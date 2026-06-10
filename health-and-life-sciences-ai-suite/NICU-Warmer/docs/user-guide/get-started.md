@@ -20,28 +20,50 @@ git sparse-checkout set health-and-life-sciences-ai-suite/NICU-Warmer
 cd health-and-life-sciences-ai-suite/NICU-Warmer
 ```
 
-## 2. Download Models and Video
+## 2. Manual Model Staging
 
-Run the model downloader to fetch all required AI models and the test video:
+Before running `make run`, place the required model files in these exact paths:
+
+- Repository root:
+  - `person-detect-fp32.xml`
+  - `person-detect-fp32.bin`
+  - `patient-detect-fp32.xml`
+  - `patient-detect-fp32.bin`
+  - `latch-detect-fp32.xml`
+  - `latch-detect-fp32.bin`
+  - `action-recognition-0001-encoder.xml`
+  - `action-recognition-0001-encoder.bin`
+  - `action-recognition-0001-decoder.xml`
+  - `action-recognition-0001-decoder.bin`
+- `models_rppg/`
+  - `mtts_can.hdf5`
+
+The rPPG model is staged as HDF5 only. If `models_rppg/mtts_can.xml` and
+`models_rppg/mtts_can.bin` are missing, the converter container creates them
+from `models_rppg/mtts_can.hdf5`.
+
+## 3. Prepare Local Assets
+
+Run setup to verify local assets and generate the rPPG OpenVINO IR when needed:
 
 ```bash
 make setup
 ```
 
-This downloads:
+This step:
 
-- 3 detection models (person, patient, latch) from GitHub Release assets
-- Action recognition encoder/decoder from Open Model Zoo
-- MTTS-CAN rPPG model (converted to OpenVINO IR)
-- Test video file (`Warmer_Testbed_YTHD.mp4`)
+- checks the staged model files already present in the repo
+- converts `models_rppg/mtts_can.hdf5` to `models_rppg/mtts_can.{xml,bin}` when needed
+- preserves existing local assets on repeated runs
 
-All files are cached locally — subsequent runs skip existing files.
+Make sure `Warmer_Testbed_YTHD.mp4` is present in the repository root before
+starting the application.
 
 > **Important**: `make setup` must complete before `make run`. If `docker compose up`
 > runs first, Docker creates empty directories for missing bind-mount sources, causing
 > pipeline failures.
 
-## 3. Run the Application
+## 4. Run the Application
 
 Start all services (default mixed-optimized device profile):
 
@@ -84,7 +106,7 @@ make run-gpu       # All workloads on GPU
 make run-npu       # All workloads on NPU
 ```
 
-## 4. Open the Dashboard
+## 5. Open the Dashboard
 
 Navigate to `http://localhost:3001` in a browser.
 
@@ -95,7 +117,7 @@ Click **Prepare & Run** to start the AI pipeline. The system will:
 3. Stream detections and vitals via MQTT
 4. Display results in real-time on the dashboard
 
-## 5. Stop the Application
+## 6. Stop the Application
 
 Click **Stop** in the dashboard, or from the terminal:
 
