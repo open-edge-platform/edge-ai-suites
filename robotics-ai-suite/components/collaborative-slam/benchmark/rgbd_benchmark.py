@@ -177,7 +177,7 @@ class TrajectoryBenchmark:
                 os.path.join(self.resultfile_dir, self.resultfile),
             ]
 
-        evo_process = ExecuteProcess(cmd=evaluate_cmd, shell=True)
+        evo_process = ExecuteProcess(cmd=evaluate_cmd)
 
         process_output_handler = OnProcessIO(
             target_action=evo_process, on_stdout=self.__on_evo_process_output
@@ -253,7 +253,6 @@ class TrajectoryBenchmark:
         )
         playback_process = ExecuteProcess(
             cmd=playback_cmd,
-            shell=True,
             output='own_log',
             env=playback_env,
             on_exit=wait_to_shutdown,

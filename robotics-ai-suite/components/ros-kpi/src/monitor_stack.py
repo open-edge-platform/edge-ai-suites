@@ -682,6 +682,14 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         help='List all previous monitoring sessions and exit'
     )
 
+    parser.add_argument(
+        '--power',
+        action='store_true',
+        default=False,
+        help='Enable RAPL CPU package power monitoring (writes cpu_power.log). '
+             'Auto-detected when /sys/class/powercap/intel-rapl:0/energy_uj is readable.'
+    )
+
     args = parser.parse_args()
 
     # Handle list sessions
@@ -755,6 +763,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         ros_domain_id=args.ros_domain_id,
         enable_gpu=args.gpu,
         enable_npu=args.npu,
+        enable_power=args.power,
         algorithm=args.algorithm,
         use_sim_time=args.use_sim_time,
     )

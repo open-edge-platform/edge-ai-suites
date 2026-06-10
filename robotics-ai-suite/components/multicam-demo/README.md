@@ -6,10 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # Multi-Camera Demo (RealSense D457 AI Demo)
 
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
-
 ## Overview
 
 In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. The Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
@@ -351,7 +347,7 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
    ```bash
    sudo intel_gpu_top
    ```
-   
+
    ```text
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted
@@ -393,6 +389,10 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
   
 
 Reboot the system.
+
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
 
 ## License
 

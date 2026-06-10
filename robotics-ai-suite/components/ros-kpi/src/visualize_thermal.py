@@ -334,6 +334,64 @@ def plot_thermal(  # pylint: disable=too-many-locals
         plt.close(fig)
 
 
+def plot_temperature_only(
+        cpu_records: List[dict],
+        gpu_records: List[dict],
+        session_label: str = '',
+        output_file: Optional[str] = None,
+        show: bool = False):
+    """Render a standalone temperature-over-time chart and optionally save / display it."""
+    if not cpu_records and not gpu_records:
+        return
+    fig, ax = plt.subplots(1, 1, figsize=(14, 4))
+    title = 'CPU / GPU Temperature Over Time'
+    if session_label:
+        title += f'\n{session_label}'
+    fig.suptitle(title, fontsize=12, fontweight='bold')
+    _panel_temperature(ax, cpu_records, gpu_records)
+    ax.set_title('Temperature', fontsize=9, pad=3)
+    _fmt_xaxis(ax, _parse_times(cpu_records or gpu_records))
+    ax.set_xlabel('Time (HH:MM:SS)', fontsize=9)
+    fig.tight_layout()
+    if output_file:
+        plt.savefig(output_file, dpi=150, bbox_inches='tight')
+        print(f'  Saved: {output_file}')
+        if not show:
+            plt.close(fig)
+    if show:
+        plt.show()
+        plt.close(fig)
+
+
+def plot_power_only(
+        cpu_records: List[dict],
+        session_label: str = '',
+        output_file: Optional[str] = None,
+        show: bool = False):
+    """Render a standalone RAPL CPU package power chart and optionally save / display it."""
+    has_power = any(r.get('power_w') is not None for r in cpu_records)
+    if not cpu_records or not has_power:
+        return
+    fig, ax = plt.subplots(1, 1, figsize=(14, 4))
+    title = 'CPU Package Power (RAPL) Over Time'
+    if session_label:
+        title += f'\n{session_label}'
+    fig.suptitle(title, fontsize=12, fontweight='bold')
+    _panel_power(ax, cpu_records)
+    ax.set_title('CPU Package Power', fontsize=9, pad=3)
+    _fmt_xaxis(ax, _parse_times(cpu_records))
+    ax.set_xlabel('Time (HH:MM:SS)', fontsize=9)
+    fig.tight_layout()
+    if output_file:
+        plt.savefig(output_file, dpi=150, bbox_inches='tight')
+        print(f'  Saved: {output_file}')
+        if not show:
+            plt.close(fig)
+    if show:
+        plt.show()
+        plt.close(fig)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Session / file resolution helpers
 # ──────────────────────────────────────────────────────────────────────────────
@@ -505,6 +563,21 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
         output_file=output_file,
         show=show,
     )
+
+    # ── Separate temperature and power charts ─────────────────────────────────
+    if out_dir:
+        plot_temperature_only(
+            cpu_records, gpu_records,
+            session_label=session_label,
+            output_file=str(out_dir / 'thermal_temperature.png'),
+            show=False,
+        )
+        plot_power_only(
+            cpu_records,
+            session_label=session_label,
+            output_file=str(out_dir / 'thermal_power.png'),
+            show=False,
+        )
 
     if not show and not out_dir:
         print('No --output-dir or --show specified; opening interactive window.')
