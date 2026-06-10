@@ -38,7 +38,7 @@ def fetch_credentials(chart_path, type):
 def fetch_influxdb_credentials(chart_path):
     """Fetch INFLUXDB_USERNAME and INFLUXDB_PASSWORD from values.yaml."""
     try:
-        values_yaml_path = os.path.expandvars(chart_path + 'values.yaml')
+        values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
         logger.info(f"Fetching InfluxDB credentials from: {values_yaml_path}")
     
         # Open and read the YAML file
@@ -68,7 +68,7 @@ def fetch_influxdb_credentials(chart_path):
 def fetch_grafana_credentials(chart_path):
     """Fetch GRAFANA_USERNAME and GRAFANA_PASSWORD from values.yaml."""
     try:
-        values_yaml_path = os.path.expandvars(chart_path + 'values.yaml')
+        values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
         logger.info(f"Fetching Grafana credentials from: {values_yaml_path}")
 
         # Open and read the YAML file
