@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # OpenVINO Vision Applications
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/index.html).
+
 ## Overview
 
 This repository contains multiple vision applications that leverage OpenVINO for computer vision tasks in robotics, including object detection, semantic segmentation, and YOLOv8-based detection. These applications provide ROS 2 integration for real-time perception capabilities using Intel RealSense cameras and OpenVINO inference engine.

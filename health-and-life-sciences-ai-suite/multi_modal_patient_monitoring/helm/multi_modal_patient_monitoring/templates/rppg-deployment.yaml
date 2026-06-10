@@ -59,6 +59,10 @@ spec:
               value: "aggregator,localhost,127.0.0.1"
             - name: no_proxy
               value: "aggregator,localhost,127.0.0.1"
+            {{- if eq .Values.devices.RPPG_DEVICE "NPU" }}
+            - name: ZE_ENABLE_ALT_DRIVERS
+              value: "libze_intel_npu.so"
+            {{- end }}
           volumeMounts:
             - name: models
               mountPath: /models
@@ -68,6 +72,10 @@ spec:
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
+            {{- if eq .Values.devices.RPPG_DEVICE "NPU" }}
+            - name: accel
+              mountPath: /dev/accel
+            {{- end }}
       volumes:
         - name: models
           persistentVolumeClaim:
@@ -81,3 +89,8 @@ spec:
         - name: dev
           hostPath:
             path: /dev
+        {{- if eq .Values.devices.RPPG_DEVICE "NPU" }}
+        - name: accel
+          hostPath:
+            path: /dev/accel
+        {{- end }}

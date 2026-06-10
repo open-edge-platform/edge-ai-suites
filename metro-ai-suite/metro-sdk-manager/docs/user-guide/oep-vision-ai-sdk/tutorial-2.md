@@ -1,6 +1,6 @@
 # OEP Vision AI SDK - Tutorial 2
 
-This tutorial demonstrates advanced video processing capabilities using Intel's hardware-accelerated video decoding and composition. You'll learn to decode multiple video streams simultaneously and display them in a tiled layout on a 4K monitor using VAAPI (Video Acceleration API) and GStreamer.
+This tutorial demonstrates advanced video processing capabilities using Intel's hardware-accelerated video decoding and composition. You will learn to decode multiple video streams simultaneously and display them in a tiled layout on a 4K monitor using VAAPI (Video Acceleration API) and GStreamer.
 
 ## Overview
 
@@ -50,13 +50,15 @@ Before starting this tutorial, ensure you have:
 
 **Important Display Requirements**
 This tutorial requires **Ubuntu Desktop** with a **local physical display** and active graphical session. It will **not work properly** with:
+
 - Ubuntu Server (no GUI)
 - Remote SSH sessions (even with X11 forwarding)
 - Remote Desktop/VNC connections
 - Headless systems
- 
+
 **Why Remote Connections Don't Work:**
 Streaming 16 simultaneous 4K video streams requires extremely high bandwidth (~150-200 Mbps) and low latency. Remote desktop protocols (SSH/X11, VNC, RDP) compress video heavily and introduce significant latency, resulting in:
+
 - Severe frame drops and stuttering
 - Poor visual quality due to compression artifacts
 - Inability to accurately measure hardware acceleration performance
@@ -94,6 +96,7 @@ vainfo
 ```
 
 **Troubleshooting:**
+
 - If `lspci` shows no Intel graphics, this tutorial cannot proceed on your system
 - If `/dev/dri/renderD128` is missing, install drivers: `sudo apt install intel-media-va-driver-non-free`
 - If `vainfo` command is not found: `sudo apt install vainfo`
@@ -262,7 +265,7 @@ docker run -it --rm --net=host \
 
 The application will display a 4x4 tiled video composition on your 4K monitor. You should see:
 
-![4x4 Video Streaming Result](images/intel-edge-ai-box-4x4-video-streaming.png)
+![4x4 Video Streaming Result](./images/intel-edge-ai-box-4x4-video-streaming.png)
 
 **Performance Monitoring:**
 Monitor system resources during playback:

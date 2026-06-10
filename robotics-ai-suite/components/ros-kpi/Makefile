@@ -5,6 +5,7 @@
 # Intel-operated generative artificial intelligence solutions.
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROS_DISTRO ?= humble
+RUN_CONFIG ?=   # Optional: path to a YAML run profile (e.g. config/wandering_run.yaml)
 
 ifeq ($(ROS_DISTRO),humble)
 	UBUNTU_CODENAME := jammy
@@ -12,14 +13,15 @@ else
 	UBUNTU_CODENAME := noble
 endif
 
-.PHONY: help install install-qmassa check-deps check-hw check-domain \
+.PHONY: help install install-qmassa enable-power-mon check-deps check-hw check-domain \
         clean clean-last clean-session \
         grafana-start grafana-stop grafana-pull grafana-status grafana-logs grafana-open \
         wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
         picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
         bag-replay bag-replay-plot bag-replay-benchmark \
         fastmapping fastmapping-plot fastmapping-benchmark \
-        analyze-benchmark regression-check regression-check-l2 \
+        analyze-benchmark analyze-e2e regression-check regression-check-l2 \
+        report visualize-kpi results visualize-thermal show-sessions summarize-benchmark \
         test package license-check lint lint-all
 
 
@@ -46,7 +48,16 @@ help:
 	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
 	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
 	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
+	@echo "  uv run python src/visualize_timing.py <session>/graph_timing.csv --help"
+	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
+	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
 	@echo "  uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
+	@echo "  uv run python src/visualize_kpi.py --session <session>              - KPI latency histogram"
+	@echo "  uv run python src/visualize_kpi.py --kpi a.json b.json --label A B  - Cross-SKU comparison"
+	@echo "  make visualize-kpi SESSION=<session>                               - Same via make"
+	@echo "  make results [SESSION=<session>]                                   - KPI charts + HTML report for latest (or given) session"
+	@echo "  make visualize-thermal [SESSION=<session>]                         - CPU/GPU temperature + throttle + power plot"
 	@echo "  uv run python demo_interactive_heatmap.py [SESSION_DIR]"
 	@echo ""
 	@echo "ANALYSIS:"
@@ -58,6 +69,7 @@ help:
 	@echo "SIMULATIONS:"
 	@echo "  bash src/wandering_run.sh --help"
 	@echo "  bash src/picknplace_run.sh --help"
+	@echo "  make wandering [RUN_CONFIG=config/wandering_run.yaml] - Override run profile YAML"
 	@echo ""
 	@echo "BAG REPLAY (offline / CI benchmarking):"
 	@echo "  make bag-replay BAG=<bag_dir> [RATE=1.0]  - Single replay + KPI collection"
@@ -81,18 +93,26 @@ help:
 	@echo "INFRASTRUCTURE (make targets):"
 	@echo "  make install                              - Install all dependencies"
 	@echo "  make install-qmassa                       - Compile and install qmassa/qmmd (xe GPU monitoring)"
+	@echo "  make enable-power-mon                     - Install udev rule to allow RAPL power reading without root"
 	@echo "  make check-deps                           - Check all dependencies"
 	@echo "  make check-hw                             - Probe GPU and NPU tool availability"
 	@echo "  make check-domain [REMOTE_IP=<ip>]        - Verify ROS_DOMAIN_ID matches"
 	@echo "  make clean                                - Remove all monitoring sessions"
 	@echo "  make clean-last                           - Remove most recent session"
 	@echo "  make clean-session SESSION=<name>         - Remove specific session"
+	@echo "  make show-sessions                        - Tree view of all sessions with metrics"
+	@echo "  make summarize-benchmark BENCH=<bench_dir> - Cross-run aggregate table for one benchmark"
+	@echo "  make analyze-e2e BENCH=<bench_dir>         - Level 2 traced e2e analysis + summary table"
 	@echo "  make grafana-start / grafana-stop         - Grafana stack lifecycle"
 	@echo "  make grafana-status                       - Check Grafana stack status"
 	@echo "  make package [ROS_DISTRO=jazzy]           - Build Debian package"
 	@echo "  make regression-check BASELINE=<b> CURRENT=<c> [THRESHOLD=5.0] [REPORT=<r>]"
 	@echo "  make test                                 - Run unit tests (pytest via uv)"
 	@echo "  make lint / license-check                 - Code quality checks"
+
+# Show all monitoring session data
+show-sessions:
+	uv run python src/show_sessions.py $(if $(ROOT),--root $(ROOT))
 
 # Clean all monitoring data
 clean:
@@ -102,13 +122,14 @@ clean:
 
 # Clean the most recent session
 clean-last:
-	@echo "Removing the most recent monitoring session..."
-	@LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
-	if [ -z "$$LAST_SESSION" ]; then \
+	@echo "Removing the most recent monitoring session or bench directory..."
+	@LAST=$$(find monitoring_sessions -mindepth 2 -maxdepth 2 -type d \
+		-printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $$2}'); \
+	if [ -z "$$LAST" ]; then \
 		echo "No monitoring sessions found."; \
 	else \
-		echo "Removing session: $$LAST_SESSION"; \
-		rm -rf "monitoring_sessions/$$LAST_SESSION"; \
+		echo "Removing: $$LAST"; \
+		rm -rf "$$LAST"; \
 		echo "Done."; \
 	fi
 
@@ -147,6 +168,17 @@ install-qmassa:
 	@echo "✅ qmassa and qmmd installed to ~/.cargo/bin/"
 	@echo "   Run: qmassa --help"
 	@echo "   Run: qmmd   --help"
+
+enable-power-mon:
+	@# Help: Install udev rule granting read access to Intel RAPL energy counter (no root required at runtime)
+	@echo "Installing RAPL udev rule..."
+	@echo 'SUBSYSTEM=="powercap", KERNEL=="intel-rapl:0", ACTION=="add", RUN+="/bin/chmod o+r /sys/class/powercap/intel-rapl/%k/energy_uj"' \
+		| sudo tee /etc/udev/rules.d/51-rapl.rules > /dev/null
+	@sudo udevadm control --reload-rules
+	@sudo udevadm trigger --subsystem-match=powercap
+	@echo "✅ udev rule installed → /etc/udev/rules.d/51-rapl.rules"
+	@echo "   RAPL will be readable without root after next reboot (or udev trigger above)."
+	@echo "   Re-run: make check-hw"
 
 # Install dependencies
 install:
@@ -619,28 +651,32 @@ monitor-remote-repeat:
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking
 #
-# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE
+# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE RUN_CONFIG
+#   RUN_CONFIG : path to YAML run profile (default: config/<scenario>_run.yaml)
+#                Example: make wandering RUN_CONFIG=config/my_custom_run.yaml
 # ─────────────────────────────────────────────────────────────────────────────
 
 wandering:
-	bash src/wandering_run.sh $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record:
-	bash src/wandering_run.sh --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-plot:
-	bash src/wandering_run.sh --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record-plot:
-	bash src/wandering_run.sh --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
 	TIMEOUT=$(if $(TIMEOUT),$(TIMEOUT),300); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),30); \
+	GOALS=$(if $(GOALS),$(GOALS),0); \
 	BENCH_DIR=monitoring_sessions/wandering/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Wandering benchmark: $$RUNS runs x $${TIMEOUT}s  →  $$BENCH_DIR"; \
+	[ "$$GOALS" -gt 0 ] && echo "   Stop condition    : $$GOALS goals per run" || echo "   Stop condition    : timeout only"; \
 	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
 	if [ -n "$(SIDE_TERMINALS)" ]; then \
 		if command -v terminator >/dev/null 2>&1; then \
@@ -654,36 +690,26 @@ wandering-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/wandering_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR" \
+			$(if $(GOALS), --goals $$GOALS); \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
 	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
 	echo ""; \
-	echo "▶  Traced e2e analysis (analyze_bag_e2e.py) across all sessions..."; \
-	for sess_dir in "$$BENCH_DIR"/*/; do \
-		kpi="$$sess_dir/kpi.json"; \
-		bag="$$sess_dir/bag"; \
-		if [ -f "$$kpi" ] && [ -f "$$bag/metadata.yaml" ]; then \
-			echo "  → $$(basename $$sess_dir)"; \
-			uv run python src/analyze_bag_e2e.py \
-				--bag "$$bag" \
-				--kpi "$$kpi" \
-				--json-out "$$sess_dir/kpi_level2_traced.json" || true; \
-		fi; \
-	done; \
-	echo "   Traced Level 2 JSON written to each session directory."
+	echo "▶  Level 2 e2e analysis ready to run:"; \
+	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
 
 picknplace-run:
-	bash src/picknplace_run.sh $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-record:
-	bash src/picknplace_run.sh --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-plot:
-	bash src/picknplace_run.sh --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-record-plot:
-	bash src/picknplace_run.sh --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
@@ -704,24 +730,13 @@ picknplace-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/picknplace_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
 	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
 	echo ""; \
-	echo "▶  Traced e2e analysis (analyze_bag_e2e.py) across all sessions..."; \
-	for sess_dir in "$$BENCH_DIR"/*/; do \
-		kpi="$$sess_dir/kpi.json"; \
-		bag="$$sess_dir/bag"; \
-		if [ -f "$$kpi" ] && [ -f "$$bag/metadata.yaml" ]; then \
-			echo "  → $$(basename $$sess_dir)"; \
-			uv run python src/analyze_bag_e2e.py \
-				--bag "$$bag" \
-				--kpi "$$kpi" \
-				--json-out "$$sess_dir/kpi_level2_traced.json" || true; \
-		fi; \
-	done; \
-	echo "   Traced Level 2 JSON written to each session directory."
+	echo "▶  Level 2 e2e analysis ready to run:"; \
+	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Bag-replay benchmarking
@@ -779,46 +794,103 @@ bag-replay-benchmark:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fast Mapping benchmarking
-# Launches fast_mapping_node alongside a ROS 2 bag replay of RGB-D sensor data.
-# Defaults to the bundled spinning bag shipped with fast_mapping.
+# Uses: ros2 launch fast_mapping fast_mapping.launch.py
+# (starts fast_mapping_node + rviz2 + bundled spinning bag replay)
 #
-# Optional: BAG=<path>   — override the bag directory (default: bundled spinning)
-#           RATE=1.0     — replay speed multiplier
-#           LOOP=1        — replay passes per run
-#           RUNS=10       — independent benchmark runs (fastmapping-benchmark)
-#           PAUSE=10      — seconds between runs (fastmapping-benchmark)
+# Optional: RUNS=10  — independent benchmark runs (fastmapping-benchmark)
+#           PAUSE=10 — seconds between runs (fastmapping-benchmark)
+#           RUN_CONFIG — path to YAML run profile (default: config/fastmapping_run.yaml)
 # ─────────────────────────────────────────────────────────────────────────────
-FASTMAPPING_BAG ?= /opt/ros/jazzy/share/bagfiles/spinning
 
 fastmapping:
-	bash src/fastmapping_run.sh \
-		$(if $(BAG),--bag $(BAG),--bag $(FASTMAPPING_BAG)) \
-		$(if $(RATE),--rate $(RATE)) \
-		$(if $(LOOP),--loop $(LOOP))
+	bash src/fastmapping_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
 
 fastmapping-plot:
-	bash src/fastmapping_run.sh --plot \
-		$(if $(BAG),--bag $(BAG),--bag $(FASTMAPPING_BAG)) \
-		$(if $(RATE),--rate $(RATE)) \
-		$(if $(LOOP),--loop $(LOOP))
+	bash src/fastmapping_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
 
 fastmapping-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),10); \
-	RATE=$(if $(RATE),$(RATE),1.0); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
-	BAG_PATH=$(if $(BAG),$(BAG),$(FASTMAPPING_BAG)); \
 	BENCH_DIR=monitoring_sessions/fastmapping/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Fast Mapping benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
-	echo "   Bag  : $$BAG_PATH"; \
-	echo "   Rate : $${RATE}x"; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/fastmapping_run.sh --bag "$$BAG_PATH" --rate "$$RATE" \
+		bash src/fastmapping_run.sh \
+			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
 			--output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
+	echo ""; \
+	echo "▶  Analysing fast_mapping_node logs..."; \
+	for sess in "$$BENCH_DIR"/*/; do \
+		[ -d "$$sess" ] && uv run python src/analyze_fastmapping_log.py --session "$$sess" || true; \
+	done; \
 	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+
+# ═══════════════════════════════════════════════════════════════
+# HTML REPORT
+# Generate a self-contained HTML benchmark report from a session dir.
+# Usage: make report SESSION=<session_dir>
+#        make report SESSION=<dir> OUTPUT=<file.html>
+# ═══════════════════════════════════════════════════════════════
+
+report:
+	@# Help: Generate self-contained HTML report from SESSION=<dir> (writes <session>/report.html)
+	@if [ -z "$(SESSION)" ]; then \
+		echo "Error: Please specify SESSION=<session_directory>"; \
+		echo "Example: make report SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
+		exit 1; \
+	fi
+	uv run python src/generate_report.py --session "$(SESSION)" $(if $(OUTPUT),--output $(OUTPUT))
+
+# Generate KPI charts (latency histogram + more) from a session directory.
+# Usage: make visualize-kpi SESSION=<session_dir> [FORMAT=svg]
+visualize-kpi:
+	@if [ -z "$(SESSION)" ]; then \
+		echo "Error: Please specify SESSION=<session_directory>"; \
+		echo "Example: make visualize-kpi SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
+		exit 1; \
+	fi
+	uv run python src/visualize_kpi.py \
+		--session "$(SESSION)" \
+		$(if $(FORMAT),--format $(FORMAT))
+
+# Show results for the most recent (or given) session: KPI charts + HTML report.
+# Usage: make results                        (auto-detects latest session)
+#        make results SESSION=monitoring_sessions/wandering/bench_X/Y
+results:
+	@SESSION="$(SESSION)"; \
+	if [ -z "$$SESSION" ]; then \
+		SESSION=$$(find monitoring_sessions -mindepth 2 -maxdepth 3 -name 'kpi.json' \
+			-printf '%T@ %h\n' 2>/dev/null | sort -n | tail -1 | awk '{print $$2}'); \
+	fi; \
+	if [ -z "$$SESSION" ]; then \
+		echo "Error: no sessions found. Run a benchmark first or specify SESSION=<path>"; \
+		exit 1; \
+	fi; \
+	echo "📊  Session: $$SESSION"; \
+	echo ""; \
+	echo "[1/2] Generating KPI charts..."; \
+	uv run python src/visualize_kpi.py --session "$$SESSION" && \
+	echo ""; \
+	echo "[2/2] Generating HTML report..."; \
+	uv run python src/generate_report.py --session "$$SESSION"; \
+	REPORT="$$SESSION/report.html"; \
+	echo ""; \
+	echo "✅  Done.  Open report:"; \
+	echo "      file://$$PWD/$$REPORT"; \
+	if [ -n "$$DISPLAY" ]; then \
+		xdg-open "$$REPORT" 2>/dev/null & \
+	fi
+
+# Generate CPU/GPU thermal + throttle time-series plot from a session.
+# Usage: make visualize-thermal                  (auto-detects latest session)
+#        make visualize-thermal SESSION=<path>
+visualize-thermal:
+	uv run python src/visualize_thermal.py \
+		$(if $(SESSION),"$(SESSION)") \
+		--save $(if $(SHOW),--show) $(if $(NO_SHOW),--no-show)
 
 analyze-benchmark:
 	@if [ -z "$(BENCH)" ]; then \
@@ -827,6 +899,33 @@ analyze-benchmark:
 		exit 1; \
 	fi
 	uv run python src/aggregate_kpi.py "$(BENCH)" $(if $(NODE),--node $(NODE))
+
+summarize-benchmark:
+	@if [ -z "$(BENCH)" ]; then \
+		echo "Error: Please specify BENCH=<bench_directory>"; \
+		echo "Example: make summarize-benchmark BENCH=monitoring_sessions/wandering/bench_20260521_123522"; \
+		exit 1; \
+	fi
+	uv run python src/summarize_benchmark.py "$(BENCH)"
+
+analyze-e2e:
+	@if [ -z "$(BENCH)" ]; then \
+		echo "Error: Please specify BENCH=<bench_directory>"; \
+		echo "Example: make analyze-e2e BENCH=monitoring_sessions/wandering/bench_20260521_123522"; \
+		exit 1; \
+	fi
+	@for sess_dir in "$(BENCH)"/*/; do \
+		kpi="$$sess_dir/kpi.json"; \
+		bag="$$sess_dir/bag"; \
+		if [ -f "$$kpi" ] && [ -f "$$bag/metadata.yaml" ]; then \
+			echo "  → $$(basename $$sess_dir)"; \
+			uv run python src/analyze_bag_e2e.py \
+				--bag "$$bag" \
+				--kpi "$$kpi" \
+				--json-out "$$sess_dir/kpi_level2_traced.json" || true; \
+		fi; \
+	done
+	uv run python src/summarize_benchmark.py "$(BENCH)"
 
 regression-check:
 	@# Help: Compare two Level 1 KPI JSON files for regressions (exit 1 if any KPI exceeds threshold)

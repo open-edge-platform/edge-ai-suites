@@ -84,7 +84,7 @@ services:
 
   # OpenWebUI - LLM Chat Interface
   open-webui:
-    image: ghcr.io/open-webui/open-webui:v0.9.5-slim
+    image: ghcr.io/open-webui/open-webui:v0.9.6-slim
     container_name: open-webui
     restart: unless-stopped
     networks:

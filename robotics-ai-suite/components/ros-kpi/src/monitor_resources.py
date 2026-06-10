@@ -443,6 +443,114 @@ def _read_cpu_thermal_sysfs() -> dict:
     return {'temp_c': temp_c, 'throttled': throttled}
 
 
+def probe_cpu_power_available() -> tuple:
+    """
+    Probe Intel RAPL CPU package power availability via powercap sysfs.
+
+    Returns ``(available, reason)`` where:
+      - ``available`` - True if the energy counter exists and is readable
+      - ``reason``    - human-readable string suitable for log output
+    """
+    if not os.path.exists(_RAPL_PKG_ENERGY):
+        return False, f'RAPL sysfs not found ({_RAPL_PKG_ENERGY}) — WSL2 or non-Intel?'
+    try:
+        int(open(_RAPL_PKG_ENERGY).read().strip())
+        return True, f'Intel RAPL accessible at {_RAPL_PKG_ENERGY}'
+    except (OSError, ValueError) as exc:
+        return False, f'RAPL sysfs exists but not readable: {exc}'
+
+
+def _read_rapl_energy_uj() -> Optional[int]:
+    """Read the current CPU package energy counter in µJ. Returns None on error."""
+    try:
+        return int(open(_RAPL_PKG_ENERGY).read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def _read_rapl_max_uj() -> int:
+    """Read the RAPL counter wraparound value in µJ (default 262143 µJ if unreadable)."""
+    try:
+        return int(open(_RAPL_PKG_MAX).read().strip())
+    except (OSError, ValueError):
+        return 262_143_000_000  # ~262 kJ, typical Sandy Bridge wrap value
+
+
+def monitor_cpu_power(interval: float = 2.0,
+                      cpu_power_log: str = None,
+                      stop_event: threading.Event = None):
+    """
+    Sample Intel RAPL CPU package power at *interval* seconds and write
+    JSON-lines to *cpu_power_log*.
+
+    Each record contains:
+        ts        - ISO-8601 timestamp
+        power_w   - mean CPU package power over the sampling window (watts)
+        temp_c    - CPU package temperature at sample time (°C), or null
+        throttled - True when CPU frequency dropped below 95 % of max, or null
+
+    Runs until *stop_event* is set or KeyboardInterrupt.
+    Silently exits if RAPL sysfs is not available.
+    """
+    avail, reason = probe_cpu_power_available()
+    if not avail:
+        print(f'[PWR] RAPL not available — CPU power monitoring skipped ({reason})')
+        return
+
+    log_fp = None
+    if cpu_power_log:
+        log_fp = open(cpu_power_log, 'a')
+        log_fp.write(json.dumps({'event': 'start',
+                                  'ts': datetime.now().isoformat()}) + '\n')
+        log_fp.flush()
+
+    if stop_event is None:
+        stop_event = threading.Event()
+
+    print(f'[PWR] Monitoring Intel RAPL CPU package power (interval={interval}s)...')
+
+    max_uj = _read_rapl_max_uj()
+
+    try:
+        e0 = _read_rapl_energy_uj()
+        t0 = time.monotonic()
+
+        while not stop_event.is_set():
+            stop_event.wait(timeout=interval)
+            e1 = _read_rapl_energy_uj()
+            t1 = time.monotonic()
+
+            if e0 is not None and e1 is not None:
+                # Handle counter wraparound
+                delta_uj = e1 - e0 if e1 >= e0 else (max_uj - e0 + e1)
+                elapsed_s = t1 - t0
+                power_w = round(delta_uj / 1_000_000.0 / max(elapsed_s, 1e-6), 2)
+
+                thermal = _read_cpu_thermal_sysfs()
+                record = {
+                    'ts':       datetime.now().isoformat(),
+                    'power_w':  power_w,
+                    'temp_c':   thermal.get('temp_c'),
+                    'throttled': thermal.get('throttled'),
+                }
+                print(f'[PWR] pkg={power_w:.2f} W'
+                      + (f'  🌡{thermal["temp_c"]}°C' if thermal.get('temp_c') else '')
+                      + ('  ⚠THROTTLE' if thermal.get('throttled') else ''))
+                if log_fp:
+                    log_fp.write(json.dumps(record) + '\n')
+                    log_fp.flush()
+
+            e0, t0 = e1, t1
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if log_fp:
+            log_fp.write(json.dumps({'event': 'stop',
+                                      'ts': datetime.now().isoformat()}) + '\n')
+            log_fp.close()
+        print('[PWR] CPU power monitor stopped.')
+
+
 def _ssh(remote_ip: str, remote_user: str, cmd: str,
          timeout: int = 12) -> subprocess.CompletedProcess:
     """Run a command on the remote via SSH (BatchMode, no tty)."""
@@ -462,19 +570,19 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
     running user in the ``video``, ``render``, and ``power`` groups (or root).
 
     JSON file format (from qmassa app_data.rs):
-      Line 1 – version string  e.g. "2.0"
-      Line 2 – CliArgs JSON object
-      Line 3+ – one AppDataState JSON object per iteration
+      Line 1 - version string  e.g. "2.0"
+      Line 2 - CliArgs JSON object
+      Line 3+ - one AppDataState JSON object per iteration
 
     Key schema details:
-      ``dev_stats.eng_usage``    – dict {engine: [ratio, …]} (0.0–1.0, NOT %)
-      ``dev_stats.freqs``        – [[{act_freq: Hz, throttle_reasons: {status: bool}}, …], …]
-      ``dev_stats.power``        – [{gpu_cur_power: W, pkg_cur_power: W}, …]
-      ``dev_stats.temps``        – [[{name: str, temp: °C}, …], …]  (dGPU only)
-      ``dev_stats.mem_info``     – [{smem_used: bytes, vram_used: bytes, …}, …]
-      ``clis_stats``             – [{pid, comm, eng_usage: {engine: [ratio,…]}, …}, …]
+      ``dev_stats.eng_usage``    - dict {engine: [ratio, …]} (0.0-1.0, NOT %)
+      ``dev_stats.freqs``        - [[{act_freq: Hz, throttle_reasons: {status: bool}}, …], …]
+      ``dev_stats.power``        - [{gpu_cur_power: W, pkg_cur_power: W}, …]
+      ``dev_stats.temps``        - [[{name: str, temp: °C}, …], …]  (dGPU only)
+      ``dev_stats.mem_info``     - [{smem_used: bytes, vram_used: bytes, …}, …]
+      ``clis_stats``             - [{pid, comm, eng_usage: {engine: [ratio,…]}, …}, …]
 
-    Returns a normalised dict (same schema as the rest of the GPU monitoring
+    Returns a normalized dict (same schema as the rest of the GPU monitoring
     pipeline), or {} on any error (binary missing, permission denied, parse failure …).
     """
     import tempfile
@@ -524,7 +632,7 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
     def _last(lst):
         return lst[-1] if lst else None
 
-    # ── Engine utilisation (ratios → %) ────────────────────────────────────────
+    # ── Engine utilization (ratios → %) ────────────────────────────────────────
     eng_usage_raw = dev_stats.get('eng_usage', {})
     engines_out = {}
     render_busy = 0.0
@@ -532,7 +640,7 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
         last_val = _last(usage_list)
         if last_val is None:
             continue
-        busy_pct = round(float(last_val) * 100.0, 1)
+        busy_pct = round(float(last_val), 1)   # qmassa eng_usage is already in %
         engines_out[eng_name] = {'busy': busy_pct, 'sema': 0.0, 'wait': 0.0}
         if _ENGINE_CLASS_RE['Render/3D'].search(eng_name):
             render_busy = busy_pct
@@ -582,7 +690,7 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
             last_val = _last(usage_list)
             if last_val is None:
                 continue
-            busy = float(last_val) * 100.0
+            busy = float(last_val)   # qmassa eng_usage is already in %
             for cls_name, pat in _ENGINE_CLASS_RE.items():
                 if pat.search(eng_name):
                     cli_engs[cls_name] = cli_engs.get(cls_name, 0.0) + busy
@@ -867,153 +975,6 @@ def monitor_gpu(interval: float = 2.0,
         print('[GPU] GPU monitor stopped.')
 
 
-# ── Intel PMT Telemetry (NPU power / temp / memory bandwidth) ────────────────
-# Adapted from Intel internal tooling (edge-metric-profiler).
-# Reads /sys/class/intel_pmt/telem* binary files exposed by the Intel PMT
-# driver (CONFIG_INTEL_PMT_TELEMETRY).  Local access only; no root required
-# for the sysfs reads, but the device files may need group membership.
-
-_PMT_ROOT = '/sys/class/intel_pmt'
-
-_PMT_GUID_REGS = {
-    '0x130670b2': ('MTL', {  # Meteor Lake
-        'VPU_ENERGY':       0x628,
-        'SOC_TEMPERATURES': 0x98,
-        'VPU_WORKPOINT':    0x68,
-        'VPU_MEMORY_BW':    0x0,
-    }),
-    '0x1306a0b3': ('ARL', {  # Arrow Lake
-        'VPU_ENERGY':       0x628,
-        'SOC_TEMPERATURES': 0x98,
-        'VPU_WORKPOINT':    0x68,
-        'VPU_MEMORY_BW':    0x0,
-    }),
-    '0x1306a0b2': ('ARL', {  # Arrow Lake-H (same regs)
-        'VPU_ENERGY':       0x628,
-        'SOC_TEMPERATURES': 0x98,
-        'VPU_WORKPOINT':    0x68,
-        'VPU_MEMORY_BW':    0x0,
-    }),
-    '0x1306a0b4': ('ARL', {  # Arrow Lake-S (same regs)
-        'VPU_ENERGY':       0x628,
-        'SOC_TEMPERATURES': 0x98,
-        'VPU_WORKPOINT':    0x68,
-        'VPU_MEMORY_BW':    0x0,
-    }),
-    '0x3072005':  ('LNL', {  # Lunar Lake
-        'VPU_ENERGY':       0x5d0,
-        'SOC_TEMPERATURES': 0x70,
-        'VPU_WORKPOINT':    0x18,
-        'VPU_MEMORY_BW':    0xc18,
-    }),
-    '0x3086000':  ('PTL', {  # Panther Lake
-        'VPU_ENERGY':       0x670,
-        'SOC_TEMPERATURES': 0x78,
-        'VPU_WORKPOINT':    0x18,
-        'VPU_MEMORY_BW':    0xc18,
-    }),
-    '0x308d000':  ('WCL', {  # Wildcat Lake — energy needs ×33 correction
-        'VPU_ENERGY':       0x670,
-        'SOC_TEMPERATURES': 0x78,
-        'VPU_WORKPOINT':    0x18,
-        'VPU_MEMORY_BW':    0xc18,
-    }),
-}
-
-
-class _PmtTelemetry:
-    """
-    Lightweight reader for the Intel PMT telemetry binary sysfs interface.
-    Supports MTL, ARL, LNL, PTL, WCL.  Raises RuntimeError on any init failure
-    so callers can gracefully skip PMT metrics when unavailable.
-    """
-
-    def __init__(self) -> None:
-        if not os.path.isdir(_PMT_ROOT):
-            raise RuntimeError(f'PMT sysfs not found at {_PMT_ROOT}')
-
-        self._buf: bytes = b''
-        self._regs: dict = {}
-        self._telem_path: str = ''
-        self._cpu_gen: str = ''
-        self._wcl_correction: bool = False
-
-        for entry in os.listdir(_PMT_ROOT):
-            if not entry.startswith('telem'):
-                continue
-            telem_dir = os.path.join(_PMT_ROOT, entry)
-            guid_path  = os.path.join(telem_dir, 'guid')
-            telem_path = os.path.join(telem_dir, 'telem')
-            if not (os.path.exists(guid_path) and os.path.exists(telem_path)):
-                continue
-            try:
-                guid = open(guid_path).read().strip()
-            except OSError:
-                continue
-            if guid in _PMT_GUID_REGS:
-                gen, regs = _PMT_GUID_REGS[guid]
-                self._cpu_gen        = gen
-                self._regs           = regs
-                self._telem_path     = telem_path
-                self._wcl_correction = gen == 'WCL'
-                break
-
-        if not self._telem_path:
-            raise RuntimeError('No PMT telemetry device with known GUID found')
-
-    # ── low-level ─────────────────────────────────────────────────────────────
-
-    def update_buffer(self) -> None:
-        with open(self._telem_path, 'rb') as fh:
-            self._buf = fh.read()
-
-    def _read_bits(self, offset: int, msb: int, lsb: int) -> int:
-        """Extract bit-field [msb:lsb] from a 64-bit LE word at *offset*."""
-        word = int.from_bytes(self._buf[offset:offset + 8], byteorder='little')
-        msb_mask = 0xFFFFFFFFFFFFFFFF & ((2 ** (msb + 1)) - 1)
-        lsb_mask = 0xFFFFFFFFFFFFFFFF & ((2 ** lsb) - 1)
-        return (word & (msb_mask & ~lsb_mask)) >> lsb
-
-    # ── public metrics ────────────────────────────────────────────────────────
-
-    def get_npu_temperature(self) -> int:
-        """NPU junction temperature in °C (bits 47:40 of SOC_TEMPERATURES)."""
-        return self._read_bits(self._regs['SOC_TEMPERATURES'], 47, 40)
-
-    def get_npu_energy(self) -> float:
-        """Cumulative NPU energy in joules (U32.18.14 fixed-point)."""
-        raw = self._read_bits(self._regs['VPU_ENERGY'], 63, 0)
-        energy = (raw >> 14) + (raw & 0x3FFF) / (1 << 14)
-        if self._wcl_correction:
-            energy *= 33   # 3-tile → 1-tile normalisation
-        return energy
-
-    def get_noc_bandwidth_mbps(self) -> float:
-        """Cumulative NPU NoC bandwidth sample (arbitrary units → MB/s proxy)."""
-        val = self._read_bits(self._regs['VPU_MEMORY_BW'], 31, 0)
-        return val / 1e3
-
-    @property
-    def cpu_gen(self) -> str:
-        return self._cpu_gen
-
-
-# Module-level PMT singleton — lazily initialised, None if unavailable.
-_PMT_STATE: dict = {'instance': None, 'unavailable': False}
-
-
-def _get_pmt() -> Optional['_PmtTelemetry']:
-    if _PMT_STATE['unavailable']:
-        return None
-    if _PMT_STATE['instance'] is None:
-        try:
-            _PMT_STATE['instance'] = _PmtTelemetry()
-        except Exception:
-            _PMT_STATE['unavailable'] = True
-            return None
-    return _PMT_STATE['instance']
-
-
 # ── Intel NPU monitoring (sysfs / SSH) ───────────────────────────────────────
 _NPU_SYSFS = '/sys/class/accel/accel0/device'
 _NPU_SYSFS_FILES = [
@@ -1022,6 +983,10 @@ _NPU_SYSFS_FILES = [
     'npu_max_frequency_mhz',
     'npu_memory_utilization',
 ]
+
+# Intel RAPL powercap sysfs — CPU package energy counter (µJ, no root required)
+_RAPL_PKG_ENERGY  = '/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj'
+_RAPL_PKG_MAX     = '/sys/class/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj'
 
 
 def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
@@ -1068,38 +1033,11 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         except (ValueError, TypeError):
             return default
 
-    # ── PMT pre-sample (local only; ignored on SSH path) ─────────────────────
-    pmt = None if remote_ip else _get_pmt()
-    pmt_e0 = 0.0
-    pmt_bw0 = 0.0
-    if pmt:
-        try:
-            pmt.update_buffer()
-            pmt_e0  = pmt.get_npu_energy()
-            pmt_bw0 = pmt.get_noc_bandwidth_mbps()
-        except Exception:
-            pmt = None
-
     t0 = time.monotonic()
     s0 = _read_all()
     time.sleep(1.0)
     t1 = time.monotonic()
     s1 = _read_all()
-
-    # ── PMT post-sample ───────────────────────────────────────────────────────
-    pmt_power_w = None
-    pmt_temp_c  = None
-    pmt_bw_mbps = None
-    if pmt:
-        try:
-            pmt.update_buffer()
-            elapsed_s   = t1 - t0
-            pmt_power_w = round((pmt.get_npu_energy() - pmt_e0) / max(elapsed_s, 1e-6), 3)
-            pmt_temp_c  = pmt.get_npu_temperature()
-            bw1         = pmt.get_noc_bandwidth_mbps()
-            pmt_bw_mbps = round(max(0.0, bw1 - pmt_bw0) / max(elapsed_s, 1.0), 2)
-        except Exception:
-            pass
 
     if not s0 or not s1:
         return {}
@@ -1122,14 +1060,6 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         'memory_used_mb': round(mem_bytes / (1024 * 1024), 1),
         'throttled':      throttled,
     }
-    if pmt_power_w is not None:
-        result['power_w']  = pmt_power_w
-    if pmt_temp_c is not None:
-        result['temp_c']   = pmt_temp_c
-    if pmt_bw_mbps is not None:
-        result['bw_mbps']  = pmt_bw_mbps
-    if pmt:
-        result['pmt_gen'] = pmt.cpu_gen
     return result
 
 
@@ -1265,6 +1195,10 @@ Examples:
                         help='Also collect Intel NPU metrics via sysfs (writes npu_usage.log alongside --log)')
     parser.add_argument('--npu-log', type=str, default=None,
                         help='Explicit path for NPU JSON-lines log (auto-derived from --log if omitted)')
+    parser.add_argument('--power', action='store_true',
+                        help='Also collect Intel RAPL CPU package power via powercap sysfs (writes cpu_power.log)')
+    parser.add_argument('--power-log', type=str, default=None,
+                        help='Explicit path for CPU power JSON-lines log (auto-derived from --log if omitted)')
     parser.add_argument('--remote-ip', type=str, default=None,
                         help='IP address of the remote system running the ROS2 pipeline')
     parser.add_argument('--remote-user', type=str, default='ubuntu',
@@ -1296,9 +1230,18 @@ Examples:
             print('[NPU] Status        : \u274c UNAVAILABLE')
         print(f'[NPU] Detail        : {npu_reason}')
         print()
+        pwr_avail, pwr_reason = probe_cpu_power_available()
+        print(f'[PWR] RAPL path     : {_RAPL_PKG_ENERGY}')
+        if pwr_avail:
+            print('[PWR] Status        : \u2705 AVAILABLE')
+        else:
+            print('[PWR] Status        : \u274c UNAVAILABLE')
+        print(f'[PWR] Detail        : {pwr_reason}')
+        print()
         print('Auto-monitoring summary:')
-        print(f'  GPU will be monitored : {"yes" if gpu_avail else "no"}')
-        print(f'  NPU will be monitored : {"yes" if npu_avail else "no"}')
+        print(f'  GPU will be monitored   : {"yes" if gpu_avail else "no"}')
+        print(f'  NPU will be monitored   : {"yes" if npu_avail else "no"}')
+        print(f'  RAPL power monitored    : {"yes" if pwr_avail else "no"}')
         import sys as _sys
         _sys.exit(0 if (gpu_avail or npu_avail) else 1)
 
@@ -1344,6 +1287,21 @@ Examples:
         )
         _npu_thread.start()
 
+    _pwr_stop = None
+    if args.power:
+        pwr_log = args.power_log
+        if pwr_log is None and args.log:
+            pwr_log = os.path.join(os.path.dirname(os.path.abspath(args.log)), 'cpu_power.log')
+        if pwr_log is None:
+            pwr_log = 'cpu_power.log'
+        _pwr_stop = threading.Event()
+        _pwr_thread = threading.Thread(
+            target=monitor_cpu_power,
+            args=(args.interval, pwr_log, _pwr_stop),
+            daemon=True,
+        )
+        _pwr_thread.start()
+
     try:
         monitor_ros2_pidstat(
             interval=args.interval,
@@ -1361,6 +1319,8 @@ Examples:
             _gpu_stop.set()
         if _npu_stop is not None:
             _npu_stop.set()
+        if _pwr_stop is not None:
+            _pwr_stop.set()
 
 
 if __name__ == '__main__':

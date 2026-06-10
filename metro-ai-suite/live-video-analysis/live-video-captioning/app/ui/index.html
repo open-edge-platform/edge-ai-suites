@@ -51,8 +51,22 @@
             <article class="card">
                 <form id="pipelineForm" class="controls">
                     <label class="field">
-                        <span class="label">Enter RTSP URL</span>
-                        <input id="rtspInput" class="input" type="text" placeholder="Enter RTSP link" />
+                        <span class="label">Stream Source Type</span>
+                        <select id="streamSourceTypeSelect" class="input">
+                            <option value="rtsp" selected>RTSP Stream</option>
+                        </select>
+                    </label>
+                    <label class="field" id="cameraDeviceRow">
+                        <span class="label">Select Camera Device</span>
+                        <select id="cameraDeviceSelect" class="input"></select>
+                        <span id="cameraDeviceWarning" class="stream-source-warning" style="display:none;">
+                            No usable camera devices detected. Connect a camera or switch to RTSP Stream.
+                        </span>
+                    </label>
+                    <label class="field" id="rtspInputRow" style="display:none;">
+                        <span class="label">Enter RTSP Stream</span>
+                        <input id="rtspInput" class="input" type="text"
+                            placeholder="Enter RTSP URL (e.g., rtsp://...)" />
                     </label>
                     <label class="field">
                         <span class="label">Enter Prompt</span>

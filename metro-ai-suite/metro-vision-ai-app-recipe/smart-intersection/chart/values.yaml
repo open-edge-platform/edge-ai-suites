@@ -18,7 +18,7 @@ imagePullPolicy: IfNotPresent
 
 # Global version configuration for external dependencies and assets
 version:
-  release: "v2026.1.0-rc1"
+  release: "v2026.1.0-rc2"
   modelsRelease: "main"
   modelsReleaseType: branch  # Options: 'tag' or 'branch'
 
@@ -27,17 +27,21 @@ externalUrls:
   githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
   videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
 
+# Trusted Compute configuration for secure workload execution
+trustedCompute:
+  enabled: false
+
 # Container images for utilities and init containers
 images:
   alpine:
     repository: alpine
-    tag: latest
+    tag: 3.23.4
   curl:
     repository: curlimages/curl
-    tag: latest
+    tag: 8.20.0
   busybox:
     repository: busybox
-    tag: latest
+    tag: 1.38.0
 
 ntpserver:
   repository: docker.io/dockurr/chrony
@@ -45,14 +49,14 @@ ntpserver:
 
 nodered:
   repository: docker.io/nodered/node-red
-  tag: "latest"
+  tag: "4.1"
   # Overrides the storage class name
   storageClassName: "standard"
   storageSize: "1Gi"
 
 broker:
   repository: eclipse-mosquitto
-  tag: 2.0.21
+  tag: 2.0.22
 
   # UID:GID to run container as (defaulting to 1000:1000 unless overridden)
   uid: 1000
@@ -106,7 +110,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: v2026.1.0-rc1
+  tag: v2026.1.0-rc2
 
   service:
     type: ClusterIP
@@ -126,7 +130,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: v2026.1.0-rc1
+    tag: v2026.1.0-rc2
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -134,7 +138,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.1.0-ubuntu24-rc1.1
+  tag: 2026.1.0-ubuntu24-rc2
   # Overrides the storage class name
   storageClassName: "standard"
   gpu:

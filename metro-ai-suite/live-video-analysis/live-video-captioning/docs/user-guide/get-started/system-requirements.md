@@ -20,7 +20,8 @@ This page summarizes the recommended environment for running Live Video Captioni
 
 ## Software Requirements
 
-- Docker Engine and Docker Compose
+- Docker Engine and Docker Compose installed using the official Debian or Ubuntu instructions:
+  - [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 - RTSP source reachable from the `dlstreamer-pipeline-server` container
 
 ## Network / Ports

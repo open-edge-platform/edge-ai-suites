@@ -7,7 +7,7 @@ V2XFusion is a multi-sensor fusion 3D object detection solution for roadside sce
 
 The architecture image takes batch size of 4 as an example. The data input of each batch consists of a camera data and the corresponding lidar data.
 
-## Git clone and apply patch 
+## Git clone and apply patch
 Please pull the specified version of BEVFusion and copy our patch package into it.
 
 ```bash
@@ -22,12 +22,12 @@ cp -r evaluators ../bevfusion/
 cp -r scripts ../bevfusion/
 cd ..
 
-cp -r Lidar_AI_Solution/CUDA-V2XFusion/* bevfusion/ 
+cp -r Lidar_AI_Solution/CUDA-V2XFusion/* bevfusion/
 ```
 ## Prerequisites
-- [Installation guide](docs/install.md)
+- [Installation guide](../../docs/user-guide/intermediate-fusion/training/install.md)
 
-## Quick Start 
+## Quick Start
 ### 1. Prepare Dataset
 Convert the dataset format from DAIR-V2X-I to KITTI. Please refer to this [document](https://github.com/ADLab-AutoDrive/BEVHeight/blob/main/docs/prepare_dataset.md) provided by BEVHeight.
 
@@ -56,14 +56,14 @@ We have two training mechanisms, including sparsity training (2:4 structured spa
    $ python scripts/ptq_v2xfusion.py configs/V2X-I/det/centerhead/lssfpn/camera+pointpillar/resnet34/default.yaml dense_epoch_100.pth --mode dense
     ```
 
-### 4. Export ONNX 
+### 4. Export ONNX
 We have two export configurations available: FP16 (--precision fp16) and INT8 (--precision int8).
 FP16 configuration provides sub-optimal TensorRT performance but the best prediction accuracy when compared to INT8. There are no QDQ nodes in the exported ONNX file.
 INT8 configuration provides optimal TensorRT performance but sub-optimal prediction accuracy when compared to FP16. In this configuration, quantization parameters are present as QDQ nodes in the exported ONNX file.
 
 To standardize the export of quantized and non-quantized models, trained models must first be PTQ, then are exported in FP16 and INT8 formats.
 
-- FP16    
+- FP16
     ```bash
     $ python scripts/export_v2xfusion.py configs/V2X-I/det/centerhead/lssfpn/camera+pointpillar/resnet34/default.yaml ptq.pth --precision fp16
     ```
@@ -76,21 +76,21 @@ Please refer to the V2XFusion inference sample provided by [DeepStream](https://
 ```bash
 image_size = [864, 1536]
 downsample_factor = 16
-C = 80 
+C = 80
 xbound = [0, 102.4, 0.8]
 ybound = [-51.2, 51.2, 0.8]
 zbound = [-5, 3, 8]
-dbound = [-2, 0, 90]   
+dbound = [-2, 0, 90]
 ```
 ## Experimental Results
-- DAIR-V2X-I Dataset  
+- DAIR-V2X-I Dataset
 
     <div align=left>
     <table>
         <tr align=center>
-            <td rowspan="3">Method</td> 
-            <td rowspan="3" align=center>Sparsity/Dense</td> 
-            <td rowspan="3" align=center>FP16/INT8</td> 
+            <td rowspan="3">Method</td>
+            <td rowspan="3" align=center>Sparsity/Dense</td>
+            <td rowspan="3" align=center>FP16/INT8</td>
             <td colspan="3" align=center>Car</td>
             <td colspan="3" align=center>Pedestrain</td>
             <td colspan="3" align=center>Cyclist</td>
@@ -113,9 +113,9 @@ dbound = [-2, 0, 90]
             <td>Hard</td>
         </tr>
         <tr align=center>
-            <td rowspan="4">V2XFusion</td> 
+            <td rowspan="4">V2XFusion</td>
             <td>sparsity</td>
-            <td>FP16</td> 
+            <td>FP16</td>
             <td>82.08</td>
             <td>69.70</td>
             <td>69.76</td>
@@ -129,7 +129,7 @@ dbound = [-2, 0, 90]
         </tr>
         <tr align=center>
             <td>sparsity</td>
-            <td>INT8-PTQ</td> 
+            <td>INT8-PTQ</td>
             <td>82.06</td>
             <td>69.70</td>
             <td>69.75</td>
@@ -143,7 +143,7 @@ dbound = [-2, 0, 90]
         </tr>
         <tr align=center>
             <td>Dense</td>
-            <td>FP16</td> 
+            <td>FP16</td>
             <td>82.30</td>
             <td>69.84</td>
             <td>69.90</td>
@@ -157,7 +157,7 @@ dbound = [-2, 0, 90]
         </tr>
         <tr align=center>
             <td>Dense</td>
-            <td>INT8-PTQ</td> 
+            <td>INT8-PTQ</td>
             <td>82.33</td>
             <td>69.88</td>
             <td>69.94</td>
@@ -173,7 +173,7 @@ dbound = [-2, 0, 90]
     </div>
 V2XFusion Backbone: **ResNet34 + PointPillars**
 
-Note:  
+Note:
 To make the model more robust, the sequence dataset V2X-Seq-SPD also can be added to the training phase. We provide a pre-trained [model](https://nvidia.app.box.com/s/xqj7ob2sa3betojf1084juyrlr1eek1a) (**dbound=[-1.5, 3.0, 180]**)  that is used in the Deepstream demo for reference. Please refer to the script [dataset_merge](scripts/dataset_merge.py) for data merge.
 
 
@@ -181,7 +181,7 @@ To make the model more robust, the sequence dataset V2X-Seq-SPD also can be adde
 ## Performance on Jetson Orin
 | FP16 Dense(fps)| FP16 Spasity(fps) | INT8 Dense(fps) | INT8 Sparsity(fps) |
 | ------ | ------| --------   | ------- |
-| 81 | 95  |  127       | 158   | 
+| 81 | 95  |  127       | 158   |
 
 - Device: NVIDIA Jetson AGX Orin Developer Kit (MAXN power mode)
 - Version: Jetpack 6.0 DP

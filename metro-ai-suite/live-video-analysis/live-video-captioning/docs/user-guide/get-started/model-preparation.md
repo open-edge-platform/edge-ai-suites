@@ -1,99 +1,98 @@
 # Model Preparation
 
-To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [Model Download Microservice](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
+Live Video Captioning needs at least one Vision Language Model (VLM) in `ov_models/`. Object detection is optional and uses models in `ov_detection_models/`.
 
-1. Clone the repository:
+The provided helper uses the ephemeral model-download container flow from the [Model Download project](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/model-download/index.html) in Open Edge Platform. It starts a temporary container, downloads or converts the model, writes the files to this repository, and removes the container when finished. No separate model-download setup is required.
 
-     Open a new terminal, clone the edge-ai-libraries repository.
+## Prerequisites
 
-     ```bash
-     # Clone the latest on the mainline
-     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b main
-     # Alternatively, clone a specific release branch
-     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b <release-tag>
-     ```
+- Docker is installed and running.
+- `curl` and `python3` are available on the host.
+- The commands are run from the `live-video-captioning` directory.
+- For gated Hugging Face models, set a token first:
 
-2. Navigate to the directory:
+  ```bash
+  export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 
-     ```bash
-     cd edge-ai-libraries/microservices/model-download
-     ```
+  # Optional: To download the model to a different path (for example, ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag for live-video-captioning-rag standalone deployment), export:
+  export MODEL_PATH=~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
+  ```
 
-3. Configure the environment variables:
+## Usage
 
-     ```bash
-     export REGISTRY="intel/"
-     export TAG=latest
-     export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-     ```
+Use the helper script with the following arguments:
 
-4. Launch the service with required plugins:
+```bash
+./model_download_scripts/download_models.sh \
+  --model <huggingface-model-id> \
+  --type <vlm|vision|llm> \
+  --weight-format <int4|int8|fp16> \
+  --device <CPU|GPU>
+```
 
-     ```bash
-     export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
-     # Example paths:
-          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning (for live-video-captioning standalone or with live-video-captioning-rag deployment)
-          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag (for live-video-captioning-rag standalone only deployment)
+**Parameters:**
+- `--model`: Hugging Face model identifier (for example, `OpenGVLab/InternVL2-1B`).
+- `--type`: Model category. Use `vlm` for Vision Language Models, `vision` for object-detection models, or `llm` for text-only LLMs.
+- `--weight-format`: Precision/quantization format. Supported values are `int4`, `int8`, and `fp16`.
+- `--device`: Target conversion device (for example, `CPU` or `GPU`, depending on host support).
 
-     # Run the script to launch the service
-     source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH
+**Weight format options:**
 
-     # You can also specify the OVMS release tag used by the script to enable support for newer models during OpenVINO conversion (default: `v2025.4.1`).
-     # Example:
-     # `source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH --ovms-release-tag <tag>
-     ```
+| Format | Memory use | Accuracy | When to use |
+|--------|-----------|----------|-------------|
+| `int4` | Lowest | Lower | Memory-constrained systems |
+| `int8` | Medium | Good | Recommended default |
+| `fp16` | Highest | Best | Maximum accuracy, more RAM required |
 
-5. Download and convert the models:
+## Download a VLM model
 
-     Navigate to `live-video-analysis/live-video-captioning` and use the provided script to download and convert the required models:
+```bash
+./model_download_scripts/download_models.sh \
+  --model OpenGVLab/InternVL2-1B \
+  --type vlm \
+  --weight-format int8
+```
 
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
+The model is prepared under `ov_models/`.
 
-     # export MODEL_PATH with the same directory that exported in previous step.
-     export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
+Supported weight formats are `int4`, `int8`, and `fp16`. The default is `int8`.
 
-     # Parameters:
-     # model_name: specify the model identifier from Hugging Face
-     # model_type: choose from vlm, vision, or llm
-     # model_quantization: select int4, int8, or fp16
+## Optional: Download an Object-Detection Model
 
-     ./model_download_scripts/download_models.sh --model <model_name> --type <model_type> --weight-format <model_quantization>
-     ```
+Download a YOLO model only if you plan to enable the object-detection pipeline:
 
-    **Examples:**
+```bash
+./model_download_scripts/download_models.sh --model yolov8s --type vision
+```
 
-     - For a VLM model (required for live-video-captioning):
+The model is prepared under `ov_detection_models/`.
 
-         ```bash
-         ./model_download_scripts/download_models.sh --model OpenGVLab/InternVL2-1B --type vlm --weight-format int8
-         ```
+Then enable detection in `.env`:
 
-     - For a YOLO vision model (for live-video-captioning with object-detection pipeline):
+```bash
+ENABLE_DETECTION_PIPELINE=true
+```
 
-         ```bash
-         ./model_download_scripts/download_models.sh --model yolov8s --type vision
-         ```
+## Optional: Change the Conversion Device Configuration
 
-         > **Note:** You may find the list of supported yolo models in this [list](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/download_public_models.sh#L23).
+For VLM conversion, set the target device:
 
-     - For a LLM model (for live-video-captioning with RAG):
+```bash
+./model_download_scripts/download_models.sh \
+  --model OpenGVLab/InternVL2-1B \
+  --type vlm \
+  --weight-format int8 \
+  --device CPU
+```
 
-         ```bash
-         ./model_download_scripts/download_models.sh --model microsoft/Phi-3.5-mini-instruct --type llm --device <CPU/GPU> --weight-format int8
-         ```
+Valid device values depend on the model-download container and host hardware. CPU is the safest default.
 
-     - For more detailed information about the scripts:
+## RAG and LLM models
 
-         ```bash
-         ./model_download_scripts/download_models.sh -h
-         ```
+RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download.md).
 
-    The script will download and convert the models to OpenVINO IR format and store them in the respective directories:
-    - VLM models → `ov_models/`
-    - Vision detection models → `ov_detection_models/`
-    - LLM models → `llm_models/`
+## Troubleshooting
 
-6. Stop the Model Download service:
-
-    The Model Download service handles the downloading and conversion of models needed for the Live Video Captioning and Live Video Captioniong RAG sample applications. The service functions independently and is not tied to the operations of the sample applications. You can stop or terminate the service once the required models have been prepared.
+- If Docker cannot pull `intel/model-download:<TAG>`, check the `TAG` value in `.env`.
+- If a gated model fails with an authentication error, set `HUGGINGFACEHUB_API_TOKEN` and rerun the command.
+- If a download is interrupted, rerun the same command. The ephemeral container is removed automatically when the helper exits.

@@ -26,6 +26,10 @@ uv run python src/monitor_stack.py --node /my_node --duration 120 Custom duratio
 uv run python src/monitor_stack.py --duration 30                  Quick 30s check
 uv run python src/monitor_stack.py --duration 300                 Extended 5-minute session
 
+uv run python src/monitor_resources.py --power                    Intel RAPL CPU package power
+uv run python src/monitor_resources.py --memory --npu --power     CPU + NPU + power
+uv run python src/monitor_resources.py --check-hw                 Probe GPU / NPU / RAPL
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🤖 SIMULATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -34,13 +38,21 @@ Wandering:
   bash src/wandering_run.sh --goals 3 --timeout 120
   bash src/wandering_run.sh --goals 3 --timeout 120 --record
   bash src/wandering_run.sh --goals 3 --timeout 120 --record --plot
+  bash src/wandering_run.sh --run-config config/wandering_run.yaml  # custom profile
   (use ./quickstart for multi-run benchmark mode)
 
 Pick-n-Place:
   bash src/picknplace_run.sh --timeout 300
   bash src/picknplace_run.sh --timeout 300 --record
   bash src/picknplace_run.sh --timeout 300 --record --plot
+  bash src/picknplace_run.sh --run-config config/picknplace_run.yaml  # custom profile
   (use ./quickstart for multi-run benchmark mode)
+
+Fast Mapping (ros2 launch fast_mapping fast_mapping.launch.py):
+  make fastmapping                         Single run
+  make fastmapping-plot                    Single run + trigger-timeline plots
+  make fastmapping-benchmark RUNS=10       10-run benchmark → aggregate KPI
+  make fastmapping RUN_CONFIG=config/fastmapping_run.yaml  # custom profile
 
 Analyze:
   uv run python src/analyze_rosbag.py <path/to/bag.db3>

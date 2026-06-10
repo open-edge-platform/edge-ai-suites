@@ -12,13 +12,13 @@ You can automate the software setup flow on this page with:
 
 [rt_linux_setup.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/get-started/installation/rt_linux_setup.sh)
 
-Default real-time kernel setup (includes OS setup prerequisites):
+Default real-time kernel setup (includes OS setup prerequisites: download [os_setup_install.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/get-started/prerequisites/os_setup_install.sh) and place in the same directory before running rt_linux_setup.sh):
 
 ```bash
 sudo ./rt_linux_setup.sh
 ```
 
-Skip OS setup prerequisites (run RT setup steps only):
+Skip OS setup prerequisites (run RT setup steps only: os_setup_install.sh not needed):
 
 ```bash
 sudo ./rt_linux_setup.sh --skip-os-setup

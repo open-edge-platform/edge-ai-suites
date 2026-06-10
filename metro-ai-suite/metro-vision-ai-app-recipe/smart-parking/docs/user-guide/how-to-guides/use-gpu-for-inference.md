@@ -1,15 +1,15 @@
 # Use GPU for Inference
 
-## Pre-requisites
+## Prerequisites
 
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that
-different stages such as decoding, inference etc., can make use of these devices.
+different stages such as decoding, inference, etc., can make use of these devices.
 For containerized applications built using the DL Streamer Pipeline Server, first we need to
 provide GPU device(s) access to the container user.
 
 ### Provide GPU access to the container
 
-This can be done by making the following changes to the docker compose file.
+This can be done by making the following changes to the Docker Compose file.
 
 ```yaml
 services:
@@ -32,11 +32,11 @@ GPU devices.
 Unlike the changes done for the container above, the following requires a modification to the
 media pipeline itself.
 
-Gstreamer has a variety of hardware specific encoders and decoders elements such as Intel
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel
 specific VA-API elements that you can benefit from by adding them into your media pipeline.
-Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, `vajpegdec`, etc.
+Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
-Additionally, one can also enforce zero-copy of buffers using GStreamer capabilities to the
+Additionally, you can also enforce zero-copy of buffers using GStreamer capabilities to the
 pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated and discrete).
 
 Read the DL Streamer [GPU Device Selection](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) document for more details.
@@ -65,4 +65,4 @@ as follows:
 ./sample_start.sh gpu
 ```
 
-Go to Grafana as explained in [Get Started](../get-started.md) to view the dashboard.
+Go to Grafana as explained in [Get Started](../get-started.md#grafana-ui) to view the dashboard.

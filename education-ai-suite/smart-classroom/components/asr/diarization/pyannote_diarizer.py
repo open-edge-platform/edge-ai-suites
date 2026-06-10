@@ -1,5 +1,6 @@
 from pyannote.audio import Pipeline
 import torch
+import torchaudio
 from torch.serialization import safe_globals
 import os
 
@@ -29,14 +30,17 @@ class PyannoteDiarizer:
         ]):
             self.pipeline = Pipeline.from_pretrained(
                 pipeline_source,
-                use_auth_token=hf_token
+                token=hf_token
             )
 
         self.device = torch.device(device)
         self.pipeline.to(self.device)
 
     def diarize(self, audio_path):
-        diarization = self.pipeline(audio_path)
+        waveform, sample_rate = torchaudio.load(audio_path)
+        audio_input = {"waveform": waveform, "sample_rate": sample_rate}
+        output = self.pipeline(audio_input)
+        diarization = output.exclusive_speaker_diarization
         segments = []
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             segments.append({

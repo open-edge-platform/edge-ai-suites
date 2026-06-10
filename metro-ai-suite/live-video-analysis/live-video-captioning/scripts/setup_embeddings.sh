@@ -5,7 +5,7 @@
 EMBEDDING_MODEL_NAME=QwenText/qwen3-embedding-0.6b
 EMBEDDING_DEVICE="CPU"
 LLM_DEVICE="CPU"
-LLM_MODEL_ID="microsoft/Phi-3.5-mini-instruct"
+LLM_MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
 MODEL_CACHE_PATH="${PWD}/llm_models"
 
 export USER_GROUP_ID=$(id -g ${USER})

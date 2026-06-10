@@ -1,0 +1,86 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vms-adapter-backend
+    expose:
+      - "8080"
+    ports:
+      - "${BACKEND_PORT:-8085}:8080"
+    volumes:
+      - ./config:/app/config:ro
+    env_file: .env
+    environment:
+      VMS_PLUGIN_CONFIG_PATH: /app/config/config.yaml
+      VMS_PLUGIN_DATABASE_URL: "postgresql+asyncpg://${PG_USER:-vms}:${PG_PASSWORD:-vms}@postgres:${PG_PORT:-5434}/vms_plugin"
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: "${no_proxy:-},host.docker.internal,${NX_HOST:-},${LVC_HOST:-},${FRIGATE_HOST:-}"
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      NO_PROXY: "${NO_PROXY:-},host.docker.internal,${NX_HOST:-},${LVC_HOST:-},${FRIGATE_HOST:-}"
+      MQTT_BROKER_HOST: "${MQTT_BROKER_HOST:-host.docker.internal}"
+      MQTT_BROKER_PORT: "${MQTT_BROKER_PORT:-1883}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - vms-net
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: vms-adapter-ui
+    ports:
+      - "${UI_PORT:-3000}:80"
+    environment:
+      LVC_BASE_URL: "${LVC_BASE_URL:-http://host.docker.internal:4173}"
+      MEDIAMTX_URL: "${MEDIAMTX_URL:-http://host.docker.internal:8889}"
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - vms-net
+
+  postgres:
+    image: postgres:15
+    container_name: vms-adapter-postgres
+    command: ["postgres", "-p", "${PG_PORT:-5434}"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: vms_plugin
+      POSTGRES_USER: ${PG_USER:-vms}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-vms}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-vms} -d vms_plugin -p ${PG_PORT:-5434}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${PG_HOST_PORT:-5433}:${PG_PORT:-5434}"
+    networks:
+      - vms-net
+
+networks:
+  vms-net:
+    driver: bridge
+
+volumes:
+  pgdata:

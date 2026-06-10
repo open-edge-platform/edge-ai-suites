@@ -140,5 +140,5 @@ Monitors and collects:
 ## Learn More
 
 - [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats
-- [Get Started](./get-started.md): Step-by-step setup instructions
+- [Get Started](./get-started.md): Installation and setup instructions.
 - [Application Flow](./application-flow.md): End-to-end application flow

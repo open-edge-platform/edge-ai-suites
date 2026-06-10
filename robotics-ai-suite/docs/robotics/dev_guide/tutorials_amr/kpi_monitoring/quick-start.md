@@ -37,7 +37,8 @@ cd /opt/ros/humble/benchmarking
 The menu guides you through:
 
 - Monitoring your ROS2 application
-- Running Wandering and Pick-n-Place simulations with rosbag recording
+- Running Wandering, Pick-n-Place, and FastMapping simulations with rosbag recording
+- Offline bag-replay benchmarking
 - Analyzing rosbag results
 - Quick health checks
 - Starting Grafana dashboards
@@ -101,19 +102,24 @@ uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --d
 
 ## Results
 
-All output is saved in `monitoring_sessions/` under a timestamped folder:
+All output is saved in `monitoring_sessions/` under a timestamped folder. When
+`--algorithm` is used, sessions are grouped by label:
 
 ```text
 monitoring_sessions/
-└── 20260306_154140/
-    ├── session_info.txt          # Test configuration
-    ├── graph_timing.csv          # Topic timing data
-    ├── resource_usage.log        # CPU/memory usage
-    └── visualizations/           # Auto-generated PNG plots
-        ├── timing_delays.png
-        ├── message_frequencies.png
-        ├── cpu_usage_timeline.png
-        └── cpu_heatmap.png
+└── <algorithm>/                  # optional: set by --algorithm
+    └── 20260306_154140/
+        ├── session_info.txt      # Test configuration
+        ├── graph_timing.csv      # Topic timing data
+        ├── resource_usage.log    # CPU/memory usage
+        ├── gpu_usage.log         # GPU metrics (if --gpu)
+        ├── npu_usage.log         # NPU metrics (if --npu)
+        ├── kpi.json              # KPI summary
+        └── visualizations/       # Auto-generated PNG plots
+            ├── timing_delays.png
+            ├── message_frequencies.png
+            ├── cpu_usage_timeline.png
+            └── cpu_heatmap.png
 ```
 
 Useful session commands:

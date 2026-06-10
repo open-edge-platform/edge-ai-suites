@@ -3,7 +3,12 @@ set -e
 
 API="https://localhost"
 USER="admin"
-PASS="${SUPASS:-admin}"   # Uses SUPASS env var if set
+if [ -z "${SUPASS:-}" ]; then
+  echo "Error: SUPASS is not set. Please set SUPASS using export with your scenescape password."
+  echo "Example: export SUPASS='your_password'"
+  exit 1
+fi
+PASS="$SUPASS"
 
 # 1. Get token
 echo "[1/4] Authenticating..."

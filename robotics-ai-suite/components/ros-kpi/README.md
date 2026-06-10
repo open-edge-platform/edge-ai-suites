@@ -8,6 +8,12 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # ROS2 KPI Monitoring & Analysis Tools
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/kpi_monitoring/index.html).
+
+## Overview
+
 Monitor, analyze, and visualize Key Performance Indicators in ROS2 systems — node latencies, CPU/memory usage, message flow, and thread-level resource distribution.
 
 ## ⚡ Quick Start (Easiest Way)
@@ -53,7 +59,7 @@ uv run python src/monitor_stack.py --duration 30    # Quick 30-second health che
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
+| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
 | `uv`, `pidstat`, `psutil`, `matplotlib`, `numpy` | installed automatically by `make install` |
 
@@ -272,20 +278,19 @@ uv run python src/analyze_rosbag.py path/to/bag.db3
 
 ### picknplace_run.sh — Pick-and-Place Benchmark Runner
 
-Automates a full pick-and-place experiment: launches the `picknplace warehouse` simulation, waits for it to stabilize, captures GPU+resource metrics for 120 seconds, then cleanly stops the simulation.
+Thin wrapper around `benchmark_runner.sh` for the pick-and-place scenario.
+All scenario behaviour (launch command, stop condition, bag topics, cleanup)
+is defined in [`config/picknplace_run.yaml`](config/picknplace_run.yaml).
 
 ```bash
-./src/picknplace_run.sh
+bash src/picknplace_run.sh [--timeout SECS] [--record] [--plot]
+
+# Override the run profile (e.g. custom launch args or topic list)
+bash src/picknplace_run.sh --run-config config/picknplace_run.yaml
+make picknplace-run RUN_CONFIG=config/my_picknplace.yaml
 ```
 
-**What it does:**
-
-1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
-2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
-4. After 120 seconds, sends `SIGINT` to the simulation process (equivalent to Ctrl-C) and waits for both processes to exit cleanly.
-
-Results land in the latest `monitoring_sessions/` directory and can be visualized directly:
+Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be visualized:
 
 ```bash
 uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
@@ -325,25 +330,27 @@ Outputs per session: `kpi.json` (Level 1), `kpi_level2.json` (Level 2, chained).
 
 ### fastmapping_run.sh — fast_mapping RGB-D Benchmark
 
-Launches `fast_mapping_node` and replays the bundled Intel spinning RGB-D bag
-(`/opt/ros/jazzy/share/bagfiles/spinning`, ~12 s, 175 depth frames).
-Collects node timing metrics alongside the standard monitor stack KPIs.
+Thin wrapper around `benchmark_runner.sh` for the fast-mapping scenario.
+Launches `ros2 launch fast_mapping fast_mapping.launch.py`, which starts
+`fast_mapping_node`, `rviz2`, and replays the bundled Intel spinning RGB-D bag
+(`/opt/ros/<distro>/share/bagfiles/spinning`, ~12 s, 175 depth frames).
+All scenario behaviour is defined in [`config/fastmapping_run.yaml`](config/fastmapping_run.yaml).
 
 ```bash
-# Single run with bundled bag
+# Single run
 make fastmapping
-
-# Custom bag or faster replay
-make fastmapping BAG=/path/to/bag RATE=2.0
 
 # 10-run benchmark
 make fastmapping-benchmark RUNS=10
 
 # Generate trigger-timeline plots
 make fastmapping-plot
+
+# Override the run profile
+make fastmapping RUN_CONFIG=config/fastmapping_run.yaml
 ```
 
-After replay, `analyze_fastmapping_log.py` parses the node's shutdown timing
+After the run, `analyze_fastmapping_log.py` parses the node's shutdown timing
 table and patches `kpi.json` with:
 
 | KPI | Typical value | Description |
@@ -538,6 +545,62 @@ ssh intel@<ip> "cat /sys/class/accel/accel0/device/npu_max_frequency_mhz"
 If the directory does not exist, the NPU driver is not loaded or the hardware is
 not present. In that case `monitor_resources` prints `[NPU] No Intel NPU sysfs
 found — NPU monitoring skipped.` and continues normally.
+
+---
+
+## ⚡ Intel RAPL CPU Package Power Monitoring
+
+CPU package power is sampled in the background via the Linux **powercap RAPL**
+sysfs interface — **no root, no special capabilities required**.  Available on
+Intel bare-metal systems running kernel ≥ 3.13 with `CONFIG_INTEL_RAPL`.
+Returns `null` on WSL2 and ARM.
+
+### RAPL quick start
+
+```bash
+# Standalone — CPU power only
+uv run python src/monitor_resources.py --power
+
+# Combined with CPU/memory/NPU resource monitoring
+uv run python src/monitor_resources.py --memory --npu --power
+
+# Check whether RAPL is available on this machine
+uv run python src/monitor_resources.py --check-hw
+```
+
+`monitor_stack.py` **auto-enables** RAPL power monitoring when the sysfs path
+is readable — no flag needed for normal benchmark sessions.
+
+### How RAPL works
+
+`monitor_resources.py --power` launches a daemon thread that:
+
+1. Reads `/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj` (µJ counter).
+2. Computes `power_w = Δenergy_µJ / Δtime_s / 1_000_000`, handling counter
+   wraparound using `max_energy_range_uj`.
+3. Appends a JSON-line `{"ts": <epoch>, "power_w": <float>}` to `cpu_power.log`
+   each interval.
+
+### RAPL logged fields
+
+`cpu_power.log` (JSON-lines) in each session directory:
+
+| Field | Description |
+|-------|-------------|
+| `ts` | Unix timestamp of the sample |
+| `power_w` | CPU package power in watts |
+
+`analyze_trigger_latency.py` reads `cpu_power.log` and stores the **mean** as
+`cpu_pkg_power_w` in the Level 1 KPI `thermal` section.
+
+### Verifying RAPL availability
+
+```bash
+uv run python src/monitor_resources.py --check-hw
+# [PWR] RAPL path     : /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
+# [PWR] Status        : ✅ AVAILABLE
+# [PWR] Detail        : Intel RAPL accessible at /sys/class/...
+```
 
 ---
 
