@@ -48,7 +48,7 @@ Run `make setup` (idempotent) to auto-populate `.env` before any `make up` varia
 
 ```bash
 make setup            # detects the render group GID and writes it into the .env file (idempotent)
-make deploy           # full one-shot: setup, Visual Pipeline and Platform Evaluation Tool, and this stack (standard GPU)
+make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
 make deploy-cdi       # full one-shot: CDI and SR-IOV variant
 make vippet-get       # does sparse-checkout of Visual Pipeline and Platform Evaluation Tool into ../vippet-fedaero (excludes docs)
 make vippet-configure # copies telegraf.conf into the Visual Pipeline and Platform Evaluation Tool and patches the tool's compose.yml file
