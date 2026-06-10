@@ -84,7 +84,7 @@ Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only acces
 ## Make Targets
 
 ```
-make deploy            Full one-shot deploy (setup, Visual Pipeline and Platform Evaluation Tool, and this stack)
+make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
 make deploy-cdi        The same for CDI and SR-IOV environments
 make up                Start this stack (standard, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-cdi            Start this stack (CDI, requires Visual Pipeline and Platform Evaluation Tool network)
