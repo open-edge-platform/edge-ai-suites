@@ -1,6 +1,6 @@
 # Deterministic Threat Detection with Time-Sensitive Networking (TSN) - Preview
 
-Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
+The Deterministic Threat Detection with Time-Sensitive Networking (TSN) project demonstrates how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
 
 ---
 
@@ -10,20 +10,20 @@ Welcome to the documentation for the Deterministic Threat Detection project—a 
 
 | Component | Role |
 |-----------|------|
-| **MOXA TSN Switch (TSN-G5000)** | PTP Grandmaster clock, VLAN segmentation, IEEE 802.1Qbv time-aware traffic shaping |
-| **Arrow Lake Host (Intel i226 NIC)** | TSN-capable inference host; clock synchronized to the switch via PTP |
-| **Camera(s)** | Video source; supports either RTSP cameras (NTP/gPTP) or Basler GigE cameras (IEEE 1588v2 hardware PTP) |
+| **Moxa Managed Switch TSN-G5000 Series** | Precision Time Protocol (PTP) Grandmaster clock, VLAN segmentation, and IEEE 802.1Qbv time-aware traffic shaping |
+| **Arrow Lake Host (Intel® Ethernet Network Adapter I226)** | TSN-capable inference host; clock synchronized to the switch via PTP |
+| **Camera(s)** | Video source; supports cameras that use the Real-Time Streaming Protocol (RTSP) with either the Network Time Protocol (NTP) or the generalized Precision Time Protocol (gPTP), or the Basler GigE cameras that use IEEE 1588 version 2 hardware Precision Time Protocol (PTP). |
 | **Traffic Injector** | Runs `iperf3` to generate background congestion and demonstrate TSN protection |
 
-This project demonstrates two complementary use cases for industrial edge AI, both using TSN infrastructure to protect latency-sensitive streams from background congestion:
+This project demonstrates two complementary use cases for industrial edge AI, both using the TSN infrastructure to protect latency-sensitive streams from background congestion:
 
 ### Use Case 1 — Multi-Camera AI Inference with Deterministic Delivery
 
-RTSP camera streams from AXIS cameras are processed by DL Streamer for person detection. Inference results and simulated sensor telemetry are published over MQTT with PTP timestamps. An MQTT aggregation node measures end-to-end latency in real time, demonstrating how TSN protects critical streams from iperf3 background congestion.
+Deep Learning Streamer (DL Streamer) processes the RTSP camera streams from AXIS cameras for person detection. The DL Streamer then publishes the inference results and simulated sensor telemetry over MQTT with PTP timestamps. An MQTT aggregation node measures end-to-end latency in real time, demonstrating how TSN protects critical streams from iperf3 background congestion.
 
 [Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
 
-Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects HOTA tracking accuracy and demonstrates that traffic shaping restores accuracy to baseline.
+Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores accuracy to the baseline.
 
 [Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
 
@@ -63,8 +63,8 @@ cd deterministic-threat-detection
 
 ## Key References
 
-- **MOXA TSN-G5000:** [PTP Grandmaster, VLAN segmentation, IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/en-50155-switches/tsn-g5004-series)
-- **Intel i226 NIC:** TSN-capable Ethernet controller for Arrow Lake hosts
-- **IEEE 802.1Qbv:** Time-Aware Scheduler for traffic isolation
-- **Intel® SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
+- **Moxa Managed Switch TSN-G5000 Series:** [PTP Grandmaster, VLAN segmentation, and IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5008-series)
+- **Intel Ethernet Network Adapter I226:** TSN-capable Ethernet controller for Arrow Lake hosts
+- **IEEE 802.1Qbv standard:** Time-Aware Scheduler for traffic isolation
+- **Intel SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
 - **DL Streamer:** [Intel's video processing and AI inference pipeline](https://github.com/openvinotoolkit/dlstreamer)
