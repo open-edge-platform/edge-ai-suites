@@ -1,0 +1,1369 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+From 28ce7f9149295e0b7daf7c49af01e93acd4b44ee Mon Sep 17 00:00:00 2001
+From: RoboticsYY <yu.yan@intel.com>
+Date: Wed, 3 Jun 2026 14:26:22 +0800
+Subject: [PATCH 2/4] feat(agenticros): enhance camera, cmd_vel, depth, and
+ transport logic
+
+---
+ .../agenticros/src/context/robot-context.ts   |  10 +-
+ packages/agenticros/src/depth.ts              |  94 ++--
+ packages/agenticros/src/plugin-api.ts         |   6 +-
+ packages/agenticros/src/safety/validator.ts   |  19 +
+ packages/agenticros/src/service.ts            |  57 ++-
+ packages/agenticros/src/teleop/routes.ts      |  62 ++-
+ packages/agenticros/src/tools/index.ts        |   2 +
+ packages/agenticros/src/tools/ros2-camera.ts  | 257 ++++++++--
+ packages/agenticros/src/tools/ros2-cmd-vel.ts | 454 ++++++++++++++++++
+ .../core/src/transport/local/conversion.ts    |   8 +-
+ packages/ros-camera/src/snapshot.ts           |  19 +-
+ 11 files changed, 859 insertions(+), 129 deletions(-)
+ create mode 100644 packages/agenticros/src/tools/ros2-cmd-vel.ts
+
+diff --git a/packages/agenticros/src/context/robot-context.ts b/packages/agenticros/src/context/robot-context.ts
+index ef6205b..fdd111f 100644
+--- a/packages/agenticros/src/context/robot-context.ts
++++ b/packages/agenticros/src/context/robot-context.ts
+@@ -256,7 +256,10 @@ function buildDynamicContext(
+ - All velocity commands are validated before execution
+ 
+ ### Camera / "What does the robot see?"
+-- When the user asks what the robot sees (or for a photo, camera view, or snapshot), **always call \`ros2_camera_snapshot\`** (or \`ros2_subscribe_once\` on a camera topic). Prefer a topic from the list above that contains **color** and **compressed** (e.g. \`/camera/camera/color/image_raw/compressed\`) for RGB. Do not assume the transport cannot decode images—${imageTransportHint(config)} If the tool returns an error, report it; otherwise show or describe the image.
++- When the user asks what the robot sees (or for a photo, camera view, or snapshot), **always call \`ros2_camera_snapshot\`** (or \`ros2_subscribe_once\` on a camera topic). Use an **exact topic that appears in the available topics list**. Do not invent variant names (for example, do not switch to \`.../compressed\` unless that exact topic exists). If only \`/camera/image_raw\` exists, use it. Do not assume the transport cannot decode images—${imageTransportHint(config)} If the tool returns an error, report it; otherwise show or describe the image.
++- If \`ros2_camera_snapshot\` succeeds and returns image data, **do not embed giant Markdown data URIs**. Rely on the tool result image block shown by the UI, and add a short caption/description in text (for example: "Captured image above: ...").
++- Prefer the topic from \`ros2_list_topics\` that is actively publishing and typed as \`sensor_msgs/msg/CompressedImage\` or \`sensor_msgs/msg/Image\`. Do not default to \`/camera/image_raw\` unless that exact topic is available and publishing.
++- Base your reply on the **most recent tool result only**. If the latest \`ros2_camera_snapshot\` call succeeds, do **not** say the camera is unavailable. Ignore stale memory notes from earlier failures.
+ 
+ ### Tips
+ - Use \`ros2_list_topics\` to discover all available topics
+@@ -309,7 +312,10 @@ ${skillsSection}### Safety Limits
+ - All velocity commands are validated before execution
+ 
+ ### Camera / "What does the robot see?"
+-- When the user asks what the robot sees (or for a photo, camera view, or snapshot), **always call \`ros2_camera_snapshot\`** (or \`ros2_subscribe_once\` on a camera topic). Do not assume the transport cannot decode images—${imageTransportHint(config)} If the tool returns an error, report it; otherwise show or describe the image.
++- When the user asks what the robot sees (or for a photo, camera view, or snapshot), **always call \`ros2_camera_snapshot\`** (or \`ros2_subscribe_once\` on a camera topic). Use an **exact topic that exists** (if only \`/camera/image_raw\` exists, use it). Do not assume the transport cannot decode images—${imageTransportHint(config)} If the tool returns an error, report it; otherwise show or describe the image.
++- If \`ros2_camera_snapshot\` succeeds and returns image data, **do not embed giant Markdown data URIs**. Rely on the tool result image block shown by the UI, and add a short caption/description in text (for example: "Captured image above: ...").
++- Prefer the topic from \`ros2_list_topics\` that is actively publishing and typed as \`sensor_msgs/msg/CompressedImage\` or \`sensor_msgs/msg/Image\`. Do not default to \`/camera/image_raw\` unless that exact topic is available and publishing.
++- Base your reply on the **most recent tool result only**. If the latest \`ros2_camera_snapshot\` call succeeds, do **not** say the camera is unavailable. Ignore stale memory notes from earlier failures.
+ 
+ ### Distance / "How far am I?"
+ - When the user asks how far they are from the robot (or depth / distance in meters), **call \`ros2_depth_distance\`** on a raw depth Image topic (e.g. RealSense \`/camera/camera/depth/image_rect_raw\`). Report the tool result or **quote the exact error text** if it fails (do not claim a generic "decode" failure without the tool message). If the result is valid, give **distance_m** as the measured answer.
+diff --git a/packages/agenticros/src/depth.ts b/packages/agenticros/src/depth.ts
+index 53483ad..424c28c 100644
+--- a/packages/agenticros/src/depth.ts
++++ b/packages/agenticros/src/depth.ts
+@@ -14,6 +14,62 @@ import {
+ } from "@agenticros/ros-camera";
+ const DEFAULT_TIMEOUT_MS = 5000;
+ 
++function subscribeOnceDepthImage(
++  transport: RosTransport,
++  topic: string,
++  timeoutMs: number,
++  timeoutLabel: string,
++): Promise<Record<string, unknown>> {
++  return new Promise<Record<string, unknown>>((resolve, reject) => {
++    let sub: { unsubscribe(): void } | null = null;
++    let timer: ReturnType<typeof setTimeout> | null = null;
++    let settled = false;
++    let unsubscribeOnAttach = false;
++
++    const cleanup = () => {
++      if (timer !== null) {
++        clearTimeout(timer);
++        timer = null;
++      }
++      if (sub !== null) {
++        sub.unsubscribe();
++      } else {
++        unsubscribeOnAttach = true;
++      }
++    };
++
++    const settle = (callback: () => void) => {
++      if (settled) return;
++      settled = true;
++      cleanup();
++      callback();
++    };
++
++    sub = transport.subscribe(
++      { topic, type: ROS_MSG_IMAGE },
++      (msg: Record<string, unknown>) => {
++        settle(() => resolve(msg));
++      },
++    );
++
++    if (unsubscribeOnAttach && sub !== null) {
++      sub.unsubscribe();
++    }
++
++    if (!settled) {
++      timer = setTimeout(() => {
++        settle(() => {
++          reject(
++            new Error(
++              `${timeoutLabel} on ${topic} (${timeoutMs}ms). No sensor_msgs/Image received—check topic and that it publishes raw depth (not CompressedImage only). With Zenoh, check the gateway log for CDR decode warnings.`,
++            ),
++          );
++        });
++      }, timeoutMs);
++    }
++  });
++}
++
+ function depthImageDataBytes(data: unknown): Uint8Array {
+   try {
+     return new Uint8Array(coerceRosImageDataToBuffer(data));
+@@ -155,24 +211,7 @@ export async function getDepthSectors(
+   topic: string,
+   timeoutMs = DEFAULT_TIMEOUT_MS,
+ ): Promise<DepthSectorsResult> {
+-  const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
+-    const sub = transport.subscribe(
+-      { topic, type: ROS_MSG_IMAGE },
+-      (msg: Record<string, unknown>) => {
+-        clearTimeout(timer);
+-        sub.unsubscribe();
+-        resolve(msg);
+-      },
+-    );
+-    const timer = setTimeout(() => {
+-      sub.unsubscribe();
+-      reject(
+-        new Error(
+-          `Depth sectors timeout on ${topic} (${timeoutMs}ms). No sensor_msgs/Image received—check topic and that it publishes raw depth (not CompressedImage only). With Zenoh, check the gateway log for CDR decode warnings.`,
+-        ),
+-      );
+-    }, timeoutMs);
+-  });
++  const result = await subscribeOnceDepthImage(transport, topic, timeoutMs, "Depth sectors timeout");
+ 
+   const encoding = normalizeDepthImageEncoding(rosStringField(result.encoding, "16UC1"));
+   const bpp = bytesPerPixelForDepthEncoding(encoding);
+@@ -226,24 +265,7 @@ export async function getDepthDistance(
+   topic: string,
+   timeoutMs = DEFAULT_TIMEOUT_MS,
+ ): Promise<DepthSampleResult> {
+-  const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
+-    const sub = transport.subscribe(
+-      { topic, type: ROS_MSG_IMAGE },
+-      (msg: Record<string, unknown>) => {
+-        clearTimeout(timer);
+-        sub.unsubscribe();
+-        resolve(msg);
+-      },
+-    );
+-    const timer = setTimeout(() => {
+-      sub.unsubscribe();
+-      reject(
+-        new Error(
+-          `Depth snapshot timeout on ${topic} (${timeoutMs}ms). No sensor_msgs/Image received—check topic and that it publishes raw depth (not CompressedImage only). With Zenoh, check the gateway log for CDR decode warnings.`,
+-        ),
+-      );
+-    }, timeoutMs);
+-  });
++  const result = await subscribeOnceDepthImage(transport, topic, timeoutMs, "Depth snapshot timeout");
+ 
+   const encoding = normalizeDepthImageEncoding(rosStringField(result.encoding, "16UC1"));
+   const bpp = bytesPerPixelForDepthEncoding(encoding);
+diff --git a/packages/agenticros/src/plugin-api.ts b/packages/agenticros/src/plugin-api.ts
+index 6c3b2f5..209b895 100644
+--- a/packages/agenticros/src/plugin-api.ts
++++ b/packages/agenticros/src/plugin-api.ts
+@@ -35,9 +35,13 @@ export interface ToolResult {
+   details?: unknown;
+ }
+ 
++export type ToolImageContent =
++  | { type: "image"; data: string; mimeType: string; url?: string }
++  | { type: "image"; url: string; mimeType?: string; data?: string };
++
+ export type ToolContent =
+   | { type: "text"; text: string }
+-  | { type: "image"; data: string; mimeType: string };
++  | ToolImageContent;
+ 
+ // --- Services ---
+ 
+diff --git a/packages/agenticros/src/safety/validator.ts b/packages/agenticros/src/safety/validator.ts
+index 113044f..1a349f1 100644
+--- a/packages/agenticros/src/safety/validator.ts
++++ b/packages/agenticros/src/safety/validator.ts
+@@ -38,6 +38,25 @@ export function registerSafetyHook(api: OpenClawPluginApi, config: AgenticROSCon
+       }
+     }
+ 
++    if (event.toolName === "ros2_cmd_vel") {
++      const linearX = Number(event.params["linear_x"] ?? 0);
++      const angularZ = Number(event.params["angular_z"] ?? 0);
++      if (Math.abs(linearX) > safety.maxLinearVelocity) {
++        api.logger.warn(`Blocked ros2_cmd_vel: linear velocity ${linearX} exceeds limit ${safety.maxLinearVelocity}`);
++        return {
++          block: true,
++          blockReason: `Linear velocity ${linearX.toFixed(2)} m/s exceeds safety limit of ${safety.maxLinearVelocity} m/s`,
++        };
++      }
++      if (Math.abs(angularZ) > safety.maxAngularVelocity) {
++        api.logger.warn(`Blocked ros2_cmd_vel: angular velocity ${angularZ} exceeds limit ${safety.maxAngularVelocity}`);
++        return {
++          block: true,
++          blockReason: `Angular velocity ${angularZ.toFixed(2)} rad/s exceeds safety limit of ${safety.maxAngularVelocity} rad/s`,
++        };
++      }
++    }
++
+     // TODO: Add workspace limit checks for navigation goals
+   });
+ }
+diff --git a/packages/agenticros/src/service.ts b/packages/agenticros/src/service.ts
+index 8ecc24d..4b1481d 100644
+--- a/packages/agenticros/src/service.ts
++++ b/packages/agenticros/src/service.ts
+@@ -15,6 +15,12 @@ let currentMode: TransportConfig["mode"] | null = null;
+ /** Concurrency guard — prevents overlapping switchTransport calls. */
+ let switching = false;
+ 
++/** Dedup guard for transport connect attempts. */
++let connectInFlight: Promise<void> | null = null;
++
++/** Single reconnect timer to avoid retry storms. */
++let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
++
+ /** Get the active transport. Throws if not connected. */
+ export function getTransport(): RosTransport {
+   if (!transport) {
+@@ -73,6 +79,12 @@ async function ensureTransportConnected(
+   api: OpenClawPluginApi,
+   transportCfg: TransportConfig,
+ ): Promise<void> {
++  if (connectInFlight) {
++    await connectInFlight;
++    return;
++  }
++
++  connectInFlight = (async () => {
+   if (transport && transport.getStatus() === "connected") {
+     return;
+   }
+@@ -90,6 +102,13 @@ async function ensureTransportConnected(
+   transport = newTransport;
+   currentMode = transportCfg.mode;
+   api.logger.info(`ROS2 transport connected (mode: ${transportCfg.mode})`);
++  })();
++
++  try {
++    await connectInFlight;
++  } finally {
++    connectInFlight = null;
++  }
+ }
+ 
+ const RETRY_INTERVAL_MS = 10000;
+@@ -101,16 +120,45 @@ const DISCONNECTED_POLL_MS = 15000;
+  * when the connection drops (e.g. Zenoh session closed).
+  */
+ export function registerService(api: OpenClawPluginApi, config: AgenticROSConfig): void {
+-  const transportCfg = getTransportConfig(config);
++  const baseTransportCfg = getTransportConfig(config);
++  const transportCfg: TransportConfig =
++    baseTransportCfg.mode === "rosbridge"
++      ? {
++          ...baseTransportCfg,
++          rosbridge: {
++            ...baseTransportCfg.rosbridge,
++            reconnect: false,
++          },
++        }
++      : baseTransportCfg;
++
++  function scheduleReconnect(delayMs: number): void {
++    if (reconnectTimer) return;
++    reconnectTimer = setTimeout(() => {
++      reconnectTimer = null;
++      tryConnect();
++    }, delayMs);
++  }
+ 
+   api.registerService({
+     id: "ros2-transport",
+ 
+     async start(_ctx) {
+-      await ensureTransportConnected(api, transportCfg);
++      try {
++        await ensureTransportConnected(api, transportCfg);
++      } catch (err) {
++        api.logger.warn(
++          "AgenticROS service start connect failed (retry in " + RETRY_INTERVAL_MS / 1000 + "s): " + (err instanceof Error ? err.message : String(err)),
++        );
++        scheduleReconnect(RETRY_INTERVAL_MS);
++      }
+     },
+ 
+     async stop(_ctx) {
++      if (reconnectTimer) {
++        clearTimeout(reconnectTimer);
++        reconnectTimer = null;
++      }
+       if (transport) {
+         await transport.disconnect();
+         transport = null;
+@@ -121,6 +169,7 @@ export function registerService(api: OpenClawPluginApi, config: AgenticROSConfig
+   });
+ 
+   function tryConnect(): void {
++    if (connectInFlight) return;
+     if (transport && transport.getStatus() === "connected") return;
+     ensureTransportConnected(api, transportCfg)
+       .then(() => {})
+@@ -128,7 +177,7 @@ export function registerService(api: OpenClawPluginApi, config: AgenticROSConfig
+         api.logger.warn(
+           "AgenticROS transport connect failed (retry in " + RETRY_INTERVAL_MS / 1000 + "s): " + (err instanceof Error ? err.message : String(err)),
+         );
+-        setTimeout(tryConnect, RETRY_INTERVAL_MS);
++        scheduleReconnect(RETRY_INTERVAL_MS);
+       });
+   }
+ 
+@@ -146,7 +195,7 @@ export function registerService(api: OpenClawPluginApi, config: AgenticROSConfig
+   // Connect eagerly; on failure retry every 10s
+   ensureTransportConnected(api, transportCfg).catch((err) => {
+     api.logger.warn("AgenticROS eager transport connect failed: " + (err instanceof Error ? err.message : String(err)));
+-    setTimeout(tryConnect, RETRY_INTERVAL_MS);
++    scheduleReconnect(RETRY_INTERVAL_MS);
+   });
+ 
+   // Every 15s, if disconnected (or session dropped), try to connect so we recover without restart
+diff --git a/packages/agenticros/src/teleop/routes.ts b/packages/agenticros/src/teleop/routes.ts
+index f08f298..43cf773 100644
+--- a/packages/agenticros/src/teleop/routes.ts
++++ b/packages/agenticros/src/teleop/routes.ts
+@@ -4,7 +4,12 @@ import { toNamespacedTopic, toNamespacedTopicFull } from "@agenticros/core";
+ import { getTransport, getTransportOrNull, getTransportMode, tryReconnectFromFile } from "../service.js";
+ import { readAgenticROSConfigFromFile } from "../config-file.js";
+ import { getTeleopPageHtml } from "./page.js";
+-import { ROS_MSG_COMPRESSED_IMAGE } from "@agenticros/ros-camera";
++import {
++  ROS_MSG_COMPRESSED_IMAGE,
++  ROS_MSG_IMAGE,
++  cameraSnapshotFromPlainMessage,
++  mimeTypeForSnapshotBase64,
++} from "@agenticros/ros-camera";
+ 
+ const TWIST_TYPE = "geometry_msgs/msg/Twist";
+ 
+@@ -92,6 +97,7 @@ function imageDataToBuffer(data: unknown): Buffer | null {
+ /** Shared latest-frame cache: one subscription per topic, serve from cache so polling doesn't timeout. */
+ type CameraCacheState = {
+   topic: string;
++  type: "compressed" | "image";
+   sub: { unsubscribe(): void } | null;
+   cache: Buffer | null;
+   mime: string;
+@@ -228,14 +234,14 @@ export function registerTeleopRoutes(api: OpenClawPluginApi, config: AgenticROSC
+       let topic = searchParams.get("topic")?.trim();
+       if (topic) topic = topic.replace(/\?.*$/, "").replace(/#.*$/, "").trim();
+       if (!topic) topic = getDefaultCameraTopic(currentConfig);
++      const typeParam = (searchParams.get("type") ?? "compressed").toLowerCase();
++      const useImage = typeParam === "image";
+       if (topic && /\/zstd\/?$/i.test(topic)) {
+         topic = topic.replace(/\/zstd\/?$/i, "/compressed");
+       }
+-      if (topic && /image_raw$/i.test(topic) && !/compressed|zstd/i.test(topic)) {
++      if (!useImage && topic && /image_raw$/i.test(topic) && !/compressed|zstd/i.test(topic)) {
+         topic = topic.replace(/\/?$/, "") + "/compressed";
+       }
+-      const typeParam = (searchParams.get("type") ?? "compressed").toLowerCase();
+-      const useImage = typeParam === "image";
+       // Camera topics from zenoh-bridge-ros2dds are typically NOT namespaced (e.g. camera/camera/color/image_raw/compressed).
+       // Only apply namespace to root-level topics so we subscribe to the key the robot actually publishes.
+       const resolvedTopic = toNamespacedTopic(currentConfig, topic);
+@@ -243,34 +249,32 @@ export function registerTeleopRoutes(api: OpenClawPluginApi, config: AgenticROSC
+         api.logger.info(`Teleop camera: topic=${topic} resolvedTopic=${resolvedTopic} namespace=${(currentConfig.robot?.namespace ?? "").trim() || "(none)"}`);
+       }
+ 
+-      if (useImage) {
+-        res.setHeader("Content-Type", "application/json");
+-        res.statusCode = 501;
+-        res.end(
+-          JSON.stringify({
+-            error: "Raw Image topics not supported; use a CompressedImage topic (e.g. .../image_raw/compressed)",
+-          }),
+-        );
+-        return;
+-      }
+-
+       try {
+-        if (cameraCacheState?.topic !== resolvedTopic) {
++        const requestedType: "compressed" | "image" = useImage ? "image" : "compressed";
++        const shouldResetCameraState =
++          cameraCacheState == null ||
++          cameraCacheState.topic !== resolvedTopic ||
++          cameraCacheState.type !== requestedType;
++        if (shouldResetCameraState) {
+           if (cameraCacheState?.sub) {
+             cameraCacheState.sub.unsubscribe();
+             if (cameraCacheState.firstFrameTimeout) clearTimeout(cameraCacheState.firstFrameTimeout);
+           }
+           cameraCacheState = {
+             topic: resolvedTopic,
++            type: requestedType,
+             sub: null,
+             cache: null,
+-            mime: "image/jpeg",
++            mime: useImage ? "image/png" : "image/jpeg",
+             firstFrameResolve: null,
+             firstFrameReject: null,
+             firstFrameTimeout: null,
+           };
+         }
+         const state = cameraCacheState;
++        if (state == null) {
++          throw new Error("teleop camera cache state was not initialized");
++        }
+ 
+         if (state.cache && state.cache.length > 0) {
+           res.setHeader("Content-Type", state.mime);
+@@ -295,11 +299,23 @@ export function registerTeleopRoutes(api: OpenClawPluginApi, config: AgenticROSC
+             }, 8000);
+           });
+           const handler = (msg: Record<string, unknown>) => {
+-            const data = msg["data"];
+-            const buf = imageDataToBuffer(data);
++            let buf: Buffer | null = null;
++            if (useImage) {
++              try {
++                const snapshot = cameraSnapshotFromPlainMessage("Image", msg);
++                buf = Buffer.from(snapshot.dataBase64, "base64");
++                state.mime = mimeTypeForSnapshotBase64(snapshot.dataBase64, snapshot.formatLabel);
++              } catch {
++                return;
++              }
++            } else {
++              const data = msg["data"];
++              buf = imageDataToBuffer(data);
++              if (!buf || buf.length === 0) return;
++              const format = String(msg["format"] ?? "jpeg").toLowerCase();
++              state.mime = format === "png" ? "image/png" : "image/jpeg";
++            }
+             if (!buf || buf.length === 0) return;
+-            const format = String(msg["format"] ?? "jpeg").toLowerCase();
+-            state.mime = format === "png" ? "image/png" : "image/jpeg";
+             state.cache = buf;
+             if (state.firstFrameTimeout) {
+               clearTimeout(state.firstFrameTimeout);
+@@ -313,12 +329,12 @@ export function registerTeleopRoutes(api: OpenClawPluginApi, config: AgenticROSC
+           };
+           if (typeof (transport as { subscribeAsync?: unknown }).subscribeAsync === "function") {
+             state.sub = await (transport as { subscribeAsync(opts: { topic: string; type: string }, h: (msg: Record<string, unknown>) => void): Promise<{ unsubscribe(): void }> }).subscribeAsync(
+-              { topic: resolvedTopic, type: ROS_MSG_COMPRESSED_IMAGE },
++              { topic: resolvedTopic, type: useImage ? ROS_MSG_IMAGE : ROS_MSG_COMPRESSED_IMAGE },
+               handler,
+             );
+           } else {
+             state.sub = transport.subscribe(
+-              { topic: resolvedTopic, type: ROS_MSG_COMPRESSED_IMAGE },
++              { topic: resolvedTopic, type: useImage ? ROS_MSG_IMAGE : ROS_MSG_COMPRESSED_IMAGE },
+               handler,
+             );
+           }
+diff --git a/packages/agenticros/src/tools/index.ts b/packages/agenticros/src/tools/index.ts
+index 9486614..5aeeb38 100644
+--- a/packages/agenticros/src/tools/index.ts
++++ b/packages/agenticros/src/tools/index.ts
+@@ -8,6 +8,7 @@ import { registerParamTools } from "./ros2-param.js";
+ import { registerIntrospectTool } from "./ros2-introspect.js";
+ import { registerCameraTool } from "./ros2-camera.js";
+ import { registerDepthDistanceTool } from "./ros2-depth-distance.js";
++import { registerCmdVelTool } from "./ros2-cmd-vel.js";
+ 
+ /**
+  * Register core ROS2 tools with the OpenClaw AI agent.
+@@ -15,6 +16,7 @@ import { registerDepthDistanceTool } from "./ros2-depth-distance.js";
+  */
+ export function registerTools(api: OpenClawPluginApi, config: AgenticROSConfig): void {
+   registerPublishTool(api, config);
++  registerCmdVelTool(api, config);
+   registerSubscribeTool(api, config);
+   registerServiceTool(api, config);
+   registerActionTool(api, config);
+diff --git a/packages/agenticros/src/tools/ros2-camera.ts b/packages/agenticros/src/tools/ros2-camera.ts
+index 91d841c..98609ba 100644
+--- a/packages/agenticros/src/tools/ros2-camera.ts
++++ b/packages/agenticros/src/tools/ros2-camera.ts
+@@ -1,5 +1,5 @@
+ import { Type } from "@sinclair/typebox";
+-import type { OpenClawPluginApi } from "../plugin-api.js";
++import type { OpenClawPluginApi, ToolContent } from "../plugin-api.js";
+ import type { AgenticROSConfig } from "@agenticros/core";
+ import { toNamespacedTopic } from "@agenticros/core";
+ import {
+@@ -19,6 +19,83 @@ export const REALSENSE_CAMERA_TOPICS = {
+   aligned_depth: "/camera/camera/aligned_depth_to_color/image_raw",
+ } as const;
+ 
++const DEFAULT_CAMERA_TOPIC = "/camera/camera/color/image_raw/compressed";
++const IMAGE_TYPE_PATTERN = /Image|CompressedImage/i;
++const CAMERA_TOPIC_NAME_PATTERN = /camera|image|compressed/i;
++const setTimer = (handler: () => void, ms: number): unknown => (globalThis as unknown as { setTimeout: (h: () => void, t: number) => unknown }).setTimeout(handler, ms);
++const clearTimer = (token: unknown): void => (globalThis as unknown as { clearTimeout: (t: unknown) => void }).clearTimeout(token);
++
++function buildCameraPreviewUrl(topic: string, messageType: "CompressedImage" | "Image"): string {
++  const params = new URLSearchParams({
++    topic,
++    type: messageType === "Image" ? "image" : "compressed",
++    _ts: String(Date.now()),
++  });
++  return `/plugins/agenticros/teleop/camera?${params.toString()}`;
++}
++
++function inferCameraMessageTypeFromTopic(topic: string, rosType?: string): "CompressedImage" | "Image" {
++  if ((rosType ?? "").includes("CompressedImage")) return "CompressedImage";
++  const t = topic.toLowerCase();
++  if (t.includes("/compressed")) return "CompressedImage";
++  return "Image";
++}
++
++async function buildCameraCandidates(
++  transport: ReturnType<typeof getTransport>,
++  config: AgenticROSConfig,
++  explicitTopic: string | undefined,
++  explicitMessageType: "CompressedImage" | "Image" | undefined,
++): Promise<Array<{ topic: string; messageType: "CompressedImage" | "Image" }>> {
++  const configuredDefault =
++    (config.robot?.cameraTopic ?? "").trim() ||
++    (config.teleop?.cameraTopic ?? "").trim() ||
++    DEFAULT_CAMERA_TOPIC;
++
++  const candidates = new Map<string, { topic: string; messageType: "CompressedImage" | "Image" }>();
++  const addCandidate = (topic: string, rosType?: string) => {
++    const normalized = topic.trim().replace(/\/zstd\/?$/i, "/compressed");
++    if (!normalized) return;
++    const resolved = toNamespacedTopic(config, normalized);
++    if (candidates.has(resolved)) return;
++    candidates.set(resolved, {
++      topic: resolved,
++      messageType: explicitMessageType ?? inferCameraMessageTypeFromTopic(resolved, rosType),
++    });
++  };
++
++  if (explicitTopic) {
++    addCandidate(explicitTopic);
++  }
++
++  addCandidate(configuredDefault);
++  addCandidate(REALSENSE_CAMERA_TOPICS.color_compressed, ROS_MSG_COMPRESSED_IMAGE);
++  addCandidate(REALSENSE_CAMERA_TOPICS.color_raw, ROS_MSG_IMAGE);
++
++  try {
++    const topics = await transport.listTopics();
++    const imageTopics = topics.filter((t) => {
++      if (t.type && IMAGE_TYPE_PATTERN.test(t.type)) return true;
++      return CAMERA_TOPIC_NAME_PATTERN.test(t.name);
++    });
++    imageTopics
++      .sort((a, b) => {
++        const aCompressed = /CompressedImage/i.test(a.type) || /compressed/i.test(a.name);
++        const bCompressed = /CompressedImage/i.test(b.type) || /compressed/i.test(b.name);
++        if (aCompressed !== bCompressed) return aCompressed ? -1 : 1;
++        const aPenalty = /^\/camera\/image_raw(?:\/compressed)?$/i.test(a.name) ? 1 : 0;
++        const bPenalty = /^\/camera\/image_raw(?:\/compressed)?$/i.test(b.name) ? 1 : 0;
++        if (aPenalty !== bPenalty) return aPenalty - bPenalty;
++        return a.name.localeCompare(b.name);
++      })
++      .forEach((t) => addCandidate(t.name, t.type));
++  } catch {
++    // Keep defaults when discovery fails.
++  }
++
++  return Array.from(candidates.values());
++}
++
+ /**
+  * Register the ros2_camera_snapshot tool with the AI agent.
+  * Grabs a single frame from a ROS2 camera topic.
+@@ -55,66 +132,135 @@ export function registerCameraTool(api: OpenClawPluginApi, config: AgenticROSCon
+     }),
+ 
+     async execute(_toolCallId, params) {
+-      const defaultTopic =
+-        (config.robot?.cameraTopic ?? "").trim() || "/camera/camera/color/image_raw/compressed";
+-      const rawTopic = (params["topic"] as string | undefined) ?? defaultTopic;
+-      const topic = toNamespacedTopic(config, rawTopic);
++      const rawTopic = (params["topic"] as string | undefined)?.trim() || undefined;
+       const rawMsgType = params["message_type"] as string | undefined;
+-      const messageType: "CompressedImage" | "Image" =
+-        rawMsgType === "Image" ? "Image" : "CompressedImage";
++      const explicitMessageType = rawMsgType === "Image" || rawMsgType === "CompressedImage";
++      const requestedMessageType: "CompressedImage" | "Image" | undefined = explicitMessageType
++        ? (rawMsgType as "CompressedImage" | "Image")
++        : undefined;
+       const timeout = (params["timeout"] as number | undefined) ?? 10000;
+ 
+       try {
+         const transport = getTransport();
+-        const typeSel = messageType === "Image" ? ROS_MSG_IMAGE : ROS_MSG_COMPRESSED_IMAGE;
++        const candidates = await buildCameraCandidates(transport, config, rawTopic, requestedMessageType);
++        if (candidates.length === 0) {
++          throw new Error("No candidate camera topics were available.");
++        }
+ 
+-        const result = await new Promise<{
++        const captureOnce = async (
++          candidateTopic: string,
++          messageType: "CompressedImage" | "Image",
++          perAttemptTimeout: number,
++        ): Promise<{
+           success: boolean;
+           topic: string;
++          messageType: "CompressedImage" | "Image";
+           format: string;
+           data: string;
+           width?: unknown;
+           height?: unknown;
+-        }>((resolve, reject) => {
+-          let subscription: { unsubscribe: () => void };
+-          let timer: ReturnType<typeof setTimeout>;
+-          try {
+-            subscription = transport.subscribe({ topic, type: typeSel }, (msg: Record<string, unknown>) => {
+-              try {
+-                clearTimeout(timer);
+-                subscription.unsubscribe();
+-                const payload = cameraSnapshotFromPlainMessage(messageType, msg);
+-                resolve({
+-                  success: true,
+-                  topic,
+-                  format: payload.formatLabel,
+-                  data: payload.dataBase64,
+-                  width: payload.width,
+-                  height: payload.height,
+-                });
+-              } catch (err) {
+-                clearTimeout(timer);
++        }> => {
++          const typeSel = messageType === "Image" ? ROS_MSG_IMAGE : ROS_MSG_COMPRESSED_IMAGE;
++          return await new Promise((resolve, reject) => {
++            let subscription: { unsubscribe: () => void };
++            let timer: unknown;
++            try {
++              subscription = transport.subscribe({ topic: candidateTopic, type: typeSel }, (msg: Record<string, unknown>) => {
+                 try {
++                  clearTimer(timer);
+                   subscription.unsubscribe();
+-                } catch {
+-                  // ignore
++                  const payload = cameraSnapshotFromPlainMessage(messageType, msg);
++                  resolve({
++                    success: true,
++                    topic: candidateTopic,
++                    messageType,
++                    format: payload.formatLabel,
++                    data: payload.dataBase64,
++                    width: payload.width,
++                    height: payload.height,
++                  });
++                } catch (err) {
++                  clearTimer(timer);
++                  try {
++                    subscription.unsubscribe();
++                  } catch {
++                    // ignore
++                  }
++                  reject(err instanceof Error ? err : new Error(String(err)));
+                 }
+-                reject(err instanceof Error ? err : new Error(String(err)));
++              });
++            } catch (err) {
++              reject(err instanceof Error ? err : new Error(String(err)));
++              return;
++            }
++            timer = setTimer(() => {
++              try {
++                subscription.unsubscribe();
++              } catch {
++                // ignore
+               }
+-            });
+-          } catch (err) {
+-            reject(err instanceof Error ? err : new Error(String(err)));
+-            return;
++              reject(new Error(`Timeout waiting for camera frame on ${candidateTopic}`));
++            }, perAttemptTimeout);
++          });
++        };
++
++        let result: {
++          success: boolean;
++          topic: string;
++          messageType: "CompressedImage" | "Image";
++          format: string;
++          data: string;
++          width?: unknown;
++          height?: unknown;
++        } | undefined;
++
++        const startedAt = Date.now();
++        let lastError: Error | undefined;
++        let usedTopic = "";
++
++        for (let i = 0; i < candidates.length; i += 1) {
++          const candidate = candidates[i];
++          usedTopic = candidate.topic;
++          const elapsed = Date.now() - startedAt;
++          const remaining = timeout - elapsed;
++          if (remaining <= 0) break;
++
++          const attemptsLeft = candidates.length - i;
++          const perAttemptTimeout = Math.max(1200, Math.floor(remaining / attemptsLeft));
++
++          if (explicitMessageType) {
++            try {
++              result = await captureOnce(candidate.topic, requestedMessageType as "CompressedImage" | "Image", perAttemptTimeout);
++              break;
++            } catch (err) {
++              lastError = err instanceof Error ? err : new Error(String(err));
++              continue;
++            }
+           }
+-          timer = setTimeout(() => {
++
++          try {
++            result = await captureOnce(candidate.topic, candidate.messageType, Math.max(800, Math.floor(perAttemptTimeout * 0.6)));
++            break;
++          } catch (firstErr) {
++            const fallbackType: "CompressedImage" | "Image" =
++              candidate.messageType === "Image" ? "CompressedImage" : "Image";
+             try {
+-              subscription.unsubscribe();
+-            } catch {
+-              // ignore
++              result = await captureOnce(candidate.topic, fallbackType, Math.max(800, perAttemptTimeout - Math.max(800, Math.floor(perAttemptTimeout * 0.6))));
++              break;
++            } catch (fallbackErr) {
++              const firstMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
++              const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
++              lastError = new Error(
++                `Snapshot failed for ${candidate.topic}. ` +
++                  `Errors: [${candidate.messageType}] ${firstMsg}; [${fallbackType}] ${fallbackMsg}`,
++              );
+             }
+-            reject(new Error(`Timeout waiting for camera frame on ${topic}`));
+-          }, timeout);
+-        });
++          }
++        }
++
++        if (!result) {
++          throw lastError ?? new Error(`Failed to capture camera frame from candidates. Last topic: ${usedTopic || "(none)"}`);
++        }
+ 
+         const base64 = (result.data as string) ?? "";
+         const formatLabel = String((result.format as string) ?? "jpeg").toLowerCase();
+@@ -124,13 +270,18 @@ export function registerCameraTool(api: OpenClawPluginApi, config: AgenticROSCon
+           result.width != null ? rosNumericField(result.width, "width") : undefined;
+         const hNum =
+           result.height != null ? rosNumericField(result.height, "height") : undefined;
+-        const summary = `Captured one frame from ${topic}${wNum != null && hNum != null ? ` (${wNum}×${hNum})` : ""}.`;
++        const summary =
++          `Captured one frame from ${result.topic} (${result.messageType})` +
++          `${wNum != null && hNum != null ? ` (${wNum}×${hNum})` : ""}.`;
+ 
+-        const content: Array<
+-          { type: "text"; text: string } | { type: "image"; data: string; mimeType: string }
+-        > = [{ type: "text", text: summary }];
++        const content: ToolContent[] = [{ type: "text", text: summary }];
+         if (base64 && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length >= 100) {
+-          content.push({ type: "image", data: base64, mimeType });
++          content.push({
++            type: "image",
++            data: base64,
++            mimeType,
++            url: buildCameraPreviewUrl(result.topic, result.messageType),
++          });
+         } else if (base64 && (!/^[A-Za-z0-9+/=]+$/.test(base64) || base64.length < 100)) {
+           content.push({
+             type: "text",
+@@ -146,13 +297,19 @@ export function registerCameraTool(api: OpenClawPluginApi, config: AgenticROSCon
+ 
+         return {
+           content,
+-          details: { success: result.success, topic, width: result.width, height: result.height },
++          details: { success: result.success, topic: result.topic, message_type: result.messageType, width: result.width, height: result.height },
+         };
+       } catch (err) {
+         const msg = err instanceof Error ? err.message : String(err);
++        const timeoutOnCompressed =
++          msg.includes("Timeout waiting for camera frame") && (rawTopic ?? "").toLowerCase().includes("/compressed");
++        const hint = timeoutOnCompressed
++          ? " Try the raw Image topic (for example /camera/image_raw) or set message_type=Image."
++          : "";
+         return {
+-          content: [{ type: "text", text: `ros2_camera_snapshot failed: ${msg}` }],
+-          details: { success: false, topic: rawTopic, error: msg },
++          content: [{ type: "text", text: `ros2_camera_snapshot failed: ${msg}${hint}` }],
++          details: { success: false, topic: rawTopic ?? "(auto)", error: msg },
++          isError: true,
+         };
+       }
+     },
+diff --git a/packages/agenticros/src/tools/ros2-cmd-vel.ts b/packages/agenticros/src/tools/ros2-cmd-vel.ts
+new file mode 100644
+index 0000000..b1181b5
+--- /dev/null
++++ b/packages/agenticros/src/tools/ros2-cmd-vel.ts
+@@ -0,0 +1,454 @@
++import { Type } from "@sinclair/typebox";
++import type { OpenClawPluginApi } from "../plugin-api.js";
++import type { AgenticROSConfig } from "@agenticros/core";
++import { toNamespacedTopic } from "@agenticros/core";
++import { getTransport } from "../service.js";
++import { getCmdVelTopic } from "../teleop/routes.js";
++
++const TWIST_TYPE = "geometry_msgs/msg/Twist";
++const ODOM_TYPE = "nav_msgs/msg/Odometry";
++const DEFAULT_LINEAR_SPEED = 0.25;
++const DEFAULT_ANGULAR_SPEED = 0.8;
++const DEFAULT_STEP_DISTANCE_M = 0.4;
++const DEFAULT_STEP_ANGLE_DEG = 45;
++const DEFAULT_FALLBACK_DURATION_S = 1.0;
++const CMD_PUBLISH_INTERVAL_MS = 100;
++const STOP_CONFIRM_DELAY_MS = 120;
++const CLOSED_LOOP_MAX_TIMEOUT_S = 20;
++
++type DirectionIntent =
++  | "forward"
++  | "backward"
++  | "left"
++  | "right"
++  | "rotate_left"
++  | "rotate_right"
++  | "stop";
++
++type ActiveMotion = {
++  intervalId: ReturnType<typeof setInterval>;
++  timeoutId: ReturnType<typeof setTimeout>;
++  odomSub?: { unsubscribe(): void };
++};
++
++const activeMotions = new Map<string, ActiveMotion>();
++
++function clamp(value: number, min: number, max: number): number {
++  return Math.max(min, Math.min(max, value));
++}
++
++function safeNumber(value: unknown, fallback = 0): number {
++  const n = Number(value);
++  return Number.isFinite(n) ? n : fallback;
++}
++
++function publishTwist(topic: string, linearX: number, angularZ: number): void {
++  const transport = getTransport();
++  transport.publish({
++    topic,
++    type: TWIST_TYPE,
++    msg: {
++      linear: { x: linearX, y: 0, z: 0 },
++      angular: { x: 0, y: 0, z: angularZ },
++    },
++  });
++}
++
++function normalizeAngleRad(angle: number): number {
++  let a = angle;
++  while (a > Math.PI) a -= 2 * Math.PI;
++  while (a < -Math.PI) a += 2 * Math.PI;
++  return a;
++}
++
++function yawFromQuaternion(msg: Record<string, unknown>): number | null {
++  const pose = msg["pose"] as Record<string, unknown> | undefined;
++  const posePose = pose?.["pose"] as Record<string, unknown> | undefined;
++  const orientation = posePose?.["orientation"] as Record<string, unknown> | undefined;
++  if (!orientation) return null;
++  const x = Number(orientation["x"] ?? NaN);
++  const y = Number(orientation["y"] ?? NaN);
++  const z = Number(orientation["z"] ?? NaN);
++  const w = Number(orientation["w"] ?? NaN);
++  if (![x, y, z, w].every(Number.isFinite)) return null;
++
++  const sinyCosp = 2 * (w * z + x * y);
++  const cosyCosp = 1 - 2 * (y * y + z * z);
++  return Math.atan2(sinyCosp, cosyCosp);
++}
++
++function positionXYFromOdom(msg: Record<string, unknown>): { x: number; y: number } | null {
++  const pose = msg["pose"] as Record<string, unknown> | undefined;
++  const posePose = pose?.["pose"] as Record<string, unknown> | undefined;
++  const position = posePose?.["position"] as Record<string, unknown> | undefined;
++  if (!position) return null;
++  const x = Number(position["x"] ?? NaN);
++  const y = Number(position["y"] ?? NaN);
++  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
++  return { x, y };
++}
++
++function stopMotion(topic: string, logger?: OpenClawPluginApi["logger"], reason = "manual"): void {
++  const current = activeMotions.get(topic);
++  if (current) {
++    clearInterval(current.intervalId);
++    clearTimeout(current.timeoutId);
++    try {
++      current.odomSub?.unsubscribe();
++    } catch {
++      // Best effort.
++    }
++    activeMotions.delete(topic);
++  }
++  try {
++    logger?.info(`ros2_cmd_vel: stop publish (reason=${reason}) topic=${topic}`);
++    publishTwist(topic, 0, 0);
++    // Send a second stop shortly after as a safety confirm for lossy links.
++    setTimeout(() => {
++      try {
++        logger?.info(`ros2_cmd_vel: stop confirm publish topic=${topic}`);
++        publishTwist(topic, 0, 0);
++      } catch {
++        // Best effort.
++      }
++    }, STOP_CONFIRM_DELAY_MS);
++  } catch {
++    // Best effort.
++  }
++}
++
++function resolveIntent(direction: DirectionIntent | undefined, maxLinear: number, maxAngular: number): { linearX: number; angularZ: number; defaultDuration: number } {
++  switch (direction) {
++    case "forward": {
++      const v = Math.min(DEFAULT_LINEAR_SPEED, maxLinear);
++      return { linearX: v, angularZ: 0, defaultDuration: DEFAULT_STEP_DISTANCE_M / Math.max(Math.abs(v), 1e-6) };
++    }
++    case "backward": {
++      const v = Math.min(DEFAULT_LINEAR_SPEED, maxLinear);
++      return { linearX: -v, angularZ: 0, defaultDuration: DEFAULT_STEP_DISTANCE_M / Math.max(Math.abs(v), 1e-6) };
++    }
++    case "left":
++    case "rotate_left": {
++      const w = Math.min(DEFAULT_ANGULAR_SPEED, maxAngular);
++      return {
++        linearX: 0,
++        angularZ: w,
++        defaultDuration: (DEFAULT_STEP_ANGLE_DEG * Math.PI) / 180 / Math.max(Math.abs(w), 1e-6),
++      };
++    }
++    case "right":
++    case "rotate_right": {
++      const w = Math.min(DEFAULT_ANGULAR_SPEED, maxAngular);
++      return {
++        linearX: 0,
++        angularZ: -w,
++        defaultDuration: (DEFAULT_STEP_ANGLE_DEG * Math.PI) / 180 / Math.max(Math.abs(w), 1e-6),
++      };
++    }
++    case "stop":
++      return { linearX: 0, angularZ: 0, defaultDuration: 0 };
++    default:
++      return { linearX: 0, angularZ: 0, defaultDuration: DEFAULT_FALLBACK_DURATION_S };
++  }
++}
++
++/**
++ * Register a high-level velocity tool so chat can drive the robot
++ * without falling back to shell commands.
++ */
++export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSConfig): void {
++  api.registerTool(
++    {
++      name: "ros2_cmd_vel",
++      label: "ROS2 Cmd Vel",
++      description:
++        "Drive the robot by publishing a geometry_msgs/msg/Twist command to the configured cmd_vel topic. " +
++        "Use this for movement requests like forward/backward/turn from chat. Movement commands are timed and auto-stop by default.",
++      parameters: Type.Object({
++        direction: Type.Optional(
++          Type.Union(
++            [
++              Type.Literal("forward"),
++              Type.Literal("backward"),
++              Type.Literal("left"),
++              Type.Literal("right"),
++              Type.Literal("rotate_left"),
++              Type.Literal("rotate_right"),
++              Type.Literal("stop"),
++            ],
++            {
++              description:
++                "High-level motion intent. If provided, the tool computes safe default velocity and duration automatically.",
++            },
++          ),
++        ),
++        linear_x: Type.Optional(Type.Number({ description: "Forward velocity in m/s (+ forward, - backward)." })),
++        angular_z: Type.Optional(Type.Number({ description: "Yaw rate in rad/s (+ left, - right)." })),
++        distance_m: Type.Optional(
++          Type.Number({
++            minimum: 0,
++            maximum: 5,
++            description:
++              "Optional travel distance in meters. If set with nonzero linear_x, duration is computed as distance_m/|linear_x|.",
++          }),
++        ),
++        angle_deg: Type.Optional(
++          Type.Number({
++            minimum: 0,
++            maximum: 360,
++            description:
++              "Optional turn angle in degrees. If set with nonzero angular_z, duration is computed as radians(angle_deg)/|angular_z|.",
++          }),
++        ),
++        duration_s: Type.Optional(
++          Type.Number({
++            minimum: 0,
++            maximum: 10,
++            description: "Optional override duration in seconds. If omitted for movement, duration is auto-computed and stop is automatic.",
++          }),
++        ),
++        odom_topic: Type.Optional(
++          Type.String({
++            description:
++              "Optional odometry topic for closed-loop stopping (default: /odom). Used for turn-by-angle and move-by-distance behavior.",
++          }),
++        ),
++      }),
++
++      async execute(_toolCallId, params) {
++        const maxLinear = config.safety.maxLinearVelocity;
++        const maxAngular = config.safety.maxAngularVelocity;
++
++        const direction = params["direction"] as DirectionIntent | undefined;
++        const intent = resolveIntent(direction, maxLinear, maxAngular);
++
++        const linearXInput = params["linear_x"];
++        const angularZInput = params["angular_z"];
++        const linearXRaw =
++          linearXInput === undefined
++            ? intent.linearX
++            : safeNumber(linearXInput, intent.linearX);
++        const angularZRaw =
++          angularZInput === undefined
++            ? intent.angularZ
++            : safeNumber(angularZInput, intent.angularZ);
++
++        const durationInput = params["duration_s"];
++        const distanceM = clamp(safeNumber(params["distance_m"], 0), 0, 5);
++        const angleDeg = clamp(safeNumber(params["angle_deg"], 0), 0, 360);
++        const odomTopicRaw = String(params["odom_topic"] ?? "/odom").trim() || "/odom";
++        const odomTopic = toNamespacedTopic(config, odomTopicRaw);
++
++        const linearX = clamp(linearXRaw, -maxLinear, maxLinear);
++        const angularZ = clamp(angularZRaw, -maxAngular, maxAngular);
++        const computedFromDistance =
++          distanceM > 0 && Math.abs(linearX) > 1e-6
++            ? distanceM / Math.abs(linearX)
++            : 0;
++        const computedFromAngle =
++          angleDeg > 0 && Math.abs(angularZ) > 1e-6
++            ? (angleDeg * Math.PI) / 180 / Math.abs(angularZ)
++            : 0;
++
++        let durationS = 0;
++        if (durationInput !== undefined) {
++          durationS = clamp(safeNumber(durationInput, 0), 0, 10);
++        } else if (computedFromDistance > 0 || computedFromAngle > 0) {
++          durationS = clamp(Math.max(computedFromDistance, computedFromAngle), 0, 10);
++        } else if (Math.abs(linearX) > 1e-6 || Math.abs(angularZ) > 1e-6) {
++          durationS = clamp(intent.defaultDuration, 0, 10);
++        }
++
++        const topic = getCmdVelTopic(config);
++        stopMotion(topic, api.logger, "replace-or-clear");
++
++        const isPureRotate = Math.abs(linearX) <= 1e-6 && Math.abs(angularZ) > 1e-6;
++        const isPureLinear = Math.abs(linearX) > 1e-6 && Math.abs(angularZ) <= 1e-6;
++        const useClosedLoopAngle = isPureRotate && angleDeg > 0;
++        const targetDistanceM =
++          distanceM > 0
++            ? distanceM
++            : isPureLinear && (direction === "forward" || direction === "backward")
++              ? DEFAULT_STEP_DISTANCE_M
++              : 0;
++        const useClosedLoopDistance = isPureLinear && targetDistanceM > 0;
++
++        if (Math.abs(linearX) <= 1e-6 && Math.abs(angularZ) <= 1e-6) {
++          api.logger.info(`ros2_cmd_vel: explicit stop request topic=${topic}`);
++          const summary = `Published STOP cmd_vel to ${topic}.`;
++          return {
++            content: [{ type: "text", text: summary }],
++            details: {
++              success: true,
++              topic,
++              type: TWIST_TYPE,
++              linear_x: 0,
++              angular_z: 0,
++              duration_s: 0,
++              stopped: true,
++            },
++          };
++        }
++
++        const now = Date.now();
++        const dueAtMs = now + Math.round(durationS * 1000);
++        api.logger.info(
++          `ros2_cmd_vel: motion start topic=${topic} linear.x=${linearX.toFixed(3)} angular.z=${angularZ.toFixed(3)} duration_s=${durationS.toFixed(3)} due_at=${new Date(dueAtMs).toISOString()}`,
++        );
++
++        publishTwist(topic, linearX, angularZ);
++        const intervalId = setInterval(() => {
++          try {
++            publishTwist(topic, linearX, angularZ);
++          } catch {
++            // Best effort; timeout stop still runs.
++          }
++        }, CMD_PUBLISH_INTERVAL_MS);
++
++        const useClosedLoopOdom = useClosedLoopAngle || useClosedLoopDistance;
++        const timeoutMs = useClosedLoopOdom
++          ? Math.round(clamp(Math.max(durationS * 6, durationS + 4), 1, CLOSED_LOOP_MAX_TIMEOUT_S) * 1000)
++          : Math.round(durationS * 1000);
++
++        let resolveClosedLoop:
++          | ((value: { mode: "angle" | "distance"; reached: boolean; timeout: boolean; achieved_deg?: number; achieved_m?: number }) => void)
++          | null = null;
++        const closedLoopPromise = useClosedLoopOdom
++          ? new Promise<{ mode: "angle" | "distance"; reached: boolean; timeout: boolean; achieved_deg?: number; achieved_m?: number }>((resolve) => {
++              resolveClosedLoop = resolve;
++            })
++          : null;
++
++        const timeoutId = setTimeout(() => {
++          api.logger.info(
++            `ros2_cmd_vel: auto-stop fired topic=${topic} scheduled_due_at=${new Date(dueAtMs).toISOString()} fired_at=${new Date().toISOString()}`,
++          );
++          stopMotion(topic, api.logger, "auto-timeout");
++          if (resolveClosedLoop) {
++            resolveClosedLoop({ mode: useClosedLoopAngle ? "angle" : "distance", reached: false, timeout: true, achieved_deg: 0, achieved_m: 0 });
++            resolveClosedLoop = null;
++          }
++        }, timeoutMs);
++
++        const active: ActiveMotion = { intervalId, timeoutId };
++
++        if (useClosedLoopAngle) {
++          let lastYaw: number | null = null;
++          let accumulated = 0;
++          const targetRad = (angleDeg * Math.PI) / 180;
++          const directionSign = angularZ >= 0 ? 1 : -1;
++          const transport = getTransport();
++          const odomSub = transport.subscribe(
++            { topic: odomTopic, type: ODOM_TYPE },
++            (msg: Record<string, unknown>) => {
++              const yaw = yawFromQuaternion(msg);
++              if (yaw == null) return;
++              if (lastYaw == null) {
++                lastYaw = yaw;
++                return;
++              }
++              const delta = normalizeAngleRad(yaw - lastYaw);
++              lastYaw = yaw;
++              accumulated += delta;
++              const progressed = accumulated * directionSign;
++              if (progressed >= targetRad) {
++                const achievedDeg = Math.abs(progressed * 180 / Math.PI);
++                api.logger.info(
++                  `ros2_cmd_vel: closed-loop angle reached topic=${topic} odom_topic=${odomTopic} target_deg=${angleDeg.toFixed(1)} achieved_deg=${achievedDeg.toFixed(1)} at=${new Date().toISOString()}`,
++                );
++                stopMotion(topic, api.logger, "closed-loop-angle");
++                if (resolveClosedLoop) {
++                  resolveClosedLoop({ mode: "angle", reached: true, achieved_deg: achievedDeg, timeout: false });
++                  resolveClosedLoop = null;
++                }
++              }
++            },
++          );
++          active.odomSub = odomSub;
++          api.logger.info(
++            `ros2_cmd_vel: closed-loop angle enabled topic=${topic} odom_topic=${odomTopic} target_deg=${angleDeg.toFixed(1)} timeout_ms=${timeoutMs}`,
++          );
++        } else if (useClosedLoopDistance) {
++          let lastPos: { x: number; y: number } | null = null;
++          let accumulatedM = 0;
++          const transport = getTransport();
++          const odomSub = transport.subscribe(
++            { topic: odomTopic, type: ODOM_TYPE },
++            (msg: Record<string, unknown>) => {
++              const pos = positionXYFromOdom(msg);
++              if (!pos) return;
++              if (!lastPos) {
++                lastPos = pos;
++                return;
++              }
++              const dx = pos.x - lastPos.x;
++              const dy = pos.y - lastPos.y;
++              lastPos = pos;
++              accumulatedM += Math.hypot(dx, dy);
++              if (accumulatedM >= targetDistanceM) {
++                api.logger.info(
++                  `ros2_cmd_vel: closed-loop distance reached topic=${topic} odom_topic=${odomTopic} target_m=${targetDistanceM.toFixed(3)} achieved_m=${accumulatedM.toFixed(3)} at=${new Date().toISOString()}`,
++                );
++                stopMotion(topic, api.logger, "closed-loop-distance");
++                if (resolveClosedLoop) {
++                  resolveClosedLoop({ mode: "distance", reached: true, achieved_m: accumulatedM, timeout: false });
++                  resolveClosedLoop = null;
++                }
++              }
++            },
++          );
++          active.odomSub = odomSub;
++          api.logger.info(
++            `ros2_cmd_vel: closed-loop distance enabled topic=${topic} odom_topic=${odomTopic} target_m=${targetDistanceM.toFixed(3)} timeout_ms=${timeoutMs}`,
++          );
++        }
++
++        activeMotions.set(topic, active);
++
++        let closedLoopResult: { mode: "angle" | "distance"; reached: boolean; timeout: boolean; achieved_deg?: number; achieved_m?: number } | null = null;
++        if (closedLoopPromise) {
++          closedLoopResult = await closedLoopPromise;
++        }
++
++        const summary =
++          `Published cmd_vel linear.x=${linearX.toFixed(3)} angular.z=${angularZ.toFixed(3)} ` +
++          `to ${topic} for ${durationS.toFixed(2)}s (continuous publish, auto-stop armed).` +
++          (closedLoopResult
++            ? closedLoopResult.reached
++              ? closedLoopResult.mode === "angle"
++                ? ` Closed-loop angle reached (${(closedLoopResult.achieved_deg ?? 0).toFixed(1)} deg).`
++                : ` Closed-loop distance reached (${(closedLoopResult.achieved_m ?? 0).toFixed(3)} m).`
++              : closedLoopResult.mode === "angle"
++                ? ` Closed-loop angle timeout before target.`
++                : ` Closed-loop distance timeout before target.`
++            : "");
++
++        return {
++          content: [{ type: "text", text: summary }],
++          details: {
++            success: true,
++            topic,
++            type: TWIST_TYPE,
++            linear_x: linearX,
++            angular_z: angularZ,
++            duration_s: durationS,
++            direction: direction ?? null,
++            distance_m: distanceM,
++            angle_deg: angleDeg,
++            odom_topic: useClosedLoopOdom ? odomTopic : null,
++            closed_loop_angle: useClosedLoopAngle,
++            closed_loop_distance: useClosedLoopDistance,
++            closed_loop_reached: closedLoopResult?.reached ?? null,
++            closed_loop_timeout: closedLoopResult?.timeout ?? null,
++            achieved_angle_deg: closedLoopResult?.achieved_deg ?? null,
++            achieved_distance_m: closedLoopResult?.achieved_m ?? null,
++            target_distance_m: useClosedLoopDistance ? targetDistanceM : null,
++          },
++        };
++      },
++    },
++    {
++      names: ["ros2_cmd_vel", "cmd_vel", "move_base"],
++    },
++  );
++}
+diff --git a/packages/core/src/transport/local/conversion.ts b/packages/core/src/transport/local/conversion.ts
+index 664c9c9..31c5476 100644
+--- a/packages/core/src/transport/local/conversion.ts
++++ b/packages/core/src/transport/local/conversion.ts
+@@ -10,6 +10,10 @@ import { createRequire } from "node:module";
+ 
+ const require = createRequire(import.meta.url);
+ 
++function isBigIntValue(value: unknown): value is bigint {
++  return Object.prototype.toString.call(value) === "[object BigInt]";
++}
++
+ /** Cached message classes keyed by normalized type string. */
+ const typeCache = new Map<string, any>();
+ 
+@@ -118,8 +122,8 @@ function copyHeaderField(header: any): Record<string, unknown> {
+   if ("stamp" in header && header.stamp != null && typeof header.stamp === "object") {
+     const s = header.stamp;
+     const stamp: { sec?: number; nanosec?: number } = {};
+-    if (typeof s.sec === "number" || typeof s.sec === "bigint") stamp.sec = Number(s.sec);
+-    if (typeof s.nanosec === "number" || typeof s.nanosec === "bigint") {
++    if (typeof s.sec === "number" || isBigIntValue(s.sec)) stamp.sec = Number(s.sec);
++    if (typeof s.nanosec === "number" || isBigIntValue(s.nanosec)) {
+       stamp.nanosec = Number(s.nanosec);
+     }
+     out.stamp = stamp;
+diff --git a/packages/ros-camera/src/snapshot.ts b/packages/ros-camera/src/snapshot.ts
+index ca08574..66688c6 100644
+--- a/packages/ros-camera/src/snapshot.ts
++++ b/packages/ros-camera/src/snapshot.ts
+@@ -12,6 +12,10 @@ export const ROS_MSG_COMPRESSED_IMAGE = "sensor_msgs/msg/CompressedImage";
+ 
+ const MAX_IMAGE_BYTES_UNWRAP_DEPTH = 3;
+ 
++function isBigIntValue(value: unknown): value is bigint {
++  return Object.prototype.toString.call(value) === "[object BigInt]";
++}
++
+ export interface CameraSnapshotPayload {
+   /** Format key for MIME fallback: png, jpeg, webp, … */
+   formatLabel: string;
+@@ -23,7 +27,7 @@ export interface CameraSnapshotPayload {
+ /** Width / height / step may be plain numbers or rclnodejs ref-wrapped. */
+ export function rosNumericField(v: unknown, label: string): number {
+   if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+-  if (typeof v === "bigint") return Number(v);
++  if (isBigIntValue(v)) return Number(v);
+   if (v != null && typeof v === "object" && "data" in v) {
+     return rosNumericField((v as { data: unknown }).data, label);
+   }
+@@ -36,7 +40,7 @@ export function rosNumericField(v: unknown, label: string): number {
+ export function rosBoolField(v: unknown): boolean {
+   if (v == null) return false;
+   if (typeof v === "boolean") return v;
+-  if (typeof v === "bigint") return v !== 0n;
++  if (isBigIntValue(v)) return v !== 0n;
+   if (typeof v === "number" && Number.isFinite(v)) return v !== 0;
+   if (typeof v === "object" && v !== null && "data" in v) {
+     return rosBoolField((v as { data: unknown }).data);
+@@ -52,7 +56,7 @@ export function rosStringField(v: unknown, fallback: string): string {
+   if (typeof v === "object" && v !== null && "data" in v) {
+     return rosStringField((v as { data: unknown }).data, fallback);
+   }
+-  if (typeof v === "bigint") return String(v);
++  if (isBigIntValue(v)) return String(v);
+   if (typeof v === "number" && Number.isFinite(v)) return String(v);
+   return String(v);
+ }
+@@ -138,14 +142,7 @@ function tryArrayLikeBytes(data: unknown): Buffer | null {
+     const u8 = new Uint8Array(len);
+     for (let i = 0; i < len; i++) {
+       const el = rec[i];
+-      const n =
+-        typeof el === "number"
+-          ? el
+-          : typeof el === "bigint"
+-            ? Number(el)
+-            : typeof el === "string"
+-              ? Number(el)
+-              : Number(el);
++      const n = Number(el);
+       if (!Number.isFinite(n)) return null;
+       u8[i] = n & 0xff;
+     }
+-- 
+2.43.0
+

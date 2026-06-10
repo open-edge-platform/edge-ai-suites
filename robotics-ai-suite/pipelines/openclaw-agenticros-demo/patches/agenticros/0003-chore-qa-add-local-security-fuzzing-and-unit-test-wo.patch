@@ -1,0 +1,2455 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+From aa745f8d36ad5114f1d57c1a35fecb965e531a7a Mon Sep 17 00:00:00 2001
+From: RoboticsYY <yu.yan@intel.com>
+Date: Wed, 3 Jun 2026 14:41:42 +0800
+Subject: [PATCH 3/4] chore(qa): add local security, fuzzing, and unit-test
+ workflows
+
+---
+ docker/Dockerfile.agenticros        |   4 +
+ docker/Dockerfile.ros2              |   7 +
+ docs/bandit-local.md                |  45 +++
+ docs/coverity-local.md              |  63 +++
+ docs/fuzz-local.md                  |  58 +++
+ package.json                        |  14 +
+ pnpm-lock.yaml                      | 372 ++++++++++++++++--
+ scripts/fuzz_ros_payloads.mjs       | 585 ++++++++++++++++++++++++++++
+ scripts/run_bandit_local.sh         | 185 +++++++++
+ scripts/run_coverity_local.sh       | 175 +++++++++
+ scripts/run_fuzz_local.sh           | 125 ++++++
+ scripts/unit-test-json-reporter.mjs | 133 +++++++
+ tests/unit/agenticros.test.ts       | 110 ++++++
+ tests/unit/config-file.test.ts      |  76 ++++
+ tests/unit/depth.test.ts            |  80 ++++
+ tests/unit/ros-camera.test.ts       |  52 +++
+ 16 files changed, 2046 insertions(+), 38 deletions(-)
+ create mode 100644 docs/bandit-local.md
+ create mode 100644 docs/coverity-local.md
+ create mode 100644 docs/fuzz-local.md
+ create mode 100755 scripts/fuzz_ros_payloads.mjs
+ create mode 100755 scripts/run_bandit_local.sh
+ create mode 100644 scripts/run_coverity_local.sh
+ create mode 100755 scripts/run_fuzz_local.sh
+ create mode 100644 scripts/unit-test-json-reporter.mjs
+ create mode 100644 tests/unit/agenticros.test.ts
+ create mode 100644 tests/unit/config-file.test.ts
+ create mode 100644 tests/unit/depth.test.ts
+ create mode 100644 tests/unit/ros-camera.test.ts
+
+diff --git a/docker/Dockerfile.agenticros b/docker/Dockerfile.agenticros
+index 0a96f42..6e9ea6d 100644
+--- a/docker/Dockerfile.agenticros
++++ b/docker/Dockerfile.agenticros
+@@ -35,6 +35,10 @@ WORKDIR /app
+ 
+ COPY --from=base /app .
+ 
++RUN chown -R node:node /app
++
+ ENV NODE_ENV=production
+ 
++USER node
++
+ CMD ["node", "extensions/openclaw-plugin/dist/index.js"]
+diff --git a/docker/Dockerfile.ros2 b/docker/Dockerfile.ros2
+index 686f950..50688db 100644
+--- a/docker/Dockerfile.ros2
++++ b/docker/Dockerfile.ros2
+@@ -30,5 +30,12 @@ RUN . /opt/ros/jazzy/setup.sh && \
+ COPY docker/ros2_entrypoint.sh /ros2_entrypoint.sh
+ RUN chmod +x /ros2_entrypoint.sh
+ 
++RUN useradd --system --create-home --home-dir /home/agenticros --shell /bin/bash agenticros && \
++    chown -R agenticros:agenticros /ros2_ws /ros2_entrypoint.sh
++
++ENV HOME=/home/agenticros
++
++USER agenticros
++
+ ENTRYPOINT ["/ros2_entrypoint.sh"]
+ CMD ["ros2", "launch", "rosbridge_server", "rosbridge_websocket_launch.xml"]
+diff --git a/docs/bandit-local.md b/docs/bandit-local.md
+new file mode 100644
+index 0000000..5e1a877
+--- /dev/null
++++ b/docs/bandit-local.md
+@@ -0,0 +1,45 @@
++# Local Bandit Scan
++
++This repository does not vendor Bandit. The local helper script creates an isolated Python virtual environment under `build/bandit/.venv`, installs Bandit there, and scans the ROS Python workspace under `ros2_ws/src`.
++
++## Prerequisites
++
++- `/usr/bin/python3` with `venv` support
++
++## Run the default local scan
++
++From the repo root:
++
++```bash
++bash ./scripts/run_bandit_local.sh
++```
++
++Artifacts are written to:
++
++- `build/bandit/.venv`
++- `build/bandit/report/bandit.txt`
++- `build/bandit/report/bandit.json`
++
++## Options
++
++```bash
++bash ./scripts/run_bandit_local.sh \
++  --target /tmp/python-src \
++  --venv-dir /tmp/agenticros-bandit/.venv \
++  --report-dir /tmp/agenticros-bandit/report
++```
++
++Supported flags:
++
++- `--target PATH` to scan a different directory
++- `--venv-dir PATH` to place the Python virtual environment elsewhere
++- `--report-dir PATH` to write reports elsewhere
++- `--no-clean` to keep any existing report files
++- `--skip-install` to reuse the current Bandit install in the venv
++- `--strict` to return a non-zero exit code when findings are reported
++
++## Notes
++
++- The default scan target is `ros2_ws/src`.
++- The helper only installs Bandit when it is missing from the selected virtual environment.
++- `build/` is gitignored in this repo, so the local Bandit environment and reports stay out of version control.
+\ No newline at end of file
+diff --git a/docs/coverity-local.md b/docs/coverity-local.md
+new file mode 100644
+index 0000000..8c2f5d8
+--- /dev/null
++++ b/docs/coverity-local.md
+@@ -0,0 +1,63 @@
++# Local Coverity Scan
++
++This repository does not vendor Coverity binaries. Install Synopsys Coverity Analysis locally first, then make sure `cov-build`, `cov-analyze`, and `cov-format-errors` are on your `PATH`.
++
++## Prerequisites
++
++- Coverity Analysis CLI installed locally
++- Node.js 20 or newer
++- pnpm 9 or newer
++- AgenticROS dependencies installed with `pnpm install`
++
++## Run the default local scan
++
++From the repo root:
++
++```bash
++pnpm coverity:local
++```
++
++The default mode uses build capture and wraps the repo's recursive build:
++
++```bash
++pnpm build
++```
++
++On the first run, the helper also generates `build/coverity/coverity_config.xml` with `cov-configure --typescript`, which covers the repo's TypeScript and JavaScript build inputs.
++
++Artifacts are written to:
++
++- `build/coverity/coverity_config.xml`
++- `build/coverity/idir`
++- `build/coverity/report/errors.json`
++- `build/coverity/report/html/index.html`
++
++## Run filesystem capture mode
++
++If your installed Coverity release supports `cov-build --fs-capture-search`, you can request filesystem capture explicitly:
++
++```bash
++pnpm coverity:local -- --mode fs
++```
++
++That mode searches these directories when supported by the local CLI:
++
++- `packages/`
++- `scripts/`
++- `examples/`
++- `ros2_ws/src/`
++
++## Custom output paths
++
++```bash
++bash ./scripts/run_coverity_local.sh \
++  --idir /tmp/agenticros-coverity/idir \
++  --report-dir /tmp/agenticros-coverity/report
++```
++
++## Notes
++
++- The script removes any previous `build/coverity` output unless you pass `--no-clean`.
++- The script fails fast with a clear error if the Coverity CLI is not installed.
++- Build capture is the default because it works across the validated local Coverity installation on this machine.
++- Filesystem capture remains optional and the script will reject it when the installed Coverity release does not expose `--fs-capture-search`.
+\ No newline at end of file
+diff --git a/docs/fuzz-local.md b/docs/fuzz-local.md
+new file mode 100644
+index 0000000..96dcd23
+--- /dev/null
++++ b/docs/fuzz-local.md
+@@ -0,0 +1,58 @@
++# Local Fuzz Testing
++
++This repository includes a local fuzz harness for high-risk ROS payload and config handling paths. The current targets span `packages/ros-camera`, `packages/core`, and `packages/agenticros`.
++
++## Prerequisites
++
++- Node.js 20 or newer
++- pnpm 9 or newer
++- AgenticROS dependencies installed with `pnpm install`
++
++## Run the default local fuzz pass
++
++From the repo root:
++
++```bash
++bash ./scripts/run_fuzz_local.sh
++```
++
++The helper script builds `@agenticros/core` and `@agenticros/ros-camera`, then runs a deterministic fuzz harness that exercises both built outputs and selected `packages/agenticros` source modules through `tsx`.
++
++Artifacts are written to:
++
++- `build/fuzz/report/summary.txt`
++- `build/fuzz/report/summary.json`
++
++## Options
++
++```bash
++bash ./scripts/run_fuzz_local.sh \
++  --iterations 5000 \
++  --seed 123456789 \
++  --report-dir /tmp/agenticros-fuzz
++```
++
++Supported flags:
++
++- `--iterations N` to change the iteration count per fuzz target
++- `--seed N` to reproduce a specific deterministic run
++- `--report-dir PATH` to write reports elsewhere
++- `--no-clean` to keep any existing report files
++- `--skip-build` to reuse existing package build artifacts
++
++## Scope
++
++The current fuzz harness exercises these surfaces with randomized but valid message-like inputs:
++
++- `coerceRosImageDataToBuffer` in `packages/ros-camera`
++- `cameraSnapshotFromPlainMessage` for both `Image` and `CompressedImage`
++- `fromRosMessage` image extraction in `packages/core/src/transport/local/conversion.ts`
++- `sampleDepthMeters`, `getDepthDistance`, and `getDepthSectors` in `packages/agenticros/src/depth.ts`
++- `readOpenClawConfig`, `writeAgenticROSConfig`, and `readAgenticROSConfigFromFile` in `packages/agenticros/src/config-file.ts`
++
++## Notes
++
++- The default run uses 1000 iterations per target.
++- The harness fails the run on the first unexpected exception or invariant violation for any target.
++- The validated broadened run fixed a real sync-delivery bug in `packages/agenticros/src/depth.ts`, where one-shot depth subscriptions could dereference `timer` before initialization if a transport invoked the message handler synchronously.
++- `build/` is gitignored in this repo, so local fuzz reports stay out of version control.
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index cf1f7be..8406204 100644
+--- a/package.json
++++ b/package.json
+@@ -8,13 +8,27 @@
+     "build": "pnpm -r build",
+     "clean": "pnpm -r exec rm -rf dist tsconfig.tsbuildinfo",
+     "lint": "pnpm -r lint",
++    "test:unit": "pnpm --filter @agenticros/core build && pnpm --filter @agenticros/ros-camera build && mkdir -p build/test-report && node --import tsx --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./scripts/unit-test-json-reporter.mjs --test-reporter-destination=build/test-report/unit-tests.json tests/unit/*.test.ts",
+     "typecheck": "pnpm -r typecheck",
++    "fuzz:local": "bash ./scripts/run_fuzz_local.sh",
++    "coverity:local": "bash ./scripts/run_coverity_local.sh",
+     "mcp:kill": "pkill -f 'node packages/agenticros-claude-code/dist/index.js' || true"
+   },
+   "engines": {
+     "node": ">=20.0.0",
+     "pnpm": ">=9.0.0"
+   },
++  "pnpm": {
++    "overrides": {
++      "fast-uri": "3.1.2",
++      "flatted": "3.4.2",
++      "path-to-regexp": "8.4.2",
++      "protobufjs": "7.6.1"
++    }
++  },
++  "devDependencies": {
++    "tsx": "^4.22.3"
++  },
+   "packageManager": "pnpm@9.15.4",
+   "author": "PlaiPin",
+   "license": "Apache-2.0"
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 005d7cb..f06ebb7 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -4,9 +4,19 @@ settings:
+   autoInstallPeers: true
+   excludeLinksFromLockfile: false
+ 
++overrides:
++  fast-uri: 3.1.2
++  flatted: 3.4.2
++  path-to-regexp: 8.4.2
++  protobufjs: 7.6.1
++
+ importers:
+ 
+-  .: {}
++  .:
++    devDependencies:
++      tsx:
++        specifier: ^4.22.3
++        version: 4.22.3
+ 
+   packages/agenticros:
+     dependencies:
+@@ -127,6 +137,162 @@ packages:
+   '@eclipse-zenoh/zenoh-ts@1.7.2':
+     resolution: {integrity: sha512-/zq3ZJ76QSuwQKUobzhag3Fp32UOO8g45N1BZl1G/95v4B19/Par2lsh+118btmERx+Gs6jBhcJ1592Pabjq/g==}
+ 
++  '@esbuild/aix-ppc64@0.28.0':
++    resolution: {integrity: sha512-lhRUCeuOyJQURhTxl4WkpFTjIsbDayJHih5kZC1giwE+MhIzAb7mEsQMqMf18rHLsrb5qI1tafG20mLxEWcWlA==}
++    engines: {node: '>=18'}
++    cpu: [ppc64]
++    os: [aix]
++
++  '@esbuild/android-arm64@0.28.0':
++    resolution: {integrity: sha512-+WzIXQOSaGs33tLEgYPYe/yQHf0WTU0X42Jca3y8NWMbUVhp7rUnw+vAsRC/QiDrdD31IszMrZy+qwPOPjd+rw==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [android]
++
++  '@esbuild/android-arm@0.28.0':
++    resolution: {integrity: sha512-wqh0ByljabXLKHeWXYLqoJ5jKC4XBaw6Hk08OfMrCRd2nP2ZQ5eleDZC41XHyCNgktBGYMbqnrJKq/K/lzPMSQ==}
++    engines: {node: '>=18'}
++    cpu: [arm]
++    os: [android]
++
++  '@esbuild/android-x64@0.28.0':
++    resolution: {integrity: sha512-+VJggoaKhk2VNNqVL7f6S189UzShHC/mR9EE8rDdSkdpN0KflSwWY/gWjDrNxxisg8Fp1ZCD9jLMo4m0OUfeUA==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [android]
++
++  '@esbuild/darwin-arm64@0.28.0':
++    resolution: {integrity: sha512-0T+A9WZm+bZ84nZBtk1ckYsOvyA3x7e2Acj1KdVfV4/2tdG4fzUp91YHx+GArWLtwqp77pBXVCPn2We7Letr0Q==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [darwin]
++
++  '@esbuild/darwin-x64@0.28.0':
++    resolution: {integrity: sha512-fyzLm/DLDl/84OCfp2f/XQ4flmORsjU7VKt8HLjvIXChJoFFOIL6pLJPH4Yhd1n1gGFF9mPwtlN5Wf82DZs+LQ==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [darwin]
++
++  '@esbuild/freebsd-arm64@0.28.0':
++    resolution: {integrity: sha512-l9GeW5UZBT9k9brBYI+0WDffcRxgHQD8ShN2Ur4xWq/NFzUKm3k5lsH4PdaRgb2w7mI9u61nr2gI2mLI27Nh3Q==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [freebsd]
++
++  '@esbuild/freebsd-x64@0.28.0':
++    resolution: {integrity: sha512-BXoQai/A0wPO6Es3yFJ7APCiKGc1tdAEOgeTNy3SsB491S3aHn4S4r3e976eUnPdU+NbdtmBuLncYir2tMU9Nw==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [freebsd]
++
++  '@esbuild/linux-arm64@0.28.0':
++    resolution: {integrity: sha512-RVyzfb3FWsGA55n6WY0MEIEPURL1FcbhFE6BffZEMEekfCzCIMtB5yyDcFnVbTnwk+CLAgTujmV/Lgvih56W+A==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [linux]
++
++  '@esbuild/linux-arm@0.28.0':
++    resolution: {integrity: sha512-CjaaREJagqJp7iTaNQjjidaNbCKYcd4IDkzbwwxtSvjI7NZm79qiHc8HqciMddQ6CKvJT6aBd8lO9kN/ZudLlw==}
++    engines: {node: '>=18'}
++    cpu: [arm]
++    os: [linux]
++
++  '@esbuild/linux-ia32@0.28.0':
++    resolution: {integrity: sha512-KBnSTt1kxl9x70q+ydterVdl+Cn0H18ngRMRCEQfrbqdUuntQQ0LoMZv47uB97NljZFzY6HcfqEZ2SAyIUTQBQ==}
++    engines: {node: '>=18'}
++    cpu: [ia32]
++    os: [linux]
++
++  '@esbuild/linux-loong64@0.28.0':
++    resolution: {integrity: sha512-zpSlUce1mnxzgBADvxKXX5sl8aYQHo2ezvMNI8I0lbblJtp8V4odlm3Yzlj7gPyt3T8ReksE6bK+pT3WD+aJRg==}
++    engines: {node: '>=18'}
++    cpu: [loong64]
++    os: [linux]
++
++  '@esbuild/linux-mips64el@0.28.0':
++    resolution: {integrity: sha512-2jIfP6mmjkdmeTlsX/9vmdmhBmKADrWqN7zcdtHIeNSCH1SqIoNI63cYsjQR8J+wGa4Y5izRcSHSm8K3QWmk3w==}
++    engines: {node: '>=18'}
++    cpu: [mips64el]
++    os: [linux]
++
++  '@esbuild/linux-ppc64@0.28.0':
++    resolution: {integrity: sha512-bc0FE9wWeC0WBm49IQMPSPILRocGTQt3j5KPCA8os6VprfuJ7KD+5PzESSrJ6GmPIPJK965ZJHTUlSA6GNYEhg==}
++    engines: {node: '>=18'}
++    cpu: [ppc64]
++    os: [linux]
++
++  '@esbuild/linux-riscv64@0.28.0':
++    resolution: {integrity: sha512-SQPZOwoTTT/HXFXQJG/vBX8sOFagGqvZyXcgLA3NhIqcBv1BJU1d46c0rGcrij2B56Z2rNiSLaZOYW5cUk7yLQ==}
++    engines: {node: '>=18'}
++    cpu: [riscv64]
++    os: [linux]
++
++  '@esbuild/linux-s390x@0.28.0':
++    resolution: {integrity: sha512-SCfR0HN8CEEjnYnySJTd2cw0k9OHB/YFzt5zgJEwa+wL/T/raGWYMBqwDNAC6dqFKmJYZoQBRfHjgwLHGSrn3Q==}
++    engines: {node: '>=18'}
++    cpu: [s390x]
++    os: [linux]
++
++  '@esbuild/linux-x64@0.28.0':
++    resolution: {integrity: sha512-us0dSb9iFxIi8srnpl931Nvs65it/Jd2a2K3qs7fz2WfGPHqzfzZTfec7oxZJRNPXPnNYZtanmRc4AL/JwVzHQ==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [linux]
++
++  '@esbuild/netbsd-arm64@0.28.0':
++    resolution: {integrity: sha512-CR/RYotgtCKwtftMwJlUU7xCVNg3lMYZ0RzTmAHSfLCXw3NtZtNpswLEj/Kkf6kEL3Gw+BpOekRX0BYCtklhUw==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [netbsd]
++
++  '@esbuild/netbsd-x64@0.28.0':
++    resolution: {integrity: sha512-nU1yhmYutL+fQ71Kxnhg8uEOdC0pwEW9entHykTgEbna2pw2dkbFSMeqjjyHZoCmt8SBkOSvV+yNmm94aUrrqw==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [netbsd]
++
++  '@esbuild/openbsd-arm64@0.28.0':
++    resolution: {integrity: sha512-cXb5vApOsRsxsEl4mcZ1XY3D4DzcoMxR/nnc4IyqYs0rTI8ZKmW6kyyg+11Z8yvgMfAEldKzP7AdP64HnSC/6g==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [openbsd]
++
++  '@esbuild/openbsd-x64@0.28.0':
++    resolution: {integrity: sha512-8wZM2qqtv9UP3mzy7HiGYNH/zjTA355mpeuA+859TyR+e+Tc08IHYpLJuMsfpDJwoLo1ikIJI8jC3GFjnRClzA==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [openbsd]
++
++  '@esbuild/openharmony-arm64@0.28.0':
++    resolution: {integrity: sha512-FLGfyizszcef5C3YtoyQDACyg95+dndv79i2EekILBofh5wpCa1KuBqOWKrEHZg3zrL3t5ouE5jgr94vA+Wb2w==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [openharmony]
++
++  '@esbuild/sunos-x64@0.28.0':
++    resolution: {integrity: sha512-1ZgjUoEdHZZl/YlV76TSCz9Hqj9h9YmMGAgAPYd+q4SicWNX3G5GCyx9uhQWSLcbvPW8Ni7lj4gDa1T40akdlw==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [sunos]
++
++  '@esbuild/win32-arm64@0.28.0':
++    resolution: {integrity: sha512-Q9StnDmQ/enxnpxCCLSg0oo4+34B9TdXpuyPeTedN/6+iXBJ4J+zwfQI28u/Jl40nOYAxGoNi7mFP40RUtkmUA==}
++    engines: {node: '>=18'}
++    cpu: [arm64]
++    os: [win32]
++
++  '@esbuild/win32-ia32@0.28.0':
++    resolution: {integrity: sha512-zF3ag/gfiCe6U2iczcRzSYJKH1DCI+ByzSENHlM2FcDbEeo5Zd2C86Aq0tKUYAJJ1obRP84ymxIAksZUcdztHA==}
++    engines: {node: '>=18'}
++    cpu: [ia32]
++    os: [win32]
++
++  '@esbuild/win32-x64@0.28.0':
++    resolution: {integrity: sha512-pEl1bO9mfAmIC+tW5btTmrKaujg3zGtUmWNdCw/xs70FBjwAL3o9OEKNHvNmnyylD6ubxUERiEhdsL0xBQ9efw==}
++    engines: {node: '>=18'}
++    cpu: [x64]
++    os: [win32]
++
+   '@eslint-community/eslint-utils@4.9.1':
+     resolution: {integrity: sha512-phrYmNiYppR7znFEdqgfWHXR6NCkZEK7hwWDHZUjit/2/U0r6XvkDl0SYnoM51Hq7FhCGdLDT6zxCCOY1hexsQ==}
+     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+@@ -216,20 +382,20 @@ packages:
+   '@protobufjs/base64@1.1.2':
+     resolution: {integrity: sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==}
+ 
+-  '@protobufjs/codegen@2.0.4':
+-    resolution: {integrity: sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==}
++  '@protobufjs/codegen@2.0.5':
++    resolution: {integrity: sha512-zgXFLzW3Ap33e6d0Wlj4MGIm6Ce8O89n/apUaGNB/jx+hw+ruWEp7EwGUshdLKVRCxZW12fp9r40E1mQrf/34g==}
+ 
+-  '@protobufjs/eventemitter@1.1.0':
+-    resolution: {integrity: sha512-j9ednRT81vYJ9OfVuXG6ERSTdEL1xVsNgqpkxMsbIabzSo3goCjDIveeGv5d03om39ML71RdmrGNjG5SReBP/Q==}
++  '@protobufjs/eventemitter@1.1.1':
++    resolution: {integrity: sha512-vW1GmwMZNnL+gMRaovlh9yZX74kc+TTU3FObkkurpMaRtBfLP3ldjS9KQWlwZgraRE0+dheEEoAxdzcJQ8eXZg==}
+ 
+-  '@protobufjs/fetch@1.1.0':
+-    resolution: {integrity: sha512-lljVXpqXebpsijW71PZaCYeIcE5on1w5DlQy5WH6GLbFryLUrBD4932W/E2BSpfRJWseIL4v/KPgBFxDOIdKpQ==}
++  '@protobufjs/fetch@1.1.1':
++    resolution: {integrity: sha512-GpptLrs57adMSuHi3VNj0mAF8dwh36LMaYF6XyJ6JMWlVsc+t42tm1HSEDmOs3A8fC9yyeisgLhsTVQokOZ0zw==}
+ 
+   '@protobufjs/float@1.0.2':
+     resolution: {integrity: sha512-Ddb+kVXlXst9d+R9PfTIxh1EdNkgoRe5tOX6t01f1lYWOvJnSPDBlG241QLzcyPdoNTsblLUdujGSE4RzrTZGQ==}
+ 
+-  '@protobufjs/inquire@1.1.0':
+-    resolution: {integrity: sha512-kdSefcPdruJiFMVSbn801t4vFK7KB/5gd2fYvrxhuJYg8ILrmn9SKSX2tZdV6V+ksulWqS7aXjBcRXl3wHoD9Q==}
++  '@protobufjs/inquire@1.1.2':
++    resolution: {integrity: sha512-pa0vFRuws4wkvaXKK1uXZMAwAX4/t8ANaJo45iw/oQHNQ9q5xUzwgFmVJGXiga2BeN+zpX7Vf9vmsiIa2J+MUw==}
+ 
+   '@protobufjs/path@1.1.2':
+     resolution: {integrity: sha512-6JOcJ5Tm08dOHAbdR3GrvP+yUUfkjG5ePsHYczMFLq3ZmMkAD98cDgcT2iA1lJ9NVwFd4tH/iSSoe44YWkltEA==}
+@@ -237,8 +403,8 @@ packages:
+   '@protobufjs/pool@1.1.0':
+     resolution: {integrity: sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw==}
+ 
+-  '@protobufjs/utf8@1.1.0':
+-    resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
++  '@protobufjs/utf8@1.1.1':
++    resolution: {integrity: sha512-oOAWABowe8EAbMyWKM0tYDKi8Yaox52D+HWZhAIJqQXbqe0xI/GV7FhLWqlEKreMkfDjshR5FKgi3mnle0h6Eg==}
+ 
+   '@rclnodejs/ref-array-di@1.2.2':
+     resolution: {integrity: sha512-BHslJ1wmmaiPQ2rPZrO9Du9Cd/eQjZ+N5T84poFZk9JFJkYatbtXALbjWTgoHWpl6Cvm415NfwsGc2xkjzFPxw==}
+@@ -497,6 +663,11 @@ packages:
+     resolution: {integrity: sha512-U9bFFjX8tFiATgtkJ1zg25+KviIXpgRvRHS8sau3GfhVzThRQrOeksPeT0BWW2MNZs1OEWJ1DPXOQMn0KKRkvg==}
+     engines: {node: '>=0.12'}
+ 
++  esbuild@0.28.0:
++    resolution: {integrity: sha512-sNR9MHpXSUV/XB4zmsFKN+QgVG82Cc7+/aaxJ8Adi8hyOac+EXptIp45QBPaVyX3N70664wRbTcLTOemCAnyqw==}
++    engines: {node: '>=18'}
++    hasBin: true
++
+   escape-html@1.0.3:
+     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
+ 
+@@ -594,8 +765,8 @@ packages:
+   fast-levenshtein@2.0.6:
+     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
+ 
+-  fast-uri@3.1.0:
+-    resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
++  fast-uri@3.1.2:
++    resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
+ 
+   fetch-blob@3.2.0:
+     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
+@@ -620,8 +791,8 @@ packages:
+     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
+     engines: {node: '>=16'}
+ 
+-  flatted@3.3.3:
+-    resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
++  flatted@3.4.2:
++    resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
+ 
+   foreachasync@3.0.0:
+     resolution: {integrity: sha512-J+ler7Ta54FwwNcx6wQRDhTIbNeyDcARMkOcguEqnEdtm0jKvN3Li3PDAb2Du3ubJYEWfYL83XMROXdsXAXycw==}
+@@ -641,6 +812,11 @@ packages:
+   fs-constants@1.0.0:
+     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
+ 
++  fsevents@2.3.3:
++    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
++    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
++    os: [darwin]
++
+   function-bind@1.1.2:
+     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+ 
+@@ -930,8 +1106,8 @@ packages:
+     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
+     engines: {node: '>=8'}
+ 
+-  path-to-regexp@8.3.0:
+-    resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
++  path-to-regexp@8.4.2:
++    resolution: {integrity: sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA==}
+ 
+   pkce-challenge@5.0.1:
+     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
+@@ -951,8 +1127,8 @@ packages:
+     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
+     engines: {node: '>= 0.8.0'}
+ 
+-  protobufjs@7.5.4:
+-    resolution: {integrity: sha512-CvexbZtbov6jW2eXAvLukXjXUW1TzFaivC46BpWc/3BpcCysb5Vffu+B3XHMm8lVEuy2Mm4XGex8hBSg1yapPg==}
++  protobufjs@7.6.1:
++    resolution: {integrity: sha512-4K0myLaWL5EteuSAro91EGFgcfVgxb64Jx+7oDAY6GOkXD4M69yuSEljNcInGVCA5sOPxmZ/EqDLj2x0Q0+Ygg==}
+     engines: {node: '>=12.0.0'}
+ 
+   proxy-addr@2.0.7:
+@@ -1099,6 +1275,11 @@ packages:
+     resolution: {integrity: sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g==}
+     engines: {node: '>=16'}
+ 
++  tsx@4.22.3:
++    resolution: {integrity: sha512-mdoNxBC/cSQObGGVQ5Bpn5i+yv7j68gk3Nfm3wFjcJg3Z0Mix9jzAFfP12prmm5eVGmDKtp0yyArrs0Q+8gZHg==}
++    engines: {node: '>=18.0.0'}
++    hasBin: true
++
+   tunnel-agent@0.6.0:
+     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
+ 
+@@ -1200,6 +1381,84 @@ snapshots:
+       - jiti
+       - supports-color
+ 
++  '@esbuild/aix-ppc64@0.28.0':
++    optional: true
++
++  '@esbuild/android-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/android-arm@0.28.0':
++    optional: true
++
++  '@esbuild/android-x64@0.28.0':
++    optional: true
++
++  '@esbuild/darwin-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/darwin-x64@0.28.0':
++    optional: true
++
++  '@esbuild/freebsd-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/freebsd-x64@0.28.0':
++    optional: true
++
++  '@esbuild/linux-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/linux-arm@0.28.0':
++    optional: true
++
++  '@esbuild/linux-ia32@0.28.0':
++    optional: true
++
++  '@esbuild/linux-loong64@0.28.0':
++    optional: true
++
++  '@esbuild/linux-mips64el@0.28.0':
++    optional: true
++
++  '@esbuild/linux-ppc64@0.28.0':
++    optional: true
++
++  '@esbuild/linux-riscv64@0.28.0':
++    optional: true
++
++  '@esbuild/linux-s390x@0.28.0':
++    optional: true
++
++  '@esbuild/linux-x64@0.28.0':
++    optional: true
++
++  '@esbuild/netbsd-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/netbsd-x64@0.28.0':
++    optional: true
++
++  '@esbuild/openbsd-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/openbsd-x64@0.28.0':
++    optional: true
++
++  '@esbuild/openharmony-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/sunos-x64@0.28.0':
++    optional: true
++
++  '@esbuild/win32-arm64@0.28.0':
++    optional: true
++
++  '@esbuild/win32-ia32@0.28.0':
++    optional: true
++
++  '@esbuild/win32-x64@0.28.0':
++    optional: true
++
+   '@eslint-community/eslint-utils@4.9.1(eslint@9.39.3)':
+     dependencies:
+       eslint: 9.39.3
+@@ -1252,7 +1511,7 @@ snapshots:
+     dependencies:
+       google-auth-library: 10.6.2
+       p-retry: 4.6.2
+-      protobufjs: 7.5.4
++      protobufjs: 7.6.1
+       ws: 8.19.0
+     optionalDependencies:
+       '@modelcontextprotocol/sdk': 1.27.1(zod@3.25.76)
+@@ -1302,24 +1561,23 @@ snapshots:
+ 
+   '@protobufjs/base64@1.1.2': {}
+ 
+-  '@protobufjs/codegen@2.0.4': {}
++  '@protobufjs/codegen@2.0.5': {}
+ 
+-  '@protobufjs/eventemitter@1.1.0': {}
++  '@protobufjs/eventemitter@1.1.1': {}
+ 
+-  '@protobufjs/fetch@1.1.0':
++  '@protobufjs/fetch@1.1.1':
+     dependencies:
+       '@protobufjs/aspromise': 1.1.2
+-      '@protobufjs/inquire': 1.1.0
+ 
+   '@protobufjs/float@1.0.2': {}
+ 
+-  '@protobufjs/inquire@1.1.0': {}
++  '@protobufjs/inquire@1.1.2': {}
+ 
+   '@protobufjs/path@1.1.2': {}
+ 
+   '@protobufjs/pool@1.1.0': {}
+ 
+-  '@protobufjs/utf8@1.1.0': {}
++  '@protobufjs/utf8@1.1.1': {}
+ 
+   '@rclnodejs/ref-array-di@1.2.2':
+     dependencies:
+@@ -1392,7 +1650,7 @@ snapshots:
+   ajv@8.18.0:
+     dependencies:
+       fast-deep-equal: 3.1.3
+-      fast-uri: 3.1.0
++      fast-uri: 3.1.2
+       json-schema-traverse: 1.0.0
+       require-from-string: 2.0.2
+ 
+@@ -1581,6 +1839,35 @@ snapshots:
+       ext: 1.7.0
+     optional: true
+ 
++  esbuild@0.28.0:
++    optionalDependencies:
++      '@esbuild/aix-ppc64': 0.28.0
++      '@esbuild/android-arm': 0.28.0
++      '@esbuild/android-arm64': 0.28.0
++      '@esbuild/android-x64': 0.28.0
++      '@esbuild/darwin-arm64': 0.28.0
++      '@esbuild/darwin-x64': 0.28.0
++      '@esbuild/freebsd-arm64': 0.28.0
++      '@esbuild/freebsd-x64': 0.28.0
++      '@esbuild/linux-arm': 0.28.0
++      '@esbuild/linux-arm64': 0.28.0
++      '@esbuild/linux-ia32': 0.28.0
++      '@esbuild/linux-loong64': 0.28.0
++      '@esbuild/linux-mips64el': 0.28.0
++      '@esbuild/linux-ppc64': 0.28.0
++      '@esbuild/linux-riscv64': 0.28.0
++      '@esbuild/linux-s390x': 0.28.0
++      '@esbuild/linux-x64': 0.28.0
++      '@esbuild/netbsd-arm64': 0.28.0
++      '@esbuild/netbsd-x64': 0.28.0
++      '@esbuild/openbsd-arm64': 0.28.0
++      '@esbuild/openbsd-x64': 0.28.0
++      '@esbuild/openharmony-arm64': 0.28.0
++      '@esbuild/sunos-x64': 0.28.0
++      '@esbuild/win32-arm64': 0.28.0
++      '@esbuild/win32-ia32': 0.28.0
++      '@esbuild/win32-x64': 0.28.0
++
+   escape-html@1.0.3: {}
+ 
+   escape-string-regexp@4.0.0: {}
+@@ -1726,7 +2013,7 @@ snapshots:
+ 
+   fast-levenshtein@2.0.6: {}
+ 
+-  fast-uri@3.1.0: {}
++  fast-uri@3.1.2: {}
+ 
+   fetch-blob@3.2.0:
+     dependencies:
+@@ -1758,10 +2045,10 @@ snapshots:
+ 
+   flat-cache@4.0.1:
+     dependencies:
+-      flatted: 3.3.3
++      flatted: 3.4.2
+       keyv: 4.5.4
+ 
+-  flatted@3.3.3: {}
++  flatted@3.4.2: {}
+ 
+   foreachasync@3.0.0:
+     optional: true
+@@ -1776,6 +2063,9 @@ snapshots:
+ 
+   fs-constants@1.0.0: {}
+ 
++  fsevents@2.3.3:
++    optional: true
++
+   function-bind@1.1.2: {}
+ 
+   fzstd@0.1.1: {}
+@@ -2045,7 +2335,7 @@ snapshots:
+ 
+   path-key@3.1.1: {}
+ 
+-  path-to-regexp@8.3.0: {}
++  path-to-regexp@8.4.2: {}
+ 
+   pkce-challenge@5.0.1: {}
+ 
+@@ -2068,18 +2358,18 @@ snapshots:
+ 
+   prelude-ls@1.2.1: {}
+ 
+-  protobufjs@7.5.4:
++  protobufjs@7.6.1:
+     dependencies:
+       '@protobufjs/aspromise': 1.1.2
+       '@protobufjs/base64': 1.1.2
+-      '@protobufjs/codegen': 2.0.4
+-      '@protobufjs/eventemitter': 1.1.0
+-      '@protobufjs/fetch': 1.1.0
++      '@protobufjs/codegen': 2.0.5
++      '@protobufjs/eventemitter': 1.1.1
++      '@protobufjs/fetch': 1.1.1
+       '@protobufjs/float': 1.0.2
+-      '@protobufjs/inquire': 1.1.0
++      '@protobufjs/inquire': 1.1.2
+       '@protobufjs/path': 1.1.2
+       '@protobufjs/pool': 1.1.0
+-      '@protobufjs/utf8': 1.1.0
++      '@protobufjs/utf8': 1.1.1
+       '@types/node': 20.19.35
+       long: 5.3.2
+ 
+@@ -2147,7 +2437,7 @@ snapshots:
+       depd: 2.0.0
+       is-promise: 4.0.0
+       parseurl: 1.3.3
+-      path-to-regexp: 8.3.0
++      path-to-regexp: 8.4.2
+     transitivePeerDependencies:
+       - supports-color
+ 
+@@ -2267,6 +2557,12 @@ snapshots:
+ 
+   tslog@4.10.2: {}
+ 
++  tsx@4.22.3:
++    dependencies:
++      esbuild: 0.28.0
++    optionalDependencies:
++      fsevents: 2.3.3
++
+   tunnel-agent@0.6.0:
+     dependencies:
+       safe-buffer: 5.2.1
+diff --git a/scripts/fuzz_ros_payloads.mjs b/scripts/fuzz_ros_payloads.mjs
+new file mode 100755
+index 0000000..92b794e
+--- /dev/null
++++ b/scripts/fuzz_ros_payloads.mjs
+@@ -0,0 +1,585 @@
++#!/usr/bin/env node
++
++import assert from "node:assert/strict";
++import fs from "node:fs";
++import os from "node:os";
++import path from "node:path";
++import process from "node:process";
++import { fileURLToPath, pathToFileURL } from "node:url";
++
++const __filename = fileURLToPath(import.meta.url);
++const __dirname = path.dirname(__filename);
++const repoRoot = path.resolve(__dirname, "..");
++
++const options = parseArgs(process.argv.slice(2));
++fs.mkdirSync(options.reportDir, { recursive: true });
++
++const rosCameraModule = await importDistModule("packages/ros-camera/dist/index.js");
++const coreConversionModule = await importDistModule("packages/core/dist/transport/local/conversion.js");
++const agenticrosDepthModule = await importSourceModule("packages/agenticros/src/depth.ts");
++const agenticrosConfigFileModule = await importSourceModule("packages/agenticros/src/config-file.ts");
++
++const {
++  cameraSnapshotFromPlainMessage,
++  coerceRosImageDataToBuffer,
++  mimeTypeForSnapshotBase64,
++  rosNumericField,
++} = rosCameraModule;
++const { fromRosMessage } = coreConversionModule;
++const { getDepthDistance, getDepthSectors, sampleDepthMeters } = agenticrosDepthModule;
++const {
++  ConfigFileError,
++  getOpenClawConfigPath,
++  readOpenClawConfig,
++  readAgenticROSConfigFromFile,
++  writeAgenticROSConfig,
++} = agenticrosConfigFileModule;
++
++const prng = createPrng(options.seed);
++const startedAt = new Date().toISOString();
++const startedMs = Date.now();
++
++const targets = [
++  {
++    name: "coerceRosImageDataToBuffer",
++    run() {
++      const bytes = randomBytes(prng, 1 + prng.int(255));
++      const shaped = makeByteSourceCase(prng, bytes);
++      let result;
++      try {
++        result = coerceRosImageDataToBuffer(shaped.value);
++      } catch (error) {
++        const message = error instanceof Error ? error.message : String(error);
++        throw new Error(`byte source ${shaped.kind} failed: ${message}`);
++      }
++      assert(Buffer.isBuffer(result), "expected a Buffer result");
++      assert(result.equals(Buffer.from(bytes)), "buffer content mismatch after coercion");
++    },
++  },
++  {
++    name: "cameraSnapshotFromPlainMessage:CompressedImage",
++    run() {
++      const bytes = randomBytes(prng, 1 + prng.int(256));
++      const shaped = makeByteSourceCase(prng, bytes);
++      const msg = {
++        format: randomCompressedFormat(prng),
++        data: shaped.value,
++      };
++      const payload = cameraSnapshotFromPlainMessage("CompressedImage", msg);
++      assert.equal(typeof payload.formatLabel, "string", "formatLabel should be a string");
++      assert(payload.formatLabel.length > 0, "formatLabel should not be empty");
++      assert.equal(payload.dataBase64, Buffer.from(bytes).toString("base64"), "compressed snapshot base64 mismatch");
++      assert(mimeTypeForSnapshotBase64(payload.dataBase64, payload.formatLabel).startsWith("image/"), "mime type should be image/*");
++    },
++  },
++  {
++    name: "cameraSnapshotFromPlainMessage:Image",
++    run() {
++      const image = makeRawImageMessage(prng);
++      const payload = cameraSnapshotFromPlainMessage("Image", image.message);
++      assert.equal(payload.formatLabel, "png", "raw image snapshots should be PNG");
++      assert.equal(payload.width, image.width, "width mismatch");
++      assert.equal(payload.height, image.height, "height mismatch");
++      assert(mimeTypeForSnapshotBase64(payload.dataBase64, payload.formatLabel) === "image/png", "raw image should encode as PNG");
++      const encoded = Buffer.from(payload.dataBase64, "base64");
++      assert(encoded.length >= 8, "PNG output too small");
++      assert.equal(encoded.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", "PNG magic mismatch");
++    },
++  },
++  {
++    name: "fromRosMessage:Image",
++    run() {
++      const image = makeRawImageMessage(prng);
++      const plain = fromRosMessage(image.message, "sensor_msgs/msg/Image");
++      assert.equal(typeof plain, "object", "expected plain object from Image conversion");
++      const data = coerceRosImageDataToBuffer(plain.data);
++      assert(data.equals(Buffer.from(image.bytes)), "Image data changed during extraction");
++      assert.equal(rosNumericField(plain.width, "width"), image.width, "plain Image width mismatch");
++      assert.equal(rosNumericField(plain.height, "height"), image.height, "plain Image height mismatch");
++    },
++  },
++  {
++    name: "fromRosMessage:CompressedImage",
++    run() {
++      const bytes = randomBytes(prng, 1 + prng.int(256));
++      const shaped = makeByteSourceCase(prng, bytes);
++      const message = {
++        header: randomHeader(prng),
++        format: randomCompressedFormat(prng),
++        data: shaped.value,
++      };
++      const plain = fromRosMessage(message, "sensor_msgs/msg/CompressedImage");
++      assert.equal(typeof plain, "object", "expected plain object from CompressedImage conversion");
++      const data = coerceRosImageDataToBuffer(plain.data);
++      assert(data.equals(Buffer.from(bytes)), "CompressedImage data changed during extraction");
++      assert.equal(typeof plain.format, "string", "plain CompressedImage format should be string");
++    },
++  },
++  {
++    name: "sampleDepthMeters:valid",
++    run() {
++      const depthCase = makeDepthImageCase(prng, { forcePositive: false });
++      const values = sampleDepthMeters(
++        depthCase.width,
++        depthCase.height,
++        depthCase.step,
++        depthCase.encoding,
++        depthCase.data,
++        randomCenterFraction(prng),
++        depthCase.isBigEndian,
++      );
++      for (const value of values) {
++        assert(Number.isFinite(value), "depth sample should be finite");
++        assert(value > 0, "depth sample should be positive");
++      }
++    },
++  },
++  {
++    name: "sampleDepthMeters:invalidEncoding",
++    run() {
++      const depthCase = makeDepthImageCase(prng, { forcePositive: false });
++      assert.throws(
++        () => sampleDepthMeters(depthCase.width, depthCase.height, depthCase.step, `bad-${randomAscii(prng, 3, 8)}`, depthCase.data),
++        /Unsupported depth encoding/,
++      );
++    },
++  },
++  {
++    name: "getDepthDistance:syncTransport",
++    async run() {
++      const depthCase = makeDepthImageCase(prng, { forcePositive: true });
++      const message = depthCase.message;
++      const result = await getDepthDistance(makeMockTransport(message, { sync: true }), "/depth");
++      assert.equal(result.topic, "/depth", "depth distance topic mismatch");
++      assert.equal(result.valid, true, "depth distance should be valid");
++      assert(Number.isFinite(result.distance_m) && result.distance_m > 0, "depth distance should be positive");
++      assert(result.sample_count > 0, "depth distance should contain samples");
++    },
++  },
++  {
++    name: "getDepthSectors:syncTransport",
++    async run() {
++      const depthCase = makeDepthImageCase(prng, { forcePositive: true });
++      const result = await getDepthSectors(makeMockTransport(depthCase.message, { sync: true }), "/depth");
++      assert.equal(result.topic, "/depth", "depth sectors topic mismatch");
++      assert.equal(result.valid, true, "depth sectors should be valid");
++      assert(Number.isFinite(result.left_m) && result.left_m > 0, "left sector should be positive");
++      assert(Number.isFinite(result.center_m) && result.center_m > 0, "center sector should be positive");
++      assert(Number.isFinite(result.right_m) && result.right_m > 0, "right sector should be positive");
++    },
++  },
++  {
++    name: "configFile:invalidJson",
++    run() {
++      withOpenClawConfigFile("{invalid-json", () => {
++        assert.throws(
++          () => readOpenClawConfig(),
++          (error) => error instanceof ConfigFileError && error.code === "INVALID_JSON",
++        );
++      });
++    },
++  },
++  {
++    name: "configFile:writeReadRoundTrip",
++    run() {
++      withOpenClawConfigFile("{}", () => {
++        const pathFromEnv = getOpenClawConfigPath();
++        assert(path.isAbsolute(pathFromEnv), "resolved OpenClaw config path should be absolute");
++        writeAgenticROSConfig({});
++        const raw = readOpenClawConfig();
++        assert.equal(typeof raw, "object", "raw config should be an object");
++        const parsed = readAgenticROSConfigFromFile();
++        assert.equal(typeof parsed, "object", "parsed plugin config should be an object");
++        assert.equal(typeof parsed.safety.maxLinearVelocity, "number", "parsed config should include safety defaults");
++        assert(parsed.safety.maxLinearVelocity > 0, "parsed config should include positive linear velocity limit");
++      });
++    },
++  },
++];
++
++const summary = {
++  seed: options.seed,
++  iterationsPerTarget: options.iterations,
++  startedAt,
++  finishedAt: "",
++  durationMs: 0,
++  targets: {},
++  failureCount: 0,
++};
++
++let firstFailure = null;
++
++for (const target of targets) {
++  const stats = { runs: 0, failures: 0 };
++  for (let i = 0; i < options.iterations; i++) {
++    stats.runs += 1;
++    try {
++      await target.run();
++    } catch (error) {
++      stats.failures += 1;
++      summary.failureCount += 1;
++      if (firstFailure === null) {
++        firstFailure = {
++          target: target.name,
++          iteration: i,
++          error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : { name: "UnknownError", message: String(error) },
++        };
++      }
++      break;
++    }
++  }
++  summary.targets[target.name] = stats;
++}
++
++summary.finishedAt = new Date().toISOString();
++summary.durationMs = Date.now() - startedMs;
++if (firstFailure !== null) {
++  summary.firstFailure = firstFailure;
++}
++
++const textSummary = buildTextSummary(summary, firstFailure);
++fs.writeFileSync(path.join(options.reportDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
++fs.writeFileSync(path.join(options.reportDir, "summary.txt"), textSummary, "utf8");
++
++console.log(textSummary.trimEnd());
++
++if (summary.failureCount > 0) {
++  process.exitCode = 1;
++}
++
++function parseArgs(argv) {
++  const out = {
++    iterations: 1000,
++    seed: (Date.now() >>> 0) || 0x1a2b3c4d,
++    reportDir: path.resolve(repoRoot, "build/fuzz/report"),
++  };
++
++  for (let i = 0; i < argv.length; i++) {
++    const arg = argv[i];
++    if (arg === "--iterations") {
++      const value = Number(argv[++i]);
++      if (!Number.isInteger(value) || value <= 0) throw new Error("--iterations must be a positive integer");
++      out.iterations = value;
++      continue;
++    }
++    if (arg === "--seed") {
++      const value = Number(argv[++i]);
++      if (!Number.isInteger(value)) throw new Error("--seed must be an integer");
++      out.seed = value >>> 0;
++      continue;
++    }
++    if (arg === "--report-dir") {
++      const value = argv[++i];
++      if (!value) throw new Error("--report-dir requires a path");
++      out.reportDir = path.resolve(process.cwd(), value);
++      continue;
++    }
++    throw new Error(`Unknown argument: ${arg}`);
++  }
++
++  return out;
++}
++
++async function importDistModule(relativePath) {
++  const absPath = path.resolve(repoRoot, relativePath);
++  if (!fs.existsSync(absPath)) {
++    throw new Error(`Required build artifact not found: ${absPath}`);
++  }
++  return import(pathToFileURL(absPath).href);
++}
++
++async function importSourceModule(relativePath) {
++  const absPath = path.resolve(repoRoot, relativePath);
++  if (!fs.existsSync(absPath)) {
++    throw new Error(`Required source file not found: ${absPath}`);
++  }
++  return import(pathToFileURL(absPath).href);
++}
++
++function createPrng(seed) {
++  let state = seed >>> 0;
++  if (state === 0) state = 0x6d2b79f5;
++  return {
++    nextUint32() {
++      state ^= state << 13;
++      state ^= state >>> 17;
++      state ^= state << 5;
++      return state >>> 0;
++    },
++    int(maxExclusive) {
++      return this.nextUint32() % maxExclusive;
++    },
++    bool() {
++      return (this.nextUint32() & 1) === 1;
++    },
++    pick(values) {
++      return values[this.int(values.length)];
++    },
++  };
++}
++
++function randomBytes(random, length) {
++  const size = Math.max(0, length);
++  const bytes = new Uint8Array(size);
++  for (let i = 0; i < size; i++) {
++    bytes[i] = random.int(256);
++  }
++  return bytes;
++}
++
++function randomAscii(random, minLength = 0, maxLength = 24) {
++  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789_-";
++  const length = minLength + random.int(maxLength - minLength + 1);
++  let result = "";
++  for (let i = 0; i < length; i++) {
++    result += alphabet[random.int(alphabet.length)];
++  }
++  return result;
++}
++
++function wrapNumeric(random, value, depth = 0) {
++  const normalized = Math.max(0, Math.trunc(value));
++  const variants = [
++    () => normalized,
++    () => BigInt(normalized),
++    () => String(normalized),
++  ];
++
++  if (depth < 2) {
++    variants.push(() => ({ data: wrapNumeric(random, normalized, depth + 1) }));
++  }
++
++  return random.pick(variants)();
++}
++
++function makeByteSourceCase(random, bytes, depth = 0) {
++  const asArray = Array.from(bytes);
++  const variants = [
++    () => ({ kind: "buffer", value: Buffer.from(bytes) }),
++    () => ({ kind: "uint8array", value: Uint8Array.from(bytes) }),
++    () => ({ kind: "arraybuffer", value: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }),
++    () => ({ kind: "array", value: asArray.slice() }),
++    () => ({ kind: "json-buffer", value: { type: "Buffer", data: asArray.slice() } }),
++    () => {
++      const record = {};
++      for (let i = 0; i < asArray.length; i++) record[i] = asArray[i];
++      return { kind: "dense-record", value: record };
++    },
++    () => {
++      const arrayLike = { length: asArray.length };
++      for (let i = 0; i < asArray.length; i++) arrayLike[i] = asArray[i];
++      return { kind: "array-like", value: arrayLike };
++    },
++    () => ({
++      kind: "iterable",
++      value: {
++        [Symbol.iterator]: function* iterator() {
++          yield* asArray;
++        },
++      },
++    }),
++  ];
++
++  if (depth < 2) {
++    variants.push(() => {
++      const nested = makeByteSourceCase(random, bytes, depth + 1);
++      return { kind: `data-wrapper<${nested.kind}>`, value: { data: nested.value } };
++    });
++  }
++
++  return random.pick(variants)();
++}
++
++function randomCompressedFormat(random) {
++  return random.pick([
++    "jpeg",
++    "jpg",
++    "png",
++    "webp",
++    "jpeg; compressed",
++    "png compressed",
++    "rgb8; jpeg compressed",
++    "",
++  ]);
++}
++
++function randomCenterFraction(random) {
++  return 0.1 + (random.int(50) / 100);
++}
++
++function bytesPerPixel(encoding) {
++  switch (encoding.toLowerCase()) {
++    case "rgb8":
++    case "bgr8":
++      return 3;
++    case "rgba8":
++    case "bgra8":
++      return 4;
++    case "mono8":
++    case "8uc1":
++      return 1;
++    default:
++      throw new Error(`Unsupported fuzz encoding: ${encoding}`);
++  }
++}
++
++function makeRawImageMessage(random) {
++  const encoding = random.pick(["rgb8", "bgr8", "rgba8", "bgra8", "mono8", "8UC1"]);
++  const width = 1 + random.int(24);
++  const height = 1 + random.int(24);
++  const bpp = bytesPerPixel(encoding);
++  const rowPadding = random.int(3);
++  const step = width * bpp + rowPadding;
++  const bytes = randomBytes(random, step * height);
++  const message = {
++    header: randomHeader(random),
++    encoding,
++    width: wrapNumeric(random, width),
++    height: wrapNumeric(random, height),
++    is_bigendian: random.pick([0, 1, false, true, { data: 0 }, { data: 1 }]),
++    step: wrapNumeric(random, step),
++    data: makeByteSourceCase(random, bytes).value,
++  };
++  return { message, width, height, bytes };
++}
++
++function makeDepthImageCase(random, options = {}) {
++  const encoding = random.pick(["16UC1", "mono16", "32FC1"]);
++  const width = 3 + random.int(22);
++  const height = 3 + random.int(22);
++  const isBigEndian = random.bool();
++  const bpp = encoding.toLowerCase() === "32fc1" ? 4 : 2;
++  const paddingUnits = random.int(3);
++  const step = width * bpp + paddingUnits * bpp;
++  const data = new Uint8Array(step * height);
++  fillDepthBytes(data, width, height, step, encoding, isBigEndian, random, options.forcePositive === true);
++
++  return {
++    encoding,
++    width,
++    height,
++    step,
++    isBigEndian,
++    data,
++    message: {
++      encoding,
++      width: wrapNumeric(random, width),
++      height: wrapNumeric(random, height),
++      step: wrapNumeric(random, step),
++      is_bigendian: random.pick([isBigEndian, Number(isBigEndian), { data: Number(isBigEndian) }]),
++      data: makeByteSourceCase(random, data).value,
++    },
++  };
++}
++
++function fillDepthBytes(buffer, width, height, step, encoding, isBigEndian, random, forcePositive) {
++  if (encoding.toLowerCase() === "32fc1") {
++    for (let y = 0; y < height; y++) {
++      for (let x = 0; x < width; x++) {
++        const off = y * step + x * 4;
++        const value = forcePositive
++          ? 0.2 + (random.int(4800) / 1000)
++          : random.bool()
++            ? 0
++            : (random.int(10000) - 2000) / 1000;
++        new DataView(buffer.buffer, buffer.byteOffset + off, 4).setFloat32(0, value, !isBigEndian);
++      }
++    }
++    return;
++  }
++
++  for (let y = 0; y < height; y++) {
++    for (let x = 0; x < width; x++) {
++      const off = y * step + x * 2;
++      const value = forcePositive ? 200 + random.int(5000) : random.bool() ? 0 : 1 + random.int(6000);
++      if (isBigEndian) {
++        buffer[off] = (value >> 8) & 0xff;
++        buffer[off + 1] = value & 0xff;
++      } else {
++        buffer[off] = value & 0xff;
++        buffer[off + 1] = (value >> 8) & 0xff;
++      }
++    }
++  }
++}
++
++function makeMockTransport(message, options = {}) {
++  return {
++    connect: async () => {},
++    disconnect: async () => {},
++    getStatus: () => "connected",
++    onConnection: () => () => {},
++    publish: async () => {},
++    subscribe: (_subscribeOptions, handler) => {
++      const subscription = { unsubscribe() {} };
++      const deliver = () => handler(message);
++      if (options.sync === true) {
++        deliver();
++      } else {
++        queueMicrotask(deliver);
++      }
++      return subscription;
++    },
++    callService: async () => ({ result: false }),
++    sendActionGoal: async () => ({ result: false }),
++    cancelActionGoal: async () => {},
++    listTopics: async () => [],
++    listServices: async () => [],
++    listActions: async () => [],
++  };
++}
++
++function withOpenClawConfigFile(contents, fn) {
++  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "agenticros-fuzz-config-"));
++  const configPath = path.join(tempDir, "openclaw.json");
++  fs.writeFileSync(configPath, contents, "utf8");
++  const previous = process.env.OPENCLAW_CONFIG;
++  process.env.OPENCLAW_CONFIG = configPath;
++  try {
++    return fn(configPath);
++  } finally {
++    if (previous === undefined) {
++      delete process.env.OPENCLAW_CONFIG;
++    } else {
++      process.env.OPENCLAW_CONFIG = previous;
++    }
++    fs.rmSync(tempDir, { recursive: true, force: true });
++  }
++}
++
++function randomHeader(random) {
++  return {
++    frame_id: randomAscii(random, 3, 12),
++    stamp: {
++      sec: random.pick([random.int(10_000), BigInt(random.int(10_000))]),
++      nanosec: random.pick([random.int(1_000_000_000), BigInt(random.int(1_000_000_000))]),
++    },
++  };
++}
++
++function buildTextSummary(summary, firstFailure) {
++  const lines = [];
++  lines.push(`Fuzz run started: ${summary.startedAt}`);
++  lines.push(`Fuzz run finished: ${summary.finishedAt}`);
++  lines.push(`Seed: ${summary.seed}`);
++  lines.push(`Iterations per target: ${summary.iterationsPerTarget}`);
++  lines.push("");
++  lines.push("Targets:");
++  for (const [name, stats] of Object.entries(summary.targets)) {
++    lines.push(`- ${name}: runs=${stats.runs}, failures=${stats.failures}`);
++  }
++  lines.push("");
++  lines.push(`Overall failures: ${summary.failureCount}`);
++  lines.push(`Duration: ${summary.durationMs} ms`);
++  if (firstFailure) {
++    lines.push("");
++    lines.push(`First failure target: ${firstFailure.target}`);
++    lines.push(`First failure iteration: ${firstFailure.iteration}`);
++    lines.push(`First failure error: ${firstFailure.error.name}: ${firstFailure.error.message}`);
++  } else {
++    lines.push("");
++    lines.push("No failures detected.");
++  }
++  lines.push("");
++  return `${lines.join("\n")}\n`;
++}
+\ No newline at end of file
+diff --git a/scripts/run_bandit_local.sh b/scripts/run_bandit_local.sh
+new file mode 100755
+index 0000000..81e22cc
+--- /dev/null
++++ b/scripts/run_bandit_local.sh
+@@ -0,0 +1,185 @@
++#!/bin/bash
++
++set -euo pipefail
++
++SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
++REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
++
++BANDIT_ROOT="${BANDIT_ROOT:-$REPO_ROOT/build/bandit}"
++VENV_DIR=""
++REPORT_DIR=""
++TARGET=""
++CLEAN=1
++SKIP_INSTALL=0
++STRICT=0
++
++log_info() {
++    printf '[bandit] %s\n' "$1"
++}
++
++log_error() {
++    printf '[bandit] ERROR: %s\n' "$1" >&2
++}
++
++die() {
++    log_error "$1"
++    exit 1
++}
++
++show_help() {
++    cat << EOF
++Run a local Bandit scan for AgenticROS.
++
++USAGE:
++    $0 [options]
++
++OPTIONS:
++    --target PATH      Scan target (default: ros2_ws/src)
++    --venv-dir PATH    Python virtual environment path (default: build/bandit/.venv)
++    --report-dir PATH  Report directory (default: build/bandit/report)
++    --no-clean         Reuse any existing report output
++    --skip-install     Reuse the existing Bandit installation in the venv
++    --strict           Exit non-zero when Bandit reports findings
++    -h, --help         Show this help message
++EOF
++}
++
++parse_args() {
++    while [[ $# -gt 0 ]]; do
++        case "$1" in
++            --)
++                shift
++                ;;
++            --target)
++                [[ $# -ge 2 ]] || die "Missing value for --target"
++                TARGET="$2"
++                shift 2
++                ;;
++            --venv-dir)
++                [[ $# -ge 2 ]] || die "Missing value for --venv-dir"
++                VENV_DIR="$2"
++                shift 2
++                ;;
++            --report-dir)
++                [[ $# -ge 2 ]] || die "Missing value for --report-dir"
++                REPORT_DIR="$2"
++                shift 2
++                ;;
++            --no-clean)
++                CLEAN=0
++                shift
++                ;;
++            --skip-install)
++                SKIP_INSTALL=1
++                shift
++                ;;
++            --strict)
++                STRICT=1
++                shift
++                ;;
++            -h|--help)
++                show_help
++                exit 0
++                ;;
++            *)
++                die "Unknown argument: $1"
++                ;;
++        esac
++    done
++}
++
++ensure_python() {
++    [[ -x /usr/bin/python3 ]] || die "Required interpreter '/usr/bin/python3' was not found."
++}
++
++ensure_venv() {
++    if [[ -x "$VENV_DIR/bin/python" ]]; then
++        return
++    fi
++
++    log_info "Creating Python virtual environment at $VENV_DIR"
++    /usr/bin/python3 -m venv "$VENV_DIR"
++}
++
++ensure_bandit() {
++    if [[ $SKIP_INSTALL -eq 1 && ! -x "$VENV_DIR/bin/bandit" ]]; then
++        die "--skip-install was requested, but Bandit is not installed in $VENV_DIR"
++    fi
++
++    if [[ $SKIP_INSTALL -eq 1 ]]; then
++        log_info "Reusing existing Bandit installation in $VENV_DIR"
++        return
++    fi
++
++    if [[ -x "$VENV_DIR/bin/bandit" ]]; then
++        log_info "Bandit already installed in $VENV_DIR"
++        return
++    fi
++
++    log_info "Installing Bandit into $VENV_DIR"
++    "$VENV_DIR/bin/python" -m pip install --upgrade pip >/dev/null
++    "$VENV_DIR/bin/python" -m pip install bandit
++}
++
++run_bandit() {
++    local -a scan_args=(
++        -r "$TARGET"
++        -x "$TARGET/**/__pycache__/*"
++    )
++    local json_status=0
++    local text_status=0
++
++    log_info "Writing JSON report"
++    set +e
++    "$VENV_DIR/bin/bandit" "${scan_args[@]}" -f json -o "$REPORT_DIR/bandit.json"
++    json_status=$?
++    set -e
++
++    log_info "Writing text report"
++    set +e
++    "$VENV_DIR/bin/bandit" "${scan_args[@]}" -f txt -o "$REPORT_DIR/bandit.txt"
++    text_status=$?
++    set -e
++
++    if [[ $json_status -ne 0 ]]; then
++        BANDIT_STATUS=$json_status
++    else
++        BANDIT_STATUS=$text_status
++    fi
++}
++
++main() {
++    parse_args "$@"
++
++    TARGET="${TARGET:-$REPO_ROOT/ros2_ws/src}"
++    VENV_DIR="${VENV_DIR:-$BANDIT_ROOT/.venv}"
++    REPORT_DIR="${REPORT_DIR:-$BANDIT_ROOT/report}"
++
++    [[ -d "$TARGET" ]] || die "Target path '$TARGET' does not exist."
++
++    ensure_python
++    mkdir -p "$BANDIT_ROOT"
++
++    if [[ $CLEAN -eq 1 ]]; then
++        rm -rf "$REPORT_DIR"
++    fi
++
++    mkdir -p "$REPORT_DIR"
++    ensure_venv
++    ensure_bandit
++    run_bandit
++
++    log_info "Bandit scan complete"
++    log_info "Target: $TARGET"
++    log_info "Text report: $REPORT_DIR/bandit.txt"
++    log_info "JSON report: $REPORT_DIR/bandit.json"
++
++    if [[ ${BANDIT_STATUS:-0} -ne 0 ]]; then
++        log_info "Bandit reported findings"
++        if [[ $STRICT -eq 1 ]]; then
++            exit "$BANDIT_STATUS"
++        fi
++    fi
++}
++
++main "$@"
+\ No newline at end of file
+diff --git a/scripts/run_coverity_local.sh b/scripts/run_coverity_local.sh
+new file mode 100644
+index 0000000..020809e
+--- /dev/null
++++ b/scripts/run_coverity_local.sh
+@@ -0,0 +1,175 @@
++#!/bin/bash
++
++set -euo pipefail
++
++SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
++REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
++
++MODE="build"
++COVERITY_ROOT="${COVERITY_ROOT:-$REPO_ROOT/build/coverity}"
++COVERITY_CONFIG=""
++IDIR=""
++REPORT_DIR=""
++CLEAN=1
++
++log_info() {
++    printf '[coverity] %s\n' "$1"
++}
++
++log_error() {
++    printf '[coverity] ERROR: %s\n' "$1" >&2
++}
++
++die() {
++    log_error "$1"
++    exit 1
++}
++
++require_tool() {
++    command -v "$1" >/dev/null 2>&1 || die "Required tool '$1' was not found in PATH."
++}
++
++show_help() {
++    cat << EOF
++Run a local Coverity scan for AgenticROS.
++
++USAGE:
++    $0 [options]
++
++OPTIONS:
++    --mode MODE        Capture mode: build (default) or fs
++    --idir PATH        Intermediate directory (default: build/coverity/idir)
++    --report-dir PATH  Report directory (default: build/coverity/report)
++    --no-clean         Reuse any existing Coverity output
++    -h, --help         Show this help message
++
++MODES:
++    build              Capture the recursive pnpm build
++    fs                 Filesystem capture when cov-build supports --fs-capture-search
++EOF
++}
++
++parse_args() {
++    while [[ $# -gt 0 ]]; do
++        case "$1" in
++            --)
++                shift
++                ;;
++            --mode)
++                [[ $# -ge 2 ]] || die "Missing value for --mode"
++                MODE="$2"
++                shift 2
++                ;;
++            --idir)
++                [[ $# -ge 2 ]] || die "Missing value for --idir"
++                IDIR="$2"
++                shift 2
++                ;;
++            --report-dir)
++                [[ $# -ge 2 ]] || die "Missing value for --report-dir"
++                REPORT_DIR="$2"
++                shift 2
++                ;;
++            --no-clean)
++                CLEAN=0
++                shift
++                ;;
++            -h|--help)
++                show_help
++                exit 0
++                ;;
++            *)
++                die "Unknown argument: $1"
++                ;;
++        esac
++    done
++}
++
++run_fs_capture() {
++    PATH="$PATH" cov-build --help | grep -q -- '--fs-capture-search' || \
++        die "The installed Coverity version does not support filesystem capture. Use --mode build instead."
++
++    local -a capture_args=()
++    local -a capture_roots=(
++        "$REPO_ROOT/packages"
++        "$REPO_ROOT/scripts"
++        "$REPO_ROOT/examples"
++        "$REPO_ROOT/ros2_ws/src"
++    )
++
++    local root
++    for root in "${capture_roots[@]}"; do
++        if [[ -d "$root" ]]; then
++            capture_args+=(--fs-capture-search "$root")
++        fi
++    done
++
++    log_info "Capturing source tree with Coverity filesystem capture"
++    cov-build --config "$COVERITY_CONFIG" --dir "$IDIR" "${capture_args[@]}" --no-command
++}
++
++run_build_capture() {
++    require_tool pnpm
++    log_info "Capturing recursive pnpm build"
++    cov-build --config "$COVERITY_CONFIG" --dir "$IDIR" pnpm build
++}
++
++ensure_coverity_config() {
++    if [[ -f "$COVERITY_CONFIG" ]]; then
++        return
++    fi
++
++    mkdir -p "$(dirname "$COVERITY_CONFIG")"
++    log_info "Generating Coverity config for TypeScript and JavaScript capture"
++    cov-configure --config "$COVERITY_CONFIG" --typescript
++}
++
++main() {
++    parse_args "$@"
++
++    case "$MODE" in
++        fs|build)
++            ;;
++        *)
++            die "Unsupported mode '$MODE'. Use 'fs' or 'build'."
++            ;;
++    esac
++
++    IDIR="${IDIR:-$COVERITY_ROOT/idir}"
++    REPORT_DIR="${REPORT_DIR:-$COVERITY_ROOT/report}"
++    COVERITY_CONFIG="${COVERITY_CONFIG:-$COVERITY_ROOT/coverity_config.xml}"
++
++    require_tool cov-build
++    require_tool cov-configure
++    require_tool cov-analyze
++    require_tool cov-format-errors
++
++    if [[ $CLEAN -eq 1 ]]; then
++        rm -rf "$IDIR" "$REPORT_DIR"
++    fi
++
++    mkdir -p "$IDIR" "$REPORT_DIR"
++    ensure_coverity_config
++
++    if [[ "$MODE" == "fs" ]]; then
++        run_fs_capture
++    else
++        run_build_capture
++    fi
++
++    log_info "Running Coverity analysis"
++    cov-analyze --config "$COVERITY_CONFIG" --dir "$IDIR" --all
++
++    log_info "Writing JSON report"
++    cov-format-errors --config "$COVERITY_CONFIG" --dir "$IDIR" --json-output-v7 "$REPORT_DIR/errors.json"
++
++    log_info "Writing HTML report"
++    cov-format-errors --config "$COVERITY_CONFIG" --dir "$IDIR" --html-output "$REPORT_DIR/html"
++
++    log_info "Coverity analysis complete"
++    log_info "Config file: $COVERITY_CONFIG"
++    log_info "JSON report: $REPORT_DIR/errors.json"
++    log_info "HTML report: $REPORT_DIR/html/index.html"
++}
++
++main "$@"
+\ No newline at end of file
+diff --git a/scripts/run_fuzz_local.sh b/scripts/run_fuzz_local.sh
+new file mode 100755
+index 0000000..a983d1b
+--- /dev/null
++++ b/scripts/run_fuzz_local.sh
+@@ -0,0 +1,125 @@
++#!/bin/bash
++
++set -euo pipefail
++
++SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
++REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
++
++FUZZ_ROOT="${FUZZ_ROOT:-$REPO_ROOT/build/fuzz}"
++REPORT_DIR=""
++ITERATIONS=1000
++SEED=""
++CLEAN=1
++BUILD=1
++
++log_info() {
++    printf '[fuzz] %s\n' "$1"
++}
++
++log_error() {
++    printf '[fuzz] ERROR: %s\n' "$1" >&2
++}
++
++die() {
++    log_error "$1"
++    exit 1
++}
++
++require_tool() {
++    command -v "$1" >/dev/null 2>&1 || die "Required tool '$1' was not found in PATH."
++}
++
++show_help() {
++    cat << EOF
++Run local fuzz testing for AgenticROS.
++
++USAGE:
++    $0 [options]
++
++OPTIONS:
++    --iterations N    Iterations per fuzz target (default: 1000)
++    --seed N          Deterministic seed (default: current time)
++    --report-dir PATH Report directory (default: build/fuzz/report)
++    --no-clean        Reuse existing report output
++    --skip-build      Reuse existing package build artifacts
++    -h, --help        Show this help message
++EOF
++}
++
++parse_args() {
++    while [[ $# -gt 0 ]]; do
++        case "$1" in
++            --iterations)
++                [[ $# -ge 2 ]] || die "Missing value for --iterations"
++                ITERATIONS="$2"
++                shift 2
++                ;;
++            --seed)
++                [[ $# -ge 2 ]] || die "Missing value for --seed"
++                SEED="$2"
++                shift 2
++                ;;
++            --report-dir)
++                [[ $# -ge 2 ]] || die "Missing value for --report-dir"
++                REPORT_DIR="$2"
++                shift 2
++                ;;
++            --no-clean)
++                CLEAN=0
++                shift
++                ;;
++            --skip-build)
++                BUILD=0
++                shift
++                ;;
++            -h|--help)
++                show_help
++                exit 0
++                ;;
++            *)
++                die "Unknown argument: $1"
++                ;;
++        esac
++    done
++}
++
++main() {
++    parse_args "$@"
++
++    require_tool node
++    require_tool npx
++    require_tool pnpm
++
++    REPORT_DIR="${REPORT_DIR:-$FUZZ_ROOT/report}"
++
++    if [[ $CLEAN -eq 1 ]]; then
++        rm -rf "$REPORT_DIR"
++    fi
++    mkdir -p "$REPORT_DIR"
++
++    if [[ $BUILD -eq 1 ]]; then
++        log_info "Building @agenticros/core"
++        pnpm --filter @agenticros/core build
++
++        log_info "Building @agenticros/ros-camera"
++        pnpm --filter @agenticros/ros-camera build
++    fi
++
++    local -a fuzz_args=(
++        ./scripts/fuzz_ros_payloads.mjs
++        --iterations "$ITERATIONS"
++        --report-dir "$REPORT_DIR"
++    )
++    if [[ -n "$SEED" ]]; then
++        fuzz_args+=(--seed "$SEED")
++    fi
++
++    log_info "Running fuzz harness"
++    npx --yes tsx "${fuzz_args[@]}"
++
++    log_info "Fuzz testing complete"
++    log_info "Text report: $REPORT_DIR/summary.txt"
++    log_info "JSON report: $REPORT_DIR/summary.json"
++}
++
++main "$@"
+\ No newline at end of file
+diff --git a/scripts/unit-test-json-reporter.mjs b/scripts/unit-test-json-reporter.mjs
+new file mode 100644
+index 0000000..636eaf2
+--- /dev/null
++++ b/scripts/unit-test-json-reporter.mjs
+@@ -0,0 +1,133 @@
++import { Transform } from 'node:stream';
++
++function toSerializable(value, seen = new WeakSet()) {
++  if (value == null) {
++    return value;
++  }
++
++  if (typeof value === 'bigint') {
++    return value.toString();
++  }
++
++  if (typeof value === 'function') {
++    return `[Function ${value.name || 'anonymous'}]`;
++  }
++
++  if (typeof value === 'symbol') {
++    return value.toString();
++  }
++
++  if (typeof value !== 'object') {
++    return value;
++  }
++
++  if (seen.has(value)) {
++    return '[Circular]';
++  }
++
++  seen.add(value);
++
++  try {
++    if (value instanceof Error) {
++      return {
++        name: value.name,
++        message: value.message,
++        stack: value.stack,
++        cause: toSerializable(value.cause, seen),
++      };
++    }
++
++    if (Buffer.isBuffer(value)) {
++      return {
++        type: 'Buffer',
++        data: Array.from(value.values()),
++      };
++    }
++
++    if (ArrayBuffer.isView(value)) {
++      return {
++        type: value.constructor.name,
++        data: Array.from(value),
++      };
++    }
++
++    if (value instanceof ArrayBuffer) {
++      return {
++        type: 'ArrayBuffer',
++        byteLength: value.byteLength,
++      };
++    }
++
++    if (Array.isArray(value)) {
++      return value.map((item) => toSerializable(item, seen));
++    }
++
++    if (value instanceof Map) {
++      return Array.from(value.entries()).map(([key, mapValue]) => ({
++        key: toSerializable(key, seen),
++        value: toSerializable(mapValue, seen),
++      }));
++    }
++
++    if (value instanceof Set) {
++      return Array.from(value.values()).map((item) => toSerializable(item, seen));
++    }
++
++    const result = {};
++
++    for (const key of Reflect.ownKeys(value)) {
++      const normalizedKey = typeof key === 'symbol' ? key.toString() : key;
++
++      try {
++        result[normalizedKey] = toSerializable(value[key], seen);
++      } catch (error) {
++        result[normalizedKey] = {
++          serializationError: error instanceof Error ? error.message : String(error),
++        };
++      }
++    }
++
++    return result;
++  } finally {
++    seen.delete(value);
++  }
++}
++
++class UnitTestJsonReporter extends Transform {
++  constructor() {
++    super({ writableObjectMode: true });
++    this.eventCounts = {};
++    this.events = [];
++    this.startedAt = new Date().toISOString();
++  }
++
++  _transform(event, _encoding, callback) {
++    try {
++      const eventType = typeof event?.type === 'string' ? event.type : 'unknown';
++      this.eventCounts[eventType] = (this.eventCounts[eventType] ?? 0) + 1;
++      this.events.push(toSerializable(event));
++      callback();
++    } catch (error) {
++      callback(error);
++    }
++  }
++
++  _flush(callback) {
++    try {
++      const report = {
++        reporter: 'unit-test-json-reporter',
++        startedAt: this.startedAt,
++        generatedAt: new Date().toISOString(),
++        eventCounts: this.eventCounts,
++        events: this.events,
++      };
++      callback(null, `${JSON.stringify(report, null, 2)}\n`);
++    } catch (error) {
++      callback(error);
++    }
++  }
++}
++
++export default function unitTestJsonReporter() {
++  return new UnitTestJsonReporter();
++}
+\ No newline at end of file
+diff --git a/tests/unit/agenticros.test.ts b/tests/unit/agenticros.test.ts
+new file mode 100644
+index 0000000..017c134
+--- /dev/null
++++ b/tests/unit/agenticros.test.ts
+@@ -0,0 +1,110 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++
++import { parseConfig } from "../../packages/core/src/config.ts";
++import { getLandingPageHtml } from "../../packages/agenticros/src/landing-page.ts";
++import { registerSafetyHook } from "../../packages/agenticros/src/safety/validator.ts";
++import type {
++  BeforeToolCallEvent,
++  BeforeToolCallHandler,
++  OpenClawPluginApi,
++} from "../../packages/agenticros/src/plugin-api.ts";
++
++function createSafetyHarness(overrides?: Record<string, unknown>) {
++  const warnings: string[] = [];
++  let beforeToolCallHandler: BeforeToolCallHandler | undefined;
++
++  const api = {
++    logger: {
++      info() {},
++      warn(message: string) {
++        warnings.push(message);
++      },
++      error() {},
++    },
++    registerTool() {},
++    registerService() {},
++    registerCommand() {},
++    on(hookName: "before_agent_start" | "before_tool_call", handler: unknown) {
++      if (hookName === "before_tool_call") {
++        beforeToolCallHandler = handler as BeforeToolCallHandler;
++      }
++    },
++  } as unknown as OpenClawPluginApi;
++
++  const config = parseConfig({
++    safety: {
++      maxLinearVelocity: 0.5,
++      maxAngularVelocity: 0.75,
++    },
++    ...overrides,
++  });
++
++  registerSafetyHook(api, config);
++  assert(beforeToolCallHandler, "before_tool_call hook should be registered");
++
++  return {
++    warnings,
++    async invoke(event: BeforeToolCallEvent) {
++      return beforeToolCallHandler!(event, { toolName: event.toolName });
++    },
++  };
++}
++
++test("registerSafetyHook blocks ros2_publish when linear speed exceeds the configured limit", async () => {
++  const harness = createSafetyHarness();
++
++  const result = await harness.invoke({
++    toolName: "ros2_publish",
++    params: {
++      message: {
++        linear: { x: 0.4, y: 0.4, z: 0 },
++        angular: { z: 0.1 },
++      },
++    },
++  });
++
++  assert.equal(result?.block, true);
++  assert.match(result?.blockReason ?? "", /Linear velocity/);
++  assert.equal(harness.warnings.length, 1);
++});
++
++test("registerSafetyHook blocks ros2_cmd_vel when angular speed exceeds the configured limit", async () => {
++  const harness = createSafetyHarness();
++
++  const result = await harness.invoke({
++    toolName: "ros2_cmd_vel",
++    params: {
++      linear_x: 0.1,
++      angular_z: -1.2,
++    },
++  });
++
++  assert.equal(result?.block, true);
++  assert.match(result?.blockReason ?? "", /Angular velocity/);
++  assert.equal(harness.warnings.length, 1);
++});
++
++test("registerSafetyHook allows safe ros2_cmd_vel inputs", async () => {
++  const harness = createSafetyHarness();
++
++  const result = await harness.invoke({
++    toolName: "ros2_cmd_vel",
++    params: {
++      linear_x: 0.2,
++      angular_z: 0.3,
++    },
++  });
++
++  assert.equal(result, undefined);
++  assert.equal(harness.warnings.length, 0);
++});
++
++test("getLandingPageHtml returns the expected navigation links", () => {
++  const html = getLandingPageHtml();
++
++  assert.match(html, /<h1>AgenticROS<\/h1>/);
++  assert.match(html, /href="config"/);
++  assert.match(html, /href="teleop\/"/);
++  assert.match(html, /natural language control of robots/i);
++});
+\ No newline at end of file
+diff --git a/tests/unit/config-file.test.ts b/tests/unit/config-file.test.ts
+new file mode 100644
+index 0000000..dfbd4e9
+--- /dev/null
++++ b/tests/unit/config-file.test.ts
+@@ -0,0 +1,76 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import fs from "node:fs";
++import os from "node:os";
++import path from "node:path";
++
++import {
++  ConfigFileError,
++  getOpenClawConfigPath,
++  readAgenticROSConfigFromFile,
++  readOpenClawConfig,
++  writeAgenticROSConfig,
++} from "../../packages/agenticros/src/config-file.ts";
++
++function withTempConfig(contents: string, fn: () => void | Promise<void>): Promise<void> | void {
++  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "agenticros-unit-config-"));
++  const configPath = path.join(tempDir, "openclaw.json");
++  fs.writeFileSync(configPath, contents, "utf8");
++
++  const previous = process.env.OPENCLAW_CONFIG;
++  process.env.OPENCLAW_CONFIG = configPath;
++
++  const cleanup = () => {
++    if (previous === undefined) {
++      delete process.env.OPENCLAW_CONFIG;
++    } else {
++      process.env.OPENCLAW_CONFIG = previous;
++    }
++    fs.rmSync(tempDir, { recursive: true, force: true });
++  };
++
++  try {
++    const result = fn();
++    if (result && typeof (result as Promise<void>).then === "function") {
++      return (result as Promise<void>).finally(cleanup);
++    }
++    cleanup();
++  } catch (error) {
++    cleanup();
++    throw error;
++  }
++}
++
++test("readOpenClawConfig reports invalid JSON", () => {
++  withTempConfig("{invalid-json", () => {
++    assert.throws(
++      () => readOpenClawConfig(),
++      (error) => error instanceof ConfigFileError && error.code === "INVALID_JSON",
++    );
++  });
++});
++
++test("writeAgenticROSConfig and readAgenticROSConfigFromFile round-trip through OPENCLAW_CONFIG", () => {
++  withTempConfig("{}", () => {
++    const resolvedPath = getOpenClawConfigPath();
++    assert.equal(path.isAbsolute(resolvedPath), true);
++
++    writeAgenticROSConfig({
++      robot: { namespace: "robot-123" },
++      safety: { maxLinearVelocity: 0.5, maxAngularVelocity: 0.75 },
++    });
++
++    const raw = readOpenClawConfig();
++    const plugins = raw.plugins as Record<string, unknown>;
++    const entries = plugins.entries as Record<string, unknown>;
++    const agenticros = entries.agenticros as Record<string, unknown>;
++    const config = agenticros.config as Record<string, unknown>;
++    const robot = config.robot as Record<string, unknown>;
++    assert.equal(robot.namespace, "robot-123");
++
++    const parsed = readAgenticROSConfigFromFile();
++    assert.equal(parsed.robot.namespace, "robot-123");
++    assert.equal(parsed.safety.maxLinearVelocity, 0.5);
++    assert.equal(parsed.safety.maxAngularVelocity, 0.75);
++  });
++});
+\ No newline at end of file
+diff --git a/tests/unit/depth.test.ts b/tests/unit/depth.test.ts
+new file mode 100644
+index 0000000..36c10a7
+--- /dev/null
++++ b/tests/unit/depth.test.ts
+@@ -0,0 +1,80 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++
++import type { RosTransport, Subscription } from "@agenticros/core";
++import {
++  getDepthDistance,
++  getDepthSectors,
++  sampleDepthMeters,
++} from "../../packages/agenticros/src/depth.ts";
++
++function createSyncTransport(message: Record<string, unknown>): RosTransport {
++  return {
++    async connect() {},
++    async disconnect() {},
++    getStatus() { return "connected"; },
++    onConnection() { return () => {}; },
++    async publish() {},
++    subscribe(_options, handler): Subscription {
++      const subscription: Subscription = { unsubscribe() {} };
++      handler(message);
++      return subscription;
++    },
++    async callService() { return { result: false }; },
++    async sendActionGoal() { return { result: false }; },
++    async cancelActionGoal() {},
++    async listTopics() { return []; },
++    async listServices() { return []; },
++    async listActions() { return []; },
++  };
++}
++
++function makeDepthImageMessage16UC1(valueMm: number): Record<string, unknown> {
++  const width = 6;
++  const height = 6;
++  const step = width * 2;
++  const data = new Uint8Array(step * height);
++
++  for (let y = 0; y < height; y++) {
++    for (let x = 0; x < width; x++) {
++      const off = y * step + x * 2;
++      data[off] = valueMm & 0xff;
++      data[off + 1] = (valueMm >> 8) & 0xff;
++    }
++  }
++
++  return {
++    encoding: "16UC1",
++    width,
++    height,
++    step,
++    is_bigendian: false,
++    data,
++  };
++}
++
++test("sampleDepthMeters rejects unsupported depth encodings", () => {
++  assert.throws(
++    () => sampleDepthMeters(2, 2, 4, "bad-encoding", new Uint8Array(16)),
++    /Unsupported depth encoding/,
++  );
++});
++
++test("getDepthDistance handles synchronous transport delivery", async () => {
++  const result = await getDepthDistance(createSyncTransport(makeDepthImageMessage16UC1(1500)), "/depth");
++
++  assert.equal(result.topic, "/depth");
++  assert.equal(result.valid, true);
++  assert.equal(result.distance_m, 1.5);
++  assert.equal(result.sample_count > 0, true);
++});
++
++test("getDepthSectors handles synchronous transport delivery", async () => {
++  const result = await getDepthSectors(createSyncTransport(makeDepthImageMessage16UC1(800)), "/depth");
++
++  assert.equal(result.topic, "/depth");
++  assert.equal(result.valid, true);
++  assert.equal(result.left_m, 0.8);
++  assert.equal(result.center_m, 0.8);
++  assert.equal(result.right_m, 0.8);
++});
+\ No newline at end of file
+diff --git a/tests/unit/ros-camera.test.ts b/tests/unit/ros-camera.test.ts
+new file mode 100644
+index 0000000..0649d54
+--- /dev/null
++++ b/tests/unit/ros-camera.test.ts
+@@ -0,0 +1,52 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++
++import {
++  cameraSnapshotFromPlainMessage,
++  coerceRosImageDataToBuffer,
++  mimeTypeForSnapshotBase64,
++} from "../../packages/ros-camera/src/index.ts";
++
++test("coerceRosImageDataToBuffer unwraps nested JSON Buffer payloads", () => {
++  const bytes = [0, 255, 16, 32, 48];
++  const wrapped = {
++    data: {
++      type: "Buffer",
++      data: bytes,
++    },
++  };
++
++  const result = coerceRosImageDataToBuffer(wrapped);
++  assert.equal(Buffer.isBuffer(result), true);
++  assert.deepEqual([...result], bytes);
++});
++
++test("cameraSnapshotFromPlainMessage encodes raw rgb8 images to PNG", () => {
++  const message = {
++    encoding: "rgb8",
++    width: 1,
++    height: 1,
++    step: 3,
++    data: [255, 0, 0],
++  };
++
++  const snapshot = cameraSnapshotFromPlainMessage("Image", message);
++
++  assert.equal(snapshot.formatLabel, "png");
++  assert.equal(snapshot.width, 1);
++  assert.equal(snapshot.height, 1);
++  assert.equal(mimeTypeForSnapshotBase64(snapshot.dataBase64, snapshot.formatLabel), "image/png");
++  assert.equal(Buffer.from(snapshot.dataBase64, "base64").subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
++});
++
++test("cameraSnapshotFromPlainMessage preserves compressed image payload bytes", () => {
++  const pngBytes = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
++  const snapshot = cameraSnapshotFromPlainMessage("CompressedImage", {
++    format: "png",
++    data: { type: "Buffer", data: [...pngBytes] },
++  });
++
++  assert.equal(snapshot.formatLabel, "png");
++  assert.equal(snapshot.dataBase64, pngBytes.toString("base64"));
++  assert.equal(mimeTypeForSnapshotBase64(snapshot.dataBase64, snapshot.formatLabel), "image/png");
++});
+\ No newline at end of file
+-- 
+2.43.0
+
