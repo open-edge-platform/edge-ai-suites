@@ -102,7 +102,6 @@ async def message(id,words_max_print):
     text_print = ""
     text_print_2pass_online = ""
     text_print_2pass_offline = ""
-    ibest_writer = None
     try:
         while True:
 
@@ -114,13 +113,6 @@ async def message(id,words_max_print):
             offline_msg_done = meg.get("is_final", False)
             if "timestamp" in meg:
                 timestamp = meg["timestamp"]
-
-            if ibest_writer is not None:
-                if timestamp != "":
-                    text_write_line = "{}\t{}\t{}\n".format(wav_name, text, timestamp)
-                else:
-                    text_write_line = "{}\t{}\n".format(wav_name, text)
-                ibest_writer.write(text_write_line)
 
             if "mode" not in meg:
                 continue

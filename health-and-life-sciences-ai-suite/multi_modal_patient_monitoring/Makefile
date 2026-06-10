@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-.PHONY: init-mdpnp build-mdpnp build-dds-bridge run down download-rppg-assets
+.PHONY: init-mdpnp build-mdpnp build-dds-bridge precheck-models run down download-rppg-assets
 
 HTTP_PROXY := $(or $(HTTP_PROXY),$(http_proxy))
 HTTPS_PROXY := $(or $(HTTPS_PROXY),$(https_proxy))
@@ -23,6 +23,11 @@ export HOST_IP
 TAG ?= 2026.1.0-rc2
 export TAG
 
+MODEL_STAGING_DIR ?= $(CURDIR)/models/downloads
+RPPG_SOURCE_MODEL := $(MODEL_STAGING_DIR)/rppg/mtts_can.hdf5
+POSE_SOURCE_ARCHIVE := $(MODEL_STAGING_DIR)/3d-pose/human-pose-estimation-3d.tar.gz
+ECG_SOURCE_DIR := $(MODEL_STAGING_DIR)/ai-ecg/hubert-ecg-small
+
 init-mdpnp:
 	@echo "Initializing mdpnp submodule..."
 	git submodule update --init $(MDPNP_PATH)
@@ -35,7 +40,14 @@ build-dds-bridge:
 	@echo "Running dds-bridge build..."
 	cd $(DDS_BRIDGE_PATH) && ./gradlew clean build
 
-run:
+precheck-models:
+	@echo "Checking manually staged model artifacts..."
+	@test -f "$(RPPG_SOURCE_MODEL)" || (echo "[ERROR] Missing rPPG source model: $(RPPG_SOURCE_MODEL)" && exit 1)
+	@test -f "$(POSE_SOURCE_ARCHIVE)" || (echo "[ERROR] Missing 3D pose source archive: $(POSE_SOURCE_ARCHIVE)" && exit 1)
+	@test -d "$(ECG_SOURCE_DIR)" || (echo "[ERROR] Missing AI-ECG source directory: $(ECG_SOURCE_DIR)" && exit 1)
+	@echo "All required model artifacts are present under $(MODEL_STAGING_DIR)."
+
+run: precheck-models
 	@if [ "$(REGISTRY)" = "true" ]; then \
 		echo "##############Using registry mode - fetching all images..."; \
 		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
