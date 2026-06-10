@@ -43,7 +43,66 @@ When you run `make run` or `make run REGISTRY=false`, the compose file reads
 inference engine compiles its OpenVINO model on the requested device, with automatic fallback
 to CPU when necessary.
 
-## 3. Run the Sample
+## 3. Stage Models Manually
+
+Before running the stack, place source models under the repository-local folder:
+
+```bash
+models/downloads/
+├── ai-ecg/
+├── rppg/
+└── 3d-pose/
+```
+
+
+### Example Models
+
+1. RPPG Model - [MTTS-CAN](https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5)
+
+   Place the model file at: `models/downloads/rppg/mtts_can.hdf5`
+   
+2. 3D Pose Model - [Human Pose Estimation 3D 0001](https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2022.1/human-pose-estimation-3d-0001/human-pose-estimation-3d.tar.gz)
+
+   Place the archive at: `models/downloads/3d-pose/human-pose-estimation-3d.tar.gz`
+   
+3. AI-ECG Model - HuBERT-ECG Small
+   
+   a. Create and activate a Python virtual environment:
+   ```bash
+   python3 -m venv hf-venv
+   source hf-venv/bin/activate
+   ```
+   b. Install the Hugging Face Hub CLI:
+   ```bash
+   pip install --upgrade pip
+   pip install huggingface_hub
+   ```
+   c. Download the model repository into the staging directory:
+   ```bash
+   hf download Edoardo-BS/hubert-ecg-small \
+   --local-dir models/downloads/ai-ecg/hubert-ecg-small
+   ```
+
+
+> **Third-Party Content**
+> 
+> *In the course of using these Intel-provided instruction, users may choose to download content (e.g., models, dataset, etc.) created and distributed by third parties. In doing so, these users acknowledge and agree that they have done so after reviewing background information about the content and agreeing to the license governing the content they select.*
+> 
+> ***Notice**: Intel does not create the content and does not warrant its accuracy or quality. By accessing the third-party content, or using materials trained on or with such content, you are indicating your acceptance of the terms associated with that content and warranting that your use complies with the applicable license.*
+
+### Verify the contents:
+
+```bash
+ls models/downloads/ai-ecg/hubert-ecg-small
+```
+
+The directory should contain the model weights, configuration files, and any custom model implementation files required.
+
+The `make run` target validates these paths first. If any artifact is missing, startup fails
+with an actionable error before containers are launched.
+
+
+## 4. Run the Sample
 
 ### Run Using Pre‑Built Images (Registry Mode)
 
@@ -81,7 +140,7 @@ To stop and remove all containers when you are done:
 make down
 ```
 
-## 4. Access the UI
+## 5. Access the UI
 
 By default, the UI service exposes port 3000 on the host:
 
@@ -90,7 +149,7 @@ By default, the UI service exposes port 3000 on the host:
 From there you can observe heart rate and respiratory rate estimates, along with waveforms
 produced by the rPPG service and aggregated by the patient‑monitoring‑aggregator.
 
-## 5. Control RPPG Streaming
+## 6. Control RPPG Streaming
 
 The rPPG service provides a simple HTTP control API (hosted by an internal FastAPI server) to
 start and stop streaming:
@@ -103,7 +162,7 @@ start and stop streaming:
 Exact URLs and endpoints may differ slightly depending on how the control API is exposed in
 your environment; refer to the rPPG service documentation for details.
 
-## 6. View Hardware Metrics
+## 7. View Hardware Metrics
 
 The metrics-collector service writes telemetry (GPU, NPU, CPU, power, and other metrics) into
 the `metrics` directory on the host, and may also expose summarized metrics via its own API:
