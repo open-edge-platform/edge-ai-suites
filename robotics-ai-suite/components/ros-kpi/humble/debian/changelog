@@ -1,3 +1,10 @@
+ros-humble-benchmark-framework (0.2.2) UNRELEASED; urgency=low
+
+  * Install Python scripts as executable (755); document cp-first workflow
+    for Debian package users in INSTALL.md and Makefile help.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 09 Jun 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.2.1) UNRELEASED; urgency=low
 
   * final_fixes: power monitoring, thermal charts, default record-plot, report.
