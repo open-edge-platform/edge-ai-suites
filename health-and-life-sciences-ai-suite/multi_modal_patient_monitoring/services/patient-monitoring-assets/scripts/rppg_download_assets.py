@@ -1,8 +1,8 @@
-"""Download and convert RPPG assets.
+"""Prepare and convert RPPG assets.
 
 This script:
 
-1. Downloads the MTTS-CAN Keras HDF5 model into /models/rppg/mtts_can.hdf5
+1. Loads a manually staged MTTS-CAN Keras HDF5 model from local storage
 2. Converts it to OpenVINO IR (XML+BIN) for Intel iGPU inference
 3. Downloads the sample video into /videos/rppg/sample.mp4
 
@@ -17,6 +17,7 @@ import urllib.request
 import socket
 import time
 from pathlib import Path
+import shutil
 from tqdm import tqdm
 import logging
 import argparse
@@ -43,11 +44,11 @@ def _load_rppg_model_config() -> tuple[str, str, str, str, str]:
     This function expects /app/configs/model-config.yaml to exist and to
     define rppg.models[0] with at least:
 
-      - name
-      - target_dir
-      - model_url
-      - video_dir
-      - video_url
+            - name
+            - target_dir
+            - source_model_path
+            - video_dir
+            - video_url
 
     If any of these are missing or the file is not readable, the script
     will raise and fail fast instead of using hardcoded defaults.
@@ -73,20 +74,20 @@ def _load_rppg_model_config() -> tuple[str, str, str, str, str]:
     first = models[0] or {}
     name = first.get("name")
     target_dir = first.get("target_dir")
-    model_url = first.get("model_url")
+    source_model_path = first.get("source_model_path")
     video_dir = first.get("video_dir")
     video_url = first.get("video_url")
 
-    if not name or not target_dir or not model_url or not video_dir or not video_url:
+    if not name or not target_dir or not source_model_path or not video_dir or not video_url:
         raise ValueError(
-            "rppg.models[0] must define name, target_dir, model_url, video_dir, "
+            "rppg.models[0] must define name, target_dir, source_model_path, video_dir, "
             "and video_url in model-config.yaml."
         )
 
     return (
         str(name),
         str(target_dir),
-        str(model_url),
+        str(source_model_path),
         str(video_dir),
         str(video_url),
     )
@@ -206,15 +207,17 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
         raise last_error
 
 
-def download_model() -> None:
-    """Download MTTS-CAN model weights.
-
-    The destination filename under /models/rppg is taken from
-    model-config.yaml (rppg.models[0].name) and the download URL from
-    rppg.models[0].model_url.
-    """
-    model_filename, target_dir, model_url, _, _ = _load_rppg_model_config()
+def stage_model() -> None:
+    """Stage MTTS-CAN model weights from a local path into target_dir."""
+    model_filename, target_dir, source_model_path, _, _ = _load_rppg_model_config()
     model_path = Path(target_dir) / model_filename
+    source_path = Path(source_model_path)
+
+    if not source_path.exists():
+        raise FileNotFoundError(
+            f"Missing manually staged rPPG model at {source_path}. "
+            "Please place the source model before running make run."
+        )
 
     if model_path.exists():
         logger.info(f"Model already exists: {model_path}")
@@ -222,18 +225,15 @@ def download_model() -> None:
         logger.info(f"  Size: {size_mb:.1f} MB")
         return
 
-    logger.info("Downloading MTTS-CAN model...")
-    logger.info(f"  Source: {model_url}")
+    logger.info("Staging MTTS-CAN model from local source...")
+    logger.info(f"  Source: {source_path}")
     logger.info(f"  Destination: {model_path}")
 
-    try:
-        download_file(model_url, model_path, "Model")
-        logger.info("✓ Model downloaded successfully")
-        size_mb = model_path.stat().st_size / (1024 * 1024)
-        logger.info(f"  Size: {size_mb:.1f} MB")
-    except Exception as e:
-        logger.error(f"Failed to download model: {e}")
-        raise
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, model_path)
+    logger.info("✓ Model staged successfully")
+    size_mb = model_path.stat().st_size / (1024 * 1024)
+    logger.info(f"  Size: {size_mb:.1f} MB")
 
 
 def convert_model_to_openvino() -> None:
@@ -315,12 +315,12 @@ def main():
 
     try:
         if args.model_only:
-            download_model()
+            stage_model()
             convert_model_to_openvino()
         elif args.video_only:
             download_video()
         else:
-            download_model()
+            stage_model()
             convert_model_to_openvino()
             logger.info("")
             download_video()

@@ -54,7 +54,7 @@ This section lists the hardware, software, and network requirements for running 
 The application bundles several AI workloads, each with its own model and inputs or outputs:
 
 - **RPPG (Remote Photoplethysmography) Workload:**
-  - **Model:** MTTS‑CAN (Multi‑Task Temporal Shift Convolutional Attention Network)
+  - **Example Model:** MTTS‑CAN (Multi‑Task Temporal Shift Convolutional Attention Network)
     converted to OpenVINO IR (`/models/rppg/mtts_can.xml`).
   - **Input:** Facial video frames (RGB) from the shared `videos` volume.
   - **Output:** Pulse and respiration waveforms, heart rate (HR) in BPM, and respiratory
@@ -63,7 +63,7 @@ The application bundles several AI workloads, each with its own model and inputs
     (`RPPG_DEVICE`).
 
 - **3D‑Pose Estimation Workload:**
-  - **Model:** `human-pose-estimation-3d-0001` from Open Model Zoo, converted to OpenVINO
+  - **Example Model:** `human-pose-estimation-3d-0001` from Open Model Zoo, converted to OpenVINO
     IR (`/models/3d-pose/human-pose-estimation-3d-0001.xml`).
   - **Input:** RGB video of a person in motion (`face-demographics-walking.mp4` under
     `/videos/3d-pose` has been provided for demonstration purposes).
@@ -72,7 +72,7 @@ The application bundles several AI workloads, each with its own model and inputs
   - **Target devices:** Intel CPU and GPU via OpenVINO.
 
 - **AI‑ECG Workload:**
-  - **Models:** OpenVINO IR models for ECG rhythm classification located under
+  - **Example Models:** OpenVINO IR models for ECG rhythm classification located under
     `/models/ai-ecg`, for example: - `ecg_8960_ir10_fp16.xml` - `ecg_17920_ir10_fp16.xml`
   - **Input:** Preprocessed multi‑lead ECG time‑series segments of supported lengths (e.g.,
     8960 or 17920 samples).
@@ -84,8 +84,8 @@ The application bundles several AI workloads, each with its own model and inputs
 
 - **Network Access:**
   - Local network connectivity to access the UI (default: `http://<HOST_IP>:3000`).
-  - Optional outbound internet access to download Docker base images, models, and assets
-    (if not pre‑cached).
+  - Optional outbound internet access to download Docker base images and reference video assets
+    (if not pre‑cached). Model files are expected to be staged manually.
 
 - **Proxy Support (optional):**
   - If your environment uses HTTP/HTTPS proxies, configure:
