@@ -1800,20 +1800,7 @@ def execute_gpu_config_curl(device="gpu"):
         logger.error(f"Error executing curl command: {e}")
         return False
 
-# Problem these helpers solve                                            #
-# ----------------------------                                           #
-# ``test_opcua_alerts`` calls ``upload_udf_tar_package`` which deposits  #
-# an OPC-UA TICK script inside TSAM's UDF registry.  A subsequent test   #
-# such as ``test_mqtt_alerts`` only re-POSTs ``/ts-api/config`` and does #
-# NOT re-upload the UDF tar, so Kapacitor keeps executing the stale     #
-# OPC-UA TICK (``.post('/opcua_alerts')`` → 400) and the MQTT broker    #
-# never receives anything.                                              #
-#                                                                       #
-# These helpers provide an idempotent way for state-sensitive tests to  #
-# guarantee the loaded UDF matches the alert mode they require,         #
-# regardless of execution order.  They are also used as a finalizer in  #
-# tests that mutate the loaded UDF so cleanup happens at the source.    #
-# ====================================================================== #
+# Idempotent helpers to ensure the UDF loaded in TSAM matches the alert mode the caller needs.
 
 def _kapacitor_task_alert_mode_matches(alert_mode):
     """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is

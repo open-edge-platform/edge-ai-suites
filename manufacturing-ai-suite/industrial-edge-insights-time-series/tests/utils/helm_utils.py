@@ -349,15 +349,7 @@ def _dump_unhealthy_pods(namespace):
     Best-effort: every kubectl invocation is wrapped so a failure here never
     masks the original test-failure assertion.
     """
-    # NOTE: a CrashLoopBackOff container still leaves its pod in phase=Running
-    # (the pod IS scheduled and at least one container restart is in flight),
-    # so filtering on .status.phase alone misses the exact pods we want to
-    # diagnose. We therefore parse the kubectl `READY` column ("0/1" vs "1/1")
-    # plus the status field, treating a pod as unhealthy if EITHER:
-    #   * its READY count is not "N/N" (any container not ready), OR
-    #   * its STATUS is not one of {Running, Completed, Succeeded}
-    # We also include 'Terminating' as a special-case skip so we don't dump
-    # leftover pods from a previous release.
+    # Parse kubectl READY column and STATUS to catch CrashLoopBackOff pods
     HEALTHY_STATUSES = {"Running", "Completed", "Succeeded"}
     try:
         result = subprocess.run(

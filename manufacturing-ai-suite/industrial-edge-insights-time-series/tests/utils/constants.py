@@ -127,11 +127,7 @@ WIND_TURBINE_ALERT_LOG_TIMEOUT = 180        # Timeout for finding alert patterns
 WIND_TURBINE_GPU_LOG_TIMEOUT = 300          # Timeout for finding GPU log entry after GPU config POST
 WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU config POST so kapacitor fully restarts
                                            # with the new DEVICE env before we begin tailing logs
-WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before sending the GPU config POST.
-                                           # Mirrors the manual procedure (see docs) where a 25s pause after
-                                           # `make up_*_ingestion` is required for TSAM/kapacitor to finish the
-                                           # initial CPU UDF startup; without it the subsequent GPU POST can be
-                                           # acknowledged but never trigger a kapacitor UDF restart.
+WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before GPU POST; allows TSAM/kapacitor CPU UDF startup
 WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
 WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
 WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
