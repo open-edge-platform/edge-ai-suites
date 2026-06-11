@@ -58,6 +58,7 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--graph-only` | Skip resource monitoring |
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
+| `--power` | Enable Intel RAPL CPU package power monitoring (writes `cpu_power.log`) |
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--gpu` | Enable Intel&trade; GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
 | `--npu` | Enable Intel&trade; NPU monitoring via sysfs |
@@ -92,6 +93,9 @@ uv run python src/monitor_resources.py --memory --threads         # CPU + memory
 uv run python src/monitor_resources.py --memory --log out.log     # With logging
 uv run python src/monitor_resources.py --list                     # List ROS2 processes
 uv run python src/monitor_resources.py --remote-ip 192.168.1.100 --memory
+uv run python src/monitor_resources.py --power                    # + Intel RAPL CPU package power
+uv run python src/monitor_resources.py --memory --npu --power     # CPU + NPU + power
+uv run python src/monitor_resources.py --check-hw                 # Probe GPU / NPU / RAPL availability
 ```
 
 ## visualize_timing.py
@@ -113,7 +117,7 @@ uv run python src/visualize_timing.py timing.csv --delays --frequencies --output
 
 ```bash
 uv run python src/visualize_resources.py resource.log --cores --heatmap --top 10 --output-dir ./plots/
-uv run python src/visualize_resources.py resource.log --summary
+uv run python src/visualize_resources.py resource.log --summary   # text table only
 ```
 
 | Option | Description |
@@ -142,9 +146,9 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --no-show --outp
 uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 ```
 
-## Hardware Visualizers (GPU / NPU / Thermal)
+## Hardware Visualizers (GPU / NPU)
 
-All three visualizers accept a session directory or log file as their first
+All visualizers accept a session directory or log file as their first
 argument and auto-detect the latest session when omitted.
 
 ```bash
@@ -156,12 +160,28 @@ uv run python src/visualize_gpu.py <session_dir> --summary
 # NPU dashboard (3 panels: busy%, clock frequency, memory)
 uv run python src/visualize_npu.py <session_dir>
 uv run python src/visualize_npu.py <session_dir> --no-show
+```
 
-# Thermal & throttle dashboard (3 panels: temperature, throttle state, power)
-uv run python src/visualize_thermal.py <session_dir>
-uv run python src/visualize_thermal.py <session_dir> --summary
+## visualize_thermal.py
 
-# Makefile shortcut (thermal)
+Renders CPU/GPU temperature, throttle state, and RAPL power from `cpu_power.log` and `gpu_usage.log`.
+
+```bash
+uv run python src/visualize_thermal.py <session_dir> --save   # writes 3 PNGs to visualizations/
+uv run python src/visualize_thermal.py <session_dir> --show   # interactive window
+uv run python src/visualize_thermal.py                        # auto-uses latest session
+```
+
+Output files written when `--save` is used:
+
+| File | Contents |
+|------|----------|
+| `thermal_throttle.png` | Combined 3-panel overview (temp + throttle + power) |
+| `thermal_temperature.png` | CPU / GPU temperature over time |
+| `thermal_power.png` | RAPL CPU package power (W) over time |
+
+```bash
+# Makefile shortcut
 make visualize-thermal
 make visualize-thermal SESSION=monitoring_sessions/<name>
 ```
@@ -218,6 +238,49 @@ uv run python src/analyze_rosbag.py path/to/bag.mcap
 ```
 
 All analysis is run automatically and printed to stdout.
+
+## Scenario Benchmark Runner
+
+`benchmark_runner.sh` is the generic orchestrator used by all scenario run scripts.
+It is driven entirely by a YAML run profile (`config/*.yaml`).
+
+```bash
+bash src/benchmark_runner.sh --run-config config/wandering_run.yaml
+bash src/wandering_run.sh --record --plot      # record KPI bag + generate plots
+bash src/wandering_run.sh --show               # record + plot + auto-open HTML report
+bash src/wandering_run.sh --timeout 120        # hard stop after 2 min
+```
+
+| Flag | Description |
+|------|-------------|
+| `--record` | Record KPI topics to an MCAP bag |
+| `--plot` | Save trigger-timeline PNG charts after analysis |
+| `--show` | Implies `--record --plot`; auto-opens `make results` at end of run |
+| `--timeout SECS` | Override YAML stop timeout |
+| `--goals N` | Stop after N goal events |
+| `--output-parent DIR` | Session parent directory |
+
+**Progress stages printed during each run:**
+
+```text
+[1/6] Pre-run cleanup
+[2/6] Launching <scenario> simulation
+[3/6] Starting monitor stack
+[4/6] Running benchmark
+[5/6] Post-Run Analysis      (scenario-specific, e.g. fastmapping log parse)
+[6/6] Trigger-Latency Analysis
+```
+
+**Make targets** (plain targets default to `--record --plot`):
+
+```bash
+make wandering                              # single run with record + plot
+make wandering SHOW=1                       # single run + auto-open report
+make wandering-benchmark RUNS=5 TIMEOUT=120 # 5-run benchmark + aggregate
+make picknplace-run                         # single run with record + plot
+make fastmapping                            # single run with record + plot
+make fastmapping SHOW=1                     # single run + auto-open report
+```
 
 ## bag_replay_run.sh / make bag-replay
 
@@ -283,8 +346,8 @@ host-network mode). Prometheus is pre-configured to scrape `localhost:9092`.
 Results are stored and visualized **locally** on the monitoring machine.
 
 ```bash
-./grafana-monitor.sh --remote-ip 192.168.1.100
-./grafana-monitor.sh --remote-ip 192.168.1.100 --remote-user ros --node /slam_toolbox
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ros --node /slam_toolbox
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
