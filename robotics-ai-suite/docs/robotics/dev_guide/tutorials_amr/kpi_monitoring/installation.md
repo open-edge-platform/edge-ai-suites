@@ -81,8 +81,10 @@ PATH="$HOME/.local/bin:$PATH" uv sync
 sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg
 ```
 
-> If `uv` was not previously installed, restart your shell (or open a new
-> terminal) after `make install` so that `uv` is on your `PATH`.
+ Reopen your terminal after `make install` so that `uv` is on your `PATH`.
+```bash
+cd ~/ros-kpi
+```
 
 ## 5. Source Your ROS2 Environment
 
@@ -96,7 +98,7 @@ terminal where you use the KPI tools:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-export ROS_DOMAIN_ID=0   # must match the monitored system
+export ROS_DOMAIN_ID=45   # must match the monitored system
 ```
 
 <!--hide_directive:::hide_directive-->
@@ -105,7 +107,7 @@ export ROS_DOMAIN_ID=0   # must match the monitored system
 
 ```bash
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=0   # must match the monitored system
+export ROS_DOMAIN_ID=42   # must match the monitored system
 ```
 
 <!--hide_directive:::hide_directive-->
