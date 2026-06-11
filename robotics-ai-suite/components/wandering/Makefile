@@ -57,8 +57,9 @@ test:
 		-e DEBIAN_FRONTEND=noninteractive \
 		amd64/ros:${ROS_DISTRO}-ros-base \
 		bash -c " \
-			apt-get -qq update && apt install -qq -y equivs devscripts ros-${ROS_DISTRO}-nav2-msgs ros-${ROS_DISTRO}-nav2-util ros-${ROS_DISTRO}-nav2-costmap-2d && \
+			apt-get -qq update && apt-get -qq -y upgrade && apt install -qq -y equivs devscripts ros-${ROS_DISTRO}-nav2-msgs ros-${ROS_DISTRO}-nav2-util ros-${ROS_DISTRO}-nav2-costmap-2d && \
 			source /opt/ros/${ROS_DISTRO}/setup.bash && \
+			rm -rf build install log && \
 			colcon build --executor sequential --event-handlers console_direct+ && \
 			source install/setup.bash && \
 			colcon test --return-code-on-test-failure --executor sequential --event-handlers console_direct+"

@@ -33,10 +33,7 @@ moviepy>=2.0
 decord
 opencv-python-headless==4.10.0.84
 
-# NOTE: pdf2image requires Poppler binaries on Windows: https://github.com/oschwartz10612/poppler-windows/releases
-pdf2image==1.17.0
-# NOTE: pytesseract requires Tesseract OCR binary on Windows: https://github.com/UB-Mannheim/tesseract/wiki
-pytesseract==0.3.13
+PyMuPDF==1.26.3
 # NOTE: unstructured[all-docs] has heavy system-level dependencies (detectron2, libmagic, etc.)
 unstructured[all-docs]==0.18.32
 python-docx==1.2.0

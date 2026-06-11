@@ -19,7 +19,7 @@ LAUNCH_FILE = os.path.join(
 
 def test_launch_file_exists():
     """The launch file must exist on disk."""
-    assert os.path.isfile(LAUNCH_FILE), f'Launch file not found: {LAUNCH_FILE}'
+    assert os.path.isfile(LAUNCH_FILE), f'Launch file not found: {LAUNCH_FILE}'  # nosec B101
 
 
 def test_launch_file_valid_python():
@@ -39,7 +39,7 @@ def test_launch_file_has_generate_function():
         for node in ast.walk(tree)
         if isinstance(node, ast.FunctionDef)
     ]
-    assert 'generate_launch_description' in func_names, (
+    assert 'generate_launch_description' in func_names, (  # nosec B101
         'generate_launch_description() not found in launch file'
     )
 
@@ -48,7 +48,7 @@ def test_launch_file_starts_turtlesim_node():
     """The launch file must include a turtlesim_node."""
     with open(LAUNCH_FILE, 'r', encoding='utf-8') as fh:
         source = fh.read()
-    assert 'turtlesim_node' in source, (
+    assert 'turtlesim_node' in source, (  # nosec B101
         "Expected 'turtlesim_node' executable in launch file"
     )
 
@@ -57,6 +57,6 @@ def test_launch_file_uses_turtlesim_package():
     """The launch file must reference the turtlesim package."""
     with open(LAUNCH_FILE, 'r', encoding='utf-8') as fh:
         source = fh.read()
-    assert "'turtlesim'" in source or '"turtlesim"' in source, (
+    assert "'turtlesim'" in source or '"turtlesim"' in source, (  # nosec B101
         "Expected 'turtlesim' package reference in launch file"
     )
