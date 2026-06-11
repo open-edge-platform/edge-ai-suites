@@ -71,9 +71,12 @@ In distributed mode, Smart Intersection runs on a dedicated machine (System 1) w
 
 ```bash
 export NVR_SCENESCAPE=true
-# export RTSP_STREAM_PORT=<rtsp port>      # optional default 8554
+# export RTSP_STREAM_PORT=<rtsp port>         # optional, default 8554
+# export RTSP_STREAM_HOST=<external_rtsp_ip>  # optional: set to use an external RTSP source; skips local demo streamer
 source setup.sh start-si
 ```
+
+By default, `start-si` downloads demo videos and starts a local MediaMTX RTSP streamer. If `RTSP_STREAM_HOST` is set to a different machine's IP, the local streamer is skipped and SI reads from the external RTSP source instead.
 
 Upon successful startup, the script outputs the System 1 IP address required for System 2 configuration.
 
@@ -104,12 +107,22 @@ System 2 connects to System 1's MQTT broker (port `1883` by default) for SceneSc
 source setup.sh stop
 
 # Distributed node
-source setup.sh stop-si   # System 1
 source setup.sh stop-nvr  # System 2
+source setup.sh stop-si   # System 1
 
 # Restart
 source setup.sh restart
 ```
+
+When stopping System 1, if a local RTSP streamer is running, the script prompts:
+
+```text
+Local RTSP streamer is running. Stop it too? [y/N]
+```
+
+- Enter `y` to stop both SI services and the RTSP streamer.
+- Enter `n` or press Enter to stop only SI services and leave the streamer running.
+  The streamer can be stopped independently with `source setup.sh stop-streamer`.
 
 ### RTSP Streamer Only
 

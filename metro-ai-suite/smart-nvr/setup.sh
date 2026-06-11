@@ -79,7 +79,6 @@ get_host_ip() {
 
 # Configure Scenescape or default Frigate mode
 # Internal flags: SCENESCAPE_SI_ONLY=true (skip Frigate), SCENESCAPE_NVR_ONLY=true (skip SI/DLStreamer)
-# Env override: RTSP_STREAM_HOST for remote RTSP IP
 configure_scenescape_setup() {
 
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
@@ -221,16 +220,15 @@ validate_environment() {
         print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
         return 1
     fi
-    # Check for VSS IP and port
     if [ -z "${VSS_SEARCH_IP}" ]; then
         print_error "VSS_SEARCH_IP environment variable is required"
-        print_info "Please set it to the IP address of your Video Summarization Service"
+        print_info "Please set it to the IP address of your Video Search Service"
         return 1
     fi
     
     if [ -z "${VSS_SEARCH_PORT}" ]; then
         print_error "VSS_SEARCH_PORT environment variable is required"
-        print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
+        print_info "Please set it to the port of your Video Search Service (typically 12345)"
         return 1
     fi
     
@@ -305,7 +303,6 @@ start_services() {
         print_error "Docker Compose failed to start services."
         return 1
     fi
-
 }
 
 # Function to stop the services
@@ -321,7 +318,7 @@ stop_services() {
 # ─── Remote mode: distributed node deployment ────────────────────────────
 
 start_si_services() {
-    print_header "Starting SI + RTSP Streamer (System 1 / SI-only mode)"
+    print_header "Starting SI (System 1 / SI-only mode)"
     if [ "${NVR_SCENESCAPE}" != "True" ] && [ "${NVR_SCENESCAPE}" != "true" ]; then
         print_error "start-si requires NVR_SCENESCAPE=true"
         print_info "Run: export NVR_SCENESCAPE=true"
@@ -330,15 +327,25 @@ start_si_services() {
     HOST_IP=$(get_host_ip)
     export HOST_IP
 
-    if ! download_videos; then
-        return 1
+    # Start local RTSP streamer only when no external stream source is provided and not already running
+    local rtsp_host="${RTSP_STREAM_HOST:-}"
+    if [ -z "${rtsp_host}" ] || [ "${rtsp_host}" = "${HOST_IP}" ] || [ "${rtsp_host}" = "localhost" ]; then
+        if docker ps --filter "name=^mediamtx$" --filter "status=running" --format '{{.Names}}' | grep -q .; then
+            print_info "Local RTSP streamer already running - skipping"
+        else
+            print_info "No external RTSP source set - starting local MediaMTX streamer"
+            if ! download_videos; then
+                return 1
+            fi
+            if ! start_rtsp_streamer; then
+                return 1
+            fi
+        fi
+    else
+        print_info "External RTSP source detected (${rtsp_host}) - skipping local streamer"
     fi
 
     if ! SCENESCAPE_SI_ONLY=true configure_scenescape_setup; then
-        return 1
-    fi
-
-    if ! start_rtsp_streamer; then
         return 1
     fi
 
@@ -346,7 +353,8 @@ start_si_services() {
         return 1
     fi
 
-    print_success "SI + RTSP stack is running on System 1."
+    local nvr_rtsp_host="${rtsp_host:-${HOST_IP}}"
+    print_success "SI services are running on System 1."
     echo ""
     print_info "System 1 IP: ${CYAN}${HOST_IP}${NC}"
     print_info "On System 2 (SmartNVR machine), run:"
@@ -354,7 +362,7 @@ start_si_services() {
     echo -e "  ${CYAN}export MQTT_USER=<mqtt-username>${NC}"
     echo -e "  ${CYAN}export MQTT_PASSWORD=<mqtt-password>${NC}"
     echo -e "  ${CYAN}export SCENESCAPE_MQTT_BROKER=${HOST_IP}${NC}"
-    echo -e "  ${CYAN}export RTSP_STREAM_HOST=${HOST_IP}${NC}"
+    echo -e "  ${CYAN}export RTSP_STREAM_HOST=${nvr_rtsp_host}${NC}"
     echo -e "  ${CYAN}export VSS_SUMMARY_IP=<vss_ip>${NC}"
     echo -e "  ${CYAN}export VSS_SUMMARY_PORT=<vss_port>${NC}"
     echo -e "  ${CYAN}export VSS_SEARCH_IP=<vss_ip>${NC}"
@@ -365,10 +373,20 @@ start_si_services() {
 }
 
 stop_si_services() {
-    print_header "Stopping SI + RTSP Streamer (System 1)"
+    print_header "Stopping SI (System 1)"
     stop_scenescape
-    stop_rtsp_streamer
-    print_success "SI + RTSP stack stopped."
+    if docker ps --filter "name=^mediamtx$" --filter "status=running" --format '{{.Names}}' | grep -q .; then
+        read -r -p "Local RTSP streamer is running. Stop it too? [y/N] " answer
+        if [[ "${answer}" =~ ^[Yy]$ ]]; then
+            stop_rtsp_streamer
+            print_success "SI and RTSP streamer stopped."
+        else
+            print_info "RTSP streamer left running. Stop manually with: source setup.sh stop-streamer"
+            print_success "SI services stopped."
+        fi
+    else
+        print_success "SI services stopped."
+    fi
 }
 
 start_nvr_services() {
@@ -436,8 +454,8 @@ show_help() {
     echo -e "  ${YELLOW}restart${NC}        - Single-node: restart everything"
     echo -e "  ${GREEN}start-streamer${NC} - RTSP-only: start MediaMTX streamer "
     echo -e "  ${RED}stop-streamer${NC}  - RTSP-only: stop MediaMTX streamer"
-  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI + RTSP streamer only"
-  echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI + RTSP streamer"
+  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless RTSP_STREAM_HOST is set)"
+  echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI services (prompts to stop local RTSP streamer if running)"
   echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (requires SCENESCAPE_MQTT_BROKER + RTSP_STREAM_HOST)"
   echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
     echo -e "  ${BLUE}help${NC}           - Display this help message"
