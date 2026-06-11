@@ -13,4 +13,7 @@ For full setup, usage, and contribution guide, see:
 
 ## Disclaimer
 
-This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
+> This software is for **reference and evaluation purposes**. The included applications
+> are **not intended for direct use in clinical or diagnostic environments** and are not
+> validated as such.
+
