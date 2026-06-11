@@ -50,7 +50,8 @@ If you would like to use `uv`, you can set up the environment and install depend
 uv sync --extra pi-ov
 ```
 
-> **Usage:** You can run a Python file by using:
+> Follow the [guide](https://docs.astral.sh/uv/getting-started/installation/) to install uv.
+> You can run a Python file by using:
 > `uv run --extra pi-ov <your_python_file>`.
 
 Alternatively, you can create a Python environment:
