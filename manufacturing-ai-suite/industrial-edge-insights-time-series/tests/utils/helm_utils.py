@@ -343,7 +343,7 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
-def verify_pods(namespace, timeout=300, interval=5):
+def verify_pods(namespace, timeout=None, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 
     Pods in terminal states ('Completed', 'Succeeded') are treated as healthy
@@ -351,6 +351,8 @@ def verify_pods(namespace, timeout=300, interval=5):
     Pods in 'Terminating' state from a previous release are ignored so that
     a fresh install is not blocked by cleanup of old pods.
     """
+    if timeout is None:
+        timeout = constants.PODS_VERIFY_TIMEOUT
     # Valid pod states that do not require further waiting
     HEALTHY_STATES = {"Running", "Completed", "Succeeded"}
 
@@ -427,6 +429,7 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
+                _dump_pod_diagnostics(namespace)
                 return False
 
             # Wait before checking again
@@ -434,7 +437,29 @@ def verify_pods(namespace, timeout=300, interval=5):
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to verify pods: {e}")
+        _dump_pod_diagnostics(namespace)
         return False
+
+
+def _dump_pod_diagnostics(namespace):
+    """Dump kubectl describe and recent events to help diagnose pod-startup failures in CI."""
+    try:
+        describe = subprocess.run(
+            ["kubectl", "describe", "pods", "-n", namespace],
+            capture_output=True, text=True, check=False,
+        )
+        logger.error("==== kubectl describe pods (namespace=%s) ====\n%s", namespace, describe.stdout or describe.stderr)
+    except Exception as diag_err:
+        logger.error("Failed to run 'kubectl describe pods': %s", diag_err)
+
+    try:
+        events = subprocess.run(
+            ["kubectl", "get", "events", "-n", namespace, "--sort-by=.lastTimestamp"],
+            capture_output=True, text=True, check=False,
+        )
+        logger.error("==== kubectl events (namespace=%s) ====\n%s", namespace, events.stdout or events.stderr)
+    except Exception as diag_err:
+        logger.error("Failed to run 'kubectl get events': %s", diag_err)
 
 
 def _parse_cpu_to_millicores(value):

@@ -161,6 +161,11 @@ jobs:
           make down
           make build
 
+      - name: Install nmap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nmap
+
       - name: Install k3s
         run: |
           curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
