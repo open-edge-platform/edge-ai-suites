@@ -764,7 +764,7 @@ Move the robot forward 1 meter
 5. ✅ Robot stops after traveling ~1 meter
 
 <p align="center">
-  <img src="README.assets/rotate_robot_validation.png" alt="Robot Movement Validation"><br>
+  <img src="README.assets/move_forward_validation.png" alt="Robot Movement Validation"><br>
   <em>JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback</em>
 </p>
 
@@ -778,7 +778,7 @@ Rotate the robot 90 degrees clockwise
 3. ✅ AgenticROS stops robot after 90-degree rotation
 
 <p align="center">
-  <img src="README.assets/rotate_validation.png" alt="Robot Rotation Validation"><br>
+  <img src="README.assets/rotate_robot_validation.png" alt="Robot Rotation Validation"><br>
   <em>JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control</em>
 </p>
 
