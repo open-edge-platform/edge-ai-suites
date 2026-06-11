@@ -23,16 +23,17 @@ if you are going to use IMU,
 odometry and other msgs which will be integrated by using time, you need to set keep_time=1
 """
 
+import copy
+import subprocess  # nosec B404
+import sys
+import threading
+from functools import partial
+from threading import Thread
+
+import builtin_interfaces.msg
 import rclpy
 from rclpy.time import Time
-import builtin_interfaces.msg
-
-from functools import partial
-import subprocess
-import threading
-from threading import Thread
-import sys
-import copy
+from sensor_msgs.msg import Image
 
 # Please change the topic names (type should not need to change) according to your setup
 # TODO add automatic topic parser
@@ -129,31 +130,22 @@ def main():
 
     publishers = {}
     subscribers = {}
-    play_cmd = 'ros2 bag play ' + bagfile + ' --remap ' + ' '.join(play_args)
+    play_cmd = ['ros2', 'bag', 'play', bagfile, '--remap'] + list(play_args)
 
     for topic in topics:
         # construct publisher
         # TODO implement a universal way to take care of remapping
         topic_remapped = topic if topic not in remappings else remappings[topic]
         # print(topic_remapped)
-        cmd = (
-            'from sensor_msgs.msg import Image;\n'
-            + 'publishers[topic] = node.create_publisher(Image, topic_remapped, 10)'
-        )
-        try:
-            exec(cmd)
-        except ImportError:
-            print('  ---> unknown type, skipped')
-            continue
+        publishers[topic] = node.create_publisher(Image, topic_remapped, 10)
         if topic in remappings:
             print('  ---> remap to %s' % remappings[topic])
         # define callback and subscriber
         cb = partial(publish_once, publishers[topic])
-        cmd = 'subscribers[topic] = node.create_subscription(Image, remap_prefix + topic, cb, 10)'
-        exec(cmd)
+        subscribers[topic] = node.create_subscription(Image, remap_prefix + topic, cb, 10)
         # add remap option
         # the original image data will now be published to remap_prefix + topic
-        play_cmd += ' %s:=%s%s' % (topic, remap_prefix, topic)
+        play_cmd.append('%s:=%s%s' % (topic, remap_prefix, topic))
 
     # whenever captured a msg under remap_prefix/topic (i.e. /rosbag/d455_front/color/image_raw)  # noqa: E501
     # deep copy the msg, change its timestamp and publish to topic (i.e. /d455_front/color/image_raw)  # noqa: E501
@@ -161,7 +153,7 @@ def main():
     spin_thread.start()
 
     print('\nStart to play... Press Ctrl+C to exit')
-    p = subprocess.call(play_cmd, shell=True)
+    p = subprocess.call(play_cmd)  # nosec B603
 
     rclpy.shutdown()
 

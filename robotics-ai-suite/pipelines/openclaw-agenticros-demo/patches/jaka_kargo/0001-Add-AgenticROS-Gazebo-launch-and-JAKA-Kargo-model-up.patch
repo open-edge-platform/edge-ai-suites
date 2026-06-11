@@ -1,0 +1,1059 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+From 8bb40712503bbb042899259498e43ac9dc251cce Mon Sep 17 00:00:00 2001
+From: RoboticsYY <yu.yan@intel.com>
+Date: Tue, 2 Jun 2026 10:55:16 +0800
+Subject: [PATCH] Add AgenticROS Gazebo launch and JAKA Kargo model updates
+
+---
+ .../launch/spawn_jaka_kargo_gazebo.launch.py  | 263 +++++++++++++
+ .../src/jaka_kargo_description/package.xml    |   2 +
+ .../urdf/jaka_kargo.urdf                      | 349 +++++++++++++++---
+ 3 files changed, 568 insertions(+), 46 deletions(-)
+ create mode 100644 jaka_kargo_ros2/src/jaka_kargo_description/launch/spawn_jaka_kargo_gazebo.launch.py
+
+diff --git a/jaka_kargo_ros2/src/jaka_kargo_description/launch/spawn_jaka_kargo_gazebo.launch.py b/jaka_kargo_ros2/src/jaka_kargo_description/launch/spawn_jaka_kargo_gazebo.launch.py
+new file mode 100644
+index 0000000..83c4550
+--- /dev/null
++++ b/jaka_kargo_ros2/src/jaka_kargo_description/launch/spawn_jaka_kargo_gazebo.launch.py
+@@ -0,0 +1,263 @@
++from pathlib import Path
++import re
++
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, OpaqueFunction
++from launch.conditions import IfCondition
++from launch.substitutions import LaunchConfiguration
++from launch_ros.actions import Node
++
++
++def _launch_setup(context, *args, **kwargs):
++    package_share = Path(get_package_share_directory("jaka_kargo_description"))
++    urdf_path = package_share / "urdf" / "jaka_kargo.urdf"
++
++    if not urdf_path.exists():
++        raise RuntimeError(
++            "JAKA URDF not found at expected path: "
++            f"{urdf_path}"
++        )
++
++    robot_description = urdf_path.read_text(encoding="utf-8")
++    package_uri_prefix = "package://jaka_kargo_description/"
++    model_uri_prefix = "model://jaka_kargo_description/"
++    absolute_prefix = f"file://{package_share.as_posix()}/"
++    robot_description = robot_description.replace(package_uri_prefix, absolute_prefix)
++    robot_description = robot_description.replace(model_uri_prefix, absolute_prefix)
++    disable_gazebo_sensors = LaunchConfiguration("disable_gazebo_sensors").perform(context).strip().lower() == "true"
++    if disable_gazebo_sensors:
++        sensor_links = [
++            "camera_1_link",
++            "camera_2_link",
++            "radar_3d_link",
++            "radar_l_link",
++            "radar_r_link",
++        ]
++        for sensor_link in sensor_links:
++            robot_description = re.sub(
++                rf'\s*<gazebo reference="{sensor_link}">.*?</gazebo>',
++                "",
++                robot_description,
++                flags=re.DOTALL,
++            )
++
++    robot_name = LaunchConfiguration("robot_name").perform(context)
++    x_pose = LaunchConfiguration("x_pose").perform(context)
++    y_pose = LaunchConfiguration("y_pose").perform(context)
++    z_pose = LaunchConfiguration("z_pose").perform(context)
++    use_sim_time = LaunchConfiguration("use_sim_time")
++    use_sensor_bridges = LaunchConfiguration("use_sensor_bridges")
++    joint_state_gz_topic = LaunchConfiguration("joint_state_gz_topic").perform(context).strip()
++    camera_width = LaunchConfiguration("camera_width").perform(context).strip()
++    camera_height = LaunchConfiguration("camera_height").perform(context).strip()
++    camera_update_rate = LaunchConfiguration("camera_update_rate").perform(context).strip()
++    enable_camera_2 = LaunchConfiguration("enable_camera_2").perform(context).strip().lower() == "true"
++    lidar_update_rate = LaunchConfiguration("lidar_update_rate").perform(context).strip()
++
++    for sensor_name in ["camera_1_sensor", "camera_2_sensor"]:
++        robot_description = re.sub(
++            rf'(<sensor name="{sensor_name}" type="camera">[\\s\\S]*?<update_rate>)([^<]+)(</update_rate>)',
++            rf"\\g<1>{camera_update_rate}\\g<3>",
++            robot_description,
++            count=1,
++        )
++        robot_description = re.sub(
++            rf'(<sensor name="{sensor_name}" type="camera">[\\s\\S]*?<width>)([^<]+)(</width>)',
++            rf"\\g<1>{camera_width}\\g<3>",
++            robot_description,
++            count=1,
++        )
++        robot_description = re.sub(
++            rf'(<sensor name="{sensor_name}" type="camera">[\\s\\S]*?<height>)([^<]+)(</height>)',
++            rf"\\g<1>{camera_height}\\g<3>",
++            robot_description,
++            count=1,
++        )
++
++    for lidar_sensor in ["radar_3d_sensor", "radar_l_sensor", "radar_r_sensor"]:
++        robot_description = re.sub(
++            rf'(<sensor name="{lidar_sensor}" type="(?:gpu_lidar|lidar)">[\\s\\S]*?<update_rate>)([^<]+)(</update_rate>)',
++            rf"\\g<1>{lidar_update_rate}\\g<3>",
++            robot_description,
++            count=1,
++        )
++
++    if not enable_camera_2:
++        robot_description = re.sub(
++            r'\s*<gazebo reference="camera_2_link">[\s\S]*?</gazebo>',
++            "",
++            robot_description,
++            count=1,
++        )
++
++    controlled_joint_names = [
++        "agv_x",
++        "agv_y",
++        "agv_yaw",
++        "body_j1",
++        "body_j2",
++        "body_j3",
++        "body_j4",
++        "arm_lj1",
++        "arm_lj2",
++        "arm_lj3",
++        "arm_lj4",
++        "arm_lj5",
++        "arm_lj6",
++        "arm_lj7",
++        "arm_rj1",
++        "arm_rj2",
++        "arm_rj3",
++        "arm_rj4",
++        "arm_rj5",
++        "arm_rj6",
++        "arm_rj7",
++    ]
++    joint_cmd_bridges = [
++        f"/jaka_cargo/joints/{joint_name}/cmd_pos@std_msgs/msg/Float64@gz.msgs.Double"
++        for joint_name in controlled_joint_names
++    ]
++    joint_state_bridge = f"{joint_state_gz_topic}@sensor_msgs/msg/JointState@gz.msgs.Model"
++
++    image_topics = ["/jaka_cargo/sensors/camera_1/image"]
++    image_remaps = [
++        ("/jaka_cargo/sensors/camera_1/image", "/camera_1/image_raw"),
++    ]
++    if enable_camera_2:
++        image_topics.append("/jaka_cargo/sensors/camera_2/image")
++        image_remaps.append(("/jaka_cargo/sensors/camera_2/image", "/camera_2/image_raw"))
++
++    return [
++        Node(
++            package="robot_state_publisher",
++            executable="robot_state_publisher",
++            name="robot_state_publisher",
++            output="screen",
++            parameters=[
++                {
++                    "use_sim_time": use_sim_time,
++                    "robot_description": robot_description,
++                }
++            ],
++        ),
++        Node(
++            package="ros_gz_sim",
++            executable="create",
++            output="screen",
++            arguments=[
++                "-name",
++                robot_name,
++                "-topic",
++                "robot_description",
++                "-x",
++                x_pose,
++                "-y",
++                y_pose,
++                "-z",
++                z_pose,
++            ],
++        ),
++        Node(
++            package="ros_gz_bridge",
++            executable="parameter_bridge",
++            name="jaka_gz_bridge",
++            output="screen",
++            arguments=[
++                "/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock",
++                joint_state_bridge,
++                "/jaka_cargo/sensors/radar_l/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
++                "/jaka_cargo/sensors/radar_r/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
++                "/jaka_cargo/sensors/radar_3d/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked",
++            ] + joint_cmd_bridges,
++            remappings=[
++                (joint_state_gz_topic, "/joint_states"),
++                ("/jaka_cargo/sensors/radar_l/scan", "/scan_left"),
++                ("/jaka_cargo/sensors/radar_r/scan", "/scan_right"),
++                ("/jaka_cargo/sensors/radar_3d/points", "/lidar/points"),
++            ],
++            condition=IfCondition(use_sensor_bridges),
++        ),
++        Node(
++            package="ros_gz_image",
++            executable="image_bridge",
++            name="jaka_camera_bridge",
++            output="screen",
++            arguments=image_topics,
++            remappings=image_remaps,
++            condition=IfCondition(use_sensor_bridges),
++        ),
++    ]
++
++
++def generate_launch_description():
++    return LaunchDescription(
++        [
++            DeclareLaunchArgument(
++                "robot_name",
++                default_value="jaka_kargo",
++                description="Entity name used when spawning the JAKA Kargo model.",
++            ),
++            DeclareLaunchArgument(
++                "x_pose",
++                default_value="0.0",
++                description="Initial x position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "y_pose",
++                default_value="0.0",
++                description="Initial y position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "z_pose",
++                default_value="0.32",
++                description="Initial z position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "use_sensor_bridges",
++                default_value="true",
++                description="Start ROS-Gazebo bridges for camera/lidar/odometry topics.",
++            ),
++            DeclareLaunchArgument(
++                "disable_gazebo_sensors",
++                default_value="false",
++                description="Remove Gazebo camera/lidar sensor blocks from the spawned JAKA URDF to reduce rendering load.",
++            ),
++            DeclareLaunchArgument(
++                "use_sim_time",
++                default_value="true",
++                description="Use simulation clock from Gazebo.",
++            ),
++            DeclareLaunchArgument(
++                "joint_state_gz_topic",
++                default_value="/world/default/model/jaka_kargo/joint_state",
++                description="Gazebo joint_state topic for the spawned robot, bridged into ROS /joint_states.",
++            ),
++            DeclareLaunchArgument(
++                "camera_width",
++                default_value="1280",
++                description="Camera image width applied to JAKA camera sensors at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_height",
++                default_value="720",
++                description="Camera image height applied to JAKA camera sensors at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_update_rate",
++                default_value="20",
++                description="Camera update rate (Hz) applied to JAKA camera sensors at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "enable_camera_2",
++                default_value="true",
++                description="Enable second camera sensor and ROS bridge topic /camera_2/image_raw.",
++            ),
++            DeclareLaunchArgument(
++                "lidar_update_rate",
++                default_value="10",
++                description="Lidar update rate (Hz) applied to JAKA lidar sensors at spawn time.",
++            ),
++            OpaqueFunction(function=_launch_setup),
++        ]
++    )
+diff --git a/jaka_kargo_ros2/src/jaka_kargo_description/package.xml b/jaka_kargo_ros2/src/jaka_kargo_description/package.xml
+index 7d70a7c..305ac40 100644
+--- a/jaka_kargo_ros2/src/jaka_kargo_description/package.xml
++++ b/jaka_kargo_ros2/src/jaka_kargo_description/package.xml
+@@ -27,6 +27,8 @@
+   <exec_depend>xacro</exec_depend> 
+   <exec_depend>rviz2</exec_depend>
+   <exec_depend>joint_state_publisher_gui</exec_depend>
++  <exec_depend>ros_gz_bridge</exec_depend>
++  <exec_depend>ros_gz_image</exec_depend>
+ 
+   <!-- The export tag contains other, unspecified, tags -->
+   <export>
+diff --git a/jaka_kargo_ros2/src/jaka_kargo_description/urdf/jaka_kargo.urdf b/jaka_kargo_ros2/src/jaka_kargo_description/urdf/jaka_kargo.urdf
+index ca022ee..d63db3b 100644
+--- a/jaka_kargo_ros2/src/jaka_kargo_description/urdf/jaka_kargo.urdf
++++ b/jaka_kargo_ros2/src/jaka_kargo_description/urdf/jaka_kargo.urdf
+@@ -32,7 +32,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.90 0.45 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -54,7 +54,13 @@
+       link="base_link"/>
+   </joint> -->
+   <!-- Fake AGV base joints for MoveIt fast-path integration -->
+-  <link name="agv_x_link"/>
++  <link name="agv_x_link">
++    <inertial>
++      <origin xyz="0 0 0" rpy="0 0 0"/>
++      <mass value="0.001"/>
++      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
++    </inertial>
++  </link>
+   <joint name="agv_x" type="prismatic">
+     <parent link="world"/>
+     <child link="agv_x_link"/>
+@@ -63,7 +69,13 @@
+     <limit lower="-20.0" upper="20.0" effort="1000" velocity="0.5"/>
+   </joint>
+ 
+-  <link name="agv_xy_link"/>
++  <link name="agv_xy_link">
++    <inertial>
++      <origin xyz="0 0 0" rpy="0 0 0"/>
++      <mass value="0.001"/>
++      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
++    </inertial>
++  </link>
+   <joint name="agv_y" type="prismatic">
+     <parent link="agv_x_link"/>
+     <child link="agv_xy_link"/>
+@@ -106,7 +118,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.25 0.45 0.92 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -164,7 +176,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.20 0.70 0.32 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -222,7 +234,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.85 0.20 0.20 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -280,7 +292,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.10 0.75 0.75 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -338,7 +350,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.92 0.82 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -391,7 +403,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.55 0.30 0.80 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -444,7 +456,7 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.25 0.45 0.92 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -497,7 +509,7 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.20 0.70 0.32 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -550,7 +562,7 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.90 0.45 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -603,7 +615,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
++          rgba="0.92 0.82 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -633,6 +645,9 @@
+       upper="0.78"
+       effort="1350"
+       velocity="0.1" />
++    <dynamics
++      damping="320"
++      friction="180" />
+   </joint>
+   <link
+     name="body_j2_link">
+@@ -661,7 +676,7 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.55 0.30 0.80 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -691,6 +706,9 @@
+       upper="1.5707"
+       effort="281"
+       velocity="1.5708" />
++    <dynamics
++      damping="90"
++      friction="28" />
+   </joint>
+   <link
+     name="camera_1_link">
+@@ -719,16 +737,15 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.10 0.75 0.75 1" />
+       </material>
+     </visual>
+     <collision>
+       <origin
+-        xyz="0 0 0"
++        xyz="0 0 0.013"
+         rpy="0 0 0" />
+       <geometry>
+-        <mesh
+-          filename="package://jaka_kargo_description/meshes/jaka_kargo_meshes/camera_1_link.STL" />
++        <box size="0.05 0.04 0.03" />
+       </geometry>
+     </collision>
+   </link>
+@@ -737,7 +754,7 @@
+     type="fixed">
+     <origin
+       xyz="0.061 -0.119 -0.0002"
+-      rpy="1.5708 0 1.5708" />
++      rpy="1.5708 0 0" />
+     <parent
+       link="body_j2_link" />
+     <child
+@@ -772,7 +789,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
++          rgba="0.25 0.45 0.92 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -802,6 +819,9 @@
+       upper="1.5707"
+       effort="19"
+       velocity="1.5708" />
++    <dynamics
++      damping="45"
++      friction="12" />
+   </joint>
+   <link
+     name="body_j4_link">
+@@ -830,7 +850,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.20 0.70 0.32 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -860,6 +880,9 @@
+       upper="0.7854"
+       effort="19"
+       velocity="1.5708" />
++    <dynamics
++      damping="32"
++      friction="10" />
+   </joint>
+   <link
+     name="camera_2_link">
+@@ -888,16 +911,15 @@
+       <material
+         name="">
+         <color
+-          rgba="1 1 1 1" />
++          rgba="0.85 0.20 0.20 1" />
+       </material>
+     </visual>
+     <collision>
+       <origin
+-        xyz="0 0 0"
++        xyz="0 0 0.013"
+         rpy="0 0 0" />
+       <geometry>
+-        <mesh
+-          filename="package://jaka_kargo_description/meshes/jaka_kargo_meshes/camera_2_link.STL" />
++        <box size="0.05 0.04 0.03" />
+       </geometry>
+     </collision>
+   </link>
+@@ -906,7 +928,7 @@
+     type="fixed">
+     <origin
+       xyz="0.0339999999999933 -0.0530000000000007 -0.000200681505657571"
+-      rpy="1.5707963267949 0 1.5707963267949" />
++      rpy="1.5707963267949 0 0" />
+     <parent
+       link="body_j4_link" />
+     <child
+@@ -941,16 +963,15 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.90 0.45 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+       <origin
+-        xyz="0 0 0"
++        xyz="0 0 0.12"
+         rpy="0 0 0" />
+       <geometry>
+-        <mesh
+-          filename="package://jaka_kargo_description/meshes/jaka_kargo_meshes/arm_rj1_link.STL" />
++        <cylinder radius="0.055" length="0.22" />
+       </geometry>
+     </collision>
+   </link>
+@@ -971,6 +992,7 @@
+       upper="6.2832"
+       effort="66"
+       velocity="1.5708" />
++    <dynamics damping="8" friction="1.5" />
+   </joint>
+   <link
+     name="arm_rj2_link">
+@@ -999,7 +1021,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.92 0.82 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1029,6 +1051,7 @@
+       upper="1.8326"
+       effort="66"
+       velocity="1.5708" />
++    <dynamics damping="8" friction="1.5" />
+   </joint>
+   <link
+     name="arm_rj3_link">
+@@ -1057,7 +1080,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.55 0.30 0.80 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1087,6 +1110,7 @@
+       upper="6.2832"
+       effort="64"
+       velocity="2.0944" />
++    <dynamics damping="6" friction="1.0" />
+   </joint>
+   <link
+     name="arm_rj4_link">
+@@ -1115,7 +1139,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.10 0.75 0.75 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1145,6 +1169,7 @@
+       upper="0.5236"
+       effort="37"
+       velocity="2.0944" />
++    <dynamics damping="6" friction="1.0" />
+   </joint>
+   <link
+     name="arm_rj5_link">
+@@ -1173,7 +1198,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.20 0.70 0.32 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1203,6 +1228,7 @@
+       upper="6.2832"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="4" friction="0.8" />
+   </joint>
+   <link
+     name="arm_rj6_link">
+@@ -1231,7 +1257,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.25 0.45 0.92 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1261,6 +1287,7 @@
+       upper="1.8326"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="4" friction="0.8" />
+   </joint>
+   <link
+     name="arm_rj7_link">
+@@ -1289,7 +1316,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.85 0.20 0.20 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1319,6 +1346,7 @@
+       upper="6.2832"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="3" friction="0.5" />
+   </joint>
+   <link name="arm_r_tcp"/>
+   <joint name="arm_r_tcp_joint" type="fixed">
+@@ -1353,16 +1381,15 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.20 0.70 0.32 1" />
+       </material>
+     </visual>
+     <collision>
+       <origin
+-        xyz="0 0 0"
++        xyz="0 0 0.12"
+         rpy="0 0 0" />
+       <geometry>
+-        <mesh
+-          filename="package://jaka_kargo_description/meshes/jaka_kargo_meshes/arm_lj1_link.STL" />
++        <cylinder radius="0.055" length="0.22" />
+       </geometry>
+     </collision>
+   </link>
+@@ -1383,6 +1410,7 @@
+       upper="6.2832"
+       effort="66"
+       velocity="1.5708" />
++    <dynamics damping="8" friction="1.5" />
+   </joint>
+   <link
+     name="arm_lj2_link">
+@@ -1411,7 +1439,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.25 0.45 0.92 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1441,6 +1469,7 @@
+       upper="1.8326"
+       effort="66"
+       velocity="1.5708" />
++    <dynamics damping="8" friction="1.5" />
+   </joint>
+   <link
+     name="arm_lj3_link">
+@@ -1469,7 +1498,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.85 0.20 0.20 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1499,6 +1528,7 @@
+       upper="6.2832"
+       effort="64"
+       velocity="2.0944" />
++    <dynamics damping="6" friction="1.0" />
+   </joint>
+   <link
+     name="arm_lj4_link">
+@@ -1527,7 +1557,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.90 0.45 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1557,6 +1587,7 @@
+       upper="0.5236" 
+       effort="37"
+       velocity="2.0944" />
++    <dynamics damping="6" friction="1.0" />
+   </joint>
+   <link
+     name="arm_lj5_link">
+@@ -1585,7 +1616,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.10 0.75 0.75 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1615,6 +1646,7 @@
+       upper="6.2832"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="4" friction="0.8" />
+   </joint>
+   <link
+     name="arm_lj6_link">
+@@ -1643,7 +1675,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.92 0.82 0.18 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1673,6 +1705,7 @@
+       upper="1.8326"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="4" friction="0.8" />
+   </joint>
+   <link
+     name="arm_lj7_link">
+@@ -1701,7 +1734,7 @@
+       <material
+         name="">
+         <color
+-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
++          rgba="0.55 0.30 0.80 1" />
+       </material>
+     </visual>
+     <collision>
+@@ -1731,6 +1764,7 @@
+       upper="6.2832"
+       effort="19"
+       velocity="2.618" />
++    <dynamics damping="3" friction="0.5" />
+   </joint>
+   <link name="arm_l_tcp"/>
+   <joint name="arm_l_tcp_joint" type="fixed">
+@@ -1738,4 +1772,227 @@
+     <child link="arm_l_tcp"/>
+     <origin xyz="0 0 0.2" rpy="0 0 0"/>
+   </joint>
++
++  <gazebo reference="camera_1_link">
++    <sensor name="camera_1_sensor" type="camera">
++      <pose>0 0 0 0 0 0</pose>
++      <always_on>true</always_on>
++      <update_rate>20</update_rate>
++      <visualize>true</visualize>
++      <topic>/jaka_cargo/sensors/camera_1/image</topic>
++      <camera>
++        <horizontal_fov>1.3962634</horizontal_fov>
++        <image>
++          <width>640</width>
++          <height>480</height>
++          <format>R8G8B8</format>
++        </image>
++        <clip>
++          <near>0.05</near>
++          <far>30.0</far>
++        </clip>
++      </camera>
++    </sensor>
++  </gazebo>
++
++  <gazebo reference="camera_2_link">
++    <sensor name="camera_2_sensor" type="camera">
++      <pose>0 0 0 0 0 0</pose>
++      <always_on>true</always_on>
++      <update_rate>20</update_rate>
++      <visualize>true</visualize>
++      <topic>/jaka_cargo/sensors/camera_2/image</topic>
++      <camera>
++        <horizontal_fov>1.3962634</horizontal_fov>
++        <image>
++          <width>640</width>
++          <height>480</height>
++          <format>R8G8B8</format>
++        </image>
++        <clip>
++          <near>0.05</near>
++          <far>30.0</far>
++        </clip>
++      </camera>
++    </sensor>
++  </gazebo>
++
++  <gazebo reference="radar_3d_link">
++    <sensor name="radar_3d_sensor" type="gpu_lidar">
++      <pose>0 0 0 0 0 0</pose>
++      <always_on>true</always_on>
++      <update_rate>10</update_rate>
++      <visualize>true</visualize>
++      <topic>/jaka_cargo/sensors/radar_3d/points</topic>
++      <lidar>
++        <scan>
++          <horizontal>
++            <samples>1024</samples>
++            <resolution>1</resolution>
++            <min_angle>-3.14159</min_angle>
++            <max_angle>3.14159</max_angle>
++          </horizontal>
++          <vertical>
++            <samples>32</samples>
++            <resolution>1</resolution>
++            <min_angle>-0.261799</min_angle>
++            <max_angle>0.261799</max_angle>
++          </vertical>
++        </scan>
++        <range>
++          <min>0.2</min>
++          <max>80.0</max>
++          <resolution>0.01</resolution>
++        </range>
++      </lidar>
++    </sensor>
++  </gazebo>
++
++  <gazebo reference="radar_l_link">
++    <sensor name="radar_l_sensor" type="gpu_lidar">
++      <pose>0 0 0 0 0 0</pose>
++      <always_on>true</always_on>
++      <update_rate>15</update_rate>
++      <visualize>true</visualize>
++      <topic>/jaka_cargo/sensors/radar_l/scan</topic>
++      <lidar>
++        <scan>
++          <horizontal>
++            <samples>720</samples>
++            <resolution>1</resolution>
++            <min_angle>-2.35619</min_angle>
++            <max_angle>2.35619</max_angle>
++          </horizontal>
++          <vertical>
++            <samples>1</samples>
++            <resolution>1</resolution>
++            <min_angle>0</min_angle>
++            <max_angle>0</max_angle>
++          </vertical>
++        </scan>
++        <range>
++          <min>0.05</min>
++          <max>30.0</max>
++          <resolution>0.01</resolution>
++        </range>
++      </lidar>
++    </sensor>
++  </gazebo>
++
++  <gazebo reference="radar_r_link">
++    <sensor name="radar_r_sensor" type="gpu_lidar">
++      <pose>0 0 0 0 0 0</pose>
++      <always_on>true</always_on>
++      <update_rate>15</update_rate>
++      <visualize>true</visualize>
++      <topic>/jaka_cargo/sensors/radar_r/scan</topic>
++      <lidar>
++        <scan>
++          <horizontal>
++            <samples>720</samples>
++            <resolution>1</resolution>
++            <min_angle>-2.35619</min_angle>
++            <max_angle>2.35619</max_angle>
++          </horizontal>
++          <vertical>
++            <samples>1</samples>
++            <resolution>1</resolution>
++            <min_angle>0</min_angle>
++            <max_angle>0</max_angle>
++          </vertical>
++        </scan>
++        <range>
++          <min>0.05</min>
++          <max>30.0</max>
++          <resolution>0.01</resolution>
++        </range>
++      </lidar>
++    </sensor>
++  </gazebo>
++
++  <gazebo>
++    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"/>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>agv_x</joint_name>
++      <topic>/jaka_cargo/joints/agv_x/cmd_pos</topic>
++      <p_gain>2500</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>450</d_gain>
++      <cmd_max>1800</cmd_max>
++      <cmd_min>-1800</cmd_min>
++    </plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>agv_y</joint_name>
++      <topic>/jaka_cargo/joints/agv_y/cmd_pos</topic>
++      <p_gain>2500</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>450</d_gain>
++      <cmd_max>1800</cmd_max>
++      <cmd_min>-1800</cmd_min>
++    </plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>agv_yaw</joint_name>
++      <topic>/jaka_cargo/joints/agv_yaw/cmd_pos</topic>
++      <p_gain>1600</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>260</d_gain>
++      <cmd_max>1200</cmd_max>
++      <cmd_min>-1200</cmd_min>
++    </plugin>
++
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>body_j1</joint_name>
++      <topic>/jaka_cargo/joints/body_j1/cmd_pos</topic>
++      <p_gain>5000</p_gain>
++      <i_gain>450.0</i_gain>
++      <d_gain>500</d_gain>
++      <i_max>1000</i_max>
++      <i_min>-1000</i_min>
++      <cmd_max>4000</cmd_max>
++      <cmd_min>-4000</cmd_min>
++    </plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>body_j2</joint_name>
++      <topic>/jaka_cargo/joints/body_j2/cmd_pos</topic>
++      <p_gain>95</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>42</d_gain>
++      <cmd_max>90</cmd_max>
++      <cmd_min>-90</cmd_min>
++    </plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>body_j3</joint_name>
++      <topic>/jaka_cargo/joints/body_j3/cmd_pos</topic>
++      <p_gain>72</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>28</d_gain>
++      <cmd_max>40</cmd_max>
++      <cmd_min>-40</cmd_min>
++    </plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
++      <joint_name>body_j4</joint_name>
++      <topic>/jaka_cargo/joints/body_j4/cmd_pos</topic>
++      <p_gain>58</p_gain>
++      <i_gain>0.0</i_gain>
++      <d_gain>22</d_gain>
++      <cmd_max>24</cmd_max>
++      <cmd_min>-24</cmd_min>
++    </plugin>
++
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj1</joint_name><topic>/jaka_cargo/joints/arm_lj1/cmd_pos</topic><p_gain>85</p_gain><i_gain>0.0</i_gain><d_gain>14</d_gain><cmd_max>90</cmd_max><cmd_min>-90</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj2</joint_name><topic>/jaka_cargo/joints/arm_lj2/cmd_pos</topic><p_gain>85</p_gain><i_gain>0.0</i_gain><d_gain>14</d_gain><cmd_max>90</cmd_max><cmd_min>-90</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj3</joint_name><topic>/jaka_cargo/joints/arm_lj3/cmd_pos</topic><p_gain>70</p_gain><i_gain>0.0</i_gain><d_gain>12</d_gain><cmd_max>80</cmd_max><cmd_min>-80</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj4</joint_name><topic>/jaka_cargo/joints/arm_lj4/cmd_pos</topic><p_gain>60</p_gain><i_gain>0.0</i_gain><d_gain>10</d_gain><cmd_max>60</cmd_max><cmd_min>-60</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj5</joint_name><topic>/jaka_cargo/joints/arm_lj5/cmd_pos</topic><p_gain>45</p_gain><i_gain>0.0</i_gain><d_gain>8</d_gain><cmd_max>45</cmd_max><cmd_min>-45</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj6</joint_name><topic>/jaka_cargo/joints/arm_lj6/cmd_pos</topic><p_gain>38</p_gain><i_gain>0.0</i_gain><d_gain>7</d_gain><cmd_max>35</cmd_max><cmd_min>-35</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_lj7</joint_name><topic>/jaka_cargo/joints/arm_lj7/cmd_pos</topic><p_gain>28</p_gain><i_gain>0.0</i_gain><d_gain>5</d_gain><cmd_max>20</cmd_max><cmd_min>-20</cmd_min></plugin>
++
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj1</joint_name><topic>/jaka_cargo/joints/arm_rj1/cmd_pos</topic><p_gain>85</p_gain><i_gain>0.0</i_gain><d_gain>14</d_gain><cmd_max>90</cmd_max><cmd_min>-90</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj2</joint_name><topic>/jaka_cargo/joints/arm_rj2/cmd_pos</topic><p_gain>85</p_gain><i_gain>0.0</i_gain><d_gain>14</d_gain><cmd_max>90</cmd_max><cmd_min>-90</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj3</joint_name><topic>/jaka_cargo/joints/arm_rj3/cmd_pos</topic><p_gain>70</p_gain><i_gain>0.0</i_gain><d_gain>12</d_gain><cmd_max>80</cmd_max><cmd_min>-80</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj4</joint_name><topic>/jaka_cargo/joints/arm_rj4/cmd_pos</topic><p_gain>60</p_gain><i_gain>0.0</i_gain><d_gain>10</d_gain><cmd_max>60</cmd_max><cmd_min>-60</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj5</joint_name><topic>/jaka_cargo/joints/arm_rj5/cmd_pos</topic><p_gain>45</p_gain><i_gain>0.0</i_gain><d_gain>8</d_gain><cmd_max>45</cmd_max><cmd_min>-45</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj6</joint_name><topic>/jaka_cargo/joints/arm_rj6/cmd_pos</topic><p_gain>38</p_gain><i_gain>0.0</i_gain><d_gain>7</d_gain><cmd_max>35</cmd_max><cmd_min>-35</cmd_min></plugin>
++    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController"><joint_name>arm_rj7</joint_name><topic>/jaka_cargo/joints/arm_rj7/cmd_pos</topic><p_gain>28</p_gain><i_gain>0.0</i_gain><d_gain>5</d_gain><cmd_max>20</cmd_max><cmd_min>-20</cmd_min></plugin>
++  </gazebo>
+ </robot>
+\ No newline at end of file
+-- 
+2.43.0
+

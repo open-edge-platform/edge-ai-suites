@@ -26,6 +26,16 @@ To see the system requirements and other installations, see the following guides
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
+### Manual Model Staging (Required)
+
+Before running `make run`, place source models in these exact paths:
+
+- `models/downloads/rppg/`
+- `models/downloads/3d-pose/`
+- `models/downloads/ai-ecg/` (local Hugging Face model folder)
+
+`make run` validates these paths.
+
 ## How It Works
 
 At a high level, the system is composed of several microservices that work together to ingest patient signals and video, run AI models on Intel hardware (CPU, GPU, and NPU), aggregate results, and expose them to a UI for clinicians.

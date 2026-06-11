@@ -19,31 +19,36 @@
 #       Picks cubes from AMR tray and places them at a destination.
 #       Uses parallel gripper via JointTrajectory (same as ARM1).
 import sys
-import subprocess
+import subprocess  # nosec B404
 import threading
 import time
+import shutil
 
 # Third-Party Library Imports
 import rclpy
 import tf2_ros
+from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.action import FollowJointTrajectory
 from builtin_interfaces.msg import Duration
-from rclpy.action import ActionClient
 from moveit2 import MoveIt2
 from smach import State, StateMachine
-from rclpy.parameter import Parameter
 
 # Custom Module Imports
 from robot_config import utils
 from robots import ur5 as robot
+
+_ROS2_BIN = shutil.which('ros2')
+if _ROS2_BIN is None:
+    raise RuntimeError('ros2 executable not found in PATH')
 
 
 class RobotController(Node):
@@ -151,7 +156,7 @@ class RobotController(Node):
             self.logger.warn("[GRIPPER] Not found, attempting to spawn gripper_controller...")
             try:
                 subprocess.run(
-                    ["ros2", "run", "controller_manager", "spawner",
+                    [_ROS2_BIN, "run", "controller_manager", "spawner",
                      "gripper_controller", "-c", "/arm2/controller_manager"],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -163,23 +168,23 @@ class RobotController(Node):
             # Set high PID gains on the JointTrajectoryController for aggressive finger closing
             try:
                 subprocess.run(
-                    ["ros2", "param", "set", "/arm2/gripper_controller",
+                    [_ROS2_BIN, "param", "set", "/arm2/gripper_controller",
                      "gains.arm2__left_finger_joint.p", "100.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 subprocess.run(
-                    ["ros2", "param", "set", "/arm2/gripper_controller",
+                    [_ROS2_BIN, "param", "set", "/arm2/gripper_controller",
                      "gains.arm2__left_finger_joint.i", "10.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 subprocess.run(
-                    ["ros2", "param", "set", "/arm2/gripper_controller",
+                    [_ROS2_BIN, "param", "set", "/arm2/gripper_controller",
                      "gains.arm2__left_finger_joint.d", "1.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 self.logger.info("[GRIPPER] Set PID gains P=100 I=10 D=1 for left_finger")
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.warn(f"[GRIPPER] Failed to set PID gains: {e}")
         else:
             self.logger.warn("[GRIPPER] Timed out waiting for gripper_controller")
         return ready
@@ -220,7 +225,7 @@ class RobotController(Node):
             return False
 
         result = result_future.result()
-        success = (result.result.error_code == FollowJointTrajectory.Result.SUCCESSFUL)
+        success = result.result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
         left_after, right_after = self._read_both_finger_positions()
         self.logger.info(
             f"[GRIPPER] Result: success={success},"
@@ -272,7 +277,9 @@ class RobotController(Node):
                 t = transform.transform.translation
                 return (t.x, t.y, t.z)
             except Exception:
-                continue
+                self.logger.info(
+                    f"TF lookup failed for {frame}, trying next frame for AMR position"
+                )
         return None
 
     def get_pose_in_base_frame(self, target_frame, timeout_sec=0.5):
@@ -302,7 +309,7 @@ class Setup(State):
         # Set position_proportional_gain at runtime — required for gripper/mimic to work
         try:
             result = subprocess.run(
-                ["ros2", "param", "set", "/arm2/gz_ros_control",
+                [_ROS2_BIN, "param", "set", "/arm2/gz_ros_control",
                  "position_proportional_gain", "100.0"],
                 capture_output=True, text=True, timeout=5.0,
             )
@@ -493,7 +500,8 @@ class GraspObject(State):
     def execute(self, userdata):
         for attempt in range(1, self.MAX_GRASP_ATTEMPTS + 1):
             self.robot_controller.logger.info(
-                f"[STATE: GRASP] ========== ATTEMPT {attempt}/{self.MAX_GRASP_ATTEMPTS} =========="  # noqa: E501
+                f"[STATE: GRASP] ========== ATTEMPT "
+                f"{attempt}/{self.MAX_GRASP_ATTEMPTS} =========="
             )
 
             if attempt > 1:

@@ -9,18 +9,12 @@ For full develop guide and API Reference, please see the [API Reference](../Cont
 
 - **Python 3.12** — verified on Windows: https://www.python.org/downloads/
 
-### Install System Dependencies
-
-The `install.ps1` will:
-- Creates the Python 3.12 venv
-- Installs `requirements_providers.txt`
-- Downloads and installs Tesseract OCR 5.5.0 and adds it to the user PATH
-- Downloads and extracts Poppler 25.12.0 and adds it to the user PATH
+### Install Python Dependencies
 
 ```powershell
-# 1. Install dependencies (once), requires admin
 cd content_search
-.\install.ps1
+python -m venv venv_content_search
+pip install -r requirements.txt
 ```
 
 > **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.

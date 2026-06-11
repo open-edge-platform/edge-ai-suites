@@ -1,3 +1,11 @@
+ros-jazzy-univloc-server (2.3-3) UNRELEASED; urgency=low
+
+  * Address bandit static analysis findings: avoid shell=True in subprocess and
+    launch ExecuteProcess calls, replace dynamic exec() of import statements
+    with importlib in play_rosbag.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 09 Jun 2026 00:00:00 +0000
+
 ros-jazzy-univloc-server (2.3-2) UNRELEASED; urgency=low
 
   * Update to build using oneAPI 2025
