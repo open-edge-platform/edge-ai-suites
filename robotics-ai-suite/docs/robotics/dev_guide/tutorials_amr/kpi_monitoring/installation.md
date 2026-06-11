@@ -81,8 +81,7 @@ PATH="$HOME/.local/bin:$PATH" uv sync
 sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg
 ```
 
-> If `uv` was not previously installed, restart your shell (or open a new
-> terminal) after `make install` so that `uv` is on your `PATH`.
+Reopen a new terminal after `make install` so that `uv` is on your `PATH`.
 
 ## 5. Source Your ROS2 Environment
 
