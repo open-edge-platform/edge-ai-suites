@@ -1,11 +1,21 @@
 # Quick Start Guide
 
-## Step 1: Run Setup Script (First-Time Only)
+## Step 1: Clone Repository
+ 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
-Open PowerShell and navigate to the smart-classroom directory:
+```bash
+  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  cd edge-ai-suites
+  git sparse-checkout set education-ai-suite
+  cd education-ai-suite
+  cd smart-classroom
+```
+## Step 2: Run Setup Script (First-Time Only)
 
 ```powershell
-cd edge-ai-suites\education-ai-suite\smart-classroom
 .\setup-smart-classroom.ps1
 ```
 
@@ -21,14 +31,14 @@ The setup script will:
    - FFmpeg (auto-install if missing)
    - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
 
-3. **[3] Configure Settings**
+3. **[3] Configure Settings**v
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
 
 4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
 
-## Step 2: Access the Application
+## Step 3: Access the Application
 
 Once all services are running, open your browser:
 
