@@ -31,7 +31,7 @@ The setup script will:
    - FFmpeg (auto-install if missing)
    - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
 
-3. **[3] Configure Settings**v
+3. **[3] Configure Settings**
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
