@@ -78,26 +78,37 @@ function Stop-AllServices {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     
-    $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Backend (port 8000)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
-        }
-        Write-Host "    Backend stopped." -ForegroundColor Gray
-    }
+    $ports = @(8000, 9011, 5173)
+    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 5173 = "Frontend" }
     
-    $connections = Get-NetTCPConnection -LocalPort 9011 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Content Search (port 9011)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    foreach ($port in $ports) {
+        Write-Host "  Stopping $($portNames[$port]) (port $port)..." -ForegroundColor Yellow
+        
+        # Retry killing processes on this port up to 3 times
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            try {
+                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+                if ($connections) {
+                    $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+                    foreach ($procId in $procIds) {
+                        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            } catch {
+                # Continue to next method
+            }
+            
+            Start-Sleep -Milliseconds 300
         }
-        Write-Host "    Content Search stopped." -ForegroundColor Gray
+        
+        # Use taskkill as additional method
+        try {
+            taskkill /F /FI "LocalPort eq $port" 2>$null
+        } catch {}
+        
+        Start-Sleep -Seconds 1
     }
-    
+
     $connections = Get-NetTCPConnection -LocalPort 9090 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping ChromaDB (port 9090)..." -ForegroundColor Yellow
@@ -105,7 +116,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    ChromaDB stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 9900 -ErrorAction SilentlyContinue
@@ -115,7 +125,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    VLM stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue
@@ -125,7 +134,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Preprocess stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 9990 -ErrorAction SilentlyContinue
@@ -135,21 +143,48 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Ingest stopped." -ForegroundColor Gray
     }
-
-    $connections = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Frontend (port 5173)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    
+    # Comprehensive process cleanup (silent)
+    
+    # Kill all Python processes (multiple attempts)
+    try {
+        Get-Process python, python.exe -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Frontend stopped." -ForegroundColor Gray
+    } catch {}
+    
+    # Kill all npm/node processes
+    try {
+        Get-Process node, npm -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+    
+    # Kill uvicorn processes specifically
+    try {
+        Get-Process uvicorn -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+    
+    # Final wait for ports to be freed
+    Start-Sleep -Seconds 3
+    
+    # Verify ports are free
+    $portsToVerify = @(8000, 9011, 9090, 9900, 8001, 9990, 5173)
+    foreach ($port in $portsToVerify) {
+        try {
+            $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+            if ($connection) {
+                taskkill /F /PID $connection.OwningProcess 2>$null
+                Start-Sleep -Seconds 1
+            }
+        } catch {}
     }
     
     Write-Host ""
-    Write-Host "  All services stopped." -ForegroundColor Green
+    Write-Host "Services stopped.. Wait for the processes to get terminated...before start again..." -ForegroundColor Green
 }
 
 # Register Ctrl+C handler
@@ -165,6 +200,9 @@ trap {
     Write-Host "  Script interrupted!" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
+    }
+    for ($i = 30; $i -gt 0; $i--) {
+        Start-Sleep -Seconds 1
     }
     exit 1
 }
@@ -303,9 +341,25 @@ Write-Host ""
 Write-Host "[PRE-CHECK] DETECTING RUNNING SERVICES" -ForegroundColor Cyan
 Write-Host "--------------------------------------" -ForegroundColor Cyan
 
-$backendRunning = Test-PortInUse -Port 8000
-$contentSearchRunning = Test-PortInUse -Port 9011
-$frontendRunning = Test-PortInUse -Port 5173
+# Wait a moment for ports to be fully released from previous session
+Write-Host "  Checking port status..." -ForegroundColor Gray
+Start-Sleep -Seconds 2
+
+# Enhanced port checking that verifies services are actually listening (not just in TIME_WAIT)
+function Test-ServiceListening {
+    param([int]$Port)
+    
+    try {
+        $connection = Get-NetTCPConnection -LocalPort $Port -State "Listen" -ErrorAction SilentlyContinue
+        return $null -ne $connection
+    } catch {
+        return $false
+    }
+}
+
+$backendRunning = Test-ServiceListening -Port 8000
+$contentSearchRunning = Test-ServiceListening -Port 9011
+$frontendRunning = Test-ServiceListening -Port 5173
 
 $anyRunning = $backendRunning -or $contentSearchRunning -or $frontendRunning
 
@@ -337,7 +391,7 @@ if ($Restart) {
     # -Restart flag: stop all running services and start fresh
     Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
     if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-    if ($contentSearchRunning) {
+    if ($contentSearchRunning) { 
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -372,7 +426,7 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Restarting all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) {
+            if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -404,7 +458,7 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Stopping all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) {
+            if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -412,7 +466,7 @@ if ($Restart) {
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
             Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-            Write-Host "  All services stopped. Exiting." -ForegroundColor Green
+            Write-Host "  All services stopped. Waiting for processes to terminate...Before starting new services..." -ForegroundColor Green
             exit 0
         }
         "E" {
@@ -430,7 +484,7 @@ if ($Restart) {
     Write-Host "  No main services detected." -ForegroundColor Green
     Write-Host ""
     Write-Host "  Stopping any orphaned processes (ChromaDB, VLM, Preprocess, Ingest, Python)..." -ForegroundColor Yellow
-
+    
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -977,19 +1031,6 @@ if (-not `$venvValid) {
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
 
-# Run install.ps1 if tesseract not found
-`$tesseractExists = Get-Command tesseract -ErrorAction SilentlyContinue
-if (-not `$tesseractExists) {
-    Write-Host ''
-    Write-Host 'Running install.ps1 (Content Search dependencies)...' -ForegroundColor Yellow
-    Write-Host 'NOTE: This requires Administrator privileges' -ForegroundColor Yellow
-    Write-Host ''
-    if (Test-Path '.\install.ps1') {
-        & '.\install.ps1'
-    } else {
-        Write-Host 'install.ps1 not found, skipping...' -ForegroundColor Yellow
-    }
-}
 
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
@@ -1242,6 +1283,9 @@ while ($true) {
     switch ($key.ToUpper()) {
         "Q" {
             Stop-AllServices
+            for ($i = 30; $i -gt 0; $i--) {
+                Start-Sleep -Seconds 1
+            }
             exit 0
         }
         "E" {
