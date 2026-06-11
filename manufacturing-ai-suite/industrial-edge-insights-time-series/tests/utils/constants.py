@@ -87,6 +87,10 @@ WIND_INGESTED_CSV= "/apps/wind-turbine-anomaly-detection/simulation-data/wind-tu
 WELD_INGESTED_CSV= "/apps/weld-defect-detection/simulation-data/burnthrough_weld_12-14-22-0201-02.csv"
 EDGE_AI_SUITES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../industrial-edge-insights-time-series"))
 WIND_TURBINE_INGESTED_TOPIC = "wind-turbine-data"
+# Actual MQTT wire topic the publisher sends on and Telegraf's mqtt_consumer
+# subscribes to. WIND_TURBINE_INGESTED_TOPIC above is the InfluxDB measurement
+# name (set via Telegraf name_override), NOT the MQTT topic.
+WIND_TURBINE_MQTT_TOPIC = "wind-simulation-data"
 WIND_TURBINE_ANALYTICS_TOPIC = "wind-turbine-anomaly-data"
 WELD_INGESTED_TOPIC = "weld-sensor-data"
 WELD_ANALYTICS_TOPIC = "weld-sensor-anomaly-data"

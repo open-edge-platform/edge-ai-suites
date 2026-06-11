@@ -576,11 +576,15 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
                 f"or pre-bake UDF deps into the TSAM image."
             )
 
-    # Use the constant topic name for consistency
+    # Use the actual MQTT wire topic the publisher sends on. Note:
+    # constants.WIND_TURBINE_INGESTED_TOPIC ("wind-turbine-data") is the
+    # InfluxDB measurement name (Telegraf name_override), NOT the MQTT topic.
+    # The publisher/broker traffic is on WIND_TURBINE_MQTT_TOPIC
+    # ("wind-simulation-data").
     MQTT_SAMPLE_TIMEOUT = 240   # was 120
     logger.info(
         f"Calling wait_for_mqtt_sample(topic="
-        f"{constants.WIND_TURBINE_INGESTED_TOPIC!r}, timeout={MQTT_SAMPLE_TIMEOUT}s) "
+        f"{constants.WIND_TURBINE_MQTT_TOPIC!r}, timeout={MQTT_SAMPLE_TIMEOUT}s) "
         f"(was timeout=120s)"
     )
 
@@ -588,7 +592,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     logger.info("Verifying MQTT data ingestion from publisher pod...")
     result = helm_utils.wait_for_mqtt_sample(
         namespace,
-        constants.WIND_TURBINE_INGESTED_TOPIC,
+        constants.WIND_TURBINE_MQTT_TOPIC,
         timeout=MQTT_SAMPLE_TIMEOUT,  # was 120
     )
     logger.info(f"wait_for_mqtt_sample result: {result}")

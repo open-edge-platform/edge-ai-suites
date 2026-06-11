@@ -861,7 +861,7 @@ def _wait_for_pod_ready(pod_name, namespace, timeout=180):
         return False
 
 
-def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_INGESTED_TOPIC, timeout=180, interval=10):
+def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_MQTT_TOPIC, timeout=180, interval=10):
     """Subscribe from inside the broker pod until a single message is observed on the topic."""
     pod_name = _wait_for_pod_with_substring(namespace, "mqtt-broker")
     if not pod_name:
