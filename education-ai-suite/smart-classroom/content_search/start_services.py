@@ -109,6 +109,11 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         app = data.get("app", {})
         _set("APP_LANGUAGE", app.get("language", "en"))
 
+        # OCR
+        models = data.get("models", {})
+        ocr = models.get("ocr", {})
+        _set("OCR_ENABLED", str(ocr.get("enabled", False)).lower())
+
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
         _set("CS_PORT", cs.get("port", "9011"))

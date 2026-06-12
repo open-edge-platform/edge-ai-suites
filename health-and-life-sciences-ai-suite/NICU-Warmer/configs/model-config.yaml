@@ -2,6 +2,17 @@
 # Config-driven model downloader reads this file to fetch all required assets.
 # Pattern follows multi_modal_patient_monitoring/configs/model-config.yaml.
 
+
+# --- rPPG model conversion (used by the nicu-rppg-converter container) ---
+# Place your mtts_can.hdf5 in models_rppg/ then run: make convert-rppg
+# The converter container reads source_model_path, converts to OpenVINO IR,
+# and writes mtts_can.xml + mtts_can.bin into target_dir.
+rppg:
+  models:
+    - name: mtts_can
+      source_model_path: /models/rppg/mtts_can.hdf5
+      target_dir: /models/rppg
+
 # --- Backend preparation section (used by backend_mvp/asset_preparation.py) ---
 preparation:
   model_paths:

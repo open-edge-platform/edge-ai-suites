@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/requirements.txt
+COPY third_party_programs_nicu-warmer.txt /app/third_party_programs_nicu-warmer.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app

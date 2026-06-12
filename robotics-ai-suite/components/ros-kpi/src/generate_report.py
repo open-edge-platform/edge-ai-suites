@@ -23,8 +23,11 @@ from pathlib import Path
 
 
 def _load_json(path):
-    with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        return None
 
 
 def load_session(session_dir, kpi_path=None, kpi2_path=None):
@@ -32,10 +35,13 @@ def load_session(session_dir, kpi_path=None, kpi2_path=None):
     if session_dir is not None:
         d = Path(session_dir)
         kpi1 = _load_json(d / "kpi.json")
+        if kpi1 is None:
+            print(f"Warning: kpi.json not found in {d} — report will be partial",
+                  file=sys.stderr)
         kpi2_file = d / "kpi_level2.json"
         kpi2 = _load_json(kpi2_file) if kpi2_file.exists() else None
         return kpi1, kpi2, d
-    kpi1 = _load_json(kpi_path)
+    kpi1 = _load_json(kpi_path) if kpi_path else None
     kpi2 = _load_json(kpi2_path) if kpi2_path else None
     return kpi1, kpi2, None
 
@@ -239,8 +245,8 @@ def _render_level1(kpi1):
         ("Mean Jitter", _fmt(kpi1.get("mean_jitter_ms"), 2), "ms"),
         ("Max Jitter", _fmt(kpi1.get("max_jitter_ms"), 2), "ms"),
         ("Jitter Stdev", _fmt(kpi1.get("jitter_stdev_ms"), 2), "ms"),
-        ("CPU Mean", _fmt(kpi1.get("cpu_mean_pct"), 1), "%"),
-        ("CPU Max", _fmt(kpi1.get("cpu_max_pct"), 1), "%"),
+        ("CPU Mean (ROS2)", _fmt(kpi1.get("cpu_mean_pct"), 1), "%"),
+        ("CPU Max (ROS2)", _fmt(kpi1.get("cpu_max_pct"), 1), "%"),
     ]
     cards_html = "".join(
         f'<div class="metric-card">'
@@ -454,7 +460,7 @@ def _render_thermal(kpi1):
   <div class="section-body">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex-wrap:wrap">
       <div>
-        <h3 style="font-size:0.9rem;color:#374151;margin-bottom:8px">CPU Utilization</h3>
+        <h3 style="font-size:0.9rem;color:#374151;margin-bottom:8px">CPU Utilization (ROS2 processes)</h3>
         <table>
           <thead><tr><th>Metric</th><th>Value</th></tr></thead>
           <tbody>
@@ -481,6 +487,8 @@ def _render_thermal(kpi1):
 
 
 def render_report(kpi1, kpi2=None):
+    if kpi1 is None:
+        kpi1 = {}
     meta = kpi1.get("metadata", {})
     title = f"Benchmark Report — {meta.get('name', 'session')}"
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -559,6 +567,10 @@ def main():
         kpi_path=args.kpi,
         kpi2_path=args.kpi2,
     )
+
+    if kpi1 is None and not args.session:
+        print("ERROR: --kpi file not found or not specified", file=sys.stderr)
+        sys.exit(1)
 
     # Determine output path
     if args.output:
