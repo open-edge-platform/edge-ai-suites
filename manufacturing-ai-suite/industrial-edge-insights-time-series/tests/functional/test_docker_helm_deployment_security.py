@@ -114,6 +114,42 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     influxdb_creds = security_utils.fetch_credentials(chart_path, "influxdb")
     grafana_creds = security_utils.fetch_credentials(chart_path, "grafana")
+    
+    # DEBUG: Print InfluxDB pod logs for credential verification
+    logger.info("=" * 80)
+    logger.info("DEBUG: Fetching InfluxDB pod logs to verify credential presence/absence")
+    logger.info("=" * 80)
+    try:
+        influxdb_pod_name = subprocess.run(
+            f"kubectl get pods -n {namespace} -l app=influxdb -o jsonpath='{{.items[0].metadata.name}}'",
+            shell=True, capture_output=True, text=True, check=False
+        ).stdout.strip()
+        
+        if influxdb_pod_name:
+            logger.info(f"InfluxDB pod name: {influxdb_pod_name}")
+            influxdb_logs = subprocess.run(
+                f"kubectl logs -n {namespace} {influxdb_pod_name} --tail=50",
+                shell=True, capture_output=True, text=True, check=False
+            ).stdout
+            
+            logger.info(f"InfluxDB credentials to check: username={influxdb_creds[0]}, password={'*' * len(influxdb_creds[1])}")
+            logger.info("Last 50 lines of InfluxDB pod logs:")
+            logger.info("-" * 80)
+            for i, line in enumerate(influxdb_logs.split('\n')[-50:], 1):
+                logger.info(f"  {i:3d}: {line}")
+            logger.info("-" * 80)
+            
+            # Check if credentials appear in logs (debug info)
+            username_found = influxdb_creds[0] in influxdb_logs
+            password_found = influxdb_creds[1] in influxdb_logs
+            logger.info(f"DEBUG: Username '{influxdb_creds[0]}' found in logs: {username_found}")
+            logger.info(f"DEBUG: Password found in logs: {password_found}")
+        else:
+            logger.warning("Could not find InfluxDB pod for debug logging")
+    except Exception as e:
+        logger.warning(f"Error fetching InfluxDB logs for debug: {e}")
+    logger.info("=" * 80)
+    
     pods_creds_result = security_utils.verify_pods_creds(namespace, influxdb_creds, grafana_creds)
     logger.info(f"verify_pods_creds result: {pods_creds_result}")
     assert pods_creds_result == True, "Credentials found in pod logs."
