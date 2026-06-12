@@ -392,44 +392,39 @@ export_model_for_ovms() {
         return 1
     fi
 
-    # get_model.sh places config_all.json under openvino_models/{device}/{precision}/
-    # and uses the source model name (e.g. "microsoft/Phi-3.5-vision-instruct") as
-    # the OVMS model name.  OVMS needs config.json at the root of /models, and
-    # the traffic agent calls OVMS using storage_model_name.  Fix both here.
+    # get_model.sh places config_all.json under openvino_models/{device}/{precision}/.
+    # The base_paths inside it are relative to that directory.
+    # Copy it to models/config.json, prefixing each base_path so it is relative to the models root.
     local models_root="${OVMS_CONFIG_DIR}/models"
     local generated_config
     generated_config=$(find "${models_root}/openvino_models" -name "config_all.json" 2>/dev/null | head -1)
 
     if [ -n "$generated_config" ]; then
-        # Relative path of the generated config's directory from models root
         local config_rel_dir
         config_rel_dir=$(dirname "${generated_config#${models_root}/}")
 
-        # base_path inside the generated config is relative to that directory
-        local inner_base_path
-        inner_base_path=$(grep -oP '"base_path":\s*"\K[^"]+' "$generated_config" | head -1)
+        # Prefix every base_path value with the directory that config_all.json lives in
+        python3 - "${generated_config}" "${config_rel_dir}" "${models_root}/config.json" << 'PYEOF'
+import json, sys
 
-        local abs_base_path="${config_rel_dir}/${inner_base_path}"
-
-        cat > "${models_root}/config.json" << OVMS_CFG
-{
-    "model_config_list": [
-        {
-            "config": {
-                "name": "${storage_model_name}",
-                "base_path": "${abs_base_path}",
-                "target_device": "${target_device}"
-            }
-        }
-    ]
-}
-OVMS_CFG
-        echo -e "${GREEN}==> Created config.json: name=${storage_model_name}, base_path=${abs_base_path}${NC}"
+src, prefix, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(src) as f:
+    cfg = json.load(f)
+for entry in cfg.get("model_config_list", []):
+    c = entry.get("config", {})
+    if "base_path" in c:
+        c["base_path"] = prefix + "/" + c["base_path"]
+    c.pop("target_device", None)
+with open(dst, "w") as f:
+    json.dump(cfg, f, indent=4)
+print(f"Created {dst} with {len(cfg['model_config_list'])} model(s)")
+PYEOF
+        echo -e "${GREEN}==> Created config.json from ${generated_config}${NC}"
     else
         echo -e "${YELLOW}WARNING: Could not find generated config_all.json under ${models_root}/openvino_models. OVMS may not start.${NC}"
     fi
 
-    echo "$storage_model_name"
+    echo "$source_model"
 }
 
 ensure_ovms_model() {
@@ -437,17 +432,14 @@ ensure_ovms_model() {
     local target_device="$2"
     local weight_format="$3"
     local ovms_model_config="${OVMS_CONFIG_DIR}/models/config.json"
-    local storage_model_name
 
-    storage_model_name=$(get_ovms_storage_model_name "$model_name" "$target_device" "$weight_format")
+    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${model_name}${NC}"
 
-    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}" >&2
-
-    if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
-        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already registered in OVMS config. Skipping export.${NC}"
-        echo "$storage_model_name"
+    if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${model_name}"; then
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${model_name}${GREEN} already registered in OVMS config. Skipping export.${NC}"
+        echo "$model_name"
     else
-        echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}" >&2
+        echo -e "[ovms-service] ${YELLOW}Model ${RED}${model_name}${YELLOW} not found. Exporting...${NC}"
 
         export_model_for_ovms \
             "$model_name" \
