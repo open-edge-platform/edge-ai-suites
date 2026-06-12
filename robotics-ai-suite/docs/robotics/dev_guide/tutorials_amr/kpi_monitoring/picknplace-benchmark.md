@@ -38,8 +38,8 @@ Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be
 visualized immediately:
 
 ```bash
-uv run python src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
-uv run python src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
+uv run src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
+uv run src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 ```
 
 ## Benchmark (Multiple Runs)
@@ -55,7 +55,7 @@ for i in $(seq 1 25); do bash src/picknplace_run.sh; done
 for i in $(seq 1 5); do bash src/picknplace_run.sh --timeout 300; done
 
 # Re-aggregate KPIs from a completed benchmark directory
-uv run python src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
+uv run src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
 ```
 
 | Parameter | Description | Default |
@@ -72,7 +72,7 @@ The `picknplace-run` script (`src/picknplace_run.sh`) automates:
 
 1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
 2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
+3. Starts `uv run src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
 4. After 120 seconds, sends `SIGINT` to stop the simulation and waits for
    both processes to exit cleanly.
 
@@ -80,20 +80,20 @@ The `picknplace-run` script (`src/picknplace_run.sh`) automates:
 
 ```bash
 # Timeline, resource, and frequency plots
-uv run python src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
+uv run src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 
 # Full GPU dashboard (engine busy%, frequency, power)
-uv run python src/visualize_gpu.py monitoring_sessions/picknplace/<session>/gpu_usage.log --show
+uv run src/visualize_gpu.py monitoring_sessions/picknplace/<session>/gpu_usage.log --show
 
 # Interactive node topology graph
-uv run python src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
+uv run src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 ```
 
 For a specific benchmark directory:
 
 ```bash
-uv run python src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
-uv run python src/visualize_gpu.py monitoring_sessions/picknplace/bench_20260319_164521/<session>/gpu_usage.log --show
+uv run src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
+uv run src/visualize_gpu.py monitoring_sessions/picknplace/bench_20260319_164521/<session>/gpu_usage.log --show
 ```
 
 ## Troubleshooting
