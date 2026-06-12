@@ -324,9 +324,6 @@ models:
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
 
-- **Content search ingest service fails on first bring-up in a new environment:**
-  On the first run, the document embedding model conversion may fail due to a thread-safety conflict during parallel model loading. Simply re-run `start_services.py` and it will succeed on the second attempt (the converted model is cached on disk).
-
 ### Known Issues
 
 - **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
@@ -334,7 +331,6 @@ models:
 - **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
 - **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.
 - **Video Ready Notification**: If the URL is configured in the settings, the notification will display "Video Ready" unless the screen is reloaded. Reloading the screen will reset the session and the notification.
-- **Content Search First-Run Failure**: On a fresh environment, the content search ingest service may fail on the first `start_services.py` run due to model conversion. Re-running the script will succeed as the model is already cached.
 
 ## Uninstall the Application
 
