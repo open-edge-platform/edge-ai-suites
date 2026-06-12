@@ -52,8 +52,8 @@ Results land in `monitoring_sessions/fastmapping/<timestamp>/` and can be
 visualized immediately:
 
 ```bash
-uv run python src/visualize_timing.py monitoring_sessions/fastmapping/<session>/graph_timing.csv --show
-uv run python src/visualize_kpi.py --session monitoring_sessions/fastmapping/<session>
+uv run src/visualize_timing.py monitoring_sessions/fastmapping/<session>/graph_timing.csv --show
+uv run src/visualize_kpi.py --session monitoring_sessions/fastmapping/<session>
 ```
 
 ## Benchmark (Multiple Runs)
@@ -73,7 +73,7 @@ make fastmapping-benchmark RUNS=25
 make fastmapping-plot
 
 # Re-aggregate KPIs from a completed benchmark directory
-uv run python src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>
+uv run src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>
 ```
 
 | Parameter | Description | Default |
@@ -102,7 +102,7 @@ The Level-2 file `kpi_level2.json` contains chained per-frame statistics.
 scenario configuration sourced from `config/fastmapping_run.yaml`. It:
 
 1. Launches `ros2 launch fast_mapping fast_mapping.launch.py` in the background.
-2. Starts `uv run python src/monitor_stack.py --gpu` to capture resource
+2. Starts `uv run src/monitor_stack.py --gpu` to capture resource
    and GPU metrics.
 3. Waits for the bag replay to complete (auto-detected via the stop condition
    defined in the YAML profile).
@@ -114,26 +114,26 @@ scenario configuration sourced from `config/fastmapping_run.yaml`. It:
 
 ```bash
 # KPI summary charts (latency histogram, resource utilization)
-uv run python src/visualize_kpi.py --session monitoring_sessions/fastmapping/<session>
+uv run src/visualize_kpi.py --session monitoring_sessions/fastmapping/<session>
 
 # Timeline and frequency plots
-uv run python src/visualize_timing.py monitoring_sessions/fastmapping/<session>/graph_timing.csv --show
+uv run src/visualize_timing.py monitoring_sessions/fastmapping/<session>/graph_timing.csv --show
 
 # GPU dashboard (busy%, frequency, power)
-uv run python src/visualize_gpu.py monitoring_sessions/fastmapping/<session> --show
+uv run src/visualize_gpu.py monitoring_sessions/fastmapping/<session> --show
 
 # Thermal dashboard (CPU/GPU temperature, throttle, power)
-uv run python src/visualize_thermal.py monitoring_sessions/fastmapping/<session> --show
+uv run src/visualize_thermal.py monitoring_sessions/fastmapping/<session> --show
 
 # Interactive node topology graph
-uv run python src/visualize_graph.py monitoring_sessions/fastmapping/<session> --show
+uv run src/visualize_graph.py monitoring_sessions/fastmapping/<session> --show
 ```
 
 For a completed benchmark directory:
 
 ```bash
-uv run python src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>
-uv run python src/summarize_benchmark.py monitoring_sessions/fastmapping/bench_<timestamp>
+uv run src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>
+uv run src/summarize_benchmark.py monitoring_sessions/fastmapping/bench_<timestamp>
 ```
 
 ## Session Data Layout
@@ -165,5 +165,5 @@ monitoring_sessions/
 | Bag file missing | Check `/opt/ros/$ROS_DISTRO/share/bagfiles/spinning/` exists |
 | `throughput_hz` is 0 or missing | The node may have crashed before logging — check `ros2 launch` output |
 | GPU data absent from results | Pass `--gpu` explicitly or verify `qmassa` is installed (`make install-qmassa`) |
-| `kpi.json` not patched | Run `uv run python src/analyze_fastmapping_log.py <session_dir>` manually |
-| Runs complete but no aggregate | Run `uv run python src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>` |
+| `kpi.json` not patched | Run `uv run src/analyze_fastmapping_log.py <session_dir>` manually |
+| Runs complete but no aggregate | Run `uv run src/aggregate_kpi.py monitoring_sessions/fastmapping/bench_<timestamp>` |

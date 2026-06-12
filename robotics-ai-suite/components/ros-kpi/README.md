@@ -8,6 +8,12 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # ROS2 KPI Monitoring & Analysis Tools
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/kpi_monitoring/index.html).
+
+## Overview
+
 Monitor, analyze, and visualize Key Performance Indicators in ROS2 systems — node latencies, CPU/memory usage, message flow, and thread-level resource distribution.
 
 ## ⚡ Quick Start (Easiest Way)
@@ -55,17 +61,27 @@ uv run python src/monitor_stack.py --duration 30    # Quick 30-second health che
 |-------------|---------|
 | ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
-| `pidstat` | `sudo apt-get install sysstat` |
-| `psutil`, `matplotlib`, `numpy` | `uv sync` |
+| `uv`, `pidstat`, `psutil`, `matplotlib`, `numpy` | installed automatically by `make install` |
 
 ---
 
 ## Installation
 
+Install the Debian package for your ROS 2 distro:
+
 ```bash
-git clone <repository-url>
-cd ros2-kpi
-chmod +x src/*.py monitor_stack.py
+# ROS 2 Jazzy (Ubuntu 24.04)
+sudo apt-get install ros-jazzy-benchmark-framework
+
+# ROS 2 Humble (Ubuntu 22.04)
+sudo apt-get install ros-humble-benchmark-framework
+```
+
+Then install Python and optional dependencies:
+
+```bash
+cd /opt/ros/$ROS_DISTRO/share/benchmark-framework
+make install
 ```
 
 ---
@@ -262,26 +278,89 @@ uv run python src/analyze_rosbag.py path/to/bag.db3
 
 ### picknplace_run.sh — Pick-and-Place Benchmark Runner
 
-Automates a full pick-and-place experiment: launches the `picknplace warehouse` simulation, waits for it to stabilize, captures GPU+resource metrics for 120 seconds, then cleanly stops the simulation.
+Thin wrapper around `benchmark_runner.sh` for the pick-and-place scenario.
+All scenario behaviour (launch command, stop condition, bag topics, cleanup)
+is defined in [`config/picknplace_run.yaml`](config/picknplace_run.yaml).
 
 ```bash
-./src/picknplace_run.sh
+bash src/picknplace_run.sh [--timeout SECS] [--record] [--plot]
+
+# Override the run profile (e.g. custom launch args or topic list)
+bash src/picknplace_run.sh --run-config config/picknplace_run.yaml
+make picknplace-run RUN_CONFIG=config/my_picknplace.yaml
 ```
 
-**What it does:**
-
-1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
-2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
-4. After 120 seconds, sends `SIGINT` to the simulation process (equivalent to Ctrl-C) and waits for both processes to exit cleanly.
-
-Results land in the latest `monitoring_sessions/` directory and can be visualized directly:
+Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be visualized:
 
 ```bash
 uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
 uv run python src/visualize_resources.py <session>/resource_usage.log --cores --heatmap --show
 uv run python src/visualize_graph.py <session>/graph_timing.csv --show
 ```
+
+---
+
+### bag_replay_run.sh — Offline Bag-Replay Benchmarking
+
+Replays any pre-recorded ROS 2 bag through the monitor stack without a live robot or simulator.
+Produces deterministic, reproducible KPI results — suitable for CI environments.
+
+```bash
+# Single replay pass
+make bag-replay BAG=monitoring_sessions/wandering/20260430_145256/bag
+
+# Faster-than-realtime replay
+make bag-replay BAG=... RATE=2.0
+
+# 10 independent runs → aggregate KPI
+make bag-replay-benchmark BAG=... RUNS=10 RATE=1.0
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `BAG` | (required) | Path to bag directory containing `metadata.yaml` |
+| `RATE` | `1.0` | Replay speed multiplier |
+| `LOOP` | `1` | Replay passes per session (0 = infinite) |
+| `RUNS` | `10` | Independent runs for `bag-replay-benchmark` |
+| `PAUSE` | `10` | Seconds between runs |
+
+Outputs per session: `kpi.json` (Level 1), `kpi_level2.json` (Level 2, chained).
+
+---
+
+### fastmapping_run.sh — fast_mapping RGB-D Benchmark
+
+Thin wrapper around `benchmark_runner.sh` for the fast-mapping scenario.
+Launches `ros2 launch fast_mapping fast_mapping.launch.py`, which starts
+`fast_mapping_node`, `rviz2`, and replays the bundled Intel spinning RGB-D bag
+(`/opt/ros/<distro>/share/bagfiles/spinning`, ~12 s, 175 depth frames).
+All scenario behaviour is defined in [`config/fastmapping_run.yaml`](config/fastmapping_run.yaml).
+
+```bash
+# Single run
+make fastmapping
+
+# 10-run benchmark
+make fastmapping-benchmark RUNS=10
+
+# Generate trigger-timeline plots
+make fastmapping-plot
+
+# Override the run profile
+make fastmapping RUN_CONFIG=config/fastmapping_run.yaml
+```
+
+After the run, `analyze_fastmapping_log.py` parses the node's shutdown timing
+table and patches `kpi.json` with:
+
+| KPI | Typical value | Description |
+|-----|--------------|-------------|
+| `throughput_hz` | 7–16 Hz | Frame processing rate |
+| `mean_latency_ms` | ~24 ms | Compute time excl. wait-for-frame |
+| `mean_jitter_ms` | ~4 ms | Window-to-window timing variation |
+
+Results: `monitoring_sessions/fastmapping/<timestamp>/kpi.json`,
+`kpi_level2.json`, `fastmapping_procedures.json`.
 
 ---
 
@@ -336,132 +415,60 @@ For detailed test results and troubleshooting, see [REMOTE_MONITORING_TEST_REPOR
 
 ---
 
-## 🖥️ Intel GPU Monitoring (Kernel 6.17+)
+## 🖥️ Intel GPU Monitoring
 
-Remote monitoring automatically collects Intel GPU metrics when `--remote-ip` is set.
-It tries **`intel_gpu_top`** first (per-engine busy%, power, RC6%) and falls back to
-sysfs RC6 residency if PMU access is blocked.
+GPU monitoring uses **qmassa** — reads xe/i915 DRM `fdinfo` directly.
+No `CAP_PERFMON`, no PMU, no custom kernel headers required.
 
-### Why a custom build?
-
-The `intel-gpu-tools` package shipped with Ubuntu 24.04 (`1.28`) crashes with
-`get_num_gts: Assertion failed` on **kernel 6.17** (Meteor Lake / Arc GPUs).
-Git master has the fix, so we build it once from source.
-
-### One-time build on the remote machine
+### Install qmassa (once)
 
 ```bash
-# 1 — build tools (no sudo required)
-pip3 install --user --break-system-packages meson ninja
-
-# 2 — clone git master (shallow, ~50 MB)
-cd ~ && git clone --depth=1 https://gitlab.freedesktop.org/drm/igt-gpu-tools.git
-
-# 3 — disable the assembler sub-project (needs flex, not required for intel_gpu_top)
-sed -i 's/if libdrm_intel.found()/if false # no flex/' ~/igt-gpu-tools/meson.build
-
-# 4 — download dev headers (no sudo -- just extracts to ~/local-devpkgs)
-mkdir -p ~/devpkg-downloads ~/local-devpkgs
-cd ~/devpkg-downloads
-apt-get download libpci-dev libudev-dev libglib2.0-dev
-for deb in *.deb; do dpkg -x "$deb" ~/local-devpkgs/; done
-
-# 5 — create symlinks / pkg-config shims so the build finds libraries
-mkdir -p ~/.local/lib/pkgconfig ~/.local/lib
-ln -sf /usr/lib/x86_64-linux-gnu/libpci.so.3  ~/.local/lib/libpci.so
-
-cat > ~/.local/lib/pkgconfig/libpci.pc   << 'EOF'
-prefix=/home/intel/local-devpkgs/usr
-includedir=${prefix}/include/x86_64-linux-gnu
-libdir=/home/intel/.local/lib
-Name: libpci
-Version: 3.10.0
-Libs: -L${libdir} -lpci
-Cflags: -I${includedir}
-EOF
-
-cat > ~/.local/lib/pkgconfig/libudev.pc  << 'EOF'
-prefix=/home/intel/local-devpkgs/usr
-includedir=${prefix}/include
-libdir=/usr/lib/x86_64-linux-gnu
-Name: libudev
-Version: 255
-Libs: -L${libdir} -ludev
-Cflags: -I${includedir}
-EOF
-
-cat > ~/.local/lib/pkgconfig/libkmod.pc  << 'EOF'
-prefix=/usr
-libdir=${prefix}/lib/x86_64-linux-gnu
-includedir=${prefix}/include
-Name: libkmod
-Version: 31
-Libs: -L${libdir} -lkmod
-Cflags: -I${includedir}
-EOF
-
-cat > ~/.local/lib/pkgconfig/libproc2.pc << 'EOF'
-prefix=/home/intel/local-devpkgs/usr
-includedir=${prefix}/include/libproc2
-libdir=/usr/lib/x86_64-linux-gnu
-Name: libproc2
-Version: 4.0.4
-Libs: -L${libdir} -lproc2
-Cflags: -I${includedir}
-EOF
-
-# Copy glib pkg-config files and point them at the extracted headers
-cp ~/local-devpkgs/usr/lib/x86_64-linux-gnu/pkgconfig/glib*.pc \
-   ~/local-devpkgs/usr/lib/x86_64-linux-gnu/pkgconfig/gobject*.pc \
-   ~/local-devpkgs/usr/lib/x86_64-linux-gnu/pkgconfig/gmodule*.pc \
-   ~/local-devpkgs/usr/lib/x86_64-linux-gnu/pkgconfig/gthread*.pc \
-   ~/local-devpkgs/usr/lib/x86_64-linux-gnu/pkgconfig/gio*.pc \
-   ~/.local/lib/pkgconfig/ 2>/dev/null || true
-for pc in ~/.local/lib/pkgconfig/g{lib,object,module,thread,io}*.pc; do
-  sed -i "s|^prefix=.*|prefix=/home/intel/local-devpkgs/usr|;s|^libdir=.*|libdir=/usr/lib/x86_64-linux-gnu|" "$pc"
-done
-
-# 6 — configure and build (only intel_gpu_top)
-export PATH="$HOME/.local/bin:$PATH"
-export PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH"
-cd ~/igt-gpu-tools
-meson setup build --prefix=$HOME/.local \
-  -Dtests=disabled -Doverlay=disabled -Drunner=disabled \
-  -Ddocs=disabled  -Dman=disabled   -Dlibunwind=disabled
-ninja -C build tools/intel_gpu_top
-
-# 7 — install
-cp build/tools/intel_gpu_top ~/.local/bin/
+make install-qmassa
+# installs Rust toolchain via rustup (if absent), then:
+# cargo install --locked qmassa qmmd
+# binaries land in ~/.cargo/bin/
 ```
 
-### Enable PMU (richer metrics)
+### Enable GPU monitoring
 
-`intel_gpu_top` needs `CAP_PERFMON` when `perf_event_paranoid > 0`.
-Run **once** (requires sudo on the remote):
+GPU hardware is **auto-detected** at startup. Pass `--gpu` to force-enable:
 
 ```bash
-# From your local machine:
-make setup-remote-gpu REMOTE_IP=<remote-ip> [REMOTE_USER=intel]
+# Auto-detect (recommended)
+uv run python src/monitor_stack.py --duration 180
 
-# Or directly on the remote:
-sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top
+# Explicit GPU flag
+uv run python src/monitor_stack.py --gpu --duration 180
+
+# Combined GPU + NPU
+uv run python src/monitor_stack.py --gpu --npu --duration 180
+
+# Remote session (sysfs fallback — qmassa is local-only)
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --gpu --duration 180
 ```
 
-With CAP_PERFMON you get full data: per-engine busy%, actual/requested frequency,
-RC6 residency %, and GPU/Package power.
-Without it the monitor falls back to sysfs RC6 residency (busy% + frequency only).
+### Standalone per-PID GPU analyzer
+
+```bash
+uv run python src/gpu_pid_analyzer.py                  # one-shot snapshot
+uv run python src/gpu_pid_analyzer.py --watch          # refresh every 2 s
+uv run python src/gpu_pid_analyzer.py --duration 60    # run for 60 s
+uv run python src/gpu_pid_analyzer.py --csv gpu.csv    # CSV logging
+```
 
 ### What gets collected
 
-| Field | Source | Description |
-|-------|--------|-------------|
-| `busy_pct` | intel_gpu_top / sysfs | Render/3D engine busy % |
-| `act_freq_mhz` | intel_gpu_top / sysfs | Actual GT clock (MHz) |
-| `req_freq_mhz` | intel_gpu_top | Requested GT clock (MHz) |
-| `rc6_pct` | intel_gpu_top | RC6 idle residency % |
-| `power_gpu_w` | intel_gpu_top | GPU power draw (W) |
-| `power_pkg_w` | intel_gpu_top | Package power draw (W) |
-| `engines` | intel_gpu_top | Per-engine: Render, Copy, Video, Compute busy % |
+| Field | Description |
+|-------|-------------|
+| `busy_pct` | Overall GPU busy % (peak engine class) |
+| `act_freq_mhz` | Actual GT clock (MHz) |
+| `power_gpu_w` / `power_pkg_w` | GPU / package power via RAPL (W) |
+| `temp_c` | GPU temperature from hwmon sysfs (°C) |
+| `vram_used_mb` / `smem_used_mb` | VRAM and shared memory usage (MB) |
+| `throttled` | True when any throttle reason is active |
+| `engines` | Per-class busy %: Render/3D, Blitter, Compute, Video, VE |
+| `clients` | Per-PID: pid, name, total busy %, per-engine busy % |
+| `drv_name` | DRM driver (`xe` or `i915`) |
 
 Results are written to `gpu_usage.log` (JSON-lines) in each session directory and
 visualised as `visualizations/gpu_utilization.png`.
@@ -541,6 +548,62 @@ found — NPU monitoring skipped.` and continues normally.
 
 ---
 
+## ⚡ Intel RAPL CPU Package Power Monitoring
+
+CPU package power is sampled in the background via the Linux **powercap RAPL**
+sysfs interface — **no root, no special capabilities required**.  Available on
+Intel bare-metal systems running kernel ≥ 3.13 with `CONFIG_INTEL_RAPL`.
+Returns `null` on WSL2 and ARM.
+
+### RAPL quick start
+
+```bash
+# Standalone — CPU power only
+uv run python src/monitor_resources.py --power
+
+# Combined with CPU/memory/NPU resource monitoring
+uv run python src/monitor_resources.py --memory --npu --power
+
+# Check whether RAPL is available on this machine
+uv run python src/monitor_resources.py --check-hw
+```
+
+`monitor_stack.py` **auto-enables** RAPL power monitoring when the sysfs path
+is readable — no flag needed for normal benchmark sessions.
+
+### How RAPL works
+
+`monitor_resources.py --power` launches a daemon thread that:
+
+1. Reads `/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj` (µJ counter).
+2. Computes `power_w = Δenergy_µJ / Δtime_s / 1_000_000`, handling counter
+   wraparound using `max_energy_range_uj`.
+3. Appends a JSON-line `{"ts": <epoch>, "power_w": <float>}` to `cpu_power.log`
+   each interval.
+
+### RAPL logged fields
+
+`cpu_power.log` (JSON-lines) in each session directory:
+
+| Field | Description |
+|-------|-------------|
+| `ts` | Unix timestamp of the sample |
+| `power_w` | CPU package power in watts |
+
+`analyze_trigger_latency.py` reads `cpu_power.log` and stores the **mean** as
+`cpu_pkg_power_w` in the Level 1 KPI `thermal` section.
+
+### Verifying RAPL availability
+
+```bash
+uv run python src/monitor_resources.py --check-hw
+# [PWR] RAPL path     : /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
+# [PWR] Status        : ✅ AVAILABLE
+# [PWR] Detail        : Intel RAPL accessible at /sys/class/...
+```
+
+---
+
 ## 📤 KPI Export: CSV & Excel
 
 All benchmark scripts support exporting results to **CSV** and optionally **Excel (`.xlsx`)** for analysis in spreadsheet tools.
@@ -617,6 +680,37 @@ uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_XXXX \
 One row per (node, input, output) pair aggregated across all runs in the bench directory. Columns: `node`, `input`, `output`, `category`, `runs_seen`, `total_runs`, `mean_fps`, `fps_stdev`, `mean_ms`, `stdev_runs`, `cv_pct`, `min_mean_ms`, `max_mean_ms`, `mean_p90_ms`, `worst_p90_ms`, `best_p90_ms`, `mean_p50_ms`, `mean_stdev_ms`, `mean_n`.
 
 > **Excel support**: install `openpyxl` once with `pip install openpyxl`. If not installed, `--xlsx-out` prints a warning and is skipped; all other outputs are unaffected.
+
+---
+
+### KPI Regression Detection (compare_kpi.py)
+
+Compare a current benchmark result against a stored baseline and detect regressions.
+
+```bash
+python3 src/compare_kpi.py \
+    --baseline tests/fixtures/baseline/kpi_level2.json \
+    --current  monitoring_sessions/wandering/<session>/kpi.json \
+    --threshold 5.0 \
+    --report   report.json
+```
+
+| Option | Description |
+|--------|-------------|
+| `--baseline PATH` | Baseline `kpi.json` or `kpi_level2.json` |
+| `--current PATH` | Current-run KPI JSON to evaluate |
+| `--threshold PCT` | Regression threshold in % (default: `5.0`) |
+| `--report PATH` | Optional JSON summary report output |
+
+Exit codes: **0** = all KPIs within threshold · **1** = regression(s) found · **2** = file/schema error.
+
+Or use the Makefile shortcut:
+
+```bash
+make regression-check \
+    BASELINE=tests/fixtures/baseline/kpi.json \
+    CURRENT=monitoring_sessions/wandering/<session>/kpi.json
+```
 
 ---
 
