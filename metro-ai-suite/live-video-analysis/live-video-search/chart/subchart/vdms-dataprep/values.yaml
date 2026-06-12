@@ -20,11 +20,19 @@ global:
     sdkUseOpenvino: 'true'
     vsIndexName: video_frame_embeddings
   gpu:
-    multimodalEmbeddingEnabled: false
     vdmsDataprepEnabled: false
     key: ''
     device: ''
     hostPath: /dev/dri
+    accelHostPath: /dev/accel
+  devices:
+    vdmsDataprep:
+      embedding:
+        device: CPU
+        key: ''
+      detection:
+        device: CPU
+        key: ''
   proxy:
     httpProxy: ''
     httpsProxy: ''

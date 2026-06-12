@@ -37,17 +37,30 @@ global:
     enableObjectDetection: 'true'
     detectionConfidence: '0.85'
     ovPerformanceMode: 'THROUGHPUT'
-  # GPU controls
+  # Accelerator controls (GPU / NPU)
   gpu:
-    multimodalEmbeddingEnabled: false
     vdmsDataprepEnabled: false
-    # Set `key` and `device` if GPU is enabled.
-    # Update as per the cluster node label key for GPU assigned by the device plugin.
+    # Set `key` and `device` if accelerator mode is enabled.
+    # Update as per the cluster node label key assigned by the device plugin.
     key: ''
-    # key: 'gpu.intel.com/xe'
-    # Set `device` when GPU mode is enabled.
-    # Set value to `GPU` to deploy on GPU.
+    # key: 'gpu.intel.com/xe' or 'npu.intel.com/accel'
+    # Set `device` when accelerator mode is enabled.
+    # Set value to `GPU` or `NPU`.
     device: 'GPU'
+    # Device host paths for accelerator mounts
+    hostPath: '/dev/dri'
+    accelHostPath: '/dev/accel'
+  devices:
+    multimodalEmbedding:
+      device: CPU # CPU | GPU | NPU
+      key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+    vdmsDataprep:
+      embedding:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+      detection:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
 # Optional USB camera override (used with usb_camera_override.yaml profile)
 frigate:
   usbCameraDevice: '/dev/video0'

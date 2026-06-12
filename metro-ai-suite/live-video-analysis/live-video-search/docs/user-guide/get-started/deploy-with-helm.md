@@ -89,19 +89,23 @@ Common optional values:
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
 | `global.keepPvc` | Retain PVCs on uninstall | `true` or `false` |
-| `global.gpu.multimodalEmbeddingEnabled` | Enable MME on GPU | `true` or `false` |
-| `global.gpu.vdmsDataprepEnabled` | Enable DataPrep on GPU | `true` or `false` |
-| `global.gpu.key` | GPU resource key from device plugin | `gpu.intel.com/xe` / `gpu.intel.com/i915` |
-| `global.gpu.device` | Device mode for GPU deployment | `GPU` |
+| `global.devices.multimodalEmbedding.device` | MME embedding execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.multimodalEmbedding.key` | MME accelerator key (required when device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.vdmsDataprep.embedding.device` | DataPrep embedding execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.vdmsDataprep.embedding.key` | DataPrep embedding accelerator key (required when embedding.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.vdmsDataprep.detection.device` | DataPrep detection execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.vdmsDataprep.detection.key` | DataPrep detection accelerator key (required when detection.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
 | `frigate.usbCameraDevice` | USB device path (used with USB profile) | `/dev/video0` |
 
 > **Note:** Scenario selection is profile-driven. Use override profiles for mode switching (`default_override.yaml`, `rtsp_test_override.yaml`, `usb_camera_override.yaml`) instead of setting mode switches in `user_values_override.yaml`.
 
 > **Tag Resolution Note:** `global.tag` is the fallback image tag. If `global.vssStackTag` is non-empty, VSS-side services use it instead of `global.tag`. If `global.smartNvrStackTag` is non-empty, Smart NVR-side services use it instead of `global.tag`. Leaving stack-specific tags empty makes those services inherit `global.tag`.
 
-> **Device Note:** `global.env.embeddingDevice` defaults to `CPU` in chart values and is internally resolved for non-GPU mode.
+> **Device Note:** All device selection is per-component via the `global.devices.*` block. Each component defaults to `CPU` and requires its matching `key` only when set to `GPU` or `NPU`.
 
-> **GPU Note:** If enabling GPU for search embeddings, set both `global.gpu.multimodalEmbeddingEnabled=true` and `global.gpu.vdmsDataprepEnabled=true`, and also set `global.gpu.key` and `global.gpu.device`.
+> **Accelerator Note:** MME and DataPrep support independent per-component accelerator settings via `global.devices.multimodalEmbedding.*`, `global.devices.vdmsDataprep.embedding.*`, and `global.devices.vdmsDataprep.detection.*`. The legacy `global.gpu.vdmsDataprepEnabled` flow is still accepted as a DataPrep fallback.
+
+> **Storage Note:** MME and DataPrep now use independent PVCs (`<release>-live-video-search-mmes-models-pvc` and `<release>-live-video-search-dataprep-models-pvc`, with per-service `*-data-pvc` fallback), so they are no longer coupled through a shared PVC.
 
 ### 3. Build Helm Dependencies
 
@@ -152,14 +156,16 @@ helm install lvs . -f user_values_override.yaml -f rtsp_test_override.yaml -n $m
 helm install lvs . -f user_values_override.yaml -f usb_camera_override.yaml -n $my_namespace
 ```
 
-#### Use Case 4: GPU-enabled MME + DataPrep
+#### Use Case 4: Accelerator-enabled MME + DataPrep (GPU or NPU)
 
 First update `user_values_override.yaml`:
 
-- `global.gpu.multimodalEmbeddingEnabled: true`
-- `global.gpu.vdmsDataprepEnabled: true`
-- `global.gpu.key: <gpu-resource-key>`
-- `global.gpu.device: GPU`
+- `global.devices.multimodalEmbedding.device: GPU|NPU`
+- `global.devices.multimodalEmbedding.key: <accelerator-resource-key>` (for example `gpu.intel.com/xe` or `npu.intel.com/accel`)
+- `global.devices.vdmsDataprep.embedding.device: GPU|NPU`
+- `global.devices.vdmsDataprep.embedding.key: <accelerator-resource-key>`
+- `global.devices.vdmsDataprep.detection.device: GPU|NPU`
+- `global.devices.vdmsDataprep.detection.key: <accelerator-resource-key>`
 
 Then deploy with your selected scenario profile (example: default):
 
@@ -235,7 +241,7 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
 ## Troubleshooting
 
 - **Pods stay Pending or not Ready:**
-  Check storage provisioning, node capacity, and device plugin availability (for GPU mode).
+  Check storage provisioning, node capacity, and device plugin availability (for GPU/NPU accelerator mode).
 
 - **Node allocation/scheduling issues caused by PVC affinity conflicts (often from old PVCs):**
   Delete old release PVCs and redeploy:
@@ -250,5 +256,5 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
 - **USB mode does not detect camera:**
   Confirm device path and override `frigate.usbCameraDevice` in `user_values_override.yaml` when not using `/dev/video0`.
 
-- **GPU deployment fails validation:**
-  Ensure both MME and DataPrep GPU flags are aligned, and both `global.gpu.key` and `global.gpu.device` are set.
+- **Accelerator deployment fails validation:**
+  Verify required keys are set for each enabled accelerator path (`global.gpu.key` for MME legacy mode, `global.devices.vdmsDataprep.embedding.key` / `global.devices.vdmsDataprep.detection.key` for DataPrep per-component mode).

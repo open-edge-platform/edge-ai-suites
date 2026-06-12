@@ -23,11 +23,29 @@ global:
     noProxy: "localhost,127.0.0.1,.svc.cluster.local"
 
   gpu:
-    multimodalEmbeddingEnabled: false
+    # Accelerator toggles for VSS search components
     vdmsDataprepEnabled: false
+    # K8s accelerator resource key (GPU or NPU)
     key: ""
+    # Accelerator device value: GPU or NPU
     device: ""
+    # GPU host path
     hostPath: "/dev/dri"
+    # NPU host path
+    accelHostPath: "/dev/accel"
+
+  devices:
+    # Multimodal Embedding Serving
+    multimodalEmbedding:
+      device: "CPU" # CPU | GPU | NPU
+      key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+    vdmsDataprep:
+      embedding:
+        device: "CPU" # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+      detection:
+        device: "CPU" # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
 
   credentials:
     minioRootUser: ""
@@ -63,7 +81,6 @@ global:
     ovModelsDir: "/app/ov_models"
     ovPerformanceMode: "THROUGHPUT"
     embeddingUseOv: "true"
-    embeddingDevice: "CPU"
     defaultStartOffsetSec: "0"
     defaultClipDuration: "-1"
     defaultNumFrames: "64"

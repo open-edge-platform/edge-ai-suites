@@ -1,5 +1,14 @@
 # Release Notes: Live Video Search
 
+## Upcoming updates (post 2026.1.0)
+
+**Improved**
+
+- Added NPU-capable device orchestration for the VSS search stack used by LVS in Docker Compose setup.
+- Updated LVS compose deployment to a pure per-component device model (`DATAPREP_EMBEDDING_DEVICE`, `DATAPREP_DETECTION_DEVICE`, `MME_EMBEDDING_DEVICE`; each defaults to `CPU`) and mount `/dev/accel` for NPU execution. Retired the redundant `VDMS_DATAPREP_DEVICE` baseline; `ENABLE_EMBEDDING_GPU` is now a mode-aware embedding shortcut.
+- Updated LVS Helm deployment templates and values to support accelerator mode with `global.gpu.device=GPU|NPU`, including NPU host device mounts and validation updates.
+- Updated LVS documentation (`get-started` and `deploy-with-helm`) with NPU usage guidance and accelerator configuration examples.
+
 ## Version 2026.1.0
 
 **June 17, 2026**

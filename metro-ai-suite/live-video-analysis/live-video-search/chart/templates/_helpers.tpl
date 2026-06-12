@@ -16,12 +16,16 @@
 {{- include "lvs.root.validateRequiredString" (list "global.credentials.mqttPassword" .Values.global.credentials.mqttPassword) -}}
 
 {{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $gpuEnabled := or (default false (index $gpu "multimodalEmbeddingEnabled")) (default false (index $gpu "vdmsDataprepEnabled")) -}}
+{{- $gpuEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
 {{- if and $gpuEnabled (eq (trim (default "" (index $gpu "key"))) "") -}}
-{{- fail "global.gpu.key must be set when GPU is enabled" -}}
+{{- fail "global.gpu.key must be set when accelerator mode is enabled" -}}
 {{- end -}}
 {{- if and $gpuEnabled (eq (trim (default "" (index $gpu "device"))) "") -}}
-{{- fail "global.gpu.device must be set when GPU is enabled" -}}
+{{- fail "global.gpu.device must be set when accelerator mode is enabled (GPU or NPU)" -}}
+{{- end -}}
+{{- $gpuDevice := upper (trim (default "" (index $gpu "device"))) -}}
+{{- if and $gpuEnabled (not (or (eq $gpuDevice "GPU") (eq $gpuDevice "NPU"))) -}}
+{{- fail "global.gpu.device must be either GPU or NPU when accelerator mode is enabled" -}}
 {{- end -}}
 {{- end -}}
 {{- define "live-video-search.name" -}}
