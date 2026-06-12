@@ -125,6 +125,7 @@ GOAL_TARGET=$CONF_GOAL_COUNT
 MAX_TIMEOUT=$CONF_TIMEOUT
 RECORD_MODE=0
 PLOT_MODE=0
+SHOW_MODE=0
 SIDE_TERMINALS=0
 OUTPUT_PARENT=""
 
@@ -135,6 +136,7 @@ while [[ $# -gt 0 ]]; do
     --timeout)         MAX_TIMEOUT="$2"; shift 2 ;;
     --record)          RECORD_MODE=1; shift ;;
     --plot)            PLOT_MODE=1; shift ;;
+    --show)            SHOW_MODE=1; RECORD_MODE=1; PLOT_MODE=1; shift ;;
     --output-parent)   OUTPUT_PARENT="$2"; shift 2 ;;
     --side-terminals)  SIDE_TERMINALS=1; shift ;;
     -h|--help)
@@ -178,7 +180,7 @@ echo "  Session dir: $SESSION_DIR"
 echo ""
 
 # ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
-echo "Killing any leftover simulation processes before starting..."
+echo "[1/6] Pre-run cleanup..."
 _pkill_sweep -SIGINT
 sleep 2
 _pkill_sweep -SIGKILL
@@ -186,7 +188,7 @@ echo "  Pre-run cleanup done."
 echo ""
 
 # ── Process 1: application launch ────────────────────────────────────────────
-echo "Starting ${CONF_SCENARIO} simulation..."
+echo "[2/6] Launching ${CONF_SCENARIO} simulation..."
 # shellcheck disable=SC2086
 setsid nohup env ${CONF_LAUNCH_ENV} ${CONF_LAUNCH_CMD} > "$LAUNCH_LOG" 2>&1 &
 LAUNCH_PID=$!
@@ -219,8 +221,8 @@ fi
 # ── Process 2: stack monitor (graph + resources + auto-detected GPU/NPU) ─────
 # GPU and NPU are enabled automatically by monitor_stack.py when the correct
 # drivers and tools are present (xe/qmassa, i915/qmassa, Intel NPU sysfs).
-echo "Starting monitor stack..."
-MONITOR_ARGS=("--interval" "0.5" "--output-dir" "$SESSION_DIR" "--use-sim-time")
+echo "[3/6] Starting monitor stack..."
+MONITOR_ARGS=("--interval" "0.5" "--output-dir" "$SESSION_DIR" "--use-sim-time" "--power")
 [[ "$CONF_GRAPH_ONLY" -eq 1 ]] && MONITOR_ARGS+=("--graph-only")
 python3 "$SCRIPT_DIR/monitor_stack.py" "${MONITOR_ARGS[@]}" \
   > "$SESSION_DIR/monitor_stack.log" 2>&1 &
@@ -248,6 +250,7 @@ fi
 echo ""
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
+echo "[4/6] Running benchmark..."
 if [[ -n "$CONF_DONE_PATTERN" ]]; then
   echo "Waiting for '${CONF_DONE_PATTERN}' (timeout: ${MAX_TIMEOUT}s)..."
 elif [[ "$GOAL_TARGET" -gt 0 ]]; then
@@ -332,7 +335,7 @@ fi
 # ── Post-run log analysis (scenario-specific, e.g. analyze_fastmapping_log) ──
 if [[ -n "${CONF_POST_RUN_CMD:-}" ]]; then
   echo ""
-  echo "━━━━ Post-Run Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "[5/6] Post-Run Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   _post_cmd="${CONF_POST_RUN_CMD//SESSION_DIR/$SESSION_DIR}"
   echo "  Running: $_post_cmd"
   eval "$_post_cmd" || echo "  ⚠ Post-run analysis failed (exit $?)"
@@ -340,7 +343,7 @@ fi
 
 # ── Trigger-latency analysis ──────────────────────────────────────────────────
 echo ""
-echo "━━━━ Trigger-Latency Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "[6/6] Trigger-Latency Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Stop the monitor so it flushes CSV + topology before we read them
 if [[ "$MONITOR_PID" -gt 0 ]]; then
@@ -390,3 +393,11 @@ echo ""
 echo "    make results SESSION=$SESSION_DIR"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ── Auto-open results (--show flag) ──────────────────────────────────────────
+if [[ "$SHOW_MODE" -eq 1 ]]; then
+  echo ""
+  echo "Auto-opening results (--show)..."
+  make -C "$REPO_ROOT" results SESSION="$SESSION_DIR" 2>/dev/null || \
+    echo "  ⚠ make results failed — open manually: $SESSION_DIR/report.html"
+fi

@@ -105,10 +105,8 @@ def main(args=None):
         node.get_logger().error(f'Exception in odom_tf_publisher: {e}')
     finally:
         node.destroy_node()
-        try:
+        if rclpy.ok():
             rclpy.shutdown()
-        except Exception:
-            pass  # Ignore double shutdown errors
 
 
 if __name__ == '__main__':

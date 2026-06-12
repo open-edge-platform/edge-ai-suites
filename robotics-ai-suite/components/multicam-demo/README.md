@@ -351,7 +351,7 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
    ```bash
    sudo intel_gpu_top
    ```
-   
+
    ```text
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted

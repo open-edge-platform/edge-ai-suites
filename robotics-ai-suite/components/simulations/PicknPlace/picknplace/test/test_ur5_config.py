@@ -7,7 +7,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 from robots.ur5 import (  # noqa: E402  # pylint: disable=wrong-import-position,import-error
     MOVE_GROUP_ARM,
@@ -22,81 +22,86 @@ from robots.ur5 import (  # noqa: E402  # pylint: disable=wrong-import-position,
 
 UR5_JOINT_COUNT = 6
 EXPECTED_JOINTS = [
-    'shoulder_pan_joint',
-    'shoulder_lift_joint',
-    'elbow_joint',
-    'wrist_1_joint',
-    'wrist_2_joint',
-    'wrist_3_joint',
+    "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
 ]
 
 
 def test_move_group_names():
     """Move group names must be non-empty strings."""
-    assert isinstance(MOVE_GROUP_ARM, str) and MOVE_GROUP_ARM
-    assert isinstance(MOVE_GROUP_GRIPPER, str) and MOVE_GROUP_GRIPPER
+    assert isinstance(MOVE_GROUP_ARM, str) and MOVE_GROUP_ARM  # nosec B101
+    assert isinstance(MOVE_GROUP_GRIPPER, str) and MOVE_GROUP_GRIPPER  # nosec B101
 
 
 def test_gripper_positions_are_lists():
     """Gripper joint positions must be non-empty lists of floats."""
-    assert isinstance(OPEN_GRIPPER_JOINT_POSITIONS, list) and OPEN_GRIPPER_JOINT_POSITIONS
-    assert isinstance(CLOSED_GRIPPER_JOINT_POSITIONS, list) and CLOSED_GRIPPER_JOINT_POSITIONS
-    assert all(isinstance(v, float) for v in OPEN_GRIPPER_JOINT_POSITIONS)
-    assert all(isinstance(v, float) for v in CLOSED_GRIPPER_JOINT_POSITIONS)
+    assert (  # nosec B101
+        isinstance(OPEN_GRIPPER_JOINT_POSITIONS, list) and OPEN_GRIPPER_JOINT_POSITIONS
+    )
+    assert (  # nosec B101
+        isinstance(CLOSED_GRIPPER_JOINT_POSITIONS, list)
+        and CLOSED_GRIPPER_JOINT_POSITIONS
+    )
+    assert all(isinstance(v, float) for v in OPEN_GRIPPER_JOINT_POSITIONS)  # nosec B101
+    assert all(isinstance(v, float) for v in CLOSED_GRIPPER_JOINT_POSITIONS)  # nosec B101
 
 
 def test_gripper_open_less_than_closed():
     """Open gripper position must be less than closed position."""
-    assert OPEN_GRIPPER_JOINT_POSITIONS[0] < CLOSED_GRIPPER_JOINT_POSITIONS[0]
+    assert OPEN_GRIPPER_JOINT_POSITIONS[0] < CLOSED_GRIPPER_JOINT_POSITIONS[0]  # nosec B101
 
 
 def test_joint_names_count():
     """UR5 must have exactly 6 arm joints."""
-    assert len(joint_names()) == UR5_JOINT_COUNT
+    assert len(joint_names()) == UR5_JOINT_COUNT  # nosec B101
 
 
 def test_joint_names_without_prefix():
     """Joint names without prefix must match expected UR5 joint names."""
-    assert joint_names() == EXPECTED_JOINTS
+    assert joint_names() == EXPECTED_JOINTS  # nosec B101
 
 
 def test_joint_names_with_prefix():
     """Joint names with a prefix must be prepended correctly."""
-    prefix = 'arm1_'
+    prefix = "arm1_"
     names = joint_names(prefix)
-    assert all(n.startswith(prefix) for n in names)
-    assert [n[len(prefix):] for n in names] == EXPECTED_JOINTS
+    assert all(n.startswith(prefix) for n in names)  # nosec B101
+    assert [n[len(prefix):] for n in names] == EXPECTED_JOINTS  # nosec B101
 
 
 def test_base_link_name_without_prefix():
     """Base link name without prefix must be 'base_link'."""
-    assert base_link_name() == 'base_link'
+    assert base_link_name() == "base_link"  # nosec B101
 
 
 def test_base_link_name_with_prefix():
     """Base link name with prefix must be prepended correctly."""
-    assert base_link_name('arm1_') == 'arm1_base_link'
+    assert base_link_name("arm1_") == "arm1_base_link"  # nosec B101
 
 
 def test_end_effector_name_without_prefix():
     """End effector name without prefix must be non-empty."""
-    assert isinstance(end_effector_name(), str) and end_effector_name()
+    assert isinstance(end_effector_name(), str) and end_effector_name()  # nosec B101
 
 
 def test_end_effector_name_with_prefix():
     """End effector name with prefix must be prepended correctly."""
-    prefix = 'arm1_'
-    assert end_effector_name(prefix).startswith(prefix)
+    prefix = "arm1_"
+    assert end_effector_name(prefix).startswith(prefix)  # nosec B101
 
 
 def test_gripper_joint_names_without_prefix():
     """Gripper joint names must be a non-empty list."""
     names = gripper_joint_names()
-    assert isinstance(names, list) and names
+    assert isinstance(names, list) and names  # nosec B101
 
 
 def test_gripper_joint_names_with_prefix():
     """Gripper joint names with prefix must be prepended correctly."""
-    prefix = 'arm1_'
+    prefix = "arm1_"
     names = gripper_joint_names(prefix)
-    assert all(n.startswith(prefix) for n in names)
+    assert all(n.startswith(prefix) for n in names)  # nosec B101
