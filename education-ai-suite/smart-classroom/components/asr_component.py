@@ -2,6 +2,8 @@ from components.base_component import PipelineComponent
 import os
 import time
 import torch
+import unicodedata
+
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
@@ -79,7 +81,43 @@ class ASRComponent(PipelineComponent):
             self.pyannote_diarizer = PyannoteDiarizer(
                 hf_token=config.models.asr.hf_token
             )
+            
+    @staticmethod
+    def _meaningful_char_count(text: str) -> int:
+        # Strip whitespace + every Unicode punctuation char (category starts
+        # with "P") so CJK punctuation like ",?!?" is treated the same as
+        # ASCII ",.!?". A segment with only filler + punctuation collapses to 0.
+        return sum(
+            1 for c in text
+            if not c.isspace() and not unicodedata.category(c).startswith("P")
+        )
 
+    def _denoised_segments(self):
+        # Drop segments with =1 meaningful character ?almost always ASR noise
+        # (stray punctuation, "?,", "?,", "a") that inflates token count
+        # without adding meaning. Used for BOTH the summarizer transcript and
+        # the timestamped transcript: noise has no topic-boundary value.
+        return [
+            s for s in self.all_segments
+            if self._meaningful_char_count(s["text"]) > 1
+        ]
+
+    def _merge_segments_by_speaker(self):
+        denoised = self._denoised_segments()
+        if not denoised:
+            return []
+
+        ordered = sorted(denoised, key=lambda s: s["start"])
+        merged = []
+        for seg in ordered:
+            if merged and merged[-1]["speaker"] == seg["speaker"]:
+                prev = merged[-1]
+                prev["text"] = f"{prev['text']} {seg['text']}".strip()
+                prev["end"] = max(prev["end"], seg["end"])
+            else:
+                merged.append(dict(seg))
+        return merged
+    
     def process(self, input_generator):
 
         project_config = RuntimeConfig.get_section("Project")
@@ -229,17 +267,17 @@ class ASRComponent(PipelineComponent):
                 full_updated_lines = []
                 full_timestamped_lines = []
 
-                for seg in self.all_segments:
+                # Merge consecutive same-speaker segments for the summarizer:
+                # one speaker label per turn instead of per sentence.
+                for seg in self._merge_segments_by_speaker():
                     spk = seg["speaker"]
                     text = seg["text"].strip()
-                    start = round(seg["start"], 2)
-                    end = round(seg["end"], 2)
+                    start = int(seg["start"])
+                    end = int(seg["end"])
 
                     if spk == teacher_speaker:
                         speaker_label = LABEL_TEACHER
-                        teacher_lines.append(
-                            f"{text}"
-                        )
+                        teacher_lines.append(text)
                     else:
                         if spk.startswith(f"{LABEL_SPEAKER}_"):
                             speaker_label = spk.replace(
@@ -250,13 +288,9 @@ class ASRComponent(PipelineComponent):
                         else:
                             speaker_label = spk
 
-                    full_updated_lines.append(
-                        f"{speaker_label}: {text}"
-                    )
+                    full_updated_lines.append(f"{speaker_label}: {text}")
+                    full_timestamped_lines.append(f"[{start}-{end}] {text}")
 
-                    full_timestamped_lines.append(
-                        f"[{start} - {end}]: {text}"
-                    )
 
                 StorageManager.save(
                     transcript_path,
