@@ -17,6 +17,23 @@ The solution is intended to:
 - Run on Ubuntu 24.04 with containerized workloads
 - Be startable with two commands from a clean clone (`make setup` then `make run`)
 
+## Manual Model Staging
+
+Before running `make run`, stage the workload models in these locations:
+
+- Repository root:
+  - patient detection model files: `.xml` and `.bin`
+  - person detection model files: `.xml` and `.bin`
+  - latch detection model files: `.xml` and `.bin`
+  - action recognition encoder model files: `.xml` and `.bin`
+  - action recognition decoder model files: `.xml` and `.bin`
+- `models_rppg/`:
+  - rPPG workload source model: `.hdf5`
+
+`make run` expects these files to exist. If `models_rppg/mtts_can.xml` and
+`models_rppg/mtts_can.bin` are missing, the rPPG converter container generates
+them automatically from `models_rppg/mtts_can.hdf5`.
+
 ## Get Started
 
 To see the system requirements and setup instructions, see the following guides:
