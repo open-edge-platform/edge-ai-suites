@@ -11,10 +11,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (default: feature/rashmi/Securityfix)'
+        description: 'Branch or tag to checkout (leave empty to use current branch)'
         required: false
         type: string
-        default: 'feature/rashmi/Securityfix'
+        default: ''
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -46,10 +46,10 @@ on:
   workflow_call:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (default: feature/rashmi/Securityfix)'
+        description: 'Branch or tag to checkout (leave empty to use current branch)'
         required: false
         type: string
-        default: 'feature/rashmi/Securityfix'
+        default: ''
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -93,31 +93,21 @@ jobs:
     steps:
       - name: Print workflow inputs
         env:
-          TAG: ${{ inputs.tag || 'main' }}
+          TAG: ${{ inputs.tag || github.ref }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
-          echo "tag             : $TAG"
+          echo "tag/ref         : $TAG"
           echo "build           : $BUILD"
           echo "tests           : $TESTS"
           echo "skip_long_tests : $SKIP_LONG_TESTS"
 
       - name: Checkout edge-ai-suites repository
-        id: checkout_current_tag
-        continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          repository: open-edge-platform/edge-ai-suites
-          ref: ${{ inputs.tag || 'main' }}
-          persist-credentials: false
-
-      - name: Checkout edge-ai-suites repository - fallback to main
-        if: steps.checkout_current_tag.outcome == 'failure'
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          repository: open-edge-platform/edge-ai-suites
-          ref: main
+          # Use current repository (supports forks) and specified tag/branch or current ref
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
 
       - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
