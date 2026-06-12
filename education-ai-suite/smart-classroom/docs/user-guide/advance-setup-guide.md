@@ -22,11 +22,11 @@ For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.co
 ### C. Clone Repository
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
+If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
   cd education-ai-suite
@@ -298,7 +298,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 
@@ -324,6 +324,9 @@ models:
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
 
+- **Content search ingest service fails on first bring-up in a new environment:**
+  On the first run, the document embedding model conversion may fail due to a thread-safety conflict during parallel model loading. Simply re-run `start_services.py` and it will succeed on the second attempt (the converted model is cached on disk).
+
 ### Known Issues
 
 - **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
@@ -331,6 +334,7 @@ models:
 - **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
 - **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.
 - **Video Ready Notification**: If the URL is configured in the settings, the notification will display "Video Ready" unless the screen is reloaded. Reloading the screen will reset the session and the notification.
+- **Content Search First-Run Failure**: On a fresh environment, the content search ingest service may fail on the first `start_services.py` run due to model conversion. Re-running the script will succeed as the model is already cached.
 
 ## Uninstall the Application
 

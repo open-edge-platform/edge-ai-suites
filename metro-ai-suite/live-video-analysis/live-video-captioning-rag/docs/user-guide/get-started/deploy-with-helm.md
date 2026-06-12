@@ -1,4 +1,4 @@
-# Deploy with Helm Chart
+# Deploy with Helm
 
 The Live Video Captioning RAG application is designed as a companion service to Live Video Captioning application and cannot be deployed independently using Helm charts.
 
