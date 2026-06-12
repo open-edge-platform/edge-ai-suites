@@ -45,8 +45,6 @@ Intel GPU, NPU, and CPU, monitored, and visualized in a clinical-style scenario.
   data/control flows.
 - [Release Notes](./release-notes.md) – Version history and known issues.
 
-> **Disclaimer:** This application is provided for development and evaluation purposes only and
-> is _not_ intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}
