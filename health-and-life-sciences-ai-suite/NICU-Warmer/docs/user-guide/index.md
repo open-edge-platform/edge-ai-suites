@@ -8,8 +8,22 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/health-and-life-sciences-ai-suite/NICU-Warmer/README.md">
      Readme
   </a>
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/latch-detect">
+     latch-detect model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/patient-present">
+     patient-present model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/people-present">
+     people-present model
+  </a>
 </div>
 hide_directive-->
+
+> This application is for **reference and evaluation purposes**. It is
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated as such.
 
 The NICU Warmer application is a reference workload that demonstrates how multiple AI models
 can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing real-time
@@ -41,8 +55,6 @@ Intel GPU, NPU, and CPU, monitored, and visualized in a clinical-style scenario.
   data/control flows.
 - [Release Notes](./release-notes.md) – Version history and known issues.
 
-> **Disclaimer:** This application is provided for development and evaluation purposes only and
-> is _not_ intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}

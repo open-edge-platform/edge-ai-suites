@@ -11,6 +11,10 @@
 </div>
 hide_directive-->
 
+> This application is for **reference and evaluation purposes**. It is
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated as such.
+
 The Multi-Modal Patient Monitoring application is a reference workload that demonstrates how
 multiple AI pipelines can run simultaneously on a single Intel® platform, providing
 consolidated monitoring for a virtual patient.
@@ -41,8 +45,7 @@ orchestrated, monitored, and visualized in a clinical-style scenario.
   data/control flows.
 - [Release Notes](./release-notes.md) – Version history and known issues.
 
-> **Disclaimer:** This application is provided for development and evaluation purposes only and is _not_
-> intended for clinical or diagnostic use.
+
 
 <!--hide_directive
 :::{toctree}
