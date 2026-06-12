@@ -1,5 +1,9 @@
 # Multi-Modal Patient Monitoring
 
+> This application is for **reference and evaluation purposes**. It is
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated as such.
+
 The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
 You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
@@ -50,3 +54,7 @@ For detailed information about system requirements, architecture, and how the ap
 
 - [Full Documentation](./docs/user-guide/index.md)
 - [Release Notes](./docs/user-guide/release-notes.md)
+
+## Disclaimer
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.  

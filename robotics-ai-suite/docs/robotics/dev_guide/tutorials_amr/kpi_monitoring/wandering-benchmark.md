@@ -36,8 +36,8 @@ bash src/wandering_run.sh --record
 After the run, visualize results:
 
 ```bash
-uv run python src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
-uv run python src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
+uv run src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
+uv run src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 ```
 
 ## Benchmark (Multiple Runs)
@@ -56,7 +56,7 @@ make wandering-benchmark RUNS=10
 for i in $(seq 1 10); do bash src/wandering_run.sh --timeout 120; done
 
 # Re-aggregate KPIs from a completed benchmark directory
-uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_20260319_100421
+uv run src/aggregate_kpi.py monitoring_sessions/wandering/bench_20260319_100421
 ```
 
 | Parameter | Description | Default |
@@ -76,15 +76,15 @@ and the ROS2 graph via DDS peer discovery, with no Grafana stack required.
 
 ```bash
 # CPU + GPU monitoring
-uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+uv run src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
     --ros-domain-id 46 --gpu --algorithm wandering --duration 180
 
 # CPU + NPU monitoring
-uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+uv run src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
     --ros-domain-id 46 --npu --algorithm wandering --duration 180
 
 # Combined GPU + NPU
-uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+uv run src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
     --ros-domain-id 46 --gpu --npu --algorithm wandering --duration 180
 ```
 
@@ -122,16 +122,16 @@ alongside `monitor_stack.py`:
 
 ```bash
 # Timeline, resource, and frequency plots
-uv run python src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
+uv run src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 
 # Full GPU dashboard (engine/freq/power)
-uv run python src/visualize_gpu.py monitoring_sessions/wandering/<session>/gpu_usage.log --show
+uv run src/visualize_gpu.py monitoring_sessions/wandering/<session>/gpu_usage.log --show
 
 # NPU dashboard (busy%, clock, memory)
-uv run python src/visualize_npu.py monitoring_sessions/wandering/<session>/npu_usage.log --show
+uv run src/visualize_npu.py monitoring_sessions/wandering/<session>/npu_usage.log --show
 
 # Interactive node topology graph
-uv run python src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
+uv run src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 ```
 
 ## Session Data Layout
