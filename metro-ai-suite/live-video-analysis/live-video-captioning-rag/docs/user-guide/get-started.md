@@ -94,8 +94,8 @@ By following this guide, you will learn how to:
      > - Call the `embeddings/` endpoint to generate embeddings.
      > - Create the context and store it in the vector store.
 
-     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.<br>
-        `Example query: "How many students are there in the classroom?"`<br>
+     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.\
+        `Example query: "How many students are there in the classroom?"`\
         You will now receive contextual responses from the RAG chatbot.
 
 7. Stop the Live Video Captioning RAG sample application services:
