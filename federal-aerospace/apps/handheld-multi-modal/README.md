@@ -26,26 +26,26 @@ apps/
 
 ## Stack
 
-| Service | Image | Role |
-|---------|-------|------|
-| `grafana` | `grafana/grafana:latest` | Dashboards — consumes metrics via Grafana Live |
-| `ovms` | `openvino/model_server:latest-gpu` | LLM inference via OpenAI-compatible REST API |
-| `open-webui` | `ghcr.io/open-webui/open-webui:v0.9.6-slim` | Chat UI connected to OpenVINO model server |
-| `whisper-stt` | `whisper-stt:latest` (local build) | Speech-to-text with Prometheus metrics |
-| `nginx-https` | `nginx:alpine` | HTTPS reverse proxy (self-signed cert, enables browser microphone) |
+| Service       | Image                                       | Role                                                               |
+|---------------|---------------------------------------------|--------------------------------------------------------------------|
+| `grafana`     | `grafana/grafana:latest`                    | Dashboards — consumes metrics via Grafana Live                     |
+| `ovms`        | `openvino/model_server:latest-gpu`          | LLM inference via OpenAI-compatible REST API                       |
+| `open-webui`  | `ghcr.io/open-webui/open-webui:v0.9.6-slim` | Chat UI connected to OpenVINO model server                         |
+| `whisper-stt` | `whisper-stt:latest` (local build)          | Speech-to-text with Prometheus metrics                             |
+| `nginx-https` | `nginx:alpine`                              | HTTPS reverse proxy (self-signed cert, enables browser microphone) |
 
 All services share the `fedaero` Docker network and are defined in [`docker-compose.yml`](docker-compose.yml).
 
 ## Prerequisites
 
-| Requirement | Notes |
-|-------------|-------|
-| Docker Engine release 24 or later| [Install guide](https://docs.docker.com/engine/install/) |
-| Docker Compose v2 | Included with Docker Desktop; on Linux OS, install the `docker-compose-plugin` package. Use `docker compose` (space), not `docker-compose` (hyphen). |
-| `render` group | Required for GPU access by OpenVINO model server. Verify with `getent group render`. |
-| Git | Required for `make vippet-get` to do sparse-checkout of Visual Pipeline and Platform Evaluation Tool. |
-| Intel® GPU with OpenVINO driver | iGPU or discrete GPU based on the Xe architecture. |
-| **CDI only:** CDI drivers configured | Set `CDI_XE_DEVICE_0` in `.env` (see `AGENTS.md` for all env vars). |
+| Requirement                          | Notes                                                                                                                                                |
+|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Docker Engine release 24 or later    | [Installation guide](https://docs.docker.com/engine/install/)                                                                                        |
+| Docker Compose v2                    | Included with Docker Desktop; on Linux OS, install the `docker-compose-plugin` package. Use `docker compose` (space), not `docker-compose` (hyphen). |
+| `render` group                       | Required for GPU access by OpenVINO model server. Verify with `getent group render`.                                                                 |
+| Git                                  | Required for `make vippet-get` to do sparse-checkout of Visual Pipeline and Platform Evaluation Tool.                                                |
+| Intel® GPU with OpenVINO driver      | iGPU or discrete GPU based on the Xe architecture.                                                                                                   |
+| **CDI only:** CDI drivers configured | Set `CDI_XE_DEVICE_0` in `.env` (see `AGENTS.md` for all env vars).                                                                                  |
 
 Run `make setup` after cloning to auto-detect the `render` group GID and write the `.env`.
 
@@ -74,17 +74,17 @@ make up-standalone
 
 Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only accessible via the NGINX Transport Layer Security (TLS) reverse proxy — their container ports are not exposed directly to the host.
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| Open WebUI | https://localhost:8443 | LLM chat UI — browser microphone enabled (via NGINX reverse proxy) |
-| Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
-| Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
+| Service                                         | URL                    | Notes                                                                 |
+|-------------------------------------------------|------------------------|-----------------------------------------------------------------------|
+| Open WebUI                                      | https://localhost:8443 | LLM chat UI — browser microphone enabled (via NGINX reverse proxy)    |
+| Grafana dashboard                               | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy)                  |
+| Whisper speech-to-text service                  | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
+| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443  | via NGINX reverse proxy                                               |
 
 ## Make Targets
 
 ```
-make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
+make deploy            Full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
 make deploy-cdi        The same for CDI and SR-IOV environments
 make up                Start this stack (standard, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-cdi            Start this stack (CDI, requires Visual Pipeline and Platform Evaluation Tool network)

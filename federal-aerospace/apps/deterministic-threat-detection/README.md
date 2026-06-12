@@ -2,8 +2,6 @@
 
 The Deterministic Threat Detection with Time-Sensitive Networking (TSN) project demonstrates how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
 
----
-
 ## Overview
 
 ![Deterministic Threat Detection Architecture](../../docs/deterministic-threat-detection/user-guide/_assets/common-deterministic-threat-detection-architecture.svg)
@@ -12,7 +10,7 @@ The Deterministic Threat Detection with Time-Sensitive Networking (TSN) project 
 |-----------|------|
 | **Moxa Managed Switch TSN-G5000 Series** | Precision Time Protocol (PTP) Grandmaster clock, VLAN segmentation, and IEEE 802.1Qbv time-aware traffic shaping |
 | **Arrow Lake Host (Intel® Ethernet Network Adapter I226)** | TSN-capable inference host; clock synchronized to the switch via PTP |
-| **Camera(s)** | Video source; supports cameras that use the Real-Time Streaming Protocol (RTSP) with either the Network Time Protocol (NTP) or the generalized Precision Time Protocol (gPTP), or the Basler GigE cameras that use IEEE 1588 version 2 hardware Precision Time Protocol (PTP). |
+| **Camera(s)** | Video source; supports cameras that use the Real-Time Streaming Protocol (RTSP) with either the Network Time Protocol (NTP) or the generalized Precision Time Protocol (gPTP), or the Basler GigE cameras that use IEEE 1588 version 2 hardware Precision Time Protocol (PTP). ||
 | **Traffic Injector** | Runs `iperf3` to generate background congestion and demonstrate TSN protection |
 
 This project demonstrates two complementary use cases for industrial edge AI, both using the TSN infrastructure to protect latency-sensitive streams from background congestion:

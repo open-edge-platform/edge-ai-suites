@@ -32,4 +32,4 @@ make deploy-cdi    # CDI and SR-IOV
 make down          # stop everything
 ```
 
-`make deploy` configures Visual Pipeline and Platform Evaluation Tool, starts it, waits for the Docker network, and then brings up the HandHeld Multi-Modal stack. The pinned Visual Pipeline and Platform Evaluation Tool revision is recorded in `vippet/.vippet-ref`.
+`make deploy` configures Visual Pipeline and Platform Evaluation Tool, starts it, waits for the Docker network, and then brings up the Handheld Multi-Modal stack. The pinned Visual Pipeline and Platform Evaluation Tool  revision is recorded in `vippet/.vippet-ref`.
