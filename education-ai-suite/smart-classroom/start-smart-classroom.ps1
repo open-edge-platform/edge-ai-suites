@@ -1031,6 +1031,20 @@ if (-not `$venvValid) {
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
 
+# Run install.ps1 if tesseract not found
+`$tesseractExists = Get-Command tesseract -ErrorAction SilentlyContinue
+if (-not `$tesseractExists) {
+    Write-Host ''
+    Write-Host 'Running install.ps1 (Content Search dependencies)...' -ForegroundColor Yellow
+    Write-Host 'NOTE: This requires Administrator privileges' -ForegroundColor Yellow
+    Write-Host ''
+    if (Test-Path '.\install.ps1') {
+        & '.\install.ps1'
+    } else {
+        Write-Host 'install.ps1 not found, skipping...' -ForegroundColor Yellow
+    }
+}
+
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
@@ -1101,7 +1115,7 @@ npm run dev -- --host 0.0.0.0 --port 5173
     Write-Host "  Frontend terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipFrontend check
-
+    
     # Wait for Frontend to be healthy
     $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
     if (-not $frontendHealthy) {
