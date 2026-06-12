@@ -8,6 +8,16 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/health-and-life-sciences-ai-suite/NICU-Warmer/README.md">
      Readme
   </a>
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/latch-detect">
+     latch-detect model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/patient-present">
+     patient-present model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/people-present">
+     people-present model
+  </a>
 </div>
 hide_directive-->
 
