@@ -25,7 +25,7 @@ llama-index-readers-file>=0.4.0
 
 open-clip-torch>=3.1.0
 qwen-vl-utils==0.0.11
-aiohttp==3.13.2
+aiohttp>=3.14.0
 
 moviepy>=2.0
 # NOTE: no official Windows wheel for Python 3.12;
@@ -42,19 +42,19 @@ unstructured[all-docs]==0.18.32
 python-docx==1.2.0
 docx2txt==0.9
 python-magic==0.4.27
-requests==2.32.4
+requests>=2.33.0
 tqdm==4.67.0
 numpy>=1.24
 pillow>=11.0.0
 PyYAML==6.0.2
 
-pytest==8.3.5
+pytest>=9.0.3
 
 httpx==0.28.1
-python-dotenv==1.2.1
+python-dotenv>=1.2.2
 SQLAlchemy==2.0.46
 starlette==0.50.0
 psycopg2==2.9.11
-python-multipart==0.0.22
+python-multipart>=0.0.27
 
 hf_xet==1.4.3
