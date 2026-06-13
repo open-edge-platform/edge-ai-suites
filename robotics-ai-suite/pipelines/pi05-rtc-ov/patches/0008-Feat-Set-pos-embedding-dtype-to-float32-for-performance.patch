@@ -1,0 +1,27 @@
+From f74172d0f88fee3568d28e811d12f93e7464da41 Mon Sep 17 00:00:00 2001
+From: baihe-liu <baihe.liu@intel.com>
+Date: Thu, 28 May 2026 14:16:19 +0800
+Subject: [PATCH 2/2] [Feat] Set pos-embedding dtype to float32 for performance
+ (#4)
+
+Signed-off-by: Liu, Baihe <baihe.liu@intel.com>
+---
+ src/lerobot/policies/pi05/modeling_pi05.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lerobot/policies/pi05/modeling_pi05.py b/src/lerobot/policies/pi05/modeling_pi05.py
+index 8726616..e73418d 100644
+--- a/src/lerobot/policies/pi05/modeling_pi05.py
++++ b/src/lerobot/policies/pi05/modeling_pi05.py
+@@ -81,7 +81,7 @@ def create_sinusoidal_pos_embedding(  # see openpi `create_sinusoidal_pos_embedd
+     if time.ndim != 1:
+         raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
+ 
+-    dtype = get_safe_dtype(torch.float64, device.type)
++    dtype = get_safe_dtype(torch.float32, device.type)
+     fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
+     period = min_period * (max_period / min_period) ** fraction
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,172 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+From dcce5df6a3549250cc7d862dfcb33421e0696080 Mon Sep 17 00:00:00 2001
+From: RoboticsYY <RoboticsYY@users.noreply.github.com>
+Date: Thu, 11 Jun 2026 23:40:50 +0800
+Subject: [PATCH 3/3] fix(agenticros): closed-loop cmd_vel reaches target under
+ low sim real-time factor
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+ros2_cmd_vel distance/angle motions were stopping short of their target ("Closed-loop
+distance timeout before target"). Two causes, both tied to the simulation running well
+below real time (observed RTF ~0.18 while the GPU is busy with inference):
+
+1. Fixed wall-clock timeout (capped at 20s) expired before a 1 m / 0.25 m/s move —
+   which needs ~4 s of SIM time but ~22 s of wall-clock at RTF 0.18.
+2. Even after raising it, the per-update progress threshold (1 cm) was larger than the
+   few-mm odom step seen per message at low RTF, so progress wasn't recognized.
+
+Fix: replace the fixed timeout with a STALL watchdog for closed-loop motions. The
+deadline is pushed forward on every odometry update that shows real progress, so a
+slow-but-moving robot keeps going; it only stops after CLOSED_LOOP_STALL_TIMEOUT_S (8s)
+of NO progress (genuinely stuck), bounded by an absolute safety ceiling (120s). Progress
+epsilons lowered (0.5 mm linear, 0.05 deg angular) so steady slow motion keeps resetting
+the watchdog. Applies to all translation (forward/backward) and rotation movements.
+
+Verified: "move forward 1 meter" and "move backward 1 meter" both reach achieved_m=1.000
+(taking ~35s wall-clock at the current sim RTF) instead of timing out short.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+---
+ packages/agenticros/src/tools/ros2-cmd-vel.ts | 59 +++++++++++++++----
+ 1 file changed, 48 insertions(+), 11 deletions(-)
+
+diff --git a/packages/agenticros/src/tools/ros2-cmd-vel.ts b/packages/agenticros/src/tools/ros2-cmd-vel.ts
+index b1181b5..a362fc1 100644
+--- a/packages/agenticros/src/tools/ros2-cmd-vel.ts
++++ b/packages/agenticros/src/tools/ros2-cmd-vel.ts
+@@ -14,7 +14,21 @@ const DEFAULT_STEP_ANGLE_DEG = 45;
+ const DEFAULT_FALLBACK_DURATION_S = 1.0;
+ const CMD_PUBLISH_INTERVAL_MS = 100;
+ const STOP_CONFIRM_DELAY_MS = 120;
+-const CLOSED_LOOP_MAX_TIMEOUT_S = 20;
++// In a heavily-loaded sim the real-time factor can be well below 1 (e.g. Gazebo at
++// ~0.18x while the GPU is busy with inference), so a motion that needs N seconds of
++// SIM time can take many times that in wall-clock. A fixed wall-clock timeout would
++// stop the robot short of its target. Instead the closed loop uses a STALL watchdog:
++// the deadline is pushed forward whenever odometry shows real progress, and the loop
++// only gives up after this many seconds of NO progress (robot genuinely stuck), up to
++// an absolute safety ceiling.
++const CLOSED_LOOP_STALL_TIMEOUT_S = 8;
++const CLOSED_LOOP_ABSOLUTE_MAX_TIMEOUT_S = 120;
++// Any non-trivial per-update movement counts as progress. Under a low sim real-time
++// factor each odom update only advances a few millimetres, so this must be small
++// enough that steady slow motion still keeps resetting the stall watchdog (a larger
++// epsilon would let the watchdog expire mid-move). It only needs to exceed odom noise.
++const CLOSED_LOOP_DISTANCE_PROGRESS_EPS_M = 0.0005;
++const CLOSED_LOOP_ANGLE_PROGRESS_EPS_RAD = (0.05 * Math.PI) / 180;
+ 
+ type DirectionIntent =
+   | "forward"
+@@ -306,9 +320,6 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+         }, CMD_PUBLISH_INTERVAL_MS);
+ 
+         const useClosedLoopOdom = useClosedLoopAngle || useClosedLoopDistance;
+-        const timeoutMs = useClosedLoopOdom
+-          ? Math.round(clamp(Math.max(durationS * 6, durationS + 4), 1, CLOSED_LOOP_MAX_TIMEOUT_S) * 1000)
+-          : Math.round(durationS * 1000);
+ 
+         let resolveClosedLoop:
+           | ((value: { mode: "angle" | "distance"; reached: boolean; timeout: boolean; achieved_deg?: number; achieved_m?: number }) => void)
+@@ -319,18 +330,41 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+             })
+           : null;
+ 
+-        const timeoutId = setTimeout(() => {
++        // Open-loop motion: stop after the computed wall-clock duration.
++        // Closed-loop motion: use a STALL watchdog instead of a fixed wall-clock
++        // timeout. The simulation real-time factor may be far below 1 (so a motion
++        // needing N seconds of sim time takes N/RTF wall-clock), and a fixed timeout
++        // would stop short of the target. The watchdog is pushed forward on every
++        // odometry progress update; it only fires if the robot makes no progress for
++        // CLOSED_LOOP_STALL_TIMEOUT_S, bounded by an absolute safety ceiling.
++        const absoluteMaxMs = Math.round(CLOSED_LOOP_ABSOLUTE_MAX_TIMEOUT_S * 1000);
++        const stallMs = Math.round(CLOSED_LOOP_STALL_TIMEOUT_S * 1000);
++        const startedAtMs = Date.now();
++
++        const fireTimeout = (): void => {
+           api.logger.info(
+-            `ros2_cmd_vel: auto-stop fired topic=${topic} scheduled_due_at=${new Date(dueAtMs).toISOString()} fired_at=${new Date().toISOString()}`,
++            `ros2_cmd_vel: auto-stop fired topic=${topic} mode=${useClosedLoopOdom ? "closed-loop-stall/ceiling" : "open-loop"} fired_at=${new Date().toISOString()}`,
+           );
+           stopMotion(topic, api.logger, "auto-timeout");
+           if (resolveClosedLoop) {
+             resolveClosedLoop({ mode: useClosedLoopAngle ? "angle" : "distance", reached: false, timeout: true, achieved_deg: 0, achieved_m: 0 });
+             resolveClosedLoop = null;
+           }
+-        }, timeoutMs);
++        };
++
++        const active: ActiveMotion = {
++          intervalId,
++          timeoutId: setTimeout(fireTimeout, useClosedLoopOdom ? stallMs : Math.round(durationS * 1000)),
++        };
+ 
+-        const active: ActiveMotion = { intervalId, timeoutId };
++        // Reset the stall watchdog when odometry shows progress (closed-loop only),
++        // unless the absolute ceiling has been reached.
++        const bumpWatchdog = (): void => {
++          if (!useClosedLoopOdom) return;
++          if (Date.now() - startedAtMs >= absoluteMaxMs) return;
++          clearTimeout(active.timeoutId);
++          active.timeoutId = setTimeout(fireTimeout, stallMs);
++        };
+ 
+         if (useClosedLoopAngle) {
+           let lastYaw: number | null = null;
+@@ -351,6 +385,7 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+               lastYaw = yaw;
+               accumulated += delta;
+               const progressed = accumulated * directionSign;
++              if (Math.abs(delta) >= CLOSED_LOOP_ANGLE_PROGRESS_EPS_RAD) bumpWatchdog();
+               if (progressed >= targetRad) {
+                 const achievedDeg = Math.abs(progressed * 180 / Math.PI);
+                 api.logger.info(
+@@ -366,7 +401,7 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+           );
+           active.odomSub = odomSub;
+           api.logger.info(
+-            `ros2_cmd_vel: closed-loop angle enabled topic=${topic} odom_topic=${odomTopic} target_deg=${angleDeg.toFixed(1)} timeout_ms=${timeoutMs}`,
++            `ros2_cmd_vel: closed-loop angle enabled topic=${topic} odom_topic=${odomTopic} target_deg=${angleDeg.toFixed(1)} stall_timeout_s=${CLOSED_LOOP_STALL_TIMEOUT_S} max_timeout_s=${CLOSED_LOOP_ABSOLUTE_MAX_TIMEOUT_S}`,
+           );
+         } else if (useClosedLoopDistance) {
+           let lastPos: { x: number; y: number } | null = null;
+@@ -384,7 +419,9 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+               const dx = pos.x - lastPos.x;
+               const dy = pos.y - lastPos.y;
+               lastPos = pos;
+-              accumulatedM += Math.hypot(dx, dy);
++              const stepM = Math.hypot(dx, dy);
++              accumulatedM += stepM;
++              if (stepM >= CLOSED_LOOP_DISTANCE_PROGRESS_EPS_M) bumpWatchdog();
+               if (accumulatedM >= targetDistanceM) {
+                 api.logger.info(
+                   `ros2_cmd_vel: closed-loop distance reached topic=${topic} odom_topic=${odomTopic} target_m=${targetDistanceM.toFixed(3)} achieved_m=${accumulatedM.toFixed(3)} at=${new Date().toISOString()}`,
+@@ -399,7 +436,7 @@ export function registerCmdVelTool(api: OpenClawPluginApi, config: AgenticROSCon
+           );
+           active.odomSub = odomSub;
+           api.logger.info(
+-            `ros2_cmd_vel: closed-loop distance enabled topic=${topic} odom_topic=${odomTopic} target_m=${targetDistanceM.toFixed(3)} timeout_ms=${timeoutMs}`,
++            `ros2_cmd_vel: closed-loop distance enabled topic=${topic} odom_topic=${odomTopic} target_m=${targetDistanceM.toFixed(3)} stall_timeout_s=${CLOSED_LOOP_STALL_TIMEOUT_S} max_timeout_s=${CLOSED_LOOP_ABSOLUTE_MAX_TIMEOUT_S}`,
+           );
+         }
+ 
+-- 
+2.43.0
+
