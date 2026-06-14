@@ -11,6 +11,11 @@ For full setup, usage, and contribution guide, see:
 - [**Multi-Modal Patient Monitoring Documentation**](./multi_modal_patient_monitoring/README.md).
 - [**NICU Warmer Documentation**](./NICU-Warmer/README.md).
 
-## Disclaimer
+## Disclaimers
 
-This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
+> This software is for **reference and evaluation purposes**. The included applications
+> are **not intended for direct use in clinical or diagnostic environments** and are not
+> validated as such.
+
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.  

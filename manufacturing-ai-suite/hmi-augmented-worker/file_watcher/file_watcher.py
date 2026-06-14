@@ -51,7 +51,21 @@ class FileChangeHandler(FileSystemEventHandler):
             filename in IGNORED_TEMP_FILENAMES
         )
 
+    def wait_until_readable(self, file_path, timeout=10):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                with open(file_path, 'rb'):
+                    return True
+            except PermissionError:
+                time.sleep(0.5)
+        return False
+
     def send_file_to_api(self, file_path):
+        if not self.wait_until_readable(file_path):
+            logging.error(f"File {file_path} is locked and not accessible after waiting.")
+            return
+
         try:
             with open(file_path, 'rb') as f:
                 files = {'files': (os.path.basename(file_path), f)}

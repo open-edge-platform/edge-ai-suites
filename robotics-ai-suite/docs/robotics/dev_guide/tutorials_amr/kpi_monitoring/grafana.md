@@ -27,7 +27,7 @@ sudo usermod -aG docker $USER   # log out and back in after this
 make grafana-start
 
 # 2. In a new terminal — run monitoring
-uv run python src/monitor_stack.py
+uv run src/monitor_stack.py
 
 # 3. In a new terminal — start the metrics exporter
 make grafana-export SESSION=<session-name-from-step-2>
@@ -93,10 +93,10 @@ Manual operation:
 ./grafana/start_grafana.sh
 
 # Export a session
-uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/<name>
+uv run src/prometheus_exporter.py --session-dir monitoring_sessions/<name>
 
 # Or run live
-uv run python src/prometheus_exporter.py --live
+uv run src/prometheus_exporter.py --live
 ```
 
 ## Configuration
@@ -104,7 +104,7 @@ uv run python src/prometheus_exporter.py --live
 ### Change the Exporter Port
 
 ```bash
-uv run python src/prometheus_exporter.py --port 9095 --session-dir monitoring_sessions/latest
+uv run src/prometheus_exporter.py --port 9095 --session-dir monitoring_sessions/latest
 ```
 
 Then update `prometheus/prometheus.yml`:
