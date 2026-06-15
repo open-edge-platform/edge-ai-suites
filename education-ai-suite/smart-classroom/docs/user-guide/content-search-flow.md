@@ -167,4 +167,5 @@ Upload and search functionality is affected until all services are healthy.
 
 ## Learn More
 
-- [How It Works — Content Search Pipeline](./how-it-works.md#content-search-pipeline): Technical architecture and design details
+- [How It Works — Content Search Pipeline](./how-it-works.md#content-search-pipeline): Technical architecture and design details.
+- [Application Flow](./application-flow.md): End-to-end application flow.
