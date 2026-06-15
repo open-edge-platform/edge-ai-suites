@@ -21,7 +21,7 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 
 ## Software Requirements
 
-- Docker Engine version 24.0 or later
+- Docker Engine version 29.0 or later
 - Docker Compose v2: [Installation Guide](https://docs.docker.com/compose/install/)
 - Python version 3.10 or later
 - Git (for cloning the repository)
