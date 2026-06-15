@@ -93,4 +93,4 @@ make down && make up
 ## References
 
 - [RTSP protocol](https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol)
-- [DL Streamer Pipeline Server RTSP guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer-pipeline-server/advanced-guide/detailed_usage/camera/rtsp.html#rtsp-cameras)
+- [DL Streamer Pipeline Server RTSP guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/advanced-guide/detailed_usage/camera/rtsp.html#rtsp-cameras)
