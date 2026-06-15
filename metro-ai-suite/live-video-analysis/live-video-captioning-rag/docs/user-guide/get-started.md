@@ -94,8 +94,8 @@ By following this guide, you will learn how to:
      > - Call the `embeddings/` endpoint to generate embeddings.
      > - Create the context and store it in the vector store.
 
-     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.<br>
-        `Example query: "How many students are there in the classroom?"`<br>
+     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.\
+        `Example query: "How many students are there in the classroom?"`\
         You will now receive contextual responses from the RAG chatbot.
 
 7. Stop the Live Video Captioning RAG sample application services:
@@ -109,43 +109,6 @@ By following this guide, you will learn how to:
 This sample application is designed to work together with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/index.html) sample application, which uses its video analytics pipeline to process video frames, generate captions, and send both frame and caption data so this application can create text embeddings and enable RAG-based contextual chat.
 
 For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
-
-## Testing and Coverage
-
-The sample application uses **pytest** for unit testing. Test files are located in the `tests/` directory under the `app/` folder.
-
-### Install Test Dependencies
-
-```bash
-cd app
-uv sync --group test
-```
-
-### Run All Tests
-
-```bash
-uv run pytest
-```
-
-### Run a Specific Test File
-
-```bash
-uv run pytest tests/test_main.py
-```
-
-### Run Tests with Coverage Report
-
-```bash
-uv run pytest --cov=backend --cov=main --cov-report=term-missing
-```
-
-### Generate an HTML Coverage Report
-
-```bash
-uv run pytest --cov=backend --cov=main --cov-report=html
-```
-
-Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 ## Learn More
 

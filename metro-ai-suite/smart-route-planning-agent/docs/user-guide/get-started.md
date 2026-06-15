@@ -93,27 +93,28 @@ Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
 ### Configure Edge Node Endpoints
 
-Edit `src/data/config.json` to add the IP addresses of your Smart Traffic Intersection Agent
-edge nodes:
+Edit `src/data/config.json` to add the IP addresses and ports of the edge nodes where Smart Traffic Intersection Agents are running.
+
+#### Example Configuration
 
 ```json
 {
-    "api_endpoint": "/api/v1/traffic/current?images=false",
+    "api_endpoint": "/api/v1/traffic/current/ws?images=false",
     "api_hosts": [
         {
-            "host": "http://<edge-node-1-ip>:8081"
+            "host": "ws://<node-1-ip>:<port>"
         },
         {
-            "host": "http://<edge-node-2-ip>:8082"
+            "host": "ws://<node-2-ip>:<port>"
         },
         {
-            "host": "http://<edge-node-3-ip>:8083"
+            "host": "ws://<node-3-ip>:<port>"
         }
     ]
 }
 ```
 
-Replace `<edge-node-X-ip>` with the actual IP addresses of your edge nodes.
+> **NOTE :** We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
 
 ### Deploy the Route Planning Agent
 

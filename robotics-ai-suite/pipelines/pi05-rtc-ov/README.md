@@ -36,7 +36,7 @@ cd lerobot
 ```
 Apply the patches:
 ```bash
-git am ../patches/*.patch
+git am --whitespace=fix ../patches/*.patch
 ```
 
 ### Setup Python Environment
@@ -50,7 +50,8 @@ If you would like to use `uv`, you can set up the environment and install depend
 uv sync --extra pi-ov
 ```
 
-> **Usage:** You can run a Python file by using:
+> Follow the [guide](https://docs.astral.sh/uv/getting-started/installation/) to install uv.
+> You can run a Python file by using:
 > `uv run --extra pi-ov <your_python_file>`.
 
 Alternatively, you can create a Python environment:
@@ -181,6 +182,9 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
 - `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
 
+> **Note**: If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
+
+
 ### Evaluation Script Overview
 
 `eval_aloha.py` provides an evaluation script for the ALOHA pipeline that can run:
@@ -215,10 +219,16 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 **Visualization/Logging:**
 
-- `--plot`: Enable visualization (typically used with MuJoCo).
-> **Note**: If visualization windows do not appear when using `--plot`, install python3-tk to enable the Matplotlib interactive backend: `sudo apt install python3-tk`.
+- `--plot`: Enable visualization (MuJoCo only). Renders the simulation in a separate subprocess using OpenCV shared memory.
 - `--save_traj`: Save trajectory data and plots.
 - `--save_traj_path`: Output directory for saved trajectories/plots. Default: `trajectory_plots`.
+
+**Keyboard controls (during evaluation):**
+
+| Key     | Action                          |
+|---------|---------------------------------|
+| `Space` | Pause / resume execution        |
+| `r`     | Toggle RTC on/off at runtime    |
 
 ### Simulation Pipeline
 
@@ -227,7 +237,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \
@@ -235,10 +245,12 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
+> **Note**: `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
+
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model with RTC
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \

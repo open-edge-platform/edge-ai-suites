@@ -69,7 +69,7 @@ jobs:
             edge-insights-vision:
               - 'manufacturing-ai-suite/industrial-edge-insights-vision/docs/user-guide/**'
             deterministic-threat-detection:
-              - 'metro-ai-suite/deterministic-threat-detection/docs/user-guide/**'
+              - 'federal-aerospace/docs/deterministic-threat-detection/user-guide/**'
             image-based-video-search:
               - 'metro-ai-suite/image-based-video-search/docs/user-guide/**'
             live-metrics-service:
@@ -168,7 +168,7 @@ jobs:
     if: ${{ needs.filter.outputs.deterministic-threat-detection_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
     with:
-      docs_directory: metro-ai-suite/deterministic-threat-detection
+      docs_directory: federal-aerospace/docs/deterministic-threat-detection
 
   build-image-based-video-search:
     permissions:

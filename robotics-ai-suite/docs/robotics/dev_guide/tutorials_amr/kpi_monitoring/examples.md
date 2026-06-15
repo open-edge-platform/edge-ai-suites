@@ -42,7 +42,7 @@ ros2 launch my_robot robot.launch.py
 3. In a new terminal, run the quick check (completes automatically):
 
 ```bash
-uv run python src/monitor_stack.py --duration 30
+uv run src/monitor_stack.py --duration 30
 ```
 
 4. Review auto-generated results:
@@ -59,6 +59,9 @@ ls monitoring_sessions/latest/visualizations/
 | `message_frequencies.png` | Topic Hz over time |
 | `cpu_usage_timeline.png` | CPU usage over time |
 | `cpu_heatmap.png` | CPU distribution across cores |
+| `gpu_usage.log` | Intel™ GPU metrics (present when `--gpu` used) |
+| `npu_usage.log` | Intel™ NPU metrics (present when `--npu` used) |
+| `kpi.json` | KPI summary for the session |
 
 ## Monitor a Specific Node
 
@@ -72,7 +75,7 @@ or identifying bottlenecks.
 ros2 node list
 
 # 2. Start monitoring (runs until Ctrl+C)
-uv run python src/monitor_stack.py --node /slam_toolbox
+uv run src/monitor_stack.py --node /slam_toolbox
 
 # 3. Let it run while your system operates normally
 
@@ -83,13 +86,13 @@ ls monitoring_sessions/latest/visualizations/
 With a fixed duration:
 
 ```bash
-uv run python src/monitor_stack.py --node /slam_toolbox --duration 120   # 2 minutes
+uv run src/monitor_stack.py --node /slam_toolbox --duration 120   # 2 minutes
 ```
 
 Using Python directly for a named session:
 
 ```bash
-uv run python src/monitor_stack.py --node /slam_toolbox --session slam_analysis
+uv run src/monitor_stack.py --node /slam_toolbox --session slam_analysis
 ```
 
 **What to look for in results:**
@@ -108,7 +111,7 @@ Step-by-step guide to isolate and diagnose a performance problem.
 ### Step 1 — Identify the Problematic Process
 
 ```bash
-uv run python src/monitor_resources.py --list
+uv run src/monitor_resources.py --list
 ```
 
 Look for processes with unexpectedly high CPU usage.
@@ -116,7 +119,7 @@ Look for processes with unexpectedly high CPU usage.
 ### Step 2 — Start Detailed Monitoring
 
 ```bash
-uv run python src/monitor_stack.py --node /problematic_node --session debug_session_1
+uv run src/monitor_stack.py --node /problematic_node --session debug_session_1
 ```
 
 ### Step 3 — Reproduce the Issue
@@ -155,7 +158,7 @@ tail -100 monitoring_sessions/debug_session_1/resource_usage.log
 After making changes, record a second session and compare:
 
 ```bash
-uv run python src/monitor_stack.py --node /problematic_node --session debug_session_2 --duration 60
+uv run src/monitor_stack.py --node /problematic_node --session debug_session_2 --duration 60
 
 # Compare visualizations side by side
 diff -r monitoring_sessions/debug_session_1/visualizations/ \
@@ -179,10 +182,10 @@ ros2 launch nav2_bringup tb3_simulation_launch.py
 
 ```bash
 # Before optimization
-uv run python src/monitor_stack.py --node /my_node --duration 120
+uv run src/monitor_stack.py --node /my_node --duration 120
 
 # Make your code changes, then run again
-uv run python src/monitor_stack.py --node /my_node --duration 120
+uv run src/monitor_stack.py --node /my_node --duration 120
 
 # Compare sessions
 diff -r monitoring_sessions/<session_before>/visualizations/ \

@@ -20,28 +20,79 @@ git sparse-checkout set health-and-life-sciences-ai-suite/NICU-Warmer
 cd health-and-life-sciences-ai-suite/NICU-Warmer
 ```
 
-## 2. Download Models and Video
+## 2. Manual Model Staging
 
-Run the model downloader to fetch all required AI models and the test video:
+Before running `make run`, stage the workload models in these locations:
+
+- Repository root:
+  - patient detection model files: `.xml` and `.bin`
+  - person detection model files: `.xml` and `.bin`
+  - latch detection model files: `.xml` and `.bin`
+  - action recognition encoder model files: `.xml` and `.bin`
+  - action recognition decoder model files: `.xml` and `.bin`
+- `models_rppg/`:
+  - rPPG workload source model: `.hdf5`
+
+`make run` expects these files to exist.
+
+### Example Models
+
+1. Patient Detection Model - [patient-present](https://huggingface.co/Intel/patient-present/tree/main)*
+   
+2. Person Detection Model - [people-present](https://huggingface.co/Intel/people-present/tree/main)*
+   
+3. Latch Detection Model - [latch-detect](https://huggingface.co/Intel/latch-detect/tree/main)*
+> *Download the above model artifacts (`.xml` and `.bin`) from Hugging Face and place them in the appropriate model directory structure. Only these files are required for inference; downloading the remaining repository contents is optional.
+   
+4. RPPG Model - [MTTS-CAN](https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5)
+
+5. Action Recognition Models -
+   - Action Recognition Encoder (.xml)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.xml
+     ```
+
+   - Action Recognition Encoder (.bin)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.bin
+     ```
+
+   - Action Recognition Decoder (.xml)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.xml
+     ```
+
+   - Action Recognition Decoder (.bin)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.bin
+     ```     
+
+> **Third-Party Content**
+> 
+> *In the course of using these Intel-provided instruction, users may choose to download content (e.g., models, dataset, etc.) created and distributed by third parties. In doing so, these users acknowledge and agree that they have done so after reviewing background information about the content and agreeing to the license governing the content they select.*
+> 
+> ***Notice**: Intel does not create the content and does not warrant its accuracy or quality. By accessing the third-party content, or using materials trained on or with such content, you are indicating your acceptance of the terms associated with that content and warranting that your use complies with the applicable license.*
+
+
+## 3. Prepare Local Assets
+
+Run setup to verify local assets and generate the rPPG OpenVINO IR when needed:
 
 ```bash
 make setup
 ```
 
-This downloads:
+This step:
 
-- 3 detection models (person, patient, latch) from GitHub Release assets
-- Action recognition encoder/decoder from Open Model Zoo
-- MTTS-CAN rPPG model (converted to OpenVINO IR)
-- Test video file (`Warmer_Testbed_YTHD.mp4`)
-
-All files are cached locally — subsequent runs skip existing files.
+- checks the staged model files already present in the repo
+- converts `.hdf5` to `.{xml,bin}`
+- preserves existing local assets on repeated runs
 
 > **Important**: `make setup` must complete before `make run`. If `docker compose up`
 > runs first, Docker creates empty directories for missing bind-mount sources, causing
 > pipeline failures.
 
-## 3. Run the Application
+## 4. Run the Application
 
 Start all services (default mixed-optimized device profile):
 
@@ -49,7 +100,21 @@ Start all services (default mixed-optimized device profile):
 make run
 ```
 
-This builds and starts 5 containers:
+By default, `make run` pulls the prebuilt images from Docker Hub.
+
+To build the images locally instead:
+
+```bash
+make run REGISTRY=false
+```
+
+To pull a specific release tag:
+
+```bash
+make run TAG=2026.1.0-rc2
+```
+
+This pulls and starts 5 containers:
 
 | Service                  | Port | Purpose                                  |
 | ------------------------ | ---- | ---------------------------------------- |
@@ -70,7 +135,7 @@ make run-gpu       # All workloads on GPU
 make run-npu       # All workloads on NPU
 ```
 
-## 4. Open the Dashboard
+## 5. Open the Dashboard
 
 Navigate to `http://localhost:3001` in a browser.
 
@@ -81,7 +146,7 @@ Click **Prepare & Run** to start the AI pipeline. The system will:
 3. Stream detections and vitals via MQTT
 4. Display results in real-time on the dashboard
 
-## 5. Stop the Application
+## 6. Stop the Application
 
 Click **Stop** in the dashboard, or from the terminal:
 

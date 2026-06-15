@@ -22,11 +22,11 @@ For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.co
 ### C. Clone Repository
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
+If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
   cd education-ai-suite
@@ -48,15 +48,7 @@ pip install --upgrade -r requirements.txt
 
 ### E. Enable OCR Features (Optional)
 
-If you need OCR functionality for document text extraction, install PaddleOCR separately:
-
-```bash
-pip install paddleocr==2.7.0.3 --no-deps
-```
-
-> **Note:** The `--no-deps` flag is required because PaddleOCR declares an outdated `PyMuPDF` dependency that has no pre-built wheel for Python 3.12 on Windows. 
-
-Then enable OCR in `config.yaml`:
+If you need OCR functionality for document text extraction, enable OCR in `config.yaml`:
 
 ```yaml
 ocr:
@@ -65,7 +57,7 @@ ocr:
 
 ### F. Install Content Search Dependencies
 
-Run the installation script in PowerShell with Administrator privileges:
+Run the installation script in **PowerShell** with Administrator privileges:
 
 ```PowerShell
 cd smart-classroom\content_search
@@ -157,12 +149,14 @@ Content Search provides multimodal semantic search, AI-driven video summarizatio
 
 > **Prerequisite:** Complete [Step 1F](#f-install-content-search-dependencies) first.
 
+Open a new **Powershell** window:
+
 ### A. Create Content Search Virtual Environment
 
 ```PowerShell
 cd smart-classroom\content_search
 python -m venv venv_content_search
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
@@ -170,7 +164,7 @@ python -m pip install -r requirements.txt
 ### B. Launch Content Search Services
 
 ```PowerShell
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python .\start_services.py
 ```
 
@@ -304,7 +298,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 
@@ -344,10 +338,13 @@ To uninstall the application, follow these steps:
 
 1. **Delete the Python virtual environment folder:** \
    Navigate to the directory and remove \
-   For base environment : *education-ai-suite/smartclassroom*. \
-   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*.
+  For base environment : *education-ai-suite/smartclassroom*. \
+  For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
+  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*.
 2. **Remove the models directory:**
-   Remove the models folder located under *education-ai-suite/smart-classroom*.
+  Remove the models folder located under *education-ai-suite/smart-classroom*.
+3. **Remove the content search database:**
+  Remove uploaded files, vector database and upload record at *education-ai-suite/smart-classroom/content_search/data*.
 
 <!--hide_directive
 :::{toctree}

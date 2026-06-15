@@ -18,7 +18,7 @@ dataset:
 harness:
   class: harnesses.scene_controller_harness.SceneControllerHarness
   config:
-    container_image: scenescape-controller:2026.1.0-rc1
+    container_image: scenescape-controller:2026.1.0-rc2
     tracker_config_path: ./dataset/tracker-config.json
 
 evaluators:

@@ -126,6 +126,42 @@ for i in $(seq 1 5); do bash src/wandering_run.sh --goals 0 --timeout 180; done
 for i in $(seq 1 5); do bash src/picknplace_run.sh --timeout 300; done
 ```
 
+### Bag-Replay Benchmarking (no live robot required)
+
+Replay any pre-recorded ROS 2 bag deterministically through the monitor stack:
+
+```bash
+# Single replay pass
+make bag-replay BAG=monitoring_sessions/wandering/20260430_145256/bag
+
+# 2× realtime
+make bag-replay BAG=... RATE=2.0
+
+# 10-run benchmark → aggregate KPI
+make bag-replay-benchmark BAG=... RUNS=10
+```
+
+Outputs per session: `kpi.json` (Level 1), `kpi_level2.json` (Level 2).
+
+### fast_mapping RGB-D Benchmark
+
+Benchmark Intel's `fast_mapping_node` using `ros2 launch fast_mapping fast_mapping.launch.py`,
+which replays the bundled spinning RGB-D bag automatically:
+
+```bash
+# Single run
+make fastmapping
+
+# 10-run benchmark
+make fastmapping-benchmark RUNS=10
+
+# With trigger-timeline plots
+make fastmapping-plot
+```
+
+Results include `kpi.json`, `kpi_level2.json`, and `fastmapping_procedures.json`
+(per-procedure timing: preprocess, octree, publish).
+
 ### All Infrastructure Targets
 ```bash
 make help           # Show infrastructure targets (install, grafana, clean, lint)
@@ -162,6 +198,7 @@ chmod +x quickstart auto-setup.sh
 ```
 
 ### UV Not Found
+`make install` installs uv automatically. If you need to install it manually:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc

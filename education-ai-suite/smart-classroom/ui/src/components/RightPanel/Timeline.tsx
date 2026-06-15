@@ -94,11 +94,10 @@ const Timeline: React.FC = () => {
       const match = speaker.match(/SPEAKER_(\d+)/i);
       if (match) {
         const speakerNumber = match[1];
-        const baseLabel = lang === "zh" ? "说话人" : labels.student;
-        return `${baseLabel}_${speakerNumber}`;
+        return `${labels.student}_${speakerNumber}`;
       }
-      if (lang === "zh" && speaker.toUpperCase() === "SPEAKER") {
-        return "说话人";
+      if (speaker.toUpperCase() === "SPEAKER") {
+        return labels.student;
       }
     }
     if (lang === "zh") {

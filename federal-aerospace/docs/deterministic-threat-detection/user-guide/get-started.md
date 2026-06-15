@@ -20,8 +20,15 @@ To ensure synchronized operations across all devices, every machine in the syste
 
 An aggregation node collects the MQTT messages and calculates the end-to-end latency. To demonstrate the impact of Time-Sensitive Networking (TSN), background traffic is introduced into the network. By enabling TSN features, the system showcases how TSN guarantees consistent and deterministic latency for critical data streams, even under network congestion.
 
-## Hardware Details
 
+## System Requirements
+
+### Software Requirements
+- **Operating System:** Ubuntu 24.04 or later
+- **Docker Engine** with Docker Compose V2
+- [**DL Streamer Pipeline Server**](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.1.0/microservices/dlstreamer-pipeline-server)
+
+### Hardware Requirements
 - **AXIS RTSP Cameras**: Cameras that support RTSP streaming.
 - **MOXA TSN Switch**: A switch that supports IEEE 802.1AS (PTP) and IEEE 802.1Qbv (Time-Aware Shaper).
 - **Arrow Lake Machines**: Linux-based systems equipped with Intel i226 TSN-capable network cards.
