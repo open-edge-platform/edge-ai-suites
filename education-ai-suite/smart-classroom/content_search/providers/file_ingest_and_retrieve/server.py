@@ -102,12 +102,21 @@ def _load_models_parallel():
     import openvino
 
     results = {}
+    errors = {}
 
     def _load_visual():
-        results["visual"] = get_visual_embedding_model()
+        try:
+            results["visual"] = get_visual_embedding_model()
+        except Exception as e:
+            errors["visual"] = e
+            logger.error(f"Failed to load visual model: {e}")
 
     def _load_document():
-        results["document"] = get_document_embedding_model()
+        try:
+            results["document"] = get_document_embedding_model()
+        except Exception as e:
+            errors["document"] = e
+            logger.error(f"Failed to load document model: {e}")
 
     t_vis = threading.Thread(target=_load_visual)
     t_doc = threading.Thread(target=_load_document)
@@ -116,9 +125,16 @@ def _load_models_parallel():
     t_vis.join()
     t_doc.join()
 
+    if errors:
+        logger.warning(f"Parallel model loading had failures: {list(errors.keys())}. Retrying sequentially...")
+        if "visual" in errors:
+            results["visual"] = get_visual_embedding_model()
+        if "document" in errors:
+            results["document"] = get_document_embedding_model()
+
     _visual_model = results["visual"]
     _document_model = results["document"]
-    logger.info("All embedding models loaded in parallel.")
+    logger.info("All embedding models loaded.")
 
 _load_models_parallel()
 
