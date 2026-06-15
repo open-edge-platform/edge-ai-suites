@@ -37,11 +37,15 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ### Validated Platforms
 
-| Product / Family     | CPU |  iGPU |  NPU | dGPU |
-|----------------------|-----------|------------|-----------|----------|
-| Intel® Core™ Ultra Processors (Series 3, 2, 1), Intel® Core™ Processors (Series 3, 2), Intel® Core™ Processors (14th/13th/12th Gen)  | ✓         | ✓          | ✓         |  Intel(R) Arc(TM) A770, B580        |
-| 4th Gen Intel® Xeon® Scalable Processors                 | ✓         |            |           | Intel(R) Arc(TM) A770, B580        |
+| Product / Family     | CPU |  iGPU |  NPU |
+|----------------------|-----------|------------|-----------|
+| Intel® Core™ Ultra Processors (Series 3, 2, 1) | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 3 | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 2 | ✓         | ✓          |    NA      |
+| Intel® Core™ Processors (14th/13th/12th Gen) | ✓         | ✓          | NA         |
+| 4th Gen Intel® Xeon® Scalable Processors | ✓         |      NA      |      NA     |
 
+**Validated on Intel® Arc™ dGPU models:** A770, B580, B60, and B50.
 
 ## Software Requirements
 <!--
