@@ -1,5 +1,3 @@
-(static_use_case)=
-
 # Static Vision Use Case
 
 This exemplary use case shows how the robot detecting an instance of an object pose, i.e.: position
