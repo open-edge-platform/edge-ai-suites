@@ -766,7 +766,7 @@ function Wait-ForService {
     )
     
     $elapsed = 0
-    $initialGracePeriod = 10  # Short grace period before checking for crashes
+    $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
     Write-Host "  (No timeout - will wait until service is ready or crashes)" -ForegroundColor DarkGray
@@ -954,7 +954,7 @@ Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
-pip install --upgrade -r requirements.txt
+python -m pip install --upgrade -r requirements.txt
 
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
@@ -1031,7 +1031,6 @@ if (-not `$venvValid) {
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
 
-
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
@@ -1101,151 +1100,6 @@ npm run dev -- --host 0.0.0.0 --port 5173
     
     Write-Host "  Frontend terminal launched" -ForegroundColor Green
     Write-Host ""
-    }  # End of skipFrontend check
-    
-    # Wait for Frontend to be healthy
-    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
-    if (-not $frontendHealthy) {
-        Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
-} else {
-    # ========== LINUX ==========
-    Write-Host "Linux support - launching terminals..." -ForegroundColor Cyan
-    
-    $gnomeExists = Get-Command gnome-terminal -ErrorAction SilentlyContinue
-    $konsoleExists = Get-Command konsole -ErrorAction SilentlyContinue
-    $xtermExists = Get-Command xterm -ErrorAction SilentlyContinue
-    
-    $terminalCmd = if ($gnomeExists) { "gnome-terminal" }
-                   elseif ($konsoleExists) { "konsole" }
-                   elseif ($xtermExists) { "xterm" }
-                   else { $null }
-    
-    if (-not $terminalCmd) {
-        Write-Host "No supported terminal found. Run manually:" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Terminal 1 (Backend):" -ForegroundColor Cyan
-        Write-Host "  cd $(Split-Path $ScriptDir -Parent) && python -m venv smartclassroom && source smartclassroom/bin/activate && cd smart-classroom && pip install -r requirements.txt && python main.py"
-        Write-Host ""
-        Write-Host "Terminal 2 (Content Search):" -ForegroundColor Cyan
-        Write-Host "  cd $ScriptDir/content_search && python -m venv venv_content_search && source venv_content_search/bin/activate && pip install -r requirements.txt && python start_services.py"
-        Write-Host ""
-        Write-Host "Terminal 3 (Frontend):" -ForegroundColor Cyan
-        Write-Host "  cd $ScriptDir/ui && npm install && npm run dev -- --host 0.0.0.0 --port 5173"
-        exit 1
-    }
-    
-    # Build proxy export for bash
-    $proxyExport = ""
-    if ($httpProxy) { $proxyExport += "export http_proxy='$httpProxy'; export HTTP_PROXY='$httpProxy'; " }
-    if ($httpsProxy) { $proxyExport += "export https_proxy='$httpsProxy'; export HTTPS_PROXY='$httpsProxy'; " }
-    if ($noProxy) { $proxyExport += "export no_proxy='$noProxy'; export NO_PROXY='$noProxy'; " }
-    
-    # Terminal 1: Backend
-    if ($script:skipBackend) {
-        Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
-        $parentDir = Split-Path $ScriptDir -Parent
-        $be_bash = @"
-$proxyExport
-cd '$parentDir'
-echo '========================================'
-echo '  BACKEND SERVICE'
-echo '========================================'
-if [ ! -f 'smartclassroom/bin/activate' ]; then
-    echo 'Creating virtual environment...'
-    python3 -m venv smartclassroom
-fi
-source smartclassroom/bin/activate
-cd smart-classroom
-pip install --upgrade pip
-pip install -r requirements.txt
-echo 'Starting Backend (port 8000)...'
-python main.py
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=Backend", "--", "bash", "-c", $be_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Backend", "-e", "bash", "-c", $be_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "Backend", "-e", "bash", "-c", $be_bash
-        }
-    }  # End of skipBackend check
-    
-    # Wait for Backend to be healthy
-    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
-    if (-not $backendHealthy) {
-        Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
-    # Terminal 2: Content Search
-    if ($script:skipContentSearch) {
-        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-        $cs_bash = @"
-$proxyExport
-cd '$ScriptDir/content_search'
-echo '========================================'
-echo '  CONTENT SEARCH SERVICE'
-echo '========================================'
-if [ ! -f 'venv_content_search/bin/activate' ]; then
-    echo 'Creating virtual environment...'
-    python3 -m venv venv_content_search
-fi
-source venv_content_search/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-echo 'Starting Content Search (port 9011)...'
-python start_services.py
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=ContentSearch", "--", "bash", "-c", $cs_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=ContentSearch", "-e", "bash", "-c", $cs_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "ContentSearch", "-e", "bash", "-c", $cs_bash
-        }
-    }  # End of skipContentSearch check
-    
-    # Wait for Content Search to be healthy
-    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
-    if (-not $csHealthy) {
-        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
-    # Terminal 3: Frontend
-    if ($script:skipFrontend) {
-        Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
-        $fe_bash = @"
-cd '$ScriptDir/ui'
-echo '========================================'
-echo '  FRONTEND UI'
-echo '========================================'
-npm install
-echo 'Starting Frontend (port 5173)...'
-npm run dev -- --host 0.0.0.0 --port 5173
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=Frontend", "--", "bash", "-c", $fe_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Frontend", "-e", "bash", "-c", $fe_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "Frontend", "-e", "bash", "-c", $fe_bash
-        }
     }  # End of skipFrontend check
     
     # Wait for Frontend to be healthy

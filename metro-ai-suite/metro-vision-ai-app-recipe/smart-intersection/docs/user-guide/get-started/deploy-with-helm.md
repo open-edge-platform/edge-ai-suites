@@ -67,6 +67,12 @@ configured Kubernetes cluster.
   kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
   ```
 
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
+  ```
+
   Verify the GPU and NPU resources are advertised on nodes:
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
