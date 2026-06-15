@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-multimodal">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md">
      Readme
   </a>
 </div>
@@ -102,11 +102,13 @@ An array defining one or more video output destinations. Each entry requires a `
 
 ##### 2.2 Time Series Analytics Microservice
 
-**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the RandomForestClassifier model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. It also publishes all the processed weld sensor data points over MQTT.
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points coming from **Telegraf** point by point, runs the `ML CatBoost` model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Additionally, it publishes all the processed weld sensor data points over MQTT.
 
 The UDF deployment package used for
 weld data is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`. Directory details are as below:
+in the [Time Series Analytics Microservice Configuration directory for Multimodal Insights](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice).
+
+Details of the directory:
 
 ###### `config.json`
 
