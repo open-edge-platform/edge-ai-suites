@@ -53,6 +53,23 @@ print_header() {
     echo -e "${PURPLE}=== $1 ===${NC}"
 }
 
+MQTT_SECRETS_FILE="./resources/mqtt-secrets"
+
+resolve_mqtt_credentials() {
+    if [[ -n "${MQTT_USER}" && -n "${MQTT_PASSWORD}" ]]; then
+        print_info "Using provided MQTT credentials (MQTT_USER=${MQTT_USER})"
+        return 0
+    fi
+
+    if ! bash "$(dirname "${BASH_SOURCE[0]}")/scripts/gen-mqtt-secrets.sh"; then
+        return 1
+    fi
+
+    # shellcheck source=/dev/null
+    source "${MQTT_SECRETS_FILE}"
+    export MQTT_USER MQTT_PASSWORD
+    print_info "MQTT credentials loaded from ${MQTT_SECRETS_FILE}"
+}
 
 # Get the host IP address
 get_host_ip() {
@@ -245,14 +262,9 @@ validate_environment() {
             return 1
         fi
     fi
-    # Check for MQTT user and password
-    if [ -z "${MQTT_USER}" ]; then
-        print_error "MQTT_USER environment variable is required"
-        return 1
-    fi
-    
-    if [ -z "${MQTT_PASSWORD}" ]; then
-        print_error "MQTT_PASSWORD environment variable is required"
+    # Resolve MQTT credentials — auto-generates if not provided by the user
+    if ! resolve_mqtt_credentials; then
+        print_error "Could not resolve MQTT credentials. Aborting."
         return 1
     fi
 }

@@ -39,13 +39,13 @@ In single-node mode, all services run on one machine. The setup script performs 
 
 ```bash
 export NVR_SCENESCAPE=true
-export MQTT_USER=<mqtt-username>
-export MQTT_PASSWORD=<mqtt-password>
 export VSS_SUMMARY_IP=<vss_ip>
 export VSS_SUMMARY_PORT=<vss_port>
 export VSS_SEARCH_IP=<vss_ip>
 export VSS_SEARCH_PORT=<vss_port>
-# export RTSP_STREAM_PORT=<rtsp port>      # optional default 8554
+# export RTSP_STREAM_PORT=<rtsp port>      # optional, default 8554
+# export MQTT_USER=<mqtt-username>         # optional, auto-generated if omitted
+# export MQTT_PASSWORD=<mqtt-password>     # optional, auto-generated if omitted
 ```
 
 ### Start
@@ -85,8 +85,6 @@ Upon successful startup, the script outputs the System 1 IP address required for
 ```bash
 # Required
 export NVR_SCENESCAPE=true
-export MQTT_USER=<mqtt-username>
-export MQTT_PASSWORD=<mqtt-password>
 export SCENESCAPE_MQTT_BROKER=<system1_ip>
 export RTSP_STREAM_HOST=<system1_ip>
 export VSS_SUMMARY_IP=<vss_ip>
@@ -95,6 +93,8 @@ export VSS_SEARCH_IP=<vss_ip>
 export VSS_SEARCH_PORT=<vss_port>
 # Optional 
 # export RTSP_STREAM_PORT=<rtsp port>      # default 8554
+# export MQTT_USER=<mqtt-username>         # optional, auto-generated if omitted
+# export MQTT_PASSWORD=<mqtt-password>     # optional, auto-generated if omitted
 source setup.sh start-nvr
 ```
 
