@@ -153,7 +153,12 @@ This script creates the following structure:
 ├── SOUL.md                          # Agent persona and behavior
 ├── AGENTS.md                        # Agent definitions
 ├── smart_classroom_incoming/        # Data directory for Smart Classroom reports
-│   └── lesson1.md                   # Sample lesson report (included as example)
+│   ├── lesson1.md                   # Sample flat-file session (legacy format)
+│   └── 2026-06-10/                  # Sample session folder
+│       ├── summary.md
+│       ├── topics.json
+│       ├── engagement_report.json
+│       └── participation_report.json
 └── skills/
     └── classroom_qa/
         └── SKILL.md                 # Smart Classroom QA skill definition

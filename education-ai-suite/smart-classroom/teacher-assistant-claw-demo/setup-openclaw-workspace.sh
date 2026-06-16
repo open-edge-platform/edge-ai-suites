@@ -23,7 +23,7 @@ mkdir -p "${OPENCLAW_WORKSPACE}/skills/smart-classroom"
 # Create incoming data directory for Smart Classroom and copy sample data
 echo "[2/4] Creating Smart Classroom data directory and copying sample data..."
 mkdir -p "${OPENCLAW_WORKSPACE}/smart_classroom_incoming"
-cp "${WORKSPACE_SRC}/smart_classroom_incoming/"*.md "${OPENCLAW_WORKSPACE}/smart_classroom_incoming/" 2>/dev/null || true
+cp -r "${WORKSPACE_SRC}/smart_classroom_incoming/." "${OPENCLAW_WORKSPACE}/smart_classroom_incoming/"
 
 # Copy SOUL.md and AGENTS.md to workspace root
 echo "[3/4] Copying SOUL.md and AGENTS.md to workspace..."

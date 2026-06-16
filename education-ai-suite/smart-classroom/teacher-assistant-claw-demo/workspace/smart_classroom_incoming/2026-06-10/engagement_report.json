@@ -1,0 +1,36 @@
+{
+  "session_id": "SC3A-20260610-0830",
+  "classroom": "3A",
+  "date": "2026-06-10",
+  "duration_minutes": 45,
+  "attendance": {
+    "total_enrolled": 24,
+    "present": 22,
+    "absent": ["Daniel Carter", "Mia Thompson"]
+  },
+  "engagement_metrics": {
+    "avg_attention_score": 0.91,
+    "attention_scans": [
+      {"time": "08:30", "faces_forward": 21, "total": 22, "gaze_score": 0.88},
+      {"time": "08:33", "faces_forward": 22, "total": 22, "gaze_score": 0.91},
+      {"time": "08:58", "faces_forward": 22, "total": 22, "gaze_score": 0.94}
+    ],
+    "hand_raises_total": 6,
+    "student_speech_events": 14,
+    "teacher_questions": 5,
+    "emotion_detections": [
+      {"student": "Lucas Martinez", "expression": "disappointed", "time": "08:31", "confidence": 0.72},
+      {"student": "Aiden Brooks", "expression": "confused", "time": "08:32", "confidence": 0.68},
+      {"student": "Aiden Brooks", "expression": "frustrated", "time": "08:46", "confidence": 0.74}
+    ],
+    "noise_levels": [
+      {"time": "08:51", "db": 62, "classification": "productive_discussion"},
+      {"time": "08:55", "db": 45, "classification": "settling_down"}
+    ],
+    "posture_shifts_forward": 18,
+    "activity_changes": 4,
+    "individual_support_events": 2,
+    "peer_teaching_events": 1
+  }
+}
+
