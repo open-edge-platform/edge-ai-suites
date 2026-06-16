@@ -9,13 +9,17 @@
                 "ovms/OpenVINO/Qwen3-8B-int4-ov": {
                     "alias": "OVMS Qwen3 8B"
                 }
-            }
+            },
+            "skills": [
+		"classroom_qa"
+		]
         }
     },
     "gateway": {
         "mode": "local",
         "auth": {
-            "mode": "token"
+            "mode": "token",
+            "token": "REPLACE_WITH_NEW_GATEWAY_TOKEN"
         },
         "port": 18789,
         "bind": "loopback",
@@ -50,12 +54,14 @@
             "message",
             "read",
             "write",
-            "edit",
             "bash"
         ]
     },
     "plugins": {
         "entries": {
+            "telegram": {
+                "enabled": true
+            },
             "duckduckgo": {
                 "enabled": true,
                 "config": {
@@ -63,6 +69,9 @@
                         "safeSearch": "off"
                     }
                 }
+            },
+            "ollama": {
+                "enabled": false
             }
         }
     },
@@ -70,7 +79,7 @@
         "mode": "merge",
         "providers": {
             "ovms": {
-                "baseUrl": "http://127.0.0.1:8000/v3",
+                "baseUrl": "http://127.0.0.1:8001/v3",
                 "api": "openai-completions",
                 "apiKey": "unused",
                 "timeoutSeconds": 300,
@@ -91,6 +100,147 @@
                         }
                     }
                 ]
+            }
+        }
+    },
+    "channels": {
+        "telegram": {
+            "enabled": true,
+            "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
+            "dmPolicy": "open",
+            "allowFrom": [
+                "*"
+            ],
+            "groupPolicy": "open",
+            "groupAllowFrom": [
+                "*"
+            ],
+            "groups": {
+                "*": {
+                    "requireMention": false
+                }
+            }
+        }
+    },
+    "wizard": {
+        "lastRunAt": "2026-06-11T15:55:37.571Z",
+        "lastRunVersion": "2026.6.1",
+        "lastRunCommand": "doctor",
+        "lastRunMode": "local"
+    },
+    "meta": {
+        "lastTouchedVersion": "2026.6.1",
+        "lastTouchedAt": "2026-06-11T15:55:37.624Z"
+    },
+    "skills": {
+        "entries": {
+            "apple-notes": {
+                "enabled": false
+            },
+            "apple-reminders": {
+                "enabled": false
+            },
+            "bear-notes": {
+                "enabled": false
+            },
+            "blogwatcher": {
+                "enabled": false
+            },
+            "blucli": {
+                "enabled": false
+            },
+            "camsnap": {
+                "enabled": false
+            },
+            "clawhub": {
+                "enabled": false
+            },
+            "coding-agent": {
+                "enabled": false
+            },
+            "discord": {
+                "enabled": false
+            },
+            "eightctl": {
+                "enabled": false
+            },
+            "gemini": {
+                "enabled": false
+            },
+            "gog": {
+                "enabled": false
+            },
+            "goplaces": {
+                "enabled": false
+            },
+            "himalaya": {
+                "enabled": false
+            },
+            "imsg": {
+                "enabled": false
+            },
+            "mcporter": {
+                "enabled": false
+            },
+            "model-usage": {
+                "enabled": false
+            },
+            "obsidian": {
+                "enabled": false
+            },
+            "openai-whisper-api": {
+                "enabled": false
+            },
+            "openhue": {
+                "enabled": false
+            },
+            "oracle": {
+                "enabled": false
+            },
+            "ordercli": {
+                "enabled": false
+            },
+            "peekaboo": {
+                "enabled": false
+            },
+            "sag": {
+                "enabled": false
+            },
+            "session-logs": {
+                "enabled": false
+            },
+            "sherpa-onnx-tts": {
+                "enabled": false
+            },
+            "slack": {
+                "enabled": false
+            },
+            "songsee": {
+                "enabled": false
+            },
+            "sonoscli": {
+                "enabled": false
+            },
+            "spotify-player": {
+                "enabled": false
+            },
+            "things-mac": {
+                "enabled": false
+            },
+            "tmux": {
+                "enabled": false
+            },
+            "trello": {
+                "enabled": false
+            },
+            "voice-call": {
+                "enabled": false
+            },
+            "wacli": {
+                "enabled": false
+            },
+            "xurl": {
+                "enabled": false
             }
         }
     }
