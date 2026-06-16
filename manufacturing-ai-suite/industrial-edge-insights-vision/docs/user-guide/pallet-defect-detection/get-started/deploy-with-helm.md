@@ -93,13 +93,13 @@ configured Kubernetes cluster.
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc2
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc2.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.7.0.tgz
      ```
 
    - Replace the helm directory
