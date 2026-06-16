@@ -1520,6 +1520,8 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.error(f"An unexpected error occurred: {e}")
         return None, False
 
+_gh_generated_for_sample_app = set()
+
 def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     """Run `make gen_helm_charts app=<sample_app>` in the parent directory."""
     original_dir = os.getcwd()
@@ -1546,6 +1548,22 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     finally:
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
+
+
+def ensure_chart_generated(chart_path, sample_app):
+    """Ensure helm chart runtime files are generated for `sample_app`.
+
+    Idempotent: only invokes `make gen_helm_charts` the first time it is
+    called for a given sample_app within the current process.
+    """
+    if not sample_app:
+        return True
+    if sample_app in _gh_generated_for_sample_app:
+        return True
+    ok = generate_helm_chart(chart_path, sample_app=sample_app)
+    if ok:
+        _gh_generated_for_sample_app.add(sample_app)
+    return ok
 
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):

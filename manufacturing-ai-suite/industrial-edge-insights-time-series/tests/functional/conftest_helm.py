@@ -53,6 +53,10 @@ def setup_helm_environment(request):
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
 
+    # Ensure helm chart runtime files are generated before installation
+    assert helm_utils.ensure_chart_generated(chart_path, sample_app) == True, \
+        "Failed to generate Helm chart runtime files via 'make gen_helm_charts'."
+
     logger.debug(
         f"Installing Helm release... "
         f"Release Name: {release_name}, "
@@ -97,6 +101,10 @@ def setup_helm_weld_environment(request):
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
+
+    # Ensure helm chart runtime files are generated before installation
+    assert helm_utils.ensure_chart_generated(chart_path, sample_app) == True, \
+        "Failed to generate Helm chart runtime files via 'make gen_helm_charts'."
 
     logger.debug(
         f"Installing Helm release... "
