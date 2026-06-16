@@ -55,7 +55,6 @@ dist/
 metrics/
 *.xml
 *.bin
-*.mp4
 *.hdf5
 uploads/
 model_artifacts/

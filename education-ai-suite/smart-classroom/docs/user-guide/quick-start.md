@@ -20,8 +20,6 @@ The setup script will:
 2. **[2] Application Dependency Check**
    - FFmpeg (auto-install if missing)
    - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
-   - Tesseract OCR (install to `C:\Program Files\Tesseract-OCR`)
-   - Poppler PDF to image conversion (install to `C:\Program Files\poppler\Library\bin`)
 
 3. **[3] Configure Settings**
    - [3.1] Language & ASR Configuration (provider, model, device)
@@ -49,7 +47,6 @@ If you encounter issues during automated setup, refer to the manual steps below:
 | DL Streamer download fails | See [Manual Step 1B](get-started.md#b-install-dl-streamer) |
 | Python dependencies fail | See [Manual Step 1D](get-started.md#d-install-python-dependencies) |
 | NPU driver install fails | Download manually from [Intel NPU Driver](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html) |
-| Tesseract/Poppler install fails | See [Manual Step 4](get-started.md#step-4-set-up-content-search) |
 | Content Search fails | See [Manual Step 4](get-started.md#step-4-set-up-content-search) |
 | Frontend fails to start | See [Manual Step 5](get-started.md#step-5-bring-up-the-frontend) |
 

@@ -13,5 +13,5 @@
 
 - **Sample app**
 
-  - Video Analytic: decode + postprocessing + yolo/resnet on GPU/NPU
+  - Video Analytic: decode + postprocessing + yolo/resnet on GPU
   - decode + postprocessing + encode

@@ -70,3 +70,7 @@
 	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws-robomaker-small-warehouse-world
 	url = https://github.com/aws-robotics/aws-robomaker-small-warehouse-world.git
 	shallow = true
+[submodule "metro-ai-suite/agentic-rag"]
+	path = metro-ai-suite/agentic-rag
+	url = https://github.com/opea-project/GenAIExamples.git
+	shallow = true

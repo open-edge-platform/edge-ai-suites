@@ -19,7 +19,7 @@ LAUNCH_FILE = os.path.join(
 
 def test_launch_file_exists():
     """The launch file must exist on disk."""
-    assert os.path.isfile(LAUNCH_FILE), f'Launch file not found: {LAUNCH_FILE}'
+    assert os.path.isfile(LAUNCH_FILE), f'Launch file not found: {LAUNCH_FILE}'  # nosec B101
 
 
 def test_launch_file_valid_python():
@@ -39,7 +39,7 @@ def test_launch_file_has_generate_function():
         for node in ast.walk(tree)
         if isinstance(node, ast.FunctionDef)
     ]
-    assert 'generate_launch_description' in func_names, (
+    assert 'generate_launch_description' in func_names, (  # nosec B101
         'generate_launch_description() not found in launch file'
     )
 
@@ -48,6 +48,6 @@ def test_launch_file_declares_use_usb_camera_arg():
     """The launch file must declare the use_usb_camera argument."""
     with open(LAUNCH_FILE, 'r', encoding='utf-8') as fh:
         source = fh.read()
-    assert 'use_usb_camera' in source, (
+    assert 'use_usb_camera' in source, (  # nosec B101
         "Expected 'use_usb_camera' argument declaration in launch file"
     )
