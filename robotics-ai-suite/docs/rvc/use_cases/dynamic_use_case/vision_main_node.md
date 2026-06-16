@@ -61,7 +61,7 @@ Here the step by step procedure:
 
 We used the Open Source 3D modeler [Blender](https://www.blender.org/).
 
-We create the object and then assured there was enough vertices by subdividing the mesh (ctrl R in edit mode), see: [Method 2](https://themotiontree.com/how-to-subdivide-in-blender/).
+We create the object and then assured there was enough vertices by subdividing the mesh (ctrl R in edit mode), see: [Method 2](https://themotiontree.com/blog/how-to-subdivide-in-blender/).
 
 Then export the mesh in obj format and converting it with `pcl_obj2pcd` as exposed above.
 

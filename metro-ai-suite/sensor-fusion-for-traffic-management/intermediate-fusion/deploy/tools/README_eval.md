@@ -150,7 +150,7 @@ If GT and predictions have different coordinate systems, use these parameters:
 - **11-point**: Interpolated at 11 recall levels (0.0, 0.1, ..., 1.0) - legacy metric
 - **40-point**: Interpolated at 40 recall levels - more precise, **recommended**
 - **Range**: 0-100 (higher is better)
-- **Interpretation**: 
+- **Interpretation**:
   - \>80%: Excellent
   - 60-80%: Good
   - 40-60%: Moderate
@@ -187,7 +187,7 @@ The script automatically evaluates different distance ranges:
 | **60-102.4m** | Far field - most difficult |
 | **all** | Overall performance |
 
-**Why it matters**: 
+**Why it matters**:
 - Object detection accuracy typically degrades with distance
 - Different applications care about different ranges (parking: 0-30m, highway: 30-100m)
 
@@ -498,7 +498,7 @@ Error: No prediction files found in build/pred/
    ```bash
    # Check actual location
   ls -lh build/pred/  # if run from the project root
-   
+
    # Fix path in evaluation
    python3 tools/kitti_3d_eval.py \
        --gt dataset/label_2 \
@@ -510,7 +510,7 @@ Error: No prediction files found in build/pred/
    # Check if files have content
   ls -lh build/pred/*.txt
    # File size should be >0 bytes
-   
+
    # If empty, check bevfusion output for errors
    ```
 
@@ -549,11 +549,11 @@ Error: No prediction files found in build/pred/
    ```bash
   # Generate FP16 predictions
   ./build/bevfusion dataset --fp16 --dump-pred --pred-dir build/pred_fp16
-   
+
    # Evaluate both
   python3 tools/kitti_3d_eval.py --gt dataset/label_2 --pred build/pred --out build/eval_int8
   python3 tools/kitti_3d_eval.py --gt dataset/label_2 --pred build/pred_fp16 --out build/eval_fp16
-   
+
    # Compare summary.csv files
   diff build/eval_int8/summary.csv build/eval_fp16/summary.csv
    ```
@@ -679,4 +679,4 @@ python3 tools/kitti_3d_eval.py --gt GT_DIR --pred PRED_DIR --quiet --out results
 
 ## Additional Resources
 
-For the main deployment guide, see [../docs/GSG.md](../docs/GSG.md).
+For the main deployment guide, see [../../../docs/user-guide/intermediate-fusion/GSG.md](../../../docs/user-guide/intermediate-fusion/GSG.md).

@@ -2,25 +2,25 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/robot-vision-control">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0//robotics-ai-suite/robot-vision-control">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/rvc/releasenotes.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0//robotics-ai-suite/docs/rvc/releasenotes.md">
      Release Notes
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/robot-vision-control/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0//robotics-ai-suite/robot-vision-control/README.md">
      Readme
   </a>
 </div>
 hide_directive-->
 
-# Stationary Robot Vision & Control
+# Stationary Robot
 
 ## Robotics Pick and Place in Industrial Fields
 
 Robotics pick and place is a critical task in industrial automation where robots are employed to manipulate objects from one location to another within a manufacturing environment. This process involves the accurate identification, grasping, and relocation of items, contributing significantly to the efficiency and productivity of various industrial operations.
 
-Robot Vision and Control offers a flexible and versatile framework to solve the majority of use cases in Industrial fields.
+Stationary Robot offers a flexible and versatile framework to solve the majority of use cases in Industrial fields.
 
 ![Robotic Arm](images/html/robotic-arm-graphic.png)
 
@@ -52,7 +52,7 @@ To address the challenges associated with robotics pick and place in industrial 
 
 5. **Interoperability and Connectivity**: Establishing standardized communication protocols and interfaces to facilitate seamless integration between robotic systems and existing manufacturing infrastructure, promoting interoperability and data exchange.
 
-## Stationary Robot Vision & Control Resources
+## Stationary Robot Resources
 
 - [Get Started](getstarted.md)
 

@@ -54,3 +54,19 @@
 [submodule "retail-ai-suite/voice-enabled-interactions"]
 	path = retail-ai-suite/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
+	url = https://github.com/agenticros/agenticros.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/openclaw"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/openclaw
+	url = https://github.com/openclaw/openclaw.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/JAKA_KARGO"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/JAKA_KARGO
+	url = https://github.com/JAKARobotics/JAKA_KARGO.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws-robomaker-small-warehouse-world"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws-robomaker-small-warehouse-world
+	url = https://github.com/aws-robotics/aws-robomaker-small-warehouse-world.git
+	shallow = true

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
@@ -47,13 +47,13 @@ INFLUX_DB_ADMIN_PASSWORD = os.getenv("INFLUX_DB_ADMIN_PASSWORD", get_password_fr
 NODE_RED_URL = os.getenv("NODE_RED_URL", "http://localhost:1880")
 NODE_RED_REMOTE_URL = os.getenv("NODE_RED_REMOTE_URL")
 
-PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-intersection")
+PROJECT_GITHUB_URL = os.getenv("PROJECT_GITHUB_URL", "https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection")
 
 
 def start_remote_port_forwarding(service_name, remote_host, local_port, remote_port, namespace="smart-intersection"):
   """Start remote port forwarding for a service and return the process."""
   pod_name = get_pod_name(service_name, namespace)
-  
+
   # Use sudo with password for privileged ports (<1024)
   if local_port < 1024:
     sudo_password = os.environ.get('SUDO_PASSWORD')
@@ -64,7 +64,7 @@ def start_remote_port_forwarding(service_name, remote_host, local_port, remote_p
     cmd = f'echo "{sudo_password}" | sudo -S -E kubectl -n {namespace} port-forward {pod_name} {local_port}:{remote_port} --address {remote_host}'
   else:
     cmd = f"kubectl -n {namespace} port-forward {pod_name} {local_port}:{remote_port} --address {remote_host}"
-    
+
   logger.info(f"Starting remote port forwarding for {service_name}: {remote_host}:{local_port}")
   return subprocess.Popen(cmd, shell=True)
 
@@ -107,7 +107,7 @@ def wait_for_services_readiness(services_urls, timeout=120, interval=2):
 @pytest.fixture(scope="session", autouse=True)
 def setup_environment(request):
   """Set up Docker or Kubernetes environment for testing."""
-  
+
   if "kubernetes" in request.config.getoption("markexpr"):
     logger.info("Deploying Kubernetes environment...")
     out, err, code = run_command(
@@ -121,7 +121,7 @@ def setup_environment(request):
 
     # Wait for all pods to be ready
     wait_for_pods_ready("smart-intersection")
-    
+
     # Get dynamic NodePort
     web_node_port = get_node_port("smart-intersection-web", "smart-intersection")
 
@@ -139,27 +139,27 @@ def setup_environment(request):
       NODE_RED_URL
     ]
     wait_for_services_readiness(localhost_services_urls)
-    
-    if are_remote_urls_configured():        
+
+    if are_remote_urls_configured():
       # Start remote port forwarding for each configured service
       if SCENESCAPE_REMOTE_URL:
         parsed = urllib.parse.urlparse(SCENESCAPE_REMOTE_URL)
         logger.info(f"SCENESCAPE_REMOTE_URL: {SCENESCAPE_REMOTE_URL}")
         logger.info(f"parsed.hostname: {parsed.hostname}, parsed.port: {parsed.port}")
         start_remote_port_forwarding("smart-intersection-web", parsed.hostname, 443, 443)
-        
+
       if GRAFANA_REMOTE_URL:
         parsed = urllib.parse.urlparse(GRAFANA_REMOTE_URL)
         logger.info(f"GRAFANA_REMOTE_URL: {GRAFANA_REMOTE_URL}")
         logger.info(f"parsed.hostname: {parsed.hostname}, parsed.port: {parsed.port}")
         start_remote_port_forwarding("smart-intersection-grafana", parsed.hostname, parsed.port, 3000)
-        
+
       if INFLUX_REMOTE_DB_URL:
         parsed = urllib.parse.urlparse(INFLUX_REMOTE_DB_URL)
         logger.info(f"INFLUX_REMOTE_DB_URL: {INFLUX_REMOTE_DB_URL}")
         logger.info(f"parsed.hostname: {parsed.hostname}, parsed.port: {parsed.port}")
         start_remote_port_forwarding("smart-intersection-influxdb", parsed.hostname, parsed.port, 8086)
-        
+
       if NODE_RED_REMOTE_URL:
         parsed = urllib.parse.urlparse(NODE_RED_REMOTE_URL)
         logger.info(f"NODE_RED_REMOTE_URL: {NODE_RED_REMOTE_URL}")
@@ -178,11 +178,11 @@ def setup_environment(request):
     wait_for_services_readiness(services_urls)
 
   yield
-  
+
   # Cleanup - this ALWAYS runs regardless of success/failure
   if "kubernetes" in request.config.getoption("markexpr"):
     logger.info("Tearing down Kubernetes environment...")
-    
+
     # Cleanup: kill all kubectl port-forward processes for namespace smart-intersection
     try:
       logger.info("Killing kubectl port-forward processes for namespace smart-intersection...")
@@ -190,8 +190,8 @@ def setup_environment(request):
       logger.info("Port forwarding stopped.")
     except Exception as e:
       logger.error(f"Error killing kubectl port-forward processes for smart-intersection: {e}")
-    
-    # Clean up Kubernetes resources  
+
+    # Clean up Kubernetes resources
     run_command("helm uninstall smart-intersection -n smart-intersection")
     run_command("kubectl delete namespace smart-intersection")
     logger.info("Kubernetes environment removed.")

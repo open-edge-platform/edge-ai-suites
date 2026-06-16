@@ -100,7 +100,7 @@ const ConfigurationMetricsAccordion: React.FC<Props> = ({ activeScreen }) => {
               <p><strong>{t("accordion.ttft") || "TTFT"}:</strong> {performanceData?.ttft || "-"}</p>
               <p><strong>{t("accordion.tps") || "Tokens Per Second"}:</strong> {performanceData?.tps || "-"}</p>
               <p><strong>{t("accordion.totalTokensProcessed") || "Total tokens processed"}:</strong> {performanceData?.total_tokens || "-"}</p>
-              <p><strong>{t("accordion.totalTimeTaken") || "Total Time Taken"}:</strong> {performanceData?.end_to_end_time || "-"}</p>
+              <p><strong>{t("accordion.summarizationTime") || "Summarization Time"}:</strong> {performanceData?.summarization_time || "-"}</p>
             </>
           )}
         </div>

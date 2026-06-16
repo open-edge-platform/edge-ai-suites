@@ -1,0 +1,52 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Trusted Compute overlay for dependency services (Smart Intersection RI)
+# Included automatically when deploying with env ENABLE_TC=true
+
+services:
+  dlstreamer-pipeline-server:
+    runtime: io.containerd.kata.v2
+    privileged: false
+    volumes:
+      - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root
+      - ./tc-resolv.conf:/etc/resolv.conf:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '6'
+          memory: 8G
+        reservations:
+          cpus: '4'
+          memory: 4G
+
+  tc-dns-relay:
+    image: coredns/coredns:1.14.3
+    networks:
+      scenescape:
+        ipv4_address: ${TC_DNS_IP}
+    configs:
+      - source: corefile
+        target: /Corefile
+    command: -conf /Corefile
+    restart: on-failure:5
+
+volumes:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver_opts:
+      o: uid=1999,gid=1999
+
+networks:
+  scenescape:
+    ipam:
+      config:
+        - subnet: ${TC_SUBNET}
+
+configs:
+  corefile:
+    content: |
+      . {
+          forward . 127.0.0.11
+          errors
+          #log
+      }

@@ -42,6 +42,7 @@ outputs, see [How It Works](./how-it-works.md).
 
 Get Started <./get-started.md>
 How It Works <./how-it-works.md>
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

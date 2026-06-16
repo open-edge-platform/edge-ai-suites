@@ -2,14 +2,75 @@
 
 ## Prerequisites
 
-- Ensure you have the **minimum system requirements** for this application.
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- Ensure you meet the [System Requirements](./system-requirements.md) for this application.
+- **Kubernetes Cluster**: Ensure you have a properly installed and
+configured Kubernetes cluster.
+- **Tools Installed**: Install the required tools:
+  - Kubernetes CLI (kubectl)
+  - Helm 3 or later
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
+- **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
+
+  ```bash
+  # Pick a release version compatible with your cluster
+  export RELEASE_VERSION=v0.35.0
+
+  # Step 1: Create namespace for the Intel device plugins
+  kubectl create namespace intel-device-plugins
+
+  # Step 2: Allow privileged pods in the device plugin namespace
+  # Required because the plugin needs hostPath mounts and access to host device files.
+  kubectl label namespace intel-device-plugins \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 3: Install Node Feature Discovery (NFD)
+  # NFD uses its own namespace: node-feature-discovery
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=${RELEASE_VERSION}"
+
+  # Step 4: Allow privileged pods in the NFD namespace
+  kubectl label namespace node-feature-discovery \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 5: Install Intel GPU NodeFeatureRules
+  # These rules let NFD detect and label Intel GPU nodes.
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=${RELEASE_VERSION}"
+
+  # Step 6: Verify NFD pods are running
+  kubectl get pods -n node-feature-discovery
+
+  # Step 7: Verify the node got Intel GPU and NPU labels
+  kubectl get node $(hostname) --show-labels | tr ',' '\n' | grep intel
+
+  # Step 8: Install the Intel GPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+
+  # Step 9: Install the Intel NPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  ```
+
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
+  ```
+
+  Verify the GPU and NPU resources are advertised on nodes:
+
+  ```bash
+  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
+  ```
+
+  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Setup the application
 
-> **Note**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
+> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -18,7 +79,7 @@
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-   > **Note**: These steps demonstrate launching two pallet-defect-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
+   > **Note:** These steps demonstrate launching two pallet-defect-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
@@ -45,7 +106,7 @@
         S3_STORAGE_PORT: 30802
     ```
 
-    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `weld1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the below mentioned environment variables in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
@@ -58,26 +119,27 @@
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
-    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
-4. Install pre-requisites for all instances
+   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+
+4. Install prerequisites for all instances
 
    ```sh
    ./setup.sh helm
    ```
 
    This does the following:
-   - Parses through the config.yml
+   - Parses through the `config.yml`
    - Downloads resources for each instance
    - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and values.yaml.
-   - Updates and adds the ports mentioned in config.yml to the respective values.yaml file
+   - Updates and adds the ports mentioned in `config.yml` to the respective values.yaml file
    - Sets executable permissions for scripts
 
 ## Deploy the application
 
-### Install helm charts
+### Install Helm charts
 
-1. Install the helm chart for all instances.
+1. Install the Helm chart for all instances.
 
    ```sh
    ./run.sh helm_install
@@ -117,7 +179,7 @@
    ./sample_list.sh helm
    ```
 
-   This lists the pipeline loaded in DLStreamer Pipeline Server.
+   This lists the pipeline loaded in DL Streamer Pipeline Server.
 
    Output:
 
@@ -196,7 +258,7 @@
    ]
    ```
 
-2. Start the pipeline for all instances in the config.yml file
+2. Start the pipeline for all instances in the `config.yml` file
 
    ```sh
    ./sample_start.sh helm
@@ -628,20 +690,21 @@
    }
    ```
 
-## Uninstall Helm Charts
+### Uninstall Helm Charts
 
  ```sh
  ./run.sh helm_uninstall
  ```
+
 Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## Storing frames to S3 storage
 
-Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart.
+2. Install the Helm chart.
 
    ```sh
    ./run.sh helm_install
@@ -682,9 +745,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-5. Create a S3 bucket using the following script.
+5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in config.yml for each instance and credentials with that of the running MinIO server. Name the file as `create_bucket_<INSTANCE_NAME>.py`.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
 
    ```python
    import boto3
@@ -710,7 +773,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    python3 create_bucket_<INSTANCE_NAME>.py
    ```
 
-6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pallet_defect_detection.  Please adjust the source path of models and videos appropriately for other sample applications.
+6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the `config.yml` for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pallet_defect_detection.  Please adjust the source path of models and videos appropriately for other sample applications.
 
    ```sh
    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -737,18 +800,19 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
-8. Uninstall the helm chart.
+8. Uninstall the Helm chart.
 
    ```sh
    ./run.sh helm_uninstall
    ```
+
 9. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## MLOps using Model Download
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart
+2. Install the Helm chart
 
    ```sh
    ./run.sh helm_install
@@ -766,7 +830,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline.
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
    Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
 
@@ -806,7 +870,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    Note the instance-id.
 
 6. Download and prepare the model. Below is an example for downloading and preparing model for pallet-defect-detection. Please modify MODEL_URL for the other sample applications.
-   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   > **Note:** For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip'
@@ -824,10 +889,11 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   >NOTE- If there are multiple sample_apps in config.yml, repeat steps 6 and 7 for each sample app and instance.
 
+   > **Note:** If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample app and instance.
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
    ```
@@ -862,7 +928,6 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ]
 
 10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
-
 
 ## Troubleshooting
 

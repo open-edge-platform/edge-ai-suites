@@ -4,22 +4,22 @@ Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# OpenVINO™ Tutorial on Multi-camera Object Detection using Intel® RealSense™ Depth Camera D457
+# OpenVINO™ Tutorial on Multi-camera Object Detection using RealSense Depth Camera D457
 
 ---
 
 In this tutorial, the multi-camera use case is demonstrated using an
 [Axiomtek Robox500 ROS2 AMR
 Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
-and four [Intel® RealSense™ Depth Camera
-D457](https://www.intelrealsense.com/depth-camera-d457/). Here, the four
+and four [RealSense Depth Camera
+D457](https://www.realsenseai.com/products/d457-gmsl-fakra/). Here, the four
 cameras are connected to the Industrial Gigabit Multimedia Serial Link™
 (GMSL) supported Axiomtek Robox500 ROS2 AMR Controller through
 GMSL/FAKRA (female-to-female) cables, which provide high-bandwidth video
 transmission.
 
 Four instances of AI-based applications for object detection and object
-segmentation are run in parallel using four Intel® RealSense™ camera
+segmentation are run in parallel using four RealSense camera
 streams. Further in this tutorial, the [Ultralytics
 YOLOv8](https://docs.ultralytics.com/) model is downloaded and used for
 object detection and object segmentation. The tutorial can be run on an
@@ -37,7 +37,7 @@ The setup looks like as described in the table below.
   | Camera-3  | YOLOv8n:FP16      | Object detection                | GPU    |
   | Camera-4  | YOLOv8n-seg:FP16  | Object detection & segmentation | GPU    |
 
-## Intel® RealSense™ Depth Camera D457 Multi-camera Object detection setup
+## RealSense Depth Camera D457 Multi-camera Object detection setup
 
 The following steps are required in order to setup the Axiomtek Robox500
 ROS2 AMR Controller to support four Intel® RealSense™ Depth Camera D457.
@@ -45,26 +45,26 @@ ROS2 AMR Controller to support four Intel® RealSense™ Depth Camera D457.
 ## Source Code
 
 The source code of this component can be found here:
-[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo)
+[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/robotics-ai-suite/components/multicam-demo)
 
 ## Axiomtek Robox500 ROS2 AMR Controller Setup
 
 ### Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
-Connect four Intel® RealSense™ Depth Camera D457 to the Axiomtek
+Connect four RealSense Depth Camera D457 to the Axiomtek
 Robox500 ROS2 AMR Controller as shown in the below picture. Now,
 power-on the target.
 
 ![image](images/Axiomtek_GMSL_Camera.jpg)
 
 > [!NOTE]
-> Select the \"MIPI\" mode of the Intel® RealSense™ Depth Camera D457 by
+> Select the \"MIPI\" mode of the RealSense Depth Camera D457 by
 > moving the select switch on the camera to \"M\", as shown in the picture
 > below.
 
@@ -131,8 +131,8 @@ SerDes and further to install and load the
     [Intel® GMSL intel-ipu6 Debian kernel modules
     (DKMS)](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#intel-gmsl-intel-ipu6-debian-kernel-modules-dkms).
 3. To load the `intel-ipu6` kernel modules after installation and to
-    enable the Intel® RealSense™ Depth Camera D457, follow the steps
-    described in the documentation [Enable ROS2 Intel® RealSense™ Depth
+    enable the RealSense Depth Camera D457, follow the steps
+    described in the documentation [Enable ROS2 RealSense Depth
     Camera D457
     GMSL](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#enable-ros2-intel-realsense-depth-camera-d457-gmsl).
 
@@ -141,15 +141,15 @@ SerDes and further to install and load the
 > be configured to be relevant to the `Standalone-mode` of the Add-in-Card
 > for Axiomtek Robox500 ROS2 AMR Controller.
 
-## Install and run multi-camera object detection tutorial using the Intel® RealSense™ Depth Camera D457
+## Install and run multi-camera object detection tutorial using the RealSense Depth Camera D457
 
 ## Pre-requisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
 ## Install
 
@@ -251,5 +251,5 @@ shown in the below picture.
 
     # Reboot the system.
    Edit `GRUB_CMDLINE_LINUX` in the `/etc/default/grub` file.
-   
-   
+
+

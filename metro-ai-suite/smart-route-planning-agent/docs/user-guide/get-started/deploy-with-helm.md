@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide explains a simple Helm deployment for Smart Route Planning Agent.
 
@@ -70,10 +70,10 @@ httpsProxy: "http://proxy.example.com:916"
 noProxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.1.2.3,10.1.2.4"
 
 trafficIntersections:
-  apiEndpoint: "/api/v1/traffic/current?images=false"
+  apiEndpoint: "/api/v1/traffic/current/ws?images=false"
   hosts:
-    - "http://10.1.2.3:8081"
-    - "http://10.1.2.4:8081"
+    - "ws://10.1.2.3:8081"
+    - "ws://10.1.2.4:8081"
 ```
 
 ### Step 3: Set a Namespace Variable
@@ -90,8 +90,7 @@ namespace=<namespace_name>
 helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_override.yaml
 ```
 
-> __**Note:**__ If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace veriable to required value in step 3.)
-
+> **Note:** If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace variable to the required value in step 3.)
 
 ### Step 5: Wait for Ready Pods
 

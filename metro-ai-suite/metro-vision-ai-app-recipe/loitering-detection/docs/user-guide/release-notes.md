@@ -9,8 +9,7 @@
 
 **Improved**
 
-- Optimized the latency for GPU and NPU workloads. 
-- DL Streamer and DL Streamer Pipeline Server versions upgraded to 2026.1.0 
+- Optimized the latency for GPU and NPU workloads.
 
 ## v1.4.0
 
@@ -21,7 +20,7 @@
 **Improved**
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
-- Optimized the latency for GPU and NPU workloads. 
+- Optimized the latency for GPU and NPU workloads.
 
 ## v1.3.0
 

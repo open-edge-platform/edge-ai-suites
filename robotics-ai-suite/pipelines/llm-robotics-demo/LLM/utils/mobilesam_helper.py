@@ -86,9 +86,10 @@ class ResizeLongestSide:
 
 class MobileSamHelper():
     debug = False
-    clip_model_path = f"/home/intel/ov_models/clip-vit-base-patch16.xml"
-    ov_sam_encoder_path = f"/home/intel/ov_models/sam_image_encoder.xml"
-    ov_sam_predictor_path = f"/home/intel/ov_models/sam_mask_predictor.xml"
+    home_dir = os.path.expanduser("~")
+    clip_model_path = os.path.join(home_dir, "ov_models/clip-vit-base-patch16/FP16/openvino_model.xml")
+    ov_sam_encoder_path = os.path.join(home_dir, "ov_models/sam_image_encoder.xml")
+    ov_sam_predictor_path = os.path.join(home_dir, "ov_models/sam_mask_predictor.xml")
     sam_model_name = f"SAM"
     clip_model_name = f"openai/clip-vit-base-patch16"
     
@@ -400,10 +401,10 @@ class MobileSamHelper():
         cv2_im = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         obj = anns[idx]
         bbox = obj['bbox']  #XYWH
-        left = bbox[0]-2
-        top = bbox[1]-2
-        right = bbox[0] + bbox[2]+2
-        bottom = bbox[1] + bbox[3]+2
+        left = int(bbox[0]-2)
+        top = int(bbox[1]-2)
+        right = int(bbox[0] + bbox[2]+2)
+        bottom = int(bbox[1] + bbox[3]+2)
         # Red color in BGR
         color = (0, 0, 255)
         # Line thickness of 4 px
@@ -443,10 +444,10 @@ class MobileSamHelper():
         idx = 0
         for obj in anns:
             bbox = obj['bbox']  #XYWH
-            x0 = bbox[0]
-            y0 = bbox[1]
-            x1 = bbox[0] + bbox[2]
-            y1 = bbox[1] + bbox[3]
+            x0 = int(bbox[0])
+            y0 = int(bbox[1])
+            x1 = int(bbox[0] + bbox[2])
+            y1 = int(bbox[1] + bbox[3])
             rec = [x0, y0, x1, y1]
             crop_rectangle = image[y0:y1, x0:x1]
             cropped_im = Image.fromarray(crop_rectangle)
@@ -479,10 +480,10 @@ class MobileSamHelper():
         
         obj = anns[idx]
         bbox = obj['bbox']  #XYWH
-        x0 = bbox[0]
-        y0 = bbox[1]
-        x1 = bbox[0] + bbox[2]
-        y1 = bbox[1] + bbox[3]
+        x0 = int(bbox[0])
+        y0 = int(bbox[1])
+        x1 = int(bbox[0] + bbox[2])
+        y1 = int(bbox[1] + bbox[3])
         rec = [x0, y0, x1, y1]
         crop_rectangle = image[y0:y1, x0:x1]
         cropped_im = Image.fromarray(crop_rectangle)
@@ -518,10 +519,10 @@ class MobileSamHelper():
         print(f"clip_predict=> color_image.shape={image.shape}")
         for obj in anns:
             bbox = obj['bbox']  #XYWH
-            x0 = bbox[0]
-            y0 = bbox[1]
-            x1 = bbox[0] + bbox[2]
-            y1 = bbox[1] + bbox[3]
+            x0 = int(bbox[0])
+            y0 = int(bbox[1])
+            x1 = int(bbox[0] + bbox[2])
+            y1 = int(bbox[1] + bbox[3])
             crop_rectangle = image[y0:y1, x0:x1]
             #crop_rectangle = np.asanyarray(rec)
             #cropped_im = image.crop(crop_rectangle)
