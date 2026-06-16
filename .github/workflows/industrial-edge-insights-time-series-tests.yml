@@ -159,6 +159,18 @@ jobs:
           make down
           make build
 
+      - name: Generate Helm charts for Sample Apps
+        if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
+        run: |
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          echo "Generating Helm charts for wind-turbine-anomaly-detection..."
+          make gen_helm_charts app=wind-turbine-anomaly-detection
+          echo "Generating Helm charts for weld-defect-detection..."
+          make gen_helm_charts app=weld-defect-detection
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/"
+          echo "Generating Helm charts for multimodal..."
+          make gen_helm_charts
+
       - name: Install k3s
         run: |
           curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
