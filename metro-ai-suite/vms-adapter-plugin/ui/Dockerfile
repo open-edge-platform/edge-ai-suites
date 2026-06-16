@@ -49,8 +49,14 @@ COPY --from=builder /copyleft_sources /copyleft_sources
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY third_party_programs.txt ./
 
-# Run nginx as non-root user
-RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+# Copy TLS scripts and entrypoint
+COPY scripts/generate-certs.sh /usr/local/bin/generate-certs.sh
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/generate-certs.sh /usr/local/bin/docker-entrypoint.sh
+
+# Create certs directory and set permissions for nginx user
+RUN mkdir -p /etc/nginx/certs && \
+    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d /etc/nginx/certs && \
     touch /var/run/nginx.pid && \
     chown nginx:nginx /var/run/nginx.pid
 
@@ -86,12 +92,12 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
 
 USER nginx
 
-# Expose port 80
-EXPOSE 80
+# Expose port 443 (HTTPS)
+EXPOSE 443
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -fsS http://localhost/ > /dev/null || exit 1
+  CMD curl -kfsS https://localhost/health > /dev/null || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start via entrypoint (generates certs if needed, then runs nginx)
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
