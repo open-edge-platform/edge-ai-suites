@@ -11,7 +11,7 @@ openvino==2025.3.0
 numpy<2.0
 ultralytics==8.0.0
 pyrealsense2
-setuptools<=70.0.0
+setuptools>=78.1.1
 mkl==2025.3.0
 onemkl-sycl-vm==2025.3.0
 onemkl-sycl-stats==2025.3.0
