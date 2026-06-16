@@ -64,3 +64,8 @@ The Room View toggle allows the user to switch between full audio–video mode a
 - VideoSearch: Based on search results the video timeline is highlighted on the respective time-stamps of topic
 
 ![Uploaded Files Processing](./_assets/search.png)
+
+## Learn More
+
+- [How It Works](./how-it-works.md): Technical architecture and design details.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.

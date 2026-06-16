@@ -1,30 +1,27 @@
 # Content Search Flow
 
-This documentation provides the end-to-end flow of the Content Search feature, which supports file upload and ingestion, multimodal search (text and image queries), and Q&A over retrieved content.
-
-## Overview
-
-From the Smart Classroom main screen, click the **Content Search** button in the top navigation bar to enter the Content Search view.
+The Content Search feature supports file upload and ingestion, multimodal search (text and
+image queries), and Q&A over retrieved content. To enter the Content Search view, click the
+**Content Search** button in the top navigation bar of the Smart Classroom main screen.
 
 ![Content Search Entry](./_assets/content-search-entry1.png)
 
-After clicking, you will enter the Content Search view:
+The Content Search view page is split into two panels:
 
-![Content Search Initial View](./_assets/content-search-entry2.png)
-
-The page is split into two panels:
-
-### Left Panel
+**Left Panel**
 
 - **Upload** — Ingest files (videos, documents, images) into the vector database
 - **Search & Q&A** — Query your uploaded content using text or image search, or ask natural-language questions
 - **Results** — Display search results with type filtering, relevance scores, and content previews
 
-### Right Panel
+**Right Panel**
 
 - **Configuration Metrics** — Platform and software configuration for Content Search services
 - **Resource Utilization** — Live monitoring of CPU, GPU, Memory, and Power utilization
 - **Models** — Models used by Content Search, including VLM, Visual Embedding, Document Embedding, and Reranker
+
+![Content Search Initial View](./_assets/content-search-entry2.png)
+
 
 ## Step 1: Upload Files
 
@@ -167,4 +164,5 @@ Upload and search functionality is affected until all services are healthy.
 
 ## Learn More
 
-- [How It Works — Content Search Pipeline](./how-it-works.md#content-search-pipeline): Technical architecture and design details
+- [How It Works — Content Search Pipeline](./how-it-works.md#content-search-pipeline): Technical architecture and design details.
+- [Application Flow](./application-flow.md): End-to-end application flow.
