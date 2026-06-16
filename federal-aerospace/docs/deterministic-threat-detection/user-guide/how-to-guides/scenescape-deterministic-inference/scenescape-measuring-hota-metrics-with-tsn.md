@@ -145,7 +145,7 @@ ffmpeg \
 If you have not yet started SceneScape, run the following. Otherwise, skip to creating the scene and cameras.
 
 ```bash
-git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0-rc2
+git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
 cd scenescape
 make demo
 ```
