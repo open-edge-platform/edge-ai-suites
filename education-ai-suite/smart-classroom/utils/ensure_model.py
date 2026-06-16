@@ -1,10 +1,12 @@
-import logging, os
+import logging, os, subprocess
+from pathlib import Path
 from typing import Tuple
 import yaml
 from utils.config_loader import config
 from utils.cli_utils import run_cli
 from utils.convert_classification_models import convert_classification_models
 from utils.convert_yolo_models import convert_yolo_models
+
 logger = logging.getLogger(__name__)
 from huggingface_hub import snapshot_download
 
@@ -65,13 +67,26 @@ def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = N
     pipeline_params = pipeline_config.get("pipeline", {}).get("params", {})
     changed = False
 
-    for key in ("segmentation", "embedding"):
+    for key in ("segmentation", "embedding", "plda"):
         model_ref = pipeline_params.get(key)
         if not isinstance(model_ref, str):
             continue
-        if os.path.isfile(model_ref):
+        if os.path.isfile(model_ref) or os.path.isdir(model_ref):
             continue
         if "/" not in model_ref:
+            continue
+
+        # pyannote 4.0 uses "$model/<name>" to reference sub-models bundled in the snapshot
+        if model_ref.startswith("$model/"):
+            sub_name = model_ref[len("$model/"):]
+            sub_dir = os.path.join(pipeline_dir, sub_name)
+            local_checkpoint = os.path.join(sub_dir, HF_PYTORCH_WEIGHTS_NAME)
+            if os.path.exists(local_checkpoint):
+                pipeline_params[key] = local_checkpoint
+                changed = True
+            elif os.path.isdir(sub_dir):
+                pipeline_params[key] = sub_dir
+                changed = True
             continue
 
         dependency_dir = os.path.join(pipeline_dir, "dependencies", model_ref.replace("/", "_"))
@@ -157,6 +172,63 @@ def ensure_model():
     output_dir = get_va_model_path()
     convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
+    
+    if config.models.ocr.enabled:
+        _initialize_ocr()
+
+
+def _initialize_ocr():
+    from utils.ocr_utils.paddle_model_manager import PaddleOCRModelManager
+    from utils.ocr_utils.convert_to_openvino import convert_ppocr_pipeline
+    
+    # Suppress PyTorch warning when loading PaddleOCR .pdmodel files
+    logging.getLogger("torch.export.pt2_archive._package").setLevel(logging.ERROR)
+    
+    lang = config.app.language
+    if lang != "en":
+        raise RuntimeError(
+            f"OCR currently only supports English (lang='en'). Got: '{lang}'. "
+            f"To use other languages, set 'ocr.enabled: false' in config.yaml."
+        )
+
+
+    if config.models.ocr.provider == "openvino":
+        paddle_models_dir = Path(config.models.ocr.model_dir)
+        det_model_dir = paddle_models_dir / "det" / lang / config.models.ocr.det_model
+        rec_model_dir = paddle_models_dir / "rec" / lang / config.models.ocr.rec_model
+
+        ir_already_exists = (
+            (det_model_dir / "det_model.xml").exists()
+            and (det_model_dir / "det_model.bin").exists()
+            and (rec_model_dir / "rec_model.xml").exists()
+            and (rec_model_dir / "rec_model.bin").exists()
+        )
+
+        if ir_already_exists:
+            logger.info("OpenVINO IR models already exist, skipping PaddleOCR download/conversion")
+            return
+
+        logger.info(f"Initializing OCR models: provider={config.models.ocr.provider}, lang={lang}, device={config.models.ocr.device}")
+        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
+
+        det_dir = paddle_models_dir / "det" / lang
+        rec_dir = paddle_models_dir / "rec" / lang
+
+        if not det_dir.exists() or not any(det_dir.iterdir()):
+            raise RuntimeError(
+                f"{paddle_models_dir}/det/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
+            )
+        if not rec_dir.exists() or not any(rec_dir.iterdir()):
+            raise RuntimeError(
+                f"{paddle_models_dir}/rec/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
+            )
+
+        logger.info("Converting PaddleOCR models to OpenVINO IR...")
+        convert_ppocr_pipeline(models_root=paddle_models_dir, output_root=paddle_models_dir, lang=lang)
+        logger.info("OpenVINO IR conversion completed")
+    else:
+        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
+
 
 def get_model_path() -> str:
     return os.path.join(config.models.summarizer.models_base_path, config.models.summarizer.provider, f"{config.models.summarizer.name.replace('/', '_')}_{config.models.summarizer.weight_format}")

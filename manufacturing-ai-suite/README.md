@@ -1,15 +1,19 @@
+# Manufacturing AI Suite
+
 **Manufacturing AI Suite (MAS)** is a comprehensive toolkit for building, deploying, and scaling AI applications in industrial environments. Powered by Intel’s Edge AI technologies, it enables real-time integration and innovation with optimized hardware.
 
 It includes:
--	Tools for AI acceleration (for example, MQTT/OPC UA support, analytics libraries, camera system software)
--	A complete AI pipeline for closed-loop systems
--	Benchmarking support for evaluating performance across time series, vision, and generative AI workloads
+
+- Tools for AI acceleration (for example, MQTT/OPC UA support, analytics libraries, camera system software)
+- A complete AI pipeline for closed-loop systems
+- Benchmarking support for evaluating performance across time series, vision, and generative AI workloads
 
 **Manufacturing AI Suite** helps you develop solutions for:
--	**Production Workflow**: Detect defects, optimize efficiency
--	**Workplace Safety**: AI-driven risk reduction
--	**Real-Time Insights**: Local data processing, trend tracking
--	**Automation**: Instant alerts and corrective actions
+
+- **Production Workflow**: Detect defects, optimize efficiency
+- **Workplace Safety**: AI-driven risk reduction
+- **Real-Time Insights**: Local data processing, trend tracking
+- **Automation**: Instant alerts and corrective actions
 
 **Sample Applications**
 
@@ -20,6 +24,7 @@ It includes:
 | [PCB Anomaly Detection](./industrial-edge-insights-vision/apps/pcb-anomaly-detection)     | Real-time anomaly detection in printed circuit boards (PCB) with AI vision systems.             | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pcb-anomaly-detection/index.html)                         |
 | [Weld Porosity](./industrial-edge-insights-vision/apps/weld-porosity)                     | Real-time detection of welding defects.                                                         | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html)                           |
 | [Worker Safety Gear Detection](./industrial-edge-insights-vision/apps/worker-safety-gear-detection) | Real-time visual analysis of safety gear compliance for workers.                      | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/index.html)                  |
+| [Win Vision AI](./industrial-edge-insights-vision/win-vision-ai/) | A Windows application for running any Vision workloads on DL Streamer-supported models.                     | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/win-vision-ai/index.html)                  |
 | [Wind Turbine Anomaly Detection](./industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection) | A time series use case of detecting anomalous power generation patterns relative to wind speed. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/index.html) |
 | [Weld Defect Detection](./industrial-edge-insights-time-series/apps/weld-defect-detection) | A time series use case of detecting anomalous weld patterns relative to weld sensor parameters. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/index.html) |
 | [Multimodal Weld Defect Detection](./industrial-edge-insights-multimodal/) | A multimodal use case combining vision and sensor data analysis to identify anomalies in welding data. | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/index.html) |
@@ -30,7 +35,7 @@ It includes:
 |:-------------|:------------|
 | [Deep Learning Streamer](https://github.com/open-edge-platform/dlstreamer/tree/main)                                     | A framework for building optimized media analytics pipelines powered by OpenVINO&trade; toolkit.                                 |
 | [Deep Learning Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server)  | A containerized microservice, built on top of GStreamer, for development and deployment of video analytics pipelines.            |
-| [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)                                      | Providing capabilities to download AI models so that they can be seamlessly used for inferencing with DLStreamer and DLStreamer Pipeline Server.                                                                   |
+| [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)                                      | Providing capabilities to download AI models so that they can be seamlessly used for inferencing with DL Streamer and DL Streamer Pipeline Server.                                                                   |
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/time-series-analytics)           | Built on top of **Kapacitor**, a containerized microservice for development and deployment of time series analytics capabilities |
 | [Intel&reg; Geti&trade; SDK](https://github.com/open-edge-platform/geti-sdk)                                                                          | A python package containing tools to interact with a Geti&trade; server via the REST API, helping you build a full MLOps for vision based use cases. |
 | [OpenVINO&trade; toolkit](https://github.com/openvinotoolkit/openvino)                                                                                | An open source toolkit for deploying performant AI solutions across Intel hardware for generative and conventional AI models.    |

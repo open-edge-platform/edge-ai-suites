@@ -1,7 +1,7 @@
 from components.llm.base_summarizer import BaseSummarizer
 import openvino_genai as ov_genai
 from transformers import AutoTokenizer
-import logging, threading, gc
+import logging, threading, gc, time
 from utils import ensure_model
 from utils.config_loader import config
 from utils.ov_genai_util import YieldingTextStreamer
@@ -25,6 +25,7 @@ class Summarizer(BaseSummarizer):
                 try:
                     with audio_pipeline_lock:
                         model = self._load_model()
+                        streamer.generation_start_time = time.perf_counter()
                         model.generate(
                             prompt,
                             streamer=streamer,
@@ -67,7 +68,11 @@ class Summarizer(BaseSummarizer):
             
     def _load_model(self):
         logger.info("Loading model instance...")
-        return ov_genai.LLMPipeline(ensure_model.get_model_path(), device=self.device)
+        return ov_genai.LLMPipeline(
+            ensure_model.get_model_path(),
+            device=self.device,
+            **{"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"},
+        )
 
     def _destroy_model(self, model):
         try:

@@ -19,11 +19,8 @@ This page provides detailed hardware, software, and platform requirements to hel
 - Include supported operating systems, versions, and platform-specific notes.
 -->
 **Operating Systems**
-- Ubuntu 22.04.5 LTS
-
-**Hardware Platforms**
-- Intel® Core™ processors (i5 or higher)
-- Intel® Xeon® processors (recommended for large deployments)
+- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 
 ## Minimum Requirements
@@ -32,12 +29,23 @@ This page provides detailed hardware, software, and platform requirements to hel
 - Use a table to clearly outline minimum and recommended configurations.
 -->
 
-| **Component**      | **Minimum Requirement**   | **Recommended**         |
-|---------------------|--------------------------|-------------------------|
-| **Processor**       | 8th Gen Intel® Core™ i5  | Intel® Core™ Ultra 7    |
-| **Memory**          | 16 GB                    | 32 GB                   |
-| **Disk Space**      | 128 GB SSD               | 256 GB SSD              |
+| **Component**      | **Minimum Requirement**   |
+|---------------------|--------------------------|
+| **Processor**       | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors   |
+| **Memory**          | 16 GB                    |
+| **Disk Space**      | 128 GB SSD               |
 
+### Validated Platforms
+
+| Product / Family     | CPU |  iGPU |  NPU |
+|----------------------|-----------|------------|-----------|
+| Intel® Core™ Ultra Processors (Series 3, 2, 1) | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 3 | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 2 | ✓         | ✓          |    NA      |
+| Intel® Core™ Processors (14th/13th/12th Gen) | ✓         | ✓          | NA         |
+| 4th Gen Intel® Xeon® Scalable Processors | ✓         |      NA      |      NA     |
+
+**Validated on Intel® Arc™ dGPU models:** A770, B580, B60, and B50.
 
 ## Software Requirements
 <!--

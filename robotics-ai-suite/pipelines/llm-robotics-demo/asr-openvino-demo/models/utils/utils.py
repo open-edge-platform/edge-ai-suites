@@ -355,10 +355,10 @@ def code_mix_split_words_jieba(seg_dict_file: str):
 
 def read_yaml(yaml_path: Union[str, Path]) -> Dict:
     if not Path(yaml_path).exists():
-        raise FileExistsError(f'The {yaml_path} does not exist.')
+        raise FileNotFoundError(f'The {yaml_path} does not exist.')
 
     with open(str(yaml_path), 'rb') as f:
-        data = yaml.load(f, Loader=yaml.Loader)
+        data = yaml.load(f, Loader=yaml.SafeLoader)
     return data
 
 

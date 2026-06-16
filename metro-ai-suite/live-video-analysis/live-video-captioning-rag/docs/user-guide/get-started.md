@@ -1,6 +1,6 @@
 # Get Started
 
-The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
+The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
 
 By following this guide, you will learn how to:
 
@@ -13,7 +13,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/get-started/model-preparation.html) provided to prepare the model.
+- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) provided to prepare the model.
 
 ## Run the Application
 
@@ -79,7 +79,7 @@ By following this guide, you will learn how to:
 
      > **Note:** You will get a generic response at this point because no context has been created in the vector store yet.
 
-     c. To demonstrate the full functionality, run the following commands to create the context using a sample image and caption:
+     c. Because this sample application does not include the video pipeline for processing frames and generating captions, run the following commands to create context using a sample image and caption:
 
      ```bash
      # Navigate to the directory
@@ -94,8 +94,8 @@ By following this guide, you will learn how to:
      > - Call the `embeddings/` endpoint to generate embeddings.
      > - Create the context and store it in the vector store.
 
-     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.<br>
-        `Example query: "How many students are there in the classroom?"`<br>
+     d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.\
+        `Example query: "How many students are there in the classroom?"`\
         You will now receive contextual responses from the RAG chatbot.
 
 7. Stop the Live Video Captioning RAG sample application services:
@@ -106,8 +106,9 @@ By following this guide, you will learn how to:
 
 ## Integration with Live Video Captioning
 
-This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
-For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
+This sample application is designed to work together with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application, which uses its video analytics pipeline to process video frames, generate captions, and send both frame and caption data so this application can create text embeddings and enable RAG-based contextual chat.
+
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Testing and Coverage
 
@@ -159,6 +160,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 ./get-started/system-requirements.md
 ./get-started/build-from-source.md
+./get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

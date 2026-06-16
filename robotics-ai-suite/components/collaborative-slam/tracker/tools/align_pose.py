@@ -9,7 +9,7 @@ import shutil
 import os
 
 import pyquaternion
-import subprocess
+import subprocess  # nosec B404
 
 
 def read_camera_poses(filename):
@@ -92,5 +92,5 @@ if __name__ == '__main__':
                 if id != 7:
                     f.write(' ')
             f.write('\n')
-    subprocess.call(['evo_ape', 'tum', sys.argv[1], 'new_pose.txt', '-p'])
+    subprocess.call(['evo_ape', 'tum', sys.argv[1], 'new_pose.txt', '-p'])  # nosec B603 B607
     os.remove('new_pose.txt')

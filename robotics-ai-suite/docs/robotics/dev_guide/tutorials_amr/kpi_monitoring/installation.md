@@ -45,25 +45,19 @@ sudo apt install ros-humble-benchmark-framework
 
 This installs the KPI monitoring tools and all required system dependencies.
 
-## 4. Install uv
+## 4. Set Up the Benchmarking Directory
 
-[uv](https://docs.astral.sh/uv/) is used to manage Python dependencies:
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-Then restart your shell (or open a new terminal) so that `uv` is on your `PATH`.
-
-From the benchmarking directory, install Python dependencies:
+Copy the installed package to a user-writable directory, then run
+`make install` to install system dependencies and `uv`:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-cd /opt/ros/jazzy/benchmarking
-uv sync
+cp -r /opt/ros/jazzy/benchmarking ~/ros-kpi
+cd ~/ros-kpi
+make install
 ```
 
 <!--hide_directive:::hide_directive-->
@@ -71,14 +65,57 @@ uv sync
 <!--hide_directive:sync: humblehide_directive-->
 
 ```bash
-cd /opt/ros/humble/benchmarking
-uv sync
+cp -r /opt/ros/humble/benchmarking ~/ros-kpi
+cd ~/ros-kpi
+make install
 ```
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive::::hide_directive-->
 
-## 5. Set Up Passwordless SSH (Remote Monitoring)
+`make install` installs system packages (`sysstat`, `python3-tk`) and `uv`.
+Then install Python dependencies into a local virtual environment:
+
+```bash
+PATH="$HOME/.local/bin:$PATH" uv sync
+sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg
+```
+
+ Reopen your terminal after `make install` so that `uv` is on your `PATH`.
+```bash
+cd ~/ros-kpi
+```
+
+## 5. Source Your ROS2 Environment
+
+Before running any monitoring commands, source your ROS2 environment and set
+`ROS_DOMAIN_ID` to match the system you want to monitor. Run these in every
+terminal where you use the KPI tools:
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+```bash
+source /opt/ros/jazzy/setup.bash
+export ROS_DOMAIN_ID=45   # must match the monitored system
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+source /opt/ros/humble/setup.bash
+export ROS_DOMAIN_ID=42   # must match the monitored system
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
+> Add these lines to your `~/.bashrc` to avoid repeating them in every terminal.
+
+## 6. Set Up Passwordless SSH (Remote Monitoring)
 
 Passwordless SSH is required when monitoring a ROS2 system on a remote machine
 (e.g. a robot). Skip this step if you are monitoring locally.

@@ -1,5 +1,16 @@
 # Release Notes
 
+## Version 1.5.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+
+**Improved**
+
+- Optimized the latency for GPU and NPU workloads.
+
 ## v1.4.0
 
 **New**
@@ -9,7 +20,7 @@
 **Improved**
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
-- Optimized the latency for GPU and NPU workloads. 
+- Optimized the latency for GPU and NPU workloads.
 
 ## v1.3.0
 

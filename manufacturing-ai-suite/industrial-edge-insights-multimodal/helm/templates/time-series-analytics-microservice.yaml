@@ -70,12 +70,14 @@ spec:
         volumeMounts:
         - name: vol-temp-time-series-analytics-microservice
           mountPath: /tmp
+        {{- if .Values.privileged_access_required }}
         - name: dev-dri
           mountPath: /dev/dri
-          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        {{- end }}
         - name: run-udev
           mountPath: /run/udev
-          readOnly: true # Reduce risk while preserving access to udev information
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
 
         env:
         - name: HTTP_PROXY
@@ -121,9 +123,11 @@ spec:
       volumes:
       - name: vol-temp-time-series-analytics-microservice
         emptyDir: {}
+      {{- if .Values.privileged_access_required }}
       - name: dev-dri
         hostPath:
           path: /dev/dri
+      {{- end }}
       - name: run-udev
         hostPath:
           path: /run/udev

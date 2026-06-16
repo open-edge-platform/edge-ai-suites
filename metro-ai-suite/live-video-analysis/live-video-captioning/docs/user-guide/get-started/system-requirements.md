@@ -9,18 +9,19 @@ This page summarizes the recommended environment for running Live Video Captioni
 
 ## Operating Systems used for validation
 
-- Ubuntu: Refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu 24.04 or Ubuntu 24.10 depending on the GPU used. 
+- Ubuntu: Refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu 24.04 or Ubuntu 24.10 depending on the GPU used.
 
 ## Minimum Requirements
 
 | **Component**       | **Minimum**                     | **Recommended**                                  |
 |---------------------|---------------------------------|--------------------------------------------------|
 | **Memory**          | 16 GB                           | 32 GB                                            |
-| **Disk Space**      | 64 GB SSD                      | 128 GB SSD                                        |
+| **Disk Space**      | 64 GB SSD                       | 128 GB SSD                                       |
 
 ## Software Requirements
 
-- Docker Engine and Docker Compose
+- Docker Engine and Docker Compose installed using the official Debian or Ubuntu instructions:
+  - [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 - RTSP source reachable from the `dlstreamer-pipeline-server` container
 
 ## Network / Ports

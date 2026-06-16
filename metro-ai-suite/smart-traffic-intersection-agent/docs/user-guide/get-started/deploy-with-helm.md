@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide provides step-by-step instructions for deploying the Smart Traffic Intersection Agent application using Helm.
 
@@ -35,15 +35,17 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 1.1.0-helm
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version <version-no>
 ```
+
+Refer to release notes for details on the latest version to use.
 
 #### Step 2: Extract the `.tgz` File
 
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-1.1.0-helm.tgz
+tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
 ```
 
 Navigate to the extracted directory:
@@ -66,9 +68,9 @@ Clone the repository containing the Helm chart:
 
 ```bash
 # Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 # Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -130,17 +132,17 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 ### Supported VLM Models
 
-The default model is `microsoft/Phi-3.5-vision-instruct`. To use a different model, override it at install time:
+The default model is `OpenVINO/Phi-3.5-vision-instruct-int8-ov`. To use a different model, override it at install time:
 
 ```bash
 helm install stia . -n <your-namespace> --create-namespace \
-  --set vlmServing.env.modelName=Qwen/Qwen2.5-VL-3B-Instruct
+  --set vlmServing.env.modelName=OpenVINO/InternVL2-1B-int4-ov
 ```
 
 | Model | Structured JSON | Notes |
 | --- | --- | --- |
-| `Qwen/Qwen2.5-VL-3B-Instruct` | Excellent | Recommended. Best instruction-following and structured output adherence. |
-| `microsoft/Phi-3.5-vision-instruct` | Good | Default. May occasionally produce non-JSON responses (~10-20% fallback rate). |
+| `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
+| `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
 
 > **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
@@ -291,7 +293,7 @@ helm uninstall stia -n <your-namespace>
 | `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `vlmServing.service.port` | OVMS HTTP API port | `8000` |
 | `vlmServing.service.nodePort` | NodePort for OVMS API (only used when type is `NodePort`) | `30800` |
-| `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
+| `vlmServing.env.modelName` | Hugging Face/OpenVINO model identifier | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` |
 | `vlmServing.env.targetDevice` | Inference device when GPU is disabled (`CPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
 | `vlmServing.env.weightFormat` | Model weight format (`int4`, `int8`). Empty = auto-detect based on device. | `""` |
 | `vlmServing.env.maxCompletionTokens` | Max tokens per completion | `1500` |
@@ -403,6 +405,56 @@ helm install stia . -n traffic -f values-override.yaml \
 
 ---
 
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your Kubernetes nodes. Complete the following sections:
+1. Prerequisites
+2. Download the Trusted Compute Package
+3. Kubernetes Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+### 2. Deploy with Trusted Compute
+
+Deploy the Smart Traffic Intersection Agent with Trusted Compute enabled by adding the `--set vlmServing.trustedCompute.enabled=true` and `--set vlmServing.gpu.enabled=false` flags to the helm command:
+
+```bash
+helm install stia . -n <your-namespace> --create-namespace \
+  --set vlmServing.trustedCompute.enabled=true \
+  --set vlmServing.gpu.enabled=false
+```
+
+The OVMS VLM serving pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and model data from untrusted co-tenants on the same host.
+
+> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
+
+> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy with Helm](#steps-to-deploy-with-helm) section above.
+
+### 3. Verify Trusted Compute Deployment
+
+Verify that the pods are running with the Trusted Compute runtime:
+
+```bash
+# Check that OVMS pods are using the trusted compute runtime class
+kubectl get pods -n <your-namespace> -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.runtimeClassName}{"\n"}{end}' | grep ovms
+
+# Verify the pods are running
+kubectl get pods -n <your-namespace>
+
+# Check OVMS pod logs to ensure containers started successfully
+kubectl logs -n <your-namespace> -l app=stia-ovms-service
+```
+
+You should see the OVMS VLM serving pods running with the Trusted Compute runtime class.
+
+---
+
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
@@ -439,6 +491,7 @@ helm install stia . -n traffic -f values-override.yaml \
   If no GPU resource is listed, install the [Intel GPU device plugin for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md). Also verify that `vlmServing.gpu.resourceName` matches the resource key reported by the device plugin (`gpu.intel.com/i915` for integrated/Arc, `gpu.intel.com/xe` for Data Center GPUs).
 
 - **GPU permission denied (`/dev/dri` access):** The chart includes all common render group GIDs (44, 109, 992) by default. If your distro uses a different GID, find it with `getent group render` on the node and override:
+
   ```bash
   helm install stia . --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
   ```
@@ -454,6 +507,10 @@ helm install stia . -n traffic -f values-override.yaml \
   # Delete the required PVC from the namespace
   kubectl delete pvc <pvc-name> -n <your-namespace>
   ```
+
+## Clean Up the Trusted Compute Deployment
+
+To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Related Links
 

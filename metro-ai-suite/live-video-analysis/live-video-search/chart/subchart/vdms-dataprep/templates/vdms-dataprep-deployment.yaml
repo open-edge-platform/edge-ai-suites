@@ -18,6 +18,9 @@ spec:
         app: vdms-dataprep
         {{- include "lvs.dataprep.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.hostIPC }}
+      hostIPC: true
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

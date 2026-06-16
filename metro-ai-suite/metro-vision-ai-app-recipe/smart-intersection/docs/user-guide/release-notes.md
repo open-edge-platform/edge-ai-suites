@@ -1,5 +1,15 @@
 # Release Notes
 
+## v1.19.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+
+**Improved**
+
+- Optimized the latency for GPU and NPU workloads.
+
 ## v1.18.0
 
 **New**

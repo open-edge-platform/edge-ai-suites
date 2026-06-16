@@ -93,6 +93,49 @@
   pointer-events: none;
 }
 
+/* ─── Unsupported File Warning ───────────────────────────── */
+
+.cs-unsupported-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 6px 0;
+  padding: 8px 10px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  animation: cs-warning-fadein 0.2s ease;
+}
+
+@keyframes cs-warning-fadein {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cs-unsupported-warning__text {
+  flex: 1;
+  font-size: 11px;
+  color: #7d4e00;
+  font-family: var(--font-text);
+  word-break: break-word;
+}
+
+.cs-unsupported-warning__dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #7d4e00;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+
+.cs-unsupported-warning__dismiss:hover {
+  opacity: 1;
+}
+
 /* ─── File Table ─────────────────────────────────────────── */
 
 .cs-file-table {
@@ -142,11 +185,21 @@
 
 /* Filename */
 .cs-file-name {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* OCR handwritten icon */
+.cs-ocr-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 /* Column widths */
@@ -432,6 +485,16 @@
 .cs-danger-btn:hover {
   background: #005fa3;
 }
+
+.cs-ocr-icon--clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.cs-ocr-icon--clickable:hover {
+  transform: scale(1.15);
+}
+
 /* ───────── Upload Card ───────── */
 
 .cs-upload-card {
@@ -457,6 +520,25 @@
   color: #2b2b2b;
 }
 
+/* ───────── View Files Button ───────── */
+
+.cs-view-files-btn {
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+}
+
+.cs-view-files-btn:hover {
+  background: #1565c0;
+}
+
 
 /* ───────── Modern Dropzone ───────── */
 
@@ -478,6 +560,11 @@
 .cs-dropzone-modern--active {
   border-color: #1976d2;
   background: #f5faff;
+}
+
+.cs-dropzone-modern--disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* ───────── Upload Icon ───────── */

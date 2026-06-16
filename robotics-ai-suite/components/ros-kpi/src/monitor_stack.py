@@ -36,6 +36,7 @@ class MonitoringSession:
                  remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
                  ros_domain_id: Optional[int] = None,
                  enable_gpu: bool = False, enable_npu: bool = False,
+                 enable_power: bool = False,
                  algorithm: Optional[str] = None,
                  use_sim_time: bool = False):
         """
@@ -75,6 +76,7 @@ class MonitoringSession:
         self.ros_domain_id = ros_domain_id  # explicit override; None = auto-detect
         self.enable_gpu = enable_gpu or bool(remote_ip)  # auto-enable GPU when remote
         self.enable_npu = enable_npu  # explicit only — not auto-enabled
+        self.enable_power = enable_power  # explicit only — not auto-enabled
         self.use_sim_time = use_sim_time
 
         # Process tracking
@@ -87,6 +89,7 @@ class MonitoringSession:
         self.resource_log = self.output_dir / "resource_usage.log"
         self.gpu_log = self.output_dir / "gpu_usage.log"
         self.npu_log = self.output_dir / "npu_usage.log"
+        self.cpu_power_log = self.output_dir / "cpu_power.log"
         self.visualization_dir = self.output_dir / "visualizations"
 
         # Setup signal handlers
@@ -97,6 +100,75 @@ class MonitoringSession:
         """Handle shutdown signals gracefully."""
         print("\n\n🛑 Received shutdown signal. Cleaning up...")
         self.stop()
+
+    def _auto_detect_hardware(self) -> None:
+        """
+        Auto-detect local GPU and NPU availability; adjust enable_gpu / enable_npu.
+
+        Rules:
+          - Remote sessions (--remote-ip): skip — the resource monitor performs
+            its own on-device checks at collection time.
+          - Flag explicitly set to True: validate; warn and disable if unavailable.
+          - Flag not set (False): probe silently; auto-enable when valid hardware found.
+        """
+        if self.remote_ip:
+            return  # remote resource monitor handles its own device detection
+
+        script_dir = Path(__file__).parent
+        if str(script_dir) not in sys.path:
+            sys.path.insert(0, str(script_dir))
+        try:
+            from monitor_resources import probe_gpu_available, probe_npu_available, probe_cpu_power_available
+        except ImportError:
+            return  # probe functions not available in this install
+
+        # ── GPU ──────────────────────────────────────────────────────────────
+        gpu_avail, _gpu_tool, gpu_reason = probe_gpu_available()
+        if self.enable_gpu:
+            if not gpu_avail:
+                print(f"   ⚠️  GPU monitoring requested but unavailable: {gpu_reason}")
+                print("       Skipping GPU monitoring.")
+                self.enable_gpu = False
+            else:
+                print(f"   ✅ GPU: {gpu_reason}")
+        else:
+            if gpu_avail:
+                self.enable_gpu = True
+                print(f"   🖥️  GPU auto-detected — enabling monitoring ({gpu_reason})")
+            else:
+                print(f"   ℹ️  GPU monitoring skipped: {gpu_reason}")
+
+        # ── NPU ──────────────────────────────────────────────────────────────
+        npu_avail, npu_reason = probe_npu_available()
+        if self.enable_npu:
+            if not npu_avail:
+                print(f"   ⚠️  NPU monitoring requested but unavailable: {npu_reason}")
+                print("       Skipping NPU monitoring.")
+                self.enable_npu = False
+            else:
+                print(f"   ✅ NPU: {npu_reason}")
+        else:
+            if npu_avail:
+                self.enable_npu = True
+                print(f"   🧠 NPU auto-detected — enabling monitoring ({npu_reason})")
+            else:
+                print(f"   ℹ️  NPU monitoring skipped: {npu_reason}")
+
+        # ── RAPL CPU power ────────────────────────────────────────────────────
+        pwr_avail, pwr_reason = probe_cpu_power_available()
+        if self.enable_power:
+            if not pwr_avail:
+                print(f"   ⚠️  CPU power monitoring requested but unavailable: {pwr_reason}")
+                print("       Skipping CPU power monitoring.")
+                self.enable_power = False
+            else:
+                print(f"   ✅ RAPL: {pwr_reason}")
+        else:
+            if pwr_avail:
+                self.enable_power = True
+                print(f"   ⚡ RAPL auto-detected — enabling CPU power monitoring ({pwr_reason})")
+            else:
+                print(f"   ℹ️  CPU power monitoring skipped: {pwr_reason}")
 
     def setup(self):
         """Setup the monitoring session directories and files."""
@@ -125,6 +197,10 @@ class MonitoringSession:
         if self.remote_ip:
             print(f"   Remote system: {self.remote_user}@{self.remote_ip}")
         print(f"   Output directory: {self.output_dir}")
+
+        # Auto-detect GPU and NPU when resource monitoring is active
+        if self.monitor_resources:
+            self._auto_detect_hardware()
 
     def _get_remote_domain_id(self) -> Optional[int]:
         """SSH to the remote machine and return its ROS_DOMAIN_ID, or None on failure."""
@@ -260,6 +336,8 @@ class MonitoringSession:
                 cmd.extend(["--gpu", "--gpu-log", str(self.gpu_log)])
             if self.enable_npu:
                 cmd.extend(["--npu", "--npu-log", str(self.npu_log)])
+            if self.enable_power:
+                cmd.extend(["--power", "--power-log", str(self.cpu_power_log)])
 
             if self.remote_ip:
                 cmd.extend(["--remote-ip", self.remote_ip,
@@ -540,9 +618,9 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     parser.add_argument(
         '--gpu',
         action='store_true',
-        help='Enable Intel GPU monitoring (auto-enabled when --remote-ip is used). '
-             'Requires intel_gpu_top with CAP_PERFMON: '
-             'sudo setcap cap_perfmon+eip $(which intel_gpu_top)'
+        help='Enable Intel GPU monitoring (auto-enabled when hardware is detected). '
+             'Uses qmassa locally; falls back to sysfs for remote sessions. '
+             'Install qmassa with: make install-qmassa'
     )
 
     parser.add_argument(
@@ -602,6 +680,14 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         '--list-sessions',
         action='store_true',
         help='List all previous monitoring sessions and exit'
+    )
+
+    parser.add_argument(
+        '--power',
+        action='store_true',
+        default=False,
+        help='Enable RAPL CPU package power monitoring (writes cpu_power.log). '
+             'Auto-detected when /sys/class/powercap/intel-rapl:0/energy_uj is readable.'
     )
 
     args = parser.parse_args()
@@ -677,6 +763,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         ros_domain_id=args.ros_domain_id,
         enable_gpu=args.gpu,
         enable_npu=args.npu,
+        enable_power=args.power,
         algorithm=args.algorithm,
         use_sim_time=args.use_sim_time,
     )

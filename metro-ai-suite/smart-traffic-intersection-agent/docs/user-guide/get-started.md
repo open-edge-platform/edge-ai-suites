@@ -27,6 +27,30 @@ an introduction.
   export TAG="latest"
   ```
 
+## Using Edge Microvisor Toolkit
+
+If you are running STIA on an OS image built with **Edge Microvisor Toolkit (EMT)** — an Azure Linux-based build pipeline for Intel® platforms — the deployment approach depends on the EMT flavor. Refer to the detailed documentation for [EMT-D](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image) and [EMT-S](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for full details.
+
+### EMT-D (Mutable)
+
+EMT-D is a **mutable** image that supports standard package management. You can run the `setup.sh` script directly on the node after installing any required dependencies using `dnf` or `tdnf`.
+
+### EMT-S (Immutable)
+
+EMT-S is an **immutable** OS image — standard package managers such as `apt` are not available, and the `setup.sh` script **cannot be run directly on the EMT-S node** (doing so will fail with `sudo: apt: command not found`). Use one of the following approaches:
+
+- **Option 1 (USB provisioning):** While preparing the USB drive, copy the required Docker images under `/opt/user-apps` on the image, then flash and deploy the Edge node.
+- **Option 2 (Remote copy):** On a Ubuntu development system, pull/build all required Docker images and prepare the project directory. Copy the entire directory to the EMT-S node without modifications and deploy from there. This approach has been verified to successfully bring up all containers.
+
+If any packages must be installed on EMT-S, use the installroot method (replace `<package>` with the required package name):
+
+```bash
+sudo env no_proxy="localhost,127.0.0.1" dnf --installroot=/opt/user-apps/tools/ -y install <package>
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/user-apps/tools/usr/lib/
+```
+
+Refer to the [EMT-S documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for further details.
+
 ## Quick Start with Setup Script
 
 Intel recommends using the automated setup script that handles environment configuration,
@@ -49,7 +73,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ### 2. Set the required environment variables
 
 ```bash
-export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
 ```
 
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
@@ -147,7 +171,7 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
    ```
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
@@ -190,7 +214,7 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
    ```
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
@@ -262,6 +286,65 @@ The following is a sample response that you might get at script completion, whic
 URLs for accessing the relevant services:
 
 ![Service endpoints displayed after setup completion](./_assets/service_endpoints.png "Service endpoints after completed setup")
+
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
+1. Prerequisites
+2. Download the Trusted Compute Package
+3. Docker Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+> **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
+
+### 2. Deploy the Smart Traffic Intersection Agent with Trusted Compute
+
+#### Configure Network Settings
+
+By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
+
+**Requirements:**
+- Subnet format must be exactly `172.X.0.0/16` where X is between 18-31 (RFC 1918 private IP range)
+- The subnet must not conflict with existing Docker networks on your system
+- DNS relay service will be automatically configured at `172.X.0.200`
+
+**Example:**
+```bash
+# Optional: Customize the subnet if needed (default is 172.20.0.0/16)
+export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
+```
+
+#### Deploy with Trusted Compute
+
+```bash
+export ENABLE_TC=true
+source ./setup.sh --setup
+```
+
+The DL Streamer Pipeline Server and openvino model server (OVMS) containers will run
+inside hardware-isolated TC VMs, protecting inference workloads and video data from
+untrusted co-tenants on the same host.
+
+> **Note:** All other setup and configuration steps remain the same as described in the
+> [Quick Start with Setup Script](#quick-start-with-setup-script) section above.
+
+### 3. Clean Up the Deployment
+
+To stop and remove the Smart Traffic Intersection Agent containers:
+
+```bash
+source ./setup.sh --clean
+```
+
+To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Upgrading
 

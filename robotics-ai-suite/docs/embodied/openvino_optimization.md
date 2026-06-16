@@ -102,7 +102,7 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
 
    ```bash
    cd ..
-   git clone https://github.com/open-edge-platform/edge-ai-suites
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/robotics-ai-suite/pipelines/vla-pi0.5-openvino
    python convert_pytorch_onnx.py
    ```

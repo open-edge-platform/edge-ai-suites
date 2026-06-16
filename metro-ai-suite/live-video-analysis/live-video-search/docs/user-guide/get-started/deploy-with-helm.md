@@ -1,4 +1,4 @@
-# How to deploy with Helm\* Chart
+# Deploy with Helm\* Chart
 
 This section shows how to deploy the Live Video Search sample application using Helm chart.
 
@@ -53,7 +53,7 @@ cd live-video-search
 Clone the repository and navigate to the chart directory:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-search/chart
 ```
 

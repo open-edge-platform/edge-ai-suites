@@ -1,0 +1,109 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Run profile for the pick-and-place benchmark scenario.
+# The scenario name is derived automatically from the ROS package in launch.cmd.
+#
+# Load with:
+#   uv run python src/benchmark_profiler.py --config config/picknplace_run.yaml --show
+#
+# Use in bash run scripts:
+#   TOPICS=$(uv run python src/benchmark_profiler.py --config config/picknplace_run.yaml --topics)
+#   LAUNCH=$(uv run python src/benchmark_profiler.py --config config/picknplace_run.yaml --launch-cmd)
+#   SLEEP=$(uv run python src/benchmark_profiler.py  --config config/picknplace_run.yaml --init-sleep)
+
+---
+launch:
+  # Full ros2 launch invocation.  Replace with your own package + launch file
+  # to run the framework against a custom application.
+  cmd: "ros2 launch picknplace warehouse.launch.py"
+
+  # Optional extra arguments appended to cmd (e.g. ["use_sim_time:=true"])
+  args: []
+
+  # Extra environment variables set for the launch process only.
+  # Cyclone DDS is required: FastDDS causes TF/joint_state instability with
+  # the large number of nodes spawned by the picknplace demo.
+  env:
+    RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+
+  # Seconds to wait after launch before starting the benchmark.
+  # Pick-and-place takes longer to initialise than wandering.
+  init_sleep: 75
+
+stop:
+  # No goal-pattern for pick-and-place — it stops on demo completion.
+  goal_pattern: ""
+  goal_count: 0
+  # Default 300s (demo completes ~157s; 2x safety margin). CLI --timeout overrides.
+  timeout: 300
+  # Stop when this string appears in the launch log.
+  done_pattern: "ARM2 at standby. Demo complete."
+  # Pattern counted for task-completion tracking in the summary.
+  task_pattern: "ARM2 at standby\\. Demo complete\\.|GRASP SUCCESS|Placed successfully|CYCLE COMPLETE"
+
+monitor:
+  # Pick-and-place only needs the ROS graph (no resource monitors).
+  graph_only: true
+
+gazebo:
+  # Press Gazebo play button after init_sleep.
+  press_play: true
+
+cleanup:
+  sweep: "ros2 |gz sim|gz_server|gz server|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
+
+session:
+  output_subdir: "picknplace"
+  log_prefix: "picknplace"
+  record_log: "/tmp/picknplace_record.log"
+
+bag:
+  # Topics recorded by `ros2 bag record` when --record is passed.
+  # Add, remove, or reorder topics here without editing the run script.
+  topics:
+    # ── Sensor inputs ────────────────────────────────────────────────────────
+    - /scan
+    - /imu
+    - /odom
+    - /tf
+    - /tf_static
+
+    # ── Maps ─────────────────────────────────────────────────────────────────
+    - /map
+    - /map_updates
+
+    # ── Costmaps ─────────────────────────────────────────────────────────────
+    - /local_costmap/costmap_raw
+    - /local_costmap/published_footprint
+    - /global_costmap/costmap_raw
+    - /global_costmap/published_footprint
+
+    # ── Navigation commands ───────────────────────────────────────────────────
+    - /cmd_vel_nav
+    - /cmd_vel_smoothed
+    - /cmd_vel
+
+    # ── Planning ─────────────────────────────────────────────────────────────
+    - /plan
+    - /plan_smoothed
+    - /optimal_trajectory
+    - /transformed_global_plan
+
+    # ── Localization & goals ─────────────────────────────────────────────────
+    - /localization_pose
+    - /goal_pose
+    - /goal_reached
+
+    # ── Safety & behaviour ────────────────────────────────────────────────────
+    - /speed_limit
+    - /collision_monitor_state
+    - /behavior_tree_log
+
+    # ── Joint states (used for graph monitor / Level 1 KPI) ──────────────────
+    - /joint_states
+
+    # ── Pick-and-place task topics ────────────────────────────────────────────
+    - /task_status
+    - /pick_result
+    - /place_result

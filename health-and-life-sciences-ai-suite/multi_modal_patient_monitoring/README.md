@@ -1,5 +1,9 @@
 # Multi-Modal Patient Monitoring
 
+> This application is for **reference and evaluation purposes**. It is
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated as such.
+
 The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
 You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
@@ -26,6 +30,16 @@ To see the system requirements and other installations, see the following guides
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
+### Manual Model Staging (Required)
+
+Before running `make run`, place source models in these exact paths:
+
+- `models/downloads/rppg/`
+- `models/downloads/3d-pose/`
+- `models/downloads/ai-ecg/` (local Hugging Face model folder)
+
+`make run` validates these paths.
+
 ## How It Works
 
 At a high level, the system is composed of several microservices that work together to ingest patient signals and video, run AI models on Intel hardware (CPU, GPU, and NPU), aggregate results, and expose them to a UI for clinicians.
@@ -36,6 +50,11 @@ For details, see [How it Works](./docs/user-guide/how-it-works.md).
 
 ## Learn More
 
-For detailed information about system requirements, architecture, and how the application works, see the
+For detailed information about system requirements, architecture, and how the application works, see the:
 
 - [Full Documentation](./docs/user-guide/index.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
+
+## Disclaimer
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.  

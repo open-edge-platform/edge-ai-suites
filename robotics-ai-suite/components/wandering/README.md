@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Wandering - The Wandering Mobile Robot Application
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
+
 ## Overview
 
 The Wandering mobile robot application is a Robot Operating System 2 (ROS 2) sample application that moves the robot around the room avoiding hitting obstacles, updating a map in real time that is exposed as the ROS topic.
@@ -192,10 +196,6 @@ rviz2 -d rviz/config.rviz
 ```
 
 ![Screenshot](rviz/Rviz_config.jpg)
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
 
 ## License
 

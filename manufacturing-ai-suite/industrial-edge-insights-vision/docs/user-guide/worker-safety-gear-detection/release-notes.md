@@ -1,5 +1,13 @@
 # Release Notes: Worker Safety Gear Detection
 
+## Version 1.3.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+- This app is planned for removal in the 2026.2 release.
+
 ## Version 1.2.0
 
 **New**

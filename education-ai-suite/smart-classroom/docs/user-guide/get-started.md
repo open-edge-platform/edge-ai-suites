@@ -1,26 +1,9 @@
-# Get Started
+# Quick Start Guide
 
-This guide walks you through installing dependencies, configuring defaults, and running the application.
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
-## Step 1: Install Dependencies
-
-To install dependencies, do the following:
-
-### A. Install FFmpeg (required for audio processing)
-
-Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
-
-### B. Install DL Streamer
-
-Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
-
-For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
-
-> Note: DLStreamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
-
-**Run your shell with admin privileges before starting the application**
-
-### C. Clone Repository
+## Step 1: Clone Repository
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -31,241 +14,95 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
   cd education-ai-suite
+  cd smart-classroom
+```
+## Step 2: Run Setup Script (First-Time Only)
+
+```powershell
+.\setup-smart-classroom.ps1
 ```
 
-### D. Install Python dependencies
+> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
 
-It’s recommended to create a **dedicated Python virtual environment** for the base dependencies.
+The setup script will:
 
-```bash
-python -m venv smartclassroom
-smartclassroom\Scripts\activate
+1. **[1] Check System Requirements**
+   - OS version, CPU, RAM, storage
+   - Python and Node.js versions
 
-# Use Python 3.12.x before running pip.
-cd smart-classroom
-python.exe -m pip install --upgrade pip
-pip install --upgrade -r requirements.txt
+2. **[2] Application Dependency Check**
+   - FFmpeg (auto-install if missing)
+   - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
+
+3. **[3] Configure Settings**
+   - [3.1] Language & ASR Configuration (provider, model, device)
+   - [3.2] Upload Size Limits
+   - [3.3] OCR Configuration
+
+4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
+
+## Step 3: Access the Application
+
+Once all services are running, open your browser:
+
+- **Local:** http://localhost:5173
+- **Network:** http://YOUR_IP:5173
+
+---
+
+## Automated Setup - Troubleshooting
+
+If you encounter issues during automated setup, refer to the manual steps below:
+
+| Issue | Solution |
+|-------|----------|
+| `PSSecurityException` when running `.ps1` scripts | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in PowerShell |
+| FFmpeg installation fails | See [Manual Step 1A](advance-setup-guide.md#a-install-ffmpeg-required-for-audio-processing) |
+| DL Streamer download fails | See [Manual Step 1B](advance-setup-guide.md#b-install-dl-streamer) |
+| Python dependencies fail | See [Manual Step 1D](advance-setup-guide.md#d-install-python-dependencies) |
+| Content Search fails | See [Manual Step 4](advance-setup-guide.md#step-4-set-up-content-search) |
+| Frontend fails to start | See [Manual Step 5](advance-setup-guide.md#step-5-bring-up-the-frontend) |
+
+---
+
+## Starting Smart Classroom
+
+After initial setup is complete, use the start script for subsequent runs or after modifying `config.yaml`:
+
+```powershell
+.\start-smart-classroom.ps1
 ```
 
-## Step 2: Configuration
+The startup script performs:
 
-### A. Default Configuration
+- **Service Detection** - Checks running services
+- **Restart Options** - Restart, skip, or abort choices
+- **Proxy Configuration** - Loads from `.proxy-config`
+- **Sequential Launch** - Backend -> Content Search -> Frontend
+- **Graceful Shutdown** - `Q` to stop all, `E` to keep running
 
-By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
+---
 
-```yaml
-asr:
-  provider: openai            # Supported: openvino, openai, funasr
-  name: whisper-small          # Options: whisper-tiny, whisper-small, paraformer-zh etc.
-  device: CPU                 # Whisper currently supports only CPU
-  temperature: 0.0
+## Manual Setup
 
-summarizer:
-  provider: openvino
-  name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
-  device: GPU                 # Options: GPU or CPU
-  weight_format: int8         # Supported: fp16, fp32, int4, int8
-  max_new_tokens: 1024        # Maximum tokens to generate in summaries
-```
+ **[Advance Setup Guide](advance-setup-guide.md)**:  Follow step-by-step instructions to set up the application.
 
-### B. Chinese Audio Transcription
+Advance Setup guide covers:
 
-For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
+- **Step 1:** Install Dependencies (FFmpeg, DL Streamer, Python, Content Search)
+- **Step 2:** Configuration (config.yaml settings)
+- **Step 3-6:** Run Services & Access UI
+- **Step 7:** Speaker Diarization Setup (Optional)
+- **[Troubleshooting](advance-setup-guide.md#troubleshooting)** — solutions for common setup and runtime issues
+- **[Known Issues](advance-setup-guide.md#known-issues)** — current limitations and workarounds
+- **[Uninstall the Application](advance-setup-guide.md#uninstall-the-application)** — steps to cleanly remove the environment and models
 
-```yaml
-asr:
-  provider: funasr
-  name: paraformer-zh
-```
-Please also config the summarizer to output Chinese
+---
 
-```yaml
-summarizer:
-  language: zh
-```
+## Service Ports Reference
 
-**Important: After updating the configuration, reload the application for changes to take effect.**
-
-## Step 3: Run the Application
-
-Activate the environment before running the application:
-
-```bash
-smartclassroom\Scripts\activate
-```
-
-Run the backend:
-
-```bash
-python main.py
-```
-You should see backend logs similar to this:
-
-```text
-pipeline initialized
-[INFO] __main__: App started, Starting Server...
-INFO:     Started server process [21616]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-```
-
-This means your pipeline server has started successfully and is ready to accept requests.
-
-Bring Up the Frontend:
-
-> **Note:** Open a second (new) Command Prompt/ terminal window for the frontend.
-> The backend terminal stays busy serving requests.
-
-```bash
-cd <path-to>\edge-ai-suites\education-ai-suite\smart-classroom\ui
-npm install
-npm run dev -- --host 0.0.0.0 --port 5173
-```
-
-## Step 4: Access the UI
-
-After starting the frontend you can open the Smart Classroom UI in a browser:
-
-Local machine:
-
-- `http://localhost:5173`
-- `http://127.0.0.1:5173`
-
-From another device on the same network (replace <HOST_IP> with your computer’s IP):
-
-- `http://<HOST_IP>:5173`
-
-Find your IP (Windows PowerShell):
-
-```sh
-ipconfig
-```
-
-Use the IPv4 Address from your active network adapter.
-
-If you changed the port, adjust the URL accordingly.
-
-## Step 5: Speaker Diarization Setup (Pyannote)
-
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
-
-### a. Request Model Access on Hugging Face
-
-Pyannote diarization models require gated access.
-
-Request access here:
-
-[Pyannote Speaker Diarization v3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
-
-[Pyannote segmentation v3.0](https://huggingface.co/pyannote/segmentation-3.0)
-
-Click "Request Access" on the model page and wait for approval.
-
-### b. Create a Hugging Face Access Token
-
-After approval:
-
-Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
-
-Create a Read access token
-
-Copy the generated token
-
-### c. Configure Hugging Face Token in Project Config
-
-Open your model configuration file `config/models.yaml` Add your Hugging Face token:
-
-```yaml
-models:
-  asr:
-    diarization: true
-    hf_token: "hf_your_access_token_here"
-```
-
-## Troubleshooting
-
-- **Frontend not opening:**
-  Ensure you ran `npm run dev` in a second terminal after starting `python main.py`.
-
-- **Backend not ready:**
-  Wait until Uvicorn shows **"Application startup complete"** and is listening on port **8000**.
-
-- **URL fails from another device:**
-  Confirm you used `--host 0.0.0.0` and replaced `<HOST_IP>` correctly.
-
-- **Nothing at http://localhost:5173:**
-  Check that the frontend terminal shows the Vite server running and no port conflict.
-
-- **Firewall blocks access:**
-  Allow inbound traffic on ports **5173** (frontend) and **8000** (backend) on Windows.
-
-- **Auto reload not happening:**
-  Refresh manually if the backend was restarted after initial UI load.
-
-- **Error: `Port for tensor name cache_position was not found.`**
-  This means the models were not configured correctly.
-  To fix this:
-
-  1. Delete the models directory:
-
-     ```text
-     edge-ai-suites/education-ai-suite/smart-classroom/models
-     ```
-
-  2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
-
- - **Crash during application bring-up on Intel® Core™ Ultra Series 3 processors without any error:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
-
-- **Tokenizer load issue:**
-
-  If you see this error:
-
-  ```bash
-  Either openvino_tokenizer.xml was not provided or it was not loaded correctly. Tokenizer::encode is not available
-  ```
-
-  Delete the models folder from `edge-ai-suites/education-ai-suite/smart-classroom/models` and try again.
-
-- If you see below error while running dls setup script,
-
-  ```text
-  .\setup_dls_env.ps1
-    CategoryInfo          : SecurityError: (:) [], PSSecurityException
-    FullyQualifiedErrorId : UnauthorizedAccess
-  ```
-
-  Run the command:
-
-  ```bash
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-  ```
-
-### Known Issues
-
-- **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
-- **Live Video Monitoring Timeout**: Live video monitoring sessions will automatically stop after 45 minutes if the user does not reload the page to start a new session.
-- **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
-- **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.
-- **Video Ready Notification**: If the URL is configured in the settings, the notification will display "Video Ready" unless the screen is reloaded. Reloading the screen will reset the session and the notification.
-
-## Uninstall the Application
-
-To uninstall the application, follow these steps:
-
-1. **Delete the Python virtual environment folder:** \
-   Navigate to the directory and remove \
-   For base environment : *education-ai-suite/smartclassroom*. \
-   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*.
-2. **Remove the models directory:**
-   Remove the models folder located under *education-ai-suite/smart-classroom*.
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-./get-started/system-requirements.md
-
-:::
-hide_directive-->
+| Service | Port | Health Check |
+|---------|------|--------------|
+| Backend | 8000 | http://localhost:8000/health |
+| Content Search | 9011 | http://localhost:9011/api/v1/system/health |
+| Frontend | 5173 | http://localhost:5173 |

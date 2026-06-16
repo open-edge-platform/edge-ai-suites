@@ -11,10 +11,7 @@
 </div>
 hide_directive-->
 
-Prevent defects in real time with AI-powered monitoring.
-
-## Overview
-
+Prevent defects in real time with AI-powered monitoring.\
 AI and machine vision enable real-time detection of welding defects, ensuring immediate
 corrective action before issues escalate. By leveraging the right camera and computing
 hardware, a trained AI model continuously monitors the weld, halting the process
@@ -47,8 +44,8 @@ This sample application is built with the following Intel Edge AI Stack Microser
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion
   and deep learning inferencing functions.
-- [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)
-  is a microservice to download AI models so that they may be used by DLStreamer Pipeline Server.
+- [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html)
+  is a microservice to download AI models so that they may be used by DL Streamer Pipeline Server.
 
 It also consists of the below Third-party microservices:
 
