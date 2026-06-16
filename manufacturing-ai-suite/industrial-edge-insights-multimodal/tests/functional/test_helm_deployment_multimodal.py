@@ -41,8 +41,6 @@ def test_gen_chart():
     logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Current directory2 %s", os.getcwd())
-    os.chdir(constants.PYTEST_DIR)
-    logger.info("Changed to pytest directory: %s", os.getcwd())
     
 def test_blank_values():
     logger.info("TC_002: Testing blank values, checking helm install and uninstall with blank values in values.yaml for multimodal")
