@@ -1,5 +1,8 @@
 # Quick Start Guide
 
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
+
 ## Step 1: Clone Repository
 
 Go to the target directory of your choice and clone the suite.
@@ -53,6 +56,7 @@ If you encounter issues during automated setup, refer to the manual steps below:
 
 | Issue | Solution |
 |-------|----------|
+| `PSSecurityException` when running `.ps1` scripts | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in PowerShell |
 | FFmpeg installation fails | See [Manual Step 1A](advance-setup-guide.md#a-install-ffmpeg-required-for-audio-processing) |
 | DL Streamer download fails | See [Manual Step 1B](advance-setup-guide.md#b-install-dl-streamer) |
 | Python dependencies fail | See [Manual Step 1D](advance-setup-guide.md#d-install-python-dependencies) |
@@ -89,6 +93,9 @@ Advance Setup guide covers:
 - **Step 2:** Configuration (config.yaml settings)
 - **Step 3-6:** Run Services & Access UI
 - **Step 7:** Speaker Diarization Setup (Optional)
+- **[Troubleshooting](advance-setup-guide.md#troubleshooting)** — solutions for common setup and runtime issues
+- **[Known Issues](advance-setup-guide.md#known-issues)** — current limitations and workarounds
+- **[Uninstall the Application](advance-setup-guide.md#uninstall-the-application)** — steps to cleanly remove the environment and models
 
 ---
 

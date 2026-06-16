@@ -274,8 +274,7 @@ NX_USERNAME=admin
 NX_PASSWORD=<nx_admin_password>
 
 # VAP ports
-BACKEND_PORT=8085
-UI_PORT=3100
+UI_HTTPS_PORT=3443
 ```
 
 **Frigate only:**
@@ -297,8 +296,7 @@ MEDIAMTX_URL=http://host.docker.internal:8889
 FRIGATE_HOST=host.docker.internal
 
 # VAP ports
-BACKEND_PORT=8085
-UI_PORT=3100
+UI_HTTPS_PORT=3443
 ```
 
 > Replace `host.docker.internal` with the actual IP address if LVC runs on a different host.
@@ -375,7 +373,7 @@ postgres          Up (healthy)
 ### 4.2 Verify the LVC schema
 
 ```bash
-curl http://localhost:8085/v1/analytics-apps/live_captioning/schema \
+curl -k https://localhost:3443/v1/analytics-apps/live_captioning/schema \
   | python3 -m json.tool | head -20
 ```
 
@@ -394,7 +392,7 @@ docker compose logs vms-backend | grep -i "lvc\|schema\|analytics_app\|error"
 ### 5.1 Open the Provider Dashboard
 
 ```
-http://localhost:3100
+https://localhost:3443
 ```
 
 ### 5.2 Discover Cameras
@@ -408,7 +406,7 @@ http://localhost:3100
 Alternatively, via the API:
 
 ```bash
-curl -X POST http://localhost:8085/v1/cameras/discover
+curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
 ### 5.3 Enable a Camera
@@ -419,12 +417,12 @@ Via the API:
 
 ```bash
 # Nx Witness camera
-curl -X POST http://localhost:8085/v1/cameras/enable \
+curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
   -d '{"camera_id": "nx:<device-uuid>", "enabled": true}'
 
 # Frigate camera
-curl -X POST http://localhost:8085/v1/cameras/enable \
+curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
   -d '{"camera_id": "frigate:front-door", "enabled": true}'
 ```
@@ -472,7 +470,7 @@ In the **Analytics Engine** panel, the active run appears in the runs list.
 Via the API:
 
 ```bash
-curl http://localhost:8085/v1/analytics-apps/live_captioning/runs | python3 -m json.tool
+curl -k https://localhost:3443/v1/analytics-apps/live_captioning/runs | python3 -m json.tool
 ```
 
 ---
@@ -495,7 +493,7 @@ Click **Stop** next to the active run in the **Analytics Engine** panel.
 Or via the API:
 
 ```bash
-curl -X DELETE http://localhost:8085/v1/analytics-apps/live_captioning/runs/<run_id>
+curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/<run_id>
 ```
 
 ---
@@ -535,7 +533,7 @@ curl -X DELETE http://localhost:8085/v1/analytics-apps/live_captioning/runs/<run
 **Checks:**
 1. Verify the SSE stream is emitting data:
    ```bash
-   curl -N http://localhost:8085/v1/analytics-apps/live_captioning/results/stream
+  curl -k -N https://localhost:3443/v1/analytics-apps/live_captioning/results/stream
    ```
    You should see `data: {...}` lines every few seconds.
 

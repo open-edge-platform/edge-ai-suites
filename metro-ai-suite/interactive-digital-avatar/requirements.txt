@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # baisc
-torch==2.8.0
+torch==2.9.1
 torchvision==0.16.2
 torchaudio==2.1.2
 numpy==1.22.4
@@ -13,18 +13,18 @@ openvino-genai==2024.3.0
 paddlepaddle==2.6.1
 paddlespeech==1.5.0
 typeguard==2.13.3
-nltk==3.9.3
+nltk==3.9.4
 
 # funasr
 funasr==1.1.4
-modelscope==1.16.1
+modelscope==1.27.0
 funasr-onnx==0.4.1
 onnxruntime==1.20.0
 
 # museTalk
-transformers==4.53.0
+transformers==5.0.0rc3
 soundfile==0.12.1
-diffusers==0.27.2
+diffusers==0.38.2
 accelerate==0.28.0
 huggingface_hub==0.25.0
 

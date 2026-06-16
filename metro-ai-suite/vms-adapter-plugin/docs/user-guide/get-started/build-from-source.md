@@ -89,7 +89,7 @@ postgres          Up (healthy)
 Verify the backend is up:
 
 ```bash
-curl http://localhost:8085/v1/health
+curl -k https://localhost:3443/v1/health
 ```
 
 ## Local Development
