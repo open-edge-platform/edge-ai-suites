@@ -7,8 +7,6 @@
 import pytest
 import sys
 import os
-import glob
-import subprocess
 from utils import helm_utils
 from utils import constants
 from utils import common_utils
@@ -34,50 +32,15 @@ pytest_plugins = ["conftest_helm"]
 ) = helm_utils.get_multimodal_env_values()
 
 def test_gen_chart():
-    logger.info("TC_001: Setting up helm chart for multimodal.")
-    
-    # For multimodal, the helm chart setup is simpler - just run make gen_helm_charts
-    # which copies configuration files. The workflow handles this before tests run.
-    # Check if helm directory exists and has required files
-    
-    if os.path.exists(chart_path_multi):
-        logger.info(f"Helm chart directory already exists at: {chart_path_multi}")
-        # Verify it has essential files
-        values_file = os.path.join(chart_path_multi, "values.yaml")
-        if os.path.exists(values_file):
-            logger.info("Helm chart is properly set up with values.yaml")
-            assert True, "Helm chart directory is ready."  # nosec B101
-        else:
-            logger.info("values.yaml not found, running make gen_helm_charts...")
-            parent_dir = os.path.abspath(os.path.join(chart_path_multi, ".."))
-            os.chdir(parent_dir)
-            result = subprocess.run(
-                ["make", "gen_helm_charts"],
-                capture_output=True, text=True
-            )
-            if result.returncode == 0:
-                logger.info("Helm chart setup completed successfully.")
-                assert True, "Helm chart generated successfully."  # nosec B101
-            else:
-                logger.error(f"Failed to setup helm chart: {result.stderr}")
-                assert False, "Failed to setup helm chart."  # nosec B101
-    else:
-        logger.info("Helm directory not found, running make gen_helm_charts...")
-        parent_dir = os.path.abspath(os.path.join(chart_path_multi, ".."))
-        os.chdir(parent_dir)
-        result = subprocess.run(
-            ["make", "gen_helm_charts"],
-            capture_output=True, text=True
-        )
-        if result.returncode == 0:
-            logger.info("Helm chart setup completed successfully.")
-            logger.info(f"Helm chart is ready at: {chart_path_multi}")
-            assert True, "Helm chart generated successfully."  # nosec B101
-        else:
-            logger.error(f"Failed to setup helm chart: {result.stderr}")
-            assert False, "Failed to setup helm chart."  # nosec B101
-    
-    logger.info("Current directory: %s", os.getcwd())
+    logger.info("TC_001: Generating helm chart for multimodal.")
+    # Use generic chart path - the function will determine the correct path
+    result = helm_utils.generate_helm_chart(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP)
+    logger.info(f"generate_helm_chart result: {result}")
+    assert result, "Failed to generate helm chart."  # nosec B101
+    logger.info(f"Helm Chart is generated at: {chart_path_multi}")
+    logger.info("Current directory1 %s", os.getcwd())
+    os.chdir(constants.PYTEST_DIR)
+    logger.info("Current directory2 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Changed to pytest directory: %s", os.getcwd())
     

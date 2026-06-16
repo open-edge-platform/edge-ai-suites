@@ -7,7 +7,6 @@
 import pytest
 import sys
 import os
-import glob
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils')))
 import helm_utils
 import constants
@@ -23,56 +22,14 @@ pytest_plugins = ["conftest_helm"]
 FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL = helm_utils.get_env_values()
 
 def test_gen_chart():
-    logger.info("TC001: Setting up helm chart.")
-    
-    # Check if pre-generated tarball exists from workflow (in helm-packages/)
-    # helm-packages is a sibling directory to helm, so go up one level from chart_path
-    parent_dir = os.path.abspath(os.path.join(chart_path, ".."))
-    helm_packages_dir = os.path.join(parent_dir, "helm-packages")
-    
-    # Determine sample app from release name
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
-    
-    if os.path.exists(helm_packages_dir):
-        logger.info(f"Found helm-packages directory at {helm_packages_dir}")
-        # Look for tarball matching the sample app
-        tarballs = glob.glob(os.path.join(helm_packages_dir, "*.tgz"))
-        
-        if tarballs:
-            tarball_path = tarballs[0]  # Use the first tarball found
-            logger.info(f"Using pre-generated helm chart tarball: {tarball_path}")
-            
-            # Extract tarball to the expected location
-            extract_dir = os.path.dirname(chart_path)
-            logger.info(f"Extracting tarball to {extract_dir}")
-            
-            result = subprocess.run(
-                ["tar", "-xzf", tarball_path, "-C", extract_dir],
-                capture_output=True, text=True
-            )
-            
-            if result.returncode == 0:
-                logger.info("Helm chart tarball extracted successfully.")
-                logger.info(f"Helm chart is ready at: {chart_path}")
-                assert True, "Helm chart extracted successfully."
-            else:
-                logger.error(f"Failed to extract tarball: {result.stderr}")
-                # Fall back to generating if extraction fails
-                logger.info("Falling back to generating helm chart...")
-                result = helm_utils.generate_helm_chart(chart_path)
-                assert result == True, "Failed to generate helm chart."
-        else:
-            logger.info("No tarball found in helm-packages, generating helm chart...")
-            result = helm_utils.generate_helm_chart(chart_path)
-            assert result == True, "Failed to generate helm chart."
-    else:
-        logger.info("helm-packages directory not found, generating helm chart...")
-        result = helm_utils.generate_helm_chart(chart_path)
-        assert result == True, "Failed to generate helm chart."
-    
-    logger.info("Current directory: %s", os.getcwd())
+    logger.info("TC001: Generating helm chart.")
+    result = helm_utils.generate_helm_chart(chart_path)
+    logger.info(f"generate_helm_chart result: {result}")
+    assert result == True, "Failed to generate helm chart."
+    logger.info("Helm Chart is generated")
+    logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
-    logger.info("Changed to pytest directory: %s", os.getcwd())
+    logger.info("Current directory2 %s", os.getcwd())
     
 def test_blank_values():
     logger.info("TC_002: Testing blank values, checking helm install and uninstall with blank values in values.yaml")
