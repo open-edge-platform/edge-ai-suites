@@ -1,0 +1,25 @@
+{
+  "schema": "smart_classroom_engagement_v1",
+  "package": "engagement",
+  "session_id": "20260615-214829-66de",
+  "class_name": "Class 10A - Economics",
+  "date": "2026-06-15",
+  "openclaw_hints": {
+    "Q2_engagement_summary": "audio.teacher_talk_time_pct shows how much the teacher spoke vs students. video.total_hand_raises and video.avg_students_present indicate class energy. audio.questions_asked_by_students reflects verbal interaction.",
+    "Q4_most_active_students": [
+      "2"
+    ]
+  },
+  "audio": {
+    "teacher_talk_time_pct": 587,
+    "student_talk_time_pct": 0,
+    "questions_asked_by_students": 0
+  },
+  "video": {
+    "avg_students_present": 8,
+    "total_hand_raises": 29,
+    "most_active_students": [
+      "2"
+    ]
+  }
+}
