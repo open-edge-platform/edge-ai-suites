@@ -18,7 +18,7 @@ echo ""
 # Create workspace directories
 echo "[1/4] Creating workspace directories..."
 mkdir -p "${OPENCLAW_WORKSPACE}"
-mkdir -p "${OPENCLAW_WORKSPACE}/skills/smart-classroom"
+mkdir -p "${OPENCLAW_WORKSPACE}/skills/classroom_qa"
 
 # Create incoming data directory for Smart Classroom and copy sample data
 echo "[2/4] Creating Smart Classroom data directory and copying sample data..."
