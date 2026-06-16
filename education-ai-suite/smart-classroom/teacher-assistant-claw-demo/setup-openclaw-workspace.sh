@@ -30,9 +30,9 @@ echo "[3/4] Copying SOUL.md and AGENTS.md to workspace..."
 cp "${WORKSPACE_SRC}/SOUL.md" "${OPENCLAW_WORKSPACE}/SOUL.md"
 cp "${WORKSPACE_SRC}/AGENTS.md" "${OPENCLAW_WORKSPACE}/AGENTS.md"
 
-# Copy SKILL.md to skills/smart-classroom/
-echo "[4/4] Copying SKILL.md to skills/smart-classroom/..."
-cp "${WORKSPACE_SRC}/skills/smart-classroom/SKILL.md" "${OPENCLAW_WORKSPACE}/skills/smart-classroom/SKILL.md"
+# Copy SKILL.md to skills/classroom_qa/
+echo "[4/4] Copying SKILL.md to skills/classroom_qa/..."
+cp "${WORKSPACE_SRC}/skills/classroom_qa/SKILL.md" "${OPENCLAW_WORKSPACE}/skills/classroom_qa/SKILL.md"
 
 echo ""
 echo "=== Workspace setup complete ==="
@@ -40,7 +40,7 @@ echo ""
 echo "Files deployed:"
 echo "  ${OPENCLAW_WORKSPACE}/SOUL.md"
 echo "  ${OPENCLAW_WORKSPACE}/AGENTS.md"
-echo "  ${OPENCLAW_WORKSPACE}/skills/smart-classroom/SKILL.md"
+echo "  ${OPENCLAW_WORKSPACE}/skills/classroom_qa/SKILL.md"
 echo ""
 echo "Data directory created:"
 echo "  ${OPENCLAW_WORKSPACE}/smart_classroom_incoming"

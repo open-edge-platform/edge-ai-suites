@@ -143,6 +143,7 @@ Copy the workspace configuration files (SOUL.md, AGENTS.md, SKILL.md) to the Ope
 ``` bash
 chmod +x ./setup-openclaw-workspace.sh
 ./setup-openclaw-workspace.sh
+openclaw skills update
 ```
 
 This script creates the following structure:
@@ -154,8 +155,8 @@ This script creates the following structure:
 ├── smart_classroom_incoming/        # Data directory for Smart Classroom reports
 │   └── lesson1.md                   # Sample lesson report (included as example)
 └── skills/
-    └── smart-classroom/
-        └── SKILL.md                 # Smart Classroom skill definition
+    └── classroom_qa/
+        └── SKILL.md                 # Smart Classroom QA skill definition
 ```
 
 > **Note:** The `smart_classroom_incoming/` directory is where the Smart Classroom application deposits lesson reports for the agent to analyze. A sample file (`lesson1.md`) is included as an example. You can add additional lesson reports to `~/.openclaw/workspace/smart_classroom_incoming/` at any time — the agent will pick them up automatically when answering questions or generating reports.

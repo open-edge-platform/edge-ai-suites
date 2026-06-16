@@ -9,7 +9,10 @@
                 "ovms/OpenVINO/Qwen3-8B-int4-ov": {
                     "alias": "OVMS Qwen3 8B"
                 }
-            }
+            },
+            "skills": [
+		"classroom_qa"
+		]
         }
     },
     "gateway": {
