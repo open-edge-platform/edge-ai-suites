@@ -171,11 +171,17 @@ This script creates the following structure:
 Run the following commands to start the OpenClaw agent in the terminal or in the web dashboard. 
 
 ``` bash
-# Run the agent in the terminal
-openclaw chat
-
 # Run the agent in the web dashboard
 openclaw dashboard
+
+# Or run the agent in the terminal
+openclaw chat
+```
+
+Try the following example prompt to verify the agent can read the sample session data:
+
+```
+Summarize the lesson from June 10
 ```
 
 ## Learn More
