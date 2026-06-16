@@ -37,7 +37,7 @@ Clone the full repository and navigate to the application directory:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection
+cd edge-ai-suites/federal-and-aerospace-ai-suite/apps/deterministic-threat-detection
 ```
 
 ### Option 2 — Download ZIP Archive
@@ -50,7 +50,7 @@ unzip deterministic-threat-detection.zip
 cd deterministic-threat-detection
 ```
 
-> **Note:** The documentation assumes paths relative to the `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection` directory. If you used the ZIP archive, replace `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection` with the path to your extracted `deterministic-threat-detection` folder wherever it appears in the guides.
+> **Note:** The documentation assumes paths relative to the `edge-ai-suites/federal-and-aerospace-ai-suite/apps/deterministic-threat-detection` directory. If you used the ZIP archive, replace `edge-ai-suites/federal-and-aerospace-ai-suite/apps/deterministic-threat-detection` with the path to your extracted `deterministic-threat-detection` folder wherever it appears in the guides.
 
 ---
 

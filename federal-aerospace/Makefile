@@ -23,7 +23,7 @@ DTD_SRC      := apps/deterministic-threat-detection
 # Output archives.
 HANDHELD_ZIP := $(DIST_DIR)/handheld-multi-modal.zip
 DTD_ZIP      := $(DIST_DIR)/deterministic-threat-detection.zip
-SOLUTION_ZIP := $(DIST_DIR)/federal-aerospace.zip
+SOLUTION_ZIP := $(DIST_DIR)/federal-and-aerospace-ai-suite.zip
 
 # Forwarded to sub-Makefiles when overridden on the command line.
 override_vars := $(foreach v,VIPPET_REPO VIPPET_REF VIPPET_PATH,\
@@ -32,7 +32,7 @@ override_vars := $(foreach v,VIPPET_REPO VIPPET_REF VIPPET_PATH,\
 # --- Public targets ----------------------------------------------------------
 
 .PHONY: all
-all: handheld-multi-modal deterministic-threat-detection federal-aerospace ## Build every component ZIP and the full-solution ZIP
+all: handheld-multi-modal deterministic-threat-detection federal-and-aerospace-ai-suite ## Build every component ZIP and the full-solution ZIP
 
 .PHONY: handheld-multi-modal
 handheld-multi-modal: $(HANDHELD_ZIP) ## Build handheld-multi-modal.zip (includes vippet)
@@ -40,8 +40,8 @@ handheld-multi-modal: $(HANDHELD_ZIP) ## Build handheld-multi-modal.zip (include
 .PHONY: deterministic-threat-detection
 deterministic-threat-detection: $(DTD_ZIP) ## Build deterministic-threat-detection.zip
 
-.PHONY: federal-aerospace
-federal-aerospace: $(SOLUTION_ZIP) ## Build federal-aerospace.zip with the entire solution
+.PHONY: federal-and-aerospace-ai-suite
+federal-and-aerospace-ai-suite: $(SOLUTION_ZIP) ## Build federal-and-aerospace-ai-suite.zip with the entire solution
 
 .PHONY: clean
 clean: ## Remove build and dist directories
@@ -79,25 +79,25 @@ $(DTD_ZIP): $(shell find $(DTD_SRC) -type f 2>/dev/null)
 
 # --- Full solution ZIP -------------------------------------------------------
 #
-# Bundles the entire federal-aerospace tree, with handheld-multi-modal already
+# Bundles the entire federal-and-aerospace-ai-suite tree, with handheld-multi-modal already
 # resolved (i.e. with its vippet sparse checkout dropped in).
 
-SOLUTION_STAGE := $(BUILD_DIR)/federal-aerospace
+SOLUTION_STAGE := $(BUILD_DIR)/federal-and-aerospace-ai-suite
 
 $(SOLUTION_ZIP): $(HANDHELD_STAMP) \
 		$(shell find $(DTD_SRC) docs -type f 2>/dev/null) \
 		README.md
-	@echo ">> Staging federal-aerospace (full solution)"
+	@echo ">> Staging federal-and-aerospace-ai-suite (full solution)"
 	@rm -rf "$(SOLUTION_STAGE)"
-	@mkdir -p "$(SOLUTION_STAGE)/federal-aerospace"
+	@mkdir -p "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite"
 	rsync -a \
 		--exclude='build' --exclude='dist' --exclude='.git' \
 		--exclude='apps/handheld-multi-modal/templates' \
 		--exclude='apps/handheld-multi-modal/VIPPET_REF' \
 		--exclude='apps/handheld-multi-modal/.work' \
-		./ "$(SOLUTION_STAGE)/federal-aerospace/"
-	cp -a "$(HANDHELD_STAGE)/vippet-fedaero" "$(SOLUTION_STAGE)/federal-aerospace/apps/handheld-multi-modal/"
+		./ "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite/"
+	cp -a "$(HANDHELD_STAGE)/vippet-fedaero" "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite/apps/handheld-multi-modal/"
 	@mkdir -p "$(DIST_DIR)"
 	@rm -f "$@"
-	cd "$(SOLUTION_STAGE)" && zip -rq "$(abspath $@)" federal-aerospace
+	cd "$(SOLUTION_STAGE)" && zip -rq "$(abspath $@)" federal-and-aerospace-ai-suite
 	@echo "Archive ready: $@"

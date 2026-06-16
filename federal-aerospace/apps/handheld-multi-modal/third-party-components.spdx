@@ -2,13 +2,13 @@ SPDXVersion: SPDX-2.3
 DataLicense: CC0-1.0
 SPDXID: SPDXRef-DOCUMENT
 DocumentName: handheld-multi-modal
-DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
+DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/apps/handheld-multi-modal
 Creator: Organization: Intel Corporation
 Creator: Tool: manual-curation
 Created: 2026-05-27T00:00:00Z
 CreatorComment: <text>
 SPDX SBOM for the handheld-multi-modal application
-(federal-aerospace/apps/handheld-multi-modal).
+(federal-and-aerospace-ai-suite/apps/handheld-multi-modal).
 
 Scope: third-party open-source components consumed by the application —
 container base images, Python pip dependencies of the locally built
@@ -28,7 +28,7 @@ SPDXID: SPDXRef-Package-handheld-multi-modal
 PackageVersion: 2026.1
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-suites
-PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/apps/handheld-multi-modal
 FilesAnalyzed: false
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0

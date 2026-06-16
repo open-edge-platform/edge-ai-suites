@@ -5,7 +5,7 @@
 #
 # Operational targets (deploy, up, down, ...) run the stack locally.
 # Packaging targets (stage, vippet) are called by the parent
-# federal-aerospace/Makefile to build the distribution ZIP.
+# federal-and-aerospace-ai-suite/Makefile to build the distribution ZIP.
 
 SHELL        := /bin/bash
 .SHELLFLAGS  := -eu -o pipefail -c
@@ -231,7 +231,7 @@ urls: ## Print service endpoints
 	@echo "  OVMS metrics     http://localhost:9000/metrics"
 	@echo ""
 
-# Packaging — called by the federal-aerospace top-level Makefile
+# Packaging — called by the federal-and-aerospace-ai-suite top-level Makefile
 
 stage: ## Stage the handheld-multi-modal tree at $(STAGE_DIR) (called by parent Makefile)
 	@if [[ -z "$(STAGE_DIR)" ]]; then echo "error: STAGE_DIR is required" >&2; exit 2; fi
