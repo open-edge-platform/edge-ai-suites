@@ -145,5 +145,37 @@
     "x": 230,
     "y": 460,
     "wires": [["da48cf024c809e81"]]
+  },
+  {
+    "id": "wrong_way_detection",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "Wrong Way Detection (Tripwire)",
+    "func": "var msg_payload = msg.payload;\n\nif (msg_payload.scene_name !== 'Intersection-Demo') { return null; }\n\nvar tripwire_name = msg_payload.tripwire_name;\nvar timestamp = msg_payload.timestamp;\nvar objects = msg_payload.objects || [];\n\n// Tripwire config: name -> wrong-way direction value\n// direction=1 means normal traffic, direction=-1 means wrong-way\nvar wrong_way_direction = {\n    'NBLANE_START_TW': -1,\n    'NBLANE_END_TW': -1,\n    'SBLANE_START_TW': -1,\n    'SBLANE_END_TW': -1,\n    'EBLANE_START_TW': -1,\n    'EBLANE_END_TW': -1,\n    'WBLANE_START_TW': -1,\n    'WBLANE_END_TW': -1\n};\n\nvar bad_dir = wrong_way_direction[tripwire_name];\nif (bad_dir === undefined) { return null; }\n\n// Extract lane name from tripwire (e.g., NBLANE_START_TW -> NBLANE)\nvar lane = tripwire_name.replace('_START_TW', '').replace('_END_TW', '');\n\nobjects.forEach(function (obj) {\n    if (obj.direction === bad_dir) {\n        var vel = obj.velocity || [0, 0, 0];\n        var speed = Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1]);\n\n        // Ignore stationary/slow objects (detection jitter)\n        if (speed < 3.0) { return; }\n\n        var json_body = [\n            {\n                object_id: obj.id || 'unknown',\n                heading: obj.heading || 0,\n                speed: parseFloat(speed.toFixed(2)),\n                wrong_way: 1\n            },\n            {\n                location: 'Anthem',\n                region: lane,\n                object: obj.category || 'vehicle'\n            }\n        ];\n        node.send({\n            payload: json_body,\n            measurement: 'wrong_way_alert',\n            timestamp: timestamp\n        });\n    }\n});\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 620,
+    "wires": [["d013192f8325ddd9"]]
+  },
+  {
+    "id": "wrong_way_mqtt_in",
+    "type": "mqtt in",
+    "z": "f6f2187d.f17ca8",
+    "name": "Tripwire Events",
+    "topic": "scenescape/event/tripwire/+/+/objects",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": false,
+    "inputs": 0,
+    "x": 230,
+    "y": 620,
+    "wires": [["wrong_way_detection"]]
   }
 ]
