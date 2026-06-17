@@ -421,7 +421,6 @@ try {
     
     foreach ($gpu in $gpuList) {
         $gpuNames += $gpu.Name
-        # Accept Intel Arc, Core Ultra, Iris Xe, UHD, or any Intel integrated/discrete GPU
         if ($gpu.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)") {
             $intelGpuFound = $true
         }
