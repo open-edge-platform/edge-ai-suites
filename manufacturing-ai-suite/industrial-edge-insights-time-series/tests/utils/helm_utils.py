@@ -1520,28 +1520,55 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.error(f"An unexpected error occurred: {e}")
         return None, False
 
-def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
-    """Run `make gen_helm_charts app=<sample_app>` in the parent directory."""
+def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
+    """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
+    
+    This generates the helm chart AND packages it into a .tgz file in helm-packages/.
+    This matches the workflow behavior which uses gen_helm_charts_targz.
+    
+    For multimodal, uses `make gen_helm_charts` + manual packaging since
+    multimodal Makefile doesn't have gen_helm_charts_targz target.
+    """
     original_dir = os.getcwd()
     try:
-
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
 
-        # Run the make command
-        logger.info(f"Generating Helm chart for app={sample_app}...")
-        result = subprocess.run(
-            ["make", "gen_helm_charts", "app=" + sample_app],
-            capture_output=True, text=True, check=True,
-        )
-        logger.info(result.stdout)
-        logger.info("Helm chart generated successfully.")
+        is_multimodal = (sample_app == constants.MULTIMODAL_SAMPLE_APP)
+        
+        if is_multimodal:
+            # Multimodal Makefile doesn't have gen_helm_charts_targz or app= parameter
+            logger.info("Generating Helm chart for multimodal (no app parameter)...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+            logger.info("Helm chart generated. Now packaging...")
+            
+            # Package the helm chart manually
+            subprocess.run(["mkdir", "-p", "helm-packages"], check=True)
+            pkg_result = subprocess.run(
+                ["helm", "package", "helm/", "-d", "helm-packages/"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(pkg_result.stdout)
+        else:
+            # Time-series Makefile has gen_helm_charts_targz with app= parameter
+            logger.info(f"Generating and packaging Helm chart for app={sample_app}...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts_targz", "app=" + sample_app],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+        
+        logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
 
         return True
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to generate Helm chart: {e.stderr}")
+        logger.error(f"Failed to generate Helm chart targz: {e.stderr}")
         return False
     finally:
         os.chdir(original_dir)

@@ -23,11 +23,11 @@ pytest_plugins = ["conftest_helm"]
 FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL = helm_utils.get_env_values()
 
 def test_gen_chart():
-    logger.info("TC001: Generating helm chart.")
-    result = helm_utils.generate_helm_chart(chart_path, constants.WELD_SAMPLE_APP)
-    logger.info(f"generate_helm_chart result: {result}")
-    assert result == True, "Failed to generate helm chart."
-    logger.info("Helm Chart is generated")
+    logger.info("TC001: Generating and packaging helm chart (using gen_helm_charts_targz).")
+    result = helm_utils.generate_helm_chart_targz(chart_path, constants.WELD_SAMPLE_APP)
+    logger.info(f"generate_helm_chart_targz result: {result}")
+    assert result == True, "Failed to generate and package helm chart."
+    logger.info("Helm Chart is generated and packaged")
     logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Current directory2 %s", os.getcwd())
