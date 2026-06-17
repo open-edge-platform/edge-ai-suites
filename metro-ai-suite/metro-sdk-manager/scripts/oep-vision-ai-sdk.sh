@@ -25,7 +25,7 @@ repositories=(
 
 images=(
   "openvino/model_server:2026.2"
-  "openvino/ubuntu24_dev:2026.2.0"
+  "openvino/ubuntu24_dev:2026.2.1"
   "intel/dlstreamer:2026.1.0-ubuntu24"
   "intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24"
   "intel/scenescape-manager:2026.1.0"
