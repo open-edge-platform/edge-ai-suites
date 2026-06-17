@@ -1,6 +1,6 @@
 # Release Notes
 
-## Version 2026.1.0-rc1
+## Version 2026.1.0
 **May 14, 2026**
 
 - Updated dependency packages to resolve known vulnerabilities.  

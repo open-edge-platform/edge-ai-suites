@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: v2
-name: live-video-alert-agent
+name: live-video-alert-agent-chart
 description: A Helm chart for deploying the Live Video Alert Agent with OpenVINO VLM inference
 type: application
-version: 2026.1.0-rc1-helm
+version: 2026.1.0
 appVersion: "2.0.0"
 
 dependencies:

@@ -38,7 +38,7 @@ image:
   # Type: string
   repository: intel/multimodal-embedding-serving
   # Type: string - pinned for reproducibility
-  tag: "2026.1.0-rc1"
+  tag: "2026.1.0"
   # Type: string  [Always | IfNotPresent | Never]
   pullPolicy: IfNotPresent
 

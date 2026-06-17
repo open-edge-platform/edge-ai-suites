@@ -24,7 +24,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    ```bash
    export REGISTRY="intel/"
-   export TAG="2026.1.0-rc1"
+   export TAG="2026.1.0"
    export HF_TOKEN=<your-huggingface-token>
    ```
 
