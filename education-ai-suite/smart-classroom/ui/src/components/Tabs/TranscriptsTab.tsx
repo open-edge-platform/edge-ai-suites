@@ -234,7 +234,7 @@ const TranscriptsTab: React.FC = () => {
           });
         }
 
-        if (mountedRef.current) {
+        if (!controller.signal.aborted && mountedRef.current) {
           dispatch(completeSegmentTyping(idx));
         }
       } catch {
@@ -250,6 +250,13 @@ const TranscriptsTab: React.FC = () => {
     };
 
     run();
+
+    // Abort this segment's typewriter when the cursor moves on (or on unmount)
+    // so a stale run can't dispatch completeSegmentTyping for an old index.
+    return () => {
+      controller.abort();
+      typewriterControllers.current.delete(idx);
+    };
   }, [currentTypingIndex]);
 
   useEffect(() => {
