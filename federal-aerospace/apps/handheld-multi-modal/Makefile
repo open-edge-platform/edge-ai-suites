@@ -104,22 +104,8 @@ vippet-get: ## Sparse-checkout vippet into ../vippet-fedaero (excludes docs, dro
 vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vippet
 	@echo "Configuring vippet metrics-manager..."; \
 	cp $(SELF_DIR)/collector/telegraf.conf $(VIPPET_CWD)/vippet-telegraf.conf; \
-	python3 - <<'EOF' ; \
-import yaml
-src = "$(VIPPET_CWD)/shared/models/supported_models.yaml"
-# Pallet defect detection model is broken in this downloader,
-# needs a newer version of DLSPS - which means a newer version of ViPPET, with newer model-downloader service
-# TODO: remove this exclusion once ViPPET is released and updated in this stack.
-broken = {"pallet_defect_detection"}
-models = yaml.safe_load(open(src))
-filtered = [
-	m for m in models
-	if m.get("source") != "huggingface"
-	and m.get("name") not in broken
-]
-yaml.dump(filtered, open(src, "w"), default_flow_style=False, allow_unicode=True)
-print(f"✓ supported_models.yaml filtered ({len(filtered)}/{len(models)} models, huggingface and broken models excluded)")
-EOF
+	python3 $(SELF_DIR)/scripts/filter_models.py \
+		"$(VIPPET_CWD)/shared/models/supported_models.yaml"; \
 	if ! grep -q 'METRICS_MANAGER_HOSTNAME' $(VIPPET_CWD)/compose.yml; then \
 		sed -i 's|METRICS_RETENTION_SECONDS:.*|&\n      METRICS_MANAGER_HOSTNAME: $${METRICS_MANAGER_HOSTNAME:-ptl}|' $(VIPPET_CWD)/compose.yml; \
 		echo "✓ compose.yml patched (METRICS_MANAGER_HOSTNAME added)"; \
