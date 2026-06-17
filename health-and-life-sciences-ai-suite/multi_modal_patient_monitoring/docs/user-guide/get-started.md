@@ -43,7 +43,22 @@ When you run `make run` or `make run REGISTRY=false`, the compose file reads
 inference engine compiles its OpenVINO model on the requested device, with automatic fallback
 to CPU when necessary.
 
-## 3. Stage Models Manually
+## 3. Configure Proxy (Optional)
+
+If your environment requires a proxy to access external networks, export the proxy settings in
+the same shell before running any `make` command that pulls or builds Docker images:
+
+```bash
+export HTTP_PROXY=http://proxy-address:PORT
+export HTTPS_PROXY=http://proxy-address:PORT
+export NO_PROXY=localhost,127.0.0.1
+```
+
+The Makefile reads these variables and passes them to Docker Compose during image pulls,
+builds, and container startup. If your environment also defines lowercase proxy variables,
+set `http_proxy`, `https_proxy`, and `no_proxy` to the same values.
+
+## 4. Stage Models Manually
 
 Before running the stack, place source models under the repository-local folder:
 
@@ -102,7 +117,7 @@ The `make run` target validates these paths first. If any artifact is missing, s
 with an actionable error before containers are launched.
 
 
-## 4. Run the Sample
+## 5. Run the Sample
 
 ### Run Using Pre‑Built Images (Registry Mode)
 
@@ -140,7 +155,7 @@ To stop and remove all containers when you are done:
 make down
 ```
 
-## 5. Access the UI
+## 6. Access the UI
 
 By default, the UI service exposes port 3000 on the host:
 
@@ -149,7 +164,7 @@ By default, the UI service exposes port 3000 on the host:
 From there you can observe heart rate and respiratory rate estimates, along with waveforms
 produced by the rPPG service and aggregated by the patient‑monitoring‑aggregator.
 
-## 6. Control RPPG Streaming
+## 7. Control RPPG Streaming
 
 The rPPG service provides a simple HTTP control API (hosted by an internal FastAPI server) to
 start and stop streaming:
@@ -162,7 +177,7 @@ start and stop streaming:
 Exact URLs and endpoints may differ slightly depending on how the control API is exposed in
 your environment; refer to the rPPG service documentation for details.
 
-## 7. View Hardware Metrics
+## 8. View Hardware Metrics
 
 The metrics-collector service writes telemetry (GPU, NPU, CPU, power, and other metrics) into
 the `metrics` directory on the host, and may also expose summarized metrics via its own API:

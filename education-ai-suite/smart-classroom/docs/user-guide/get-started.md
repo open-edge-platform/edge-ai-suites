@@ -13,8 +13,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
-  cd education-ai-suite
-  cd smart-classroom
+  cd education-ai-suite\smart-classroom
 ```
 ## Step 2: Run Setup Script (First-Time Only)
 

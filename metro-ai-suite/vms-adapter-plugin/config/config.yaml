@@ -34,6 +34,10 @@ analytics_apps:
     tls_ca_bundle: "${DLS_VISION_CA_BUNDLE:-}"
     mqtt_host: "${MQTT_HOST:-host.docker.internal}"
     mqtt_port: ${MQTT_PORT:-1883}
+    mqtt_tls_enabled: ${MQTT_TLS_ENABLED:-false}
+    mqtt_ca_bundle: "${MQTT_CA_BUNDLE:-}"
+    mqtt_client_cert: "${MQTT_CLIENT_CERT:-}"
+    mqtt_client_key: "${MQTT_CLIENT_KEY:-}"
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST:-172.18.0.1}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
     # Map detection labels (case-insensitive) to Nx Witness object typeIds.
@@ -52,6 +56,10 @@ api:
 mqtt:
   host: "${MQTT_BROKER_HOST:-}"
   port: ${MQTT_BROKER_PORT:-1883}
+  tls_enabled: ${MQTT_BROKER_TLS_ENABLED:-false}
+  tls_ca_bundle: "${MQTT_BROKER_CA_BUNDLE:-}"
+  tls_client_cert: "${MQTT_BROKER_CLIENT_CERT:-}"
+  tls_client_key: "${MQTT_BROKER_CLIENT_KEY:-}"
 
 database:
   url: "postgresql+asyncpg://${PG_USER:-vms}:${PG_PASSWORD:-vms}@${PG_HOST:-postgres}:${PG_PORT:-5434}/vms_plugin"

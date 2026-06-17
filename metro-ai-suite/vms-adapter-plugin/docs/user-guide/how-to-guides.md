@@ -14,6 +14,7 @@ Step-by-step guides for common VAP workflows and integrations.
 
 how-to-guides/lvc-with-frigate-and-nx-witness
 how-to-guides/dls-vision-with-nx-witness
+how-to-guides/tls-and-certificates
 
 :::
 hide_directive-->
