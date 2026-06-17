@@ -42,14 +42,13 @@ The following tools must be available on the system:
 
 ## ⚙️ Setup OVMS
 
-OVMS should be setup before OpenClaw installation to ensure easy discoverability and configuration. Run the following script to start OVMS and wait for the model to be loaded:
+OVMS should be setup before OpenClaw installation to ensure easy discoverability and configuration. Run the following script to start the OVMS container in the background:
 
 ``` bash
-chmod +x ./setup-ovms.sh &&
 ./setup-ovms.sh
 ```
 
-> **Note:** The first run downloads the model (~5GB) which may take 5–10 minutes. The script will wait automatically until the model is ready.
+> **Note:** The first run downloads the model (~5GB). The download happens in the background while you proceed with Steps 1–2. The model will be ready by the time you reach Step 3.
 
 ---
 
@@ -72,23 +71,16 @@ cd education-ai-suite/smart-classroom/teacher-assistant-claw-demo
 
 ---
 
-### Step 2: OpenClaw installation
+### Step 2: Install and configure OpenClaw
 
-Quickly install OpenClaw using the following command. The version of OpenClaw can be changed as per the requirement.
-
-``` bash
-curl -fsSL https://openclaw.ai/install.sh | bash -s -- --version 2026.6.6 --no-onboard
-```
-
----
-
-### Step 3: Configure OpenClaw
-
-Apply configuration from the repo and restart the gateway for the changes to take effect:
+Install OpenClaw, apply configuration from the repo, and start the gateway:
 
 ``` bash
+curl -fsSL https://openclaw.ai/install.sh | bash -s -- --version 2026.6.6 --no-onboard &&
 openclaw config patch --file ./openclaw-config.json &&
-openclaw gateway install
+openclaw gateway install &&
+./setup-openclaw-workspace.sh &&
+openclaw skills update
 ```
 
 <details>
@@ -102,19 +94,6 @@ openclaw config get gateway.auth.token
 
 </details>
 
----
-
-### Step 4: Deploy workspace files
-
-Copy the workspace configuration files (SOUL.md, AGENTS.md, SKILL.md) to the OpenClaw workspace directory. These files define the agent persona, available agents, and skills.
-
-``` bash
-chmod +x ./setup-openclaw-workspace.sh &&
-./setup-openclaw-workspace.sh &&
-openclaw skills update
-```
-
-The `openclaw skills update` command registers the deployed skill with OpenClaw so it becomes available during chat and dashboard sessions.
 
 <details>
 <summary>Workspace structure created by the script</summary>
@@ -141,22 +120,21 @@ The `openclaw skills update` command registers the deployed skill with OpenClaw 
 
 ---
 
-### Step 5: Run OpenClaw agent
+### Step 3: Run OpenClaw agent
 
-Run the following commands to start the OpenClaw agent in the web dashboard or terminal:
+Wait for OVMS to finish loading the model, then start the agent:
 
 ``` bash
-# Run the agent in the web dashboard
-openclaw dashboard
-
-# Or run the agent in the terminal
+echo "Waiting for OVMS..." &&
+until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do sleep 5; printf "."; done &&
+echo " Ready!" &&
 openclaw chat
 ```
 
 Try the following example prompt to verify the agent can read the sample session data:
 
 ```
-Summarize the lesson from June 10
+Summarize the lesson from June 15
 ```
 
 ---

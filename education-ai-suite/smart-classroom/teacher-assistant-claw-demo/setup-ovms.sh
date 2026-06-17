@@ -1,6 +1,7 @@
 #!/bin/bash
 # setup-ovms.sh
-# Starts OVMS with the Qwen3-8B model on GPU and waits until the model is loaded.
+# Starts OVMS with the Qwen3-8B model on GPU.
+# The container starts in the background — model download happens while you continue setup.
 
 set -e
 
@@ -33,8 +34,8 @@ if curl -s http://localhost:${PORT}/v3/models | grep -q "Qwen3-8B-int4-ov" 2>/de
     exit 0
 fi
 
-# Start OVMS container
-echo "[1/2] Starting OVMS container..."
+# Start OVMS container (runs in background, model downloads in parallel)
+echo "Starting OVMS container..."
 docker run -d --rm \
        --user $(id -u):$(id -g) \
        --device /dev/dri \
@@ -50,15 +51,10 @@ docker run -d --rm \
        --target_device GPU \
        --cache_size 4
 
-# Wait for model to load
-echo "[2/2] Waiting for model to load (first run downloads several GB, may take 5–10 min)..."
-until curl -s http://localhost:${PORT}/v3/models | grep -q "Qwen3-8B-int4-ov"; do
-    sleep 5
-    printf "."
-done
-
 echo ""
-echo "=== OVMS is ready ==="
-echo "Model: ${MODEL}"
-echo "Endpoint: http://localhost:${PORT}/v3"
+echo "=== OVMS container started ==="
+echo "Model ${MODEL} is downloading/loading in the background."
+echo "You can proceed with OpenClaw installation. OVMS will be ready by the time you need it."
+echo ""
+echo "To check readiness manually: curl -s http://localhost:${PORT}/v3/models"
 
