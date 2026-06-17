@@ -1,4 +1,4 @@
-﻿
+app:
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: False # True or False, applicable for provider: openvino
