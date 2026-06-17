@@ -9,7 +9,7 @@ replicaCount: 1
 
 image:
   repository: intel/live-metrics-service
-  tag: "2026.1.0-rc1"
+  tag: "2026.1.0"
   pullPolicy: Always
 
 service:
