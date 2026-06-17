@@ -124,6 +124,12 @@ def setup_multimodal_helm_environment():
     logger.debug("Ensuring multimodal Helm release is not present before installation...")
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
 
+    # Wait for pods from previous release to fully terminate before installing
+    logger.debug(f"Waiting for pods in namespace '{namespace_multi}' to terminate...")
+    cleanup_ok = helm_utils.check_pods(namespace_multi, timeout=constants.POD_TERMINATION_TIMEOUT)
+    if not cleanup_ok:
+        logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
+
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(chart_path_multi + '/values.yaml')
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update multimodal values.yaml."
