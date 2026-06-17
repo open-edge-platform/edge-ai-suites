@@ -19,12 +19,13 @@
 
 # Standard Library Imports
 import sys
-import time
 import random
 import threading
 from copy import deepcopy
 
 # Third-Party Library Imports
+import subprocess  # nosec B404
+
 import rclpy
 import rclpy.time
 import rclpy.duration
@@ -36,15 +37,13 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 
 from ament_index_python.packages import get_package_share_directory
 
-import subprocess
-
 # Gazebo Transport Imports
 import gz.transport13 as gz_transport
-import gz.msgs10.boolean_pb2 as boolean_pb2
-import gz.msgs10.entity_pb2 as entity_pb2
-import gz.msgs10.entity_factory_pb2 as entity_factory_pb2
-import gz.msgs10.pose_pb2 as pose_pb2
-import gz.msgs10.pose_v_pb2 as pose_v_pb2
+from gz.msgs10 import boolean_pb2
+from gz.msgs10 import entity_pb2
+from gz.msgs10 import entity_factory_pb2
+from gz.msgs10 import pose_pb2
+from gz.msgs10 import pose_v_pb2
 
 # ROS 2 Imports
 from picknplace.msg import BoxState
@@ -53,7 +52,7 @@ from geometry_msgs.msg import Pose, TransformStamped
 from tf2_ros import TransformBroadcaster
 
 # Custom Module Imports
-import robot_config.utils as utils
+from robot_config import utils
 
 
 class CubeController(Node):
@@ -76,10 +75,9 @@ class CubeController(Node):
         self.get_logger().info('Cube Controller Node Initialized')
 
     def run(self):
-        self.entity_xml = open(
-            get_package_share_directory('picknplace') +
-            '/urdf/marker_0/model.sdf'
-        ).read()
+        sdf_path = get_package_share_directory('picknplace') + '/urdf/marker_0/model.sdf'
+        with open(sdf_path, 'r', encoding='utf-8') as sdf_file:
+            self.entity_xml = sdf_file.read()
 
         self._init_pose()
         self._init_ros_resources()
@@ -243,9 +241,7 @@ class CubeController(Node):
     # Timer to publish cube location and delete cube if it's out of range.
     def timer_callback(self):
         self.timer.cancel()
-        start = time.time()
         array_len = len(self.cubes)
-        cubelist = ''
         try:
             for index in range(array_len):
                 if self.cubes[index] is not None:
@@ -329,17 +325,14 @@ class CubeController(Node):
                             box_state.name = cube
                             box_state.pose = pose
                             self.object_location_publisher.publish(box_state)
-        except Exception:
-            pass
+        except Exception as e:
+            self.get_logger().error(f"Error in timer_callback: {e}")
 
         self.index = (self.index + 1) % 2
         self.timer.reset()
 
     def is_cube_missed(self, pose):
-        if pose.x > 0.0 and pose.x < 1.5 and pose.y > 1.7 and pose.y < 3.0:
-            return True
-        else:
-            return False
+        return 0.0 < pose.x < 1.5 and 1.7 < pose.y < 3.0
 
     def clock_cb(self, entity):
         if entity.clock.sec - self.last_spawn > 10 or self.last_spawn == 0:
@@ -347,7 +340,7 @@ class CubeController(Node):
             array_len = len(self.cubes)
             for index in range(array_len):
                 if self.cubes[index] is None:
-                    success = self._spawn_cube(index)
+                    self._spawn_cube(index)
                     return
 
     def _spawn_cube(self, index):
@@ -361,8 +354,9 @@ class CubeController(Node):
 
         # Set pose using protobuf message structure
         initial_pose = deepcopy(self.initial_pose)
-        initial_pose.position.x += random.uniform(-0.15, 0.15)
-        initial_pose.position.y += random.uniform(-0.15, 0.15)
+        # nosec B311 (benign pseudo-random usage for cube placement jitter)
+        initial_pose.position.x += random.uniform(-0.15, 0.15)  # nosec B311
+        initial_pose.position.y += random.uniform(-0.15, 0.15)  # nosec B311
 
         entity_factory.pose.CopyFrom(initial_pose)
         entity_factory.relative_to = 'world'
@@ -434,7 +428,7 @@ def main(args=sys.argv):
 
     executor = MultiThreadedExecutor()
     executor.add_node(cube_controller_node)
-    exit_code = cube_controller_node.run()
+    cube_controller_node.run()
     executor.spin()
 
     rclpy.shutdown()

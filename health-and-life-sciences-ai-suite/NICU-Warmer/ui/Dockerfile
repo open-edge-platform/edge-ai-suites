@@ -11,6 +11,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
+COPY third_party_programs_nicu-warmer-ui.txt /app/third_party_programs_nicu-warmer-ui.txt
 RUN npm install
 
 # Copy source code

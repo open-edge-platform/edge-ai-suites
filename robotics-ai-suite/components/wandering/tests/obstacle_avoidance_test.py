@@ -8,12 +8,21 @@ import logging
 import os
 import shutil
 import signal
-import subprocess
+import subprocess  # nosec B404
 import time
 from pathlib import Path
 import numpy as np
 import pytest
 from PIL import Image
+
+
+def _resolve_binary(name):
+    """Return absolute path to executable ``name`` or raise if not found on PATH."""
+    path = shutil.which(name)
+    if path is None:
+        raise FileNotFoundError(f"Required executable '{name}' was not found on PATH")
+    return path
+
 
 DEFAULT_RESOLUTION = '1680x1050x24'
 DEFAULT_DISPLAY = ':10.0'
@@ -34,15 +43,34 @@ def take_screenshot_series(screenshot_dir, screenshot_name_prefix="screenshot_",
         frame_rate (int): Frame rate for screenshot capture.
         record_time (int): Duration in seconds to record screenshots.
     """
-    subprocess.run(["mkdir", "-p", f"{screenshot_dir}"], check=True)
+    os.makedirs(screenshot_dir, exist_ok=True)
 
-    # For shell expansion of the xdpyinfo command, use shell=True with a string command
-    cmd_str = (
-        f"ffmpeg -f x11grab -video_size $(xdpyinfo | grep 'dimensions:' | awk '{{print $2}}') "
-        f"-i {display} -r {frame_rate} {screenshot_dir}/{screenshot_name_prefix}_%06d.png"
+    # Resolve the X display geometry in Python instead of via a shell pipeline so
+    # ffmpeg can be launched with an argv list (avoids shell=True).
+    xdpyinfo = _resolve_binary("xdpyinfo")
+    xdpyinfo_env = {**os.environ, "DISPLAY": display}
+    xdpyinfo_result = subprocess.run(  # nosec B603
+        [xdpyinfo], capture_output=True, text=True, check=True, env=xdpyinfo_env
     )
+    video_size = ""
+    for line in xdpyinfo_result.stdout.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("dimensions:"):
+            # Format: "dimensions:    1680x1050 pixels (445x278 millimeters)"
+            video_size = stripped.split()[1]
+            break
+    if not video_size:
+        raise RuntimeError(f"Unable to determine display dimensions for {display}")
 
-    with subprocess.Popen(cmd_str, shell=True) as process:
+    ffmpeg = _resolve_binary("ffmpeg")
+    output_pattern = os.path.join(
+        screenshot_dir, f"{screenshot_name_prefix}_%06d.png"
+    )
+    cmd = [
+        ffmpeg, "-y", "-f", "x11grab", "-video_size", video_size,
+        "-i", display, "-r", str(frame_rate), output_pattern,
+    ]
+    with subprocess.Popen(cmd, start_new_session=True) as process:  # nosec B603
         time.sleep(record_time)
         terminate_process_gracefully(process)
 
@@ -110,11 +138,11 @@ def start_ros_bag_playback(bag_path, loop=False):
     Returns:
         subprocess.Popen: The started process
     """
-    cmd = ["ros2", "launch", "wandering_gazebo_tutorial", bag_path]
+    cmd = [_resolve_binary("ros2"), "launch", "wandering_gazebo_tutorial", bag_path]
     if loop:
         cmd.append("--loop")
 
-    return subprocess.Popen(
+    return subprocess.Popen(  # nosec B603
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -154,8 +182,8 @@ def start_virtual_display(display=DEFAULT_DISPLAY,
     Returns:
         subprocess.Popen: The started Xvfb process
     """
-    return subprocess.Popen(
-        ["Xvfb", f"{display}", "-ac", "-screen", "0", resolution],
+    return subprocess.Popen(  # nosec B603
+        [_resolve_binary("Xvfb"), f"{display}", "-ac", "-screen", "0", resolution],
         start_new_session=True
     )
 
@@ -249,7 +277,7 @@ def after_fixture():
         logging.warning("Failed to copy Gazebo log %s: %s", gazebo_log, exc)
 
 
-def test_obstacle_avoidance():
+def test_obstacle_avoidance():  # pylint: disable=too-many-locals
     """Test obstacle avoidance in Gazebo simulation."""
 
     os.environ["DISPLAY"] = ":10.0"
@@ -259,17 +287,18 @@ def test_obstacle_avoidance():
     fluxbox_process = None
     launch_process = None
 
-    subprocess.run(["mkdir", "-p", "testout"], check=True)
+    os.makedirs("testout", exist_ok=True)
 
     try:
         xvfb_process = start_virtual_display(display=":10.0")
         # pylint: disable=R1732
-        fluxbox_process = subprocess.Popen(
-            ["fluxbox"],
+        fluxbox_process = subprocess.Popen(  # nosec B603
+            [_resolve_binary("fluxbox")],
             start_new_session=True
         )
-        launch_process = subprocess.Popen(
-            ["ros2", "launch", "wandering_gazebo_tutorial", "wandering_gazebo.launch.py"],
+        launch_process = subprocess.Popen(  # nosec B603
+            [_resolve_binary("ros2"), "launch", "wandering_gazebo_tutorial",
+             "wandering_gazebo.launch.py"],
             stdout=open("testout/obstacle_avoidance_test_launch.log", "w", encoding="utf-8"),
             stderr=subprocess.STDOUT,
             start_new_session=True
@@ -282,16 +311,39 @@ def test_obstacle_avoidance():
         # make sure Gazebo initializes properly
         time.sleep(120)
 
-        cmd = (
-            "export DISPLAY=:10.0;"
-            "id=$(xwininfo -root -tree | grep 'Gazebo' | awk '{print $1}'); "
-            'echo "window id=$id"  ; '
-            "xdotool windowfocus --sync $id ; "
-            "xdotool windowsize --sync $id 90% 100% ; "
-            "xdotool windowmove --sync $id 0 0 ;"
-            "wmctrl -ir $id -e '0,0,0,1510,1010'"
+        # Locate the Gazebo X11 window and resize/move it to a known geometry.
+        # Originally a single shell pipeline; refactored to argv-list calls so
+        # subprocess is invoked without shell=True.
+        x11_env = {**os.environ, "DISPLAY": ":10.0"}
+        xwininfo = _resolve_binary("xwininfo")
+        xdotool = _resolve_binary("xdotool")
+        wmctrl = _resolve_binary("wmctrl")
+
+        xwininfo_result = subprocess.run(  # nosec B603
+            [xwininfo, "-root", "-tree"],
+            capture_output=True, text=True, check=True, env=x11_env,
         )
-        subprocess.run(cmd, shell=True, check=True)
+        window_id = None
+        for line in xwininfo_result.stdout.splitlines():
+            if "Gazebo" in line:
+                window_id = line.strip().split()[0]
+                break
+        if not window_id:
+            pytest.fail("Unable to locate Gazebo window in xwininfo output")
+        logging.info("window id=%s", window_id)
+
+        for xdotool_args in (
+            [xdotool, "windowfocus", "--sync", window_id],
+            [xdotool, "windowsize", "--sync", window_id, "90%", "100%"],
+            [xdotool, "windowmove", "--sync", window_id, "0", "0"],
+        ):
+            subprocess.run(  # nosec B603
+                xdotool_args, check=True, env=x11_env,
+            )
+        subprocess.run(  # nosec B603
+            [wmctrl, "-ir", window_id, "-e", "0,0,0,1510,1010"],
+            check=True, env=x11_env,
+        )
 
         out_dir = "testout/screenshots/"
         take_screenshot_series(

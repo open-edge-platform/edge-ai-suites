@@ -52,8 +52,7 @@ class Indexer:
         parser_kwargs = dict(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
-            extract_images=False,
-            use_hi_res_strategy=False,
+            extract_images=True,
         )
 
         if chunk_method == "semantic":

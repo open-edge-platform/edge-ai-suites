@@ -264,8 +264,7 @@ MQTT_HOST=
 MQTT_PORT=1883
 
 # VAP ports
-BACKEND_PORT=8085
-UI_PORT=3100
+UI_HTTPS_PORT=3443
 
 # MQTT Broker host for VAP's own broker (used by LVC; leave empty if not using LVC)
 MQTT_BROKER_HOST=
@@ -477,10 +476,10 @@ A `200 OK` response confirms the device agent is enabled.
 Open a browser and navigate to:
 
 ```
-http://localhost:3100
+https://localhost:3443
 ```
 
-The dashboard loads and connects to the VAP backend at `http://localhost:8085/v1`.
+The dashboard loads and connects to the VAP backend through the UI proxy at `https://localhost:3443/v1`.
 
 ### 6.2 Discover Cameras from Nx Witness
 
@@ -491,7 +490,7 @@ The dashboard loads and connects to the VAP backend at `http://localhost:8085/v1
 Alternatively, trigger discovery via the API:
 
 ```bash
-curl -X POST http://localhost:8085/v1/cameras/discover
+curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
 ### 6.3 Enable a Camera for Analytics
@@ -501,7 +500,7 @@ In the **Camera Discovery** panel, find the camera you want to use. Click the to
 You can also enable a camera via the API:
 
 ```bash
-curl -X POST http://localhost:8085/v1/cameras/enable \
+curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
   -d '{"camera_ids": ["nx:<device-uuid>"], "enabled": true}'
 ```
@@ -578,7 +577,7 @@ Check active runs in the dashboard **Analytics Engine** panel — the run should
 Or via the API:
 
 ```bash
-curl http://localhost:8085/v1/analytics-apps/dls_vision/runs | python3 -m json.tool
+curl -k https://localhost:3443/v1/analytics-apps/dls_vision/runs | python3 -m json.tool
 ```
 
 Check the Pipeline Server directly:
@@ -616,7 +615,7 @@ When you want to stop the detection, go back to the VAP dashboard **Analytics En
 Or via the API:
 
 ```bash
-curl -X DELETE http://localhost:8085/v1/analytics-apps/dls_vision/runs/<run_id>
+curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_id>
 ```
 
 This sends `DELETE /pipelines/<instance_id>` to the DLStreamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).

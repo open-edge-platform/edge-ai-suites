@@ -23,7 +23,7 @@ The main features are as follows:
 
 - Multimodal semantic search across videos, images, and documents
 - AI-driven video summarization using Vision Language Models (VLM)
-- Document text extraction with OCR support (Tesseract, PaddleOCR)
+- Document text extraction with OCR support (PaddleOCR)
 - RAG-based Question & Answer over uploaded educational materials
 - Vector-based retrieval using ChromaDB with CLIP and mE5 embeddings
 
@@ -48,7 +48,7 @@ The **audio pipeline** begins with audio preprocessing, where FFmpeg chunks inpu
 
 The **video analytics pipeline** processes up to three concurrent camera streams (front, back, content) through DL Streamer-based processing graphs. Each stream passes through **YOLO-based person detection and pose estimation**, followed by **posture classification** (sit/stand, hand-raise) and **multi-model classification** (ResNet-18, MobileNet-V2, Person-ReID). All models run on OpenVINO with NPU by default. Processed video is streamed via a **MediaMTX RTSP server**, and per-frame metadata is aggregated into classroom engagement statistics.
 
-The **content search pipeline** handles multimodal content ingestion and retrieval. Uploaded files (videos, documents, images) are processed through format-specific extractors: videos are split into time-based chunks and summarized by a **VLM** (Qwen2.5-VL); documents undergo text extraction with optional OCR (Tesseract) and semantic chunking; images are embedded directly via **CLIP**. All content is indexed into **ChromaDB** with dual embeddings (CLIP for visual, mE5 for text). At query time, a **cross-encoder reranker** (BGE-reranker) scores document results, and **Reciprocal Rank Fusion (RRF)** merges results across modalities for balanced retrieval. A RAG-based Q&A layer generates grounded answers from the retrieved context.
+The **content search pipeline** handles multimodal content ingestion and retrieval. Uploaded files (videos, documents, images) are processed through format-specific extractors: videos are split into time-based chunks and summarized by a **VLM** (Qwen2.5-VL); documents undergo text extraction with optional OCR (PaddleOCR) and semantic chunking; images are embedded directly via **CLIP**. All content is indexed into **ChromaDB** with dual embeddings (CLIP for visual, mE5 for text). At query time, a **cross-encoder reranker** (BGE-reranker) scores document results, and **Reciprocal Rank Fusion (RRF)** merges results across modalities for balanced retrieval. A RAG-based Q&A layer generates grounded answers from the retrieved context.
 
 <p align="center">
   <img src="./docs/user-guide/_assets/architecture.svg" alt="High-Level Audio Pipeline Diagram" width="80%">

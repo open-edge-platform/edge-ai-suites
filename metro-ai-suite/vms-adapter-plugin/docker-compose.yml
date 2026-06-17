@@ -7,10 +7,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: vms-adapter-backend
-    expose:
-      - "8080"
-    ports:
-      - "${BACKEND_PORT:-8085}:8080"
     volumes:
       - ./config:/app/config:ro
     env_file: .env
@@ -30,6 +26,10 @@ services:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,mode=1777
+      - /var/tmp:rw,mode=1777
     restart: unless-stopped
     networks:
       - vms-net
@@ -39,8 +39,14 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     container_name: vms-adapter-ui
+    read_only: true
     ports:
-      - "${UI_PORT:-3000}:80"
+      - "${UI_HTTPS_PORT:-3443}:443"
+    tmpfs:
+      - /etc/nginx/certs:rw,mode=1777
+      - /var/cache/nginx:rw,mode=1777
+      - /var/run:rw,mode=1777
+      - /tmp:rw,mode=1777
     environment:
       LVC_BASE_URL: "${LVC_BASE_URL:-http://host.docker.internal:4173}"
       MEDIAMTX_URL: "${MEDIAMTX_URL:-http://host.docker.internal:8889}"
@@ -50,7 +56,7 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/health"]
+      test: ["CMD", "curl", "-kfsS", "https://127.0.0.1/health"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -73,8 +79,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "${PG_HOST_PORT:-5433}:${PG_PORT:-5434}"
     networks:
       - vms-net
 

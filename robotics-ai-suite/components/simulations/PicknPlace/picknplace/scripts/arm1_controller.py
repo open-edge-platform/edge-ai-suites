@@ -17,33 +17,41 @@
 #
 # Desc: Controller program for ARM1
 import sys
-import subprocess
+import subprocess  # nosec B404
 import threading
 import time
-
+import shutil
 
 # Third-Party Library Imports
 import rclpy
+import tf2_ros
+from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.action import FollowJointTrajectory
 from builtin_interfaces.msg import Duration
-from rclpy.action import ActionClient
 from robot_config_plugins.srv import ConveyorBeltControl
 from moveit2 import MoveIt2
 from smach import State, StateMachine
-from rclpy.parameter import Parameter
-import tf2_ros
 
 # Custom Module Imports
 from robot_config import utils
 from robots import ur5 as robot
+
+_ROS2_BIN = shutil.which('ros2')
+if _ROS2_BIN is None:
+    raise RuntimeError('ros2 executable not found in PATH')
+
+_GZ_BIN = shutil.which('gz')
+if _GZ_BIN is None:
+    raise RuntimeError('gz executable not found in PATH')
 
 
 class RobotController(Node):
@@ -191,6 +199,10 @@ class RobotController(Node):
                 if best_distance is None or distance < best_distance:
                     best_distance = distance
             except Exception:
+                self.logger.info(
+                    f"TF lookup failed for ee_frame {ee_frame}, "
+                    "skipping in distance calculation"
+                )
                 continue
 
         return best_distance
@@ -200,7 +212,7 @@ class RobotController(Node):
         Returns (x, y, z) tuple or None."""
         try:
             result = subprocess.run(
-                ["gz", "model", "-m", model_name, "--pose"],
+                [_GZ_BIN, "model", "-m", model_name, "--pose"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, timeout=timeout,
             )
@@ -211,8 +223,10 @@ class RobotController(Node):
                     coords = line.strip().strip('[]').split()
                     if len(coords) >= 3:
                         return (float(coords[0]), float(coords[1]), float(coords[2]))
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.warn(
+                f"[STATE: GRASP] Failed to query Gazebo model pose for {model_name}: {e}"
+            )
         return None
 
     def conveyor_velocity_callback(self, msg):
@@ -315,7 +329,8 @@ class RobotController(Node):
                         closest_distance = distance_to_grasp
                         closest_cube = (cube_frame, transform)
 
-            except Exception:
+            except Exception as e:
+                self.logger.warn(f"[STATE: GRASP] TF lookup failed for cube {cube_frame}: {e}")
                 continue
 
         return closest_cube if closest_cube else (None, None)
@@ -348,7 +363,7 @@ class RobotController(Node):
             self.logger.warn("[GRIPPER] Not found, attempting to spawn gripper_controller...")
             try:
                 subprocess.run(
-                    ["ros2", "run", "controller_manager", "spawner",
+                    [_ROS2_BIN, "run", "controller_manager", "spawner",
                      "gripper_controller", "-c", f"/{self.arm_name}/controller_manager"],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -360,23 +375,23 @@ class RobotController(Node):
             # Set high PID gains on the JointTrajectoryController for aggressive finger closing
             try:
                 subprocess.run(
-                    ["ros2", "param", "set", f"/{self.arm_name}/gripper_controller",
+                    [_ROS2_BIN, "param", "set", f"/{self.arm_name}/gripper_controller",
                      f"gains.{self.arm_name}__left_finger_joint.p", "100.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 subprocess.run(
-                    ["ros2", "param", "set", f"/{self.arm_name}/gripper_controller",
+                    [_ROS2_BIN, "param", "set", f"/{self.arm_name}/gripper_controller",
                      f"gains.{self.arm_name}__left_finger_joint.i", "10.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 subprocess.run(
-                    ["ros2", "param", "set", f"/{self.arm_name}/gripper_controller",
+                    [_ROS2_BIN, "param", "set", f"/{self.arm_name}/gripper_controller",
                      f"gains.{self.arm_name}__left_finger_joint.d", "1.0"],
                     capture_output=True, text=True, timeout=5,
                 )
                 self.logger.info("[GRIPPER] Set PID gains P=100 I=10 D=1 for left_finger")
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.warn(f"[GRIPPER] Failed to set PID gains: {e}")
         else:
             self.logger.warn("[GRIPPER] Timed out waiting for gripper_controller action server")
         return ready
@@ -424,7 +439,7 @@ class RobotController(Node):
 
         result = result_future.result()
         error_code = result.result.error_code
-        success = (error_code == FollowJointTrajectory.Result.SUCCESSFUL)
+        success = error_code == FollowJointTrajectory.Result.SUCCESSFUL
         left_pos_after, right_pos_after = self._read_both_finger_positions()
         self.logger.info(
             f"[GRIPPER] Result: error_code={error_code}, success={success}, "
@@ -477,7 +492,7 @@ class RobotController(Node):
             result = future.result()
             action = "STOPPED" if power == 0.0 else f"SET to {power}%"
             self.logger.info(f"[CONVEYOR] Belt {action} (success={result.success})")
-            self._conveyor_stopped = (power == 0.0)
+            self._conveyor_stopped = power == 0.0
             return result.success
         self.logger.warn(f"[CONVEYOR] Service call timed out (power={power})")
         return False
@@ -527,7 +542,7 @@ class Setup(State):
         for gain_val in ['50.0']:
             try:
                 result = subprocess.run(
-                    ["ros2", "param", "set", "/arm1/gz_ros_control",
+                    [_ROS2_BIN, "param", "set", "/arm1/gz_ros_control",
                      "position_proportional_gain", gain_val],
                     capture_output=True, text=True, timeout=5.0,
                 )
@@ -605,7 +620,7 @@ class Wait(State):
                 # Lock on when cube is far enough for the arm to pre-position
                 # (>2m gives ~17s at 0.12m/s)
                 # But also close enough that TF positions are fresh
-                if distance > 0.3 and distance < 2.5 and cube_y > 0.5:
+                if 0.3 < distance < 2.5 and cube_y > 0.5:
                     self.robot_controller.target_cube_name = cube_name
                     self.robot_controller.target_cube_x = cube_transform.transform.translation.x
                     self.robot_controller.target_cube_y = cube_y
@@ -991,8 +1006,10 @@ class GraspObject(State):
                 ee_tf.transform.translation.y,
                 ee_tf.transform.translation.z,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            self.robot_controller.logger.warn(
+                f"[STATE: GRASP] TF lookup failed for ee_frame arm1/wrist_3_link: {e}"
+            )
 
         self.robot_controller.logger.info(
             f"[STATE: GRASP] After lift: gz_pose={pose_after_gz}, ee={ee_world}, "
