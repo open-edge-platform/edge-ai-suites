@@ -24,7 +24,7 @@ an introduction.
 
   ```bash
   export REGISTRY="intel"
-  export TAG="2026.1.0-rc1"
+  export TAG="2026.1.0"
   ```
 
 ## Using Edge Microvisor Toolkit
