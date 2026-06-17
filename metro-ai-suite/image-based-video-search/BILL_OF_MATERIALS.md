@@ -1,4 +1,4 @@
-## Bill of Materials
+# Bill of Materials
 
 | Component                | Included Services/Tools                          |
 |--------------------------|--------------------------------------------------|
