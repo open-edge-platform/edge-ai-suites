@@ -23,12 +23,12 @@ repositories=(
 )
 
 images=(
-  "intel/audio-analyzer:1.3.3-rc1"
+  "intel/audio-analyzer:1.3.3"
   "intel/document-ingestion:2026.1.0-rc1"
   "intel/multimodal-embedding-serving:2026.1.0-rc1"
   "intel/vdms-dataprep:2026.1.0-rc1"
-  "intel/vlm-openvino-serving:1.3.2-rc1"
-  "intel/model-download:2026.1.0-rc1"
+  "intel/vlm-openvino-serving:1.3.2"
+  "intel/model-download:2026.1.0-rc2"
   "intel/chatqna:2026.1.0-rc1"
   "intel/chatqna-ui:2026.1.0-rc1"
 )
