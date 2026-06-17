@@ -80,7 +80,7 @@ A **Media Server (MediaMTX)** receives processed video from all three pipelines 
 - RTSP streaming for real-time playback
 - HLS/WebRTC streaming for browser-based viewing
 
-## Content Search Pipeline 
+## Content Search Pipeline
 
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.
 
@@ -139,6 +139,7 @@ Monitors and collects:
 
 ## Learn More
 
-- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
 - [Get Started](./get-started.md): Installation and setup instructions.
-- [Application Flow](./application-flow.md): End-to-end application flow
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.
