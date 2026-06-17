@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 -------------------------------------------------------------
-2)@gradio/lite, aiofiles, aiohttp, aiosignal, frozenlist, hf-xet, huggingface-hub, multidict, numpy, orjson, packaging, propcache, python-multipart, requests, sniffio, yarl
+2)@gradio/lite, aiofiles, aiosignal, frozenlist, hf-xet, huggingface-hub, multidict, numpy, orjson, packaging, propcache, python-multipart, requests, sniffio, yarl
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
