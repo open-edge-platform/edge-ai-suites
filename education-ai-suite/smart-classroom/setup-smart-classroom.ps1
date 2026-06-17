@@ -263,6 +263,7 @@ Write-Host "[1] CHECK SYSTEM REQUIREMENTS" -ForegroundColor Green
 Write-Host "------------------------------" -ForegroundColor Green
 Write-Host ""
 
+<<<<<<< Updated upstream
 Write-Host "System Requirements:" -ForegroundColor Yellow
 Write-Host "  OS: Windows 11" -ForegroundColor Gray
 Write-Host "  Processor: Intel Core Ultra Series 1, 2, or 3 (with iGPU)" -ForegroundColor Gray
@@ -271,6 +272,70 @@ Write-Host "  Storage: 50 GB free (for models and logs)" -ForegroundColor Gray
 Write-Host "  GPU: Intel iGPU (Core Ultra, Arc) for summarization" -ForegroundColor Gray
 Write-Host "  NPU: Intel NPU (Core Ultra) for Video pipelines" -ForegroundColor Gray
 Write-Host "  NPU Driver: https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor Cyan
+=======
+$systemRequirementsDocPath = Join-Path $PSScriptRoot "docs\user-guide\get-started\system-requirements.md"
+$systemRequirementsDocUrl = "https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements"
+
+function Show-SystemRequirementsFromDoc {
+    param(
+        [string]$DocPath,
+        [string]$DocUrl,
+        [string]$SectionHeader = "Software and Hardware Requirements"
+    )
+
+    Write-Host "System Requirements:" -ForegroundColor Yellow
+
+    if (-not (Test-Path $DocPath)) {
+        return
+    }
+
+    $docLines = Get-Content -Path $DocPath -Encoding UTF8
+    $sectionStart = -1
+    for ($i = 0; $i -lt $docLines.Count; $i++) {
+        if ($docLines[$i] -match "^##\s+$([regex]::Escape($SectionHeader))\s*$") {
+            $sectionStart = $i
+            break
+        }
+    }
+
+    if ($sectionStart -eq -1) {
+        return
+    }
+
+    $sectionEnd = $docLines.Count
+    for ($j = $sectionStart + 1; $j -lt $docLines.Count; $j++) {
+        if ($docLines[$j] -match "^##\s+") {
+            $sectionEnd = $j
+            break
+        }
+    }
+
+    $sectionLines = $docLines[($sectionStart + 1)..($sectionEnd - 1)]
+    foreach ($line in $sectionLines) {
+        if ($line -match "^\s*-\s+") {
+            $displayLine = $line.Trim()
+            $displayLine = $displayLine -replace "^-\s+", "  "
+            $displayLine = $displayLine -replace "\*\*", ""
+            $displayLine = $displayLine -replace "\[([^\]]+)\]\(([^\)]+)\)", '$1 ($2)'
+            Write-Host $displayLine -ForegroundColor Gray
+        }
+    }
+
+    Write-Host ""
+}
+
+Show-SystemRequirementsFromDoc -DocPath $systemRequirementsDocPath -DocUrl $systemRequirementsDocUrl
+Write-Host "  Source:" -ForegroundColor Yellow
+Write-Host "  $systemRequirementsDocUrl" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Please review the system requirements above." -ForegroundColor Yellow
+$proceedChecks = Read-Host "Would you like to proceed with the setup? (Y/N)"
+if ($proceedChecks -notmatch "^[Yy]") {
+    Write-Host ""
+    Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+    exit 0
+}
+>>>>>>> Stashed changes
 Write-Host ""
 
 $checksFailed = $false
@@ -373,8 +438,40 @@ try {
     }
     
     if ($intelGpuFound) {
+<<<<<<< Updated upstream
         $intelGpu = ($gpuList | Where-Object { $_.Name -match "Intel" } | Select-Object -First 1).Name
         Write-Host "  [OK] $intelGpu" -ForegroundColor Green
+=======
+        $intelGpuObj = $gpuList | Where-Object { $_.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)" } | Select-Object -First 1
+        Write-Host "  [OK] $($intelGpuObj.Name)" -ForegroundColor Green
+
+        # Driver version check
+        $installedVersion = $intelGpuObj.DriverVersion
+        if ($installedVersion) {
+            $majorVersion = [int]($installedVersion.Split('.')[0])
+
+            # Latest known driver for supported GPUs (Arc / Core Ultra use the 32.x branch)
+            $latestVersionMap = @{
+                32 = "32.0.101.8826"   # Arc / Iris Xe / Core Ultra Series 1, 2, 3
+            }
+
+            Write-Host "  Driver version: $installedVersion" -ForegroundColor Gray
+
+            if ($latestVersionMap.ContainsKey($majorVersion)) {
+                $latestVersion = $latestVersionMap[$majorVersion]
+
+                if ([version]$installedVersion -ge [version]$latestVersion) {
+                    Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
+                } else {
+                    Write-Host "  [WARN] Driver is outdated - latest is $latestVersion" -ForegroundColor Yellow
+                    Write-Host "         Please Download and install the latest version (https://www.intel.com/content/www/us/en/search.html)" -ForegroundColor Cyan
+                    $warnings += "Intel GPU driver is outdated (installed: $installedVersion, latest: $latestVersion)"
+                }
+            } else {
+                Write-Host "  [INFO] Unknown driver family (v$majorVersion) - verify manually at https://www.intel.com/content/www/us/en/search.html" -ForegroundColor DarkYellow
+            }
+        }
+>>>>>>> Stashed changes
     } else {
         Write-Host "  [WARN] Intel GPU not detected" -ForegroundColor Yellow
         Write-Host "         Found: $($gpuNames -join ', ')" -ForegroundColor DarkYellow
