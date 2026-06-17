@@ -113,9 +113,9 @@ src = "$(VIPPET_CWD)/shared/models/supported_models.yaml"
 broken = {"pallet_defect_detection"}
 models = yaml.safe_load(open(src))
 filtered = [
-    m for m in models
-    if m.get("source") != "huggingface"
-    and m.get("name") not in broken
+	m for m in models
+	if m.get("source") != "huggingface"
+	and m.get("name") not in broken
 ]
 yaml.dump(filtered, open(src, "w"), default_flow_style=False, allow_unicode=True)
 print(f"✓ supported_models.yaml filtered ({len(filtered)}/{len(models)} models, huggingface and broken models excluded)")
