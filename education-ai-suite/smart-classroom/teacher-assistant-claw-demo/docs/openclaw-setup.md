@@ -103,12 +103,11 @@ openclaw config get gateway.auth.token
 ├── SOUL.md                          # Agent persona and behavior
 ├── AGENTS.md                        # Agent definitions
 ├── smart_classroom_incoming/        # Data directory for Smart Classroom reports
-│   ├── lesson1.md                   # Sample flat-file session (legacy format)
-│   └── 2026-06-10/                  # Sample session folder
+│   └── 2026-06-15/                  # Sample session folder
 │       ├── summary.md
 │       ├── topics.json
 │       ├── engagement_report.json
-│       └── participation_report.json
+│       └── session_meta.json
 └── skills/
     └── classroom_qa/
         └── SKILL.md                 # Smart Classroom QA skill definition
