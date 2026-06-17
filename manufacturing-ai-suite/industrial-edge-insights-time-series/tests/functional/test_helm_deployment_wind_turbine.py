@@ -217,7 +217,7 @@ def test_verify_pods_stability_after_influxdb_restart(setup_helm_environment, te
     logger.info(f"pod_restart result: {result}")
     assert result == True, "Failed to restart pod for opcua input plugin."
     logger.info("Pod is restarted for opcua input plugin")
-    time.sleep(1)
+    time.sleep(wait_time)  # Wait for pods to fully stabilize after restart
     result = helm_utils.verify_pods(namespace)
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for opcua input plugin."

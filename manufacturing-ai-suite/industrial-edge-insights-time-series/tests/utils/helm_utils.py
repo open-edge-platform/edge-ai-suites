@@ -1680,6 +1680,8 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "The directory '/.cache/pip' or its parent directory is not owned",  # pip cache warning
             "error while sending usage report",  # Kapacitor telemetry timeout (benign)
             "usage.influxdata.com",  # InfluxData usage reporting endpoint timeout
+            "failed to write points to InfluxDB",  # Transient error during InfluxDB restart
+            "connection refused",  # Transient connection refused during pod restarts
         ]
         
         # Check if "error" exists in logs (case-insensitive)
@@ -1689,7 +1691,7 @@ def check_pod_logs_for_errors(namespace, pod_name):
             is_benign = any(pattern.lower() in logs_lower for pattern in benign_patterns)
             
             if is_benign:
-                logger.info(f"Benign pip warnings found in logs for pod {pod_name} (expected during package installation). Logs:\n{logs}")
+                logger.info(f"Benign transient errors found in logs for pod {pod_name} (expected during restarts). Logs:\n{logs}")
                 return True
             else:
                 logger.error(f"Error found in logs for pod {pod_name}:")

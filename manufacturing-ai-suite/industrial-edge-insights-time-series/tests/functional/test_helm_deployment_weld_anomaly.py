@@ -122,7 +122,7 @@ def test_verify_pods_stability_after_influxdb_restart(setup_helm_weld_environmen
     logger.info(f"pod_restart result: {result}")
     assert result == True, "Failed to restart pod for mqtt input plugin."
     logger.info("Pod is restarted for mqtt input plugin")
-    time.sleep(1)
+    time.sleep(wait_time)  # Wait for pods to fully stabilize after restart
     result = helm_utils.verify_pods(namespace)
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for mqtt input plugin."

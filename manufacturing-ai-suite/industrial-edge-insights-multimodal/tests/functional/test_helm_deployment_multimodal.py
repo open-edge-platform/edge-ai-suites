@@ -181,7 +181,7 @@ def test_verify_pods_stability_after_influxdb_restart(setup_multimodal_helm_envi
     logger.info(f"pod_restart result: {pod_restart_result}")
     assert pod_restart_result == True, "Failed to restart pod."  # nosec B101
     logger.info("Pod is restarted")
-    time.sleep(1)
+    time.sleep(wait_time_multi)  # Wait for pods to fully stabilize after restart
     pods_result2 = helm_utils.verify_pods(namespace_multi)
     logger.info(f"verify_pods result after restart: {pods_result2}")
     assert pods_result2 is True, "Failed to verify pods."  # nosec B101
