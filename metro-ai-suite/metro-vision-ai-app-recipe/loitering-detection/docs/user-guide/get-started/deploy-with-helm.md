@@ -13,11 +13,11 @@ in the sample application.
 ### Prerequisites
 
 - [System Requirements](./system-requirements.md)
-- K8s installation on single or multi node must be done as prerequisite to continue the
-following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and
-`kubelet` packages on single and multi nodes with `v1.30.2`.
-Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>)
-to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- **Kubernetes Cluster**: Ensure you have a properly installed and
+configured Kubernetes cluster.
+- **Tools Installed**: Install the required tools:
+  - Kubernetes CLI (kubectl)
+  - Helm 3 or later
 - For Helm installation, refer to the [Helm website](https://helm.sh/docs/intro/install/)
 - **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
 
@@ -62,6 +62,12 @@ to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
 
   # Step 9: Install the Intel NPU device plugin
   kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  ```
+
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
   ```
 
   Verify the GPU and NPU resources are advertised on nodes:

@@ -70,10 +70,10 @@ httpsProxy: "http://proxy.example.com:916"
 noProxy: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.1.2.3,10.1.2.4"
 
 trafficIntersections:
-  apiEndpoint: "/api/v1/traffic/current?images=false"
+  apiEndpoint: "/api/v1/traffic/current/ws?images=false"
   hosts:
-    - "http://10.1.2.3:8081"
-    - "http://10.1.2.4:8081"
+    - "ws://10.1.2.3:8081"
+    - "ws://10.1.2.4:8081"
 ```
 
 ### Step 3: Set a Namespace Variable

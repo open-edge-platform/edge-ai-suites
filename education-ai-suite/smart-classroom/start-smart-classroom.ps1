@@ -78,26 +78,37 @@ function Stop-AllServices {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     
-    $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Backend (port 8000)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
-        }
-        Write-Host "    Backend stopped." -ForegroundColor Gray
-    }
+    $ports = @(8000, 9011, 5173)
+    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 5173 = "Frontend" }
     
-    $connections = Get-NetTCPConnection -LocalPort 9011 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Content Search (port 9011)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    foreach ($port in $ports) {
+        Write-Host "  Stopping $($portNames[$port]) (port $port)..." -ForegroundColor Yellow
+        
+        # Retry killing processes on this port up to 3 times
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            try {
+                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+                if ($connections) {
+                    $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+                    foreach ($procId in $procIds) {
+                        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            } catch {
+                # Continue to next method
+            }
+            
+            Start-Sleep -Milliseconds 300
         }
-        Write-Host "    Content Search stopped." -ForegroundColor Gray
+        
+        # Use taskkill as additional method
+        try {
+            taskkill /F /FI "LocalPort eq $port" 2>$null
+        } catch {}
+        
+        Start-Sleep -Seconds 1
     }
-    
+
     $connections = Get-NetTCPConnection -LocalPort 9090 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping ChromaDB (port 9090)..." -ForegroundColor Yellow
@@ -105,7 +116,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    ChromaDB stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 9900 -ErrorAction SilentlyContinue
@@ -115,7 +125,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    VLM stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue
@@ -125,7 +134,6 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Preprocess stopped." -ForegroundColor Gray
     }
 
     $connections = Get-NetTCPConnection -LocalPort 9990 -ErrorAction SilentlyContinue
@@ -135,21 +143,48 @@ function Stop-AllServices {
         foreach ($procId in $procIds) {
             Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Ingest stopped." -ForegroundColor Gray
     }
-
-    $connections = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
-    if ($connections) {
-        Write-Host "  Stopping Frontend (port 5173)..." -ForegroundColor Yellow
-        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($procId in $procIds) {
-            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    
+    # Comprehensive process cleanup (silent)
+    
+    # Kill all Python processes (multiple attempts)
+    try {
+        Get-Process python, python.exe -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
-        Write-Host "    Frontend stopped." -ForegroundColor Gray
+    } catch {}
+    
+    # Kill all npm/node processes
+    try {
+        Get-Process node, npm -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+    
+    # Kill uvicorn processes specifically
+    try {
+        Get-Process uvicorn -ErrorAction SilentlyContinue | ForEach-Object {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+    
+    # Final wait for ports to be freed
+    Start-Sleep -Seconds 3
+    
+    # Verify ports are free
+    $portsToVerify = @(8000, 9011, 9090, 9900, 8001, 9990, 5173)
+    foreach ($port in $portsToVerify) {
+        try {
+            $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+            if ($connection) {
+                taskkill /F /PID $connection.OwningProcess 2>$null
+                Start-Sleep -Seconds 1
+            }
+        } catch {}
     }
     
     Write-Host ""
-    Write-Host "  All services stopped." -ForegroundColor Green
+    Write-Host "Services stopped.. Wait for the processes to get terminated...before start again..." -ForegroundColor Green
 }
 
 # Register Ctrl+C handler
@@ -165,6 +200,9 @@ trap {
     Write-Host "  Script interrupted!" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
+    }
+    for ($i = 30; $i -gt 0; $i--) {
+        Start-Sleep -Seconds 1
     }
     exit 1
 }
@@ -303,9 +341,25 @@ Write-Host ""
 Write-Host "[PRE-CHECK] DETECTING RUNNING SERVICES" -ForegroundColor Cyan
 Write-Host "--------------------------------------" -ForegroundColor Cyan
 
-$backendRunning = Test-PortInUse -Port 8000
-$contentSearchRunning = Test-PortInUse -Port 9011
-$frontendRunning = Test-PortInUse -Port 5173
+# Wait a moment for ports to be fully released from previous session
+Write-Host "  Checking port status..." -ForegroundColor Gray
+Start-Sleep -Seconds 2
+
+# Enhanced port checking that verifies services are actually listening (not just in TIME_WAIT)
+function Test-ServiceListening {
+    param([int]$Port)
+    
+    try {
+        $connection = Get-NetTCPConnection -LocalPort $Port -State "Listen" -ErrorAction SilentlyContinue
+        return $null -ne $connection
+    } catch {
+        return $false
+    }
+}
+
+$backendRunning = Test-ServiceListening -Port 8000
+$contentSearchRunning = Test-ServiceListening -Port 9011
+$frontendRunning = Test-ServiceListening -Port 5173
 
 $anyRunning = $backendRunning -or $contentSearchRunning -or $frontendRunning
 
@@ -337,7 +391,7 @@ if ($Restart) {
     # -Restart flag: stop all running services and start fresh
     Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
     if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-    if ($contentSearchRunning) {
+    if ($contentSearchRunning) { 
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -372,7 +426,7 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Restarting all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) {
+            if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -404,7 +458,7 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Stopping all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) {
+            if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -412,7 +466,7 @@ if ($Restart) {
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
             Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-            Write-Host "  All services stopped. Exiting." -ForegroundColor Green
+            Write-Host "  All services stopped. Waiting for processes to terminate...Before starting new services..." -ForegroundColor Green
             exit 0
         }
         "E" {
@@ -430,7 +484,7 @@ if ($Restart) {
     Write-Host "  No main services detected." -ForegroundColor Green
     Write-Host ""
     Write-Host "  Stopping any orphaned processes (ChromaDB, VLM, Preprocess, Ingest, Python)..." -ForegroundColor Yellow
-
+    
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -712,7 +766,7 @@ function Wait-ForService {
     )
     
     $elapsed = 0
-    $initialGracePeriod = 10  # Short grace period before checking for crashes
+    $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
     Write-Host "  (No timeout - will wait until service is ready or crashes)" -ForegroundColor DarkGray
@@ -900,7 +954,7 @@ Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
-pip install --upgrade -r requirements.txt
+python -m pip install --upgrade -r requirements.txt
 
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
@@ -1068,151 +1122,6 @@ npm run dev -- --host 0.0.0.0 --port 5173
         Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
         exit 1
     }
-    
-} else {
-    # ========== LINUX ==========
-    Write-Host "Linux support - launching terminals..." -ForegroundColor Cyan
-    
-    $gnomeExists = Get-Command gnome-terminal -ErrorAction SilentlyContinue
-    $konsoleExists = Get-Command konsole -ErrorAction SilentlyContinue
-    $xtermExists = Get-Command xterm -ErrorAction SilentlyContinue
-    
-    $terminalCmd = if ($gnomeExists) { "gnome-terminal" }
-                   elseif ($konsoleExists) { "konsole" }
-                   elseif ($xtermExists) { "xterm" }
-                   else { $null }
-    
-    if (-not $terminalCmd) {
-        Write-Host "No supported terminal found. Run manually:" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Terminal 1 (Backend):" -ForegroundColor Cyan
-        Write-Host "  cd $(Split-Path $ScriptDir -Parent) && python -m venv smartclassroom && source smartclassroom/bin/activate && cd smart-classroom && pip install -r requirements.txt && python main.py"
-        Write-Host ""
-        Write-Host "Terminal 2 (Content Search):" -ForegroundColor Cyan
-        Write-Host "  cd $ScriptDir/content_search && python -m venv venv_content_search && source venv_content_search/bin/activate && pip install -r requirements.txt && python start_services.py"
-        Write-Host ""
-        Write-Host "Terminal 3 (Frontend):" -ForegroundColor Cyan
-        Write-Host "  cd $ScriptDir/ui && npm install && npm run dev -- --host 0.0.0.0 --port 5173"
-        exit 1
-    }
-    
-    # Build proxy export for bash
-    $proxyExport = ""
-    if ($httpProxy) { $proxyExport += "export http_proxy='$httpProxy'; export HTTP_PROXY='$httpProxy'; " }
-    if ($httpsProxy) { $proxyExport += "export https_proxy='$httpsProxy'; export HTTPS_PROXY='$httpsProxy'; " }
-    if ($noProxy) { $proxyExport += "export no_proxy='$noProxy'; export NO_PROXY='$noProxy'; " }
-    
-    # Terminal 1: Backend
-    if ($script:skipBackend) {
-        Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
-        $parentDir = Split-Path $ScriptDir -Parent
-        $be_bash = @"
-$proxyExport
-cd '$parentDir'
-echo '========================================'
-echo '  BACKEND SERVICE'
-echo '========================================'
-if [ ! -f 'smartclassroom/bin/activate' ]; then
-    echo 'Creating virtual environment...'
-    python3 -m venv smartclassroom
-fi
-source smartclassroom/bin/activate
-cd smart-classroom
-pip install --upgrade pip
-pip install -r requirements.txt
-echo 'Starting Backend (port 8000)...'
-python main.py
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=Backend", "--", "bash", "-c", $be_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Backend", "-e", "bash", "-c", $be_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "Backend", "-e", "bash", "-c", $be_bash
-        }
-    }  # End of skipBackend check
-    
-    # Wait for Backend to be healthy
-    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
-    if (-not $backendHealthy) {
-        Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
-    # Terminal 2: Content Search
-    if ($script:skipContentSearch) {
-        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-        $cs_bash = @"
-$proxyExport
-cd '$ScriptDir/content_search'
-echo '========================================'
-echo '  CONTENT SEARCH SERVICE'
-echo '========================================'
-if [ ! -f 'venv_content_search/bin/activate' ]; then
-    echo 'Creating virtual environment...'
-    python3 -m venv venv_content_search
-fi
-source venv_content_search/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-echo 'Starting Content Search (port 9011)...'
-python start_services.py
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=ContentSearch", "--", "bash", "-c", $cs_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=ContentSearch", "-e", "bash", "-c", $cs_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "ContentSearch", "-e", "bash", "-c", $cs_bash
-        }
-    }  # End of skipContentSearch check
-    
-    # Wait for Content Search to be healthy
-    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
-    if (-not $csHealthy) {
-        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
-    # Terminal 3: Frontend
-    if ($script:skipFrontend) {
-        Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
-        $fe_bash = @"
-cd '$ScriptDir/ui'
-echo '========================================'
-echo '  FRONTEND UI'
-echo '========================================'
-npm install
-echo 'Starting Frontend (port 5173)...'
-npm run dev -- --host 0.0.0.0 --port 5173
-exec bash
-"@
-        
-        if ($terminalCmd -eq "gnome-terminal") {
-            Start-Process gnome-terminal -ArgumentList "--title=Frontend", "--", "bash", "-c", $fe_bash
-        } elseif ($terminalCmd -eq "konsole") {
-            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Frontend", "-e", "bash", "-c", $fe_bash
-        } else {
-            Start-Process xterm -ArgumentList "-title", "Frontend", "-e", "bash", "-c", $fe_bash
-        }
-    }  # End of skipFrontend check
-    
-    # Wait for Frontend to be healthy
-    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
-    if (-not $frontendHealthy) {
-        Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
-        exit 1
-    }
 }
 
 # ============================================================================
@@ -1242,6 +1151,9 @@ while ($true) {
     switch ($key.ToUpper()) {
         "Q" {
             Stop-AllServices
+            for ($i = 30; $i -gt 0; $i--) {
+                Start-Sleep -Seconds 1
+            }
             exit 0
         }
         "E" {

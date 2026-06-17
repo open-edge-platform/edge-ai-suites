@@ -87,7 +87,7 @@ JAKA robot-arm ROS2 application.
 
     ``` bash
     cd ~/Downloads/
-    sudo apt source ros-jazzy-pykdl-utils ros-jazzy-jaka-bringup ros-jazzy-jaka-description ros-jazzy-jaka-hardware ros-jazzy-jaka-moveit-config ros-jazzy-jaka-moveit-py ros-jazzy-jaka-servo ros-jazzy-run-jaka-moveit ros-jazzy-run-jaka-plc
+    sudo apt source ros-jazzy-pykdl-utils ros-jazzy-jaka-bringup ros-jazzy-jaka-description ros-jazzy-jaka-hardware ros-jazzy-jaka-moveit-config ros-jazzy-jaka-moveit-py ros-jazzy-run-jaka-moveit ros-jazzy-run-jaka-plc
     ```
 
 2.  Create workspace for robot arm source code:

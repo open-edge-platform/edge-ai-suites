@@ -808,8 +808,8 @@ def plot_gpu(records: list, output_file=None, show=False):
     timestamps  = [datetime.fromisoformat(r['ts']) for r in records]
     busy        = [r.get('busy_pct', 0.0) for r in records]
     has_temp    = any(r.get('temp_c') is not None for r in records)
-    has_power   = source == 'intel_gpu_top' and any(r.get('power_gpu_w', 0) for r in records)
-    has_engines = source == 'intel_gpu_top' and any(r.get('engines') for r in records)
+    has_power   = any(r.get('power_gpu_w', 0) for r in records)
+    has_engines = any(r.get('engines') for r in records)
     has_clients = any(r.get('clients') for r in records)
 
     nrows = 2 + has_temp + has_power + has_engines + has_clients
@@ -836,29 +836,15 @@ def plot_gpu(records: list, output_file=None, show=False):
     ax1.grid(True, alpha=0.3)
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
 
-    # Panel 2 – frequency & RC6
+    # Panel 2 – frequency
     ax2 = next(ax_iter)
     act_freq = [r.get('act_freq_mhz', 0) for r in records]
-    if source == 'intel_gpu_top':
-        req_freq = [r.get('req_freq_mhz', 0) for r in records]
-        rc6_pct  = [r.get('rc6_pct', 0.0) for r in records]
-        ax2.plot(timestamps, act_freq, color='darkorange', linewidth=1.2, label='Actual freq')
-        ax2.plot(timestamps, req_freq, color='gold', linewidth=1.0, linestyle='--',
-                 label='Requested freq')
-        ax2_rc6 = ax2.twinx()
-        ax2_rc6.plot(timestamps, rc6_pct, color='grey', linewidth=0.8,
-                     linestyle=':', label='RC6 %', alpha=0.7)
-        ax2_rc6.set_ylabel('RC6 (%)', fontsize=9, color='grey')
-        ax2_rc6.tick_params(axis='y', labelcolor='grey')
-        l1, lb1 = ax2.get_legend_handles_labels()
-        l2, lb2 = ax2_rc6.get_legend_handles_labels()
-        ax2.legend(l1 + l2, lb1 + lb2, loc='upper right', fontsize=8)
-    else:
-        cur_freq = [r.get('cur_freq_mhz', 0) for r in records]
-        ax2.plot(timestamps, act_freq, color='darkorange', linewidth=1.2, label='Actual freq')
+    cur_freq = [r.get('cur_freq_mhz', 0) for r in records]
+    ax2.plot(timestamps, act_freq, color='darkorange', linewidth=1.2, label='Actual freq')
+    if any(cur_freq):
         ax2.plot(timestamps, cur_freq, color='gold', linewidth=1.0, linestyle='--',
                  label='Current freq')
-        ax2.legend(loc='upper right', fontsize=8)
+    ax2.legend(loc='upper right', fontsize=8)
     ax2.set_ylabel('Frequency (MHz)', fontsize=10)
     ax2.grid(True, alpha=0.3)
     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))

@@ -47,17 +47,16 @@ This installs the KPI monitoring tools and all required system dependencies.
 
 ## 4. Set Up the Benchmarking Directory
 
-Change to the benchmarking directory and grant your user write access (needed
-for session output and Python virtual environment creation), then run
-`make install` to install all dependencies including `uv` and Python packages:
+Copy the installed package to a user-writable directory, then run
+`make install` to install system dependencies and `uv`:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-sudo chown -R $USER /opt/ros/jazzy/benchmarking
-cd /opt/ros/jazzy/benchmarking
+cp -r /opt/ros/jazzy/benchmarking ~/ros-kpi
+cd ~/ros-kpi
 make install
 ```
 
@@ -66,19 +65,23 @@ make install
 <!--hide_directive:sync: humblehide_directive-->
 
 ```bash
-sudo chown -R $USER /opt/ros/humble/benchmarking
-cd /opt/ros/humble/benchmarking
+cp -r /opt/ros/humble/benchmarking ~/ros-kpi
+cd ~/ros-kpi
 make install
 ```
 
 <!--hide_directive:::hide_directive-->
 <!--hide_directive::::hide_directive-->
 
-`make install` installs system packages (`sysstat`, `python3-tk`), `uv`, and
-all Python dependencies via `uv sync`.
+`make install` installs system packages (`sysstat`, `python3-tk`) and `uv`.
+Then install Python dependencies into a local virtual environment:
 
-> If `uv` was not previously installed, restart your shell (or open a new
-> terminal) after `make install` so that `uv` is on your `PATH`.
+```bash
+PATH="$HOME/.local/bin:$PATH" uv sync
+sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg
+```
+
+Reopen a new terminal after `make install` so that `uv` is on your `PATH`.
 
 ## 5. Source Your ROS2 Environment
 

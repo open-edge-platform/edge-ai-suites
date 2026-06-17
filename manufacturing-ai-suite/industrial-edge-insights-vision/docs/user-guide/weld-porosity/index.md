@@ -11,10 +11,7 @@
 </div>
 hide_directive-->
 
-Prevent defects in real time with AI-powered monitoring.
-
-## Overview
-
+Prevent defects in real time with AI-powered monitoring.\
 AI and machine vision enable real-time detection of welding defects, ensuring immediate
 corrective action before issues escalate. By leveraging the right camera and computing
 hardware, a trained AI model continuously monitors the weld, halting the process

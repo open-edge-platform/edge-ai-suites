@@ -55,7 +55,10 @@ Edit `user_values_override.yaml` with values for your environment:
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
 | `app.image.tag`    | Latest image tag                     | `2026.1.0-rc1` | 
 
-> **Note:** `user_values_override.yaml` may contain credentials. Do not commit it to version control.
+> **Note:**
+  - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
+  - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
+
 
 ### 3. Build Helm Dependencies
 
