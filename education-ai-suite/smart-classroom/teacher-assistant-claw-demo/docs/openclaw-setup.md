@@ -73,14 +73,16 @@ cd education-ai-suite/smart-classroom/teacher-assistant-claw-demo
 
 ### Step 2: Install and configure OpenClaw
 
-Install OpenClaw, apply configuration from the repo, and start the gateway:
+Install OpenClaw, apply configuration from the repo, start the gateway, deploy the workspace, and wait for OVMS to finish loading the model:
 
 ``` bash
 curl -fsSL https://openclaw.ai/install.sh | bash -s -- --version 2026.6.6 --no-onboard &&
 openclaw config patch --file ./openclaw-config.json &&
 openclaw gateway install &&
 ./setup-openclaw-workspace.sh &&
-openclaw skills update
+openclaw skills update &&
+echo "Waiting for OVMS..." &&
+until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do sleep 5; printf "."; done
 ```
 
 <details>
@@ -121,12 +123,9 @@ openclaw config get gateway.auth.token
 
 ### Step 3: Run OpenClaw agent
 
-Wait for OVMS to finish loading the model, then start the agent:
+Start the agent:
 
 ``` bash
-echo "Waiting for OVMS..." &&
-until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do sleep 5; printf "."; done &&
-echo " Ready!" &&
 openclaw chat
 ```
 

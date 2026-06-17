@@ -42,7 +42,7 @@ docker run -d --rm \
        --group-add=$(stat -c "%g" /dev/dri/render* | head -n 1) \
        -p ${PORT}:${PORT} \
        -v ~/models:/models \
-       openvino/model_server:latest-gpu \
+       openvino/model_server:2026.2-gpu \
        --source_model ${MODEL} \
        --model_repository_path /models \
        --task text_generation \
