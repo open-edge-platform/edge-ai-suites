@@ -8,6 +8,9 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/federal-aerospace/apps/handheld-multi-modal/README.md">
      Readme
   </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/v2026.1.0/handheld-multi-modal.zip">
+     Download Package
+  </a>
 </div>
 hide_directive-->
 
@@ -61,9 +64,7 @@ For more information, see [Web UI documentation](https://github.com/open-webui/o
 :::{toctree}
 :hidden:
 
-OS Preparation <os-preparation.md>
 Application Deployment <deploy-applications.md>
-Release Notes <release-notes.md>
 
 :::
 hide_directive-->
