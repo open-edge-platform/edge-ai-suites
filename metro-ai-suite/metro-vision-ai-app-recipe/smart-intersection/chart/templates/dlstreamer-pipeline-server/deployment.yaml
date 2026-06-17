@@ -18,17 +18,13 @@ spec:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
       {{- if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
       annotations:
-        io.katacontainers.config.hypervisor.default_memory: "4096"
-        io.katacontainers.config.hypervisor.pcie_root_port: "1"
-        io.katacontainers.config.hypervisor.hot_plug_vfio: "root-port"
-        io.katacontainers.config.hypervisor.enable_virtio_mem: "true"
-        devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
-          {{- range .Values.trustedCompute.devices }}
-          - path: {{ .path }}
-            type: {{ .type }}
-            major: {{ .major }}
-            minor: {{ .minor }}
-            file_mode: {{ .file_mode }}
+        io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        io.katacontainers.config.hypervisor.enable_virtio_mem: {{ .Values.trustedCompute.tcvm_enable_virtio_mem | quote }}
+        cdi-devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
+          {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
+          - {{ . }}
           {{- end }}
       {{- end }}
     spec:
