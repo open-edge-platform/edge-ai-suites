@@ -43,7 +43,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](../live-video-analysis/live-video-captioning/docs/user-guide/get-started.md) to prepare models and configure the environment, then start the stack:
+Follow the [LVC Get Started guide](../../../live-video-analysis/live-video-captioning/docs/user-guide/quick-start-guide.md) to prepare models and configure the environment, then start the stack:
 
 ```bash
 docker compose up -d
@@ -95,10 +95,14 @@ Open `.env` and update the variables for your environment:
 | `LOITERING_DET_HOST` / `LOITERING_DET_PORT`              | DLStreamer Pipeline Server host and port for Loitering Detection app (default: `8080`)       |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
 | `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
+| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
 | `PG_PASSWORD`                        | PostgreSQL password (change from default)                                |
 | `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (`3443`)                              |
 
 > If LVC or Loitering Detectopm is running on the same host as VAP, use `host.docker.internal` (Linux/Mac). Otherwise, use the actual IP address.
+
+For certificate path examples and TLS behavior details, see [TLS and Certificate Configuration](./how-to-guides/tls-and-certificates.md).
 
 ---
 

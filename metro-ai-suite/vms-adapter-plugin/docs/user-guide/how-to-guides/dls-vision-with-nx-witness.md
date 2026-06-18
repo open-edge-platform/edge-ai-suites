@@ -205,7 +205,18 @@ Note the **Device ID** (UUID) of each camera you intend to use. You can find thi
   curl -k -u admin:<password> https://<NX_HOST>:7001/rest/v4/devices | python3 -m json.tool | grep '"id"\|"name"'
   ```
 
+### 2.4 Allow API Integrations registration requests
+
+In the Nx Witness desktop client:
+1. Go to **Main Menu** → **System Administration**.
+2. In the window, click **Integrations**.
+3. In the **Manage Integrations** window, go to **Settings** tab and check *Accept API Integrations registration requests* to enable REST based API integration.
+4. Click **OK**
+
+<img src="../_assets/nx-enable_api_integration.png" alt="Enable Digest Auth" style="width: 600px; max-width: 100%;" />
+
 ---
+
 
 ## Part 3 — Configure VAP for dls_vision + Nx Witness
 

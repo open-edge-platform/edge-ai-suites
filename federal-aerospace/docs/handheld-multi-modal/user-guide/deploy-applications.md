@@ -1,12 +1,13 @@
 # Handheld Multi-Modal Application Deployment
 
+This guide provides instructions on how to deploy the Handheld Multi-Modal application on a
+local machine.
 
-## Handheld Multi-Modal Deployment
-
-### (Optional) Configure the Proxy
+## (Optional) Configure the Proxy
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
-Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a valid proxy for the local environment:
+Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a
+valid proxy for the local environment:
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
@@ -55,15 +56,16 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-Verify the Docker daemon's proxy configurations:
-```bash
-╰$ docker info|grep -i PROX
+Verify the Docker daemon's proxy configurations (sample output below):
+
+```text
+docker info|grep -i PROXY
  HTTP Proxy: http://proxy-example:123
  HTTPS Proxy: http://proxy-example:123
  No Proxy: localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager
 ```
 
-### Deploy the Application
+## Deploy the Application
 
 Download the compressed file:
 
@@ -77,17 +79,19 @@ Decompress the downloaded file:
 unzip handheld-multi-modal.zip
 ```
 
-Run the script that installs all dependencies, downloads models, and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, see [proxy configuration step](#optional-proxy-configuration):
+Run the script that installs all dependencies, downloads models, and starts applications.
+Depending on network bandwidth, it takes around 10-15 minutes. If an error occurs during
+installation, see the [proxy configuration step](#optional-configure-the-proxy):
 
 ```bash
 cd handheld-multi-modal
 ./run up
 ```
 
-After the script finishes, verify that the containers are running:
+After the script finishes, verify that the containers are running (sample output below):
 
-```bash
-╰$ docker ps
+```text
+docker ps
 CONTAINER ID   IMAGE                                                   COMMAND                  CREATED          STATUS                             PORTS                                                                                                                                   NAMES
 45aeb6ad8884   nginx:alpine                                            "/docker-entrypoint.…"   27 seconds ago   Up 25 seconds                      127.0.0.1:443->443/tcp, 127.0.0.1:5443->5443/tcp, 127.0.0.1:7443->7443/tcp, 80/tcp, 127.0.0.1:8443->8443/tcp                            nginx-https
 1cf974e6c425   ghcr.io/open-webui/open-webui:v0.9.6-slim               "bash start.sh"          27 seconds ago   Up 25 seconds (health: starting)   8080/tcp                                                                                                                                open-webui
@@ -102,6 +106,7 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
 
-After applications are deployed, see [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. The applications do not provide authentication or authorization, hence are only available on the `localhost` and are not exposed under any external IP address.
-
-
+After applications are deployed, see [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md#endpoints)
+to access a specific application. The applications do not provide authentication or
+authorization, hence are only available on the `localhost` and are not exposed under any
+external IP address.

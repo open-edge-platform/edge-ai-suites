@@ -44,9 +44,13 @@ Set at minimum the following variables before building:
 | `NX_BASE_URL` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness credentials (only if using Nx Witness)                       |
 | `NX_TLS_VERIFY` / `NX_CA_BUNDLE`              | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
+| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
 | `PG_PASSWORD`                                 | PostgreSQL password (change from default)                               |
 
 Refer to `.env.example` for all available variables.
+
+For certificate path examples and TLS behavior details, see [TLS and Certificate Configuration](../how-to-guides/tls-and-certificates.md).
 
 ## Step 3: Build and Start with Docker Compose
 

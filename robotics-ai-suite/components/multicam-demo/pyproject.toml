@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [build-system]
-requires = ["setuptools", "cython", "numpy<2.0"]
+requires = ["setuptools>=78.1.1", "cython", "numpy<2.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -28,7 +28,7 @@ dependencies = [
     "ultralytics>=8.0.20,<9.0",
     "torch",
     "pyrealsense2",
-    "setuptools<=70.0.0",
+    "setuptools>=78.1.1",
     "mkl==2025.3.0",
     "onemkl-sycl-vm==2025.3.0",
     "onemkl-sycl-stats==2025.3.0",
