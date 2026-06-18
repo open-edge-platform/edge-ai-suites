@@ -23,28 +23,12 @@ replicas: 1
 trustedCompute:
   enabled: false
   tc_gpu_enabled: false
-  gpuStabilizeSecs: 10
-  devices:
-    - path: /dev/vfio/vfio
-      type: c
-      major: 10
-      minor: 196
-      file_mode: 438
-    - path: /dev/vfio/1
-      type: c
-      major: 510
-      minor: 0
-      file_mode: 438
-    - path: /dev/dri/card0
-      type: c
-      major: 226
-      minor: 0
-      file_mode: 438
-    - path: /dev/dri/renderD128
-      type: c
-      major: 226
-      minor: 128
-      file_mode: 438
+  tc_gpu_cdiAnnotations:
+    - gpu.intel.com/igpu=tc
+  tcvm_default_memory: "4096"
+  tcvm_pcie_root_port: "1"
+  tcvm_hot_plug_vfio: "root-port"
+  tcvm_enable_virtio_mem: "true"
 
 service:
   type: NodePort

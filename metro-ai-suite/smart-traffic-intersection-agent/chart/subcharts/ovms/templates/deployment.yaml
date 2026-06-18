@@ -4,11 +4,10 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if and .Values.trustedCompute.enabled .Values.gpu.enabled -}}
-{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. Use trustedCompute.tc_gpu_enabled for GPU support with Trusted Compute instead of the Intel device plugin." -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. Use trustedCompute.tc_gpu_enabled for GPU support with Trusted Compute." -}}
 {{- end -}}
 {{- $tcGpu := and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled -}}
 {{- $targetDevice := ternary "GPU" .Values.env.targetDevice (or .Values.gpu.enabled $tcGpu) -}}
-{{- /* $needsGpu is true only for the non-TC Intel device plugin GPU path */ -}}
 {{- $needsGpu := and .Values.gpu.enabled (not .Values.trustedCompute.enabled) -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.env.weightFormat -}}
 {{- $sanitized := .Values.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
@@ -35,18 +34,14 @@ spec:
         app.kubernetes.io/component: ovms
       {{- if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
       annotations:
-        io.katacontainers.config.hypervisor.default_memory: "4096"
-        io.katacontainers.config.hypervisor.pcie_root_port: "1"
-        io.katacontainers.config.hypervisor.hot_plug_vfio: "root-port"
-        io.katacontainers.config.hypervisor.enable_virtio_mem: "true"
-        devices.noderesource.dev/container.ovms: |
-          {{ range .Values.trustedCompute.devices -}}
-          - path: {{ .path }}
-            type: {{ .type }}
-            major: {{ .major }}
-            minor: {{ .minor }}
-            file_mode: {{ .file_mode }}
-          {{ end -}}
+        io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        io.katacontainers.config.hypervisor.enable_virtio_mem: {{ .Values.trustedCompute.tcvm_enable_virtio_mem | quote }}
+        cdi-devices.noderesource.dev/container.ovms: |
+          {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
+          - {{ . }}
+          {{- end }}
       {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
@@ -141,33 +136,20 @@ spec:
         - name: ovms
           image: "{{- if (or $needsGpu $tcGpu) -}}{{ .Values.image.repository }}:{{ .Values.image.gpuTag }}{{- else -}}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{- end -}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if $tcGpu }}
           command:
             - /bin/sh
             - -c
             - |
-              echo "Waiting {{ .Values.trustedCompute.gpuStabilizeSecs | default 10 }}s for GPU PCIe passthrough to initialize in kata VM..."
-              sleep {{ .Values.trustedCompute.gpuStabilizeSecs | default 10 }}
-              echo "Starting OVMS..."
+              {{- if $tcGpu }}
+              echo "Waiting 10s for GPU PCIe passthrough to initialize in kata VM..."
+              sleep 10
+              {{- end }}
               exec /ovms/bin/ovms \
                 --port 9000 \
                 --rest_port 8000 \
                 --config_path /models/config.json \
                 --log_level {{ .Values.env.logLevel | quote }} \
                 --metrics_enable
-          {{- end }}
-          args:
-            {{- if not $tcGpu }}
-            - "--port"
-            - "9000"
-            - "--rest_port"
-            - "8000"
-            - "--config_path"
-            - "/models/config.json"
-            - "--log_level"
-            - {{ .Values.env.logLevel | quote }}
-            - "--metrics_enable"
-            {{- end }}
           ports:
             - name: http
               containerPort: 8000
@@ -179,7 +161,7 @@ spec:
               value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.httpsProxy | quote }}
-            {{- if or $needsGpu $tcGpu }}
+            {{- if $tcGpu }}
             - name: ZES_ENABLE_SYSMAN
               value: "1"
             {{- end }}
@@ -211,13 +193,16 @@ spec:
             {{- $res := deepCopy .Values.resources }}
             {{- if .Values.trustedCompute.enabled }}
             {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
-            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6")) }}
+            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6" "memory" "20Gi")) }}
             {{- end }}
             {{- if $needsGpu }}
+            {{- $res := deepCopy .Values.resources }}
             {{- $gpuLimits := dict .Values.gpu.resourceName (.Values.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
-            {{- end }}
             {{- toYaml $res | nindent 12 }}
+            {{- else }}
+            {{- toYaml $res | nindent 12 }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
       volumes:
