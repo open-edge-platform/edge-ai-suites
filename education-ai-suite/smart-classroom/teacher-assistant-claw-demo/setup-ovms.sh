@@ -57,4 +57,3 @@ echo "Model ${MODEL} is downloading/loading in the background."
 echo "You can proceed with OpenClaw installation. OVMS will be ready by the time you need it."
 echo ""
 echo "To check readiness manually: curl -s http://localhost:${PORT}/v3/models"
-

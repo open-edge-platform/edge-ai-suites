@@ -1,39 +1,35 @@
-# OpenClaw setup for Teacher Assistant demo
+# OpenClaw Setup for Teacher Assistant Demo
 
-The OpenClaw based agent functions as the "Teacher Assistant" persona that enables the staff of a school, which includes teachers, to create their own custom report based on the per classroom data provided by the Smart Classroom application. The custom report can be at a class level or at a grade level combining all classrooms in that grade and at the school level which combines all the grades. The deployment setup envisaged is shown in the figure below.
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        Teacher Assistant Demo                        │
-│  ┌──────────┐     ┌─────────────────┐    ┌──────────────────────┐    │
-│  │   SC-1   │◄───►| OpenClaw Agent  │◄──►│       Telegram       │    │
-│  └──────────┘     │                 │    │ Channel based comms  |    │   
-│  ┌──────────┐     │                 │    └──────────────────────┘    │
-│  │   SC-2   │◄───►│                 │                                │
-│  └──────────┘     │                 │    ┌──────────────────────┐    │
-│  ┌──────────┐     │                 │───►|      OVMS local      |    │
-│  |   SC-n   │◄───►│                 │    |       inference      |    │
-│  └──────────┘     └─────────────────┘    └──────────────────────┘    │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
+The OpenClaw-based agent functions as the "Teacher Assistant" persona that enables teachers and school staff to query and generate custom reports from classroom session data. This guide sets up a **local, standalone demo** using sample session data and OVMS for on-device inference.
 
 ```
-Note: In the figure, Smart Classroom is abbreviated as SC.
+┌─────────────────────────────────────────────────────────┐
+│                  Teacher Assistant Demo                 │
+│                                                         │
+│  ┌──────────────────┐    ┌──────────────────────────┐   │
+│  │  OpenClaw Agent  │───►│      OVMS local          │   │
+│  │                  │    │       inference          │   │
+│  │ ┌──────────────┐ │    │  (Qwen3-8B on GPU)       │   │
+│  │ │ Dashboard /  │ │    └──────────────────────────┘   │
+│  │ │ Chat UI      │ │                                   │
+│  │ └──────────────┘ │    ┌──────────────────────────┐   │
+│  │                  │◄── │   Sample session data    │   │
+│  └──────────────────┘    │(smart_classroom_incoming)│   │
+│                          └──────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
 
-> **ℹ️ This is the _basic_ setup variant** — the fastest, validated path to a working agent (OVMS local inference plus the OpenClaw dashboard/chat), **without Telegram or other external integrations**. It uses the configuration file [`openclaw-basic.json`](../openclaw-basic.json).
+> **ℹ️ This is the _basic_ setup variant** — the fastest, validated path to a working agent (OVMS local inference plus the OpenClaw dashboard/chat), **without external integrations**. It uses the configuration file [`openclaw-basic.json`](../openclaw-basic.json).
 
 ## ✅ Pre-requisites
 
-### System Requirements for OpenClaw agent
+### System Requirements
 - Ubuntu 24.04 LTS
-- Intel PTL based system 
+- Intel PTL based system
 - At least 32GB RAM
 - 100GB free disk space for models and environments
 
-### Smart Classroom setup
-It is assumed here that Smart Classroom application is setup in a separate node compared to OpenClaw Agent. The WSL route of installing OpenClaw in a Windows environment and hence sharing the same compute resources with Smart Classroom app is not covered in this version. The set-up of the Smart Classroom is as per the documentation provided in the Smart Classroom application repo. This documentation is not repeated here. Communication between the Smart Classroom app and OpenClaw is covered in this documentation.
-
-### Prepare for setup
+### Required tools
 
 The following tools must be available on the system:
 - **Docker** — installed and running ([install guide](https://docs.docker.com/engine/install/ubuntu/))
@@ -106,7 +102,7 @@ openclaw config get gateway.auth.token
 ~/.openclaw/workspace/
 ├── SOUL.md                          # Agent persona and behavior
 ├── AGENTS.md                        # Agent definitions
-├── smart_classroom_incoming/        # Data directory for Smart Classroom reports
+├── smart_classroom_incoming/        # Data directory for session reports
 │   └── 2026-06-15/                  # Sample session folder
 │       ├── summary.md
 │       ├── topics.json
@@ -119,7 +115,7 @@ openclaw config get gateway.auth.token
 
 </details>
 
-> **Note:** The `~/.openclaw/workspace/smart_classroom_incoming/` directory is where the Smart Classroom application deposits lesson reports for the agent to analyze. You can add additional session folders there at any time — the agent will pick them up automatically.
+> **Note:** The `~/.openclaw/workspace/smart_classroom_incoming/` directory is where session reports are stored for the agent to analyze. Sample data is included for testing. You can add additional session folders there at any time — the agent will pick them up automatically.
 
 ---
 
@@ -141,5 +137,4 @@ Summarize the lesson from June 15
 
 ## 📚 Learn More
 
-- [OpenClaw]()
-- [Smart Classroom]()
+- [OpenClaw](https://openclaw.ai)
