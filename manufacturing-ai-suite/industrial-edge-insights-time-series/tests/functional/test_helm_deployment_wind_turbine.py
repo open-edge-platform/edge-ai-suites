@@ -267,11 +267,9 @@ def test_verify_pods_mqtt_for_5mins(setup_helm_environment, telegraf_input_plugi
     logger.info("UDF package copied and activated successfully")
     
     # Wait for Kapacitor to fully start after UDF installation (includes pip install with PyPI timeouts)
-    max_wait_seconds = 420
-    poll_interval_seconds = 10
     logger.info(
         "Waiting up to %ss for Kapacitor to install UDF packages and restart pods...",
-        max_wait_seconds,
+        constants.KAPACITOR_UDF_INSTALL_TIMEOUT,
     )
     start_time = time.time()
     while True:
@@ -280,12 +278,12 @@ def test_verify_pods_mqtt_for_5mins(setup_helm_environment, telegraf_input_plugi
             break
 
         elapsed = time.time() - start_time
-        if elapsed >= max_wait_seconds:
+        if elapsed >= constants.KAPACITOR_UDF_INSTALL_TIMEOUT:
             pytest.fail(
-                f"Timed out after {max_wait_seconds}s waiting for Kapacitor pods to become ready after UDF deployment."
+                f"Timed out after {constants.KAPACITOR_UDF_INSTALL_TIMEOUT}s waiting for Kapacitor pods to become ready after UDF deployment."
             )
 
-        time.sleep(poll_interval_seconds)
+        time.sleep(constants.KAPACITOR_UDF_POLL_INTERVAL)
 
     logger.info("Wait for the application to run for 5 minutes...")
     time.sleep(300)  # Wait for the pods to stabilize
@@ -327,11 +325,9 @@ def test_opcua_alerts(setup_helm_environment, telegraf_input_plugin):
     logger.info("UDF package configured and activated successfully")
     
     # Wait for Kapacitor to fully start after UDF installation (includes pip install with PyPI timeouts)
-    max_wait_seconds = 420
-    poll_interval_seconds = 10
     logger.info(
         "Waiting up to %ss for Kapacitor to install UDF packages and restart pods...",
-        max_wait_seconds,
+        constants.KAPACITOR_UDF_INSTALL_TIMEOUT,
     )
     start_time = time.time()
     while True:
@@ -340,12 +336,12 @@ def test_opcua_alerts(setup_helm_environment, telegraf_input_plugin):
             break
 
         elapsed = time.time() - start_time
-        if elapsed >= max_wait_seconds:
+        if elapsed >= constants.KAPACITOR_UDF_INSTALL_TIMEOUT:
             pytest.fail(
-                f"Timed out after {max_wait_seconds}s waiting for Kapacitor pods to become ready after UDF deployment."
+                f"Timed out after {constants.KAPACITOR_UDF_INSTALL_TIMEOUT}s waiting for Kapacitor pods to become ready after UDF deployment."
             )
 
-        time.sleep(poll_interval_seconds)
+        time.sleep(constants.KAPACITOR_UDF_POLL_INTERVAL)
     
     result = helm_utils.restart_deployment(namespace, "opcua-server")
     logger.info(f"restart_deployment result: {result}")
@@ -499,13 +495,10 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     assert result == True, "Failed to activate UDF deployment package."
     logger.info("UDF package copied and activated successfully")
 
-    KAPACITOR_READY_TIMEOUT = 600
-    KAPACITOR_POLL_INTERVAL = 10
-    KAPACITOR_TASK_MARKER   = "windturbine"
     logger.info(
         "Smart-waiting for Kapacitor UDF task "
-        f"(marker={KAPACITOR_TASK_MARKER!r}, ceiling={KAPACITOR_READY_TIMEOUT}s, "
-        f"interval={KAPACITOR_POLL_INTERVAL}s) instead of fixed sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
+        f"(marker={constants.KAPACITOR_TASK_MARKER!r}, ceiling={constants.KAPACITOR_READY_TIMEOUT}s, "
+        f"interval={constants.KAPACITOR_POLL_INTERVAL}s) instead of fixed sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
     )
     tsam_pod = helm_utils._wait_for_pod_with_substring(
         namespace, "time-series-analytics-microservice", timeout=120
@@ -525,10 +518,10 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
             "|| python3 -c 'import urllib.request,sys; "
             "sys.stdout.write(urllib.request.urlopen(\"http://localhost:9092/kapacitor/v1/tasks\", "
             "timeout=5).read().decode())' ); "
-            "echo \"$BODY\" | grep -q '" + KAPACITOR_TASK_MARKER + "'"
+            "echo \"$BODY\" | grep -q '" + constants.KAPACITOR_TASK_MARKER + "'"
         )
         start = time.time()
-        deadline = start + KAPACITOR_READY_TIMEOUT
+        deadline = start + constants.KAPACITOR_READY_TIMEOUT
         ready = False
         last_body = ""
         while time.time() < deadline:
@@ -542,7 +535,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
                 last_body = (probe.stdout or probe.stderr or "").strip()[:200]
                 if probe.returncode == 0:
                     logger.info(
-                        f"Kapacitor UDF task '{KAPACITOR_TASK_MARKER}' "
+                        f"Kapacitor UDF task '{constants.KAPACITOR_TASK_MARKER}' "
                         f"live after ~{elapsed}s "
                         f"(saved up to {max(0, constants.UDF_DEPLOYMENT_TIMEOUT - elapsed)}s vs fixed sleep)"
                     )
@@ -550,13 +543,13 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
                     break
                 logger.info(
                     f"Task not loaded yet at ~{elapsed}s "
-                    f"(rc={probe.returncode}); next probe in {KAPACITOR_POLL_INTERVAL}s"
+                    f"(rc={probe.returncode}); next probe in {constants.KAPACITOR_POLL_INTERVAL}s"
                 )
             except subprocess.TimeoutExpired:
                 logger.info(f"kubectl exec probe timed out at ~{elapsed}s")
             except Exception as exc:
                 logger.info(f"probe error at ~{elapsed}s: {exc}")
-            time.sleep(KAPACITOR_POLL_INTERVAL)
+            time.sleep(constants.KAPACITOR_POLL_INTERVAL)
 
         if not ready:
             logger.error(f"Last probe stdout/stderr: {last_body!r}")
@@ -570,8 +563,8 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
             except Exception as exc:
                 logger.warning(f"Failed to tail TSAM logs: {exc}")
             pytest.fail(
-                f"Kapacitor UDF task '{KAPACITOR_TASK_MARKER}' "
-                f"not loaded within {KAPACITOR_READY_TIMEOUT}s after /ts-api/restart — "
+                f"Kapacitor UDF task '{constants.KAPACITOR_TASK_MARKER}' "
+                f"not loaded within {constants.KAPACITOR_READY_TIMEOUT}s after /ts-api/restart — "
                 f"likely a slow PyPI pip install of UDF deps; bump KAPACITOR_READY_TIMEOUT "
                 f"or pre-bake UDF deps into the TSAM image."
             )
@@ -581,10 +574,9 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     # InfluxDB measurement name (Telegraf name_override), NOT the MQTT topic.
     # The publisher/broker traffic is on WIND_TURBINE_MQTT_TOPIC
     # ("wind-simulation-data").
-    MQTT_SAMPLE_TIMEOUT = 240   # was 120
     logger.info(
         f"Calling wait_for_mqtt_sample(topic="
-        f"{constants.WIND_TURBINE_MQTT_TOPIC!r}, timeout={MQTT_SAMPLE_TIMEOUT}s) "
+        f"{constants.WIND_TURBINE_MQTT_TOPIC!r}, timeout={constants.MQTT_SAMPLE_TIMEOUT}s) "
         f"(was timeout=120s)"
     )
 
@@ -593,7 +585,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     result = helm_utils.wait_for_mqtt_sample(
         namespace,
         constants.WIND_TURBINE_MQTT_TOPIC,
-        timeout=MQTT_SAMPLE_TIMEOUT,  # was 120
+        timeout=constants.MQTT_SAMPLE_TIMEOUT,  # was 120
     )
     logger.info(f"wait_for_mqtt_sample result: {result}")
     assert result == True, "Failed to observe MQTT data before InfluxDB verification."

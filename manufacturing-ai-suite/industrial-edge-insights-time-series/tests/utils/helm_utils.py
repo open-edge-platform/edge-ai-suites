@@ -344,13 +344,19 @@ def update_values_yaml(file_path, values):
         return False
 
 def _dump_unhealthy_pods(namespace):
-    """Dump describe + logs for every non-Running pod in *namespace*.
+    """Dump describe + logs for every non-Running pod or pods with high restart counts.
 
     Best-effort: every kubectl invocation is wrapped so a failure here never
     masks the original test-failure assertion.
+
+    A pod is considered unhealthy if:
+    - STATUS is not in {Running, Completed, Succeeded}
+    - READY column shows not all containers ready (e.g., 0/1)
+    - Restart count exceeds threshold (catches pods that restart frequently but
+      may appear Running at the moment of check)
     """
-    # Parse kubectl READY column and STATUS to catch CrashLoopBackOff pods
     HEALTHY_STATUSES = {"Running", "Completed", "Succeeded"}
+    RESTART_THRESHOLD = 5  # Flag pods with >5 restarts as potentially unstable
     try:
         result = subprocess.run(
             ["kubectl", "get", "pods", "-n", namespace, "--no-headers"],
@@ -371,11 +377,26 @@ def _dump_unhealthy_pods(namespace):
             if "/" in ready:
                 num, den = ready.split("/", 1)
                 ready_ok = (num == den and num != "0")
-            if (not ready_ok) or (status not in HEALTHY_STATUSES):
-                pods.append(name)
+
+            # Check restart count (cols[3] if present, format: "5" or "5 (3h ago)")
+            high_restarts = False
+            if len(cols) >= 4:
+                try:
+                    # Extract numeric part (handles "5" and "5 (3h ago)" formats)
+                    restart_str = cols[3].split("(")[0].strip()
+                    restarts = int(restart_str)
+                    if restarts > RESTART_THRESHOLD:
+                        high_restarts = True
+                        logger.warning(f"Pod {name} has {restarts} restarts (threshold={RESTART_THRESHOLD})")
+                except (ValueError, IndexError):
+                    pass  # Can't parse restarts, ignore
+
+            if (not ready_ok) or (status not in HEALTHY_STATUSES) or high_restarts:
+                if name not in pods:
+                    pods.append(name)
 
         if not pods:
-            logger.error(f"no unhealthy pods found to dump in '{namespace}'.")
+            logger.info(f"No unhealthy pods found to dump in '{namespace}'.")
             return
 
         logger.error(f"dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
