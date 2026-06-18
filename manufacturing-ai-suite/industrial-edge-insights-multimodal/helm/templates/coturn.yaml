@@ -54,7 +54,14 @@ spec:
       containers:
       - name: coturn
         image: coturn/coturn:4.12.0
-        args: ["-v"]  # Enable verbose logging
+        args:
+          - "-v"
+          - "--external-ip={{ $.Values.env.HOST_IP }}"
+          - "--user={{ $.Values.env.MTX_WEBRTCICESERVERS2_0_USERNAME }}:{{ $.Values.env.MTX_WEBRTCICESERVERS2_0_PASSWORD }}"
+          - "--realm=turn.local"
+          - "--no-tls"
+          - "--no-dtls"
+          - "--lt-cred-mech"
         ports:
         - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
           protocol: TCP
