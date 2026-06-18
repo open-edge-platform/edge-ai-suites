@@ -443,6 +443,28 @@ def verify_pods(namespace, timeout=None, interval=5):
 
 def _dump_pod_diagnostics(namespace):
     """Dump kubectl describe and recent events to help diagnose pod-startup failures in CI."""
+    dump_pod_diagnostics(namespace)
+
+
+def dump_pod_diagnostics(namespace):
+    """Dump kubectl describe and recent events to help diagnose pod-startup failures in CI.
+    
+    This is a public version that can be called from fixtures and tests.
+    """
+    logger.error("=" * 80)
+    logger.error("POD DIAGNOSTICS FOR NAMESPACE: %s", namespace)
+    logger.error("=" * 80)
+    
+    # List all pods with their status
+    try:
+        pods_list = subprocess.run(
+            ["kubectl", "get", "pods", "-n", namespace, "-o", "wide"],
+            capture_output=True, text=True, check=False,
+        )
+        logger.error("==== kubectl get pods -o wide (namespace=%s) ====\n%s", namespace, pods_list.stdout or pods_list.stderr)
+    except Exception as diag_err:
+        logger.error("Failed to run 'kubectl get pods': %s", diag_err)
+    
     try:
         describe = subprocess.run(
             ["kubectl", "describe", "pods", "-n", namespace],
@@ -460,6 +482,18 @@ def _dump_pod_diagnostics(namespace):
         logger.error("==== kubectl events (namespace=%s) ====\n%s", namespace, events.stdout or events.stderr)
     except Exception as diag_err:
         logger.error("Failed to run 'kubectl get events': %s", diag_err)
+    
+    # Check helm release status
+    try:
+        helm_list = subprocess.run(
+            ["helm", "list", "-n", namespace, "-a"],
+            capture_output=True, text=True, check=False,
+        )
+        logger.error("==== helm list -n %s -a ====\n%s", namespace, helm_list.stdout or helm_list.stderr)
+    except Exception as diag_err:
+        logger.error("Failed to run 'helm list': %s", diag_err)
+    
+    logger.error("=" * 80)
 
 
 def _parse_cpu_to_millicores(value):
@@ -1478,6 +1512,27 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
 
+def verify_helm_release_exists(release_name, namespace):
+    """Verify that a Helm release is deployed in the specified namespace.
+    
+    Returns:
+        bool: True if release exists, False otherwise.
+    """
+    try:
+        result = subprocess.run(
+            ["helm", "list", "-n", namespace, "-q"],
+            capture_output=True, text=True, check=True
+        )
+        releases = result.stdout.strip().split('\n')
+        exists = release_name in releases
+        logger.info(f"Helm release '{release_name}' in namespace '{namespace}': {'EXISTS' if exists else 'NOT FOUND'}")
+        logger.info(f"Available releases: {releases}")
+        return exists
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to list Helm releases: {e.stderr}")
+        return False
+
+
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
     try:
@@ -1494,19 +1549,36 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
         if sample_app:
             helm_command.extend(["--set", f"env.SAMPLE_APP={sample_app}"])
 
-        # Execute the Helm install command and capture output
-        logger.info(f"Installing Helm chart with {telegraf_input_plugin}...")
+        # Log the full command for debugging
+        logger.info(f"Executing Helm install command: {' '.join(helm_command)}")
+        logger.info(f"Installing Helm chart '{release_name}' with {telegraf_input_plugin}...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
 
         # Print the output for debugging purposes
-        logger.info(result.stdout)
+        logger.info(f"Helm install stdout: {result.stdout}")
+        if result.stderr:
+            logger.warning(f"Helm install stderr: {result.stderr}")
         
-        # Configuration will be handled by setup_sample_app_udf_deployment_package() using TS API
-        # as recommended in the documentation instead of directly updating ConfigMaps
+        # Verify the release was actually created
+        if verify_helm_release_exists(release_name, namespace):
+            logger.info(f"✓ Helm release '{release_name}' successfully installed in namespace '{namespace}'")
+            return True
+        else:
+            logger.error(f"✗ Helm install command succeeded but release '{release_name}' not found in namespace '{namespace}'")
+            return False
         
-        return True
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to install Helm chart: Error: INSTALLATION FAILED: values don't meet the specifications of the schema(s) in the following chart(s): {e.stderr}")
+        logger.error(f"=" * 80)
+        logger.error(f"HELM INSTALL FAILED")
+        logger.error(f"=" * 80)
+        logger.error(f"Release: {release_name}")
+        logger.error(f"Chart Path: {chart_path}")
+        logger.error(f"Namespace: {namespace}")
+        logger.error(f"Command: {' '.join(helm_command)}")
+        logger.error(f"Exit Code: {e.returncode}")
+        logger.error(f"STDOUT: {e.stdout}")
+        logger.error(f"STDERR: {e.stderr}")
+        logger.error(f"=" * 80)
         return False
 
 def helm_uninstall(release_name, namespace):

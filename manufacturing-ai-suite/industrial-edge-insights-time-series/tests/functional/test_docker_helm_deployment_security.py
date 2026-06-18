@@ -116,8 +116,11 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     grafana_creds = security_utils.fetch_credentials(chart_path, "grafana")
     
     # DEBUG: Print InfluxDB pod logs for credential verification
+    # NOTE: The test checks if EITHER username OR password appears in logs
+    # If ANY credential (username/password) is found, the test will FAIL
     logger.info("=" * 80)
     logger.info("DEBUG: Fetching InfluxDB pod logs to verify credential presence/absence")
+    logger.info("IMPORTANT: Test will FAIL if username OR password is found in logs")
     logger.info("=" * 80)
     try:
         influxdb_pod_name = subprocess.run(
@@ -144,14 +147,82 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
             password_found = influxdb_creds[1] in influxdb_logs
             logger.info(f"DEBUG: Username '{influxdb_creds[0]}' found in logs: {username_found}")
             logger.info(f"DEBUG: Password found in logs: {password_found}")
+            
+            if username_found or password_found:
+                logger.error("⚠️  SECURITY ISSUE: Credentials detected in InfluxDB logs!")
+                logger.error(f"   - Username visible: {username_found}")
+                logger.error(f"   - Password visible: {password_found}")
+                logger.error("   Test will FAIL - this is the expected security behavior")
+            else:
+                logger.info("✓ PASS: No credentials found in InfluxDB logs")
         else:
             logger.warning("Could not find InfluxDB pod for debug logging")
     except Exception as e:
         logger.warning(f"Error fetching InfluxDB logs for debug: {e}")
     logger.info("=" * 80)
     
+    # DEBUG: Print Grafana pod logs for credential verification
+    logger.info("=" * 80)
+    logger.info("DEBUG: Fetching Grafana pod logs to verify credential presence/absence")
+    logger.info("=" * 80)
+    try:
+        grafana_pod_name = subprocess.run(
+            f"kubectl get pods -n {namespace} -l app=ia-grafana -o jsonpath='{{.items[0].metadata.name}}'",
+            shell=True, capture_output=True, text=True, check=False
+        ).stdout.strip()
+        
+        if grafana_pod_name:
+            logger.info(f"Grafana pod name: {grafana_pod_name}")
+            grafana_logs = subprocess.run(
+                f"kubectl logs -n {namespace} {grafana_pod_name} --tail=50",
+                shell=True, capture_output=True, text=True, check=False
+            ).stdout
+            
+            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, password={'*' * len(grafana_creds[1])}")
+            logger.info("Last 50 lines of Grafana pod logs:")
+            logger.info("-" * 80)
+            for i, line in enumerate(grafana_logs.split('\n')[-50:], 1):
+                logger.info(f"  {i:3d}: {line}")
+            logger.info("-" * 80)
+            
+            # Check if credentials appear in logs (debug info)
+            username_found = grafana_creds[0] in grafana_logs
+            password_found = grafana_creds[1] in grafana_logs
+            logger.info(f"DEBUG: Username '{grafana_creds[0]}' found in logs: {username_found}")
+            logger.info(f"DEBUG: Password found in logs: {password_found}")
+            
+            if username_found or password_found:
+                logger.error("⚠️  SECURITY ISSUE: Credentials detected in Grafana logs!")
+                logger.error(f"   - Username visible: {username_found}")
+                logger.error(f"   - Password visible: {password_found}")
+                logger.error("   Test will FAIL - this is the expected security behavior")
+            else:
+                logger.info("✓ PASS: No credentials found in Grafana logs")
+        else:
+            logger.warning("Could not find Grafana pod for debug logging")
+    except Exception as e:
+        logger.warning(f"Error fetching Grafana logs for debug: {e}")
+    logger.info("=" * 80)
+    
+    # Now run the actual verification function that checks ALL pods
+    logger.info("=" * 80)
+    logger.info("RUNNING FULL CREDENTIAL VERIFICATION ACROSS ALL PODS")
+    logger.info("This will check ALL pods in namespace for both username AND password")
+    logger.info("=" * 80)
     pods_creds_result = security_utils.verify_pods_creds(namespace, influxdb_creds, grafana_creds)
     logger.info(f"verify_pods_creds result: {pods_creds_result}")
+    
+    # Final summary
+    logger.info("=" * 80)
+    logger.info("CREDENTIAL SECURITY TEST SUMMARY")
+    logger.info("=" * 80)
+    logger.info(f"Result: {'✓ PASSED - No credentials found' if pods_creds_result else '✗ FAILED - Credentials detected'}")
+    logger.info("Security check covers:")
+    logger.info("  • InfluxDB username and password")
+    logger.info("  • Grafana username and password")
+    logger.info("  • All pods in namespace: " + namespace)
+    logger.info("=" * 80)
+    
     assert pods_creds_result == True, "Credentials found in pod logs."
 
 def test_data_integrity():

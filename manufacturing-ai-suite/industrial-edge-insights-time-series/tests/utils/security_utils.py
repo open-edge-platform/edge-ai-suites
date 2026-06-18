@@ -532,6 +532,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the first record response
         influx_first_record = parse_influxdb_response(first_record_response)
+        if influx_first_record is None:
+            logger.error("Failed to parse first record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -546,6 +549,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the last record response
         influx_last_record = parse_influxdb_response(last_record_response)
+        if influx_last_record is None:
+            logger.error("Failed to parse last record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -560,6 +566,10 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the count response
         influx_total_count = parse_influxdb_response(count_response)
+        if influx_total_count is None:
+            logger.error("Failed to parse count from InfluxDB response")
+            return False
+        
         # Convert all values to strings for comparison
         first_wind_speed = str(first_wind_speed)
         last_wind_speed = str(last_wind_speed)
@@ -585,10 +595,44 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         return False
 
 def parse_influxdb_response(response):
-    # Implement parsing logic based on the response format
-    # This is a placeholder function and needs to be customized
-    # according to the actual response format from InfluxDB
-    return response.split('\n')[-1].split()[-1]  # Example parsing logic
+    """Parse InfluxDB CLI response to extract the value.
+    
+    This handles the typical InfluxDB CLI output format:
+    name: measurement
+    time                 value
+    ----                 -----
+    timestamp            actual_value
+    
+    Returns the extracted value or None if parsing fails.
+    """
+    if not response or not response.strip():
+        logger.warning("Empty response from InfluxDB query")
+        return None
+    
+    try:
+        lines = response.strip().split('\n')
+        # Filter out empty lines and header lines
+        data_lines = [line for line in lines if line.strip() and not line.startswith('name:') and not line.startswith('time') and not line.startswith('----')]
+        
+        if not data_lines:
+            logger.warning(f"No data lines found in InfluxDB response: {response}")
+            return None
+        
+        # Get the last data line and extract the last column (the value)
+        last_line = data_lines[-1].strip()
+        if not last_line:
+            logger.warning("Last data line is empty")
+            return None
+        
+        columns = last_line.split()
+        if not columns:
+            logger.warning(f"No columns found in line: {last_line}")
+            return None
+        
+        return columns[-1]
+    except Exception as e:
+        logger.error(f"Error parsing InfluxDB response: {e}. Response was: {response}")
+        return None
 
 def verify_docker_file_integrity():
     try:

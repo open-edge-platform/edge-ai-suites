@@ -60,11 +60,19 @@ def setup_helm_environment(request):
         f"Namespace: {namespace}, "
         f"Telegraf Input Plugin: {telegraf_input_plugin}"
     )
-    assert helm_utils.helm_install(release_name, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app) == True, "Failed to install Helm release."
+    install_result = helm_utils.helm_install(release_name, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app)
+    if not install_result:
+        logger.error(f"Helm install failed for release '{release_name}'")
+        helm_utils.dump_pod_diagnostics(namespace)
+        assert False, f"Failed to install Helm release '{release_name}'. Check logs for details."
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
+    pods_ready = helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT)
+    if not pods_ready:
+        logger.error(f"Pods failed to become ready in namespace '{namespace}' within {constants.PODS_VERIFY_TIMEOUT}s")
+        helm_utils.dump_pod_diagnostics(namespace)
+        assert False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics."
     
     yield
     # Stop helm releases
@@ -105,11 +113,19 @@ def setup_helm_weld_environment(request):
         f"Namespace: {namespace}, "
         f"Telegraf Input Plugin: {telegraf_input_plugin}"
     )
-    assert helm_utils.helm_install(release_name_weld, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app) == True, "Failed to install Helm release."
+    install_result = helm_utils.helm_install(release_name_weld, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app)
+    if not install_result:
+        logger.error(f"Helm install failed for release '{release_name_weld}'")
+        helm_utils.dump_pod_diagnostics(namespace)
+        assert False, f"Failed to install Helm release '{release_name_weld}'. Check logs for details."
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
+    pods_ready = helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT)
+    if not pods_ready:
+        logger.error(f"Pods failed to become ready in namespace '{namespace}' within {constants.PODS_VERIFY_TIMEOUT}s")
+        helm_utils.dump_pod_diagnostics(namespace)
+        assert False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics."
     
     yield
     # Stop helm releases
@@ -137,8 +153,21 @@ def setup_multimodal_helm_environment():
     logger.debug(
         f"Installing multimodal Helm release... Release Name: {release_name_multi}, Chart Path: {chart_path_multi}, Namespace: {namespace_multi}"
     )
-    assert helm_utils.helm_install(release_name_multi, chart_path_multi, namespace_multi, constants.TELEGRAF_MQTT_PLUGIN) == True, "Failed to install multimodal Helm release."
-    time.sleep(3)
+    install_result = helm_utils.helm_install(release_name_multi, chart_path_multi, namespace_multi, constants.TELEGRAF_MQTT_PLUGIN)
+    if not install_result:
+        logger.error(f"Helm install failed for multimodal release '{release_name_multi}'")
+        helm_utils.dump_pod_diagnostics(namespace_multi)
+        assert False, f"Failed to install multimodal Helm release '{release_name_multi}'. Check logs for details."
+    
+    # Wait for pods to be ready
+    logger.debug(f"Waiting for pods to be ready in namespace '{namespace_multi}'...")
+    time.sleep(3)  # Initial delay for k8s to register pods
+    pods_ready = helm_utils.verify_pods(namespace_multi, timeout=constants.PODS_VERIFY_TIMEOUT)
+    if not pods_ready:
+        logger.error(f"Pods failed to become ready in namespace '{namespace_multi}' within {constants.PODS_VERIFY_TIMEOUT}s")
+        helm_utils.dump_pod_diagnostics(namespace_multi)
+        assert False, f"Failed to verify multimodal pods are running after installation. Check logs for diagnostics."
+    
     yield
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
     cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI)
