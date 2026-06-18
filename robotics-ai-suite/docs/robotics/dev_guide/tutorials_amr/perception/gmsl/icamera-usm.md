@@ -56,8 +56,10 @@ sudo apt-get install ros2-jazzy-icamera-usm
 
 ## Start the ros2 icamera-usm node
 
+The extra arg also enables classis ros raw image publish
+
 ```bash
-ros2 run  icamera_usm icamera_usm_node
+ros2 run  icamera_usm icamera_usm_node --ros-args -p publish_image_raw:=true
 ```
 
 expected output with 4 cameras running
@@ -98,3 +100,64 @@ Changing the model that will be used can be done with the following arg
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml 
 ```
+
+
+
+Visualize the example. create a file called inference-visualize.rviz and add the following into it
+```bash
+vim inference-visualize.rviz
+```
+copy the following into it.
+
+```yaml
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Image
+      Name: Legacy Annotations
+      Enabled: true
+      Topic:
+        Value: /legacy/camera0/annotated_image
+        Reliability Policy: Best Effort
+        History Policy: Keep Last
+        Depth: 1
+      Normalize Range: false
+    - Class: rviz_default_plugins/Image
+      Name: USM Annotations
+      Enabled: true
+      Topic:
+        Value: /infer_usm/camera0/image_annotated
+        Reliability Policy: Best Effort
+        History Policy: Keep Last
+        Depth: 1
+      Normalize Range: false
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: camera
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Orbit
+    Saved: ~
+Window Geometry:
+  Height: 720
+  Width: 1280
+  Hide Left Dock: false
+  Hide Right Dock: false
+```
+
+start rviz using the configuration file that was created
+
+```bash
+rviz2 -d inference-visualize.rviz
+```
+
+ user can visualize the inference by changeing `camera0` with `camera1..3` if there is more than one camera
