@@ -13,10 +13,10 @@ background traffic and then enabling TSN features, this demonstration shows how 
 preserves tracking accuracy even under network congestion — quantified using HOTA,
 MOTA, and IDF1 metrics.
 
-
 ## System Requirements
 
 ### Software Requirements
+
 - **Operating System:** Ubuntu 24.04 or later
 - **Docker Engine** with Docker Compose V2
 - [**SceneScape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0)
@@ -35,7 +35,6 @@ MOTA, and IDF1 metrics.
 ## Network Topology
 
 ![TSN Network Topology](./_assets/scenescape-dtd-network-topology.svg)
-
 
 The MOXA switch carries both camera traffic and background traffic. In the Basler camera setup, the switch also acts as the PTP Grandmaster for the host and cameras.
 
@@ -56,6 +55,7 @@ cd scenescape
 ## Prerequisite: Choose Your Camera Setup
 
 ### Option 1: RTSP Camera with NTP Synchronization
+
 SceneScape supports NTP-synchronized RTSP cameras by default. Set the following in `scenescape/dlstreamer-pipeline-server/queuing-config.json` for both `qcam1` and `qcam2` pipelines:
 
 ```json
@@ -73,7 +73,6 @@ Before continuing, complete the following steps in order:
 1. [Configure MOXA Switch and Host for IEEE 1588v2](./how-to-guides/scenescape-deterministic-inference/configure-ptp-1588v2.md)
 2. [Configure the Basler Camera to Use PTP Timestamps](./how-to-guides/scenescape-deterministic-inference/configure-basler-ptp-timestamps.md)
 3. [Set Up SceneScape with Basler GigE Camera and PTP Support](./how-to-guides/scenescape-deterministic-inference/integrate-basler-camera-with-scenescape.md)
-
 
 ## End-to-End Testing
 
@@ -96,7 +95,7 @@ sudo ip link set enp1s0.5 type vlan egress-qos-map 0:5
 sudo ifconfig enp1s0.5 192.168.5.31 up
 ```
 
-> **Note**: if you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
+> **Note:** If you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
 
 For detailed instructions, refer to the
 [HOST VLAN Configuration Guide](./how-to-guides/common/create-vlan-on-all-machines.md).
@@ -149,19 +148,17 @@ prioritize the camera traffic, protecting it from background congestion.
 For detailed instructions, refer to the
 [TSN Traffic Shaping Guide](./how-to-guides/common/enable-tsn-traffic-shaping.md).
 
-
 ### Step 5: HOTA Metrics and Observability
 
 After validating TSN shaping behavior under load, measure tracking quality and timing
 consistency to quantify the end-to-end impact.
 
 Use the HOTA workflow to compare baseline behavior (without shaping) versus TSN-aware
-traffic scheduling. 
+traffic scheduling.
 
 For the full procedure, metric definitions, and example commands, see:
 
 [HOTA Metrics Guide](./how-to-guides/scenescape-deterministic-inference/scenescape-measuring-hota-metrics-with-tsn.md)
-
 
 ## Resources
 

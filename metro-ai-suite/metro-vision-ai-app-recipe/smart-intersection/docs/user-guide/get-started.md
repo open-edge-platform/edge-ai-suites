@@ -229,6 +229,7 @@ Once the application is running, follow the [Access the Application and Componen
 ```bash
 docker compose down
 ```
+
 To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Other Deployment Options
