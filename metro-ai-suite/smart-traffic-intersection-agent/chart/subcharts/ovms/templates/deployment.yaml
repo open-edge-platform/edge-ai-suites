@@ -93,12 +93,6 @@ spec:
 
               if [ "$needs_init" = true ]; then
                 . /config/ovms-init.sh
-              else
-                # Remove any stale models for other devices from config.json
-                # (e.g. CPU model left over from a previous non-GPU deployment)
-                if [ -f /models/config.json ]; then
-                  python3 -c "import json; f=open('/models/config.json'); cfg=json.load(f); f.close(); cfg['model_config_list']=[m for m in cfg.get('model_config_list',[]) if m['config']['name']=='${vlm_storage_name}']; f=open('/models/config.json','w'); json.dump(cfg,f,indent=4); f.close()" && echo "Pruned config.json to only include ${vlm_storage_name}."
-                fi
               fi
           args:
             - {{ .Values.env.modelName | quote }}
@@ -136,20 +130,32 @@ spec:
         - name: ovms
           image: "{{- if (or $needsGpu $tcGpu) -}}{{ .Values.image.repository }}:{{ .Values.image.gpuTag }}{{- else -}}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{- end -}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if $tcGpu }}
           command:
             - /bin/sh
             - -c
             - |
-              {{- if $tcGpu }}
               echo "Waiting 10s for GPU PCIe passthrough to initialize in kata VM..."
               sleep 10
-              {{- end }}
               exec /ovms/bin/ovms \
                 --port 9000 \
                 --rest_port 8000 \
                 --config_path /models/config.json \
                 --log_level {{ .Values.env.logLevel | quote }} \
                 --metrics_enable
+          {{- else }}
+          args:
+            - "/ovms/bin/ovms"
+            - "--port"
+            - "9000"
+            - "--rest_port"
+            - "8000"
+            - "--config_path"
+            - "/models/config.json"
+            - "--log_level"
+            - {{ .Values.env.logLevel | quote }}
+            - "--metrics_enable"
+          {{- end }}
           ports:
             - name: http
               containerPort: 8000
