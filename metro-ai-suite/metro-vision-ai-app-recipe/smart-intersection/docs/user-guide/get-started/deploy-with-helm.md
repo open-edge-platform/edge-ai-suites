@@ -245,36 +245,63 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 ## Deploy with Trusted Compute
 
-Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
-
-> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+Intel Trusted Compute runs workloads inside a hardware-isolated VM, protecting inference workloads and video data from untrusted co-tenants on the same host.
 
 ### 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your Kubernetes nodes. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.1 or later on your Kubernetes nodes. Complete the following sections:
 1. Prerequisites
 2. Download the Trusted Compute Package
 3. Kubernetes Option
 
-> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+### 2. Deploy the Application
 
-### 2. Deploy with Trusted Compute
+Choose one of the following paths based on whether you need GPU acceleration.
 
-Deploy the Smart Intersection application with Trusted Compute enabled by adding the `--set trustedCompute.enabled=true` flag to the helm command:
+> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy](#steps-to-deploy) section above.
+
+---
+
+#### a. Deploy with Trusted Compute (CPU)
 
 ```bash
-# Install the chart with Trusted Compute enabled
 helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set global.storageClassName="" \
   --set trustedCompute.enabled=true \
   -n smart-intersection
-  
 ```
 
-The DL Streamer Pipeline Server pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and video data from untrusted co-tenants on the same host.
+#### b. Deploy with Trusted Compute (GPU)
 
-> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy](#steps-to-deploy) section above.
+##### Prerequisites
+
+Before enabling GPU passthrough, ensure:
+
+- Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
+- Trusted Compute version 1.5.1 or later
+- Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
+
+##### Step 1: Bind GPU to vfio-pci
+
+> **Note:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+
+Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver.
+
+```bash
+sudo ./tools/intel-igpu-vfio-bind.sh bind
+```
+
+##### Step 2: Deploy with GPU Enabled
+
+```bash
+helm upgrade --install smart-intersection ./smart-intersection/chart \
+  --create-namespace \
+  --set global.storageClassName="" \
+  --set trustedCompute.enabled=true \
+  --set trustedCompute.tc_gpu_enabled=true \
+  -n smart-intersection
+```
 
 ### 3. Verify Trusted Compute Deployment
 
@@ -293,23 +320,26 @@ kubectl logs -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline
 
 You should see the DL Streamer Pipeline Server pods running with the Trusted Compute runtime class.
 
-## Uninstall the Application
+Once the pods are ready, access the application using the URLs listed in the [Access Application Services](#access-application-services) section.
 
-To uninstall the application, run the following command:
+### 4. Clean Up Deployment
+
+Follow the steps below in order to cleanly remove the deployment.
+
+**Step 1. Uninstall the application and delete the namespace:**
 
 ```bash
 helm uninstall smart-intersection -n smart-intersection
-```
-
-## Delete the Namespace
-
-To delete the namespace and all resources within it, run the following command:
-
-```bash
 kubectl delete namespace smart-intersection
 ```
 
-## Clean Up the Trusted Compute Deployment
+**Step 2. Revert GPU binding** (if deployed with GPU):
+
+```bash
+sudo ./tools/intel-igpu-vfio-bind.sh unbind
+```
+
+**Step 3. Clean Up the Trusted Compute Deployment**
 
 To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
