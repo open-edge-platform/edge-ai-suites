@@ -145,3 +145,5 @@ resources/frigate-config/.*
 resources/frigate-config/frigate*
 resources/frigate-config/model_cache
 resources/frigate-config/backup*
+frigate-clips/
+resources/videos/*
