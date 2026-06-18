@@ -70,7 +70,7 @@ docker info|grep -i PROXY
 Download the compressed file:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/v2026.1.0/handheld-multi-modal.zip
 ```
 
 Decompress the downloaded file:
