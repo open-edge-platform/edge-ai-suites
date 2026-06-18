@@ -499,9 +499,9 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     assert result == True, "Failed to activate UDF deployment package."
     logger.info("UDF package copied and activated successfully")
 
-    KAPACITOR_READY_TIMEOUT = 600    # ceiling (was fixed 180s sleep)
-    KAPACITOR_POLL_INTERVAL = 10     # seconds between probes
-    KAPACITOR_TASK_MARKER   = "windturbine"  # substring expected in /tasks JSON
+    KAPACITOR_READY_TIMEOUT = 600
+    KAPACITOR_POLL_INTERVAL = 10
+    KAPACITOR_TASK_MARKER   = "windturbine"
     logger.info(
         "Smart-waiting for Kapacitor UDF task "
         f"(marker={KAPACITOR_TASK_MARKER!r}, ceiling={KAPACITOR_READY_TIMEOUT}s, "

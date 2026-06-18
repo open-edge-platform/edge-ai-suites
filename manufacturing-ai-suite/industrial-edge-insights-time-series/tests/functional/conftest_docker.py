@@ -210,9 +210,7 @@ def setup_multimodal_environment(request):
         os.chdir(original_dir)
 
 
-# ---------------------------------------------------------------------------
 # Wind Turbine — dedicated module-scoped fixture
-# ---------------------------------------------------------------------------
 # Expected containers for MQTT and OPC-UA wind turbine deployments
 _WIND_MQTT_CONTAINERS = [
     constants.CONTAINERS["influxdb"]["name"],

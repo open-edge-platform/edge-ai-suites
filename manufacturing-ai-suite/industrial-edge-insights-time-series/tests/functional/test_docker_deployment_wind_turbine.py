@@ -20,9 +20,7 @@ pytest_plugins = ["conftest_docker"]
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Container lists used by wait_until_containers_up in multi-stream tests
-# ---------------------------------------------------------------------------
 _WIND_MQTT_CONTAINERS = [
     constants.CONTAINERS["influxdb"]["name"],
     constants.CONTAINERS["telegraf"]["name"],

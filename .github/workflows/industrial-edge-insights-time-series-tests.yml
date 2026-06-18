@@ -14,7 +14,7 @@ on:
         description: 'Branch or tag to checkout (default: main)'
         required: false
         type: string
-        default: 'feature/rashmi/Automation_fix'
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -29,8 +29,6 @@ on:
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
-          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification
-          or test_helm_deployment_wind_turbine::test_gen_chart.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
@@ -50,7 +48,7 @@ on:
         description: 'Branch or tag to checkout (default: main)'
         required: false
         type: string
-        default: 'feature/rashmi/Automation_fix'
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -65,8 +63,6 @@ on:
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
-          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification
-          or test_helm_deployment_wind_turbine::test_gen_chart.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string

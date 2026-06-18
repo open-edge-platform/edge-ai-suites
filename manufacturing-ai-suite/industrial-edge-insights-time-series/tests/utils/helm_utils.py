@@ -2782,9 +2782,7 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
         return False
 
 
-# =================================================================
 # SEAWEED / S3 STORAGE HELM FUNCTIONS
-# =================================================================
 
 def verify_seaweed_essential_pods(namespace):
     """
