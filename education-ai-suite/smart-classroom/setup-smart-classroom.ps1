@@ -1306,30 +1306,76 @@ Write-Host "Checking DL Streamer..." -ForegroundColor White
 
 $dlStreamerPath = $env:DLSTREAMER_DIR
 $dlStreamerFound = $false
+$gstInspectPassed = $false
+$dlStreamerFoundPath = $null
 
-if ($dlStreamerPath -and (Test-Path $dlStreamerPath)) {
-    $dlStreamerFound = $true
-    Write-Host "  [OK] DL Streamer found at: $dlStreamerPath" -ForegroundColor Green
-} else {
-    # Check common installation paths (including DLLs-only extraction path)
-    $commonPaths = @(
-        "C:\Program Files\Intel\dlstreamer",
-        "C:\Intel\dlstreamer",
-        "C:\Program Files (x86)\Intel\dlstreamer",
-        "C:\dlls_windows"
-    )
-    
-    if ($env:INTEL_OPENVINO_DIR) {
-        $commonPaths += "$env:INTEL_OPENVINO_DIR\..\dlstreamer"
+# Primary check: verify DL Streamer plugins are actually usable via gst-inspect-1.0
+$dlStreamerCheckScript = Join-Path $PSScriptRoot "Scripts\check_dlstreamer.ps1"
+if (Test-Path $dlStreamerCheckScript) {
+    & $dlStreamerCheckScript -Quiet
+    if ($LASTEXITCODE -eq 0) {
+        $dlStreamerFound = $true
+        $gstInspectPassed = $true
+        Write-Host "  [OK] DL Streamer plugins detected via gst-inspect-1.0" -ForegroundColor Green
     }
-    
-    foreach ($path in $commonPaths) {
-        if (Test-Path $path) {
-            $dlStreamerFound = $true
-            Write-Host "  [OK] DL Streamer found at: $path" -ForegroundColor Green
-            break
+    else
+    {
+        Write-Host "  [INFO] DL Streamer plugins not detected via gst-inspect-1.0" -ForegroundColor Yellow
+    }
+}
+
+if (-not $dlStreamerFound) {
+    if ($dlStreamerPath -and (Test-Path $dlStreamerPath)) {
+        $dlStreamerFound = $true
+        $dlStreamerFoundPath = $dlStreamerPath
+        Write-Host "  [OK] DL Streamer found at: $dlStreamerPath" -ForegroundColor Green
+    } else {
+        # Check common installation paths (including DLLs-only extraction path)
+        $commonPaths = @(
+            "C:\Program Files\Intel\dlstreamer",
+            "C:\Intel\dlstreamer",
+            "C:\Program Files (x86)\Intel\dlstreamer",
+            "C:\dlls_windows"
+        )
+        
+        if ($env:INTEL_OPENVINO_DIR) {
+            $commonPaths += "$env:INTEL_OPENVINO_DIR\..\dlstreamer"
+        }
+        
+        foreach ($path in $commonPaths) {
+            if (Test-Path $path) {
+                $dlStreamerFound = $true
+                $dlStreamerFoundPath = $path
+                Write-Host "  [OK] DL Streamer found at: $path" -ForegroundColor Green
+                break
+            }
         }
     }
+}
+
+# gst-inspect-1.0 failed but DLL/install path was found: the installation may be
+# incomplete or not on PATH. Warn the user and confirm before proceeding.
+if ($dlStreamerFound -and -not $gstInspectPassed -and $dlStreamerFoundPath) {
+    Write-Host "" 
+    Write-Host "  [WARN] DL Streamer verification via gst-inspect-1.0 failed," -ForegroundColor Yellow
+    Write-Host "         but DL Streamer files were found at: $dlStreamerFoundPath" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "         This usually means DL Streamer is installed but not fully" -ForegroundColor DarkYellow
+    Write-Host "         configured (gst-inspect-1.0 is not on PATH or the GStreamer" -ForegroundColor DarkYellow
+    Write-Host "         environment is not initialized). Video pipelines may not work" -ForegroundColor DarkYellow
+    Write-Host "         until DL Streamer is correctly installed and its environment" -ForegroundColor DarkYellow
+    Write-Host "         variables are set." -ForegroundColor DarkYellow
+    Write-Host ""
+    Write-Host "         Please make sure DL Streamer is installed correctly." -ForegroundColor Cyan
+    Write-Host ""
+    $continueDls = Read-Host "  Do you want to continue anyway? (Y/N)"
+    if ($continueDls -notmatch "^[Yy]") {
+        Write-Host ""
+        Write-Host "  Setup cancelled. Please verify your DL Streamer installation and try again." -ForegroundColor Gray
+        exit 1
+    }
+    Write-Host ""
+    Write-Host "  Continuing with DL Streamer (verification skipped)..." -ForegroundColor Yellow
 }
 
 if (-not $dlStreamerFound) {
