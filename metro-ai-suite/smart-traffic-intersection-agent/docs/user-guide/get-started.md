@@ -255,7 +255,7 @@ For advanced users who need more control over the configuration, you can configu
 export LOG_LEVEL=DEBUG
 
 # Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU
-export VLM_DEVICE=GPU
+export VLM_TARGET_DEVICE=GPU
 
 # Other VLM related config, sample values
 export VLM_TIMEOUT_SECONDS=600          # Default 300
