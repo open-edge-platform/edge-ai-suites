@@ -1,5 +1,3 @@
-(components)=
-
 # Components and Features of RVC
 
 RVC Framework is composed by

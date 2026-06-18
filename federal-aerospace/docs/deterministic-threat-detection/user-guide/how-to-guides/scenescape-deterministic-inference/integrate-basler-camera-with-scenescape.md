@@ -15,7 +15,7 @@ The Basler camera only supports IEEE 1588v2 over UDP, so the switch and host mus
 ### Step 1: Clone SceneScape
 
 ```bash
-git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0-rc2
+git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
 cd scenescape
 ```
 

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: nicu-warmer
-description: Health AI Suite - NICU Warmer Patient Monitoring
-type: application
-version: 0.1.0
-appVersion: "2026.1.0-rc1"

@@ -1,5 +1,3 @@
-(model-idp3)=
-
 # Improved 3D Diffusion Policy (iDP3)
 
 Improved 3D Diffusion Policy (iDP3) builds upon the original Diffusion Policy framework by enhancing its capabilities for 3D robotic manipulation tasks. The original Diffusion Policy, while effective for 2D tasks, faced challenges in scaling to 3D environments due to increased complexity and the need for more accurate spatial reasoning. Instead, to address the limitations of the original framework, iDP3 uses a more sophisticated 3D visual encoder to point clouds, enabling the policy to better understand the 3D structure of the environment.

@@ -190,11 +190,25 @@ export const transcriptSlice = createSlice({
 
     completeSegmentTyping: (state, action: PayloadAction<number>) => {
       const idx = action.payload;
-      if (idx >= 0 && idx < state.segments.length) {
-        state.segments[idx].isComplete = true;
-        const next = idx + 1;
-        state.currentTypingIndex = next < state.segments.length ? next : -1;
+      if (idx < 0 || idx >= state.segments.length) return;
+
+      state.segments[idx].isComplete = true;
+
+      // Only advance the cursor when the segment that just finished is the one
+      // we're actually typing. On long transcriptions chunks can arrive faster
+      // than the typewriter animates, so a stale run may complete an older index
+      // after the cursor has moved on. Honoring it would move the cursor
+      // backward into already-completed segments and trigger a synchronous
+      // completion cascade ("Maximum update depth exceeded").
+      if (idx !== state.currentTypingIndex) return;
+
+      // Skip over segments that are already complete so we never re-type (or
+      // cascade through) finished content.
+      let next = idx + 1;
+      while (next < state.segments.length && state.segments[next].isComplete) {
+        next++;
       }
+      state.currentTypingIndex = next < state.segments.length ? next : -1;
     },
 
     setTotalDuration: (state, action: PayloadAction<number>) => {

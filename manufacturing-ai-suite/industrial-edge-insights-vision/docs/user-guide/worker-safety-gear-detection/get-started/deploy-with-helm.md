@@ -91,10 +91,10 @@ configured Kubernetes cluster.
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.3.0-rc2`
+        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.3.0`
     - unzip the package using the following command
 
-        `tar -xvf worker-safety-gear-detection-1.3.0-rc2.tgz`
+        `tar -xvf worker-safety-gear-detection-1.3.0.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv worker-safety-gear-detection helm`

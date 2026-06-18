@@ -1,5 +1,3 @@
-(pose_detector)=
-
 # Pose Detector
 
 The last stage of the dynamic use cases Vision component of RVC is the Pose Detector.

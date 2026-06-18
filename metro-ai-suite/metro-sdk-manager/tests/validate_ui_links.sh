@@ -11,8 +11,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-CONFIG_JS="${REPO_ROOT}/docs/_static/installer/config.js"
-SELECTOR_HTML="${REPO_ROOT}/docs/_static/installer/selector.html"
+CONFIG_JS="${REPO_ROOT}/docs/oep-sdk-manager-files/config.js"
+SELECTOR_HTML="${REPO_ROOT}/docs/oep-sdk-manager-files/selector.html"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
