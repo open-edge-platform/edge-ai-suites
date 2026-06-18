@@ -279,6 +279,33 @@ def start_video_analytics_pipeline(
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
                 va_services[x_session_id].x_session_id = x_session_id
 
+                # ── Register callback: fires when ALL pipelines finish (EOS or manual stop) ──
+                _sid      = x_session_id
+                _location = location
+                _pname    = name
+                def _on_all_pipelines_done(session_id, _svc=va_services[x_session_id],
+                                           _loc=_location, _n=_pname):
+                    from utils.scp_sender import write_engagement_reports, get_scp_sender
+                    from utils.telegram_sender import get_sender
+                    try:
+                        _session_dir     = os.path.join(_loc, _n, session_id)
+                        _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
+                        # Use the same engine as the /class-statistics UI endpoint
+                        va_stats, _ = _svc.get_pose_stats(_front_posture)
+                        logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
+                        # Always write the files regardless of sender config
+                        write_engagement_reports(session_id, _session_dir, va_stats)
+                        _scp = get_scp_sender()
+                        if _scp:
+                            _scp.send_engagement_package_async(session_id, _session_dir, va_stats)
+                        _tg = get_sender()
+                        if _tg:
+                            _tg.send_engagement_package_async(session_id, _session_dir, _front_posture)
+                    except Exception as _e:
+                        logger.error(f"[VA done] Failed to generate/send reports: {_e}", exc_info=True)
+                va_services[x_session_id].on_all_pipelines_done = _on_all_pipelines_done
+                # ───────────────────────────────────────────────────────────────────────────
+
             service = va_services[x_session_id]
 
             # Prepare pipeline options
@@ -466,11 +493,9 @@ def stop_video_analytics_pipeline(
                 sender.send_engagement_package_async(
                     x_session_id, session_dir, va_posture_file
                 )
-            scp = get_scp_sender()
-            if scp:
-                scp.send_engagement_package_async(
-                    x_session_id, session_dir, va_posture_file
-                )
+            # Report generation and SCP send are triggered automatically by
+            # service.on_all_pipelines_done, which fires from stop_pipeline()
+            # when the last pipeline is removed, or from _monitor_pipeline on EOS.
             # ────────────────────────────────────────────────────────────────
 
             return JSONResponse(content={"results": results}, status_code=200)
