@@ -104,7 +104,8 @@ vippet-get: ## Sparse-checkout vippet into ../vippet-fedaero (excludes docs, dro
 vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vippet
 	@echo "Configuring vippet metrics-manager..."; \
 	cp $(SELF_DIR)/collector/telegraf.conf $(VIPPET_CWD)/vippet-telegraf.conf; \
-	python3 -c 'import yaml; src="$(VIPPET_CWD)/shared/models/supported_models.yaml"; models=yaml.safe_load(open(src)); filtered=[m for m in models if m.get("source")!="huggingface"]; yaml.dump(filtered,open(src,"w"),default_flow_style=False,allow_unicode=True); print(f"✓ supported_models.yaml filtered ({len(filtered)}/{len(models)} models, huggingface excluded)")'; \
+	python3 $(SELF_DIR)/scripts/filter_models.py \
+		"$(VIPPET_CWD)/shared/models/supported_models.yaml"; \
 	if ! grep -q 'METRICS_MANAGER_HOSTNAME' $(VIPPET_CWD)/compose.yml; then \
 		sed -i 's|METRICS_RETENTION_SECONDS:.*|&\n      METRICS_MANAGER_HOSTNAME: $${METRICS_MANAGER_HOSTNAME:-ptl}|' $(VIPPET_CWD)/compose.yml; \
 		echo "✓ compose.yml patched (METRICS_MANAGER_HOSTNAME added)"; \

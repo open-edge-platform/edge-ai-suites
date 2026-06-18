@@ -16,9 +16,40 @@ trap 'rm -f "${TMP_OVERRIDE}"' EXIT
 echo "services:" > "${TMP_OVERRIDE}"
 
 HAS_NPU=false
+RENDER_GROUP_ID=""
+
+resolve_render_group_id() {
+  if getent group render >/dev/null 2>&1; then
+    getent group render | cut -d: -f3
+    return 0
+  fi
+
+  if [[ -e /dev/accel/accel0 ]]; then
+    stat -c '%g' /dev/accel/accel0
+    return 0
+  fi
+
+  if [[ -d /dev/accel ]]; then
+    stat -c '%g' /dev/accel
+    return 0
+  fi
+
+  return 1
+}
+
+enable_npu_override() {
+  HAS_NPU=true
+
+  if [[ -z "${RENDER_GROUP_ID}" ]]; then
+    if ! RENDER_GROUP_ID="$(resolve_render_group_id)"; then
+      echo "Unable to resolve the host render group for NPU access. Ensure the render group and /dev/accel devices are available." >&2
+      exit 1
+    fi
+  fi
+}
 
 if [[ "${ECG_DEVICE:-}" == "NPU" ]]; then
-  HAS_NPU=true
+  enable_npu_override
   cat >> "${TMP_OVERRIDE}" <<EOF
   ai-ecg:
     environment:
@@ -27,12 +58,12 @@ if [[ "${ECG_DEVICE:-}" == "NPU" ]]; then
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
     group_add:
-      - render
+      - "${RENDER_GROUP_ID}"
 EOF
 fi
 
 if [[ "${POSE_3D_DEVICE:-}" == "NPU" ]]; then
-  HAS_NPU=true
+  enable_npu_override
   cat >> "${TMP_OVERRIDE}" <<EOF
   3dpose-estimation:
     environment:
@@ -41,12 +72,12 @@ if [[ "${POSE_3D_DEVICE:-}" == "NPU" ]]; then
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
     group_add:
-      - render
+      - "${RENDER_GROUP_ID}"
 EOF
 fi
 
 if [[ "${RPPG_DEVICE:-}" == "NPU" ]]; then
-  HAS_NPU=true
+  enable_npu_override
   cat >> "${TMP_OVERRIDE}" <<EOF
   rppg:
     environment:
@@ -55,7 +86,7 @@ if [[ "${RPPG_DEVICE:-}" == "NPU" ]]; then
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
     group_add:
-      - render
+      - "${RENDER_GROUP_ID}"
 EOF
 fi
 

@@ -1,5 +1,3 @@
-(orb_slam3)=
-
 # VSLAM: ORB-SLAM3
 
 SLAM(Simultaneous localization and mapping) is a major research problem in the robotics community, where a great deal of effort has been devoted to developing new methods to maximize their robustness and reliability.

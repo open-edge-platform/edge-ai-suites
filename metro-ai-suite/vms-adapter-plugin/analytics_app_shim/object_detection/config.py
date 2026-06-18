@@ -22,6 +22,10 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     tls_ca_bundle: str = ""
     mqtt_host: str = "localhost"
     mqtt_port: int = 1883
+    mqtt_tls_enabled: bool = False
+    mqtt_ca_bundle: str = ""
+    mqtt_client_cert: str = ""
+    mqtt_client_key: str = ""
     # Broker address as seen by the Pipeline Server (used in the destination payload
     # so gvametapublish can connect). Defaults to the Pipeline Server's MQTT_HOST env var
     # value (container name on the DLStreamer Vision network). Set to "host.docker.internal" if the

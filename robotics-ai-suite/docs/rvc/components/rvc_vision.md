@@ -1,5 +1,3 @@
-(vision_abstract)=
-
 # Vision
 
 The RVC Vision can be divided in two use case based sets of components:

@@ -1,5 +1,3 @@
-(imitation_act)=
-
 # Imitation Learning - ACT
 
 Imitation learning is a machine learning approach where a model is trained to mimic expert behavior by observing and replicating demonstrations, enabling it to perform tasks similarly to the expert. ACT is an action chunking policy with Transformers, an architecture designed for sequence modeling. It is trained as a conditional VAE (CVAE) to capture the variability in human data. It significantly outperforms previous imitation learning algorithms on a range of simulated and real-world fine manipulation tasks.
@@ -58,8 +56,6 @@ pip install torch==2.7.1 torchvision==0.22.1 pyquaternion==0.9.9 pyyaml==6.0 ros
 > Because of this, pip may fall back to building from source, which triggers the need for compilers and tools like Bazel. Additional build tools may be required to build some of the dependencies from source. If you encounter errors during installation, either switch to a different python version or check the error messages for missing tools or libraries and install them accordingly.
 
 ### Install ACT package
-
-(act-ov)=
 
 The Embodied Intelligence SDK provides optimized source code for OpenVINO™. To get the source code from `/opt/act-ov/` with the following command:
 

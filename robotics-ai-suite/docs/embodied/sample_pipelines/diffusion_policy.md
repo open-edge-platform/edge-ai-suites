@@ -1,5 +1,3 @@
-(diffusion_policy)=
-
 # Diffusion Policy
 
 Diffusion Policy presents an innovative method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process. During inference, it utilizes the gradient of the score function for the action distribution and applies iterative stochastic Langevin dynamics, allowing for robust management of complex, multimodal, and high-dimensional action spaces while maintaining training stability. Key features, including receding horizon control, visual input conditioning, and a time-series diffusion transformer, further enhance the effectiveness of this approach for real-world visuomotor policy learning.

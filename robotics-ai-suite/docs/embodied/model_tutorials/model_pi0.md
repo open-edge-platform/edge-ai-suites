@@ -4,8 +4,6 @@
 ```
 hide_directive-->
 
-(model-pi0)=
-
 # General-purpose robot foundation model (Pi0)
 
 Pi0 created by Physical Intelligence introduces a groundbreaking robotic model designed to integrate vision, language, and action (VLA) for general-purpose robotic tasks.

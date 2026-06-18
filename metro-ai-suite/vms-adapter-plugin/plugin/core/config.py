@@ -99,6 +99,10 @@ _DiscriminatedAnalyticsAppConfig = Annotated[
 class MqttConfig(BaseModel):
     host: str = ""
     port: int = 1883
+    tls_enabled: bool = False
+    tls_ca_bundle: str = ""
+    tls_client_cert: str = ""
+    tls_client_key: str = ""
 
 
 class ApiConfig(BaseModel):
