@@ -105,3 +105,9 @@ Advance Setup guide covers:
 | Backend | 8000 | http://localhost:8000/health |
 | Content Search | 9011 | http://localhost:9011/api/v1/system/health |
 | Frontend | 5173 | http://localhost:5173 |
+
+## Learn More
+
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.
