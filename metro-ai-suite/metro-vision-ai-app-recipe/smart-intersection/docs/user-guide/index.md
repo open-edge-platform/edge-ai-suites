@@ -40,12 +40,10 @@ with existing cameras and deliver real-time, coordinated insights for smarter tr
 - **Reduced TCO**: works with the existing cameras, and makes scaling with additional sensors
   and cameras easy. This simplifies business logic development, and future-proofs the solution.
 
-
-
 ## Learn More
 
-- [Security Enablement](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
-- [Intel® SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [Security Enablement](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
+- [Scenescape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive

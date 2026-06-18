@@ -56,7 +56,7 @@ for Intel edge devices.
 The system uses the **Metro Edge Architecture** based on three key layers:
 
 - **Perception**: Deep Learning Streamer (DL Streamer) [processes 3/4 camera feeds](./how-it-works/perception-layer.md).
-- **Control**: Intel® SceneScape Controller [aggregates metadata](./how-it-works/analytics-pipeline.md).
+- **Control**: Scenescape Controller [aggregates metadata](./how-it-works/analytics-pipeline.md).
 - **Analytics**: Node-RED [transforms events into traffic insights](./how-it-works/analytics-pipeline.md#node-red-transformation)
   (Traffic Volume, Flow Efficiency, Tariffing).
 

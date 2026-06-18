@@ -22,14 +22,14 @@ Guides for the [RTSP + MQTT use case](./get-started.md).
 - [Run the MQTT Aggregator and Visualization](./how-to-guides/rtsp-deterministic-inference/run-mqtt-aggregator-and-visualization.md)
 - [Run the Traffic Injector](./how-to-guides/rtsp-deterministic-inference/run-traffic-injector.md)
 
-## SceneScape with Basler GigE Camera and TSN PTP
+## Scenescape with Basler GigE Camera and TSN PTP
 
-Guides for the [SceneScape + Basler use case](./get-started-scenescape.md).
+Guides for the [Scenescape + Basler use case](./get-started-scenescape.md).
 
 - [Configure PTP Time Synchronization (IEEE 1588v2)](./how-to-guides/scenescape-deterministic-inference/configure-ptp-1588v2.md)
 - [Configure Basler Camera to Use PTP Timestamps](./how-to-guides/scenescape-deterministic-inference/configure-basler-ptp-timestamps.md)
-- [Set Up SceneScape with Basler GigE Camera and PTP Support](./how-to-guides/scenescape-deterministic-inference/integrate-basler-camera-with-scenescape.md)
-- [Measuring HOTA Tracking Accuracy with TSN and SceneScape](./how-to-guides/scenescape-deterministic-inference/scenescape-measuring-hota-metrics-with-tsn.md)
+- [Set Up Scenescape with Basler GigE Camera and PTP Support](./how-to-guides/scenescape-deterministic-inference/integrate-basler-camera-with-scenescape.md)
+- [Measuring HOTA Tracking Accuracy with TSN and Scenescape](./how-to-guides/scenescape-deterministic-inference/scenescape-measuring-hota-metrics-with-tsn.md)
 - [HOTA Script Reference](./how-to-guides/scenescape-deterministic-inference/hota-script-reference.md)
 
 <!--hide_directive
