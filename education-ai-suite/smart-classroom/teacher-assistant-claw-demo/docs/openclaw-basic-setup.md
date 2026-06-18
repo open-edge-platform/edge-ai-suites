@@ -80,7 +80,8 @@ openclaw gateway install &&
 ./setup-openclaw-workspace.sh &&
 openclaw skills update &&
 echo "Waiting for OVMS..." &&
-until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do sleep 5; printf "."; done
+until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do sleep 5; printf "."; done &&
+echo " OVMS ready!"
 ```
 
 <details>
