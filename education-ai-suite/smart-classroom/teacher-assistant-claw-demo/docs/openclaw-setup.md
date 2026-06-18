@@ -20,6 +20,8 @@ The OpenClaw based agent functions as the "Teacher Assistant" persona that enabl
 ```
 Note: In the figure, Smart Classroom is abbreviated as SC.
 
+> **ℹ️ This is the _basic_ setup variant** — the fastest, validated path to a working agent (OVMS local inference plus the OpenClaw dashboard/chat), **without Telegram or other external integrations**. It uses the configuration file [`openclaw-basic.json`](../openclaw-basic.json).
+
 ## ✅ Pre-requisites
 
 ### System Requirements for OpenClaw agent
@@ -77,7 +79,7 @@ Install OpenClaw, apply configuration from the repo, start the gateway, deploy t
 
 ``` bash
 curl -fsSL https://openclaw.ai/install.sh | bash -s -- --version 2026.6.6 --no-onboard &&
-openclaw config patch --file ./openclaw-config.json &&
+openclaw config patch --file ./openclaw-basic.json &&
 openclaw gateway install &&
 ./setup-openclaw-workspace.sh &&
 openclaw skills update &&
