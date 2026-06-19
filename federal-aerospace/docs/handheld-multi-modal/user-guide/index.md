@@ -75,7 +75,7 @@ which is an open source data visualization and analytics software. A Grafana Das
 supplied that aggregates and presents metrics from the components of the application
 and from the underlying platform. The metrics are streamed via websocket to Grafana
 for on-device live ephemeral view. Additionally a Prometheus endpoint is exposed at
-`https://localhost:9273/metrics` address from which the data can be scraped for
+`localhost:9273/metrics` address from which the data can be scraped for
 long-term persistence.
 
 ## Composite Application installation
