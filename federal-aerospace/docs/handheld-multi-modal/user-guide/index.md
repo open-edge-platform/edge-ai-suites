@@ -73,7 +73,7 @@ For more information, see [Web UI documentation](https://github.com/open-webui/o
 The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/)
 which is an open source data visualization and analytics software. A Grafana Dashboard is
 supplied that aggregates and presents metrics from the components of the application
-and from the underlying platform. The metrics are streamed via websocket to Grafana
+and from the underlying platform. Metrics are streamed over websocket to Grafana
 for on-device live ephemeral view. Additionally a Prometheus endpoint is exposed at
 `localhost:9273/metrics` address from which the data can be scraped for
 long-term persistence.
