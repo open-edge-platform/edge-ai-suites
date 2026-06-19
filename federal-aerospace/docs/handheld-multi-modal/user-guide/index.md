@@ -28,7 +28,7 @@ It assumes two main stages:
    GPU or NPU, as well as Single Root I/O Virtualization (SR-IOV) for modern applications.
 2. Deployment of the composition pieces, such as a local LLM inference server.
 
-## Handheld Multi-Modal Components
+## Handheld Multi-Modal Application Components
 
 The application combines LLM inference capability served through the OpenVINO Model Server
 platform, speech-to-text transcription through the Whisper service, a chat UI through the
@@ -43,8 +43,9 @@ optimized hardware selection and performance tuning.
 
 For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 
-### Whisper Model
+### Speech To Text (Whisper Model)
 
+This component is responsible for speech to text functionality and uses Whisper model.
 Whisper is a general-purpose speech recognition model. It is trained on a large dataset of
 diverse audio and is also a multitasking model that can perform multilingual speech recognition,
 speech translation, and language identification.
@@ -59,6 +60,16 @@ It supports various LLM runners, such as **Ollama** and **OpenAI-compatible APIs
 a built-in inference engine for RAG, making it a powerful AI deployment solution.
 
 For more information, see [Web UI documentation](https://github.com/open-webui/open-webui).
+
+### Observability
+
+The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/)
+which is an open source data visualization and analytics software. A Grafana Dashboard is
+supplied that aggregates and presents metrics from the components of the application
+and from the underlying platform. The metrics are streamed via websocket to Grafana
+for on-device live ephemeral view. Additionally a Prometheus endpoint is exposed at
+`https://localhost:9273/metrics` address that can be scraped the data intended for
+long-term persistence if needed.
 
 <!--hide_directive
 :::{toctree}
