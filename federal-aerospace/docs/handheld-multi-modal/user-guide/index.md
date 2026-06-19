@@ -15,7 +15,8 @@
 hide_directive-->
 
 The Handheld Multi-Modal application is a full-stack AI inference and observability software
-collection optimized for Intel® edge hardware in handheld deployment scenarios.
+collection consisting of both single- and multi-modal components that are optimized for
+Intel® edge hardware in handheld deployment scenarios.
 
 This composite application combines a conversational agent exposed via Chat UI that is backed by
 a LLM inference server, a speech-to-text service and 
