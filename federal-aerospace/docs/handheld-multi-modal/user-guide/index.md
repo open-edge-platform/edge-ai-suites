@@ -74,8 +74,8 @@ The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/gr
 The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/), a data visualization and analytics tool. A Grafana Dashboard is
 supplied that aggregates and presents metrics from the components of the application
 and from the underlying platform. Metrics are streamed over websocket to Grafana
-for on-device live ephemeral view. Additionally a Prometheus endpoint is exposed at
-`localhost:9273/metrics` address from which the data can be scraped for
+for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exposed at
+`localhost:9273/metrics` address, from which data can be scraped for
 long-term persistence.
 
 ## Composite Application installation
