@@ -2,9 +2,7 @@
 
 ## Version 2026.1
 
-**2026**
-
-Initial release (preview) version of the application.
+Initial release (preview) version of the application. The application is optimized for AI inference on portable devices, focusing on SWaP-C compliance (Size, Weight, Power, and Cost). 
 
 **New**
 
