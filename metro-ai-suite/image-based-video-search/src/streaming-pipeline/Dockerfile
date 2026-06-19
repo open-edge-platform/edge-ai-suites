@@ -1,4 +1,4 @@
-FROM docker.io/intel/dlstreamer:2026.1.0-ubuntu24-rc2
+FROM docker.io/intel/dlstreamer:2026.1.0-ubuntu24
 USER root
 
 # Pull Debian security fixes (addresses libpng/libpq/linux-libc-dev CVEs when available in node security)

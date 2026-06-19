@@ -1,5 +1,3 @@
-(development_resources)=
-
 # Developer Resources
 
 <!--hide_directive

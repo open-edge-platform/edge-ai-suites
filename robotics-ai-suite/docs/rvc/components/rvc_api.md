@@ -1,5 +1,3 @@
-(rvc_api_messages)=
-
 # API messages
 
 The RVC API messages are a set of ROS2 messages designed to permit

@@ -1,5 +1,3 @@
-(requirements)=
-
 # RVC Requirements
 
 ## Knowledge / Experience

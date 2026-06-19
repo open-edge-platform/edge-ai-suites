@@ -1,5 +1,3 @@
-(pi05_rtc)=
-
 # Pi0.5 with Real-Time Chunking
 
 π₀.₅ (Pi0.5) is a Vision-Language-Action (VLA) model architecture designed by [Physical Intelligence](https://www.pi.website/). It is built upon the PaliGemma VLM backbone, integrating a SigLIP vision encoder (So400m) with a Gemma language model base (e.g., 2.6B parameters) to process multimodal inputs.

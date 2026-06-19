@@ -1,5 +1,3 @@
-(model-lightglue)=
-
 # Feature Tracking Model: LightGlue
 
 LightGlue is a model designed for efficient and accurate feature matching in computer vision tasks. It builds upon the
