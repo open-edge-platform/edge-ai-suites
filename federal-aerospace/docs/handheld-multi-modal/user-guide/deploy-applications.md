@@ -116,8 +116,8 @@ This composite application exposes multiple endpoints through the NGINX TLS reve
 Since the intended use is on handheld devices, the applications do not provide authentication or authorization.
 
 > **Notice**:
-> A browser warning about use of self-signed certificate is an expected behavior as the NGINX reverse proxy uses such certificate to assure TLS transport on the `localhost` bound addresses.
-> Supporting HTTPS connections is required on modern browsers to enable microphone input used by Open WebUI and Speech To Text services.
+> A browser warning about the self-signed certificate is expected — the NGINX reverse proxy uses one to provide TLS on the localhost-bound addresses.
+> HTTPS is required by modern browsers to enable the microphone input used by Open WebUI and Speech To Text services.
 
 | Service | URL | Notes |
 |---------|-----|-------|
