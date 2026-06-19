@@ -115,6 +115,11 @@ def test_multimodal_helm_install_uninstall():
     logger.info(f"check_pods result after uninstall: {check_pods_result}")
     if not check_pods_result:
         logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")
+    # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+    check_services_result = helm_utils.check_services(multimodal_namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    logger.info(f"check_services result: {check_services_result}")
+    if not check_services_result:
+        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
     
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(multimodal_chart_path + '/values.yaml')
@@ -215,6 +220,11 @@ def test_verify_pods_logs_with_respect_to_log_level_multimodal():
         logger.info(f"check_pods result: {check_pods_result}")
         if not check_pods_result:
             logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+        check_services_result = helm_utils.check_services(multimodal_namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+        logger.info(f"check_services result: {check_services_result}")
+        if not check_services_result:
+            logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
         update_result = helm_utils.update_values_yaml(values_yaml_path, case)
         logger.info(f"update_values_yaml result: {update_result}")
         assert update_result is True, "Failed to update values.yaml."  # nosec B101
@@ -460,6 +470,11 @@ def test_seaweed_s3_stored_images_access_multimodal():
         logger.info(f"check_pods result: {check_pods_result}")
         if not check_pods_result:
             logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+        check_services_result = helm_utils.check_services(multimodal_namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+        logger.info(f"check_services result: {check_services_result}")
+        if not check_services_result:
+            logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
         update_result = helm_utils.update_values_yaml(values_yaml_path, case)
         logger.info(f"update_values_yaml result: {update_result}")
         assert update_result is True, "Failed to update values.yaml."  # nosec B101
@@ -638,6 +653,11 @@ def test_vision_metadata_sender_timestamp_multimodal():
         logger.info(f"check_pods result: {check_pods_result}")
         if not check_pods_result:
             logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+        check_services_result = helm_utils.check_services(multimodal_namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+        logger.info(f"check_services result: {check_services_result}")
+        if not check_services_result:
+            logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
         update_result = helm_utils.update_values_yaml(values_yaml_path, case)
         logger.info(f"update_values_yaml result: {update_result}")
         assert update_result is True, "Failed to update values.yaml."  # nosec B101

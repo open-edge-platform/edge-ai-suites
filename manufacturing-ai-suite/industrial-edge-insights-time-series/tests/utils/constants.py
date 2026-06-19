@@ -317,6 +317,7 @@ TEST_PROCESS_CHECK_TIMEOUT = 30    # seconds for process checks
 UDF_DEPLOYMENT_TIMEOUT = 180       # seconds (3 minutes) - aligned with 08Weekly fast approach
 POD_TERMINATION_TIMEOUT = 120      # seconds to wait for pods to terminate before helm install
 POD_CLEANUP_TIMEOUT = 60           # seconds to wait for pods to stop after helm uninstall
+SERVICE_TERMINATION_TIMEOUT = 30   # seconds to wait for services (especially NodePort) to be deleted before helm install
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT = 60    # seconds - standard pod cleanup timeout
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI = 120  # seconds - extended timeout for multimodal (dual-service) cleanup
 PODS_VERIFY_TIMEOUT = 600          # seconds - timeout for verify_pods after Helm install (raised for slower GitHub-hosted runners where upstream image pulls happen on first use)

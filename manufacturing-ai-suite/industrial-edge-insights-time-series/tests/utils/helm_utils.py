@@ -2583,6 +2583,54 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
 
     return success_rate, avg_time, min(times), max(times), times
 
+def check_services(namespace, timeout=30, interval=3):
+    """
+    Checks if any services still exist in the specified Kubernetes namespace.
+    This is important for NodePort services that may cause port allocation conflicts
+    if not fully deleted before a new Helm install.
+
+    :param namespace: The Kubernetes namespace to check.
+    :param timeout: The maximum time to wait in seconds (default is 30 seconds).
+    :param interval: The interval between checks in seconds (default is 3 seconds).
+    :return: True if no services are found within the timeout, False otherwise.
+    """
+    start_time = time.time()
+
+    while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout:
+            logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+            return False
+        try:
+            # Execute the kubectl command to get services in the namespace
+            result = subprocess.run(
+                ["kubectl", "get", "svc", "-n", namespace],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            # Debug: Print the command output
+            logger.debug(f"Services check output: {result.stdout.strip()}")
+            # Check if the output contains "No resources found"
+            if not result.stdout.strip() or "No resources found" in result.stdout:
+                logger.info(f"No services found in {namespace} namespace.")
+                return True
+            else:
+                logger.info(f"Services are still terminating in {namespace} namespace. Waiting...")
+
+        except subprocess.CalledProcessError as e:
+            if "not found" in str(e).lower():
+                logger.info(f"Namespace {namespace} not found - considered as no services running.")
+                return True
+            logger.warning(f"An error occurred while checking services: {e}")
+
+        # Wait for the specified interval before checking again
+        time.sleep(interval)
+
+    logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+    return False
+
+
 def check_pods(namespace, timeout=180, interval=5):
     """
     Checks the status of pods in the specified Kubernetes namespace for up to 3 minutes.

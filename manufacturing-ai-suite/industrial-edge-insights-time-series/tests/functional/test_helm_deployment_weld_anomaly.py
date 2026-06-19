@@ -189,6 +189,11 @@ def test_verify_pods_logs_with_respect_to_log_level():
     result = helm_utils.check_pods(namespace)
     logger.info(f"check_pods result: {result}")
     assert result == True, "Pods are still running after cleanup."
+    # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+    services_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    logger.info(f"check_services result: {services_result}")
+    if not services_result:
+        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     result = helm_utils.update_values_yaml(values_yaml_path, case)
     logger.info(f"update_values_yaml result: {result}")

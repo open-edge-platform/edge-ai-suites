@@ -41,6 +41,13 @@ def setup_helm_environment(request):
     cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
     if not cleanup_ok:
         logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
+
+    # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+    logger.debug(f"Waiting for services in namespace '{namespace}' to be deleted...")
+    services_cleanup_ok = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_ok:
+        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
+
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
@@ -94,6 +101,12 @@ def setup_helm_weld_environment(request):
     if not cleanup_ok:
         logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
 
+    # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+    logger.debug(f"Waiting for services in namespace '{namespace}' to be deleted...")
+    services_cleanup_ok = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_ok:
+        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
+
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
@@ -145,6 +158,12 @@ def setup_multimodal_helm_environment():
     cleanup_ok = helm_utils.check_pods(namespace_multi, timeout=constants.POD_TERMINATION_TIMEOUT)
     if not cleanup_ok:
         logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
+
+    # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
+    logger.debug(f"Waiting for services in namespace '{namespace_multi}' to be deleted...")
+    services_cleanup_ok = helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_ok:
+        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
 
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(chart_path_multi + '/values.yaml')

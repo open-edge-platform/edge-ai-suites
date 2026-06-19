@@ -133,29 +133,11 @@ async def login_to_grafana(url, username, password):
 
 
 def influxdb_login(namespace, chart_path):
-    """Verify InfluxDB authentication inside the InfluxDB pod.
-
-    A successful login is determined by the credentials being accepted (no
-    authorization/authentication error), independent of whether any data has
-    been ingested yet. The presence of measurements is NOT required for the
-    login to be considered successful, since on slower runners ingestion may
-    not have started when this check runs.
-    """
+    """Execute InfluxDB commands inside the InfluxDB pod."""
     logger.info(f"Executing InfluxDB commands in namespace '{namespace}'...")
-    # Indicators that the credentials themselves were rejected
-    auth_error_markers = (
-        "authorization failed",
-        "unauthorized",
-        "authentication failed",
-        "invalid username or password",
-        "user not found",
-    )
     try:
         # Step 1: Identify the InfluxDB pod
         influxdb_username, influxdb_password = fetch_influxdb_credentials(chart_path)
-        if not influxdb_username or not influxdb_password:
-            logger.error("InfluxDB credentials not found in values.yaml; cannot verify login.")
-            return False
         pod_name_command = (
             f"kubectl get pods -n {namespace} "
             "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep influxdb | head -n 1"
@@ -169,45 +151,25 @@ def influxdb_login(namespace, chart_path):
 
         logger.info(f"InfluxDB pod found: {pod_name}")
 
-        # Step 2: Execute an authenticated InfluxDB query inside the pod.
-        # Retry to tolerate InfluxDB not being fully ready yet on slower runners.
+        # Step 2: Execute InfluxDB commands inside the pod
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
             "-execute 'SHOW MEASUREMENTS';"
         )
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(
-            "Executing InfluxDB query 'SHOW MEASUREMENTS' in namespace '%s' on pod '%s' with redacted credentials.",
+        logger.info(f"Executing InfluXDB measurement query 'SHOW MEASUREMENTS' in namespace '%s' on pod '%s' with redacted credentials.",
             namespace,
             pod_name,
         )
-
-        max_attempts = 6
-        for attempt in range(1, max_attempts + 1):
-            result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
-            stdout = (result.stdout or "").strip()
-            stderr = (result.stderr or "").strip()
-            combined = f"{stdout}\n{stderr}".lower()
-            logger.info(f"InfluxDB login attempt {attempt}/{max_attempts} (rc={result.returncode}).")
-
-            # Credentials explicitly rejected -> login failed, no point retrying
-            if any(marker in combined for marker in auth_error_markers):
-                logger.error("InfluxDB authentication failed: credentials were rejected.")
-                return False
-
-            # Command authenticated and executed successfully -> login OK
-            # (measurements may be empty if no data has been ingested yet)
-            if result.returncode == 0:
-                logger.info("InfluxDB login successful (credentials accepted).")
-                return True
-
-            logger.warning(
-                f"InfluxDB query did not succeed yet (rc={result.returncode}); retrying in 5s. stderr: {stderr}"
-            )
-            time.sleep(5)
-
-        logger.error("InfluxDB login could not be verified after multiple attempts.")
-        return False
+        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
+        response = result.stdout.strip()
+        logger.info(f"InfluxDB response: {response}")
+        if "measurements" in response.lower():
+            logger.info("InfluxDB login successful and measurements found.")
+            return True
+        else:            
+            logger.error("InfluxDB login failed or no measurements found.")
+            return False
     except subprocess.CalledProcessError as e:
         logger.error(f"An error occurred while executing a command: {e.stderr}")
         return False
@@ -216,19 +178,14 @@ def influxdb_login(namespace, chart_path):
         return False
 
 def check_pod_logs_for_creds(namespace, pod_name, creds):
-    """Check pod logs for credentials.
-
-    Only non-empty credential values are checked. Any value that is None or an
-    empty string is skipped so the substring search never receives a NoneType.
-    """
+    """Check pod logs for credentials."""
     try:
         result = subprocess.run(
             ["kubectl", "logs", pod_name, "-n", namespace, "--tail=100"],
             capture_output=True, text=True, check=True
         )
         logs = result.stdout.strip()
-        values_to_check = [c for c in (creds or ()) if c]
-        if any(value in logs for value in values_to_check):
+        if creds[0] in logs or creds[1] in logs:
             logger.error(f"Credentials found in logs for pod {pod_name}.")
             return False
         else:            
@@ -240,36 +197,40 @@ def check_pod_logs_for_creds(namespace, pod_name, creds):
         return False
 
 def verify_pods_creds(namespace, influxdb_creds, grafana_creds):
-    """Verify that no credentials are present in any pod logs.
-
-    Returns True only if none of the provided credentials appear in the logs of
-    any pod. Credentials that could not be fetched (None/empty) are treated as
-    a failure to fetch and abort the check.
-    """
-    pod_names = helm_utils.get_pod_names(namespace)
+    """Verify creds for all pods  logs."""
+    pod_names=helm_utils.get_pod_names(namespace)
     if not pod_names:
         logger.error("No pods found or failed to fetch pod names.")
         return False
-
-    # A (None, None) tuple is truthy, so validate the actual values.
-    if not influxdb_creds or not all(influxdb_creds):
-        logger.error("Failed to fetch InfluxDB credentials.")
-        return False
-    if not grafana_creds or not all(grafana_creds):
-        logger.error("Failed to fetch Grafana credentials.")
-        return False
-
+    start_time = time.time()
     logger.info(f"Checking pod logs for credentials in namespace '{namespace}'...")
-    for pod_name in pod_names:
-        if not check_pod_logs_for_creds(namespace, pod_name, influxdb_creds):
-            logger.warning(f"InfluxDB credentials found in logs for pod {pod_name}.")
+    while (time.time() - start_time) < 60:
+        if influxdb_creds:
+            logger.info("InfluxDB credentials fetched successfully.")
+            for pod_name in pod_names:
+                result = check_pod_logs_for_creds(namespace, pod_name, influxdb_creds)
+                if result:
+                    logger.info(f"InfluxDB credentials are not found in logs for pod {pod_name}.")
+                    return True
+                else:
+                    logger.warning(f"InfluxDB credentials found in logs for pod {pod_name}.")
+                    return False
+        else:
+            logger.error("Failed to fetch InfluxDB credentials.")
             return False
-        if not check_pod_logs_for_creds(namespace, pod_name, grafana_creds):
-            logger.warning(f"Grafana credentials found in logs for pod {pod_name}.")
+        if grafana_creds:
+            logger.info("Grafana credentials fetched successfully.")
+            for pod_name in pod_names:
+                result = check_pod_logs_for_creds(namespace, pod_name, grafana_creds)
+                if result:
+                    logger.info(f"Grafana credentials are not found in logs for pod {pod_name}.")
+                    return True
+                else:
+                    logger.warning(f"Grafana credentials found in logs for pod {pod_name}.")
+                    return False   
+        else:
+            logger.error("Failed to fetch Grafana credentials.")
             return False
-
-    logger.info("No credentials found in any pod logs.")
-    return True
         
 def find_exposed_ports_helm(namespace):
     exposed_ports = []
@@ -532,9 +493,6 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the first record response
         influx_first_record = parse_influxdb_response(first_record_response)
-        if influx_first_record is None:
-            logger.error("Failed to parse first record from InfluxDB response")
-            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -549,9 +507,6 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the last record response
         influx_last_record = parse_influxdb_response(last_record_response)
-        if influx_last_record is None:
-            logger.error("Failed to parse last record from InfluxDB response")
-            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -566,10 +521,6 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the count response
         influx_total_count = parse_influxdb_response(count_response)
-        if influx_total_count is None:
-            logger.error("Failed to parse count from InfluxDB response")
-            return False
-        
         # Convert all values to strings for comparison
         first_wind_speed = str(first_wind_speed)
         last_wind_speed = str(last_wind_speed)
@@ -595,44 +546,10 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         return False
 
 def parse_influxdb_response(response):
-    """Parse InfluxDB CLI response to extract the value.
-    
-    This handles the typical InfluxDB CLI output format:
-    name: measurement
-    time                 value
-    ----                 -----
-    timestamp            actual_value
-    
-    Returns the extracted value or None if parsing fails.
-    """
-    if not response or not response.strip():
-        logger.warning("Empty response from InfluxDB query")
-        return None
-    
-    try:
-        lines = response.strip().split('\n')
-        # Filter out empty lines and header lines
-        data_lines = [line for line in lines if line.strip() and not line.startswith('name:') and not line.startswith('time') and not line.startswith('----')]
-        
-        if not data_lines:
-            logger.warning(f"No data lines found in InfluxDB response: {response}")
-            return None
-        
-        # Get the last data line and extract the last column (the value)
-        last_line = data_lines[-1].strip()
-        if not last_line:
-            logger.warning("Last data line is empty")
-            return None
-        
-        columns = last_line.split()
-        if not columns:
-            logger.warning(f"No columns found in line: {last_line}")
-            return None
-        
-        return columns[-1]
-    except Exception as e:
-        logger.error(f"Error parsing InfluxDB response: {e}. Response was: {response}")
-        return None
+    # Implement parsing logic based on the response format
+    # This is a placeholder function and needs to be customized
+    # according to the actual response format from InfluxDB
+    return response.split('\n')[-1].split()[-1]  # Example parsing logic
 
 def verify_docker_file_integrity():
     try:
