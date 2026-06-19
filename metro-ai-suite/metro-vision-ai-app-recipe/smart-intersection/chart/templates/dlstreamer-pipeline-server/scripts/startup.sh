@@ -14,13 +14,7 @@ echo "$SMART_INTERSECTION_BROKER_SERVICE_HOST    $MQTT_HOST" >> /etc/hosts &&
 {{- if or .Values.dlstreamerPipelineServer.gpu.enabled .Values.dlstreamerPipelineServer.npu.enabled }}
 ./run.sh
 {{- else if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
-until LIBVA_DRIVER_NAME=iHD \
-	LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri \
-	vainfo 2>/dev/null | grep -q "VA-API version"; do
-	echo "Waiting for GPU VA-API..."
-	sleep 1
-done &&
-rm -f /home/intelmicroserviceuser/.cache/gstreamer-1.0/registry.x86_64.bin &&
+until vainfo 2>/dev/null | grep -q "VA-API version"; do echo "Waiting for GPU VA-API..."; sleep 1; done &&
 ./run.sh
 {{- else }}
 runuser -u intelmicroserviceuser ./run.sh

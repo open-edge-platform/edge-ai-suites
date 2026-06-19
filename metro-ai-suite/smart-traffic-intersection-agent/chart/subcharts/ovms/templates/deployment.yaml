@@ -135,8 +135,8 @@ spec:
             - /bin/sh
             - -c
             - |
-              echo "Waiting 10s for GPU PCIe passthrough to initialize in kata VM..."
-              sleep 10
+              until [ -c /dev/dri/renderD128 ]; do sleep 1; done
+              until ls /sys/class/drm/renderD128/device/driver 2>/dev/null; do sleep 1; done
               exec /ovms/bin/ovms \
                 --port 9000 \
                 --rest_port 8000 \
@@ -145,7 +145,6 @@ spec:
                 --metrics_enable
           {{- else }}
           args:
-            - "/ovms/bin/ovms"
             - "--port"
             - "9000"
             - "--rest_port"
@@ -167,10 +166,6 @@ spec:
               value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.httpsProxy | quote }}
-            {{- if $tcGpu }}
-            - name: ZES_ENABLE_SYSMAN
-              value: "1"
-            {{- end }}
           volumeMounts:
             - name: ov-models
               mountPath: /models
