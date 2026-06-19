@@ -112,8 +112,8 @@ c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/ent
 
 ## Accessing Application User Interface
 
-This composite application exposes multiple endpoints that are accessible via the NGINX Transport Layer Security (TLS) reverse proxy and are bound to `localhost` address only (are not exposed under any
-external IP address). As the intended use in on handheld devices, the applications do not need to provide authentication or authorization.
+This composite application exposes multiple endpoints through the NGINX TLS reverse proxy. They are bound to localhost only and are not exposed on any external IP address. 
+Since the intended use is on handheld devices, the applications do not provide authentication or authorization.
 
 > **Notice**:
 > A browser warning about use of self-signed certificate is an expected behavior as the NGINX reverse proxy uses such certificate to assure TLS transport on the `localhost` bound addresses.
