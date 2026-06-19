@@ -19,7 +19,7 @@ Execute the following command:
 ls -la /dev/video-*
 ```
 
-symbolic link of cameras should show up.
+This should show simplified name symbolic links pointing to the original device files.
 
 if the cameras are `RealSense™ Depth Camera D457` the result of the command should look like the following 
 
@@ -39,6 +39,8 @@ lrwxrwxrwx 1 root root 12 Jun 15 15:49 /dev/video-rs-ir-1 -> /dev/video10
 ```
 Here it shows there are two `RealSense™ Depth Camera D457` connected, 0, and 1 with all of there sensors showing up.
 
+If using the `D3CMCXXX-115-084`, the output will look like the following:
+
 ```bash
 lrwxrwxrwx 1 root root 11 Jun 15 16:12 /dev/video-isx031-a-0 -> /dev/video1
 lrwxrwxrwx 1 root root 11 Jun 15 16:12 /dev/video-isx031-b-0 -> /dev/video2
@@ -54,15 +56,15 @@ This one shows that I have four `D3CMCXXX-115-084` connected.
 sudo apt-get install ros2-jazzy-icamera-usm
 ```
 
-## Start the ros2 icamera-usm node
+## Start the ROS2 icamera-usm node
 
-The extra arg also enables classis ros raw image publish
+The following command launches the GMSL cameras using classical ROS2 raw image publish along with shared memory.
 
 ```bash
 ros2 run  icamera_usm icamera_usm_node --ros-args -p publish_image_raw:=true
 ```
 
-expected output with 4 cameras running
+This will find all the available GMSL cameras that are identified and setup by the driver, and binded. In the following log you can see there are four cameras connected. 'a' to 'd' represents the different cameras, and value '0' represents the CSI port that they are connected to.
 ```bash
 [INFO] [1781565274.914167474] [icamera_usm]: [isx031 a-0] V4L2 MMAP ready: 4 bufs, fmt=UYVY 1920x1536
 [INFO] [1781565274.914342851] [icamera_usm]: [isx031 a-0] V4L2 capture started (UYVY 1920x1536)
@@ -79,6 +81,9 @@ expected output with 4 cameras running
 ```
 
 ## Download the models
+
+To run a example that uses the shared memory or legacy which uses the classical publish, use will need to first download the yolov8 models. The following script will download the models and place them in the destination folder using the `--dest` flag.
+
 ```bash
 source /opt/ros/jazzy/share/icamera_usm/generate_ai_models.sh --dest ~/test
 ```
@@ -87,27 +92,26 @@ source /opt/ros/jazzy/share/icamera_usm/generate_ai_models.sh --dest ~/test
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py 
 ```
-
-This example will only connect to a single camera, to connect to multiple camera you can run the following 
+By default the example only connectes to `camera0` to inference on multiple cameras use the following command. The user will add extra argument `cameras` followed by the extra cameras `camera0` to `cameraX`. To identify what camera streams are available execute `ros2 topic list`, this will show all the published topics. Topics for camera start with the namespace `/icamera`
 
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1
 ```
 
-The default the model that is being used is yolov8n.xml this is the smaller version of the model and is not as accurate.
-Changing the model that will be used can be done with the following arg
+The default  model that is being used is YOLOv8n this is the smaller version of the model and is not as accurate.
+User can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg
 
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml 
 ```
 
 
+You can use RVIZ to visualize the output of the inference. First create a new RVIZ file using `vim`.
 
-Visualize the example. create a file called inference-visualize.rviz and add the following into it
 ```bash
 vim inference-visualize.rviz
 ```
-copy the following into it.
+Copy the following configuration into `inference-visualize.rviz`
 
 ```yaml
 Panels:
@@ -154,10 +158,10 @@ Window Geometry:
   Hide Right Dock: false
 ```
 
-start rviz using the configuration file that was created
+Launch rviz using the following command:
 
 ```bash
 rviz2 -d inference-visualize.rviz
 ```
 
- user can visualize the inference by changeing `camera0` with `camera1..3` if there is more than one camera
+You can control what camera to visualize by modifying the  `Topic` value `Value: /infer_usm/camera0/image_annotated` to `Value: /infer_usm/camera1/image_annotated`
