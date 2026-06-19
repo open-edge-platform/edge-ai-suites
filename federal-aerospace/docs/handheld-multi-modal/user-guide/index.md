@@ -8,7 +8,7 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md">
      Readme
   </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/v2026.1.0/handheld-multi-modal.zip">
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.1/handheld-multi-modal.zip">
      Download Package
   </a>
 </div>
