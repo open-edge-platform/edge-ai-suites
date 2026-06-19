@@ -37,40 +37,46 @@ Before running `make run`, stage the workload models in these locations:
 
 ### Example Models
 
-1. Patient Detection Model - [patient-present](https://huggingface.co/Intel/patient-present/tree/main)*
-   
-2. Person Detection Model - [people-present](https://huggingface.co/Intel/people-present/tree/main)*
-   
-3. Latch Detection Model - [latch-detect](https://huggingface.co/Intel/latch-detect/tree/main)*
-> *Download the above model artifacts (`.xml` and `.bin`) from Hugging Face and place them in the appropriate model directory structure. Only these files are required for inference; downloading the remaining repository contents is optional.
-   
+1. Patient Detection Model - [patient-present](https://huggingface.co/Intel/patient-present/tree/main)\*
+
+2. Person Detection Model - [people-present](https://huggingface.co/Intel/people-present/tree/main)\*
+
+3. Latch Detection Model - [latch-detect](https://huggingface.co/Intel/latch-detect/tree/main)\*
+
+   > \*Download the above model artifacts (`.xml` and `.bin`) from Hugging Face and place them in the appropriate    model directory structure. Only these files are required for inference; downloading the remaining repository    contents is optional.
+
 4. RPPG Model - [MTTS-CAN](https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5)
 
 5. Action Recognition Models -
+
    - Action Recognition Encoder (.xml)
+
      ```bash
      wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.xml
      ```
 
    - Action Recognition Encoder (.bin)
+
      ```bash
      wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.bin
      ```
 
    - Action Recognition Decoder (.xml)
+
      ```bash
      wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.xml
      ```
 
    - Action Recognition Decoder (.bin)
+
      ```bash
      wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.bin
-     ```     
+     ```
 
 > **Third-Party Content**
-> 
+>
 > *In the course of using these Intel-provided instruction, users may choose to download content (e.g., models, dataset, etc.) created and distributed by third parties. In doing so, these users acknowledge and agree that they have done so after reviewing background information about the content and agreeing to the license governing the content they select.*
-> 
+>
 > ***Notice**: Intel does not create the content and does not warrant its accuracy or quality. By accessing the third-party content, or using materials trained on or with such content, you are indicating your acceptance of the terms associated with that content and warranting that your use complies with the applicable license.*
 
 
