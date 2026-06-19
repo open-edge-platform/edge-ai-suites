@@ -57,7 +57,7 @@ on:
         default: 'yes'
       tests:
         description: >
-          Which tests to run. Use 'all-tests' (security + multimodal only), 'timeseries-all', or 'multimodal-all' to run a group,
+          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
@@ -183,13 +183,8 @@ jobs:
             test_file="${t%%::*}"
             test_file="${test_file%.py}"
 
-            # Check if it's a wildcard selector (generate helm charts)
-            if [[ "$t" == "all-tests" ]]; then
-              # all-tests: only security test (requires wind helm chart)
-              GENERATE_WIND=true
-              break
-            elif [[ "$t" == "timeseries-all" ]]; then
-              # timeseries-all: generate all timeseries helm charts
+            # Check if it's a wildcard selector (generate all helm charts)
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
               GENERATE_WIND=true
               GENERATE_WELD=true
               break
@@ -266,12 +261,7 @@ jobs:
           TS_TEST_FILES=()
           RUN_ALL_TS=false
           for t in "${SELECTED_TESTS[@]}"; do
-            if [[ "$t" == "all-tests" ]]; then
-              # all-tests: only run security test
-              TS_TEST_FILES+=("test_docker_helm_deployment_security.py")
-              break
-            elif [[ "$t" == "timeseries-all" ]]; then
-              # timeseries-all: run all timeseries tests
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
               RUN_ALL_TS=true; break
             fi
             # Extract base file name (strip .py suffix and anything after ::)
