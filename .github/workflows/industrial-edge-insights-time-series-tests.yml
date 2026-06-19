@@ -390,6 +390,55 @@ jobs:
           name: timeseries-test-report
           path: /tmp/test_timeseries_report
 
+      - name: Cleanup cluster before multimodal tests
+        if: ${{ !cancelled() }}
+        run: |
+          echo "=== Cleaning up cluster resources before multimodal tests ==="
+
+          # Uninstall all helm releases in default namespace
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          # Delete test-related namespaces (if any were created)
+          echo "Cleaning up test namespaces..."
+          kubectl get namespaces -o name 2>/dev/null | grep -E "(weld|wind|timeseries|multimodal)" | while read ns; do
+            echo "Deleting namespace: $ns"
+            kubectl delete "$ns" --wait=true --timeout=5m 2>/dev/null || true
+          done
+
+          # Delete all PVCs in default namespace
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          # Wait for all pods to terminate in default namespace
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          # Force delete any stuck pods
+          echo "Force deleting any stuck pods..."
+          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
+            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          done
+
+          # Clean up any leftover docker resources from timeseries tests
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          # Give cluster time to stabilize
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          # Verify cluster is healthy
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Cluster cleanup complete ==="
+
       - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
         if: ${{ !cancelled() }}
         env:
