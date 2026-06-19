@@ -65,6 +65,7 @@ For more information, see [Web UI documentation](https://github.com/open-webui/o
 :hidden:
 
 Application Deployment <deploy-applications.md>
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->
