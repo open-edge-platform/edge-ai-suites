@@ -12,7 +12,7 @@ The application introduces the following features:
 - Text and audio modality support through Conversational Agent exposed via Chat UI that is backed by LLM served by OpenVINO Model Server
 - Audio modality support through Speech To Text Service (Whisper)
 - Visual modality support through [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html). 
-- Insight into Observability Dashboard with application and platform metrics
+- Insight into application and platform metrics through the Observability Dashboard
 
 **Known issues and limitations**
 
