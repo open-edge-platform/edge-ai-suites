@@ -236,6 +236,56 @@ jobs:
               docker save "$image" | sudo k3s ctr images import -
           done
 
+      - name: Cleanup cluster before timeseries tests
+        run: |
+          echo "=== Cleaning up cluster resources before timeseries tests ==="
+
+          # Uninstall all helm releases
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          # Delete test-related namespaces (ts-sample-app is used by security tests)
+          echo "Cleaning up test namespaces..."
+          for ns in ts-sample-app weld wind timeseries; do
+            if kubectl get namespace "$ns" 2>/dev/null; then
+              echo "Deleting namespace: $ns"
+              kubectl delete namespace "$ns" --wait=true --timeout=5m 2>/dev/null || true
+            fi
+          done
+
+          # Delete all PVCs in default namespace
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          # Wait for all pods to terminate in default namespace
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          # Force delete any stuck pods
+          echo "Force deleting any stuck pods..."
+          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
+            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          done
+
+          # Clean up any leftover docker resources
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          # Give cluster time to stabilize
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          # Verify cluster is healthy
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Cluster cleanup complete ==="
+
       - name: Run Time Series Sample Apps functional tests
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
