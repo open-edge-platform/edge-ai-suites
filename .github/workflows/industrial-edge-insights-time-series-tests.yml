@@ -57,7 +57,7 @@ on:
         default: 'yes'
       tests:
         description: >
-          Which tests to run. Use 'all-tests' (security + multimodal only), 'timeseries-all', or 'multimodal-all' to run a group,
+          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
@@ -183,13 +183,8 @@ jobs:
             test_file="${t%%::*}"
             test_file="${test_file%.py}"
 
-            # Check if it's a wildcard selector (generate helm charts)
-            if [[ "$t" == "all-tests" ]]; then
-              # all-tests: only security test (requires wind helm chart)
-              GENERATE_WIND=true
-              break
-            elif [[ "$t" == "timeseries-all" ]]; then
-              # timeseries-all: generate all timeseries helm charts
+            # Check if it's a wildcard selector (generate all helm charts)
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
               GENERATE_WIND=true
               GENERATE_WELD=true
               break
@@ -209,12 +204,12 @@ jobs:
           # Generate helm charts only for the helm tests being run
           if [[ "$GENERATE_WIND" == "true" ]]; then
             echo "Generating Helm chart package for wind-turbine-anomaly-detection..."
-            make gen_helm_charts app=wind-turbine-anomaly-detection
+            make gen_helm_charts_targz app=wind-turbine-anomaly-detection
           fi
 
           if [[ "$GENERATE_WELD" == "true" ]]; then
             echo "Generating Helm chart package for weld-defect-detection..."
-            make gen_helm_charts app=weld-defect-detection
+            make gen_helm_charts_targz app=weld-defect-detection
           fi
 
           if [[ "$GENERATE_WIND" == "false" && "$GENERATE_WELD" == "false" ]]; then
@@ -241,6 +236,56 @@ jobs:
               docker save "$image" | sudo k3s ctr images import -
           done
 
+      - name: Cleanup cluster before timeseries tests
+        run: |
+          echo "=== Cleaning up cluster resources before timeseries tests ==="
+
+          # Uninstall all helm releases
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          # Delete test-related namespaces (ts-sample-app is used by security tests)
+          echo "Cleaning up test namespaces..."
+          for ns in ts-sample-app weld wind timeseries; do
+            if kubectl get namespace "$ns" 2>/dev/null; then
+              echo "Deleting namespace: $ns"
+              kubectl delete namespace "$ns" --wait=true --timeout=5m 2>/dev/null || true
+            fi
+          done
+
+          # Delete all PVCs in default namespace
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          # Wait for all pods to terminate in default namespace
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          # Force delete any stuck pods
+          echo "Force deleting any stuck pods..."
+          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
+            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          done
+
+          # Clean up any leftover docker resources
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          # Give cluster time to stabilize
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          # Verify cluster is healthy
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Cluster cleanup complete ==="
+
       - name: Run Time Series Sample Apps functional tests
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
@@ -266,12 +311,7 @@ jobs:
           TS_TEST_FILES=()
           RUN_ALL_TS=false
           for t in "${SELECTED_TESTS[@]}"; do
-            if [[ "$t" == "all-tests" ]]; then
-              # all-tests: only run security test
-              TS_TEST_FILES+=("test_docker_helm_deployment_security.py")
-              break
-            elif [[ "$t" == "timeseries-all" ]]; then
-              # timeseries-all: run all timeseries tests
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
               RUN_ALL_TS=true; break
             fi
             # Extract base file name (strip .py suffix and anything after ::)
@@ -399,6 +439,56 @@ jobs:
         with:
           name: timeseries-test-report
           path: /tmp/test_timeseries_report
+
+      - name: Cleanup cluster before multimodal tests
+        if: ${{ !cancelled() }}
+        run: |
+          echo "=== Cleaning up cluster resources before multimodal tests ==="
+
+          # Uninstall all helm releases in default namespace
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          # Delete test-related namespaces (if any were created)
+          echo "Cleaning up test namespaces..."
+          kubectl get namespaces -o name 2>/dev/null | grep -E "(weld|wind|timeseries|multimodal)" | while read ns; do
+            echo "Deleting namespace: $ns"
+            kubectl delete "$ns" --wait=true --timeout=5m 2>/dev/null || true
+          done
+
+          # Delete all PVCs
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          # Wait for all pods to terminate
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          # Force delete any stuck pods
+          echo "Force deleting any stuck pods..."
+          kubectl get pods --all-namespaces -o name 2>/dev/null | while read pod; do
+            ns=$(echo "$pod" | cut -d'/' -f1)
+            kubectl delete "$pod" --force --grace-period=0 2>/dev/null || true
+          done
+
+          # Clean up any leftover docker resources from timeseries
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          # Give cluster time to stabilize
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          # Verify cluster is healthy
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Cluster cleanup complete ==="
 
       - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
         if: ${{ !cancelled() }}
