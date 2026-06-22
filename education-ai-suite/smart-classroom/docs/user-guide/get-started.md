@@ -1,9 +1,9 @@
-# Quick Start Guide
+# Get Started with Smart Classroom
 
 > **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
 > PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
-## Step 1: Clone Repository
+## Step 1: Clone the Repository
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.
@@ -16,13 +16,14 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   cd education-ai-suite
   cd smart-classroom
 ```
-## Step 2: Run Setup Script (First-Time Only)
+## Step 2: Run the Setup Script (First-Time Only)
 
 ```powershell
 .\setup-smart-classroom.ps1
 ```
 
-> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
+> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python
+> dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
 
 The setup script will:
 
@@ -85,9 +86,9 @@ The startup script performs:
 
 ## Manual Setup
 
- **[Advance Setup Guide](advance-setup-guide.md)**:  Follow step-by-step instructions to set up the application.
+**[Advanced Setup Guide](advance-setup-guide.md)**:  Follow step-by-step instructions to set up the application.
 
-Advance Setup guide covers:
+Advanced Setup guide covers:
 
 - **Step 1:** Install Dependencies (FFmpeg, DL Streamer, Python, Content Search)
 - **Step 2:** Configuration (config.yaml settings)

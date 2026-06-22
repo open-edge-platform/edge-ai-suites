@@ -19,8 +19,8 @@ Before you begin, ensure that you have the following:
 #### Option 1: Get the chart from Docker Hub
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version 2026.1.0-rc1
-tar -xvf live-video-alert-agent-chart-2026.1.0-rc1.tgz
+helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version 2026.1.0
+tar -xvf live-video-alert-agent-chart-2026.1.0.tgz
 cd live-video-alert-agent-chart
 ```
 
@@ -53,12 +53,12 @@ Edit `user_values_override.yaml` with values for your environment:
 | `app.mcpEnabled` | Enable MCP (Model Context Protocol) tool integration | `true` / `false` |
 | `app.mcpServersConfig` | MCP server configuration JSON (see `resources/mcp_servers.json` for format) | See `values.yaml` |
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
-| `app.image.tag`    | Latest image tag                     | `2026.1.0-rc1` | 
+| `app.image.tag`    | Latest image tag                     | `2026.1.0` |
 
 > **Note:**
-  - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
-  - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
-
+>
+> - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
+> - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
 
 ### 3. Build Helm Dependencies
 

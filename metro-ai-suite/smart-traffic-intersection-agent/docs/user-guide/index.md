@@ -1,3 +1,5 @@
+# Smart Traffic Intersection Agent
+
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/smart-traffic-intersection-agent">
@@ -8,8 +10,6 @@
   </a>
 </div>
 hide_directive-->
-
-# Smart Traffic Intersection Agent
 
 The Smart Traffic Intersection Agent is a comprehensive traffic analysis service that provides
 real-time intersection monitoring, directional traffic density analysis, and Vision Language

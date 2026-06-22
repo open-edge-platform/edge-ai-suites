@@ -39,7 +39,7 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 
    ```bash
    export REGISTRY="intel/"
-   export TAG="2026.1.0-rc1"
+   export TAG="2026.1.0"
    ```
 
    If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.

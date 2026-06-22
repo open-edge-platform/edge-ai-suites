@@ -26,7 +26,6 @@
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 - Vehicle count on UI shows 0 due to issue with Smart Intersection on Arrow Lake, Meteor Lake NPU
 
-
 ## Version 1.0.0
 
 **April 01, 2026**

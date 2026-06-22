@@ -11,18 +11,18 @@ hide_directive-->
 
 # Deterministic Threat Detection (Preview)
 
-Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
+Welcome to the documentation for the Deterministic Threat Detection project — a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
 
 ## Overview
 
 ![Deterministic Threat Detection Architecture](./_assets/common-deterministic-threat-detection-architecture.svg)
 
-| Component | Role |
-|-----------|------|
-| **MOXA TSN Switch (TSN-G5000)** | PTP Grandmaster clock, VLAN segmentation, IEEE 802.1Qbv time-aware traffic shaping |
-| **Arrow Lake Host (Intel i226 NIC)** | TSN-capable inference host; clock synchronized to the switch via PTP |
-| **Camera(s)** | Video source; supports either RTSP cameras (NTP/gPTP) or Basler GigE cameras (IEEE 1588v2 hardware PTP) |
-| **Traffic Injector** | Runs `iperf3` to generate background congestion and demonstrate TSN protection |
+| Component                            | Role                                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **MOXA TSN Switch (TSN-G5000)**      | PTP Grandmaster clock, VLAN segmentation, IEEE 802.1Qbv time-aware traffic shaping                      |
+| **Arrow Lake Host (Intel i226 NIC)** | TSN-capable inference host; clock synchronized to the switch via PTP                                    |
+| **Camera(s)**                        | Video source; supports either RTSP cameras (NTP/gPTP) or Basler GigE cameras (IEEE 1588v2 hardware PTP) |
+| **Traffic Injector**                 | Runs `iperf3` to generate background congestion and demonstrate TSN protection                          |
 
 This project demonstrates two complementary use cases for industrial edge AI, both using TSN infrastructure to protect latency-sensitive streams from background congestion:
 

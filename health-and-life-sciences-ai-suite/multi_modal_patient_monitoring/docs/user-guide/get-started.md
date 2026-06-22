@@ -198,6 +198,5 @@ the `metrics` directory on the host, and may also expose summarized metrics via 
 :hidden:
 
 get-started/system-requirements.md
-get-started/deploy-with-helm.md
 :::
 hide_directive-->

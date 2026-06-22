@@ -22,7 +22,6 @@
 - Consumed the latest Intel® SceneScape version 2026.0.0.
 - Optimized the latency for GPU and NPU workloads.
 
-
 ## v1.17.0
 
 - Consumed latest Intel® SceneScape version 2025.2

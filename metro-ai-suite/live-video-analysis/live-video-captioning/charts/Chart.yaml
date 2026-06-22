@@ -9,7 +9,7 @@ description: >
   DL Streamer pipeline server, MQTT broker, MediaMTX WebRTC relay, coturn TURN server,
   live metrics service, and a system collector.
 type: application
-version: 2026.1.0-rc1-helm
+version: 2026.1.0-helm
 appVersion: "2026.0.0"
 keywords:
   - intel

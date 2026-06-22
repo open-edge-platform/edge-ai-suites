@@ -54,10 +54,10 @@ cd deterministic-threat-detection
 
 ## Documentation
 
-- [Get Started — Use Case 1](./docs/user-guide/get-started.md)
-- [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
-- [How-to Guides](./docs/user-guide/how-to-guides.md)
-- [Release Notes](./docs/user-guide/release-notes.md)
+- [Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
+- [Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
+- [How-to Guides](../../docs/deterministic-threat-detection/user-guide/how-to-guides.md)
+- [Release Notes](../../docs/deterministic-threat-detection/user-guide/release-notes.md)
 
 ## Key References
 

@@ -85,7 +85,7 @@ Create and run the model download script to install all required AI models:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/oep-suite" \
-  intel/dlstreamer:2026.1.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.1.0-ubuntu24 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/oep-suite/
 

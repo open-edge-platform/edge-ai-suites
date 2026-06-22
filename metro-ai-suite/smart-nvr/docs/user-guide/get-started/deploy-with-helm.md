@@ -52,7 +52,7 @@ There are two options to get the charts in your workspace:
 Use the following command to pull the Helm chart from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-nvr --version 2026.1.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-nvr --version 2026.1.0
 ```
 
 Refer to the [release notes](../release-notes.md) for details on the latest version number to
@@ -63,7 +63,7 @@ use for the sample application.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-nvr-2026.1.0-rc1.tgz
+tar -xvf smart-nvr-2026.1.0.tgz
 ```
 
 This will create a directory named `smart-nvr` containing the chart files. Navigate to the
