@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-**Live Video Search** is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. The application ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and enables you to select cameras, time ranges, and free-text queries. You can retrieve ranked, playable clips with confidence scores and view live system metrics.
+**Live Video Search** is a Metro AI Suite sample that adapts the Visual Search and Summarization (VSS) pipeline for semantic search on live Frigate streams. The application ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and enables you to select cameras, time ranges, and free-text queries. You can retrieve ranked, playable clips with confidence scores and view live system metrics.
 
 ## Key Features
 

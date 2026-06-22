@@ -1,6 +1,6 @@
 # Get Started
 
-Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics. This guide starts the **Live Video Search** stack (Smart NVR + VSS Search) using Docker Compose.
+Live Video Search is a Metro AI Suite sample that adapts the Visual Search and Summarization (VSS) pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics. This guide starts the **Live Video Search** stack (Smart NVR + VSS Search) using Docker Compose.
 
 ## Prerequisites
 
@@ -288,7 +288,7 @@ For RTSP test mode, start again with:
 
 ### Accuracy of search results
 
-The accuracy of search results vary based on multiple factors as listed in the VSS troubleshooting guide. The same considerations hold true for Live Video Search too as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised that the user not use the RTSP test mode to check accuracy of the search results. Live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search used exclusively to note the performance on given hardware platform.
+The accuracy of search results vary based on multiple factors as listed in the [VSS troubleshooting guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/video-search-and-summarization/troubleshooting.html#accuracy-of-search-results). The same considerations hold true for Live Video Search, as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised not to use the RTSP test mode to check the accuracy of the search results; live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search is used exclusively to note the performance on a given hardware platform.
 
 ## References
 
