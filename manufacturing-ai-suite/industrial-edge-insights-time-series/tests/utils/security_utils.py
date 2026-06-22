@@ -920,9 +920,6 @@ def get_docker_ports_from_env(project_root: str = None):
     port_mapping['mqtt'] = 1883
     port_mapping['time_series_analytics'] = 5000
     
-    if 'MR_SERVER_PORT' in env_vars:
-        port_mapping['model_registry'] = int(env_vars['MR_SERVER_PORT'])
-    
     return port_mapping
 
 

@@ -85,7 +85,7 @@ spec:
         - name: HTTPS_PROXY
           value: '{{ .Values.env.HTTPS_PROXY }}'
         - name: NO_PROXY
-          value: "influxdb,ia-time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,localhost,model-registry"
+          value: "influxdb,ia-time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,localhost"
         - name: TIMESERIES_NO_PROXY
           value: '{{ .Values.env.TIMESERIES_NO_PROXY }}'
         - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
@@ -114,8 +114,6 @@ spec:
           value: "ia-mqtt-broker" 
         - name: MQTT_BROKER_PORT
           value: "1883" 
-        - name: MODEL_REGISTRY_URL
-          value: "http://model-registry:8111"
         - name: REST_API_ROOT_PATH
           value: "/ts-api"
         - name: UDF_MAX_FILE_SIZE_MB
