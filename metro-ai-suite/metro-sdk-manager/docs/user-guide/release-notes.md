@@ -10,7 +10,7 @@
 - **Component Version Updates**
     - DL Streamer and DL Streamer Pipeline Server updated to 2026.1.0 Ubuntu 24 tags.
     - OpenVINO Model Server upgraded to 2026.2 and OpenVINO development image to 2026.2.0.
-    - SceneScape components updated to 2026.1.0.
+    - Scenescape components updated to 2026.1.0.
     - Gen AI microservices updated to latest available production tags, with Model Download updated to 2026.1.0-rc2.
 - **Gen AI SDK Enhancements**
     - Chat Q&A and Chat Q&A UI updated to latest available tags.

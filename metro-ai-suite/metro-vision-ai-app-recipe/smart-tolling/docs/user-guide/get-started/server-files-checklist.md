@@ -45,12 +45,12 @@ This assumes the root directory on the server matches the `${SAMPLE_APP}` variab
 - [ ] `src/dlstreamer-pipeline-server/models/vehicle_model_latest/`
 - [ ] `src/dlstreamer-pipeline-server/models/licenseplate_cropped/`
 
-## 6. SceneScape Manager (Web/PGServer)
+## 6. Scenescape Manager (Web/PGServer)
 
 - [ ] `src/webserver/user_access_config.json`
 - [ ] `src/webserver/smart-intersection-ri.tar.bz2` (Database dump)
 
-## 7. SceneScape Controller
+## 7. Scenescape Controller
 
 - [ ] `src/controller/tracker-config.json`
 
