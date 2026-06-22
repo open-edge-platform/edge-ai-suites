@@ -1,5 +1,3 @@
-(state_machine_node)=
-
 # State Machine Main Node
 
 The Exemplary dynamic use case shows the use case of an Universal robot
@@ -36,8 +34,6 @@ controller will do its best to track the goal.
   - Butterworth filtering
   - custom plugin filtering
 - Supports Robots controllable in position and/or in velocity
-
-(motion_controller_configuration)=
 
 ### Motion Controller Configuration
 
@@ -111,8 +107,6 @@ checks will be performed at a frequency specified in
       use_gazebo: false
       windup_limit: 0.05
 ```
-
-(waypoint_configuration)=
 
 ### Waypoint Configuration
 

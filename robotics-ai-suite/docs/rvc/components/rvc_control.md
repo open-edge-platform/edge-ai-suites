@@ -1,5 +1,3 @@
-(rvc_control)=
-
 # Control
 
 ![High Level Design](images/html/RVCControl.png)

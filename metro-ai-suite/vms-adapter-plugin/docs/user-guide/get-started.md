@@ -43,7 +43,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](../live-video-analysis/live-video-captioning/docs/user-guide/get-started.md) to prepare models and configure the environment, then start the stack:
+Follow the [LVC Get Started guide](../../../live-video-analysis/live-video-captioning/docs/user-guide/quick-start-guide.md) to prepare models and configure the environment, then start the stack:
 
 ```bash
 docker compose up -d
@@ -95,10 +95,14 @@ Open `.env` and update the variables for your environment:
 | `LOITERING_DET_HOST` / `LOITERING_DET_PORT`              | DLStreamer Pipeline Server host and port for Loitering Detection app (default: `8080`)       |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
 | `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
+| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
 | `PG_PASSWORD`                        | PostgreSQL password (change from default)                                |
-| `BACKEND_PORT` / `UI_PORT`           | Host ports for the API (`8085`) and dashboard (`3100`)                   |
+| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (`3443`)                              |
 
 > If LVC or Loitering Detectopm is running on the same host as VAP, use `host.docker.internal` (Linux/Mac). Otherwise, use the actual IP address.
+
+For certificate path examples and TLS behavior details, see [TLS and Certificate Configuration](./how-to-guides/tls-and-certificates.md).
 
 ---
 
@@ -192,7 +196,7 @@ postgres          Up (healthy)
 Verify the backend is up:
 
 ```bash
-curl http://localhost:8085/v1/health
+curl -k https://localhost:3443/v1/health
 ```
 
 ---
@@ -202,9 +206,13 @@ curl http://localhost:8085/v1/health
 
 | **Service**             | **URL**                            |
 |-------------------------|------------------------------------|
-| Provider Dashboard      | `http://localhost:3100`            |
-| Backend API             | `http://localhost:8085/v1`         |
-| API Docs (Swagger)      | `http://localhost:8085/docs`       |
+| Provider Dashboard (HTTPS) | `https://localhost:3443`        |
+| API Docs (Swagger UI)   | `https://localhost:3443/docs`      |
+| OpenAPI JSON            | `https://localhost:3443/openapi.json` |
+
+> **Note:** The dashboard uses HTTPS by default with a self-signed certificate. Your browser will show a security warning on first access — this is expected. To use your own certificate, copy `docker-compose.tls.yml` to `docker-compose.override.yml` and place `cert.pem` and `key.pem` in `./certs/ui/`.
+
+> **Swagger Docs:** VAP serves API docs through the UI nginx proxy. Open `https://localhost:3443/docs` to browse endpoints and `https://localhost:3443/openapi.json` for the raw OpenAPI schema.
 
 ---
 
@@ -213,7 +221,7 @@ curl http://localhost:8085/v1/health
 In the dashboard, click **Discover Cameras** to sync cameras from all connected VMS systems. You can also trigger discovery via the API:
 
 ```bash
-curl -X POST http://localhost:8085/v1/cameras/discover
+curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
 The backend queries all configured VMS shims (Frigate, Nx Witness) and persists discovered cameras to PostgreSQL.

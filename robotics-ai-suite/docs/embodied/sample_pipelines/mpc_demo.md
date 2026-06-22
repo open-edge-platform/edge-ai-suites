@@ -1,8 +1,6 @@
 <!-- Copyright (C) 2025 Intel Corporation -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-(mpc_demo)=
-
 # Model Predictive Control Demo
 
 Model predictive control (MPC) is an advanced method of process control that is used to control a process while satisfying a set of constraints. Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Also MPC has the ability to anticipate future events and can take control actions accordingly. These features can benefit current model-based robotics control in Perception-Action frequency gap, unsmoothness of generated trajectories, and potential collision.

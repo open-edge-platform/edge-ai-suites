@@ -1,5 +1,3 @@
-(motion_controller_plugin)=
-
 # Motion Controller Plugin
 
 The [RVCMotionControllerInterface](../../development/rvc_control/rvc_interface_apis/interface_apis.md#rvc-control-plugin-interface-apis) defines the interfaces Motion controller plugins are based off.

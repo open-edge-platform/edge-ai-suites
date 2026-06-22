@@ -1,5 +1,3 @@
-(object_detection)=
-
 # Object Detection
 
 This component implements a plugin framework to host different

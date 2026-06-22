@@ -12,7 +12,7 @@ print_usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME [options]
 
-Automates the software steps from docs/embodied/get-started/prerequisites/os_setup.rst
+Automates the software steps from docs/embodied/get-started/prerequisites/os_setup.md
 and its included pages (locale + APT repositories).
 
 Options:
@@ -78,7 +78,7 @@ require_cmd() {
 
 log "Manual prerequisites from guide:"
 log "1) Install Ubuntu 22.04 Desktop (64-bit)"
-log "2) Configure BIOS according to bios-generic.rst"
+log "2) Configure BIOS according to Step 4 in the OS Setup guide"
 
 if [[ -r /etc/os-release ]]; then
   # shellcheck disable=SC1091

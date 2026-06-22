@@ -1,5 +1,3 @@
-(model-rdt)=
-
 # Robotics Diffusion Transformer (RDT-1B)
 
 Robotics Diffusion Transformer with 1.2B parameters (RDT-1B), is a diffusion-based foundation model for robotic manipulation. It is pre-trained on a multi-robot collection of 46 datasets with 1M+ episodes. To boost bimanual capability, RDT-1B have collected 6K+ episodes (one of the largest to date) on the ALOHA dual-arm robot for fine-tuning. It has set a new benchmark in terms of dexterity, zero-shot generalizability, and few-shot learning. It supports control of almost all modern manipulators (e.g., dual-arm, joints, EEFs, and even wheeled locomotion) and is ready for the community to fine-tune with their robots.

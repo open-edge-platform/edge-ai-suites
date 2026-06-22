@@ -1,5 +1,3 @@
-(swapping_robots)=
-
 # Modify Hardware Setup
 
 RVC Framework has been designed with modularity and abstraction in mind.

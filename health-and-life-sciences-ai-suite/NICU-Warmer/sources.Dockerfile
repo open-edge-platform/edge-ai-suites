@@ -1,5 +1,5 @@
 # -------- Stage 1: Download GPL Sources --------
-FROM intel/hl-ai-nicu-backend:2026.1.0-rc1 AS source-builder
+FROM intel/hl-ai-nicu-backend:2026.1.0 AS source-builder
 LABEL stage="source-builder"
 
 USER root

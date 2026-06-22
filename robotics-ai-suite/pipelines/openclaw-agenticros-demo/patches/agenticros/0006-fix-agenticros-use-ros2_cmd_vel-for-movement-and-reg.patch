@@ -1,0 +1,97 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+From ca148e95fd8ff5933e1c7e78bc2b739dc553461e Mon Sep 17 00:00:00 2001
+From: RoboticsYY <RoboticsYY@users.noreply.github.com>
+Date: Thu, 11 Jun 2026 22:20:46 +0800
+Subject: [PATCH 2/3] fix(agenticros): use ros2_cmd_vel for movement and
+ register its aliases
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Movement prompts ("move forward 1 meter", "turn left", "stop") were driving the
+model to ros2_publish a one-shot Twist to /cmd_vel, which does not move the robot
+(no sustained drive, no auto-stop, and the base subscribes to /cmd_vel_unstamped).
+
+- context/robot-context.ts: replace the "use ros2_publish for velocity" guidance
+  (both dynamic and fallback contexts) with explicit instructions to always use
+  the ros2_cmd_vel tool for any movement request, mapping intent to
+  direction/distance_m, and noting a single ros2_publish does not move the robot.
+- openclaw.plugin.json: add the ros2_cmd_vel tool aliases "cmd_vel" and "move_base"
+  to contracts.tools. The tool registers with names ["ros2_cmd_vel","cmd_vel",
+  "move_base"], and OpenClaw 2026.5.31 rejects the whole registration unless every
+  declared name is in contracts.tools — previously this dropped ros2_cmd_vel
+  entirely ("Tool ros2_cmd_vel not found").
+
+Result: "move the robot forward 1 meter" now calls ros2_cmd_vel
+(direction: forward, distance_m: 1), which publishes sustained velocity to
+/cmd_vel_unstamped with auto-stop.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+---
+ packages/agenticros/openclaw.plugin.json         |  2 ++
+ packages/agenticros/src/context/robot-context.ts | 14 ++++++++++----
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/packages/agenticros/openclaw.plugin.json b/packages/agenticros/openclaw.plugin.json
+index 79de824..b795b81 100644
+--- a/packages/agenticros/openclaw.plugin.json
++++ b/packages/agenticros/openclaw.plugin.json
+@@ -11,6 +11,8 @@
+       "ros2_action_goal",
+       "ros2_camera_snapshot",
+       "ros2_cmd_vel",
++      "cmd_vel",
++      "move_base",
+       "ros2_depth_distance",
+       "ros2_list_topics",
+       "ros2_param_get",
+diff --git a/packages/agenticros/src/context/robot-context.ts b/packages/agenticros/src/context/robot-context.ts
+index 53c8f31..53fca08 100644
+--- a/packages/agenticros/src/context/robot-context.ts
++++ b/packages/agenticros/src/context/robot-context.ts
+@@ -191,9 +191,10 @@ function buildDynamicContext(
+ ): string {
+   let context = `## Robot: ${name}\n\n`;
+   context += `You are connected to a ROS2 robot named "${name}". You can control it using the ros2_* tools.\n\n`;
+-  if (namespace) {
+-    context += `**Velocity commands:** Use \`ros2_publish\` with topic \`/cmd_vel\`; the plugin sends them to \`/${namespace}/cmd_vel\`.\n\n`;
+-  }
++  context += `### Movement / driving the robot\n`;
++  context += `- For ANY movement request ("move forward 1 meter", "go back", "turn left", "rotate 90 degrees", "stop"), **always use the \`ros2_cmd_vel\` tool** — do NOT use \`ros2_publish\` for driving. \`ros2_cmd_vel\` publishes to the correct configured cmd_vel topic, sustains the command for the right duration, and auto-stops, so the robot actually moves the requested amount.\n`;
++  context += `- Map the request to \`ros2_cmd_vel\` arguments: forward/backward/left/right/rotate_left/rotate_right/stop via \`direction\`, plus \`distance_m\` for a distance (e.g. "forward 1 meter" → \`direction: "forward", distance_m: 1\`) or an angle for rotations. The tool computes safe velocity and timing for you.\n`;
++  context += `- A single \`ros2_publish\` of one Twist does NOT make the robot move (it is a one-shot message with no sustained drive or auto-stop); use \`ros2_cmd_vel\` instead.\n\n`;
+   context += `${buildUserInterfaceBlurb(config)}\n\n`;
+ 
+   // Cap injected lists to avoid huge context (rate limits / token burn)
+@@ -307,7 +308,12 @@ ${buildUserInterfaceBlurb(config)}
+ - \`${prefix}battery_state\` (sensor_msgs/msg/BatteryState) — Battery status
+ - RealSense: \`/camera/camera/color/image_raw\` (Image), \`/camera/camera/color/image_raw/compressed\` (CompressedImage), \`/camera/camera/depth/image_rect_raw\` (depth). Use \`ros2_camera_snapshot\` for RGB; use \`ros2_depth_distance\` for distance in meters.
+ 
+-${skillsSection}### Safety Limits
++${skillsSection}### Movement / driving the robot
++- For ANY movement request ("move forward 1 meter", "go back", "turn left", "rotate 90 degrees", "stop"), **always use the \`ros2_cmd_vel\` tool** — do NOT use \`ros2_publish\` for driving. \`ros2_cmd_vel\` publishes to the correct configured cmd_vel topic, sustains the command for the right duration, and auto-stops, so the robot actually moves the requested amount.
++- Map the request to \`ros2_cmd_vel\` arguments: forward/backward/left/right/rotate_left/rotate_right/stop via \`direction\`, plus \`distance_m\` for a distance (e.g. "forward 1 meter" → \`direction: "forward", distance_m: 1\`) or an angle for rotations. The tool computes safe velocity and timing for you.
++- A single \`ros2_publish\` of one Twist does NOT make the robot move (it is a one-shot message with no sustained drive or auto-stop); use \`ros2_cmd_vel\` instead.
++
++### Safety Limits
+ - Maximum linear velocity: 1.0 m/s
+ - Maximum angular velocity: 1.5 rad/s
+ - All velocity commands are validated before execution
+-- 
+2.43.0
+

@@ -20,7 +20,7 @@ Check the output for dependency errors (database not ready, missing env vars, po
 
 **Symptoms**: A service fails to bind to its port; address already in use.
 
-**Solution**: Update the port variables in `.env` (for example, `BACKEND_PORT`, `UI_PORT`) and restart:
+**Solution**: Update the port variables in `.env` (for example, `UI_HTTPS_PORT`) and restart:
 
 ```bash
 docker compose down
@@ -87,7 +87,7 @@ docker compose restart vms-backend
 **Checks**:
 - Confirm the RTSP stream is reachable from the LVC `dlstreamer-pipeline-server` container.
 - Check LVC logs: `docker compose logs dlstreamer-pipeline-server` (in the LVC stack).
-- Verify the SSE stream is connected: open `http://localhost:8085/v1/analytics-apps/live_captioning/results/stream` in a browser.
+- Verify the SSE stream is connected: open `https://localhost:3443/v1/analytics-apps/live_captioning/results/stream` in a browser.
 - If running in a proxy network, add the RTSP stream IP to `no_proxy`.
 
 ### WebRTC Video Not Playing

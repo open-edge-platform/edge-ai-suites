@@ -2,9 +2,9 @@
 
 **Version: 1.0.0**
 
-The VMS Adapter Plugin exposes REST API at `http://localhost:8085/v1`. Interactive API
-documentation (Swagger UI) is available at `http://localhost:8085/docs` when the backend
-is running.
+The VMS Adapter Plugin exposes REST API at `https://localhost:3443/v1` through the UI nginx
+proxy. Interactive API documentation (Swagger UI) is available at
+`https://localhost:3443/docs` when the stack is running.
 
 ## Health
 

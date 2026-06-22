@@ -41,6 +41,6 @@ the data flow of the selected app before proceeding with the following steps.
     > make build_copyleft_sources
     > ```
 
-2. **Docker compose deployment and Verification**:
+3. **Docker compose deployment and Verification**:
 
     Follow the remaining steps/sections starting from [docker compose deployment](../get-started.md#deploy-with-docker-compose)

@@ -1,7 +1,7 @@
 # Get Started with Post Fusion
 
 This article describes how to run Metro AI Suite Sensor Fusion for Traffic Management on
-Bare Metal systems. Before proceding, make sure to address the
+Bare Metal systems. Before proceeding, make sure to address the
 [prerequisites](./get-started-guide/prerequisites.md) and meet the
 [system requirements](./get-started-guide/system-req.md).
 
@@ -25,7 +25,7 @@ Besides, you can test each component (without display) following the guides at [
 
     > File location: `$PROJ_DIR/ai_inference/test/configs/kitti/1C1L/localMediaPipeline.json`
   - Pipeline Description:
-    ```
+    ```text
     input -> decode -> detection -> tracking -> output
     ```
 
