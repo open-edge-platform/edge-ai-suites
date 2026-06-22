@@ -724,9 +724,9 @@ def create_ui():
                             yield gr.update(
                                 value="❌ Count must be a non-negative integer.",
                                 visible=True,
-                            )
+                            ), gr.update()
                             time.sleep(3)
-                            yield gr.update(visible=False)
+                            yield gr.update(visible=False), gr.update()
                             return
 
                     resp = add_rule(
@@ -740,20 +740,14 @@ def create_ui():
                         resp.get("message") if isinstance(resp, dict) else str(resp)
                     )
 
-                    # Show message
-                    yield gr.update(value=message, visible=True)
+                    # Show message and refresh rules table
+                    yield gr.update(value=message, visible=True), load_rules()
 
                     # Keep it visible for 3 seconds
                     time.sleep(3)
 
                     # Hide message
-                    yield gr.update(visible=False)
-
-                add_rule_btn.click(
-                    fn=add_rule_with_auto_hide,
-                    inputs=[source_dropdown, count, camera_dropdown, label_filter, action_dropdown_auto],
-                    outputs=[add_rule_alert],
-                )
+                    yield gr.update(visible=False), gr.update()
 
                 #  Automatically hide after 5 seconds
                 # add_rule_event.then(
@@ -765,6 +759,7 @@ def create_ui():
                 # Rules Table Section
                 gr.Markdown("### Current Rules")
                 delete_status = gr.Textbox(label="Deletion Status", visible=False)
+                last_deleted_state = gr.State(value=None)
                 headers = ["ID", "Source"]
                 datatypes = ["str", "str"]
                 if show_scenescape_source:
@@ -791,31 +786,40 @@ def create_ui():
                         rows.append(row)
                     return rows
 
-                def delete_selected_rule(evt: gr.SelectData):
+                def delete_selected_rule(evt: gr.SelectData, last_del_id):
+                    if evt.index[1] != len(headers) - 1:
+                        yield gr.update(visible=False), gr.update(), last_del_id
+                        return
 
-                    if evt.value == "🗑️ Delete":
-                        try:
-                            # Get the full row data from row_value
-                            selected_row = evt.row_value
+                    rule_id = str(evt.row_value[0]) if evt.row_value and evt.row_value[0] else None
+                    if not rule_id or rule_id == last_del_id:
+                        yield gr.update(visible=False), gr.update(), last_del_id
+                        return
 
-                            # Extract rule ID (first column)
-                            rule_id = selected_row[0]
+                    try:
+                        result = delete_rule_by_id(rule_id)
+                        new_state, table_update = rule_id, load_rules()
+                    except Exception as e:
+                        logger.error(f"Error deleting rule: {str(e)}")
+                        result = f"Error: {str(e)}"
+                        new_state, table_update = last_del_id, gr.update()
 
-                            # Delete the rule
-                            result = delete_rule_by_id(rule_id)
-                            return result, load_rules()
-
-                        except Exception as e:
-                            logger.error(f"Error deleting rule: {str(e)}")
-                            return f" Error: {str(e)}", load_rules()
-
-                    return "Click the delete icon (🗑️) to remove a rule", load_rules()
+                    yield gr.update(value=result, visible=True), table_update, new_state
+                    time.sleep(3)
+                    yield gr.update(visible=False), gr.update(), None
 
                 # Event handlers
+                add_rule_btn.click(
+                    fn=add_rule_with_auto_hide,
+                    inputs=[source_dropdown, count, camera_dropdown, label_filter, action_dropdown_auto],
+                    outputs=[add_rule_alert, rules_table],
+                )
                 refresh_rules_btn.click(fn=load_rules, outputs=[rules_table])
 
                 rules_table.select(
-                    fn=delete_selected_rule, outputs=[delete_status, rules_table]
+                    fn=delete_selected_rule,
+                    inputs=[last_deleted_state],
+                    outputs=[delete_status, rules_table, last_deleted_state],
                 )
 
                 # Initial load
