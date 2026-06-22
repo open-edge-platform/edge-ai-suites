@@ -1,14 +1,13 @@
 # Deploy with Custom UDF
 
-This guide provides instructions for setting up custom UDF deployment package (UDFs, TICKscripts, models) and `config.json` in **Time Series Analytics Microservice**.
+This guide provides instructions for setting up a custom UDF deployment package (UDFs, TICKscripts, models) and `config.json` in **Time Series Analytics Microservice**.
 
 ## Configuration
 
 - **`config.json`**:
-   - Understand the configuration documented at [link](../get-started.md#configjson) and update
-     as per the need to configure the custom UDF deployment package
+   - Review the [configuration reference](../wind-turbine-anomaly-detection/index.md#configjson) and update it as needed for your custom UDF deployment package.
 
-- **`UDF Deployment package`**:
+- **`UDF Deployment Package`**:
 
   1. **`udfs/`**:
      - Contains Python scripts for UDFs.
@@ -17,7 +16,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
 
   2. **`tick_scripts/`**:
      - Contains TICKscripts for data processing, analytics, and alerts.
-     - Mode detail on writing TICKscript is available at <https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/>
+     - More details on writing TICKscripts are available at <https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/>
 
      - Example TICKscript:
 
@@ -56,49 +55,80 @@ This guide provides instructions for setting up custom UDF deployment package (U
   3. **`models/`**:
      - Contains model files (e.g., `.pkl`) used by UDF Python scripts.
 
-### Docker compose deployment
+### Docker Compose Deployment
 
 > **Note:** Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` and `Weld Defect Detection` sample apps.
 
-The files at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config` for `Wind Turbine Anomaly Detection` sample app OR `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config` for `Weld Defect Detection` representing the UDF deployment package (UDFs, TICKscripts, models)
-and `config.json` have been volume mounted for the Time Series Analytics Microservice service in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/docker-compose.yml`. If anything needs to be updated in the custom UDF deployment package and `config.json`, it has to be done at this location and the time series analytics microservice container needs to be restarted manually.
+The UDF deployment package (UDFs, TICKscripts, models) and `config.json` for each sample app are uploaded into the Time Series Analytics Microservice container via `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile`:
+
+- **Wind Turbine Anomaly Detection**: `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`
+- **Weld Defect Detection**: `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`
+
+To apply changes to the UDF deployment package or `config.json`, update the files at the relevant path above, then follow the steps below to upload the updated package:
+
+1. Create the UDF deployment package tar file:
+
+   ```sh
+   export SAMPLE_APP="<wind-turbine-anomaly-detection or weld-defect-detection>"
+   # Navigate to the directory containing your UDF deployment package files
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/${SAMPLE_APP}/time-series-analytics-config/
+   rm -f ${SAMPLE_APP}.tar
+   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
+   ```
+
+2. Upload the UDF deployment package to the Time Series Analytics Microservice:
+
+   ```sh
+   curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
+   ```
+
+3. Upload the `config.json` to activate the custom UDF:
+
+   ```sh
+   curl -s -X POST https://localhost:3000/ts-api/config \
+     -H 'accept: application/json' \
+     -H 'Content-Type: application/json' \
+     -d @config.json \
+     -k
+   ```
 
 ### Helm Deployment
 
-> **Note:** This method does not use a volume mount. Instead, the `kubectl cp` command is used to copy the UDF deployment package into the container, which serves the same purpose.
-
 1. Update the UDF deployment package by following the instructions in [Configure Time Series Analytics Microservice with Custom UDF Deployment Package](./configure-custom-udf.md#configuration).
 
-2. Copy the updated UDF deployment package using the [steps](../get-started/deploy-with-helm.md#step-4-copy-the-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+2. Install the Helm chart by following [Step 3: Install Helm Charts](../get-started/deploy-with-helm.md#step-3-install-helm-charts).
 
-3. Make the following REST API call to the Time Series Analytics microservice for the updated custom UDF:
+3. Create the UDF deployment package tar file:
 
    ```sh
-   curl -k -X 'POST' \
-   'https://<HOST_IP>:30001/ts-api/config' \
-   -H 'accept: application/json' \
-   -H 'Content-Type: application/json' \
-   -d '{
-     "udfs": {
-         "name": "<custom_UDF>",
-         "models": "<custom_UDF>.pkl|<custom_UDF>.cb",
-         "device"": "cpu|gpu"
-     },
-     "alerts": {
-         "mqtt": {
-             "mqtt_broker_host": "ia-mqtt-broker",
-             "mqtt_broker_port": 1883,
-             "name": "my_mqtt_broker"
-         }
-     }
-   }'
+   export SAMPLE_APP="<wind-turbine-anomaly-detection or weld-defect-detection>"
+   # Navigate to the directory containing your UDF deployment package files
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/${SAMPLE_APP}/time-series-analytics-config/
+   rm -f ${SAMPLE_APP}.tar
+   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
    ```
 
-4. Verify the logs of the Time Series Analytics Microservice:
+4. Upload the UDF deployment package to the Time Series Analytics Microservice:
+
+   ```sh
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
+   ```
+
+5. Upload the `config.json` to activate the custom UDF:
+
+   ```sh
+   curl -s -X POST https://localhost:30001/ts-api/config \
+     -H 'accept: application/json' \
+     -H 'Content-Type: application/json' \
+     -d @config.json \
+     -k
+   ```
+
+6. Verify the logs of the Time Series Analytics Microservice:
 
    ```sh
    POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
    kubectl logs -f -n ts-sample-app $POD_NAME
    ```
 
-For more details, refer to `Time Series Analytics` microservice API documents on [updating the config](./update-config.md).
+For more details, refer to the Time Series Analytics Microservice API documentation on [updating the config](./update-config.md).

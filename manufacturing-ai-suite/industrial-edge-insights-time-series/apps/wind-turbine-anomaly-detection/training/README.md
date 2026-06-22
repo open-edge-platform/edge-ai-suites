@@ -1,7 +1,24 @@
 # Wind Turbine Anomaly Detection — Training & Inference Sample (Intel GPU-Accelerated)
 
 The wind turbine anomaly model is built using `train.py` for model training and `inference_sample.py` for inference.
-The dataset file is [T1.csv](T1.csv), sourced from https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset.
+
+## Generating Synthetic Training Data
+
+Generate a synthetic dataset with a schema compatible
+
+```bash
+python generate_synthetic_dataset.py --output synthetic_dataset.csv --rows 45000 --seed 42
+```
+
+`--seed` controls reproducibility for random generation:
+- Use the same seed (for example, `42`) to regenerate the exact same synthetic dataset.
+- Use a different seed (for example, `7`) to create a different dataset with similar statistical behavior.
+
+Generated columns:
+- `timestamp`
+- `grid_activepower`
+- `wind_speed`
+- `Theoretical_Power_Curve`
 
 ## Quick Start
 
@@ -18,7 +35,7 @@ pip install -r requirements.txt
 
 ```bash
 python train.py \
-  --data T1.csv \
+  --data synthetic_dataset.csv \
   --target grid_activepower \
   --features wind_speed \
   --output-model rf_model.pkl \
@@ -43,7 +60,7 @@ python train.py \
 
 ```bash
 python train.py \
-  --data T1.csv \
+  --data synthetic_dataset.csv \
   --target grid_activepower \
   --features wind_speed \
   --output-model rf_anomaly_model_compact.pkl \

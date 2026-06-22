@@ -1,0 +1,16 @@
+{
+  "schema": "smart_classroom_session_v1",
+  "package": "content",
+  "session_id": "20260615-171958-8312",
+  "class_name": "Class 10A - Physics",
+  "date": "2026-06-15",
+  "time": "17:41",
+  "files": {
+    "summary": "summary.md",
+    "topics": "topics.json"
+  },
+  "openclaw_hints": {
+    "Q1_topics_covered": "Read topics.json for the timestamped list; read ## Session Outline in summary.md for human-readable form.",
+    "Q3_absentee_catchup": "summary.md contains the full lesson content. topics.json gives a timed breakdown the student can use for self-study."
+  }
+}
