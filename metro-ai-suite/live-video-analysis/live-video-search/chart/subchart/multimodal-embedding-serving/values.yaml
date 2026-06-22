@@ -2,7 +2,6 @@ global:
   volumeHostPath: ''
   usePvc: true
   keepPvc: false
-  sharedPvcName: ''
   env:
     defaultClipDuration: '-1'
     defaultNumFrames: '64'

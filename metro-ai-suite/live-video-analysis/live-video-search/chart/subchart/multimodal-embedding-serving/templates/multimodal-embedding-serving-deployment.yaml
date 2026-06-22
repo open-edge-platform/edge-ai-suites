@@ -89,15 +89,9 @@ spec:
             - name: volume-data
               mountPath: /home/appuser/.cache/huggingface
               subPath: huggingface
-            {{- if .Values.modelPvc.enabled }}
-            - name: models-data
-              mountPath: {{ .Values.global.env.ovModelsDir }}
-              subPath: ovmodels
-            {{- else }}
             - name: volume-data
               mountPath: {{ .Values.global.env.ovModelsDir }}
               subPath: ovmodels
-            {{- end }}
             - name: volume-data
               mountPath: /tmp/dataprep
               subPath: tmpvideos
@@ -111,22 +105,6 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.modelPvc.enabled }}
-        - name: models-data
-          {{- if .Values.modelPvc.existingClaim }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.modelPvc.existingClaim }}
-          {{- else if .Values.global.usePvc }}
-          persistentVolumeClaim:
-            claimName: {{ include "lvs.mmes.fullname" . }}-mmes-models-pvc
-          {{- else if .Values.global.volumeHostPath }}
-          hostPath:
-            path: {{ .Values.global.volumeHostPath }}
-            type: DirectoryOrCreate
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        {{- end }}
         - name: volume-data
           {{- if .Values.global.usePvc }}
           persistentVolumeClaim:

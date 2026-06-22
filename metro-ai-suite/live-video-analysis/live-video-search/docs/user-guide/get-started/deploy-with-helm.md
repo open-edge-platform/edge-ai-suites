@@ -256,6 +256,9 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   ```
 
+- **`VolumeBinding` "object has been modified" warning during scheduling:**
+  A one-off `FailedScheduling ... running PreBind plugin "VolumeBinding": ... the object has been modified` warning that is immediately followed by a successful `Scheduled` event is a transient optimistic-lock retry and is safe to ignore — it self-heals on the scheduler's next attempt. The MME and DataPrep pods now reference each model PVC through a single volume, so this should no longer recur. If a pod stays `Pending` and the warning repeats indefinitely, treat it as a real failure: check that the model PVC is `Bound` (`kubectl get pvc -n "$my_namespace"`) and that the `WaitForFirstConsumer` storage class can provision on the target node.
+
 - **Search not returning expected results:**
   Verify `global.env.embeddingModelName` and confirm clips are ingested.
 

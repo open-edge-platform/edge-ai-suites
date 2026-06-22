@@ -2,7 +2,6 @@ global:
   volumeHostPath: ''
   usePvc: true
   keepPvc: false
-  sharedPvcName: ''
   env:
     defaultBucketName: vdms-bucket
     detectionConfidence: '0.85'
