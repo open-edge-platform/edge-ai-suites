@@ -2690,6 +2690,56 @@ def check_pods(namespace, timeout=180, interval=5):
     logger.warning(f"Timeout reached after {timeout}s. Some pods may still exist in namespace '{namespace}'.")
     return False
 
+
+def check_services(namespace, timeout=30, interval=5):
+    """
+    Checks if services (especially NodePort) have been deleted in the specified namespace.
+    Returns True if no services are found within the timeout period, otherwise returns False.
+    
+    This is important to avoid NodePort allocation conflicts when reinstalling Helm charts.
+
+    :param namespace: The Kubernetes namespace to check.
+    :param timeout: The maximum time to wait in seconds (default is 30 seconds).
+    :param interval: The interval between checks in seconds (default is 5 seconds).
+    :return: True if no services are found within the timeout, False otherwise.
+    """
+    start_time = time.time()
+    
+    while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout:
+            logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+            return False
+        try:
+            # Execute the kubectl command to get services in the namespace
+            result = subprocess.run(
+                ["kubectl", "get", "svc", "-n", namespace],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            # Debug: Print the command output
+            logger.debug(f"Command output: {result.stdout.strip()}")
+            # Check if the output contains "No resources found"
+            if not result.stdout.strip() or "No resources found" in result.stdout:
+                logger.info(f"No services found in {namespace} namespace.")
+                return True
+            else:
+                logger.info(f"Services are still terminating in {namespace} namespace. Waiting...")
+
+        except subprocess.CalledProcessError as e:
+            if "not found" in str(e).lower():
+                logger.info(f"Namespace {namespace} not found - considered as no services running.")
+                return True
+            logger.warning(f"An error occurred while checking services: {e}")
+
+        # Wait for the specified interval before checking again
+        time.sleep(interval)
+
+    logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+    return False
+
+
 def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.
     
