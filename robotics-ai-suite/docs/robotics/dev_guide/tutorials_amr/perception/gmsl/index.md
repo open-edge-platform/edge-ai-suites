@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 This chapter provides a list of GMSL tutorials.
 
-Before you can run these tutorials, you have to ensure that `intel-mipi-gmsl-dkms` is installed.
+Before you can run these tutorials, ensure that `intel-mipi-gmsl-dkms` is installed.
 
 Follow the instructions on [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html), to install GMSL Drivers and required packages.
 
