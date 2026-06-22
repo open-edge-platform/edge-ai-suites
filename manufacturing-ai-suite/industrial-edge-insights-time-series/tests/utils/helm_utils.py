@@ -453,6 +453,19 @@ def _dump_unhealthy_pods(namespace):
         logger.error(f"_dump_unhealthy_pods crashed: {e}")
 
 
+def dump_pod_diagnostics(namespace):
+    """Public wrapper to dump diagnostic info for unhealthy pods.
+    
+    This function is called by test fixtures when Helm install or pod verification
+    fails, to provide debugging information in CI/CD logs.
+    
+    Args:
+        namespace: Kubernetes namespace to check for unhealthy pods
+    """
+    logger.info(f"Dumping pod diagnostics for namespace '{namespace}'...")
+    _dump_unhealthy_pods(namespace)
+
+
 def verify_pods(namespace, timeout=300, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 

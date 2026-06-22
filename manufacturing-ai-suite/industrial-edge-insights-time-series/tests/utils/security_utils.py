@@ -493,6 +493,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the first record response
         influx_first_record = parse_influxdb_response(first_record_response)
+        if influx_first_record is None:
+            logger.error("Failed to parse first record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -507,6 +510,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the last record response
         influx_last_record = parse_influxdb_response(last_record_response)
+        if influx_last_record is None:
+            logger.error("Failed to parse last record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -521,6 +527,10 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the count response
         influx_total_count = parse_influxdb_response(count_response)
+        if influx_total_count is None:
+            logger.error("Failed to parse count from InfluxDB response")
+            return False
+        
         # Convert all values to strings for comparison
         first_wind_speed = str(first_wind_speed)
         last_wind_speed = str(last_wind_speed)
@@ -546,10 +556,49 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         return False
 
 def parse_influxdb_response(response):
-    # Implement parsing logic based on the response format
-    # This is a placeholder function and needs to be customized
-    # according to the actual response format from InfluxDB
-    return response.split('\n')[-1].split()[-1]  # Example parsing logic
+    """Parse InfluxDB CLI response to extract the value.
+    
+    InfluxDB CLI typically returns output like:
+    name: measurement
+    time                     wind_speed
+    ----                     ----------
+    2024-01-01T00:00:00Z     5.5
+    
+    This function extracts the last value from the last non-empty line.
+    
+    Returns:
+        str: The extracted value, or None if parsing fails.
+    """
+    if not response:
+        logger.warning("Empty InfluxDB response received")
+        return None
+    
+    try:
+        # Split response into lines and filter out empty lines
+        lines = [line.strip() for line in response.strip().split('\n') if line.strip()]
+        
+        if not lines:
+            logger.warning("No data lines in InfluxDB response")
+            return None
+        
+        # Get the last line which should contain the data
+        last_line = lines[-1]
+        
+        # Skip header lines (containing 'time', '----', or 'name:')
+        if 'time' in last_line.lower() or '----' in last_line or last_line.startswith('name:'):
+            logger.warning(f"InfluxDB response appears to have no data rows: {response[:200]}")
+            return None
+        
+        # Split the line and get the last column (the value)
+        columns = last_line.split()
+        if not columns:
+            logger.warning(f"Could not parse columns from line: {last_line}")
+            return None
+        
+        return columns[-1]
+    except Exception as e:
+        logger.error(f"Error parsing InfluxDB response: {e}, response: {response[:200] if response else 'None'}")
+        return None
 
 def verify_docker_file_integrity():
     try:
