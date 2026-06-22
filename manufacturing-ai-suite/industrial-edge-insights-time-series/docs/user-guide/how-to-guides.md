@@ -8,7 +8,7 @@ This section collects guides for Time Series Analytics microservice and associat
 - [Connect to External OPC UA server](./how-to-guides/connect-to-secure-opcua-server.md)
 - [Update Configuration](./how-to-guides/update-config.md)
 - [Create a new sample app](./how-to-guides/create-a-new-sample-app.md)
-- [Write a User Define Function(UDF)](./how-to-guides/write-user-defined-function.md)
+- [Write a User Defined Function (UDF)](./how-to-guides/write-user-defined-function.md)
 
 <!--hide_directive
 :::{toctree}
@@ -21,6 +21,8 @@ This section collects guides for Time Series Analytics microservice and associat
 ./how-to-guides/update-config
 ./how-to-guides/create-a-new-sample-app
 ./how-to-guides/write-user-defined-function
+./how-to-guides/benchmarking
+./how-to-guides/multi-stream-ingestion
 
 :::
 hide_directive-->
