@@ -1,5 +1,3 @@
-(dynamic_vision)=
-
 # Dynamic Vision
 
 High performance 2D to 3D object classification and dynamic real-time

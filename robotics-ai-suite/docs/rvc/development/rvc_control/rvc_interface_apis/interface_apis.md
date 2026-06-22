@@ -1,5 +1,3 @@
-(rvc_grasp_interface)=
-
 # RVC Control Plugin Interface APIs
 
 ```{doxygenclass} RVCControl::RVCGraspInterface

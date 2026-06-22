@@ -1,5 +1,3 @@
-(preliminary_system_configuration)=
-
 # Preliminary System Configuration
 
 Before running RVC for the first time, ensure proper configuration has occurred:
@@ -65,8 +63,6 @@ the original configuration or you will need to retrain the neural network proces
 > **Note:** Every component has an option to change the default namespace: `namespace:=<namespace>` which by default is "ipc". When specified, the components
 > will only see other components if they have same namespaces and the associated .xacro files must be named as seen in the above table (e.g. `d415camera<namespace>.xacro`).
 
-(universal-robots-configuration)=
-
 ## Universal Robots Configuration
 
 The real robot or the simulator must be configured to accept
@@ -108,8 +104,6 @@ Install these URCaps on the UR5e robot teach pendant using a USB drive.
 Restart the robot. Select **Program Robot** on the Welcome screen. Go to the **Installation** tab. Select **Gripper** listed under **URCaps**.
 
 ![UR Robotiq Gripper urcap](../../images/html/URRobotiqGripper.png)
-
-(robot_calibration_procedure)=
 
 ## Overwrite Model-specific Kinematics Parameters (Calibration)
 
@@ -157,8 +151,6 @@ To use the new URCaps, enabling the communication with the Intel® architecture 
 ![Create Program](../../images/html/URCreateProgram.png)
 
 > **Note:** Make sure that you have replaced Host IP with your IA RVC controller private network IP connected to the robot.
-
-(robots_home_pose)=
 
 ## Robot Home Pose
 

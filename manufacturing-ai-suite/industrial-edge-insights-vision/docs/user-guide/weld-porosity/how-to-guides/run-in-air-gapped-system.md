@@ -25,23 +25,24 @@ This guide explains how to run the Weld Porosity application in an environment w
 
 ## Start the Application
 
-3. Start the Docker application:
+1. Start the Docker application:
 
    ```bash
    docker compose up -d
    ```
 
-4. Start the pipeline:
+2. Start the pipeline:
 
    ```bash
    ./sample_start.sh -p weld_porosity_classification
    ```
 
-5. Open a browser and navigate to:
+3. Open a browser and navigate to:
 
-   ```
+   ```text
    https://127.0.0.1/mediamtx/weld/
    ```
+
    > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application

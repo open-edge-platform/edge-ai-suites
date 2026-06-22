@@ -105,10 +105,16 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 	@echo "Configuring vippet metrics-manager..."; \
 	cp $(SELF_DIR)/collector/telegraf.conf $(VIPPET_CWD)/vippet-telegraf.conf; \
 	python3 $(SELF_DIR)/scripts/filter_models.py \
-		"$(VIPPET_CWD)/shared/models/supported_models.yaml"; \
+		"$(VIPPET_CWD)/shared/models/supported_models.yaml" \
+		"$(VIPPET_CWD)/vippet/pipelines"; \
 	if ! grep -q 'METRICS_MANAGER_HOSTNAME' $(VIPPET_CWD)/compose.yml; then \
 		sed -i 's|METRICS_RETENTION_SECONDS:.*|&\n      METRICS_MANAGER_HOSTNAME: $${METRICS_MANAGER_HOSTNAME:-ptl}|' $(VIPPET_CWD)/compose.yml; \
 		echo "✓ compose.yml patched (METRICS_MANAGER_HOSTNAME added)"; \
+	fi; \
+	if ! grep -q 'vippet/pipelines' $(VIPPET_CWD)/compose.yml; then \
+		sed -i '/    - \.\/shared\/metadata\/:\/metadata/a\    - .\/vippet\/pipelines:\/home\/dlstreamer\/vippet\/pipelines:ro' \
+			$(VIPPET_CWD)/compose.yml; \
+		echo "✓ compose.yml patched (pipelines volume added)"; \
 	fi; \
 	echo "✓ vippet configured (telegraf.conf copied)"
 

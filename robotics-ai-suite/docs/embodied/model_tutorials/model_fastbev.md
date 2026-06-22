@@ -1,5 +1,3 @@
-(model-fastbev)=
-
 # Bird's Eye View Perception: Fast-BEV
 
 Bird's eye view (BEV) perception refers to a perspective in which the scene or objects are viewed from directly above,
