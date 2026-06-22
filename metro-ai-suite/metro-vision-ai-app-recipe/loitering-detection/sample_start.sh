@@ -2,6 +2,29 @@
 
 DLSPS_NODE_IP="localhost"
 
+function detect_sku() {
+  CPU_MODEL=$(grep "model name" /proc/cpuinfo 2>/dev/null | head -1 | sed 's/.*: //' | xargs)
+  GPU_INFO="Not detected"
+  if ls /dev/dri/renderD* 1>/dev/null 2>&1; then
+    for card in /sys/class/drm/card*/; do
+      pname=$(cat "${card}device/product_name" 2>/dev/null)
+      if [ -n "$pname" ]; then
+        GPU_INFO="$pname"
+        break
+      fi
+    done
+    [ "$GPU_INFO" = "Not detected" ] && GPU_INFO="Intel iGPU (device present)"
+  fi
+  NPU_INFO="Not present"
+  ls /dev/accel/accel* 1>/dev/null 2>&1 && NPU_INFO="Intel NPU (device present)"
+  echo "============================================================"
+  echo "  SYSTEM SKU"
+  echo "  CPU : ${CPU_MODEL:-Unknown}"
+  echo "  iGPU: ${GPU_INFO}"
+  echo "  NPU : ${NPU_INFO}"
+  echo "============================================================"
+}
+
 function run_sample() {
   pipelines=$1
   device=$2
@@ -9,6 +32,10 @@ function run_sample() {
   if [ $device == "GPU" ]; then
     pipeline_name="object_tracking_gpu"
   elif [ $device == "NPU" ]; then
+    pipeline_name="object_tracking_npu"
+  elif [ $device == "IGPU_CPU" ]; then
+    pipeline_name="object_tracking_igpu_cpu"
+  elif [ $device == "IGPU_NPU_CPU" ]; then
     pipeline_name="object_tracking_npu"
   else
     pipeline_name="object_tracking_cpu"
@@ -95,25 +122,47 @@ function stop_all_pipelines() {
 forcedCPU=false
 forcedGPU=false
 forcedNPU=false
+forcedIGPUCPU=false
+forcedIGPUNPUCPU=false
 
 for arg in "$@"; do
   if [ "$arg" == "cpu" ]; then
       forcedCPU=true
       forcedGPU=false
       forcedNPU=false
+      forcedIGPUCPU=false
+      forcedIGPUNPUCPU=false
   elif [ "$arg" == "gpu" ]; then
       forcedCPU=false
       forcedGPU=true
       forcedNPU=false
+      forcedIGPUCPU=false
+      forcedIGPUNPUCPU=false
   elif [ "$arg" == "npu" ]; then
       forcedCPU=false
       forcedGPU=false
       forcedNPU=true
+      forcedIGPUCPU=false
+      forcedIGPUNPUCPU=false
+  elif [ "$arg" == "igpu_cpu" ]; then
+      forcedCPU=false
+      forcedGPU=false
+      forcedNPU=false
+      forcedIGPUCPU=true
+      forcedIGPUNPUCPU=false
+  elif [ "$arg" == "igpu_npu_cpu" ]; then
+      forcedCPU=false
+      forcedGPU=false
+      forcedNPU=false
+      forcedIGPUCPU=false
+      forcedIGPUNPUCPU=true
   else
       echo "Unknown argument '$arg', defaulting to CPU"
       forcedCPU=true
       forcedGPU=false
       forcedNPU=false
+      forcedIGPUCPU=false
+      forcedIGPUNPUCPU=false
   fi
 done
 
@@ -123,6 +172,7 @@ if [ $# -eq 0 ]; then
   forcedCPU=true
 fi
 
+detect_sku
 
 stop_all_pipelines
 
@@ -152,6 +202,33 @@ elif $forcedNPU; then
     fi
   else
     echo -e "\n>>>>>No NPU device found. Please check your NPU driver installation or use CPU."
+    exit 0
+  fi
+elif $forcedIGPUCPU; then
+  if ls /dev/dri/renderD* 1> /dev/null 2>&1; then
+    echo -e "\n>>>>>iGPU+CPU mode selected (iGPU hardware decode, CPU inference)."
+    run_sample 4 IGPU_CPU
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+  else
+    echo -e "\n>>>>>No GPU device found. Please check your GPU driver installation or use CPU."
+    exit 0
+  fi
+elif $forcedIGPUNPUCPU; then
+  if ls /dev/dri/renderD* 1> /dev/null 2>&1; then
+    if ls /dev/accel/accel* 1> /dev/null 2>&1; then
+      echo -e "\n>>>>>iGPU+NPU+CPU mode selected (iGPU hardware decode, NPU inference)."
+      run_sample 4 IGPU_NPU_CPU
+      if [ $? -ne 0 ]; then
+        exit 1
+      fi
+    else
+      echo -e "\n>>>>>No NPU device found. Please check your NPU driver installation or use igpu_cpu mode."
+      exit 0
+    fi
+  else
+    echo -e "\n>>>>>No GPU device found. Please check your GPU driver installation or use CPU."
     exit 0
   fi
 elif $forcedCPU; then
