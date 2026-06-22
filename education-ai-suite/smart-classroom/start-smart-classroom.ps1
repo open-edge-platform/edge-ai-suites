@@ -954,7 +954,7 @@ Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
-python -m pip install --upgrade -r requirements.txt
+python -m pip install --no-cache-dir -r .\requirements.txt
 
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
@@ -1034,7 +1034,7 @@ Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install --no-cache-dir -r .\requirements.txt
 
 Write-Host ''
 Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green
