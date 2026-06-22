@@ -14,19 +14,6 @@
 {{- include "lvs.root.validateRequiredString" (list "global.credentials.postgresPassword" .Values.global.credentials.postgresPassword) -}}
 {{- include "lvs.root.validateRequiredString" (list "global.credentials.mqttUser" .Values.global.credentials.mqttUser) -}}
 {{- include "lvs.root.validateRequiredString" (list "global.credentials.mqttPassword" .Values.global.credentials.mqttPassword) -}}
-
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $gpuEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
-{{- if and $gpuEnabled (eq (trim (default "" (index $gpu "key"))) "") -}}
-{{- fail "global.gpu.key must be set when accelerator mode is enabled" -}}
-{{- end -}}
-{{- if and $gpuEnabled (eq (trim (default "" (index $gpu "device"))) "") -}}
-{{- fail "global.gpu.device must be set when accelerator mode is enabled (GPU or NPU)" -}}
-{{- end -}}
-{{- $gpuDevice := upper (trim (default "" (index $gpu "device"))) -}}
-{{- if and $gpuEnabled (not (or (eq $gpuDevice "GPU") (eq $gpuDevice "NPU"))) -}}
-{{- fail "global.gpu.device must be either GPU or NPU when accelerator mode is enabled" -}}
-{{- end -}}
 {{- end -}}
 {{- define "live-video-search.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}

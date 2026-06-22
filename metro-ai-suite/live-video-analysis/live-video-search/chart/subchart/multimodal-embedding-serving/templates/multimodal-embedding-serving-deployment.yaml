@@ -1,4 +1,3 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
 {{- $globalDevices := default (dict) .Values.global.devices -}}
 {{- $mmDevices := default (dict) (index $globalDevices "multimodalEmbedding") -}}
 {{- $mmDevice := upper (default "CPU" (index $mmDevices "device")) -}}
@@ -9,8 +8,6 @@
 {{- if and $mmUsesAccelerator (eq (trim $mmKey) "") -}}
 {{- fail "global.devices.multimodalEmbedding.key is required when device is GPU or NPU" -}}
 {{- end -}}
-{{- $gpuHostPath := default "/dev/dri" (index $gpu "hostPath") -}}
-{{- $accelHostPath := default "/dev/accel" (index $gpu "accelHostPath") -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,9 +35,17 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
-      {{- with .Values.podSecurityContext }}
+      {{- if or .Values.podSecurityContext $mmUsesAccelerator }}
       securityContext:
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if $mmUsesAccelerator }}
+        supplementalGroups:
+          {{- range .Values.global.accelGroupIds }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       containers:
         - name: multimodal-embedding-serving
@@ -140,12 +145,12 @@ spec:
         {{- if $mmUsesNpu }}
         - name: dev-accel
           hostPath:
-            path: {{ $accelHostPath }}
+            path: /dev/accel
             type: Directory
         {{- else if $mmUsesGpu }}
         - name: dev-dri
           hostPath:
-            path: {{ $gpuHostPath }}
+            path: /dev/dri
             type: Directory
         {{- end }}
       {{- with .Values.tolerations }}

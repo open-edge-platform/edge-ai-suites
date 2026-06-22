@@ -1,14 +1,9 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $dataprepAccelEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
-{{- $legacyDevice := upper (default "" (index $gpu "device")) -}}
-{{- $legacyKey := default "" (index $gpu "key") -}}
 {{- $globalDevices := default (dict) .Values.global.devices -}}
 {{- $vdmsDevices := default (dict) (index $globalDevices "vdmsDataprep") -}}
 {{- $embeddingCfg := default (dict) (index $vdmsDevices "embedding") -}}
 {{- $detectionCfg := default (dict) (index $vdmsDevices "detection") -}}
-{{- $baselineDevice := ternary $legacyDevice "CPU" $dataprepAccelEnabled -}}
-{{- $embeddingDevice := upper ((index $embeddingCfg "device") | default $baselineDevice) -}}
-{{- $detectionDevice := upper ((index $detectionCfg "device") | default $baselineDevice) -}}
+{{- $embeddingDevice := upper (default "CPU" (index $embeddingCfg "device")) -}}
+{{- $detectionDevice := upper (default "CPU" (index $detectionCfg "device")) -}}
 {{- $embeddingUsesGpu := eq $embeddingDevice "GPU" -}}
 {{- $embeddingUsesNpu := eq $embeddingDevice "NPU" -}}
 {{- $detectionUsesGpu := eq $detectionDevice "GPU" -}}
@@ -17,16 +12,15 @@
 {{- $detectionUsesAccelerator := or $detectionUsesGpu $detectionUsesNpu -}}
 {{- $dataprepGpuEnabled := or $embeddingUsesGpu $detectionUsesGpu -}}
 {{- $dataprepNpuEnabled := or $embeddingUsesNpu $detectionUsesNpu -}}
-{{- $embeddingKey := (index $embeddingCfg "key") | default $legacyKey -}}
-{{- $detectionKey := (index $detectionCfg "key") | default $legacyKey -}}
+{{- $dataprepUsesAccelerator := or $embeddingUsesAccelerator $detectionUsesAccelerator -}}
+{{- $embeddingKey := default "" (index $embeddingCfg "key") -}}
+{{- $detectionKey := default "" (index $detectionCfg "key") -}}
 {{- if and $embeddingUsesAccelerator (eq (trim $embeddingKey) "") -}}
 {{- fail "global.devices.vdmsDataprep.embedding.key is required when embedding.device is GPU or NPU" -}}
 {{- end -}}
 {{- if and $detectionUsesAccelerator (eq (trim $detectionKey) "") -}}
 {{- fail "global.devices.vdmsDataprep.detection.key is required when detection.device is GPU or NPU" -}}
 {{- end -}}
-{{- $gpuHostPath := default "/dev/dri" (index $gpu "hostPath") -}}
-{{- $accelHostPath := default "/dev/accel" (index $gpu "accelHostPath") -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -47,9 +41,17 @@ spec:
       {{- if .Values.hostIPC }}
       hostIPC: true
       {{- end }}
-      {{- with .Values.podSecurityContext }}
+      {{- if or .Values.podSecurityContext $dataprepUsesAccelerator }}
       securityContext:
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if $dataprepUsesAccelerator }}
+        supplementalGroups:
+          {{- range .Values.global.accelGroupIds }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       initContainers:
         - name: wait-for-dependencies
@@ -196,12 +198,12 @@ spec:
         {{- if $dataprepNpuEnabled }}
         - name: dev-accel
           hostPath:
-            path: {{ $accelHostPath }}
+            path: /dev/accel
             type: Directory
         {{- end }}
         {{- if $dataprepGpuEnabled }}
         - name: dev-dri
           hostPath:
-            path: {{ $gpuHostPath }}
+            path: /dev/dri
             type: Directory
         {{- end }}

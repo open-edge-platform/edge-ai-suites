@@ -22,17 +22,13 @@ global:
     httpsProxy: ""
     noProxy: "localhost,127.0.0.1,.svc.cluster.local"
 
-  gpu:
-    # Accelerator toggles for VSS search components
-    vdmsDataprepEnabled: false
-    # K8s accelerator resource key (GPU or NPU)
-    key: ""
-    # Accelerator device value: GPU or NPU
-    device: ""
-    # GPU host path
-    hostPath: "/dev/dri"
-    # NPU host path
-    accelHostPath: "/dev/accel"
+  # Host group ids owning the accelerator device nodes (/dev/dri for GPU,
+  # /dev/accel for NPU). When a service uses a GPU or NPU these gids are added to
+  # the pod's supplementalGroups so the non-root container user can open the
+  # device. The gids are host-specific; override to match the target node
+  # (check with `ls -ln /dev/accel` and `ls -ln /dev/dri`).
+  accelGroupIds:
+    - 992
 
   devices:
     # Multimodal Embedding Serving

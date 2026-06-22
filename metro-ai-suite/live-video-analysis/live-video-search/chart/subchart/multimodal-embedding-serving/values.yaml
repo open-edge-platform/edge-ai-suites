@@ -18,12 +18,8 @@ global:
     videoFrameShmPoolBlockSize: '6220800'
     videoFrameShmPoolBlocksMultiplier: '2'
     videoFrameLogLevel: 'INFO'
-  gpu:
-    vdmsDataprepEnabled: false
-    key: ''
-    device: ''
-    hostPath: /dev/dri
-    accelHostPath: /dev/accel
+  accelGroupIds:
+    - 992
   devices:
     multimodalEmbedding:
       device: CPU
@@ -68,6 +64,11 @@ securityContext:
     type: RuntimeDefault
 
 resources: {}
+
+# OpenVINO model cache directory. Points at the persistent ov_models mount so an
+# NPU/GPU first-compile is written once and reused across restarts (avoids slow
+# recompilation and startup-probe crash loops). Used when device is GPU/NPU.
+ovCacheDir: "/app/ov_models/ov_cache"
 
 modelPvc:
   enabled: true

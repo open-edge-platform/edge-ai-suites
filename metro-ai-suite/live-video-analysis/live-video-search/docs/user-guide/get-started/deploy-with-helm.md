@@ -95,6 +95,7 @@ Common optional values:
 | `global.devices.vdmsDataprep.embedding.key` | DataPrep embedding accelerator key (required when embedding.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
 | `global.devices.vdmsDataprep.detection.device` | DataPrep detection execution device | `CPU`, `GPU`, or `NPU` |
 | `global.devices.vdmsDataprep.detection.key` | DataPrep detection accelerator key (required when detection.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.accelGroupIds` | Host group ids owning the accelerator device nodes (`/dev/dri`, `/dev/accel`); added to the pod `supplementalGroups` when a service uses GPU/NPU | `[992]` |
 | `frigate.usbCameraDevice` | USB device path (used with USB profile) | `/dev/video0` |
 
 > **Note:** Scenario selection is profile-driven. Use override profiles for mode switching (`default_override.yaml`, `rtsp_test_override.yaml`, `usb_camera_override.yaml`) instead of setting mode switches in `user_values_override.yaml`.
@@ -103,7 +104,11 @@ Common optional values:
 
 > **Device Note:** All device selection is per-component via the `global.devices.*` block. Each component defaults to `CPU` and requires its matching `key` only when set to `GPU` or `NPU`.
 
-> **Accelerator Note:** MME and DataPrep support independent per-component accelerator settings via `global.devices.multimodalEmbedding.*`, `global.devices.vdmsDataprep.embedding.*`, and `global.devices.vdmsDataprep.detection.*`. The legacy `global.gpu.vdmsDataprepEnabled` flow is still accepted as a DataPrep fallback.
+> **Accelerator Note:** MME and DataPrep use independent per-component accelerator settings via `global.devices.multimodalEmbedding.*`, `global.devices.vdmsDataprep.embedding.*`, and `global.devices.vdmsDataprep.detection.*`. This is the single source of truth for device placement; there is no separate legacy `global.gpu` flow.
+
+> **Device Permissions Note:** When a component runs on GPU or NPU, its host accelerator nodes (`/dev/dri` for GPU, `/dev/accel` for NPU) are mounted and the gids in `global.accelGroupIds` are added to the pod `supplementalGroups` so the non-root container user can open the device. These gids are host-specific — check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri` and override `global.accelGroupIds` to match (default `[992]`).
+
+> **OpenVINO Cache Note:** On GPU/NPU, MME and DataPrep write the first-time OpenVINO model compilation to `ovCacheDir` (default `/app/ov_models/ov_cache`) on the persistent models mount, so the compile is reused across pod restarts instead of recompiling on every start.
 
 > **Storage Note:** MME and DataPrep now use independent PVCs (`<release>-live-video-search-mmes-models-pvc` and `<release>-live-video-search-dataprep-models-pvc`, with per-service `*-data-pvc` fallback), so they are no longer coupled through a shared PVC.
 
@@ -166,6 +171,7 @@ First update `user_values_override.yaml`:
 - `global.devices.vdmsDataprep.embedding.key: <accelerator-resource-key>`
 - `global.devices.vdmsDataprep.detection.device: GPU|NPU`
 - `global.devices.vdmsDataprep.detection.key: <accelerator-resource-key>`
+- `global.accelGroupIds: [<gid>]` (host gids owning `/dev/dri` and `/dev/accel`; check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri`)
 
 Then deploy with your selected scenario profile (example: default):
 
@@ -257,4 +263,7 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   Confirm device path and override `frigate.usbCameraDevice` in `user_values_override.yaml` when not using `/dev/video0`.
 
 - **Accelerator deployment fails validation:**
-  Verify required keys are set for each enabled accelerator path (`global.gpu.key` for MME legacy mode, `global.devices.vdmsDataprep.embedding.key` / `global.devices.vdmsDataprep.detection.key` for DataPrep per-component mode).
+  Verify the required key is set for each accelerator path (`global.devices.multimodalEmbedding.key` for MME, `global.devices.vdmsDataprep.embedding.key` / `global.devices.vdmsDataprep.detection.key` for DataPrep) whenever the matching device is set to `GPU` or `NPU`.
+
+- **Accelerator pod cannot access the device (NPU/GPU init fails):**
+  Confirm `global.accelGroupIds` matches the host gids owning `/dev/accel` (NPU) and `/dev/dri` (GPU) on the scheduled node (`ls -ln /dev/accel`, `ls -ln /dev/dri`). The non-root container needs these in its `supplementalGroups` to open the device.
