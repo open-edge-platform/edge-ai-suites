@@ -19,6 +19,7 @@ On each message:
 from __future__ import annotations
 
 import asyncio
+import ssl
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -52,6 +53,7 @@ class MqttSubscriber:
         analytics_app_id: str = "dls_vision",
         label_type_map: dict[str, str] | None = None,
         timestamp_offset_ms: int = 0,
+        tls_context: ssl.SSLContext | None = None,
     ) -> None:
         """Subscribe to MQTT and dispatch messages until cancelled.
 
@@ -84,7 +86,7 @@ class MqttSubscriber:
 
         while True:
             try:
-                async with aiomqtt.Client(mqtt_host, port=mqtt_port) as client:
+                async with aiomqtt.Client(mqtt_host, port=mqtt_port, tls_context=tls_context) as client:
                     await client.subscribe(topic_filter)
                     logger.info("mqtt_subscriber_subscribed", topic_filter=topic_filter)
                     async for message in client.messages:

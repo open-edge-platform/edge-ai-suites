@@ -25,6 +25,7 @@ so the generic ``/v1/analytics-apps/{app_id}/…`` routes work without any LVC-s
 from __future__ import annotations
 
 import asyncio
+import ssl
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -43,6 +44,16 @@ if TYPE_CHECKING:
     from plugin.core.pipeline.orchestrator import Orchestrator
 
 logger = structlog.get_logger(__name__)
+
+
+def _make_tls_context(cfg) -> ssl.SSLContext | None:
+    """Build an SSLContext from MqttConfig TLS fields, or None when TLS is disabled."""
+    if not cfg.tls_enabled:
+        return None
+    ctx = ssl.create_default_context(cafile=cfg.tls_ca_bundle or None)
+    if cfg.tls_client_cert and cfg.tls_client_key:
+        ctx.load_cert_chain(certfile=cfg.tls_client_cert, keyfile=cfg.tls_client_key)
+    return ctx
 
 
 class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
@@ -95,6 +106,7 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
             subscriber.run(
                 mqtt_host=orchestrator.config.mqtt.host,
                 mqtt_port=orchestrator.config.mqtt.port,
+                tls_context=_make_tls_context(orchestrator.config.mqtt),
             ),
             name=f"lvc-mqtt-subscriber-{self.app_id}",
         )

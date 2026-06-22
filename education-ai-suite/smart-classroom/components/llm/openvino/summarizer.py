@@ -85,8 +85,8 @@ class Summarizer(BaseSummarizer):
                             max_new_tokens=max_new_tokens,
 
                             # sampling
-                            do_sample=True,
-                            temperature=max(self.temperature, 0.1),
+                            do_sample=False, # If True, make sure temperature is set to a higher-value; example:0.7
+                            temperature=max(self.temperature, 0.0),  # Ensure temperature is non-negative
                             top_p=0.9,
                             top_k=50,
 
@@ -125,8 +125,8 @@ class Summarizer(BaseSummarizer):
                         input_ids=inputs.input_ids,
                         max_new_tokens=max_new_tokens,
 
-                        do_sample=True,
-                        temperature=max(self.temperature, 0.1),
+                        do_sample=False, # If True, make sure temperature is set to a higher-value; example:0.7
+                        temperature=max(self.temperature, 0.0),  # Ensure temperature is non-negative
                         top_p=0.9,
                         top_k=50,
 

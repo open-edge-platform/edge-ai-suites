@@ -22,12 +22,12 @@ repositories=(
 )
 
 images=(
-  eclipse-mosquitto:2.0.21
-  intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1
-  bluenviron/mediamtx:1.11.3
-  coturn/coturn:4.7
-  grafana/grafana:11.5.4
-  nodered/node-red:3.1
+  eclipse-mosquitto:2.0.22
+  intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+  bluenviron/mediamtx:1.19.1
+  coturn/coturn:4.13.1
+  grafana/grafana:13.0.2
+  nodered/node-red:5.0.0
 )
 
 NAME="Visual AI Demo Kit"

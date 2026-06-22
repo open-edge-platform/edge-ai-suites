@@ -1,10 +1,6 @@
-(main_application)=
-
 # Main Application
 
 The specific use case application, also known as the decisional program, must adhere to certain rules to integrate with the RVC Framework.
-
-(main_application_development)=
 
 ## Main Application Development
 

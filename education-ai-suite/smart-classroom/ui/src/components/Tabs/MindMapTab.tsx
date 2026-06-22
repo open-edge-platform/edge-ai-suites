@@ -31,12 +31,74 @@ declare global {
 
 const activeMindmapSessions = new Set<string>();
 
+const sanitizeNode = (node: any, fallbackIndex: number = 0, seen = new Set<string>()): any => {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return null;
+
+  // Recover id from typo keys like "id:", "id：", " id", "Id"
+  let id = node.id;
+  if (!id || typeof id !== 'string') {
+    const candidateKeys = Object.keys(node).filter(
+      k => /^[\s]*id[\s:：.]*$/i.test(k) && k !== 'id'
+    );
+    const candidate = candidateKeys.length ? node[candidateKeys[0]] : null;
+    id = (candidate && typeof candidate === 'string') ? candidate : `node_${fallbackIndex}_${Date.now()}`;
+  }
+  id = id.trim();
+
+  // Deduplicate ids — jsMind requires unique ids across the tree
+  if (seen.has(id)) {
+    id = `${id}_dup_${fallbackIndex}`;
+  }
+  seen.add(id);
+
+  // Recover topic from typo keys like "topic:", "Topic", "label", "text", "name"
+  let topic = node.topic;
+  if (!topic || typeof topic !== 'string') {
+    const topicAliases = Object.keys(node).find(
+      k => /^[\s]*(topic[\s:：.]*|label|text|title|name)[\s]*$/i.test(k) && k !== 'topic'
+    );
+    const candidate = topicAliases ? node[topicAliases] : null;
+    topic = (candidate && typeof candidate === 'string') ? candidate : id;
+  }
+  topic = topic.trim() || id;
+
+  // Truncate excessively long topics that break rendering
+  if (topic.length > 200) {
+    topic = topic.slice(0, 197) + '...';
+  }
+
+  const sanitized: any = { id, topic };
+
+  // Preserve direction if present (left/right for jsMind layout)
+  if (node.direction && typeof node.direction === 'string') {
+    sanitized.direction = node.direction;
+  }
+
+  // Recover children from typo keys like "children:", "child", "nodes", "sub"
+  let children = node.children;
+  if (!Array.isArray(children)) {
+    const childAliases = Object.keys(node).find(
+      k => /^[\s]*(children[\s:：.]*|child|nodes|sub|subtopics)[\s]*$/i.test(k) && k !== 'children'
+    );
+    children = childAliases ? node[childAliases] : undefined;
+  }
+
+  if (Array.isArray(children)) {
+    sanitized.children = children
+      .map((child: any, i: number) => sanitizeNode(child, i, seen))
+      .filter(Boolean);
+  }
+
+  return sanitized;
+};
+
 const validateJsMindData = (data: any): boolean => {
   try {
     if (!data || typeof data !== 'object') return false;
     if (!data.meta || !data.format || !data.data) return false;
     if (data.format !== 'node_tree') return false;
     if (!data.data.id || !data.data.topic) return false;
+    data.data = sanitizeNode(data.data);
     return true;
   } catch (error) {
     return false;

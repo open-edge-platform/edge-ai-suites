@@ -57,7 +57,7 @@ Download the YOLO11s model using the DL Streamer container:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.1.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.1.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolo11s"
 ```
 
@@ -78,12 +78,12 @@ docker run -it --rm \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
-  openvino/ubuntu24_dev:2026.0.0
+  openvino/ubuntu24_dev:2026.2.0
 ```
 
 ```bash
 # Run the sample application
-/opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+/opt/intel/openvino_2026.2.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
 -m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
 -data_shape "x[1,3,640,640]" \
 -d CPU
@@ -109,8 +109,8 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user=root \
-  openvino/ubuntu24_dev:2026.0.0 \
-  /opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+  openvino/ubuntu24_dev:2026.2.0 \
+  /opt/intel/openvino_2026.2.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
   -shape "[1,3,640,640]" \
   -d GPU
@@ -126,8 +126,8 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user=root \
-  openvino/ubuntu24_dev:2026.0.0 \
-  /opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+  openvino/ubuntu24_dev:2026.2.0 \
+  /opt/intel/openvino_2026.2.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
   -m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
   -shape "[1,3,640,640]" \
   -d NPU
