@@ -1,5 +1,5 @@
 <!--
-Copyright (C) 2025 Intel Corporation
+Copyright (C) 2026 Intel Corporation
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -7,14 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 # GMSL Ingestion Guide icamera-usm
 
 
-This tutorial will cover getting GMSL RGB camera stream working as a ros node. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
+This tutorial will cover getting GMSL RGB camera stream working as a ROS node to enable quick ingest of GMSL RBG Camera streams. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
 
 
 The current tested cameras for this tutorials are the following
 [RealSense™ Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra/) and
 [D3CMCXXX-115-084](https://www.d3embedded.com/product/isx031-smart-camera-medium-fov-gmsl2-unsealed/).
 
-The user can enable up to 6 camera stream of either four `D3CMCXXX-115-084` or 2x `RealSense™ Depth Camera D457` on a single CSI port. If the user can mix and match the cameras, for example putting 4 `D3CMCXXX-115-084` on CSI port 0, and two `RealSense™ Depth Camera D457` on CSI port 2.
+You can enable up to 6 camera streams of either four `D3CMCXXX-115-084` or 2x `RealSense™ Depth Camera D457` on a single CSI port. You can mix and match the cameras as well, for example putting 4 `D3CMCXXX-115-084` on CSI port 0, and two `RealSense™ Depth Camera D457` on CSI port 2.
 
 
 ## Validate Cameras
@@ -27,7 +27,7 @@ ls -la /dev/video-*
 
 This should show simplified name symbolic links pointing to the original device files.
 
-if the cameras are `RealSense™ Depth Camera D457` the result of the command should look like the following 
+If the cameras are `RealSense™ Depth Camera D457` the result of the command should look like the following:
 
 ```bash
 lrwxrwxrwx 1 root root 11 Jun 15 15:49 /dev/video-rs-color-0 -> /dev/video2
@@ -53,7 +53,7 @@ lrwxrwxrwx 1 root root 11 Jun 15 16:12 /dev/video-isx031-b-0 -> /dev/video2
 lrwxrwxrwx 1 root root 11 Jun 15 16:12 /dev/video-isx031-c-0 -> /dev/video3
 lrwxrwxrwx 1 root root 11 Jun 15 16:12 /dev/video-isx031-d-0 -> /dev/video4
 ```
-This one shows that I have four `D3CMCXXX-115-084` connected.
+This one shows that there are four `D3CMCXXX-115-084` connected.
 
 
 ## Install icamera
@@ -88,7 +88,7 @@ This will find all the available GMSL cameras that are identified and setup by t
 
 ## Download the models
 
-To run a example that uses the shared memory or legacy which uses the classical publish, use will need to first download the yolov8 models. The following script will download the models and place them in the destination folder using the `--dest` flag.
+To run a example that uses the shared memory or legacy which uses the classical publish, you will need to first download the yolov8 models. The following script will download the models and place them in the destination folder using the `--dest` flag.
 
 ```bash
 source /opt/ros/$ROS_DISTRO/share/icamera_usm/generate_ai_models.sh --dest ~/test
@@ -103,21 +103,21 @@ By default the example only connectes to `camera0` to inference on multiple came
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1
 ```
+The default model `YOLOv8n` is a smaller model and is not as accurate, if you are not getting the results you expect then change the model that is being used.
+There are three models downloaded with the `generate_ai_models.sh` script: `yolov8n`,`yolov8s`, `yolov8m`.
 
-The default  model that is being used is YOLOv8n this is the smaller version of the model and is not as accurate.
-User can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg
+You can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg:
 
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml 
 ```
 
-
-You can use RVIZ to visualize the output of the inference. First create a new RVIZ file using `vim`.
+You can use RVIZ to visualize the output of the inference. First create a new RVIZ file using `vim`:
 
 ```bash
 vim inference-visualize.rviz
 ```
-Copy the following configuration into `inference-visualize.rviz`
+Copy the following configuration into `inference-visualize.rviz`:
 
 ```yaml
 Panels:
