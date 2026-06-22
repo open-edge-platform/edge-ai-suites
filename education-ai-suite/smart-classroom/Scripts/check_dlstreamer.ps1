@@ -237,6 +237,7 @@ function Install-DLStreamerDLLs {
         Write-Host ""
 
         Write-Host "  Step 2: Run Installer" -ForegroundColor Yellow
+        Write-Host "    In the installer wizard, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
 
         Write-Host "    Starting DL Streamer installer..." -ForegroundColor Gray
         try {
@@ -332,6 +333,7 @@ if ($result.Status -eq 'Found') {
         if ($detectedDlsVersion -lt [version]$RequiredVersion) {
             Write-Host "  [WARN] DL Streamer $dlStreamerVersion is older than the required $RequiredVersion" -ForegroundColor Yellow
             Write-Host ""
+            Write-Host "  During installation, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
             $upgradeChoice = Read-Host "  Reinstall DL Streamer $RequiredVersion now? (Y/N)"
             if ($upgradeChoice -match "^[Yy]") {
                 if (Install-DLStreamerDLLs) {
@@ -375,6 +377,7 @@ if (-not $dlStreamerFound) {
     Write-Host "  Latest verified version: $RequiredVersion" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  This will download and run the DL Streamer $RequiredVersion installer." -ForegroundColor Gray
+    Write-Host "  During installation, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
     Write-Host ""
     $installChoice = Read-Host "  Install DL Streamer $RequiredVersion now? (Y/N)"
 
