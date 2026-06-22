@@ -1,6 +1,6 @@
 ---
 name: classroom_qa
-description: "Use for Smart Classroom questions: topics covered, class summary, today's class, a specific date, absentee catch-up, transcript details, student engagement, participation, hand raises, or class statistics from /home/intel/smart_classroom_incoming."
+description: "Use for Smart Classroom questions: topics covered, class summary, today's class, a specific date, absentee catch-up, transcript details, student engagement, participation, hand raises, or class statistics from $HOME/.openclaw/workspace/smart_classroom_incoming."
 
 ---
 
@@ -14,7 +14,7 @@ Data root:
 
 ```text
 
-/home/intel/smart_classroom_incoming
+$HOME/.openclaw/workspace/smart_classroom_incoming
 ```
 
 ## Required Workflow
@@ -37,7 +37,7 @@ Always use `bash` before answering.
 If a date is requested, run a command like this, replacing the two date variables:
 
 ```bash
-base=/home/intel/smart_classroom_incoming; d1=YYYY-MM-DD; d2=YYYYMMDD; find "$base" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f %p\n' 2>/dev/null | awk -v d1="$d1" -v d2="$d2" '$2 ~ "^" d1 || $2 ~ "^" d2' | sort -nr
+base=$HOME/.openclaw/workspace/smart_classroom_incoming; d1=YYYY-MM-DD; d2=YYYYMMDD; find "$base" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f %p\n' 2>/dev/null | awk -v d1="$d1" -v d2="$d2" '$2 ~ "^" d1 || $2 ~ "^" d2' | sort -nr
 
 ```
 
@@ -45,7 +45,7 @@ If no date is requested, run:
 
 ```bash
 
-find /home/intel/smart_classroom_incoming -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f %p\n' 2>/dev/null | sort -nr
+find $HOME/.openclaw/workspace/smart_classroom_incoming -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f %p\n' 2>/dev/null | sort -nr
 ```
 
 Select the newest matching folder. Folder names may have suffixes after the date; do not reject them only because of suffixes.

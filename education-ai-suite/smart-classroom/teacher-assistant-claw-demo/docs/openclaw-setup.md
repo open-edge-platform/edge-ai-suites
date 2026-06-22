@@ -7,7 +7,7 @@ The OpenClaw based agent functions as the "Teacher Assistant" persona that enabl
 │                        Teacher Assistant Demo                        │
 │  ┌──────────┐     ┌─────────────────┐    ┌──────────────────────┐    │
 │  │   SC-1   │◄───►| OpenClaw Agent  │◄──►│       Telegram       │    │
-│  └──────────┘     │                 │    │ Channel based comms  |    │   
+│  └──────────┘     │                 │    │ Channel based comms  |    │
 │  ┌──────────┐     │                 │    └──────────────────────┘    │
 │  │   SC-2   │◄───►│                 │                                │
 │  └──────────┘     │                 │    ┌──────────────────────┐    │
@@ -24,7 +24,7 @@ Note: In the figure, Smart Classroom is abbreviated as SC.
 
 ### System Requirements for OpenClaw agent
 - Ubuntu 24.04 LTS
-- Intel PTL based system 
+- Intel PTL based system
 - At least 32GB RAM
 - 100GB free disk space for models and environments
 
@@ -162,7 +162,7 @@ This script creates the following structure:
 
 ### Step 5: Run OpenClaw agent
 
-Run the following commands to start the OpenClaw agent in the terminal or in the web dashboard. 
+Run the following commands to start the OpenClaw agent in the terminal or in the web dashboard.
 
 ``` bash
 # Run the agent in the terminal
@@ -176,3 +176,4 @@ openclaw dashboard
 
 - [OpenClaw]()
 - [Smart Classroom]()
+
