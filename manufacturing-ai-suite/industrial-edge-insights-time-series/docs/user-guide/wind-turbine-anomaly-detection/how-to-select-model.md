@@ -5,6 +5,7 @@
 Select and integrate your own ML models with our time-series analytics infrastructure.
 
 **What You Can Do**:
+
 - Use any model (Random Forest, XGBoost, Neural Networks, etc.)
 - Any format (pkl, ONNX, PyTorch, TensorFlow, joblib, custom)
 - Modify UDF to load/run your model
@@ -220,6 +221,7 @@ def preprocess(df):
 ### Dataset Requirements
 
 Your dataset should contain:
+
 - **Required columns**: `wind_speed`, `grid_activepower` (or equivalent power output column)
 - **Optional columns**: `timestamp`, `wind_direction`, `temperature`, blade pitch, rotor speed
 - **Format**: CSV, Parquet, or any pandas-readable format
@@ -322,6 +324,7 @@ Update Telegraf config to read from your file:
 ### Dataset Validation Checklist
 
 Before training:
+
 - [ ] Verify column names match expected format (or update code)
 - [ ] Check data types (numeric for wind_speed and power)
 - [ ] Validate wind speed range (typically 0-25 m/s)
@@ -359,26 +362,29 @@ model = train_model(df_combined)
 Before deploying:
 
 **Accuracy**:
+
 - [ ] MAE, RMSE, R² meet targets (see criteria table)
 - [ ] Train/test gap < 5% (check overfitting)
 - [ ] Test on labeled anomalies (FP/FN rates)
 
 **Performance**:
+
 - [ ] Inference < 10ms (avg of 1000 predictions)
 - [ ] Concurrent streams work (test 10+ turbines)
 - [ ] Model loads < 5 seconds
 
 **Integration**:
+
 - [ ] Model loads correctly in UDF
 - [ ] Prediction interface works
 - [ ] Config.json updated
 - [ ] Works on target hardware
 
 **Robustness**:
+
 - [ ] Handles NaN/missing values
 - [ ] Out-of-range inputs don't crash
 - [ ] Memory usage acceptable
-
 
 **Evaluation Script**:
 
@@ -407,6 +413,7 @@ def evaluate(model, X_test, y_test):
 ## Retraining Guidelines
 
 **When to Retrain**:
+
 - MAE increases >20% from baseline
 - False positive rate >50% increase
 - New turbine model/configuration
@@ -414,6 +421,7 @@ def evaluate(model, X_test, y_test):
 - After 3-6 months new data
 
 **Process**:
+
 1. Collect 6-12 months operational data
 2. Remove maintenance periods, validate quality
 3. Train with same pipeline, compare vs current
@@ -421,6 +429,7 @@ def evaluate(model, X_test, y_test):
 5. Gradual rollout: 10% → 50% → 100%
 
 **Version Control**: `windturbine_anomaly_detector_vX.Y.<format>`
+
 - X = algorithm change
 - Y = retrain same algorithm
 
@@ -487,7 +496,7 @@ best_model = grid_search.best_estimator_
 ## Appendix: Troubleshooting
 
 | Issue | Solution |
-|-------|----------|
+| ----- | -------- |
 | High false positives | Increase `error_threshold` (0.15 default), adjust `n_steps` window |
 | Missing anomalies | Decrease threshold, improve model accuracy |
 | Slow inference (>50ms) | Reduce trees, enable Intel optimizations, simpler model |
@@ -510,22 +519,26 @@ best_model = grid_search.best_estimator_
 ## Appendix: References and Resources
 
 ### Documentation
+
 - [Training README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md)
 - [Application Config](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
 - [UDF Implementation](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
 
 ### Data Sources
-- **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)
-- Training File: `training/T1.csv`
-- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv`
+
+- **Primary Dataset**: Project-generated synthetic wind turbine SCADA dataset (see `training/generate_synthetic_dataset.py`)
+- Training File: `training/synthetic_dataset.csv`
+- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv` (subset of the generated synthetic dataset)
 
 ### Tools and Libraries
+
 - **Intel® Extension for Scikit-learn**: Performance optimization
 - **Scikit-learn**: Model training and evaluation
 - **Kapacitor**: Time series processing and UDF framework
 - **Grafana**: Visualization dashboard
 
 ### Recommended Reading
+
 - Wind Turbine Power Curve modeling techniques (Eg: https://www.mdpi.com/1996-1073/16/1/180)
 - Edge AI deployment best practices
 - Intel optimization guides for ML inference: https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html

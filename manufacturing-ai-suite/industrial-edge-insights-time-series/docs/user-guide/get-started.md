@@ -109,75 +109,6 @@ make up_mqtt_ingestion app="weld-defect-detection"
 <!--hide_directive:::
 ::::hide_directive-->
 
-### Multi-Stream Ingestion support
-
-Multi-stream ingestion enables the simultaneous processing of multiple data streams, improving throughput and scalability.
-
-To activate multi-stream ingestion, set the `num_of_streams` parameter to the required number of parallel streams when deploying the application.
-`<NUMBER_OF_STREAMS>`: Specify the number of parallel streams to run (e.g., `3` for three concurrent streams).
-
-<!--hide_directive::::{tab-set}
-:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive:sync: tab1hide_directive-->
-
-```bash
-# Deploy with OPC-UA Multi-Stream Ingestion
-export OPCUA_SERVER_PORT_MAPPING=30003-30100
-make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-
-# Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```bash
-# Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-<!--hide_directive:::
-::::hide_directive-->
-
-### Benchmarking
-
-To run benchmarking with batch processing, append `batch` to the `make` command.
-
-To enable benchmarking for Docker Compose deployment:
-
-1. Set `number_of_data_points_per_stream=<NUM_POINTS>` in the `make` command.
-2. This automatically enables benchmarking mode for Docker Compose by setting `ENABLE_BENCHMARKING=true`.
-3. The total point count passed to the Time Series Analytics Microservice (TSAM) service is derived from stream count:
-
-  `BENCHMARK_TOTAL_PTS = number_of_data_points_per_stream * num_of_streams`
-
-Eg. For Weld Defect Detection, use:
-
-```bash
-make up_mqtt_ingestion batch app=weld-defect-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
-```
-
-Example:
-
-```bash
-make up_mqtt_ingestion batch app=weld-defect-detection num_of_streams=4 number_of_data_points_per_stream=500
-```
-
-#### Notes
-
-- Ensure system resources (CPU, memory) are sufficient to support the desired number of streams.
-- For troubleshooting or monitoring, use `make status` to verify container health and logs.
-
-  > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
-  > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
-  > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
-
-  ```sh
-  make status
-  ```
-
 ### Running User Defined Function(UDF) inference on GPU
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
@@ -187,23 +118,23 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 - **For Wind Turbine Anomaly Detection**:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 - **For Weld Defect Detection**:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 ## Verify the Output Results
@@ -310,7 +241,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 
    - One will see the below output.
 
-     ![Anomaly prediction in weld sensor data](./_assets/anomaly_detection_weld.png)
+     ![Anomaly prediction in weld sensor data](./_assets/defect_detection_weld.png)
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -342,6 +273,9 @@ guide to learn how to deploy the sample application on a k8s cluster using Helm.
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [How to configure OPC-UA/MQTT alerts](./how-to-guides/configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
 - [How to configure custom UDF deployment package](./how-to-guides/configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
+- [How to enable multi-stream ingestion](./how-to-guides/multi-stream-ingestion.md): Guide to deploy sample apps with multiple parallel ingestion streams
+- [How to run benchmarking](./how-to-guides/benchmarking.md): Guide to benchmark ingestion and UDF processing with stream and batch modes
+
 
 <!--hide_directive
 :::{toctree}

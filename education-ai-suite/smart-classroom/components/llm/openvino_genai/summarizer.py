@@ -16,6 +16,13 @@ class Summarizer(BaseSummarizer):
         logger.info(f"Loading Model: model name={self.model_name}, model path={ensure_model.get_model_path()}, device={self.device}")
         self.tokenizer = AutoTokenizer.from_pretrained(ensure_model.get_model_path())
 
+        think_tokens = ["<think>", "</think>"]
+        existing_specials = set(self.tokenizer.additional_special_tokens or [])
+        missing_specials = [t for t in think_tokens if t not in existing_specials]
+        if missing_specials:
+            self.tokenizer.add_special_tokens({"additional_special_tokens": missing_specials})
+            logger.info("Registered think tags as special tokens: %s", missing_specials)
+
     def generate(self, prompt, stream: bool = True):
         if stream:
             streamer = YieldingTextStreamer(self.tokenizer)
@@ -68,7 +75,11 @@ class Summarizer(BaseSummarizer):
             
     def _load_model(self):
         logger.info("Loading model instance...")
-        return ov_genai.LLMPipeline(ensure_model.get_model_path(), device=self.device)
+        return ov_genai.LLMPipeline(
+            ensure_model.get_model_path(),
+            device=self.device,
+            **{"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"},
+        )
 
     def _destroy_model(self, model):
         try:

@@ -15,7 +15,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
-> Note: DL Streamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+> Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
 **Run your shell with admin privileges before starting the application**
 
@@ -53,24 +53,6 @@ If you need OCR functionality for document text extraction, enable OCR in `confi
 ```yaml
 ocr:
   enabled: true
-```
-
-### F. Install Content Search Dependencies
-
-Run the installation script in **PowerShell** with Administrator privileges:
-
-```PowerShell
-cd smart-classroom\content_search
-.\install.ps1
-```
-
-> **Note:** Restart your PowerShell terminal after installation to apply new environment variables.
-
-Verify the installation:
-
-```PowerShell
-tesseract --version
-pdftoppm -v
 ```
 
 ## Step 2: Configuration
@@ -146,10 +128,6 @@ This means your pipeline server has started successfully and is ready to accept 
 ## Step 4: Set Up Content Search
 
 Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
-
-> **Prerequisite:** Complete [Step 1F](#f-install-content-search-dependencies) first.
-
-Open a new **Powershell** window:
 
 ### A. Create Content Search Virtual Environment
 
@@ -239,9 +217,8 @@ Pyannote diarization models require gated access.
 
 Request access here:
 
-[Pyannote Speaker Diarization v3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
+[Pyannote Speaker Diarization Community v1](https://huggingface.co/pyannote/speaker-diarization-community-1)
 
-[Pyannote segmentation v3.0](https://huggingface.co/pyannote/segmentation-3.0)
 
 Click "Request Access" on the model page and wait for approval.
 
@@ -298,7 +275,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 
@@ -354,3 +331,10 @@ To uninstall the application, follow these steps:
 
 :::
 hide_directive-->
+
+## Learn More
+
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
+- [Get Started](./get-started.md): Quick installation and setup instructions.
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.

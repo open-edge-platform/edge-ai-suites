@@ -11,10 +11,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (leave empty to use current branch)'
+        description: 'Branch or tag to checkout (default: main)'
         required: false
         type: string
-        default: ''
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -29,7 +29,6 @@ on:
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
-          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
@@ -46,10 +45,10 @@ on:
   workflow_call:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (leave empty to use current branch)'
+        description: 'Branch or tag to checkout (default: main)'
         required: false
         type: string
-        default: ''
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -64,7 +63,6 @@ on:
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
-          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
@@ -93,21 +91,31 @@ jobs:
     steps:
       - name: Print workflow inputs
         env:
-          TAG: ${{ inputs.tag || github.ref }}
+          TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
-          echo "tag/ref         : $TAG"
+          echo "tag             : $TAG"
           echo "build           : $BUILD"
           echo "tests           : $TESTS"
           echo "skip_long_tests : $SKIP_LONG_TESTS"
 
       - name: Checkout edge-ai-suites repository
+        id: checkout_current_tag
+        continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          # Use current repository (supports forks) and specified tag/branch or current ref
-          ref: ${{ inputs.tag || github.ref }}
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.tag || github.ref_name }}
+          persist-credentials: false
+
+      - name: Checkout edge-ai-suites repository - fallback to main
+        if: steps.checkout_current_tag.outcome == 'failure'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}
+          ref: main
           persist-credentials: false
 
       - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
@@ -164,15 +172,15 @@ jobs:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
         run: |
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
-
+          
           # Determine which sample apps need helm charts based on selected tests
           # Only generate for Helm tests, not Docker tests
           WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security"
           WELD_HELM_TESTS="test_helm_deployment_weld_anomaly"
-
+          
           GENERATE_WIND=false
           GENERATE_WELD=false
-
+          
           # Parse comma-separated test input
           IFS=',' read -ra SELECTED <<< "$TESTS"
           for t in "${SELECTED[@]}"; do
@@ -182,50 +190,50 @@ jobs:
             # and test_helm_deployment_wind_turbine::test_gen_chart
             test_file="${t%%::*}"
             test_file="${test_file%.py}"
-
+            
             # Check if it's a wildcard selector (generate all helm charts)
             if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
               GENERATE_WIND=true
               GENERATE_WELD=true
               break
             fi
-
+            
             # Check if test is wind helm-related
             if echo "$WIND_HELM_TESTS" | grep -qw "$test_file"; then
               GENERATE_WIND=true
             fi
-
+            
             # Check if test is weld helm-related
             if echo "$WELD_HELM_TESTS" | grep -qw "$test_file"; then
               GENERATE_WELD=true
             fi
           done
-
+          
           # Generate helm charts only for the helm tests being run
           if [[ "$GENERATE_WIND" == "true" ]]; then
             echo "Generating Helm chart package for wind-turbine-anomaly-detection..."
-            make gen_helm_charts app=wind-turbine-anomaly-detection
+            make gen_helm_charts_targz app=wind-turbine-anomaly-detection
           fi
-
+          
           if [[ "$GENERATE_WELD" == "true" ]]; then
             echo "Generating Helm chart package for weld-defect-detection..."
-            make gen_helm_charts app=weld-defect-detection
+            make gen_helm_charts_targz app=weld-defect-detection
           fi
-
+          
           if [[ "$GENERATE_WIND" == "false" && "$GENERATE_WELD" == "false" ]]; then
             echo "No helm tests selected, skipping helm chart generation"
           fi
-
-      - name: Install nmap
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y nmap
 
       - name: Install k3s
         run: |
           curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
           sh -s - --disable=traefik --write-kubeconfig-mode=644
           echo "KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> "$GITHUB_ENV"
+
+      - name: Install nmap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nmap
 
       - name: Load images into k3s
         if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
@@ -235,6 +243,56 @@ jobs:
               echo "Importing image: $image"
               docker save "$image" | sudo k3s ctr images import -
           done
+
+      - name: Cleanup cluster before timeseries tests
+        run: |
+          echo "=== Cleaning up cluster resources before timeseries tests ==="
+
+          # Uninstall all helm releases
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          # Delete test-related namespaces (ts-sample-app is used by security tests)
+          echo "Cleaning up test namespaces..."
+          for ns in ts-sample-app weld wind timeseries; do
+            if kubectl get namespace "$ns" 2>/dev/null; then
+              echo "Deleting namespace: $ns"
+              kubectl delete namespace "$ns" --wait=true --timeout=5m 2>/dev/null || true
+            fi
+          done
+
+          # Delete all PVCs in default namespace
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          # Wait for all pods to terminate in default namespace
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          # Force delete any stuck pods
+          echo "Force deleting any stuck pods..."
+          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
+            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          done
+
+          # Clean up any leftover docker resources
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          # Give cluster time to stabilize
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          # Verify cluster is healthy
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Cluster cleanup complete ==="
 
       - name: Run Time Series Sample Apps functional tests
         env:

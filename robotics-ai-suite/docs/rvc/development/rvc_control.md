@@ -1,5 +1,3 @@
-(rvc_control_api)=
-
 # RVC Control API
 
 <!--hide_directive

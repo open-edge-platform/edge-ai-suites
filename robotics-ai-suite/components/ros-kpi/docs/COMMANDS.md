@@ -66,6 +66,7 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--pid-only` | Process-level only, no thread details |
 | `--gpu` | Enable Intel GPU monitoring (auto-detected when hardware present) |
 | `--npu` | Enable Intel NPU monitoring via sysfs |
+| `--power` | Enable Intel RAPL CPU package power monitoring (writes cpu_power.log) |
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
@@ -129,6 +130,72 @@ uv run python src/visualize_resources.py resource.log --summary   # text table o
 ```
 
 > CPU% scale: 100% = 1 full core. Use the **Avg Cores** column in `--summary` output for a human-readable reading.
+
+### visualize_thermal.py
+
+Renders CPU/GPU temperature, throttle state, and RAPL power from `cpu_power.log` and `gpu_usage.log`.
+
+```bash
+uv run python src/visualize_thermal.py <session_dir> --save   # writes 3 PNGs to visualizations/
+uv run python src/visualize_thermal.py <session_dir> --show   # interactive window
+uv run python src/visualize_thermal.py                        # auto-uses latest session
+```
+
+Output files written when `--save` is used:
+
+| File | Contents |
+|------|----------|
+| `thermal_throttle.png` | Combined 3-panel overview (temp + throttle + power) |
+| `thermal_temperature.png` | CPU / GPU temperature over time |
+| `thermal_power.png` | RAPL CPU package power (W) over time |
+
+---
+
+## Scenario Benchmark Runner
+
+`benchmark_runner.sh` is the generic orchestrator used by all scenario run scripts.
+It is driven entirely by a YAML run profile (`config/*.yaml`).
+
+```bash
+bash src/benchmark_runner.sh --run-config config/wandering_run.yaml
+bash src/wandering_run.sh --record --plot      # record KPI bag + generate plots
+bash src/wandering_run.sh --show               # record + plot + auto-open HTML report
+bash src/wandering_run.sh --timeout 120        # hard stop after 2 min
+bash src/wandering_run.sh --run-config config/wandering_run.yaml --show
+```
+
+| Flag | Description |
+|------|-------------|
+| `--record` | Record KPI topics to an MCAP bag |
+| `--plot` | Save trigger-timeline PNG charts after analysis |
+| `--show` | Implies `--record --plot`; auto-opens `make results` at end of run |
+| `--timeout SECS` | Override YAML stop timeout |
+| `--goals N` | Stop after N goal events |
+| `--output-parent DIR` | Session parent directory |
+| `--side-terminals` | Open htop + qmassa in Terminator windows |
+
+**Progress stages printed during each run:**
+
+```text
+[1/6] Pre-run cleanup
+[2/6] Launching <scenario> simulation
+[3/6] Starting monitor stack
+[4/6] Running benchmark
+[5/6] Post-Run Analysis      (scenario-specific, e.g. fastmapping log parse)
+[6/6] Trigger-Latency Analysis
+```
+
+**Make targets** (plain targets now default to `--record --plot`):
+
+```bash
+make wandering                              # single run with record + plot
+make wandering SHOW=1                       # single run + auto-open report
+make wandering-benchmark RUNS=5 TIMEOUT=120 # 5-run benchmark + aggregate
+make picknplace-run                         # single run with record + plot
+make fastmapping                            # single run with record + plot
+```
+
+---
 
 ### gpu_pid_analyzer.py
 

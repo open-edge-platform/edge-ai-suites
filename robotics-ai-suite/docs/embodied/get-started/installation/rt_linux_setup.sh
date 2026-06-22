@@ -8,7 +8,20 @@ set -euo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OS_SETUP_SCRIPT="${SCRIPT_DIR}/../prerequisites/os_setup_install.sh"
+OS_SETUP_SCRIPT=""
+
+resolve_os_setup_script() {
+  local candidate
+  for candidate in "${SCRIPT_DIR}/os_setup_install.sh" "${SCRIPT_DIR}/../prerequisites/os_setup_install.sh"; do
+    if [[ -x "$candidate" ]]; then
+      OS_SETUP_SCRIPT="$candidate"
+      return 0
+    fi
+  done
+
+  echo "Cannot find executable os_setup_install.sh in ${SCRIPT_DIR} or ${SCRIPT_DIR}/../prerequisites" >&2
+  exit 1
+}
 
 KERNEL_FLAVOR="rt"
 RUN_OS_SETUP=true
@@ -150,10 +163,7 @@ log_skipped_section "Use Cache Allocation Technology example (manual/platform sp
 log_skipped_section "Use Dynamic Voltage and Frequency example (manual/platform specific)"
 
 if [[ "$RUN_OS_SETUP" == true ]]; then
-  if [[ ! -x "$OS_SETUP_SCRIPT" ]]; then
-    echo "Cannot execute OS setup script: $OS_SETUP_SCRIPT" >&2
-    exit 1
-  fi
+  resolve_os_setup_script
 
   log "Running prerequisite OS setup script"
   os_args=()

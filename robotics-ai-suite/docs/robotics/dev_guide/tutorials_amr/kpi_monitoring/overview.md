@@ -68,7 +68,7 @@ CPU, memory, and I/O statistics at thread or process level.
 ### monitor_stack.py — Unified Entry Point
 
 ```bash
-uv run python src/monitor_stack.py [OPTIONS]
+uv run src/monitor_stack.py [OPTIONS]
 ```
 
 | Option | Description |

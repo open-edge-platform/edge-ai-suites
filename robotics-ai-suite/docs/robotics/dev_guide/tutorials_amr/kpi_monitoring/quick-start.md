@@ -72,29 +72,29 @@ export ROS_DOMAIN_ID=0
 
 ```bash
 # Quick 30-second check
-uv run python src/monitor_stack.py --duration 30
+uv run src/monitor_stack.py --duration 30
 
 # Full 60-second session
-uv run python src/monitor_stack.py --duration 60
+uv run src/monitor_stack.py --duration 60
 
 # Extended session (5 minutes)
-uv run python src/monitor_stack.py --duration 300
+uv run src/monitor_stack.py --duration 300
 ```
 
 ### Monitor a Specific Node
 
 ```bash
-uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --duration 120
+uv run src/monitor_stack.py --node /slam_toolbox --session my_session --duration 120
 ```
 
 ### Remote Monitoring
 
 ```bash
 # Basic remote session
-./grafana-monitor.sh --remote-ip 192.168.1.100
+uv run src/monitor_stack.py --remote-ip 192.168.1.100
 
 # With specific node and user
-./grafana-monitor.sh --remote-ip 192.168.1.100 --remote-user ubuntu --node /slam_toolbox
+uv run src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ubuntu --node /slam_toolbox
 ```
 
 > **Note:** Allow 30–60 seconds for DDS discovery to complete before topic data
@@ -125,9 +125,9 @@ monitoring_sessions/
 Useful session commands:
 
 ```bash
-uv run python src/monitor_stack.py --list-sessions   # List all previous sessions
-uv run python src/visualize_timing.py <session>/graph_timing.csv --show   # Re-visualize
-uv run python src/analyze_trigger_latency.py         # Analyze trigger latency
+uv run src/monitor_stack.py --list-sessions   # List all previous sessions
+uv run src/visualize_timing.py <session>/graph_timing.csv --show   # Re-visualize
+uv run src/analyze_trigger_latency.py         # Analyze trigger latency
 ```
 
 ## Advanced Usage
@@ -135,11 +135,17 @@ uv run python src/analyze_trigger_latency.py         # Analyze trigger latency
 ### Benchmarking
 
 ```bash
+# Single run with recording and plots (default)
+bash src/wandering_run.sh
+
+# Single run + auto-open HTML report in browser
+bash src/wandering_run.sh --show
+
 # Run Wandering benchmark (5 runs, 180s each)
-for i in $(seq 1 5); do bash src/wandering_run.sh --timeout 180; done
+make wandering-benchmark RUNS=5 TIMEOUT=180
 
 # Run Pick-n-Place benchmark (5 runs)
-for i in $(seq 1 5); do bash src/picknplace_run.sh; done
+make picknplace-benchmark RUNS=5
 ```
 
 ### Grafana Dashboard

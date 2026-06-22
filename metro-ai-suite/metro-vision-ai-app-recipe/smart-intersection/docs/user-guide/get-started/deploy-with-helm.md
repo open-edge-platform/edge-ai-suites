@@ -67,6 +67,12 @@ configured Kubernetes cluster.
   kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
   ```
 
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
+  ```
+
   Verify the GPU and NPU resources are advertised on nodes:
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
@@ -96,10 +102,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.19.0-rc2
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.19.0
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.19.0-rc2.tgz
+tar -xvf smart-intersection-1.19.0.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart

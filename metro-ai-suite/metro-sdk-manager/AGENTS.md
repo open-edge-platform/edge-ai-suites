@@ -53,7 +53,7 @@ metro-sdk-manager/
 - **Install Scripts**: Bash (strict mode: `set -euo pipefail`)
 - **Docker Images**: Each SDK defines its images array in the install script
 - **Source Repos**: GitHub repos (edge-ai-libraries, edge-ai-suites) cloned at specific release branches
-- **Current Release Branch**: `release-2026.1.0` (RC1) — Docker images use `-rc1` suffix tags where available
+- **Current Release Branch**: `release-2026.1.0` (latest available release branch) — Docker images are pinned to the latest available stable tags where possible
 - **Linting**: ShellCheck, markdownlint, doc8, pylint, black, yamllint, reuse (license), Trivy
 - **Build System**: GNU Make with Python virtualenv (provided by CI; `Makefile` and `requirements.txt` are gitignored)
 

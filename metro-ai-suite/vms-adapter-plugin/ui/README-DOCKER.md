@@ -47,8 +47,8 @@ All routing is handled by `nginx.conf` inside the container:
 
 ### Port Configuration
 
-- **Container Port**: 80 (nginx default)
-- **Host Port**: `UI_PORT` env var (default: `3100`)
+- **Container Port**: 443 (nginx HTTPS)
+- **Host Port**: `UI_HTTPS_PORT` env var (default: `3443`)
 
 ## Usage
 
@@ -68,7 +68,7 @@ docker compose down -v && docker compose up -d
 docker compose logs -f ui
 
 # Check health
-curl http://localhost:3100/health
+curl -k https://localhost:3443/health
 ```
 
 ### Standalone docker run
@@ -82,7 +82,7 @@ docker build -t vms-adapter-ui ./ui
 
 docker run -d \
   --name vms-adapter-ui \
-  -p 3100:80 \
+   -p 3443:443 \
   --add-host=host.docker.internal:host-gateway \
   vms-adapter-ui
 ```
@@ -97,7 +97,7 @@ Configure via `vms-adapter/.env` (see `.env.example`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `UI_PORT` | `3100` | Host port the UI is exposed on |
+| `UI_HTTPS_PORT` | `3443` | Host HTTPS port the UI is exposed on |
 | `VITE_MEDIAMTX_BASE` | *(unset — falls back to `window.location.hostname:8889`)* | Browser-reachable MediaMTX base URL for the iframe player |
 
 The nginx backend proxy target (`http://backend:8080`) is resolved via Docker Compose
@@ -116,15 +116,15 @@ is only used for the `/whep/` MediaMTX proxy.
 
 ```bash
 # Health check
-curl http://localhost:3100/health
+curl -k https://localhost:3443/health
 # Expected: healthy
 
 # UI is serving
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3100/
+curl -ks -o /dev/null -w "%{http_code}" https://localhost:3443/
 # Expected: 200
 
 # API proxy (cameras)
-curl http://localhost:3100/v1/cameras
+curl -k https://localhost:3443/v1/cameras
 # Expected: JSON array
 ```
 
@@ -132,7 +132,7 @@ curl http://localhost:3100/v1/cameras
 
 ### Port Already in Use
 
-Set `UI_PORT` in `.env` to a free port, then `docker compose up -d`.
+Set `UI_HTTPS_PORT` in `.env` to a free port, then `docker compose up -d`.
 
 ### API Proxy Not Working
 
@@ -145,7 +145,7 @@ Set `UI_PORT` in `.env` to a free port, then `docker compose up -d`.
 
 1. Check logs: `docker compose logs ui`
 2. Verify image built: `docker images vms-adapter-ui`
-3. Check for port conflicts: `ss -tlnp | grep 3100`
+3. Check for port conflicts: `ss -tlnp | grep 3443`
 
 ## Production Deployment
 
@@ -157,7 +157,7 @@ Set `UI_PORT` in `.env` to a free port, then `docker compose up -d`.
 
 2. **Use Docker Compose** (already configured):
    - `vms-adapter/docker-compose.yml` defines all services with restart policies
-   - Adjust `UI_PORT`, `BACKEND_PORT` in `.env` as needed
+   - Adjust `UI_HTTPS_PORT` in `.env` as needed
 
 3. **Health checks**: The container has a built-in healthcheck on `/health`.
 

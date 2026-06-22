@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("hubert-ecg-convert")
 
 
-def _load_hubert_ecg_model_cfg() -> tuple[str, str, Path]:
-    """Return (model_id, model_name, target_dir) for HuBERT-ECG from model-config.yaml.
+def _load_hubert_ecg_model_cfg() -> tuple[Path, str, Path]:
+    """Return (source_dir, model_name, target_dir) for HuBERT-ECG from model-config.yaml.
 
     We expect model-config.yaml to define an ai-ecg.models entry with
     `source: hubert-ecg`. Its `name` field is used as the IR base
@@ -53,20 +53,20 @@ def _load_hubert_ecg_model_cfg() -> tuple[str, str, Path]:
         )
 
     m = hubert_models[0] or {}
-    model_id = m.get("model_id")
+    source_dir = m.get("source_dir")
     name = m.get("name")
     target_dir = m.get("target_dir")
 
-    if not name or not target_dir:
+    if not source_dir or not name or not target_dir:
         raise ValueError(
-            "HuBERT-ECG ai-ecg.models entry must define both name and target_dir in model-config.yaml."
+            "HuBERT-ECG ai-ecg.models entry must define source_dir, name, and target_dir in model-config.yaml."
         )
 
-    return str(model_id), str(name), Path(str(target_dir))
+    return Path(str(source_dir)), str(name), Path(str(target_dir))
 
 
 def main() -> int:
-    model_id, model_name, target_dir = _load_hubert_ecg_model_cfg()
+    source_dir, model_name, target_dir = _load_hubert_ecg_model_cfg()
     target_dir.mkdir(parents=True, exist_ok=True)
 
     ov_model_path = target_dir / f"{model_name}.xml"
@@ -75,8 +75,14 @@ def main() -> int:
         logger.info("HuBERT-ECG IR already exists at %s, skipping conversion", ov_model_path)
         return 0
 
-    logger.info("Loading HuBERT-ECG backbone '%s' from Hugging Face", model_id)
-    hubert = AutoModel.from_pretrained(model_id, trust_remote_code=True)
+    if not source_dir.exists():
+        raise FileNotFoundError(
+            f"Missing manually staged HuBERT-ECG source directory: {source_dir}. "
+            "Please place the model files before running make run."
+        )
+
+    logger.info("Loading HuBERT-ECG backbone from local directory '%s'", source_dir)
+    hubert = AutoModel.from_pretrained(str(source_dir), trust_remote_code=True, local_files_only=True)
     hubert.eval()
 
     logger.info("Converting HuBERT-ECG to OpenVINO IR at %s", ov_model_path)

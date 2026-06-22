@@ -1,5 +1,3 @@
-(model-superpoint)=
-
 # Feature Extraction Model: SuperPoint
 
 SuperPoint is a self-supervised framework for interest point detection and description in images, suitable for a large

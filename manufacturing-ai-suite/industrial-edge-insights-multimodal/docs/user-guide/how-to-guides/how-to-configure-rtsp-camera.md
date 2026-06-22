@@ -27,10 +27,10 @@ sudo apt install -y \
 
 Update the RTSP URL in the pipeline and replace the placeholders with your camera details and run the below command
 
-- `<USERNAME>`: camera username  
-- `<PASSWORD>`: camera password  
-- `<RTSP_CAMERA_IP>`: camera IP address  
-- `<PORT>`: RTSP port (commonly `554`)  
+- `<USERNAME>`: camera username
+- `<PASSWORD>`: camera password
+- `<RTSP_CAMERA_IP>`: camera IP address
+- `<PORT>`: RTSP port (commonly `554`)
 - `<FEED>`: stream path (varies by camera model/vendor)
 
 > Note: If you are behind a proxy network, make sure the camera IP is added to `no_proxy` or `NO_PROXY`
@@ -62,10 +62,10 @@ Edit `configs/dlstreamer-pipeline-server/config.json` and update the `pipeline` 
 
 Update the RTSP URL in the pipeline and replace the placeholders with your camera details:
 
-- `<USERNAME>`: camera username  
-- `<PASSWORD>`: camera password  
-- `<RTSP_CAMERA_IP>`: camera IP address / hostname  
-- `<PORT>`: RTSP port (commonly `554`)  
+- `<USERNAME>`: camera username
+- `<PASSWORD>`: camera password
+- `<RTSP_CAMERA_IP>`: camera IP address / hostname
+- `<PORT>`: RTSP port (commonly `554`)
 - `<FEED>`: stream path (varies by camera model/vendor)
 
 ```json

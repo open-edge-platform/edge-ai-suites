@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import ssl
 import time
 from typing import Callable, Optional
 
@@ -71,7 +72,12 @@ class LvcMqttSubscriber:
 
     # ── Main loop ─────────────────────────────────────────────────────────────
 
-    async def run(self, mqtt_host: str, mqtt_port: int = 1883) -> None:
+    async def run(
+        self,
+        mqtt_host: str,
+        mqtt_port: int = 1883,
+        tls_context: ssl.SSLContext | None = None,
+    ) -> None:
         """Subscribe to LVC MQTT and dispatch messages until cancelled.
 
         Reconnects automatically on broker disconnection (5 s backoff).
@@ -89,7 +95,7 @@ class LvcMqttSubscriber:
 
         while True:
             try:
-                async with aiomqtt.Client(mqtt_host, port=mqtt_port) as client:
+                async with aiomqtt.Client(mqtt_host, port=mqtt_port, tls_context=tls_context) as client:
                     await client.subscribe(_TOPIC)
                     logger.info("lvc_mqtt_subscriber_subscribed", topic=_TOPIC)
                     async for message in client.messages:

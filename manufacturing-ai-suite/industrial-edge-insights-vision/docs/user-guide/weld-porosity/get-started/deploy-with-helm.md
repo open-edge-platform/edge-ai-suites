@@ -3,8 +3,11 @@
 ## Prerequisites
 
 - [System Requirements](../get-started/system-requirements.md)
-- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials online to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04 and/or Ubuntu 24.04.
+- **Kubernetes Cluster**: Ensure you have a properly installed and
+configured Kubernetes cluster.
+- **Tools Installed**: Install the required tools:
+  - Kubernetes CLI (kubectl)
+  - Helm 3 or later
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 - **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
 
@@ -51,6 +54,12 @@
   kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
   ```
 
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
+  ```
+
   Verify the GPU and NPU resources are advertised on nodes:
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
@@ -79,10 +88,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.5.0-rc2`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.5.0`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.5.0-rc2.tgz`
+        `tar -xvf weld-porosity-sample-application-1.5.0.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`

@@ -12,13 +12,12 @@ File  →  [Step 1: Text Extraction]  →  raw text  →  [Step 2: Chunking]  �
 
 ## Step 1 — Text Extraction
 
-Controlled by `use_hi_res_strategy` and `ocr_languages`. These parameters affect **only how text is read from the file**.
+Always uses the "fast" strategy for PDF text extraction (selectable text extracted natively). Embedded images in PDFs are extracted and sent to the PaddleOCR service for OCR, with each image's text becoming an independent searchable node.
 
 | Parameter | Default | Description |
 |---|---|---|
-| `use_hi_res_strategy` | `True` | `True`: renders each PDF page as an image and runs Tesseract OCR (slower, higher accuracy, required for scanned PDFs). `False`: fast strategy — uses selectable text directly; OCR only as fallback for image-only pages |
-| `ocr_languages` | `["eng", "chi_sim", "chi"]` | Tesseract language codes used when OCR is invoked |
-| `extract_images` | `True` | Extract embedded images from PDFs/DOCX and save them to `image_output_dir` (no OCR is applied to the extracted images) |
+| `extract_images` | `True` | Extract embedded images from PDFs and OCR them via PaddleOCR service. Each image produces an independent node with `source_type: "image_ocr"` metadata |
+| `ocr_service_url` | `env OCR_SERVICE_URL` or `http://127.0.0.1:8000` | URL of the PaddleOCR service used for image OCR |
 
 ---
 
@@ -54,12 +53,10 @@ A bilingual sentence splitter is used internally, supporting both **Chinese** (�
 
 ## Combination Matrix
 
-| `use_hi_res_strategy` | `embed_model` | Text extraction | Chunking |
+| `embed_model` | Text extraction | Image OCR | Chunking |
 |---|---|---|---|
-| `False` | `None` | fast (selectable text, OCR fallback) | fixed-size (unstructured basic) |
-| `True` | `None` | hi_res full OCR | fixed-size (unstructured basic) |
-| `False` | provided | fast (selectable text, OCR fallback) | semantic (SemanticSplitterNodeParser) |
-| `True` | provided | hi_res full OCR | semantic (SemanticSplitterNodeParser) |
+| `None` | fast (selectable text) | PaddleOCR service | fixed-size (unstructured basic) |
+| provided | fast (selectable text) | PaddleOCR service | semantic (SemanticSplitterNodeParser) |
 
 ---
 
@@ -71,7 +68,6 @@ self.document_parser = DocumentParser(
     embed_model=self.document_embedding_model,  # LlamaIndex-compatible OpenVINOEmbedding instance
     semantic_breakpoint_percentile=95,
     semantic_min_chunk_size=150,
-    use_hi_res_strategy=False,  # Step 1: fast extraction (Step 2 semantic chunking is independent)
 )
 ```
 

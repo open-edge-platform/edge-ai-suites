@@ -50,7 +50,7 @@ case by detecting the anomalous power generation patterns relative to wind speed
 - Generic Time Series AI stack supporting the data ingestion, data analytics,
   data storage and data visualization.
 - Data Analytics is powered by
-  [Time Series Analytics Microservice](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/time-series-analytics/index.html)
+  [Time Series Analytics Microservice](https://docs.openedgeplatform.intel.com/2025.1/edge-ai-libraries/time-series-analytics/index.html)
   which from the sample app context takes in the configuration related to wind
   turbine sample app and the User Defined Function(UDF) deployment package and
   provides below capabilities:

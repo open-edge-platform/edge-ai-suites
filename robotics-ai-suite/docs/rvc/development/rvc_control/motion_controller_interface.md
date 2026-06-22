@@ -1,5 +1,3 @@
-(motioncontroller_plugins)=
-
 # MotionController Plugins
 
 MotionController interface based plugins are needed to implement a robot
