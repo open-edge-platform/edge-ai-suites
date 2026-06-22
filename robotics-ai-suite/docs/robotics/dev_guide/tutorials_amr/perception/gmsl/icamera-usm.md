@@ -103,8 +103,10 @@ By default the example only connectes to `camera0` to inference on multiple came
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1
 ```
-The default  model that is being used is YOLOv8n this is the smaller version of the model and is not as accurate.
-User can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg:
+The default model `YOLOv8n` is a smaller model and is not as accurate, if you are not getting the results you expect then change the model that is being used.
+There are three models downloaded with the `generate_ai_models.sh` script: `yolov8n`,`yolov8s`, `yolov8m`.
+
+You can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg:
 
 ```bash
 ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml 
