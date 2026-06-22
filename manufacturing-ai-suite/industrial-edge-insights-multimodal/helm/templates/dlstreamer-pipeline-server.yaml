@@ -149,14 +149,6 @@ spec:
           value: "{{ $.Values.env.OPCUA_SERVER_USERNAME }}"
         - name: OPCUA_SERVER_PASSWORD
           value: "{{ $.Values.env.OPCUA_SERVER_PASSWORD }}"
-        - name: MR_URL
-          value: "{{ $.Values.env.MR_URL }}"
-        - name: MR_SAVED_MODELS_DIR
-          value: "{{ $.Values.env.MR_SAVED_MODELS_DIR }}"
-        - name: MR_REQUEST_TIMEOUT
-          value: "{{ $.Values.env.MR_REQUEST_TIMEOUT }}"
-        - name: MR_VERIFY_CERT
-          value: "{{ $.Values.env.MR_VERIFY_CERT }}"
         - name: MQTT_HOST
           value: '{{ .Values.config.mqttbroker.name }}'
         - name: MQTT_PORT
