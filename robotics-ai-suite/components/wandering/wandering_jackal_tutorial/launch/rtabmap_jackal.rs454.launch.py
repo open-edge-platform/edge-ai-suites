@@ -28,13 +28,19 @@ def generate_launch_description():
     localization = LaunchConfiguration('localization')
     params_file = LaunchConfiguration('params_file')
 
-    remappings = [('rgbd_image', '/sensors/camera_0/rgbd_image')]
+    robot_ns = os.environ.get('ROBOT_NAMESPACE', '/j100_0123')
+
+    remappings = [
+        ('rgbd_image', robot_ns + '/sensors/camera_0/rgbd_image'),
+        ('/tf', robot_ns + '/tf'),
+        ('/tf_static', robot_ns + '/tf_static'),
+    ]
 
     remapping_rs = [
-        ('rgbd_image', '/sensors/camera_0/rgbd_image'),
-        ('rgb/image', '/sensors/camera_0/color/image_raw'),
-        ('rgb/camera_info', '/sensors/camera_0/color/camera_info'),
-        ('depth/image', '/sensors/camera_0/aligned_depth_to_color/image_raw'),
+        ('rgbd_image', robot_ns + '/sensors/camera_0/rgbd_image'),
+        ('rgb/image', robot_ns + '/sensors/camera_0/color/image'),
+        ('rgb/camera_info', robot_ns + '/sensors/camera_0/color/camera_info'),
+        ('depth/image', robot_ns + '/sensors/camera_0/aligned_depth_to_color/image'),
     ]
 
     return LaunchDescription(
@@ -59,7 +65,7 @@ def generate_launch_description():
                 package='rtabmap_sync',
                 executable='rgbd_sync',
                 remappings=remapping_rs,
-                parameters=[{'approx_sync': False}],
+                parameters=[{'approx_sync': True, 'approx_sync_max_interval': 0.1}],
             ),
             Node(
                 condition=UnlessCondition(localization),

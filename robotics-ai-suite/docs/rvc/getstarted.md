@@ -1,5 +1,3 @@
-(getstarted)=
-
 # Get Started
 
 The following steps will help you get started with using RVC in a reference setup:

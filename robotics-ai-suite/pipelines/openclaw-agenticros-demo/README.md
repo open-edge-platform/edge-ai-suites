@@ -658,6 +658,11 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
 - ✅ rosbridge WebSocket server running on port 9090
 - ✅ ROS2 topics are available: `/camera/image_raw`, `/cmd_vel`, `/odom`
 
+<p align="center">
+  <img src="README.assets/gazebo_launch_validation.png" alt="Gazebo launch validation with JAKA Kargo in AWS Small Warehouse"><br>
+  <em>Gazebo simulation with JAKA Kargo robot in AWS Small Warehouse environment</em>
+</p>
+
 **Verification:**
 ```bash
 # Terminal 2: Check running topics
@@ -758,6 +763,11 @@ Move the robot forward 1 meter
 4. ✅ AgenticROS monitors `/odom` for closed-loop control
 5. ✅ Robot stops after traveling ~1 meter
 
+<p align="center">
+  <img src="README.assets/move_forward_validation.png" alt="Robot Movement Validation"><br>
+  <em>JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback</em>
+</p>
+
 ```
 Rotate the robot 90 degrees clockwise
 ```
@@ -766,6 +776,11 @@ Rotate the robot 90 degrees clockwise
 1. ✅ OpenClaw calls `cmd_vel_move` with `angular: -1.57` (radians)
 2. ✅ Robot rotates in place in Gazebo
 3. ✅ AgenticROS stops robot after 90-degree rotation
+
+<p align="center">
+  <img src="README.assets/rotate_robot_validation.png" alt="Robot Rotation Validation"><br>
+  <em>JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control</em>
+</p>
 
 ## Troubleshooting
 

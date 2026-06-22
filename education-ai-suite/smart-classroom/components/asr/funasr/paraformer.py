@@ -120,8 +120,8 @@ class Paraformer(BaseASR):
                     })
 
             # temperature controls merge intensity: 0.0 = default merging, 1.0 = minimal
-            turn_threshold = max(0.1, 0.8 - 0.7 * float(temperature))
-            segments = merge_vad(segments, turn_threshold=turn_threshold)
+            # turn_threshold = max(0.1, 0.8 - 0.7 * float(temperature))
+            # segments = merge_vad(segments, turn_threshold=turn_threshold)
 
 
             return {

@@ -20,7 +20,7 @@ REGISTRY ?= true
 HOST_IP ?= $(shell ip route get 1 2>/dev/null | awk '{print $$7}' | head -1)
 export HOST_IP
 
-TAG ?= 2026.1.0-rc2
+TAG ?= 2026.1.0
 export TAG
 
 MODEL_STAGING_DIR ?= $(CURDIR)/models/downloads

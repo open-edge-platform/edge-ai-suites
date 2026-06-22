@@ -11,10 +11,7 @@
 </div>
 hide_directive-->
 
-Automated quality control with AI-driven vision systems.
-
-## Overview
-
+Automated quality control with AI-driven vision systems.\
 This Sample Application enables real-time anomaly detection in printed circuit boards
 (PCB) by running inference workflows across multiple AI models. It connects multiple
 video streams from different cameras to AI-powered pipelines, all operating efficiently

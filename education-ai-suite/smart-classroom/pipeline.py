@@ -236,7 +236,10 @@ class Pipeline:
             from pathlib import Path
 
             # 🔹 Generate topics (returns JSON string from LLM)
-            topic_json_str = self.content_component.generate_topics(transcript_text)
+            topic_json_str = self.content_component.generate_topics(
+                transcript_text,
+                language=config.app.language,
+            )
 
             # 🔹 Save raw JSON string
             topic_path = os.path.join(session_dir, "topics.json")

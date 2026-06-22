@@ -19,7 +19,7 @@ MOTA, and IDF1 metrics.
 ### Software Requirements
 - **Operating System:** Ubuntu 24.04 or later
 - **Docker Engine** with Docker Compose V2
-- [**SceneScape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0-rc2)
+- [**SceneScape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0)
 
 ### Hardware Requirements
 
@@ -49,7 +49,7 @@ The MOXA switch carries both camera traffic and background traffic. In the Basle
 ## Prerequisite: Clone SceneScape Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0-rc2
+git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
 cd scenescape
 ```
 
@@ -108,7 +108,7 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
 
 > **Basler camera users:** If you completed the Basler prerequisite steps above, the Docker Compose file has already been patched and the custom DL Streamer image with Basler support has been built. Start SceneScape with `make demo` as usual — the patched compose file will be picked up automatically.
 
