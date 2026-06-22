@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # GMSL Ingestion Guide icamera-usm
 
 
@@ -53,7 +59,7 @@ This one shows that I have four `D3CMCXXX-115-084` connected.
 ## Install icamera
 
 ```bash
-sudo apt-get install ros2-jazzy-icamera-usm
+sudo apt-get install ros2-$ROS_DISTRO-icamera-usm
 ```
 
 ## Start the ROS2 icamera-usm node
@@ -85,7 +91,7 @@ This will find all the available GMSL cameras that are identified and setup by t
 To run a example that uses the shared memory or legacy which uses the classical publish, use will need to first download the yolov8 models. The following script will download the models and place them in the destination folder using the `--dest` flag.
 
 ```bash
-source /opt/ros/jazzy/share/icamera_usm/generate_ai_models.sh --dest ~/test
+source /opt/ros/$ROS_DISTRO/share/icamera_usm/generate_ai_models.sh --dest ~/test
 ```
 
 ## Run a sample inference pipeline
