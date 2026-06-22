@@ -103,152 +103,20 @@ initialize Kapacitor to start inference.
 
 ### 4.1 Issue
 
-Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error: 
+Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error:
 `OCI runtime exec failed: exec failed: unable to start container process: error writing config to pipe: write init-p: broken pipe: unknown`
 
 ### 4.2 Reason
 
-On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.  
+On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.
 
 ### 4.3 Solution
 
-As a workaround, run the following steps to be able to successfully exec and execute the command.  
-As the container is functioning as expected, please ignore any `unhealthy` status showing up against this  
-container in `docker ps`.  
-
+As a workaround, run the following steps to be able to successfully exec and execute the command.
+As the container is functioning as expected, please ignore any `unhealthy` status showing up against this
+container in `docker ps`.
 
 ```bash
 PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
 sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
-```
-
----
-
-## 5. GPU / NPU Not Accessible Inside a Container
-
-### 5.1 Issue
-
-Any service that mounts `/dev/dri` (GPU) or `/dev/accel` (NPU) fails to use those devices for inference. The failure manifests differently depending on the service:
-
-**dlstreamer-pipeline-server** — pipeline errors with a GStreamer/OpenVINO message in logs:
-
-```bash
-{"levelname": "ERROR", ..., "message": "Error on Pipeline ...: gst-library-error-quark: base_inference plugin initialization failed (3): ...
-Failed to construct OpenVINOImageInference
-    Exception from src/inference/src/cpp/core.cpp:118:
-Exception from src/inference/src/dev/plugin.cpp:112:
-Check '!m_device_map.empty()' failed at src/plugins/intel_gpu/src/plugin/plugin.cpp:528:
-[GPU] Can't get PERFORMANCE_HINT property as no supported devices found or an error happened during devices query.
-[GPU] Please check OpenVINO documentation for GPU drivers setup guide.", "module": "gstreamer_pipeline"}
-```
-
-**Any other service** — inference either falls back silently to CPU, throws a permission error when opening the device, or reports no GPU/NPU device found. The common indicator across all services is that the device files `/dev/dri/renderD128` and `/dev/accel/accel0` are not readable inside the container.
-
-### 5.2 Reason
-
-Both `/dev/dri/renderD128` and `/dev/accel/accel0` are owned by the `render` group. The `render` group GID is **typically 992 on Ubuntu 24.04**, but the actual GID varies per system depending on the order in which system groups were created. If another group (e.g. `systemd-resolve`) was allocated before the GPU driver created the `render` group, the GID will be shifted — commonly to **993**.
-
-The `group_add` section in `docker-compose.yml` lists the expected GIDs, but if the host's `render` GID is not in that list, the container process cannot read the device files.
-
-### 5.3 Diagnosis
-
-**Step 1 — Find the actual render group GID on the host:**
-
-```bash
-getent group render
-```
-
-Example output:
-
-```
-render:x:993:user
-```
-
-The third field (`993`) is the GID. If it differs from the values in `group_add`, that is the problem.
-
-**Step 2 — Confirm via device file ownership:**
-
-```bash
-stat /dev/dri/renderD128
-stat /dev/accel/accel0
-```
-
-Look for the `Gid:` line in the output:
-
-```
-Access: (0660/crw-rw----)  Uid: (    0/    root)   Gid: (  993/  render)
-```
-
-**Step 3 — Verify inside the container:**
-
-For Docker Compose:
-
-```bash
-docker exec <container-name> bash -c "test -r /dev/dri/renderD128 && echo 'GPU: accessible' || echo 'GPU: NOT accessible'"
-docker exec <container-name> bash -c "test -r /dev/accel/accel0 && echo 'NPU: accessible' || echo 'NPU: NOT accessible'"
-```
-
-> **Note:** For Helm deployment, use `kubectl exec` instead:
-> ```bash
-> kubectl exec -n <namespace> <pod-name> -- bash -c "test -r /dev/dri/renderD128 && echo 'GPU: accessible' || echo 'GPU: NOT accessible'"
-> kubectl exec -n <namespace> <pod-name> -- bash -c "test -r /dev/accel/accel0 && echo 'NPU: accessible' || echo 'NPU: NOT accessible'"
-> ```
-> To find the pod name: `kubectl get pods -n <namespace>`
-
-### 5.4 Solution
-
-**Step 1 — Add the correct render GID to the service configuration:**
-
-First find the actual render GID on the host (from Step 1 of Diagnosis above), then update the relevant configuration depending on how the service is deployed.
-
-**For Docker Compose deployments** — open `docker-compose.yml` and locate the `group_add` section for the affected service:
-
-```yaml
-group_add:
-  # render group ID for ubuntu 20.04 host OS
-  - "109"
-  # render group ID for ubuntu 22.04 host OS
-  - "110"
-  # render group ID for ubuntu 24.04 host OS
-  - "992"
-  # render group ID on this host (verify with: getent group render)
-  - "993"
-```
-
-**For Helm deployments** — open the relevant Helm template (e.g. `helm/templates/dlstreamer-pipeline-server.yaml`) and locate the `supplementalGroups` field under `securityContext`. Add the GID returned by `getent group render`:
-
-```yaml
-securityContext:
-  supplementalGroups: [109, 110, 992, 993]  # render group IDs for ubuntu 20.04, 22.04, 24.04 host OS
-```
-
-Replace `993` with the actual GID on your system if it differs.
-
-**Step 2 — Restart the stack:**
-
-For Docker Compose:
-
-```bash
-make down
-make up
-```
-
-> **Note:** For Helm deployment, follow the uninstall and install steps in the [Getting Started](./get-started/deploy-with-helm.md) guide to redeploy the stack after editing the Helm template.
-
-**Step 3 — Verify the fix:**
-
-Check that the device files are now readable inside the container:
-
-```bash
-docker exec <container-name> bash -c "
-  test -r /dev/dri/renderD128 && echo 'GPU: accessible' || echo 'GPU: NOT accessible'
-  test -r /dev/accel/accel0   && echo 'NPU: accessible' || echo 'NPU: NOT accessible'
-"
-```
-
-Expected output:
-
-```bash
-GPU: accessible
-NPU: accessible
 ```
