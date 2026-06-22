@@ -598,10 +598,89 @@ try {
     }
     
     if ($npuDevices) {
-        $npuName = ($npuDevices | Select-Object -First 1).FriendlyName
-        $npuStatus = ($npuDevices | Select-Object -First 1).Status
+        $npuDevice = $npuDevices | Select-Object -First 1
+        $npuName = $npuDevice.FriendlyName
+        $npuStatus = $npuDevice.Status
+        
         if ($npuStatus -eq "OK") {
             Write-Host "  [OK] $npuName" -ForegroundColor Green
+            
+            # Try to get driver version information from registry and WMI
+            $npuDriverVersion = $null
+            try {
+                $instanceId = $npuDevice.InstanceId
+                
+                # Method 1: Check device registry for DriverVersion
+                $regPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$instanceId"
+                if (Test-Path $regPath) {
+                    $deviceProps = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+                    
+                    # Try to get from Device Parameters
+                    $deviceParamsPath = "$regPath\Device Parameters"
+                    if (Test-Path $deviceParamsPath) {
+                        $deviceParams = Get-ItemProperty -Path $deviceParamsPath -ErrorAction SilentlyContinue
+                        if ($deviceParams -and $deviceParams.DriverVersion) {
+                            $npuDriverVersion = $deviceParams.DriverVersion
+                        }
+                    }
+                    
+                    # Fallback: Check direct properties
+                    if (-not $npuDriverVersion -and $deviceProps.DriverVersion) {
+                        $npuDriverVersion = $deviceProps.DriverVersion
+                    }
+                }
+                
+                # Method 2: Use WMI to find driver by device name
+                if (-not $npuDriverVersion) {
+                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue | 
+                                    Where-Object { $_.DeviceName -match "Intel.*(NPU|Neural|AI Boost|VPU)" }
+                    
+                    if ($signedDrivers) {
+                        $driver = $signedDrivers | Select-Object -First 1
+                        if ($driver.DriverVersion) {
+                            $npuDriverVersion = $driver.DriverVersion
+                        }
+                    }
+                }
+                
+                if ($npuDriverVersion) {
+                    Write-Host "  Driver version: $npuDriverVersion" -ForegroundColor Gray
+                    
+                    # Define known latest versions for NPU drivers
+                    $latestVersionMap = @{
+                        "32" = "32.0.100.4778"   # Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)
+                    }
+                    
+                    # Parse version and compare
+                    $installedMajor = [int]($npuDriverVersion.Split('.')[0])
+                    
+                    if ($latestVersionMap.ContainsKey($installedMajor.ToString())) {
+                        $latestVersion = $latestVersionMap[$installedMajor.ToString()]
+                        
+                        try {
+                            $installedVersion = [version]$npuDriverVersion
+                            $latestVersionObj = [version]$latestVersion
+                            
+                            if ($installedVersion -ge $latestVersionObj) {
+                                Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
+                            } else {
+                                Write-Host "  [WARN] NPU driver is outdated - latest is $latestVersion" -ForegroundColor Yellow
+                                Write-Host "         Please download and install the latest version" -ForegroundColor Cyan
+                                Write-Host "         https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor Cyan
+                                $warnings += "Intel NPU driver is outdated (installed: $npuDriverVersion, latest: $latestVersion)"
+                            }
+                        } catch {
+                            Write-Host "  [INFO] Could not parse driver version - manual verification may be needed" -ForegroundColor DarkYellow
+                        }
+                    } else {
+                        Write-Host "  [INFO] Unknown driver family (v$installedMajor) - verify manually at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                    }
+                } else {
+                    Write-Host "  [INFO] Could not retrieve driver version - verify at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                }
+            } catch {
+                Write-Host "  [INFO] Could not check driver version details" -ForegroundColor DarkYellow
+            }
         } else {
             Write-Host "  [WARN] $npuName (Status: $npuStatus)" -ForegroundColor Yellow
             Write-Host "         NPU driver may need to be updated" -ForegroundColor DarkYellow
