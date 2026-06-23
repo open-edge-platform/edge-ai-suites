@@ -134,7 +134,7 @@ WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU confi
 WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before GPU POST; allows TSAM/kapacitor CPU UDF startup
 WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
 WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
-WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
+WIND_TURBINE_OPCUA_ALERT_SETTLE = 360         # Max time to wait for OPC UA alerts after restart when polling logs
 # Required for OPC-UA multi-stream so each scaled OPC-UA server container binds to a unique host port
 WIND_TURBINE_OPCUA_PORT_MAPPING = "30003-30100"
 
