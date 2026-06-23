@@ -64,7 +64,10 @@ For detailed information refer the tutorial: [Geti™ - Label Management](https:
 
 ## Data Annotation and Training
 
-For comprehensive tutorials on data annotation and training workflows, refer to the [Geti™ Tutorials Documentation](https://docs.geti.intel.com/docs/user-guide/getting-started/use-geti/tutorials).
+Dataset is a collection of images and videos in your project, together with the annotations used to train models. The Dataset screen is where you upload media, monitor annotation progress, and launch the annotator. For more information on datasets, see [Dataset Management](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/datasets/dataset-management).
+
+To use Geti™ application for data collection and annotation, see [Building a Good Dataset](https://docs.geti.intel.com/docs/user-guide/learn-geti/dataset-creation). 
+
 
 ### Step 6: Upload Training Images
 
@@ -82,7 +85,7 @@ Click on "Annotate Interactively" on the top right side of the dashboard. Begin 
 
 ![Annotate Images](../_assets/annotate.png)
 
-After annotating a few frames, Geti™ will automatically start training the model.
+After annotating a few frames, Geti™ will automatically start training the model. For more information on model training, see [Model Training](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/model-training-and-optimization/).
 
 > **Note:** By default, Geti™ uses **MobileNetV2-ATSS** as the model backbone for your detection task. For more control over your model training, you can explore the [Advanced Guide](#advanced-guide) section below to:
 >
@@ -163,6 +166,8 @@ model.xml  <- Replace with downloaded version
 Alternatively, you can download the entire deployment folder and replace the existing deployment folder in your resources:
 
 ![Deployment Dashboard](../_assets/deployment_dashboard.png)
+
+For more information on model deployment, see [Inference Pipeline](https://docs.geti.intel.com/docs/user-guide/pipeline-management/introduction).
 
 Navigate to **Deployments** and click **Select model for deployment**:
 
