@@ -25,13 +25,13 @@ You can either generate or download the Helm charts.
   1. Download Helm chart with the following command:
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0-rc1
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0
      ```
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.1.0-rc1.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.1.0.tgz
      ```
 
 - Get into the Helm directory:
@@ -161,35 +161,54 @@ following cURL command.
 >
 > - By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
-> - To run model inference on `GPU` or `NPU` in DL Streamer Pipeline Server, set the `device` field to `GPU` or `NPU` exactly as shown and run the following command.
+> - To run model inference on `GPU` or `NPU`, substitute the device using the sed commands shown below.
 
-```bash
-curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "vision_weld_defect_classification"
-        },
-        "frame": [{
-                            "type": "webrtc",
-                            "peer-id": "samplestream",
-                            "overlay": false
-                        },
-                        {
-                            "type": "s3_write",
-                            "bucket": "dlstreamer-pipeline-results",
-                            "folder_prefix": "weld-defect-classification",
-                            "block": false
-                        }]
-    },
-    "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
-            "device": "CPU"
-        }
-    }
-}'
-```
+- To run inference on `CPU` (Default),
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
+  ```
+
+- To run inference on `GPU`,
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+- To run inference on `NPU`,
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
 
 **Time Series Analytics Microservice**
 
@@ -207,20 +226,10 @@ curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/
 - GPU
 
 ```bash
-curl -s -X POST https://localhost:30001/ts-api/config -H 'accept: application/json' -H 'Content-Type: application/json' -d '{
-    "udfs": {
-        "name": "weld_anomaly_detector",
-        "models": "weld_anomaly_detector.pkl",
-        "device": "gpu"
-    },
-    "alerts": {
-        "mqtt": {
-            "mqtt_broker_host": "ia-mqtt-broker",
-            "mqtt_broker_port": 1883,
-            "name": "my_mqtt_broker"
-        }
-    }
-}' -k
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
+curl -s -X POST https://localhost:30001/ts-api/config \
+  -H 'accept: application/json' -H 'Content-Type: application/json' \
+  -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)" -k
 ```
 
 ## Step 6: Verify the Results

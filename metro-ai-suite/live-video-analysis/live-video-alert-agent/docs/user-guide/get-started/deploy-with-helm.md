@@ -54,7 +54,10 @@ Edit `user_values_override.yaml` with values for your environment:
 | `app.mcpServersConfig` | MCP server configuration JSON (see `resources/mcp_servers.json` for format) | See `values.yaml` |
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
 
-> **Note:** `user_values_override.yaml` may contain credentials. Do not commit it to version control.
+> **Note:**
+>
+> - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
+> - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
 
 ### 3. Build Helm Dependencies
 
