@@ -11,7 +11,7 @@ To get started:
   your environment.
 - **Run a predefined pipeline**: execute a sample pipeline to see real-time transportation
   monitoring and object detection in action.
-- **Access the application's features and user interfaces**: explore the Intel® SceneScape
+- **Access the application's features and user interfaces**: explore the Scenescape
   Web UI, Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor,
   analyze and customize workflows.
 - **Consider Enabling Security features**: use hardware-based security measures to make your
@@ -82,8 +82,8 @@ To get started:
    - Grafana Dashboard
    - DL Streamer Pipeline Server
    - MQTT Broker
-   - Node-RED (for applications without Intel® SceneScape)
-   - Intel® SceneScape services (for Smart Intersection only)
+   - Node-RED (for applications without Scenescape)
+   - Scenescape services (for Smart Intersection only)
 
    </details>
 
@@ -229,6 +229,7 @@ Once the application is running, follow the [Access the Application and Componen
 ```bash
 docker compose down
 ```
+
 To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Other Deployment Options
@@ -242,16 +243,16 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 
 With AI systems handling sensitive city data and making autonomous decisions, robust security
 is essential. Intel platforms provide built-in security features to protect data, infrastructure,
-and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
+and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
 that uses the example of Smart Intersection to show how to secure Open Edge Platform
 applications.
 
 ## Learn More
 
-- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
+- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
-- [Intel® SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [Scenescape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
 
 <!--hide_directive
 :::{toctree}

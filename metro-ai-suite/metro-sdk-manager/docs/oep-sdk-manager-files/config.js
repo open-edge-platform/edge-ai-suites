@@ -75,12 +75,12 @@ const CONFIG = {
             "DL Streamer Pipeline Server",
             "OpenVINO",
             "OpenVINO Model Server",
-            "SceneScape Manager",
-            "SceneScape Controller",
-            "SceneScape Autocalibration",
+            "Scenescape Manager",
+            "Scenescape Controller",
+            "Scenescape Autocalibration",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo",
-            "SceneScape - Repo"
+            "Scenescape - Repo"
           ]
         },
         {
@@ -175,12 +175,12 @@ const CONFIG = {
             "DL Streamer Pipeline Server",
             "OpenVINO",
             "OpenVINO Model Server",
-            "SceneScape Manager",
-            "SceneScape Controller",
-            "SceneScape Autocalibration",
+            "Scenescape Manager",
+            "Scenescape Controller",
+            "Scenescape Autocalibration",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo",
-            "SceneScape - Repo"
+            "Scenescape - Repo"
           ]
         },
         {
@@ -408,7 +408,7 @@ const CONFIG = {
             { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
             { text: "OpenVINO", url: "https://docs.openvino.ai/2026/get-started.html" },
             { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2026/model-server/ovms_what_is_openvino_model_server.html" },
-            { text: "Intel® SceneScape", url: "https://github.com/open-edge-platform/scenescape" },
+            { text: "Scenescape", url: "https://github.com/open-edge-platform/scenescape" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.1/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.1/ai-suite-metro.html"}
           ]
@@ -501,7 +501,7 @@ const CONFIG = {
             { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
             { text: "OpenVINO", url: "https://docs.openvino.ai/2026/get-started.html" },
             { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2026/model-server/ovms_what_is_openvino_model_server.html" },
-            { text: "Intel® SceneScape", url: "https://github.com/open-edge-platform/scenescape" },
+            { text: "Scenescape", url: "https://github.com/open-edge-platform/scenescape" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]

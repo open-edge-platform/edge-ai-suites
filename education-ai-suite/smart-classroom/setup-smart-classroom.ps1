@@ -598,10 +598,89 @@ try {
     }
     
     if ($npuDevices) {
-        $npuName = ($npuDevices | Select-Object -First 1).FriendlyName
-        $npuStatus = ($npuDevices | Select-Object -First 1).Status
+        $npuDevice = $npuDevices | Select-Object -First 1
+        $npuName = $npuDevice.FriendlyName
+        $npuStatus = $npuDevice.Status
+        
         if ($npuStatus -eq "OK") {
             Write-Host "  [OK] $npuName" -ForegroundColor Green
+            
+            # Try to get driver version information from registry and WMI
+            $npuDriverVersion = $null
+            try {
+                $instanceId = $npuDevice.InstanceId
+                
+                # Method 1: Check device registry for DriverVersion
+                $regPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$instanceId"
+                if (Test-Path $regPath) {
+                    $deviceProps = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+                    
+                    # Try to get from Device Parameters
+                    $deviceParamsPath = "$regPath\Device Parameters"
+                    if (Test-Path $deviceParamsPath) {
+                        $deviceParams = Get-ItemProperty -Path $deviceParamsPath -ErrorAction SilentlyContinue
+                        if ($deviceParams -and $deviceParams.DriverVersion) {
+                            $npuDriverVersion = $deviceParams.DriverVersion
+                        }
+                    }
+                    
+                    # Fallback: Check direct properties
+                    if (-not $npuDriverVersion -and $deviceProps.DriverVersion) {
+                        $npuDriverVersion = $deviceProps.DriverVersion
+                    }
+                }
+                
+                # Method 2: Use WMI to find driver by device name
+                if (-not $npuDriverVersion) {
+                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue | 
+                                    Where-Object { $_.DeviceName -match "Intel.*(NPU|Neural|AI Boost|VPU)" }
+                    
+                    if ($signedDrivers) {
+                        $driver = $signedDrivers | Select-Object -First 1
+                        if ($driver.DriverVersion) {
+                            $npuDriverVersion = $driver.DriverVersion
+                        }
+                    }
+                }
+                
+                if ($npuDriverVersion) {
+                    Write-Host "  Driver version: $npuDriverVersion" -ForegroundColor Gray
+                    
+                    # Define known latest versions for NPU drivers
+                    $latestVersionMap = @{
+                        "32" = "32.0.100.4778"   # Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)
+                    }
+                    
+                    # Parse version and compare
+                    $installedMajor = [int]($npuDriverVersion.Split('.')[0])
+                    
+                    if ($latestVersionMap.ContainsKey($installedMajor.ToString())) {
+                        $latestVersion = $latestVersionMap[$installedMajor.ToString()]
+                        
+                        try {
+                            $installedVersion = [version]$npuDriverVersion
+                            $latestVersionObj = [version]$latestVersion
+                            
+                            if ($installedVersion -ge $latestVersionObj) {
+                                Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
+                            } else {
+                                Write-Host "  [WARN] NPU driver is outdated - latest is $latestVersion" -ForegroundColor Yellow
+                                Write-Host "         Please download and install the latest version" -ForegroundColor Cyan
+                                Write-Host "         https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor Cyan
+                                $warnings += "Intel NPU driver is outdated (installed: $npuDriverVersion, latest: $latestVersion)"
+                            }
+                        } catch {
+                            Write-Host "  [INFO] Could not parse driver version - manual verification may be needed" -ForegroundColor DarkYellow
+                        }
+                    } else {
+                        Write-Host "  [INFO] Unknown driver family (v$installedMajor) - verify manually at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                    }
+                } else {
+                    Write-Host "  [INFO] Could not retrieve driver version - verify at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                }
+            } catch {
+                Write-Host "  [INFO] Could not check driver version details" -ForegroundColor DarkYellow
+            }
         } else {
             Write-Host "  [WARN] $npuName (Status: $npuStatus)" -ForegroundColor Yellow
             Write-Host "         NPU driver may need to be updated" -ForegroundColor DarkYellow
@@ -1142,123 +1221,6 @@ function Install-FFmpeg {
     }
 }
 
-function Install-DLStreamerDLLs {
-    Write-Host ""
-    Write-Host "  ============================================" -ForegroundColor Cyan
-    Write-Host "  DL Streamer Installer Installation" -ForegroundColor Cyan
-    Write-Host "  ============================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  This method downloads and runs the DL Streamer" -ForegroundColor Gray
-    Write-Host "  installer for Windows 64-bit." -ForegroundColor Gray
-    Write-Host ""
-    
-    $dlsVersion = "2026.1.0"
-    $installerName = "dlstreamer-$dlsVersion-win64.exe"
-    $downloadUrl = "https://github.com/open-edge-platform/dlstreamer/releases/download/v$dlsVersion/$installerName"
-    try {
-        Write-Host "  Step 1: Download Installer" -ForegroundColor Yellow
-        $installerPath = Join-Path $env:TEMP $installerName
-        
-        Write-Host "    Downloading from GitHub releases..." -ForegroundColor Gray
-        Write-Host "    URL: $downloadUrl" -ForegroundColor DarkGray
-        if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        
-        $downloadSuccess = $false
-        
-        try {
-            Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $installerPath -UseBasicParsing
-            if (Test-Path $installerPath) {
-                $fileSize = (Get-Item $installerPath).Length
-                if ($fileSize -gt 5MB) {
-                    $downloadSuccess = $true
-                    Write-Host "    [OK] Downloaded: $installerName ($([math]::Round($fileSize/1MB, 1)) MB)" -ForegroundColor Green
-                } else {
-                    Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-                    Write-Host "    [WARN] Download incomplete, trying alternative method..." -ForegroundColor Yellow
-                }
-            }
-        } catch {
-            Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
-        }
-        
-        if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
-            Write-Host "    Trying curl.exe..." -ForegroundColor Gray
-            try {
-                $curlArgs = @("-L", "-o", "`"$installerPath`"", "--connect-timeout", "60", "--max-time", "600")
-                if ($script:httpProxy) {
-                    $curlArgs += @("-x", $script:httpProxy)
-                }
-                $curlArgs += $downloadUrl
-                
-                $curlProcess = Start-Process -FilePath "curl.exe" -ArgumentList $curlArgs -Wait -PassThru -NoNewWindow
-                
-                if ((Test-Path $installerPath) -and ((Get-Item $installerPath).Length -gt 5MB)) {
-                    $downloadSuccess = $true
-                    $fileSize = (Get-Item $installerPath).Length
-                    Write-Host "    [OK] Downloaded with curl: $installerName ($([math]::Round($fileSize/1MB, 1)) MB)" -ForegroundColor Green
-                }
-            } catch {
-                Write-Host "    [WARN] curl download failed: $_" -ForegroundColor Yellow
-            }
-        }
-        
-        if (-not $downloadSuccess) {
-            Write-Host "    [FAIL] Download failed. Please download manually:" -ForegroundColor Red
-            Write-Host "    $downloadUrl" -ForegroundColor Cyan
-            return $false
-        }
-        
-        Write-Host ""
-        
-        Write-Host "  Step 2: Run Installer" -ForegroundColor Yellow
-        
-        Write-Host "    Starting DL Streamer installer..." -ForegroundColor Gray
-        try {
-            $process = Start-Process -FilePath $installerPath -Wait -PassThru
-            
-            if ($process.ExitCode -eq 0) {
-                Write-Host "    [OK] Installer completed successfully" -ForegroundColor Green
-            } else {
-                Write-Host "    [WARN] Installer exited with code: $($process.ExitCode)" -ForegroundColor Yellow
-                Write-Host "           Please check the installation manually." -ForegroundColor DarkYellow
-            }
-        } catch {
-            Write-Host "    [FAIL] Failed to run installer: $_" -ForegroundColor Red
-            Write-Host "    Please run the installer manually: $installerPath" -ForegroundColor Yellow
-            return $false
-        }
-        
-        Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-        
-
-        
-        Write-Host ""
-        Write-Host "  ============================================" -ForegroundColor Green
-        Write-Host "  DL Streamer Installation Complete!" -ForegroundColor Green
-        Write-Host "  ============================================" -ForegroundColor Green
-        Write-Host ""
-        Write-Host "  The installer has been executed successfully." -ForegroundColor Gray
-        Write-Host "  DL Streamer 2026.1.0 should now be installed." -ForegroundColor Gray
-        Write-Host ""
-        Write-Host "  Note: You may need to restart PowerShell or your system" -ForegroundColor Yellow
-        Write-Host "        for environment variables to take effect." -ForegroundColor Yellow
-        Write-Host ""
-        
-        return $true
-        
-    } catch {
-        Write-Host "    [FAIL] DL Streamer installation error: $_" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "  Manual Installation:" -ForegroundColor Yellow
-        Write-Host "    1. Download: $downloadUrl" -ForegroundColor Cyan
-        Write-Host "    2. Run the installer exe file" -ForegroundColor Gray
-        Write-Host "    3. Follow the on-screen instructions" -ForegroundColor Gray
-        Write-Host ""
-        return $false
-    }
-}
-
 Write-Host "Checking FFmpeg..." -ForegroundColor White
 $ffmpegInstalled = $false
 
@@ -1304,58 +1266,24 @@ if (-not $ffmpegInstalled) {
 Write-Host ""
 Write-Host "Checking DL Streamer..." -ForegroundColor White
 
-$dlStreamerPath = $env:DLSTREAMER_DIR
 $dlStreamerFound = $false
+$dlStreamerRequiredVersion = "2026.1.0"
 
-if ($dlStreamerPath -and (Test-Path $dlStreamerPath)) {
-    $dlStreamerFound = $true
-    Write-Host "  [OK] DL Streamer found at: $dlStreamerPath" -ForegroundColor Green
+# The full DL Streamer check (detection + version-gate + install/reinstall flow)
+# lives in Scripts\check_dlstreamer.ps1. Delegate to it and act on its exit code.
+$dlStreamerCheckScript = Join-Path $PSScriptRoot "Scripts\check_dlstreamer.ps1"
+if (Test-Path $dlStreamerCheckScript) {
+    & $dlStreamerCheckScript -Install -RequiredVersion $dlStreamerRequiredVersion -HttpProxy $script:httpProxy -HttpsProxy $script:httpsProxy
+    switch ($LASTEXITCODE) {
+        0       { $dlStreamerFound = $true }                          # present and meets required version
+        1       { $dlStreamerFound = $true; $appChecksFailed = $true } # present but required reinstall failed
+        default { $dlStreamerFound = $false; $appChecksFailed = $true } # not installed / install skipped or failed
+    }
 } else {
-    # Check common installation paths (including DLLs-only extraction path)
-    $commonPaths = @(
-        "C:\Program Files\Intel\dlstreamer",
-        "C:\Intel\dlstreamer",
-        "C:\Program Files (x86)\Intel\dlstreamer",
-        "C:\dlls_windows"
-    )
-    
-    if ($env:INTEL_OPENVINO_DIR) {
-        $commonPaths += "$env:INTEL_OPENVINO_DIR\..\dlstreamer"
-    }
-    
-    foreach ($path in $commonPaths) {
-        if (Test-Path $path) {
-            $dlStreamerFound = $true
-            Write-Host "  [OK] DL Streamer found at: $path" -ForegroundColor Green
-            break
-        }
-    }
-}
-
-if (-not $dlStreamerFound) {
-    Write-Host "  [INFO] DL Streamer is not installed" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  DL Streamer is required for video analytics pipelines." -ForegroundColor Gray
-    Write-Host "  Latest verified version: 2026.1.0" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "  This will download and run the DL Streamer 2026.1.0 installer." -ForegroundColor Gray
-    Write-Host ""
-    $installChoice = Read-Host "  Install DL Streamer 2026.1.0 now? (Y/N)"
-    
-    if ($installChoice -match "^[Yy]") {
-        if (Install-DLStreamerDLLs) {
-            $dlStreamerFound = $true
-        } else {
-            Write-Host "  [FAIL] DL Streamer installation failed" -ForegroundColor Red
-            Write-Host "         Please download and run the installer manually from:" -ForegroundColor Cyan
-            Write-Host "         https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe" -ForegroundColor Cyan
-            $appChecksFailed = $true
-        }
-    } else {
-        Write-Host "  [SKIP] DL Streamer installation skipped" -ForegroundColor Yellow
-        Write-Host "         Please install manually from: https://github.com/open-edge-platform/dlstreamer/releases" -ForegroundColor Cyan
-        $appChecksFailed = $true
-    }
+    Write-Host "  [WARN] DL Streamer check script not found at:" -ForegroundColor Yellow
+    Write-Host "         $dlStreamerCheckScript" -ForegroundColor DarkYellow
+    Write-Host "         Skipping DL Streamer verification." -ForegroundColor DarkYellow
+    $appChecksFailed = $true
 }
 
 if ($appChecksFailed) {

@@ -1,4 +1,4 @@
-# Integrate Intel® SceneScape with Smart NVR
+# Integrate Scenescape with Smart NVR
 
 This guide describes how to integrate Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from the Smart Intersection application.
 

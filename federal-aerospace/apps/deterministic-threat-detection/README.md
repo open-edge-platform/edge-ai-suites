@@ -23,7 +23,7 @@ Deep Learning Streamer (DL Streamer) processes the RTSP camera streams from AXIS
 
 [Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
 
-Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores accuracy to the baseline.
+Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Scenescape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores accuracy to the baseline.
 
 [Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
 
@@ -56,15 +56,15 @@ cd deterministic-threat-detection
 
 ## Documentation
 
-- [Get Started — Use Case 1](./docs/user-guide/get-started.md)
-- [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
-- [How-to Guides](./docs/user-guide/how-to-guides.md)
-- [Release Notes](./docs/user-guide/release-notes.md)
+- [Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
+- [Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
+- [How-to Guides](../../docs/deterministic-threat-detection/user-guide/how-to-guides.md)
+- [Release Notes](../../docs/deterministic-threat-detection/user-guide/release-notes.md)
 
 ## Key References
 
 - **Moxa Managed Switch TSN-G5000 Series:** [PTP Grandmaster, VLAN segmentation, and IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5008-series)
 - **Intel Ethernet Network Adapter I226:** TSN-capable Ethernet controller for Arrow Lake hosts
 - **IEEE 802.1Qbv standard:** Time-Aware Scheduler for traffic isolation
-- **Intel SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
+- **Scenescape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
 - **DL Streamer:** [Intel's video processing and AI inference pipeline](https://github.com/openvinotoolkit/dlstreamer)

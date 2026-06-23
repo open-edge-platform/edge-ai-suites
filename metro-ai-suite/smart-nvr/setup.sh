@@ -84,13 +84,13 @@ get_host_ip() {
         # Fallback to hostname command
         HOST_IP=$(hostname -I | awk '{print $1}')
     fi
-    
+
     # Fallback to localhost if we couldn't determine the IP
     if [ -z "$HOST_IP" ]; then
         HOST_IP="localhost"
         print_warning "Could not determine host IP, using localhost instead."
     fi
-    
+
     echo "$HOST_IP"
 }
 
@@ -224,14 +224,14 @@ validate_environment() {
             return 1
         fi
     fi
-    
+
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
         print_info "Please set it to the IP address of your Video Summarization Service"
         return 1
     fi
-    
+
     if [ -z "${VSS_SUMMARY_PORT}" ]; then
         print_error "VSS_SUMMARY_PORT environment variable is required"
         print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
@@ -242,7 +242,7 @@ validate_environment() {
         print_info "Please set it to the IP address of your Video Search Service"
         return 1
     fi
-    
+
     if [ -z "${VSS_SEARCH_PORT}" ]; then
         print_error "VSS_SEARCH_PORT environment variable is required"
         print_info "Please set it to the port of your Video Search Service (typically 12345)"
@@ -255,7 +255,7 @@ validate_environment() {
             print_info "Please set it to the IP address of your VLM Model Endpoint"
             return 1
         fi
-        
+
         if [ -z "${VLM_SERVING_PORT}" ]; then
             print_error "VLM_SERVING_PORT environment variable is required when NVR_GENAI is enabled"
             print_info "Please set it to the port of your VLM Model Endpoint (typically 9766)"
@@ -300,7 +300,7 @@ start_services() {
     if ! configure_genai_setup; then
         return 1
     fi
-    
+
     print_info "Starting Docker Compose services..."
     docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
