@@ -41,7 +41,7 @@ By following this guide, you will learn how to:
      ```
 
    > **Note:** For environments requiring a specific host IP address (such as when using Edge
-   > Manageability Toolkit or deploying across different network interfaces), you can explicitly
+   > Microvisor Toolkit or deploying across different network interfaces), you can explicitly
    > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
    > your target IP address.)
 
