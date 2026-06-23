@@ -64,9 +64,9 @@ For detailed information refer the tutorial: [Geti™ - Label Management](https:
 
 ## Data Annotation and Training
 
-Dataset is a collection of images and videos in your project, together with the annotations used to train models. The Dataset screen is where you upload media, monitor annotation progress, and launch the annotator. For more information on datasets, see [Dataset Management](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/datasets/dataset-management).
+A dataset is a collection of images and videos in your project, together with the annotations used to train models. The Dataset screen is where you upload media, monitor annotation progress, and launch the annotator. For more information on datasets, see [Dataset Management](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/datasets/dataset-management).
 
-To use Geti™ application for data collection and annotation, see [Building a Good Dataset](https://docs.geti.intel.com/docs/user-guide/learn-geti/dataset-creation). 
+To use the Geti™ application for data collection and annotation, see [Building a Good Dataset](https://docs.geti.intel.com/docs/user-guide/learn-geti/dataset-creation).
 
 
 ### Step 6: Upload Training Images
