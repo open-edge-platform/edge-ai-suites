@@ -53,6 +53,9 @@ The following three sections are always skipped because they require manual, pla
    ```bash
    sudo apt install -y linux-firmware
    ```
+   
+   :::
+   :::{tab-item}  **Ubuntu 22.04**
 
    **Note:** Linux OS version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in `/lib/firmware/i915/experimental/`. Confirm the following boot parameters through `cat /proc/cmdline` after the next reboot:
 
@@ -79,7 +82,10 @@ The following three sections are always skipped because they require manual, pla
      Installed: 20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
    ```
 
-3. Install the real-time Linux kernel. For details, see [LinuxBSP](../../packages/linuxbsp.md).
+   :::
+   ::::
+
+4. Install the real-time Linux kernel. For details, see [LinuxBSP](../../packages/linuxbsp.md).
 
    ```bash
    sudo apt install -y linux-intel-rt-experimental
@@ -91,7 +97,7 @@ The following three sections are always skipped because they require manual, pla
    sudo apt install -y linux-intel-experimental
    ```
 
-4. To modify default boot parameters, edit `/etc/grub.d/10_eci_experimental`.
+5. To modify default boot parameters, edit `/etc/grub.d/10_eci_experimental`.
 
    **Note:** Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
 
@@ -116,16 +122,28 @@ The following three sections are always skipped because they require manual, pla
 
    ![ECI GRUB boot screen](assets/images/eci_grub.png)
 
+   :::
+   :::{tab-item}  **Ubuntu 22.04**
+
    **Note:** Select `Advanced Options for [Experimental] ECI Ubuntu` to list `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts-rt` for a real-time kernel or `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts` for a generic kernel.
 
    ![Kernel selection screen](assets/images/kernel_select.png)
+
+   :::
+   ::::
 
 ## Real-time Runtime Optimization
 
 To achieve real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
+:::
+:::{tab-item}  **Ubuntu 22.04**
+
 ![ARL RT setup diagram](../../assets/images/arl_rt_setup.png)
 
+:::
+::::
+   
 ### Use Cache Allocation Technology
 
 Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy, providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
