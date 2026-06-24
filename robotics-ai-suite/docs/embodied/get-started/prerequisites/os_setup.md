@@ -1,10 +1,10 @@
 # OS Setup
 
-To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 22.04 Desktop`) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
+To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 22.04/24.04 Desktop`) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
 
 Do the following to prepare the target system:
 
-1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 22.04 Desktop with **64bits** variant on to the target system.
+1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 22.04/24.04 Desktop with **64bits** variant on to the target system.
 
    > **Attention:**
    > Please review [Canonical Intellectual property rights policy](https://ubuntu.com/legal/intellectual-property-policy) regarding Canonical Ubuntu. Note that any redistribution of modified versions of Canonical Ubuntu must be approved, certified or provided by Canonical if you are going to associate it with the Trademarks. Otherwise you must remove and replace the Trademarks and will need to recompile the source code to create your own binaries.
@@ -25,7 +25,7 @@ Do the following to prepare the target system:
    | Hyper-Threading | Disabled | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel (VMX) Virtualization | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
    | X2APIC | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
-   | Active SOC-North Efficient-cores | 0 | Intel Advanced Menu ⟶ CPU Configuration |
+   | Active SOC-North Efficient-cores | 0/All<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel(R) SpeedStep | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Shift Technology | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Turbo Mode | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
@@ -43,7 +43,7 @@ Do the following to prepare the target system:
    | Low Power S0 Idle Capability | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Native ASPM | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
-
+   
    :::
    :::{tab-item} Generic (non-real-time)
 
@@ -73,6 +73,8 @@ Do the following to prepare the target system:
 
    :::
    ::::
+
+   **Note**: Active SOC-North Efficient-cores can be enabled on Panther Lake, while still 0 on Arrow Lake under Real-time Optimization.
 
 ## Automated Setup Script
 
