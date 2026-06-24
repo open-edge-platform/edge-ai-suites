@@ -54,7 +54,7 @@ The following three sections are always skipped because they require manual, pla
    sudo apt install -y linux-firmware
    ```
    
-   :::
+   ::::{tab-set}
    :::{tab-item}  **Ubuntu 22.04**
 
    **Note:** Linux OS version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in `/lib/firmware/i915/experimental/`. Confirm the following boot parameters through `cat /proc/cmdline` after the next reboot:
@@ -122,7 +122,7 @@ The following three sections are always skipped because they require manual, pla
 
    ![ECI GRUB boot screen](assets/images/eci_grub.png)
 
-   :::
+   ::::{tab-set}
    :::{tab-item}  **Ubuntu 22.04**
 
    **Note:** Select `Advanced Options for [Experimental] ECI Ubuntu` to list `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts-rt` for a real-time kernel or `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts` for a generic kernel.
@@ -136,7 +136,7 @@ The following three sections are always skipped because they require manual, pla
 
 To achieve real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
-:::
+::::{tab-set}
 :::{tab-item}  **Ubuntu 22.04**
 
 ![ARL RT setup diagram](../../assets/images/arl_rt_setup.png)
