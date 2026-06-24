@@ -22,16 +22,17 @@
 </div>
 hide_directive-->
 
+> Note!
 > This application is for **reference and evaluation purposes**. It is
-> **not intended for direct use in clinical or diagnostic environments** and is not
-> validated as such.
+  **not intended for direct use in clinical or diagnostic environments** and is not
+  validated as such.
 ::::
 
-The NICU Warmer application is a reference workload that demonstrates how multiple AI models
-can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing real-time
-neonatal patient monitoring in a hospital warmer bed scenario.
+The NICU Warmer application is a reference solution that demonstrates how multiple AI models
+can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing workloads
+that mimic real-time neonatal patient monitoring in a simulated hospital warmer bed scenario.
 
-It combines several AI workloads:
+It combines several representative AI workloads:
 
 - **Object Detection (×3):** Custom OpenVINO FP32 models for detecting patient presence,
   caretaker presence, and warmer latch clip status — all running on Intel Arc GPU.

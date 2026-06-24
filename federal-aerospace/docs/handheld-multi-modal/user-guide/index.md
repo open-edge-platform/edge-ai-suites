@@ -47,10 +47,11 @@ For more information, see [ViPPET documentation](https://docs.openedgeplatform.i
 <!-- ViPPET 2026.0 is used here on purpose -->
 
 > **Notice:**
-> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld Multi-Modal Application
-> does not fully support pipelines that utilize [Hugging Face](https://huggingface.co/) models requiring
-> access approval and downloading via an access token. As a result the Video Summarization VLM pipeline
-> is not available in the preview release.
+> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
+  Multi-Modal Application does not fully support pipelines that utilize
+  [Hugging Face](https://huggingface.co/) models, requiring access approval and downloading
+  via an access token. As a result the Video Summarization VLM pipeline is not available in
+  the preview release.
 
 ### Speech To Text (Whisper Model)
 
