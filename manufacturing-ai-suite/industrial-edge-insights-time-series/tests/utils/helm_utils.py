@@ -2691,6 +2691,39 @@ def check_pods(namespace, timeout=180, interval=5):
     return False
 
 
+def force_cleanup_namespace(namespace):
+    """Best-effort cleanup for lingering namespaced resources before reinstall."""
+    cleanup_commands = [
+        ["kubectl", "delete", "pod", "--all", "-n", namespace, "--grace-period=0", "--force", "--ignore-not-found=true"],
+        ["kubectl", "delete", "svc", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "deploy", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "replicaset", "--all", "-n", namespace, "--ignore-not-found=true"],
+    ]
+
+    logger.warning(f"Forcing cleanup of lingering resources in namespace '{namespace}'.")
+    cleanup_ok = True
+
+    for command in cleanup_commands:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            if result.stdout.strip():
+                logger.debug(result.stdout.strip())
+            if result.stderr.strip():
+                logger.debug(result.stderr.strip())
+            if result.returncode != 0:
+                cleanup_ok = False
+                logger.warning(
+                    "Force cleanup command returned non-zero exit code %s: %s",
+                    result.returncode,
+                    " ".join(command),
+                )
+        except Exception as e:
+            cleanup_ok = False
+            logger.warning(f"Force cleanup command failed for namespace '{namespace}': {e}")
+
+    return cleanup_ok
+
+
 def check_services(namespace, timeout=30, interval=5):
     """
     Checks if services (especially NodePort) have been deleted in the specified namespace.

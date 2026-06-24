@@ -266,7 +266,7 @@ def test_data_integrity():
     ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
     logger.info(f"verify_ts_logs result: {ts_logs_result}")
     assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
-    first_wind_speed, last_wind_speed, total_records = security_utils.fetch_wind_turbine_data()
+    first_wind_speed, last_wind_speed, total_records = security_utils.fetch_wind_turbine_data(chart_path)
     assert first_wind_speed is not None or last_wind_speed is not None or total_records is not None, "Failed to fetch wind turbine data."
     logger.info(f"First wind speed: {first_wind_speed}, Last wind speed: {last_wind_speed}, Total records: {total_records} and wait for few {wait_time + 300} seconds to finish 1st set of ingestion data")
     time.sleep(wait_time + 300)
