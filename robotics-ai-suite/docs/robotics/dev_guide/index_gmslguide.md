@@ -36,5 +36,6 @@ Enable GMSL multi-camera Realsense2 ``d4xx-compat`` ROS2 libraries <./gmsl-guide
 Enable GMSL Camera GStreamer ``v4l2src`` plugin <./gmsl-guide/gmsl-gst-v4l2src-plugin.md>
 Enable GMSL Camera GStreamer ``icamerasrc`` plugin <./gmsl-guide/gmsl-gst-icamerasrc-plugin.md>
 GMSL Toubleshooting <./gmsl-guide/gmsl-toubleshooting.md>
+GMSL Supported Cameras <./gmsl-guide/supported-cameras.md>
 :::
 
