@@ -20,13 +20,21 @@ It is crucial to understand the SerDes I2C connectivity specific to each ODM/OEM
 
 - [GMSL Add-in-Card Design Overview](./gmsl-guide/gmsl-aic-overview.md)
 - [Configure Intel® GMSL `SerDes` ACPI Devices](./gmsl-guide/configure-gmsl-serdes-acpi.md)
+- [Install ``intel-mipi-gmsl-dkms`` Linux kernel V4L2 drivers](./gmsl-guide/install-intel-mipi-gmsl-dkms.md)
+- [Enable GMSL multi-camera Realsense2 ``d4xx-compat`` ROS2 libraries](./gmsl-guide/gmsl-librealsense2-d4xx-compat.md)
+- [Enable GMSL multi-camera GStreamer ``v4l2src`` plugin](./gmsl-guide/gmsl-gst-v4l2src-plugin.md)
+- [Enable GMSL multi-camera GStreamer ``icamerasrc`` plugin](./gmsl-guide/gmsl-gst-icamerasrc-plugin.md)
+- [GMSL Toubleshooting](./gmsl-guide/gmsl-toubleshooting.md)
 
-<!--hide_directive
 :::{toctree}
 :hidden:
 
 GMSL Add-in-Card Overview <./gmsl-guide/gmsl-aic-overview.md>
 Configure GMSL SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-acpi.md>
-
+Install ``intel-mipi-gmsl-dkms`` Linux kernel V4L2 drivers <./gmsl-guide/install-intel-mipi-gmsl-dkms.md>
+Enable GMSL multi-camera Realsense2 ``d4xx-compat`` ROS2 libraries <./gmsl-guide/gmsl-librealsense2-d4xx-compat.md>
+Enable GMSL Camera GStreamer ``v4l2src`` plugin <./gmsl-guide/gmsl-gst-v4l2src-plugin.md>
+Enable GMSL Camera GStreamer ``icamerasrc`` plugin <./gmsl-guide/gmsl-gst-icamerasrc-plugin.md>
+GMSL Toubleshooting <./gmsl-guide/gmsl-toubleshooting.md>
 :::
-hide_directive-->
+

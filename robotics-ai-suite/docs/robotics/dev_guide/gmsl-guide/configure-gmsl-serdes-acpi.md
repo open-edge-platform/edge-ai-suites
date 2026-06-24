@@ -17,14 +17,14 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    Refer to each tab below to understand the distinct ACPI camera device configuration tables for ODM hardware.
 
-   <!--hide_directive::::::{tab-set}
-   :::::{tab-item}hide_directive--> **Advantech® AFE-R360 & ASR-A502 series**
+   ::::::{tab-set}
+   :::::{tab-item} **Advantech® AFE-R360 & ASR-A502 series**
 
    The [Advantech® GMSL Input Module Card](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/mioe-gmsl/mod_fc1fc070-30f8-40c1-881f-56c967e26924) for [AFE-R360 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/afe-r360/mod_1e4a1980-9a31-46e6-87b6-affbd7a2cb44) and [ASR-A502 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/asr-a502/mod_ccca0f36-a50b-40c7-87b7-10fb96448605) may provide up to 6x GMSL camera interfaces (FAKRA universal type).
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **RealSense™ D457**
-   <!--hide_directive:sync: realsensehide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **RealSense™ D457**
+   :sync: realsense
 
    Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
@@ -45,9 +45,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 42         | 44         | 42         | 44         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
-   <!--hide_directive:sync: d3cmc115hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-115-084**
+   :sync: d3cmc115
 
    Below is an ACPI device configuration example for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module:
 
@@ -70,9 +70,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** on Advantech® AFE-R360 series the four D3CMCXXX ACPI configurations achieved by `PPR Unit=2` also require setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
-   <!--hide_directive:sync: d3cmc106hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-106-084**
+   :sync: d3cmc106
 
    Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/) GMSL2 camera module:
 
@@ -95,9 +95,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** on Advantech® AFE-R360 series the four D3CMCXXX ACPI configurations achieved by `PPR Unit=2` also require setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM222**
-   <!--hide_directive:sync: otocam222hide_directive-->
+   :::
+   :::{tab-item} **oToCAM222**
+   :sync: otocam222
 
    Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -118,9 +118,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM223**
-   <!--hide_directive:sync: otocam223hide_directive-->
+   :::
+   :::{tab-item} **oToCAM223**
+   :sync: otocam223
 
    Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
@@ -141,8 +141,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   ::::hide_directive-->
+   :::
+   ::::
 
    ![Advantech GMSL layout](../../images/gmsl/gmsl-adv-mioe.png "advantech gmsl layout")
 
@@ -169,14 +169,14 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    >
    > For the [Advantech® GMSL Input Module Card](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/mioe-gmsl/mod_fc1fc070-30f8-40c1-881f-56c967e26924) for [AFE-R360 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/afe-r360/mod_1e4a1980-9a31-46e6-87b6-affbd7a2cb44), the I2C1-channel **aggregated-link** deserializer at I2C device `0x48` can set the _Custom HID_, for example `INTC10CD`, and _Camera module label_, for example `d4xx`, tuple for both GMSL camera suffixes `a` and `g`, while the other **aggregated-link** deserializer at I2C device `0x4a` can use a different _Custom HID_, for example `INTC1031`, and _Camera module label_, for example `isx031`, tuple on GMSL camera suffixes `e` and `k`.
 
-   <!--hide_directive:::::
-   :::::{tab-item}hide_directive--> **SEAVO® HB03**
+   :::::
+   :::::{tab-item} **SEAVO® HB03**
 
    The [SEAVO® Embedded Computer HB03](https://www.seavo.com/en/products/products-info_itemid_693.html) UEFI BIOS `Version: S1132C1133A11` allows an admin user to configure up to 4x GMSL2 camera interfaces (FAKRA universal type).
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **RealSense™ D457**
-   <!--hide_directive:sync: realsensehide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **RealSense™ D457**
+   :sync: realsense
 
    Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
@@ -197,9 +197,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 42         | 44         | 42         | 44         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
-   <!--hide_directive:sync: d3cmc115hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-115-084**
+   :sync: d3cmc115
 
    Below is an ACPI device configuration example for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module:
 
@@ -222,9 +222,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** On SEAVO® HB03, the four D3CMCXXX ACPI configurations achieved by `PPR Unit=2` also require setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
-   <!--hide_directive:sync: d3cmc106hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-106-084**
+   :sync: d3cmc106
 
    Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/) GMSL2 camera module:
 
@@ -247,9 +247,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** On SEAVO® HB03, the four D3CMCXXX ACPI configurations achieved by `PPR Unit=2` also require setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM222**
-   <!--hide_directive:sync: otocam222hide_directive-->
+   :::
+   :::{tab-item} **oToCAM222**
+   :sync: otocam222
 
    Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -270,9 +270,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM223**
-   <!--hide_directive:sync: otocam223hide_directive-->
+   :::
+   :::{tab-item} **oToCAM223**
+   :sync: otocam223
 
    Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
@@ -293,8 +293,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 48         | 48         | 48         |
 
-   <!--hide_directive:::
-   ::::hide_directive-->
+   :::
+   ::::
 
    > **Note:** GMSL2 _aggregated-link_ `SerDes` CSI-2 ports 0 and 4 are purposely set to `LaneUsed = x4` to improve Intel® IPU6 DPHY signal-integrity issues on the [SEAVO® Embedded Computer HB03](https://www.seavo.com/en/products/products-info_itemid_693.html).
 
@@ -304,14 +304,14 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    >
    > For the [SEAVO® Embedded Computer HB03](https://www.seavo.com/en/products/products-info_itemid_693.html) Add-in-Card (AIC), the I2C1-channel **aggregated-link** deserializer at I2C device `0x48` can set the _Custom HID_, for example `INTC10CD`, and _Camera module label_, for example `d4xx`, tuple for both GMSL camera suffixes `a` and `g`, while the other **aggregated-link** deserializer at I2C device `0x4a` can use a different _Custom HID_, for example `INTC1031`, and _Camera module label_, for example `isx031`, tuple on GMSL camera suffixes `e` and `k`.
 
-   <!--hide_directive:::::
-   :::::{tab-item}hide_directive--> **Axiomtek® ROBOX500**
+   :::::
+   :::::{tab-item} **Axiomtek® ROBOX500**
 
    The [Axiomtek® ROBOX500](https://www.axiomtek.com/ROBOX500/) may provide either 4x GMSL or 8x GMSL camera interfaces (FAKRA universal type).
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **RealSense™ D457**
-   <!--hide_directive:sync: realsensehide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **RealSense™ D457**
+   :sync: realsense
 
    Below is an ACPI device configuration example for 4x RealSense Depth Camera D457 GMSL2 modules:
 
@@ -332,9 +332,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 42         | 44         | 62         | 64         |
    | Device2 I2C Address | 48         | 4a         | 68         | 6c         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
-   <!--hide_directive:sync: d3cmc115hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-115-084**
+   :sync: d3cmc115
 
    Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/):
 
@@ -357,9 +357,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** On Axiomtek ROBOX500, the 4x D3CMCXXX camera ACPI configuration achieved by `PPR Unit=1` requires setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
-   <!--hide_directive:sync: d3cmc106hide_directive-->
+   :::
+   :::{tab-item} **D3CMCXXX-106-084**
+   :sync: d3cmc106
 
    Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/):
 
@@ -382,9 +382,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    > **Note:** The D3CMCXXX ACPI configuration with `PPR Unit=2` requires setting `Device0` for the GMSL2 **aggregated-link** deserializer I2C address, for example `MAX9296A`, and `Device2` for the sensor I2C address, for example `ISX031`.
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM222**
-   <!--hide_directive:sync: otocam222hide_directive-->
+   :::
+   :::{tab-item} **oToCAM222**
+   :sync: otocam222
 
    Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -405,9 +405,9 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 4a         | 68         | 6c         |
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive--> **oToCAM223**
-   <!--hide_directive:sync: otocam223hide_directive-->
+   :::
+   :::{tab-item} **oToCAM223**
+   :sync: otocam223
 
    Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
@@ -428,8 +428,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 18         | 19         | 18         | 19         |
    | Device2 I2C Address | 48         | 4a         | 68         | 6c         |
 
-   <!--hide_directive:::
-   ::::hide_directive-->
+   :::
+   ::::
 
    ![Axiomtek ROBOX500](../../images/gmsl/gmsl2-robox500.jpg "axiomtek robox500")
 
@@ -454,5 +454,5 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address    | 42         | 44         | 62         | 64         | _43_       | _45_       | _63_       | _65_       |
    | Device2 I2C Address    | 48         | 4a         | 68         | 6c         | _48_       | _4a_       | _68_       | _6c_       |
 
-   <!--hide_directive:::::
-   ::::::hide_directive-->
+   :::::
+   ::::::
