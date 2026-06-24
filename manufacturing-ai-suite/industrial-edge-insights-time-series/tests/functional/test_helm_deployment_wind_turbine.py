@@ -130,14 +130,32 @@ def test_verify_pods_all_running_opcua_switch_to_mqtt(setup_helm_environment):
     assert result == True, "Pods are still running after cleanup."
     
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
-def test_verify_pods_opcua_for_5mins(setup_helm_environment, telegraf_input_plugin):
+def test_verify_pods_opcua_for_5mins(setup_helm_environment, telegraf_input_plugin, request):
     
     logger.info("TC_008: Testing OPC UA input plugin for 5 minutes, checking helm install, pod logs and uninstall with valid values in values.yaml")
+
+    def _restore_tick_to_mqtt():
+        try:
+            helm_utils.setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP)
+        except Exception as e:
+            logger.warning(f"TC_008 finalizer: failed to reset TICK to mqtt mode: {e}")
+
+    request.addfinalizer(_restore_tick_to_mqtt)
+
     result = helm_utils.verify_pods(namespace)
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for OPC UA input plugin."
     logger.info("All pods are running for opcua input plugin")
-    result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP)
+
+    result = helm_utils.setup_opcua_alerts(chart_path)
+    logger.info(f"setup_opcua_alerts result: {result}")
+    assert result == True, "Failed to configure OPC UA alert in TICK script."
+
+    result = helm_utils.setup_sample_app_udf_deployment_package(
+        chart_path,
+        sample_app=constants.WIND_SAMPLE_APP,
+        alert_mode="opcua",
+    )
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
     logger.info("UDF deployment package is activated")
