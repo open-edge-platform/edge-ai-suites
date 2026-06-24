@@ -300,7 +300,7 @@ const CONFIG = {
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
-          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.0.0/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
         },
         {
           when: {
@@ -405,7 +405,7 @@ const CONFIG = {
             VERSION: "2026.0"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/metro-sdk-manager/drone-mission-compute-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/drone-mission-compute-sdk/get-started.html`
         },
         {
           when: {
