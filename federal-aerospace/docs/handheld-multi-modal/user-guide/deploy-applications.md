@@ -112,12 +112,18 @@ c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/ent
 
 ## Accessing Application User Interface
 
-This composite application exposes multiple endpoints through the NGINX TLS reverse proxy. They are bound to localhost only and are not exposed on any external IP address. 
-Since the intended use is on handheld devices, the applications do not provide authentication or authorization.
+This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
+They are bound to localhost only and are not exposed on any external IP address.
+Since the intended use is on handheld devices, the applications do not provide authentication
+or authorization.
 
 > **Notice**:
-> A browser warning about the self-signed certificate is expected — the NGINX reverse proxy uses one to provide TLS on the localhost-bound addresses.
-> HTTPS is required by modern browsers to enable the microphone input used by Open WebUI and Speech To Text services.
+> The "self-signed certificate" browser warning is expected.
+> Modern browsers require HTTPS to enable microphone input used by Open WebUI and
+  Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
+  TLS transport on the `localhost` bound addresses.
+
+
 
 | Service | URL | Notes |
 |---------|-----|-------|
@@ -128,6 +134,6 @@ Since the intended use is on handheld devices, the applications do not provide a
 
 
 
-<!-- 
+<!--
 Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md#endpoints)
 -->

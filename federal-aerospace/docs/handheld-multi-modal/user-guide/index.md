@@ -19,8 +19,8 @@ collection consisting of both single- and multi-modal components that are optimi
 Intel® edge hardware in handheld deployment scenarios.
 
 This composite application combines a conversational agent exposed via Chat UI that is backed by
-a LLM inference server, a speech-to-text service and 
-[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html). 
+a LLM inference server, a speech-to-text service and
+[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
 Deployment of the the full solution consists of two main stages:
@@ -30,7 +30,7 @@ Deployment of the the full solution consists of two main stages:
 
 ## Components of the Handheld Multi-Modal Application
 
-The application combines a conversational agent (Chat UI) exposed as Open WebUI component 
+The application combines a conversational agent (Chat UI) exposed as Open WebUI component
 backed by LLM model served through the OpenVINO Model Server platform, a speech-to-text
 transcription functionality realized by the Whisper model, and observability dashboard
 exposed via Grafana dashboard for a live view of platform utilization and application metrics.
@@ -45,10 +45,11 @@ optimized hardware selection and performance tuning.
 For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 
 > **Notice:**
-> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld Multi-Modal Application
-> does not fully support pipelines that utilize [Hugging Face](https://huggingface.co/) models requiring
-> access approval and downloading via an access token. As a result the Video Summarization VLM pipeline
-> is not available in the preview release.
+> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
+  Multi-Modal Application does not fully support pipelines that utilize
+  [Hugging Face](https://huggingface.co/) models, requiring access approval and downloading
+  via an access token. As a result the Video Summarization VLM pipeline is not available in
+  the preview release.
 
 ### Speech To Text (Whisper Model)
 
