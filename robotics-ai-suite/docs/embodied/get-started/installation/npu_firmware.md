@@ -12,6 +12,9 @@ the steps in the [dedicated guide on how to do so](https://www.intel.com/content
 The full device name is Neural Processing Unit, but the Linux kernel driver uses
 the old name - Versatile Processing Unit (VPU).
 
+::::{tab-set}
+:::{tab-item} **Ubuntu 22.04**
+
 ## Installation
 
 1. Remove old packages.
@@ -90,6 +93,75 @@ the old name - Versatile Processing Unit (VPU).
    sudo udevadm control --reload-rules
    sudo udevadm trigger --subsystem-match=accel
    ```
+:::
+:::{tab-item}  **Ubuntu 24.04**
+
+## Installation
+
+1. Remove old packages.
+
+   ```bash
+   sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
+   ```
+
+2. Download all deb packages.
+
+   ```bash
+   wget https://github.com/intel/linux-npu-driver/releases/download/v1.32.0/linux-npu-driver-v1.32.0.20260402-23905121947-ubuntu2404.tar.gz --no-check-certificate
+   ```
+
+3. Install `libtbb12` which is a dependency for `intel-driver-compiler-npu`.
+
+   ```bash
+   sudo apt update
+   sudo apt install libtbb12
+   ```
+
+4. Install all packages.
+
+   ```bash
+   tar -xf linux-npu-driver-v1.32.0.20260402-23905121947-ubuntu2404.tar.gz
+   sudo dpkg -i *.deb
+   ```
+
+5. Reboot.
+
+   ```bash
+   reboot
+   # if everything works, we should see /dev/accel/accel0 device
+   ls /dev/accel/accel0
+   /dev/accel/accel0
+   # to receive intel_vpu state
+   dmesg | grep intel_vpu
+   ```
+
+6. User access to the device.
+
+   As a root user, this step can be skipped.
+
+   The new device `/dev/accel/accel0` requires manual setting of permissions access.
+   The `accel` devices should be in the "render" group in Ubuntu:
+
+   ```bash
+   # set the render group for accel device
+   sudo chown root:render /dev/accel/accel0
+   sudo chmod g+rw /dev/accel/accel0
+   # add user to the render group
+   sudo usermod -a -G render <user-name>
+   # user needs to restart the session to use the new group (log out and log in)
+   ```
+
+   The above steps must be repeated each time the module is reloaded or on every reboot.
+   To avoid manual setup of the group for `accel` device, the udev rules can be used:
+
+   ```bash
+   sudo bash -c "echo 'SUBSYSTEM==\"accel\", KERNEL==\"accel*\", GROUP=\"render\", MODE=\"0660\"' > /etc/udev/rules.d/10-intel-vpu.rules"
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger --subsystem-match=accel
+   ```
+   
+:::
+::::
 
 > **Tip:** If the NPU is not visible, check the access to the device with the following command:
 >
