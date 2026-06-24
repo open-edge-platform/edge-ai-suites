@@ -32,7 +32,7 @@ The setup script will:
 
 2. **[2] Application Dependency Check**
    - FFmpeg (auto-install if missing)
-   - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
+   - DL Streamer (auto-download and run installer [`dlstreamer-2026.1.0-win64.exe`](advance-setup-guide.md#b-install-dl-streamer); set the install path to `C:\dlls_windows`)
 
 3. **[3] Configure Settings**
    - [3.1] Language & ASR Configuration (provider, model, device)

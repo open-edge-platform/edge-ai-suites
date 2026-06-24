@@ -293,17 +293,16 @@ Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine,
 
 > **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
 
-
 ### 1. Install Trusted Compute
 
 Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
-1. Prerequisites
-2. Download the Trusted Compute Package
-3. Docker Option
 
-> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+1. [Prerequisites](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#1-prerequisites)
+2. [Download the Trusted Compute Package](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#2-download-the-trusted-compute-package)
+3. [Docker Option](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#4-docker-option)
 
-> **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment. However, Trusted
+> Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
 
 ### 2. Deploy the Smart Traffic Intersection Agent with Trusted Compute
 
@@ -312,24 +311,26 @@ Follow the [Trusted Compute baremetal installation guide](https://github.com/ope
 By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
 
 **Requirements:**
+
 - Subnet format must be exactly `172.X.0.0/16` where X is between 18-31 (RFC 1918 private IP range)
 - The subnet must not conflict with existing Docker networks on your system
 - DNS relay service will be automatically configured at `172.X.0.200`
 
 **Example:**
+
 ```bash
 # Optional: Customize the subnet if needed (default is 172.20.0.0/16)
 export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
 ```
 
-#### Deploy with Trusted Compute
+#### Perform the STIA Deployment with Trusted Compute
 
 ```bash
 export ENABLE_TC=true
 source ./setup.sh --setup
 ```
 
-The DL Streamer Pipeline Server and openvino model server (OVMS) containers will run
+The DL Streamer Pipeline Server and OpenVINO model server (OVMS) containers will run
 inside hardware-isolated TC VMs, protecting inference workloads and video data from
 untrusted co-tenants on the same host.
 
@@ -368,12 +369,12 @@ cd metro-ai-suite/smart-traffic-intersection-agent
 rm -rf deps/metro-vision
 ```
 
-> `setup.sh --setup` automatically re-clones `deps/metro-vision` when the directory is absent.
-> Removing it before upgrading ensures the correct version is fetched.
+> **Note:** `setup.sh --setup` automatically re-clones `deps/metro-vision` when the directory
+> is absent. Removing it before upgrading ensures the correct version is fetched.
 
 ### 3. Clean and Re-setup
 
-For **major version upgrades** (for example, from SceneScape v1.x to v2026.x), stale data
+For **major version upgrades** (for example, from Scenescape v1.x to v2026.x), stale data
 volumes and secrets can cause failures. Clean up old containers and re-run setup:
 
 ```bash

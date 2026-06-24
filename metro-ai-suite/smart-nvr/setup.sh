@@ -64,31 +64,31 @@ get_host_ip() {
         # Fallback to hostname command
         HOST_IP=$(hostname -I | awk '{print $1}')
     fi
-    
+
     # Fallback to localhost if we couldn't determine the IP
     if [ -z "$HOST_IP" ]; then
         HOST_IP="localhost"
         print_warning "Could not determine host IP, using localhost instead."
     fi
-    
+
     echo "$HOST_IP"
 }
 
 # Function to configure Scenescape settings
 configure_scenescape_setup() {
     print_info "Configuring Scenescape setup based on NVR_SCENESCAPE setting"
-    
+
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
-        
+
         # Configure Frigate with Scenescape cameras
         cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
-        
+
         # Substitute RTSP_STREAM_IP with host IP in the configuration
         local host_ip=$(get_host_ip)
         sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
         print_success "Scenescape Frigate configuration activated"
-        
+
         # Verify Scenescape certificates exist
         SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
         if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ] && \
@@ -109,10 +109,10 @@ configure_scenescape_setup() {
 
 configure_genai_setup() {
     print_info "Configuring GenAI setup based on NVR_GENAI setting"
-    
+
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         print_info "NVR_GENAI is enabled - configuring GenAI mode"
-        
+
         if [ -f "./resources/frigate-config/config.yml" ]; then
             sed -i '/^\s*genai:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
             # Enable Detect - required for GenAI
@@ -128,7 +128,7 @@ configure_genai_setup() {
 }
 
 # Function to validate required environment variables
-validate_environment() {    
+validate_environment() {
     # Check for NVR_GENAI flag
     if [ -z "${NVR_GENAI}" ]; then
         print_error "NVR_GENAI environment variable is required"
@@ -137,24 +137,24 @@ validate_environment() {
     fi
     if [ -z "${NVR_SCENESCAPE}" ]; then
         print_error "NVR_SCENESCAPE environment variable is required"
-        print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
+        print_info "Please set it to 'true' or 'false' to enable/disable NVR Scenescape features"
         return 1
     fi
 
     # Check for incompatible configuration
     if ([ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]) && ([ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]); then
         print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
-        print_info "Please set NVR_GENAI to 'false' if using SceneScape, or disable NVR_SCENESCAPE"
+        print_info "Please set NVR_GENAI to 'false' if using Scenescape, or disable NVR_SCENESCAPE"
         return 1
     fi
-    
+
     # Check for VSS IP and port
     if [ -z "${VSS_SUMMARY_IP}" ]; then
         print_error "VSS_SUMMARY_IP environment variable is required"
         print_info "Please set it to the IP address of your Video Summarization Service"
         return 1
     fi
-    
+
     if [ -z "${VSS_SUMMARY_PORT}" ]; then
         print_error "VSS_SUMMARY_PORT environment variable is required"
         print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
@@ -166,13 +166,13 @@ validate_environment() {
         print_info "Please set it to the IP address of your Video Summarization Service"
         return 1
     fi
-    
+
     if [ -z "${VSS_SEARCH_PORT}" ]; then
         print_error "VSS_SEARCH_PORT environment variable is required"
         print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
         return 1
     fi
-    
+
     # Check for VLM Model Endpoint IP and port
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         if [ -z "${VLM_SERVING_IP}" ]; then
@@ -180,33 +180,33 @@ validate_environment() {
             print_info "Please set it to the IP address of your VLM Model Endpoint"
             return 1
         fi
-        
+
         if [ -z "${VLM_SERVING_PORT}" ]; then
             print_error "VLM_SERVING_PORT environment variable is required when NVR_GENAI is enabled"
             print_info "Please set it to the port of your VLM Model Endpoint (typically 9766)"
             return 1
         fi
     fi
-    # Check for SceneScape MQTT settings if enabled
+    # Check for Scenescape MQTT settings if enabled
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         if [ -z "${SCENESCAPE_MQTT_USER}" ]; then
             print_error "SCENESCAPE_MQTT_USER environment variable is required when NVR_SCENESCAPE is enabled"
-            print_info "Please set it to the MQTT username for SceneScape"
+            print_info "Please set it to the MQTT username for Scenescape"
             return 1
         fi
 
         if [ -z "${SCENESCAPE_MQTT_PASSWORD}" ]; then
             print_error "SCENESCAPE_MQTT_PASSWORD environment variable is required when NVR_SCENESCAPE is enabled"
-            print_info "Please set it to the MQTT password for SceneScape"
+            print_info "Please set it to the MQTT password for Scenescape"
             return 1
         fi
-    fi    
+    fi
     # Check for MQTT user and password
     if [ -z "${MQTT_USER}" ]; then
         print_error "MQTT_USER environment variable is required"
         return 1
     fi
-    
+
     if [ -z "${MQTT_PASSWORD}" ]; then
         print_error "MQTT_PASSWORD environment variable is required"
         return 1
@@ -223,20 +223,20 @@ start_services() {
         print_error "Environment validation failed. Please set the required variables."
         return 1
     fi
-    
+
     # Configure Scenescape setup (config and certificates)
     if ! configure_scenescape_setup; then
         return 1
     fi
-    
+
     # Configure GenAI setup
     if ! configure_genai_setup; then
         return 1
     fi
-    
+
     print_info "Starting Docker Compose services..."
     # Run the Docker Compose stack with all services
-    docker compose -f docker/compose.yaml up -d 
+    docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
     sleep 5
     print_success "Services are starting up..."

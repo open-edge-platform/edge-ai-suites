@@ -96,18 +96,18 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make up
    ```
 
 3. Use the following command to verify that all containers are active and error-free.
 
-   > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
+   > **Note:** The command `make status` may show errors in containers like ia-grafana when the user has not logged in
    > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
    > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
    ```sh
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
@@ -118,49 +118,53 @@ By default, UDF for Time Series Analytics Microservice is configured to run on `
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 ### Running DL Streamer Pipeline Server model inference on GPU or NPU
 
 By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
-To trigger the model inference on `GPU` or `NPU` in DL Streamer Pipeline Server, run the following command:
+To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the following command:
 
-> **Note:**
-> Replace `GPU` with `NPU` to run inference on `NPU`.
+- To run inference on with GPU, 
 
-```sh
-curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "vision_weld_defect_classification"
-        },
-        "frame": [{
-                            "type": "webrtc",
-                            "peer-id": "samplestream",
-                            "overlay": false
-                        },
-                        {
-                            "type": "s3_write",
-                            "bucket": "dlstreamer-pipeline-results",
-                            "folder_prefix": "weld-defect-classification",
-                            "block": false
-                        }]
-    },
-    "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
-            "device": "GPU"
-        }
-    }
-}'
-```
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+- To run inference on `NPU`, use:
+
+  > **Note:** Ensure NPU support is available on your platform before running NPU inference.
+
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+    curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
+
+
+> **Note:** When stopping the pipeline, Grafana may display the error message: **"Error: stream not found, retrying in some seconds"**. This is expected behavior. The stream will automatically reconnect and resume in Grafana once the pipeline is started again.
 
 ## Verify the Multimodal Weld Defect Detection Results
 
@@ -174,7 +178,7 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
      docker exec -it ia-influxdb bash
     ```
 
-2. Run following commands to see the data in InfluxDB*.
+2. Run the following commands to see the data in InfluxDB*.
 
    > **NOTE:**
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
@@ -218,7 +222,7 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
 ## Bring down the sample app
 
 ```sh
-cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make down
 ```
 

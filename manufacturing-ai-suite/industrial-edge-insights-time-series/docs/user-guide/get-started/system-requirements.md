@@ -15,7 +15,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 **Required Software**:
 
 - Operating System Ubuntu 24.04
-- Docker 24.0.72 or higher
+- Docker 24.0.7 or higher
 - Python 3.10+
 
 ## Validation
