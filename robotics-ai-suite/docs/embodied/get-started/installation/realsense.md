@@ -11,6 +11,9 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
 ## Installation
 
+::::{tab-set}
+:::{tab-item} **Ubuntu 22.04**
+
 1. Register the server's public key:
 
    ```bash
@@ -68,6 +71,72 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
     See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
     to install librealsense packages and more other tools from RealSense depth camera sources.
+
+:::
+:::{tab-item}  **Ubuntu 24.04**
+
+1. Register the server's public key:
+
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+   ```
+
+2. Ensure that apt HTTPS support is installed:
+
+   ```bash
+
+   sudo apt-get install apt-transport-https
+   ```
+
+3. Add the server to the list of repositories:
+
+   ```bash
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
+
+4. Update your apt repository caches after setting up the repositories:
+
+   ```bash
+
+   sudo apt update
+   ```
+
+5. Configure APT preferences to pin the librealsense2 version:
+
+   This step pins the RealSense SDK to version 2.56.5-0~realsense.17055, which has been validated with
+   the ROS 2 Jazzy integration and the tutorials in this documentation. This prevents
+   automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
+
+   ```bash
+   echo -e "\nPackage: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
+   echo -e "\nPackage: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+   echo -e "\nPackage: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+   ```
+
+6. Install the RealSense drivers and libraries:
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+   > **Note:**
+   > The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
+
+7. (Optional) Install the ROS wrappers for RealSense depth cameras:
+
+   ```bash
+   sudo apt install ros-jazzy-realsense2-camera
+   ```
+
+8. (Optional) Install other tools or packages of RealSense depth cameras:
+
+    See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
+    to install librealsense packages and more other tools from RealSense depth camera sources.
+
+:::
+::::
 
 ## Troubleshooting
 
