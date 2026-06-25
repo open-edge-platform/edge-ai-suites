@@ -22,7 +22,7 @@ on:
         default: 'yes'
       tests:
         description: >
-          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
+          Which tests to run. Use 'all-tests', 'timeseries-all', 'timeseries-functional', or 'multimodal-all' to run a group,
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
@@ -57,7 +57,7 @@ on:
         default: 'yes'
       tests:
         description: >
-          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
+          Which tests to run. Use 'all-tests', 'timeseries-all', 'timeseries-functional', or 'multimodal-all' to run a group,
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
@@ -184,7 +184,7 @@ jobs:
             test_file="${test_file%.py}"
 
             # Check if it's a wildcard selector (generate all helm charts)
-            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
               GENERATE_WIND=true
               GENERATE_WELD=true
               break
@@ -236,9 +236,9 @@ jobs:
               docker save "$image" | sudo k3s ctr images import -
           done
 
-      - name: Cleanup cluster before timeseries tests
+      - name: Cleanup cluster before Time Series Wind and Weld tests
         run: |
-          echo "=== Cleaning up cluster resources before timeseries tests ==="
+          echo "=== Cleaning up cluster resources before Time Series Wind and Weld tests ==="
 
           # Uninstall all helm releases
           echo "Uninstalling all Helm releases..."
@@ -284,18 +284,18 @@ jobs:
           echo "Verifying cluster health..."
           kubectl get nodes
           kubectl get pods -A
-          echo "=== Cluster cleanup complete ==="
+          echo "=== Time Series Wind and Weld cleanup complete ==="
 
-      - name: Run Time Series Sample Apps functional tests
+      - name: Run Time Series Wind and Weld functional tests
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
-          # Timeseries-specific test files
-          TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
-            test_docker_deployment_wind_turbine test_docker_helm_deployment_security \
-            test_docker_influxdb_retention test_helm_deployment_weld_anomaly \
-            test_helm_deployment_wind_turbine test_helm_influxdb_retention"
+          # Core time-series test files excluding security.
+          TIMESERIES_CORE_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
+            test_docker_deployment_wind_turbine test_docker_influxdb_retention \
+            test_helm_deployment_weld_anomaly test_helm_deployment_wind_turbine \
+            test_helm_influxdb_retention"
 
           # Skip if only multimodal tests are selected
           # Parse comma-separated input, trim whitespace from each entry
@@ -306,38 +306,38 @@ jobs:
             [[ -n "$t" ]] && SELECTED_TESTS+=("$t")
           done
 
-          # Determine which timeseries test files to run
+          # Determine which core time-series test files to run.
           # Supports file names (test_foo), file names with .py, and node IDs (test_foo::test_bar)
-          TS_TEST_FILES=()
+          TS_CORE_TEST_FILES=()
           RUN_ALL_TS=false
           for t in "${SELECTED_TESTS[@]}"; do
-            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
               RUN_ALL_TS=true; break
             fi
             # Extract base file name (strip .py suffix and anything after ::)
             file_part="${t%%::*}"
             file_part="${file_part%.py}"
-            if echo "$TIMESERIES_TESTS" | grep -qw "$file_part"; then
+            if echo "$TIMESERIES_CORE_TESTS" | grep -qw "$file_part"; then
               if [[ "$t" == *"::"* ]]; then
-                TS_TEST_FILES+=("${file_part}.py::${t#*::}")
+                TS_CORE_TEST_FILES+=("${file_part}.py::${t#*::}")
               else
-                TS_TEST_FILES+=("${file_part}.py")
+                TS_CORE_TEST_FILES+=("${file_part}.py")
               fi
             fi
           done
 
-          if [[ "$RUN_ALL_TS" == "false" && "${#TS_TEST_FILES[@]}" -eq 0 ]]; then
-            echo "Skipping time-series tests (no time-series tests selected)"
+          if [[ "$RUN_ALL_TS" == "false" && "${#TS_CORE_TEST_FILES[@]}" -eq 0 ]]; then
+            echo "Skipping time-series core tests (no wind/weld tests selected)"
             exit 0
           fi
 
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional"
-          echo "Running Time Series Sample Apps functional tests"
+          echo "Running Time Series Wind and Weld functional tests"
           python3 -m venv env
           source env/bin/activate
           pip3 install -r ../requirements.txt
-          mkdir -p /tmp/test_timeseries_report
-          rm -f /tmp/test_timeseries_report/report.html /tmp/test_timeseries_report/junit.xml
+          mkdir -p /tmp/test_timeseries_core_report
+          rm -f /tmp/test_timeseries_core_report/report.html /tmp/test_timeseries_core_report/junit.xml
 
           # Build marker expression to skip long-running tests when requested
           MARKER_ARGS=()
@@ -358,11 +358,11 @@ jobs:
 
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
-          echo "========== Collecting tests =========="
+          echo "========== Collecting time-series core tests =========="
           if [[ "$RUN_ALL_TS" == "true" ]]; then
             pytest --collect-only -q "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" 2>&1 || true
           else
-            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}" 2>&1 || true
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}" 2>&1 || true
           fi
           echo "======================================"
           echo ""
@@ -370,15 +370,54 @@ jobs:
           # Run selected tests (all or specific files)
           set +e
           if [[ "$RUN_ALL_TS" == "true" ]]; then
-            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}"
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_core_report/report.html \
+              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" \
+              --ignore=test_docker_helm_deployment_security.py
           else
-            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}"
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_core_report/report.html \
+              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}"
           fi
           PYTEST_RC=$?
           set -e
-          echo "TIMESERIES_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
+          echo "TIMESERIES_CORE_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
+
+          if [[ "$PYTEST_RC" -ne 0 ]]; then
+            echo ""
+            echo "========== Time Series Core Failure Diagnostics =========="
+            echo "Kubernetes nodes:"
+            kubectl get nodes -o wide 2>&1 || true
+            echo ""
+            echo "All pods:"
+            kubectl get pods -A -o wide 2>&1 || true
+            echo ""
+            echo "Time-series namespace resources (ts-sample-app):"
+            kubectl get all -n ts-sample-app -o wide 2>&1 || true
+            echo ""
+            echo "Time-series namespace pod descriptions:"
+            kubectl describe pods -n ts-sample-app 2>&1 || true
+            echo ""
+            echo "Time-series namespace recent events:"
+            kubectl get events -n ts-sample-app --sort-by=.lastTimestamp 2>&1 || true
+            echo ""
+            echo "Time-series namespace current pod logs:"
+            for deploy in \
+              deployment-time-series-analytics-microservice \
+              deployment-telegraf \
+              deployment-influxdb \
+              deployment-nginx \
+              deployment-mqtt-publisher \
+              deployment-mqtt-broker \
+              deployment-opcua-server \
+              deployment-grafana; do
+              echo "----- Logs for ${deploy} -----"
+              kubectl logs -n ts-sample-app --all-containers=true --prefix=true --tail=200 "deployment/${deploy}" 2>&1 || true
+            done
+            echo ""
+            echo "Pytest-generated tests.log (if present):"
+            find . -maxdepth 3 -name tests.log -type f -print -exec tail -n 400 {} \; 2>&1 || true
+            echo "===================================================="
+            echo ""
+          fi
 
           # Print test results summary with failure details
           python3 - <<'PYEOF'
@@ -387,7 +426,7 @@ jobs:
           def fmt_time(s):
               s = float(s); m = int(s) // 60; r = s - m * 60
               return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
-          xml_path = '/tmp/test_timeseries_report/junit.xml'
+            xml_path = '/tmp/test_timeseries_core_report/junit.xml'
           if not os.path.exists(xml_path):
               print("No test results found (JUnit XML not generated)")
           else:
@@ -433,12 +472,219 @@ jobs:
           deactivate
           exit $PYTEST_RC
 
-      - name: Upload Time Series Sample Apps HTML test report to GitHub
+      - name: Upload Time Series Wind and Weld HTML test report to GitHub
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
-          name: timeseries-test-report
-          path: /tmp/test_timeseries_report
+          name: timeseries-core-test-report
+          path: /tmp/test_timeseries_core_report
+
+      - name: Cleanup cluster before security tests
+        if: ${{ !cancelled() }}
+        run: |
+          echo "=== Cleaning up cluster resources before security tests ==="
+
+          echo "Uninstalling all Helm releases..."
+          helm list --all-namespaces -q 2>/dev/null | while read release; do
+            ns=$(helm list --all-namespaces --filter "^${release}$" -o json 2>/dev/null | jq -r '.[0].namespace // "default"')
+            echo "Uninstalling helm release: $release from namespace: $ns"
+            helm uninstall "$release" -n "$ns" --wait --timeout 5m 2>/dev/null || true
+          done
+
+          echo "Cleaning up security test namespace..."
+          if kubectl get namespace ts-sample-app 2>/dev/null; then
+            kubectl delete namespace ts-sample-app --wait=true --timeout=5m 2>/dev/null || true
+          fi
+
+          echo "Cleaning up PVCs..."
+          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
+
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
+
+          echo "Force deleting any stuck pods..."
+          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
+            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          done
+
+          echo "Cleaning up docker resources..."
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+
+          echo "Waiting for cluster to stabilize..."
+          sleep 30
+
+          echo "Verifying cluster health..."
+          kubectl get nodes
+          kubectl get pods -A
+          echo "=== Security cleanup complete ==="
+
+      - name: Run Time Series Security functional tests
+        if: ${{ !cancelled() }}
+        env:
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+        run: |
+          SECURITY_TEST_FILE="test_docker_helm_deployment_security"
+
+          IFS=',' read -ra SELECTED <<< "$TESTS"
+          SECURITY_TEST_FILES=()
+          RUN_SECURITY=false
+          for t in "${SELECTED[@]}"; do
+            t="$(echo "$t" | xargs)"
+            [[ -z "$t" ]] && continue
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
+              RUN_SECURITY=true
+              break
+            fi
+            file_part="${t%%::*}"
+            file_part="${file_part%.py}"
+            if [[ "$file_part" == "$SECURITY_TEST_FILE" ]]; then
+              if [[ "$t" == *"::"* ]]; then
+                SECURITY_TEST_FILES+=("${file_part}.py::${t#*::}")
+              else
+                SECURITY_TEST_FILES+=("${file_part}.py")
+              fi
+            fi
+          done
+
+          if [[ "$RUN_SECURITY" == "false" && "${#SECURITY_TEST_FILES[@]}" -eq 0 ]]; then
+            echo "Skipping time-series security tests (no security tests selected)"
+            exit 0
+          fi
+
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional"
+          echo "Running Time Series Security functional tests"
+          python3 -m venv env
+          source env/bin/activate
+          pip3 install -r ../requirements.txt
+          mkdir -p /tmp/test_timeseries_security_report
+          rm -f /tmp/test_timeseries_security_report/report.html /tmp/test_timeseries_security_report/junit.xml
+
+          MARKER_ARGS=()
+          if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
+            echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
+            MARKER_ARGS=(-m "not longrun")
+          fi
+
+          echo ""
+          echo "========== Collecting time-series security tests =========="
+          if [[ "$RUN_SECURITY" == "true" ]]; then
+            pytest --collect-only -q "${MARKER_ARGS[@]}" test_docker_helm_deployment_security.py 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${SECURITY_TEST_FILES[@]}" 2>&1 || true
+          fi
+          echo "==========================================="
+          echo ""
+
+          set +e
+          if [[ "$RUN_SECURITY" == "true" ]]; then
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_security_report/report.html \
+              --junitxml=/tmp/test_timeseries_security_report/junit.xml "${MARKER_ARGS[@]}" test_docker_helm_deployment_security.py
+          else
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_security_report/report.html \
+              --junitxml=/tmp/test_timeseries_security_report/junit.xml "${MARKER_ARGS[@]}" "${SECURITY_TEST_FILES[@]}"
+          fi
+          PYTEST_RC=$?
+          set -e
+          echo "TIMESERIES_SECURITY_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
+
+          if [[ "$PYTEST_RC" -ne 0 ]]; then
+            echo ""
+            echo "========== Time Series Security Failure Diagnostics =========="
+            echo "Kubernetes nodes:"
+            kubectl get nodes -o wide 2>&1 || true
+            echo ""
+            echo "All pods:"
+            kubectl get pods -A -o wide 2>&1 || true
+            echo ""
+            echo "Time-series namespace resources (ts-sample-app):"
+            kubectl get all -n ts-sample-app -o wide 2>&1 || true
+            echo ""
+            echo "Time-series namespace pod descriptions:"
+            kubectl describe pods -n ts-sample-app 2>&1 || true
+            echo ""
+            echo "Time-series namespace recent events:"
+            kubectl get events -n ts-sample-app --sort-by=.lastTimestamp 2>&1 || true
+            echo ""
+            echo "Time-series namespace current pod logs:"
+            for deploy in \
+              deployment-time-series-analytics-microservice \
+              deployment-telegraf \
+              deployment-influxdb \
+              deployment-nginx \
+              deployment-mqtt-publisher \
+              deployment-mqtt-broker \
+              deployment-opcua-server \
+              deployment-grafana; do
+              echo "----- Logs for ${deploy} -----"
+              kubectl logs -n ts-sample-app --all-containers=true --prefix=true --tail=200 "deployment/${deploy}" 2>&1 || true
+            done
+            echo ""
+            echo "Pytest-generated tests.log (if present):"
+            find . -maxdepth 3 -name tests.log -type f -print -exec tail -n 400 {} \; 2>&1 || true
+            echo "========================================================"
+            echo ""
+          fi
+
+          python3 - <<'PYEOF'
+          import xml.etree.ElementTree as ET, os
+          from collections import defaultdict
+          def fmt_time(s):
+              s = float(s); m = int(s) // 60; r = s - m * 60
+              return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
+          xml_path = '/tmp/test_timeseries_security_report/junit.xml'
+          if not os.path.exists(xml_path):
+              print("No test results found (JUnit XML not generated)")
+          else:
+              root = ET.parse(xml_path).getroot()
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0})
+              failures = []
+              errors = []
+              for tc in root.findall('.//testcase'):
+                  parts = tc.get('classname', '').split('.')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
+                  files[fname]['total'] += 1
+                  files[fname]['time'] += float(tc.get('time', 0))
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
+                      files[fname]['failed'] += 1
+                      msg = fail_el.get('message', '')[:200]
+                      failures.append(f"  FAILED  {test_id}\n          {msg}")
+                  elif err_el is not None:
+                      files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      errors.append(f"  ERROR   {test_id}\n          {msg}")
+                  elif tc.find('skipped') is not None:
+                      files[fname]['skipped'] += 1
+                  else:
+                      files[fname]['passed'] += 1
+              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5} {'Time':>8}")
+              print('-' * 90)
+              for fname, c in sorted(files.items()):
+                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5} {fmt_time(c['time']):>8}")
+              if failures:
+                  print(f"\n--- Failures ({len(failures)}) ---")
+                  print('\n'.join(failures))
+              if errors:
+                  print(f"\n--- Errors ({len(errors)}) ---")
+                  print('\n'.join(errors))
+              print()
+          PYEOF
+          deactivate
+          exit $PYTEST_RC
+
+      - name: Upload Time Series Security HTML test report to GitHub
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: timeseries-security-test-report
+          path: /tmp/test_timeseries_security_report
 
       - name: Cleanup cluster before multimodal tests
         if: ${{ !cancelled() }}
@@ -475,9 +721,11 @@ jobs:
             kubectl delete "$pod" --force --grace-period=0 2>/dev/null || true
           done
 
-          # Clean up any leftover docker resources from timeseries
+          # Clean up any leftover docker resources from prior segments
           echo "Cleaning up docker resources..."
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down 2>/dev/null || true
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/"
           make down 2>/dev/null || true
 
           # Give cluster time to stabilize
@@ -488,7 +736,7 @@ jobs:
           echo "Verifying cluster health..."
           kubectl get nodes
           kubectl get pods -A
-          echo "=== Cluster cleanup complete ==="
+          echo "=== Multimodal cleanup complete ==="
 
       - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
         if: ${{ !cancelled() }}
@@ -649,7 +897,8 @@ jobs:
           tests   = os.environ.get('TESTS', 'all-tests')
           skip_long = os.environ.get('SKIP_LONG_TESTS', 'yes')
           event   = os.environ.get('GITHUB_EVENT_NAME', 'unknown')
-          ts_exit = os.environ.get('TIMESERIES_EXIT_CODE', '')
+          ts_core_exit = os.environ.get('TIMESERIES_CORE_EXIT_CODE', '')
+          ts_security_exit = os.environ.get('TIMESERIES_SECURITY_EXIT_CODE', '')
           mm_exit = os.environ.get('MULTIMODAL_EXIT_CODE', '')
 
           def fmt_time(s):
@@ -715,8 +964,9 @@ jobs:
               out.write(f'- **Skip Long Tests:** {skip_long}\n\n')
 
               sections = [
-                  ('\U0001f3ed Time Series Tests', '/tmp/test_timeseries_report/junit.xml', ts_exit),
-                  ('\U0001f3ad Multimodal Tests',  '/tmp/test_multimodal_report/junit.xml',  mm_exit),
+                  ('\U0001f30a Time Series Wind and Weld Tests', '/tmp/test_timeseries_core_report/junit.xml', ts_core_exit),
+                  ('\U0001f512 Time Series Security Tests', '/tmp/test_timeseries_security_report/junit.xml', ts_security_exit),
+                  ('\U0001f3ad Multimodal Tests', '/tmp/test_multimodal_report/junit.xml', mm_exit),
               ]
               for title, xml_path, exit_code in sections:
                   out.write(f'### {title}\n')
