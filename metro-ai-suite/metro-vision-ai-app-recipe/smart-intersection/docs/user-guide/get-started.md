@@ -46,8 +46,7 @@ To get started:
      ./install.sh smart-intersection
      ```
 
-> **Note:** For environments requiring a specific host IP address (such as when using Edge
-> Manageability Toolkit or deploying across different network interfaces), you can explicitly
+> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
 > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `./install.sh smart-intersection <HOST_IP>`
 

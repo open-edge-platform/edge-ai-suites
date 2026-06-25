@@ -26,14 +26,24 @@ spec:
         ports:
         - containerPort: {{ .Values.servicePorts.retriever }}
         env:
-        - name: MILVUS_HOST
-          value: {{ .Values.MILVUS_HOST | quote }}
-        - name: MILVUS_PORT
-          value: {{ .Values.MILVUS_PORT | quote  }}
+        - name: RETRIEVER_BACKEND
+          value: "milvus"
+        - name: MILVUS_URI
+          value: "http://{{ .Values.MILVUS_HOST }}:{{ .Values.MILVUS_PORT }}"
         - name: EMBEDDING_MODEL_NAME
           value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
-        - name: EMBEDDING_BASE_URL
-          value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
+        - name: EMBEDDINGS_ENDPOINT
+          value: "{{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL }}/embeddings"
+        - name: INDEX_NAME
+          value: {{ .Values.retrieverMilvus.env.INDEX_NAME | quote }}
+        - name: MILVUS_METADATA_FIELD
+          value: {{ .Values.retrieverMilvus.env.MILVUS_METADATA_FIELD | quote }}
+        - name: DEFAULT_TOP_K
+          value: {{ .Values.retrieverMilvus.env.DEFAULT_TOP_K | quote }}
+        - name: MAX_TOP_K
+          value: {{ .Values.retrieverMilvus.env.MAX_TOP_K | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.retrieverMilvus.env.LOG_LEVEL | quote }}
         - name: HF_ENDPOINT
           value: {{ .Values.retrieverMilvus.env.HF_ENDPOINT | quote }}
         - name: no_proxy
@@ -42,9 +52,11 @@ spec:
           value: {{ .Values.global.proxy.http_proxy | quote }}
         - name: https_proxy
           value: {{ .Values.global.proxy.https_proxy | quote }}
+        - name: NO_PROXY
+          value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
         livenessProbe:
           httpGet:
-            path: /v1/retrieval/health
+            path: /health
             port: {{ .Values.servicePorts.retriever }}
           {{- with .Values.retrieverMilvus.livenessProbe }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
@@ -53,13 +65,13 @@ spec:
           failureThreshold: {{ .failureThreshold }}
           {{- end }}
         readinessProbe:
-          {{- if .Values.retrieverMilvus.readinessProbe.sameAsLiveness }}
           httpGet:
-            path: /v1/retrieval/health
+            path: /ready
             port: {{ .Values.servicePorts.retriever }}
-          initialDelaySeconds: {{ .Values.retrieverMilvus.livenessProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.retrieverMilvus.livenessProbe.periodSeconds }}
-          timeoutSeconds: {{ .Values.retrieverMilvus.livenessProbe.timeoutSeconds }}
-          failureThreshold: {{ .Values.retrieverMilvus.livenessProbe.failureThreshold }}
+          {{- with .Values.retrieverMilvus.readinessProbe }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+          failureThreshold: {{ .failureThreshold }}
           {{- end }}
 

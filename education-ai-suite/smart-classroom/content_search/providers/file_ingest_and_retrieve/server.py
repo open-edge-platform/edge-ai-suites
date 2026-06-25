@@ -13,14 +13,14 @@ class _ShortNameFormatter(logging.Formatter):
 _fmt = "%(levelname)s: [%(name)s] %(message)s"
 _datefmt = '%Y-%m-%d %H:%M:%S'
 logging.basicConfig(level=logging.WARNING, format=_fmt, datefmt=_datefmt, force=True)
-for _h in logging.root.handlers:
-    _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
-for _named in [
-    "server", "models", "clip_handler", "indexer",
-    "retriever", "reranker", "document_parser", "detector",
-    "chroma_client", "store",
-]:
-    logging.getLogger(_named).setLevel(logging.INFO)
+
+_pkg_logger = logging.getLogger("providers")
+_pkg_logger.setLevel(logging.INFO)
+_pkg_logger.propagate = False
+_pkg_handler = logging.StreamHandler()
+_pkg_handler.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
+_pkg_logger.addHandler(_pkg_handler)
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 import langdetect
@@ -49,7 +49,7 @@ from providers.file_ingest_and_retrieve.models import (
     get_document_embedding_model,
 )
 
-logger = logging.getLogger("server")
+logger = logging.getLogger(__name__)
 
 class _IngestRequestBase(BaseModel):
     @field_validator('meta', check_fields=False)
