@@ -20,9 +20,7 @@ pytest_plugins = ["conftest_docker"]
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Container lists used by wait_until_containers_up in multi-stream tests
-# ---------------------------------------------------------------------------
 _WIND_MQTT_CONTAINERS = [
     constants.CONTAINERS["influxdb"]["name"],
     constants.CONTAINERS["telegraf"]["name"],
@@ -364,18 +362,18 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info("TC_013: Testing MQTT alerts functionality")
     context = setup_wind_turbine_environment
 
-    # ------------------------------------------------------------------
+    # Ensure UDF is reset to MQTT mode for test determinism
+    logger.info("Pre-flight: ensuring loaded UDF is in MQTT mode")
+    if not docker_utils.reset_loaded_udf_to("mqtt"):
+        pytest.fail("reset_loaded_udf_to('mqtt') failed — see logs above")
+
     # Phase 1: Deploy MQTT stack
-    # ------------------------------------------------------------------
     logger.info("[DEBUG] Phase 1/4: Deploying MQTT stack...")
     deploy_ok = context["deploy_mqtt"]()
     logger.info(f"[DEBUG] deploy_mqtt returned: {deploy_ok}")
     assert deploy_ok, "MQTT deployment failed before alert validation could start"
 
-    # ------------------------------------------------------------------
-    # Phase 2: Pre-validation health checks — confirm prerequisites the
-    # validate_mqtt_alert_system helper assumes are already in place.
-    # ------------------------------------------------------------------
+    # Phase 2: Pre-validation health checks
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
     mqtt_broker_name = constants.CONTAINERS["mqtt_broker"]["name"]
     mqtt_publisher_name = constants.CONTAINERS["mqtt_publisher"]["name"]
@@ -404,8 +402,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
     assert svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation"
 
-    # Snapshot of running containers + their status — useful when triaging
-    # failures that show up later as "container X not running".
+    # Snapshot container state for triage
     try:
         ps_out = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
@@ -415,17 +412,12 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     except Exception as exc:
         logger.warning(f"[DEBUG] Failed to capture docker ps snapshot: {exc}")
 
-    # ------------------------------------------------------------------
     # Phase 3: Run the actual validation helper
-    # ------------------------------------------------------------------
     logger.info("[DEBUG] Phase 3/4: Invoking validate_mqtt_alert_system()...")
     validation_result = docker_utils.validate_mqtt_alert_system(constants.WIND_SAMPLE_APP)
     logger.info(f"[DEBUG] validate_mqtt_alert_system returned: {validation_result}")
 
-    # ------------------------------------------------------------------
-    # Phase 4: On failure, dump container state + key logs so the CI
-    # output is self-sufficient for diagnosis.
-    # ------------------------------------------------------------------
+    # Phase 4: On failure, dump container state and logs for diagnosis
     if not validation_result:
         logger.error("[DEBUG] Phase 4/4: Validation FAILED — collecting diagnostics")
 
@@ -465,7 +457,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # Cleanup handled by fixture
 
 @pytest.mark.opcua
-def test_opcua_alerts(setup_wind_turbine_environment):
+def test_opcua_alerts(setup_wind_turbine_environment, request):
     """TC_014: Testing OPCUA alerts functionality.
 
     The underlying ``validate_opcua_alert_system`` helper performs 5 sequential
@@ -481,18 +473,22 @@ def test_opcua_alerts(setup_wind_turbine_environment):
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
 
-    # ------------------------------------------------------------------
+    # Reset UDF to MQTT baseline on teardown so later tests don't inherit the OPC-UA TICK.
+    def _reset_to_mqtt_baseline():
+        try:
+            ok = docker_utils.reset_loaded_udf_to("mqtt")
+            logger.info(f"TC_014 teardown: reset_loaded_udf_to('mqtt') -> {ok}")
+        except Exception as exc:
+            logger.warning(f"TC_014 teardown reset failed: {exc}")
+    request.addfinalizer(_reset_to_mqtt_baseline)
+
     # Phase 1: Deploy OPC-UA stack
-    # ------------------------------------------------------------------
     logger.info("[DEBUG] Phase 1/4: Deploying OPC-UA stack...")
     deploy_ok = context["deploy_opcua"]()
     logger.info(f"[DEBUG] deploy_opcua returned: {deploy_ok}")
     assert deploy_ok, "OPC-UA deployment failed before alert validation could start"
 
-    # ------------------------------------------------------------------
-    # Phase 2: Pre-validation health checks — confirm prerequisites the
-    # validate_opcua_alert_system helper assumes are already in place.
-    # ------------------------------------------------------------------
+    # Phase 2: Pre-validation health checks
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
     opcua_name = constants.CONTAINERS["opcua_server"]["name"]
 
@@ -514,8 +510,7 @@ def test_opcua_alerts(setup_wind_turbine_environment):
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
     assert svc_ready, "ts-api health endpoint did not become ready before OPC-UA alert validation"
 
-    # Snapshot of running containers + their status — useful when triaging
-    # failures that show up later as "container X not running".
+    # Snapshot container state for triage
     try:
         ps_out = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
@@ -525,17 +520,12 @@ def test_opcua_alerts(setup_wind_turbine_environment):
     except Exception as exc:
         logger.warning(f"[DEBUG] Failed to capture docker ps snapshot: {exc}")
 
-    # ------------------------------------------------------------------
     # Phase 3: Run the actual validation helper
-    # ------------------------------------------------------------------
     logger.info("[DEBUG] Phase 3/4: Invoking validate_opcua_alert_system()...")
     validation_result = docker_utils.validate_opcua_alert_system()
     logger.info(f"[DEBUG] validate_opcua_alert_system returned: {validation_result}")
 
-    # ------------------------------------------------------------------
-    # Phase 4: On failure, dump container state + key logs so the CI
-    # output is self-sufficient for diagnosis.
-    # ------------------------------------------------------------------
+    # Phase 4: On failure, dump container state and logs for diagnosis
     if not validation_result:
         logger.error("[DEBUG] Phase 4/4: Validation FAILED — collecting diagnostics")
 

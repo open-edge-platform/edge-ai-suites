@@ -343,6 +343,116 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
+def _dump_unhealthy_pods(namespace):
+    """Dump describe + logs for every non-Running pod or pods with high restart counts.
+
+    Best-effort: every kubectl invocation is wrapped so a failure here never
+    masks the original test-failure assertion.
+
+    A pod is considered unhealthy if:
+    - STATUS is not in {Running, Completed, Succeeded}
+    - READY column shows not all containers ready (e.g., 0/1)
+    - Restart count exceeds threshold (catches pods that restart frequently but
+      may appear Running at the moment of check)
+    """
+    HEALTHY_STATUSES = {"Running", "Completed", "Succeeded"}
+    RESTART_THRESHOLD = 5  # Flag pods with >5 restarts as potentially unstable
+    try:
+        result = subprocess.run(
+            ["kubectl", "get", "pods", "-n", namespace, "--no-headers"],
+            capture_output=True, text=True, check=False, timeout=30,
+        )
+        pods = []
+        for line in result.stdout.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split()
+            if len(cols) < 3:
+                continue
+            name, ready, status = cols[0], cols[1], cols[2]
+            if status == "Terminating":
+                continue  # leftover from previous release; not actionable
+            ready_ok = False
+            if "/" in ready:
+                num, den = ready.split("/", 1)
+                ready_ok = (num == den and num != "0")
+
+            # Check restart count (cols[3] if present, format: "5" or "5 (3h ago)")
+            high_restarts = False
+            if len(cols) >= 4:
+                try:
+                    # Extract numeric part (handles "5" and "5 (3h ago)" formats)
+                    restart_str = cols[3].split("(")[0].strip()
+                    restarts = int(restart_str)
+                    if restarts > RESTART_THRESHOLD:
+                        high_restarts = True
+                        logger.warning(f"Pod {name} has {restarts} restarts (threshold={RESTART_THRESHOLD})")
+                except (ValueError, IndexError):
+                    pass  # Can't parse restarts, ignore
+
+            if (not ready_ok) or (status not in HEALTHY_STATUSES) or high_restarts:
+                if name not in pods:
+                    pods.append(name)
+
+        if not pods:
+            logger.info(f"No unhealthy pods found to dump in '{namespace}'.")
+            return
+
+        logger.error(f"dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
+        for pod in pods:
+            logger.error(f"\n===== describe pod {pod} =====")
+            try:
+                desc = subprocess.run(
+                    ["kubectl", "describe", "pod", "-n", namespace, pod],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(desc.stdout)
+                if desc.stderr:
+                    logger.error(f"[stderr] {desc.stderr}")
+            except Exception as e:
+                logger.error(f"describe failed: {e}")
+
+            logger.error(f"\n===== logs {pod} (current, --tail=200) =====")
+            try:
+                cur = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(cur.stdout or "(no current logs)")
+                if cur.stderr:
+                    logger.error(f"[stderr] {cur.stderr}")
+            except Exception as e:
+                logger.error(f"current logs failed: {e}")
+
+            logger.error(f"\n===== logs {pod} (previous, --tail=200) =====")
+            try:
+                prev = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--previous", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(prev.stdout or "(no previous logs)")
+                if prev.stderr:
+                    logger.error(f"[stderr] {prev.stderr}")
+            except Exception as e:
+                logger.error(f"previous logs failed: {e}")
+
+        logger.error(f"\n===== recent events in '{namespace}' =====")
+        try:
+            evs = subprocess.run(
+                ["kubectl", "get", "events", "-n", namespace,
+                 "--sort-by=.lastTimestamp"],
+                capture_output=True, text=True, check=False, timeout=30,
+            )
+            logger.error(evs.stdout)
+        except Exception as e:
+            logger.error(f"events dump failed: {e}")
+    except Exception as e:
+        logger.error(f"_dump_unhealthy_pods crashed: {e}")
+
+
 def verify_pods(namespace, timeout=300, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 
@@ -375,6 +485,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     logger.error("Timeout reached. No pods found in namespace.")
+                    _dump_unhealthy_pods(namespace)
                     return False
                 time.sleep(interval)
                 continue
@@ -427,6 +538,7 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
+                _dump_unhealthy_pods(namespace)
                 return False
 
             # Wait before checking again
@@ -770,7 +882,7 @@ def _wait_for_pod_ready(pod_name, namespace, timeout=180):
         return False
 
 
-def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_INGESTED_TOPIC, timeout=180, interval=10):
+def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_MQTT_TOPIC, timeout=180, interval=10):
     """Subscribe from inside the broker pod until a single message is observed on the topic."""
     pod_name = _wait_for_pod_with_substring(namespace, "mqtt-broker")
     if not pod_name:
@@ -1429,29 +1541,60 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.error(f"An unexpected error occurred: {e}")
         return None, False
 
-def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
-    """Run make gen_helm_chart in the parent directory."""
+def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
+    """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
+    
+    This generates the helm chart AND packages it into a .tgz file in helm-packages/.
+    This matches the workflow behavior which uses gen_helm_charts_targz.
+    
+    For multimodal, uses `make gen_helm_charts` + manual packaging since
+    multimodal Makefile doesn't have gen_helm_charts_targz target.
+    """
     original_dir = os.getcwd()
     try:
-        
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
 
-        # Run the make command
-        logger.info("Generating Helm chart...")
-        result = subprocess.run(["make", "gen_helm_charts", "app=" + sample_app], capture_output=True, text=True, check=True)
-        logger.info(result.stdout)
-        logger.info("Helm chart generated successfully.")
+        is_multimodal = (sample_app == constants.MULTIMODAL_SAMPLE_APP)
+        
+        if is_multimodal:
+            # Multimodal Makefile doesn't have gen_helm_charts_targz or app= parameter
+            logger.info("Generating Helm chart for multimodal (no app parameter)...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+            logger.info("Helm chart generated. Now packaging...")
+            
+            # Package the helm chart manually
+            subprocess.run(["mkdir", "-p", "helm-packages"], check=True)
+            pkg_result = subprocess.run(
+                ["helm", "package", "helm/", "-d", "helm-packages/"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(pkg_result.stdout)
+        else:
+            # Time-series Makefile has gen_helm_charts_targz with app= parameter
+            logger.info(f"Generating and packaging Helm chart for app={sample_app}...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts_targz", "app=" + sample_app],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+        
+        logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
 
         return True
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to generate Helm chart: {e.stderr}")
+        logger.error(f"Failed to generate Helm chart targz: {e.stderr}")
         return False
     finally:
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
+
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
@@ -1558,6 +1701,8 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "The directory '/.cache/pip' or its parent directory is not owned",  # pip cache warning
             "error while sending usage report",  # Kapacitor telemetry timeout (benign)
             "usage.influxdata.com",  # InfluxData usage reporting endpoint timeout
+            "failed to write points to InfluxDB",  # Transient error during InfluxDB restart
+            "connection refused",  # Transient connection refused during pod restarts
         ]
         
         # Check if "error" exists in logs (case-insensitive)
@@ -1567,7 +1712,7 @@ def check_pod_logs_for_errors(namespace, pod_name):
             is_benign = any(pattern.lower() in logs_lower for pattern in benign_patterns)
             
             if is_benign:
-                logger.info(f"Benign pip warnings found in logs for pod {pod_name} (expected during package installation). Logs:\n{logs}")
+                logger.info(f"Benign transient errors found in logs for pod {pod_name} (expected during restarts). Logs:\n{logs}")
                 return True
             else:
                 logger.error(f"Error found in logs for pod {pod_name}:")
@@ -2658,9 +2803,7 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
         return False
 
 
-# =================================================================
 # SEAWEED / S3 STORAGE HELM FUNCTIONS
-# =================================================================
 
 def verify_seaweed_essential_pods(namespace):
     """

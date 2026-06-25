@@ -24,7 +24,6 @@
 
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 
-
 ## Version 1.0.0
 
 **April 01, 2026**
@@ -32,7 +31,7 @@
 Smart Traffic Intersection Agent (STIA) is a new addition to the Metro AI Sute. It showcases
 Hybrid AI usage in combination with the Smart Route Planning Agent (SRPA) sample application,
 acting as an agent deployed at the edge (traffic intersection in this case) and providing rich
-data on the “what” and “why” of the surrounding events, using SceneScape and VLMs respectively.
+data on the “what” and “why” of the surrounding events, using Scenescape and VLMs respectively.
 It provides a *UI to visualize the events* at the intersection, reporting on the number of
 vehicles, showing the feed from the camera, and explaining the traffic situation.
 
