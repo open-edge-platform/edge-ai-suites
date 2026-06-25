@@ -29,8 +29,22 @@ class ModelList(BaseModel):
 
 class PipelineInfo(BaseModel):
     pipeline_name: str
+    pipeline_display_name: Optional[str] = None
     pipeline_type: Literal["detection", "non-detection"]
+    pipeline_default: bool = False
 
 
 class PipelineInfoList(BaseModel):
     pipelines: List[PipelineInfo]
+
+
+class CameraDevice(BaseModel):
+    device_path: str
+    device_name: Optional[str] = None
+    pixel_formats: List[str]
+    usable_formats: List[str]
+    has_usable_format: bool
+
+
+class CameraDeviceList(BaseModel):
+    cameras: List[CameraDevice]

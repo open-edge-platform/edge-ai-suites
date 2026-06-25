@@ -1,5 +1,3 @@
-(rvc_vision_messages)=
-
 # RVC Vision Messages
 
 Two ROS 2 custom messages have been created for the dynamic use case Vision container internal

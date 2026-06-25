@@ -1,5 +1,5 @@
 from components.llm.base_summarizer import BaseSummarizer
-import logging, threading, gc
+import logging, threading, gc, time
 from transformers import AutoTokenizer, TextIteratorStreamer
 from optimum.intel.openvino import OVModelForCausalLM
 from utils import ensure_model
@@ -37,6 +37,7 @@ class Summarizer(BaseSummarizer):
             self.model_path,
             device=self.device,
             use_cache=True,
+            ov_config={"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"},
         )
 
     def _destroy_model(self, model):
@@ -60,6 +61,7 @@ class Summarizer(BaseSummarizer):
                         skip_prompt=skip_prompt,
                     )
                     self.total_tokens = 0
+                    self.generation_start_time = None
 
                 def put(self, value):
                     if value is not None:
@@ -77,13 +79,14 @@ class Summarizer(BaseSummarizer):
                 try:
                     with audio_pipeline_lock:
                         model = self._load_model()
+                        streamer.generation_start_time = time.perf_counter()
                         model.generate(
                             input_ids=inputs.input_ids,
                             max_new_tokens=max_new_tokens,
 
                             # sampling
-                            do_sample=True,
-                            temperature=max(self.temperature, 0.1),
+                            do_sample=False, # If True, make sure temperature is set to a higher-value; example:0.7
+                            temperature=max(self.temperature, 0.0),  # Ensure temperature is non-negative
                             top_p=0.9,
                             top_k=50,
 
@@ -118,18 +121,20 @@ class Summarizer(BaseSummarizer):
             try:
                 with audio_pipeline_lock:
                     model = self._load_model()
-                    return model.generate(
+                    output = model.generate(
                         input_ids=inputs.input_ids,
                         max_new_tokens=max_new_tokens,
 
-                        do_sample=True,
-                        temperature=max(self.temperature, 0.1),
+                        do_sample=False, # If True, make sure temperature is set to a higher-value; example:0.7
+                        temperature=max(self.temperature, 0.0),  # Ensure temperature is non-negative
                         top_p=0.9,
                         top_k=50,
 
                         pad_token_id=self.tokenizer.eos_token_id,
                         eos_token_id=self.tokenizer.eos_token_id,
                     )
+                    generated_ids = output[:, inputs.input_ids.shape[1]:]
+                    return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
             finally:
                 if model is not None:
                     self._destroy_model(model)

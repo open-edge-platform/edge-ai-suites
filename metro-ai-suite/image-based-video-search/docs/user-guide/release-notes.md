@@ -19,7 +19,6 @@ application.
 **Improved**
 
 - Bug fixes to improve UI/UX.
-- DL Streamer and DL Streamer Pipeline Server versions upgraded to 2026.1.0 
 
 ## Version 1.2.0
 

@@ -1,8 +1,6 @@
-(supported_hw)=
-
 # Supported Peripherals
 
-Robot Vision & Control Framework is developed, tested and validated with a limited set of peripherals.
+Stationary Robot is developed, tested and validated with a limited set of peripherals.
 
 ## Supported Sensors
 

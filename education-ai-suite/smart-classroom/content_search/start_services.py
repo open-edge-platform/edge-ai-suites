@@ -89,7 +89,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         # Reranker
         reranker = ingest.get("reranker", {})
-        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-large"))
+        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-base"))
         _set("RERANKER_DEVICE", reranker.get("device", "CPU"))
         _set("RERANKER_DEDUP_TIME_THRESHOLD", str(reranker.get("dedup_time_threshold", 5)))
         _set("RERANKER_OVERFETCH_MULTIPLIER", str(reranker.get("overfetch_multiplier", 3)))
@@ -108,6 +108,11 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         # App-level language (en or zh)
         app = data.get("app", {})
         _set("APP_LANGUAGE", app.get("language", "en"))
+
+        # OCR
+        models = data.get("models", {})
+        ocr = models.get("ocr", {})
+        _set("OCR_ENABLED", str(ocr.get("enabled", False)).lower())
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))

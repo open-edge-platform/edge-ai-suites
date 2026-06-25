@@ -136,6 +136,10 @@
       "type": "string",
       "description": "Absolute path to the Level 1 kpi.json file used as input."
     },
+    "bag_source": {
+      "type": "string",
+      "description": "Absolute path to the .mcap bag directory used for traced e2e correlation. Present only when method='traced' (produced by analyze_bag_e2e.py). Absent for chained output."
+    },
     "metadata": {
       "type": "object",
       "description": "Session provenance — same structure as Level 1 metadata.",

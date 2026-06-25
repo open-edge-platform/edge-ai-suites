@@ -4,9 +4,24 @@ This section shows how to install the Autonomous Mobile Robot with the
 ROS 2 middleware and the Clearpath Robotics ecosystem, on
 the Clearpath Robotics Jackal robot's onboard computer.
 
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+The Jackal robot runs Canonical Ubuntu 24.04 LTS (Noble) and ROS 2 Jazzy
+for this configuration. Intel provides a setup script that installs all
+required Intel and Clearpath software repositories and packages.
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
+
 The Jackal robot is equipped with an onboard
 computer that has a pre-installed Canonical Ubuntu 22.04 LTS OS,
 ROS 2 Humble distribution, and the Clearpath Robotics software packages.
+
+:::
+::::
 
 Intel recommends using the pre-installed software for the initial bring-up
 of your Jackal robot. During the initial bring-up, you must update
@@ -18,7 +33,42 @@ Intel recommends creating a backup of the default software installation
 or replace the pre-installed SATA M.2 SSD with an empty storage device,
 before continuing with the next steps.
 
-## Install ROS 2 Humble Distribution and Autonomous Mobile Robot
+## Install ROS 2 Distribution and Autonomous Mobile Robot
+
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+1. Set the hostname to match the robot serial number:
+
+   ```bash
+   sudo hostnamectl set-hostname cpr-j100-<serial>
+   ```
+
+1. Run the Intel Robotics setup script, which installs all required
+   repositories (ROS 2, Clearpath, Intel ECI/AMR, librealsense) and packages:
+
+   ```bash
+   wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
+   chmod +x setup-robotics-jazzy.sh
+   ./setup-robotics-jazzy.sh
+   ```
+
+1. To install the Autonomous Mobile Robot on the Clearpath Robotics Jackal robot,
+   see the [GSG Robot Guide](../../../../gsg_robot/index.md).
+
+1. Create an account with the username ``administrator`` when
+   installing the Canonical Ubuntu OS, or create and set its group membership
+   as follows:
+
+   ```bash
+   sudo adduser administrator
+   sudo usermod -a -G sudo administrator
+   ```
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 1. To install the ROS 2 Humble distribution and the Autonomous Mobile Robot on the
 Clearpath Robotics Jackal robot, see the
@@ -33,15 +83,122 @@ as follows:
    sudo usermod -a -G sudo administrator
    ```
 
+:::
+::::
+
 ## Install the Clearpath Robotics Software Packages
+
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+Install the ROS 2 development tools:
+
+```bash
+sudo apt-get install ros-dev-tools
+```
+
+Install the required Clearpath and Nav2 packages:
+
+```bash
+sudo apt-get install -y \
+  ros-jazzy-clearpath-robot \
+  ros-jazzy-clearpath-firmware \
+  ros-jazzy-micro-ros-agent \
+  ros-jazzy-nav2-bringup \
+  ros-jazzy-rtabmap-ros \
+  ros-jazzy-realsense2-camera \
+  ros-jazzy-librealsense2-tools
+```
+
+Reload udev rules so the ``/dev/clearpath/j100`` device node is created:
+
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+### Pin Package Versions
+
+Version mismatches between ``librealsense2`` and ``ros-jazzy-realsense2-camera``
+cause silent communication failures. Pin the following working versions:
+
+```bash
+sudo tee /etc/apt/preferences.d/librealsense > /dev/null <<'EOF'
+Package: librealsense2*
+Pin: version 2.56.5-0~realsense.17055
+Pin-Priority: 1001
+
+Package: ros-jazzy-librealsense2*
+Pin: version 2.56.4*
+Pin-Priority: 1001
+
+Package: ros-jazzy-realsense2*
+Pin: version 4.56.4*
+Pin-Priority: 1001
+EOF
+```
+
+```bash
+sudo tee /etc/apt/preferences.d/oneapi > /dev/null <<'EOF'
+Package: intel-oneapi-runtime-*
+Pin: version 2025.3.*
+Pin-Priority: 1001
+
+Package: intel-oneapi-compiler-*
+Pin: version 2025.3.*
+Pin-Priority: 1001
+
+Package: intel-oneapi-mkl-*
+Pin: version 2025.3.*
+Pin-Priority: 1001
+EOF
+```
+
+Then re-run ``sudo apt-get install`` from above to ensure pinned versions
+are installed.
+
+### Build clearpath_ws from Source (micro-ROS Agent Fix)
+
+The binary ``ros-jazzy-micro-ros-agent`` ships with a ``libmicroxrcedds_agent.so``
+that conflicts with the version expected by the Clearpath platform. Build
+the workspace from source and copy the corrected library:
+
+```bash
+mkdir -p ~/clearpath_ws/src && cd ~/clearpath_ws
+wget https://raw.githubusercontent.com/clearpathrobotics/clearpath_robot/jazzy/dependencies.repos
+vcs import src < dependencies.repos
+git clone https://github.com/micro-ROS/micro-ROS-Agent.git src/micro-ROS-Agent
+rosdep install -r --from-paths src -i -y --rosdistro jazzy \
+  --skip-keys="flir_ptu_description flir_ptu_driver flir_ptu_viz"
+colcon build --symlink-install
+```
+
+Copy the built library to the system ROS install:
+
+```bash
+sudo cp ~/clearpath_ws/install/micro_ros_agent/lib/libmicroxrcedds_agent.so.2.4.3 \
+        /opt/ros/jazzy/lib/libmicroxrcedds_agent.so.2.4.3
+```
+
+Add the workspace overlay to the Clearpath platform environment so all
+systemd services pick it up:
+
+```bash
+sudo cp /etc/clearpath/setup.bash /etc/clearpath/setup.bash.bak
+echo 'source /home/intel/clearpath_ws/install/setup.bash' | sudo tee -a /etc/clearpath/setup.bash
+```
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 Install the ROS 2 development tools, which comprises the compilers
 and other tools to build ROS 2 packages. See the official
 [ROS 2 Installation Instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html):
 
-   ```bash
-   sudo apt-get install ros-dev-tools
-   ```
+```bash
+sudo apt-get install ros-dev-tools
+```
 
 See the [Package Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#package-install)
 section of the Clearpath Robotics documentation. You can install the software through one of these methods:
@@ -50,6 +207,9 @@ section of the Clearpath Robotics documentation. You can install the software th
   which uses an automated installer.
 - [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install),
   which provides detailed instructions on how to install the software with a higher flexibility.
+
+:::
+::::
 
 ## Create Your Robot Configuration
 
@@ -105,20 +265,40 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    - In the ``system/hosts`` section, change the ``ip`` address to the
      IP address of your Jackal robot, either a static address or
      a dynamic address that is assigned by the router of your network.
-   - In the ``system/ros2`` section, change the ``namespace`` string.
-     While the Clearpath Robotics default configuration usually defines
-     a namespace for the ROS 2 topics, Intel recommends using an empty
-     namespace as used in the Autonomous Mobile Robot tutorials. An empty
-     namespace is indicated by a slash character: ``namespace: /``
+   - In the ``system/ros2`` section, set the ``namespace`` string.
+
+     ::::{tab-set}
+     :::{tab-item} **Jazzy**
+     :sync: jazzy
+
+     For ROS 2 Jazzy with the Clearpath platform, use the robot serial
+     number as the namespace (without a leading slash), for example
+     ``namespace: j100_0123``. This namespace is used as the prefix for
+     all platform and sensor topics, and must match the namespace
+     configured in the MCU (see [Flash Firmware and Configure the MCU](#flash-firmware-and-configure-the-mcu)).
+
+     :::
+     :::{tab-item} **Humble**
+     :sync: humble
+
+     Intel recommends using an empty namespace as used in the Autonomous
+     Mobile Robot tutorials. An empty namespace is indicated by a slash
+     character: ``namespace: /``
+
+     :::
+     ::::
+
    - In the ``system/ros2`` section, add the ``domain_id`` entry and set it
      to a value that does not conflict with the ``ROS_DOMAIN_ID`` of
      other ROS 2 installations in your neighborhood. The value that you
-     use here will be propagated into the ``/etc/clearpath/setup.bash`` script,
-     whose execution has been added to your ``~/.basrc`` script when you
-     executed one of the installation options in the
-     [Install](#install-the-clearpath-robotics-software-packages) section.
-     The``ROS_DOMAIN_ID`` environment variable will be
-     set to the value you defined here.
+     use here will be propagated into the ``/etc/clearpath/setup.bash`` script.
+     The ``ROS_DOMAIN_ID`` environment variable will be set to the value
+     you defined here.
+
+     > **Note (Jazzy):** The ``wandering_jackal.sh`` script always reads
+     > ``ROS_DOMAIN_ID`` directly from ``/etc/clearpath/robot.yaml`` to
+     > ensure it matches the MCU configuration, overriding any value set
+     > in ``setup.bash``.
    - If you have used the manual installation option in the
      [Install Clearpath Software Packages](#install-the-clearpath-robotics-software-packages)
      section, add the ``workspaces`` entry
@@ -132,7 +312,29 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    Details on these configuration entries are provided on the
    [System](https://docs.clearpathrobotics.com/docs/ros/config/yaml/system/)
    section of the Clearpath Robotics documentation. As an example,
-   the following listing shows the first sections of the``robot.yaml`` file:
+   the following listing shows the first sections of the ``robot.yaml`` file:
+
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   > ```yaml
+   > serial_number: j100-<serial>      # e.g. j100-0812
+   > version: 0
+   > system:
+   >   hosts:
+   >     - hostname: cpr-j100-<serial>  # must match hostnamectl
+   >   username: intel
+   >   ros2:
+   >     namespace: j100_<serial>       # e.g. j100_0812  (no leading slash)
+   >     domain_id: 42                  # must match MCU configuration
+   > platform:
+   >   ...
+   > ```
+
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    > ```yaml
    > serial_number: j100-1234
@@ -149,6 +351,9 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    > platform:
    >   ...
    > ```
+
+   :::
+   ::::
 
 1. Copy the ``robot.yaml`` file
    to the ``/etc/clearpath/`` folder on the onboard computer of your
@@ -228,30 +433,83 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 1. Reboot the robot to propagate the new configuration.
 
+## Flash Firmware and Configure the MCU
+
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+1. Flash the MCU firmware:
+
+   ```bash
+   source /opt/ros/jazzy/setup.bash
+   ros2 run clearpath_robot install
+   ```
+
+   The robot must be powered on and ``/dev/clearpath/j100`` must be accessible.
+   Verify the device node exists:
+
+   ```bash
+   ls -l /dev/clearpath/j100
+   ```
+
+1. After flashing, write the ``domain_id`` and robot namespace into the MCU
+   so it uses the correct FastDDS domain and topic prefix on next boot.
+   Replace ``<serial>`` and ``<domain_id>`` with the values from your
+   ``robot.yaml``:
+
+   ```bash
+   source /etc/clearpath/setup.bash
+
+   ros2 service call /j100_<serial>/platform/mcu/configure \
+     clearpath_platform_msgs/srv/ConfigureMcu \
+     "{domain_id: <domain_id>, robot_namespace: 'j100_<serial>'}"
+   ```
+
+1. Restart the platform service to apply the new MCU configuration:
+
+   ```bash
+   sudo systemctl restart clearpath-platform
+   ```
+
+> **Note:** Do **not** delete ``/dev/shm/fastrtps_*`` files. Clearpath
+> platform and sensor services own these FastDDS shared-memory segments.
+> Deleting them while the robot services are running will crash all robot nodes.
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
+
+See the [Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
+page of the Clearpath Robotics documentation for firmware update instructions.
+
+:::
+::::
+
 ## Verify the Robot Configuration
 
 ### Verify the Frames of the TF2 Tree
 
 1. If not already installed, install the ROS2 TF2 Tools:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt install ros-jazzy-tf2-tools
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    sudo apt install ros-humble-tf2-tools
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 1. Verify that the robot state publisher communicates the correct TF2 tree:
 
@@ -283,163 +541,174 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 1. Verify that the required ROS 2 topics are published:
 
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   > **Note:** On Jazzy, all platform and sensor topics are prefixed with
+   > the robot namespace, e.g. ``/j100_<serial>/``. The following list uses
+   > ``/j100_0123/`` as an example. Camera topics also depend on the
+   > installed ``ros-jazzy-realsense2-camera`` version (4.55 vs 4.54).
+
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
+
    > **Note:** The names of the camera-related topics depend on the version of the
    > ``ros-humble-realsense2-camera`` package on your system. The following list was
    > created on a system with package version 4.55.
 
+   :::
+   ::::
+
    ```console
-   /cmd_vel
+   /j100_0123/cmd_vel
+   /j100_0123/diagnostics
+   /j100_0123/joint_state_broadcaster/transition_event
+   /j100_0123/joy_teleop/cmd_vel
+   /j100_0123/platform/bms/state
+   /j100_0123/platform/cmd_vel
+   /j100_0123/platform/dynamic_joint_states
+   /j100_0123/platform/emergency_stop
+   /j100_0123/platform/joint_states
+   /j100_0123/platform/mcu/status
+   /j100_0123/platform/mcu/status/power
+   /j100_0123/platform/mcu/status/stop
+   /j100_0123/platform/motors/cmd_drive
+   /j100_0123/platform/motors/feedback
+   /j100_0123/platform/odom
+   /j100_0123/platform/odom/filtered
+   /j100_0123/platform/safety_stop
+   /j100_0123/rc_teleop/cmd_vel
+   /j100_0123/robot_description
+   /j100_0123/sensors/camera_0/camera/aligned_depth_to_color/camera_info
+   /j100_0123/sensors/camera_0/camera/aligned_depth_to_color/image_raw
+   /j100_0123/sensors/camera_0/camera/color/camera_info
+   /j100_0123/sensors/camera_0/camera/color/image_raw
+   /j100_0123/sensors/camera_0/camera/depth/camera_info
+   /j100_0123/sensors/camera_0/camera/depth/image_rect_raw
+   /j100_0123/sensors/camera_0/color/image
+   /j100_0123/sensors/camera_0/depth/image
+   /j100_0123/sensors/camera_0/points
+   /j100_0123/sensors/imu_0/data
+   /j100_0123/sensors/imu_0/data_raw
+   /j100_0123/sensors/imu_0/magnetic_field
+   /j100_0123/tf
+   /j100_0123/tf_static
+   /j100_0123/twist_marker_server/cmd_vel
    /diagnostics
-   /diagnostics_agg
-   /diagnostics_toplevel_state
-   /joint_state_broadcaster/transition_event
-   /joy_teleop/cmd_vel
-   /joy_teleop/joy
-   /joy_teleop/joy/set_feedback
    /parameter_events
-   /platform/bms/state
-   /platform/cmd_vel_unstamped
-   /platform/dynamic_joint_states
-   /platform/emergency_stop
-   /platform/joint_states
-   /platform/mcu/status
-   /platform/mcu/status/power
-   /platform/mcu/status/stop
-   /platform/motors/cmd_drive
-   /platform/motors/feedback
-   /platform/odom
-   /platform/odom/filtered
-   /platform/wifi_connected
-   /platform/wifi_status
-   /platform_velocity_controller/transition_event
-   /rc_teleop/cmd_vel
-   /robot_description
    /rosout
-   /sensors/camera_0/camera/aligned_depth_to_color/camera_info
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressed
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/compressedDepth
-   /sensors/camera_0/camera/aligned_depth_to_color/image_raw/theora
-   /sensors/camera_0/camera/aligned_depth_to_infra1/camera_info
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressed
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/compressedDepth
-   /sensors/camera_0/camera/aligned_depth_to_infra1/image_raw/theora
-   /sensors/camera_0/camera/color/camera_info
-   /sensors/camera_0/camera/color/image_raw
-   /sensors/camera_0/camera/color/image_raw/compressed
-   /sensors/camera_0/camera/color/image_raw/compressedDepth
-   /sensors/camera_0/camera/color/image_raw/theora
-   /sensors/camera_0/camera/color/metadata
-   /sensors/camera_0/camera/depth/camera_info
-   /sensors/camera_0/camera/depth/color/points
-   /sensors/camera_0/camera/depth/image_rect_raw
-   /sensors/camera_0/camera/depth/image_rect_raw/compressed
-   /sensors/camera_0/camera/depth/image_rect_raw/compressedDepth
-   /sensors/camera_0/camera/depth/image_rect_raw/theora
-   /sensors/camera_0/camera/depth/metadata
-   /sensors/camera_0/camera/extrinsics/depth_to_color
-   /sensors/camera_0/camera/extrinsics/depth_to_infra1
-   /sensors/camera_0/camera/infra1/camera_info
-   /sensors/camera_0/camera/infra1/image_rect_raw
-   /sensors/camera_0/camera/infra1/image_rect_raw/compressed
-   /sensors/camera_0/camera/infra1/image_rect_raw/compressedDepth
-   /sensors/camera_0/camera/infra1/image_rect_raw/theora
-   /sensors/camera_0/camera/infra1/metadata
-   /sensors/camera_0/color/image
-   /sensors/camera_0/depth/image
-   /sensors/camera_0/points
-   /sensors/gps_0/nmea_sentence
-   /sensors/imu_0/data
-   /sensors/imu_0/data_raw
-   /sensors/imu_0/magnetic_field
-   /sensors/lidar2d_0/diagnostics
-   /sensors/lidar2d_0/laser_status
-   /sensors/lidar2d_0/scan
-   /sensors/lidar2d_1/diagnostics
-   /sensors/lidar2d_1/laser_status
-   /sensors/lidar2d_1/scan
-   /sensors/lidar3d_0/diagnostics
-   /sensors/lidar3d_0/points
-   /sensors/lidar3d_0/scan
-   /sensors/lidar3d_0/velodyne_packets
-   /sensors/lidar3d_0/velodyne_points
-   /set_pose
-   /tf
-   /tf_static
-   /twist_marker_server/cmd_vel
-   /twist_marker_server/feedback
-   /twist_marker_server/update
    ```
 
 1. To see the installed package version on your board, run:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    apt show ros-jazzy-realsense2-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    apt show ros-humble-realsense2-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    The following table shows how the names of the camera-related topics
    depend on the package version.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    |Version of ``ros-jazzy-realsense2-camera``|Camera-related topics start with|
    |---|---|
-   |4.55|``/sensors/camera_0/camera/``|
-   |4.54|``/sensors/camera_0/``|
+   |4.55 (``ros_parameters`` key: ``camera``)|``/j100_<serial>/sensors/camera_0/camera/``|
+   |4.54 (``ros_parameters`` key: ``intel_realsense``)|``/j100_<serial>/sensors/camera_0/``|
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    |Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55|``/sensors/camera_0/camera/``|
    |4.54|``/sensors/camera_0/``|
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 ## Jackal Troubleshooting
 
 If the output of the ``ros2 topic list`` command does not show any topics,
-verify that you are logged in as the ``administrator`` and
-check that the ``ROS_DOMAIN_ID`` environment variable contains the value
-that is defined in your ``/etc/clearpath/robot.yaml`` file
-under the ``system/ros2/domain_id`` entry.
+check that ``ROS_DOMAIN_ID`` matches the value in ``/etc/clearpath/robot.yaml``:
 
-If the output of the ``ros2 topic list`` command shows some missing
-ROS 2 topics (see the [verify ROS topics](#verify-the-ros-2-topics) section for a list of topics),
-there might be an issue with your installation of the Clearpath Robotics
-services.
+```bash
+grep domain_id /etc/clearpath/robot.yaml
+echo $ROS_DOMAIN_ID
+```
 
-In this case, check whether the required services are
-up and running. These services are responsible for parsing the ``robot.yaml``
-file and for starting the required ROS 2 nodes:
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+Ensure ``ROBOT_NAMESPACE`` is set before running any wandering scripts:
+
+```bash
+export ROBOT_NAMESPACE=/j100_<serial>
+```
+
+Verify the MCU is communicating by checking the platform status:
+
+```bash
+source /etc/clearpath/setup.bash
+ros2 topic echo /j100_<serial>/platform/mcu/status --once
+```
+
+If the MCU topic is not publishing, check that no manual
+``micro_ros_agent`` process is holding the serial port and restart
+the platform service:
+
+```bash
+pkill -f micro_ros_agent
+sudo systemctl restart clearpath-platform
+```
+
+> **FastDDS shared memory:** Do **not** delete ``/dev/shm/fastrtps_*``
+> files while the robot services are running. If you need to clear stale
+> segments after a crash, stop all clearpath services first:
+>
+> ```bash
+> sudo systemctl stop clearpath-platform
+> rm -f /dev/shm/fastrtps_*
+> sudo systemctl start clearpath-platform
+> ```
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
+
+Verify that you are logged in as the ``administrator`` user.
+
+:::
+::::
+
+If ROS 2 topics are missing (see the [verify ROS topics](#verify-the-ros-2-topics) section),
+check whether the required services are up and running:
 
 ```bash
 sudo systemctl status clearpath-platform.service clearpath-sensors.service clearpath-robot.service
 ```
 
-If any of these services are not active (running), check whether
-the systemd journal shows any error messages:
+If any of these services are not active (running), check the systemd journal:
 
 ```bash
 sudo journalctl -b | grep clearpath

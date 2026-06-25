@@ -21,6 +21,7 @@ from utils.core_models import FileAsset, AITask
 
 OCR_BASE_URL = os.getenv("OCR_SERVICE_URL", "http://127.0.0.1:8000")
 OCR_TIMEOUT = 120.0
+OCR_ENABLED = os.getenv("OCR_ENABLED", "false").lower() in ("true", "1", "yes")
 
 VIDEO_SUMMARIZATION_ENABLED = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
 
@@ -205,7 +206,7 @@ class TaskService:
                 else:
                     # OCR: detect handwritten PDF and extract text before ingestion
                     ocr_file_key = None
-                    if file_key.lower().endswith('.pdf'):
+                    if OCR_ENABLED and file_key.lower().endswith('.pdf'):
                         ocr_file_key = TaskService._process_ocr(file_key)
 
                     # If OCR produced a .txt file, ingest that instead of the original PDF

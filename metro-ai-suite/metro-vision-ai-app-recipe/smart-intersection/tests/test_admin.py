@@ -35,7 +35,7 @@ def web_options_availability_check(waiter, scenescape_url):
     scenescape_url + "/cam/list/",  # Cameras
     scenescape_url + "/singleton_sensor/list/",  # Sensors
     scenescape_url + "/asset/list/",  # Object Library
-    "https://docs.openedgeplatform.intel.com/scenescape/main/toc.html",  # Documentation
+    "https://docs.openedgeplatform.intel.com/scenescape/dev/index.html",  # Documentation
     scenescape_url + "/admin"  # Admin
   ]
 

@@ -160,7 +160,7 @@ data:
                 proxy_set_header Upgrade $http_upgrade;
                 proxy_set_header Connection "upgrade";
 
-                # Handle SceneScape authentication (matching Docker Compose)
+                # Handle Scenescape authentication (matching Docker Compose)
                 proxy_set_header X-Forwarded-Host $host;
                 proxy_set_header X-Forwarded-Server $host;
             }
@@ -194,7 +194,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:alpine
+        image: nginx:1.30.2-alpine
         ports:
         - containerPort: 80
         - containerPort: 443

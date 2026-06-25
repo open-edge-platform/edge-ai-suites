@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Multi-Camera Demo (RealSense D457 AI Demo)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
+
 ## Overview
 
 In this demo four instances of AI applications for object detection are run in parallel using four RealSense™ camera streams. The Ultralytics YOLOv8 model and mobilenet-ssd model are downloaded and used for object detection and segmentation.
@@ -220,7 +224,7 @@ clinfo | grep -i "Device Name"
 Follow the below steps only in case the above iGPU driver is not installed.
 
 1. The steps to install iGPU driver on 12th Gen Intel® Core™ i7 processor is described here:
-[Configurations for Intel® Processor Graphics (GPU) with OpenVINO™](https://docs.openvino.ai/nightly/openvino_docs_install_guides_configurations_for_intel_gpu.html#)
+[Configurations for Intel® Processor Graphics (GPU) with OpenVINO™](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html)
 
 2. Reboot the target after installation.
 
@@ -347,7 +351,7 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
    ```bash
    sudo intel_gpu_top
    ```
-   
+
    ```text
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted
@@ -389,10 +393,6 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
   
 
 Reboot the system.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
 
 ## License
 

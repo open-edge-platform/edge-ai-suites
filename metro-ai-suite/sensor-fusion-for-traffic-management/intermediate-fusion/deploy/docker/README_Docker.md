@@ -12,72 +12,66 @@ Before you install Docker Engine for the first time on a new host machine, you n
 
 1. Set up Docker's `apt` repository.
 
-```bash
-# Add Docker's official GPG key:
-sudo -E apt-get update
-sudo -E apt-get install ca-certificates curl
-sudo -E install -m 0755 -d /etc/apt/keyrings
-sudo -E curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+   ```bash
+   # Add Docker's official GPG key:
+   sudo -E apt-get update
+   sudo -E apt-get install ca-certificates curl
+   sudo -E install -m 0755 -d /etc/apt/keyrings
+   sudo -E curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+   sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo -E apt-get update
-```
+   # Add the repository to Apt sources:
+   echo \
+     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+     $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo -E apt-get update
+   ```
 
 2. Install the Docker packages.
 
-To install the latest version, run:
+   To install the latest version, run:
 
-```bash
-sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-
+   ```bash
+   sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   ```
 
 3. Set proxy(Optional).
 
-Note you may need to set proxy for docker.
+   Note you may need to set proxy for docker.
 
-```bash
-sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo vim /etc/systemd/system/docker.service.d/http-proxy.conf
+   ```bash
+   sudo mkdir -p /etc/systemd/system/docker.service.d
+   sudo vim /etc/systemd/system/docker.service.d/http-proxy.conf
 
-# Modify the file contents as follows
-[Service]
-Environment="HTTP_PROXY=http://proxy.example.com:8080"
-Environment="HTTPS_PROXY=http://proxy.example.com:8080"
-Environment="NO_PROXY=localhost,127.0.0.1"
-```
+   # Modify the file contents as follows
+   [Service]
+   Environment="HTTP_PROXY=http://proxy.example.com:8080"
+   Environment="HTTPS_PROXY=http://proxy.example.com:8080"
+   Environment="NO_PROXY=localhost,127.0.0.1"
+   ```
 
+   Then restart docker:
 
-
-Then restart docker:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart docker
-```
-
-
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart docker
+   ```
 
 4. Verify that the installation is successful by running the `hello-world` image:
 
-```bash
-sudo docker run hello-world
-```
+   ```bash
+   sudo docker run hello-world
+   ```
 
-This command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
+   This command downloads a test image and runs it in a container. When the container runs, it prints a confirmation message and exits.
 
 5. Add user to group
 
-```bash
-sudo usermod -aG docker $USER
-newgrp docker
-```
+   ```bash
+   sudo usermod -aG docker $USER
+   newgrp docker
+   ```
 
 ## 2. Install the corresponding driver on the host
 
@@ -91,30 +85,30 @@ bash install_driver_related_libs.sh
 
 > **Note that the default username is `tfcc` and password is `intel` in the docker image.**
 
-When the published image is available, pull the `intel/tfcc:bevfusion` image and run it directly.
+When the published image is available, pull the `intel/tfcc:2026.1.0-ubuntu24` image and run it directly.
 
 For example:
 
 ```bash
-docker pull intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 If you already pulled or built the image locally, you do not need to rebuild it. You can run it directly.
 
-### Run the published image
+### 3.1 Run the published image
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 # After the run completes, the container ID is printed. You can also find it with docker ps.
 ```
 
-### Enter docker
+### 3.2 Enter docker
 
 Get the container id by command below:
 
@@ -128,7 +122,7 @@ And then enter docker by command below:
 docker exec -it <container id> /bin/bash
 ```
 
-### Copy dataset
+### 3.3 Copy dataset
 
 If you want to copy dataset or other files to docker, you can use the command below:
 
@@ -141,7 +135,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 Use the published image for the quickest validation:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
 This uses the dataset path already visible inside the container. The default is `/home/tfcc/bevfusion/data/v2xfusion/dataset`, and you can override it with `--container-dataset-path`.
@@ -149,10 +143,10 @@ This uses the dataset path already visible inside the container. The default is 
 To copy a dataset from the host into the container for the test run:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 --dataset-path /path/to/kitti_dataset
 ```
 
-If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`:
+If you retagged the published image to `tfcc:2026.1.0-ubuntu24`, or built a local image with that tag, you can omit `--image`:
 
 ```bash
 bash autotest_docker.sh
@@ -169,7 +163,7 @@ bash autotest_docker.sh \
 Additional arguments after `--` are forwarded to `autotest.sh` inside the container. For example, to restore live per-binary output:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion -- --verbose
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 -- --verbose
 ```
 
 If `--dataset-path` is provided, the script copies that host dataset into the container and uses it for the inner autotest run. If `--dataset-path` is omitted, the script uses `--container-dataset-path` directly.
@@ -218,7 +212,7 @@ bash docker/build_docker.sh /path/to/custom_openvino/install
 If you want to override the image name or base image settings, append them after the required custom OpenVINO path:
 
 ```bash
-bash docker/build_docker.sh /path/to/custom_openvino/install tfcc:bevfusion Dockerfile.dockerfile ubuntu 24.04
+bash docker/build_docker.sh /path/to/custom_openvino/install tfcc:2026.1.0-ubuntu24 Dockerfile.dockerfile ubuntu 24.04
 ```
 
 Requirements for `CUSTOM_OPENVINO_INSTALL_DIR`:
@@ -235,20 +229,20 @@ The directory can live anywhere on the host. `build_docker.sh` forwards it as an
 Usage:
 
 ```bash
-bash docker/run_docker.sh <DOCKER_IMAGE, default tfcc:bevfusion>
+bash docker/run_docker.sh <DOCKER_IMAGE, default tfcc:2026.1.0-ubuntu24>
 ```
 
 Example:
 
 ```bash
-bash docker/run_docker.sh tfcc:bevfusion
+bash docker/run_docker.sh tfcc:2026.1.0-ubuntu24
 ```
 
 ## 6. Optional: Docker Compose workflow for local images
 
-The Compose file supports both the published `intel/tfcc:bevfusion` image and local rebuilds. Use `docker compose pull` or `docker compose up` when the published image is available. Use `docker compose up --build` when you want to rebuild from local sources.
+The Compose file supports both the published `intel/tfcc:2026.1.0-ubuntu24` image and local rebuilds. Use `docker compose pull` or `docker compose up` when the published image is available. Use `docker compose up --build` when you want to rebuild from local sources.
 
-Set `DOCKER_IMAGE=intel/tfcc:bevfusion` when using the published image. Use `tfcc:bevfusion` only if you retagged it locally or rebuilt the image under that name.
+Set `DOCKER_IMAGE=intel/tfcc:2026.1.0-ubuntu24` when using the published image. Use `tfcc:2026.1.0-ubuntu24` only if you retagged it locally or rebuilt the image under that name.
 
 Modify `proxy`, `VIDEO_GROUP_ID`, and `RENDER_GROUP_ID` in `.env`.
 
@@ -257,7 +251,7 @@ Modify `proxy`, `VIDEO_GROUP_ID`, and `RENDER_GROUP_ID` in `.env`.
 https_proxy=
 http_proxy=
 # docker image name
-DOCKER_IMAGE=intel/tfcc:bevfusion
+DOCKER_IMAGE=intel/tfcc:2026.1.0-ubuntu24
 # base image settings
 BASE=ubuntu
 BASE_VERSION=24.04
@@ -281,7 +275,7 @@ echo $(getent group video | awk -F: '{printf "%s\n", $3}')
 echo $(getent group render | awk -F: '{printf "%s\n", $3}')
 ```
 
-### Build and run with Compose
+### 6.1 Build and run with Compose
 
 Usage:
 
@@ -301,7 +295,7 @@ docker compose up bevfusion -d
 
 Use `docker compose up --build bevfusion -d` when you need Compose to rebuild the image from local sources.
 
-### Enter docker
+### 6.2 Enter docker
 
 Usage:
 
@@ -315,7 +309,7 @@ Example:
 docker compose exec bevfusion /bin/bash
 ```
 
-### Copy dataset
+### 6.3 Copy dataset
 
 Find the container name or ID:
 
@@ -327,7 +321,7 @@ Sample output:
 
 ```bash
 NAME                 IMAGE            COMMAND       SERVICE     CREATED              STATUS                        PORTS
-docker-bevfusion-1   intel/tfcc:bevfusion   "/bin/bash"   bevfusion   About a minute ago   Up About a minute (healthy)
+docker-bevfusion-1   intel/tfcc:2026.1.0-ubuntu24   "/bin/bash"   bevfusion   About a minute ago   Up About a minute (healthy)
 ```
 
 Copy dataset:

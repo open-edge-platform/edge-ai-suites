@@ -1,14 +1,17 @@
 # Release Notes
 
-Current Version: 2025.2
+## Version 2026.1.0
 
-Core Library support: 
-- Functions: Decode, Postprocessing, Display, Encode, HDMI-in, Audio-in, Audio-out
-- Hardware: ARL, MTL, RPL, ADL
+**June 17, 2026**
 
-Sample app:
-- NVR: 4x4K display + 4x64 decode
-- Video Analytic: decode + yolo/resnet on GPU/NPU + display
-- decode + postprocessing + display
-- decode + postprocessing + encode
+**Improved**
 
+- **Core Library support**
+
+  - Functions: Decode, Postprocessing, Encode
+  - Hardware: PTL, ARL, MTL, RPL, ADL, B580, B60
+
+- **Sample app**
+
+  - Video Analytic: decode + postprocessing + yolo/resnet on GPU
+  - decode + postprocessing + encode

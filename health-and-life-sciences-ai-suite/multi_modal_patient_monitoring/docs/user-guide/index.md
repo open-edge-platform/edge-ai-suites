@@ -1,5 +1,6 @@
 # Multi-Modal Patient Monitoring
 
+::::{container} component_header_row
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/health-and-life-sciences-ai-suite/multi_modal_patient_monitoring">
@@ -11,18 +12,24 @@
 </div>
 hide_directive-->
 
-The Multi-Modal Patient Monitoring application is a reference workload that demonstrates how
-multiple AI pipelines can run simultaneously on a single Intel® platform, providing
-consolidated monitoring for a virtual patient.
+> Note!
+> This application is for **reference and evaluation purposes**. It is
+  **not intended for direct use in clinical or diagnostic environments** and is not
+  validated as such.
+::::
 
-It combines several AI services:
+The Multi-Modal Patient Monitoring application is a reference solution that demonstrates how
+multiple AI pipelines can run simultaneously on a single Intel® platform, providing
+workflows that mimic a consolidated patient monitoring application.
+
+It combines several representative AI workloads and services:
 
 - **rPPG (Remote Photoplethysmography):** Contactless heart and respiratory rate estimation
   from facial video.
 - **3D-Pose Estimation:** 3D human pose detection from video.
 - **AI-ECG:** ECG rhythm classification from simulated ECG waveforms.
 - **MDPNP (Medical Device Plug-and-Play):** Getting metrics of three simulated devices such
-  as ECG, BP and CO2
+  as ECG, BP and CO2.
 - **Patient Monitoring Aggregator:** Central service that collects and aggregates vitals from
   all AI workloads.
 - **Metrics Collector:** Gathers hardware and system telemetry (CPU, GPU, NPU, power) from
@@ -41,8 +48,7 @@ orchestrated, monitored, and visualized in a clinical-style scenario.
   data/control flows.
 - [Release Notes](./release-notes.md) – Version history and known issues.
 
-> **Disclaimer:** This application is provided for development and evaluation purposes only and is _not_
-> intended for clinical or diagnostic use.
+
 
 <!--hide_directive
 :::{toctree}

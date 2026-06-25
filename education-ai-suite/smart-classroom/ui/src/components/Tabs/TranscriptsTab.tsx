@@ -99,12 +99,12 @@ const TranscriptsTab: React.FC = () => {
       const speakerMatch = speaker.match(/speaker_(\d+)/i);
       if (speakerMatch) {
         const speakerNumber = speakerMatch[1];
-        const baseLabel = currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
+        const baseLabel = currentLanguage === "zh" ? labels.student : labels.student.toUpperCase();
         return `${baseLabel}_${speakerNumber}`;
       }
-    
+
       if (speaker.toLowerCase() === 'speaker') {
-        return currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
+        return currentLanguage === "zh" ? labels.student : labels.student.toUpperCase();
       }
       return speaker;
     }
@@ -234,7 +234,7 @@ const TranscriptsTab: React.FC = () => {
           });
         }
 
-        if (mountedRef.current) {
+        if (!controller.signal.aborted && mountedRef.current) {
           dispatch(completeSegmentTyping(idx));
         }
       } catch {
@@ -250,6 +250,13 @@ const TranscriptsTab: React.FC = () => {
     };
 
     run();
+
+    // Abort this segment's typewriter when the cursor moves on (or on unmount)
+    // so a stale run can't dispatch completeSegmentTyping for an old index.
+    return () => {
+      controller.abort();
+      typewriterControllers.current.delete(idx);
+    };
   }, [currentTypingIndex]);
 
   useEffect(() => {

@@ -4,8 +4,6 @@
 ```
 hide_directive-->
 
-(model-graspnet)=
-
 # GraspNet - Baseline
 
 Robotic grasping is a fundamental challenge in robotics, requiring the generation of stable and feasible grasps for a wide variety of objects. Existing methods often struggle with generalization across diverse objects and lack large-scale datasets for training and evaluation. The GraspNet project introduced a **GraspNet-1Billion Dataset** and a baseline **Grasp Generation Model**:

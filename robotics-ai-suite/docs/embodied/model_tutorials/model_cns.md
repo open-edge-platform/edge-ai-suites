@@ -1,5 +1,3 @@
-(model-cns)=
-
 # Visual Servoing - CNS
 
 Visual servoing, also known as vision-based robot control and abbreviated VS, is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot. Visual Servoing control techniques are broadly classified into three types:

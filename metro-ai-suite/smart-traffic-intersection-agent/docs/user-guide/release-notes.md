@@ -1,18 +1,27 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version 2026.1.0-rc1
+## Version 2026.1.0
 
-**May 14, 2026**
+**June 17, 2026**
 
-- Integrate Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm)
-- Update Smart Intersection RI to release-2026.0.0 version
-- Migrate VLM serving from custom container to [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html) for improved inference performance and maintainability
-- Add `response_format` (JSON schema) support for structured VLM output via OVMS structured generation
-- Support configurable VLM model selection — `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` validated
-- Automatic model export and conversion in Helm init container using OVMS export tooling
-- Add alert deduplication and short-analysis fallback for improved VLM response handling
+**New**
+
+- Added `response_format` (JSON schema) support for structured VLM output via OVMS structured generation.
+- Added alert deduplication and short-analysis fallback for improved VLM response handling.
+
+**Improved**
+
+- Integrated Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm).
+- Updated Smart Intersection RI to the latest release version.
+- Migrated VLM serving from custom container to
+  [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html)
+  for improved inference performance and maintainability.
+- Support configurable VLM model selection —
+  `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` have been validated.
+- Automatic model export and conversion in Helm init container using OVMS export tooling.
 
 **Known Issues**
+
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 
 ## Version 1.0.0
@@ -22,7 +31,7 @@
 Smart Traffic Intersection Agent (STIA) is a new addition to the Metro AI Sute. It showcases
 Hybrid AI usage in combination with the Smart Route Planning Agent (SRPA) sample application,
 acting as an agent deployed at the edge (traffic intersection in this case) and providing rich
-data on the “what” and “why” of the surrounding events, using SceneScape and VLMs respectively.
+data on the “what” and “why” of the surrounding events, using Scenescape and VLMs respectively.
 It provides a *UI to visualize the events* at the intersection, reporting on the number of
 vehicles, showing the feed from the camera, and explaining the traffic situation.
 

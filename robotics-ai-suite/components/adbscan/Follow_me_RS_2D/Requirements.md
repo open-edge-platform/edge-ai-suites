@@ -32,7 +32,7 @@ pip3 install librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
 
 ## ROS 2 Humble (Ubuntu 22.04)
 
-### System Packages
+### System Packages (Humble)
 
 ```bash
 sudo apt install libprotobuf-lite23 ros-humble-gazebo-* \
@@ -40,13 +40,13 @@ sudo apt install libprotobuf-lite23 ros-humble-gazebo-* \
     ros-humble-turtlebot3 ros-humble-xacro
 ```
 
-### Python Packages (gesture only)
+### Python Packages (gesture only, Humble)
 
 ```bash
 pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
 ```
 
-### Python Packages (gesture + audio)
+### Python Packages (gesture + audio, Humble)
 
 ```bash
 pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_humble.txt

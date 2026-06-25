@@ -32,12 +32,12 @@ pytest_plugins = ["conftest_helm"]
 ) = helm_utils.get_multimodal_env_values()
 
 def test_gen_chart():
-    logger.info("TC_001: Generating helm chart for multimodal.")
+    logger.info("TC_001: Generating and packaging helm chart for multimodal (using gen_helm_charts_targz).")
     # Use generic chart path - the function will determine the correct path
-    result = helm_utils.generate_helm_chart(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP)
-    logger.info(f"generate_helm_chart result: {result}")
-    assert result, "Failed to generate helm chart."  # nosec B101
-    logger.info(f"Helm Chart is generated at: {chart_path_multi}")
+    result = helm_utils.generate_helm_chart_targz(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP)
+    logger.info(f"generate_helm_chart_targz result: {result}")
+    assert result, "Failed to generate and package helm chart."  # nosec B101
+    logger.info(f"Helm Chart is generated and packaged at: {chart_path_multi}")
     logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Current directory2 %s", os.getcwd())
@@ -181,7 +181,7 @@ def test_verify_pods_stability_after_influxdb_restart(setup_multimodal_helm_envi
     logger.info(f"pod_restart result: {pod_restart_result}")
     assert pod_restart_result == True, "Failed to restart pod."  # nosec B101
     logger.info("Pod is restarted")
-    time.sleep(1)
+    time.sleep(wait_time_multi)  # Wait for pods to fully stabilize after restart
     pods_result2 = helm_utils.verify_pods(namespace_multi)
     logger.info(f"verify_pods result after restart: {pods_result2}")
     assert pods_result2 is True, "Failed to verify pods."  # nosec B101
@@ -436,12 +436,12 @@ def test_seaweed_s3_stored_images_access_multimodal():
     values_yaml_path = os.path.expandvars(os.path.join(multimodal_chart_path, "values.yaml"))
 
     try:
-        # Step 1: Generate helm chart (cd + make gen_helm_charts)
-        logger.info("Step 1: Generating helm chart for multimodal")
-        gen_result = helm_utils.generate_helm_chart(multimodal_chart_path, constants.MULTIMODAL_SAMPLE_APP)
-        logger.info(f"generate_helm_chart result: {gen_result}")
-        assert gen_result is True, "Failed to generate helm chart."  # nosec B101
-        logger.info("✓ Helm Chart generated successfully")
+        # Step 1: Generate helm chart (cd + make gen_helm_charts_targz)
+        logger.info("Step 1: Generating and packaging helm chart for multimodal")
+        gen_result = helm_utils.generate_helm_chart_targz(multimodal_chart_path, constants.MULTIMODAL_SAMPLE_APP)
+        logger.info(f"generate_helm_chart_targz result: {gen_result}")
+        assert gen_result is True, "Failed to generate and package helm chart."  # nosec B101
+        logger.info("✓ Helm Chart generated and packaged successfully")
 
         # Step 2: Set environment variables via values.yaml update
         logger.info("Step 2: Setting environment variables via values.yaml")
@@ -610,12 +610,12 @@ def test_vision_metadata_sender_timestamp_multimodal():
     values_yaml_path = os.path.expandvars(os.path.join(multimodal_chart_path, "values.yaml"))
 
     try:
-        # Step 1: Generate helm chart (cd + make gen_helm_charts)
-        logger.info("Step 1: Generating helm chart for multimodal")
-        gen_result = helm_utils.generate_helm_chart(multimodal_chart_path, constants.MULTIMODAL_SAMPLE_APP)
-        logger.info(f"generate_helm_chart result: {gen_result}")
-        assert gen_result is True, "Failed to generate helm chart."  # nosec B101
-        logger.info("✓ Helm Chart generated successfully")
+        # Step 1: Generate helm chart (cd + make gen_helm_charts_targz)
+        logger.info("Step 1: Generating and packaging helm chart for multimodal")
+        gen_result = helm_utils.generate_helm_chart_targz(multimodal_chart_path, constants.MULTIMODAL_SAMPLE_APP)
+        logger.info(f"generate_helm_chart_targz result: {gen_result}")
+        assert gen_result is True, "Failed to generate and package helm chart."  # nosec B101
+        logger.info("✓ Helm Chart generated and packaged successfully")
         logger.info("Waiting %ss after chart generation...", constants.MULTIMODAL_WAIT_AFTER_CHART_GEN)
         common_utils.wait_for_stability(constants.MULTIMODAL_WAIT_AFTER_CHART_GEN)
 

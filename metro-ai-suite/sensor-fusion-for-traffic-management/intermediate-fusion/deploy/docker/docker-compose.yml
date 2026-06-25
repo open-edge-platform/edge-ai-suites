@@ -1,6 +1,6 @@
 services:
   bevfusion:
-    image: ${DOCKER_IMAGE:-tfcc:bevfusion}
+    image: ${DOCKER_IMAGE:-tfcc:2026.1.0-ubuntu24}
     pull_policy: missing
     build:
       context: ..

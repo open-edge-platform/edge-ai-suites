@@ -25,14 +25,14 @@ for Multimodal applications.
 
 ### Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of a data
+As seen in the architecture diagram above, the sample app at a high-level comprises a data
 simulator, analytics and visualization components.
 Below is an explanation of how this architecture translates to data flow in the weld defect
 detection use case.
 
 #### 1. Weld Data Simulator
 
-The Weld Data Simulator uses sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
+The Weld Data Simulator uses sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset).
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
@@ -53,15 +53,15 @@ defect classification model, publishes the frame metadata results over MQTT, sto
 | `source`       | The source type for video ingestion.                                        | `"gstreamer"`                          |
 | `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                   |
 | `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvawatermark ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
-| `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
+| `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for the nested structure |
 
 **Parameters Properties**:
 
-| Key                          | Description                                                                 | Value                                   |
-|------------------------------|-----------------------------------------------------------------------------|-----------------------------------------|
-| `classification-properties`  | Properties for the classification element in the pipeline.                  | Object containing element configuration |
-| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`                      |
-| `element.format`             | Format type for element properties.                                         | `"element-properties"`                  |
+| Key                         | Description                                                | Value                                   |
+|-----------------------------|------------------------------------------------------------|-----------------------------------------|
+| `classification-properties` | Properties for the classification element in the pipeline. | Object containing element configuration |
+| `element.name`              | Name of the GStreamer element to configure.                | `"classification"`                      |
+| `element.format`            | Format type for element properties.                        | `"element-properties"`                  |
 
 **Destination Configuration**:
 
@@ -89,7 +89,7 @@ An array defining one or more video output destinations. Each entry requires a `
 |------------|---------------------------------------------------|------------------|
 | `type`     | Frame destination type.                           | `"webrtc"`       |
 | `peer-id`  | Unique identifier for the WebRTC peer connection. | `"samplestream"` |
-| `overlay`  | It's an optional field. By default, it is true. If true, it draws overlay and if false the gvawatermark DLStreamer configuration would be used as is | `false` |
+| `overlay`  | An optional field (true by default). If true, it draws an overlay and if false the `gvawatermark` DL Streamer configuration is used as is | `false` |
 
 **S3 Storage (`type: "s3_write"`)**:
 
@@ -102,11 +102,13 @@ An array defining one or more video output destinations. Each entry requires a `
 
 ##### 2.2 Time Series Analytics Microservice
 
-**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points coming from **Telegraf** point by point, runs the `ML CatBoost` model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Additionally, it publishes all the processed weld sensor data points over MQTT.
 
 The UDF deployment package used for
 weld data is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
+in the [Time Series Analytics Microservice Configuration directory for Multimodal Insights](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice).
+
+Details of the directory:
 
 ###### `config.json`
 
@@ -117,7 +119,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | Key     | Description                                         | Example Value                   |
 |---------|-----------------------------------------------------|---------------------------------|
 | `name`  | The name of the UDF script.                         | `"weld_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.cb"`    |
+| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.pkl"`    |
+| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
@@ -137,11 +140,9 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 
 ###### `udfs/`
 
-Contains the python script to process the incoming data.
-Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
+Contains the Python script to process the incoming data.
+Uses RandomForestClassifier machine learning algorithm from the scikit-learn library (Intel accelerated) to run on CPU/GPU to
 detect anomalous weld data points using sensor data.
-
-> **Note:** CatBoost models do not run on Intel GPUs.
 
 ###### `tick_scripts/`
 
@@ -151,12 +152,11 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ###### `models/`
 
-The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
-library.
+The `weld_anomaly_detector.pkl` is a model built using the RandomForestClassifier Algo, part of scikit-learn library.
 
 ##### 2.3 Fusion Analytics
 
-**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**
+**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during the weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**.
 It also stores the vision metadata from the `DL Streamer Pipeline Server` as a measurement in **InfluxDB**.
 
 #### 3. Data Storage

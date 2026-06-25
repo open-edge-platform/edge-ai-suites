@@ -1,3 +1,10 @@
+ros-humble-wandering-irobot-tutorial (2.4-1) UNRELEASED; urgency=low
+
+  * Bandit static-analysis fixes: replace assert with explicit ValueError in launch logging-dir helper
+  * Lint cleanup in wandering_irobot.launch.py (module/function docstrings, top-level rclpy import, long-line refactor)
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 09 Jun 2026 16:06:37 +0000
+
 ros-humble-wandering-irobot-tutorial (2.3-1) UNRELEASED; urgency=low
 
   * Refactoring of the code and general optimizations

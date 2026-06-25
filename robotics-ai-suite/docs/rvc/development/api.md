@@ -1,5 +1,3 @@
-(api_development)=
-
 # API Development
 
 To utilize the RVC API, follow the steps outlined below:

@@ -13,15 +13,15 @@ class _ShortNameFormatter(logging.Formatter):
 _fmt = "%(levelname)s: [%(name)s] %(message)s"
 _datefmt = '%Y-%m-%d %H:%M:%S'
 logging.basicConfig(level=logging.WARNING, format=_fmt, datefmt=_datefmt, force=True)
-for _h in logging.root.handlers:
-    _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
-for _named in [
-    "server", "models", "clip_handler", "registry", "indexer",
-    "retriever", "reranker", "document_parser", "detector",
-    "chroma_client", "store",
-]:
-    logging.getLogger(_named).setLevel(logging.INFO)
-warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
+
+_pkg_logger = logging.getLogger("providers")
+_pkg_logger.setLevel(logging.INFO)
+_pkg_logger.propagate = False
+_pkg_handler = logging.StreamHandler()
+_pkg_handler.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
+_pkg_logger.addHandler(_pkg_handler)
+
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 import langdetect
 langdetect.detector_factory.init_factory()
@@ -49,7 +49,7 @@ from providers.file_ingest_and_retrieve.models import (
     get_document_embedding_model,
 )
 
-logger = logging.getLogger("server")
+logger = logging.getLogger(__name__)
 
 class _IngestRequestBase(BaseModel):
     @field_validator('meta', check_fields=False)
@@ -95,13 +95,28 @@ _document_model = None
 
 def _load_models_parallel():
     global _visual_model, _document_model
+
+    import torch
+    import open_clip
+    import transformers
+    import openvino
+
     results = {}
+    errors = {}
 
     def _load_visual():
-        results["visual"] = get_visual_embedding_model()
+        try:
+            results["visual"] = get_visual_embedding_model()
+        except Exception as e:
+            errors["visual"] = e
+            logger.error(f"Failed to load visual model: {e}")
 
     def _load_document():
-        results["document"] = get_document_embedding_model()
+        try:
+            results["document"] = get_document_embedding_model()
+        except Exception as e:
+            errors["document"] = e
+            logger.error(f"Failed to load document model: {e}")
 
     t_vis = threading.Thread(target=_load_visual)
     t_doc = threading.Thread(target=_load_document)
@@ -110,9 +125,16 @@ def _load_models_parallel():
     t_vis.join()
     t_doc.join()
 
+    if errors:
+        logger.warning(f"Parallel model loading had failures: {list(errors.keys())}. Retrying sequentially...")
+        if "visual" in errors:
+            results["visual"] = get_visual_embedding_model()
+        if "document" in errors:
+            results["document"] = get_document_embedding_model()
+
     _visual_model = results["visual"]
     _document_model = results["document"]
-    logger.info("All embedding models loaded in parallel.")
+    logger.info("All embedding models loaded.")
 
 _load_models_parallel()
 

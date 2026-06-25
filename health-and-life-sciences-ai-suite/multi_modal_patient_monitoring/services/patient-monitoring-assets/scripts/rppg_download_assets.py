@@ -1,8 +1,8 @@
-"""Download and convert RPPG assets.
+"""Prepare and convert RPPG assets.
 
 This script:
 
-1. Downloads the MTTS-CAN Keras HDF5 model into /models/rppg/mtts_can.hdf5
+1. Loads a manually staged MTTS-CAN Keras HDF5 model from local storage
 2. Converts it to OpenVINO IR (XML+BIN) for Intel iGPU inference
 3. Downloads the sample video into /videos/rppg/sample.mp4
 
@@ -14,10 +14,14 @@ Usage:
 """
 
 import urllib.request
+import socket
+import time
 from pathlib import Path
+import shutil
 from tqdm import tqdm
 import logging
 import argparse
+from urllib.error import URLError
 
 import yaml
 import tensorflow as tf
@@ -40,11 +44,11 @@ def _load_rppg_model_config() -> tuple[str, str, str, str, str]:
     This function expects /app/configs/model-config.yaml to exist and to
     define rppg.models[0] with at least:
 
-      - name
-      - target_dir
-      - model_url
-      - video_dir
-      - video_url
+            - name
+            - target_dir
+            - source_model_path
+            - video_dir
+            - video_url
 
     If any of these are missing or the file is not readable, the script
     will raise and fail fast instead of using hardcoded defaults.
@@ -70,20 +74,20 @@ def _load_rppg_model_config() -> tuple[str, str, str, str, str]:
     first = models[0] or {}
     name = first.get("name")
     target_dir = first.get("target_dir")
-    model_url = first.get("model_url")
+    source_model_path = first.get("source_model_path")
     video_dir = first.get("video_dir")
     video_url = first.get("video_url")
 
-    if not name or not target_dir or not model_url or not video_dir or not video_url:
+    if not name or not target_dir or not source_model_path or not video_dir or not video_url:
         raise ValueError(
-            "rppg.models[0] must define name, target_dir, model_url, video_dir, "
+            "rppg.models[0] must define name, target_dir, source_model_path, video_dir, "
             "and video_url in model-config.yaml."
         )
 
     return (
         str(name),
         str(target_dir),
-        str(model_url),
+        str(source_model_path),
         str(video_dir),
         str(video_url),
     )
@@ -133,30 +137,87 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
     """Download file with progress bar."""
     dest.parent.mkdir(parents=True, exist_ok=True)
 
+    # Some hosts (e.g. Pexels) block the default Python user-agent.
+    # Use a per-request opener so we don't leak headers to other downloads.
+    opener = urllib.request.build_opener()
+    opener.addheaders = [
+        ("User-Agent",
+         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+         "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"),
+        ("Referer", "https://www.pexels.com/"),
+    ]
+
     class DownloadProgressBar(tqdm):
         def update_to(self, b=1, bsize=1, tsize=None):
             if tsize is not None:
                 self.total = tsize
             self.update(b * bsize - self.n)
 
-    with DownloadProgressBar(
-        unit='B',
-        unit_scale=True,
-        miniters=1,
-        desc=desc
-    ) as t:
-        urllib.request.urlretrieve(url, dest, reporthook=t.update_to)
+    def is_transient_error(error: Exception) -> bool:
+        if isinstance(error, URLError):
+            return isinstance(getattr(error, "reason", None), (socket.gaierror, TimeoutError, OSError))
+        return isinstance(error, (socket.gaierror, TimeoutError, OSError))
+
+    attempts = 3
+    last_error: Exception | None = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            with DownloadProgressBar(
+                unit='B',
+                unit_scale=True,
+                miniters=1,
+                desc=desc
+            ) as t:
+                tmp_dest = dest.with_suffix(dest.suffix + ".part")
+                try:
+                    with opener.open(url) as response, tmp_dest.open("wb") as output:
+                        total_size = response.headers.get("Content-Length")
+                        if total_size is not None:
+                            t.total = int(total_size)
+
+                        while True:
+                            chunk = response.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            output.write(chunk)
+                            t.update(len(chunk))
+                    tmp_dest.replace(dest)
+                except Exception:
+                    if tmp_dest.exists():
+                        tmp_dest.unlink()
+                    raise
+            return
+        except Exception as error:
+            last_error = error
+            if attempt >= attempts or not is_transient_error(error):
+                raise
+            wait_seconds = 2 ** (attempt - 1)
+            logger.warning(
+                "Download attempt %s/%s failed for %s: %s; retrying in %ss",
+                attempt,
+                attempts,
+                url,
+                error,
+                wait_seconds,
+            )
+            time.sleep(wait_seconds)
+
+    if last_error is not None:
+        raise last_error
 
 
-def download_model() -> None:
-    """Download MTTS-CAN model weights.
-
-    The destination filename under /models/rppg is taken from
-    model-config.yaml (rppg.models[0].name) and the download URL from
-    rppg.models[0].model_url.
-    """
-    model_filename, target_dir, model_url, _, _ = _load_rppg_model_config()
+def stage_model() -> None:
+    """Stage MTTS-CAN model weights from a local path into target_dir."""
+    model_filename, target_dir, source_model_path, _, _ = _load_rppg_model_config()
     model_path = Path(target_dir) / model_filename
+    source_path = Path(source_model_path)
+
+    if not source_path.exists():
+        raise FileNotFoundError(
+            f"Missing manually staged rPPG model at {source_path}. "
+            "Please place the source model before running make run."
+        )
 
     if model_path.exists():
         logger.info(f"Model already exists: {model_path}")
@@ -164,18 +225,15 @@ def download_model() -> None:
         logger.info(f"  Size: {size_mb:.1f} MB")
         return
 
-    logger.info("Downloading MTTS-CAN model...")
-    logger.info(f"  Source: {model_url}")
+    logger.info("Staging MTTS-CAN model from local source...")
+    logger.info(f"  Source: {source_path}")
     logger.info(f"  Destination: {model_path}")
 
-    try:
-        download_file(model_url, model_path, "Model")
-        logger.info("✓ Model downloaded successfully")
-        size_mb = model_path.stat().st_size / (1024 * 1024)
-        logger.info(f"  Size: {size_mb:.1f} MB")
-    except Exception as e:
-        logger.error(f"Failed to download model: {e}")
-        raise
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, model_path)
+    logger.info("✓ Model staged successfully")
+    size_mb = model_path.stat().st_size / (1024 * 1024)
+    logger.info(f"  Size: {size_mb:.1f} MB")
 
 
 def convert_model_to_openvino() -> None:
@@ -257,12 +315,12 @@ def main():
 
     try:
         if args.model_only:
-            download_model()
+            stage_model()
             convert_model_to_openvino()
         elif args.video_only:
             download_video()
         else:
-            download_model()
+            stage_model()
             convert_model_to_openvino()
             logger.info("")
             download_video()

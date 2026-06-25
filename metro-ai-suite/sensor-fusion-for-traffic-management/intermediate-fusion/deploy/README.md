@@ -19,31 +19,31 @@ This deploy tree contains the Intel GPU inference assets for the BEVFusion proje
 
 Choose the workflow that matches your goal:
 
-1. `docker/README_Docker.md`
+1. [Docker README on GH](docker/README_Docker.md)
 
    Recommended first stop for a quick run with the published Docker image.
 
-2. `docs/Prerequisites.md`
+2. [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md)
 
    Prepare the host for a native build and install the project dependencies.
 
-3. `docs/GSG.md`
+3. [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md)
 
    Build and run the native applications, export predictions, and troubleshoot common issues.
 
-4. `docs/Testing.md`
+4. [Executable Reference](../../docs/user-guide/intermediate-fusion/Testing.md)
 
    Review the available executables plus the native and Docker smoke-test flows.
 
-5. `tools/README_eval.md`
+5. [KITTI 3D Object Detection Evaluation](./tools/README_eval.md)
 
    Run KITTI-format evaluation and interpret the generated metrics.
 
-6. `tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md`
+6. [DAIR-V2X-I to KITTI Format Conversion Guide](./tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md)
 
    Convert DAIR-V2X-I into KITTI format and verify the converted calibration outputs.
 
-7. `tools/how_to_generate_kitti_format_dataset/kitti360_guide.md`
+7. [KITTI-360 Conversion Guide](./tools/how_to_generate_kitti_format_dataset/kitti360_guide.md)
 
    Convert Kitti360 into KITTI format with the bundled helper scripts.
 
@@ -52,23 +52,23 @@ Choose the workflow that matches your goal:
 Pull the published image and run the container smoke test:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To work interactively inside the published image instead:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 ```
 
-If this container workflow is enough for your use case, you can skip the native build steps in `docs/Prerequisites.md` and `docs/GSG.md`.
+If this container workflow is enough for your use case, you can skip the native build steps in [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md) and the [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md).
 
 ## Native Host Entry Points
 
@@ -92,15 +92,15 @@ source /opt/intel/openvino/setupvars.sh
 For a containerized smoke test of a published or prebuilt image, use:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
+If you retagged the published image to `tfcc:2026.1.0-ubuntu24`, or built a local image with that tag, you can omit `--image`.
 
 To copy a host dataset into the container for the run, pass:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 --dataset-path /path/to/kitti_dataset
 ```
 
 To run the native host binaries in one shot and get pass/fail counts plus the final performance lines for `bevfusion` and `bevfusion_unified`, use:
@@ -126,16 +126,16 @@ If you want to build the Docker image locally instead of pulling it, add `--buil
 ## Included Sample Assets
 
 - `data/v2xfusion/dataset/`: DAIR-V2X sample dataset for smoke tests.
-- `data/v2xfusion/pointpillars/`: DAIR-V2X split-model assets for `bevfusion`, including INT8 IR and FP32 ONNX files.
+- `data/v2xfusion/pointpillars/`: DAIR-V2X split-model assets for `bevfusion`, including INT8 IR and the non-quantized ONNX files used by `bevfusion --fp16`.
 - `data/v2xfusion/second/`: DAIR-V2X unified-model assets for `bevfusion_unified`, including INT8 IR and FP16 ONNX files.
 - `data/kitti/dataset/`: KITTI-360 sample dataset for smoke tests.
-- `data/kitti/pointpillars/`: KITTI-360 split-model assets for `bevfusion`, including INT8 IR and FP32 ONNX files.
+- `data/kitti/pointpillars/`: KITTI-360 split-model assets for `bevfusion`, including INT8 IR and the non-quantized ONNX files used by `bevfusion --fp16`.
 - `data/kitti/second/`: KITTI-360 unified-model assets for `bevfusion_unified`, including INT8 IR and FP16 ONNX files.
 - `data/v2xfusion/dump_bins/`: intermediate tensors used by several module tests.
 
 The bundled model files under `data/*/pointpillars` and `data/*/second` are dummy weights in the current release package. They preserve the runtime interfaces so the pipelines can be launched and profiled, but they do not produce meaningful detections or evaluation results.
 
-For split-model PFE selection, both DAIR-V2X and KITTI-360 prefer the v7000 PFE shape and fall back to v6000 only when v7000 is not present. Default split and unified runs request INT8 models; on Battlemage GPUs the split pipeline keeps the known INT8 fuser protection and uses `fuser.onnx` while the other available INT8 split components remain enabled. `--fp32` selects split-model FP32 ONNX components, and `--fp16` selects unified FP16 ONNX models.
+For split-model PFE selection, both DAIR-V2X and KITTI-360 prefer the v7000 PFE shape and fall back to v6000 only when v7000 is not present. Default split and unified runs request INT8 models; on Battlemage GPUs the split pipeline keeps the known INT8 fuser protection and uses `fuser.onnx` while the other available INT8 split components remain enabled. `bevfusion --fp16` switches the split pipeline to the non-quantized ONNX components, and `bevfusion_unified --fp16` selects the unified FP16 ONNX model.
 
 ## Additional Utilities
 

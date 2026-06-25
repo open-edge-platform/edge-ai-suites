@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide provides step-by-step instructions for deploying the Smart Traffic Intersection Agent application using Helm.
 
@@ -11,7 +11,7 @@ Before you begin, ensure that you have the following prerequisites:
 - Install `kubectl` on your system. Refer to the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm installed on your system: [Installation Guide](https://helm.sh/docs/intro/install/).
 - A running **Smart Intersection** deployment (provides MQTT broker, camera pipelines, and scene analytics). See [Step 4](#step-5-deploy-smart-intersection) below.
-- The SceneScape CA certificate file (`scenescape-ca.pem`) for TLS connections to the MQTT broker (created during the Smart Intersection installation).
+- The Scenescape CA certificate file (`scenescape-ca.pem`) for TLS connections to the MQTT broker (created during the Smart Intersection installation).
 - *(Optional)* A [Hugging Face](https://huggingface.co/) API token if the VLM model requires authentication.
 - **Storage Requirement:** The VLM model cache PVC requests 20 GiB by default. Ensure the cluster has sufficient storage available.
 - *(Optional — GPU inference)* To run VLM inference on an Intel GPU:
@@ -99,7 +99,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 ### Step 5: Deploy Smart Intersection
 
-The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
+The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [Scenescape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
 Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
@@ -143,7 +143,6 @@ helm install stia . -n <your-namespace> --create-namespace \
 | --- | --- | --- |
 | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
 | `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
-
 
 > **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
@@ -406,12 +405,62 @@ helm install stia . -n traffic -f values-override.yaml \
 
 ---
 
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your Kubernetes nodes. Complete the following sections:
+1. Prerequisites
+2. Download the Trusted Compute Package
+3. Kubernetes Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+### 2. Deploy with Trusted Compute
+
+Deploy the Smart Traffic Intersection Agent with Trusted Compute enabled by adding the `--set vlmServing.trustedCompute.enabled=true` and `--set vlmServing.gpu.enabled=false` flags to the helm command:
+
+```bash
+helm install stia . -n <your-namespace> --create-namespace \
+  --set vlmServing.trustedCompute.enabled=true \
+  --set vlmServing.gpu.enabled=false
+```
+
+The OVMS VLM serving pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and model data from untrusted co-tenants on the same host.
+
+> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
+
+> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy with Helm](#steps-to-deploy-with-helm) section above.
+
+### 3. Verify Trusted Compute Deployment
+
+Verify that the pods are running with the Trusted Compute runtime:
+
+```bash
+# Check that OVMS pods are using the trusted compute runtime class
+kubectl get pods -n <your-namespace> -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.runtimeClassName}{"\n"}{end}' | grep ovms
+
+# Verify the pods are running
+kubectl get pods -n <your-namespace>
+
+# Check OVMS pod logs to ensure containers started successfully
+kubectl logs -n <your-namespace> -l app=stia-ovms-service
+```
+
+You should see the OVMS VLM serving pods running with the Trusted Compute runtime class.
+
+---
+
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
 - Access the Gradio UI and verify that it is showing the traffic intersection dashboard.
 - Check the backend API at `/docs` for the interactive Swagger documentation.
-- Verify that the traffic agent is receiving MQTT messages from SceneScape by checking the logs:
+- Verify that the traffic agent is receiving MQTT messages from Scenescape by checking the logs:
 
   ```bash
   kubectl logs -l app=stia-traffic-agent -n <your-namespace> -f
@@ -442,11 +491,12 @@ helm install stia . -n traffic -f values-override.yaml \
   If no GPU resource is listed, install the [Intel GPU device plugin for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md). Also verify that `vlmServing.gpu.resourceName` matches the resource key reported by the device plugin (`gpu.intel.com/i915` for integrated/Arc, `gpu.intel.com/xe` for Data Center GPUs).
 
 - **GPU permission denied (`/dev/dri` access):** The chart includes all common render group GIDs (44, 109, 992) by default. If your distro uses a different GID, find it with `getent group render` on the node and override:
+
   ```bash
   helm install stia . --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
   ```
 
-- **Traffic agent cannot connect to MQTT broker:** Verify that the SceneScape deployment is reachable from the cluster, the `trafficAgent.mqtt.host` value is correct, and the CA certificate is provided via `tls.caCert` or `tls.caCertSecretName`.
+- **Traffic agent cannot connect to MQTT broker:** Verify that the Scenescape deployment is reachable from the cluster, the `trafficAgent.mqtt.host` value is correct, and the CA certificate is provided via `tls.caCert` or `tls.caCertSecretName`.
 
 - **PVC not cleaned up after uninstall:** When `vlmServing.persistence.keepOnUninstall` is `true` (the default), the model cache PVC is intentionally retained. To reclaim storage, delete it manually:
 
@@ -457,6 +507,10 @@ helm install stia . -n traffic -f values-override.yaml \
   # Delete the required PVC from the namespace
   kubectl delete pvc <pvc-name> -n <your-namespace>
   ```
+
+## Clean Up the Trusted Compute Deployment
+
+To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Related Links
 

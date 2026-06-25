@@ -10,6 +10,7 @@ const MetricsPoller: React.FC = () => {
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const aiProcessing = useAppSelector(s => s.ui.aiProcessing);
   const csProcessing = useAppSelector(s => s.ui.csProcessing);
+  const monitoringActive = useAppSelector(s => s.ui.monitoringActive);
   const summaryStatus = useAppSelector(s => s.summary.status);
   const monitoringPaused = useAppSelector(s => s.ui.monitoringPaused);
   const dispatch = useAppDispatch();
@@ -50,7 +51,7 @@ const MetricsPoller: React.FC = () => {
       return; 
     }
 
-    const shouldPoll = aiProcessing || csProcessing || summaryStatus === 'streaming';
+    const shouldPoll = monitoringActive || aiProcessing || csProcessing || summaryStatus === 'streaming';
     if (!shouldPoll) return;
 
     let cancelled = false;
@@ -65,7 +66,7 @@ const MetricsPoller: React.FC = () => {
       cancelled = true;
       if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
     };
-  }, [sessionId, aiProcessing, csProcessing, summaryStatus, monitoringPaused, dispatch]);
+  }, [sessionId, aiProcessing, csProcessing, monitoringActive, summaryStatus, monitoringPaused, dispatch]);
 
   return null;
 };

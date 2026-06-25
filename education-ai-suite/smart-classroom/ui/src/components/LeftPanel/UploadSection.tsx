@@ -95,6 +95,26 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
 
   const [showFileManager, setShowFileManager] = useState(false);
 
+  const ensureSessionAndMonitoring = useCallback(async () => {
+    if (!sessionIdRef.current) {
+      try {
+        const res = await createSession();
+        sessionIdRef.current = res.sessionId;
+        dispatch(setSessionId(res.sessionId));
+      } catch (e) {
+        console.warn("Could not create session for metrics:", e);
+      }
+    }
+    if (sessionIdRef.current && !monitoringActiveRef.current) {
+      try {
+        await startMonitoring(sessionIdRef.current);
+        dispatch(setMonitoringActive(true));
+      } catch (e) {
+        console.warn("Could not start monitoring:", e);
+      }
+    }
+  }, [dispatch]);
+
   // Check if files exist on the server on initial mount
   useEffect(() => {
     const checkServerFiles = async () => {
@@ -108,6 +128,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
         if (hasFiles) {
           dispatch(setCsHasUploads(true));
           dispatch(setCsUploadsComplete(true));
+          await ensureSessionAndMonitoring();
         }
         if (Array.isArray(tags) && tags.length > 0) {
           serverTagsRef.current = tags;
@@ -118,7 +139,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
       }
     };
     checkServerFiles();
-  }, [dispatch]);
+  }, [dispatch, ensureSessionAndMonitoring]);
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);
@@ -257,7 +278,8 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
             null;
           const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
           const videoSummaryStatus = (result.result as any)?.video_summary_status ?? null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}) });
+          const errorMsg = status === "FAILED" ? ((result.result as any)?.error ?? null) : null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}), ...(errorMsg ? { error: errorMsg } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
             // Keep polling if video summarization is still in progress
@@ -322,26 +344,6 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
       )
     );
 
-    // Ensure session + monitoring without blocking uploads
-    const ensureSessionAndMonitoring = async () => {
-      if (!sessionIdRef.current) {
-        try {
-          const res = await createSession();
-          sessionIdRef.current = res.sessionId;
-          dispatch(setSessionId(res.sessionId));
-        } catch (e) {
-          console.warn("Could not create session for metrics:", e);
-        }
-      }
-      if (sessionIdRef.current && !monitoringActiveRef.current) {
-        try {
-          await startMonitoring(sessionIdRef.current);
-          dispatch(setMonitoringActive(true));
-        } catch (e) {
-          console.warn("Could not start monitoring:", e);
-        }
-      }
-    };
     ensureSessionAndMonitoring();
 
     await Promise.all(
@@ -702,9 +704,9 @@ return (
                         {entry.status === "FAILED" ? (
                           <div className="cs-failed-cell">
                             <span className="cs-failed-msg" title={entry.error ?? ""}>
-                              {entry.fileType === "MP4"
+                              {entry.error || (entry.fileType === "MP4"
                                 ? t("uploadSection.summarizationFailed")
-                                : entry.error || `Upload of '${entry.filename}' failed. Please try again`}
+                                : `Upload of '${entry.filename}' failed. Please try again`)}
                             </span>
                             <div className="cs-failed-actions">
                               <button

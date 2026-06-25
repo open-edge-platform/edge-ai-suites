@@ -50,7 +50,7 @@ CASE_TIMEOUT=120
 BEVFUSION_REPEAT=1
 UNIFIED_REPEAT=1
 UNIFIED_NUM_SAMPLES=""
-USE_FP32=0
+USE_FP16=0
 KEEP_WORKDIR=0
 SKIP_ENV_SETUP=0
 QUIET=1
@@ -111,7 +111,7 @@ Optional:
                               Default: 1
   --unified-num-samples N     Optional --num-samples override for bevfusion_unified.
                               Default: full dataset
-  --fp32                      Run split-model binaries with FP32 models and unified binaries with FP16 models.
+  --fp16                      Run bevfusion and bevfusion_unified with FP16 models.
   --quiet                     Only print start/finish status lines for each case.
                               This is the default behavior.
   --verbose                   Stream each binary's output to the console while
@@ -498,7 +498,7 @@ build_bevfusion_args(){
   if [[ "${DATASET_PATH_EXPLICIT}" != "1" ]]; then
     args+=(--repeat "${BEVFUSION_REPEAT}")
   fi
-  args+=("${FP32_FLAG[@]}")
+  args+=("${BEVFUSION_PRECISION_ARGS[@]}")
 
   printf '%s\0' "${args[@]}"
 }
@@ -517,7 +517,7 @@ build_unified_args(){
 
 build_kitti_bevfusion_args(){
   local -a args=(./bevfusion "${KITTI_DATASET_PATH}" --preset kitti --model-dir "${KITTI_POINTPILLARS_MODEL_DIR}" --num-samples 1)
-  args+=("${FP32_FLAG[@]}")
+  args+=("${BEVFUSION_PRECISION_ARGS[@]}")
 
   printf '%s\0' "${args[@]}"
 }
@@ -591,8 +591,13 @@ while [[ $# -gt 0 ]]; do
       UNIFIED_NUM_SAMPLES="$2"
       shift 2
       ;;
+    --fp16)
+      USE_FP16=1
+      shift
+      ;;
     --fp32)
-      USE_FP32=1
+      warn "--fp32 is deprecated for autotest; use --fp16 to match bevfusion/bevfusion_unified"
+      USE_FP16=1
       shift
       ;;
     --verbose)
@@ -661,7 +666,7 @@ require_dataset_layout "${DATASET_PATH}"
 [[ -d "${V2X_ROOT}/second" ]] || die "Missing second model directory under ${V2X_ROOT}"
 
 POINTPILLARS_MODEL_DIR="${V2X_ROOT}/pointpillars"
-if [[ "${USE_FP32}" == "0" && -f "${POINTPILLARS_MODEL_DIR}/quantized_lidar_pfe.xml" ]]; then
+if [[ "${USE_FP16}" == "0" && -f "${POINTPILLARS_MODEL_DIR}/quantized_lidar_pfe.xml" ]]; then
   POINTPILLARS_PFE_MODEL="${POINTPILLARS_MODEL_DIR}/quantized_lidar_pfe.xml"
 elif [[ -f "${POINTPILLARS_MODEL_DIR}/lidar_pfe_v7000.onnx" ]]; then
   POINTPILLARS_PFE_MODEL="${POINTPILLARS_MODEL_DIR}/lidar_pfe_v7000.onnx"
@@ -704,13 +709,15 @@ else
 fi
 
 CAMERA_MODEL="../data/v2xfusion/pointpillars/quantized_camera.xml"
-FP32_FLAG=()
+SPLIT_TEST_FP32_FLAG=()
+BEVFUSION_PRECISION_ARGS=()
 UNIFIED_ARGS=()
 UNIFIED_PRECISION_ARGS=()
 
-if [[ "${USE_FP32}" == "1" ]]; then
+if [[ "${USE_FP16}" == "1" ]]; then
   CAMERA_MODEL="../data/v2xfusion/pointpillars/camera.backbone.onnx"
-  FP32_FLAG=(--fp32)
+  SPLIT_TEST_FP32_FLAG=(--fp32)
+  BEVFUSION_PRECISION_ARGS=(--fp16)
   UNIFIED_PRECISION_ARGS=(--fp16)
 fi
 
@@ -741,15 +748,15 @@ fi
 if [[ "${RUNTIME_SMOKE_ONLY}" != "1" ]]; then
   run_case "test_camera_geometry" "" ./test_camera_geometry
   run_case "test_bev_pool" "" ./test_bev_pool "${SHORT_WARMUP}" "${SHORT_ITERS}"
-  run_case "test_viewtransform" "" ./test_viewtransform "${VIEWTRANSFORM_IMAGE}" "${CAMERA_MODEL}" "${SHORT_WARMUP}" "${SHORT_ITERS}" "${FP32_FLAG[@]}"
-  run_case "test_camera_bev_pipeline" "" ./test_camera_bev_pipeline "${MINI_DATASET}" "${CAMERA_MODEL}" "${SHORT_WARMUP}" "${FP32_FLAG[@]}"
+  run_case "test_viewtransform" "" ./test_viewtransform "${VIEWTRANSFORM_IMAGE}" "${CAMERA_MODEL}" "${SHORT_WARMUP}" "${SHORT_ITERS}" "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_camera_bev_pipeline" "" ./test_camera_bev_pipeline "${MINI_DATASET}" "${CAMERA_MODEL}" "${SHORT_WARMUP}" "${SPLIT_TEST_FP32_FLAG[@]}"
   run_case "test_pointpillars_voxelizer" "" ./test_pointpillars_voxelizer
-  run_case "test_pointpillars" "" ./test_pointpillars --dataset "${MINI_DATASET}" --pfe "${POINTPILLARS_PFE_MODEL}" "${FP32_FLAG[@]}"
-  run_case "test_lidar_pipeline" "" ./test_lidar_pipeline "${MINI_DATASET}" "${POINTPILLARS_PFE_MODEL}" "${SHORT_WARMUP}" --num-samples "${SMALL_SAMPLES}" "${FP32_FLAG[@]}"
-  run_case "test_fuser" "" ./test_fuser "${SHORT_WARMUP}" "${SHORT_ITERS}" "${FP32_FLAG[@]}"
-  run_case "test_head" "" ./test_head "${SHORT_WARMUP}" "${SHORT_ITERS}" "${FP32_FLAG[@]}"
-  run_case "test_fusion_pipeline" "" ./test_fusion_pipeline "../data/v2xfusion" "${SHORT_WARMUP}" "${SHORT_ITERS}" usm "${FP32_FLAG[@]}"
-  run_case "test_bevfusion_pipeline" "" ./test_bevfusion_pipeline "${MINI_DATASET}" --model-dir "${POINTPILLARS_MODEL_DIR}" --num-samples "${SMALL_SAMPLES}" --warmup "${SHORT_WARMUP}" "${FP32_FLAG[@]}"
+  run_case "test_pointpillars" "" ./test_pointpillars --dataset "${MINI_DATASET}" --pfe "${POINTPILLARS_PFE_MODEL}" "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_lidar_pipeline" "" ./test_lidar_pipeline "${MINI_DATASET}" "${POINTPILLARS_PFE_MODEL}" "${SHORT_WARMUP}" --num-samples "${SMALL_SAMPLES}" "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_fuser" "" ./test_fuser "${SHORT_WARMUP}" "${SHORT_ITERS}" "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_head" "" ./test_head "${SHORT_WARMUP}" "${SHORT_ITERS}" "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_fusion_pipeline" "" ./test_fusion_pipeline "../data/v2xfusion" "${SHORT_WARMUP}" "${SHORT_ITERS}" usm "${SPLIT_TEST_FP32_FLAG[@]}"
+  run_case "test_bevfusion_pipeline" "" ./test_bevfusion_pipeline "${MINI_DATASET}" --model-dir "${POINTPILLARS_MODEL_DIR}" --num-samples "${SMALL_SAMPLES}" --warmup "${SHORT_WARMUP}" "${BEVFUSION_PRECISION_ARGS[@]}"
 else
   log "Dummy model assets detected; running bevfusion/bevfusion_unified runtime smoke tests only"
 fi
@@ -758,7 +765,7 @@ run_case "bevfusion" "bevfusion" "${BEVFUSION_CMD[@]}"
 run_case "bevfusion_unified" "bevfusion_unified" "${UNIFIED_CMD[@]}"
 if [[ -n "${KITTI_DATASET_PATH}" ]]; then
   run_case "bevfusion_kitti" "bevfusion" "${KITTI_BEVFUSION_CMD[@]}"
-  if [[ "${USE_FP32}" == "0" ]]; then
+  if [[ "${USE_FP16}" == "0" ]]; then
     run_case "bevfusion_unified_kitti" "bevfusion_unified" "${KITTI_UNIFIED_CMD[@]}"
   fi
 fi

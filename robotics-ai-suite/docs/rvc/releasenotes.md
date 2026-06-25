@@ -1,8 +1,6 @@
-(releasenotes)=
-
 # Release Notes
 
-Click each tab to learn about the new and updated features in each release of Intel® Robot Vision & Control Framework.
+Click each tab to learn about the new and updated features in each release of Stationary Robot.
 
 ::::{tab-set}
 :::{tab-item} RVC v2.1

@@ -1,3 +1,5 @@
+# Metro AI Suite
+
 The **Metro AI Suite** accelerates application development for sophisticated edge AI video safety, security, and smart city use cases.
 
 The Metro AI Suite includes Intel® software such as OpenVINO&trade; toolkit, Deep Learning Streamer, Intel&reg; oneAPI Toolkit, and other tools, libraries, and microservices for media analytics and AI performance optimization for the aforementioned use cases.
@@ -23,7 +25,7 @@ The Suite also provides a collection of visual analytics sample applications, us
 | [Smart NVR](smart-nvr) | Integrates generative AI-powered vision analytics to a Network Video Recorder (NVR) and delivers advanced event detection, summarization, and automation while reducing bandwidth and storage requirements by processing and analyzing video data directly at the edge. | [Link](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/docs/user-guide/index.md) |
 |[Image Based Video Search](image-based-video-search) | Performs near real-time analysis and image-based search to detect and retrieve objects of interest in large video datasets. |  [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/image-based-video-search/index.html) |
 |[Visual Search Question and Answering](visual-search-question-and-answering) | A unified application that integrates a multi-modal search engine for image search with text query with a visual question and answering assistant. |  [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/visual-search-question-and-answering/index.html) |
-|[Deterministic Threat Detection](deterministic-threat-detection) | A sample application that showcases Time-Sensitive Networking (TSN) to enable deterministic, low-latency transmission of AI-processed video and sensor data alongside best-effort traffic on a shared network. |  [Link](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/deterministic-threat-detection/docs/user-guide/index.md) |
+|[Agentic RAG](https://github.com/opea-project/GenAIExamples/tree/main/EdgeCraftRAG) | A customizable, tunable and agentic Retrieval-Augmented Generation system for edge solutions. It is designed to curate the RAG pipeline to meet hardware requirements at edge with guaranteed quality and performance. |  [Link](https://opea-project.github.io/latest/GenAIExamples/EdgeCraftRAG/docker_compose/intel/gpu/arc/README.html) |
 
 See the respective sample applications to learn more about using them in your application development as well as customizing them to meet your use case needs.
 

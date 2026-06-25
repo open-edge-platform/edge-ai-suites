@@ -11,7 +11,7 @@ To get started:
   your environment.
 - **Run a predefined pipeline**: execute a sample pipeline to see real-time transportation
   monitoring and object detection in action.
-- **Access the application's features and user interfaces**: explore the Intel® SceneScape
+- **Access the application's features and user interfaces**: explore the Scenescape
   Web UI, Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor,
   analyze and customize workflows.
 - **Consider Enabling Security features**: use hardware-based security measures to make your
@@ -46,8 +46,7 @@ To get started:
      ./install.sh smart-intersection
      ```
 
-> **Note:** For environments requiring a specific host IP address (such as when using Edge
-> Manageability Toolkit or deploying across different network interfaces), you can explicitly
+> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
 > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `./install.sh smart-intersection <HOST_IP>`
 
@@ -82,8 +81,8 @@ To get started:
    - Grafana Dashboard
    - DL Streamer Pipeline Server
    - MQTT Broker
-   - Node-RED (for applications without Intel® SceneScape)
-   - Intel® SceneScape services (for Smart Intersection only)
+   - Node-RED (for applications without Scenescape)
+   - Scenescape services (for Smart Intersection only)
 
    </details>
 
@@ -170,6 +169,68 @@ instead of `localhost` for external access:
     docker compose down
     ```
 
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://docs.openedgeplatform.intel.com/trusted-compute/baremetal-installation) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
+
+- Prerequisites
+- Download the Trusted Compute Package
+- Docker Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+> **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
+
+### 2. Deploy the Smart Intersection Sample Application with Trusted Compute
+
+**Configure Network Settings**
+
+By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
+
+Requirements:
+
+- Subnet format must be exactly `172.X.0.0/16` where `X` is between 18–31 (RFC 1918 private IP range)
+- The subnet must not conflict with existing Docker networks on your system
+- DNS relay service will be automatically configured at `172.X.0.200`
+
+Example:
+
+```bash
+# Optional: Customize the subnet if needed (default is 172.20.0.0/16)
+export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
+```
+
+**Deploy with Trusted Compute**
+
+```bash
+export ENABLE_TC=true
+./install.sh smart-intersection
+```
+
+The DL Streamer Pipeline Server containers will run inside hardware-isolated TC VMs, protecting inference workloads and video data from untrusted co-tenants on the same host.
+
+**Start the Application**
+
+```bash
+docker compose up -d
+```
+
+Once the application is running, follow the [Access the Application and Components](#access-the-application-and-components) section to access the UI and services.
+
+**Stop the Application**
+
+```bash
+docker compose down
+```
+
+To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
+
 ## Other Deployment Options
 
 Choose one of the following methods to deploy the Smart Intersection Sample Application:
@@ -181,16 +242,16 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 
 With AI systems handling sensitive city data and making autonomous decisions, robust security
 is essential. Intel platforms provide built-in security features to protect data, infrastructure,
-and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
+and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
 that uses the example of Smart Intersection to show how to secure Open Edge Platform
 applications.
 
 ## Learn More
 
-- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
+- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
-- [Intel® SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [Scenescape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
 
 <!--hide_directive
 :::{toctree}

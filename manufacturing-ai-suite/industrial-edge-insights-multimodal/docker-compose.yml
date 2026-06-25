@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.3
+    image: telegraf:1.38.4
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -129,7 +129,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:13.0.1-ubuntu
+    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -228,7 +228,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.29.8-trixie-perl
+    image: nginx:1.31.1-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -384,7 +384,7 @@ services:
     - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.18.1
+    image: bluenviron/mediamtx:1.18.2
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -522,7 +522,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.10.0
+    image: coturn/coturn:4.12.0
     container_name: coturn
     read_only: true
     security_opt:
@@ -530,7 +530,7 @@ services:
     ports:
       - "${COTURN_UDP_PORT}:3478"
       - "${COTURN_UDP_PORT}:3478/udp"
-    command: ["-v"]  # Verbose mode for logging
+    command: ["-v", "--external-ip=${HOST_IP}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
     networks:
     - timeseries_network
 networks:
