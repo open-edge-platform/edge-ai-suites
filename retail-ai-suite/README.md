@@ -1,3 +1,5 @@
+# Retail AI Suite
+
 The **Retail AI Suite** is an open-source software framework designed to accelerate AI workload evaluation and hardware selection for retail edge use cases.
 It helps retail solution builders to:
 

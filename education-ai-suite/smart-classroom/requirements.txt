@@ -60,10 +60,9 @@ hf_xet==1.4.3
 ultralytics==8.4.39
 
 # OCR dependencies
-paddleocr==2.10.0
+paddleocr==3.7.0
 pyclipper
 PyMuPDF==1.26.3
-paddlepaddle==3.3.1
 beautifulsoup4==4.13.4
 fire==0.7.1
 rapidfuzz==3.13.0
