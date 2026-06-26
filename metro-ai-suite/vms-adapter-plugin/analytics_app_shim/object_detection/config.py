@@ -49,3 +49,5 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     # in Nx. For example, -300 corrects for ~300 ms of inference latency.
     # Has no effect when sender_ntp_unix_timestamp_ns is present in the payload.
     metadata_timestamp_offset_ms: int = 0
+    # Loitering detection pipeline for Nx Witness client
+    pipeline_name: str = ""

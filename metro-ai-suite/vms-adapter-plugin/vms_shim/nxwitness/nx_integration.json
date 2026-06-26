@@ -27,7 +27,23 @@
         },
         "deviceAgentSettingsModel": {
             "type": "Settings",
-            "items": []
+            "items": [
+                {
+                    "type": "CheckBox",
+                    "name": "pipelineEnabled",
+                    "caption": "Enable Loitering Detection pipeline",
+                    "description": "Start or stop the Loitering Detection pipeline for this camera",
+                    "defaultValue": false
+                },
+                {
+                    "type": "ComboBox",
+                    "name": "device",
+                    "caption": "Device",
+                    "description": "Inference device for the Loitering Detection pipeline",
+                    "defaultValue": "CPU",
+                    "range": ["CPU", "GPU", "NPU"]
+                }
+            ]
         },
         "objectActions": []
     },
