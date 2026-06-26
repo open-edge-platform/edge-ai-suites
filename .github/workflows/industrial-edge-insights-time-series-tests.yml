@@ -110,23 +110,27 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
 
+      - name: Resolve edge-ai-libraries ref
+        if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          LIBRARIES_REF="main"
+          if [[ -n "$REQUESTED_TAG" ]]; then
+            if git ls-remote --exit-code --heads --tags https://github.com/open-edge-platform/edge-ai-libraries.git "$REQUESTED_TAG" >/dev/null 2>&1; then
+              LIBRARIES_REF="$REQUESTED_TAG"
+            else
+              echo "Requested edge-ai-libraries ref '$REQUESTED_TAG' was not found. Falling back to 'main'."
+            fi
+          fi
+          echo "EDGE_AI_LIBRARIES_REF=$LIBRARIES_REF" >> "$GITHUB_ENV"
+
       - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
         if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
-        id: checkout_tag
-        continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: open-edge-platform/edge-ai-libraries
-          ref: ${{ inputs.tag || 'main' }}
-          path: edge-ai-libraries
-          persist-credentials: false
-
-      - name: Checkout Time Series Analytics microservice (edge-ai-libraries) - fallback to main
-        if: ${{ (inputs.build != 'no' || (inputs.tag || 'main') == 'main') && steps.checkout_tag.outcome == 'failure' }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          repository: open-edge-platform/edge-ai-libraries
-          ref: main
+          ref: ${{ env.EDGE_AI_LIBRARIES_REF }}
           path: edge-ai-libraries
           persist-credentials: false
 
