@@ -430,7 +430,7 @@ jobs:
           def fmt_time(s):
               s = float(s); m = int(s) // 60; r = s - m * 60
               return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
-            xml_path = '/tmp/test_timeseries_core_report/junit.xml'
+          xml_path = '/tmp/test_timeseries_core_report/junit.xml'
           if not os.path.exists(xml_path):
               print("No test results found (JUnit XML not generated)")
           else:
@@ -523,7 +523,7 @@ jobs:
           kubectl get pods -A
           echo "=== Security cleanup complete ==="
 
-      - name: Run Time Series Security functional tests
+      - name: Run Security functional tests
         if: ${{ !cancelled() }}
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
@@ -553,12 +553,12 @@ jobs:
           done
 
           if [[ "$RUN_SECURITY" == "false" && "${#SECURITY_TEST_FILES[@]}" -eq 0 ]]; then
-            echo "Skipping time-series security tests (no security tests selected)"
+            echo "Skipping security tests (no security tests selected)"
             exit 0
           fi
 
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional"
-          echo "Running Time Series Security functional tests"
+          echo "Running Security functional tests"
           python3 -m venv env
           source env/bin/activate
           pip3 install -r ../requirements.txt
@@ -572,7 +572,7 @@ jobs:
           fi
 
           echo ""
-          echo "========== Collecting time-series security tests =========="
+          echo "========== Collecting security tests =========="
           if [[ "$RUN_SECURITY" == "true" ]]; then
             pytest --collect-only -q "${MARKER_ARGS[@]}" test_docker_helm_deployment_security.py 2>&1 || true
           else
@@ -595,7 +595,7 @@ jobs:
 
           if [[ "$PYTEST_RC" -ne 0 ]]; then
             echo ""
-            echo "========== Time Series Security Failure Diagnostics =========="
+            echo "========== Security Failure Diagnostics =========="
             echo "Kubernetes nodes:"
             kubectl get nodes -o wide 2>&1 || true
             echo ""
@@ -683,11 +683,11 @@ jobs:
           deactivate
           exit $PYTEST_RC
 
-      - name: Upload Time Series Security HTML test report to GitHub
+      - name: Upload Security HTML test report to GitHub
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
-          name: timeseries-security-test-report
+          name: security-test-report
           path: /tmp/test_timeseries_security_report
 
       - name: Cleanup cluster before multimodal tests
@@ -969,7 +969,7 @@ jobs:
 
               sections = [
                   ('\U0001f30a Time Series Wind and Weld Tests', '/tmp/test_timeseries_core_report/junit.xml', ts_core_exit),
-                  ('\U0001f512 Time Series Security Tests', '/tmp/test_timeseries_security_report/junit.xml', ts_security_exit),
+                  ('\U0001f512 Security Tests', '/tmp/test_timeseries_security_report/junit.xml', ts_security_exit),
                   ('\U0001f3ad Multimodal Tests', '/tmp/test_multimodal_report/junit.xml', mm_exit),
               ]
               for title, xml_path, exit_code in sections:
