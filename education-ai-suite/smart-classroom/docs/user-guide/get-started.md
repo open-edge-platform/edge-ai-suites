@@ -39,7 +39,7 @@ The setup script will:
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
 
-4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
+4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
 ## Step 3: Access the Application
 
@@ -73,13 +73,22 @@ After initial setup is complete, use the start script for subsequent runs or aft
 .\start-smart-classroom.ps1
 ```
 
+**Optional Parameters:**
+- `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
+- `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
+
+```powershell
+# Example: Automated deployment
+.\start-smart-classroom.ps1 -Silent -NoElevate
+```
+
 The startup script performs:
 
 - **Service Detection** - Checks running services
-- **Restart Options** - Restart, skip, or abort choices
+- **Restart Options** - Restart, skip, or abort choices (auto in `-Silent` mode)
 - **Proxy Configuration** - Loads from `.proxy-config`
 - **Sequential Launch** - Backend -> Content Search -> Frontend
-- **Graceful Shutdown** - `Q` to stop all, `E` to keep running
+- **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
 ---
 
