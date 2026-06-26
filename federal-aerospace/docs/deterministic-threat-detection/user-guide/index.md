@@ -58,7 +58,9 @@ Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patche
 :hidden:
 
 get-started
+get-started/system-requirements
 get-started-scenescape
+get-started/system-requirements-scenescape
 how-to-guides
 release-notes
 
