@@ -19,7 +19,7 @@ The OpenClaw-based agent functions as the "Teacher Assistant" persona that enabl
 └─────────────────────────────────────────────────────────┘
 ```
 
-> **ℹ️ This is the _basic_ setup variant** — the fastest, validated path to a working agent (OVMS local inference plus the OpenClaw dashboard/chat), **without external integrations**. It uses the configuration file [`openclaw-basic.json`](../openclaw-basic.json).
+> **ℹ️ This is the _basic_ setup variant** — the fastest, validated path to a working agent (OVMS local inference plus the OpenClaw dashboard/chat), **without external integrations**. It uses the configuration file [`openclaw-basic.json`](./openclaw-basic.json).
 
 ## ✅ Pre-requisites
 
@@ -63,8 +63,8 @@ Clone the repository and navigate to the Teacher Assistant demo directory. All s
 ``` bash
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git &&
 cd edge-ai-suites &&
-git sparse-checkout set education-ai-suite/smart-classroom/teacher-assistant-claw-demo &&
-cd education-ai-suite/smart-classroom/teacher-assistant-claw-demo
+git sparse-checkout set education-ai-suite/teacher-assistant-claw-demo &&
+cd education-ai-suite/teacher-assistant-claw-demo
 ```
 
 ---
