@@ -3,7 +3,8 @@ param(
     [switch]$SkipProxy,
     [switch]$Restart,
     [switch]$Help,
-    [switch]$NoElevate  
+    [switch]$NoElevate,
+    [switch]$Silent
 )
 
 # ============================================================================
@@ -29,6 +30,7 @@ if (-not $NoElevate) {
         if ($SkipProxy) { $argList += " -SkipProxy" }
         if ($Restart) { $argList += " -Restart" }
         if ($Help) { $argList += " -Help" }
+        if ($Silent) { $argList += " -Silent" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -47,11 +49,12 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-NoElevate] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-Help]
 
 Options:
     -SkipProxy    Skip proxy configuration prompts
     -Restart      Kill existing services and restart (no prompt)
+    -Silent       Unattended mode - auto-restart, skip all prompts
     -NoElevate    Skip auto-elevation to Administrator (Windows)
     -Help         Show this help message
 
@@ -391,7 +394,7 @@ if ($Restart) {
     # -Restart flag: stop all running services and start fresh
     Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
     if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-    if ($contentSearchRunning) { 
+    if ($contentSearchRunning) {
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -399,8 +402,14 @@ if ($Restart) {
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
     Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
     if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-    
-    $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+
+    if ($Silent) {
+        Write-Host "  Silent mode: keeping existing virtual environments" -ForegroundColor Gray
+        $deleteVenvs = "N"
+    } else {
+        $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+    }
+
     if ($deleteVenvs.ToUpper() -eq "Y") {
         Remove-VirtualEnvironments
         Write-Host "  All services will be restarted with new environments." -ForegroundColor Green
@@ -412,21 +421,26 @@ if ($Restart) {
     $script:skipContentSearch = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
-    Write-Host "  What would you like to do?" -ForegroundColor Yellow
-    Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
-    Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
-    Write-Host "    [A] Abort   - Stop all services and exit" -ForegroundColor White
-    Write-Host "    [E] Exit    - Exit script without changes" -ForegroundColor White
-    Write-Host ""
-    
-    $choice = Read-Host "  Enter choice (R/S/A/E)"
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-restarting all running services..." -ForegroundColor Yellow
+        $choice = "R"
+    } else {
+        Write-Host "  What would you like to do?" -ForegroundColor Yellow
+        Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
+        Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
+        Write-Host "    [A] Abort   - Stop all services and exit" -ForegroundColor White
+        Write-Host "    [E] Exit    - Exit script without changes" -ForegroundColor White
+        Write-Host ""
+
+        $choice = Read-Host "  Enter choice (R/S/A/E)"
+    }
     
     switch ($choice.ToUpper()) {
         "R" {
             Write-Host ""
             Write-Host "  Restarting all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -434,8 +448,14 @@ if ($Restart) {
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
             Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-            
-            $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+
+            if ($Silent) {
+                Write-Host "  Silent mode: keeping existing virtual environments" -ForegroundColor Gray
+                $deleteVenvs = "N"
+            } else {
+                $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+            }
+
             if ($deleteVenvs.ToUpper() -eq "Y") {
                 Remove-VirtualEnvironments
             } else {
@@ -500,8 +520,14 @@ if ($Restart) {
     
     Write-Host ""
     Write-Host "  Starting all services..." -ForegroundColor Green
-    
-    $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
+
+    if ($Silent) {
+        Write-Host "  Silent mode: using existing virtual environments (faster startup)" -ForegroundColor Gray
+        $deleteVenvs = "N"
+    } else {
+        $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
+    }
+
     if ($deleteVenvs.ToUpper() -eq "Y") {
         Remove-VirtualEnvironments
         Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
@@ -532,13 +558,13 @@ $httpsProxy = ""
 $noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
-if (-not $SkipProxy) {
+if (-not $SkipProxy -and -not $Silent) {
     if (Test-Path $proxyConfigFile) {
         $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
         $httpProxy = $proxyConfig.httpProxy
         $httpsProxy = $proxyConfig.httpsProxy
         $noProxy = $proxyConfig.noProxy
-        
+
         Write-Host ""
         Write-Host "  Saved proxy settings found:" -ForegroundColor Cyan
         if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
@@ -546,7 +572,7 @@ if (-not $SkipProxy) {
         if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
         if (-not $httpProxy -and -not $httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
         Write-Host ""
-        
+
         Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
         Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
         Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
@@ -1145,30 +1171,38 @@ Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -Foreground
 Write-Host ""
 Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Yellow
-Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
-Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
-Write-Host "========================================" -ForegroundColor Yellow
-Write-Host ""
 
-# Wait for user input to stop services or exit
-while ($true) {
-    $key = Read-Host "Enter choice (Q/E)"
-    switch ($key.ToUpper()) {
-        "Q" {
-            Stop-AllServices
-            for ($i = 30; $i -gt 0; $i--) {
-                Start-Sleep -Seconds 1
+if ($Silent) {
+    Write-Host "Silent mode: services started successfully. Exiting..." -ForegroundColor Green
+    Write-Host ""
+    $script:servicesStarted = $false  # Prevent trap from stopping services
+    exit 0
+} else {
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
+    Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+
+    # Wait for user input to stop services or exit
+    while ($true) {
+        $key = Read-Host "Enter choice (Q/E)"
+        switch ($key.ToUpper()) {
+            "Q" {
+                Stop-AllServices
+                for ($i = 30; $i -gt 0; $i--) {
+                    Start-Sleep -Seconds 1
+                }
+                exit 0
             }
-            exit 0
-        }
-        "E" {
-            Write-Host ""
-            Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
-            Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
-            Write-Host ""
-            $script:servicesStarted = $false  # Prevent trap from stopping services
-            exit 0
+            "E" {
+                Write-Host ""
+                Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
+                Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
+                Write-Host ""
+                $script:servicesStarted = $false  # Prevent trap from stopping services
+                exit 0
+            }
         }
     }
 }
