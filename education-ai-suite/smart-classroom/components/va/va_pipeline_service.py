@@ -122,16 +122,7 @@ class VideoAnalyticsPipelineService:
         """Setup GStreamer environment variables"""
         current_path = os.environ.get("GST_PLUGIN_PATH", "")
 
-        # Select plugin folder based on GStreamer version
-        gst_version = self._get_gstreamer_version()
-        if gst_version and gst_version.startswith("1.26."):
-            plugin_dir = self.plugin_path / "dlstreamer-2025"
-            self.logger.info(f"GStreamer {gst_version} detected, using old plugin")
-        else:
-            plugin_dir = self.plugin_path
-            self.logger.info(f"GStreamer {gst_version or 'unknown'} detected, using default plugin")
-
-        os.environ["GST_PLUGIN_PATH"] = f"{plugin_dir};{current_path}"
+        os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )

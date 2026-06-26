@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 param(
     [switch]$Help,
-    [switch]$NoElevate  
+    [switch]$NoElevate,
+    [switch]$Silent
 )
 
 # ============================================================================
@@ -25,6 +26,7 @@ if (-not $NoElevate) {
         
         $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
         if ($Help) { $argList += " -Help" }
+        if ($Silent) { $argList += " -Silent" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -43,11 +45,12 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Setup Script
 
-Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate]
+Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent]
 
 Options:
     -Help       Show this help message
     -NoElevate  Skip auto-elevation to Administrator (Windows)
+    -Silent     Unattended mode - auto-install dependencies, no prompts
 
 System Requirements:
   - OS: Windows 11
@@ -112,7 +115,7 @@ if (Test-Path $proxyConfigFile) {
     $script:httpProxy = $proxyConfig.httpProxy
     $script:httpsProxy = $proxyConfig.httpsProxy
     $script:noProxy = $proxyConfig.noProxy
-    
+
     Write-Host ""
     Write-Host "  Saved proxy settings found:" -ForegroundColor Cyan
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
@@ -120,12 +123,17 @@ if (Test-Path $proxyConfigFile) {
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
     if (-not $script:httpProxy -and -not $script:httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
     Write-Host ""
-    
-    Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-    Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-    Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
-    Write-Host ""
-    $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
+
+    if ($Silent) {
+        Write-Host "  Silent mode: using saved proxy settings" -ForegroundColor Gray
+        $changeProxy = "N"
+    } else {
+        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
+    }
     
     if ($changeProxy -match "^[Yy]") {
         Write-Host ""
@@ -159,11 +167,17 @@ if (Test-Path $proxyConfigFile) {
     Write-Host ""
     Write-Host "  No proxy configuration found." -ForegroundColor Gray
     Write-Host ""
-    Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
-    Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
-    Write-Host ""
-    $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
-    
+
+    if ($Silent) {
+        Write-Host "  Silent mode: assuming no proxy (direct connection)" -ForegroundColor Gray
+        $configureProxy = "N"
+    } else {
+        Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
+        Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
+    }
+
     if ($configureProxy -match "^[Yy]") {
         Write-Host ""
         Write-Host "Enter proxy settings:" -ForegroundColor Yellow
@@ -318,12 +332,16 @@ Show-SystemRequirementsFromDoc -DocPath $systemRequirementsDocPath -DocUrl $syst
 Write-Host "  Source:" -ForegroundColor Yellow
 Write-Host "  $systemRequirementsDocUrl" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Please review the system requirements above." -ForegroundColor Yellow
-$proceedChecks = Read-Host "Would you like to proceed with the setup? (Y/N)"
-if ($proceedChecks -notmatch "^[Yy]") {
-    Write-Host ""
-    Write-Host "Setup cancelled by user." -ForegroundColor Yellow
-    exit 0
+if ($Silent) {
+    Write-Host "Silent mode: proceeding with setup automatically..." -ForegroundColor Gray
+} else {
+    Write-Host "Please review the system requirements above." -ForegroundColor Yellow
+    $proceedChecks = Read-Host "Would you like to proceed with the setup? (Y/N)"
+    if ($proceedChecks -notmatch "^[Yy]") {
+        Write-Host ""
+        Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+        exit 0
+    }
 }
 Write-Host ""
 
@@ -685,24 +703,34 @@ try {
             Write-Host "  [WARN] $npuName (Status: $npuStatus)" -ForegroundColor Yellow
             Write-Host "         NPU driver may need to be updated" -ForegroundColor DarkYellow
             Write-Host ""
-            $updateDriver = Read-Host "  Do you want to update the NPU driver? (Y/N)"
-            if ($updateDriver -match "^[Yy]") {
-                Install-NPUDriver | Out-Null
+            if ($Silent) {
+                Write-Host "  [SKIP] Silent mode: skipping NPU driver update" -ForegroundColor Yellow
+                $warnings += "NPU detected but status is $npuStatus (skipped in silent mode)"
             } else {
-                $warnings += "NPU detected but status is $npuStatus"
+                $updateDriver = Read-Host "  Do you want to update the NPU driver? (Y/N)"
+                if ($updateDriver -match "^[Yy]") {
+                    Install-NPUDriver | Out-Null
+                } else {
+                    $warnings += "NPU detected but status is $npuStatus"
+                }
             }
         }
     } else {
         Write-Host "  [WARN] Intel NPU not detected" -ForegroundColor Yellow
         Write-Host "         Intel NPU (Core Ultra Series) recommended for Video pipelines" -ForegroundColor DarkYellow
         Write-Host ""
-        $installNpu = Read-Host "  Do you want to install the Intel NPU driver? (Y/N)"
-        if ($installNpu -match "^[Yy]") {
-            if (-not (Install-NPUDriver)) {
-                $warnings += "Intel NPU driver installation pending (restart may be required)"
-            }
+        if ($Silent) {
+            Write-Host "  [SKIP] Silent mode: skipping NPU driver installation" -ForegroundColor Yellow
+            $warnings += "Intel NPU not detected (skipped in silent mode)"
         } else {
-            $warnings += "Intel NPU recommended for Video pipelines"
+            $installNpu = Read-Host "  Do you want to install the Intel NPU driver? (Y/N)"
+            if ($installNpu -match "^[Yy]") {
+                if (-not (Install-NPUDriver)) {
+                    $warnings += "Intel NPU driver installation pending (restart may be required)"
+                }
+            } else {
+                $warnings += "Intel NPU recommended for Video pipelines"
+            }
         }
     }
 } catch {
@@ -861,8 +889,13 @@ try {
 # Auto-install if not found or wrong version
 if ($pythonNeedsInstall) {
     Write-Host ""
-    $installChoice = Read-Host "  Install Python 3.12.10 now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing Python 3.12.10..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install Python 3.12.10 now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-Python312) {
             # Verify installation
@@ -1066,8 +1099,13 @@ try {
 # Auto-install if not found or needs upgrade
 if (-not $nodeInstalled) {
     Write-Host ""
-    $installChoice = Read-Host "  Install Node.js v22 LTS now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing Node.js v22 LTS..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install Node.js v22 LTS now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-NodeJS) {
             # Verify installation
@@ -1130,11 +1168,15 @@ if ($warnings.Count -gt 0) {
         Write-Host "  - $warn" -ForegroundColor DarkYellow
     }
     Write-Host ""
-    $continueSetup = Read-Host "Do you still want to continue with the setup? (Y/N)"
-    if ($continueSetup -notmatch "^[Yy]") {
-        Write-Host ""
-        Write-Host "Setup cancelled by user." -ForegroundColor Yellow
-        exit 0
+    if ($Silent) {
+        Write-Host "Silent mode: continuing with $($warnings.Count) warning(s)..." -ForegroundColor Yellow
+    } else {
+        $continueSetup = Read-Host "Do you still want to continue with the setup? (Y/N)"
+        if ($continueSetup -notmatch "^[Yy]") {
+            Write-Host ""
+            Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+            exit 0
+        }
     }
 }
 
@@ -1236,8 +1278,13 @@ try {
 
 if (-not $ffmpegInstalled) {
     Write-Host ""
-    $installChoice = Read-Host "  Install FFmpeg now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing FFmpeg..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install FFmpeg now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-FFmpeg) {
             # Verify installation
@@ -1317,16 +1364,21 @@ if ($appChecksFailed) {
     Write-Host "WARNING: Some application dependencies are missing." -ForegroundColor Yellow
     Write-Host "         Certain features may not function correctly." -ForegroundColor DarkYellow
     Write-Host ""
-    $skipChoice = Read-Host "Do you still want to continue with the setup? (Y/N)"
-    
-    if ($skipChoice -match "^[Yy]") {
-        Write-Host ""
-        Write-Host "  Continuing setup with missing dependencies..." -ForegroundColor Yellow
+    if ($Silent) {
+        Write-Host "Silent mode: continuing with missing dependencies..." -ForegroundColor Yellow
         Write-Host ""
     } else {
-        Write-Host ""
-        Write-Host "  Setup cancelled. Please install the missing dependencies and try again." -ForegroundColor Gray
-        exit 1
+        $skipChoice = Read-Host "Do you still want to continue with the setup? (Y/N)"
+
+        if ($skipChoice -match "^[Yy]") {
+            Write-Host ""
+            Write-Host "  Continuing setup with missing dependencies..." -ForegroundColor Yellow
+            Write-Host ""
+        } else {
+            Write-Host ""
+            Write-Host "  Setup cancelled. Please install the missing dependencies and try again." -ForegroundColor Gray
+            exit 1
+        }
     }
 } else {
     Write-Host ""
@@ -1410,7 +1462,12 @@ Write-Host "Current language: $currentLanguage" -ForegroundColor Cyan
 Write-Host ""
 
 # Ask if user wants to change ASR settings
-$changeAsr = Read-Host "Do you want to change ASR settings? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing ASR settings" -ForegroundColor Gray
+    $changeAsr = "N"
+} else {
+    $changeAsr = Read-Host "Do you want to change ASR settings? (Y/N)"
+}
 
 if ($changeAsr -match "^[Yy]") {
     Write-Host ""
@@ -1535,7 +1592,12 @@ Write-Host "      document_max_mb: $currentDocMax    # maximum upload size for d
 Write-Host "      video_max_mb: $currentVideoMax      # maximum upload size for videos (MB)" -ForegroundColor Gray
 Write-Host ""
 
-$changeUploadLimits = Read-Host "Do you want to change upload size limits? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing upload size limits" -ForegroundColor Gray
+    $changeUploadLimits = "N"
+} else {
+    $changeUploadLimits = Read-Host "Do you want to change upload size limits? (Y/N)"
+}
 
 if ($changeUploadLimits.ToUpper() -eq "Y") {
     Write-Host ""
@@ -1577,7 +1639,12 @@ Write-Host "  ocr:" -ForegroundColor White
 Write-Host "    enabled: $currentOcr" -ForegroundColor Gray
 Write-Host ""
 
-$changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing OCR setting" -ForegroundColor Gray
+    $changeOcr = "N"
+} else {
+    $changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+}
 
 if ($changeOcr.ToUpper() -eq "Y") {
     Write-Host ""
@@ -1640,27 +1707,18 @@ Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
-# LAUNCH STARTUP SCRIPT
+# SETUP COMPLETE
 # ============================================================================
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "   LAUNCHING SMART CLASSROOM" -ForegroundColor Green
+Write-Host "   SETUP COMPLETE!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-
-$startupScript = Join-Path $ScriptDir "start-smart-classroom.ps1"
-
-if (Test-Path $startupScript) {
-    Write-Host "Starting: $startupScript" -ForegroundColor Yellow
-    Write-Host ""
-    
-    # Execute the startup script with -SkipProxy since proxy was already configured in setup
-    & $startupScript -SkipProxy
-} else {
-    Write-Host "ERROR: start-smart-classroom.ps1 not found at:" -ForegroundColor Red
-    Write-Host "  $startupScript" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Please run it manually:" -ForegroundColor Yellow
-    Write-Host "  cd `"$ScriptDir`"" -ForegroundColor Gray
-    Write-Host "  .\start-smart-classroom.ps1" -ForegroundColor Gray
-    exit 1
-}
+Write-Host "Smart Classroom setup has finished successfully." -ForegroundColor Green
+Write-Host ""
+Write-Host "To start the services, run:" -ForegroundColor Yellow
+Write-Host "  .\start-smart-classroom.ps1" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Or with options:" -ForegroundColor Gray
+Write-Host "  .\start-smart-classroom.ps1 -SkipProxy       # Skip proxy configuration" -ForegroundColor Gray
+Write-Host "  .\start-smart-classroom.ps1 -Restart         # Force restart all services" -ForegroundColor Gray
+Write-Host ""

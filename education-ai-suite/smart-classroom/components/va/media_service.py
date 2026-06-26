@@ -2,6 +2,7 @@ import subprocess
 import sys
 import time
 import logging
+import threading
 from pathlib import Path
 from typing import Optional
 import signal
@@ -272,3 +273,22 @@ class MediaService:
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+
+
+# Process-wide MediaMTX singleton, started on demand (first VA pipeline launch).
+_media_service: Optional[MediaService] = None
+_media_service_lock = threading.Lock()
+
+
+def ensure_media_service_running() -> MediaService:
+    """Construct and start the MediaMTX server on first use, returning
+    the running singleton. Idempotent and thread-safe.
+    """
+    global _media_service
+    with _media_service_lock:
+        if _media_service is None:
+            _media_service = MediaService()
+        if not _media_service.is_running():
+            if not _media_service.launch_server():
+                raise RuntimeError("Failed to start MediaMTX RTSP server")
+        return _media_service
