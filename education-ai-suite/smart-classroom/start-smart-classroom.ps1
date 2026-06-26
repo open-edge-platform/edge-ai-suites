@@ -200,7 +200,7 @@ $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
 
 trap {
     Write-Host ""
-    Write-Host "  Script interrupted!" -ForegroundColor Red
+    Write-Host "  Script interrupted at line $($_.InvocationInfo.ScriptLineNumber) with $($_.Exception.Message)" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
     }
@@ -922,7 +922,7 @@ if ($noProxy) {
 
 if ($IsWindowsOS) {
     $wtExists = Get-Command wt -ErrorAction SilentlyContinue
-    
+
     # ========================================================================
     # TERMINAL 1: BACKEND (with paddleocr check)
     # ========================================================================
@@ -998,13 +998,13 @@ Write-Host ''
 python main.py
 "@
     $backendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($backendScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Backend powershell -NoExit -EncodedCommand $backendEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $backendEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $backendEncoded" | Out-Null
     }
-    
+
     Write-Host "  Backend terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipBackend check
@@ -1088,13 +1088,13 @@ Write-Host ''
 python .\start_services.py
 "@
     $contentSearchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($contentSearchScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title ContentSearch powershell -NoExit -EncodedCommand $contentSearchEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $contentSearchEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $contentSearchEncoded" | Out-Null
     }
-    
+
     Write-Host "  Content Search terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipContentSearch check
@@ -1137,13 +1137,13 @@ Write-Host ''
 npm run dev -- --host 0.0.0.0 --port 5173
 "@
     $frontendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($frontendScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Frontend powershell -NoExit -EncodedCommand $frontendEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $frontendEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $frontendEncoded" | Out-Null
     }
-    
+
     Write-Host "  Frontend terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipFrontend check
