@@ -49,5 +49,9 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     # in Nx. For example, -300 corrects for ~300 ms of inference latency.
     # Has no effect when sender_ntp_unix_timestamp_ns is present in the payload.
     metadata_timestamp_offset_ms: int = 0
-    # Loitering detection pipeline for Nx Witness client
+    # DLS pipeline name to be run. This is populated from config/config.yaml
     pipeline_name: str = ""
+    # Fields to display in the Nx Witness device-agent settings panel.
+    # Each entry is a raw Nx settings item dict (type, name, caption, defaultValue, range, ...).
+    # If non-empty these replace any items already defined in nx_integration.json.
+    display_fields: list[dict] = Field(default_factory=list)

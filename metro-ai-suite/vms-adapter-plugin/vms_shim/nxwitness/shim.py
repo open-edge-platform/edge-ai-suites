@@ -514,10 +514,18 @@ class NxWitnessVmsShim(IVmsShim):
             return
 
         # Merge any label_type_map typeIds from object_detection analytics apps into the manifest.
+        # Also inject display_fields into deviceAgentSettingsModel if configured.
         from analytics_app_shim.object_detection.config import ObjectDetectionAnalyticsAppConfig
         for ca_cfg in orchestrator.config.analytics_apps:
-            if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig) and ca_cfg.label_type_map:
-                _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
+            if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig):
+                if ca_cfg.label_type_map:
+                    _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
+                if ca_cfg.display_fields:
+                    (
+                        manifests
+                        .setdefault("engineManifest", {})
+                        .setdefault("deviceAgentSettingsModel", {})
+                    )["items"] = ca_cfg.display_fields
 
         try:
             result = await self.register_analytics(manifests)
