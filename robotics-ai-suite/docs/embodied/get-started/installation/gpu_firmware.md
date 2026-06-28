@@ -73,7 +73,8 @@ To verify that the GPU firmwares are installed, run `sudo dmesg | grep firmware`
 > **Tip:** If Intel® Graphics Driver is disabled, check the grub of cmdline:
 >
 > ```console
-> xe.max_vfs=7 xe.force_probe=* modprobe.blacklist=i915 udmabuf.list_limit=8192"
+> cat /proc/cmdline
+> xe.max_vfs=7 xe.force_probe=* modprobe.blacklist=i915 udmabuf.list_limit=8192
 > ```
 
 ## Installation

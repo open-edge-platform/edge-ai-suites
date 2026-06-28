@@ -1,10 +1,10 @@
 # OS Setup
 
-To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 22.04/24.04 Desktop`) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
+To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) Desktop` based on your processor type) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
 
 Do the following to prepare the target system:
 
-1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 22.04/24.04 Desktop with **64bits** variant on to the target system.
+1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) Desktop with **64bits** variant on to the target system.
 
    > **Attention:**
    > Please review [Canonical Intellectual property rights policy](https://ubuntu.com/legal/intellectual-property-policy) regarding Canonical Ubuntu. Note that any redistribution of modified versions of Canonical Ubuntu must be approved, certified or provided by Canonical if you are going to associate it with the Trademarks. Otherwise you must remove and replace the Trademarks and will need to recompile the source code to create your own binaries.
@@ -74,7 +74,7 @@ Do the following to prepare the target system:
    :::
    ::::
 
-   **Note**: Active SOC-North Efficient-cores can be enabled on Panther Lake, while still 0 on Arrow Lake under Real-time Optimization.
+   **Note**: Active SOC-North Efficient-cores can be enabled **all** on Panther Lake processor, while still **0** on Arrow Lake processor under Real-time Optimization.
 
 ## Automated Setup Script
 
@@ -180,27 +180,13 @@ This section explains the procedure to configure the APT package manager to use 
    sudo add-apt-repository universe
    ```
 
-2. Add the ROS 2 GPG key with apt.
+2. The [ros-apt-source](https://github.com/ros-infrastructure/ros-apt-source/) packages provide keys and apt source configuration for the various ROS repositories.
+
+   Installing the ros2-apt-source package will configure ROS 2 repositories for your system. Updates to repository configuration will occur automatically when new versions of this package are released to the ROS repositories.
 
    ```bash
    sudo apt update && sudo apt install curl -y
-   sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-   ```
-
-   **Note**: If your DNS cannot resolve `raw.githubusercontent.com`, modify the `/etc/hosts` file to directly connect to the `raw.githubusercontent` server:
-
-   ```bash
-   sudo bash -c "echo '185.199.108.133 raw.githubusercontent.com' >> /etc/hosts"
-   ```
-
-3. Add the repository to your sources list.
-
-   ```bash
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-   ```
-
-4. Update your apt repository caches after setting up the repositories.
-
-   ```bash
-   sudo apt update
+   export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}')
+   curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   sudo dpkg -i /tmp/ros2-apt-source.deb
    ```
