@@ -98,13 +98,6 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
    make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
    ```
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```bash
-make up_mqtt_ingestion app="weld-defect-detection"
-```
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -126,16 +119,7 @@ curl -k -X 'POST' \
  -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
-- **For Weld Defect Detection**:
 
-```sh
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config
-curl -k -X 'POST' \
- 'https://localhost:3000/ts-api/config' \
- -H 'accept: application/json' \
- -H 'Content-Type: application/json' \
- -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
-```
 
 ## Verify the Output Results
 
@@ -191,57 +175,6 @@ curl -k -X 'POST' \
 
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-1. Get into the InfluxDB* container:
-
-   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
-   > where for <namespace> replace with namespace name where the application was deployed and
-   > for <influxdb-pod-name> replace with InfluxDB pod name.
-
-   ``` bash
-    docker exec -it ia-influxdb bash
-   ```
-
-2. Run following commands to see the data in InfluxDB*:
-
-   > **NOTE**:
-   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-   > This does not affect any functionality while working with the InfluxDB commands
-
-   ``` bash
-   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-   # for docker compose deployment and `values.yml` for helm deployment
-   influx -username <username> -password <passwd>
-   use datain # database access
-   show measurements
-   # Run below query to check and output measurement processed
-   # by Time Series Analytics microservice
-   select * from "weld-sensor-anomaly-data"
-   ```
-
-3. To check the output in Grafana:
-
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
-
-     > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
-
-   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in `.env` file.
-
-     ![Grafana login](./_assets/login_wt.png)
-
-   - After login, click on Dashboard
-     ![Menu view](./_assets/dashboard.png)
-
-   - Select the `Weld Defect Detection Dashboard`.
-     ![Weld Defect Detection dashboard](./_assets/weld_defect_detection.png)
-
-   - One will see the below output.
-
-     ![Anomaly prediction in weld sensor data](./_assets/defect_detection_weld.png)
 
 <!--hide_directive:::
 ::::hide_directive-->

@@ -22,16 +22,16 @@ To enable benchmarking:
 
 To run benchmarking with stream processing UDF, use the following command.
 
-For example, for Weld Defect Detection, use:
+For example, for Wind Turbine Anomaly Detection, use:
 
 ```bash
-make up_mqtt_ingestion app=weld-defect-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
+make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
 ```
 
 Example:
 
 ```bash
-make up_mqtt_ingestion app=weld-defect-detection num_of_streams=4 number_of_data_points_per_stream=500
+make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=4 number_of_data_points_per_stream=500
 ```
 
 
@@ -39,16 +39,16 @@ make up_mqtt_ingestion app=weld-defect-detection num_of_streams=4 number_of_data
 
 To run benchmarking with batch processing UDF, append `batch` to the `make` command.
 
-For example, for Weld Defect Detection, use:
+For example, for Wind Turbine Anomaly Detection, use:
 
 ```bash
-make up_mqtt_ingestion batch app=weld-defect-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
+make up_mqtt_ingestion batch app=wind-turbine-anomaly-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
 ```
 
 Example:
 
 ```bash
-make up_mqtt_ingestion batch app=weld-defect-detection num_of_streams=4 number_of_data_points_per_stream=500
+make up_mqtt_ingestion batch app=wind-turbine-anomaly-detection num_of_streams=4 number_of_data_points_per_stream=500
 ```
 
 ## Notes
