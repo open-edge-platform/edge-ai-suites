@@ -14,7 +14,7 @@ on:
         description: 'Branch or tag to checkout (leave empty to use current branch)'
         required: false
         type: string
-        default: ''
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -49,7 +49,7 @@ on:
         description: 'Branch or tag to checkout (leave empty to use current branch)'
         required: false
         type: string
-        default: ''
+        default: 'main'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -887,7 +887,7 @@ jobs:
       - name: Generate Test Summary
         if: ${{ !cancelled() }}
         env:
-          TAG: ${{ inputs.tag || 'main' }}
+          TAG: ${{ inputs.tag || github.ref }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
