@@ -2820,7 +2820,7 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
     Setup MQTT alerts for Docker deployment with app-specific support.
     
     Args:
-        sample_app (str): Sample app type (constants.WIND_SAMPLE_APP, or constants.MULTIMODAL_SAMPLE_APP).
+        sample_app (str): Sample app type (constants.WIND_SAMPLE_APP, constants.MULTIMODAL_SAMPLE_APP).
     
     Returns:
         bool: True if setup successful, False otherwise
