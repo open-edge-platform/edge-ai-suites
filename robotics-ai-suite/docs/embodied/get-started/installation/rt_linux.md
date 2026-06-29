@@ -105,6 +105,10 @@ The following three sections are always skipped because they require manual, pla
    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to isolate cpus to core 10-13
    sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+   # Modify default cmdline parameter to set efi=noruntime
+   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+   # Modify default cmdline parameter to set iommu to passthrough mode
+   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
    sudo update-grub
    ```
    
@@ -118,6 +122,10 @@ The following three sections are always skipped because they require manual, pla
    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to isolate cpus to core 8-11
    sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
+   # Modify default cmdline parameter to set efi=noruntime
+   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+   # Modify default cmdline parameter to set iommu to passthrough mode
+   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
    sudo update-grub
    ```
 
@@ -353,6 +361,16 @@ for (( i=cpu_start; i<=cpu_end; i++ )); do
 done
 ```
 
+> **Note:** Combine the adjustment of P-states, C-states and Turbo-Boost. Use [CommsPower](https://github.com/intel/CommsPowerManagement/blob/main/power.py) script to configure isolated cores in following way:
+> 1. Set minimum and maximum frequency to specific turbo frequency.
+> 2. Set Governor to performance.
+> 3. Disable C-states other than C0 or Poll.
+> 4. Set minimum and maximum Uncore frequency to maximal available value.
+>
+> By following those steps, configuration will look like this:
+> ![power script output diagram](assets/images/power_script_output.png)
+
+
 ### Timer Migration Disable
 
 In Linux kernel, timer migration refers to the process of moving timers from one CPU to another. This is often done to balance the load across CPUs or to optimize power management by consolidating timers on fewer CPUs when others are idle. Timer migration can lead to interference with other tasks running on the target CPU, potentially affecting real-time performance in isolated CPU core. By keeping timers on their original CPU, you minimize the risk of such interference.
@@ -373,6 +391,68 @@ Swap can be disabled with following command:
 ```bash
 swapoff -a
 ```
+### Stop Unnecessary Services
+
+Many services run in the background, by default, on Linux. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
+
+```bash
+systemctl -t service
+```
+
+To stop a service, run the following command (where \<service\> is the name a service):
+
+> **Warning:**
+>
+> Stopping system services can be detrimental to the stability of the Linux system. Be sure you understand the implications before stopping a service. e.g.
+
+```bash
+#systemctl stop <service>
+systemctl stop fwupd-refresh.timer fwupd.service snapd.socket snapd.service
+```
+
+### Prevent integrated graphics from changing power states
+
+The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads. 
+
+Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or very close to zero when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
+
+::::{tab-set}
+:::{tab-item} i915
+
+Because of the way the Linux i915 graphics driver handles RC6, this feature must be disabled in both the BIOS and in the i915 Linux graphics driver. Refer to Table 5, which describes RC6 disabling in the BIOS. The Linux command-line interface command used to disable RC6 are shown below:
+
+```bash
+cat /proc/cmdline | grep rc6
+i915.enable_rc6=0
+```
+
+```bash
+echo 0 > /sys/class/drm/card0/gt_rc6_enable
+```
+
+:::
+:::{tab-item} Xe
+
+Xe driver doesn’t support disable RC6. So there is no parameter for it. Try below methods to hold forcewake so that GT will always ON. Keep the debugfs file descriptor by letting a long‑lived shell process hold it open. Either method works as follow(replace PATH with the real forcewake_all path, e.g. /sys/kernel/debug/dri/0/forcewake_all):
+
+1. Open FD in current shell and keep it:
+
+   ```bash
+   exec 3< /sys/kernel/debug/dri/0/forcewake_all
+   # FD 3 now holds it; forcewake stays asserted until released
+   exec 3<&-
+   ```
+
+2. Background sleeper holding it:
+
+   ```bash
+   sleep 999999 < /sys/kernel/debug/dri/0/forcewake_all &
+   # Kill the sleep to release
+   kill -9 pid 
+   ```
+
+:::
+::::
 
 ## Verify Benchmark Performance
 

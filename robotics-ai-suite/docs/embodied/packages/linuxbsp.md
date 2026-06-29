@@ -1,6 +1,6 @@
 # Linux BSP
 
-The Embodied Intelligence SDK includes Intel's LTS Kernel v6.12 with Preempt RT patch to support the Arrow Lake platform, which includes the Linux Kernel v6.12, optimized configuration, and kernel boot parameters.
+The Embodied Intelligence SDK includes Intel's LTS Kernel v6.12 with Preempt RT patch to support the Arrow Lake platform and Intel's LTS Kernel v6.17 with Preempt RT patch to support the Panther Lake platform, which includes the Linux Kernel, optimized configuration, and kernel boot parameters.
 
 ## Quick Start
 
@@ -78,7 +78,7 @@ The Linux kernel source code comes with the default configuration. Refer to the 
 | `CONFIG_VIRT_CPU_ACCOUNTING=y`<br>`CONFIG_VIRT_CPU_ACCOUNTING_GEN=y` | Enable more accurate task and CPU time accounting |
 | `CONFIG_CPU_ISOLATION=y`<br>`CONFIG_RCU_NOCB_CPU=y`<br>`CONFIG_PREEMPT_RCU=y`<br>`CONFIG_HAVE_PREEMPT_LAZY=y`<br>`CONFIG_PREEMPT_LAZY=y`<br>`CONFIG_PREEMPT_RT=y` | Enable more preemptive task scheduling policies and CPU temporal-isolation |
 
-You can find a file named `config-6.12.8-intel-ese-experimental-lts` in `/boot/` when the target had installed with `sudo apt install linux-intel-rt-experimental`, and copy it into Linux kernel source directory.
+You can find a file named `config-6.12.8-intel-ese-experimental-lts(config-6.17.11-intel-ese-experimental-lts)` in `/boot/` when the target had installed with `sudo apt install linux-intel-rt-experimental`, and copy it into Linux kernel source directory.
 
 1. To make changes to the configuration file, run the make command:
 
