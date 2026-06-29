@@ -87,3 +87,21 @@ port-audit:  ## Assert only one host-published port exists (UI:8080)
 	@N=$$($(COMPOSE) config | awk '/^[[:space:]]+ports:/{flag=1;next} /^[[:space:]]+[a-z]+:/{flag=0} flag && /^[[:space:]]+- /{count++} END{print count+0}'); \
 	if [ "$$N" -ne 1 ]; then echo "FAIL: expected 1 published port, found $$N"; exit 1; fi; \
 	echo "PASS: exactly 1 published port"
+
+# ---- Dev-only targets (no Docker) -------------------------------------------
+
+.PHONY: mock-backend
+mock-backend:  ## Run the Phase 1 mock backend (offline UI dev)
+	@python3 -c "import flask, PIL" 2>/dev/null || ( \
+		echo "[mock] Installing mock deps into .venv-mock"; \
+		python3 -m venv .venv-mock && \
+		. .venv-mock/bin/activate && \
+		pip install -q -r backend_mvp/requirements-mock.txt; \
+	)
+	@if [ -d .venv-mock ]; then . .venv-mock/bin/activate; fi; \
+		PORT=5001 python3 -m backend_mvp.mock_server
+
+.PHONY: ui-dev
+ui-dev:  ## Run the Vite dev server (proxies to mock-backend on :5001)
+	cd ui && npm install && npm run dev
+
