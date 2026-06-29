@@ -50,7 +50,7 @@ if [ "$ENABLE_TC" = "true" ]; then
     if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
         if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
             echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
-            echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
+            echo -e "${YELLOW}Please use VLM_TARGET_DEVICE=CPU or disable Trusted Compute${NC}"
             return 1
         fi
     fi
@@ -265,6 +265,14 @@ export VLM_MODEL_NAME=${VLM_MODEL_NAME}
 export VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
 export VLM_WEIGHT_FORMAT=${VLM_WEIGHT_FORMAT:-}
 
+# Select OVMS image tag based on target device:
+# GPU requires the GPU-enabled image (includes OpenCL/Level Zero runtime).
+# Mirrors the Helm chart logic: vlmServing.image.gpuTag vs vlmServing.image.tag.
+case "$VLM_TARGET_DEVICE" in
+    *GPU*) export OVMS_TAG="${OVMS_TAG:-2026.1-gpu}" ;;
+    *)     export OVMS_TAG="${OVMS_TAG:-2026.1}" ;;
+esac
+
 # OVMS model repository directory (host-side, mounted into OVMS container)
 # Health Check Configuration
 export HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30s}
@@ -339,7 +347,7 @@ export_model_for_ovms() {
     fi
 
     storage_model_name=$(get_ovms_storage_model_name "$source_model" "$target_device" "$weight_format")
-    echo -e "[ovms-service] ${BLUE}Storage model name: ${YELLOW}${storage_model_name}${NC}"
+    echo -e "[ovms-service] ${BLUE}Storage model name: ${YELLOW}${storage_model_name}${NC}" >&2
 
     if [ -n "$pipeline_type" ]; then
         extra_args+=(--pipeline_type "$pipeline_type")
@@ -351,15 +359,17 @@ export_model_for_ovms() {
         mkdir -p "${OVMS_CONFIG_DIR}"
         cd "${OVMS_CONFIG_DIR}" || exit 1
 
-        echo -e "Downloading latest export_model.py from OVMS repository..."
+        echo -e "Downloading latest export_model.py from OVMS repository..." >&2
         curl -fsSL https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/export_model.py -o export_model.py || exit 1
 
-        echo -e "Creating Python virtual environment for model export..."
-        if ! dpkg-query -W -f='${Status}' python3-venv 2>/dev/null | grep -q "ok installed"; then
-            echo -e "Installing python3-venv package..."
-            sudo apt install -y python3-venv || exit 1
+        echo -e "Creating Python virtual environment for model export..." >&2
+        python_ver=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        venv_pkg="python${python_ver}-venv"
+        if ! dpkg-query -W -f='${Status}' "$venv_pkg" 2>/dev/null | grep -q "ok installed"; then
+            echo -e "Installing ${venv_pkg} package..." >&2
+            sudo apt install -y "$venv_pkg" || exit 1
         else
-            echo -e "python3-venv is already installed, skipping installation"
+            echo -e "${venv_pkg} is already installed, skipping installation" >&2
         fi
 
         python3 -m venv ovms_venv || exit 1
@@ -367,10 +377,10 @@ export_model_for_ovms() {
         source ovms_venv/bin/activate || exit 1
 
         if is_openvino_namespace_model "$source_model"; then
-            echo -e "${GREEN}Model '${source_model}' is from OpenVINO namespace (pre-converted).${NC}"
-            echo -e "${YELLOW}Skipping full requirements — only need huggingface_hub for download.${NC}"
+            echo -e "${GREEN}Model '${source_model}' is from OpenVINO namespace (pre-converted).${NC}" >&2
+            echo -e "${YELLOW}Skipping full requirements — only need huggingface_hub for download.${NC}" >&2
             if ! pip install --no-cache-dir 'huggingface_hub<0.27' jinja2; then
-                echo -e "${RED}ERROR: Failed to install minimal dependencies for OpenVINO model.${NC}"
+                echo -e "${RED}ERROR: Failed to install minimal dependencies for OpenVINO model.${NC}" >&2
                 deactivate
                 rm -rf ovms_venv
                 exit 1
@@ -381,7 +391,7 @@ export_model_for_ovms() {
             tmp_requirements=$(mktemp)
 
             if ! curl -fsSL "$ovms_requirements_url" -o "$tmp_requirements"; then
-                echo -e "${RED}ERROR: Failed to download OVMS requirements.${NC}"
+                echo -e "${RED}ERROR: Failed to download OVMS requirements.${NC}" >&2
                 rm -f "$tmp_requirements"
                 deactivate
                 rm -rf ovms_venv
@@ -395,7 +405,7 @@ export_model_for_ovms() {
             fi
 
             if ! pip install --no-cache-dir -r "$tmp_requirements"; then
-                echo -e "${RED}ERROR: Failed to install OVMS requirements.${NC}"
+                echo -e "${RED}ERROR: Failed to install OVMS requirements.${NC}" >&2
                 rm -f "$tmp_requirements"
                 deactivate
                 rm -rf ovms_venv
@@ -406,7 +416,7 @@ export_model_for_ovms() {
 
         if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
             pip install --no-cache-dir -U 'huggingface_hub[hf_xet]==0.36.0' || exit 1
-            echo -e "${BLUE}Logging in to Hugging Face to access gated models...${NC}"
+            echo -e "${BLUE}Logging in to Hugging Face to access gated models...${NC}" >&2
             hf auth login --token "$HUGGINGFACE_TOKEN" || exit 1
         fi
 
@@ -421,13 +431,13 @@ export_model_for_ovms() {
             --target_device "$target_device" \
             --cache_size "$cache_size" \
             "${extra_args[@]}"; then
-            echo -e "${RED}ERROR: Failed to export the model '${source_model}' for OVMS.${NC}"
+            echo -e "${RED}ERROR: Failed to export the model '${source_model}' for OVMS.${NC}" >&2
             deactivate
             rm -rf ovms_venv
             exit 1
         fi
 
-        echo -e "Cleaning up virtual environment..."
+        echo -e "Cleaning up virtual environment..." >&2
         deactivate
         rm -rf ovms_venv
     )
@@ -451,20 +461,20 @@ ensure_ovms_model() {
     storage_model_name=$(get_ovms_storage_model_name "$model_name" "$target_device" "$weight_format")
     model_path="${OVMS_CONFIG_DIR}/models/${storage_model_name}"
 
-    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}"
+    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}" >&2
 
     if [ -d "$model_path" ] && [ -f "${model_path}/graph.pbtxt" ]; then
-        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already exists. Skipping export.${NC}"
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already exists. Skipping export.${NC}" >&2
 
         if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
-            echo -e "[ovms-service] ${GREEN}Model is registered in OVMS config.${NC}"
+            echo -e "[ovms-service] ${GREEN}Model is registered in OVMS config.${NC}" >&2
         else
-            echo -e "[ovms-service] ${YELLOW}Model exists but not in config. Will re-register.${NC}"
+            echo -e "[ovms-service] ${YELLOW}Model exists but not in config. Will re-register.${NC}" >&2
         fi
 
         echo "$storage_model_name"
     else
-        echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}"
+        echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}" >&2
 
         export_model_for_ovms \
             "$model_name" \

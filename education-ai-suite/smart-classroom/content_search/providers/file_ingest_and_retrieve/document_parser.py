@@ -44,7 +44,7 @@ TextNode.__init__ = _patched_textnode_init
 
 from providers.file_ingest_and_retrieve.utils import DocxParagraphPicturePartitioner, ensure_directory, is_supported_file
 
-logger = logging.getLogger("document_parser")
+logger = logging.getLogger(__name__)
 
 # Sentence boundary pattern for both Chinese and English.
 # Splits after: 。！？；…… \n\n  or  . ! ? followed by whitespace
@@ -152,10 +152,10 @@ class DocumentParser:
                 breakpoint_percentile_threshold=semantic_breakpoint_percentile,
                 sentence_splitter=_bilingual_sentence_splitter,
             )
-            logger.info("DocumentParser: using SemanticSplitterNodeParser.")
+            logger.info("Using SemanticSplitterNodeParser.")
         else:
             self.splitter = None  # unstructured basic chunking will be used
-            logger.info("DocumentParser: using unstructured basic chunking.")
+            logger.info("Using unstructured basic chunking.")
 
         self.excluded_embed_metadata_keys = [
             "file_size",
@@ -236,22 +236,20 @@ class DocumentParser:
 
             if ext == ".pdf":
                 if not self.extract_images:
-                    logger.info(f"Image extraction disabled for {file_path}")
+                    logger.info(f"Image extraction disabled for DocumentParser.")
                 elif not self._is_ocr_enabled():
-                    pass  # _is_ocr_enabled already logs
+                    pass
                 else:
                     file_hash = hashlib.md5(os.path.abspath(file_path).encode()).hexdigest()[:12]
                     file_image_dir = os.path.join(self.image_output_dir, file_hash)
                     ensure_directory(file_image_dir)
                     self._extract_pdf_images(file_path, file_image_dir)
                     image_count = len([f for f in os.listdir(file_image_dir) if not f.startswith('.')])
-                    logger.info(f"Extracted {image_count} image(s) from {file_path} to {file_image_dir}")
+                    logger.info(f"{image_count} image(s) extracted to {file_image_dir}")
                     if image_count > 0:
                         image_ocr_nodes = self._ocr_extracted_images(file_path, file_image_dir)
-                        logger.info(f"OCR produced {len(image_ocr_nodes)} text node(s) from {image_count} image(s)")
+                        logger.info(f"OCR produced {len(image_ocr_nodes)} text node(s)")
                         nodes.extend(image_ocr_nodes)
-
-            logger.info(f"Parsed {file_path}: {len(nodes)} total node(s)")
             return nodes
         except Exception as e:
             raise RuntimeError(f"Failed to parse {file_path}: {str(e)}")
@@ -328,7 +326,7 @@ class DocumentParser:
             else:
                 nodes[-1].set_content(carry_text)
                 merged.append(nodes[-1])
-        logger.info(f"Semantic split: {len(nodes)} → {len(merged)} chunks after merging short ones.")
+        logger.info(f"{len(nodes)} → {len(merged)} chunks after merging short ones.")
         return merged
 
     @staticmethod
@@ -398,9 +396,7 @@ class DocumentParser:
             )
             nodes.append(node)
 
-        if nodes:
-            logger.info(f"OCR'd {len(nodes)} images from {file_path}")
-        elif image_files:
+        if not nodes and image_files:
             logger.warning(
                 f"Found {len(image_files)} image(s) in {file_path} but OCR service returned no text. "
                 f"Check that OCR is enabled (ocr.enabled: true in config.yaml) and the service is running at {self.ocr_service_url}"

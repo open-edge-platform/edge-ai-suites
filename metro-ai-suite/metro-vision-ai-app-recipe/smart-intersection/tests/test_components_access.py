@@ -45,7 +45,7 @@ def remote_components_access_functionality_check(scenescape_remote_url, grafana_
   Skips the test if any of the remote URL environment variables are not set.
 
   Args:
-    scenescape_remote_url: Remote SceneScape URL to test
+    scenescape_remote_url: Remote Scenescape URL to test
     grafana_remote_url: Remote Grafana URL to test
     influx_remote_url: Remote InfluxDB URL to test
     nodered_remote_url: Remote Node-RED URL to test

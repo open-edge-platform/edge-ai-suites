@@ -20,7 +20,7 @@ The Smart NVR is a next-generation network video recorder that integrates GenAI-
   - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Instructions for building using helm.
 
 - **Advanced Integrations**
-  - [Intel® SceneScape Integration](./docs/user-guide/scenescape-integration.md): Complete guide for integrating with Intel® SceneScape for traffic analytics and vehicle counting.
+  - [Scenescape Integration](./docs/user-guide/scenescape-integration.md): Complete guide for integrating with Scenescape for traffic analytics and vehicle counting.
 
 - **Development**
   - [Development Guide](./docs/user-guide/development-guide.md): Instructions for running tests and generating code coverage reports.
