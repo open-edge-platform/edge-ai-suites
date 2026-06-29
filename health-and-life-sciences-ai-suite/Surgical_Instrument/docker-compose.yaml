@@ -1,0 +1,139 @@
+# Surgical Instrument — single-host, single-published-port topology.
+# Only the UI is exposed to the host (8080). All inter-service traffic
+# runs on the private `surgical-internal` bridge.
+
+name: surgical-instrument
+
+networks:
+  surgical-internal:
+    driver: bridge
+
+volumes:
+  mosquitto-data:
+  mosquitto-log:
+  frame-tmpfs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=64m
+
+services:
+
+  surgical-mqtt:
+    image: eclipse-mosquitto:2
+    container_name: surgical-mqtt
+    restart: unless-stopped
+    networks: [surgical-internal]
+    volumes:
+      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./configs/mqtt_passwd:/mosquitto/config/passwd:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$$SYS/#' -C 1 -W 3 -u $${MQTT_USERNAME:-surgical} -P $${MQTT_PASSWORD} >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    environment:
+      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+
+  surgical-pipeline:
+    build:
+      context: ./pipeline
+      dockerfile: Dockerfile
+    image: surgical-pipeline:dev
+    container_name: surgical-pipeline
+    restart: unless-stopped
+    networks: [surgical-internal]
+    depends_on:
+      surgical-mqtt:
+        condition: service_healthy
+    user: "1000:1000"
+    group_add:
+      - "${RENDER_GID:-992}"   # render group (override per host)
+      - "${VIDEO_GID:-44}"     # video group
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/accel:/dev/accel
+    volumes:
+      - ./pipeline:/app:ro
+      - ./models:/models:ro
+      - ./videos:/videos:ro
+      - ./configs:/configs:ro
+      - frame-tmpfs:/frames
+    environment:
+      MQTT_HOST: surgical-mqtt
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_TOPIC: surgical/detections
+      DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
+      PIPELINE_CONFIG: /app/pipeline.yaml
+      FRAME_OUT_DIR: /frames
+
+  surgical-metrics:
+    image: ${METRICS_IMAGE:-intel/hl-ai-metrics-collector:latest}
+    container_name: surgical-metrics
+    restart: unless-stopped
+    networks: [surgical-internal]
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/accel:/dev/accel
+    volumes:
+      - /sys/devices:/sys/devices:ro
+      - /sys/kernel/debug:/sys/kernel/debug:ro
+      - /proc:/host/proc:ro
+      - /run:/run:ro
+    environment:
+      SAMPLE_INTERVAL_MS: "500"
+
+  surgical-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: surgical-backend:dev
+    container_name: surgical-backend
+    restart: unless-stopped
+    networks: [surgical-internal]
+    depends_on:
+      surgical-mqtt:
+        condition: service_healthy
+      surgical-pipeline:
+        condition: service_started
+      surgical-metrics:
+        condition: service_started
+    volumes:
+      - ./backend_mvp:/app/backend_mvp:ro
+      - ./configs:/app/configs:ro
+      - frame-tmpfs:/frames:ro
+    environment:
+      FLASK_APP: backend_mvp.app
+      BACKEND_CONFIG: /app/configs/mvp-backend.yaml
+      PIPELINE_HOST: surgical-pipeline
+      PIPELINE_PORT: 8000
+      MQTT_HOST: surgical-mqtt
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_TOPIC: surgical/detections
+      METRICS_HOST: surgical-metrics
+      METRICS_PORT: 9000
+      FRAME_IN_DIR: /frames
+
+  surgical-ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    image: surgical-ui:dev
+    container_name: surgical-ui
+    restart: unless-stopped
+    networks: [surgical-internal]
+    depends_on:
+      - surgical-backend
+    ports:
+      - "${UI_HOST_PORT:-8080}:8080"   # ★ the ONLY host-published port ★
