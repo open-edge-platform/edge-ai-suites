@@ -5,7 +5,7 @@
 #
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
-SAMPLE_APP_LIST := wind-turbine-anomaly-detection 
+SAMPLE_APP_LIST := wind-turbine-anomaly-detection
 HELM_REGISTRY := oci://registry-1.docker.io/intel
 MAKEFLAGS += --no-print-directory
 

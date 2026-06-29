@@ -2602,7 +2602,7 @@ def deploy_from_docker_hub(app_name, ingestion_type="mqtt", wait_time=90):
     Deploy application from Docker Hub pre-built images.
     
     Args:
-        app_name (str): Application name constant (e.g., constants.WIND_TURBINE_SAMPLE_APP)
+        app_name (str): Application name constant (e.g., constants.WIND_SAMPLE_APP)
         ingestion_type (str): Type of ingestion - "mqtt" or "opcua"
         wait_time (int): Time to wait for containers to stabilize after deployment
         
