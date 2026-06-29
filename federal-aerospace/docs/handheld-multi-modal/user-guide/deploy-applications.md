@@ -13,10 +13,10 @@ valid proxy for the local environment:
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
-export http_proxy="http://proxy-example:123"
-export https_proxy="http://proxy-example:123"
-export ftp_proxy="http://proxy-example:123"
-export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+http_proxy="http://proxy-example:123"
+https_proxy="http://proxy-example:123"
+ftp_proxy="http://proxy-example:123"
+no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
 EOF
 
 source /etc/environment
