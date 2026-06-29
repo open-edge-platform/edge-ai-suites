@@ -72,7 +72,6 @@ def _get_sample_app_config_dir(chart_path, sample_app):
 
     relative_map = {
         constants.WIND_SAMPLE_APP: constants.HELM_TIMESERIES,
-        constants.WELD_SAMPLE_APP: constants.HELM_WELD,
     }
     relative_path = relative_map.get(sample_app)
     if not relative_path:
@@ -139,7 +138,6 @@ def _build_udf_payload(sample_app, device_value, alert_mode):
     if not udf_name or not model_name:
         fallback = {
             constants.WIND_SAMPLE_APP: (constants.WIND_UDF, constants.WIND_MODEL),
-            constants.WELD_SAMPLE_APP: (constants.WELD_UDF, constants.WELD_MODEL),
         }.get(sample_app)
         if fallback:
             udf_name, model_name = fallback
@@ -946,8 +944,6 @@ def verify_mqtt_alerts_via_subscription(namespace, alert_type, timeout=180, inte
     # Determine alert topic based on alert type
     if alert_type.lower() == "mqtt":
         alert_topic = "alerts/wind_turbine"
-    elif alert_type.lower() == "mqtt_weld":
-        alert_topic = "alerts/weld_defects"
     else:
         logger.error("Unknown alert type for MQTT subscription: %s", alert_type)
         return False
@@ -1075,11 +1071,6 @@ def execute_influxdb_commands(namespace, chart_path, sample_app=constants.WIND_S
             measurements = (
                 constants.WIND_TURBINE_INGESTED_TOPIC,
                 constants.WIND_TURBINE_ANALYTICS_TOPIC,
-            )
-        elif sample_app == constants.WELD_SAMPLE_APP:
-            measurements = (
-                constants.WELD_INGESTED_TOPIC,
-                constants.WELD_ANALYTICS_TOPIC,
             )
         else:
             logger.error("Unknown sample app '%s' for InfluxDB validation.", sample_app)
@@ -2386,8 +2377,8 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
         payload = {
             "udfs": {
-                "name": constants.WELD_UDF,
-                "models": constants.WELD_MODEL,
+                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_defect_detector"),
+                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_defect_detector.cb"),
                 "device": device_value
             },
             "alerts": {
@@ -2477,12 +2468,9 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
             file_path = f'{os.getcwd()}/tick_scripts/windturbine_anomaly_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt"
-        elif sample_app == constants.WELD_SAMPLE_APP:
-            os.chdir('../' + constants.HELM_WELD)
-            logger.debug(f"Current working directory: {os.getcwd()}")
-            file_path = f'{os.getcwd()}/tick_scripts/weld_defect_detector.tick'
-            logger.info(f"File path for tick script: {file_path}")
-            setup = "mqtt_weld"
+        else:
+            logger.error(f"Unsupported sample_app for Helm MQTT alert setup: {sample_app}")
+            return False
 
         success = common_utils.update_alert_in_tick_script(file_path, setup)
         if success:
@@ -2575,7 +2563,7 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
     
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
+    sample_app = "wind-turbine-anomaly-detection" 
     
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):

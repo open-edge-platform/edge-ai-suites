@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">docker_wind_turbine_report.html</title>
+      <link href="assets/style.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <h1 id="title">docker_wind_turbine_report.html</h1>
+    <p>Report generated on 17-Jun-2026 at 09:49:37 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">1 test took 00:05:20.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled>
+            <span class="failed">0 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">1 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.12.3&#34;, &#34;Platform&#34;: &#34;Linux-6.8.0-31-generic-x86_64-with-glibc2.39&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.0.3&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;html&#34;: &#34;4.2.0&#34;, &#34;env&#34;: &#34;1.6.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;}}, &#34;tests&#34;: {&#34;test_docker_deployment_wind_turbine.py::test_opcua_alerts&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;test_docker_deployment_wind_turbine.py::test_opcua_alerts&#34;, &#34;duration&#34;: &#34;00:05:20&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;test_docker_deployment_wind_turbine.py::test_opcua_alerts&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:05:20&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\n2026-06-17 09:44:17 INFO === Setting up Wind Turbine module-scoped Docker environment ===\n2026-06-17 09:44:17 INFO [WT fixture] Backed up existing .env (2344 bytes) for restore on teardown\n2026-06-17 09:44:17 DEBUG Successfully updated .env file with 7 environment variables\n\n------------------------------ Captured log call -------------------------------\n2026-06-17 09:44:17 INFO TC_014: Testing OPCUA alerts functionality\n2026-06-17 09:44:17 INFO [DEBUG] Phase 1/4: Deploying OPC-UA stack...\n2026-06-17 09:44:17 INFO [WT fixture] Deploying OPC-UA (app=wind-turbine-anomaly-detection, streams=None)\n2026-06-17 09:44:17 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:44:17 DEBUG Changing to target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:17 DEBUG \u2713 Successfully changed to: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 INFO make up_opcua_ingestion app=&amp;quot;wind-turbine-anomaly-detection&amp;quot; succeeded in 22.92 seconds\n2026-06-17 09:44:40 INFO Polling until 5 container(s) are up (timeout=120s, interval=5s): [&amp;#x27;ia-influxdb&amp;#x27;, &amp;#x27;ia-telegraf&amp;#x27;, &amp;#x27;ia-time-series-analytics-microservice&amp;#x27;, &amp;#x27;ia-mqtt-broker&amp;#x27;, &amp;#x27;timeseriessoftware-ia-opcua-server-1&amp;#x27;]\n2026-06-17 09:44:40 INFO \u2713 All containers up after ~0s\n2026-06-17 09:44:40 INFO Polling ts-api health endpoint until service is ready (timeout=120s, interval=5s, ready_codes=(&amp;#x27;200&amp;#x27;, &amp;#x27;503&amp;#x27;))...\n2026-06-17 09:44:40 INFO \u2713 Service ready (HTTP 503) after ~0s\n2026-06-17 09:44:40 INFO [WT fixture] OPC-UA stack ready \u2713\n2026-06-17 09:44:40 INFO [DEBUG] deploy_opcua returned: True\n2026-06-17 09:44:40 INFO [DEBUG] Phase 2/4: Pre-validation health checks\n2026-06-17 09:44:40 INFO [DEBUG] Checking TSAM container &amp;#x27;ia-time-series-analytics-microservice&amp;#x27; is running...\n2026-06-17 09:44:40 INFO [DEBUG]   tsam_running=True\n2026-06-17 09:44:40 INFO [DEBUG] Checking OPC-UA server container &amp;#x27;timeseriessoftware-ia-opcua-server-1&amp;#x27; is running...\n2026-06-17 09:44:40 INFO [DEBUG]   opcua_running=True\n2026-06-17 09:44:40 INFO [DEBUG] Polling ts-api health endpoint until ready...\n2026-06-17 09:44:40 INFO Polling ts-api health endpoint until service is ready (timeout=120s, interval=5s, ready_codes=(&amp;#x27;200&amp;#x27;, &amp;#x27;503&amp;#x27;))...\n2026-06-17 09:44:40 INFO \u2713 Service ready (HTTP 503) after ~0s\n2026-06-17 09:44:40 INFO [DEBUG]   wait_until_service_ready=True\n2026-06-17 09:44:40 INFO [DEBUG] docker ps snapshot:\nnginx_proxy\tUp 5 seconds (health: starting)\nia-time-series-analytics-microservice\tUp 5 seconds (health: starting)\nia-mqtt-broker\tUp 5 seconds (health: starting)\nia-telegraf\tUp 5 seconds (health: starting)\nia-grafana\tUp 5 seconds (health: starting)\nia-influxdb\tUp 5 seconds (health: starting)\ntimeseriessoftware-ia-opcua-server-1\tUp 5 seconds (health: starting)\ninfluxdb2\tUp 5 days\nmyFirstDB\tUp 5 days\n2026-06-17 09:44:40 INFO [DEBUG] Phase 3/4: Invoking validate_opcua_alert_system()...\n2026-06-17 09:44:40 INFO === Docker-based OPC UA Alert System Validation ===\n2026-06-17 09:44:40 INFO Starting validation from directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:44:40 INFO \nStep 1: Configuring OPC UA alert in TICK script...\n2026-06-17 09:44:40 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:44:40 DEBUG Changing to target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 DEBUG \u2713 Successfully changed to: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 INFO Opening tick script at: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick\n2026-06-17 09:44:40 INFO \u2713 Successfully opened tick script (847 characters)\n2026-06-17 09:44:40 INFO \u2713 Script file: windturbine_anomaly_detector.tick\n2026-06-17 09:44:40 INFO \n--- Updating tick script with opcua alert configuration ---\n2026-06-17 09:44:40 INFO Updating tick script with opcua setup...\n2026-06-17 09:44:40 INFO Removed MQTT alert pattern from the .tick file.\n2026-06-17 09:44:40 INFO Removed OPCUA alert pattern from the .tick file.\n2026-06-17 09:44:40 INFO Added new OPCUA alert script to the .tick file.\n2026-06-17 09:44:40 INFO Alert configuration updated successfully.\n2026-06-17 09:44:40 INFO \u2713 Successfully updated tick script with opcua alerts\n2026-06-17 09:44:40 INFO \u2713 Tick script updated with alert configuration (793 characters)\n2026-06-17 09:44:40 INFO \u2713 Step 1 PASSED: Tick script updated successfully\n2026-06-17 09:44:40 INFO \nStep 2: Uploading UDF deployment package...\n2026-06-17 09:44:40 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:44:40 DEBUG Changing to target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 DEBUG \u2713 Successfully changed to: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 INFO Added required &amp;#x27;udfs&amp;#x27; folder to tar archive.\n2026-06-17 09:44:40 INFO Added required &amp;#x27;tick_scripts&amp;#x27; folder to tar archive.\n2026-06-17 09:44:40 INFO Added optional &amp;#x27;models&amp;#x27; folder to tar archive.\n2026-06-17 09:44:40 INFO Created UDF tar archive at &amp;#x27;/tmp/wind-turbine-anomaly-detection_udf_l6daiycy.tar&amp;#x27;.\n2026-06-17 09:44:40 INFO Uploading UDF tar package for &amp;#x27;wind-turbine-anomaly-detection&amp;#x27; to https://localhost:3000/ts-api/udfs/package\n2026-06-17 09:44:40 INFO UDF tar package uploaded successfully (HTTP 200).\n2026-06-17 09:44:40 INFO \u2713 Step 2 PASSED: UDF deployment package uploaded successfully\n2026-06-17 09:44:40 INFO \nStep 3: Configuring OPC UA alert in config.json...\n2026-06-17 09:44:40 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:44:40 DEBUG Changing to target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 DEBUG \u2713 Successfully changed to: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:44:40 INFO Checking if time-series analytics container is running...\n2026-06-17 09:44:40 INFO \u2713 Container ia-time-series-analytics-microservice is running\n2026-06-17 09:44:40 INFO Waiting 60 seconds for services to stabilize...\n2026-06-17 09:45:40 INFO Waiting for time-series analytics service to be ready...\n2026-06-17 09:45:40 INFO \u2713 Service is responding (HTTP 200)\n2026-06-17 09:45:40 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:45:40 DEBUG Already in target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:45:40 INFO Opening tick script at: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick\n2026-06-17 09:45:40 INFO \u2713 Successfully opened tick script (793 characters)\n2026-06-17 09:45:40 INFO \u2713 Script file: windturbine_anomaly_detector.tick\n2026-06-17 09:45:40 INFO \n--- Updating tick script with opcua alert configuration ---\n2026-06-17 09:45:40 INFO Updating tick script with opcua setup...\n2026-06-17 09:45:40 INFO Removed MQTT alert pattern from the .tick file.\n2026-06-17 09:45:40 INFO Removed OPCUA alert pattern from the .tick file.\n2026-06-17 09:45:40 INFO Added new OPCUA alert script to the .tick file.\n2026-06-17 09:45:40 INFO Alert configuration updated successfully.\n2026-06-17 09:45:40 INFO \u2713 Successfully updated tick script with opcua alerts\n2026-06-17 09:45:40 INFO \u2713 Tick script updated with alert configuration (799 characters)\n2026-06-17 09:45:40 INFO \u2713 OPCUA tick script configuration completed successfully\n2026-06-17 09:45:40 DEBUG Changed to directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config\n2026-06-17 09:45:40 INFO current directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config\n2026-06-17 09:45:40 INFO Starting the curl command to update the configuration...\n2026-06-17 09:45:40 INFO Attempting curl command (attempt 1/3)...\n2026-06-17 09:45:40 INFO Curl command executed successfully. Response:\n2026-06-17 09:45:40 INFO {&amp;quot;status&amp;quot;:&amp;quot;success&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Configuration updated successfully&amp;quot;}\n2026-06-17 09:45:40 DEBUG \u2713 OPCUA alerts configuration setup completed successfully\n2026-06-17 09:45:40 INFO Waiting for services to fully process the configuration change...\n2026-06-17 09:45:40 INFO Waiting 45 seconds for services to stabilize...\n2026-06-17 09:46:25 INFO \nStep 4: Restarting OPC UA server container...\n2026-06-17 09:46:25 INFO Restarting timeseriessoftware-ia-opcua-server-1 container...\n2026-06-17 09:46:36 INFO \u2713 Successfully restarted timeseriessoftware-ia-opcua-server-1\n2026-06-17 09:46:36 INFO Waiting for OPC UA server to restart and stabilize...\n2026-06-17 09:46:36 INFO Waiting 30 seconds for services to stabilize...\n2026-06-17 09:47:06 INFO \nWaiting for OPC UA alert system to stabilize and generate alerts...\n2026-06-17 09:47:06 INFO Waiting 60 seconds for services to stabilize...\n2026-06-17 09:48:06 INFO \nStep 5: Checking container logs for OPC UA alert pattern...\n2026-06-17 09:48:06 INFO Checking ia-time-series-analytics-microservice container logs for opcua pattern...\n2026-06-17 09:48:06 INFO Timeout: 120 seconds, Check interval: 10 seconds\n2026-06-17 09:48:06 INFO Monitoring... (elapsed: 0.0s, remaining: 120.0s)\n2026-06-17 09:48:16 INFO Monitoring... (elapsed: 10.0s, remaining: 110.0s)\n2026-06-17 09:48:26 INFO Monitoring... (elapsed: 20.0s, remaining: 100.0s)\n2026-06-17 09:48:36 INFO Monitoring... (elapsed: 30.0s, remaining: 90.0s)\n2026-06-17 09:48:46 INFO Monitoring... (elapsed: 40.1s, remaining: 79.9s)\n2026-06-17 09:48:56 INFO Monitoring... (elapsed: 50.1s, remaining: 69.9s)\n2026-06-17 09:49:06 INFO Monitoring... (elapsed: 60.1s, remaining: 59.9s)\n2026-06-17 09:49:16 INFO Monitoring... (elapsed: 70.1s, remaining: 49.9s)\n2026-06-17 09:49:26 INFO Monitoring... (elapsed: 80.1s, remaining: 39.9s)\n2026-06-17 09:49:26 INFO [MATCH] 2026-06-17 04:19:20,185 - root - INFO - ALERT sent to OPC UA server: Anomaly detected for wind speed: 4.91 Grid Active Power: 133.01 Anomaly Status: 0.6\n2026-06-17 09:49:26 INFO \u2713 OPCUA pattern found in logs for container ia-time-series-analytics-microservice\n2026-06-17 09:49:26 INFO \n=== Docker-based OPC UA Alert System Validation PASSED ===\n2026-06-17 09:49:26 INFO [DEBUG] validate_opcua_alert_system returned: True\n2026-06-17 09:49:26 INFO OPCUA alert validation result: True\n\n---------------------------- Captured log teardown -----------------------------\n2026-06-17 09:49:26 INFO === Tearing down Wind Turbine module-scoped Docker environment ===\n2026-06-17 09:49:26 DEBUG Current working directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional\n2026-06-17 09:49:26 DEBUG Changing to target directory: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:49:26 DEBUG \u2713 Successfully changed to: /home/ecgv-d19-l3t19/timeseries/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series\n2026-06-17 09:49:37 INFO make down succeeded\n2026-06-17 09:49:37 INFO Wind Turbine fixture: make down completed \u2713\n2026-06-17 09:49:37 INFO [WT fixture] Restored original .env contents&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;docker_wind_turbine_report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>
