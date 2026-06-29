@@ -110,6 +110,8 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
 
+> **Note**: After a system restart, run `./run up` from the `handheld-multi-modal` directory to start the applications again.
+
 ## Accessing Application User Interface
 
 This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
