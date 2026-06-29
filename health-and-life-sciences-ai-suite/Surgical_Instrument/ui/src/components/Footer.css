@@ -1,0 +1,27 @@
+.ftr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
+.ftr-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ftr-disclaimer { color: var(--color-disclaim-text); font-weight: 500; }
+
+.ftr-sha {
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
