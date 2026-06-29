@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (leave empty to use current branch)'
+        description: 'Branch or tag to checkout (leave empty to use main branch)'
         required: false
         type: string
         default: 'main'
@@ -46,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (leave empty to use current branch)'
+        description: 'Branch or tag to checkout (leave empty to use main branch)'
         required: false
         type: string
         default: 'main'
@@ -261,18 +261,16 @@ jobs:
             fi
           done
 
-          # Delete all PVCs in default namespace
-          echo "Cleaning up PVCs..."
-          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
-
-          # Wait for all pods to terminate in default namespace
-          echo "Waiting for pods to terminate..."
-          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
-
-          # Force delete any stuck pods
-          echo "Force deleting any stuck pods..."
-          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
-            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
+          # Clean up sample-app namespaces
+          echo "Cleaning up namespace-scoped test resources..."
+          for ns in ts-sample-app weld wind timeseries; do
+            if kubectl get namespace "$ns" 2>/dev/null; then
+              kubectl delete pvc --all -n "$ns" --wait=true --timeout=5m 2>/dev/null || true
+              kubectl wait --for=delete pod --all -n "$ns" --timeout=5m 2>/dev/null || true
+              kubectl get pods -n "$ns" -o name 2>/dev/null | while read pod; do
+                kubectl delete "$pod" -n "$ns" --force --grace-period=0 2>/dev/null || true
+              done
+            fi
           done
 
           # Clean up any leftover docker resources
@@ -500,16 +498,14 @@ jobs:
             kubectl delete namespace ts-sample-app --wait=true --timeout=5m 2>/dev/null || true
           fi
 
-          echo "Cleaning up PVCs..."
-          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
-
-          echo "Waiting for pods to terminate..."
-          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
-
-          echo "Force deleting any stuck pods..."
-          kubectl get pods -n default -o name 2>/dev/null | while read pod; do
-            kubectl delete "$pod" -n default --force --grace-period=0 2>/dev/null || true
-          done
+          echo "Cleaning up namespace-scoped test resources..."
+          if kubectl get namespace ts-sample-app 2>/dev/null; then
+            kubectl delete pvc --all -n ts-sample-app --wait=true --timeout=5m 2>/dev/null || true
+            kubectl wait --for=delete pod --all -n ts-sample-app --timeout=5m 2>/dev/null || true
+            kubectl get pods -n ts-sample-app -o name 2>/dev/null | while read pod; do
+              kubectl delete "$pod" -n ts-sample-app --force --grace-period=0 2>/dev/null || true
+            done
+          fi
 
           echo "Cleaning up docker resources..."
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
@@ -710,19 +706,16 @@ jobs:
             kubectl delete "$ns" --wait=true --timeout=5m 2>/dev/null || true
           done
 
-          # Delete all PVCs
-          echo "Cleaning up PVCs..."
-          kubectl delete pvc --all -n default --wait=true --timeout=5m 2>/dev/null || true
-
-          # Wait for all pods to terminate
-          echo "Waiting for pods to terminate..."
-          kubectl wait --for=delete pod --all -n default --timeout=5m 2>/dev/null || true
-
-          # Force delete any stuck pods
-          echo "Force deleting any stuck pods..."
-          kubectl get pods --all-namespaces -o name 2>/dev/null | while read pod; do
-            ns=$(echo "$pod" | cut -d'/' -f1)
-            kubectl delete "$pod" --force --grace-period=0 2>/dev/null || true
+          # Clean up sample-app namespaces
+          echo "Cleaning up namespace-scoped test resources..."
+          for ns in ts-sample-app weld wind timeseries multimodal; do
+            if kubectl get namespace "$ns" 2>/dev/null; then
+              kubectl delete pvc --all -n "$ns" --wait=true --timeout=5m 2>/dev/null || true
+              kubectl wait --for=delete pod --all -n "$ns" --timeout=5m 2>/dev/null || true
+              kubectl get pods -n "$ns" -o name 2>/dev/null | while read pod; do
+                kubectl delete "$pod" -n "$ns" --force --grace-period=0 2>/dev/null || true
+              done
+            fi
           done
 
           # Clean up any leftover docker resources from prior segments

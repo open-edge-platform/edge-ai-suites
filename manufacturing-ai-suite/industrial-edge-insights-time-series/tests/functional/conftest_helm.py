@@ -90,7 +90,9 @@ def setup_helm_environment(request):
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
     cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace)
+        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
 
 @pytest.fixture(scope="function")
 def setup_helm_weld_environment(request):
@@ -153,7 +155,9 @@ def setup_helm_weld_environment(request):
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
     cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace)
+        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
 
 @pytest.fixture(scope="function")
 def setup_multimodal_helm_environment():
@@ -203,4 +207,6 @@ def setup_multimodal_helm_environment():
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
     cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI)
     if not cleanup_result:
-        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace_multi)
+        assert helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."

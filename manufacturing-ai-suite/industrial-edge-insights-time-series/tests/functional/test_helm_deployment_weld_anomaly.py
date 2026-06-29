@@ -193,7 +193,9 @@ def test_verify_pods_logs_with_respect_to_log_level():
     services_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
     logger.info(f"check_services result: {services_result}")
     if not services_result:
-        logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
+        logger.warning("Some services are still present after the standard wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace)
+        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install."
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     result = helm_utils.update_values_yaml(values_yaml_path, case)
     logger.info(f"update_values_yaml result: {result}")
