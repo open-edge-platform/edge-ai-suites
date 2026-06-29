@@ -33,15 +33,6 @@ make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMB
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```bash
-# Deploy with MQTT multi-stream ingestion
-make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-<!--hide_directive:::
 ::::hide_directive-->
 
 ## Verification

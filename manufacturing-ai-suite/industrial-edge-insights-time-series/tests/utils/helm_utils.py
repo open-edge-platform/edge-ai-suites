@@ -944,8 +944,6 @@ def verify_mqtt_alerts_via_subscription(namespace, alert_type, timeout=180, inte
     # Determine alert topic based on alert type
     if alert_type.lower() == "mqtt":
         alert_topic = "alerts/wind_turbine"
-    elif alert_type.lower() == "mqtt_weld":
-        alert_topic = "alerts/weld_defects"
     else:
         logger.error("Unknown alert type for MQTT subscription: %s", alert_type)
         return False
