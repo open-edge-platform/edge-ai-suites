@@ -49,6 +49,7 @@ import structlog
 from plugin.base.interfaces import IVmsShim
 from plugin.core.config import VmsInstanceConfig
 from plugin.core.models.domain import Camera, CommandResult
+from vms_shim.nxwitness.settings_factory import apply_settings_model
 
 if TYPE_CHECKING:
     from plugin.core.pipeline.orchestrator import Orchestrator
@@ -514,18 +515,14 @@ class NxWitnessVmsShim(IVmsShim):
             return
 
         # Merge any label_type_map typeIds from object_detection analytics apps into the manifest.
-        # Also inject display_fields into deviceAgentSettingsModel if configured.
         from analytics_app_shim.object_detection.config import ObjectDetectionAnalyticsAppConfig
         for ca_cfg in orchestrator.config.analytics_apps:
-            if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig):
-                if ca_cfg.label_type_map:
-                    _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
-                if ca_cfg.display_fields:
-                    (
-                        manifests
-                        .setdefault("engineManifest", {})
-                        .setdefault("deviceAgentSettingsModel", {})
-                    )["items"] = ca_cfg.display_fields
+            if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig) and ca_cfg.label_type_map:
+                _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
+
+        # Build the Nx device-agent settings panel from all configured apps so the
+        # bundled manifest stays generic and any app added to config.yaml shows up.
+        apply_settings_model(manifests, list(orchestrator.config.analytics_apps))
 
         try:
             result = await self.register_analytics(manifests)

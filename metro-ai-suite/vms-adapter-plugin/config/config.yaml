@@ -42,20 +42,6 @@ analytics_apps:
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
     # DLS pipeline to be run for Nx Witness client
     pipeline_name: "${DLS_PIPELINE_NAME:-}"
-    # Fields shown in the Nx Witness device-agent settings panel for this app.
-    # These are injected into the Nx integration manifest at registration time.
-    display_fields:
-      - type: CheckBox
-        name: pipelineEnabled
-        caption: "Enable Loitering Detection Pipeline"
-        description: "Start or stop the Loitering Detection pipeline for this camera"
-        defaultValue: false
-      - type: ComboBox
-        name: device
-        caption: "Device"
-        description: "Inference device for the Loitering Detection pipeline"
-        defaultValue: "CPU"
-        range: ["CPU", "GPU", "NPU"]
     # Map detection labels (case-insensitive) to Nx Witness object typeIds.
     # Labels not listed here fall back to "python.detected.object".
     # These types are also registered in the Nx manifest automatically at startup.
