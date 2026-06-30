@@ -1800,6 +1800,60 @@ def execute_gpu_config_curl(device="gpu"):
         logger.error(f"Error executing curl command: {e}")
         return False
 
+
+# Idempotent helpers to ensure the UDF loaded in TSAM matches the alert mode the caller needs.
+def _kapacitor_task_alert_mode_matches(alert_mode):
+    """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is
+    currently executing the TICK for the given alert_mode ("mqtt" or "opcua").
+    Looks at the live task definition served by Kapacitor's REST API rather
+    than the .tick file on the test host, because TSAM uses its own copy of
+    the UDF package (only ``upload_udf_tar_package`` ships a new one).
+    Returns False on any error so the caller falls through to a re-upload
+    (safer than a false positive that skips needed remediation).
+    """
+    if alert_mode not in ("mqtt", "opcua"):
+        return False
+    tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    try:
+        result = subprocess.run(
+            ["docker", "exec", tsam_name,
+             "curl", "-s", "http://localhost:9092/kapacitor/v1/tasks/windturbine_anomaly_detector"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0:
+            return False
+        body = result.stdout or ""
+        if alert_mode == "mqtt":
+            return ("my_mqtt_broker" in body) and ("opcua_alerts" not in body)
+        return ("opcua_alerts" in body) and ("my_mqtt_broker" not in body)
+    except Exception as exc:
+        logger.warning(f"[reset_loaded_udf_to] Kapacitor introspection failed: {exc}")
+        return False
+
+
+def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
+    """Idempotently ensure TSAM's loaded UDF package and config match alert_mode (mqtt/opcua), rewriting TICK and re-uploading only if needed."""
+    if alert_mode not in ("mqtt", "opcua"):
+        logger.error(f"[reset_loaded_udf_to] Invalid alert_mode '{alert_mode}'")
+        return False
+
+    if _kapacitor_task_alert_mode_matches(alert_mode):
+        logger.info(f"[reset_loaded_udf_to] Kapacitor already in '{alert_mode}' mode; skipping re-upload")
+        return True
+
+    logger.info(f"[reset_loaded_udf_to] Loaded UDF != '{alert_mode}'; rewriting TICK + re-uploading tar")
+    if check_and_update_tick_script(setup=alert_mode) is None:
+        logger.error(f"[reset_loaded_udf_to] Failed to rewrite TICK to '{alert_mode}'")
+        return False
+    if not upload_udf_tar_package(sample_app):
+        logger.error(f"[reset_loaded_udf_to] Failed to re-upload UDF tar for '{alert_mode}'")
+        return False
+    if not update_config_file(alert_mode):
+        logger.error(f"[reset_loaded_udf_to] Failed to POST '{alert_mode}' config")
+        return False
+    logger.info(f"[reset_loaded_udf_to] Reset to '{alert_mode}' completed")
+    return True
+
 def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
     """Simple 5-step MQTT alert validation function with app-specific support."""
     logger.info("=== Simple MQTT Alert System Validation ===")
@@ -1889,13 +1943,17 @@ def validate_opcua_alert_system():
         logger.error(f"✗ Step 4 FAILED: Error restarting OPC UA server - {str(e)}")
         return False
 
-    # Wait for OPC UA system to stabilize and process data before checking logs
-    logger.info("\nWaiting for OPC UA alert system to stabilize and generate alerts...")
-    wait_for_stability(constants.WIND_TURBINE_OPCUA_ALERT_SETTLE)
-
-    # Step 5: Check container logs for OPC UA alert pattern
-    logger.info("\nStep 5: Checking container logs for OPC UA alert pattern...")
-    logs_validation = check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], "opcua", timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, interval=constants.WIND_TURBINE_CYCLE_GAP_TIME)
+    # Step 5: Poll logs immediately after restart instead of sleeping a fixed window.
+    logger.info("\nStep 5: Polling container logs for OPC UA alert pattern...")
+    logs_validation = check_logs_for_alerts(
+        constants.CONTAINERS["time_series_analytics"]["name"],
+        "opcua",
+        timeout=max(
+            constants.WIND_TURBINE_OPCUA_ALERT_SETTLE,
+            constants.WIND_TURBINE_ALERT_LOG_TIMEOUT,
+        ),
+        interval=constants.WIND_TURBINE_CYCLE_GAP_TIME,
+    )
     if not logs_validation:
         logger.error("✗ Step 5 FAILED: OPC UA alert pattern not found in container logs")
         return False
@@ -3472,7 +3530,7 @@ def check_multimodal_container_processing(container_name, processing_type="analy
     # Define patterns for different processing types
     pattern_maps = {
         "analytics": [
-            "CatBoost", "prediction", "anomaly_status", "model", "inference",
+            "RandomForestClassifier", "prediction", "anomaly_status", "model", "inference",
             "processing", "analytics", "time_series", "weld_sensor"
         ],
         "fusion": [
@@ -4262,7 +4320,7 @@ def measure_multimodal_inference_performance(device="gpu", container="ia-time-se
                 # Count inference-related log entries
                 inference_patterns = [
                     "prediction", "inference", "model", "processing",
-                    "anomaly_status", "catboost", "weld_anomaly"
+                    "anomaly_status", "randomforestclassifier", "weld_anomaly"
                 ]
                 
                 recent_lines = logs.split('\n')[-50:]  # Last 50 lines
