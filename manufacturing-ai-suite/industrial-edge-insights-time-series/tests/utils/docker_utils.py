@@ -3512,7 +3512,7 @@ def check_multimodal_container_processing(container_name, processing_type="analy
     # Define patterns for different processing types
     pattern_maps = {
         "analytics": [
-            "CatBoost", "prediction", "anomaly_status", "model", "inference",
+            "RandomForestClassifier", "prediction", "anomaly_status", "model", "inference",
             "processing", "analytics", "time_series", "weld_sensor"
         ],
         "fusion": [
@@ -4302,7 +4302,7 @@ def measure_multimodal_inference_performance(device="gpu", container="ia-time-se
                 # Count inference-related log entries
                 inference_patterns = [
                     "prediction", "inference", "model", "processing",
-                    "anomaly_status", "catboost", "weld_anomaly"
+                    "anomaly_status", "randomforestclassifier", "weld_anomaly"
                 ]
                 
                 recent_lines = logs.split('\n')[-50:]  # Last 50 lines
