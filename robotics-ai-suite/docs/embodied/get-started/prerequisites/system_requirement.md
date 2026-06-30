@@ -21,7 +21,6 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 | --- | --- |
 | **Processor (CPU)** | The embodied SDK is powered by the **Panther Lake 358H Processor**, a high-efficiency CPU designed for edge computing and AI-driven applications:<br>- Base Frequency: 1.9 GHz<br>- Max Turbo Frequency: 4.8 GHz<br>- Base Power Consumption: 25W |
 | **Memory (RAM)** | To ensure smooth multitasking and data processing, the Embodied Intelligence SDK prefers **64GB of LPDDR5X** memory:<br>- Memory Type: Dual-channel LPDDR5X<br>- Speed: 2R 9500 MT/s |
-| **Discrete Graphics Processing Unit (dGPU)** | To enable more complex AI workloads, including large languages models, vision-action models, the Embodied Intelligence SDK requires **Battlemage B580 dGPU**, a dedicated high-performance graphics card engineered for AI acceleration, real-time graphics rendering, and computationally intensive tasks:<br>- Memory: 12GB GDDR6 VRAM<br>- Base Frequency: 2.3 GHz<br>- Interface: MXM 3.1 Type B slot with PCIe Gen4 x8<br>- Thermal Design Power (TDP): 150W |
 
 :::
 ::::
