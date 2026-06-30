@@ -29,8 +29,9 @@
     }
 
     .wrap {
-      max-width: 1100px;
-      margin: 32px auto;
+      width: 100%;
+      max-width: none;
+      margin: 16px 0;
       padding: 0 16px;
     }
 
@@ -80,6 +81,24 @@
     button:disabled {
       opacity: 0.45;
       cursor: not-allowed;
+    }
+
+    .explain-btn {
+      background: #c9d1de;
+      color: #30405e;
+      border-color: #b4bfd0;
+      cursor: not-allowed;
+    }
+
+    .explain-btn.enabled {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .explain-btn.enabled:hover {
+      background: var(--accent-dark);
     }
 
     .status {
@@ -152,7 +171,6 @@
     <div class="card">
       <div class="header">
         <h1>InfluxDB Table Viewer</h1>
-        <div class="sub">Browse measurement data with page-by-page navigation.</div>
       </div>
 
       <div class="table-wrap">
@@ -168,6 +186,7 @@
         <div id="pageInfo">Page 1</div>
         <div id="status" class="status">Loading data...</div>
         <div class="pager">
+          <button id="explainBtn" class="explain-btn" disabled>Explain</button>
           <button id="prevBtn">Previous</button>
           <button id="nextBtn">Next</button>
         </div>
@@ -178,6 +197,7 @@
   <script>
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
+    const explainBtn = document.getElementById("explainBtn");
     const statusEl = document.getElementById("status");
     const pageInfoEl = document.getElementById("pageInfo");
     const tableHead = document.getElementById("tableHead");
@@ -187,7 +207,7 @@
 
     let state = {
       page: 1,
-      pageSize: 25,
+      pageSize: 10,
       hasMore: false,
       loading: false,
     };
@@ -206,12 +226,19 @@
       return Boolean(tableBody.querySelector("input[type='checkbox'][data-row-select='true']:checked"));
     }
 
+    function updateExplainButtonState() {
+      const enabled = hasSelectedRows() && !state.loading;
+      explainBtn.disabled = !enabled;
+      explainBtn.classList.toggle("enabled", enabled);
+    }
+
     function buildTable(rows) {
       tableHead.innerHTML = "";
       tableBody.innerHTML = "";
 
       if (!rows || rows.length === 0) {
         emptyMessage.hidden = false;
+        updateExplainButtonState();
         return;
       }
 
@@ -230,6 +257,7 @@
         rowCheckboxes.forEach((checkbox) => {
           checkbox.checked = checked;
         });
+        updateExplainButtonState();
       });
       selectAllTh.appendChild(selectAllCheckbox);
       headerRow.appendChild(selectAllTh);
@@ -258,6 +286,7 @@
           if (selectAll) {
             selectAll.checked = allChecked;
           }
+          updateExplainButtonState();
         });
         selectTd.appendChild(rowCheckbox);
         tr.appendChild(selectTd);
@@ -270,6 +299,8 @@
         });
         tableBody.appendChild(tr);
       });
+
+      updateExplainButtonState();
     }
 
     async function loadPage() {
@@ -313,6 +344,13 @@
       await loadPage();
     });
 
+    explainBtn.addEventListener("click", () => {
+      const selectedCount = tableBody.querySelectorAll(
+        "input[type='checkbox'][data-row-select='true']:checked"
+      ).length;
+      setStatus(`Explain clicked for ${selectedCount} selected row(s).`);
+    });
+
     setInterval(async () => {
       if (state.loading || hasSelectedRows()) {
         return;
@@ -322,6 +360,7 @@
     }, AUTO_REFRESH_INTERVAL_MS);
 
     loadPage();
+    updateExplainButtonState();
   </script>
 </body>
 </html>
