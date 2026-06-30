@@ -522,20 +522,6 @@ if ($Restart) {
     
     Write-Host ""
     Write-Host "  Starting all services..." -ForegroundColor Green
-
-    if ($Silent) {
-        Write-Host "  Silent mode: using existing virtual environments (faster startup)" -ForegroundColor Gray
-        $deleteVenvs = "N"
-    } else {
-        $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
-    }
-
-    if ($deleteVenvs.ToUpper() -eq "Y") {
-        Remove-VirtualEnvironments
-        Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
-    } else {
-        Write-Host "  Using existing virtual environments (faster startup)." -ForegroundColor Gray
-    }
 }
 
 # Summary
@@ -980,21 +966,6 @@ Set-Location '$ScriptDir'
 Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 
 Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip --no-input
-python -m pip install -r .\requirements.txt --no-input
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt --no-input
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
-
-Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
 Write-Host ''
 python main.py
@@ -1068,21 +1039,6 @@ if (-not `$venvValid) {
 
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
-
-Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip --no-input
-python -m pip install -r .\requirements.txt --no-input
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt --no-input
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
 
 Write-Host ''
 Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green
