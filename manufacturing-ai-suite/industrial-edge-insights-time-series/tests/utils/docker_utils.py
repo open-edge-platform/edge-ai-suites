@@ -3472,7 +3472,7 @@ def check_multimodal_container_processing(container_name, processing_type="analy
     # Define patterns for different processing types
     pattern_maps = {
         "analytics": [
-            "randomforestclassifier", "prediction", "anomaly_status", "model", "inference",
+            "RandomForestClassifier", "prediction", "anomaly_status", "model", "inference",
             "processing", "analytics", "time_series", "weld_sensor"
         ],
         "fusion": [
