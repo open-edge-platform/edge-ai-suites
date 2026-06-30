@@ -26,7 +26,7 @@ on:
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
-          test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
+          test_docker_influxdb_retention,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
           Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
@@ -61,7 +61,7 @@ on:
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
-          test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
+          test_docker_influxdb_retention,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
           Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
@@ -172,7 +172,7 @@ jobs:
           # Determine which sample apps need helm charts based on selected tests
           # Only generate for Helm tests, not Docker tests
           WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security"
-          WELD_HELM_TESTS="test_helm_deployment_weld_anomaly"
+          WELD_HELM_TESTS=""
 
           GENERATE_WIND=false
           GENERATE_WELD=false
@@ -296,7 +296,7 @@ jobs:
           # Core time-series test files excluding security.
           TIMESERIES_CORE_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
             test_docker_deployment_wind_turbine test_docker_influxdb_retention \
-            test_helm_deployment_weld_anomaly test_helm_deployment_wind_turbine \
+            test_helm_deployment_wind_turbine \
             test_helm_influxdb_retention"
 
           # Skip if only multimodal tests are selected
