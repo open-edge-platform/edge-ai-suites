@@ -8,6 +8,7 @@ services:
   dlstreamer-pipeline-server:
     runtime: io.containerd.kata.v2
     privileged: false
+    devices: !override []
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root
       - ./tc-resolv.conf:/etc/resolv.conf:ro

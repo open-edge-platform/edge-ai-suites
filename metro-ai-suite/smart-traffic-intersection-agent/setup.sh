@@ -47,12 +47,23 @@ export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 
 if [ "$ENABLE_TC" = "true" ]; then
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
-    if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
-        if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
-            echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
-            echo -e "${YELLOW}Please use VLM_TARGET_DEVICE=CPU or disable Trusted Compute${NC}"
+    if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
+        GPU_PCI_FULL=$(lspci -Dnn | grep -E '(VGA compatible controller|Display controller).*Intel' | head -1 | awk '{print $1}')
+        if [ -z "$GPU_PCI_FULL" ]; then
+            echo -e "${RED}ERROR: No Intel iGPU found for VFIO passthrough.${NC}"
             return 1
         fi
+        IOMMU_LINK="/sys/bus/pci/devices/${GPU_PCI_FULL}/iommu_group"
+        if [ ! -L "$IOMMU_LINK" ]; then
+            echo -e "${RED}ERROR: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled.${NC}"
+            return 1
+        fi
+        export VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+        if [ ! -e "/dev/vfio/${VFIO_GROUP}" ]; then
+            echo -e "${RED}ERROR: /dev/vfio/${VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci.${NC}"
+            return 1
+        fi
+        TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-gpu-overlay-agent.yaml"
     fi
 else
     TC_OVERLAY_AGENT="";
@@ -264,6 +275,13 @@ export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/
 export VLM_MODEL_NAME=${VLM_MODEL_NAME}
 export VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
 export VLM_WEIGHT_FORMAT=${VLM_WEIGHT_FORMAT:-}
+
+# When VLM_TARGET_DEVICE=GPU, force SI to CPU so GPU is reserved for OVMS/VLM.
+export TC_SI_TARGET_DEVICE=${TC_SI_TARGET_DEVICE:-CPU}
+if [ "$VLM_TARGET_DEVICE" = "GPU" ] && [ "$TC_SI_TARGET_DEVICE" != "CPU" ]; then
+    echo -e "${YELLOW}VLM_TARGET_DEVICE=GPU: overriding TC_SI_TARGET_DEVICE to CPU (GPU reserved for OVMS).${NC}"
+    export TC_SI_TARGET_DEVICE=CPU
+fi
 
 # Select OVMS image tag based on target device:
 # GPU requires the GPU-enabled image (includes OpenCL/Level Zero runtime).
