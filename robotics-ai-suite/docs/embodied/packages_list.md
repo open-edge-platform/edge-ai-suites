@@ -3,7 +3,7 @@
 The following is a list of Debian update packages for Embodied Intelligence SDK components.
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 |Component Group|Package |Description |
 |---|---|---|
@@ -20,7 +20,7 @@ The following is a list of Debian update packages for Embodied Intelligence SDK 
 |[Robotics Diffusion Transformer](./sample_pipelines/robotics_diffusion_transformer.md)|rdt-ov|Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability.|
 
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 
 |Component Group|Package |Description |
 |---|---|---|

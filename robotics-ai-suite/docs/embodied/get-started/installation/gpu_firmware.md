@@ -20,7 +20,7 @@ collection within <https://github.com/intel-gpu> includes:
 Each project is tagged consistently so when pulling these repositories pull the same tag.
 
 ::::{tab-set}
-:::{tab-item} **i915**
+:::{tab-item} i915
 
 > **Tip:** If Intel® Graphics Driver is disabled, check the grub of cmdline:
 >
@@ -68,7 +68,7 @@ To verify that the GPU firmwares are installed, run `sudo dmesg | grep firmware`
 ```
 
 :::
-:::{tab-item}  **Xe**
+:::{tab-item} Xe
 
 > **Tip:** If Intel® Graphics Driver is disabled, check the grub of cmdline:
 >

@@ -1,7 +1,7 @@
 # Install Client GPUs driver
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 ## Installation
 
@@ -53,7 +53,7 @@ sudo apt-cache policy intel-opencl-icd
 Alternatively, you can run the `clinfo` command as root.
 
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 
 ## Installation
 

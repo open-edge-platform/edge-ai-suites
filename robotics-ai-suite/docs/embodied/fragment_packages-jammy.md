@@ -1,7 +1,7 @@
 # Packages
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 | Component Group | Package | Description |
 |---|---|---|
@@ -18,7 +18,7 @@
 | [Robotics Diffusion Transformer (RDT)](./sample_pipelines/robotics_diffusion_transformer.md) | rdt-ov | Robotics Diffusion Transformer (RDT), the largest bimanual manipulation foundation model with strong generalizability. |
 
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 
 | Component Group | Package | Description |
 |---|---|---|

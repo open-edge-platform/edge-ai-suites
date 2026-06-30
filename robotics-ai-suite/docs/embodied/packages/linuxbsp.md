@@ -130,6 +130,21 @@ When the system boots up, verify the kernel version using the `uname` command:
 ```bash
 uname -mrs
 ```
+### cpupower
+
+`cpupower` is a standalone tool from the Linux kernel source tree. It is a Linux command-line tool used to manage and monitor CPU power management settings, including: CPU Frequency, CPU Governor, C-States, P-States and Turbo Boost. It is recommended to build the tool from kernel source code.
+
+```bash
+cd linux-intel-rt-experimental*/tools/power/cpupower
+make 
+sudo make install
+```
+
+> **Note:** Please ensure you had installed the following packages as dependences before compilation.
+>
+> ```bash
+> sudo apt install -y make build-essential libpci-dev libcap-dev gettext libncurses-dev
+> ```
 
 ## Packages
 

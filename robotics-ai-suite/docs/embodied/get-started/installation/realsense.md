@@ -12,7 +12,7 @@ ROS is a set of open-source software libraries and tools that help you build rob
 ## Installation
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 1. Register the server's public key:
 
@@ -73,7 +73,7 @@ ROS is a set of open-source software libraries and tools that help you build rob
     to install librealsense packages and more other tools from RealSense depth camera sources.
 
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 
 1. Register the server's public key:
 

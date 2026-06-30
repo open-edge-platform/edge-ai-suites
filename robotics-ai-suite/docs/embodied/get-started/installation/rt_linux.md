@@ -54,7 +54,7 @@ The following three sections are always skipped because they require manual, pla
    sudo apt install -y linux-firmware
    ```
 
-   > **Note:** Linux OS version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in `/lib/firmware/i915/experimental/`. Confirm the following boot parameters through `cat /proc/cmdline` after the next reboot:
+   > **Note:** Linux kernel version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in `/lib/firmware/i915/experimental/`. Confirm the following boot parameters through `cat /proc/cmdline` after the next reboot:
    >
    > ```bash
    > i915.guc_firmware_path=i915/experimental/mtl_guc_70.bin i915.dmc_firmware_path=i915/experimental/mtl_dmc.bin i915.gsc_firmware_path=i915/experimental/mtl_gsc_1.bin
@@ -104,7 +104,7 @@ The following three sections are always skipped because they require manual, pla
    # Modify default cmdline parameter to affinity irq to core 0-9
    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to isolate cpus to core 10-13
-   sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to set efi=noruntime
    sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to set iommu to passthrough mode
@@ -121,11 +121,16 @@ The following three sections are always skipped because they require manual, pla
    # Modify default cmdline parameter to affinity irq to core 0-7
    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to isolate cpus to core 8-11
-   sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
+   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to set efi=noruntime
    sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+   # Kernel parameters need to load the correct Xe firmware
+   sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' /etc/grub.d/10_eci_experimental
+   sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' /etc/grub.d/10_eci_experimental
+   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' /etc/grub.d/10_eci_experimental
    # Modify default cmdline parameter to set iommu to passthrough mode
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
+   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimental
+
    sudo update-grub
    ```
 
@@ -144,7 +149,7 @@ The following three sections are always skipped because they require manual, pla
    ![ECI GRUB boot screen](assets/images/eci_grub.png)
 
    ::::{tab-set}
-   :::{tab-item}  **Ubuntu 22.04**
+   :::{tab-item} Ubuntu 22.04
 
    **Note:** Select `Advanced Options for [Experimental] ECI Ubuntu` to list `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts-rt` for a real-time kernel or `[Experimental] ECI Ubuntu, with Linux 6.12.8-intel-ese-experimental-lts` for a generic kernel.
 
@@ -165,7 +170,7 @@ The following three sections are always skipped because they require manual, pla
 To achieve real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
 ::::{tab-set}
-:::{tab-item}  **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 ![ARL RT setup diagram](../../assets/images/arl_rt_setup.png)
 
@@ -254,7 +259,7 @@ For more information on accessing HWP MSRs directly instead of using the `sysfs`
 Below is an example to boost the real-time core to 3GHz, with the Energy Performance Preference (EPP) set to performance to ensure Quality of Service (QoS) in case of power limit throttling:
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 (e.g. core 13 as isolated core on Intel® Core™ Ultra Processors 255H)
 
@@ -284,10 +289,10 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 7 0x80003e01
   wrmsr 0x774 -p 8 0x80003e01
   wrmsr 0x774 -p 9 0x80003e01
-  wrmsr 0x774 -p 10 0x80003e01
-  wrmsr 0x774 -p 11 0x80003e01
-  wrmsr 0x774 -p 12 0x80003e01
-  wrmsr 0x774 -p 13 0x001e1e1e
+  wrmsr 0x774 -p 10 0x00002a2a
+  wrmsr 0x774 -p 11 0x00002a2a
+  wrmsr 0x774 -p 12 0x00002a2a
+  wrmsr 0x774 -p 13 0x00002a2a
   ```
 
 :::
@@ -319,10 +324,10 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 5 0x80002501
   wrmsr 0x774 -p 6 0x80002501
   wrmsr 0x774 -p 7 0x80002501
-  wrmsr 0x774 -p 8 0x80002501
-  wrmsr 0x774 -p 9 0x80002501
-  wrmsr 0x774 -p 10 0x80002501
-  wrmsr 0x774 -p 11 0x001e1e1e
+  wrmsr 0x774 -p 8 0x00002020
+  wrmsr 0x774 -p 9 0x00002020
+  wrmsr 0x774 -p 10 0x00002020
+  wrmsr 0x774 -p 11 0x00002020
   wrmsr 0x774 -p 12 0x80002101
   wrmsr 0x774 -p 13 0x80002101
   wrmsr 0x774 -p 14 0x80002101
@@ -331,6 +336,8 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
 
 :::
 ::::
+
+> **Attention:** On current Intel platforms the P-state of performance (P) cores can be selected independently per core. Efficiency (E) cores are typically grouped in sets of four cores per module and the P-state can be selected per module.
 
 ### Per-core C-State Disable
 
@@ -361,15 +368,14 @@ for (( i=cpu_start; i<=cpu_end; i++ )); do
 done
 ```
 
-> **Note:** Combine the adjustment of P-states, C-states and Turbo-Boost. Use [CommsPower](https://github.com/intel/CommsPowerManagement/blob/main/power.py) script to configure isolated cores in following way:
+> **Note:** Combine the adjustment of P-states, C-states and Turbo-Boost. Use `cpupower` tool (manually build cpupower from kernel source code, see [LinuxBSP](../../packages/linuxbsp.md)) to configure isolated cores in following way:
 > 1. Set minimum and maximum frequency to specific turbo frequency.
 > 2. Set Governor to performance.
 > 3. Disable C-states other than C0 or Poll.
-> 4. Set minimum and maximum Uncore frequency to maximal available value.
 >
 > By following those steps, configuration will look like this:
-> ![power script output diagram](assets/images/power_script_output.png)
-
+> ![cpupower tool output diagram](assets/images/cpupower_tool_output.png)
+>
 
 ### Timer Migration Disable
 

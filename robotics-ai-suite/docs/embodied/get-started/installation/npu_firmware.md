@@ -13,7 +13,7 @@ The full device name is Neural Processing Unit, but the Linux kernel driver uses
 the old name - Versatile Processing Unit (VPU).
 
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 
 ## Installation
 
@@ -94,7 +94,7 @@ the old name - Versatile Processing Unit (VPU).
    sudo udevadm trigger --subsystem-match=accel
    ```
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 
 ## Installation
 

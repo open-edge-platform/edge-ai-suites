@@ -4,7 +4,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 
 **Hardware Requirements**
 ::::{tab-set}
-:::{tab-item} **Intel® Core™ Ultra Series 2 processor**
+:::{tab-item} Intel® Core™ Ultra Series 2 processor
 :sync: Ubuntu 22.04
 
 | **Component** | **Specifications** |
@@ -14,7 +14,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 | **Discrete Graphics Processing Unit (dGPU)** | To enable more complex AI workloads, including large languages models, vision-action models, the Embodied Intelligence SDK requires **Battlemage B580 dGPU**, a dedicated high-performance graphics card engineered for AI acceleration, real-time graphics rendering, and computationally intensive tasks:<br>- Memory: 12GB GDDR6 VRAM<br>- Base Frequency: 2.3 GHz<br>- Interface: MXM 3.1 Type B slot with PCIe Gen4 x8<br>- Thermal Design Power (TDP): 150W |
 
 :::
-:::{tab-item}  **Intel® Core™ Ultra Series 3 processor**
+:::{tab-item} Intel® Core™ Ultra Series 3 processor
 :sync: Ubuntu 24.04
 
 | **Component** | **Specifications** |
@@ -28,7 +28,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 
 **Software Requirements**
 ::::{tab-set}
-:::{tab-item} **Ubuntu 22.04**
+:::{tab-item} Ubuntu 22.04
 :sync: Ubuntu 22.04
 
 | **Component** | **Specifications** |
@@ -38,7 +38,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 | **ROS2 Compatibility** | Humble |
 
 :::
-:::{tab-item}  **Ubuntu 24.04**
+:::{tab-item} Ubuntu 24.04
 :sync: Ubuntu 24.04
 
 | **Component** | **Specifications** |
