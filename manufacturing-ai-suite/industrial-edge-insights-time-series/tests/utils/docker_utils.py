@@ -1805,7 +1805,6 @@ def execute_gpu_config_curl(device="gpu"):
 def _kapacitor_task_alert_mode_matches(alert_mode):
     """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is
     currently executing the TICK for the given alert_mode ("mqtt" or "opcua").
-
     Looks at the live task definition served by Kapacitor's REST API rather
     than the .tick file on the test host, because TSAM uses its own copy of
     the UDF package (only ``upload_udf_tar_package`` ships a new one).
@@ -1855,7 +1854,6 @@ def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
     logger.info(f"[reset_loaded_udf_to] Reset to '{alert_mode}' completed")
     return True
 
-
 def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
     """Simple 5-step MQTT alert validation function with app-specific support."""
     logger.info("=== Simple MQTT Alert System Validation ===")
@@ -1865,9 +1863,6 @@ def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
     # Determine alert type based on sample app
     if sample_app == constants.WIND_SAMPLE_APP:
         alert_type = "mqtt"
-        ingestion_type = "mqtt"
-    elif sample_app == constants.WELD_SAMPLE_APP:
-        alert_type = "mqtt_weld"
         ingestion_type = "mqtt"
     elif sample_app == constants.MULTIMODAL_SAMPLE_APP:
         alert_type = "mqtt_weld"  # Multimodal uses weld detection
@@ -2013,14 +2008,8 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
 
         # Step 3: Execute InfluxDB commands inside the container
         if measurement:
-            # Query specific measurement(s)
-            if measurement == constants.WELD_INGESTED_TOPIC:
-                query_part = f"SELECT * FROM \"{constants.WELD_INGESTED_TOPIC}\" LIMIT 5; SELECT * FROM \"{constants.WELD_ANALYTICS_TOPIC}\" LIMIT 5"
-                verify_tables = [constants.WELD_INGESTED_TOPIC, constants.WELD_ANALYTICS_TOPIC]
-            else:
-                # Default to wind turbine or handle other measurements
-                query_part = f"SELECT * FROM \"{measurement.replace('_', '-')}\" LIMIT 5"
-                verify_tables = [measurement.replace('_', '-')]
+            query_part = f"SELECT * FROM \"{measurement.replace('_', '-')}\" LIMIT 5"
+            verify_tables = [measurement.replace('_', '-')]
         else:
             # Default wind turbine queries for backward compatibility
             query_part = f"SELECT * FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" LIMIT 5; SELECT * FROM \"{constants.WIND_TURBINE_ANALYTICS_TOPIC}\" LIMIT 5"
@@ -2613,7 +2602,7 @@ def deploy_from_docker_hub(app_name, ingestion_type="mqtt", wait_time=90):
     Deploy application from Docker Hub pre-built images.
     
     Args:
-        app_name (str): Application name constant (e.g., constants.WELD_SAMPLE_APP)
+        app_name (str): Application name constant (e.g., constants.WIND_SAMPLE_APP)
         ingestion_type (str): Type of ingestion - "mqtt" or "opcua"
         wait_time (int): Time to wait for containers to stabilize after deployment
         
@@ -2831,7 +2820,7 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
     Setup MQTT alerts for Docker deployment with app-specific support.
     
     Args:
-        sample_app (str): Sample app type (constants.WIND_SAMPLE_APP, constants.WELD_SAMPLE_APP, or constants.MULTIMODAL_SAMPLE_APP).
+        sample_app (str): Sample app type (constants.WIND_SAMPLE_APP, constants.MULTIMODAL_SAMPLE_APP).
     
     Returns:
         bool: True if setup successful, False otherwise
@@ -2848,11 +2837,6 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
                                     "apps/wind-turbine-anomaly-detection/time-series-analytics-config")
             file_path = os.path.join(target_dir, "tick_scripts/windturbine_anomaly_detector.tick")
             setup_type = "mqtt"
-        elif sample_app == constants.WELD_SAMPLE_APP:
-            target_dir = os.path.join(constants.EDGE_AI_SUITES_DIR, 
-                                    "apps/weld-defect-detection/time-series-analytics-config")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
-            setup_type = "mqtt_weld"
         elif sample_app == constants.MULTIMODAL_SAMPLE_APP:
             # For multimodal, the config is in a different location
             multimodal_dir = constants.EDGE_AI_SUITES_DIR.replace(constants.TARGET_SUBPATH, constants.MULTIMODAL_TARGET_SUBPATH)
@@ -5443,4 +5427,3 @@ def get_seaweedfs_bucket_files(bucket_url):
             "jpg_files": [],
             "total_files": 0
         }
-

@@ -207,13 +207,16 @@ services:
       context: ./services/ui
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://${HOST_IP:-localhost}:8001
-        VITE_POSE_STREAM_URL: http://${HOST_IP:-localhost}:8085/video_feed
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
     image: intel/hl-ai-ui:${TAG:-1.0.1}
-    container_name: ui  
+    container_name: ui
+    # nginx in this image reverse-proxies /api/ and /pose-stream/ to the
+    # aggregator (host port 8001) and 3D-pose service (host port 8085).
+    # host-gateway lets the bridge-network UI reach those host-mode services.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "3000:3000"
     depends_on:

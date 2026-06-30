@@ -34,7 +34,7 @@ def setup_helm_environment(request):
     """Setup Helm environment before running tests."""
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
-    assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
+    
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
