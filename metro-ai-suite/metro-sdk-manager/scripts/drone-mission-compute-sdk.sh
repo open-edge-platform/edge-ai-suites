@@ -23,11 +23,8 @@ repositories=(
   "https://github.com/open-edge-platform/edge-ai-suites|release-2026.0.0|edge-ai-suites"
 )
 
+# Placeholder for Docker images to pull; currently empty
 images=(
-  "openvino/model_server:2026.0"
-  "intel/dlstreamer:2026.0.0-ubuntu24"
-  "intel/edge-robotics-compute:2026.0.0"
-  "intel/ros2-openvino:2026.0.0"
 )
 
 NAME="Drone Mission Compute SDK"
