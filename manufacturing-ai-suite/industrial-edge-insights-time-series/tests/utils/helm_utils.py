@@ -451,6 +451,19 @@ def _dump_unhealthy_pods(namespace):
         logger.error(f"_dump_unhealthy_pods crashed: {e}")
 
 
+def dump_pod_diagnostics(namespace):
+    """Public wrapper to dump diagnostic info for unhealthy pods.
+    
+    This function is called by test fixtures when Helm install or pod verification
+    fails, to provide debugging information in CI/CD logs.
+    
+    Args:
+        namespace: Kubernetes namespace to check for unhealthy pods
+    """
+    logger.info(f"Dumping pod diagnostics for namespace '{namespace}'...")
+    _dump_unhealthy_pods(namespace)
+
+
 def verify_pods(namespace, timeout=300, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 
@@ -2518,6 +2531,89 @@ def check_pods(namespace, timeout=180, interval=5):
 
     logger.warning(f"Timeout reached after {timeout}s. Some pods may still exist in namespace '{namespace}'.")
     return False
+
+
+def force_cleanup_namespace(namespace):
+    """Best-effort cleanup for lingering namespaced resources before reinstall."""
+    cleanup_commands = [
+        ["kubectl", "delete", "pod", "--all", "-n", namespace, "--grace-period=0", "--force", "--ignore-not-found=true"],
+        ["kubectl", "delete", "svc", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "deploy", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "replicaset", "--all", "-n", namespace, "--ignore-not-found=true"],
+    ]
+
+    logger.warning(f"Forcing cleanup of lingering resources in namespace '{namespace}'.")
+    cleanup_ok = True
+
+    for command in cleanup_commands:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            if result.stdout.strip():
+                logger.debug(result.stdout.strip())
+            if result.stderr.strip():
+                logger.debug(result.stderr.strip())
+            if result.returncode != 0:
+                cleanup_ok = False
+                logger.warning(
+                    "Force cleanup command returned non-zero exit code %s: %s",
+                    result.returncode,
+                    " ".join(command),
+                )
+        except Exception as e:
+            cleanup_ok = False
+            logger.warning(f"Force cleanup command failed for namespace '{namespace}': {e}")
+
+    return cleanup_ok
+
+
+def check_services(namespace, timeout=30, interval=5):
+    """
+    Checks if services (especially NodePort) have been deleted in the specified namespace.
+    Returns True if no services are found within the timeout period, otherwise returns False.
+    
+    This is important to avoid NodePort allocation conflicts when reinstalling Helm charts.
+
+    :param namespace: The Kubernetes namespace to check.
+    :param timeout: The maximum time to wait in seconds (default is 30 seconds).
+    :param interval: The interval between checks in seconds (default is 5 seconds).
+    :return: True if no services are found within the timeout, False otherwise.
+    """
+    start_time = time.time()
+    
+    while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout:
+            logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+            return False
+        try:
+            # Execute the kubectl command to get services in the namespace
+            result = subprocess.run(
+                ["kubectl", "get", "svc", "-n", namespace],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            # Debug: Print the command output
+            logger.debug(f"Command output: {result.stdout.strip()}")
+            # Check if the output contains "No resources found"
+            if not result.stdout.strip() or "No resources found" in result.stdout:
+                logger.info(f"No services found in {namespace} namespace.")
+                return True
+            else:
+                logger.info(f"Services are still terminating in {namespace} namespace. Waiting...")
+
+        except subprocess.CalledProcessError as e:
+            if "not found" in str(e).lower():
+                logger.info(f"Namespace {namespace} not found - considered as no services running.")
+                return True
+            logger.warning(f"An error occurred while checking services: {e}")
+
+        # Wait for the specified interval before checking again
+        time.sleep(interval)
+
+    logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+    return False
+
 
 def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.

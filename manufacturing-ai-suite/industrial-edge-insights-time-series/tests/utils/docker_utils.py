@@ -1940,13 +1940,17 @@ def validate_opcua_alert_system():
         logger.error(f"✗ Step 4 FAILED: Error restarting OPC UA server - {str(e)}")
         return False
 
-    # Wait for OPC UA system to stabilize and process data before checking logs
-    logger.info("\nWaiting for OPC UA alert system to stabilize and generate alerts...")
-    wait_for_stability(constants.WIND_TURBINE_OPCUA_ALERT_SETTLE)
-
-    # Step 5: Check container logs for OPC UA alert pattern
-    logger.info("\nStep 5: Checking container logs for OPC UA alert pattern...")
-    logs_validation = check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], "opcua", timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, interval=constants.WIND_TURBINE_CYCLE_GAP_TIME)
+    # Step 5: Poll logs immediately after restart instead of sleeping a fixed window.
+    logger.info("\nStep 5: Polling container logs for OPC UA alert pattern...")
+    logs_validation = check_logs_for_alerts(
+        constants.CONTAINERS["time_series_analytics"]["name"],
+        "opcua",
+        timeout=max(
+            constants.WIND_TURBINE_OPCUA_ALERT_SETTLE,
+            constants.WIND_TURBINE_ALERT_LOG_TIMEOUT,
+        ),
+        interval=constants.WIND_TURBINE_CYCLE_GAP_TIME,
+    )
     if not logs_validation:
         logger.error("✗ Step 5 FAILED: OPC UA alert pattern not found in container logs")
         return False

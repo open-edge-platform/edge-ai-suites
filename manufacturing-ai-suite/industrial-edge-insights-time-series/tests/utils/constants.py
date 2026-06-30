@@ -128,7 +128,7 @@ WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU confi
 WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before GPU POST; allows TSAM/kapacitor CPU UDF startup
 WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
 WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
-WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
+WIND_TURBINE_OPCUA_ALERT_SETTLE = 360         # Max time to wait for OPC UA alerts after restart when polling logs
 # Required for OPC-UA multi-stream so each scaled OPC-UA server container binds to a unique host port
 WIND_TURBINE_OPCUA_PORT_MAPPING = "30003-30100"
 
@@ -296,9 +296,10 @@ KAPACITOR_UDF_POLL_INTERVAL = 10       # seconds - polling interval during UDF i
 MQTT_SAMPLE_TIMEOUT = 240              # seconds - timeout for MQTT sample data verification
 POD_TERMINATION_TIMEOUT = 120      # seconds to wait for pods to terminate before helm install
 POD_CLEANUP_TIMEOUT = 60           # seconds to wait for pods to stop after helm uninstall
+SERVICE_TERMINATION_TIMEOUT = 30   # seconds to wait for services (especially NodePort) to be deleted before helm install
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT = 60    # seconds - standard pod cleanup timeout
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI = 120  # seconds - extended timeout for multimodal (dual-service) cleanup
-PODS_VERIFY_TIMEOUT = 300          # seconds - timeout for verify_pods after Helm install
+PODS_VERIFY_TIMEOUT = 600          # seconds - timeout for verify_pods after Helm install (raised for slower GitHub-hosted runners where upstream image pulls happen on first use)
 MQTT_PORT_INT = CONTAINERS["mqtt_broker"]["port"]
 MULTIMODAL_DOCKER_PRE_TEARDOWN_WAIT = 5   # seconds before teardown validations
 MULTIMODAL_DOCKER_POST_TEARDOWN_WAIT = 10 # seconds to let containers stop
