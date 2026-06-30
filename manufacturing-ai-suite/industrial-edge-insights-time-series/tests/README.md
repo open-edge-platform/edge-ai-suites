@@ -28,7 +28,6 @@
    * Weld Defect Detection
 
       ```sh
-      pytest -v -s --html=docker_weld_anomaly_report.html test_docker_deployment_weld_anomaly.py
       ```
 
 3. For Helm-related test cases, run the following commands:
@@ -51,7 +50,6 @@
    * Weld Defect Detection
 
       ```sh
-      pytest -v -s --html=helm_weld_anomaly_report.html test_helm_deployment_weld_anomaly.py
       ```
 
 4. Security tests:

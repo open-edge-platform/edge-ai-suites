@@ -87,6 +87,8 @@ jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
     runs-on: ${{ inputs.runner_label || 'ubuntu-24.04' }}
+    env:
+      KUBECONFIG: /etc/rancher/k3s/k3s.yaml
     permissions:
       contents: read
       packages: read
@@ -169,6 +171,15 @@ jobs:
         run: |
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
 
+          HAS_WIND_APP=false
+          HAS_WELD_APP=false
+          if [[ -d "apps/wind-turbine-anomaly-detection" ]]; then
+            HAS_WIND_APP=true
+          fi
+          if [[ -d "apps/weld-defect-detection" ]]; then
+            HAS_WELD_APP=true
+          fi
+
           # Determine which sample apps need helm charts based on selected tests
           # Only generate for Helm tests, not Docker tests
           WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security"
@@ -189,8 +200,12 @@ jobs:
 
             # Check if it's a wildcard selector (generate all helm charts)
             if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
-              GENERATE_WIND=true
-              GENERATE_WELD=true
+              if [[ "$HAS_WIND_APP" == "true" ]]; then
+                GENERATE_WIND=true
+              fi
+              if [[ "$HAS_WELD_APP" == "true" ]]; then
+                GENERATE_WELD=true
+              fi
               break
             fi
 
@@ -216,6 +231,10 @@ jobs:
             make gen_helm_charts_targz app=weld-defect-detection
           fi
 
+          if [[ "$HAS_WELD_APP" == "false" ]]; then
+            echo "Skipping weld-defect-detection Helm chart generation because apps/weld-defect-detection is not present in this checkout."
+          fi
+
           if [[ "$GENERATE_WIND" == "false" && "$GENERATE_WELD" == "false" ]]; then
             echo "No helm tests selected, skipping helm chart generation"
           fi
@@ -229,7 +248,7 @@ jobs:
         run: |
           curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
           sh -s - --disable=traefik --write-kubeconfig-mode=644
-          echo "KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> "$GITHUB_ENV"
+          test -r "$KUBECONFIG"
 
       - name: Load images into k3s
         if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
@@ -284,6 +303,7 @@ jobs:
 
           # Verify cluster is healthy
           echo "Verifying cluster health..."
+          test -r "$KUBECONFIG"
           kubectl get nodes
           kubectl get pods -A
           echo "=== Time Series Wind and Weld cleanup complete ==="
@@ -515,6 +535,7 @@ jobs:
           sleep 30
 
           echo "Verifying cluster health..."
+          test -r "$KUBECONFIG"
           kubectl get nodes
           kubectl get pods -A
           echo "=== Security cleanup complete ==="
@@ -731,6 +752,7 @@ jobs:
 
           # Verify cluster is healthy
           echo "Verifying cluster health..."
+          test -r "$KUBECONFIG"
           kubectl get nodes
           kubectl get pods -A
           echo "=== Multimodal cleanup complete ==="
