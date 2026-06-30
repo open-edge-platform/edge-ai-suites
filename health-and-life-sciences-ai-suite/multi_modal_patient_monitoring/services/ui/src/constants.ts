@@ -6,10 +6,10 @@ export const constants = {
   VERSION: 'v1.0.0',
 };
 
-const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-export const API_BASE_URL = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${API_HOST}:8001`
-  : `http://${API_HOST}:8001`;
+// Default: call the aggregator through the UI nginx reverse proxy.
+// Override with VITE_API_BASE_URL at build time to point at an absolute URL.
+export const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) || '/api';
 
 export const WORKLOADS = [
   {

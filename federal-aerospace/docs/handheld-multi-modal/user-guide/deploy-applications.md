@@ -13,10 +13,10 @@ valid proxy for the local environment:
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
-export http_proxy="http://proxy-example:123"
-export https_proxy="http://proxy-example:123"
-export ftp_proxy="http://proxy-example:123"
-export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+http_proxy="http://proxy-example:123"
+https_proxy="http://proxy-example:123"
+ftp_proxy="http://proxy-example:123"
+no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
 EOF
 
 source /etc/environment
@@ -109,6 +109,8 @@ d1ec3f394245   intel/vippet-app:2026.1.0-20260512-weekly               "./entryp
 f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypoint.sh"         34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp, 8186/tcp, 0.0.0.0:9273->9273/tcp, [::]:9273->9273/tcp                                      metrics-manager
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
+
+> **Note**: After a system restart, run `./run up` from the `handheld-multi-modal` directory to start the applications again.
 
 ## Accessing Application User Interface
 
