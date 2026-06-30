@@ -4,7 +4,8 @@ param(
     [switch]$Restart,
     [switch]$Help,
     [switch]$NoElevate,
-    [switch]$Silent
+    [switch]$Silent,
+    [switch]$NoWindowsTerminal
 )
 
 # ============================================================================
@@ -31,6 +32,7 @@ if (-not $NoElevate) {
         if ($Restart) { $argList += " -Restart" }
         if ($Help) { $argList += " -Help" }
         if ($Silent) { $argList += " -Silent" }
+        if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -49,14 +51,15 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Help]
 
 Options:
-    -SkipProxy    Skip proxy configuration prompts
-    -Restart      Kill existing services and restart (no prompt)
-    -Silent       Unattended mode - auto-restart, skip all prompts
-    -NoElevate    Skip auto-elevation to Administrator (Windows)
-    -Help         Show this help message
+    -SkipProxy           Skip proxy configuration prompts
+    -Restart             Kill existing services and restart (no prompt)
+    -Silent              Unattended mode - auto-restart, skip all prompts
+    -NoElevate           Skip auto-elevation to Administrator (Windows)
+    -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
+    -Help                Show this help message
 
 Note: On Windows, the script automatically requests Administrator privileges.
 
@@ -909,7 +912,7 @@ if ($noProxy) {
 }
 
 if ($IsWindowsOS) {
-    $wtExists = Get-Command wt -ErrorAction SilentlyContinue
+    $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
     # ========================================================================
     # TERMINAL 1: BACKEND (with paddleocr check)
