@@ -54,5 +54,4 @@ Applications in this repository which are based on third-party content are liste
 |[ACT Sample](robotics-ai-suite/pipelines/act-sample) | [ACT](https://github.com/tonyzhaozh/act) |
 |[ORB-SLAM3 Sample](robotics-ai-suite/pipelines/orb-slam3-sample) | [ORB-SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3.git) |
 
-Last Updated Date: August 04, 2025.
-
+Last Updated Date: June 30, 2026.
