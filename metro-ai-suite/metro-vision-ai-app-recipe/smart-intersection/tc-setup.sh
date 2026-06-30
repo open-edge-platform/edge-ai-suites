@@ -87,12 +87,18 @@ if [ "${TC_SI_TARGET_DEVICE}" = "GPU" ]; then
         echo "Error: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled." >&2
         exit 1
     fi
-    export VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+    export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
 
     # Verify GPU is bound to vfio-pci and /dev/vfio/<n> exists
-    if [ ! -e "/dev/vfio/${VFIO_GROUP}" ]; then
-        echo "Error: /dev/vfio/${VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci." >&2
+    if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
+        echo "Error: /dev/vfio/${TC_GPU_VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci." >&2
         exit 1
+    fi
+    # Write TC_GPU_VFIO_GROUP to root .env so docker compose can resolve ${TC_GPU_VFIO_GROUP}
+    if grep -q "^TC_GPU_VFIO_GROUP=" "$ENV_FILE"; then
+        sed -i "s|^TC_GPU_VFIO_GROUP=.*|TC_GPU_VFIO_GROUP=${TC_GPU_VFIO_GROUP}|" "$ENV_FILE"
+    else
+        echo "TC_GPU_VFIO_GROUP=${TC_GPU_VFIO_GROUP}" >> "$ENV_FILE"
     fi
 fi
 

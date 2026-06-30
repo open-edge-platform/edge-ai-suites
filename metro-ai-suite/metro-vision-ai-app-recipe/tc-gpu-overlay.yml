@@ -5,7 +5,7 @@
 services:
   dlstreamer-pipeline-server:
     devices:
-      - "/dev/vfio/${VFIO_GROUP}:/dev/vfio/${VFIO_GROUP}"
+      - "/dev/vfio/${TC_GPU_VFIO_GROUP}:/dev/vfio/${TC_GPU_VFIO_GROUP}"
     annotations:
       io.katacontainers.config.hypervisor.default_memory: "4096"
       io.katacontainers.config.hypervisor.enable_virtio_mem: "true"

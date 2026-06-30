@@ -58,9 +58,9 @@ if [ "$ENABLE_TC" = "true" ]; then
             echo -e "${RED}ERROR: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled.${NC}"
             return 1
         fi
-        export VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
-        if [ ! -e "/dev/vfio/${VFIO_GROUP}" ]; then
-            echo -e "${RED}ERROR: /dev/vfio/${VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci.${NC}"
+        export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+        if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
+            echo -e "${RED}ERROR: /dev/vfio/${TC_GPU_VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci.${NC}"
             return 1
         fi
         TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-gpu-overlay-agent.yaml"
