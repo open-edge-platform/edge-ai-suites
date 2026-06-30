@@ -23,7 +23,7 @@ class ChatBubble extends StatelessWidget {
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            _Avatar(isUser: false),
+            const _Avatar(isUser: false),
             const SizedBox(width: 8),
           ],
           Flexible(
@@ -93,7 +93,7 @@ class ChatBubble extends StatelessWidget {
           ),
           if (isUser) ...[
             const SizedBox(width: 8),
-            _Avatar(isUser: true),
+            const _Avatar(isUser: true),
           ],
         ],
       ),
@@ -110,7 +110,7 @@ class _Avatar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return CircleAvatar(
       radius: 15,
-      backgroundColor: cs.primary.withOpacity(0.1),
+      backgroundColor: cs.primary.withValues(alpha: 0.1),
       child: Icon(
         isUser ? Icons.person_outline : Icons.smart_toy_outlined,
         size: 17,
@@ -156,7 +156,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          _Avatar(isUser: false),
+          const _Avatar(isUser: false),
           const SizedBox(width: 8),
           Container(
             padding:
@@ -183,7 +183,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: cs.onSurface.withOpacity(0.45),
+                          color: cs.onSurface.withValues(alpha: 0.45),
                           shape: BoxShape.circle,
                         ),
                       ),

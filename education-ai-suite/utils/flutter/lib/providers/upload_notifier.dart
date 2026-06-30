@@ -3,30 +3,41 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_config.dart';
 import '../models/upload_entry.dart';
-import '../models/ingest_task_result.dart';
-import '../services/content_search_api_service.dart';
 import 'service_providers.dart';
 
 /// Manages the list of UploadEntry objects and their full lifecycle:
 ///   staged → uploading → queued → processing → completed / failed
-///
-/// Flutter equivalent of React's UploadSection.tsx state + useEffect hooks:
-///   useState<UploadEntry[]>     → StateNotifier<List<UploadEntry>>
-///   setInterval / clearInterval → Timer.periodic / timer.cancel()
-///   useEffect cleanup           → dispose()
+
 class UploadNotifier extends StateNotifier<List<UploadEntry>> {
-  UploadNotifier(this._ref) : super(const []);
+  UploadNotifier(this._ref) : super(const []) {
+    _checkServerFiles();
+  }
 
   final Ref _ref;
-
-  /// Active polling timers — one per entry.id while status is QUEUED/PROCESSING.
-  /// Equivalent of the pollTimers ref in React's UploadSection.tsx.
   final Map<String, Timer> _pollTimers = {};
   final Map<String, DateTime> _pollStartTimes = {};
   int _idCounter = 0;
 
   String _genId() =>
       'e_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+
+  // ── Startup: check server for existing files + tags ──────────────────────────
+
+  Future<void> _checkServerFiles() async {
+    try {
+      final svc = _ref.read(contentSearchApiServiceProvider);
+      final files = await svc.getFilesList();
+      if (files.isNotEmpty) {
+        _ref.read(serverHasFilesProvider.notifier).state = true;
+      }
+      final tags = await svc.getTags();
+      if (tags.isNotEmpty) {
+        _ref.read(tagsProvider.notifier).state = tags;
+      }
+    } catch (_) {
+      // Server not reachable yet — will be retried when health check passes
+    }
+  }
 
   // ── Stage files (add to list before upload) ────────────────────────────────
 
@@ -50,10 +61,19 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
     return newEntries.map((e) => e.id).toList();
   }
 
+  /// Update the tag list for a staged entry.
+  /// Only effective while status == staged (ignored otherwise).
+  void updateEntryTags(String entryId, List<String> tags) {
+    final entry = state.firstWhere(
+      (e) => e.id == entryId,
+      orElse: () => state.first,
+    );
+    if (entry.status != TaskStatus.staged) return;
+    _updateEntry(entryId, tags: tags);
+  }
+
   // ── Upload one file ────────────────────────────────────────────────────────
 
-  /// Upload + ingest a single file. Handles the duplicate (40901) corner case.
-  /// Called from UploadScreen — the screen owns the PlatformFile reference.
   Future<void> uploadEntry(String entryId, PlatformFile file) async {
     _updateEntry(entryId, status: TaskStatus.uploading, uploadProgress: 0.0);
 
@@ -61,9 +81,21 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
     final ext = file.name.contains('.')
         ? file.name.split('.').last.toLowerCase()
         : '';
+    // Read tags from the current entry state before transitioning
+    final tags = state
+        .firstWhere((e) => e.id == entryId,
+            orElse: () => UploadEntry(
+                  id: entryId,
+                  filename: file.name,
+                  extension: ext,
+                  fileSize: file.size,
+                  status: TaskStatus.uploading,
+                ))
+        .tags;
     final meta = <String, dynamic>{
       'file_name': file.name,
       'type': _inferType(ext),
+      if (tags.isNotEmpty) 'tags': tags,
     };
 
     try {
@@ -111,21 +143,12 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
 
   // ── Task polling ───────────────────────────────────────────────────────────
 
-  /// Poll GET /api/v1/task/query/{taskId} every 3 s until terminal.
-  ///
-  /// React equivalent:
-  ///   const id = setInterval(async () => { ... }, POLL_INTERVAL_MS);
-  ///   return () => clearInterval(id);  // useEffect cleanup
-  ///
-  /// Flutter:
-  ///   _pollTimers[entryId] = Timer.periodic(...)
-  ///   timer.cancel() in dispose()
   void _startPolling(String entryId, String taskId) {
     _pollStartTimes[entryId] = DateTime.now();
     _pollTimers[entryId]?.cancel();
 
     _pollTimers[entryId] = Timer.periodic(
-      Duration(milliseconds: AppConfig.pollIntervalMs),
+      const Duration(milliseconds: AppConfig.pollIntervalMs),
       (timer) async {
         // Guard: local timeout (10 min) — backend may be unresponsive
         final start = _pollStartTimes[entryId];
@@ -207,6 +230,7 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
     int? progress,
     double? uploadProgress,
     String? error,
+    List<String>? tags,
   }) {
     state = [
       for (final e in state)
@@ -218,6 +242,7 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
             progress: progress,
             uploadProgress: uploadProgress,
             error: error,
+            tags: tags,
           )
         else
           e,
@@ -251,16 +276,23 @@ final uploadNotifierProvider =
 );
 
 // ─── Derived providers (computed from upload state) ───────────────────────────
-// Equivalent of csHasUploads / csUploadsComplete / csProcessing in Redux uiSlice
 
 final hasUploadsProvider = Provider<bool>(
   (ref) => ref.watch(uploadNotifierProvider).isNotEmpty,
 );
 
 final hasCompletedUploadsProvider = Provider<bool>(
-  (ref) => ref
-      .watch(uploadNotifierProvider)
-      .any((e) => e.status == TaskStatus.completed),
+  (ref) {
+    // true if any in-session upload finished successfully
+    final inMemoryComplete = ref
+        .watch(uploadNotifierProvider)
+        .any((e) =>
+            e.status == TaskStatus.completed ||
+            e.status == TaskStatus.alreadyExists);
+    // true if the server already held files when the app started
+    final serverHasFiles = ref.watch(serverHasFilesProvider);
+    return inMemoryComplete || serverHasFiles;
+  },
 );
 
 final isAnyUploadActiveProvider = Provider<bool>(

@@ -128,7 +128,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     Text(
                       '${entries.length} file${entries.length == 1 ? '' : 's'}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurface.withOpacity(0.38),
+                        color: cs.onSurface.withValues(alpha: 0.38),
                       ),
                     ),
                   ],
@@ -145,6 +145,10 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                             final e = entries[i];
                             return UploadEntryTile(
                               entry: e,
+                              onTagsChanged: e.status == TaskStatus.staged
+                                  ? (tags) => notifier.updateEntryTags(
+                                      e.id, tags)
+                                  : null,
                               onRemove: (e.status == TaskStatus.staged ||
                                       e.status.isTerminal)
                                   ? () {
@@ -183,17 +187,17 @@ class _PickZone extends StatelessWidget {
         height: 120,
         decoration: BoxDecoration(
           border: Border.all(
-            color: cs.primary.withOpacity(0.35),
+            color: cs.primary.withValues(alpha: 0.35),
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(12),
-          color: cs.primary.withOpacity(0.03),
+          color: cs.primary.withValues(alpha: 0.03),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.add_circle_outline,
-                size: 30, color: cs.primary.withOpacity(0.75)),
+                size: 30, color: cs.primary.withValues(alpha: 0.75)),
             const SizedBox(height: 8),
             Text(
               'Add files',
@@ -204,7 +208,7 @@ class _PickZone extends StatelessWidget {
             Text(
               'PDF · DOCX · PPTX · TXT · JPG · PNG · MP4 · AVI · MOV · MKV',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: cs.onSurface.withOpacity(0.32), fontSize: 11),
+                  color: cs.onSurface.withValues(alpha: 0.32), fontSize: 11),
               textAlign: TextAlign.center,
             ),
           ],
@@ -226,18 +230,18 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.cloud_upload_outlined,
-              size: 60, color: cs.primary.withOpacity(0.22)),
+              size: 60, color: cs.primary.withValues(alpha: 0.22)),
           const SizedBox(height: 14),
           Text(
             'No files added yet',
             style: theme.textTheme.titleMedium
-                ?.copyWith(color: cs.onSurface.withOpacity(0.32)),
+                ?.copyWith(color: cs.onSurface.withValues(alpha: 0.32)),
           ),
           const SizedBox(height: 4),
           Text(
             'Click "Add files" to upload documents, images, or videos',
             style: theme.textTheme.bodySmall
-                ?.copyWith(color: cs.onSurface.withOpacity(0.22)),
+                ?.copyWith(color: cs.onSurface.withValues(alpha: 0.22)),
             textAlign: TextAlign.center,
           ),
         ],

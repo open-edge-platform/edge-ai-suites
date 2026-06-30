@@ -53,7 +53,7 @@ Write-Host "Setting up content_search backend Python environment..." -Foreground
 $ScriptDir        = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
 $RepoRoot         = (Get-Item (Join-Path $ScriptDir "..\..")).FullName
 $ContentSearchDir = Join-Path $RepoRoot "smart-classroom\content_search"
-$VenvDir    = Join-Path $ContentSearchDir "venv_content_search"
+$VenvDir    = Join-Path $RepoRoot "venv_content_search"
 $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
 $Requirements = Join-Path $ContentSearchDir "requirements.txt"
 

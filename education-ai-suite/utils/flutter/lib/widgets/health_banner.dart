@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/health_status.dart';
 import '../providers/service_providers.dart';
 
-/// Persistent banner at the top of UploadScreen showing backend health.
-/// Equivalent of the health-check banners in React's UploadSection.tsx and
-/// ContentSearchPanel.tsx that call getCsHealth().
 class HealthBanner extends ConsumerWidget {
   const HealthBanner({super.key});
 
@@ -74,7 +71,7 @@ class HealthBanner extends ConsumerWidget {
                     .map((e) => '${e.key}: ${e.value}')
                     .join('\n'),
                 child: Icon(Icons.info_outline,
-                    size: 15, color: fg.withOpacity(0.6)),
+                    size: 15, color: fg.withValues(alpha: 0.6)),
               ),
             const SizedBox(width: 4),
             // Retry button

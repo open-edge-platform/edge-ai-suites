@@ -2,21 +2,55 @@ import 'package:flutter/material.dart';
 import '../models/upload_entry.dart';
 
 /// Displays one file's upload state as a card row.
-/// Equivalent of the per-entry row rendering in React's UploadSection.tsx.
-class UploadEntryTile extends StatelessWidget {
+class UploadEntryTile extends StatefulWidget {
   final UploadEntry entry;
   final VoidCallback? onRemove;
+  final void Function(List<String> tags)? onTagsChanged;
 
   const UploadEntryTile({
     super.key,
     required this.entry,
     this.onRemove,
+    this.onTagsChanged,
   });
 
   @override
+  State<UploadEntryTile> createState() => _UploadEntryTileState();
+}
+
+class _UploadEntryTileState extends State<UploadEntryTile> {
+  final _tagController = TextEditingController();
+  final _tagFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _tagController.dispose();
+    _tagFocus.dispose();
+    super.dispose();
+  }
+
+  void _commitTag() {
+    final raw = _tagController.text.trim().replaceAll(',', '');
+    if (raw.isEmpty) return;
+    final current = List<String>.from(widget.entry.tags);
+    if (!current.contains(raw)) {
+      current.add(raw);
+      widget.onTagsChanged?.call(current);
+    }
+    _tagController.clear();
+  }
+
+  void _removeTag(String tag) {
+    final current = List<String>.from(widget.entry.tags)..remove(tag);
+    widget.onTagsChanged?.call(current);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isStaged = entry.status == TaskStatus.staged;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -52,8 +86,89 @@ class UploadEntryTile extends StatelessWidget {
                   Text(
                     '${entry.fileTypeLabel} · ${entry.formattedSize}',
                     style: theme.textTheme.bodySmall
-                        ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                        ?.copyWith(color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
+                  // ── Tag chips + input (staged only) ───────────────────────
+                  if (isStaged) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        // Existing tag chips
+                        for (final tag in entry.tags)
+                          Chip(
+                            label: Text(tag,
+                                style: const TextStyle(fontSize: 11)),
+                            deleteIcon:
+                                const Icon(Icons.close, size: 12),
+                            onDeleted: () => _removeTag(tag),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4),
+                          ),
+                        // Inline tag input
+                        SizedBox(
+                          width: 140,
+                          height: 28,
+                          child: TextField(
+                            controller: _tagController,
+                            focusNode: _tagFocus,
+                            style: const TextStyle(fontSize: 12),
+                            decoration: InputDecoration(
+                              hintText: 'Add tag…',
+                              hintStyle: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      cs.onSurface.withValues(alpha: 0.38)),
+                              isDense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 6),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide(
+                                    color: cs.outline.withValues(alpha: 0.4)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide(
+                                    color: cs.outline.withValues(alpha: 0.3)),
+                              ),
+                            ),
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _commitTag(),
+                            // Also commit on comma
+                            onChanged: (v) {
+                              if (v.endsWith(',')) _commitTag();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  // ── Non-staged: show tags as read-only chips ───────────────
+                  if (!isStaged && entry.tags.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        for (final tag in entry.tags)
+                          Chip(
+                            label: Text(tag,
+                                style: const TextStyle(fontSize: 11)),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4),
+                          ),
+                      ],
+                    ),
+                  ],
                   // Upload progress bar (multipart in-flight)
                   if (entry.status == TaskStatus.uploading) ...[
                     const SizedBox(height: 8),
@@ -62,7 +177,7 @@ class UploadEntryTile extends StatelessWidget {
                           ? entry.uploadProgress
                           : null,
                       color: cs.primary,
-                      backgroundColor: cs.primary.withOpacity(0.1),
+                      backgroundColor: cs.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     const SizedBox(height: 2),
@@ -82,7 +197,7 @@ class UploadEntryTile extends StatelessWidget {
                           ? entry.progress / 100.0
                           : null,
                       color: cs.tertiary,
-                      backgroundColor: cs.tertiary.withOpacity(0.1),
+                      backgroundColor: cs.tertiary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     const SizedBox(height: 2),
@@ -117,9 +232,9 @@ class UploadEntryTile extends StatelessWidget {
               ),
             ),
             // Remove button (only when not actively processing)
-            if (onRemove != null)
+            if (widget.onRemove != null)
               IconButton(
-                onPressed: onRemove,
+                onPressed: widget.onRemove,
                 icon: const Icon(Icons.close, size: 16),
                 color: Colors.grey.shade500,
                 tooltip: 'Remove',
@@ -164,7 +279,7 @@ class _FileTypeIcon extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(icon, color: color, size: 22),
@@ -178,8 +293,8 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color bg;
-    final Color fg;
+    late Color bg;
+    late Color fg;
     Widget? leading;
 
     switch (status) {

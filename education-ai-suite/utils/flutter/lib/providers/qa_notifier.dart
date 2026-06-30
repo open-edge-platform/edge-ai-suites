@@ -32,8 +32,6 @@ class QaState {
 // ─── Notifier ─────────────────────────────────────────────────────────────────
 
 /// Manages Q&A chat state.
-/// Equivalent of the useState / useCallback hooks in React's QASection.tsx.
-///
 /// State mapping:
 ///   messages: ChatEntry[]    → List<ChatEntry>
 ///   isLoading: bool          → bool
@@ -47,12 +45,9 @@ class QaNotifier extends StateNotifier<QaState> {
   String _genId() =>
       'm_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
 
-  /// Build the conversation history sent to /qa.
-  /// Backend accepts last QA_MAX_HISTORY_TURNS (3) pairs.
-  /// Matches the history slice in React's QASection.tsx sendQuestion().
   List<QaHistoryMessage> _buildHistory() {
     final completed = state.messages.where((m) => !m.isError).toList();
-    final maxMessages = AppConfig.maxHistoryTurns * 2;
+    const maxMessages = AppConfig.maxHistoryTurns * 2;
     final slice = completed.length > maxMessages
         ? completed.sublist(completed.length - maxMessages)
         : completed;
@@ -74,7 +69,14 @@ class QaNotifier extends StateNotifier<QaState> {
     final trimmed = question.trim();
     if (trimmed.isEmpty) return;
 
-    // 1. Append user message immediately (optimistic update)
+    // 1. Snapshot history BEFORE appending the current question.
+    //    React does the same: it reads `messages` before setMessages() takes
+    //    effect (React batches). Flutter's StateNotifier is synchronous, so we
+    //    must capture the snapshot explicitly to avoid including the current
+    //    question in the history payload sent to the backend.
+    final historySnapshot = _buildHistory();
+
+    // 2. Append user message immediately (optimistic update)
     final userEntry = ChatEntry(
       id: _genId(),
       role: ChatRole.user,
@@ -85,17 +87,17 @@ class QaNotifier extends StateNotifier<QaState> {
       isLoading: true,
     );
 
-    // 2. Build filter from selected tags
+    // 3. Build filter from selected tags
     final filter =
         tags.isNotEmpty ? <String, dynamic>{'tags': tags} : null;
 
-    // 3. Call POST /api/v1/object/qa
+    // 4. Call POST /api/v1/object/qa
     try {
       final service = _ref.read(contentSearchApiServiceProvider);
       final result = await service.askQuestion(
         QaRequest(
           question: trimmed,
-          history: _buildHistory(),
+          history: historySnapshot,
           filter: filter,
         ),
       );

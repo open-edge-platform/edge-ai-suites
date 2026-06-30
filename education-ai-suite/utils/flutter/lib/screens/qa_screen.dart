@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/qa_models.dart';
 import '../providers/qa_notifier.dart';
 import '../providers/upload_notifier.dart';
 import '../providers/service_providers.dart';
@@ -93,13 +92,13 @@ class _QaScreenState extends ConsumerState<QaScreen> {
         // ── Chat messages ──────────────────────────────────────────────────
         Expanded(
           child: !hasCompleted
-              ? _Placeholder(
+              ? const _Placeholder(
                   icon: Icons.upload_file_outlined,
                   title: 'No indexed files yet',
                   subtitle: 'Go to Upload and wait for indexing to complete',
                 )
               : qaState.messages.isEmpty
-                  ? _Placeholder(
+                  ? const _Placeholder(
                       icon: Icons.chat_bubble_outline,
                       title: 'Ask a question',
                       subtitle:

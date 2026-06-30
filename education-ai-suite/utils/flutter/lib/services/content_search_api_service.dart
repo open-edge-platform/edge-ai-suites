@@ -25,14 +25,8 @@ class UploadIngestResult {
 }
 
 /// HTTP service layer for the Content Search RAG pipeline.
-///
-/// Flutter equivalent of the cs* functions in React's ui/src/services/api.ts.
 /// Key difference from React: uses Dio instead of browser fetch(), which gives
 /// us built-in interceptors, upload progress callbacks, and typed exceptions.
-///
-/// Two base-URL note: React uses Vite's dev-proxy to transparently route
-/// /api/v1 to port 9011. Flutter has no proxy — this class points directly
-/// to AppConfig.contentSearchBaseUrl (port 9011).
 class ContentSearchApiService {
   late final Dio _dio;
 
@@ -49,9 +43,10 @@ class ContentSearchApiService {
 
     _dio.interceptors.add(
       LogInterceptor(
-        requestHeader: false,
-        requestBody: false,
-        responseBody: false,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
         logPrint: (o) => debugPrint('[ContentSearch] $o'),
       ),
     );
@@ -83,11 +78,7 @@ class ContentSearchApiService {
   // ─── Upload + Ingest — POST /api/v1/object/upload-ingest ─────────────────
 
   /// Upload a file and trigger ingestion in one request.
-  /// Equivalent of csUploadIngest() in React's api.ts.
-  ///
-  /// React uses: new FormData(); form.append('file', file)
-  /// Flutter uses: FormData.fromMap({'file': MultipartFile.fromFile(path)})
-  ///
+
   /// Corner-case: if isDuplicate=true, caller must call cleanupTask(taskId)
   /// then retry — matches the code=40901 handling in UploadSection.tsx.
   Future<UploadIngestResult> uploadAndIngest(
@@ -125,8 +116,6 @@ class ContentSearchApiService {
     final data = body['data'] as Map<String, dynamic>? ?? {};
 
     if (code == 40901) {
-      // Duplicate: backend already has this file (same SHA-256 hash).
-      // Caller should: cleanupTask(taskId) → retry uploadAndIngest()
       return UploadIngestResult(
         taskId: data['task_id'] as String? ?? '',
         status: 'ALREADY_EXISTS',
@@ -145,10 +134,6 @@ class ContentSearchApiService {
   // ─── Task Polling — GET /api/v1/task/query/{task_id} ─────────────────────
 
   /// Poll ingestion task status every 3 s until isTerminal.
-  /// Equivalent of csQueryTask() in React's api.ts.
-  ///
-  /// React: setInterval → clearInterval in useEffect cleanup
-  /// Flutter: Timer.periodic → timer.cancel() in UploadNotifier.dispose()
   Future<IngestTaskResult> queryTask(String taskId) async {
     final res = await _dio.get('/api/v1/task/query/$taskId');
     return IngestTaskResult.fromJson(_data(res.data));
@@ -156,13 +141,10 @@ class ContentSearchApiService {
 
   // ─── Cleanup — DELETE /api/v1/object/cleanup-task/{task_id} ──────────────
 
-  /// Remove stale task when a duplicate upload is detected (code=40901).
-  /// Equivalent of csCleanupTask() in React's api.ts.
   Future<void> cleanupTask(String taskId) async {
     try {
       await _dio.delete('/api/v1/object/cleanup-task/$taskId');
     } catch (e) {
-      // Best-effort — non-critical if this fails
       debugPrint('cleanupTask failed (non-critical): $e');
     }
   }
@@ -170,10 +152,6 @@ class ContentSearchApiService {
   // ─── Q&A — POST /api/v1/object/qa ────────────────────────────────────────
 
   /// RAG question answering over ingested content.
-  /// Equivalent of csQaAsk() in React's api.ts.
-  ///
-  /// Backend flow: question → ChromaDB top-k retrieval → Reranker →
-  /// VLM (Qwen2.5-VL) → answer + source citations
   Future<QaResult> askQuestion(QaRequest request) async {
     final res = await _dio.post(
       '/api/v1/object/qa',
@@ -184,8 +162,6 @@ class ContentSearchApiService {
 
   // ─── Tags — GET /api/v1/object/tags ──────────────────────────────────────
 
-  /// Fetch all unique tags from ingested files.
-  /// Equivalent of csGetTags() in React's api.ts.
   Future<List<String>> getTags() async {
     try {
       final res = await _dio.get('/api/v1/object/tags');
@@ -199,8 +175,6 @@ class ContentSearchApiService {
 
   // ─── Files list — GET /api/v1/object/files/list ───────────────────────────
 
-  /// List all ingested files with vector index status.
-  /// Equivalent of csGetFilesList() in React's api.ts.
   Future<List<FileAsset>> getFilesList({
     int page = 1,
     int pageSize = 50,
@@ -229,8 +203,6 @@ class ContentSearchApiService {
 
   // ─── Delete file — DELETE /api/v1/object/files/{file_hash} ───────────────
 
-  /// Delete a file and its vectors from ChromaDB.
-  /// file_hash is the SHA-256 hex string (64 chars) from FileAsset.fileHash.
   Future<bool> deleteFile(String fileHash) async {
     try {
       await _dio.delete('/api/v1/object/files/$fileHash');

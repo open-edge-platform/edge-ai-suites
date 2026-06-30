@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/qa_models.dart';
 
 /// Small chip showing a source citation on an assistant message.
-/// Equivalent of the source label rendering in React's QASection.tsx
-/// (getSourceLabel / getSourceTypeIcon functions).
+
 class SourceChip extends StatelessWidget {
   final QaSource source;
   const SourceChip({super.key, required this.source});
@@ -32,9 +31,9 @@ class SourceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -58,7 +57,7 @@ class SourceChip extends StatelessWidget {
               '${source.score!.toStringAsFixed(0)}%',
               style: TextStyle(
                 fontSize: 10,
-                color: color.withOpacity(0.7),
+                color: color.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w400,
               ),
             ),

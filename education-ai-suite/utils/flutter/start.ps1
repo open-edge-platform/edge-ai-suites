@@ -14,12 +14,12 @@ Write-Host "==========================================" -ForegroundColor Cyan
 $ScriptDir        = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
 $RepoRoot         = (Get-Item (Join-Path $ScriptDir "..\..")).FullName
 $ContentSearchDir = Join-Path $RepoRoot "smart-classroom\content_search"
-$VenvPython       = Join-Path $ContentSearchDir "venv_content_search\Scripts\python.exe"
+$VenvPython       = Join-Path $RepoRoot "venv_content_search\Scripts\python.exe"
 $StartServices    = Join-Path $ContentSearchDir "start_services.py"
 
 Write-Host "  Repo root   : $RepoRoot" -ForegroundColor DarkGray
 Write-Host "  Backend dir : $ContentSearchDir" -ForegroundColor DarkGray
-Write-Host "  Python venv : $VenvPython" -ForegroundColor DarkGray
+Write-Host "  Python venv : $RepoRoot\venv_content_search" -ForegroundColor DarkGray
 
 # --- Sanity checks ------------------------------------------------------------
 if (-not (Test-Path $VenvPython)) {
@@ -37,20 +37,48 @@ if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# --- 1. Start content_search backend in a new window -------------------------
+# --- 1. Start content_search backend in a new elevated PowerShell window -----
 Write-Host ""
-Write-Host "Starting content_search backend services..." -ForegroundColor Green
-$BackendProc = Start-Process -FilePath $VenvPython `
-    -ArgumentList "`"$StartServices`"" `
+Write-Host "Starting content_search backend in an elevated PowerShell window..." -ForegroundColor Green
+
+# Build the command the elevated window will run:
+#   cd into content_search, activate the venv, then run start_services.py
+$BackendCmd = "Set-Location '$ContentSearchDir'; & '$VenvPython' '$StartServices'; Read-Host 'Backend stopped - press Enter to close'"
+
+$BackendProc = Start-Process -FilePath "powershell.exe" `
+    -ArgumentList "-NoExit", "-Command", $BackendCmd `
     -WorkingDirectory $ContentSearchDir `
+    -Verb RunAs `
     -PassThru
 
-Write-Host "  Backend started (PID $($BackendProc.Id))." -ForegroundColor White
+Write-Host "  Backend window launched (PID $($BackendProc.Id))." -ForegroundColor White
 
-# --- 2. Wait briefly so ChromaDB / main_app begin initialising ----------------
+# --- 2. Poll the health endpoint until the backend is fully up ---------------
+$HealthUrl        = "http://127.0.0.1:9011/api/v1/system/health"
+$MaxWaitSeconds   = 180   # give the VLM / ChromaDB up to 3 minutes to load
+$PollIntervalSec  = 5
+$Elapsed          = 0
+$BackendReady     = $false
+
 Write-Host ""
-Write-Host "Waiting 5 seconds for backend to begin initialising..." -ForegroundColor Yellow
-Start-Sleep -Seconds 5
+Write-Host "Waiting for backend to be ready ($HealthUrl) ..." -ForegroundColor Yellow
+
+while ($Elapsed -lt $MaxWaitSeconds) {
+    try {
+        $r = Invoke-WebRequest -Uri $HealthUrl -UseBasicParsing -TimeoutSec 4 -ErrorAction Stop
+        if ($r.StatusCode -eq 200) { $BackendReady = $true; break }
+    } catch { <# not ready yet #> }
+
+    Start-Sleep -Seconds $PollIntervalSec
+    $Elapsed += $PollIntervalSec
+    Write-Host "  ...still waiting ($Elapsed / ${MaxWaitSeconds}s)" -ForegroundColor DarkGray
+}
+
+if ($BackendReady) {
+    Write-Host "  Backend is ready!" -ForegroundColor Green
+} else {
+    Write-Warning "Backend did not respond within ${MaxWaitSeconds}s - launching Flutter anyway."
+}
 
 # --- 3. Start Flutter Windows app (blocks in this window) --------------------
 Write-Host ""

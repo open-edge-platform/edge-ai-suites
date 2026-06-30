@@ -3,12 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_asset.dart';
 import '../providers/service_providers.dart';
 
-/// Files screen — lists all ingested files with their vector index status.
-/// Allows deletion of files from storage + ChromaDB.
-///
-/// Equivalent of React's FileManager.tsx component.
-/// Uses local StatefulWidget state (not Riverpod) since this data is
-/// fetched on demand and doesn't need to be shared with other screens.
 class FilesScreen extends ConsumerStatefulWidget {
   const FilesScreen({super.key});
 
@@ -35,15 +29,23 @@ class _FilesScreenState extends ConsumerState<FilesScreen> {
     try {
       final svc = ref.read(contentSearchApiServiceProvider);
       final files = await svc.getFilesList();
-      if (mounted) setState(() {
-        _files = files;
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _files = files;
+          _loading = false;
+        });
+        ref.read(serverHasFilesProvider.notifier).state = files.isNotEmpty;
+        if (files.isEmpty) {
+          ref.read(tagsProvider.notifier).state = [];
+        }
+      }
     } catch (e) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _error = e.toString();
         _loading = false;
       });
+      }
     }
   }
 
@@ -78,9 +80,10 @@ class _FilesScreenState extends ConsumerState<FilesScreen> {
     if (ok && mounted) {
       setState(() =>
           _files.removeWhere((f) => f.fileHash == file.fileHash));
-      // Refresh tags after deletion
+      // Refresh tags and server-files state after deletion
       final tags = await svc.getTags();
       ref.read(tagsProvider.notifier).state = tags;
+      ref.read(serverHasFilesProvider.notifier).state = _files.isNotEmpty;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -107,7 +110,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen> {
               Text(
                 '${_files.length} file${_files.length == 1 ? '' : 's'} indexed',
                 style: theme.textTheme.titleSmall
-                    ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                    ?.copyWith(color: cs.onSurface.withValues(alpha: 0.5)),
               ),
               const Spacer(),
               IconButton.outlined(
@@ -177,36 +180,16 @@ class _FileTile extends StatelessWidget {
           '${file.fileTypeLabel} · ${file.formattedSize}'
           '${file.indexed ? ' · ${file.totalVectors} vectors' : ''}',
           style: theme.textTheme.bodySmall
-              ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+              ?.copyWith(color: cs.onSurface.withValues(alpha: 0.5)),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Indexed / not indexed badge
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: file.indexed
-                    ? Colors.green.shade50
-                    : Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                file.indexed ? 'Indexed' : 'Pending',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: file.indexed
-                      ? Colors.green.shade700
-                      : Colors.orange.shade700,
-                ),
-              ),
-            ),
+
             IconButton(
               onPressed: onDelete,
               icon: Icon(Icons.delete_outline,
-                  size: 18, color: cs.error.withOpacity(0.65)),
+                  size: 18, color: cs.error.withValues(alpha: 0.65)),
               tooltip: 'Delete',
             ),
           ],
@@ -263,15 +246,15 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.folder_open_outlined,
-              size: 56, color: cs.primary.withOpacity(0.22)),
+              size: 56, color: cs.primary.withValues(alpha: 0.22)),
           const SizedBox(height: 14),
           Text('No files indexed yet',
               style: theme.textTheme.titleMedium
-                  ?.copyWith(color: cs.onSurface.withOpacity(0.32))),
+                  ?.copyWith(color: cs.onSurface.withValues(alpha: 0.32))),
           const SizedBox(height: 4),
           Text('Upload files in the Upload tab',
               style: theme.textTheme.bodySmall
-                  ?.copyWith(color: cs.onSurface.withOpacity(0.22))),
+                  ?.copyWith(color: cs.onSurface.withValues(alpha: 0.22))),
         ],
       ),
     );
@@ -294,14 +277,14 @@ class _ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline,
-                size: 48, color: cs.error.withOpacity(0.6)),
+                size: 48, color: cs.error.withValues(alpha: 0.6)),
             const SizedBox(height: 10),
             Text('Failed to load files',
                 style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(error,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: cs.error),
+                    ?.copyWith(color: cs.error.withValues(alpha: 0.6)),
                 textAlign: TextAlign.center),
             const SizedBox(height: 14),
             TextButton(onPressed: onRetry, child: const Text('Retry')),
