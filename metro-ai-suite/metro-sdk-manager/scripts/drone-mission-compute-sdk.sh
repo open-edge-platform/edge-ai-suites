@@ -19,8 +19,8 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.0.0|edge-ai-libraries"
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.0.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.1.0|edge-ai-libraries"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.1.0|edge-ai-suites"
 )
 
 # Placeholder for Docker images to pull; currently empty
