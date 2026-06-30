@@ -154,6 +154,49 @@
       color: var(--muted);
     }
 
+    .explain-output {
+      margin: 24px 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfcff;
+      overflow: hidden;
+    }
+
+    .explain-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      color: #22395f;
+      background: #f4f7fd;
+    }
+
+    .explain-body {
+      padding: 12px 14px;
+      color: #22395f;
+      line-height: 1.5;
+    }
+
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d2d9e8;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     @media (max-width: 700px) {
       .footer {
         flex-direction: column;
@@ -191,6 +234,11 @@
           <button id="nextBtn">Next</button>
         </div>
       </div>
+
+      <div id="explainOutput" class="explain-output" hidden>
+        <div id="explainHeader" class="explain-header">AI Assistant Output</div>
+        <div id="explainBody" class="explain-body"></div>
+      </div>
     </div>
   </div>
 
@@ -203,13 +251,31 @@
     const tableHead = document.getElementById("tableHead");
     const tableBody = document.getElementById("tableBody");
     const emptyMessage = document.getElementById("emptyMessage");
+    const explainOutput = document.getElementById("explainOutput");
+    const explainHeader = document.getElementById("explainHeader");
+    const explainBody = document.getElementById("explainBody");
     const AUTO_REFRESH_INTERVAL_MS = 10000;
+    const APP_BASE_PATH = window.location.pathname.startsWith("/insight-ui") ? "/insight-ui" : "";
+
+    function buildApiUrl(path, params) {
+      const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+      const url = new URL(`${APP_BASE_PATH}${normalizedPath}`, window.location.origin);
+
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+      }
+
+      return url.toString();
+    }
 
     let state = {
       page: 1,
       pageSize: 10,
       hasMore: false,
       loading: false,
+      explainLoading: false,
     };
 
     function setLoading(loading) {
@@ -227,9 +293,26 @@
     }
 
     function updateExplainButtonState() {
-      const enabled = hasSelectedRows() && !state.loading;
+      const enabled = hasSelectedRows() && !state.loading && !state.explainLoading;
       explainBtn.disabled = !enabled;
       explainBtn.classList.toggle("enabled", enabled);
+    }
+
+    function getSelectedRows() {
+      const selectedRows = [];
+      const checkboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
+      checkboxes.forEach((checkbox) => {
+        if (!checkbox.checked) {
+          return;
+        }
+
+        const rowJson = checkbox.getAttribute("data-row-json");
+        if (rowJson) {
+          selectedRows.push(JSON.parse(rowJson));
+        }
+      });
+
+      return selectedRows;
     }
 
     function buildTable(rows) {
@@ -276,6 +359,7 @@
         const rowCheckbox = document.createElement("input");
         rowCheckbox.type = "checkbox";
         rowCheckbox.setAttribute("data-row-select", "true");
+        rowCheckbox.setAttribute("data-row-json", JSON.stringify(row));
         rowCheckbox.setAttribute("aria-label", `Select row ${rowIndex + 1}`);
         rowCheckbox.addEventListener("change", () => {
           const rowCheckboxes = Array.from(
@@ -308,12 +392,10 @@
       setStatus(`Loading page ${state.page}...`);
 
       try {
-        const params = new URLSearchParams({
+        const response = await fetch(buildApiUrl("/api/data", {
           page: String(state.page),
           page_size: String(state.pageSize),
-        });
-
-        const response = await fetch(`/api/data?${params.toString()}`);
+        }));
         const payload = await response.json();
 
         if (!response.ok) {
@@ -344,11 +426,52 @@
       await loadPage();
     });
 
-    explainBtn.addEventListener("click", () => {
-      const selectedCount = tableBody.querySelectorAll(
-        "input[type='checkbox'][data-row-select='true']:checked"
-      ).length;
-      setStatus(`Explain clicked for ${selectedCount} selected row(s).`);
+    explainBtn.addEventListener("click", async () => {
+      const selectedRows = getSelectedRows();
+      if (selectedRows.length === 0) {
+        return;
+      }
+
+      state.explainLoading = true;
+      updateExplainButtonState();
+      explainOutput.hidden = false;
+      explainHeader.textContent = "AI Assistant Output";
+      explainBody.innerHTML = '<div class="spinner-wrap"><span class="spinner" aria-hidden="true"></span><span>Generating analysis...</span></div>';
+      setStatus("Generating explanation...");
+
+      try {
+        const response = await fetch(buildApiUrl("/api/explain"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rows: selectedRows }),
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || "Failed to generate explanation");
+        }
+
+        explainHeader.textContent = payload.title || "AI Assistant Output";
+
+        const bulletsHtml = (payload.bullets || [])
+          .map((item) => `<li>${item}</li>`)
+          .join("");
+
+        explainBody.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${payload.section || "Root Cause Analysis"}</div>
+          <ul style="margin: 0 0 10px 18px; padding: 0;">${bulletsHtml}</ul>
+          <div><strong>Recommendation:</strong> ${payload.recommendation || "N/A"}</div>
+        `;
+        setStatus(`Explanation generated for ${selectedRows.length} row(s).`);
+      } catch (error) {
+        explainBody.textContent = error.message;
+        setStatus(error.message);
+      } finally {
+        state.explainLoading = false;
+        updateExplainButtonState();
+      }
     });
 
     setInterval(async () => {

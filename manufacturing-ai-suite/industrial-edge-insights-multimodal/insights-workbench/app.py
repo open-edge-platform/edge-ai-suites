@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Any
 
 from flask import Flask, jsonify, render_template, request
@@ -99,6 +100,25 @@ def api_data() -> Any:
         )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": str(exc), "rows": []}), 500
+
+
+@app.route("/api/explain", methods=["POST"])
+def api_explain() -> Any:
+    # Simulate a short model/API processing time for the UI spinner.
+    time.sleep(2)
+
+    return jsonify(
+        {
+            "title": "AI Assistant Output",
+            "section": "Root Cause Analysis",
+            "bullets": [
+                "WT-001 exhibited a sudden increase in vibration.",
+                "Temperature rose 15% above baseline.",
+                "Similar pattern observed in previous bearing failure.",
+            ],
+            "recommendation": "Inspect bearing assembly.",
+        }
+    )
 
 
 if __name__ == "__main__":
