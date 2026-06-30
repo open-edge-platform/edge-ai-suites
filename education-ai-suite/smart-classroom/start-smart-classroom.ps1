@@ -191,7 +191,9 @@ function Stop-AllServices {
 }
 
 # Register Ctrl+C handler
-[Console]::TreatControlCAsInput = $false
+if (-not $Silent) {
+    [Console]::TreatControlCAsInput = $false
+}
 $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
     if ($script:servicesStarted) {
         Stop-AllServices
@@ -979,12 +981,12 @@ Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
+python -m pip install --upgrade pip --no-input
+python -m pip install -r .\requirements.txt --no-input
 if (`$LASTEXITCODE -ne 0) {
     Write-Host ''
     Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
+    python -m pip install --no-cache-dir -r .\requirements.txt --no-input
     if (`$LASTEXITCODE -ne 0) {
         Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
         Read-Host 'Press Enter to close'
@@ -1069,12 +1071,12 @@ Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 
 Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
+python -m pip install --upgrade pip --no-input
+python -m pip install -r .\requirements.txt --no-input
 if (`$LASTEXITCODE -ne 0) {
     Write-Host ''
     Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
+    python -m pip install --no-cache-dir -r .\requirements.txt --no-input
     if (`$LASTEXITCODE -ne 0) {
         Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
         Read-Host 'Press Enter to close'
