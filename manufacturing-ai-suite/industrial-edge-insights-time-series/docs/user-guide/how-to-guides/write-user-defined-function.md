@@ -68,7 +68,6 @@ class MyHandler(Handler):
 
         # Initialize model for analysis.
         # Load the model using your algorithm's import method and assign it to self.model.
-        # Example: self.model = cb.CatBoostClassifier(...), then self.model.load_model(model_path)
         self.model = None  # Replace None with your actual model instance
 
         self.model.load_model(model_path)
@@ -238,7 +237,6 @@ Use it to extract fields, run inference or business logic, and emit results.
    numpy==1.24.0
    scikit-learn==1.3.0
    pandas==2.0.0
-   catboost==1.2.0
    ```
 
 ## Using Your UDF in TICKscripts
