@@ -1,44 +1,32 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
-  },
+  "id": null,
+  "uid": "multimodal-weld-defect",
+  "title": "Multimodal Weld Defect Detection Dashboard",
+  "tags": [],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
   "editable": true,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "id": 1,
-  "links": [],
+  "refresh": "5s",
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
   "panels": [
     {
+      "id": 15,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 17
+      },
+      "title": "Vision Analytics Result",
+      "type": "text",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
       },
-      "gridPos": {
-        "h": 15,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 15,
       "options": {
         "code": {
           "language": "plaintext",
@@ -48,15 +36,111 @@
         "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;\n  const port = window.location.port || \"443\";   // default if none present\n\n  // Build iframe URL INCLUDING PORT\n  const iframeUrl = `https://${host}:${port}/samplestream/`;\n\n  document.getElementById(\"myframe\").src = iframeUrl;\n</script>",
         "mode": "html"
       },
-      "pluginVersion": "12.0.0",
-      "title": "Vision Analytics Result",
-      "type": "text"
+      "targets": []
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+      "id": 16,
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 8
       },
+      "title": "Fusion Analytics Result",
+      "type": "table",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "No Anomaly"
+                },
+                "1": {
+                  "color": "semi-dark-red",
+                  "index": 1,
+                  "text": "Anomaly"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "cellHeight": "sm",
+        "frameIndex": 1,
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "query": "SELECT ts_anomaly as \"Timeseries Analytics\", vision_classification as \"Vision Analytics\", fused_decision as \"Fusion Analytics\"   from fusion_result order by time desc limit 10",
+          "rawQuery": true,
+          "resultFormat": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "gridPos": {
+        "x": 9,
+        "y": 0,
+        "w": 15,
+        "h": 32
+      },
+      "title": "VLM Reasoning",
+      "type": "text",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },    
+        "content": "<iframe id=\"htmlframe\" src=\"http://10.106.147.224:8088/\" width=\"100%\"   height=\"100%\" frameborder=\"0\" style=\"border:none;\" > \n</iframe> \n\n<script>\n  const host = window.location.hostname;\n  // const port = window.location.port || \"443\";   // default if none present\n  const port = 8088;\n\n  // Build iframe URL INCLUDING PORT\n  const iframeUrl = `http://${host}:${port}/`;\n\n  document.getElementById(\"htmlframe\").src = iframeUrl;\n</script>",
+        "mode": "html"
+      },
+      "targets": []
+    },
+    {
+      "id": 5,
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 9,
+        "h": 15
+      },
+      "title": "Timeseries Analytics Result (Primary Weld Current vs Time)",
+      "type": "timeseries",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -90,6 +174,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -100,13 +185,13 @@
             }
           },
           "fieldMinMax": false,
-          "mappings": [],
           "max": 400,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               }
             ]
           }
@@ -144,14 +229,11 @@
           }
         ]
       },
-      "gridPos": {
-        "h": 15,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 5,
       "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
         "legend": {
           "calcs": [],
           "displayMode": "list",
@@ -167,14 +249,9 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
       "targets": [
         {
           "alias": "Non Anomalous ",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
           "groupBy": [
             {
               "params": [
@@ -189,13 +266,11 @@
               "type": "fill"
             }
           ],
-          "hide": false,
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "default",
           "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
           "rawQuery": true,
-          "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
@@ -217,15 +292,12 @@
               "operator": "=",
               "value": "0"
             }
-          ]
+          ],
+          "refId": "A"
         },
         {
           "alias": " Anomalous",
           "columns": [],
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
           "filters": [],
           "format": "table",
           "global_query_id": "",
@@ -237,13 +309,11 @@
               "type": "tag"
             }
           ],
-          "hide": false,
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
           "rawQuery": true,
-          "refId": "B",
           "resultFormat": "time_series",
           "root_selector": "",
           "select": [
@@ -269,103 +339,10 @@
           "url_options": {
             "data": "",
             "method": "GET"
-          }
-        }
-      ],
-      "title": "Timeseries Analytics Result (Primary Weld Current vs Time)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "No Anomaly"
-                },
-                "1": {
-                  "color": "semi-dark-red",
-                  "index": 1,
-                  "text": "Anomaly"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 15
-      },
-      "id": 16,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "frameIndex": 1,
-        "showHeader": true
-      },
-      "pluginVersion": "12.0.0",
-      "targets": [
-        {
-          "query": "SELECT ts_anomaly as \"Timeseries Analytics\", vision_classification as \"Vision Analytics\", fused_decision as \"Fusion Analytics\"   from fusion_result order by time desc limit 10",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
+          "refId": "B"
         }
-      ],
-      "title": "Fusion Analytics Result",
-      "type": "table"
+      ]
     }
-  ],
-  "preload": false,
-  "refresh": "5s",
-  "schemaVersion": 41,
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-5m",
-    "to": "now"
-  },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Multimodal Weld Defect Detection Dashboard",
-  "uid": "ff7b8081-d0f0-4469-9210-9daf1bd148fd",
-  "version": 1
+  ]
 }

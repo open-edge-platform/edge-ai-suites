@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Influx Data Viewer</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #11203a;
+      --muted: #5f6d82;
+      --accent: #0f62fe;
+      --accent-dark: #0043ce;
+      --border: #d6deeb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, #eaf2ff 0%, transparent 35%),
+        radial-gradient(circle at 90% 100%, #e9fff2 0%, transparent 35%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(16, 32, 58, 0.06);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    button {
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 0.95rem;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      cursor: pointer;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-left: auto;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f7fd;
+      color: #243b60;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .footer {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pager {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .message {
+      padding: 18px 20px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 700px) {
+      .footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pager {
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <h1>InfluxDB Table Viewer</h1>
+        <div class="sub">Browse measurement data with page-by-page navigation.</div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyMessage" class="message" hidden>No data available.</div>
+
+      <div class="footer">
+        <div id="pageInfo">Page 1</div>
+        <div id="status" class="status">Loading data...</div>
+        <div class="pager">
+          <button id="prevBtn">Previous</button>
+          <button id="nextBtn">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const statusEl = document.getElementById("status");
+    const pageInfoEl = document.getElementById("pageInfo");
+    const tableHead = document.getElementById("tableHead");
+    const tableBody = document.getElementById("tableBody");
+    const emptyMessage = document.getElementById("emptyMessage");
+    const AUTO_REFRESH_INTERVAL_MS = 10000;
+
+    let state = {
+      page: 1,
+      pageSize: 25,
+      hasMore: false,
+      loading: false,
+    };
+
+    function setLoading(loading) {
+      state.loading = loading;
+      prevBtn.disabled = loading || state.page <= 1;
+      nextBtn.disabled = loading || !state.hasMore;
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function hasSelectedRows() {
+      return Boolean(tableBody.querySelector("input[type='checkbox'][data-row-select='true']:checked"));
+    }
+
+    function buildTable(rows) {
+      tableHead.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      if (!rows || rows.length === 0) {
+        emptyMessage.hidden = false;
+        return;
+      }
+
+      emptyMessage.hidden = true;
+      const columns = Object.keys(rows[0]);
+
+      const headerRow = document.createElement("tr");
+      const selectAllTh = document.createElement("th");
+      const selectAllCheckbox = document.createElement("input");
+      selectAllCheckbox.type = "checkbox";
+      selectAllCheckbox.id = "selectAllRows";
+      selectAllCheckbox.setAttribute("aria-label", "Select all rows on current page");
+      selectAllCheckbox.addEventListener("change", (event) => {
+        const checked = event.target.checked;
+        const rowCheckboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
+        rowCheckboxes.forEach((checkbox) => {
+          checkbox.checked = checked;
+        });
+      });
+      selectAllTh.appendChild(selectAllCheckbox);
+      headerRow.appendChild(selectAllTh);
+
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+
+      rows.forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+
+        const selectTd = document.createElement("td");
+        const rowCheckbox = document.createElement("input");
+        rowCheckbox.type = "checkbox";
+        rowCheckbox.setAttribute("data-row-select", "true");
+        rowCheckbox.setAttribute("aria-label", `Select row ${rowIndex + 1}`);
+        rowCheckbox.addEventListener("change", () => {
+          const rowCheckboxes = Array.from(
+            tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']")
+          );
+          const allChecked = rowCheckboxes.length > 0 && rowCheckboxes.every((checkbox) => checkbox.checked);
+          const selectAll = document.getElementById("selectAllRows");
+          if (selectAll) {
+            selectAll.checked = allChecked;
+          }
+        });
+        selectTd.appendChild(rowCheckbox);
+        tr.appendChild(selectTd);
+
+        columns.forEach((column) => {
+          const td = document.createElement("td");
+          const value = row[column];
+          td.textContent = value == null ? "" : String(value);
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    async function loadPage() {
+      setLoading(true);
+      setStatus(`Loading page ${state.page}...`);
+
+      try {
+        const params = new URLSearchParams({
+          page: String(state.page),
+          page_size: String(state.pageSize),
+        });
+
+        const response = await fetch(`/api/data?${params.toString()}`);
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Failed to load data");
+        }
+
+        state.hasMore = payload.has_more;
+        buildTable(payload.rows);
+        pageInfoEl.textContent = `Page ${state.page}`;
+        setStatus(`Loaded ${payload.rows.length} rows.`);
+      } catch (error) {
+        setStatus(error.message);
+        buildTable([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    prevBtn.addEventListener("click", async () => {
+      if (state.page <= 1) return;
+      state.page -= 1;
+      await loadPage();
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      if (!state.hasMore) return;
+      state.page += 1;
+      await loadPage();
+    });
+
+    setInterval(async () => {
+      if (state.loading || hasSelectedRows()) {
+        return;
+      }
+
+      await loadPage();
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    loadPage();
+  </script>
+</body>
+</html>

@@ -134,7 +134,7 @@ services:
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     restart: unless-stopped
-    read_only: true
+    read_only: false
     depends_on:
       - ia-influxdb
     security_opt:
@@ -533,6 +533,34 @@ services:
     command: ["-v", "--external-ip=${HOST_IP}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
     networks:
     - timeseries_network
+
+  ia-insights-workbench:
+    container_name: ia-insights-workbench
+    hostname: ia-insights-workbench
+    image: ${DOCKER_REGISTRY}intel/ia-insights-workbench:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    build:
+      context: $PWD/insights-workbench
+      dockerfile: $PWD/insights-workbench/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    read_only: false
+    environment:
+      no_proxy: "ia-influxdb,${no_proxy}"
+      NO_PROXY: "ia-influxdb,${no_proxy}"
+      INFLUX_HOST: ia-influxdb
+      INFLUX_PORT: 8086
+      INFLUX_USER: ${INFLUXDB_USERNAME}
+      INFLUX_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUX_DB: datain
+      FUSION_MEASUREMENT: fusion_result
+    ports:
+      - "8088:8080"
+    networks:
+      - timeseries_network
+
 networks:
   timeseries_network:
     driver: bridge
