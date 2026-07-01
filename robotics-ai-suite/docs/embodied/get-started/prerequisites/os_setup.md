@@ -25,7 +25,7 @@ Do the following to prepare the target system:
    | Hyper-Threading | Disabled | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel (VMX) Virtualization | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
    | X2APIC | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
-   | Active SOC-North Efficient-cores | 0/All<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
+   | Active SOC-North Efficient-cores | 0 (ARL)<br>All (PTL)<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel(R) SpeedStep | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Shift Technology | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Turbo Mode | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |

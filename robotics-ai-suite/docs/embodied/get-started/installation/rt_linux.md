@@ -368,7 +368,7 @@ for (( i=cpu_start; i<=cpu_end; i++ )); do
 done
 ```
 
-> **Note:** Combine the adjustment of P-states, C-states and Turbo-Boost. Use `cpupower` tool (manually build cpupower from kernel source code, see [LinuxBSP](../../packages/linuxbsp.md)) to configure isolated cores in following way:
+> **Note:** Combine the adjustment of P-states, C-states and Turbo-Boost. Use `cpupower` tool (manually build cpupower from kernel source code, see [LinuxBSP](../../packages/linuxbsp.md#cpupower)) to configure isolated cores in following way:
 > 1. Set minimum and maximum frequency to specific turbo frequency.
 > 2. Set Governor to performance.
 > 3. Disable C-states other than C0 or Poll.
@@ -407,9 +407,7 @@ systemctl -t service
 
 To stop a service, run the following command (where \<service\> is the name a service):
 
-> **Warning:**
->
-> Stopping system services can be detrimental to the stability of the Linux system. Be sure you understand the implications before stopping a service. e.g.
+> **Warning:** Stopping system services can be detrimental to the stability of the Linux system. Be sure you understand the implications before stopping a service. e.g.
 
 ```bash
 #systemctl stop <service>
