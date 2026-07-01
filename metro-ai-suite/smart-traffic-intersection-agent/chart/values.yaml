@@ -53,6 +53,14 @@ trafficAgent:
     highDensityThreshold: "10"
     moderateDensityThreshold: ""
     bufferDuration: ""
+  metrics:
+    # Leave empty to use the bundled Metrics Manager service. Set these when
+    # metrics-manager.enabled=false and an external Metrics Manager is used.
+    managerUrl: ""
+    streamUrl: ""
+    healthUrl: ""
+    pushEnabled: ""
+    pushTimeoutSeconds: "1.0"
   # Health check configuration
   healthcheck:
     initialDelaySeconds: 10
@@ -153,25 +161,107 @@ tls:
   caCertKey: "root-cert"
 
 # =============================================================================
-# Live Metrics Service (subchart)
+# Metrics Manager
 # =============================================================================
-# Keys MUST match the subchart chart name "live-metrics-service".
-# The condition field in Chart.yaml enables/disables the subchart.
-live-metrics-service:
-  # Set to false to skip deploying the live-metrics relay
+# Keys are nested under "metrics-manager" so they align with the upstream
+# Metrics Manager chart values and can be migrated to an external chart later.
+metrics-manager:
   enabled: true
-  # Service name is derived from the Helm release name automatically.
-  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
-
-# =============================================================================
-# Collector / Telegraf (subchart)
-# =============================================================================
-# Keys MUST match the subchart chart name "collector".
-collector:
-  # Set to false to skip deploying the Telegraf collector.
-  # Requires live-metrics-service.enabled=true to function.
-  enabled: true
-  # Service name is derived from the Helm release name automatically.
-  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
-  # The WebSocket URL is constructed dynamically in the collector deployment template
-  # to use the release-scoped live-metrics-service name.
+  image:
+    repository: intel/metrics-manager
+    tag: ""
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+  controller:
+    kind: Deployment
+    replicaCount: 1
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+  pod:
+    # Equivalent to compose `pid: host`; required for host process telemetry.
+    hostPID: true
+    hostNetwork: false
+    dnsPolicy: ""
+    restartPolicy: Always
+    serviceAccount:
+      create: true
+      name: ""
+      annotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    priorityClassName: ""
+  # Keep privileged mode off by default. Set privileged=true only when NPU
+  # telemetry requires elevated sysfs access on trusted nodes/namespaces.
+  securityContext:
+    privileged: false
+    runAsNonRoot: false
+    readOnlyRootFilesystem: false
+    appArmorProfile:
+      type: RuntimeDefault
+    appArmorProfileForce: false
+    seccompProfile:
+      type: RuntimeDefault
+  hardware:
+    gpu:
+      enabled: true
+  service:
+    type: ClusterIP
+    metricsPort: 9090
+    telegrafPort: 9273
+    telegrafHttpPort: 8186
+    annotations: {}
+    nodePorts:
+      metrics: ""
+      telegraf: ""
+      telegrafHttp: ""
+  config:
+    logLevel: INFO
+    logFormat: json
+    corsOrigins: "*"
+    metricsRetentionSeconds: 300
+    maxMetricsBatchSize: 1000
+    hostnameOverride: ""
+    extraEnv: []
+  telegraf:
+    config: ""
+  customMetrics:
+    enabled: true
+    storage: emptyDir
+    existingClaim: ""
+    size: 100Mi
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: metrics
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: metrics
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    namespace: ""
+    labels: {}
+    annotations: {}

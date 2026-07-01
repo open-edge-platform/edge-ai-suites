@@ -7,12 +7,3 @@ description: A Helm chart for deploying the Smart Traffic Intersection Agent app
 type: application
 version: 2026.1.0-rc1-helm
 appVersion: "1.0.0"
-dependencies:
-  - name: live-metrics-service
-    version: "0.1.0"
-    repository: "file://subcharts/live-metrics-service"
-    condition: live-metrics-service.enabled
-  - name: collector
-    version: "0.1.0"
-    repository: "file://subcharts/collector"
-    condition: collector.enabled

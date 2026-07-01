@@ -70,6 +70,34 @@ Define the fully qualified name for the VLM serving.
 {{- end }}
 
 {{/*
+Define the fully qualified name for Metrics Manager.
+*/}}
+{{- define "stia.metricsManager.fullname" -}}
+{{ .Release.Name | trunc 47 | trimSuffix "-" }}-metrics-manager
+{{- end }}
+
+{{/*
+Define the Metrics Manager image reference.
+*/}}
+{{- define "stia.metricsManager.image" -}}
+{{- $metricsManager := index .Values "metrics-manager" -}}
+{{- $tag := $metricsManager.image.tag | default "2026.1.0" -}}
+{{- printf "%s:%s" $metricsManager.image.repository $tag -}}
+{{- end }}
+
+{{/*
+Define the Metrics Manager ServiceAccount name.
+*/}}
+{{- define "stia.metricsManager.serviceAccountName" -}}
+{{- $metricsManager := index .Values "metrics-manager" -}}
+{{- if $metricsManager.pod.serviceAccount.create }}
+{{- default (include "stia.metricsManager.fullname" .) $metricsManager.pod.serviceAccount.name }}
+{{- else }}
+{{- default "default" $metricsManager.pod.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Define the name of the CA cert secret.
 */}}
 {{- define "stia.caCertSecretName" -}}
