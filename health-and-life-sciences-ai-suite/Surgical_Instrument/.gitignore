@@ -3,6 +3,10 @@
 # POC scratch — soft-archived, never tracked
 poc/
 
+# Local-only mock backend — replaced by real Flask backend in Phase 3.
+# Kept on disk (not tracked) so the UI can be exercised standalone during dev.
+backend_mvp/
+
 # Generated reports & demo media
 **/*.docx
 **/*.mp4

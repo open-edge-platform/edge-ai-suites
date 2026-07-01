@@ -1,40 +1,72 @@
-import { useEffect } from 'react';
-import { useAppDispatch } from './store';
-import { openEventStream } from './services/eventStream';
+import { useEffect, useState } from 'react';
+import Header from './components/Header/Header';
+import TopPanel from './components/TopPanel/TopPanel';
+import Body from './components/common/Body';
+import Footer from './components/Footer/Footer';
+import { MetricsPoller } from './components/common/MetricsPoller';
 import { api } from './services/api';
-import { setStatus } from './store/slices/statusSlice';
-import Header from './components/Header';
-import TopPanel from './components/TopPanel';
-import VideoPanel from './components/VideoPanel';
-import RightPanel from './components/RightPanel';
-import LeftPanel from './components/LeftPanel';
-import Footer from './components/Footer';
 import './App.css';
 
-export default function App() {
-  const dispatch = useAppDispatch();
+function App() {
+  const [backendReady, setBackendReady] = useState(false);
+  const [initialReady, setInitialReady] = useState(false);
 
   useEffect(() => {
-    const handle = openEventStream(dispatch);
+    let active = true;
 
-    // Seed initial status; SSE will keep it fresh from here.
-    api.status()
-      .then((s) => dispatch(setStatus(s)))
-      .catch(() => { /* SSE will fill it in shortly */ });
+    const check = async () => {
+      let ok = await api.pingBackend();
+      if (ok) {
+        try {
+          const readiness = await api.getReadiness();
+          const lifecycle = String(readiness.lifecycle || '').toLowerCase();
+          ok = readiness.ready === true || lifecycle === 'running' || lifecycle === 'starting';
+        } catch {
+          ok = false;
+        }
+      }
+      if (active) {
+        setBackendReady(ok);
+        if (ok) setInitialReady(true);
+      }
+    };
 
-    return () => handle.close();
-  }, [dispatch]);
+    check();
+    const timer = window.setInterval(check, 5000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, []);
+
+  if (!initialReady) {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <div className="spinner" />
+          <h2>Backend Readiness Check</h2>
+          <p>Waiting for backend to become ready...</p>
+          <div className="auto-retry-indicator">
+            <span className="spinner small" />
+            <span>Retrying automatically</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
+      <MetricsPoller />
       <Header />
+      {!backendReady && (
+        <div className="backend-reconnect-banner" role="status" aria-live="polite">
+          <span className="spinner small" />
+          <span>Backend is reconnecting. Live status and video will resume automatically.</span>
+        </div>
+      )}
       <TopPanel />
-      <main className="app-main">
-        <LeftPanel />
-        <VideoPanel />
-        <RightPanel />
-      </main>
+      <Body />
       <Footer />
     </div>
   );
 }
+
+export default App;

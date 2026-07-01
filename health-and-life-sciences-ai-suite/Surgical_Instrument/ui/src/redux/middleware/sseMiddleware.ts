@@ -1,0 +1,127 @@
+import type { Middleware } from '@reduxjs/toolkit';
+import { addEvent } from '../slices/eventsSlice';
+import { updateWorkloadData, setAggregatorStatus } from '../slices/servicesSlice';
+import { patchNicuState, resetNicuState } from '../slices/nicuSlice';
+import { api } from '../../services/api';
+
+/**
+ * SSE middleware for the surgical-instrument backend.
+ *
+ * Listens for two named events from /api/events:
+ *   - "full"  : initial / periodic full snapshot
+ *   - "delta" : changed-fields-only patch
+ *
+ * Payload shape:
+ *   {
+ *     lifecycle?: 'starting' | 'running' | 'stopping' | 'error',
+ *     analytics?: { polyp_detection?: { detected, count, confidence } },
+ *     metrics?:   { fps, loop_count },
+ *     pipeline_performance?: { workloads: [...], pipeline_fps, decode },
+ *     frame?:     true,  // when present, signals there's a fresh frame at /frame/latest
+ *   }
+ */
+export const sseMiddleware: Middleware = (store) => {
+  let eventSource: EventSource | null = null;
+
+  return (next) => (action: any) => {
+    if (typeof action !== 'object' || action === null || !('type' in action)) {
+      return next(action);
+    }
+
+    if (action.type === 'sse/connect') {
+      const url = action.payload?.url;
+      if (!url) return next(action);
+
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+
+      store.dispatch(setAggregatorStatus('connecting'));
+
+      eventSource = new EventSource(url);
+
+      eventSource.onopen = () => store.dispatch(setAggregatorStatus('connected'));
+
+      const handleSSEData = (event: MessageEvent) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const timestamp = Date.now();
+          const nicuPatch: any = {};
+
+          if (payload.lifecycle !== undefined) {
+            nicuPatch.systemStatus = payload.lifecycle;
+          }
+          if (payload.analytics?.polyp_detection !== undefined) {
+            const p = payload.analytics.polyp_detection;
+            nicuPatch.polyp = {
+              detected: !!p.detected,
+              count: p.count ?? 0,
+              confidence: p.confidence ?? 0,
+            };
+          }
+          if (payload.frame !== undefined) {
+            nicuPatch.frameUrl = api.getFrameUrl();
+          }
+          if (payload.metrics !== undefined) {
+            nicuPatch.fps = payload.metrics.fps ?? 0;
+            nicuPatch.uptime = payload.metrics.loop_count ?? 0;
+          }
+          if (payload.pipeline_performance !== undefined) {
+            nicuPatch.pipelinePerformance = {
+              workloads: payload.pipeline_performance.workloads ?? [],
+              pipeline_fps: payload.pipeline_performance.pipeline_fps ?? 0,
+              decode: payload.pipeline_performance.decode ?? '',
+            };
+          }
+
+          store.dispatch(patchNicuState(nicuPatch));
+
+          store.dispatch(updateWorkloadData({
+            workloadId: 'polyp',
+            data: payload?.analytics?.polyp_detection ?? {},
+            timestamp,
+          }));
+
+          store.dispatch(addEvent({
+            workload: 'polyp',
+            data: payload,
+            timestamp,
+            id: '',
+          }));
+        } catch {
+          /* ignore malformed events */
+        }
+      };
+
+      eventSource.addEventListener('full', handleSSEData);
+      eventSource.addEventListener('delta', handleSSEData);
+      eventSource.onmessage = handleSSEData;
+
+      eventSource.onerror = () => {
+        store.dispatch(setAggregatorStatus('error'));
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        setTimeout(() => {
+          const state: any = store.getState();
+          if (state.app?.isProcessing) {
+            store.dispatch({ type: 'sse/connect', payload: { url } });
+          }
+        }, 5000);
+      };
+    }
+
+    if (action.type === 'sse/disconnect') {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      store.dispatch(setAggregatorStatus('stopped'));
+      store.dispatch(resetNicuState());
+    }
+
+    return next(action);
+  };
+};
