@@ -85,19 +85,19 @@ You can automate the software setup flow on this page with:
 Default OS setup automation (locale + APT repositories):
 
 ```bash
-sudo ./os_setup_install.sh
+sudo -E ./os_setup_install.sh
 ```
 
 Set date/time during setup:
 
 ```bash
-sudo ./os_setup_install.sh --set-date "2026-03-17 12:00"
+sudo -E ./os_setup_install.sh --set-date "2026-03-17 12:00"
 ```
 
 Enable additional options:
 
 ```bash
-sudo ./os_setup_install.sh --disable-auto-upgrades --fix-raw-github-host
+sudo -E ./os_setup_install.sh --disable-auto-upgrades --fix-raw-github-host
 ```
 
 For all available options:

@@ -11,19 +11,19 @@ You can automate the software setup flow on this page with:
 Default real-time kernel setup (includes OS setup prerequisites: download [os_setup_install.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/get-started/prerequisites/os_setup_install.sh) and place in the same directory before running rt_linux_setup.sh):
 
 ```bash
-sudo ./rt_linux_setup.sh
+sudo -E ./rt_linux_setup.sh
 ```
 
 Skip OS setup prerequisites (run RT setup steps only: os_setup_install.sh not needed):
 
 ```bash
-sudo ./rt_linux_setup.sh --skip-os-setup
+sudo -E ./rt_linux_setup.sh --skip-os-setup
 ```
 
 Real-time setup with GRUB tuning and runtime options:
 
 ```bash
-sudo ./rt_linux_setup.sh --apply-rt-grub-tuning --disable-timer-migration --disable-swap --disable-cstate-cpus 13-13
+sudo -E ./rt_linux_setup.sh --apply-rt-grub-tuning --disable-timer-migration --disable-swap --stop-unnecessary-services --disable-cstate-cpus 13-13
 ```
 
 For all available options:
