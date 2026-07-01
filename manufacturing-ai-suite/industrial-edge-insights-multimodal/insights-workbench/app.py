@@ -11,6 +11,17 @@ app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
 
+def get_seaweed_public_image_base_path() -> str:
+    return os.getenv(
+        "SEAWEEDFS_PUBLIC_IMAGE_BASE_PATH",
+        "/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification",
+    ).rstrip("/")
+
+
+def build_image_url(img_handle: str) -> str:
+    return f"{get_seaweed_public_image_base_path()}/{img_handle}.jpg"
+
+
 def get_fusion_measurement_name() -> str:
     return os.getenv("FUSION_MEASUREMENT", "fusion_result")
 
@@ -109,31 +120,59 @@ def api_explain() -> Any:
     payload = request.get_json(silent=True) or {}
     selected_times = payload.get("selected_times", [])
     app.logger.info("Explain request received with %d selected time(s)", len(selected_times))
+    resolved_images: list[dict[str, Any]] = []
 
     for time_str in selected_times:
         try:
-            dt = datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
-            epoch_ns = int(dt.timestamp() * 1_000_000_000)
-            app.logger.info("Selected time=%s epoch_ns=%d", time_str, epoch_ns)
+            datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+            app.logger.info("Selected time=%s", time_str)
             client = get_influx_client()
             query = f"SELECT * FROM fusion_result WHERE time = '{time_str}'"
             result = client.query(query)
             points = list(result.get_points())
-            app.logger.info("Matched %d row(s) for time=%s row: %s", len(points), time_str, points[0])
+            if len(points) == 0:
+                app.logger.warning("No fusion_result row found for time=%s", time_str)
+                continue
 
-#             vision-weld-classification-results
-# weld-sensor-anomaly-data
+            row = points[0]
+            vision_timestamp = row.get("vision_timestamp")
+            if not vision_timestamp:
+                app.logger.warning("No vision_timestamp found in fusion row for time=%s", time_str)
+                continue
 
-            query_vision = f"SELECT * FROM \"vision-weld-classification-results\" WHERE search_time = '{points[0]['vision_timestamp']}'"
+            query_vision = (
+                f"SELECT * FROM \"vision-weld-classification-results\" "
+                f"WHERE search_time = '{vision_timestamp}'"
+            )
             app.logger.info("Querying vision data with query: %s", query_vision)
             result_vision = client.query(query_vision)
             points_vision = list(result_vision.get_points())
-            app.logger.info("Matched %d row(s) for vision time=%s row: %s", len(points_vision), points[0]['vision_timestamp'], points_vision)
+            app.logger.info(
+                "Matched %d row(s) for vision time=%s",
+                len(points_vision),
+                vision_timestamp,
+            )
 
             if len(points_vision) > 0:
                 frame_id = points_vision[0].get("frame_id")
-                app.logger.info("Retrieved frame_id=%s for vision time=%s", frame_id, points[0]['vision_timestamp'])
-            else:
+                img_handle = points_vision[0].get("img_handle")
+                image_url = build_image_url(str(img_handle)) if img_handle else None
+                app.logger.info(
+                    "Retrieved frame_id=%s img_handle=%s image_url=%s",
+                    frame_id,
+                    img_handle,
+                    image_url,
+                )
+
+                resolved_images.append(
+                    {
+                        "selected_time": time_str,
+                        "frame_id": frame_id,
+                        "img_handle": img_handle,
+                        "image_url": image_url,
+                    }
+                )
+            
 
             query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"
             app.logger.info("Querying sensor data with query: %s", query_sensor)
@@ -162,6 +201,7 @@ def api_explain() -> Any:
             ],
             "recommendation": "Inspect bearing assembly.",
             "selected_times": selected_times,
+            "resolved_images": resolved_images,
         }
     )
 
