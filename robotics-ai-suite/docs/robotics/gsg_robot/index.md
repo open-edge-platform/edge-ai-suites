@@ -590,40 +590,13 @@ access to commonly used robotic functionality with ease.
    echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
    ```
 
-3. Configure APT preferences to pin the RealSense version:
-
-   This step pins the RealSense SDK to validated versions that ensure compatibility with ROS 2 and the tutorials in this documentation. This prevents automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
-
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
-   ```
-
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
-
-   ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
-   ```
-
-   ::::
-   :::::
-
-4. Update your APT repository caches after setting up the repository:
+3. Update your APT repository caches after setting up the repository:
 
    ```bash
    sudo apt update
    ```
 
-5. Install the RealSense drivers and libraries:
+4. Install the RealSense drivers and libraries:
 
    :::::{tab-set}
    ::::{tab-item} **Jazzy**

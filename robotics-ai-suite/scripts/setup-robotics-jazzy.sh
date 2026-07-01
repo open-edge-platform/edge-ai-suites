@@ -66,6 +66,7 @@ run sudo apt-get remove -y --purge "*oneapi*" "ros-*" "intel-igc*" "*openvino*" 
 run sudo apt-get remove -y --purge "intel-igc*" || :
 run sudo apt-get remove -y --purge "*level-zero*" || :
 run sudo apt-get remove -y --purge "libze1" || :
+sudo rm -f "/etc/apt/preferences.d/librealsense" || :
 sudo rm -f "/etc/apt/sources.list.d/*" || :
 
 step "Updating package lists and cleaning up..."
@@ -146,9 +147,6 @@ step "Adding Intel RealSense apt repository..."
 sudo mkdir -p /etc/apt/keyrings
 curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
 echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
-echo -e "\nPackage: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
-echo -e "\nPackage: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
-echo -e "\nPackage: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
 run sudo apt-get update
 
 step "Installing Intel RealSense SDK..."
