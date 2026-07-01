@@ -161,3 +161,10 @@ backend-infer:  ## Run standalone annotated inference on $(DEMO_VIDEO)
 	$(BACKEND_PY) -m backend.main_infer --ir $(IR_DIR) --video $(DEMO_VIDEO) \
 		--out-video out/annotated.mp4 --out-csv out/per_frame.csv
 
+.PHONY: backend-serve
+backend-serve:  ## Run the real Phase 3 Flask server on :5001 (replaces mock-backend)
+	@test -x $(BACKEND_PY) || (echo "[backend-serve] run 'make backend-venv' first"; exit 1)
+	@echo "[backend-serve] starting on http://0.0.0.0:5001"
+	PORT=5001 BACKEND_CONFIG=backend/config/model.yaml $(BACKEND_PY) -m backend.main_server
+
+

@@ -48,6 +48,9 @@ PROGRESS_*.md
 SCRATCH_*.md
 NOTES_*.md
 **/TASK_*.md
+
+# Developer reference notes — local only, never commit
+_dev_notes/
 **/PROGRESS_*.md
 **/SCRATCH_*.md
 **/NOTES_*.md
