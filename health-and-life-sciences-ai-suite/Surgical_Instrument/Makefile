@@ -37,15 +37,39 @@ mqtt-passwd: env  ## Generate configs/mqtt_passwd from MQTT_PASSWORD in .env
 	@chmod 600 $(MQTT_PASSWD_FILE)
 	@echo "[mqtt-passwd] $(MQTT_PASSWD_FILE) written (user=$(MQTT_USERNAME))"
 
+# ---- Model artifact locations (align with backend/config/model.yaml) --------
+MODEL_NAME       ?= yolo11n_polyp
+IR_DIR           ?= models/$(MODEL_NAME)/best_openvino_model
+IR_MARKER        ?= models/$(MODEL_NAME)/.trained_ok
+DEMO_VIDEO       ?= videos/polyp_test.mp4
+# Local POC scratch — used to seed the pretrained IR without re-training.
+POC_IR_DIR       ?= poc/st2_app/artifacts/yolo11n_xpu/best_openvino_model
+POC_DEMO_VIDEO   ?= poc/st1_artifacts/polyp_test.mp4
+
 .PHONY: assets
-assets:  ## Fetch / validate model and sample video
-	@echo "[assets] TODO (Phase 2): fetch yolo11n IR + polyp_test.mp4 from artifact server"
-	@test -f models/yolo_polyp/best.xml || echo "  WARN: models/yolo_polyp/best.xml missing"
-	@test -f videos/polyp_test.mp4      || echo "  WARN: videos/polyp_test.mp4 missing"
+assets:  ## Seed pretrained IR + demo video from POC (skips training)
+	@mkdir -p $(IR_DIR) videos
+	@if [ -d $(POC_IR_DIR) ]; then \
+		cp -v $(POC_IR_DIR)/best.xml  $(IR_DIR)/; \
+		cp -v $(POC_IR_DIR)/best.bin  $(IR_DIR)/; \
+		cp -v $(POC_IR_DIR)/metadata.yaml $(IR_DIR)/; \
+		echo "externally_seeded_at=$$(date -Is)" > $(IR_MARKER); \
+		echo "source=$(POC_IR_DIR)" >> $(IR_MARKER); \
+		echo "[assets] seeded IR at $(IR_DIR)"; \
+	else \
+		echo "[assets] POC IR not found at $(POC_IR_DIR); run 'make backend-bootstrap' to train from scratch"; \
+	fi
+	@if [ -f $(POC_DEMO_VIDEO) ]; then \
+		cp -v $(POC_DEMO_VIDEO) $(DEMO_VIDEO); \
+	elif [ -f $(DEMO_VIDEO) ]; then \
+		echo "[assets] demo video already present at $(DEMO_VIDEO)"; \
+	else \
+		echo "[assets] WARN: $(POC_DEMO_VIDEO) missing — supply your own $(DEMO_VIDEO)"; \
+	fi
 
 .PHONY: validate-models
 validate-models:  ## Sanity-check model files
-	@for f in models/yolo_polyp/best.xml models/yolo_polyp/best.bin models/yolo_polyp/yolo_polyp.json; do \
+	@for f in $(IR_DIR)/best.xml $(IR_DIR)/best.bin; do \
 		if [ ! -f "$$f" ]; then echo "MISSING $$f"; exit 1; fi; \
 		echo "OK $$f"; \
 	done
@@ -104,4 +128,36 @@ mock-backend:  ## Run the Phase 1 mock backend (offline UI dev)
 .PHONY: ui-dev
 ui-dev:  ## Run the Vite dev server (proxies to mock-backend on :5001)
 	cd ui && npm install && npm run dev
+
+# ---- Backend (Phase 2 — bootstrap orchestrator + streaming inference) -------
+
+BACKEND_VENV     ?= .venv-backend
+BACKEND_PY       ?= $(BACKEND_VENV)/bin/python
+TORCH_XPU_INDEX  ?= https://download.pytorch.org/whl/xpu
+
+.PHONY: backend-venv
+backend-venv:  ## Create .venv-backend with torch+xpu + Ultralytics + OpenVINO
+	@if [ ! -d $(BACKEND_VENV) ]; then \
+		python3 -m venv $(BACKEND_VENV); \
+		$(BACKEND_PY) -m pip install -U pip wheel; \
+	fi
+	@echo "[backend-venv] installing torch+xpu wheels"
+	$(BACKEND_PY) -m pip install --index-url $(TORCH_XPU_INDEX) torch==2.7.1 torchvision==0.22.1
+	@echo "[backend-venv] installing backend requirements"
+	$(BACKEND_PY) -m pip install -r backend/requirements.txt
+	@echo "[backend-venv] ready — activate with 'source $(BACKEND_VENV)/bin/activate'"
+
+.PHONY: backend-bootstrap
+backend-bootstrap:  ## Run the cache-first bootstrap (skips train if IR cached)
+	@test -x $(BACKEND_PY) || (echo "[backend-bootstrap] run 'make backend-venv' first"; exit 1)
+	$(BACKEND_PY) -m backend.main_bootstrap
+
+.PHONY: backend-infer
+backend-infer:  ## Run standalone annotated inference on $(DEMO_VIDEO)
+	@test -x $(BACKEND_PY) || (echo "[backend-infer] run 'make backend-venv' first"; exit 1)
+	@test -f $(IR_DIR)/best.xml || (echo "[backend-infer] IR missing — run 'make assets' or 'make backend-bootstrap'"; exit 1)
+	@test -f $(DEMO_VIDEO)      || (echo "[backend-infer] $(DEMO_VIDEO) missing — run 'make assets'"; exit 1)
+	@mkdir -p out
+	$(BACKEND_PY) -m backend.main_infer --ir $(IR_DIR) --video $(DEMO_VIDEO) \
+		--out-video out/annotated.mp4 --out-csv out/per_frame.csv
 
