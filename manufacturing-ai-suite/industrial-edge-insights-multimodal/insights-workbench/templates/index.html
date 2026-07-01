@@ -298,8 +298,8 @@
       explainBtn.classList.toggle("enabled", enabled);
     }
 
-    function getSelectedRows() {
-      const selectedRows = [];
+    function getSelectedTimes() {
+      const selectedTimes = [];
       const checkboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
       checkboxes.forEach((checkbox) => {
         if (!checkbox.checked) {
@@ -308,11 +308,14 @@
 
         const rowJson = checkbox.getAttribute("data-row-json");
         if (rowJson) {
-          selectedRows.push(JSON.parse(rowJson));
+          const row = JSON.parse(rowJson);
+          if (row.time) {
+            selectedTimes.push(row.time);
+          }
         }
       });
 
-      return selectedRows;
+      return selectedTimes;
     }
 
     function buildTable(rows) {
@@ -427,8 +430,8 @@
     });
 
     explainBtn.addEventListener("click", async () => {
-      const selectedRows = getSelectedRows();
-      if (selectedRows.length === 0) {
+      const selectedTimes = getSelectedTimes();
+      if (selectedTimes.length === 0) {
         return;
       }
 
@@ -445,7 +448,7 @@
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ rows: selectedRows }),
+          body: JSON.stringify({ selected_times: selectedTimes }),
         });
 
         const payload = await response.json();
@@ -464,7 +467,7 @@
           <ul style="margin: 0 0 10px 18px; padding: 0;">${bulletsHtml}</ul>
           <div><strong>Recommendation:</strong> ${payload.recommendation || "N/A"}</div>
         `;
-        setStatus(`Explanation generated for ${selectedRows.length} row(s).`);
+        setStatus(`Explanation generated for ${selectedTimes.length} selected time value(s).`);
       } catch (error) {
         explainBody.textContent = error.message;
         setStatus(error.message);
