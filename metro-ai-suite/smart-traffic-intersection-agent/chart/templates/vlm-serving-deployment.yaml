@@ -52,7 +52,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              # Storage-aware model detection — skip download if model already on PVC
+              # Storage-aware model detection
               vlm_storage_name="{{ $storageName }}"
               vlm_model_path="/models/${vlm_storage_name}"
 
@@ -72,7 +72,7 @@ spec:
                   needs_init=true
                 fi
                 if [ "$needs_init" = false ]; then
-                  echo "Model ${vlm_storage_name} already exists with correct config. Skipping."
+                  echo "Model ${vlm_storage_name} already exists with correct config."
                 fi
               else
                 echo "No config.json found, building OVMS model repository."
@@ -80,20 +80,14 @@ spec:
               fi
 
               if [ "$needs_init" = true ]; then
-                exec /opt/entrypoint.sh \
-                    --plugins huggingface \
-                    --ephemeral \
-                    --model-name {{ .Values.vlmServing.env.modelName | quote }} \
-                    --hub huggingface \
-                    --type vlm \
-                    --precision {{ $weightFormat | quote }} \
-                    --device {{ $targetDevice | quote }}
+                . /config/ovms-init.sh
               fi
+          args:
+            - {{ .Values.vlmServing.env.modelName | quote }}
+            - {{ $weightFormat | quote }}
+            - {{ .Values.vlmServing.huggingfaceToken | quote }}
+            - {{ $targetDevice | quote }}
           env:
-            - name: MODELS_DIR
-              value: /models
-            - name: HF_TOKEN
-              value: {{ .Values.vlmServing.huggingfaceToken | quote }}
             - name: http_proxy
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy
@@ -117,6 +111,9 @@ spec:
           volumeMounts:
             - name: ov-models
               mountPath: /models
+            - name: init-script
+              mountPath: /config
+              readOnly: true
       containers:
         - name: {{ .Values.vlmServing.name }}
           image: "{{- if $needsGpu -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.gpuTag }}{{- else -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}{{- end -}}"
@@ -190,6 +187,10 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: init-script
+          configMap:
+            name: {{ include "stia.vlmServing.fullname" . }}-init-script
+            defaultMode: 0755
         {{- if $needsGpu }}
         - name: dri-device
           hostPath:
