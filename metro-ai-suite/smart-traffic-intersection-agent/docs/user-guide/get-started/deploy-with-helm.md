@@ -81,12 +81,13 @@ Navigate to the chart directory:
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/chart
 ```
 
-#### Step 3: Build Chart Dependencies
+#### Step 3: Review Chart Dependencies
 
-The chart uses Helm subcharts for the live-metrics service and collector. Build them before installing:
+The chart renders the Traffic Agent, OVMS, and Metrics Manager resources directly. No separate
+dependency build is required before installing from source.
 
 ```bash
-helm dependency build .
+helm lint .
 ```
 
 #### Step 4: Configure the `values.yaml` File
@@ -167,19 +168,13 @@ kubectl get pods -n <your-namespace>
 kubectl get services -n <your-namespace>
 ```
 
-You should see two pods:
+You should see these pods:
 
 | Pod | Description |
 | --- | ----------- |
 | `stia-traffic-agent-*` | The traffic intersection agent (backend + Gradio UI) |
 | `stia-ovms-service-*` | The OVMS VLM inference server |
-
-When live metrics is enabled (the default), you will also see:
-
-| Pod | Description |
-| --- | ----------- |
-| `<release>-live-metrics-service-*` | WebSocket relay for live system metrics |
-| `<release>-collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
+| `<release>-metrics-manager-*` | Metrics Manager for System Telemetry and STIA application metrics |
 
 Wait until all pods show `Running` and `READY 1/1`:
 
@@ -279,6 +274,11 @@ helm uninstall stia -n <your-namespace>
 | `trafficAgent.traffic.highDensityThreshold` | Object count for high-density classification | `10` |
 | `trafficAgent.traffic.moderateDensityThreshold` | Object count for moderate-density classification | `""` |
 | `trafficAgent.traffic.bufferDuration` | Traffic analysis buffer window | `""` |
+| `trafficAgent.metrics.managerUrl` | External Metrics Manager API URL. Empty uses the bundled Metrics Manager service. | `""` |
+| `trafficAgent.metrics.streamUrl` | External Metrics Manager SSE stream URL. Empty uses `<managerUrl>/metrics/stream`. | `""` |
+| `trafficAgent.metrics.healthUrl` | External Metrics Manager health URL. Empty uses `<managerUrl>/health`. | `""` |
+| `trafficAgent.metrics.pushEnabled` | Override custom STIA metric publishing. Empty follows `metrics-manager.enabled`. | `""` |
+| `trafficAgent.metrics.pushTimeoutSeconds` | Timeout for best-effort STIA metric publishing | `1.0` |
 | `trafficAgent.persistence.enabled` | Enable persistent storage for agent data | `true` |
 | `trafficAgent.persistence.size` | PVC size for agent data | `1Gi` |
 | `trafficAgent.persistence.storageClass` | Storage class (empty = cluster default) | `""` |
@@ -317,21 +317,26 @@ helm uninstall stia -n <your-namespace>
 | `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`). The Smart Intersection RI (release-2026.0.0) creates `smart-intersection-ca-secret`. | `smart-intersection-ca-secret` |
 | `tls.caCertKey` | Key name inside the external secret (required when `caCertSecretName` is set) | `root-cert` |
 
-### Live Metrics Service Settings (Subchart)
+### Metrics Manager Settings
 
-The live-metrics service is packaged as a Helm subchart. Keys must be nested under `live-metrics-service` to match the subchart name.
-
-| Key | Description | Default |
-| --- | ----------- | ------- |
-| `live-metrics-service.enabled` | Deploy the live-metrics WebSocket relay | `true` |
-
-### Collector / Telegraf Settings (Subchart)
-
-The collector is packaged as a Helm subchart. Keys must be nested under `collector` to match the subchart name.
+Metrics Manager provides the UI **System Telemetry** stream and accepts STIA application metrics.
+Keys are nested under `metrics-manager`.
 
 | Key | Description | Default |
 | --- | ----------- | ------- |
-| `collector.enabled` | Deploy the Telegraf collector (requires `live-metrics-service.enabled=true`) | `true` |
+| `metrics-manager.enabled` | Deploy Metrics Manager | `true` |
+| `metrics-manager.service.metricsPort` | Metrics Manager API and `/metrics/stream` port | `9090` |
+| `metrics-manager.service.telegrafPort` | Telegraf Prometheus metrics port | `9273` |
+| `metrics-manager.service.telegrafHttpPort` | Telegraf HTTP listener port for custom metrics | `8186` |
+| `metrics-manager.hardware.gpu.enabled` | Enable Intel GPU telemetry through `/dev/dri` | `true` |
+| `metrics-manager.pod.hostPID` | Enable host process namespace access for host telemetry | `true` |
+| `metrics-manager.securityContext.privileged` | Enable privileged access for NPU telemetry on trusted nodes | `false` |
+
+> **Security/runtime note:** Host telemetry may require the Metrics Manager pod to run with
+> `hostPID` and hostPath mounts such as `/sys`, `/run`, and `/dev/dri`. Intel NPU telemetry
+> may additionally require `metrics-manager.securityContext.privileged=true`. Enable elevated
+> deployment-time permissions only on trusted nodes and in accordance with your cluster security
+> policy.
 
 ---
 
@@ -497,6 +502,16 @@ You should see the OVMS VLM serving pods running with the Trusted Compute runtim
   ```
 
 - **Traffic agent cannot connect to MQTT broker:** Verify that the Scenescape deployment is reachable from the cluster, the `trafficAgent.mqtt.host` value is correct, and the CA certificate is provided via `tls.caCert` or `tls.caCertSecretName`.
+
+- **System Telemetry metrics are missing:** Verify the Metrics Manager pod is running and check its logs. Then port-forward its API and Prometheus ports to test `/health` and Telegraf metrics:
+
+  ```bash
+  kubectl get pods -n <your-namespace> | grep metrics-manager
+  kubectl logs <metrics-manager-pod-name> -n <your-namespace>
+  kubectl port-forward <metrics-manager-pod-name> 9090:9090 9273:9273 -n <your-namespace>
+  curl -fsS http://127.0.0.1:9090/health
+  curl -fsS http://127.0.0.1:9273/metrics | head
+  ```
 
 - **PVC not cleaned up after uninstall:** When `vlmServing.persistence.keepOnUninstall` is `true` (the default), the model cache PVC is intentionally retained. To reclaim storage, delete it manually:
 
