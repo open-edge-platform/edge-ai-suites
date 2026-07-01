@@ -57,19 +57,18 @@ This guide provides instructions for setting up a custom UDF deployment package 
 
 ### Docker Compose Deployment
 
-> **Note:** Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` and `Weld Defect Detection` sample apps.
+> **Note:** Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` sample app.
 
 The UDF deployment package (UDFs, TICKscripts, models) and `config.json` for each sample app are uploaded into the Time Series Analytics Microservice container via `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile`:
 
 - **Wind Turbine Anomaly Detection**: `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`
-- **Weld Defect Detection**: `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`
 
 To apply changes to the UDF deployment package or `config.json`, update the files at the relevant path above, then follow the steps below to upload the updated package:
 
 1. Create the UDF deployment package tar file:
 
    ```sh
-   export SAMPLE_APP="<wind-turbine-anomaly-detection or weld-defect-detection>"
+   export SAMPLE_APP="<wind-turbine-anomaly-detection>"
    # Navigate to the directory containing your UDF deployment package files
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/${SAMPLE_APP}/time-series-analytics-config/
    rm -f ${SAMPLE_APP}.tar
@@ -101,7 +100,7 @@ To apply changes to the UDF deployment package or `config.json`, update the file
 3. Create the UDF deployment package tar file:
 
    ```sh
-   export SAMPLE_APP="<wind-turbine-anomaly-detection or weld-defect-detection>"
+   export SAMPLE_APP="<wind-turbine-anomaly-detection>"
    # Navigate to the directory containing your UDF deployment package files
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/${SAMPLE_APP}/time-series-analytics-config/
    rm -f ${SAMPLE_APP}.tar

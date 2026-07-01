@@ -1707,6 +1707,73 @@ Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
+# PYTHON VIRTUAL ENVIRONMENTS
+# ============================================================================
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "   CREATING VIRTUAL ENVIRONMENTS" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+$venvBackend = Join-Path $ScriptDir "smartclassroom"
+$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
+
+$recreateVenvs = $false
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+    if ($Silent) {
+        Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
+        $recreateVenvs = $false
+    } else {
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        $recreateVenvs = $response.ToUpper() -eq "Y"
+        if ($recreateVenvs) {
+            Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } else {
+            Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
+        }
+    }
+}
+Write-Host ""
+
+Write-Host "Setting up Backend virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvBackend)) {
+    Remove-Item $venvBackend -Recurse -Force
+}
+if (-not (Test-Path $venvBackend)) {
+    python -m venv $venvBackend
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create Backend venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
+}
+Write-Host ""
+
+Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+    Remove-Item $venvContentSearch -Recurse -Force
+}
+if (-not (Test-Path $venvContentSearch)) {
+    python -m venv $venvContentSearch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+}
+Write-Host ""
+
+# ============================================================================
 # SETUP COMPLETE
 # ============================================================================
 Write-Host "========================================" -ForegroundColor Green
