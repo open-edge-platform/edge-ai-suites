@@ -8,6 +8,8 @@ const SettingsManager = (function() {
         try {
             const settings = {
                 rtspUrl: els.rtspInput?.value || '',
+                streamSourceType: els.streamSourceTypeSelect?.value || 'camera',
+                cameraDevicePath: els.cameraDeviceSelect?.value || '',
                 prompt: els.promptInput?.value || '',
                 modelName: els.modelNameSelect?.value || '',
                 pipelineName: els.pipelineSelect?.value || '',
@@ -82,6 +84,9 @@ const SettingsManager = (function() {
         if (settings.customHeight !== undefined && settings.customHeight !== '' && els.customHeightInput) {
             els.customHeightInput.value = settings.customHeight;
         }
+        if (settings.streamSourceType && els.streamSourceTypeSelect) {
+            els.streamSourceTypeSelect.value = settings.streamSourceType;
+        }
         // Model and pipeline will be restored after options are loaded
     }
 
@@ -101,11 +106,18 @@ const SettingsManager = (function() {
                 els.pipelineSelect.value = settings.pipelineName;
             }
         }
+        if (settings.cameraDevicePath && els.cameraDeviceSelect) {
+            const options = Array.from(els.cameraDeviceSelect.options).map(o => o.value);
+            if (options.includes(settings.cameraDevicePath)) {
+                els.cameraDeviceSelect.value = settings.cameraDevicePath;
+            }
+        }
     }
 
     function setupSettingsPersistence(els) {
         // Save settings on input changes
-        const inputs = [els.rtspInput, els.promptInput, els.maxTokensInput, els.modelNameSelect, els.pipelineSelect, els.runNameInput,
+        const inputs = [els.rtspInput, els.streamSourceTypeSelect, els.cameraDeviceSelect,
+            els.promptInput, els.maxTokensInput, els.modelNameSelect, els.pipelineSelect, els.runNameInput,
             els.frameRateInput, els.chunkSizeInput, els.frameQualitySelect, els.customWidthInput, els.customHeightInput,
             els.captionHistoryInput];
         inputs.forEach(el => {

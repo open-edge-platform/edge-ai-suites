@@ -18,17 +18,23 @@ All notable changes to this project are documented in this file.
 - Removed unused pip packages from wind turbine training `requirements.txt`. ([#2642])
 - Updated `setuptools` to the latest version in training requirements. ([#2647])
 - Updated version to `2026.1.0`. ([#2387])
+- Changed UDF deployment to use REST API upload instead of bind-mounting artifacts; introduced max upload size environment variable in Helm templates. ([#2369])
+- Migrated Wind Turbine dataset from Kaggle to a project-owned synthetic dataset. ([#2851])
+- Updated image suffix and Helm chart version to `rc1`. ([#2717])
 
 ### Security
 - Bumped `cryptography` from 46.0.5 to 47.0.0. ([#2352])
 - Updated Docker Compose service image versions to address security vulnerabilities. ([#2579])
 - Bumped `requests` to 2.33.0 in test. ([#2343])
+- Fixed security vulnerability issues. ([#2869])
 
 ### Fixed
 - Fixed Helm automation deployment issues. ([#2424])
 - Fixed failing functional test cases. ([#2450])
 - Removed OPC-UA server port range to fix connectivity issues. ([#2524])
 - Fixed CI/CD GitHub workflow issues for time-series. ([#2346])
+- Updated test automation to be more resilient in Helm deployments and aligned UDF activation with the REST API upload workflow. ([#2472])
+- Fixed functional tests for more reliable Helm automation. ([#2383])
 
 ### Documentation
 - Distinguished Time-Series vs Multimodal Weld Defect Detection documentation. ([#2607])
@@ -36,6 +42,17 @@ All notable changes to this project are documented in this file.
 - Updated OPC-UA alert configuration documentation. ([#2522])
 - Fixed broken reference in Weld Defect Detection documentation. ([#2581])
 - Fixed typos in documentation. ([#2565])
+- Updated get-started guide by moving multi-stream ingestion and benchmarking content to dedicated how-to guides. ([#2884])
+- Fixed model reference in documentation. ([#2867])
+- Updated documentation links and references. ([#2857])
+- Updated release branch references in documentation for 2026.1. ([#2766], [#2796], [#2946])
+- Minor documentation updates. ([#2789])
+- Fixed documentation issues. ([#2752])
+- Updated clone commands to include explicit branch or release-tag parameter. ([#2662])
+- Removed "project" instances from GitHub navigation box directives in documentation index. ([#2385])
+- Language and formatting review of documentation. ([#2990])
+- Fixed punctuation and minor corrections in release notes. ([#2947])
+- Miscellaneous documentation fixes. ([#2932])
 
 ---
 [#2283]: https://github.com/open-edge-platform/edge-ai-suites/pull/2283
@@ -65,6 +82,21 @@ All notable changes to this project are documented in this file.
 [#2607]: https://github.com/open-edge-platform/edge-ai-suites/pull/2607
 [#2642]: https://github.com/open-edge-platform/edge-ai-suites/pull/2642
 [#2647]: https://github.com/open-edge-platform/edge-ai-suites/pull/2647
+[#2662]: https://github.com/open-edge-platform/edge-ai-suites/pull/2662
+[#2717]: https://github.com/open-edge-platform/edge-ai-suites/pull/2717
+[#2752]: https://github.com/open-edge-platform/edge-ai-suites/pull/2752
+[#2766]: https://github.com/open-edge-platform/edge-ai-suites/pull/2766
+[#2789]: https://github.com/open-edge-platform/edge-ai-suites/pull/2789
+[#2796]: https://github.com/open-edge-platform/edge-ai-suites/pull/2796
+[#2851]: https://github.com/open-edge-platform/edge-ai-suites/pull/2851
+[#2857]: https://github.com/open-edge-platform/edge-ai-suites/pull/2857
+[#2867]: https://github.com/open-edge-platform/edge-ai-suites/pull/2867
+[#2869]: https://github.com/open-edge-platform/edge-ai-suites/pull/2869
+[#2884]: https://github.com/open-edge-platform/edge-ai-suites/pull/2884
+[#2932]: https://github.com/open-edge-platform/edge-ai-suites/pull/2932
+[#2946]: https://github.com/open-edge-platform/edge-ai-suites/pull/2946
+[#2947]: https://github.com/open-edge-platform/edge-ai-suites/pull/2947
+[#2990]: https://github.com/open-edge-platform/edge-ai-suites/pull/2990
 ---
 
 ## [2026.0] - Mar 2026

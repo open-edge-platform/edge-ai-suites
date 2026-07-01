@@ -1,5 +1,6 @@
 # NICU Warmer — Intelligent Patient Monitoring
 
+::::{container} component_header_row
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/health-and-life-sciences-ai-suite/NICU-Warmer">
@@ -8,14 +9,30 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/health-and-life-sciences-ai-suite/NICU-Warmer/README.md">
      Readme
   </a>
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/latch-detect">
+     latch-detect model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/patient-present">
+     patient-present model
+  </a>
+  <a class="icon_download" href="https://huggingface.co/Intel/people-present">
+     people-present model
+  </a>
 </div>
 hide_directive-->
 
-The NICU Warmer application is a reference workload that demonstrates how multiple AI models
-can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing real-time
-neonatal patient monitoring in a hospital warmer bed scenario.
+> Note!
+> This application is for **reference and evaluation purposes**. It is
+  **not intended for direct use in clinical or diagnostic environments** and is not
+  validated as such.
+::::
 
-It combines several AI workloads:
+The NICU Warmer application is a reference solution that demonstrates how multiple AI models
+can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing workloads
+that mimic real-time neonatal patient monitoring in a simulated hospital warmer bed scenario.
+
+It combines several representative AI workloads:
 
 - **Object Detection (×3):** Custom OpenVINO FP32 models for detecting patient presence,
   caretaker presence, and warmer latch clip status — all running on Intel Arc GPU.
@@ -41,8 +58,6 @@ Intel GPU, NPU, and CPU, monitored, and visualized in a clinical-style scenario.
   data/control flows.
 - [Release Notes](./release-notes.md) – Version history and known issues.
 
-> **Disclaimer:** This application is provided for development and evaluation purposes only and
-> is _not_ intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}

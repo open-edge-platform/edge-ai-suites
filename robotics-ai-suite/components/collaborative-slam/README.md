@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Collaborative SLAM (CSLAM)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
+
 ## Overview
 
 This is a collaborative SLAM system. The main input should come from a camera, either monocular, or stereo, or RGB-D. It also supports wheel odometry, IMU and 2D LiDAR data as auxiliary input. The output include the estimated pose of the camera and visualization of the internal map. All inputs and outputs are in standard ROS formats.
@@ -463,9 +467,7 @@ If builds fail with network errors behind proxy:
 
 **Solution:** Export proxy environment variables before building:
 
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
+## Additional Documentation
 
 Additional documentation is placed under docs folder:
 

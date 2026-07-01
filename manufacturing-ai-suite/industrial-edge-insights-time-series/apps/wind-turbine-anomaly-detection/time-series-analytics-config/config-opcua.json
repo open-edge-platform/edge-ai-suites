@@ -1,0 +1,14 @@
+{
+    "udfs": {
+        "name": "windturbine_anomaly_detector",
+        "models": "windturbine_anomaly_detector.pkl",
+        "device": "CPU"
+    },
+    "alerts": {
+        "opcua": {
+            "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
+            "namespace": 1,
+            "node_id": 2004
+        }
+    }
+}

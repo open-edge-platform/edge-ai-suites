@@ -1,3 +1,6 @@
+{{- if and .Values.trustedCompute.enabled .Values.dlstreamerPipelineServer.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and dlstreamerPipelineServer.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,18 +17,15 @@ spec:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
     spec:
+      {{- if .Values.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
       securityContext:
-        supplementalGroups: [109,110,992]
+        supplementalGroups: [44,109,110,990,992,993,994,996]
       volumes:
-      - name: dev
-        hostPath:
-          path: /dev
       - name: dev-shm
         hostPath:
           path: /dev/shm
-      - name: run-udev
-        hostPath:
-          path: /run/udev
       - name: dlstreamer-pipeline-server-videos-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-videos-pvc
@@ -106,29 +106,27 @@ spec:
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
-        securityContext:
-          privileged: true
-          runAsUser: 0
-          runAsGroup: 0
-        {{- else }}
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+        {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
+        resources:
+          requests:
+             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+          limits:
+             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
+             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
         {{- end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         terminationMessagePath: /tmp/termination-log
         command: ["/bin/bash", "-c"]
         args:
           - |
             {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
         volumeMounts:
-        - name: dev
-          mountPath: /dev
         - name: dev-shm
           mountPath: /dev/shm
-        - name: run-udev
-          mountPath: /run/udev
         - mountPath: /home/pipeline-server/videos
           name: dlstreamer-pipeline-server-videos-data
         - mountPath: /home/pipeline-server/models/object_detection
@@ -147,10 +145,15 @@ spec:
         ports:
           - containerPort: 8080
           - containerPort: 8555
-      {{- if .Values.dlstreamerPipelineServer.npuWorkload }}
+      {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
         resources:
           limits:
-            npu.intel.com/accel: 1
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+      {{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+            {{ .Values.dlstreamerPipelineServer.npu.type }}: {{ .Values.dlstreamerPipelineServer.npu.count }}
       {{- end }}
       restartPolicy: Always
       {{- with .Values.imagePullSecrets }}

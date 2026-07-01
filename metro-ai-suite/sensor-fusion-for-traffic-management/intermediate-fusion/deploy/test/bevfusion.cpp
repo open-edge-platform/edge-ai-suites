@@ -15,9 +15,11 @@
 #include "visualization.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -41,6 +43,8 @@ const std::vector<std::string>& class_names()
     return names;
 }
 
+enum class CalibResyncMode { Auto, Always, Off };
+
 struct Args {
     std::string dataset_path;
     bevfusion::SplitPipelinePreset preset = bevfusion::SplitPipelinePreset::V2X;
@@ -62,6 +66,9 @@ struct Args {
     bool use_int8_head = true;
     std::vector<int> filter_labels{7, 8};
     bool model_dir_set = false;
+    bool bbox_score_set = false;
+    float bbox_score_threshold = 0.0f;
+    CalibResyncMode calib_resync = CalibResyncMode::Auto;
 
     bool any_int8() const
     {
@@ -105,8 +112,9 @@ void print_usage(const char* argv0)
               << "[--model-dir DIR] [--device DEVICE] [--num-samples N] [--repeat N] "
               << "[--vis] [--save-image] [--save-video] [--display] [--util] "
               << "[--dump-pred] [--pred-dir DIR] [--vis-dir DIR] "
-              << "[--int8] [--fp32] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] "
-              << "[--filter-labels NAME,...] [--no-filter]\n";
+              << "[--int8] [--fp16] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] "
+              << "[--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter] "
+              << "[--calib-resync auto|always|off]\n";
 }
 
 Args parse(int argc, char** argv)
@@ -170,11 +178,13 @@ Args parse(int argc, char** argv)
             args.use_int8_pfe = true;
             args.use_int8_fuser = true;
             args.use_int8_head = true;
-        } else if (key == "--fp32") {
+        } else if (key == "--fp16") {
             args.use_int8_camera = false;
             args.use_int8_pfe = false;
             args.use_int8_fuser = false;
             args.use_int8_head = false;
+        } else if (key == "--fp32") {
+            throw std::runtime_error("--fp32 was renamed to --fp16 for bevfusion");
         } else if (key == "--int8-camera") {
             args.use_int8_camera = true;
         } else if (key == "--int8-pfe") {
@@ -183,10 +193,25 @@ Args parse(int argc, char** argv)
             args.use_int8_fuser = true;
         } else if (key == "--int8-head") {
             args.use_int8_head = true;
+        } else if (key == "--bbox-score") {
+            args.bbox_score_threshold = std::stof(next());
+            args.bbox_score_set = true;
         } else if (key == "--filter-labels") {
             args.filter_labels = parse_label_list(next());
         } else if (key == "--no-filter") {
             args.filter_labels.clear();
+        } else if (key == "--calib-resync") {
+            const std::string value = next();
+            if (value == "auto") {
+                args.calib_resync = CalibResyncMode::Auto;
+            } else if (value == "always") {
+                args.calib_resync = CalibResyncMode::Always;
+            } else if (value == "off") {
+                args.calib_resync = CalibResyncMode::Off;
+            } else {
+                throw std::runtime_error("Unknown --calib-resync value: " + value
+                                         + " (expected auto|always|off)");
+            }
         } else {
             throw std::runtime_error("Unknown arg: " + key);
         }
@@ -262,6 +287,29 @@ void print_filter(const std::vector<int>& labels)
     std::cout << std::endl;
 }
 
+// Calibration signature: P2 intrinsics (12 floats) + Tr_velo_to_cam (16 floats).
+// Used by --calib-resync auto to detect when the dataset's calibration jumps
+// (e.g. dair-v2x-i-kitti splices 3 sensor configurations across frame boundaries
+//  986, 1944, 7084). When the signature changes, force a one-shot recompute of
+//  camera_metas + geometry LUT so the V2X preset (which normally caches metas
+//  from the warmup frame) doesn't keep projecting with stale calibration.
+using CalibSignature = std::array<float, 28>;
+
+bool make_calib_signature(const CalibField_t& calib, CalibSignature& out)
+{
+    auto itP = calib.cameraParams.find("P2");
+    auto itTr = calib.transforms.find("Tr_velo_to_cam");
+    if (itTr == calib.transforms.end()) {
+        itTr = calib.transforms.find("lidar_to_camera");
+    }
+    if (itP == calib.cameraParams.end() || itTr == calib.transforms.end()) {
+        return false;
+    }
+    std::copy(std::begin(itP->second.intrinsics), std::end(itP->second.intrinsics), out.begin());
+    std::copy(std::begin(itTr->second.data), std::end(itTr->second.data), out.begin() + 12);
+    return true;
+}
+
 std::string csv_quote(const std::string& value)
 {
     std::string quoted;
@@ -304,12 +352,21 @@ int main(int argc, char** argv)
               << " vis_dir=" << args.vis_dir.string() << "\n"
               << "[info] num_samples=" << args.num_samples
               << " repeat=" << args.repeat_count << std::endl;
+    {
+        const char* mode_str = (args.calib_resync == CalibResyncMode::Auto)    ? "auto"
+                             : (args.calib_resync == CalibResyncMode::Always)  ? "always"
+                                                                               : "off";
+        std::cout << "[info] calib_resync=" << mode_str << std::endl;
+    }
     print_filter(args.filter_labels);
+    if (args.bbox_score_set) {
+        std::cout << "[info] BBox score threshold (override): " << args.bbox_score_threshold << std::endl;
+    }
 
     sycl::queue queue = create_opencl_queue();
     auto& ctx = GPUContextManager::getInstance();
     if (!ctx.isInitialized()) {
-        if (!ctx.initialize(queue, !args.any_int8())) {
+        if (!ctx.initialize(queue)) {
             std::cerr << "Failed to initialize GPUContextManager" << std::endl;
             return 1;
         }
@@ -355,6 +412,9 @@ int main(int argc, char** argv)
                   << "for the known INT8 fuser issue" << std::endl;
     }
     PipelineConfig cfg = cfg_build.config;
+    if (args.bbox_score_set) {
+        cfg.fusion.post_params.score_threshold = args.bbox_score_threshold;
+    }
 
     BEVFusionPipeline pipeline(cfg, queue);
 
@@ -370,6 +430,8 @@ int main(int argc, char** argv)
     std::cout << "[info] " << samples.size() << " samples to process" << std::endl;
 
     bool v2x_geometry_ready = false;
+    CalibSignature last_calib_sig{};
+    bool last_calib_sig_valid = false;
     {
         const int warmup_iters = 3;
         const std::string warmup_id = samples.front();
@@ -382,6 +444,7 @@ int main(int argc, char** argv)
                 recompute = false;
             }
             v2x_geometry_ready = !recompute_every_frame;
+            last_calib_sig_valid = make_calib_signature(warmup_sample.calib, last_calib_sig);
         }
     }
     pipeline.reset_perf_stats();
@@ -423,10 +486,31 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            const bool recompute_camera_metas = recompute_every_frame || !v2x_geometry_ready;
+            CalibSignature current_sig{};
+            const bool current_sig_valid = make_calib_signature(sample.calib, current_sig);
+            const bool calib_changed = current_sig_valid &&
+                (!last_calib_sig_valid ||
+                 std::memcmp(current_sig.data(), last_calib_sig.data(),
+                             sizeof(CalibSignature)) != 0);
+
+            bool recompute_camera_metas = recompute_every_frame || !v2x_geometry_ready;
+            if (!recompute_camera_metas) {
+                if (args.calib_resync == CalibResyncMode::Always) {
+                    recompute_camera_metas = true;
+                } else if (args.calib_resync == CalibResyncMode::Auto && calib_changed) {
+                    recompute_camera_metas = true;
+                    std::cout << "[calib] frame " << id << ": calibration changed, "
+                              << "forcing camera_metas recompute" << std::endl;
+                }
+            }
+
             auto boxes = pipeline.run(sample.img, sample.lidar, sample.calib, "P2", 0.0f, recompute_camera_metas);
             if (!recompute_every_frame) {
                 v2x_geometry_ready = true;
+            }
+            if (current_sig_valid) {
+                last_calib_sig = current_sig;
+                last_calib_sig_valid = true;
             }
             std::cout << "Detected " << boxes.size() << " boxes" << std::endl;
 

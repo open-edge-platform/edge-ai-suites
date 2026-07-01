@@ -15,7 +15,7 @@ services:
     restart: on-failure:5
 
   broker:
-    image: docker.io/library/eclipse-mosquitto:2.0.21
+    image: docker.io/library/eclipse-mosquitto:2.0.22
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -44,7 +44,7 @@ services:
     restart: on-failure:5
 
   node-red:
-    image: docker.io/nodered/node-red:4.0
+    image: docker.io/nodered/node-red:4.1
     user: root
     environment:
       TZ: America/Los_Angeles
@@ -170,9 +170,14 @@ services:
       - "c 209:* rmw"
       - "a 189:* rwm"
     group_add:
+      - "44"
       - "109"
       - "110"
+      - "990"
       - "992"
+      - "993"
+      - "994"
+      - "996"
     depends_on:
       - broker
       - ntpserver
@@ -221,9 +226,15 @@ services:
       - pgserver-db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scenescape -d scenescape"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   web:
-    image: intel/scenescape-manager:v2026.1.0-rc1
+    image: intel/scenescape-manager:2026.1.0
     init: true
     networks:
       scenescape:
@@ -231,7 +242,7 @@ services:
           - web.scenescape.intel.com
     depends_on:
       pgserver:
-        condition: service_started
+        condition: service_healthy
       broker:
         condition: service_started
     environment:
@@ -243,11 +254,11 @@ services:
       - HTTPS_PROXY=${https_proxy}
       - SUPASS=${SUPASS}
       - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - DBHOST=pgserver
+      - DBPORT=5432
     command: >
       webserver
-      --dbhost pgserver
       --dbtype postgres
-      --dbport 5432
       --broker broker.scenescape.intel.com
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem
@@ -281,7 +292,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:v2026.1.0-rc1
+    image: intel/scenescape-controller:2026.1.0
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -323,7 +334,7 @@ services:
     restart: on-failure:5
 
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.30.2-alpine
     container_name: nginx-reverse-proxy
     ports:
       - "80:80"

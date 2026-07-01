@@ -48,17 +48,15 @@ class PoseInference:
             self._configure_device_properties(device, device_properties)
     
         try:
-            # Compile model for GPU - no fallback for GPU-only operation
             self.compiled_model = self.core.compile_model(str(self.model_path), device)
             self.device = device
-            logger.info("✓ 3D pose model loaded successfully on GPU")
+            logger.info(f"✓ 3D pose model loaded successfully on {device}")
             print(f"[INFO] ✓ Successfully loaded model on {device}")
     
         except Exception as e:
             logger.error(f"Failed to load model on {device}: {e}")
             print(f"[ERROR] Failed to load on {device}: {e}")
-            # For 3D pose, we want GPU-only operation, so don't fallback
-            raise RuntimeError(f"GPU inference required but failed: {e}")
+            raise RuntimeError(f"Failed to compile model on {device}: {e}")
     
         # Get input/output info
         self.input_layer = self.compiled_model.input(0)

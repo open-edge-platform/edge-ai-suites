@@ -80,7 +80,7 @@ A **Media Server (MediaMTX)** receives processed video from all three pipelines 
 - RTSP streaming for real-time playback
 - HLS/WebRTC streaming for browser-based viewing
 
-## Content Search Pipeline 
+## Content Search Pipeline
 
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.
 
@@ -94,7 +94,7 @@ The Content Search pipeline provides multimodal ingestion, semantic indexing, an
 ### Ingestion
 
 - **Video**: Split into time-based chunks (default 30s with 4s overlap), each chunk's sampled frames are summarized by a **Vision Language Model** (Qwen2.5-VL via OpenVINO). Summaries are indexed as text embeddings; frames are indexed as visual embeddings.
-- **Document**: Full-text extraction via `unstructured` with optional OCR (Tesseract for scanned PDFs). Text is split using semantic chunking (embedding-based boundary detection) or fixed-size chunking, then embedded with **BGE** (bge-small-en-v1.5).
+- **Document**: Full-text extraction via `unstructured` with image OCR via PaddleOCR service. Text is split using semantic chunking (embedding-based boundary detection) or fixed-size chunking, then embedded with **BGE** (bge-small-en-v1.5).
 - **Image**: Embedded directly via **CLIP** (xlm-roberta-base-ViT-B-32) for visual similarity search.
 
 All embeddings are stored in **ChromaDB** across two collections: a **visual collection** (CLIP embeddings for images/video frames) and a **textual collection** (BGE embeddings for document chunks/video summaries).
@@ -139,6 +139,7 @@ Monitors and collects:
 
 ## Learn More
 
-- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats
-- [Get Started](./get-started.md): Step-by-step setup instructions
-- [Application Flow](./application-flow.md): End-to-end application flow
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
+- [Get Started](./get-started.md): Installation and setup instructions.
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.

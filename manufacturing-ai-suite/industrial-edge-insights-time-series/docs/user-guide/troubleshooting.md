@@ -124,17 +124,17 @@ No action required --- wait for the deployment to complete and for all pods to b
 
 **Issue**
 
-Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error: 
+Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error:
 `OCI runtime exec failed: exec failed: unable to start container process: error writing config to pipe: write init-p: broken pipe: unknown`
 
 **Reason**
 
-On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.  
+On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.
 
 **Solution**
 
-As a workaround, run the following steps to be able to successfully exec and execute the command.  
-As the container is functioning as expected, please ignore any `unhealthy` status showing up against this  
+As a workaround, run the following steps to be able to successfully exec and execute the command.
+As the container is functioning as expected, please ignore any `unhealthy` status showing up against this
 container in `docker ps`.
 
 ```bash

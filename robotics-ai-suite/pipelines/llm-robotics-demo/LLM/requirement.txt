@@ -1,12 +1,12 @@
-clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33
+clip @ git+https://github.com/openai/CLIP.git@d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
 loguru==0.7.3
 opencv-python==4.11.0.86
-openvino==2025.2
+openvino==2026.1
 optimum==1.25.3
 optimum-intel==1.23.1
 psutil==5.9.8
 pyaudio==0.2.14
-pyrealsense2==2.55.1.6486
+pyrealsense2==2.56.5.9235
 pyside6==6.9.1
 qtawesome==1.4.0
 segment_anything==1.0

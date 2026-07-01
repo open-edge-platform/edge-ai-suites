@@ -46,5 +46,5 @@ SPDX-License-Identifier: Apache-2.0
 - [ROBOTIS e-Manual for OpenManipulator](http://emanual.robotis.com/docs/en/platform/openmanipulator/)
 - [ROBOTIS e-Manual for Dynamixel SDK](http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/overview/)
 - [Website for TurtleBot Series](http://www.turtlebot.com/)
-- [e-Book for TurtleBot3](https://community.robotsource.org/t/download-the-ros-robot-programming-book-for-free/51/)
+- [e-Book for TurtleBot3](https://www.robotis.us/ros-robot-programming-book-digital-copy/)
 - [Videos for TurtleBot3](https://www.youtube.com/playlist?list=PLRG6WP3c31_XI3wlvHlx2Mp8BYqgqDURU)

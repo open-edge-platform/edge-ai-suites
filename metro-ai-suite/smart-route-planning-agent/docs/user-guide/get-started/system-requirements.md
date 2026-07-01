@@ -10,25 +10,22 @@ This section shows the hardware, software, and platform requirements to help you
 
 ## Hardware Requirements
 
-| Platform | Processor |
-|----------|-----------|
-| Intel® Xeon® processor | 6th Gen Intel® Xeon® Scalable processors (codenamed Granite Rapids) |
+| Component | Minimum | Recommended |
+|---|---|---|
+| CPU | Intel® Core™ i5 or equivalent | Intel® Core™ Series 2/3 or Intel® Xeon® processor 3rd Gen onwards |
+| RAM | 8 GB | 16 GB or more |
+| Disk Space | 10 GB free | 20 GB free |
+| Network | Internet access for connecting to remote Smart Traffic Intersection Agent | — |
 
-## Minimum Requirements
-
-| Component | Requirement |
-|-----------|-------------|
-| CPU | Intel® Xeon® 6 processor |
-| RAM | 16 GB |
-| Storage | 20-GB available disk space |
 
 ## Software Requirements
 
 | Software | Version |
 |----------|---------|
-| Docker | 24.0 or later |
+| Docker | 29.0 or later |
 | Docker Compose | 2.20 or later |
 | Python | 3.10 or later |
+| git    | v2 or later |
 
 For Docker engine installation, see [Get Docker](https://docs.docker.com/get-docker/).
 For Docker Compose tool installation, see [Overview of installing Docker Compose](https://docs.docker.com/compose/install/).

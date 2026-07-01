@@ -1,5 +1,6 @@
 #include "utilization_monitor.hpp"
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -11,6 +12,78 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+namespace {
+
+constexpr const char *kGpuDiscoveryCommand = "xpu-smi discovery -j";
+
+bool runCommand(const std::string &command, std::string &output)
+{
+    std::array<char, 256> buffer;
+    FILE *pipe = popen(command.c_str(), "r");
+    if (!pipe)
+        return false;
+
+    output.clear();
+    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+        output += buffer.data();
+    }
+
+    const int status = pclose(pipe);
+    return status == 0;
+}
+
+bool detectGpuDeviceId(int &device_id)
+{
+    std::string result;
+    if (!runCommand(kGpuDiscoveryCommand, result) || result.empty())
+        return false;
+
+    try {
+        std::istringstream jsonStream(result);
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_json(jsonStream, pt);
+
+        int first_device_id = -1;
+        if (auto devices = pt.get_child_optional("device_list")) {
+            for (const auto &item : *devices) {
+                const int id = item.second.get<int>("device_id", -1);
+                if (id < 0)
+                    continue;
+
+                if (first_device_id < 0) {
+                    first_device_id = id;
+                }
+
+                const std::string device_type = item.second.get<std::string>("device_type", "");
+                const std::string function_type = item.second.get<std::string>("device_function_type", "");
+                if (device_type == "GPU" && function_type == "physical") {
+                    device_id = id;
+                    return true;
+                }
+            }
+        }
+
+        if (first_device_id >= 0) {
+            device_id = first_device_id;
+            return true;
+        }
+    }
+    catch (const std::exception &e) {
+        std::cerr << "[UtilizationMonitor] GPU discovery JSON parse error: " << e.what() << std::endl;
+    }
+
+    return false;
+}
+
+std::string makeGpuStatsCommand(int device_id)
+{
+    std::ostringstream command;
+    command << "sudo timeout 1 xpu-smi stats -d " << device_id << " -j";
+    return command.str();
+}
+
+}  // namespace
 
 UtilizationMonitor::UtilizationMonitor(const Options &opts) : opts_(opts) {}
 
@@ -28,7 +101,18 @@ bool UtilizationMonitor::start()
 
     // Resolve GPU command once: env var takes priority, then Options.
     const char *env_cmd = std::getenv("XPU_SMI_CMD");
-    gpu_cmd_cached_ = (env_cmd && *env_cmd) ? std::string(env_cmd) : opts_.gpu_command;
+    if (env_cmd && *env_cmd) {
+        gpu_cmd_cached_ = env_cmd;
+    }
+    else {
+        gpu_cmd_cached_ = opts_.gpu_command;
+        if (opts_.gpu_command == Options().gpu_command) {
+            int device_id = -1;
+            if (detectGpuDeviceId(device_id)) {
+                gpu_cmd_cached_ = makeGpuStatsCommand(device_id);
+            }
+        }
+    }
 
     running_.store(true);
     cpu_worker_ = std::thread(&UtilizationMonitor::cpuLoop_, this);
@@ -195,16 +279,8 @@ bool UtilizationMonitor::readGpuUtil_(double &out)
     if (gpu_cmd_cached_.empty())
         return false;
 
-    std::array<char, 256> buffer;
     std::string result;
-    FILE *pipe = popen(gpu_cmd_cached_.c_str(), "r");
-    if (!pipe)
-        return false;
-    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-        result += buffer.data();
-    }
-    const int status = pclose(pipe);
-    if (status != 0) {
+    if (!runCommand(gpu_cmd_cached_, result)) {
         // Subprocess failed (non-zero exit or signal).
         return false;
     }

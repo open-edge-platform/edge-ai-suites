@@ -1,6 +1,7 @@
 from components.llm.base_summarizer import BaseSummarizer
 import torch
 import threading
+import time
 from utils.locks import audio_pipeline_lock
 from utils.config_loader import config
 from utils import ensure_model
@@ -112,6 +113,7 @@ class Summarizer(BaseSummarizer):
                     def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
                         super().__init__(tokenizer, skip_special_tokens=skip_special_tokens, skip_prompt=skip_prompt)
                         self.total_tokens = 0
+                        self.generation_start_time = None
 
                     def put(self, value):
                         self.total_tokens += 1
@@ -131,7 +133,7 @@ class Summarizer(BaseSummarizer):
 
                         torch.xpu.empty_cache()
                         torch.xpu.synchronize()
-
+                        streamer.generation_start_time = time.perf_counter()
                         self.model.generate(**gen_kwargs)
                     finally:
                         audio_pipeline_lock.release()

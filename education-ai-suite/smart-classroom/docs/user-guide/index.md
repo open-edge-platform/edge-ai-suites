@@ -49,8 +49,10 @@ The main features are as follows:
 :hidden:
 
 ./get-started
+./advance-setup-guide
 ./how-it-works
 ./application-flow
+./content-search-flow
 Release Notes <./release-notes>
 
 :::

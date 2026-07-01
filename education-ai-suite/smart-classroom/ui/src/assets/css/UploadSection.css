@@ -562,6 +562,11 @@
   background: #f5faff;
 }
 
+.cs-dropzone-modern--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* ───────── Upload Icon ───────── */
 
 .cs-upload-icon {

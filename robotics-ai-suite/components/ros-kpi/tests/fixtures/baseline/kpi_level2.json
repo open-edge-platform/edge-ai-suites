@@ -1,0 +1,80 @@
+{
+  "schema_version": "level2_v1",
+  "pipeline": {
+    "input_topic": "/camera/raw",
+    "output_topic": "/cmd_vel",
+    "stage_sequence": ["Sensor", "Perception", "Planning"]
+  },
+  "e2e_latency_ms": {
+    "mean": 110.0,
+    "p50": 108.0,
+    "p90": 126.0,
+    "p99": 141.0,
+    "max": 156.0,
+    "n": 180,
+    "method": "chained"
+  },
+  "throughput_hz": 15.0,
+  "drop_rate_pct": 5.0,
+  "bottleneck_stage": "Planning",
+  "stage_latency_ms": {
+    "Sensor": {
+      "mean_ms": 10.0,
+      "p50_ms": 10.0,
+      "p90_ms": 12.0,
+      "p99_ms": 14.0,
+      "max_ms": 16.0,
+      "n": 200,
+      "throughput_hz": 20.0,
+      "nodes": ["/camera_node"],
+      "representative_node": "/camera_node",
+      "representative_input": "/camera/raw",
+      "representative_output": "/camera/image"
+    },
+    "Perception": {
+      "mean_ms": 40.0,
+      "p50_ms": 39.0,
+      "p90_ms": 46.0,
+      "p99_ms": 52.0,
+      "max_ms": 58.0,
+      "n": 180,
+      "throughput_hz": 18.0,
+      "nodes": ["/detector_node"],
+      "representative_node": "/detector_node",
+      "representative_input": "/camera/image",
+      "representative_output": "/detections"
+    },
+    "Planning": {
+      "mean_ms": 60.0,
+      "p50_ms": 59.0,
+      "p90_ms": 68.0,
+      "p99_ms": 75.0,
+      "max_ms": 82.0,
+      "n": 190,
+      "throughput_hz": 15.0,
+      "nodes": ["/planner_node"],
+      "representative_node": "/planner_node",
+      "representative_input": "/detections",
+      "representative_output": "/cmd_vel"
+    }
+  },
+  "cpu_mean_pct": 30.0,
+  "cpu_max_pct": 60.0,
+  "level1_source": "tests/fixtures/baseline/kpi.json",
+  "metadata": {
+    "name": "baseline_session",
+    "datetime": "2026-04-29T00:00:00Z",
+    "hostname": "baseline-host",
+    "arch": "x86_64",
+    "os": "Linux 6.8.0",
+    "data_path": "/tmp/baseline_session",
+    "framework_version": "0.1.7",
+    "ros_distro": "jazzy",
+    "hardware": {
+      "cpu_model": "Intel Core Ultra 7 165H",
+      "cpu_cores": 16,
+      "gpu_model": null,
+      "total_ram_gb": 32.0
+    }
+  }
+}

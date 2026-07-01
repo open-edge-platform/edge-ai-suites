@@ -1,5 +1,3 @@
-(model-dp)=
-
 # Diffusion Policy
 
 Similar to the Action Chunking Transformer (ACT), the Diffusion Policy is another significant advancement in the field of robotic visuomotor policy learning, which represents policies as conditional denoising diffusion processes. This allows for effective handling of multimodal action distributions and is well adapted to high dimensional action spaces, which are common in robotic tasks. The algorithm's ability to learn the gradient of the action distribution score function and optimize via stochastic Langevin dynamics steps during inference provides a stable and efficient way to find optimal actions.

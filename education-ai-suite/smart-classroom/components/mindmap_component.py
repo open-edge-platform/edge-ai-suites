@@ -2,6 +2,7 @@ from components.base_component import PipelineComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.markdown_cleaner import strip_think_tokens
 import logging, os
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,8 @@ class MindmapComponent(PipelineComponent):
             mindmap_prompt = self.model.tokenizer.apply_chat_template(
                 self._get_mindmap_message(summary_text),
                 tokenize=False,
-                add_generation_prompt=True
+                add_generation_prompt=True,
+                enable_thinking=False
             )
 
             full_mindmap = self.model.generate(mindmap_prompt, False)

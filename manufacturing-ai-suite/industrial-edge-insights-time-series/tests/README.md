@@ -25,12 +25,6 @@
       pytest -v -s --html=docker_stability_wind_turbine_report.html test_docker_deployment_stability.py
       ```
 
-   * Weld Defect Detection
-
-      ```sh
-      pytest -v -s --html=docker_weld_anomaly_report.html test_docker_deployment_weld_anomaly.py
-      ```
-
 3. For Helm-related test cases, run the following commands:
 
    > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites. If you are using k3s, ensure `KUBECONFIG` is exported before running the tests:
@@ -46,12 +40,6 @@
 
       # InfluxDB retention test
       pytest -v -s --html=helm_influxdb_retention_wind_turbine_report.html test_helm_influxdb_retention.py
-      ```
-
-   * Weld Defect Detection
-
-      ```sh
-      pytest -v -s --html=helm_weld_anomaly_report.html test_helm_deployment_weld_anomaly.py
       ```
 
 4. Security tests:

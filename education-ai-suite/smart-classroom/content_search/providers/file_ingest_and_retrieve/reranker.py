@@ -8,7 +8,7 @@ from pathlib import Path
 
 import math
 
-import torch
+import numpy as np
 from optimum.intel import OVModelForSequenceClassification
 from transformers import AutoTokenizer
 
@@ -302,7 +302,7 @@ class PostProcessor:
                          converted_count, len(remove_indices))
 
     def _rerank_documents(self, query: str, doc_results: list[dict]) -> list[dict]:
-        """Re-score documents with BAAI/bge-reranker-large cross-encoder.
+        """Re-score documents with cross-encoder reranker.
 
         Documents missing ``chunk_text`` in metadata are kept at their
         original rank position but do not receive a reranker score.
@@ -324,11 +324,10 @@ class PostProcessor:
             pairs = [[query, r["meta"]["chunk_text"]] for _, r in with_text]
             logger.debug("[rerank] Scoring %d doc pairs with cross-encoder", len(pairs))
             inputs = self.tokenizer(
-                pairs, padding=True, truncation=True, max_length=512, return_tensors="pt",
+                pairs, padding=True, truncation=True, max_length=512, return_tensors="np",
             )
-            with torch.no_grad():
-                logits = self.reranker_model(**inputs).logits.squeeze(-1)
-            scores = logits.float().cpu().tolist()
+            logits = self.reranker_model(**inputs).logits.squeeze(-1)
+            scores = logits.astype(np.float32).tolist()
             if isinstance(scores, float):
                 scores = [scores]
 
@@ -434,9 +433,18 @@ class PostProcessor:
         """Assign 0-100 relevance score: sigmoid(reranker logit) for docs, sigmoid(k*(sim-center)) for visual."""
         for r in results:
             if r.get("reranker_score") is not None:
+                if not math.isfinite(r["reranker_score"]):
+                    logger.warning("[reranker] Non-finite reranker_score for id=%s, defaulting to 0", r.get("id"))
+                    r["score"] = 0.0
+                    continue
                 r["score"] = round(1.0 / (1.0 + math.exp(-r["reranker_score"])) * 100, 2)
             else:
-                similarity = 1.0 - r["distance"]
+                distance = r["distance"]
+                if not math.isfinite(distance):
+                    logger.warning("[reranker] Non-finite distance for id=%s, defaulting to 0", r.get("id"))
+                    r["score"] = 0.0
+                    continue
+                similarity = 1.0 - distance
                 r["score"] = round(1.0 / (1.0 + math.exp(-visual_sigmoid_k * (similarity - visual_sigmoid_center))) * 100, 2)
 
     @staticmethod

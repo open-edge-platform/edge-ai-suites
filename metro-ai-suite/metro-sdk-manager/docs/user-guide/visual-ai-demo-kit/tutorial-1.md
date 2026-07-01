@@ -85,26 +85,26 @@ Create and run the model download script to install all required AI models:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/oep-suite" \
-  intel/dlstreamer:2026.0.0-ubuntu24 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.1.0-ubuntu24 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/oep-suite/
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/public
 export MODELS_PATH=/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models
-/home/open-edge-platform/dlstreamer/samples/download_public_models.sh yolov10s
+/opt/intel/dlstreamer/samples/download_public_models.sh yolov10s
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/intel
 
-python3 -m pip install openvino-dev[onnx,tensorflow2]
+python3 -m pip install --break-system-packages openvino-dev[onnx,tensorflow2]
 
 omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
+curl -Lo "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
 
 
 omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
+curl -Lo "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" ai-tolling/src/dlstreamer-pipeline-server/models ai-tolling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true

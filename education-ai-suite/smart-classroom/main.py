@@ -1,4 +1,7 @@
 import sys
+import warnings
+warnings.filterwarnings("ignore", message=r"[\s\S]*torchcodec is not installed correctly")
+
 from utils import system_checker
 
 from utils.logger_config import setup_logger
@@ -15,7 +18,6 @@ import os
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pathlib import Path
-from components.va.media_service import MediaService
 
 
 logger = logging.getLogger(__name__)
@@ -43,9 +45,6 @@ if __name__ == "__main__":
     RuntimeConfig.ensure_config_exists()
     ensure_model()
     preload_models()
-
-    media_service = MediaService()
-    media_service.launch_server()
 
     import uvicorn
     logger.info("App started, Starting Server...")

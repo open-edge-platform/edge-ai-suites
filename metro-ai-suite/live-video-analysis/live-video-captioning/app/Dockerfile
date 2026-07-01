@@ -4,7 +4,7 @@
 FROM python:3.12-slim AS base
 
 # Install system dependencies needed for building, upgrade to apply security patches
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends curl \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends curl v4l-utils \
     && python -m pip install --upgrade --no-cache-dir pip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -79,7 +79,7 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
     # Get source code for installed Python packages with copyleft licenses \
     mkdir -p /copyleft_sources/python && \
     cd /copyleft_sources/python && \
-    apt-get update && apt-get install -y gcc build-essential libffi-dev python3-dev && \
+    apt-get update && apt-get install -y --no-install-recommends gcc build-essential libffi-dev python3-dev && \
     # Download python package sources with relevant licenses \
     pip3 freeze | cut -d= -f1 | while read pkg; do \
     meta=$(pip3 show $pkg 2>/dev/null); \

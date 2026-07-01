@@ -1,3 +1,269 @@
+ros-humble-benchmark-framework (0.2.2) UNRELEASED; urgency=low
+
+  * Install Python scripts as executable (755); document cp-first workflow
+    for Debian package users in INSTALL.md and Makefile help.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 09 Jun 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.2.1) UNRELEASED; urgency=low
+
+  * final_fixes: power monitoring, thermal charts, default record-plot, report.
+    - src/monitor_stack.py: add --power CLI flag for RAPL CPU package power
+      monitoring; wired to enable_power in MonitoringSession.
+    - src/benchmark_runner.sh: pass --power to monitor_stack so cpu_power.log
+      is always written; add [N/6] stage progress labels throughout each run;
+      add --show flag (implies --record --plot) that auto-invokes make results
+      after the run.
+    - src/visualize_thermal.py: add plot_temperature_only() and plot_power_only()
+      producing standalone thermal_temperature.png and thermal_power.png
+      alongside the existing combined thermal_throttle.png when --save is used.
+    - src/generate_report.py: handle missing kpi.json gracefully (warn + write
+      partial report) instead of crashing with FileNotFoundError.
+    - Makefile: plain make wandering / fastmapping / picknplace-run now default
+      to --record --plot; add SHOW= passthrough to all scenario targets;
+      results target adds [0/2] kpi.json recovery step from bag when missing,
+      fixes file:// URL for absolute SESSION paths, uses $(CURDIR) for
+      find auto-detect, adds headless http.server hint; benchmark targets
+      print aggregate progress note before aggregate_kpi.py call.
+    - debian/rules: add config/ to cp -r install so YAML run profiles are
+      shipped in the package.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Sun, 08 Jun 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.2.0) UNRELEASED; urgency=low
+
+  * YAML-driven run profiles and generic benchmark orchestrator.
+    - src/benchmark_profiler.py: new Python YAML loader/validator for run
+      profiles; exports all scenario settings as CONF_* shell variables via
+      --export-bash; also usable as a Python module.
+    - src/benchmark_runner.sh: new generic scenario-agnostic orchestrator;
+      replaces per-scenario monolithic scripts; driven entirely by YAML config.
+    - config/wandering_run.yaml: run profile for wandering scenario.
+    - config/picknplace_run.yaml: run profile for pick-and-place scenario.
+    - config/fastmapping_run.yaml: run profile for fast-mapping scenario;
+      uses ros2 launch fast_mapping fast_mapping.launch.py (docs approach).
+    - src/wandering_run.sh: replaced 300-line script with 22-line exec wrapper.
+    - src/picknplace_run.sh: replaced 270-line script with 22-line exec wrapper.
+    - src/fastmapping_run.sh: replaced 300-line script with 25-line exec wrapper.
+    - Makefile: add RUN_CONFIG passthrough to all wandering-*, picknplace-*,
+      and fastmapping-* targets.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 29 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.19) UNRELEASED; urgency=low
+
+  * Thermal visualizer, session browser, and benchmarking bug fixes.
+    - src/visualize_thermal.py: 3-panel CPU/GPU temperature, throttle, and
+      package-power dashboard; saves PNG; auto-detects latest session.
+    - src/show_sessions.py: tree-view of all monitoring sessions with per-run
+      duration, e2e latency, throughput, drop rate, goals, and throttle flag.
+    - src/analyze_bag_e2e.py: fix Level 2 KPI reporting 0 ms latency when
+      entry and exit topics resolved to the same topic.
+    - src/wandering_run.sh: print 'make results' banner after each run.
+    - Makefile: add results, visualize-thermal, show-sessions targets; fix
+      clean-last for bench subdirectories; forward GOALS in wandering-benchmark.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 21 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.18) UNRELEASED; urgency=low
+
+  * KPI visualization CLI.
+    - src/visualize_kpi.py: new CLI chart generator producing publication-ready
+      PNG/SVG charts from kpi.json benchmark output.
+      latency_histogram: horizontal grouped bar chart of per-node mean/p50/p90
+        latency, colour-coded by pipeline stage (Sensor/Perception/Planning/
+        Control), with inline value labels and dual legends.
+      sku_comparison: grouped bar chart comparing mean latency per node across
+        multiple SKUs; p90 shown as a tick marker overlay; accepts >= 2 --kpi
+        files with optional --label overrides.
+      resource_utilization: horizontal bar chart of CPU utilization and thermal
+        readings (cpu_mean_pct, cpu_max_pct, cpu/gpu/npu temp_c); skips
+        gracefully when all fields are null (WSL2/no-sysfs environments);
+        annotates throttled components with a warning marker.
+      _infer_sku_label: auto-detects Intel SKU family (PTL/LNL/ARL/MTL/
+        RPL-R/RPL/ADL-N/ADL/TGL/Xeon/Atom) from metadata.hardware.cpu_model
+        so --label is optional for cross-SKU comparisons.
+    - tests/test_visualize_kpi.py: 41 unit tests; all pass headlessly via
+      the Agg matplotlib backend.
+    - Makefile: visualize-kpi target with SESSION= and FORMAT= parameters.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Sun, 18 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.17) UNRELEASED; urgency=low
+
+  * Add Intel RAPL CPU package power monitoring (ITEP-90266).
+    - monitor_resources.py: probe_cpu_power_available(), monitor_cpu_power()
+      daemon reads /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj at
+      configurable interval; handles counter wraparound; writes cpu_power.log
+      (JSON-lines). New --power / --power-log CLI flags; --check-hw now
+      reports RAPL availability alongside GPU/NPU.
+    - monitor_stack.py: enable_power flag; auto-detects RAPL via
+      probe_cpu_power_available() and passes --power --power-log to the
+      resource monitor subprocess when available.
+    - analyze_trigger_latency.py: reads cpu_power.log, averages power_w
+      samples, stores mean as cpu_pkg_power_w in the thermal KPI section.
+    - schemas/kpi_level1_v1.json: add cpu_pkg_power_w (number|null) to
+      thermal object (additionalProperties: false).
+    - prometheus_exporter.py: ros2_cpu_package_power_watts Gauge reads
+      the latest sample from cpu_power.log on each scrape.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 15 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.16) UNRELEASED; urgency=low
+
+  * Bag-replay benchmarking without a live robot or simulator.
+    - src/bag_replay_run.sh: new script — replays any ROS 2 bag at configurable
+      rate/loop count through the monitor stack; collects Level 1 and Level 2
+      KPIs deterministically; supports --rate, --loop, --plot, --output-parent.
+    - Makefile: bag-replay, bag-replay-plot, bag-replay-benchmark targets.
+  * fast_mapping benchmark pipeline.
+    - src/fastmapping_run.sh: launches fast_mapping_node + bag replay of the
+      bundled spinning RGB-D bag (/opt/ros/<distro>/share/bagfiles/spinning);
+      auto-detects ROS distro; stops node gracefully and waits for procedure
+      table flush before analysis.
+    - src/analyze_fastmapping_log.py: parses fast_mapping_node.log to extract
+      per-procedure timing (wait/preprocess/octree/publish) and patches kpi.json
+      in-place with throughput_hz, mean_latency_ms, jitter fields, per_node and
+      pairs entries; falls back to window-based KPIs when node is killed before
+      shutdown table is printed.
+    - Makefile: fastmapping, fastmapping-plot, fastmapping-benchmark targets;
+      FASTMAPPING_BAG points to the bundled spinning bag.
+  * GPU visualization fixes.
+    - src/gpu_engine_defs.py: ENGINE_CLASSES regex now matches i915 fdinfo key
+      names ("copy" → Blitter, "video-enhance" → VE).
+    - src/visualize_gpu.py: dynamic y-axis (no 100 % ceiling clip); new
+      per-engine detail panel; MaxNLocator prevents MAXTICKS warnings at >100 %
+      busy; frequency panel shows graceful fallback message when all-zero.
+    - src/monitor_resources.py: supplement i915 GT frequency from sysfs
+      gt_act_freq_mhz / gt_max_freq_mhz when qmassa reports 0.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 13 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.15) UNRELEASED; urgency=low
+
+  * Add NPU throttle detection to sysfs monitor.
+    - monitor_resources.py: _read_sysfs_npu() now emits 'throttled' bool
+      (True when cur_freq_mhz < max_freq_mhz * 0.95); console output shows
+      ⚠THROTTLE indicator when active.
+    - analyze_trigger_latency.py: _load_resource_thermal() reads 'throttled'
+      from npu_usage.log; 'npu_throttled' in thermal KPI section is now
+      True/False (not always None) when npu_usage.log is present.
+    - Dependency security: bump pillow >=12.2.0 (5 CVEs), pytest >=9.0.3
+      (1 CVE), add pygments >=2.20.0 (1 CVE) to dev deps.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 08 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.14) UNRELEASED; urgency=low
+
+  * Correlate GPU/NPU thermal and throttle data with Level 1 JSON output
+   .
+    - analyze_trigger_latency.py: add _read_cpu_thermal_sysfs() and
+      _load_resource_thermal() helpers; build_performance_kpi() now includes
+      a 'thermal' section: cpu_temp_c, gpu_temp_c, npu_temp_c,
+      cpu_throttled, gpu_throttled, npu_throttled.
+    - monitor_resources.py: add _read_cpu_thermal_sysfs() helper; reads
+      x86_pkg_temp sysfs zone and cpufreq scaling_cur_freq for throttle
+      detection.
+    - schemas/kpi_level1_v1.json: add optional 'thermal' object property
+      with all six fields; existing KPI files without 'thermal' remain valid.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 08 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.13) UNRELEASED; urgency=low
+
+  * Remove intel_gpu_top entirely; use qmassa exclusively for GPU monitoring.
+    - monitor_resources.py: remove _try_intel_gpu_top_local, _find_local_igt,
+      _parse_igt_clients; simplify probe_gpu_available and monitor_gpu to
+      qmassa-only (sysfs RC6 fallback retained for remote sessions).
+    - gpu_pid_analyzer.py: full rewrite for qmassa; remove --remote-ip/--remote-user;
+      update print_snapshot, CSV output, collect_snapshot and main().
+    - visualize_gpu.py: remove intel_gpu_top source guards; engine/power panels
+      now work for any qmassa record.
+    - visualize_resources.py: remove intel_gpu_top source guards from has_power,
+      has_engines, and frequency panel (RC6 overlay removed).
+    - monitor_stack.py: update --gpu help text (no CAP_PERFMON required).
+    - Makefile: remove setup-remote-gpu target.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 06 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.12) UNRELEASED; urgency=low
+
+  * Add 'make install-qmassa' target: installs Rust toolchain via rustup
+    (minimal profile) if cargo is absent, then runs
+    cargo install --locked qmassa qmmd; binaries land in ~/.cargo/bin/.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 06 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.11) UNRELEASED; urgency=low
+
+  * Add qmassa/xe GPU monitoring support in src/monitor_resources.py:
+    auto-detects active DRM driver (xe vs i915) at runtime via sysfs symlink;
+    xe systems use qmassa -x (headless JSON) for per-PID engine utilisation,
+    power, throttle, VRAM/SMEM, and temperature (dGPU); i915 systems continue
+    to use intel_gpu_top -J; both fall back to sysfs RC6 residency on failure.
+  * Add _try_qmassa_local(), _find_local_qmassa(), _detect_gpu_driver() helpers
+    in src/monitor_resources.py; search ~/.cargo/bin, /usr/local/bin, etc.
+  * Update src/gpu_engine_defs.py: add Compute engine class (xe ccs); extend
+    Render/3D, Blitter, Video, VE regexes to match xe names (rcs, bcs, vcs,
+    vecs) alongside existing i915 names.
+  * Add _PmtTelemetry class to src/monitor_resources.py: reads Intel PMT binary
+    sysfs interface (/sys/class/intel_pmt/telem*) to provide NPU power (W),
+    junction temperature (degC), and NoC memory bandwidth (MB/s); auto-detects
+    SKU via GUID (MTL, ARL, ARL-H/S, LNL, PTL, WCL); purely additive — SSH
+    remote monitoring path unaffected.
+  * Extend _read_sysfs_npu() to bracket its sysfs delta-sample with PMT
+    pre/post reads; adds power_w, temp_c, bw_mbps, pmt_gen fields to
+    npu_usage.log JSON-lines when PMT is available.
+  * Extend monitor_npu() console output to show power, temperature, and BW
+    when present.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 05 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.10) UNRELEASED; urgency=low
+
+  * Add regression-check CI job to .github/workflows/build-test-scan.yml:
+    runs Level 1 and Level 2 baseline-vs-baseline smoke tests after unit-tests
+    job, gates on exit code from compare_kpi.py.
+  * Add regression-check-l2 Makefile target: symmetric with regression-check
+    for Level 2 KPI JSON comparisons.
+  * Update regression-check Makefile target help comment to clarify Level 1 scope.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 05 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.9) UNRELEASED; urgency=low
+
+  * Migrate test suite to pytest framework; all tests runnable via 'make test'
+    or 'uv run pytest tests/ -v' without ROS 2, robot, or hardware.
+  * Add tests/conftest.py: centralises sys.path setup for all test modules.
+  * Add tests/fixtures.py: single source of truth for synthetic Level 1 and
+    Level 2 KPI payloads shared across test files.
+  * Add tests/test_aggregate_kpi.py (37 tests): boundary-condition coverage for
+    _health, _consistency, _classify; aggregate() statistics, sort order,
+    min-runs filtering, node_filter, and zero-stdev single-run edge case.
+  * Add tests/test_trigger_latency.py (30 tests): _is_internal topic-filter
+    regex (13 filtered + 8 pass-through topics); find_trigger binary-search
+    (9 edge cases including empty list, exact match, before-all timestamps).
+  * Add tests/test_wandering_metrics.py (25 tests): _extract_goals,
+    _extract_elapsed, _extract_rtf, _extract_hz, _verdict regex extractors
+    with spacing variants, absent fields, and multi-block cases.
+  * Fix schemas/kpi_level1_v1.json: add missing 'pipeline_stage' field to
+    'pairs' items (additionalProperties: false was rejecting valid output).
+  * Add 'make test' target to Makefile.
+  * Update CI (.github/workflows/build-test-scan.yml): replace three separate
+    'python3 tests/test_*.py' steps with single 'uv run pytest tests/ -v'.
+  * Update docs/COMMANDS.md: Unit Tests section; make test in Quick Reference.
+  * Update docs/IMPROVEMENTS.md: May 2026 entry documenting test suite.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 04 May 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.8) UNRELEASED; urgency=low
+
+  * Add src/compare_kpi.py: KPI regression detection CLI (--baseline, --current,
+    --threshold, --report). Supports Level 1 and Level 2 JSON outputs.
+  * Add synthetic baseline fixtures and unit tests for regression detection.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 29 Apr 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.1.7) UNRELEASED; urgency=low
 
   * Add --csv-out flag to analyze_trigger_latency.py: writes a flat CSV with

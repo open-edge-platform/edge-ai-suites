@@ -1,0 +1,46 @@
+{
+    "integrationManifest": {
+        "id": "DLStreamerAnalyticsIntegrationVMS",
+        "name": "DLStreamerAnalyticsIntegrationVMS",
+        "description": "REST-only analytics integration example with DLStreamer Pipeline Server based Application",
+        "vendor": "Open Edge Platform",
+        "version": "1.0.0",
+        "engineSettingsModel": {
+            "type": "Settings",
+            "items": []
+        }
+    },
+    "engineManifest": {
+        "typeLibrary": {
+            "objectTypes": [
+                {
+                    "id": "python.detected.object",
+                    "name": "Detected Object"
+                }
+            ],
+            "eventTypes": [
+                {
+                    "id": "python.object.detected",
+                    "name": "Object Detected"
+                }
+            ]
+        },
+        "deviceAgentSettingsModel": {
+            "type": "Settings",
+            "items": []
+        },
+        "objectActions": []
+    },
+    "deviceAgentManifest": {
+        "supportedTypes": [
+            {
+                "objectTypeId": "python.detected.object",
+                "attributes": ["boundingBox", "confidence"]
+            },
+            {
+                "eventTypeId": "analytics.api.stub.lineCrossing",
+                "attributes": []
+            }
+        ]
+    }
+}

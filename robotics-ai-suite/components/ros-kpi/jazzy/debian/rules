@@ -23,12 +23,12 @@ DESTDIR := debian/$(PKG)/opt/ros/$(ROS_DISTRO)/benchmarking
 
 override_dh_auto_install:
 	install -d $(DESTDIR)/src
-	install -m 644 src/*.py $(DESTDIR)/src/
+	install -m 755 src/*.py $(DESTDIR)/src/
 	install -m 755 src/*.sh $(DESTDIR)/src/
 	install -m 755 quickstart $(DESTDIR)/
 	install -m 644 Makefile docker-compose.yml pyproject.toml README.md $(DESTDIR)/
 	install -m 755 *.sh $(DESTDIR)/
-	cp -r prometheus grafana schemas $(DESTDIR)/
+	cp -r prometheus grafana schemas config $(DESTDIR)/
 
 override_dh_shlibdeps:
 	:

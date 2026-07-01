@@ -86,8 +86,8 @@ docker ps
 - Grafana Dashboard
 - DL Streamer Pipeline Server
 - MQTT Broker
-- Node-RED (for applications without Intel® SceneScape)
-- Intel® SceneScape services (for Smart Intersection only)
+- Node-RED (for applications without Scenescape)
+- Scenescape services (for Smart Intersection only)
 
 </details>
 

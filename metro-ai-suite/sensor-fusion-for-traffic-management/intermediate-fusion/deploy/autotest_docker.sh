@@ -16,7 +16,7 @@ DOCKER_DIR="${SCRIPT_DIR}/docker"
 RUN_DOCKER_SCRIPT="${DOCKER_DIR}/run_docker.sh"
 BUILD_DOCKER_SCRIPT="${DOCKER_DIR}/build_docker.sh"
 
-IMAGE="tfcc:bevfusion"
+IMAGE="tfcc:2026.1.0-ubuntu24"
 CUSTOM_OPENVINO_INSTALL_DIR="${CUSTOM_OPENVINO_INSTALL_DIR:-}"
 DOCKERFILE="Dockerfile.dockerfile"
 BASE="ubuntu"
@@ -46,7 +46,7 @@ Options:
   --dataset-path PATH              Host dataset root to copy into the container
                                    before running tests.
   --image NAME                     Docker image to run.
-                                   Default: tfcc:bevfusion
+                                   Default: tfcc:2026.1.0-ubuntu24
   --build-image                    Build the Docker image before running tests.
   --custom-openvino-install-dir P  Host custom OpenVINO install root used when
                                    building the image. Must contain setupvars.sh.

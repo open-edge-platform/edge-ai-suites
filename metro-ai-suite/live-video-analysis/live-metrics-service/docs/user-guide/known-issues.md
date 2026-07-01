@@ -41,7 +41,7 @@ docker logs live-metrics-service
 docker logs -f live-metrics-service
 
 # Enable debug logging
-docker run -e LOG_LEVEL=DEBUG live-metrics-service:latest
+docker run -e LOG_LEVEL=DEBUG ${REGISTRY:-}live-metrics-service:${TAG:-latest}
 ```
 
 ### Health Check Commands
