@@ -1,0 +1,23 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{- $metricsManager := index .Values "metrics-manager" -}}
+{{- if and $metricsManager.enabled $metricsManager.customMetrics.enabled (eq $metricsManager.customMetrics.storage "pvc") (not $metricsManager.customMetrics.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "stia.metricsManager.fullname" . }}-custom-metrics
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-manager
+spec:
+  accessModes:
+    {{- toYaml $metricsManager.customMetrics.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ $metricsManager.customMetrics.size }}
+  {{- if $metricsManager.customMetrics.storageClassName }}
+  storageClassName: {{ $metricsManager.customMetrics.storageClassName | quote }}
+  {{- end }}
+{{- end }}

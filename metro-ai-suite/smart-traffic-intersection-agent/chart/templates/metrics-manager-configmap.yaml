@@ -1,0 +1,17 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{- $metricsManager := index .Values "metrics-manager" -}}
+{{- if and $metricsManager.enabled $metricsManager.telegraf.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "stia.metricsManager.fullname" . }}-telegraf
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-manager
+data:
+  telegraf.conf: |
+{{ $metricsManager.telegraf.config | indent 4 }}
+{{- end }}

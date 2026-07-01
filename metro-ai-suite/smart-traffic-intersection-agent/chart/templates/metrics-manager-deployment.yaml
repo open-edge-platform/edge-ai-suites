@@ -1,0 +1,198 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{- $metricsManager := index .Values "metrics-manager" -}}
+{{- if $metricsManager.enabled }}
+{{- $kind := $metricsManager.controller.kind | default "Deployment" -}}
+apiVersion: apps/v1
+kind: {{ $kind }}
+metadata:
+  name: {{ include "stia.metricsManager.fullname" . }}
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-manager
+spec:
+  {{- if eq $kind "Deployment" }}
+  replicas: {{ $metricsManager.controller.replicaCount }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ include "stia.metricsManager.fullname" . }}
+      app.kubernetes.io/component: metrics-manager
+  template:
+    metadata:
+      labels:
+        app: {{ include "stia.metricsManager.fullname" . }}
+        {{- include "stia.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: metrics-manager
+        {{- with $metricsManager.pod.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if $metricsManager.telegraf.config }}
+        checksum/telegraf-config: {{ include (print $.Template.BasePath "/metrics-manager-configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if and $metricsManager.securityContext.appArmorProfile (eq ($metricsManager.securityContext.appArmorProfile.type | default "") "Unconfined") }}
+        container.apparmor.security.beta.kubernetes.io/metrics-manager: unconfined
+        {{- end }}
+        {{- with $metricsManager.pod.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "stia.metricsManager.serviceAccountName" . }}
+      hostPID: {{ $metricsManager.pod.hostPID }}
+      hostNetwork: {{ $metricsManager.pod.hostNetwork }}
+      {{- $dnsPolicy := $metricsManager.pod.dnsPolicy }}
+      {{- if not $dnsPolicy }}
+        {{- if $metricsManager.pod.hostNetwork }}
+          {{- $dnsPolicy = "ClusterFirstWithHostNet" }}
+        {{- else }}
+          {{- $dnsPolicy = "ClusterFirst" }}
+        {{- end }}
+      {{- end }}
+      dnsPolicy: {{ $dnsPolicy }}
+      restartPolicy: {{ $metricsManager.pod.restartPolicy }}
+      {{- with $metricsManager.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $metricsManager.pod.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with $metricsManager.controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $metricsManager.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $metricsManager.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: metrics-manager
+          image: {{ include "stia.metricsManager.image" . | quote }}
+          imagePullPolicy: {{ $metricsManager.image.pullPolicy }}
+          securityContext:
+            privileged: {{ $metricsManager.securityContext.privileged }}
+            runAsNonRoot: {{ $metricsManager.securityContext.runAsNonRoot }}
+            readOnlyRootFilesystem: {{ $metricsManager.securityContext.readOnlyRootFilesystem }}
+            {{- with $metricsManager.securityContext.seccompProfile }}
+            seccompProfile:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ $metricsManager.service.metricsPort }}
+              protocol: TCP
+            - name: telegraf
+              containerPort: {{ $metricsManager.service.telegrafPort }}
+              protocol: TCP
+            - name: telegraf-http
+              containerPort: {{ $metricsManager.service.telegrafHttpPort }}
+              protocol: TCP
+          env:
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: HTTP_PROXY
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},localhost,127.0.0.1,{{ include "stia.metricsManager.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.vlmServing.fullname" . }}"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy }},localhost,127.0.0.1,{{ include "stia.metricsManager.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.vlmServing.fullname" . }}"
+            - name: METRICS_PORT
+              value: {{ $metricsManager.service.metricsPort | quote }}
+            - name: TELEGRAF_PORT
+              value: {{ $metricsManager.service.telegrafPort | quote }}
+            - name: TELEGRAF_HTTP_PORT
+              value: {{ $metricsManager.service.telegrafHttpPort | quote }}
+            - name: LOG_LEVEL
+              value: {{ $metricsManager.config.logLevel | quote }}
+            - name: LOG_FORMAT
+              value: {{ $metricsManager.config.logFormat | quote }}
+            - name: CORS_ORIGINS
+              value: {{ $metricsManager.config.corsOrigins | quote }}
+            - name: METRICS_RETENTION_SECONDS
+              value: {{ $metricsManager.config.metricsRetentionSeconds | quote }}
+            - name: MAX_METRICS_BATCH_SIZE
+              value: {{ $metricsManager.config.maxMetricsBatchSize | quote }}
+            - name: METRICS_MANAGER_HOSTNAME
+              value: {{ $metricsManager.config.hostnameOverride | quote }}
+            - name: CUSTOM_METRICS_DIR
+              value: /app/custom-metrics
+            - name: TELEGRAF_CONFIG_PATH
+              value: /etc/telegraf/telegraf.conf
+            {{- with $metricsManager.config.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $metricsManager.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $metricsManager.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $metricsManager.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+              readOnly: true
+            - name: run
+              mountPath: /run
+              readOnly: true
+            {{- if $metricsManager.hardware.gpu.enabled }}
+            - name: dev-dri
+              mountPath: /dev/dri
+            {{- end }}
+            {{- if $metricsManager.telegraf.config }}
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            {{- end }}
+            {{- if and $metricsManager.customMetrics.enabled (ne $metricsManager.customMetrics.storage "none") }}
+            - name: custom-metrics
+              mountPath: /app/custom-metrics
+            {{- end }}
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: run
+          hostPath:
+            path: /run
+            type: Directory
+        {{- if $metricsManager.hardware.gpu.enabled }}
+        - name: dev-dri
+          hostPath:
+            path: /dev/dri
+        {{- end }}
+        {{- if $metricsManager.telegraf.config }}
+        - name: telegraf-config
+          configMap:
+            name: {{ include "stia.metricsManager.fullname" . }}-telegraf
+        {{- end }}
+        {{- if and $metricsManager.customMetrics.enabled (ne $metricsManager.customMetrics.storage "none") }}
+        - name: custom-metrics
+          {{- if eq $metricsManager.customMetrics.storage "pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-custom-metrics" (include "stia.metricsManager.fullname" .)) $metricsManager.customMetrics.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+{{- end }}
