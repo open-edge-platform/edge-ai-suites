@@ -172,21 +172,15 @@ jobs:
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
 
           HAS_WIND_APP=false
-          HAS_WELD_APP=false
           if [[ -d "apps/wind-turbine-anomaly-detection" ]]; then
             HAS_WIND_APP=true
-          fi
-          if [[ -d "apps/weld-defect-detection" ]]; then
-            HAS_WELD_APP=true
           fi
 
           # Determine which sample apps need helm charts based on selected tests
           # Only generate for Helm tests, not Docker tests
           WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security"
-          WELD_HELM_TESTS=""
 
           GENERATE_WIND=false
-          GENERATE_WELD=false
 
           # Parse comma-separated test input
           IFS=',' read -ra SELECTED <<< "$TESTS"
@@ -203,20 +197,12 @@ jobs:
               if [[ "$HAS_WIND_APP" == "true" ]]; then
                 GENERATE_WIND=true
               fi
-              if [[ "$HAS_WELD_APP" == "true" ]]; then
-                GENERATE_WELD=true
-              fi
               break
             fi
 
             # Check if test is wind helm-related
             if echo "$WIND_HELM_TESTS" | grep -qw "$test_file"; then
               GENERATE_WIND=true
-            fi
-
-            # Check if test is weld helm-related
-            if echo "$WELD_HELM_TESTS" | grep -qw "$test_file"; then
-              GENERATE_WELD=true
             fi
           done
 
@@ -226,16 +212,7 @@ jobs:
             make gen_helm_charts_targz app=wind-turbine-anomaly-detection
           fi
 
-          if [[ "$GENERATE_WELD" == "true" ]]; then
-            echo "Generating Helm chart package for weld-defect-detection..."
-            make gen_helm_charts_targz app=weld-defect-detection
-          fi
-
-          if [[ "$HAS_WELD_APP" == "false" ]]; then
-            echo "Skipping weld-defect-detection Helm chart generation because apps/weld-defect-detection is not present in this checkout."
-          fi
-
-          if [[ "$GENERATE_WIND" == "false" && "$GENERATE_WELD" == "false" ]]; then
+          if [[ "$GENERATE_WIND" == "false" ]]; then
             echo "No helm tests selected, skipping helm chart generation"
           fi
 
