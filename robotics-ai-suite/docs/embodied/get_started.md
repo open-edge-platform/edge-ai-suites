@@ -7,7 +7,7 @@ If any problems are encountered during installation, please refer to the [Troubl
 
 ## Prerequisites
 
-
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 
@@ -15,11 +15,11 @@ get-started/prerequisites/system_requirement
 get-started/prerequisites/os_setup
 
 :::
-
+hide_directive-->
 
 ## Installation
 
-
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 
@@ -30,6 +30,7 @@ get-started/installation/client_gpu_driver
 get-started/installation/realsense
 
 :::
+hide_directive-->
 
 ## Quick Start Guide Resources
 

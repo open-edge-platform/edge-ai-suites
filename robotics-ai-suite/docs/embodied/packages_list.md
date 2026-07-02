@@ -39,7 +39,7 @@ The following is a list of Debian update packages for Embodied Intelligence SDK 
 :::
 ::::
 
-
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 :hidden:
@@ -48,4 +48,4 @@ packages/linuxbsp
 packages/mc_gateway
 fragment_packages-jammy
 :::
-
+hide_directive-->
