@@ -48,20 +48,23 @@ export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 if [ "$ENABLE_TC" = "true" ]; then
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
     if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
-        GPU_PCI_FULL=$(lspci -Dnn | grep -E '(VGA compatible controller|Display controller).*Intel' | head -1 | awk '{print $1}')
-        if [ -z "$GPU_PCI_FULL" ]; then
-            echo -e "${RED}ERROR: No Intel iGPU found for VFIO passthrough.${NC}"
-            return 1
-        fi
-        IOMMU_LINK="/sys/bus/pci/devices/${GPU_PCI_FULL}/iommu_group"
-        if [ ! -L "$IOMMU_LINK" ]; then
-            echo -e "${RED}ERROR: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled.${NC}"
-            return 1
-        fi
-        export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
-        if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
-            echo -e "${RED}ERROR: /dev/vfio/${TC_GPU_VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci.${NC}"
-            return 1
+        # Run GPU validation only for runtime commands (--setup, --run, --restart)
+        if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
+            GPU_PCI_FULL=$(lspci -Dnn | grep -E '(VGA compatible controller|Display controller).*Intel' | head -1 | awk '{print $1}')
+            if [ -z "$GPU_PCI_FULL" ]; then
+                echo -e "${RED}ERROR: No Intel iGPU found for VFIO passthrough.${NC}"
+                return 1
+            fi
+            IOMMU_LINK="/sys/bus/pci/devices/${GPU_PCI_FULL}/iommu_group"
+            if [ ! -L "$IOMMU_LINK" ]; then
+                echo -e "${RED}ERROR: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled.${NC}"
+                return 1
+            fi
+            export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+            if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
+                echo -e "${RED}ERROR: GPU (${GPU_PCI_FULL}) is not bound to vfio-pci driver.${NC}"
+                return 1
+            fi
         fi
         TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-gpu-overlay-agent.yaml"
     fi
