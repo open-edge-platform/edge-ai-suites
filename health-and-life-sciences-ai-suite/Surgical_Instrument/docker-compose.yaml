@@ -1,6 +1,20 @@
-# Surgical Instrument — single-host, single-published-port topology.
-# Only the UI is exposed to the host (8080). All inter-service traffic
-# runs on the private `surgical-internal` bridge.
+# Surgical Instrument — single-host deployment.
+#
+# Two services, one published host port (UI :8080). The backend runs the
+# bootstrap → train → export → serve pipeline on the host's Intel Arc iGPU
+# and streams annotated frames to the UI over its private network.
+#
+# The UI does NOT come online until the backend HEALTHCHECK passes. First
+# boot may take 20-35 min while YOLO11n trains on CVC-ColonDB — see
+# docs/user-guide/quickstart.md for the manual dataset-drop instructions.
+#
+#   make up            # build + start (detached)
+#   make logs          # follow logs
+#   make down          # stop
+#
+# Override on the CLI:
+#   make up UI_HOST_PORT=9090
+#   make up DETECTION_DEVICE=CPU
 
 name: surgical-instrument
 
@@ -9,88 +23,10 @@ networks:
     driver: bridge
 
 volumes:
-  mosquitto-data:
-  mosquitto-log:
-  frame-tmpfs:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-      o: size=64m
+  # Cache dir survives across restarts (Ultralytics weights, HF datasets, etc.)
+  surgical-cache:
 
 services:
-
-  surgical-mqtt:
-    image: eclipse-mosquitto:2
-    container_name: surgical-mqtt
-    restart: unless-stopped
-    networks: [surgical-internal]
-    volumes:
-      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./configs/mqtt_passwd:/mosquitto/config/passwd:ro
-      - mosquitto-data:/mosquitto/data
-      - mosquitto-log:/mosquitto/log
-    healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -h localhost -p 1883 -t '$$SYS/#' -C 1 -W 3 -u $${MQTT_USERNAME:-surgical} -P $${MQTT_PASSWORD} >/dev/null"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    environment:
-      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
-      MQTT_PASSWORD: ${MQTT_PASSWORD}
-
-  surgical-pipeline:
-    build:
-      context: ./pipeline
-      dockerfile: Dockerfile
-    image: surgical-pipeline:dev
-    container_name: surgical-pipeline
-    restart: unless-stopped
-    networks: [surgical-internal]
-    depends_on:
-      surgical-mqtt:
-        condition: service_healthy
-    user: "1000:1000"
-    group_add:
-      - "${RENDER_GID:-992}"   # render group (override per host)
-      - "${VIDEO_GID:-44}"     # video group
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/accel:/dev/accel
-    volumes:
-      - ./pipeline:/app:ro
-      - ./models:/models:ro
-      - ./videos:/videos:ro
-      - ./configs:/configs:ro
-      - frame-tmpfs:/frames
-    environment:
-      MQTT_HOST: surgical-mqtt
-      MQTT_PORT: 1883
-      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
-      MQTT_PASSWORD: ${MQTT_PASSWORD}
-      MQTT_TOPIC: surgical/detections
-      DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
-      PIPELINE_CONFIG: /app/pipeline.yaml
-      FRAME_OUT_DIR: /frames
-
-  surgical-metrics:
-    image: ${METRICS_IMAGE:-intel/hl-ai-metrics-collector:latest}
-    container_name: surgical-metrics
-    restart: unless-stopped
-    networks: [surgical-internal]
-    cap_add:
-      - SYS_ADMIN
-      - SYS_PTRACE
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/accel:/dev/accel
-    volumes:
-      - /sys/devices:/sys/devices:ro
-      - /sys/kernel/debug:/sys/kernel/debug:ro
-      - /proc:/host/proc:ro
-      - /run:/run:ro
-    environment:
-      SAMPLE_INTERVAL_MS: "500"
 
   surgical-backend:
     build:
@@ -100,30 +36,49 @@ services:
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
-    depends_on:
-      surgical-mqtt:
-        condition: service_healthy
-      surgical-pipeline:
-        condition: service_started
-      surgical-metrics:
-        condition: service_started
+
+    # Intel Arc iGPU passthrough. `/dev/accel` is optional (NPU); leave in
+    # so the container can also discover it when present.
+    group_add:
+      - "${RENDER_GID:-992}"
+      - "${VIDEO_GID:-44}"
+    devices:
+      - /dev/dri:/dev/dri
+    # /dev/accel is Meteor Lake NPU; comment out on systems without it.
+    # devices:
+    #   - /dev/accel:/dev/accel
+
     volumes:
-      - ./backend_mvp:/app/backend_mvp:ro
-      - ./configs:/app/configs:ro
-      - frame-tmpfs:/frames:ro
+      # Trained IR + Ultralytics runs directory. Cache-first bootstrap
+      # skips training when `.trained_ok` marker is present here.
+      - ./models:/models
+      # Manual-drop location for the CVC-ColonDB archive (see quickstart).
+      - ./datasets:/datasets
+      # Demo videos consumed by the inference worker.
+      - ./videos:/videos
+      # Weights / dataset download cache.
+      - surgical-cache:/cache
+
     environment:
-      FLASK_APP: backend_mvp.app
-      BACKEND_CONFIG: /app/configs/mvp-backend.yaml
-      PIPELINE_HOST: surgical-pipeline
-      PIPELINE_PORT: 8000
-      MQTT_HOST: surgical-mqtt
-      MQTT_PORT: 1883
-      MQTT_USERNAME: ${MQTT_USERNAME:-surgical}
-      MQTT_PASSWORD: ${MQTT_PASSWORD}
-      MQTT_TOPIC: surgical/detections
-      METRICS_HOST: surgical-metrics
-      METRICS_PORT: 9000
-      FRAME_IN_DIR: /frames
+      BACKEND_CONFIG: /app/backend/config/model.yaml
+      MODELS_DIR:     /models
+      DATASETS_DIR:   /datasets
+      VIDEOS_DIR:     /videos
+      CACHE_DIR:      /cache
+      HOST:           0.0.0.0
+      PORT:           "5001"
+      # xpu | cpu — used by backend/main_infer + train device selection
+      DETECTION_DEVICE: ${DETECTION_DEVICE:-xpu}
+
+    # start_period covers first-boot training (20-35 min on Arc iGPU).
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5001/api/readiness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45m
+
+    # No `ports:` — backend is reachable only through the UI reverse-proxy.
 
   surgical-ui:
     build:
@@ -133,7 +88,19 @@ services:
     container_name: surgical-ui
     restart: unless-stopped
     networks: [surgical-internal]
+
+    # UI only starts once the backend reports readiness=true. This is the
+    # "gate UI on BE ready" contract the architect signed off on: no
+    # user-visible bootstrap UX; the URL simply doesn't answer until then.
     depends_on:
-      - surgical-backend
+      surgical-backend:
+        condition: service_healthy
+
     ports:
       - "${UI_HOST_PORT:-8080}:8080"   # ★ the ONLY host-published port ★
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

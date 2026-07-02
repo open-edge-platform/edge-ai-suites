@@ -6,36 +6,18 @@ SHELL := /bin/bash
 
 # ---- Tunables (override on the CLI: `make up UI_HOST_PORT=9000`) -----------
 UI_HOST_PORT       ?= 8080
-DETECTION_DEVICE   ?= GPU
+DETECTION_DEVICE   ?= xpu
 COMPOSE            ?= docker compose
-ENV_FILE           ?= .env
-MQTT_PASSWD_FILE   ?= configs/mqtt_passwd
-MQTT_USERNAME      ?= surgical
+# Render/video GIDs are auto-detected from the host so /dev/dri passthrough
+# works without editing this file. Override on the CLI if needed.
+RENDER_GID         ?= $(shell getent group render 2>/dev/null | cut -d: -f3)
+VIDEO_GID          ?= $(shell getent group video  2>/dev/null | cut -d: -f3)
 
 # ---- Targets ----------------------------------------------------------------
 
 .PHONY: help
 help:  ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
-
-.PHONY: env
-env:  ## Create .env from .env.example if missing
-	@if [ ! -f $(ENV_FILE) ]; then \
-		cp configs/.env.example $(ENV_FILE); \
-		echo "[env] Created $(ENV_FILE) — edit MQTT_PASSWORD before \`make up\`"; \
-	else \
-		echo "[env] $(ENV_FILE) already exists"; \
-	fi
-
-.PHONY: mqtt-passwd
-mqtt-passwd: env  ## Generate configs/mqtt_passwd from MQTT_PASSWORD in .env
-	@if [ ! -f $(ENV_FILE) ]; then echo "ERROR: run 'make env' first and set MQTT_PASSWORD"; exit 1; fi
-	@. ./$(ENV_FILE); \
-	if [ -z "$$MQTT_PASSWORD" ]; then echo "ERROR: MQTT_PASSWORD is empty in $(ENV_FILE)"; exit 1; fi; \
-	docker run --rm -i -v "$$(pwd)/configs:/c" eclipse-mosquitto:2 \
-		mosquitto_passwd -b -c /c/mqtt_passwd $(MQTT_USERNAME) "$$MQTT_PASSWORD"
-	@chmod 600 $(MQTT_PASSWD_FILE)
-	@echo "[mqtt-passwd] $(MQTT_PASSWD_FILE) written (user=$(MQTT_USERNAME))"
 
 # ---- Model artifact locations (align with backend/config/model.yaml) --------
 MODEL_NAME       ?= yolo11n_polyp
@@ -83,11 +65,13 @@ build:  ## Build all service images
 	$(COMPOSE) build
 
 .PHONY: up
-up: env  ## Bring the stack up (detached)
-	@test -f $(MQTT_PASSWD_FILE) || (echo "ERROR: run 'make mqtt-passwd' first"; exit 1)
+up:  ## Build (if needed) + start the stack (detached). UI unblocks once BE is healthy.
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
-		$(COMPOSE) --env-file $(ENV_FILE) up -d
-	@echo "[up] UI:    http://localhost:$(UI_HOST_PORT)"
+	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
+		$(COMPOSE) up -d --build
+	@echo "[up] UI (waits for backend readiness): http://localhost:$(UI_HOST_PORT)"
+	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
+	@echo "[up] Follow progress: make logs"
 
 .PHONY: ps
 ps:  ## Show running services

@@ -8,38 +8,55 @@ Real-time polyp detection on endoscopic video using Intel hardware acceleration 
 
 | | |
 |---|---|
-| **Model** | YOLOv11n (FP16 OpenVINO IR) — trained on polyp-detection dataset (mAP@50 0.98) |
-| **Pipeline** | DL Streamer (`intel/dlstreamer:2026.1.0-ubuntu24`) |
-| **Event bus** | MQTT (`eclipse-mosquitto:2`, internal-only, password-authenticated) |
-| **Backend** | Flask 3.0 (REST + SSE + MJPEG passthrough) |
-| **UI** | React + Vite + nginx (NICU-derived layout) |
-| **Source** | Recorded video today (Basler USB3 via `gencamsrc` in follow-up) |
-| **Target latency** | < 30 ms camera → screen, 1080p @ 60 fps |
-| **Validated POC** | yolo11n / iGPU p99 = 13.9 ms (DL Streamer `latency_tracer`) |
+| **Model** | YOLO11n (FP16 OpenVINO IR) — trained in-container on CVC-ColonDB (mAP@50 ≈ 0.98 on val) |
+| **Inference** | Ultralytics (train/export) + OpenVINO 2026.2 (serve) on Intel Arc iGPU via torch+xpu |
+| **Backend** | Flask 3.0 — bootstrap orchestrator + REST + SSE + MJPEG streaming (`backend/main_server.py`) |
+| **UI** | React + Vite + nginx |
+| **Target latency** | < 30 ms end-to-end at 1080p (validated: 18.04 ms end-to-end @ 25 fps on Arc iGPU) |
+| **First-boot time** | 20–35 min while YOLO11n trains on the iGPU (subsequent boots: seconds — IR is cached) |
 
 ## Topology
 
-Only `ui:8080` is published to the host. All inter-service traffic runs on the private `surgical-internal` Docker bridge.
+Two services on a private Docker bridge. Only the UI (:8080) is published to the host — the backend is reachable only through the UI's nginx reverse-proxy.
 
 ```
-HOST :8080 ─→ surgical-ui  (nginx + React)
+HOST :8080 ─→ surgical-ui        (nginx + React SPA + /api reverse-proxy)
             INTERNAL surgical-internal bridge
-                ├─ surgical-backend   Flask 3.0
-                ├─ surgical-pipeline  DL Streamer (Gst.parse_launch)
-                ├─ surgical-mqtt      eclipse-mosquitto:2 (password auth)
-                └─ surgical-metrics   intel/hl-ai-metrics-collector
+                └─ surgical-backend   Flask 3.0
+                                      · bootstrap: fetch → train → export IR
+                                      · serve:     REST + SSE + MJPEG on :5001
+                                      · devices:   /dev/dri (Intel Arc iGPU)
 ```
 
-## Quickstart
+The UI does **not** unblock until `surgical-backend` reports `/api/readiness → ready`. On first boot this includes the full train pipeline; the browser tab simply won't answer until the model is trained and served. This is the "gate UI on BE ready" contract — no user-visible bootstrap UX.
+
+## Quickstart (Docker)
 
 ```bash
-make mqtt-passwd        # generate configs/mqtt_passwd (one-time)
-make assets             # fetch/validate model + sample video
-make up                 # bring up the stack
+# 1) Drop CVC-ColonDB archive into ./datasets/CVC-ColonDB/raw/
+#    (research use only — download from the CVC lab, accept their terms)
+#    See docs/user-guide/quickstart.md for the exact URL.
+
+# 2) Start the stack. Compose builds both images if needed.
+make up
+
+# 3) Follow first-boot progress (train logs stream here).
+make logs
+
+# 4) Once backend is healthy, open the UI (may take 20-35 min first time).
 open http://localhost:8080
 ```
 
-See `docs/user-guide/` for full setup instructions.
+### Dev workflow (no Docker)
+
+```bash
+make backend-venv       # one-time: build .venv-backend with torch+xpu
+make backend-bootstrap  # first-boot only: cache-first train + export
+make backend-serve      # Flask on :5001
+make ui-dev             # Vite dev server proxied at http://localhost:5173
+```
+
+See [docs/user-guide/quickstart.md](docs/user-guide/quickstart.md) for the full dataset-drop procedure, GPU passthrough troubleshooting, and health-gating details.
 
 ## JIRA
 
