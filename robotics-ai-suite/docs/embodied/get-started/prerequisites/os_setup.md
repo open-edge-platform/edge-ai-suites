@@ -25,7 +25,7 @@ Do the following to prepare the target system:
    | Hyper-Threading | Disabled | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel (VMX) Virtualization | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
    | X2APIC | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
-   | Active SOC-North Efficient-cores | 0 (ARL)<br>All (PTL)<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
+   | Active SOC-North Efficient-cores | 0 (Intel® Core™ Ultra Series 2 processor)<br>All (Intel® Core™ Ultra Series 3 processor)<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel(R) SpeedStep | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Shift Technology | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Turbo Mode | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
@@ -74,7 +74,7 @@ Do the following to prepare the target system:
    :::
    ::::
 
-   **Note**: Active SOC-North Efficient-cores can be enabled **all** on Panther Lake processor, while still **0** on Arrow Lake processor under Real-time Optimization.
+   **Note<sup>*</sup>**: Active SOC-North Efficient-cores can be enabled **all** on Intel® Core™ Ultra Series 3 (Panther Lake) processor, while still **0** on Intel® Core™ Ultra Series 2 (Arrow Lake) processor under Real-time Optimization.
 
 ## Automated Setup Script
 
@@ -149,6 +149,18 @@ This section explains the procedure to configure the APT package manager to use 
    ```bash
    sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
    ```
+   > **Note:** If error occur during download:
+   >
+   > ```bash
+   > ERROR: cannot verify eci.intel.com's certificate, issued by ‘CN=Sectigo Public Server Authentication CA OV R36,O=Sectigo Limited,C=GB’:
+   > Self-signed certificate encountered.
+   > To connect to eci.intel.com insecurely, use `--no-check-certificate'.
+   > ```
+   > You can try the following command:
+   >
+   > ```bash
+   > sudo apt install --only-upgrade ca-certificates 
+   > ```
 
 3. Add the signed entry to APT sources and configure the APT client to use the ECI APT repository:
 

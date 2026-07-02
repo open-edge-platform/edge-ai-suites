@@ -192,7 +192,7 @@ For more information about CAT, refer to the following resources:
 
 - Public Intel® Time Coordinated Computing (TCC) User Guide - [RDC #[831067]](https://cdrdv2-public.intel.com/851159/Public%20TCC%20User%20Guide%20-%20Q4%202025%20-%20RDC-831067.pdf)
 - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - [RDC #[789566]](https://cdrdv2-public.intel.com/851356/356688-004-intel-rdt-architecture-spec.pdf)
-- Intel® 64 and IA-32 Architectures Software Developer's Manual - [RDC#[671200]](https://cdrdv2-public.intel.com/874240/325462-090-sdm-vol-1-2abcd-3abcd-4.pdf)
+- Intel® 64 and IA-32 Architectures Software Developer's Manual - [RDC #[671200]](https://cdrdv2-public.intel.com/874240/325462-090-sdm-vol-1-2abcd-3abcd-4.pdf)
 
 Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux `msr-tools` to test it according to your configuration:
 
