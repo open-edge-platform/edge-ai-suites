@@ -87,7 +87,7 @@ installation, see the [proxy configuration step](#optional-configure-the-proxy):
 
 ```bash
 cd handheld-multi-modal
-./run up
+./run.sh up
 ```
 
 ## Verifying the installation
