@@ -10,9 +10,12 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
+# NOTE: do NOT set NODE_ENV=production here — npm ci would skip devDependencies
+# and `vite build` (a devDep) would be unavailable. `vite build` already emits
+# a production bundle regardless of NODE_ENV.
+
 # Leave VITE_API_BASE_URL unset in production — the app falls back to
 # `${window.location.origin}/api` which nginx proxies to the backend.
-ENV NODE_ENV=production
 
 COPY package.json package-lock.json* ./
 RUN npm ci

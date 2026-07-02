@@ -344,7 +344,12 @@ def _do_start() -> None:
 
         p = _cfg["pipeline"]
         ir_dir = _cfg["model"]["ir_dir"]
-        video_src = p.get("video_source") or p.get("video_src") or "videos/polyp_test.mp4"
+        video_src = (
+            p.get("video_source")
+            or p.get("video_src")
+            or p.get("default_video")
+            or "videos/polyp_test.mp4"
+        )
         _worker = InferenceWorker(
             ir_dir=ir_dir,
             video_src=video_src,
@@ -457,7 +462,7 @@ def config() -> Response:
     p = _cfg.get("pipeline", {})
     return jsonify({
         "video_file": p.get("video_source") or p.get("video_src"),
-        "default_video": "videos/polyp_test.mp4",
+        "default_video": p.get("default_video", "videos/polyp_test.mp4"),
         "devices": {"detect": STATE.device},
         "model": {
             "name": _cfg["model"]["name"],

@@ -33,17 +33,22 @@ The UI does **not** unblock until `surgical-backend` reports `/api/readiness →
 ## Quickstart (Docker)
 
 ```bash
+# --- FIRST TIME ---------------------------------------------------------
 # 1) Drop CVC-ColonDB archive into ./datasets/CVC-ColonDB/raw/
 #    (research use only — download from the CVC lab, accept their terms)
 #    See docs/user-guide/quickstart.md for the exact URL.
+#    (Skip if you seeded a pre-trained IR via `make assets`.)
 
-# 2) Start the stack. Compose builds both images if needed.
+# 2) Build images + first-boot train (~20-35 min on Arc iGPU).
 make up
+make logs        # follow the train pipeline
 
-# 3) Follow first-boot progress (train logs stream here).
-make logs
+# 3) Once backend HEALTHCHECK passes, open the UI.
+open http://localhost:8080
 
-# 4) Once backend is healthy, open the UI (may take 20-35 min first time).
+# --- EVERY TIME AFTER ---------------------------------------------------
+# Fast path: no rebuild, no train (trained IR is cached under ./models/).
+make run
 open http://localhost:8080
 ```
 
