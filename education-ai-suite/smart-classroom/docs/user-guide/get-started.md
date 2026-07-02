@@ -76,10 +76,11 @@ After initial setup is complete, use the start script for subsequent runs or aft
 **Optional Parameters:**
 - `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
 - `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
+- `-NoWindowsTerminal` - Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions/Ansible)
 
 ```powershell
 # Example: Automated deployment
-.\start-smart-classroom.ps1 -Silent -NoElevate
+.\start-smart-classroom.ps1 -Silent -NoElevate -NoWindowsTerminal
 ```
 
 The startup script performs:

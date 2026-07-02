@@ -775,16 +775,16 @@ def uninstall_helm_charts(release_name, namespace):
     """Check if a Helm release is installed in the specified namespace and uninstall it if found."""
 
     try:
-        # List Helm releases in the specified namespace
-        list_command = f"helm list -n {namespace} -q"
-        result = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
+        list_command = ["helm", "list", "-n", namespace, "-q"]
+        result = subprocess.run(list_command, capture_output=True, text=True, check=True)
         releases = result.stdout.strip().split()
 
-        # Check if the release is present
         if release_name in releases:
             logger.info(f"Release '{release_name}' found in namespace '{namespace}'. Uninstalling...")
-            uninstall_command = f"helm uninstall {release_name} -n {namespace}"
-            subprocess.run(uninstall_command, shell=True, check=True)
+            uninstall_command = ["helm", "uninstall", release_name, "-n", namespace]
+            uninstall_result = subprocess.run(uninstall_command, capture_output=True, text=True, check=True)
+            if uninstall_result.stdout.strip():
+                logger.info(uninstall_result.stdout.strip())
             logger.info(f"Release '{release_name}' uninstalled successfully.")
             return True
         else:
@@ -792,7 +792,15 @@ def uninstall_helm_charts(release_name, namespace):
             return True
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"An error occurred while executing a command: {e.stderr}")
+        logger.error(
+            "Failed to uninstall Helm release '%s' in namespace '%s'. Command: %s Return code: %s Stdout: %s Stderr: %s",
+            release_name,
+            namespace,
+            e.cmd,
+            e.returncode,
+            (e.stdout or "").strip(),
+            (e.stderr or "").strip(),
+        )
         return False
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
