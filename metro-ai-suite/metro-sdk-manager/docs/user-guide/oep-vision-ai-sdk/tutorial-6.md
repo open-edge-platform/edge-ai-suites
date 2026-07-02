@@ -1,10 +1,10 @@
 # OEP Vision AI SDK - Tutorial 6
 
-This tutorial walks you through deploying Intel® SceneScape using the prebuilt Docker images already downloaded by the OEP Vision AI SDK install script.
+This tutorial walks you through deploying Scenescape using the prebuilt Docker images already downloaded by the OEP Vision AI SDK install script.
 
 ## Overview
 
-Intel® SceneScape goes beyond single-camera vision AI by fusing data from multiple cameras and sensors into a unified scene graph. It enables spatial awareness, multimodal object tracking, and scene analytics for smart city, retail, and industrial applications.
+Scenescape goes beyond single-camera vision AI by fusing data from multiple cameras and sensors into a unified scene graph. It enables spatial awareness, multimodal object tracking, and scene analytics for smart city, retail, and industrial applications.
 
 ## Time to Complete
 
@@ -14,20 +14,20 @@ Intel® SceneScape goes beyond single-camera vision AI by fusing data from multi
 
 Upon completion of this tutorial, you will be able to:
 
-- Deploy the SceneScape demo using prebuilt container images
-- Access and explore the SceneScape web UI
-- Manage SceneScape services with Docker Compose profiles
+- Deploy the Scenescape demo using prebuilt container images
+- Access and explore the Scenescape web UI
+- Manage Scenescape services with Docker Compose profiles
 
 ## Prerequisites
 
-- OEP Vision AI SDK installed (the install script downloads SceneScape images and clones the repo)
+- OEP Vision AI SDK installed (the install script downloads Scenescape images and clones the repo)
 - Docker and Docker Compose installed and running
 
 ## Tutorial Steps
 
-### Step 1: Navigate to the SceneScape Repository
+### Step 1: Navigate to the Scenescape Repository
 
-The OEP Vision AI SDK install script already cloned SceneScape. Navigate to it:
+The OEP Vision AI SDK install script already cloned Scenescape. Navigate to it:
 
 ```bash
 cd ~/oep/scenescape
@@ -41,7 +41,7 @@ Generate TLS certificates and download the required OpenVINO models:
 make init-secrets install-models
 ```
 
-### Step 3: Deploy the SceneScape Demo
+### Step 3: Deploy the Scenescape Demo
 
 Set a super user password and start the demo:
 
@@ -59,7 +59,7 @@ Open a browser and navigate to:
 - **Local:** `https://localhost`
 - **Remote:** `https://<ip_address>` or `https://<hostname>`
 
-If you see a certificate warning, this is expected (SceneScape uses a self-signed certificate). Click through to proceed.
+If you see a certificate warning, this is expected (Scenescape uses a self-signed certificate). Click through to proceed.
 
 Log in with:
 
@@ -76,7 +76,7 @@ docker compose --profile controller down --remove-orphans
 
 ## Next Steps
 
-- [SceneScape Get Started](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/get-started.md): Follow the getting started guide to explore core SceneScape functionality
+- [Scenescape Get Started](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/get-started.md): Follow the getting started guide to explore core Scenescape functionality
 - [How to Use the 3D UI](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/ui-tutorial.md): Explore the 3D visualization interface
 - [How to Integrate Cameras and Sensors](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/integrate-cameras-and-sensors.md): Connect live cameras and sensors
 - [How to Create a New Scene](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/build-a-scene/create-new-scene.md): Build your own scene from scratch

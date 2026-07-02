@@ -1,6 +1,8 @@
-# Measuring HOTA Tracking Accuracy with TSN and SceneScape
+# Measuring HOTA Tracking Accuracy with TSN and Scenescape
 
-This guide explains how to measure **HOTA (Higher Order Tracking Accuracy)** metrics for the SceneScape object tracker running over a real TSN network — both with and without network congestion — to quantify the impact of TSN traffic shaping on tracking quality.
+This guide explains how to measure **HOTA (Higher Order Tracking Accuracy)** metrics for the
+Scenescape object tracker running over a real TSN network — both with and without network
+congestion — to quantify the impact of TSN traffic shaping on tracking quality.
 
 ---
 
@@ -8,7 +10,8 @@ This guide explains how to measure **HOTA (Higher Order Tracking Accuracy)** met
 
 ### What is HOTA?
 
-HOTA is an industry-standard metric for evaluating multi-object tracking systems. It balances detection accuracy and association accuracy in a single score:
+HOTA is an industry-standard metric for evaluating multi-object tracking systems. It balances
+detection accuracy and association accuracy in a single score:
 
 - **Detection accuracy** — did the tracker find the right objects?
 - **Association accuracy** — did the tracker maintain consistent identities over time?
@@ -18,7 +21,7 @@ Alongside HOTA, the evaluation also reports:
 - **MOTA (Multiple Object Tracking Accuracy)** — focuses on counting errors such as false positives, missed detections, and identity switches
 - **IDF1** — measures how consistently the tracker assigns the same ID to the same individual across time
 
-SceneScape's evaluation framework uses the [TrackEval](https://github.com/JonathonLuiten/TrackEval) toolkit to compute these scores. The framework lives at:
+Scenescape's evaluation framework uses the [TrackEval](https://github.com/JonathonLuiten/TrackEval) toolkit to compute these scores. The framework lives at:
 
 ```
 scenescape/tools/tracker/evaluation/
@@ -28,7 +31,7 @@ For a full reference, see the [Tracker Evaluation Pipeline README](https://githu
 
 ### How the Existing Evaluation Pipeline Works
 
-SceneScape ships with a reference dataset in:
+Scenescape ships with a reference dataset in:
 
 ```
 scenescape/tests/system/metric/dataset/
@@ -36,15 +39,15 @@ scenescape/tests/system/metric/dataset/
 
 This dataset contains:
 
-| File | Purpose |
-|------|---------|
+| File                                                           | Purpose                                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- |
 | [`Cam_x1_0.json`][cam-x1-json], [`Cam_x2_0.json`][cam-x2-json] | Per-frame camera detections (bounding boxes) — the **tracker input** |
-| [`Cam_x1_0.mp4`][cam-x1-mp4], [`Cam_x2_0.mp4`][cam-x2-mp4] | Source video files the detections were generated from |
-| `gtLoc.json` | 3D ground-truth object positions — the **evaluation reference** |
-| `config.json` | Scene and camera calibration configuration |
-| `tracker-config.json` | Tracker settings |
+| [`Cam_x1_0.mp4`][cam-x1-mp4], [`Cam_x2_0.mp4`][cam-x2-mp4]     | Source video files the detections were generated from                |
+| `gtLoc.json`                                                   | 3D ground-truth object positions — the **evaluation reference**      |
+| `config.json`                                                  | Scene and camera calibration configuration                           |
+| `tracker-config.json`                                          | Tracker settings                                                     |
 
-The evaluation pipeline feeds the detection JSON files into the SceneScape controller, collects the 3D tracking output, and compares it against `gtLoc.json` to produce HOTA scores.
+The evaluation pipeline feeds the detection JSON files into the Scenescape controller, collects the 3D tracking output, and compares it against `gtLoc.json` to produce HOTA scores.
 
 ### Why a Different Approach Is Needed for TSN Testing
 
@@ -81,10 +84,10 @@ sudo apt-get install -y iperf3
 
 ## Hardware Setup
 
-| Machine | Role |
-|---------|------|
-| **Machine 1** | Runs SceneScape; captures MQTT output; runs HOTA evaluation |
-| **Machine 2** | Streams the RTSP test video over the TSN network |
+| Machine       | Role                                                            |
+| ------------- | --------------------------------------------------------------- |
+| **Machine 1** | Runs Scenescape; captures MQTT output; runs HOTA evaluation     |
+| **Machine 2** | Streams the RTSP test video over the TSN network                |
 | **Machine 3** | Injects background traffic with `iperf3` to simulate congestion |
 
 All machines are connected via the MOXA TSN switch and synchronized using PTP.
@@ -95,7 +98,7 @@ All machines are connected via the MOXA TSN switch and synchronized using PTP.
 
 ### About the Test Videos
 
-Two pre-prepared MPEG-TS video files are provided. They are derived from the SceneScape reference videos ([`Cam_x1_0.mp4`][cam-x1-mp4] / [`Cam_x2_0.mp4`][cam-x2-mp4]) with two modifications:
+Two pre-prepared MPEG-TS video files are provided. They are derived from the Scenescape reference videos ([`Cam_x1_0.mp4`][cam-x1-mp4] / [`Cam_x2_0.mp4`][cam-x2-mp4]) with two modifications:
 
 - **B-frames removed** — ensures frames are always delivered in decode order, so frame sequence numbers are reliable
 - **SEI frame numbers injected** — each frame carries its frame number in an H.264 SEI NAL unit (UUID `12345678-1234-5678-1234-567812345678`), which the GVAPython plugin reads to track drops
@@ -138,11 +141,11 @@ ffmpeg \
 
 ---
 
-## Step 2 — Machine 1: Configure SceneScape for HOTA Capture
+## Step 2 — Machine 1: Configure Scenescape for HOTA Capture
 
 ### 2a. Create the Scene and Cameras
 
-If you have not yet started SceneScape, run the following. Otherwise, skip to creating the scene and cameras.
+If you have not yet started Scenescape, run the following. Otherwise, skip to creating the scene and cameras.
 
 ```bash
 git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
@@ -150,7 +153,7 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
@@ -158,15 +161,16 @@ Create the `hota-scene` scene and its two cameras, then run the setup script:
 cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection
 bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.sh
 ```
-> Note: If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 
-This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the SceneScape REST API. See the [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md) for details.
+> **Note:** If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
+
+This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md) for details.
 
 ### 2b. Install the SEI Frame-Number Parser
 
 The `sei_parser.py` GVAPython plugin reads the SEI-embedded frame number from each decoded H.264 buffer and injects it as `sei_frame_num` into the internal messages. This is what allows the capture script to detect dropped frames. This information needs to be captured before the frame is decoded.
 
-Copy it into the SceneScape pipeline server scripts directory:
+Copy it into the Scenescape pipeline server scripts directory:
 
 ```bash
 cp usecases/scenescape-deterministic-inference/hota/scripts/gvapython/sei_parser.py \
@@ -192,6 +196,7 @@ configs:
   queuing-config:
     file: ./dlstreamer-pipeline-server/hota-metrics-config.json
 ```
+
 ### 2e. Include the Frame Number in the MQTT Message
 
 Apply the following patch to `sscape_adapter.py` so the adapter publishes the SEI
@@ -205,15 +210,15 @@ git -C /path/to/scenescape apply \
 Also expose port 1883 of the broker service in `sample_data/docker-compose-dl-streamer-example.yml` to allow the capture script to connect to the MQTT broker from outside the container network, if not already configured:
 
 ```yaml
-   broker:
-     image: eclipse-mosquitto:2.0.22
-     ports:
-       - "1883:1883"
+broker:
+  image: eclipse-mosquitto:2.0.22
+  ports:
+    - "1883:1883"
 ```
 
-### 2f. Restart SceneScape
+### 2f. Restart Scenescape
 
-Apply the new configuration by restarting SceneScape:
+Apply the new configuration by restarting Scenescape:
 
 ```bash
 export no_proxy=$no_proxy,<machine2-tsn-vlan1-ip>
@@ -238,7 +243,7 @@ You should see the pipeline connecting to both RTSP streams and the SEI parser l
 
 ## Step 3 — Machine 1: Set Up the Capture and Evaluation Environment
 
-The `hota-metrics` scripts must run from inside the SceneScape evaluation tool directory so they can import `pipeline_engine` and its modules.
+The `hota-metrics` scripts must run from inside the Scenescape evaluation tool directory so they can import `pipeline_engine` and its modules.
 
 ```bash
 # Copy the hota-metrics scripts into the evaluation tool directory
@@ -279,7 +284,7 @@ python mqtt_camera_capture_processor.py
 
 ### Machine 3: Start the Traffic Generator (Congestion Test Only)
 
-> Skip this step for the **baseline** (no-congestion) run. Run it only when measuring the effect of network congestion.
+> **Note:** Skip this step for the **baseline** (no-congestion) run. Run it only when measuring the effect of network congestion.
 
 ```bash
 cd usecases/scenescape-deterministic-inference/hota/scripts
@@ -298,13 +303,14 @@ python3 traffic_generator.py \
 ```
 
 The traffic generator:
+
 - Waits for frame 0 to arrive on both camera topics before injecting any traffic
 - Alternates between running `iperf3` for `--duration` seconds and sleeping for `--sleep` seconds
 - Stops automatically when either camera exceeds `--stop-frame`, ensuring the capture script can detect the final frames to stop and run the evaluation.
 
 ### Machine 2: Enable TSN Traffic Shaping (TSN Test Only)
 
-> Skip this step for the **congestion without TSN** run. Enable it only for the **congestion with TSN** comparison run.
+> **Note:** Skip this step for the **congestion without TSN** run. Enable it only for the **congestion with TSN** comparison run.
 
 Configure the Time-Aware Shaper (IEEE 802.1Qbv) on the MOXA switch to protect the camera stream traffic from the `iperf3` background traffic.
 
@@ -316,11 +322,11 @@ Refer to the [TSN Traffic Shaping Guide](../common/enable-tsn-traffic-shaping.md
 
 Run the experiment three times to produce a full comparison:
 
-| Run | Traffic injection | TSN shaping | Expected result |
-|-----|------------------|-------------|----------------|
-| **Baseline** | No | No | Highest HOTA score (reference) |
-| **Congestion** | Yes | No | Lower HOTA — dropped frames degrade tracking |
-| **TSN protected** | Yes | Yes | HOTA close to baseline — TSN restores quality |
+| Run               | Traffic injection | TSN shaping | Expected result                               |
+| ----------------- | ----------------- | ----------- | --------------------------------------------- |
+| **Baseline**      | No                | No          | Highest HOTA score (reference)                |
+| **Congestion**    | Yes               | No          | Lower HOTA — dropped frames degrade tracking  |
+| **TSN protected** | Yes               | Yes         | HOTA close to baseline — TSN restores quality |
 
 Results are stored in timestamped subdirectories under `/tmp/tracker-evaluation/`. Look for `TrackEvalEvaluator/` inside each run directory for the HOTA, MOTA, and IDF1 scores.
 
@@ -332,9 +338,10 @@ Results are stored in timestamped subdirectories under `/tmp/tracker-evaluation/
 - [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/2026.1.0/tools/tracker/evaluation/README.md)
 - [TrackEval Toolkit](https://github.com/JonathonLuiten/TrackEval)
 - [TSN Traffic Shaping Guide](../common/enable-tsn-traffic-shaping.md)
-- [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md)
+- [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md)
 
-[cam-x1-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0/tests/system/metric/dataset/Cam_x1_0.mp4
-[cam-x2-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0/tests/system/metric/dataset/Cam_x2_0.mp4
-[cam-x1-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0/tests/system/metric/dataset/Cam_x1_0.json
-[cam-x2-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0/tests/system/metric/dataset/Cam_x2_0.json
+- Dataset files:
+  - [cam-x1-mp4](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.mp4)
+  - [cam-x2-mp4](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.mp4)
+  - [cam-x1-json](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.json)
+  - [cam-x2-json](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.json)

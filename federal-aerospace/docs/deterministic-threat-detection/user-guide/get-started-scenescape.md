@@ -1,25 +1,25 @@
-# Get Started: SceneScape
+# Get Started: Scenescape
 
-This guide explains how to run Intel® [SceneScape](https://github.com/open-edge-platform/scenescape) on a TSN network and evaluate tracking quality under baseline, congestion, and TSN-shaped conditions. The workflow supports either Basler GigE cameras with IEEE 1588v2 PTP hardware timestamps or RTSP cameras that rely on NTP-based synchronization.
+This guide explains how to run [Scenescape](https://github.com/open-edge-platform/scenescape) on a TSN network and evaluate tracking quality under baseline, congestion, and TSN-shaped conditions. The workflow supports either Basler GigE cameras with IEEE 1588v2 PTP hardware timestamps or RTSP cameras that rely on NTP-based synchronization.
 
 ## How It Works
 
-![SceneScape deterministic threat detection architecture](./_assets/scenescape-dtd-architecture.svg)
+![Scenescape deterministic threat detection architecture](./_assets/scenescape-dtd-architecture.svg)
 
 This use case streams video from either Basler or RTSP cameras through the DL Streamer
-Pipeline Server for AI inference (person detection). The SceneScape controller consumes
+Pipeline Server for AI inference (person detection). The Scenescape controller consumes
 the inference results and produces 3D multi-camera tracking output. By injecting
 background traffic and then enabling TSN features, this demonstration shows how TSN
 preserves tracking accuracy even under network congestion — quantified using HOTA,
 MOTA, and IDF1 metrics.
 
-
 ## System Requirements
 
 ### Software Requirements
+
 - **Operating System:** Ubuntu 24.04 or later
 - **Docker Engine** with Docker Compose V2
-- [**SceneScape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0)
+- [**Scenescape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0)
 
 ### Hardware Requirements
 
@@ -36,17 +36,16 @@ MOTA, and IDF1 metrics.
 
 ![TSN Network Topology](./_assets/scenescape-dtd-network-topology.svg)
 
-
 The MOXA switch carries both camera traffic and background traffic. In the Basler camera setup, the switch also acts as the PTP Grandmaster for the host and cameras.
 
 ### Logical Roles
 
 | Machine | Role |
 |---------|------|
-| Arrow Lake Host (Machine 1) | Runs SceneScape and the DL Streamer inference pipeline |
+| Arrow Lake Host (Machine 1) | Runs Scenescape and the DL Streamer inference pipeline |
 | Traffic Injector (Machine 2) | Injects background traffic with `iperf3` to simulate congestion |
 
-## Prerequisite: Clone SceneScape Repository
+## Prerequisite: Clone Scenescape Repository
 
 ```bash
 git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
@@ -56,7 +55,8 @@ cd scenescape
 ## Prerequisite: Choose Your Camera Setup
 
 ### Option 1: RTSP Camera with NTP Synchronization
-SceneScape supports NTP-synchronized RTSP cameras by default. Set the following in `scenescape/dlstreamer-pipeline-server/queuing-config.json` for both `qcam1` and `qcam2` pipelines:
+
+Scenescape supports NTP-synchronized RTSP cameras by default. Set the following in `scenescape/dlstreamer-pipeline-server/queuing-config.json` for both `qcam1` and `qcam2` pipelines:
 
 ```json
 "frame_ntp_config": {
@@ -66,14 +66,13 @@ SceneScape supports NTP-synchronized RTSP cameras by default. Set the following 
 
 ### Option 2: Basler Camera with IEEE 1588v2 PTP Synchronization
 
-Basler cameras provide hardware PTP timestamps, but require additional setup for the camera, switch, host, and SceneScape containers.
+Basler cameras provide hardware PTP timestamps, but require additional setup for the camera, switch, host, and Scenescape containers.
 
 Before continuing, complete the following steps in order:
 
 1. [Configure MOXA Switch and Host for IEEE 1588v2](./how-to-guides/scenescape-deterministic-inference/configure-ptp-1588v2.md)
 2. [Configure the Basler Camera to Use PTP Timestamps](./how-to-guides/scenescape-deterministic-inference/configure-basler-ptp-timestamps.md)
-3. [Set Up SceneScape with Basler GigE Camera and PTP Support](./how-to-guides/scenescape-deterministic-inference/integrate-basler-camera-with-scenescape.md)
-
+3. [Set Up Scenescape with Basler GigE Camera and PTP Support](./how-to-guides/scenescape-deterministic-inference/integrate-basler-camera-with-scenescape.md)
 
 ## End-to-End Testing
 
@@ -96,21 +95,21 @@ sudo ip link set enp1s0.5 type vlan egress-qos-map 0:5
 sudo ifconfig enp1s0.5 192.168.5.31 up
 ```
 
-> **Note**: if you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
+> **Note:** If you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
 
 For detailed instructions, refer to the
 [HOST VLAN Configuration Guide](./how-to-guides/common/create-vlan-on-all-machines.md).
 
-### Step 2: Run SceneScape
+### Step 2: Run Scenescape
 
 ```bash
 cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
 
-> **Basler camera users:** If you completed the Basler prerequisite steps above, the Docker Compose file has already been patched and the custom DL Streamer image with Basler support has been built. Start SceneScape with `make demo` as usual — the patched compose file will be picked up automatically.
+> **Basler camera users:** If you completed the Basler prerequisite steps above, the Docker Compose file has already been patched and the custom DL Streamer image with Basler support has been built. Start Scenescape with `make demo` as usual — the patched compose file will be picked up automatically.
 
 ### Step 3: Inject Background Traffic
 
@@ -129,10 +128,9 @@ iperf3 -s -B <machine1-vlan5-ip>
 iperf3 -c <machine1-vlan5-ip> -u -b 960M -t 60
 ```
 
-Observe the SceneScape controller logs for signs of packet loss and video stream
+Observe the Scenescape controller logs for signs of packet loss and video stream
 degradation as best-effort traffic competes with the camera stream. You may also
-see visual frame corruption in the camera stream panel of the SceneScape dashboard.
-
+see visual frame corruption in the camera stream panel of the Scenescape dashboard.
 
 ### Step 4: Enable TSN Traffic Shaping
 
@@ -144,11 +142,10 @@ prioritize the camera traffic, protecting it from background congestion.
 > **Note:** The default MOXA switch username is `admin` and the default password is `moxa`.
 
 > **Note:** Apply the port setting on the switch port that connects to the host running
-> SceneScape.
+> Scenescape.
 
 For detailed instructions, refer to the
 [TSN Traffic Shaping Guide](./how-to-guides/common/enable-tsn-traffic-shaping.md).
-
 
 ### Step 5: HOTA Metrics and Observability
 
@@ -156,14 +153,13 @@ After validating TSN shaping behavior under load, measure tracking quality and t
 consistency to quantify the end-to-end impact.
 
 Use the HOTA workflow to compare baseline behavior (without shaping) versus TSN-aware
-traffic scheduling. 
+traffic scheduling.
 
 For the full procedure, metric definitions, and example commands, see:
 
 [HOTA Metrics Guide](./how-to-guides/scenescape-deterministic-inference/scenescape-measuring-hota-metrics-with-tsn.md)
 
-
 ## Resources
 
 - [Basler Precision Time Protocol Documentation](https://docs.baslerweb.com/precision-time-protocol)
-- [SceneScape Repository](https://github.com/open-edge-platform/scenescape)
+- [Scenescape Repository](https://github.com/open-edge-platform/scenescape)

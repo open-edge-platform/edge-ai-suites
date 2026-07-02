@@ -11,7 +11,7 @@ Before you begin, ensure that you have the following prerequisites:
 - Install `kubectl` on your system. Refer to the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm installed on your system: [Installation Guide](https://helm.sh/docs/intro/install/).
 - A running **Smart Intersection** deployment (provides MQTT broker, camera pipelines, and scene analytics). See [Step 4](#step-5-deploy-smart-intersection) below.
-- The SceneScape CA certificate file (`scenescape-ca.pem`) for TLS connections to the MQTT broker (created during the Smart Intersection installation).
+- The Scenescape CA certificate file (`scenescape-ca.pem`) for TLS connections to the MQTT broker (created during the Smart Intersection installation).
 - *(Optional)* A [Hugging Face](https://huggingface.co/) API token if the VLM model requires authentication.
 - **Storage Requirement:** The VLM model cache PVC requests 20 GiB by default. Ensure the cluster has sufficient storage available.
 - *(Optional — GPU inference)* To run VLM inference on an Intel GPU:
@@ -99,7 +99,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 ### Step 5: Deploy Smart Intersection
 
-The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
+The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [Scenescape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
 Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
@@ -460,7 +460,7 @@ You should see the OVMS VLM serving pods running with the Trusted Compute runtim
 - Ensure that all pods are running and the services are accessible.
 - Access the Gradio UI and verify that it is showing the traffic intersection dashboard.
 - Check the backend API at `/docs` for the interactive Swagger documentation.
-- Verify that the traffic agent is receiving MQTT messages from SceneScape by checking the logs:
+- Verify that the traffic agent is receiving MQTT messages from Scenescape by checking the logs:
 
   ```bash
   kubectl logs -l app=stia-traffic-agent -n <your-namespace> -f
@@ -496,7 +496,7 @@ You should see the OVMS VLM serving pods running with the Trusted Compute runtim
   helm install stia . --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
   ```
 
-- **Traffic agent cannot connect to MQTT broker:** Verify that the SceneScape deployment is reachable from the cluster, the `trafficAgent.mqtt.host` value is correct, and the CA certificate is provided via `tls.caCert` or `tls.caCertSecretName`.
+- **Traffic agent cannot connect to MQTT broker:** Verify that the Scenescape deployment is reachable from the cluster, the `trafficAgent.mqtt.host` value is correct, and the CA certificate is provided via `tls.caCert` or `tls.caCertSecretName`.
 
 - **PVC not cleaned up after uninstall:** When `vlmServing.persistence.keepOnUninstall` is `true` (the default), the model cache PVC is intentionally retained. To reclaim storage, delete it manually:
 
