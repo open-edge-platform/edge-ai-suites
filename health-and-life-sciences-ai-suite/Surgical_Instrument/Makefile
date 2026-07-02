@@ -64,14 +64,31 @@ config:  ## Validate docker-compose configuration
 build:  ## Build all service images
 	$(COMPOSE) build
 
+# Print the URLs the user can hit. `docker compose up -d` already blocks on
+# `depends_on: condition: service_healthy`, so by the time we get here the
+# backend is healthy and nginx is listening — no separate wait target needed.
+define _print_urls
+	@LAN_IP=$$(hostname -I 2>/dev/null | awk '{print $$1}'); \
+	echo ""; \
+	echo "  UI is up.  Open one of:"; \
+	echo "    http://localhost:$(UI_HOST_PORT)      (from this box)"; \
+	if [ -n "$$LAN_IP" ]; then \
+	  echo "    http://$$LAN_IP:$(UI_HOST_PORT)   (from another machine on the LAN)"; \
+	fi; \
+	echo ""; \
+	echo "  Tip: 'make up UI_HOST_PORT=80' publishes on the standard HTTP port"; \
+	echo "       so the URL becomes plain http://<host>/ (no :port suffix)."; \
+	echo ""
+endef
+
 .PHONY: up
 up:  ## First-boot: build images + start stack. May take 20-35 min if no cached IR.
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) up -d --build
-	@echo "[up] UI (waits for backend readiness): http://localhost:$(UI_HOST_PORT)"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
+	$(_print_urls)
 
 .PHONY: run
 run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
@@ -82,19 +99,7 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) up -d
-	@echo "[run] Cached IR detected — backend should be ready within seconds."
-	@echo "[run] UI: http://localhost:$(UI_HOST_PORT)"
-
-.PHONY: wait-ready
-wait-ready:  ## Block until surgical-backend HEALTHCHECK passes (or 60m).
-	@echo "[wait-ready] polling http://localhost:$(UI_HOST_PORT)/api/readiness ..."
-	@for i in $$(seq 1 720); do \
-		STATUS=$$($(COMPOSE) ps --format json surgical-backend 2>/dev/null | grep -o '"Health":"[^"]*"' | head -1); \
-		echo "[wait-ready] [$$i/720] $$STATUS"; \
-		echo "$$STATUS" | grep -q healthy && echo "[wait-ready] backend healthy" && exit 0; \
-		sleep 5; \
-	done; \
-	echo "[wait-ready] TIMEOUT after 60m"; exit 1
+	$(_print_urls)
 
 .PHONY: ps
 ps:  ## Show running services
