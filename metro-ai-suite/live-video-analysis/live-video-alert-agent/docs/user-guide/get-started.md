@@ -33,6 +33,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export OVMS_TARGET_DEVICE=GPU
    export HF_TOKEN=<your-huggingface-token>
    ```
 
@@ -53,24 +54,25 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export LOG_LEVEL=DEBUG
    ```
 
-   **Agentic dispatch — choose one mode:**
+   **Agentic dispatch**
 
-   *Option A — Google ADK with local OVMS (default, fully offline):*
+   The `alert-agent-service` microservice handles agentic dispatch automatically.
+
+   If you want ADK (LLM-reasoned) mode, enable the LLM service:
 
    ```bash
-   export USE_ADK=true
    export COMPOSE_PROFILES=adk-llm
-   export LLM_MODEL=<llm-model-name>   #Example: Openvino/Phi-4-mini-instruct-int4-ov
+   export LLM_MODEL=OpenVINO/Phi-4-mini-instruct-int4-ov
+   export AGENT_MODE=true
    ```
 
-   *Option B — Rule-based (no LLM needed):*
+   If you want rule-based mode
 
    ```bash
-   export USE_ADK=false
-   export COMPOSE_PROFILES=[]
+   export AGENT_MODE=false
    ```
 
-   **Action tools** (configure the ones you want active):
+   **Action tools**
 
    ```bash
    # Webhook (receives HMAC-signed POST)
@@ -78,7 +80,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export WEBHOOK_SECRET=<hmac-secret>          # optional
 
    # MQTT
-   export MQTT_BROKER=192.168.1.20
+   export MQTT_BROKER=<MQTT_Broker_url>
    export MQTT_PORT=1883
    export MQTT_USERNAME=<username>              # optional
    export MQTT_PASSWORD=<password>              # optional
@@ -114,6 +116,9 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    docker ps
    ```
+
+   Confirm that `live-video-alert-agent` and `alert-agent-service` are both
+   running. If you enabled MQTT support, you may also see `alert-mqtt`.
 
    View application logs:
 
@@ -215,6 +220,9 @@ docker compose logs -f
 
 # VLM service logs
 docker logs -f ovms-vlm
+
+# Alert agent service logs
+docker logs -f alert-agent-service
 
 # Application logs
 docker logs -f live-video-alert-agent

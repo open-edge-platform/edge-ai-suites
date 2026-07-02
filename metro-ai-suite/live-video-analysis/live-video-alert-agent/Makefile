@@ -9,7 +9,7 @@
 # This application includes:
 #   - live-video-alert-agent  (first-party; built from local Dockerfile)
 #   - OVMS VLM / LLM inference servers (OpenVINO pre-built images)
-#   - live-metrics-service and vippet-collector (Intel pre-built images)
+#   - metrics-manager (Intel pre-built image)
 #
 # Quick Start:
 #   make help           - Show all available commands
@@ -62,9 +62,8 @@ REGISTRY := $(if $(REGISTRY_URL),$(REGISTRY_URL)/)$(if $(PROJECT_NAME),$(PROJECT
 COMPONENTS := live-video-alert-agent
 
 # Intel platform images (pre-built, fixed release tags)
-LIVE_METRICS_IMAGE    := intel/live-metrics-service:1.0.0
-VIPPET_COLLECTOR_IMAGE := intel/vippet-collector:2026.0.0
-PLATFORM_IMAGES       := $(LIVE_METRICS_IMAGE) $(VIPPET_COLLECTOR_IMAGE)
+METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.1.0-rc2
+PLATFORM_IMAGES       := $(METRICS_MANAGER_IMAGE)
 
 # ==============================================================================
 # Deployment Configuration
