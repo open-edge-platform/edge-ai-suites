@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppSelector } from '../../redux/hooks';
 import Accordion from '../common/Accordion';
+import { api, type Device } from '../../services/api';
 import '../../assets/css/RightPanel.css';
 
 const DEVICE_COLORS: Record<string, string> = {
@@ -8,6 +9,8 @@ const DEVICE_COLORS: Record<string, string> = {
   CPU: '#2e7d32',
   NPU: '#6a1b9a',
 };
+
+const DEVICE_OPTIONS: Device[] = ['GPU', 'CPU', 'NPU'];
 
 const STATUS_DOT: Record<string, { color: string; label: string }> = {
   running: { color: '#4caf50', label: 'Running' },
@@ -25,6 +28,25 @@ export function PipelinePerformanceAccordion() {
 
   const isRunning = systemStatus === 'running' || systemStatus === 'starting';
   const status = isRunning ? 'running' : 'stopped';
+
+  const [deviceError, setDeviceError] = useState<string>('');
+  const [deviceBusy, setDeviceBusy] = useState(false);
+
+  const handleDeviceChange = async (newDevice: Device) => {
+    if (deviceBusy || isRunning) return;
+    setDeviceBusy(true);
+    setDeviceError('');
+    try {
+      await api.setDevice(newDevice);
+      // Backend publishes a fresh snapshot; SSE will update the pill on its own.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setDeviceError(msg);
+      setTimeout(() => setDeviceError(''), 4000);
+    } finally {
+      setDeviceBusy(false);
+    }
+  };
 
   const sseLookup: Record<string, { fps?: number; infer_ms?: number; latency_ms?: number; latency_p99_ms?: number; device?: string; status?: string }> = {};
   if (pipelinePerf?.workloads) {
@@ -81,20 +103,36 @@ export function PipelinePerformanceAccordion() {
                   <td style={{ ...cellStyle, fontWeight: 500, color: '#24292f' }}>{def.name}</td>
                   <td style={{ ...cellStyle, fontSize: '10px', color: '#888', fontFamily: 'monospace' }}>{def.models}</td>
                   <td style={cellStyle}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '2px 10px',
-                      border: '1px solid',
-                      borderRadius: '10px',
-                      fontFamily: 'monospace',
-                      fontWeight: 700,
-                      fontSize: '10px',
-                      backgroundColor: devColor + '14',
-                      color: devColor,
-                      borderColor: devColor + '40',
-                    }}>
-                      {actualDevice}
-                    </span>
+                    <select
+                      value={actualDevice}
+                      onChange={(e) => handleDeviceChange(e.target.value as Device)}
+                      disabled={isRunning || deviceBusy}
+                      title={isRunning
+                        ? 'Stop inference to change device'
+                        : 'Change inference device (CPU / GPU / NPU)'}
+                      style={{
+                        padding: '2px 22px 2px 10px',
+                        border: '1px solid',
+                        borderRadius: '10px',
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '10px',
+                        backgroundColor: devColor + '14',
+                        color: devColor,
+                        borderColor: devColor + '40',
+                        cursor: isRunning || deviceBusy ? 'not-allowed' : 'pointer',
+                        opacity: isRunning ? 0.65 : 1,
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path fill='${encodeURIComponent(devColor)}' d='M2 4l3 3 3-3z'/></svg>")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 6px center',
+                      }}
+                    >
+                      {DEVICE_OPTIONS.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
                   </td>
                   <td style={numStyle}>
                     {sseRow.fps !== undefined ? sseRow.fps.toFixed(1) : '—'}
@@ -126,6 +164,17 @@ export function PipelinePerformanceAccordion() {
             {pipelinePerf?.decode && <span style={{ color: '#666' }}>· decode {pipelinePerf.decode}</span>}
             {uptime > 0 && <span style={{ color: '#666' }}>· uptime {fmtUptime(uptime)}</span>}
             {totalFrames > 0 && <span style={{ color: '#666' }}>· {totalFrames.toLocaleString()} frames</span>}
+          </div>
+        )}
+
+        {!isRunning && (
+          <div style={{ marginTop: 6, fontSize: 10, color: '#6b7280', fontStyle: 'italic' }}>
+            Tip: click the Device pill above to switch between CPU / GPU / NPU (only while stopped).
+          </div>
+        )}
+        {deviceError && (
+          <div style={{ marginTop: 6, padding: '6px 10px', background: '#fee', border: '1px solid #fcc', borderRadius: 4, fontSize: 11, color: '#c62828' }}>
+            {deviceError}
           </div>
         )}
 

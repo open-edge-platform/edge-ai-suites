@@ -1,7 +1,7 @@
 import type { Middleware } from '@reduxjs/toolkit';
 import { addEvent } from '../slices/eventsSlice';
 import { updateWorkloadData, setAggregatorStatus } from '../slices/servicesSlice';
-import { patchDetectionState, resetDetectionState } from '../slices/detectionSlice';
+import { patchDetectionState } from '../slices/detectionSlice';
 import { api } from '../../services/api';
 
 /**
@@ -128,7 +128,9 @@ export const sseMiddleware: Middleware = (store) => {
         eventSource = null;
       }
       store.dispatch(setAggregatorStatus('stopped'));
-      store.dispatch(resetDetectionState());
+      // Deliberately do NOT reset detection state — freeze the last snapshot
+      // (video, KPIs, session totals) so the user can review the final session
+      // after clicking Stop. On next Start the backend clears the frozen snapshot.
     }
 
     return next(action);

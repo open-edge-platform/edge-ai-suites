@@ -158,6 +158,21 @@ export async function getConfig(): Promise<PipelineConfig> {
   return res.json();
 }
 
+export type Device = 'CPU' | 'GPU' | 'NPU';
+
+export async function setDevice(device: Device): Promise<{ status: string; device: string; error?: string }> {
+  const res = await fetch(`${BASE_URL}/device`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error || `Failed to set device: ${res.status}`);
+  }
+  return data;
+}
+
 export const api = {
   pingBackend,
   getStreamingStatus,
@@ -171,6 +186,7 @@ export const api = {
   getEventsUrl,
   getFrameUrl,
   getConfig,
+  setDevice,
 };
 
 export default api;

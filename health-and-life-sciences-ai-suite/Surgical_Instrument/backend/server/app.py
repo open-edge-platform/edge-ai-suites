@@ -83,6 +83,15 @@ _orch: Optional[Orchestrator] = None
 _worker = None  # type: Optional[Any]  # InferenceWorker — lazy import
 _cfg: Optional[dict] = None
 
+# Frozen snapshot of the last session — populated on Stop, cleared on Start,
+# so the UI keeps showing the final frame + session KPIs after the user stops.
+_last_stats: Optional[dict] = None
+_last_dets: Optional[dict] = None
+_last_frame_jpeg: Optional[bytes] = None
+
+
+VALID_DEVICES = {"CPU", "GPU", "NPU"}
+
 
 # ---------------------------------------------------------------------------
 # Publish helpers
@@ -118,17 +127,29 @@ def _map_fsm_to_lifecycle(fsm_state: str, worker_running: bool) -> str:
 
 def _snapshot_full() -> dict[str, Any]:
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
-    inf = _worker.stats() if _worker else {
-        "running": False, "delivered_fps": 0.0,
-        "infer_mean_ms": 0.0, "infer_p99_ms": 0.0,
-        "total_mean_ms": 0.0, "total_p99_ms": 0.0,
-        "frame_id": 0, "uptime_s": 0.0,
-        "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
-    }
-    dets = _worker.latest_detections() if _worker else {"detections": []}
-    detections = dets.get("detections", [])
-    n_polyp = sum(1 for d in detections if str(d.get("class_name", "")).lower() == "polyp")
-    conf = max((float(d.get("confidence", 0.0)) for d in detections), default=0.0)
+    # Live worker wins; frozen last-session stats used when worker is None.
+    if _worker is not None:
+        inf = _worker.stats()
+    elif _last_stats is not None:
+        inf = _last_stats
+    else:
+        inf = {
+            "running": False, "delivered_fps": 0.0,
+            "infer_mean_ms": 0.0, "infer_p99_ms": 0.0,
+            "total_mean_ms": 0.0, "total_p99_ms": 0.0,
+            "frame_id": 0, "uptime_s": 0.0,
+            "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
+        }
+
+    if _worker is not None:
+        dets = _worker.latest_detections()
+        detections = dets.get("detections", [])
+        n_polyp = sum(1 for d in detections if str(d.get("class_name", "")).lower() == "polyp")
+        conf = max((float(d.get("confidence", 0.0)) for d in detections), default=0.0)
+    else:
+        # Post-stop: no live detection. Session totals still come from _last_stats.
+        n_polyp = 0
+        conf = 0.0
     fps = float(inf.get("delivered_fps", 0.0))
     latency = float(inf.get("total_mean_ms", 0.0))
     infer_ms = float(inf.get("infer_mean_ms", 0.0))
@@ -164,7 +185,10 @@ def _snapshot_full() -> dict[str, Any]:
             "total_mean_ms": round(latency, 2),
             "total_p99_ms": round(total_p99, 2),
         },
-        "frame": _worker is not None and _worker.latest_frame_jpeg() is not None,
+        "frame": (
+            (_worker is not None and _worker.latest_frame_jpeg() is not None)
+            or _last_frame_jpeg is not None
+        ),
         "pipeline_performance": {
             "workloads": [{
                 "name": "Polyp Detection",
@@ -279,6 +303,9 @@ def _current_jpeg() -> bytes:
         jpeg = _worker.latest_frame_jpeg()
         if jpeg:
             return jpeg
+    # Post-stop: keep showing the last real frame so the video panel doesn't blank.
+    if _last_frame_jpeg is not None and STATE.lifecycle in ("ready", "stopping"):
+        return _last_frame_jpeg
     if STATE.lifecycle == "initializing":
         boot_msg = ""
         if _orch is not None:
@@ -369,10 +396,15 @@ def start() -> Response:
 
 
 def _do_start() -> None:
-    global _worker
+    global _worker, _last_stats, _last_dets, _last_frame_jpeg
     assert _cfg is not None
     try:
         from ..pipeline.inference import InferenceWorker  # lazy — pulls torch
+
+        # Fresh session — clear any frozen snapshot from the previous run.
+        _last_stats = None
+        _last_dets = None
+        _last_frame_jpeg = None
 
         p = _cfg["pipeline"]
         ir_dir = _cfg["model"]["ir_dir"]
@@ -382,10 +414,13 @@ def _do_start() -> None:
             or p.get("default_video")
             or "videos/polyp_test.mp4"
         )
+        # STATE.device is the authoritative runtime choice (POST /api/device);
+        # falls back to the config value at first boot via create_app().
+        device = (STATE.device or p.get("device", "gpu")).lower()
         _worker = InferenceWorker(
             ir_dir=ir_dir,
             video_src=video_src,
-            device=p.get("device", "gpu"),
+            device=device,
             target_fps=float(p.get("target_fps", 30.0)),
             output_size=tuple(p.get("output_size", (1920, 1080))),
             infer_size=int(p.get("infer_size", 640)),
@@ -411,14 +446,45 @@ def stop() -> Response:
     _set_lifecycle("stopping")
 
     def _do_stop() -> None:
-        global _worker
+        global _worker, _last_stats, _last_dets, _last_frame_jpeg
         if _worker is not None:
+            # Freeze the last session so the UI keeps showing final KPIs + frame.
+            try:
+                _last_stats = _worker.stats()
+                _last_dets = _worker.latest_detections()
+                _last_frame_jpeg = _worker.latest_frame_jpeg()
+            except Exception:  # noqa: BLE001
+                pass
             _worker.stop(timeout=5.0)
             _worker = None
         _set_lifecycle("ready")
 
     threading.Thread(target=_do_stop, name="inference-stop", daemon=True).start()
     return jsonify({"status": "stopping", "message": "inference stopping"})
+
+
+@app.post(f"{API}/device")
+def set_device() -> Response:
+    """Change inference device (CPU/GPU/NPU). Rejects if inference is running."""
+    if STATE.lifecycle in LIFECYCLE_RUN:
+        return jsonify({
+            "error": "cannot change device while running — stop inference first",
+            "lifecycle": STATE.lifecycle,
+            "device": STATE.device,
+        }), 409
+
+    body = request.get_json(silent=True) or {}
+    dev = str(body.get("device", "")).upper().strip()
+    if dev not in VALID_DEVICES:
+        return jsonify({
+            "error": f"invalid device {dev!r}; want one of {sorted(VALID_DEVICES)}",
+            "device": STATE.device,
+        }), 400
+
+    with STATE.lock:
+        STATE.device = dev
+    _publish("full", _snapshot_full())
+    return jsonify({"status": "ok", "device": STATE.device})
 
 
 @app.get(f"{API}/events")
@@ -520,6 +586,11 @@ def create_app(config_path: str | Path) -> Flask:
     from ..bootstrap.config import load_config
 
     _cfg = load_config(config_path)
+    # Seed the runtime device from config so /api/device reflects the compose-time choice.
+    cfg_device = str((_cfg.get("pipeline", {}) or {}).get("device", "GPU")).upper()
+    if cfg_device in VALID_DEVICES:
+        STATE.device = cfg_device
+
     _start_bootstrap(Path(config_path))
 
     stop_event = threading.Event()
