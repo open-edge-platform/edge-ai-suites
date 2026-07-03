@@ -1,16 +1,19 @@
 <#
 .SYNOPSIS
     Checks whether DL Streamer (Deep Learning Streamer) is installed and usable
-    by inspecting the available GStreamer plugins via gst-inspect-1.0, and can
-    optionally drive the full install / version-upgrade flow.
+    by reading its installer registry key, configuring the session environment,
+    and running a gst-inspect-1.0 sanity check, and can optionally drive the
+    full install / version-upgrade flow.
 
 .DESCRIPTION
     Two modes:
 
     1. Detection mode (default, optionally with -Quiet):
-       Detects DL Streamer plugins via gst-inspect-1.0 and reports the result
-       through the exit code. When found, the detected version number (e.g.
-       "2026.1.0") is written to stdout so callers can capture it.
+       Detects DL Streamer via the registry (HKLM:\SOFTWARE\Intel\dlstreamer),
+       configures the session by running <InstallDir>\scripts\setup_dls_env.ps1,
+       then runs a gst-inspect-1.0 sanity check and reports the result through
+       the exit code. When found, the registry version (e.g. "2026.1.0") is
+       written to stdout so callers can capture it.
 
     2. Install mode (-Install):
        Runs the complete DL Streamer check used by setup-smart-classroom.ps1:
@@ -39,9 +42,10 @@
 
 .OUTPUTS
     Detection mode exit codes:
-      0 -> DL Streamer plugin found (version emitted to stdout)
-      1 -> gst-inspect-1.0 not available (GStreamer/DLStreamer missing)
-      2 -> gst-inspect-1.0 present but no DL Streamer plugin found
+      0 -> DL Streamer found via registry and the gvadetect sanity check passed
+           (version emitted to stdout)
+      1 -> DL Streamer not installed, or gst-inspect-1.0 unavailable after setup
+      2 -> DL Streamer installed but the gvadetect sanity check failed
 
     Install mode exit codes:
       0 -> DL Streamer present and meets the required version (or freshly
@@ -73,104 +77,82 @@ function Write-Status {
     }
 }
 
-# Inspect available GStreamer plugins and report DL Streamer presence/version.
-# Returns a PSCustomObject with Status ('Found' | 'NoGstInspect' | 'NoPlugin'),
-# plus Version / VersionLine / Source / Package / Plugin when found.
+# Detect DL Streamer via the registry key written by its installer
+# (HKLM:\SOFTWARE\Intel\dlstreamer -> Version, InstallDir), configure the
+# session by running <InstallDir>\scripts\setup_dls_env.ps1, then run a
+# gst-inspect-1.0 sanity check on the gvadetect element. Returns a
+# PSCustomObject with Status ('Found' | 'NotInstalled' | 'NoGstInspect' |
+# 'NoPlugin'), plus Version / VersionLine / Source / Package / Plugin /
+# InstallDir when available.
 function Test-DLStreamer {
+    # The installer records the version and install location under this key.
+    $reg = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Intel\dlstreamer' -ErrorAction SilentlyContinue
+    if (-not $reg -or -not $reg.InstallDir) {
+        return [pscustomobject]@{ Status = 'NotInstalled'; Version = $null; VersionLine = $null; Source = $null; Package = $null; Plugin = $null; InstallDir = $null }
+    }
+
+    $installDir = $reg.InstallDir
+    $version = $reg.Version
+
+    # Configure the DL Streamer environment for this session (sets DLSTREAMER_DIR,
+    # GST_PLUGIN_PATH and PATH, and regenerates the GStreamer plugin cache).
+    # Invoked with '&' so the script's own 'exit' cannot terminate this process,
+    # while its $env: changes still persist because they apply to the process.
+    $setupScript = Join-Path $installDir 'scripts\setup_dls_env.ps1'
+    if (Test-Path $setupScript) {
+        if ($Quiet) { & $setupScript *> $null } else { & $setupScript 1> $null }
+    }
+
+    # Sanity check: confirm gst-inspect-1.0 can load the gvadetect element.
     $gstInspect = Get-Command gst-inspect-1.0 -ErrorAction SilentlyContinue
     if (-not $gstInspect) {
-        return [pscustomobject]@{ Status = 'NoGstInspect'; Version = $null; VersionLine = $null; Source = $null; Package = $null; Plugin = $null }
+        return [pscustomobject]@{ Status = 'NoGstInspect'; Version = $version; VersionLine = $null; Source = $null; Package = $null; Plugin = $null; InstallDir = $installDir }
     }
 
-    $plugins = gst-inspect-1.0 2>$null |
-        Select-String "^[A-Za-z0-9_]+:" |
-        ForEach-Object {
-            ($_ -split ':')[1].Trim()
-        }
-
-    foreach ($plugin in $plugins) {
-        $info = gst-inspect-1.0 $plugin 2>$null
-
-        $source = ($info | Select-String "^  Source module").Line
-        $package = ($info | Select-String "^  Binary package").Line
-
-        if ($source -match "dlstreamer" -or
-            $package -match "Deep Learning Streamer") {
-
-            $versionLine = ($info | Select-String "^  Version").Line
-            $versionNumber = $null
-            if ($versionLine -and ($versionLine -match "(\d+\.\d+(?:\.\d+)?)")) {
-                $versionNumber = $Matches[1]
-            }
-
-            return [pscustomobject]@{ Status = 'Found'; Version = $versionNumber; VersionLine = $versionLine; Source = $source; Package = $package; Plugin = $plugin }
-        }
+    $info = gst-inspect-1.0 gvadetect 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $info) {
+        return [pscustomobject]@{ Status = 'NoPlugin'; Version = $version; VersionLine = $null; Source = $null; Package = $null; Plugin = $null; InstallDir = $installDir }
     }
 
-    return [pscustomobject]@{ Status = 'NoPlugin'; Version = $null; VersionLine = $null; Source = $null; Package = $null; Plugin = $null }
+    $source = ($info | Select-String "^  Source module" | Select-Object -First 1).Line
+    $package = ($info | Select-String "^  Binary package" | Select-Object -First 1).Line
+    $versionLine = ($info | Select-String "^  Version" | Select-Object -First 1).Line
+
+    return [pscustomobject]@{ Status = 'Found'; Version = $version; VersionLine = $versionLine; Source = $source; Package = $package; Plugin = 'gvadetect'; InstallDir = $installDir }
 }
 
-# Download helper with proxy support (used by -Install mode only).
+# Download helper with proxy support (used by -Install mode only). Uses
+# System.Net.WebClient, which handles large files through proxies more reliably
+# than Invoke-WebRequest; throws on failure so the caller can fall back to curl.
 function Invoke-WebRequestWithProxy {
     param(
         [string]$Uri,
-        [string]$OutFile,
-        [switch]$UseBasicParsing
+        [string]$OutFile
     )
 
     # Ensure TLS 1.2 is enabled
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    # For large files (GitHub releases), use WebClient which handles better through proxies
-    if ($OutFile -and ($Uri -match "github.com.*releases")) {
-        Write-Host "    Using WebClient for large file download..." -ForegroundColor DarkGray
-        $webClient = New-Object System.Net.WebClient
-
-        if ($script:httpProxy -or $script:httpsProxy) {
-            $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
-            if ($proxyUrl) {
-                $proxy = New-Object System.Net.WebProxy($proxyUrl)
-                $proxy.UseDefaultCredentials = $true
-                $webClient.Proxy = $proxy
-            }
-        }
-
-        $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PowerShell")
-
-        try {
-            $webClient.DownloadFile($Uri, $OutFile)
-            return
-        } catch {
-            Write-Host "    WebClient failed, trying Invoke-WebRequest..." -ForegroundColor DarkYellow
-        }
-    }
-
-    $params = @{
-        Uri = $Uri
-        UseBasicParsing = $UseBasicParsing
-        TimeoutSec = 300
-    }
-
-    if ($OutFile) {
-        $params.OutFile = $OutFile
-    }
+    $webClient = New-Object System.Net.WebClient
 
     if ($script:httpProxy -or $script:httpsProxy) {
         $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
         if ($proxyUrl) {
-            $params.Proxy = $proxyUrl
-            $params.ProxyUseDefaultCredentials = $true
+            $proxy = New-Object System.Net.WebProxy($proxyUrl)
+            $proxy.UseDefaultCredentials = $true
+            $webClient.Proxy = $proxy
         }
     }
 
-    Invoke-WebRequest @params
+    $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PowerShell")
+    $webClient.DownloadFile($Uri, $OutFile)
 }
 
 # Downloads and runs the DL Streamer Windows installer. Returns $true on success.
-function Install-DLStreamerDLLs {
+function Install-DLStreamer {
     Write-Host ""
     Write-Host "  ============================================" -ForegroundColor Cyan
-    Write-Host "  DL Streamer Installer Installation" -ForegroundColor Cyan
+    Write-Host "  DL Streamer Installation" -ForegroundColor Cyan
     Write-Host "  ============================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  This method downloads and runs the DL Streamer" -ForegroundColor Gray
@@ -187,12 +169,11 @@ function Install-DLStreamerDLLs {
         Write-Host "    Downloading from GitHub releases..." -ForegroundColor Gray
         Write-Host "    URL: $downloadUrl" -ForegroundColor DarkGray
         if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
         $downloadSuccess = $false
 
         try {
-            Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $installerPath -UseBasicParsing
+            Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $installerPath
             if (Test-Path $installerPath) {
                 $fileSize = (Get-Item $installerPath).Length
                 if ($fileSize -gt 5MB) {
@@ -216,7 +197,7 @@ function Install-DLStreamerDLLs {
                 }
                 $curlArgs += $downloadUrl
 
-                $curlProcess = Start-Process -FilePath "curl.exe" -ArgumentList $curlArgs -Wait -PassThru -NoNewWindow
+                Start-Process -FilePath "curl.exe" -ArgumentList $curlArgs -Wait -NoNewWindow
 
                 if ((Test-Path $installerPath) -and ((Get-Item $installerPath).Length -gt 5MB)) {
                     $downloadSuccess = $true
@@ -237,11 +218,10 @@ function Install-DLStreamerDLLs {
         Write-Host ""
 
         Write-Host "  Step 2: Run Installer" -ForegroundColor Yellow
-        Write-Host "    In the installer wizard, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
 
-        Write-Host "    Starting DL Streamer installer..." -ForegroundColor Gray
+        Write-Host "    Running DL Streamer installer in silent mode..." -ForegroundColor Gray
         try {
-            $process = Start-Process -FilePath $installerPath -Wait -PassThru
+            $process = Start-Process -FilePath $installerPath -ArgumentList "/S" -Wait -PassThru
 
             if ($process.ExitCode -eq 0) {
                 Write-Host "    [OK] Installer completed successfully" -ForegroundColor Green
@@ -291,12 +271,16 @@ function Install-DLStreamerDLLs {
 if (-not $Install) {
     $result = Test-DLStreamer
     switch ($result.Status) {
+        'NotInstalled' {
+            Write-Status "DL Streamer is not installed (registry key HKLM:\SOFTWARE\Intel\dlstreamer not found)." "Yellow"
+            exit 1
+        }
         'NoGstInspect' {
-            Write-Status "Neither GStreamer nor DL Streamer is installed (gst-inspect-1.0 not found)." "Yellow"
+            Write-Status "gst-inspect-1.0 not available after DL Streamer environment setup." "Yellow"
             exit 1
         }
         'NoPlugin' {
-            Write-Status "DL Streamer plugins not found." "Yellow"
+            Write-Status "DL Streamer is installed but the gvadetect sanity check failed." "Yellow"
             exit 2
         }
         'Found' {
@@ -322,9 +306,9 @@ if ($result.Status -eq 'Found') {
     $dlStreamerVersion = $result.Version
     $dlStreamerFound = $true
     if ($dlStreamerVersion) {
-        Write-Host "  [OK] DL Streamer plugins detected via gst-inspect-1.0 (version $dlStreamerVersion)" -ForegroundColor Green
+        Write-Host "  [OK] DL Streamer detected (version $dlStreamerVersion)" -ForegroundColor Green
     } else {
-        Write-Host "  [OK] DL Streamer plugins detected via gst-inspect-1.0" -ForegroundColor Green
+        Write-Host "  [OK] DL Streamer detected" -ForegroundColor Green
     }
 
     # Enforce minimum version: reinstall if the detected version is older than required
@@ -333,10 +317,9 @@ if ($result.Status -eq 'Found') {
         if ($detectedDlsVersion -lt [version]$RequiredVersion) {
             Write-Host "  [WARN] DL Streamer $dlStreamerVersion is older than the required $RequiredVersion" -ForegroundColor Yellow
             Write-Host ""
-            Write-Host "  During installation, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
             $upgradeChoice = Read-Host "  Reinstall DL Streamer $RequiredVersion now? (Y/N)"
             if ($upgradeChoice -match "^[Yy]") {
-                if (Install-DLStreamerDLLs) {
+                if (Install-DLStreamer) {
                     Write-Host "  [OK] DL Streamer $RequiredVersion installed." -ForegroundColor Green
 
                     # Post-reinstall: verify the version again
@@ -367,7 +350,7 @@ if ($result.Status -eq 'Found') {
         }
     }
 } elseif ($result.Status -eq 'NoPlugin') {
-    Write-Host "  [INFO] DL Streamer plugins not detected via gst-inspect-1.0" -ForegroundColor Yellow
+    Write-Host "  [INFO] DL Streamer is registered but the gvadetect sanity check failed" -ForegroundColor Yellow
 }
 
 if (-not $dlStreamerFound) {
@@ -377,12 +360,11 @@ if (-not $dlStreamerFound) {
     Write-Host "  Latest verified version: $RequiredVersion" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  This will download and run the DL Streamer $RequiredVersion installer." -ForegroundColor Gray
-    Write-Host "  During installation, set the install path to: C:\dlls_windows" -ForegroundColor Yellow
     Write-Host ""
     $installChoice = Read-Host "  Install DL Streamer $RequiredVersion now? (Y/N)"
 
     if ($installChoice -match "^[Yy]") {
-        if (Install-DLStreamerDLLs) {
+        if (Install-DLStreamer) {
             $dlStreamerFound = $true
         } else {
             Write-Host "  [FAIL] DL Streamer installation failed" -ForegroundColor Red

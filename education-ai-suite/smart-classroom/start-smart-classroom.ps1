@@ -3,7 +3,9 @@ param(
     [switch]$SkipProxy,
     [switch]$Restart,
     [switch]$Help,
-    [switch]$NoElevate  
+    [switch]$NoElevate,
+    [switch]$Silent,
+    [switch]$NoWindowsTerminal
 )
 
 # ============================================================================
@@ -29,6 +31,8 @@ if (-not $NoElevate) {
         if ($SkipProxy) { $argList += " -SkipProxy" }
         if ($Restart) { $argList += " -Restart" }
         if ($Help) { $argList += " -Help" }
+        if ($Silent) { $argList += " -Silent" }
+        if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -47,13 +51,15 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-NoElevate] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Help]
 
 Options:
-    -SkipProxy    Skip proxy configuration prompts
-    -Restart      Kill existing services and restart (no prompt)
-    -NoElevate    Skip auto-elevation to Administrator (Windows)
-    -Help         Show this help message
+    -SkipProxy           Skip proxy configuration prompts
+    -Restart             Kill existing services and restart (no prompt)
+    -Silent              Unattended mode - auto-restart, skip all prompts
+    -NoElevate           Skip auto-elevation to Administrator (Windows)
+    -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
+    -Help                Show this help message
 
 Note: On Windows, the script automatically requests Administrator privileges.
 
@@ -188,7 +194,9 @@ function Stop-AllServices {
 }
 
 # Register Ctrl+C handler
-[Console]::TreatControlCAsInput = $false
+if (-not $Silent) {
+    [Console]::TreatControlCAsInput = $false
+}
 $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
     if ($script:servicesStarted) {
         Stop-AllServices
@@ -197,7 +205,7 @@ $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
 
 trap {
     Write-Host ""
-    Write-Host "  Script interrupted!" -ForegroundColor Red
+    Write-Host "  Script interrupted at line $($_.InvocationInfo.ScriptLineNumber) with $($_.Exception.Message)" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
     }
@@ -391,7 +399,7 @@ if ($Restart) {
     # -Restart flag: stop all running services and start fresh
     Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
     if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-    if ($contentSearchRunning) { 
+    if ($contentSearchRunning) {
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -399,8 +407,14 @@ if ($Restart) {
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
     Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
     if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-    
-    $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+
+    if ($Silent) {
+        Write-Host "  Silent mode: keeping existing virtual environments" -ForegroundColor Gray
+        $deleteVenvs = "N"
+    } else {
+        $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+    }
+
     if ($deleteVenvs.ToUpper() -eq "Y") {
         Remove-VirtualEnvironments
         Write-Host "  All services will be restarted with new environments." -ForegroundColor Green
@@ -412,21 +426,26 @@ if ($Restart) {
     $script:skipContentSearch = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
-    Write-Host "  What would you like to do?" -ForegroundColor Yellow
-    Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
-    Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
-    Write-Host "    [A] Abort   - Stop all services and exit" -ForegroundColor White
-    Write-Host "    [E] Exit    - Exit script without changes" -ForegroundColor White
-    Write-Host ""
-    
-    $choice = Read-Host "  Enter choice (R/S/A/E)"
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-restarting all running services..." -ForegroundColor Yellow
+        $choice = "R"
+    } else {
+        Write-Host "  What would you like to do?" -ForegroundColor Yellow
+        Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
+        Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
+        Write-Host "    [A] Abort   - Stop all services and exit" -ForegroundColor White
+        Write-Host "    [E] Exit    - Exit script without changes" -ForegroundColor White
+        Write-Host ""
+
+        $choice = Read-Host "  Enter choice (R/S/A/E)"
+    }
     
     switch ($choice.ToUpper()) {
         "R" {
             Write-Host ""
             Write-Host "  Restarting all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
@@ -434,8 +453,14 @@ if ($Restart) {
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
             Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
-            
-            $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+
+            if ($Silent) {
+                Write-Host "  Silent mode: keeping existing virtual environments" -ForegroundColor Gray
+                $deleteVenvs = "N"
+            } else {
+                $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+            }
+
             if ($deleteVenvs.ToUpper() -eq "Y") {
                 Remove-VirtualEnvironments
             } else {
@@ -500,14 +525,6 @@ if ($Restart) {
     
     Write-Host ""
     Write-Host "  Starting all services..." -ForegroundColor Green
-    
-    $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
-    if ($deleteVenvs.ToUpper() -eq "Y") {
-        Remove-VirtualEnvironments
-        Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
-    } else {
-        Write-Host "  Using existing virtual environments (faster startup)." -ForegroundColor Gray
-    }
 }
 
 # Summary
@@ -532,13 +549,13 @@ $httpsProxy = ""
 $noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
-if (-not $SkipProxy) {
+if (-not $SkipProxy -and -not $Silent) {
     if (Test-Path $proxyConfigFile) {
         $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
         $httpProxy = $proxyConfig.httpProxy
         $httpsProxy = $proxyConfig.httpsProxy
         $noProxy = $proxyConfig.noProxy
-        
+
         Write-Host ""
         Write-Host "  Saved proxy settings found:" -ForegroundColor Cyan
         if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
@@ -546,7 +563,7 @@ if (-not $SkipProxy) {
         if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
         if (-not $httpProxy -and -not $httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
         Write-Host ""
-        
+
         Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
         Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
         Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
@@ -895,8 +912,8 @@ if ($noProxy) {
 }
 
 if ($IsWindowsOS) {
-    $wtExists = Get-Command wt -ErrorAction SilentlyContinue
-    
+    $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
+
     # ========================================================================
     # TERMINAL 1: BACKEND (with paddleocr check)
     # ========================================================================
@@ -952,33 +969,18 @@ Set-Location '$ScriptDir'
 Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 
 Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
-
-Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
 Write-Host ''
 python main.py
 "@
     $backendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($backendScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Backend powershell -NoExit -EncodedCommand $backendEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $backendEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $backendEncoded" | Out-Null
     }
-    
+
     Write-Host "  Backend terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipBackend check
@@ -1042,33 +1044,18 @@ Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
 
 Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
-
-Write-Host ''
 Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green
 Write-Host ''
 python .\start_services.py
 "@
     $contentSearchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($contentSearchScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title ContentSearch powershell -NoExit -EncodedCommand $contentSearchEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $contentSearchEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $contentSearchEncoded" | Out-Null
     }
-    
+
     Write-Host "  Content Search terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipContentSearch check
@@ -1111,13 +1098,13 @@ Write-Host ''
 npm run dev -- --host 0.0.0.0 --port 5173
 "@
     $frontendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($frontendScript))
-    
+
     if ($wtExists) {
         Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Frontend powershell -NoExit -EncodedCommand $frontendEncoded"
     } else {
-        Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $frontendEncoded
+        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $frontendEncoded" | Out-Null
     }
-    
+
     Write-Host "  Frontend terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipFrontend check
@@ -1145,30 +1132,38 @@ Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -Foreground
 Write-Host ""
 Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Yellow
-Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
-Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
-Write-Host "========================================" -ForegroundColor Yellow
-Write-Host ""
 
-# Wait for user input to stop services or exit
-while ($true) {
-    $key = Read-Host "Enter choice (Q/E)"
-    switch ($key.ToUpper()) {
-        "Q" {
-            Stop-AllServices
-            for ($i = 30; $i -gt 0; $i--) {
-                Start-Sleep -Seconds 1
+if ($Silent) {
+    Write-Host "Silent mode: services started successfully. Exiting..." -ForegroundColor Green
+    Write-Host ""
+    $script:servicesStarted = $false  # Prevent trap from stopping services
+    exit 0
+} else {
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
+    Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+
+    # Wait for user input to stop services or exit
+    while ($true) {
+        $key = Read-Host "Enter choice (Q/E)"
+        switch ($key.ToUpper()) {
+            "Q" {
+                Stop-AllServices
+                for ($i = 30; $i -gt 0; $i--) {
+                    Start-Sleep -Seconds 1
+                }
+                exit 0
             }
-            exit 0
-        }
-        "E" {
-            Write-Host ""
-            Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
-            Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
-            Write-Host ""
-            $script:servicesStarted = $false  # Prevent trap from stopping services
-            exit 0
+            "E" {
+                Write-Host ""
+                Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
+                Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
+                Write-Host ""
+                $script:servicesStarted = $false  # Prevent trap from stopping services
+                exit 0
+            }
         }
     }
 }
