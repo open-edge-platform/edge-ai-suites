@@ -9,10 +9,12 @@ interface DetectionCardProps {
   lastSeenSeconds?: number;
   /** When true, renders a larger hero variant suitable for a full-width slot. */
   hero?: boolean;
-  /** Session-cumulative stats. When any is provided a session bar is rendered. */
-  sessionCumulative?: number;
-  sessionFrames?: number;
-  sessionRate?: number; // 0..1
+  /** Session KPIs (per Start→Stop). When any is provided a session bar is rendered. */
+  sessionFramesProcessed?: number;
+  sessionFramesWithDetection?: number;
+  sessionRate?: number;         // 0..1
+  sessionPeakConfidence?: number; // 0..1
+  sessionSeconds?: number;      // wall time since Start
 }
 
 const DetectionCard: React.FC<DetectionCardProps> = ({
@@ -23,9 +25,11 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
   detail,
   lastSeenSeconds,
   hero = false,
-  sessionCumulative,
-  sessionFrames,
+  sessionFramesProcessed,
+  sessionFramesWithDetection,
   sessionRate,
+  sessionPeakConfidence,
+  sessionSeconds,
 }) => {
   const isLowConf = confidence !== null && confidence < 0.5;
 
@@ -35,7 +39,20 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
     return `>${Math.floor(s / 3600)}h ago`;
   };
 
-  const showSession = sessionCumulative !== undefined || sessionFrames !== undefined || sessionRate !== undefined;
+  const formatSessionTime = (s: number) => {
+    const total = Math.max(0, Math.floor(s));
+    const mm = Math.floor(total / 60);
+    const ss = total % 60;
+    return `${mm}:${ss.toString().padStart(2, '0')}`;
+  };
+
+  const showSession = [
+    sessionFramesProcessed,
+    sessionFramesWithDetection,
+    sessionRate,
+    sessionPeakConfidence,
+    sessionSeconds,
+  ].some((v) => v !== undefined);
 
   return (
     <div className={`det-card ${hero ? 'det-card--hero' : ''} ${detected ? 'det-card--on' : 'det-card--off'}`}>
@@ -77,25 +94,39 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
           )}
         </div>
 
-        {/* Row 3: session cumulative */}
+        {/* Row 3: session KPIs (per Start→Stop) */}
         {showSession && (
           <div className="det-session">
             <span className="det-session-label">SESSION</span>
             <span className="det-session-metric">
-              <strong>{(sessionCumulative ?? 0).toLocaleString()}</strong>
-              <span className="det-session-unit">detections</span>
+              <strong>{(sessionFramesProcessed ?? 0).toLocaleString()}</strong>
+              <span className="det-session-unit">frames processed</span>
+            </span>
+            <span className="det-session-sep">·</span>
+            <span className="det-session-metric">
+              <strong>{(sessionFramesWithDetection ?? 0).toLocaleString()}</strong>
+              <span className="det-session-unit">with polyp</span>
             </span>
             <span className="det-session-sep">·</span>
             <span className="det-session-metric">
               <strong>{((sessionRate ?? 0) * 100).toFixed(1)}%</strong>
-              <span className="det-session-unit">of frames</span>
+              <span className="det-session-unit">detection rate</span>
             </span>
-            {sessionFrames !== undefined && sessionFrames > 0 && (
+            {sessionPeakConfidence !== undefined && sessionPeakConfidence > 0 && (
               <>
                 <span className="det-session-sep">·</span>
                 <span className="det-session-metric">
-                  <strong>{sessionFrames.toLocaleString()}</strong>
-                  <span className="det-session-unit">positive frames</span>
+                  <strong>{sessionPeakConfidence.toFixed(2)}</strong>
+                  <span className="det-session-unit">peak conf</span>
+                </span>
+              </>
+            )}
+            {sessionSeconds !== undefined && sessionSeconds > 0 && (
+              <>
+                <span className="det-session-sep">·</span>
+                <span className="det-session-metric">
+                  <strong>{formatSessionTime(sessionSeconds)}</strong>
+                  <span className="det-session-unit">session</span>
                 </span>
               </>
             )}

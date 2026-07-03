@@ -47,9 +47,11 @@ const DetectionPanel: React.FC<DetectionPanelProps> = ({ expanded = false }) => 
             confidence={detection.polyp.detected ? detection.polyp.confidence : null}
             detail={detail}
             hero
-            sessionCumulative={detection.polyp.cumulative_detections}
-            sessionFrames={detection.polyp.frames_with_detection}
+            sessionFramesProcessed={detection.polyp.frames_processed}
+            sessionFramesWithDetection={detection.polyp.frames_with_detection}
             sessionRate={detection.polyp.detection_rate}
+            sessionPeakConfidence={detection.polyp.peak_confidence}
+            sessionSeconds={detection.polyp.session_seconds}
           />
         </div>
       </div>

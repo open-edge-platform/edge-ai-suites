@@ -139,6 +139,7 @@ def _snapshot_full() -> dict[str, Any]:
             "total_mean_ms": 0.0, "total_p99_ms": 0.0,
             "frame_id": 0, "uptime_s": 0.0,
             "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
+            "peak_confidence": 0.0,
         }
 
     if _worker is not None:
@@ -171,9 +172,11 @@ def _snapshot_full() -> dict[str, Any]:
                 "detected": n_polyp > 0,
                 "count": n_polyp,
                 "confidence": round(conf, 3),
-                "cumulative_detections": int(inf.get("cumulative_detections", 0)),
+                "frames_processed": int(inf.get("frame_id", 0)),
                 "frames_with_detection": int(inf.get("frames_with_detection", 0)),
                 "detection_rate": round(float(inf.get("detection_rate", 0.0)), 4),
+                "peak_confidence": round(float(inf.get("peak_confidence", 0.0)), 3),
+                "session_seconds": round(float(inf.get("uptime_s", 0.0)), 1),
             },
         },
         "metrics": {

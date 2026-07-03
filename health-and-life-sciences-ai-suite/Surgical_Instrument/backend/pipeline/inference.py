@@ -250,6 +250,7 @@ class InferenceWorker:
         self._recent_infer_ms: deque[float] = deque(maxlen=120)
         self._frames_with_detection = 0
         self._cumulative_detections = 0
+        self._peak_confidence = 0.0
         self._error: Optional[str] = None
 
     # -- lifecycle -----------------------------------------------------------
@@ -303,6 +304,7 @@ class InferenceWorker:
                 "frames_with_detection": self._frames_with_detection,
                 "cumulative_detections": self._cumulative_detections,
                 "detection_rate": detection_rate,
+                "peak_confidence": self._peak_confidence,
                 "device": self.device,
                 "error": self._error,
             }
@@ -371,10 +373,14 @@ class InferenceWorker:
                     }
                     self._recent_latencies.append(total_ms)
                     self._recent_infer_ms.append(infer_ms)
-                    n_polyps = sum(1 for d in dets if str(d.get("class_name", "")).lower() == "polyp")
-                    if n_polyps > 0:
+                    polyp_confs = [float(d.get("confidence", 0.0)) for d in dets
+                                   if str(d.get("class_name", "")).lower() == "polyp"]
+                    if polyp_confs:
                         self._frames_with_detection += 1
-                        self._cumulative_detections += n_polyps
+                        self._cumulative_detections += len(polyp_confs)
+                        top = max(polyp_confs)
+                        if top > self._peak_confidence:
+                            self._peak_confidence = top
 
                 next_deadline += tick_s
                 slack = next_deadline - time.perf_counter()

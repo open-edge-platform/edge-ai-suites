@@ -6,9 +6,11 @@ export interface PolypDetection {
   detected: boolean;
   count: number;
   confidence: number; // 0–1 — confidence of the most recent detection
-  cumulative_detections?: number;    // sum of all polyps across every frame this session
-  frames_with_detection?: number;    // number of frames where at least one polyp was found
-  detection_rate?: number;           // frames_with_detection / total_frames, in [0,1]
+  frames_processed?: number;         // frames the model ran on this session
+  frames_with_detection?: number;    // frames where at least one polyp was found
+  detection_rate?: number;           // frames_with_detection / frames_processed, in [0,1]
+  peak_confidence?: number;          // highest confidence seen this session, 0..1
+  session_seconds?: number;          // wall time since Start
 }
 
 export interface PipelineWorkload {
