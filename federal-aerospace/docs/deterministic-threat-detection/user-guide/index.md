@@ -1,9 +1,9 @@
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/deterministic-threat-detection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/federal-aerospace/apps/deterministic-threat-detection">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/deterministic-threat-detection/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/federal-aerospace/apps/deterministic-threat-detection/README.md">
      Readme
   </a>
 </div>

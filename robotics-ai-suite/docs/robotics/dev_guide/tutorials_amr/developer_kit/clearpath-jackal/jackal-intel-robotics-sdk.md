@@ -49,7 +49,7 @@ before continuing with the next steps.
    repositories (ROS 2, Clearpath, Intel ECI/AMR, librealsense) and packages:
 
    ```bash
-   wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
+   wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.1.0/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
    chmod +x setup-robotics-jazzy.sh
    ./setup-robotics-jazzy.sh
    ```

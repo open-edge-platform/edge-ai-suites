@@ -24,7 +24,7 @@ Before you begin, ensure that you have the following:
 
 2. Configure the values.yaml file.
 
-   Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the chart.
+   Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/model-download/chart/values.yaml) located in the chart.
 
    Configure the following:
 

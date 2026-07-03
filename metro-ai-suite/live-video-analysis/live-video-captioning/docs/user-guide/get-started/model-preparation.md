@@ -74,7 +74,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
          ./model_download_scripts/download_models.sh --model yolov8s --type vision
          ```
 
-         > **Note:** You may find the list of supported yolo models in this [list](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/download_public_models.sh#L23).
+         > **Note:** You may find the list of supported yolo models in this [list](https://github.com/open-edge-platform/dlstreamer/blob/v2026.1.0/samples/download_public_models.sh#L23).
 
      - For a LLM model (for live-video-captioning with RAG):
 

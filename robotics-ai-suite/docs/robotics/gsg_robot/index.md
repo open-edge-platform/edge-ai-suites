@@ -136,7 +136,7 @@ An alternative method for setup is to create a pre-configured OS image with ROS 
 
 Image Composer Tool supports creating both ISO images (for installation via USB) and raw disk images (for direct deployment to storage devices or VMs). ISO images are suitable for interactive installations, while raw images can be directly written to storage media or VMs for immediate use. If you prefer to start with a base Ubuntu installation, without needing to reimage a system, use the [Express Setup](#express-setup) or the [Step-by-step Setup](#step-by-step-setup) guide.
 
-For detailed instructions, see the [image-composer-tool installation guide](https://github.com/open-edge-platform/image-composer-tool/blob/main/docs/tutorial/installation.md). An abbreviated ISO image creation follows:
+For detailed instructions, see the [Image Composer Tool Installation guide](https://github.com/open-edge-platform/image-composer-tool/blob/2026.1-Release/docs/tutorial/installation.md). An abbreviated ISO image creation follows:
 
 1. Install Go (Go 1.24+ required) + build dependencies:
 

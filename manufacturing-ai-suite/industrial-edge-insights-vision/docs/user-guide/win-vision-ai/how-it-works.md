@@ -43,4 +43,4 @@ This document provides an overview of the architecture and components of Win Vis
 
 - [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
   - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/supported_models.html)
-  - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/main/scripts/download_models/README.md)
+  - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/v2026.1.0/scripts/download_models/README.md)

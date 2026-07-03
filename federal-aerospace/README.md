@@ -6,7 +6,7 @@ AI-enabled applications and supporting components for aerospace and defense edge
 
 ### Handheld Multi-Modal
 
-The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios. The application combines LLM inference capability served through the OpenVINO Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; and runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
+The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios. The application combines LLM inference capability served through the OpenVINO Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; and runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.1.0/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
 
 See [`apps/handheld-multi-modal/`](apps/handheld-multi-modal/README.md).
 

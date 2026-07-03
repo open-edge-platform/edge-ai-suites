@@ -31,7 +31,7 @@ This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO to
 
 ## Installation
 
-This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. Please get the source code from Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/pi05-rtc-ov). To set up the environment, you need to initialize and patch the submodule:
+This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. Please get the source code from Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/robotics-ai-suite/pipelines/pi05-rtc-ov). To set up the environment, you need to initialize and patch the submodule:
 
 ```bash
 git submodule update --init lerobot
