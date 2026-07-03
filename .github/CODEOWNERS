@@ -124,12 +124,17 @@ README.md          @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/docs/       @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/visual-search-question-and-answering/README.md   @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
+/metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/vms-adapter-plugin/README.md                     @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write
+
 # ============================================================================
 # Retail-AI Suite
 # ============================================================================
 
 # Retail-ai patterns - to be defined when content is added
 
+/retail-ai-suite/README.md              @xwu2intel @avinash-palleti @open-edge-platform/open-edge-platform-docs-write
 
 # ============================================================================
 # Robotics-AI Suite

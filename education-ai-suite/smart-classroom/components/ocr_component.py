@@ -9,23 +9,22 @@ logger = logging.getLogger(__name__)
 
 
 class OCRComponent(PipelineComponent):
-    
+
     _model = None
     _config = None
 
-    def __init__(self, session_id, provider="openvino-paddle", lang="en", device="CPU"):
+    def __init__(self, session_id, provider="openvino", lang="en", device="CPU"):
         self.session_id = session_id
         self.provider = provider.lower()
         self.lang = lang
         self.device = device
-        model_config_key = (self.provider, self.lang, self.device)
-    
+        model_config_key = (self.provider, self.device)
+
         if OCRComponent._model is None or OCRComponent._config != model_config_key:
             try:
-                logger.debug(f"Initializing OCR component: provider={self.provider}, lang={self.lang}, device={self.device}")
+                logger.debug(f"Initializing OCR component: provider={self.provider}, device={self.device}")
                 if self.provider == "native":
-                    logger.info("Ensuring PaddleOCR models are cached...")
-                    OCRComponent._model = PaddleOCRProcessor(lang=self.lang,use_angle_cls=True,device=self.device)
+                    OCRComponent._model = PaddleOCRProcessor(lang=self.lang, use_angle_cls=True, device=self.device)
                 elif self.provider == "openvino":
                     OCRComponent._model = OpenVINOOCRProcessor(
                         lang=self.lang,
@@ -35,13 +34,13 @@ class OCRComponent(PipelineComponent):
                     )
                 else:
                     raise ValueError(f"Unsupported OCR provider: {self.provider}")
-                
+
                 OCRComponent._config = model_config_key
-                logger.info(f"OCR model initialized: provider={self.provider}, lang={self.lang}, device={self.device}")
+                logger.info(f"OCR model initialized: provider={self.provider}, device={self.device}")
             except Exception as e:
-                logger.error(f" Failed to initialize OCR model: {e}")
+                logger.error(f"Failed to initialize OCR model: {e}")
                 raise
-        
+
         self.ocr_model = OCRComponent._model
 
     

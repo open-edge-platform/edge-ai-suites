@@ -107,7 +107,6 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
-      MODEL_REGISTRY_URL: http://model-registry:8111
       SAMPLE_APP: ${SAMPLE_APP}
       REST_API_ROOT_PATH: "/ts-api"
       ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}

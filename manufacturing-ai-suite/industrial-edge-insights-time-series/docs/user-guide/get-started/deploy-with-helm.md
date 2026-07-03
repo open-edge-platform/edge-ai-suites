@@ -52,43 +52,6 @@ Choose **one** of the following approaches to get the Helm charts:
 
 3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-**Option A: Download the Helm charts**
-
-1. Download Helm chart:
-
-   ```bash
-   helm pull oci://registry-1.docker.io/intel/weld-defect-detection-sample-app --version 2026.1.0
-   ```
-
-2. Extract the Helm chart:
-
-   ```bash
-   tar -xvzf weld-defect-detection-sample-app-2026.1.0.tgz
-   cd weld-defect-detection-sample-app
-   ```
-
-3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
-
-**Option B: Generate Helm charts**
-
-1. Navigate to the source directory:
-
-    ```bash
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series  # path relative to git clone folder
-    ```
-
-2. Generate the charts:
-
-    ```bash
-    make gen_helm_charts app=weld-defect-detection
-    cd helm/
-    ```
-
-3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -151,17 +114,6 @@ To install Helm charts, use one of the following options:
     ```bash
     helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n ts-sample-app --create-namespace
     ```
-
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-To install Helm charts, run the following command:
-
-```bash
-helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
-```
-
 <!--hide_directive:::
 ::::hide_directive-->
 
@@ -196,39 +148,6 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 
    curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
-
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-To upload your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
-
-1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
-
-   ```text
-   - time-series-analytics-config/
-       - models/
-           - weld_defect_detector.pkl
-           - weld_defect_detector_labels.pkl
-           - weld_defect_detector.json
-       - tick_scripts/
-           - weld_defect_detector.tick
-       - udfs/
-           - requirements.txt
-           - weld_defect_detector.py
-   ```
-
-2. Upload your new UDF package (using the `Weld Defect Detection` UDF package as an example) to the `time-series-analytics-microservice` pod:
-
-   ```sh
-   export SAMPLE_APP="weld-defect-detection"
-   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config # path relative to git clone folder
-   rm -f ${SAMPLE_APP}.tar
-   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
-
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
-   ```
-
 <!--hide_directive:::
 ::::hide_directive-->
 
@@ -273,14 +192,6 @@ helm uninstall ts-wind-turbine-anomaly -n ts-sample-app
 kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
 ```
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```sh
-helm uninstall ts-weld-anomaly -n ts-sample-app
-kubectl get all -n ts-sample-app # It may take a few minutes for all application resources to be cleaned up.
-```
 
 <!--hide_directive:::
 ::::hide_directive-->

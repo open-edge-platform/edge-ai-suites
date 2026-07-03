@@ -13,10 +13,10 @@ valid proxy for the local environment:
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
-export http_proxy="http://proxy-example:123"
-export https_proxy="http://proxy-example:123"
-export ftp_proxy="http://proxy-example:123"
-export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+http_proxy="http://proxy-example:123"
+https_proxy="http://proxy-example:123"
+ftp_proxy="http://proxy-example:123"
+no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
 EOF
 
 source /etc/environment
@@ -87,7 +87,7 @@ installation, see the [proxy configuration step](#optional-configure-the-proxy):
 
 ```bash
 cd handheld-multi-modal
-./run up
+./run.sh up
 ```
 
 ## Verifying the installation
@@ -110,14 +110,22 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
 
+> **Note**: After a system restart, run `./run up` from the `handheld-multi-modal` directory to start the applications again.
+
 ## Accessing Application User Interface
 
-This composite application exposes multiple endpoints through the NGINX TLS reverse proxy. They are bound to localhost only and are not exposed on any external IP address. 
-Since the intended use is on handheld devices, the applications do not provide authentication or authorization.
+This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
+They are bound to localhost only and are not exposed on any external IP address.
+Since the intended use is on handheld devices, the applications do not provide authentication
+or authorization.
 
 > **Notice**:
-> A browser warning about the self-signed certificate is expected — the NGINX reverse proxy uses one to provide TLS on the localhost-bound addresses.
-> HTTPS is required by modern browsers to enable the microphone input used by Open WebUI and Speech To Text services.
+> The "self-signed certificate" browser warning is expected.
+> Modern browsers require HTTPS to enable microphone input used by Open WebUI and
+  Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
+  TLS transport on the `localhost` bound addresses.
+
+
 
 | Service | URL | Notes |
 |---------|-----|-------|
@@ -128,6 +136,6 @@ Since the intended use is on handheld devices, the applications do not provide a
 
 
 
-<!-- 
+<!--
 Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md#endpoints)
 -->

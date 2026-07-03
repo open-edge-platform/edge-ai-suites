@@ -33,7 +33,7 @@ ROLE_ASSISTANT = "assistant"
 
 # Get environment variables
 BACKEND_VQA_BASE_URL = os.getenv("BACKEND_VQA_BASE_URL", "http://localhost:8399")
-BACKEND_SEARCH_BASE_URL = os.getenv("BACKEND_SEARCH_BASE_URL", "http://localhost:7770")
+BACKEND_SEARCH_BASE_URL = os.getenv("BACKEND_SEARCH_BASE_URL", "http://localhost:6008")
 BACKEND_DATAPREP_BASE_URL = os.getenv("BACKEND_DATAPREP_BASE_URL", "http://localhost:9990")
 
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "openai/clip-vit-base-patch32")
@@ -157,39 +157,54 @@ def filter_output(results, de_duplicate=False):
     return filtered_results
 
 
-def send_query_request(text: str = "", image_base64: str = "", k: int = 10, filter: dict = {}):
-    url = f"{BACKEND_SEARCH_BASE_URL}/v1/retrieval" 
+def send_query_request(text: str = "", image_base64: str = "", k: int = 10, where: dict | None = None):
+    url = f"{BACKEND_SEARCH_BASE_URL}/query"
+
+    query_block: dict = {"query_id": "vsqa-search", "top_k": k}
 
     if text:
         logger.info(f"Querying {text}")
-        payload = {
-            "query": text,
-            "filter": filter,  
-            "max_num_results": k
-        }
+        query_block["query"] = text
     elif image_base64:
-        logger.info(f"Querying image")
-        payload = {
-            "image_base64": image_base64,
-            "filter": filter,  
-            "max_num_results": k
-        }
+        logger.info("Querying image")
+        query_block["image"] = {"type": "image_base64", "image_base64": image_base64}
     else:
         logger.error("No query or image provided")
         return None
 
+    if where is not None:
+        query_block["where"] = where
+
     results = {}
 
     try:
-        response = requests.post(url, json=payload, timeout=100)  # Set a timeout to avoid hanging
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response = requests.post(url, json=[query_block], timeout=100)
+        response.raise_for_status()
 
-        # Parse the response JSON
-        results = response.json()["results"]
+        body = response.json()
+        errors = body.get("errors", [])
+        if errors:
+            logger.error(f"Retriever query errors: {errors}")
+            return []
+
+        query_results = body.get("results", [])
+        if not query_results:
+            return []
+
+        items = query_results[0].get("items", [])
+        results = [
+            {
+                "id": item.get("metadata", {}).get("id", str(idx)),
+                "distance": item.get("score", 0.0),
+                "meta": item.get("metadata", {}),
+            }
+            for idx, item in enumerate(items)
+        ]
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error sending request: {e}")
-    
+        return []
+
     return results
     
 
@@ -433,6 +448,7 @@ def initialize_session_state():
 def query_submit():
     # Ensure only one of ktext or file_for_search is provided
     if st.session_state["ktext"] and st.session_state.file_for_search:
+        logger.warning("Both text and image provided for search; only one is supported")
         query_display.error("Only one of 'Prompt' or 'Uploaded File' can be used for the query. Please provide only one.")
         return
     if not st.session_state["ktext"] and not st.session_state.file_for_search:
@@ -479,20 +495,26 @@ def query_submit():
         st.session_state.selected_videos_len = 0
         st.session_state.selected_images_len = 0
     
-    filters = {}
+    where_clauses = []
     if st.session_state["kCamera"]:
-        filters["camera"] = st.session_state["kCamera"]
+        where_clauses.append({"field": "camera", "op": "eq", "value": st.session_state["kCamera"]})
     if st.session_state["f_s_time"]:
         s_time = st.session_state["f_s_time"]
-        filters["timestamp_start"] = int(s_time.strftime("%Y%m%d"))
+        where_clauses.append({"field": "timestamp", "op": "gte", "value": int(s_time.strftime("%Y%m%d"))})
     if st.session_state["f_e_time"]:
         e_time = st.session_state["f_e_time"]
-        filters["timestamp_end"] = int(e_time.strftime("%Y%m%d"))
+        where_clauses.append({"field": "timestamp", "op": "lte", "value": int(e_time.strftime("%Y%m%d"))})
+
+    where = None
+    if len(where_clauses) == 1:
+        where = where_clauses[0]
+    elif len(where_clauses) > 1:
+        where = {"all": where_clauses}
 
     if st.session_state.file_for_search is not None:
-        data = send_query_request(image_base64=img_b64_str, k=st.session_state["kk"], filter=filters)
+        data = send_query_request(image_base64=img_b64_str, k=st.session_state["kk"], where=where)
     else:
-        data = send_query_request(text=st.session_state["ktext"], k=st.session_state["kk"], filter=filters)
+        data = send_query_request(text=st.session_state["ktext"], k=st.session_state["kk"], where=where)
     data = filter_output(data, st.session_state.de_duplicate)
     logger.info(f"Search results: {data}")
 
@@ -810,8 +832,9 @@ if __name__ == '__main__':
             if st.session_state.start_time and vqa_prompt:
                 st.session_state.last_time = end_time - st.session_state.start_time
             logger.debug(f"st.session_state.last_time,{st.session_state.last_time}")
-            html_code = f"""
-               <p style="text-align: right; font-weight: bold;">End to End Time:{round(st.session_state.last_time,2)} s</p>
-            """
-            history.markdown(html_code, unsafe_allow_html=True)
+            if st.session_state.last_time is not None:
+                html_code = f"""
+                   <p style="text-align: right; font-weight: bold;">End to End Time:{round(st.session_state.last_time,2)} s</p>
+                """
+                history.markdown(html_code, unsafe_allow_html=True)
 

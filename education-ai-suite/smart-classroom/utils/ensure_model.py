@@ -173,61 +173,57 @@ def ensure_model():
     convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
     
-    if config.models.ocr.enabled:
+    if config.models.ocr.enabled and config.models.ocr.provider == "openvino":
         _initialize_ocr()
 
 
 def _initialize_ocr():
-    from utils.ocr_utils.paddle_model_manager import PaddleOCRModelManager
-    from utils.ocr_utils.convert_to_openvino import convert_ppocr_pipeline
-    
-    # Suppress PyTorch warning when loading PaddleOCR .pdmodel files
-    logging.getLogger("torch.export.pt2_archive._package").setLevel(logging.ERROR)
-    
-    lang = config.app.language
-    if lang != "en":
-        raise RuntimeError(
-            f"OCR currently only supports English (lang='en'). Got: '{lang}'. "
-            f"To use other languages, set 'ocr.enabled: false' in config.yaml."
-        )
+    import shutil
+    import openvino as ov
+    from paddlex.inference.utils.official_models import official_models
 
+    model_dir = Path(config.models.ocr.model_dir)
+    det_model = config.models.ocr.det_model
+    rec_model = config.models.ocr.rec_model
+    cls_model = config.models.ocr.cls_model
 
-    if config.models.ocr.provider == "openvino":
-        paddle_models_dir = Path(config.models.ocr.model_dir)
-        det_model_dir = paddle_models_dir / "det" / lang / config.models.ocr.det_model
-        rec_model_dir = paddle_models_dir / "rec" / lang / config.models.ocr.rec_model
+    models = [
+        ("det", det_model),
+        ("rec", rec_model),
+        ("cls", cls_model),
+    ]
 
-        ir_already_exists = (
-            (det_model_dir / "det_model.xml").exists()
-            and (det_model_dir / "det_model.bin").exists()
-            and (rec_model_dir / "rec_model.xml").exists()
-            and (rec_model_dir / "rec_model.bin").exists()
-        )
+    all_cached = all(
+        (model_dir / mtype / mname / "inference.xml").exists()
+        for mtype, mname in models
+    )
+    if all_cached:
+        logger.info("OpenVINO IR models already cached, skipping download/conversion")
+        return
 
-        if ir_already_exists:
-            logger.info("OpenVINO IR models already exist, skipping PaddleOCR download/conversion")
-            return
+    core = ov.Core()
 
-        logger.info(f"Initializing OCR models: provider={config.models.ocr.provider}, lang={lang}, device={config.models.ocr.device}")
-        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
+    for model_type, model_name in models:
+        out_dir = model_dir / model_type / model_name
+        ir_path = out_dir / "inference.xml"
 
-        det_dir = paddle_models_dir / "det" / lang
-        rec_dir = paddle_models_dir / "rec" / lang
+        if ir_path.exists():
+            continue
 
-        if not det_dir.exists() or not any(det_dir.iterdir()):
-            raise RuntimeError(
-                f"{paddle_models_dir}/det/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
-            )
-        if not rec_dir.exists() or not any(rec_dir.iterdir()):
-            raise RuntimeError(
-                f"{paddle_models_dir}/rec/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
-            )
+        logger.info(f"Downloading {model_name} (ONNX format)...")
+        downloaded_dir = Path(official_models.get_model_path(model_name, model_formats=["onnx"]))
 
-        logger.info("Converting PaddleOCR models to OpenVINO IR...")
-        convert_ppocr_pipeline(models_root=paddle_models_dir, output_root=paddle_models_dir, lang=lang)
-        logger.info("OpenVINO IR conversion completed")
-    else:
-        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        onnx_path = downloaded_dir / "inference.onnx"
+        yml_src = downloaded_dir / "inference.yml"
+
+        if yml_src.exists():
+            shutil.copy2(yml_src, out_dir / "inference.yml")
+
+        logger.info(f"Converting {model_name} ONNX → OpenVINO IR...")
+        model = core.read_model(str(onnx_path))
+        ov.save_model(model, str(ir_path))
+        logger.info(f"Saved: {ir_path}")
 
 
 def get_model_path() -> str:
