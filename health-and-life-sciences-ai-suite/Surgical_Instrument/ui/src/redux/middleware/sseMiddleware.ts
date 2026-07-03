@@ -1,7 +1,7 @@
 import type { Middleware } from '@reduxjs/toolkit';
 import { addEvent } from '../slices/eventsSlice';
 import { updateWorkloadData, setAggregatorStatus } from '../slices/servicesSlice';
-import { patchNicuState, resetNicuState } from '../slices/nicuSlice';
+import { patchDetectionState, resetDetectionState } from '../slices/detectionSlice';
 import { api } from '../../services/api';
 
 /**
@@ -47,14 +47,14 @@ export const sseMiddleware: Middleware = (store) => {
         try {
           const payload = JSON.parse(event.data);
           const timestamp = Date.now();
-          const nicuPatch: any = {};
+          const detectionPatch: any = {};
 
           if (payload.lifecycle !== undefined) {
-            nicuPatch.systemStatus = payload.lifecycle;
+            detectionPatch.systemStatus = payload.lifecycle;
           }
           if (payload.analytics?.polyp_detection !== undefined) {
             const p = payload.analytics.polyp_detection;
-            nicuPatch.polyp = {
+            detectionPatch.polyp = {
               detected: !!p.detected,
               count: p.count ?? 0,
               confidence: p.confidence ?? 0,
@@ -64,27 +64,27 @@ export const sseMiddleware: Middleware = (store) => {
             };
           }
           if (payload.frame !== undefined) {
-            nicuPatch.frameUrl = api.getFrameUrl();
+            detectionPatch.frameUrl = api.getFrameUrl();
           }
           if (payload.metrics !== undefined) {
-            nicuPatch.fps = payload.metrics.fps ?? 0;
-            nicuPatch.totalFrames = payload.metrics.loop_count ?? 0;
-            nicuPatch.uptime = payload.metrics.uptime_s ?? 0;
-            nicuPatch.inferP99Ms = payload.metrics.infer_p99_ms ?? 0;
-            nicuPatch.totalP99Ms = payload.metrics.total_p99_ms ?? 0;
+            detectionPatch.fps = payload.metrics.fps ?? 0;
+            detectionPatch.totalFrames = payload.metrics.loop_count ?? 0;
+            detectionPatch.uptime = payload.metrics.uptime_s ?? 0;
+            detectionPatch.inferP99Ms = payload.metrics.infer_p99_ms ?? 0;
+            detectionPatch.totalP99Ms = payload.metrics.total_p99_ms ?? 0;
           }
           if (payload.pipeline_performance !== undefined) {
-            nicuPatch.pipelinePerformance = {
+            detectionPatch.pipelinePerformance = {
               workloads: payload.pipeline_performance.workloads ?? [],
               pipeline_fps: payload.pipeline_performance.pipeline_fps ?? 0,
               decode: payload.pipeline_performance.decode ?? '',
             };
           }
           if (payload.model_info !== undefined) {
-            nicuPatch.modelInfo = payload.model_info;
+            detectionPatch.modelInfo = payload.model_info;
           }
 
-          store.dispatch(patchNicuState(nicuPatch));
+          store.dispatch(patchDetectionState(detectionPatch));
 
           store.dispatch(updateWorkloadData({
             workloadId: 'polyp',
@@ -128,7 +128,7 @@ export const sseMiddleware: Middleware = (store) => {
         eventSource = null;
       }
       store.dispatch(setAggregatorStatus('stopped'));
-      store.dispatch(resetNicuState());
+      store.dispatch(resetDetectionState());
     }
 
     return next(action);

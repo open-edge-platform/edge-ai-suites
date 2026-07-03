@@ -6,7 +6,7 @@
 // Field names, types, and nesting match the real backend so that
 // when the SSE hook is wired in, the adapter is trivial.
 
-import type { NicuState } from '../types/nicu';
+import type { DetectionState } from '../types/detection';
 
 // ─── Waveform generator (for mock only) ──────────────────────────────────────
 function generateWaveform(length: number): number[] {
@@ -46,7 +46,7 @@ function generateWaveform(length: number): number[] {
 //   systemStatus                     → derive from /health poll separately
 //   fps (top-level)                  → derive from model_stats averages on integration
 
-export const mockNicuState: NicuState = {
+export const mockDetectionState: DetectionState = {
   // Derived from /health on integration
   systemStatus: 'running',
 
@@ -111,7 +111,7 @@ export const mockNicuState: NicuState = {
 };
 
 // ─── Live mock updater ────────────────────────────────────────────────────────
-export function generateLiveMockState(prev: NicuState): NicuState {
+export function generateLiveMockState(prev: DetectionState): DetectionState {
   const jitter = (val: number, range: number) =>
     Math.round((val + (Math.random() - 0.5) * range) * 100) / 100;
 

@@ -1,9 +1,9 @@
 /* =============================================
-   NicuPanel — mirrors LeftPanel layout system
+   DetectionPanel — mirrors LeftPanel layout system
    ============================================= */
 
 /* ── Panel content container ── */
-.nicu-panel-content {
+.det-panel-content {
   width: 100%;
   height: 100%;
   padding: 12px;
@@ -13,13 +13,13 @@
   background: #f5f7fa;
 }
 
-.nicu-panel-content::-webkit-scrollbar { width: 4px; }
-.nicu-panel-content::-webkit-scrollbar-track { background: transparent; }
-.nicu-panel-content::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
-.nicu-panel-content::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+.det-panel-content::-webkit-scrollbar { width: 4px; }
+.det-panel-content::-webkit-scrollbar-track { background: transparent; }
+.det-panel-content::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+.det-panel-content::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
 
 /* ── Grid ── */
-.nicu-grid {
+.det-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -27,30 +27,30 @@
   transition: all 0.3s ease;
 }
 
-.nicu-grid--has-expanded {
+.det-grid--has-expanded {
   height: auto;
 }
 
-.nicu-grid__expanded {
+.det-grid__expanded {
   flex: 1 1 auto;
   min-height: 400px;
   max-height: 65vh;
 }
 
 /* Collapsed row */
-.nicu-collapsed-row {
+.det-collapsed-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   flex-shrink: 0;
 }
 
-.nicu-collapsed-row .nicu-video {
+.det-collapsed-row .det-video {
   aspect-ratio: 4 / 3;
 }
 
 /* ── Section Labels ── */
-.nicu-section-label {
+.det-section-label {
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
@@ -62,14 +62,14 @@
 }
 
 /* ── Detection grid — full width column stack ── */
-.nicu-detection-grid {
+.det-detection-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
 }
 
 /* ── Generic card base ── */
-.nicu-card {
+.det-card {
   background: #fff;
   border-radius: 8px;
   border: 1px solid #e6e7e8;
@@ -77,18 +77,18 @@
   transition: box-shadow 0.2s;
 }
 
-.nicu-card:hover {
+.det-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.nicu-card-header {
+.det-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.nicu-card-title {
+.det-card-title {
   font-family: var(--font-text);
   font-size: 12px;
   font-weight: 600;
@@ -103,7 +103,7 @@
    DETECTION CARDS
    ═══════════════════════════════════════════ */
 
-.nicu-det-card {
+.det-card {
   background: #fff;
   border-radius: 8px;
   border: 1px solid #e8e9ea;
@@ -117,12 +117,12 @@
   min-height: 56px;
 }
 
-.nicu-det-card:hover {
+.det-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
 /* Left accent bar */
-.nicu-det-accent {
+.det-accent {
   width: 4px;
   flex-shrink: 0;
   background: #ccc;
@@ -130,14 +130,14 @@
   margin-left: -4px;
 }
 
-.nicu-det-card--on   { border-left-color: #2e7d32; }
-.nicu-det-card--on   .nicu-det-accent { background: #2e7d32; }
-.nicu-det-card--warn { border-left-color: #e65100; }
-.nicu-det-card--warn .nicu-det-accent { background: #e65100; }
-.nicu-det-card--off  { border-left-color: #c62828; }
-.nicu-det-card--off  .nicu-det-accent { background: #c62828; }
+.det-card--on   { border-left-color: #2e7d32; }
+.det-card--on   .det-accent { background: #2e7d32; }
+.det-card--warn { border-left-color: #e65100; }
+.det-card--warn .det-accent { background: #e65100; }
+.det-card--off  { border-left-color: #c62828; }
+.det-card--off  .det-accent { background: #c62828; }
 
-.nicu-det-body {
+.det-body {
   flex: 1;
   padding: 8px 12px;
   display: flex;
@@ -148,24 +148,24 @@
 }
 
 /* Row 1: icon + title + pill */
-.nicu-det-row {
+.det-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 /* Row 2: subtitle */
-.nicu-det-row--sub {
+.det-row--sub {
   margin-top: 1px;
 }
 
-.nicu-det-icon {
+.det-icon {
   font-size: 16px;
   flex-shrink: 0;
   line-height: 1;
 }
 
-.nicu-det-title {
+.det-title {
   font-family: var(--font-text);
   font-size: 12px;
   font-weight: 600;
@@ -177,7 +177,7 @@
 }
 
 /* Status pill */
-.nicu-det-pill {
+.det-pill {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
@@ -188,24 +188,24 @@
   white-space: nowrap;
 }
 
-.nicu-det-pill--on   { background: #e8f5e9; color: #2e7d32; }
-.nicu-det-pill--warn { background: #fff3e0; color: #e65100; }
-.nicu-det-pill--off  { background: #ffebee; color: #c62828; }
+.det-pill--on   { background: #e8f5e9; color: #2e7d32; }
+.det-pill--warn { background: #fff3e0; color: #e65100; }
+.det-pill--off  { background: #ffebee; color: #c62828; }
 
 /* Sub text */
-.nicu-det-sub {
+.det-sub {
   font-family: var(--font-text);
   font-size: 10px;
   color: #6b7280;
 }
 
-.nicu-det-sub--absent {
+.det-sub--absent {
   color: #c62828;
   font-weight: 500;
 }
 
 /* Confidence — only shown when low */
-.nicu-det-conf {
+.det-conf {
   font-family: var(--font-mono);
   font-size: 9px;
   color: #9ca3af;
@@ -213,13 +213,13 @@
   white-space: nowrap;
 }
 
-.nicu-det-conf--warn {
+.det-conf--warn {
   color: #e65100;
   font-weight: 600;
 }
 
 /* Inline confidence next to title (hero variant, high-confidence path) */
-.nicu-det-conf-inline {
+.det-conf-inline {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
@@ -233,37 +233,37 @@
 }
 
 /* ── Hero variant: larger typography for the single-workload polyp card ── */
-.nicu-det-card--hero {
+.det-card--hero {
   min-height: 88px;
   border-left-width: 6px;
 }
-.nicu-det-card--hero .nicu-det-body {
+.det-card--hero .det-body {
   padding: 12px 16px 10px;
   gap: 4px;
 }
-.nicu-det-card--hero .nicu-det-icon {
+.det-card--hero .det-icon {
   font-size: 22px;
 }
-.nicu-det-card--hero .nicu-det-title {
+.det-card--hero .det-title {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.3px;
 }
-.nicu-det-card--hero .nicu-det-pill {
+.det-card--hero .det-pill {
   font-size: 11px;
   padding: 4px 12px;
   border-radius: 12px;
   letter-spacing: 0.5px;
 }
-.nicu-det-card--hero .nicu-det-sub {
+.det-card--hero .det-sub {
   font-size: 12px;
 }
-.nicu-det-card--hero .nicu-det-sub--absent {
+.det-card--hero .det-sub--absent {
   font-size: 12px;
 }
 
 /* ── Session cumulative bar (bottom of hero card) ── */
-.nicu-det-session {
+.det-session {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -275,7 +275,7 @@
   color: #4a5568;
   flex-wrap: wrap;
 }
-.nicu-det-session-label {
+.det-session-label {
   font-family: var(--font-display);
   font-size: 9px;
   font-weight: 700;
@@ -286,28 +286,28 @@
   border-radius: 4px;
   text-transform: uppercase;
 }
-.nicu-det-session-metric {
+.det-session-metric {
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
 }
-.nicu-det-session-metric strong {
+.det-session-metric strong {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
   color: #1a1a2e;
 }
-.nicu-det-session-unit {
+.det-session-unit {
   color: #6b7280;
   font-size: 10px;
 }
-.nicu-det-session-sep {
+.det-session-sep {
   color: #cbd5e0;
   font-weight: 600;
 }
 
 /* Padlock SVG icon in latch card */
-.nicu-latch-icon {
+.det-latch-icon {
   flex-shrink: 0;
   display: block;
 }
@@ -316,7 +316,7 @@
    VIDEO FEED
    ═══════════════════════════════════════════ */
 
-.nicu-video {
+.det-video {
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #1a1a2e;
@@ -328,18 +328,18 @@
 }
 
 /* Expanded: fill available space but stay 16:9 so overlays align */
-.nicu-video--expanded {
+.det-video--expanded {
   width: 100%;
   max-height: 100%;
   border-radius: 8px;
 }
 
 /* Panel full width (right panel collapsed) — keep 16:9 */
-.nicu-video--panel-full:not(.nicu-video--expanded) {
+.det-video--panel-full:not(.det-video--expanded) {
   aspect-ratio: 16 / 9;
 }
 
-.nicu-video img {
+.det-video img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -347,7 +347,7 @@
 }
 
 /* Placeholder — must be absolute to fill aspect-ratio box */
-.nicu-video-placeholder {
+.det-video-placeholder {
   position: absolute;
   inset: 0;
   display: flex;
@@ -360,9 +360,9 @@
   background: #1a1a2e;
 }
 
-.nicu-video-placeholder-icon  { font-size: 36px; opacity: 0.4; }
-.nicu-video-placeholder-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); }
-.nicu-video-placeholder-sub   {
+.det-video-placeholder-icon  { font-size: 36px; opacity: 0.4; }
+.det-video-placeholder-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); }
+.det-video-placeholder-sub   {
   font-size: 11px;
   color: rgba(255,255,255,0.35);
   text-align: center;
@@ -371,20 +371,20 @@
 }
 
 /* Loading spinner overlay */
-.nicu-video-spinner {
+.det-video-spinner {
   width: 28px;
   height: 28px;
   border: 3px solid rgba(255,255,255,0.25);
   border-top-color: #fff;
   border-radius: 50%;
-  animation: nicuSpin 0.7s linear infinite;
+  animation: detectionSpin 0.7s linear infinite;
 }
-@keyframes nicuSpin {
+@keyframes detectionSpin {
   to { transform: rotate(360deg); }
 }
 
 /* Expand button — bottom-right */
-.nicu-video-expand-btn {
+.det-video-expand-btn {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -405,10 +405,10 @@
   padding: 0;
 }
 
-.nicu-video-expand-btn:hover { background: rgba(0, 113, 197, 0.8); }
+.det-video-expand-btn:hover { background: rgba(0, 113, 197, 0.8); }
 
 /* Status badge — top-left */
-.nicu-video-status {
+.det-video-status {
   position: absolute;
   top: 8px;
   left: 8px;
@@ -425,11 +425,11 @@
   backdrop-filter: blur(4px);
 }
 
-.nicu-video-status--running { background: rgba(27,122,46,0.85);  color: #fff; }
-.nicu-video-status--error   { background: rgba(198,40,40,0.85);  color: #fff; }
-.nicu-video-status--other   { background: rgba(60,60,60,0.75);   color: #eee; }
+.det-video-status--running { background: rgba(27,122,46,0.85);  color: #fff; }
+.det-video-status--error   { background: rgba(198,40,40,0.85);  color: #fff; }
+.det-video-status--other   { background: rgba(60,60,60,0.75);   color: #eee; }
 
-.nicu-video-status-dot {
+.det-video-status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -437,17 +437,17 @@
   opacity: 0.9;
 }
 
-.nicu-video-status-dot--pulse {
-  animation: nicu-pulse 1.4s ease-in-out infinite;
+.det-video-status-dot--pulse {
+  animation: det-pulse 1.4s ease-in-out infinite;
 }
 
-@keyframes nicu-pulse {
+@keyframes det-pulse {
   0%, 100% { opacity: 0.9; transform: scale(1);   }
   50%       { opacity: 0.4; transform: scale(0.7); }
 }
 
 /* FPS badge — top-right */
-.nicu-video-fps {
+.det-video-fps {
   position: absolute;
   top: 8px;
   right: 38px;
@@ -463,7 +463,7 @@
 }
 
 /* Detection tags — bottom */
-.nicu-video-overlays {
+.det-video-overlays {
   position: absolute;
   bottom: 8px;
   left: 8px;
@@ -474,7 +474,7 @@
   gap: 4px;
 }
 
-.nicu-video-tag {
+.det-video-tag {
   background: rgba(0,0,0,0.55);
   color: #a5d6a7;
   font-family: var(--font-mono);
@@ -486,21 +486,21 @@
   white-space: nowrap;
 }
 
-.nicu-video-tag--warn { color: #ffcc80; }
-.nicu-video-tag--off  { color: #bdbdbd; }
+.det-video-tag--warn { color: #ffcc80; }
+.det-video-tag--off  { color: #bdbdbd; }
 
 /* ═══════════════════════════════════════════
    rPPG CARD
    ═══════════════════════════════════════════ */
 
-.nicu-rppg-card {
+.det-rppg-card {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
 /* Vitals row: large BPM + stats column */
-.nicu-rppg-vitals {
+.det-rppg-vitals {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -508,14 +508,14 @@
 }
 
 /* BPM block */
-.nicu-rppg-bpm-block {
+.det-rppg-bpm-block {
   display: flex;
   align-items: baseline;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.nicu-rppg-value {
+.det-rppg-value {
   font-family: var(--font-mono);
   font-size: 36px;
   font-weight: 300;
@@ -525,12 +525,12 @@
 }
 
 /* HR status colours — neonatal range 100–160 bpm */
-.nicu-rppg-value--normal  { color: #c62828; }
-.nicu-rppg-value--low     { color: #1565c0; }
-.nicu-rppg-value--high    { color: #e65100; }
-.nicu-rppg-value--unknown { color: #9e9e9e; }
+.det-rppg-value--normal  { color: #c62828; }
+.det-rppg-value--low     { color: #1565c0; }
+.det-rppg-value--high    { color: #e65100; }
+.det-rppg-value--unknown { color: #9e9e9e; }
 
-.nicu-rppg-unit {
+.det-rppg-unit {
   font-family: var(--font-text);
   font-size: 11px;
   color: #6b7280;
@@ -539,7 +539,7 @@
 }
 
 /* Trend arrow */
-.nicu-rppg-trend {
+.det-rppg-trend {
   font-size: 16px;
   font-weight: 700;
   align-self: flex-end;
@@ -547,26 +547,26 @@
   line-height: 1;
 }
 
-.nicu-rppg-trend--up     { color: #e65100; }
-.nicu-rppg-trend--down   { color: #1565c0; }
-.nicu-rppg-trend--stable { color: #2e7d32; }
+.det-rppg-trend--up     { color: #e65100; }
+.det-rppg-trend--down   { color: #1565c0; }
+.det-rppg-trend--stable { color: #2e7d32; }
 
 /* Stats column: MIN / MAX / CONF (conf only when low) */
-.nicu-rppg-stats {
+.det-rppg-stats {
   display: flex;
   flex-direction: column;
   gap: 3px;
   margin-left: auto;
 }
 
-.nicu-rppg-stat {
+.det-rppg-stat {
   display: flex;
   align-items: center;
   gap: 6px;
   justify-content: flex-end;
 }
 
-.nicu-rppg-stat-label {
+.det-rppg-stat-label {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 600;
@@ -576,7 +576,7 @@
   text-align: right;
 }
 
-.nicu-rppg-stat-value {
+.det-rppg-stat-value {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
@@ -585,10 +585,10 @@
   text-align: right;
 }
 
-.nicu-rppg-stat-value--warn { color: #e65100; }
+.det-rppg-stat-value--warn { color: #e65100; }
 
 /* Session badge */
-.nicu-rppg-session {
+.det-rppg-session {
   font-family: var(--font-mono);
   font-size: 10px;
   padding: 2px 7px;
@@ -596,11 +596,11 @@
   font-weight: 600;
 }
 
-.nicu-rppg-session--active   { background: #e8f5e9; color: #2e7d32; }
-.nicu-rppg-session--inactive { background: #f0f0f0; color: #888; }
+.det-rppg-session--active   { background: #e8f5e9; color: #2e7d32; }
+.det-rppg-session--inactive { background: #f0f0f0; color: #888; }
 
 /* HR alert banner — only shown when abnormal */
-.nicu-rppg-alert {
+.det-rppg-alert {
   font-family: var(--font-text);
   font-size: 11px;
   font-weight: 500;
@@ -609,11 +609,11 @@
   margin-bottom: 8px;
 }
 
-.nicu-rppg-alert--low  { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
-.nicu-rppg-alert--high { background: #fff3e0; color: #e65100; border-left: 3px solid #e65100; }
+.det-rppg-alert--low  { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
+.det-rppg-alert--high { background: #fff3e0; color: #e65100; border-left: 3px solid #e65100; }
 
 /* Waveform canvas */
-.nicu-rppg-canvas-wrap {
+.det-rppg-canvas-wrap {
   width: 100%;
   height: 64px;
   background: #fafafa;
@@ -625,7 +625,7 @@
   position: relative;
 }
 
-.nicu-rppg-canvas-label {
+.det-rppg-canvas-label {
   position: absolute;
   top: 2px;
   left: 6px;
@@ -636,14 +636,14 @@
   pointer-events: none;
 }
 
-.nicu-rppg-canvas {
+.det-rppg-canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
 /* Session progress bar */
-.nicu-rppg-progress-wrap {
+.det-rppg-progress-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -651,7 +651,7 @@
   margin-bottom: 4px;
 }
 
-.nicu-rppg-progress-bar {
+.det-rppg-progress-bar {
   flex: 1;
   height: 4px;
   background: #e8e9ea;
@@ -659,19 +659,19 @@
   overflow: hidden;
 }
 
-.nicu-rppg-progress-fill {
+.det-rppg-progress-fill {
   height: 100%;
   background: #bdbdbd;
   border-radius: 2px;
   transition: width 0.8s ease;
 }
 
-.nicu-rppg-progress-fill--active {
+.det-rppg-progress-fill--active {
   background: #c62828;
   transition: width 1s linear;
 }
 
-.nicu-rppg-progress-label {
+.det-rppg-progress-label {
   font-family: var(--font-mono);
   font-size: 10px;
   color: #9ca3af;
@@ -680,7 +680,7 @@
 }
 
 /* Low signal warning strip — only shown when confidence < 50% */
-.nicu-rppg-warn-strip {
+.det-rppg-warn-strip {
   font-family: var(--font-text);
   font-size: 10px;
   font-weight: 500;
@@ -692,10 +692,10 @@
   margin-top: 6px;
 }
 
-/* ── Removed: .nicu-card-expand-btn, .nicu-rppg-card--expanded ── */
+/* ── Removed: .det-card-expand-btn, .det-rppg-card--expanded ── */
 /* rPPG is no longer expandable                                    */
 
-/* ── Removed: .nicu-signal, .nicu-signal-dot ── */
+/* ── Removed: .det-signal, .det-signal-dot ── */
 /* Signal dots replaced by SVG padlock in LatchStatusCard         */
 /* and clean ✓/✗ pills in DetectionCard                           */
 
@@ -704,28 +704,28 @@
    ═══════════════════════════════════════════ */
 
    @media (max-width: 900px) {
-    .nicu-detection-grid,
-    .nicu-collapsed-row {
+    .det-detection-grid,
+    .det-collapsed-row {
       grid-template-columns: 1fr;
     }
 
-  .nicu-grid__expanded {
+  .det-grid__expanded {
     min-height: 300px;
     max-height: none;
   }
 
-  .nicu-video--panel-full:not(.nicu-video--expanded) {
+  .det-video--panel-full:not(.det-video--expanded) {
     aspect-ratio: 16 / 9;
   }
 
 /* Action recognition activity card */
-.nicu-action-labels {
+.det-action-labels {
   margin-top: 6px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.nicu-action-row {
+.det-action-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -734,28 +734,28 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.04);
 }
-.nicu-action-left {
+.det-action-left {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.nicu-action-cat {
+.det-action-cat {
   color: #e0e0e0;
   font-weight: 500;
 }
-.nicu-action-detail {
+.det-action-detail {
   color: #888;
   font-size: 0.72rem;
   font-style: italic;
 }
-.nicu-action-conf {
+.det-action-conf {
   color: #90caf9;
   font-weight: 600;
   font-size: 0.78rem;
   white-space: nowrap;
   margin-left: 8px;
 }
-.nicu-action-warming {
+.det-action-warming {
   margin-top: 4px;
   font-size: 0.78rem;
   color: #888;

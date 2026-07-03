@@ -4,7 +4,7 @@ import appReducer from './slices/appSlice';
 import servicesReducer from './slices/servicesSlice';
 import eventsReducer from './slices/eventsSlice';
 import { sseMiddleware } from './middleware/sseMiddleware';
-import nicuReducer from './slices/nicuSlice';
+import detectionReducer from './slices/detectionSlice';
 import metricsReducer from './slices/metricsSlice';
 
 export const store = configureStore({
@@ -13,7 +13,7 @@ export const store = configureStore({
     services: servicesReducer,
     events: eventsReducer,
     metrics: metricsReducer,
-    nicu: nicuReducer,
+    detection: detectionReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

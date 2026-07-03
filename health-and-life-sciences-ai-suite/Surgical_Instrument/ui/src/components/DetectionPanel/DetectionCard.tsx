@@ -38,38 +38,38 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
   const showSession = sessionCumulative !== undefined || sessionFrames !== undefined || sessionRate !== undefined;
 
   return (
-    <div className={`nicu-det-card ${hero ? 'nicu-det-card--hero' : ''} ${detected ? 'nicu-det-card--on' : 'nicu-det-card--off'}`}>
-      <div className="nicu-det-accent" />
+    <div className={`det-card ${hero ? 'det-card--hero' : ''} ${detected ? 'det-card--on' : 'det-card--off'}`}>
+      <div className="det-accent" />
 
-      <div className="nicu-det-body">
+      <div className="det-body">
         {/* Row 1: icon + title + pill */}
-        <div className="nicu-det-row">
-          <span className="nicu-det-icon">{icon}</span>
-          <span className="nicu-det-title">{title}</span>
+        <div className="det-row">
+          <span className="det-icon">{icon}</span>
+          <span className="det-title">{title}</span>
           {detected && confidence !== null && !isLowConf && (
-            <span className="nicu-det-conf-inline">conf {confidence.toFixed(2)}</span>
+            <span className="det-conf-inline">conf {confidence.toFixed(2)}</span>
           )}
-          <span className={`nicu-det-pill ${detected ? 'nicu-det-pill--on' : 'nicu-det-pill--off'}`}>
+          <span className={`det-pill ${detected ? 'det-pill--on' : 'det-pill--off'}`}>
             {detected ? '✓ DETECTED' : '✗ NOT DETECTED'}
           </span>
         </div>
 
         {/* Row 2: detail / last-seen / low-conf warning */}
-        <div className="nicu-det-row nicu-det-row--sub">
+        <div className="det-row det-row--sub">
           {detected ? (
             <>
-              <span className="nicu-det-sub">{detail ?? 'Present'}</span>
+              <span className="det-sub">{detail ?? 'Present'}</span>
               {isLowConf && (
-                <span className="nicu-det-conf nicu-det-conf--warn">
+                <span className="det-conf det-conf--warn">
                   ⚠ low conf {confidence !== null ? confidence.toFixed(2) : ''}
                 </span>
               )}
             </>
           ) : (
             <>
-              <span className="nicu-det-sub nicu-det-sub--absent">No polyp in current frame</span>
+              <span className="det-sub det-sub--absent">No polyp in current frame</span>
               {lastSeenSeconds !== undefined && (
-                <span className="nicu-det-conf">
+                <span className="det-conf">
                   {formatLastSeen(lastSeenSeconds)}
                 </span>
               )}
@@ -79,23 +79,23 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
 
         {/* Row 3: session cumulative */}
         {showSession && (
-          <div className="nicu-det-session">
-            <span className="nicu-det-session-label">SESSION</span>
-            <span className="nicu-det-session-metric">
+          <div className="det-session">
+            <span className="det-session-label">SESSION</span>
+            <span className="det-session-metric">
               <strong>{(sessionCumulative ?? 0).toLocaleString()}</strong>
-              <span className="nicu-det-session-unit">detections</span>
+              <span className="det-session-unit">detections</span>
             </span>
-            <span className="nicu-det-session-sep">·</span>
-            <span className="nicu-det-session-metric">
+            <span className="det-session-sep">·</span>
+            <span className="det-session-metric">
               <strong>{((sessionRate ?? 0) * 100).toFixed(1)}%</strong>
-              <span className="nicu-det-session-unit">of frames</span>
+              <span className="det-session-unit">of frames</span>
             </span>
             {sessionFrames !== undefined && sessionFrames > 0 && (
               <>
-                <span className="nicu-det-session-sep">·</span>
-                <span className="nicu-det-session-metric">
+                <span className="det-session-sep">·</span>
+                <span className="det-session-metric">
                   <strong>{sessionFrames.toLocaleString()}</strong>
-                  <span className="nicu-det-session-unit">positive frames</span>
+                  <span className="det-session-unit">positive frames</span>
                 </span>
               </>
             )}

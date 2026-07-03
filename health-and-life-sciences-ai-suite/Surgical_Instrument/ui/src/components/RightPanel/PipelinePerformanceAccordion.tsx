@@ -20,8 +20,8 @@ const WORKLOAD_DEFS = [
 ] as const;
 
 export function PipelinePerformanceAccordion() {
-  const systemStatus = useAppSelector((state) => state.nicu.data.systemStatus);
-  const pipelinePerf = useAppSelector((state) => state.nicu.data.pipelinePerformance);
+  const systemStatus = useAppSelector((state) => state.detection.data.systemStatus);
+  const pipelinePerf = useAppSelector((state) => state.detection.data.pipelinePerformance);
 
   const isRunning = systemStatus === 'running' || systemStatus === 'starting';
   const status = isRunning ? 'running' : 'stopped';
@@ -31,9 +31,9 @@ export function PipelinePerformanceAccordion() {
     for (const w of pipelinePerf.workloads) sseLookup[w.name] = w;
   }
 
-  const modelInfo = useAppSelector((state) => state.nicu.data.modelInfo);
-  const totalFrames = useAppSelector((state) => state.nicu.data.totalFrames);
-  const uptime = useAppSelector((state) => state.nicu.data.uptime);
+  const modelInfo = useAppSelector((state) => state.detection.data.modelInfo);
+  const totalFrames = useAppSelector((state) => state.detection.data.totalFrames);
+  const uptime = useAppSelector((state) => state.detection.data.uptime);
 
   const fmtUptime = (s: number) => {
     if (!s || s <= 0) return '—';

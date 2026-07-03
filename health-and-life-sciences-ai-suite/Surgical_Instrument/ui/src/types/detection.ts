@@ -1,5 +1,5 @@
 // Surgical-Instrument state shape.
-// Mirrors NICU-Warmer's NicuState surface for layout reuse, but trimmed to
+// Surgical polyp detection UI state — trimmed to
 // a single workload: polyp detection.
 
 export interface PolypDetection {
@@ -37,7 +37,7 @@ export interface ModelInfo {
   device: string;
 }
 
-export interface NicuState {
+export interface DetectionState {
   systemStatus: 'initializing' | 'preparing' | 'ready' | 'starting' | 'running' | 'error' | 'stopping';
   polyp: PolypDetection;
   pipelinePerformance: PipelinePerformance;

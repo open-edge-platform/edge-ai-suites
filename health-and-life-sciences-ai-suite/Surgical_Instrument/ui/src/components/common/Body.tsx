@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import RightPanel from "../RightPanel/RightPanel";
-import NicuPanel from "../NicuPanel/NicuPanel";
+import DetectionPanel from "../DetectionPanel/DetectionPanel";
 import "../../assets/css/Body.css";
 
 const Body: React.FC = () => {
@@ -8,9 +8,9 @@ const Body: React.FC = () => {
 
   return (
     <div className="container">
-      {/* Left Panel — NicuPanel, expands to full width when right panel is hidden */}
+      {/* Left Panel — DetectionPanel, expands to full width when right panel is hidden */}
       <div className={`left-panel${isRightPanelCollapsed ? ' left-panel--full' : ''}`}>
-        <NicuPanel expanded={isRightPanelCollapsed} />
+        <DetectionPanel expanded={isRightPanelCollapsed} />
       </div>
 
       {/* Right Panel */}

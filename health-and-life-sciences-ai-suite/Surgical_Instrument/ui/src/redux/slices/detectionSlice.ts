@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { NicuState } from '../../types/nicu';
+import type { DetectionState } from '../../types/detection';
 
-interface NicuSliceState {
-  data: NicuState;
+interface DetectionSliceState {
+  data: DetectionState;
   expandedSection: 'video' | null;
 }
 
-const initialState: NicuSliceState = {
+const initialState: DetectionSliceState = {
   data: {
     systemStatus: 'ready',
     polyp: {
@@ -25,17 +25,17 @@ const initialState: NicuSliceState = {
   expandedSection: null,
 };
 
-const nicuSlice = createSlice({
-  name: 'nicu',
+const detectionSlice = createSlice({
+  name: 'detection',
   initialState,
   reducers: {
-    updateNicuState(state, action: PayloadAction<NicuState>) {
+    updateDetectionState(state, action: PayloadAction<DetectionState>) {
       state.data = action.payload;
     },
-    patchNicuState(state, action: PayloadAction<Partial<NicuState>>) {
+    patchDetectionState(state, action: PayloadAction<Partial<DetectionState>>) {
       state.data = { ...state.data, ...action.payload };
     },
-    resetNicuState(state) {
+    resetDetectionState(state) {
       state.data = initialState.data;
       state.expandedSection = null;
     },
@@ -46,5 +46,5 @@ const nicuSlice = createSlice({
   },
 });
 
-export const { updateNicuState, patchNicuState, resetNicuState, setExpandedSection } = nicuSlice.actions;
-export default nicuSlice.reducer;
+export const { updateDetectionState, patchDetectionState, resetDetectionState, setExpandedSection } = detectionSlice.actions;
+export default detectionSlice.reducer;
