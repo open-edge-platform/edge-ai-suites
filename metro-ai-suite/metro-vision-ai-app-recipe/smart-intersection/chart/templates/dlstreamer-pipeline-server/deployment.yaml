@@ -16,16 +16,17 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
-      {{- if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
+      {{- if .Values.trustedCompute.enabled }}
       annotations:
         io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        {{- if .Values.trustedCompute.tc_gpu_enabled }}
         io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
         io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
-        io.katacontainers.config.hypervisor.enable_virtio_mem: {{ .Values.trustedCompute.tcvm_enable_virtio_mem | quote }}
         cdi-devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
           {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
           - {{ . }}
           {{- end }}
+        {{- end }}
       {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
@@ -120,10 +121,10 @@ spec:
         {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
         resources:
           requests:
-             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+             memory: {{ (.Values.resources.requests).memory | default "2Gi" | quote }}
              cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
           limits:
-             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
+             memory: {{ (.Values.resources.limits).memory | default "4Gi" | quote }}
              cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
         {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
