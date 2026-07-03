@@ -227,6 +227,8 @@ class InferenceWorker:
         warmup_frames: int = 5,
         annotate: bool = True,
         jpeg_quality: int = 80,
+        tracker: str = "bytetrack.yaml",
+        min_track_len: int = 5,
     ):
         self.ir_dir = str(ir_dir)
         self.video_src = video_src
@@ -237,6 +239,8 @@ class InferenceWorker:
         self.warmup_frames = int(warmup_frames)
         self.annotate = bool(annotate)
         self.jpeg_quality = int(jpeg_quality)
+        self.tracker = str(tracker)
+        self.min_track_len = int(min_track_len)
 
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
@@ -251,6 +255,8 @@ class InferenceWorker:
         self._frames_with_detection = 0
         self._cumulative_detections = 0
         self._peak_confidence = 0.0
+        # track_id -> frames seen. distinct_polyps = count of tracks with >= min_track_len frames.
+        self._track_frame_counts: dict[int, int] = {}
         self._error: Optional[str] = None
 
     # -- lifecycle -----------------------------------------------------------
@@ -289,6 +295,7 @@ class InferenceWorker:
             infer_arr = np.fromiter(self._recent_infer_ms, dtype=float) if self._recent_infer_ms else None
             total_arr = np.fromiter(self._recent_latencies, dtype=float) if self._recent_latencies else None
             detection_rate = (self._frames_with_detection / self._frame_id) if self._frame_id > 0 else 0.0
+            distinct_polyps = sum(1 for c in self._track_frame_counts.values() if c >= self.min_track_len)
             return {
                 "running": self.is_running(),
                 "frame_id": self._frame_id,
@@ -305,6 +312,7 @@ class InferenceWorker:
                 "cumulative_detections": self._cumulative_detections,
                 "detection_rate": detection_rate,
                 "peak_confidence": self._peak_confidence,
+                "distinct_polyps": distinct_polyps,
                 "device": self.device,
                 "error": self._error,
             }
@@ -347,7 +355,14 @@ class InferenceWorker:
                 frame_out = cv2.resize(frame, self.output_size)
 
                 t_i0 = time.perf_counter()
-                results = model(frame_out, device=dev, verbose=False, imgsz=self.infer_size)
+                results = model.track(
+                    frame_out,
+                    device=dev,
+                    verbose=False,
+                    imgsz=self.infer_size,
+                    persist=True,
+                    tracker=self.tracker,
+                )
                 t_i1 = time.perf_counter()
                 infer_ms = (t_i1 - t_i0) * 1000.0
 
@@ -373,14 +388,17 @@ class InferenceWorker:
                     }
                     self._recent_latencies.append(total_ms)
                     self._recent_infer_ms.append(infer_ms)
-                    polyp_confs = [float(d.get("confidence", 0.0)) for d in dets
-                                   if str(d.get("class_name", "")).lower() == "polyp"]
-                    if polyp_confs:
+                    polyp_dets = [d for d in dets if str(d.get("class_name", "")).lower() == "polyp"]
+                    if polyp_dets:
                         self._frames_with_detection += 1
-                        self._cumulative_detections += len(polyp_confs)
-                        top = max(polyp_confs)
+                        self._cumulative_detections += len(polyp_dets)
+                        top = max(float(d.get("confidence", 0.0)) for d in polyp_dets)
                         if top > self._peak_confidence:
                             self._peak_confidence = top
+                        for d in polyp_dets:
+                            tid = d.get("track_id")
+                            if tid is not None:
+                                self._track_frame_counts[int(tid)] = self._track_frame_counts.get(int(tid), 0) + 1
 
                 next_deadline += tick_s
                 slack = next_deadline - time.perf_counter()
@@ -402,14 +420,20 @@ class InferenceWorker:
         xyxy = boxes.xyxy.cpu().numpy() if hasattr(boxes.xyxy, "cpu") else np.asarray(boxes.xyxy)
         conf = boxes.conf.cpu().numpy() if hasattr(boxes.conf, "cpu") else np.asarray(boxes.conf)
         cls = boxes.cls.cpu().numpy() if hasattr(boxes.cls, "cpu") else np.asarray(boxes.cls)
+        ids = None
+        if getattr(boxes, "id", None) is not None:
+            ids = boxes.id.cpu().numpy() if hasattr(boxes.id, "cpu") else np.asarray(boxes.id)
         names = getattr(r0, "names", {}) or {}
         out = []
         for i in range(len(boxes)):
             cid = int(cls[i])
-            out.append({
+            item = {
                 "class_id": cid,
                 "class_name": names.get(cid, str(cid)),
                 "confidence": float(conf[i]),
                 "bbox": [float(x) for x in xyxy[i].tolist()],  # [x1,y1,x2,y2]
-            })
+            }
+            if ids is not None:
+                item["track_id"] = int(ids[i])
+            out.append(item)
         return out

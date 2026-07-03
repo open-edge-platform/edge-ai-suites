@@ -11,6 +11,7 @@ const initialState: DetectionSliceState = {
     systemStatus: 'ready',
     polyp: {
       detected: false, count: 0, confidence: 0,
+      distinct_polyps: 0,
       frames_processed: 0, frames_with_detection: 0, detection_rate: 0,
       peak_confidence: 0, session_seconds: 0,
     },

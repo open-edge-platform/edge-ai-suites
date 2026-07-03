@@ -58,6 +58,7 @@ export const sseMiddleware: Middleware = (store) => {
               detected: !!p.detected,
               count: p.count ?? 0,
               confidence: p.confidence ?? 0,
+              distinct_polyps: p.distinct_polyps ?? 0,
               frames_processed: p.frames_processed ?? 0,
               frames_with_detection: p.frames_with_detection ?? 0,
               detection_rate: p.detection_rate ?? 0,

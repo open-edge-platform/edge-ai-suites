@@ -10,6 +10,7 @@ interface DetectionCardProps {
   /** When true, renders a larger hero variant suitable for a full-width slot. */
   hero?: boolean;
   /** Session KPIs (per Start→Stop). When any is provided a session bar is rendered. */
+  sessionDistinctPolyps?: number;
   sessionFramesProcessed?: number;
   sessionFramesWithDetection?: number;
   sessionRate?: number;         // 0..1
@@ -25,6 +26,7 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
   detail,
   lastSeenSeconds,
   hero = false,
+  sessionDistinctPolyps,
   sessionFramesProcessed,
   sessionFramesWithDetection,
   sessionRate,
@@ -47,6 +49,7 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
   };
 
   const showSession = [
+    sessionDistinctPolyps,
     sessionFramesProcessed,
     sessionFramesWithDetection,
     sessionRate,
@@ -98,6 +101,15 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
         {showSession && (
           <div className="det-session">
             <span className="det-session-label">SESSION</span>
+            {sessionDistinctPolyps !== undefined && (
+              <>
+                <span className="det-session-metric det-session-metric--hero">
+                  <strong>{sessionDistinctPolyps.toLocaleString()}</strong>
+                  <span className="det-session-unit">polyps detected</span>
+                </span>
+                <span className="det-session-sep">·</span>
+              </>
+            )}
             <span className="det-session-metric">
               <strong>{(sessionFramesProcessed ?? 0).toLocaleString()}</strong>
               <span className="det-session-unit">frames processed</span>

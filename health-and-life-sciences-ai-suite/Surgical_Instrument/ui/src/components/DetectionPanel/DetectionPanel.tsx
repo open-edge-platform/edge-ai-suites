@@ -47,6 +47,7 @@ const DetectionPanel: React.FC<DetectionPanelProps> = ({ expanded = false }) => 
             confidence={detection.polyp.detected ? detection.polyp.confidence : null}
             detail={detail}
             hero
+            sessionDistinctPolyps={detection.polyp.distinct_polyps}
             sessionFramesProcessed={detection.polyp.frames_processed}
             sessionFramesWithDetection={detection.polyp.frames_with_detection}
             sessionRate={detection.polyp.detection_rate}
