@@ -15,7 +15,7 @@ Make sure Docker is correctly installed and configured.
 
 ## Download the yolov8n_with_preprocess.xml model
 
-1. Download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb)
+1. Download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/2026.0/notebooks/yolov8-optimization/yolov8-object-detection.ipynb)
 
 ## Run Docker container
 
