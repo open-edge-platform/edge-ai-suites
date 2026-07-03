@@ -32,16 +32,17 @@ spec:
         app: {{ include "ovms.fullname" . }}
         {{- include "ovms.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: ovms
-      {{- if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
+      {{- if .Values.trustedCompute.enabled }}
       annotations:
         io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        {{- if .Values.trustedCompute.tc_gpu_enabled }}
         io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
         io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
-        io.katacontainers.config.hypervisor.enable_virtio_mem: {{ .Values.trustedCompute.tcvm_enable_virtio_mem | quote }}
         cdi-devices.noderesource.dev/container.ovms: |
           {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
           - {{ . }}
           {{- end }}
+        {{- end }}
       {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
@@ -109,13 +110,10 @@ spec:
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"
           {{- if .Values.trustedCompute.enabled }}
+          {{- if .Values.trustedCompute.resources }}
           resources:
-            limits:
-              cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
-              memory: {{ (.Values.resources.limits).memory | default "20Gi" | quote }}
-            requests:
-              cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
-              memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+            {{- toYaml .Values.trustedCompute.resources | nindent 12 }}
+          {{- end }}
           {{- else if or (.Values.resources.requests) (.Values.resources.limits) }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -201,18 +199,17 @@ spec:
             timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
             failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           resources:
-            {{- $res := deepCopy .Values.resources }}
             {{- if .Values.trustedCompute.enabled }}
-            {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
-            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6" "memory" "20Gi")) }}
+            {{- if .Values.trustedCompute.resources }}
+            {{- toYaml .Values.trustedCompute.resources | nindent 12 }}
             {{- end }}
-            {{- if $needsGpu }}
+            {{- else if $needsGpu }}
             {{- $res := deepCopy .Values.resources }}
             {{- $gpuLimits := dict .Values.gpu.resourceName (.Values.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
             {{- toYaml $res | nindent 12 }}
             {{- else }}
-            {{- toYaml $res | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false

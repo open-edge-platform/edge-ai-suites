@@ -121,10 +121,10 @@ spec:
         {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
         resources:
           requests:
-             memory: {{ (.Values.resources.requests).memory | default "2Gi" | quote }}
+             memory: {{ (.Values.resources.requests).memory | default "4Gi" | quote }}
              cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
           limits:
-             memory: {{ (.Values.resources.limits).memory | default "4Gi" | quote }}
+             memory: {{ (.Values.resources.limits).memory | default "6Gi" | quote }}
              cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
         {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}

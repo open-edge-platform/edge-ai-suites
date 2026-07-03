@@ -25,10 +25,14 @@ trustedCompute:
   tc_gpu_enabled: false
   tc_gpu_cdiAnnotations:
     - gpu.intel.com/igpu=tc
-  tcvm_default_memory: "6144"
+  tcvm_default_memory: "16384"
   tcvm_pcie_root_port: "1"
   tcvm_hot_plug_vfio: "root-port"
-  tcvm_enable_virtio_mem: "true"
+  resources:
+    requests:
+      cpu: "4"
+    limits:
+      cpu: "6"
 
 service:
   type: NodePort
