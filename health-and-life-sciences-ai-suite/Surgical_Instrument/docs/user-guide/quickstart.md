@@ -81,11 +81,47 @@ Expect to see the FSM walk through:
 
 ### Open the UI
 
-Once the backend is healthy the UI starts and answers on `http://localhost:8080` (override with `make up UI_HOST_PORT=9090`). The video panel begins streaming inference frames immediately.
+Once the backend is healthy the UI starts and answers on `http://localhost:8080` (override with `make up UI_HOST_PORT=9090`). `make up` and `make run` also print the LAN URL (e.g. `http://10.223.23.206:8080`) so you can open it from another machine on the same network.
+
+Click **Start** in the top toolbar to kick off inference. The video panel begins streaming annotated frames and the KPI blocks on the right start populating within ~1 second.
 
 ---
 
-## 4. Common overrides
+## 4. What the UI shows
+
+Everything on-screen is driven by the backend's `/api/events` SSE stream (~1 Hz snapshot) plus the `/api/video_feed` MJPEG. There is no client-side state polling.
+
+**Left column**
+
+| Block | Source | Notes |
+|---|---|---|
+| Video feed | `/api/video_feed` (MJPEG) | 1080p H.264 source, model-annotated |
+| **Detection Status** (hero card, under the video) | `analytics.polyp_detection` | Live pill (`DETECTED` / `NOT DETECTED`) + confidence, plus a `SESSION` sub-bar with **cumulative polyp detections**, **% of frames with a detection**, and **positive-frame count** — reset on `POST /api/reset`. |
+
+**Right column — Pipeline Performance accordion**
+
+| Column | Source | Meaning |
+|---|---|---|
+| Workload | static | `Polyp Detection` |
+| Model | static | `yolo11n` |
+| Device | `pipeline_performance.workloads[0].device` | Colored pill: `GPU` / `CPU` / `NPU` |
+| FPS | `pipeline_performance.workloads[0].fps` | Rolling mean over the last ~5 s |
+| **Infer** | `pipeline_performance.workloads[0].infer_ms` | Mean OpenVINO inference latency (excludes pre/post) |
+| **P99** | `pipeline_performance.workloads[0].latency_p99_ms` | True p99 of end-to-end frame latency (rolling deque of 120, `numpy.percentile`) |
+| Status | lifecycle FSM | `running` / `paused` / `stopped` |
+
+Below the table:
+
+- **End-to-end summary bar** — pipeline FPS · decode resolution · uptime · total frames processed.
+- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset (`Polyp Detection` on `CVC-ColonDB`), **video source** resolution (e.g. `1080p H.264 (looped)`), **model input** tensor size (`640x640`), and the runtime **device**.
+
+**Right column — Platform accordion**
+
+Live CPU / GPU / NPU utilization from `intel-npu-info` and `nvidia-smi`-style samplers, refreshed on every SSE snapshot.
+
+---
+
+## 5. Common overrides
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -101,7 +137,7 @@ make up UI_HOST_PORT=9000 DETECTION_DEVICE=cpu
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
 | Symptom | Diagnosis / Fix |
 |---|---|
@@ -113,7 +149,7 @@ make up UI_HOST_PORT=9000 DETECTION_DEVICE=cpu
 
 ---
 
-## 6. Stop / clean up
+## 7. Stop / clean up
 
 ```bash
 make down                 # stop + remove containers, keep volumes + IR

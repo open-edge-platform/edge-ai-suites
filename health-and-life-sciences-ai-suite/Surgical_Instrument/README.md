@@ -12,8 +12,22 @@ Real-time polyp detection on endoscopic video using Intel hardware acceleration 
 | **Inference** | Ultralytics (train/export) + OpenVINO 2026.2 (serve) on Intel Arc iGPU via torch+xpu |
 | **Backend** | Flask 3.0 — bootstrap orchestrator + REST + SSE + MJPEG streaming (`backend/main_server.py`) |
 | **UI** | React + Vite + nginx |
-| **Target latency** | < 30 ms end-to-end at 1080p (validated: 18.04 ms end-to-end @ 25 fps on Arc iGPU) |
+| **Target latency** | < 30 ms end-to-end at 1080p (validated: ~23 ms mean, ~28 ms p99 on Arc iGPU) |
 | **First-boot time** | 20–35 min while YOLO11n trains on the iGPU (subsequent boots: seconds — IR is cached) |
+
+## What the UI shows
+
+Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`). After clicking **Start** the left panel begins streaming inference frames and the right column exposes the KPIs a reviewer typically asks for:
+
+- **Video feed** — 1080p H.264 loop with per-frame polyp bounding boxes.
+- **Detection Status card** (hero, under the video)
+  - Live pill: `DETECTED` / `NOT DETECTED` + confidence
+  - `SESSION` sub-bar: cumulative polyp instances, % of frames with a detection, positive-frame count
+- **Pipeline Performance table** — `Workload | Model | Device | FPS | Infer | P99 | Status`. `Infer` is the mean per-frame model latency; `P99` is the true 99th percentile over the last 120 frames (rolling deque + `np.percentile`).
+- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset, video source resolution, model input tensor size, target device (`GPU` / `CPU` / `NPU`).
+- **Platform accordion** — CPU / GPU / NPU utilization from `intel-npu-info` + `nvidia-smi`-style samplers.
+
+All of the above is driven by a single Server-Sent Events stream at `/api/events` (~1 Hz snapshot) and an MJPEG stream at `/api/video_feed`, both proxied through nginx with `proxy_buffering off`.
 
 ## Topology
 
@@ -62,6 +76,28 @@ make ui-dev             # Vite dev server proxied at http://localhost:5173
 ```
 
 See [docs/user-guide/quickstart.md](docs/user-guide/quickstart.md) for the full dataset-drop procedure, GPU passthrough troubleshooting, and health-gating details.
+
+## Repo layout (short)
+
+```
+Surgical_Instrument/
+├── backend/
+│   ├── main_server.py         # bootstrap FSM entrypoint
+│   ├── pipeline/inference.py  # OpenVINO inference worker + rolling p99 stats
+│   └── server/app.py          # Flask REST + SSE snapshot builder
+├── ui/
+│   └── src/
+│       ├── components/DetectionPanel/   # video + hero detection card
+│       ├── components/RightPanel/       # Pipeline Performance + Model & Input + Platform accordions
+│       ├── redux/slices/detectionSlice.ts
+│       ├── redux/middleware/sseMiddleware.ts
+│       └── types/detection.ts
+├── docker-compose.yaml
+├── Makefile                   # up / run / down / logs / clean
+└── docs/user-guide/quickstart.md
+```
+
+> The UI panel + Redux slice were previously named `Nicu*` (layout was ported from the NICU-Warmer reference); as of commit `5f1b3fe2` everything is renamed to `Detection*` for consistency with this app.
 
 ## JIRA
 
