@@ -776,6 +776,7 @@ function createCombinedChart(canvasId) {
                     pointHoverRadius: 3,
                     spanGaps: true
                 },
+                // NPU dataset hidden pending fix
                 {
                     label: 'NPU %',
                     data: [],
@@ -786,7 +787,8 @@ function createCombinedChart(canvasId) {
                     tension: 0.35,
                     pointRadius: 0,
                     pointHoverRadius: 3,
-                    spanGaps: true
+                    spanGaps: true,
+                    hidden: true
                 }
             ]
         },
@@ -809,7 +811,8 @@ function createCombinedChart(canvasId) {
                         boxHeight: 6,
                         padding: 16,
                         font: { size: 11 },
-                        color: '#64748b'
+                        color: '#64748b',
+                        filter: (item, data) => data.datasets[item.datasetIndex].label !== 'NPU %'
                     }
                 },
                 tooltip: {
@@ -955,11 +958,12 @@ function processMetrics(metrics) {
                 }
                 break;
 
-            case 'npu_utilization':
-                npuVal = value;
-                const npuEl = document.getElementById('metrics-npu-val');
-                if (npuEl) npuEl.textContent = value.toFixed(1) + '%';
-                break;
+            // NPU metrics processing disabled pending fix
+            // case 'npu_utilization':
+            //     npuVal = value;
+            //     const npuEl = document.getElementById('metrics-npu-val');
+            //     if (npuEl) npuEl.textContent = value.toFixed(1) + '%';
+            //     break;
         }
     });
 

@@ -164,7 +164,7 @@ services:
       - app_network
 
   alert-agent-service:
-    image: amr-fm-registry.caas.intel.com/esh-user/alert-agent-service:latest
+    image: intel/alert-agent-service:2026.2.0-rc1
     container_name: alert-agent-service
     restart: unless-stopped
     ports:
@@ -197,6 +197,8 @@ services:
       - ACTION_WORKERS=${ACTION_WORKERS:-2}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./resources:/app/resources
     depends_on:
       mqtt:
         condition: service_started

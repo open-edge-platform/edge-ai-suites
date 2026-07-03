@@ -1,0 +1,38 @@
+{{/*
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mqtt.fullname" . }}-data
+  labels:
+    {{- include "mqtt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mqtt-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.data.size }}
+  {{- if .Values.storage.data.storageClassName }}
+  storageClassName: {{ .Values.storage.data.storageClassName }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mqtt.fullname" . }}-log
+  labels:
+    {{- include "mqtt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mqtt-log
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.log.size }}
+  {{- if .Values.storage.log.storageClassName }}
+  storageClassName: {{ .Values.storage.log.storageClassName }}
+  {{- end }}

@@ -2,8 +2,6 @@
 
 ## Version 2026.2.0
 
-**June 23, 2026**
-
 **New**
 
 - **Microservice architecture for action dispatch.** Alert action dispatch
