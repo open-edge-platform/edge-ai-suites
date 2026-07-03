@@ -19,9 +19,9 @@ for your target system, but this is not mandatory.
 
 Install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
-::::{tab-set}
-:::{tab-item} **Ubuntu 24.04**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Depending on your processor type, select one of the following Canonical Ubuntu 24.04 LTS variants:
 
@@ -29,9 +29,9 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 |-|-|-|
 |Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/noble/) Desktop image|Jazzy|
 
-:::
-:::{tab-item}  **Ubuntu 22.04**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 Depending on your processor type, select one of the following Canonical Ubuntu 22.04 LTS variants:
 
@@ -39,8 +39,8 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 |-|-|-|
 |11-13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|Humble|
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
@@ -48,9 +48,9 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 Download and execute the convenience script. Note: This script may take anywhere from 10 to 30 minutes depending on your network and system performance.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 > **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
 > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
@@ -62,9 +62,9 @@ export USE_PROXY=0
 ./setup-robotics-jazzy.sh
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 > **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
 > ``*oneapi*`` ``ros-*`` ``*openvino*`` ``*gazebo*`` ``*realsense*``
@@ -76,8 +76,8 @@ export USE_PROXY=0
 ./setup-robotics-humble.sh
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 > **Note:** If you are behind a network proxy, make sure you have
 > defined ``http_proxy`` and ``https_proxy`` environment variables and
@@ -89,26 +89,26 @@ In order to execute any ROS 2 command in a new shell, you first have to source
 the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your
 ROS 2 communication graph.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=42
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
 export ROS_DOMAIN_ID=42
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 > **Note:** The value 42 serves just as an example. Use an individual ID for every ROS 2
 > node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
@@ -209,9 +209,9 @@ for your target system, but this is not mandatory.
 
 Install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
-::::{tab-set}
-:::{tab-item} **Ubuntu 24.04**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Depending on your processor type, select one of the following Canonical Ubuntu 24.04 LTS variants:
 
@@ -219,9 +219,9 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 |-|-|-|
 |Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
 
-:::
-:::{tab-item}  **Ubuntu 22.04**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 Depending on your processor type, select one of the following Canonical Ubuntu 22.04 LTS variants:
 
@@ -229,8 +229,8 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 |-|-|-|
 |11-13th Generation Intel® Core™ Processors,<br>Intel® Processor N-series (products formerly Alder Lake-N)|22.04 LTS image for Intel IoT platforms, available at [Download Ubuntu image for Intel® IoT platforms](https://ubuntu.com/download/iot/intel-iot)|Humble|
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
@@ -238,20 +238,20 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 To install ROS 2 on your system, follow the **ROS 2 setup guide**:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 [https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 [https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 #### 2.1 Prepare your ROS 2 Environment
 
@@ -259,26 +259,26 @@ In order to execute any ROS 2 command in a new shell, you first have to source
 the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your
 ROS 2 communication graph.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=42
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
 export ROS_DOMAIN_ID=42
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 > **Note:** The value 42 serves just as an example. Use an individual ID for every ROS 2
 > node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
@@ -286,20 +286,20 @@ export ROS_DOMAIN_ID=42
 
 Get more information about **The ROS_DOMAIN_ID** in:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 [documentation](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 [documentation](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Domain-ID.html)
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 #### 2.2 Set up a permanent ROS 2 environment
 
@@ -307,26 +307,26 @@ To simplify the handling of your system, you may add these lines to ``~/.bashrc`
 file. In this way, the required settings are executed automatically
 if a new shell is launched.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
 echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 #### 2.3 Important Notes
 
@@ -399,33 +399,33 @@ The following steps will add the OpenVINO™ APT repository to your package mana
 2. Add the Deb package sources for OpenVINO™ 2025.
    This will allow you to choose your preferred OpenVINO™ version to be installed.
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 3. Run the following commands to create the file ``/etc/apt/preferences.d/intel-openvino``.
 
    This will pin the OpenVINO™ version to 2025.3.0. Earlier versions of OpenVINO™
    might not support inferencing on the NPU of Intel® Core™ Ultra processors.
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2025.3.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -434,9 +434,9 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    echo -e "\nPackage: ros-jazzy-openvino-node\nPin: version 2025.3.0*\nPin-Priority: 1002" | sudo tee -a /etc/apt/preferences.d/intel-openvino
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2025.3.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -445,8 +445,8 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    echo -e "\nPackage: ros-humble-openvino-node\nPin: version 2025.3.0*\nPin-Priority: 1002" | sudo tee -a /etc/apt/preferences.d/intel-openvino
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    If you decide to use a different OpenVINO™ version, ensure that all four packages
    (``openvino-libraries-dev``, ``openvino``, ``ros-jazzy-openvino-wrapper-lib``,
@@ -478,9 +478,9 @@ The following steps will install the OpenVINO™ packages:
 
 4. Clear any previous installation configurations:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt purge ros-jazzy-openvino-node
@@ -488,9 +488,9 @@ The following steps will install the OpenVINO™ packages:
    echo PURGE | sudo debconf-communicate ros-jazzy-openvino-node
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt purge ros-humble-openvino-node
@@ -498,8 +498,8 @@ The following steps will install the OpenVINO™ packages:
    echo PURGE | sudo debconf-communicate ros-humble-openvino-node
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 5. Install the OpenVINO™ Runtime:
 
@@ -509,24 +509,24 @@ The following steps will install the OpenVINO™ packages:
 
 6. Install the ROS 2 OpenVINO™ Toolkit:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo -E apt install ros-jazzy-openvino-node
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo -E apt install ros-humble-openvino-node
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    During the installation of the "openvino-node" package,
    you will be prompted to decide whether to install the OpenVINO™ IR
@@ -541,9 +541,9 @@ The following steps will install the OpenVINO™ packages:
 If you need to reinstall OpenVINO™ or clean your system after a failed
 installation, run the following commands:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt purge ros-jazzy-openvino-node
@@ -552,9 +552,9 @@ echo PURGE | sudo debconf-communicate ros-jazzy-openvino-node
 sudo apt install ros-jazzy-openvino-node
 ```
 
-:::
-:::{tab-item}  **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt purge ros-humble-openvino-node
@@ -563,8 +563,8 @@ echo PURGE | sudo debconf-communicate ros-humble-openvino-node
 sudo -E apt install ros-humble-openvino-node
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### 5. Install RealSense™ Camera SDK
 
@@ -598,9 +598,9 @@ access to commonly used robotic functionality with ease.
 
 4. Install the RealSense drivers and libraries:
 
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive:::::{tab-set}hide_directive-->
+   <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install -y --allow-downgrades ros-jazzy-librealsense2
@@ -608,9 +608,9 @@ access to commonly used robotic functionality with ease.
    sudo apt install librealsense2
    ```
 
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive::::hide_directive-->
+   <!--hide_directive::::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install -y --allow-downgrades ros-humble-librealsense2
@@ -618,8 +618,8 @@ access to commonly used robotic functionality with ease.
    sudo apt install librealsense2
    ```
 
-   ::::
-   :::::
+   <!--hide_directive::::hide_directive-->
+   <!--hide_directive:::::hide_directive-->
 
    > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
 
@@ -639,9 +639,9 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
 2. Follow the instructions to install Gazebo:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get update
@@ -653,9 +653,9 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    sudo apt-get install gz-harmonic
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get update
@@ -667,14 +667,14 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    sudo apt-get update
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 3. Choose the Autonomous Mobile Robot Deb package to install.
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    **ros-jazzy-robotics-sdk**
       The standard version of the Autonomous Mobile Robot. This package includes almost everything except for a handful of tutorials and bag files.
@@ -682,9 +682,9 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    **ros-jazzy-robotics-sdk-complete**
       The complete version of the Autonomous Mobile Robot. It also includes those items excluded from the standard version. Please note that the complete SDK downloads approximately 20GB of additional files.
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    **ros-humble-robotics-sdk**
       The standard version of the Autonomous Mobile Robot. This package includes almost everything except for a handful of tutorials and bag files.
@@ -692,24 +692,24 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    **ros-humble-robotics-sdk-complete**
       The complete version of the Autonomous Mobile Robot. It also includes those items excluded from the standard version. Please note that the complete SDK downloads approximately 20GB of additional files.
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 4. Install the chosen Autonomous Mobile Robot Deb package
 
    Install command example:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt install ros-jazzy-robotics-sdk
    ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    Intel oneAPI requires GCC >= 12, so upgrade GCC as well.
 
@@ -719,8 +719,8 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    sudo apt install ros-humble-robotics-sdk
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    The standard version of the Autonomous Mobile Robot should generally download and install
    all files within just a few minutes. The complete version of the Autonomous Mobile Robot will take
@@ -735,72 +735,72 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
 
    - Intel SSE-only CPU instruction accelerated package for Collaborative SLAM (installed by default):
 
-     :::::{tab-set}
-     ::::{tab-item} **Jazzy**
-     :sync: jazzy
+     <!--hide_directive:::::{tab-set}hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      # Required for Intel® Atom® processor-based systems
      sudo apt-get install ros-jazzy-collab-slam-sse
      ```
 
-     ::::
-     ::::{tab-item} **Humble**
-     :sync: humble
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      # Required for Intel® Atom® processor-based systems
      sudo apt-get install ros-humble-collab-slam-sse
      ```
 
-     ::::
-     :::::
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive:::::hide_directive-->
 
    - Intel AVX2 CPU instruction accelerated package for Collaborative SLAM:
 
-     :::::{tab-set}
-     ::::{tab-item} **Jazzy**
-     :sync: jazzy
+     <!--hide_directive:::::{tab-set}hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      # Works only on Intel® Core™ processor-based systems
      sudo apt-get install ros-jazzy-collab-slam-avx2
      ```
 
-     ::::
-     ::::{tab-item} **Humble**
-     :sync: humble
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      # Works only on Intel® Core™ processor-based systems
      sudo apt-get install ros-humble-collab-slam-avx2
      ```
 
-     ::::
-     :::::
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive:::::hide_directive-->
 
    - Intel GPU Level-Zero accelerated package for Collaborative SLAM:
 
-     :::::{tab-set}
-     ::::{tab-item} **Jazzy**
-     :sync: jazzy
+     <!--hide_directive:::::{tab-set}hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      ```bash
      # Works only on Intel® Core™ processors with Intel® Xe Integrated Graphics or Intel® UHD Graphics
      sudo apt-get install ros-jazzy-collab-slam-lze
      ```
 
-     ::::
-     ::::{tab-item} **Humble**
-     :sync: humble
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
+     <!--hide_directive:sync: humblehide_directive-->
 
      ```bash
      # Works only on Intel® Core™ processors with Intel® Xe Integrated Graphics or Intel® UHD Graphics
      sudo apt-get install ros-humble-collab-slam-lze
      ```
 
-     ::::
-     :::::
+     <!--hide_directive::::hide_directive-->
+     <!--hide_directive:::::hide_directive-->
 
      During the installation of the above packages, you will see a dialogue
      asking you for the GPU generation of your system:
@@ -935,46 +935,46 @@ development.
 
 1. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
    sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
    ```
 
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 2. Install mesa packages from ``kisak`` PPA:
 
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive:::::{tab-set}hide_directive-->
+   <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
    ```
 
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive::::hide_directive-->
+   <!--hide_directive::::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
    ```
 
-   ::::
-   :::::
+   <!--hide_directive::::hide_directive-->
+   <!--hide_directive:::::hide_directive-->
 
 3. Install the latest Linux kernel:
 

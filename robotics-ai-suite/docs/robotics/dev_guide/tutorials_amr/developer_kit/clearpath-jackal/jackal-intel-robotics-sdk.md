@@ -4,24 +4,24 @@ This section shows how to install the Autonomous Mobile Robot with the
 ROS 2 middleware and the Clearpath Robotics ecosystem, on
 the Clearpath Robotics Jackal robot's onboard computer.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 The Jackal robot runs Canonical Ubuntu 24.04 LTS (Noble) and ROS 2 Jazzy
 for this configuration. Intel provides a setup script that installs all
 required Intel and Clearpath software repositories and packages.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 The Jackal robot is equipped with an onboard
 computer that has a pre-installed Canonical Ubuntu 22.04 LTS OS,
 ROS 2 Humble distribution, and the Clearpath Robotics software packages.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 Intel recommends using the pre-installed software for the initial bring-up
 of your Jackal robot. During the initial bring-up, you must update
@@ -35,9 +35,9 @@ before continuing with the next steps.
 
 ## Install ROS 2 Distribution and Autonomous Mobile Robot
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 1. Set the hostname to match the robot serial number:
 
@@ -66,9 +66,9 @@ before continuing with the next steps.
    sudo usermod -a -G sudo administrator
    ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 1. To install the ROS 2 Humble distribution and the Autonomous Mobile Robot on the
 Clearpath Robotics Jackal robot, see the
@@ -83,14 +83,14 @@ as follows:
    sudo usermod -a -G sudo administrator
    ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Install the Clearpath Robotics Software Packages
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Install the ROS 2 development tools:
 
@@ -188,9 +188,9 @@ sudo cp /etc/clearpath/setup.bash /etc/clearpath/setup.bash.bak
 echo 'source /home/intel/clearpath_ws/install/setup.bash' | sudo tee -a /etc/clearpath/setup.bash
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 Install the ROS 2 development tools, which comprises the compilers
 and other tools to build ROS 2 packages. See the official
@@ -208,8 +208,8 @@ section of the Clearpath Robotics documentation. You can install the software th
 - [Option 2: Manual Source Install](https://docs.clearpathrobotics.com/docs/ros/installation/robot/#option-2-manual-source-install),
   which provides detailed instructions on how to install the software with a higher flexibility.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Create Your Robot Configuration
 
@@ -267,9 +267,9 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
      a dynamic address that is assigned by the router of your network.
    - In the ``system/ros2`` section, set the ``namespace`` string.
 
-     ::::{tab-set}
-     :::{tab-item} **Jazzy**
-     :sync: jazzy
+     <!--hide_directive::::{tab-set}hide_directive-->
+     <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+     <!--hide_directive:sync: jazzyhide_directive-->
 
      For ROS 2 Jazzy with the Clearpath platform, use the robot serial
      number as the namespace (without a leading slash), for example
@@ -277,16 +277,16 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
      all platform and sensor topics, and must match the namespace
      configured in the MCU (see [Flash Firmware and Configure the MCU](#flash-firmware-and-configure-the-mcu)).
 
-     :::
-     :::{tab-item} **Humble**
-     :sync: humble
+     <!--hide_directive:::hide_directive-->
+     <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+     <!--hide_directive:sync: humblehide_directive-->
 
      Intel recommends using an empty namespace as used in the Autonomous
      Mobile Robot tutorials. An empty namespace is indicated by a slash
      character: ``namespace: /``
 
-     :::
-     ::::
+     <!--hide_directive:::hide_directive-->
+     <!--hide_directive::::hide_directive-->
 
    - In the ``system/ros2`` section, add the ``domain_id`` entry and set it
      to a value that does not conflict with the ``ROS_DOMAIN_ID`` of
@@ -314,9 +314,9 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    section of the Clearpath Robotics documentation. As an example,
    the following listing shows the first sections of the ``robot.yaml`` file:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    > ```yaml
    > serial_number: j100-<serial>      # e.g. j100-0812
@@ -332,9 +332,9 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    >   ...
    > ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    > ```yaml
    > serial_number: j100-1234
@@ -352,8 +352,8 @@ in the Clearpath Robotics [configuration repository](https://github.com/clearpat
    >   ...
    > ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 1. Copy the ``robot.yaml`` file
    to the ``/etc/clearpath/`` folder on the onboard computer of your
@@ -435,9 +435,9 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 ## Flash Firmware and Configure the MCU
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 1. Flash the MCU firmware:
 
@@ -476,15 +476,15 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 > platform and sensor services own these FastDDS shared-memory segments.
 > Deleting them while the robot services are running will crash all robot nodes.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 See the [Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
 page of the Clearpath Robotics documentation for firmware update instructions.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Verify the Robot Configuration
 
@@ -492,24 +492,24 @@ page of the Clearpath Robotics documentation for firmware update instructions.
 
 1. If not already installed, install the ROS2 TF2 Tools:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt install ros-jazzy-tf2-tools
    ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt install ros-humble-tf2-tools
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 1. Verify that the robot state publisher communicates the correct TF2 tree:
 
@@ -541,25 +541,25 @@ page of the Clearpath Robotics documentation for firmware update instructions.
 
 1. Verify that the required ROS 2 topics are published:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    > **Note:** On Jazzy, all platform and sensor topics are prefixed with
    > the robot namespace, e.g. ``/j100_<serial>/``. The following list uses
    > ``/j100_0123/`` as an example. Camera topics also depend on the
    > installed ``ros-jazzy-realsense2-camera`` version (4.55 vs 4.54).
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    > **Note:** The names of the camera-related topics depend on the version of the
    > ``ros-humble-realsense2-camera`` package on your system. The following list was
    > created on a system with package version 4.55.
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    ```console
    /j100_0123/cmd_vel
@@ -603,48 +603,48 @@ page of the Clearpath Robotics documentation for firmware update instructions.
 
 1. To see the installed package version on your board, run:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    apt show ros-jazzy-realsense2-camera
    ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    apt show ros-humble-realsense2-camera
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    The following table shows how the names of the camera-related topics
    depend on the package version.
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    |Version of ``ros-jazzy-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55 (``ros_parameters`` key: ``camera``)|``/j100_<serial>/sensors/camera_0/camera/``|
    |4.54 (``ros_parameters`` key: ``intel_realsense``)|``/j100_<serial>/sensors/camera_0/``|
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    |Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55|``/sensors/camera_0/camera/``|
    |4.54|``/sensors/camera_0/``|
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 ## Jackal Troubleshooting
 
@@ -656,9 +656,9 @@ grep domain_id /etc/clearpath/robot.yaml
 echo $ROS_DOMAIN_ID
 ```
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Ensure ``ROBOT_NAMESPACE`` is set before running any wandering scripts:
 
@@ -692,14 +692,14 @@ sudo systemctl restart clearpath-platform
 > sudo systemctl start clearpath-platform
 > ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 Verify that you are logged in as the ``administrator`` user.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 If ROS 2 topics are missing (see the [verify ROS topics](#verify-the-ros-2-topics) section),
 check whether the required services are up and running:

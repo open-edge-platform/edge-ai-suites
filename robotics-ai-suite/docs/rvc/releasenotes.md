@@ -4,8 +4,8 @@
 
 Click each tab to learn about the new and updated features in each release of Stationary Robot.
 
-::::{tab-set}
-:::{tab-item} RVC v2.1
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> RVC v2.1
 
 RVC v2.1 release includes bug and security updates as well as Intel Lab's Histodepth Pointcloud Segmentation algorithm in a Virtual Fence application.
 
@@ -18,8 +18,8 @@ RVC v2.1 release includes bug and security updates as well as Intel Lab's Histod
 
 **Known Limitations and Issues**
 
-:::
-:::{tab-item} RVC v2.0
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> RVC v2.0
 
 RVC v2.0 provides a SW framework to control a robot based on vision based object detection.
 It's a collection of SW components that can be deployed provided a debian packages.
@@ -73,8 +73,8 @@ RVC focuses on demonstrating consolidation of the following functionalities:
 | trac-ik-lib | `ros-humble-trac-ik-lib_0.1.0jammy_amd64.deb` | TRAC-IK is a faster, significantly more reliable drop-in replacement for KDL's pseudoinverse Jacobian solver. |
 | ur-pendant-motion-controller | `ros-humble-ur-pendant-motion-controller_1.0.0jammy_amd64.deb` | Direct Universal Robot pendant controller. |
 
-:::
-:::{tab-item} RVC v1.0
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> RVC v1.0
 
 Initial release of Robot Vision & Control Framework (RVC).
 RVC allows closed loop automatic object recognition and robot manipulation of a set of moving objects.
@@ -91,5 +91,5 @@ RVC allows closed loop automatic object recognition and robot manipulation of a 
 - Only the Universal Robots™ family has been tested (more specifically, UR5e), the Robotiq 2F-85 Gripper and D415 Intel® RealSense™ Camera.
 - Only one object can be placed under the camera. Multiple objects could work, however there are known issues. For this release, make sure that there is only one object under the camera or none.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->

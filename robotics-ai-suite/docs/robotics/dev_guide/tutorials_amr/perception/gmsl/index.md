@@ -18,5 +18,5 @@ Follow the instructions on [GMSL Guide](https://docs.openedgeplatform.intel.com/
 
 icamera-usm
 
-:::
+<!--hide_directive:::hide_directive-->
 
