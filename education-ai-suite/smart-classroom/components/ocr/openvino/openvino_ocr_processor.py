@@ -201,3 +201,11 @@ class OpenVINOOCRProcessor(BaseOCR):
             return ""
         lines = [item[1][0] for item in result[0]]
         return "\n".join(lines)
+
+    def extract_text_with_scores(self, file_path) -> Tuple[str, List[float]]:
+        result = self.ocr(file_path)
+        if not result or not result[0]:
+            return "", []
+        lines = [item[1][0] for item in result[0]]
+        scores = [float(item[1][1]) for item in result[0]]
+        return "\n".join(lines), scores

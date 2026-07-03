@@ -22,7 +22,7 @@ dependencies = [
 
     # Agentic framework
     "google-adk>=1.28.1",
-    "litellm>=1.83.14",        # LiteLlm bridge for ADK → local OVMS inference
+    "litellm>=1.83.14",         # LiteLlm bridge for ADK → local OVMS inference
 
     # Action tools
     "aiohttp>=3.13.4",       # webhook tool
