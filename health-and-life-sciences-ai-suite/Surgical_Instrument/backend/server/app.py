@@ -518,8 +518,15 @@ def events() -> Response:
 def frame_latest() -> Response:
     jpeg = _current_jpeg()
     if request.args.get("base64"):
+        # "available" mirrors _current_jpeg's real output: live worker frame OR
+        # the frozen last-session frame. Without this the UI treats every
+        # post-Stop poll as a miss and shows a stale-overlay spinner.
+        available = (
+            (_worker is not None and _worker.latest_frame_jpeg() is not None)
+            or _last_frame_jpeg is not None
+        )
         return jsonify({
-            "available": _worker is not None and _worker.latest_frame_jpeg() is not None,
+            "available": available,
             "data": base64.b64encode(jpeg).decode("ascii"),
         })
     return Response(jpeg, mimetype="image/jpeg")
