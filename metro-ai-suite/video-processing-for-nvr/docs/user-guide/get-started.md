@@ -7,10 +7,8 @@ The sample application is based on the Video Processing Platform SDK. It can run
 - **Time to Complete:** 20min
 - **Programming Language:** C++
 
-> **Note:** This guide covers the video analytic and transcoding example applications in the
-> `example` folder. To configure and run NVR composition and multi-display workloads from
-> configuration files, use **SVET2** instead — see the [SVET2 Guide](./svet-guide.md). For the
-> underlying architecture, see [How It Works](./how-it-works.md).
+> **Note:** This guide covers the Video Analytic and Transcoding example applications in the
+> `example` folder.
 
 ## Prerequisites
 
@@ -124,23 +122,23 @@ $ source /opt/intel/vppsdk/env.sh
 $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
 
-Then run `build.sh` to build the video analytic application binary:
+Then run `build.sh` to build the Video Analytic application binary:
 
 ```
 $ cd example/VA_example/decode_detection/surface_map
 $ ./build.sh
 ```
 
-If the `build.sh` runs successfully, you can find `dec_det` binary under the build directory.
+If the `build.sh` runs successfully, you can find the `dec_det` binary under the build directory.
 
 ## Run the Sample Application
 
 ### 1 Download and convert the model
 
-You can download and convert the YOLO model with [OpenVINO™ notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov11-optimization/yolov11-object-detection.ipynb), you will get `yolov11n_with_preprocess.xml` after successful model download and conversion.
+You can download and convert the YOLO model with [OpenVINO™ notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/2026.0/notebooks/yolov8-optimization/yolov8-object-detection.ipynb), you will get `yolov8n_with_preprocess.xml` after successful model download and conversion.
 
 ```
-https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov11-optimization/yolov11-object-detection.ipynb
+https://github.com/openvinotoolkit/openvino_notebooks/blob/2026.0/notebooks/yolov8-optimization/yolov8-object-detection.ipynb
 ```
 
 ### 2 Switch to root and set environment variables
@@ -156,12 +154,12 @@ Before running the sample application, make sure the environment variables are s
 
 > **Note:** the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
 
-### 3 Run basic video analytic pipeline
+### 3 Run a basic Video Analytic pipeline
 
-Run video decode + detection with YOLO detection model
+Run video decode + detection with YOLO detection model:
 
 ```
-./dec_det yolov11n_with_preprocess.xml
+./dec_det yolov8n_with_preprocess.xml
 ```
 
 Logs will be displayed upon successful execution. Sample output is shown below:
