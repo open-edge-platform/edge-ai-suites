@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useAppSelector } from '../../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import Accordion from '../common/Accordion';
 import { api, type Device } from '../../services/api';
+import { setActiveDevice } from '../../redux/slices/detectionSlice';
 import '../../assets/css/RightPanel.css';
 
 const DEVICE_COLORS: Record<string, string> = {
@@ -31,6 +32,7 @@ export function PipelinePerformanceAccordion() {
 
   const [deviceError, setDeviceError] = useState<string>('');
   const [deviceBusy, setDeviceBusy] = useState(false);
+  const dispatch = useAppDispatch();
 
   const handleDeviceChange = async (newDevice: Device) => {
     if (deviceBusy || isRunning) return;
@@ -38,7 +40,9 @@ export function PipelinePerformanceAccordion() {
     setDeviceError('');
     try {
       await api.setDevice(newDevice);
-      // Backend publishes a fresh snapshot; SSE will update the pill on its own.
+      // Optimistically reflect the change immediately — SSE is closed while stopped,
+      // so the pill/Model Info would otherwise stay stale until the next Start.
+      dispatch(setActiveDevice(newDevice));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setDeviceError(msg);

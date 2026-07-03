@@ -39,6 +39,22 @@ const detectionSlice = createSlice({
       state.data = initialState.data;
       state.expandedSection = null;
     },
+    setActiveDevice(state, action: PayloadAction<string>) {
+      // Optimistic device swap for the frozen post-stop state: SSE is closed,
+      // so patch the pill + Model Info block directly until the next Start
+      // pulls a fresh snapshot from the backend.
+      const dev = action.payload;
+      if (state.data.modelInfo) {
+        state.data.modelInfo = { ...state.data.modelInfo, device: dev };
+      }
+      const wls = state.data.pipelinePerformance?.workloads ?? [];
+      state.data.pipelinePerformance = {
+        ...state.data.pipelinePerformance,
+        workloads: wls.length > 0
+          ? wls.map((w, i) => (i === 0 ? { ...w, device: dev } : w))
+          : [{ name: 'Polyp Detection', device: dev, fps: 0, status: 'stopped' } as any],
+      };
+    },
     setExpandedSection(state, action: PayloadAction<'video' | null>) {
       state.expandedSection =
         state.expandedSection === action.payload ? null : action.payload;
@@ -46,5 +62,5 @@ const detectionSlice = createSlice({
   },
 });
 
-export const { updateDetectionState, patchDetectionState, resetDetectionState, setExpandedSection } = detectionSlice.actions;
+export const { updateDetectionState, patchDetectionState, resetDetectionState, setActiveDevice, setExpandedSection } = detectionSlice.actions;
 export default detectionSlice.reducer;
