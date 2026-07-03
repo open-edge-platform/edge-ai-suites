@@ -3,7 +3,7 @@
 
 global:
   externalIP: ""  # Required: IP of a cluster node reachable from your browser
-  keepPvc: true
+  keepPvc: false
 
   # Hugging Face token — required only for initial download of gated models.
   huggingfaceToken: ""
@@ -41,8 +41,6 @@ app:
     # repository: ""
     # tag: ""
   # rtspUrl: "rtsp://<host>:<port>/<stream>"
-  nodeSelector:
-   kubernetes.io/hostname: 
 
   # Video capture
   captureFps: 10

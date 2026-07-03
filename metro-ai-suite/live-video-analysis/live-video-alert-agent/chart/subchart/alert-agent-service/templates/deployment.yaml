@@ -18,6 +18,10 @@ spec:
         app: {{ include "alert-agent-service.fullname" . }}
         app.kubernetes.io/component: alert-agent-service
         app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- if .Values.subscriptions }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- end }}
     spec:
       serviceAccountName: {{ include "alert-agent-service.serviceAccountName" . }}
       automountServiceAccountToken: false
@@ -90,6 +94,10 @@ spec:
               value: {{ .Values.mcpEnabled | quote }}
             - name: ACTION_WORKERS
               value: {{ .Values.actionWorkers | quote }}
+            {{- if .Values.subscriptions }}
+            - name: SUBSCRIPTION_CONFIG_PATH
+              value: "/app/resources/config.yaml"
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.port }}
@@ -127,6 +135,19 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if .Values.subscriptions }}
+          volumeMounts:
+            - name: subscription-config
+              mountPath: /app/resources/config.yaml
+              subPath: config.yaml
+              readOnly: true
+          {{- end }}
+      {{- if .Values.subscriptions }}
+      volumes:
+        - name: subscription-config
+          configMap:
+            name: {{ include "alert-agent-service.fullname" . }}-config
+      {{- end }}
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

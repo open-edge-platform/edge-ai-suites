@@ -198,7 +198,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./resources:/app/resources
+      - ./resources/config.yaml:/app/resources/config.yaml:ro
+      - ./resources/mcp_server.json:/app/resources/mcp_server.json:ro
+      - ./resources/streams.json:/app/resources/streams.json:ro
     depends_on:
       mqtt:
         condition: service_started
