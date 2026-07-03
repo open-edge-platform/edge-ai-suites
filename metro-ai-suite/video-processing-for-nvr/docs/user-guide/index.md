@@ -25,31 +25,13 @@ GPUs.
 This sample application uses the Video Processing Platform SDK as a reference for various video-processing use
 cases:
 
-- **Smart Video Evaluation Tool 2 (SVET2)** — a configuration-driven reference application for
-  the NVR scenario.
 - **Reference sample applications** — located in the `example` folder, these are built with
-  the Video Processing Platform SDK APIs to construct video analytic and transcoding workflows (for example, decode +
+  the Video Processing Platform SDK APIs to construct Video Analytic and Transcoding workflows (for example, decode +
   post-processing + YOLO/ResNet inference, and decode + post-processing + encode).
+- **Smart Video Evaluation Tool 2 (SVET2)** (legacy solution) — a configuration-driven reference application for
+  the NVR scenario. For the detailed workflow and configuration reference, see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md).
 
 - **Programming Language:** C/C++
-
-## Smart Video Evaluation Tool 2
-
-**Smart Video Evaluation Tool 2 (SVET2)** is the NVR-focused reference application shipped
-with this sample; its binary is `svet_app` and its sources live under the `svet2/` folder.
-
-Rather than requiring you to write code, SVET2 is driven entirely by a text **configuration
-file**. In that file you describe an NVR workload — video decode, composition (multiview),
-and concurrent display — and `svet_app` reads the file and executes the workload accordingly.
-Ready-made configuration files are provided under `svet2/svet_app/sample_config`.
-
-Use SVET2 to:
-
-- Configure concurrent NVR workloads (decode, post-processing, composition, multi-display).
-- Evaluate runtime performance and channel density on Intel integrated and discrete GPUs.
-- Debug and tune core video-processing pipelines without changing source code.
-
-For the detailed workflow and configuration reference, see the [SVET2 Guide](./svet-guide.md).
 
 ## How It Works
 
@@ -59,8 +41,7 @@ architecture, see [How It Works](./how-it-works.md).
 
 ## Learn More
 
-- [Get Started](./get-started.md): Build and run the video analytic and transcoding reference applications.
-- [SVET2 Guide](./svet-guide.md): Configure and run NVR composition and display workloads with SVET2.
+- [Get Started](./get-started.md): Build and run the Video Analytic and Transcoding reference applications.
 - [How It Works](./how-it-works.md): Understand the Video Processing Platform SDK architecture and the SVET2 application design.
 - [Release Notes](./release-notes.md): Review the latest changes.
 
@@ -69,7 +50,6 @@ architecture, see [How It Works](./how-it-works.md).
 :hidden:
 
 ./get-started
-SVET2 Guide <./svet-guide.md>
 ./how-it-works
 Release Notes <./release-notes.md>
 

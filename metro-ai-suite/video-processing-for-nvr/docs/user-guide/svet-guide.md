@@ -1,7 +1,15 @@
+<!--hide_directive
+```{eval-rst}
+:orphan:
+```
+hide_directive-->
+
 # Smart Video Evaluation Tool 2 Guide
 
 - **Time to Complete:** 20min
 - **Programming Language:** C++
+
+> **Note:** SVET2 is a legacy solution.
 
 ## About SVET2
 
@@ -13,7 +21,7 @@ SVET2 well suited for performance evaluation and as an implementation reference.
 
 This guide covers installing the dependencies, building `svet_app`, and running example NVR
 workloads from configuration files. For the workload model and the high-level architecture of
-`svet_app`, see [How It Works](./how-it-works.md).
+`svet_app`, see [How It Works](./how-it-works.md#svet2-application-architecture).
 
 `svet_app` uses a configuration file to specify the parameters of each function block, like
 the input video file path, codec, a display channel's position on the video layer, the video
@@ -21,7 +29,7 @@ layer's resolution, and the composition fps. The `svet2/sample_config` folder co
 configuration files. For descriptions of each configuration file and the configuration options,
 refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
-### Prerequisites
+## Prerequisites
 
 **Operating System:**
 
@@ -39,7 +47,9 @@ Install Ubuntu\* 24.04, set up the network correctly, and run the sudo apt updat
 
 ### 2 Install Software Dependencies
 
-The `svet_app` sample application depends on the Video Processing Platform SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.
+The `svet_app` sample application depends on the Video Processing Platform SDK for video decode,
+encoding, and post-processing functionalities. It also depends on the live555 library for RTSP
+streaming.
 
 #### 2.1 Install the Video Processing Platform SDK
 
@@ -131,7 +141,7 @@ Then run `build.sh` to build the `svet_app` binary:
 $ ./build.sh
 ```
 
-If the `build.sh` runs successfully, you can find `svet_app` binary under the build directory.
+If the `build.sh` runs successfully, you can find the `svet_app` binary under the build directory.
 
 ## Run the svet_app Sample Application
 
@@ -159,7 +169,7 @@ Before running the sample application, make sure the environment variables are s
 
 > **Note:** the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
 
-### 3 Run Basic Decode and Display Pipeline
+### 3 Run a basic Decode and Display pipeline
 
 Run the command below:
 
@@ -197,7 +207,7 @@ Configuration file `sample_config/multiview/16dec_4kdisp.txt` defines workload t
 ```
 
 You will see a 4x4 video on display:
-![Architecture](./_images/svet-16dec_4kdisp.png)
+![Architecture](./_assets/svet-16dec_4kdisp.png)
 Figure 3. Screenshot of sample_config/multiview/16dec_4kdisp.txt
 The following is the first line of sample_config/multiview/16dec_4kdisp.txt:
 

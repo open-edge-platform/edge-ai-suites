@@ -19,14 +19,10 @@ The sample application depends on the Video Processing Platform SDK and [live555
 
 ## Table of contents
 
-- [License](#license)
 - [System requirements](#system-requirements)
 - [How to build](#how-to-build)
 - [Known limitations](#known-limitations)
-
-## License
-
-The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).
+- [License](#license)
 
 ## System requirements
 
@@ -72,3 +68,7 @@ The sample application is licensed under [APACHE 2.0](https://github.com/open-ed
 ## Known limitations
 
 The sample application has been validated on Intel® platforms Arrow Lake, Meteor Lake, Raptor Lake, Adler Lake and Tiger Lake
+
+## License
+
+The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).

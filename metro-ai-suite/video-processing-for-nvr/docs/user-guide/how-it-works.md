@@ -2,13 +2,13 @@
 
 Video Processing for NVR is built on the **Video Processing Platform SDK**. This
 section explains the underlying platform, the SDK architecture, and how the reference
-applications — including **SVET2** — are constructed on top of it.
+applications are constructed on top of it.
 
 ## Intel® Video Processing Platform
 
-![Video Processing Platform](./_images/VPP.png)
+![Video Processing Platform](./_assets/VPP.png)
 
-<center>Figure 1: Intel® Video Processing Platform</center>
+*Figure 1: Intel® Video Processing Platform*
 
 The Intel® Video Processing Platform is a collection of video-processing functions in the following
 areas:
@@ -31,9 +31,9 @@ usually offloaded to accelerators like GPUs.
 
 ## Intel GPU
 
-![GPU](./_images/GPU.png)
+![GPU](./_assets/GPU.png)
 
-<center>Figure 2: Intel® GPU</center>
+*Figure 2: Intel® GPU*
 
 The Intel® integrated GPU is part of the Intel® Core™/Celeron® CPU. It has strong capability for
 graphics and parallel computing tasks, including Media, Display, and AI/CV. Consequently,
@@ -41,9 +41,9 @@ an Intel Core/Celeron CPU can be a good option for the core processor of a VPP p
 
 ## Video Processing Platform SDK Architecture
 
-![architecture](./_images/architecture.png)
+![architecture](./_assets/architecture.png)
 
-<center>Figure 3: Video Processing Platform SDK Architecture</center>
+*Figure 3: Video Processing Platform SDK Architecture*
 
 The Video Processing Platform SDK provides a set of APIs to construct pipelines with functions like video encoding,
 post-processing, and display on the Linux platform. With these APIs, you can build your
@@ -68,9 +68,9 @@ The Video Processing Platform SDK provides different types of streams:
 - Video capture
 - Audio in/out
 
-![pipeline](./_images/pipeline.png)
+![pipeline](./_assets/pipeline.png)
 
-<center>Figure 4: Video Processing Platform SDK Pipeline Construction Illustration</center>
+*Figure 4: Video Processing Platform SDK Pipeline Construction Illustration*
 
 You can bind a decode stream to a post-processing stream and then bind it to a display
 stream, or bind a decode stream directly to a display stream to set up a pipeline. After
@@ -78,6 +78,8 @@ pipeline setup, switch the stream state to running, or stop to control the pipel
 state.
 
 ## SVET2 Application Architecture
+
+> **Note:** SVET2 is a legacy solution. You can see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md) for details on how to use it.
 
 **SVET2 (Smart Video Evaluation Tool 2)** is the reference NVR application built on the Video
 Processing Platform SDK. Its binary is `svet_app`. SVET2 is configuration-driven: instead of
@@ -87,9 +89,9 @@ runtime performance and for debugging core video-processing workloads without mo
 
 Figure 5 shows a typical multi-channel decode, composition, and display workload.
 
-![Multi-channel](./_images/svet-Multi-channel.png)
+![Multi-channel](./_assets/svet-Multi-channel.png)
 
-<center>Figure 5: Multi-channel Decode, Composition, and Display Workload</center>
+*Figure 5: Multi-channel Decode, Composition, and Display Workload*
 
 The workload above includes several blocks: an input video file reader or RTSP reader, a
 decoder, display channels, video layers, and a display. A display channel represents an area
@@ -102,9 +104,9 @@ the video layer's resolution, and the composition fps. The [sample_config](https
 sample configuration files; for descriptions of each configuration file, refer to
 [sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
-![Architecture](./_images/svet-Architecture.png)
+![Architecture](./_assets/svet-Architecture.png)
 
-<center>Figure 6: High-level Architecture of svet_app</center>
+*Figure 6: High-level Architecture of svet_app*
 
 As shown in Figure 6, `svet_app` consists of four main blocks: RTSP streaming input; video
 decode / post-process / composition / display; a configuration parser; and a pipeline
@@ -112,5 +114,5 @@ manager. It depends on the live555 and Video Processing Platform SDK libraries.
 
 ## Learn More
 
-- [Get Started](./get-started.md): Build and run the video analytic and transcoding reference applications.
-- [SVET2 Guide](./svet-guide.md): Configure and run NVR composition and display workloads with SVET2.
+- [Get Started](./get-started.md): Build and run the Video Analytic and Transcoding reference applications.
+- [Release Notes](./release-notes.md): Review the latest changes.
