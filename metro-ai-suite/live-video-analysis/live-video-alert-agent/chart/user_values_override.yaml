@@ -2,7 +2,7 @@
 # RESET ALL VALUES TO THEIR DEFAULTS BEFORE COMMITTING OR PUSHING.
 
 global:
-  externalIP: "10.223.22.127"  # Required: IP of a cluster node reachable from your browser
+  externalIP: ""  # Required: IP of a cluster node reachable from your browser
   keepPvc: true
 
   # Hugging Face token — required only for initial download of gated models.
@@ -10,8 +10,8 @@ global:
 
   # Proxy settings
   proxy:
-    httpProxy: "http://proxy-dmz.intel.com:911"
-    httpsProxy: "http://proxy-dmz.intel.com:912"
+    httpProxy: ""
+    httpsProxy: ""
     noProxy: "localhost,127.0.0.1,.svc.cluster.local"
 
   appNodePort:
@@ -21,7 +21,7 @@ global:
 
   # Node selector applied globally (used by metrics-manager, alert-agent-service)
   nodeSelector:
-    kubernetes.io/hostname: worker5
+    kubernetes.io/hostname: 
 
   # GPU controls
   gpu:
@@ -32,7 +32,7 @@ global:
     device: "GPU"
     # GIDs for GPU device access. Verify on your node: getent group render video | cut -d: -f3
     # supplementalGroups: [109, 110, 992]
-    
+
 app:
   # Set registry to override global.registry for the app image only.
   # Use this when the app image is in a different registry than other components.
@@ -42,7 +42,7 @@ app:
     # tag: ""
   # rtspUrl: "rtsp://<host>:<port>/<stream>"
   nodeSelector:
-   kubernetes.io/hostname: worker5
+   kubernetes.io/hostname: 
 
   # Video capture
   captureFps: 10
