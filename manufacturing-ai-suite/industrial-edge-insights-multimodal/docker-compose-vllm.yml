@@ -1,0 +1,52 @@
+#
+# Apache v2 license
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+services:
+  vllm-server:
+    image: ${VLLM_IMAGE}:${VLLM_IMAGE_TAG}
+    container_name: ${VLLM_CONTAINER_NAME}
+    restart: unless-stopped
+    shm_size: ${VLLM_SHM_SIZE}
+    ports:
+      - "${VLLM_PORT}:${VLLM_PORT}"
+    devices:
+      - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
+    group_add:
+      - "109"
+      - "110"
+      - "992"
+      - "993"
+    volumes:
+      - /dev/dri/by-path:/dev/dri/by-path:ro
+      - "/run/udev:/run/udev:ro"
+      - ${FINE_TUNING_HOST_PATH}:/checkpoints
+    environment:
+      VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
+    command:
+      - vllm
+      - serve
+      - ${VLLM_MODEL_NAME}
+      - --dtype=${VLLM_DTYPE}
+      - --enforce-eager
+      - --port
+      - ${VLLM_PORT}
+      - --block-size
+      - ${VLLM_BLOCK_SIZE}
+      - --gpu-memory-utilization
+      - ${VLLM_GPU_MEMORY_UTILIZATION}
+      - --no-enable-prefix-caching
+      - --trust-remote-code
+      - --max-num-batched-tokens=${VLLM_MAX_NUM_BATCHED_TOKENS}
+      - --max-model-len
+      - ${VLLM_MAX_MODEL_LEN}
+      - --served-model-name
+      - ${VLLM_SERVED_MODEL_NAME}
+      - --enable-lora
+      - --lora-modules
+      - ${VLLM_LORA_ADAPTER_NAME}=${VLLM_LORA_ADAPTER_PATH}
+      - -tp=${VLLM_TENSOR_PARALLEL_SIZE}
+      - --quantization
+      - ${VLLM_QUANTIZATION}
