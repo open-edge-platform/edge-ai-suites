@@ -118,14 +118,29 @@ def _map_fsm_to_lifecycle(fsm_state: str, worker_running: bool) -> str:
 
 def _snapshot_full() -> dict[str, Any]:
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
-    inf = _worker.stats() if _worker else {"running": False, "delivered_fps": 0.0,
-                                            "infer_mean_ms": 0.0, "total_mean_ms": 0.0}
+    inf = _worker.stats() if _worker else {
+        "running": False, "delivered_fps": 0.0,
+        "infer_mean_ms": 0.0, "infer_p99_ms": 0.0,
+        "total_mean_ms": 0.0, "total_p99_ms": 0.0,
+        "frame_id": 0, "uptime_s": 0.0,
+        "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
+    }
     dets = _worker.latest_detections() if _worker else {"detections": []}
     detections = dets.get("detections", [])
     n_polyp = sum(1 for d in detections if str(d.get("class_name", "")).lower() == "polyp")
     conf = max((float(d.get("confidence", 0.0)) for d in detections), default=0.0)
     fps = float(inf.get("delivered_fps", 0.0))
     latency = float(inf.get("total_mean_ms", 0.0))
+    infer_ms = float(inf.get("infer_mean_ms", 0.0))
+    total_p99 = float(inf.get("total_p99_ms", 0.0))
+    infer_p99 = float(inf.get("infer_p99_ms", 0.0))
+
+    cfg = _cfg or {}
+    model_cfg = cfg.get("model", {}) or {}
+    ds_cfg = cfg.get("dataset", {}) or {}
+    pipe_cfg = cfg.get("pipeline", {}) or {}
+    infer_size = int(pipe_cfg.get("infer_size", 640))
+    out_w, out_h = tuple(pipe_cfg.get("output_size", (1920, 1080)))
 
     return {
         "lifecycle": STATE.lifecycle,
@@ -135,11 +150,19 @@ def _snapshot_full() -> dict[str, Any]:
                 "detected": n_polyp > 0,
                 "count": n_polyp,
                 "confidence": round(conf, 3),
+                "cumulative_detections": int(inf.get("cumulative_detections", 0)),
+                "frames_with_detection": int(inf.get("frames_with_detection", 0)),
+                "detection_rate": round(float(inf.get("detection_rate", 0.0)), 4),
             },
         },
         "metrics": {
             "fps": round(fps, 2),
             "loop_count": int(inf.get("frame_id", 0)),
+            "uptime_s": round(float(inf.get("uptime_s", 0.0)), 1),
+            "infer_mean_ms": round(infer_ms, 2),
+            "infer_p99_ms": round(infer_p99, 2),
+            "total_mean_ms": round(latency, 2),
+            "total_p99_ms": round(total_p99, 2),
         },
         "frame": _worker is not None and _worker.latest_frame_jpeg() is not None,
         "pipeline_performance": {
@@ -148,12 +171,21 @@ def _snapshot_full() -> dict[str, Any]:
                 "device": STATE.device,
                 "status": "running" if STATE.lifecycle in LIFECYCLE_RUN else "stopped",
                 "fps": round(fps, 2),
+                "infer_ms": round(infer_ms, 2),
                 "latency_ms": round(latency, 2),
-                "latency_p99_ms": round(inf.get("total_mean_ms", 0.0) * 1.2, 2),
-                "infer_ms": round(float(inf.get("infer_mean_ms", 0.0)), 2),
+                "latency_p99_ms": round(total_p99, 2),
             }],
             "pipeline_fps": round(fps, 2),
-            "decode": "1080p H.264",
+            "decode": f"{out_w}x{out_h} H.264",
+        },
+        "model_info": {
+            "name": model_cfg.get("name", "yolo11n"),
+            "precision": "FP16 OpenVINO IR",
+            "task": "Polyp Detection",
+            "dataset": ds_cfg.get("name", "CVC-ColonDB"),
+            "input_source": f"{out_h}p H.264 (looped)",
+            "model_input": f"{infer_size}x{infer_size}",
+            "device": STATE.device,
         },
     }
 

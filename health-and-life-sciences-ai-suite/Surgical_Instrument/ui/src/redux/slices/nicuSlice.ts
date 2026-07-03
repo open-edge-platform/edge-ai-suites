@@ -9,11 +9,18 @@ interface NicuSliceState {
 const initialState: NicuSliceState = {
   data: {
     systemStatus: 'ready',
-    polyp: { detected: false, count: 0, confidence: 0 },
+    polyp: {
+      detected: false, count: 0, confidence: 0,
+      cumulative_detections: 0, frames_with_detection: 0, detection_rate: 0,
+    },
     pipelinePerformance: { workloads: [], pipeline_fps: 0, decode: '' },
+    modelInfo: null,
     frameUrl: null,
     fps: 0,
     uptime: 0,
+    totalFrames: 0,
+    inferP99Ms: 0,
+    totalP99Ms: 0,
   },
   expandedSection: null,
 };

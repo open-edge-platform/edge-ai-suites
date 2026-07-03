@@ -58,6 +58,9 @@ export const sseMiddleware: Middleware = (store) => {
               detected: !!p.detected,
               count: p.count ?? 0,
               confidence: p.confidence ?? 0,
+              cumulative_detections: p.cumulative_detections ?? 0,
+              frames_with_detection: p.frames_with_detection ?? 0,
+              detection_rate: p.detection_rate ?? 0,
             };
           }
           if (payload.frame !== undefined) {
@@ -65,7 +68,10 @@ export const sseMiddleware: Middleware = (store) => {
           }
           if (payload.metrics !== undefined) {
             nicuPatch.fps = payload.metrics.fps ?? 0;
-            nicuPatch.uptime = payload.metrics.loop_count ?? 0;
+            nicuPatch.totalFrames = payload.metrics.loop_count ?? 0;
+            nicuPatch.uptime = payload.metrics.uptime_s ?? 0;
+            nicuPatch.inferP99Ms = payload.metrics.infer_p99_ms ?? 0;
+            nicuPatch.totalP99Ms = payload.metrics.total_p99_ms ?? 0;
           }
           if (payload.pipeline_performance !== undefined) {
             nicuPatch.pipelinePerformance = {
@@ -73,6 +79,9 @@ export const sseMiddleware: Middleware = (store) => {
               pipeline_fps: payload.pipeline_performance.pipeline_fps ?? 0,
               decode: payload.pipeline_performance.decode ?? '',
             };
+          }
+          if (payload.model_info !== undefined) {
+            nicuPatch.modelInfo = payload.model_info;
           }
 
           store.dispatch(patchNicuState(nicuPatch));

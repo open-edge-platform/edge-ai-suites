@@ -46,6 +46,10 @@ const NicuPanel: React.FC<NicuPanelProps> = ({ expanded = false }) => {
             detected={nicu.polyp.detected}
             confidence={nicu.polyp.detected ? nicu.polyp.confidence : null}
             detail={detail}
+            hero
+            sessionCumulative={nicu.polyp.cumulative_detections}
+            sessionFrames={nicu.polyp.frames_with_detection}
+            sessionRate={nicu.polyp.detection_rate}
           />
         </div>
       </div>

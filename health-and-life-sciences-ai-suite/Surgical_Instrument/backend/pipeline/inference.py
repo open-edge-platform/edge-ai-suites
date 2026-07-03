@@ -248,6 +248,8 @@ class InferenceWorker:
         self._start_time = 0.0
         self._recent_latencies: deque[float] = deque(maxlen=120)
         self._recent_infer_ms: deque[float] = deque(maxlen=120)
+        self._frames_with_detection = 0
+        self._cumulative_detections = 0
         self._error: Optional[str] = None
 
     # -- lifecycle -----------------------------------------------------------
@@ -283,19 +285,24 @@ class InferenceWorker:
         with self._lock:
             wall = time.perf_counter() - self._start_time if self._start_time else 0.0
             fps = (self._frame_id / wall) if wall > 0 else 0.0
-            infer_mean = (
-                float(np.mean(self._recent_infer_ms)) if self._recent_infer_ms else 0.0
-            )
-            total_mean = (
-                float(np.mean(self._recent_latencies)) if self._recent_latencies else 0.0
-            )
+            infer_arr = np.fromiter(self._recent_infer_ms, dtype=float) if self._recent_infer_ms else None
+            total_arr = np.fromiter(self._recent_latencies, dtype=float) if self._recent_latencies else None
+            detection_rate = (self._frames_with_detection / self._frame_id) if self._frame_id > 0 else 0.0
             return {
                 "running": self.is_running(),
                 "frame_id": self._frame_id,
                 "delivered_fps": fps,
                 "target_fps": self.target_fps,
-                "infer_mean_ms": infer_mean,
-                "total_mean_ms": total_mean,
+                "infer_mean_ms": float(infer_arr.mean()) if infer_arr is not None else 0.0,
+                "infer_p95_ms":  float(np.percentile(infer_arr, 95)) if infer_arr is not None else 0.0,
+                "infer_p99_ms":  float(np.percentile(infer_arr, 99)) if infer_arr is not None else 0.0,
+                "total_mean_ms": float(total_arr.mean()) if total_arr is not None else 0.0,
+                "total_p95_ms":  float(np.percentile(total_arr, 95)) if total_arr is not None else 0.0,
+                "total_p99_ms":  float(np.percentile(total_arr, 99)) if total_arr is not None else 0.0,
+                "uptime_s": wall,
+                "frames_with_detection": self._frames_with_detection,
+                "cumulative_detections": self._cumulative_detections,
+                "detection_rate": detection_rate,
                 "device": self.device,
                 "error": self._error,
             }
@@ -364,6 +371,10 @@ class InferenceWorker:
                     }
                     self._recent_latencies.append(total_ms)
                     self._recent_infer_ms.append(infer_ms)
+                    n_polyps = sum(1 for d in dets if str(d.get("class_name", "")).lower() == "polyp")
+                    if n_polyps > 0:
+                        self._frames_with_detection += 1
+                        self._cumulative_detections += n_polyps
 
                 next_deadline += tick_s
                 slack = next_deadline - time.perf_counter()

@@ -26,10 +26,22 @@ export function PipelinePerformanceAccordion() {
   const isRunning = systemStatus === 'running' || systemStatus === 'starting';
   const status = isRunning ? 'running' : 'stopped';
 
-  const sseLookup: Record<string, { fps?: number; latency_ms?: number; device?: string; status?: string }> = {};
+  const sseLookup: Record<string, { fps?: number; infer_ms?: number; latency_ms?: number; latency_p99_ms?: number; device?: string; status?: string }> = {};
   if (pipelinePerf?.workloads) {
     for (const w of pipelinePerf.workloads) sseLookup[w.name] = w;
   }
+
+  const modelInfo = useAppSelector((state) => state.nicu.data.modelInfo);
+  const totalFrames = useAppSelector((state) => state.nicu.data.totalFrames);
+  const uptime = useAppSelector((state) => state.nicu.data.uptime);
+
+  const fmtUptime = (s: number) => {
+    if (!s || s <= 0) return '—';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    return h > 0 ? `${h}h ${m}m ${sec}s` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  };
 
   const thStyle: React.CSSProperties = {
     padding: '8px 10px', color: '#fff', fontWeight: 600, fontSize: '11px',
@@ -48,6 +60,8 @@ export function PipelinePerformanceAccordion() {
               <th style={thStyle}>Model</th>
               <th style={thStyle}>Device</th>
               <th style={thStyle}>FPS</th>
+              <th style={thStyle}>Infer</th>
+              <th style={thStyle}>P99</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -60,6 +74,7 @@ export function PipelinePerformanceAccordion() {
               const statusInfo = STATUS_DOT[actualStatus] || STATUS_DOT.stopped;
               const rowBg = i % 2 === 0 ? '#fff' : '#f4f5f7';
               const cellStyle: React.CSSProperties = { padding: '8px 10px', border: '1px solid #bbb', verticalAlign: 'middle' };
+              const numStyle: React.CSSProperties = { ...cellStyle, fontFamily: 'monospace', fontWeight: 600 };
 
               return (
                 <tr key={def.name} style={{ background: rowBg }}>
@@ -81,8 +96,14 @@ export function PipelinePerformanceAccordion() {
                       {actualDevice}
                     </span>
                   </td>
-                  <td style={{ ...cellStyle, fontFamily: 'monospace', fontWeight: 600 }}>
+                  <td style={numStyle}>
                     {sseRow.fps !== undefined ? sseRow.fps.toFixed(1) : '—'}
+                  </td>
+                  <td style={numStyle}>
+                    {sseRow.infer_ms !== undefined && sseRow.infer_ms > 0 ? `${sseRow.infer_ms.toFixed(1)} ms` : '—'}
+                  </td>
+                  <td style={numStyle}>
+                    {sseRow.latency_p99_ms !== undefined && sseRow.latency_p99_ms > 0 ? `${sseRow.latency_p99_ms.toFixed(1)} ms` : '—'}
                   </td>
                   <td style={cellStyle}>
                     <span style={{
@@ -98,10 +119,35 @@ export function PipelinePerformanceAccordion() {
             })}
           </tbody>
         </table>
-        {pipelinePerf?.pipeline_fps > 0 && (
-          <div style={{ marginTop: 12, padding: '8px 10px', background: '#f0f4f8', borderRadius: 4, fontSize: 12 }}>
-            <strong>End-to-end pipeline FPS:</strong> {pipelinePerf.pipeline_fps.toFixed(1)}
-            {pipelinePerf.decode && <span style={{ marginLeft: 12, color: '#666' }}>· decode {pipelinePerf.decode}</span>}
+
+        {(pipelinePerf?.pipeline_fps > 0 || totalFrames > 0) && (
+          <div style={{ marginTop: 12, padding: '8px 10px', background: '#f0f4f8', borderRadius: 4, fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+            <span><strong>Pipeline FPS:</strong> {(pipelinePerf?.pipeline_fps ?? 0).toFixed(1)}</span>
+            {pipelinePerf?.decode && <span style={{ color: '#666' }}>· decode {pipelinePerf.decode}</span>}
+            {uptime > 0 && <span style={{ color: '#666' }}>· uptime {fmtUptime(uptime)}</span>}
+            {totalFrames > 0 && <span style={{ color: '#666' }}>· {totalFrames.toLocaleString()} frames</span>}
+          </div>
+        )}
+
+        {modelInfo && (
+          <div style={{ marginTop: 10, padding: '10px 12px', background: '#fff', border: '1px solid #d9dee5', borderRadius: 4, fontSize: 12, lineHeight: 1.7 }}>
+            <div style={{ fontWeight: 700, fontSize: 11, color: '#3a3f47', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+              Model & Input
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', rowGap: 3, columnGap: 8 }}>
+              <span style={{ color: '#6b7280' }}>Model:</span>
+              <span style={{ fontFamily: 'monospace', color: '#24292f' }}>{modelInfo.name}</span>
+              <span style={{ color: '#6b7280' }}>Precision:</span>
+              <span style={{ color: '#24292f' }}>{modelInfo.precision}</span>
+              <span style={{ color: '#6b7280' }}>Task:</span>
+              <span style={{ color: '#24292f' }}>{modelInfo.task} <span style={{ color: '#6b7280' }}>({modelInfo.dataset})</span></span>
+              <span style={{ color: '#6b7280' }}>Video source:</span>
+              <span style={{ color: '#24292f' }}>{modelInfo.input_source}</span>
+              <span style={{ color: '#6b7280' }}>Model input:</span>
+              <span style={{ fontFamily: 'monospace', color: '#24292f' }}>{modelInfo.model_input}</span>
+              <span style={{ color: '#6b7280' }}>Device:</span>
+              <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1565c0' }}>{modelInfo.device}</span>
+            </div>
           </div>
         )}
       </div>
