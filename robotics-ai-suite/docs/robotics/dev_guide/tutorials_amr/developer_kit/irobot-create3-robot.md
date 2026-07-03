@@ -125,4 +125,4 @@ launch file as argument ``irobot_ns``.
 
 ../navigation/wandering_app/wandering-irobot-tutorial
 ../navigation/follow_me/Tutorials/followme-on-irobot
-:::
+<!--hide_directive:::hide_directive-->
