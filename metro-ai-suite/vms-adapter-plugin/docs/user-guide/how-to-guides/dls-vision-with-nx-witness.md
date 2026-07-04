@@ -71,7 +71,7 @@ Edit the config.json and add the following pipeline.
             {
                 "name": "loitering_detection_vms_mqtt",
                 "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -330,6 +330,7 @@ analytics_apps:
     mqtt_port: ${MQTT_PORT:-1883}
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
+    pipeline_name: "${DLS_PIPELINE_NAME:-loitering_detection_vms_mqtt}"
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
