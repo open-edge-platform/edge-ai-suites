@@ -12,11 +12,12 @@ Before you can run these tutorials, ensure that `intel-mipi-gmsl-dkms` is instal
 
 Follow the instructions on [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html), to install GMSL Drivers and required packages.
 
-
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 
 icamera-usm
 
-<!--hide_directive:::hide_directive-->
+:::
+hide_directive-->
 

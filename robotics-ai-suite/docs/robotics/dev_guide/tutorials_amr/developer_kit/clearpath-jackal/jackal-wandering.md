@@ -185,16 +185,16 @@ ros2 run depthimage_to_laserscan depthimage_to_laserscan_node --ros-args \
 
 - if ``ros-humble-realsense2-camera`` version is 4.55:
 
- |Topic name expected by the node|True topic name on the Jackal robot|
- |---|---|
- |``depth``|``/sensors/camera_0/camera/depth/image_rect_raw``|
- |``depth_camera_info``|``/sensors/camera_0/camera/depth/camera_info``|
+  |Topic name expected by the node|True topic name on the Jackal robot|
+  |---|---|
+  |``depth``|``/sensors/camera_0/camera/depth/image_rect_raw``|
+  |``depth_camera_info``|``/sensors/camera_0/camera/depth/camera_info``|
 
 - if ``ros-humble-realsense2-camera`` version is 4.54:
 
   |Topic name expected by the node|True topic name on the Jackal robot|
   |---|---|
-  |``depth`|``/sensors/camera_0/depth/image_rect_raw``|
+  |``depth``|``/sensors/camera_0/depth/image_rect_raw``|
   |``depth_camera_info``|``/sensors/camera_0/depth/camera_info``|
 
 The script ``/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
