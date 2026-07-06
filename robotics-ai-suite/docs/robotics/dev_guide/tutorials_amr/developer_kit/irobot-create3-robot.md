@@ -120,9 +120,12 @@ launch file as argument ``irobot_ns``.
 
 ## Autonomous Mobile Robot Tutorials based on the iRobot Create 3
 
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 
 ../navigation/wandering_app/wandering-irobot-tutorial
 ../navigation/follow_me/Tutorials/followme-on-irobot
-<!--hide_directive:::hide_directive-->
+
+:::
+hide_directive-->
