@@ -63,6 +63,8 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
 # had immature SYCL kernels for YOLO's loss / target-assignment ops and
 # stalls indefinitely inside get_assigned_targets_and_loss on Xe3.
 RUN pip install \
+      --retries 8 \
+      --timeout 120 \
       torch==2.12.1 \
       torchvision==0.27.1 \
       --index-url https://download.pytorch.org/whl/xpu
