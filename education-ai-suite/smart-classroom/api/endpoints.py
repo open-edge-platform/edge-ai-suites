@@ -22,6 +22,7 @@ from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
+from components.va.media_service import ensure_media_service_running
 from utils.session_manager import generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
@@ -267,6 +268,11 @@ def start_video_analytics_pipeline(
     # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
         try:
+            # Ensure the MediaMTX RTSP server is up before any pipeline pushes to
+            # it. Started on demand. Failures are surfaced as a 500 by the outer
+            # handler below.
+            ensure_media_service_running()
+
             # Create or get service for this session
             if x_session_id not in va_services:
                 project_config = RuntimeConfig.get_section("Project")

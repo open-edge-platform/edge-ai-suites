@@ -107,7 +107,6 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
-      MODEL_REGISTRY_URL: http://model-registry:8111
       SAMPLE_APP: ${SAMPLE_APP}
       REST_API_ROOT_PATH: "/ts-api"
       ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}
@@ -279,8 +278,10 @@ services:
     security_opt:
     - no-new-privileges
     healthcheck:
-      test: ["CMD-SHELL", "curl -f https://localhost/ -k ||  exit 1"]
-      interval: 5m
+      test: ["CMD-SHELL", "curl -f https://localhost:15443/ -k || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     networks:
       - timeseries_network
     depends_on:

@@ -78,7 +78,7 @@ Clone the repository and navigate to the Teacher Assistant demo directory. All s
 
 ``` bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/education-ai-suite/smart-classroom/teacher-assistant-claw-demo
+cd edge-ai-suites/education-ai-suite/teacher-assistant-claw-demo
 ```
 
 ### Step 2: OpenClaw installation

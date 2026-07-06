@@ -11,13 +11,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 ## Common Issues
 
-### 1. Description not coming in UI
-
-- Check logs for Frigate container
-- Check if VLM microservice is running and reachable.
-- Verify that `NVR_GENAI=true` is set and Frigate config has `genai.enabled: true`
-
-### 2. GenAI Event Descriptions Not Working
+### 1. GenAI Event Descriptions Not Working
 
 - **Issue**: AI-powered event descriptions are not being generated or displayed.
 - **Solution**:
@@ -28,12 +22,12 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 > **Note:** This is an experimental feature with known stability issues
 
-### 3. Object not getting detected
+### 2. Object not getting detected
 
 - Check the label in Frigate `config.yaml` for the specific camera.
 - Check the `top_score` parameter .
 
-### 4. "No video footage available" warning during Summarize/Search Clip
+### 3. "No video footage available" warning during Summarize/Search Clip
 
 - Ensure the browser’s date and time are correctly set and in sync with the system time of the machine running the NVR services.
 - Video clips are only available from the time the NVR services started running. If a past time (before service start) is selected, this warning will be shown.
