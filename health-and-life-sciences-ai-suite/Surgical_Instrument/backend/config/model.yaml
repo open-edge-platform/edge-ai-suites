@@ -51,25 +51,12 @@ dataset:
   class_names: [Polyp]
 
 train:
-  # cpu | xpu | cuda.
-  #
-  # CPU is the default because it is the only path proven to complete
-  # first-boot training reliably across the supported Intel client
-  # platforms. On Xe iGPUs (Meteor Lake, Panther Lake / Xe3), torch.xpu
-  # is functional and passes tensor round-trips, but Ultralytics' YOLO
-  # loss and target-assignment kernels are not fully accelerated on the
-  # SYCL backend — epoch 1 can stall for 30+ minutes on first run while
-  # kernels are JIT-compiled. A modern Intel Core Ultra CPU (16 P+E
-  # cores) trains YOLO11n on 266 CVC-ColonDB images in a few minutes,
-  # which is well within the fresh-boot bootstrap budget.
-  #
-  # Inference is unaffected — the pipeline container runs OpenVINO on
-  # whichever device the user selects in the UI (CPU / GPU / NPU).
-  #
-  # Set device: xpu explicitly if you want to experiment with iGPU
-  # training on a machine where the SYCL kernel cache is already warm.
-  device: cpu
-  epochs: 50
+  # xpu | cuda | cpu. Runs on the Intel iGPU by default (Arc on Meteor
+  # Lake, Xe3 on Panther Lake). Cold-start first epoch is dominated by
+  # SYCL kernel JIT; the persistent kernel cache volume mounted at
+  # /root/.cache in docker-compose.yaml keeps subsequent runs fast.
+  device: xpu
+  epochs: 20
   imgsz: 640
   batch: 8
   workers: 4

@@ -34,6 +34,8 @@ volumes:
   surgical-cache:
   # Shared JPEG + latency tracer between pipeline (rw) and backend (ro).
   surgical-frames:
+  # Persistent SYCL / NEO kernel cache for the XPU trainer.
+  surgical-sycl-cache:
 
 services:
 
@@ -128,6 +130,9 @@ services:
       - ./videos:/videos
       # Weights / dataset download cache.
       - surgical-cache:/cache
+      # Persistent SYCL / OpenCL kernel cache. Without this, every fresh
+      # container recreate triggers 10-15 min of JIT compilation on Xe3.
+      - surgical-sycl-cache:/root/.cache
       # Read-only view of the shared frames volume — pipeline writes,
       # backend reads.
       - surgical-frames:/frames:ro
@@ -140,6 +145,10 @@ services:
       CACHE_DIR:      /cache
       HOST:           0.0.0.0
       PORT:           "5001"
+      # Persist compiled SYCL kernels between container restarts so the
+      # trainer only pays JIT cost once per host.
+      SYCL_CACHE_PERSISTENT: "1"
+      NEO_CACHE_PERSISTENT:  "1"
       # GPU | CPU | NPU — initial device for /api/device (can be changed
       # from the UI when inference is stopped).
       DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
