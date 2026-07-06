@@ -96,12 +96,12 @@ def install_select_device_xpu_shim():
 
     _orig = _ut.select_device
 
-    def _select(device="", batch=0, newline=False, verbose=True):
+    def _select(device="", newline=False, verbose=True):
         if isinstance(device, str) and device.startswith("xpu"):
             return torch.device(device)
         if isinstance(device, torch.device) and device.type == "xpu":
             return device
-        return _orig(device, batch, newline, verbose)
+        return _orig(device, newline, verbose)
 
     _ut.select_device = _select
 
