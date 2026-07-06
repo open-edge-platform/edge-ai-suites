@@ -14,6 +14,7 @@ Follow the instructions on [GMSL Guide](https://docs.openedgeplatform.intel.com/
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 :maxdepth: 1
 
 icamera-usm
