@@ -101,6 +101,10 @@ services:
       surgical-mqtt:
         condition: service_healthy
 
+    # torch DataLoader worker processes share tensors via /dev/shm; the
+    # docker default (64 MB) is far too small and workers get SIGBUS.
+    shm_size: "2gb"
+
     # Intel Arc iGPU passthrough for the bootstrap trainer (torch+xpu).
     # Runtime inference is now in surgical-pipeline; the backend does not
     # need the iGPU at serve time but the trainer does.
