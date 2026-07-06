@@ -92,9 +92,25 @@ RUN pip install \
       "pyyaml>=6.0" \
       "intel-pti==0.16.0" \
       "intel-cmplr-lib-rt==2025.3.2" \
+      "intel-cmplr-lib-ur==2025.3.2" \
+      "intel-cmplr-lic-rt==2025.3.2" \
       "intel-sycl-rt==2025.3.2" \
       "intel-opencl-rt==2025.3.2" \
-      "intel-openmp==2025.3.2"
+      "intel-openmp==2025.3.2" \
+      "dpcpp-cpp-rt==2025.3.2" \
+      "mkl==2025.3.1" \
+      "onemkl-license==2025.3.1" \
+      "onemkl-sycl-blas==2025.3.1" \
+      "onemkl-sycl-dft==2025.3.1" \
+      "onemkl-sycl-lapack==2025.3.1" \
+      "onemkl-sycl-rng==2025.3.1" \
+      "onemkl-sycl-sparse==2025.3.1" \
+      "tbb==2022.3.1" \
+      "tcmlib==1.4.1" \
+      "umf==1.0.3" \
+      "oneccl==2021.17.2" \
+      "oneccl-devel==2021.17.2" \
+      "impi-rt==2021.17.2"
 
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install -r /app/backend/requirements.txt
@@ -121,7 +137,8 @@ ENV BACKEND_CONFIG=/app/backend/config/model.yaml \
     VIDEOS_DIR=/videos \
     CACHE_DIR=/cache \
     HOST=0.0.0.0 \
-    PORT=5001
+    PORT=5001 \
+    LD_LIBRARY_PATH=/usr/local/lib:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
 
 EXPOSE 5001
 
