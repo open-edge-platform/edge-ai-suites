@@ -30,6 +30,7 @@ designated destination.
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 :maxdepth: 1
 
 dynamic_use_case/system_config
