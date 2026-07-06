@@ -1,0 +1,32 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: live-video-captioning-rag
+description: >
+  Parent chart for Live Video Captioning RAG deployment.
+  This chart composes the Live Video Captioning stack and enables RAG components.
+type: application
+version: 0.1.0
+appVersion: "2026.0.0"
+
+keywords:
+  - intel
+  - openvino
+  - video-captioning
+  - rag
+  - llm
+
+dependencies:
+  - name: live-video-captioning
+    version: "2026.2.0-ww28-helm"
+    repository: "file://../../live-video-captioning/charts"
+  - name: multimodal-embedding
+    version: "0.1.0"
+    repository: "file://subcharts/multimodal-embedding"
+  - name: vdmsvectordb
+    version: "0.1.0"
+    repository: "file://subcharts/vdms-vectordb"
+  - name: live-video-captioning-rag
+    version: "0.1.0"
+    repository: "file://subcharts/live-video-captioning-rag"

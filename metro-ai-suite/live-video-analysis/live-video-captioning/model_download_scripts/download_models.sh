@@ -292,8 +292,9 @@ for DEVICE in "${DEVICE_LIST[@]}"; do
     if [[ "${MODEL_TYPE}" == "vlm" ]]; then
       TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL_BASENAME}"
     elif [[ "${MODEL_TYPE}" == "llm" ]]; then
-      # For LLMs, preserve the org/model structure if present
-      TARGET_DIR="${FINAL_DIR}/${MODEL}"
+      # For LLMs, keep provider/model grouped by device.
+      # Example: llm_models/gpu/microsoft/Phi-3.5-mini-instruct
+      TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL}"
     fi
 
     if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then

@@ -3,3 +3,6 @@ venv
 llm_models
 .coverage
 *__pycache__*
+charts/Chart.lock
+charts/charts
+charts/charts/*.tgz

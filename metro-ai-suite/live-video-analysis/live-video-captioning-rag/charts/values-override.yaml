@@ -1,0 +1,83 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# values-override.yaml - User-facing overrides for live-video-captioning-rag parent chart.
+#
+# Important mapping:
+# - global.* applies to both live-video-captioning(LVC) and live-video-captioning-rag(LVC-RAG).
+# - live-video-captioning.* uses the same key names as live-video-captioning values,
+#   but nested under live-video-captioning.
+# - live-video-captioning-rag.* configures the LVC-RAG service chart.
+
+# 1) REQUIRED PLATFORM SETTINGS
+global:
+  # REQUIRED: worker node name and reachable host IP.
+  nodeName: ""
+  hostIP: ""
+
+  # REQUIRED: model-download service location.
+  modelDownload:
+    serviceName: "model-download"
+    port: 8000
+
+  # REQUIRED: at least one VLM model for captioning flow.
+    # This VLM model is used in DLSPS pipeline to generate captions text for input video stream.
+    # Parameters:
+    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "OpenGVLab/InternVL2-1B"
+    #          output directory is derived from the final segment of modelId
+    #          and created under /ov_models/<device>/ in the PVC.
+    # modelType: "vlm"
+    # weightFormat: "int8", or "int4" or "fp16"
+    # device: target conversion device(s): "CPU", "GPU", "NPU", or CSV/list (for multiple).
+    #         Example CSV: "CPU,GPU". Example list: ["CPU", "NPU"].
+    #         If NPU is selected, weightFormat is automatically forced to "int4".
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      modelType: "vlm"
+      weightFormat: "int8"
+      device: "CPU"
+
+  detectionModels:
+    - "yolov8s"
+
+  huggingface:
+    apiToken: ""
+
+  httpProxy: ""
+  httpsProxy: ""
+  noProxy: ""
+
+  llmModel:
+    modelId: "microsoft/Phi-3.5-mini-instruct"
+    modelType: "llm"
+    weightFormat: "int8"
+    useGPU:
+      enabled: false
+      key: ""
+
+  embeddingModel:
+    modelId: "QwenText/qwen3-embedding-0.6b"
+    useGPU:
+      enabled: false
+      key: ""
+
+# 2) LIVE-VIDEO-CAPTIONING OVERRIDES
+# These must be nested under live-video-captioning because this chart is a dependency.
+live-video-captioning:
+  video-caption-service:
+    modelsPvcName: "models-pvc"
+    env:
+      defaultRtspUrl: ""
+      alertMode: "false"
+      enableDetectionPipeline: "false"
+      captionHistory: "3"
+
+  dlstreamer-pipeline-server:
+    modelsPvcName: "models-pvc"
+
+# 3) LIVE-VIDEO-CAPTIONING-RAG SERVICE OVERRIDES
+live-video-captioning-rag:
+  modelsPvcName: "models-pvc"
+  env:
+    maxTokens: 1024
+    topK: 1

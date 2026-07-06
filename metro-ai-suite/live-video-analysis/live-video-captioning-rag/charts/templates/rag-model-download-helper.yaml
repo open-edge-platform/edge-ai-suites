@@ -1,0 +1,308 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-model-download-helper
+  labels:
+    app: rag-model-download-helper
+data:
+  download-model.sh: |-
+    #!/bin/bash
+    # Shared helper dedicated to LLM model download for live-video-captioning-rag.
+    set -e
+
+    check_model_download_service_health() {
+        local max_attempts=5
+        local sleep_secs=5
+        local attempt=1
+
+        if [ -z "${MODEL_DOWNLOAD_BASE_URL:-}" ]; then
+            echo "ERROR: MODEL_DOWNLOAD_BASE_URL is empty."
+            echo "Set MODEL_DOWNLOAD_HOST/MODEL_DOWNLOAD_PORT or MODEL_DOWNLOAD_BASE_URL before calling download_model."
+            return 1
+        fi
+
+        local api_health_url="${MODEL_DOWNLOAD_BASE_URL%/}/health"
+        local root_base_url="${MODEL_DOWNLOAD_BASE_URL%/}"
+        root_base_url="${root_base_url%/api/v1}"
+        local root_health_url="${root_base_url%/}/health"
+
+        echo "Checking health of model-download microservice..."
+        echo "Health URLs: ${api_health_url} (api), ${root_health_url} (root)"
+
+        while [ "$attempt" -le "$max_attempts" ]; do
+            local api_http_code
+            local root_http_code
+            local api_curl_rc
+            local root_curl_rc
+
+            set +e
+            api_http_code=$(curl -sS -o /dev/null -w "%{http_code}" "${api_health_url}")
+            api_curl_rc=$?
+            root_http_code=$(curl -sS -o /dev/null -w "%{http_code}" "${root_health_url}")
+            root_curl_rc=$?
+            set -e
+
+            if [ "$api_curl_rc" -eq 0 ] && [ "$api_http_code" = "200" ]; then
+                echo "Model-download microservice is up and running"
+                return 0
+            fi
+
+            if [ "$root_curl_rc" -eq 0 ] && [ "$root_http_code" = "200" ]; then
+                echo "Model-download microservice is up and running"
+                return 0
+            fi
+
+            echo "Attempt ${attempt}/${max_attempts}: Model-download microservice not available. Retrying in ${sleep_secs} seconds..."
+            echo "  api health -> curl_rc=${api_curl_rc}, http_code=${api_http_code}"
+            echo "  root health -> curl_rc=${root_curl_rc}, http_code=${root_http_code}"
+            sleep "$sleep_secs"
+            attempt=$((attempt + 1))
+        done
+
+        echo "ERROR: Model-download service is not healthy. Please restart the service and try again"
+        return 1
+    }
+
+    resolve_llm_content_dir() {
+        local root="$1"
+        local model_name="$2"
+        local current="$root"
+        local provider_segment="${model_name%%/*}"
+        local model_segment="${model_name##*/}"
+        local direct_match="${root}/${provider_segment}/${model_segment}"
+        local provider_match="${root}/${provider_segment}"
+        local model_match="${root}/${model_segment}"
+        local found=""
+
+        if [ -d "$direct_match" ]; then
+            echo "$direct_match"
+            return
+        fi
+
+        if [ -d "${provider_match}/${model_segment}" ]; then
+            echo "${provider_match}/${model_segment}"
+            return
+        fi
+
+        if [ -d "$model_match" ]; then
+            echo "$model_match"
+            return
+        fi
+
+        if [ -d "${current}/models" ]; then
+            current="${current}/models"
+        fi
+
+        while true; do
+            local file_count
+            local dir_count
+            file_count=$(find "$current" -mindepth 1 -maxdepth 1 -type f | wc -l)
+            dir_count=$(find "$current" -mindepth 1 -maxdepth 1 -type d | wc -l)
+
+            if [ "$file_count" -gt 0 ] || [ "$dir_count" -ne 1 ]; then
+                break
+            fi
+
+            current=$(find "$current" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+        done
+
+        found=$(find "$root" -type d -name "$model_segment" | head -n 1)
+        if [ -n "$found" ]; then
+            echo "$found"
+            return
+        fi
+
+        echo "$current"
+    }
+
+    download_model() {
+        local model_name="$1"
+        local model_type="$2"
+        local weight_format="$3"
+        local hf_token="${4:-}"  # currently unused by model-download API
+        local output_name="${5:-}"
+        local device
+        local target_root="/opt/data/llm_models"
+        local model_basename="${model_name##*/}"
+        local model_provider="${model_name%%/*}"
+        local target_subpath=""
+        local target_dir=""
+        local staging_dir_name="downloaded_llm_models"
+        local payload=""
+        local post_response=""
+        local curl_rc=0
+        local job_ids=""
+        local max_attempts=90
+        local sleep_secs=10
+        local attempt=1
+
+        device=$(echo "${6:-CPU}" | tr '[:lower:]' '[:upper:]')
+
+        if [ -z "$model_name" ]; then
+            echo "ERROR: model_name is required"
+            exit 1
+        fi
+
+        if [ "$model_type" != "llm" ]; then
+            echo "ERROR: rag-model-download-helper only supports model_type=llm (got '${model_type}')."
+            exit 1
+        fi
+
+        case "$device" in
+            CPU|GPU|NPU) ;;
+            *)
+                echo "ERROR: Unsupported device '${device}'. Allowed values are CPU, GPU, NPU."
+                exit 1
+                ;;
+        esac
+
+        if [ -z "$output_name" ]; then
+            output_name="$model_basename"
+            output_name="${output_name%-it}"
+            output_name="${output_name%-instruct}"
+        fi
+
+        target_subpath="$output_name"
+        case "$target_subpath" in
+            */*) ;;
+            *) target_subpath="${model_provider}/${target_subpath}" ;;
+        esac
+        target_dir="${target_root}/${target_subpath}"
+
+        if [ -z "${MODEL_DOWNLOAD_BASE_URL:-}" ]; then
+            MODEL_DOWNLOAD_HOST="${MODEL_DOWNLOAD_HOST:-{{ .Values.global.modelDownload.serviceName }}}"
+            MODEL_DOWNLOAD_PORT="${MODEL_DOWNLOAD_PORT:-{{ .Values.global.modelDownload.port }}}"
+            if [ -n "${MODEL_DOWNLOAD_HOST}" ] && [ -n "${MODEL_DOWNLOAD_PORT}" ]; then
+                MODEL_DOWNLOAD_BASE_URL="http://${MODEL_DOWNLOAD_HOST}:${MODEL_DOWNLOAD_PORT}/api/v1/"
+            else
+                echo "ERROR: Missing model-download endpoint configuration."
+                echo "Provide MODEL_DOWNLOAD_HOST and MODEL_DOWNLOAD_PORT, or set MODEL_DOWNLOAD_BASE_URL directly."
+                exit 1
+            fi
+        fi
+
+        if [ -z "${MODEL_DOWNLOAD_API_URL:-}" ]; then
+            MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL%/}/models/download"
+        fi
+
+        apt-get update -qq && apt-get install -y -qq curl jq > /dev/null 2>&1
+
+        if ! check_model_download_service_health; then
+            exit 1
+        fi
+
+        mkdir -p "$target_root"
+
+        payload=$(printf '{"models":[{"name":"%s","hub":"openvino","type":"llm","is_ovms":true,"config":{"precision":"%s","device":"%s"}}],"parallel_downloads":false}' \
+            "$model_name" "$weight_format" "$device")
+
+        echo "Downloading llm model '${model_name}' via model-download service..."
+
+        set +e
+        post_response=$(curl -sS -X POST "${MODEL_DOWNLOAD_API_URL}?download_path=${staging_dir_name}/" \
+            -H "Content-Type: application/json" \
+            -d "${payload}")
+        curl_rc=$?
+        set -e
+
+        if [ "$curl_rc" -ne 0 ]; then
+            echo "ERROR: Download API call failed (curl rc=${curl_rc})."
+            exit 1
+        fi
+
+        if echo "$post_response" | jq -e '.detail' >/dev/null 2>&1; then
+            echo "ERROR: API returned error: $(echo "$post_response" | jq -r '.detail')"
+            exit 1
+        fi
+
+        echo "Model download API response: $post_response"
+
+        job_ids=$(echo "$post_response" | jq -r '.job_ids[]')
+        if [ -z "$job_ids" ]; then
+            echo "ERROR: No job_ids returned by model-download API"
+            exit 1
+        fi
+
+        echo "Jobs submitted: $job_ids"
+
+        while [ "$attempt" -le "$max_attempts" ]; do
+            local all_done=1
+            local job_id
+
+            for job_id in $job_ids; do
+                local job_url="${MODEL_DOWNLOAD_BASE_URL%/}/jobs/${job_id}"
+                local job_response
+                local status
+
+                job_response=$(curl -s "$job_url")
+                status=$(echo "$job_response" | jq -r '.status')
+                echo "Job ${job_id} -> ${status}"
+
+                if [ "$status" != "completed" ] && [ "$status" != "failed" ]; then
+                    all_done=0
+                fi
+
+                if [ "$status" = "failed" ]; then
+                    echo "ERROR: Job ${job_id} failed"
+                    exit 1
+                fi
+            done
+
+            if [ "$all_done" -eq 1 ]; then
+                break
+            fi
+
+            echo "Waiting for jobs to finish (attempt ${attempt}/${max_attempts})..."
+            sleep "$sleep_secs"
+            attempt=$((attempt + 1))
+        done
+
+        if [ "$attempt" -gt "$max_attempts" ]; then
+            echo "ERROR: Timed out waiting for model download jobs"
+            exit 1
+        fi
+
+        for job_id in $job_ids; do
+            local job_url="${MODEL_DOWNLOAD_BASE_URL%/}/jobs/${job_id}"
+            local job_response
+            local conversion_path
+            local source_path
+            local content_dir
+
+            job_response=$(curl -s "$job_url")
+            conversion_path=$(echo "$job_response" | jq -r '.result.conversion_path // .result.download_path // ""')
+
+            if [ -z "$conversion_path" ]; then
+                echo "ERROR: No conversion path returned for job ${job_id}"
+                exit 1
+            fi
+
+            source_path=$(echo "$conversion_path" | sed 's|/opt/models|/opt/data|')
+            if [ ! -d "$source_path" ]; then
+                echo "ERROR: Conversion path does not exist: ${source_path} (API returned: ${conversion_path})"
+                exit 1
+            fi
+
+            echo "Flattening LLM model files from ${source_path} to ${target_dir}"
+            rm -rf "$target_dir"
+            mkdir -p "$target_dir"
+
+            content_dir=$(resolve_llm_content_dir "$source_path" "$model_name")
+            if [ ! -d "$content_dir" ]; then
+                echo "ERROR: Resolved model content directory does not exist: ${content_dir}"
+                exit 1
+            fi
+
+            cp -a "$content_dir"/. "$target_dir"/
+            echo "Copied LLM model files from ${content_dir}"
+        done
+
+        rm -rf "/opt/data/${staging_dir_name}"
+        rm -rf "/opt/data/models/${staging_dir_name}"
+
+        if [ -n "$hf_token" ]; then
+            echo "HF token provided for request context."
+        fi
+
+        echo "Successfully prepared llm model '${model_name}' for device ${device} at ${target_dir}"
+    }
