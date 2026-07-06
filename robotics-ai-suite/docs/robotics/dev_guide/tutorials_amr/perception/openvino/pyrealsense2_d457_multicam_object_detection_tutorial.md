@@ -106,7 +106,7 @@ sudo modprobe intel-ipu6-isys
 
 ### Install
 
-Install the multi-camera object detection tutorial by using the following command.
+Install the multi-camera object detection tutorial by using the following command:
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
