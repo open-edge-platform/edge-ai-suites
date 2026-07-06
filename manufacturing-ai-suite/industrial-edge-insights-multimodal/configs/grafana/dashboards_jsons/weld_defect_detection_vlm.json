@@ -2,7 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "adc6jx7",
+    "name": "adc9jx7",
     "generation": 1,
     "creationTimestamp": "2026-06-30T08:32:49Z",
     "labels": {},
@@ -72,7 +72,7 @@
         "kind": "Panel",
         "spec": {
           "id": 17,
-          "title": "VLM Reasoning",
+          "title": "VLLM Reasoning",
           "description": "",
           "links": [],
           "data": {
@@ -94,7 +94,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "<iframe id=\"htmlframe\" src=\"http://10.106.147.224:8088/\" width=\"100%\"   height=\"100%\" frameborder=\"0\" style=\"border:none;\" > \n</iframe> \n\n<script>\n  const host = window.location.origin;\n  // const port = window.location.port || \"443\";   // default if none present\n  const port = 8088;\n\n  // Build iframe URL INCLUDING PORT\n  const iframeUrl = `${host}/insight-ui`;\n\n  document.getElementById(\"htmlframe\").src = iframeUrl;\n</script>",
+                "content": "<iframe\n  src=\"/insight-ui/\"\n  width=\"100%\"\n  height=\"100%\"\n  frameborder=\"0\"\n  style=\"border:none;\"\n</iframe>",
                 "mode": "html"
               },
               "fieldConfig": {
@@ -423,7 +423,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Multimodal Weld Defect Detection Dashboard",
+    "title": "Multimodal Weld Defect Detection with vLLM Dashboard",
     "variables": []
   }
 }

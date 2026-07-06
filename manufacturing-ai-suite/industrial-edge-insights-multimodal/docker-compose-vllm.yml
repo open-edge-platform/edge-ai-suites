@@ -6,8 +6,9 @@
 
 services:
   vllm-server:
-    image: ${VLLM_IMAGE}:${VLLM_IMAGE_TAG}
-    container_name: ${VLLM_CONTAINER_NAME}
+    image: ${VLLM_IMAGE}
+    container_name: vllm-server
+    hostname: vllm-server
     restart: unless-stopped
     shm_size: ${VLLM_SHM_SIZE}
     ports:
@@ -22,7 +23,7 @@ services:
     volumes:
       - /dev/dri/by-path:/dev/dri/by-path:ro
       - "/run/udev:/run/udev:ro"
-      - ${FINE_TUNING_HOST_PATH}:/checkpoints
+      - ./configs/vllm/models:/checkpoints
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
     command:
@@ -46,7 +47,34 @@ services:
       - ${VLLM_SERVED_MODEL_NAME}
       - --enable-lora
       - --lora-modules
-      - ${VLLM_LORA_ADAPTER_NAME}=${VLLM_LORA_ADAPTER_PATH}
+      - qwen3.5-2b-adapter=/checkpoint/checkpoint-432/
       - -tp=${VLLM_TENSOR_PARALLEL_SIZE}
       - --quantization
       - ${VLLM_QUANTIZATION}
+    networks:
+      - timeseries_network
+      
+  ia-insights-workbench:
+    container_name: ia-insights-workbench
+    hostname: ia-insights-workbench
+    image: ${DOCKER_REGISTRY}intel/ia-insights-workbench:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    build:
+      context: $PWD/insights-workbench
+      dockerfile: $PWD/insights-workbench/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    read_only: false
+    environment:
+      no_proxy: "ia-influxdb,${no_proxy}"
+      NO_PROXY: "ia-influxdb,${no_proxy}"
+      INFLUX_HOST: ia-influxdb
+      INFLUX_PORT: 8086
+      INFLUX_USER: ${INFLUXDB_USERNAME}
+      INFLUX_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUX_DB: datain
+      FUSION_MEASUREMENT: fusion_result
+    networks:
+      - timeseries_network
