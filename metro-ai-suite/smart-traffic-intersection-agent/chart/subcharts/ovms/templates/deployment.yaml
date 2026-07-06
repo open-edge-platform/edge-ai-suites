@@ -128,30 +128,6 @@ spec:
         - name: ovms
           image: "{{- if (or $needsGpu $tcGpu) -}}{{ .Values.image.repository }}:{{ .Values.image.gpuTag }}{{- else -}}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{- end -}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if $tcGpu }}
-          command:
-            - /bin/sh
-            - -c
-            - |
-              render_node=$(find /dev/dri -name 'renderD*' | head -n1)
-              i=0
-              until [ -n "$render_node" ] && [ -c "$render_node" ]; do
-                i=$((i+1)); [ $i -ge 15 ] && echo "Timed out waiting for DRI render node" && exit 1
-                sleep 1; render_node=$(find /dev/dri -name 'renderD*' | head -n1)
-              done
-              render_name=$(basename "$render_node")
-              i=0
-              until ls /sys/class/drm/${render_name}/device/driver 2>/dev/null; do
-                i=$((i+1)); [ $i -ge 15 ] && echo "Timed out waiting for driver on ${render_name}" && exit 1
-                sleep 1
-              done
-              exec /ovms/bin/ovms \
-                --port 9000 \
-                --rest_port 8000 \
-                --config_path /models/config.json \
-                --log_level {{ .Values.env.logLevel | quote }} \
-                --metrics_enable
-          {{- else }}
           args:
             - "--port"
             - "9000"
@@ -162,7 +138,6 @@ spec:
             - "--log_level"
             - {{ .Values.env.logLevel | quote }}
             - "--metrics_enable"
-          {{- end }}
           ports:
             - name: http
               containerPort: 8000
