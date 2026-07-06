@@ -1,105 +1,82 @@
-# start.ps1 - Start the content_search backend and Flutter Windows app together.
-# Run from the utils/flutter directory:
-#   cd education-ai-suite\utils\flutter
-#   .\start.ps1
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-$ErrorActionPreference = "Stop"
+<#
+.SYNOPSIS
+    Start Smart Classroom RAG application
+.DESCRIPTION
+    Launches the Content Search backend in a separate window
+    and starts the Flutter Windows app.
+#>
 
-Write-Host ""
-Write-Host "Smart Classroom - Startup" -ForegroundColor Cyan
-Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "`n=== Starting Smart Classroom RAG ===" -ForegroundColor Cyan
 
-# --- Resolve paths ------------------------------------------------------------
-# Use $PSScriptRoot when available; fall back to the script's own path.
-$ScriptDir        = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
-$RepoRoot         = (Get-Item (Join-Path $ScriptDir "..\..")).FullName
-$ContentSearchDir = Join-Path $RepoRoot "smart-classroom\content_search"
-$VenvPython       = Join-Path $RepoRoot "venv_content_search\Scripts\python.exe"
-$StartServices    = Join-Path $ContentSearchDir "start_services.py"
+# Set proxy
+$env:HTTP_PROXY  = "http://proxy-dmz.intel.com:911"
+$env:HTTPS_PROXY = "http://proxy-dmz.intel.com:912"
+$env:http_proxy  = "http://proxy-dmz.intel.com:911"
+$env:https_proxy = "http://proxy-dmz.intel.com:912"
+$env:NO_PROXY    = "localhost,127.0.0.1,::1,*.intel.com"
+$env:no_proxy    = "localhost,127.0.0.1,::1,*.intel.com"
 
-Write-Host "  Repo root   : $RepoRoot" -ForegroundColor DarkGray
-Write-Host "  Backend dir : $ContentSearchDir" -ForegroundColor DarkGray
-Write-Host "  Python venv : $RepoRoot\venv_content_search" -ForegroundColor DarkGray
+# Check prerequisites
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$venvPython = Join-Path $repoRoot "venv_content_search\Scripts\python.exe"
+$backendScript = Join-Path $repoRoot "smart-classroom\content_search\start_services.py"
 
-# --- Sanity checks ------------------------------------------------------------
-if (-not (Test-Path $VenvPython)) {
-    Write-Error "Python venv not found at '$VenvPython'. Run .\setup.ps1 first."
+if (-not (Test-Path $venvPython)) {
+    Write-Host "[X] Python venv not found. Run .\setup.ps1 first" -ForegroundColor Red
     exit 1
 }
 
-if (-not (Test-Path $StartServices)) {
-    Write-Error "start_services.py not found at '$StartServices'."
+if (-not (Test-Path (Join-Path $PSScriptRoot "pubspec.yaml"))) {
+    Write-Host "[X] Flutter app not set up. Run .\setup.ps1 first" -ForegroundColor Red
     exit 1
 }
 
-if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
-    Write-Error "Flutter not found in PATH. Install from https://docs.flutter.dev/get-started/install/windows"
-    exit 1
-}
+# Start backend in separate window
+Write-Host "`nStarting Content Search backend..." -ForegroundColor Yellow
+$backendCmd = "Set-Location '$repoRoot'; & '$venvPython' '$backendScript'; Read-Host 'Backend stopped - press Enter to close'"
 
-# --- 1. Start content_search backend in a new elevated PowerShell window -----
-Write-Host ""
-Write-Host "Starting content_search backend in an elevated PowerShell window..." -ForegroundColor Green
+Start-Process powershell.exe `
+    -ArgumentList "-NoExit", "-Command", $backendCmd `
+    -WorkingDirectory $repoRoot
 
-# Build the command the elevated window will run:
-#   cd into content_search, activate the venv, then run start_services.py
-$BackendCmd = "Set-Location '$ContentSearchDir'; & '$VenvPython' '$StartServices'; Read-Host 'Backend stopped - press Enter to close'"
+Write-Host "[OK] Backend window opened" -ForegroundColor Green
+Write-Host "  Wait for 'Application startup complete' message before using the app" -ForegroundColor Yellow
 
-$BackendProc = Start-Process -FilePath "powershell.exe" `
-    -ArgumentList "-NoExit", "-Command", $BackendCmd `
-    -WorkingDirectory $ContentSearchDir `
-    -Verb RunAs `
-    -PassThru
+# Wait for backend to be ready
+Write-Host "`nWaiting for backend to be ready..." -ForegroundColor Yellow
+$deadline = (Get-Date).AddSeconds(60)
+$backendReady = $false
 
-Write-Host "  Backend window launched (PID $($BackendProc.Id))." -ForegroundColor White
-
-# --- 2. Poll the health endpoint until the backend is fully up ---------------
-$HealthUrl        = "http://127.0.0.1:9011/api/v1/system/health"
-$MaxWaitSeconds   = 180   # give the VLM / ChromaDB up to 3 minutes to load
-$PollIntervalSec  = 5
-$Elapsed          = 0
-$BackendReady     = $false
-
-Write-Host ""
-Write-Host "Waiting for backend to be ready ($HealthUrl) ..." -ForegroundColor Yellow
-
-while ($Elapsed -lt $MaxWaitSeconds) {
+do {
+    Start-Sleep -Seconds 3
     try {
-        $r = Invoke-WebRequest -Uri $HealthUrl -UseBasicParsing -TimeoutSec 4 -ErrorAction Stop
-        if ($r.StatusCode -eq 200) { $BackendReady = $true; break }
-    } catch { <# not ready yet #> }
-
-    Start-Sleep -Seconds $PollIntervalSec
-    $Elapsed += $PollIntervalSec
-    Write-Host "  ...still waiting ($Elapsed / ${MaxWaitSeconds}s)" -ForegroundColor DarkGray
-}
-
-if ($BackendReady) {
-    Write-Host "  Backend is ready!" -ForegroundColor Green
-} else {
-    Write-Warning "Backend did not respond within ${MaxWaitSeconds}s - launching Flutter anyway."
-}
-
-# --- 3. Start Flutter Windows app (blocks in this window) --------------------
-Write-Host ""
-Write-Host "Launching Flutter Windows app..." -ForegroundColor Green
-Write-Host "  (Close this window or press Ctrl+C to stop everything)" -ForegroundColor DarkGray
-Write-Host ""
-
-try {
-    Push-Location $ScriptDir
-    flutter run -d windows
-} finally {
-    Pop-Location
-
-    # --- 4. Tear down the backend when Flutter exits --------------------------
-    Write-Host ""
-    Write-Host "Flutter exited. Stopping backend (PID $($BackendProc.Id))..." -ForegroundColor Yellow
-    if (-not $BackendProc.HasExited) {
-        $prevPref = $ErrorActionPreference
-        $ErrorActionPreference = 'SilentlyContinue'
-        taskkill /F /T /PID $BackendProc.Id 2>&1 | Out-Null
-        $ErrorActionPreference = $prevPref
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:9011/api/v1/system/health" `
+                                       -UseBasicParsing -TimeoutSec 5
+        if ($response.StatusCode -eq 200) {
+            Write-Host "[OK] Backend is healthy" -ForegroundColor Green
+            $backendReady = $true
+            break
+        }
+    } catch {
+        Write-Host "." -NoNewline
     }
-    Write-Host "Done." -ForegroundColor Green
+} while ((Get-Date) -lt $deadline)
+
+if (-not $backendReady) {
+    Write-Host "`n⚠ Backend health check timed out" -ForegroundColor Yellow
+    Write-Host "  Continuing anyway - check the backend window for errors" -ForegroundColor Yellow
 }
+
+# Start Flutter app
+Write-Host "`nStarting Flutter app..." -ForegroundColor Yellow
+Push-Location $PSScriptRoot
+
+flutter run -d windows
+
+Pop-Location
+
+Write-Host "`n=== Application Closed ===" -ForegroundColor Cyan
+Write-Host "Remember to close the backend window if still running" -ForegroundColor Yellow

@@ -125,7 +125,7 @@ class _QaScreenState extends ConsumerState<QaScreen> {
             color: theme.scaffoldBackgroundColor,
             border: Border(
               top: BorderSide(
-                  color: cs.outline.withOpacity(0.15), width: 1),
+                  color: cs.outline.withValues(alpha: 0.15), width: 1),
             ),
           ),
           child: SafeArea(
@@ -142,7 +142,7 @@ class _QaScreenState extends ConsumerState<QaScreen> {
                           ref.read(qaNotifierProvider.notifier).clearChat(),
                       icon: Icon(Icons.delete_outline,
                           size: 20,
-                          color: cs.onSurface.withOpacity(0.4)),
+                          color: cs.onSurface.withValues(alpha: 0.4)),
                     ),
                   ),
                 // Text field
@@ -157,7 +157,7 @@ class _QaScreenState extends ConsumerState<QaScreen> {
                           ? 'Ask about the uploaded content...'
                           : 'Upload and index files first',
                       hintStyle: TextStyle(
-                        color: cs.onSurface.withOpacity(0.38),
+                        color: cs.onSurface.withValues(alpha: 0.38),
                         fontSize: 14,
                       ),
                       border: OutlineInputBorder(
@@ -166,7 +166,7 @@ class _QaScreenState extends ConsumerState<QaScreen> {
                       ),
                       filled: true,
                       fillColor:
-                          cs.surfaceContainerHighest.withOpacity(0.6),
+                          cs.surfaceContainerHighest.withValues(alpha: 0.6),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 11),
                       isDense: true,
@@ -224,7 +224,7 @@ class _TagBar extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
             bottom:
-                BorderSide(color: cs.outline.withOpacity(0.15))),
+                BorderSide(color: cs.outline.withValues(alpha: 0.15))),
       ),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -267,15 +267,15 @@ class _Placeholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: cs.primary.withOpacity(0.22)),
+            Icon(icon, size: 56, color: cs.primary.withValues(alpha: 0.22)),
             const SizedBox(height: 14),
             Text(title,
                 style: theme.textTheme.titleMedium
-                    ?.copyWith(color: cs.onSurface.withOpacity(0.35))),
+                    ?.copyWith(color: cs.onSurface.withValues(alpha: 0.35))),
             const SizedBox(height: 4),
             Text(subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurface.withOpacity(0.22)),
+                    color: cs.onSurface.withValues(alpha: 0.22)),
                 textAlign: TextAlign.center),
           ],
         ),
