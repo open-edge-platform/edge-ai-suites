@@ -62,14 +62,17 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
 # on MTL's Arc iGPU end-to-end in ~21 minutes for 50 epochs. torch 2.7.x
 # had immature SYCL kernels for YOLO's loss / target-assignment ops and
 # stalls indefinitely inside get_assigned_targets_and_loss on Xe3.
+#
+# Wheels are installed by direct URL against download.pytorch.org (rather
+# than the index) because pip's index resolution redirects through
+# download-r2.pytorch.org (Cloudflare R2 mirror) whose TLS handshake is
+# rejected by some corporate proxies (Fortinet). The direct wheel URLs
+# on the primary host succeed even when the R2 mirror does not.
 RUN pip install \
       --retries 8 \
       --timeout 120 \
-      --trusted-host download.pytorch.org \
-      --trusted-host download-r2.pytorch.org \
-      torch==2.12.1 \
-      torchvision==0.27.1 \
-      --index-url https://download.pytorch.org/whl/xpu
+      "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
+      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl"
 
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install -r /app/backend/requirements.txt
