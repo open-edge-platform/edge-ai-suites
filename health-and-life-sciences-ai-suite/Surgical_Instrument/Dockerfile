@@ -57,9 +57,14 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
 # torch + torchvision XPU wheels (Intel iGPU / Arc / Xe) — installed from
 # Intel's PyPI index BEFORE the rest of the requirements so ultralytics
 # doesn't pull the CPU-only torch as a dependency.
+#
+# Version pin matches the poc/gabriel_test/.venv setup that trained YOLO11n
+# on MTL's Arc iGPU end-to-end in ~21 minutes for 50 epochs. torch 2.7.x
+# had immature SYCL kernels for YOLO's loss / target-assignment ops and
+# stalls indefinitely inside get_assigned_targets_and_loss on Xe3.
 RUN pip install \
-      torch==2.7.1 \
-      torchvision==0.22.1 \
+      torch==2.12.1 \
+      torchvision==0.27.1 \
       --index-url https://download.pytorch.org/whl/xpu
 
 COPY backend/requirements.txt /app/backend/requirements.txt

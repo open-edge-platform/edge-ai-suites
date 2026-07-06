@@ -52,11 +52,12 @@ dataset:
 
 train:
   # xpu | cuda | cpu. Runs on the Intel iGPU by default (Arc on Meteor
-  # Lake, Xe3 on Panther Lake). Cold-start first epoch is dominated by
-  # SYCL kernel JIT; the persistent kernel cache volume mounted at
-  # /root/.cache in docker-compose.yaml keeps subsequent runs fast.
+  # Lake, Xe3 on Panther Lake). Matches the poc/gabriel_test/.venv
+  # recipe that trained YOLO11n on Arc iGPU in ~21 min for 50 epochs.
+  # Requires torch>=2.12.1+xpu — earlier torch-xpu versions stall in
+  # Ultralytics' loss/assign kernels on Xe3.
   device: xpu
-  epochs: 20
+  epochs: 50
   imgsz: 640
   batch: 8
   workers: 4
