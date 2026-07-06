@@ -25,6 +25,7 @@ backend_mvp/
 **/artifacts/
 **/benchmarks/
 **/*.svg
+out/
 
 # Model binaries / caches (use `make assets` to fetch)
 models/**/*.bin
