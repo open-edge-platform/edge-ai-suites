@@ -63,16 +63,38 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
 # had immature SYCL kernels for YOLO's loss / target-assignment ops and
 # stalls indefinitely inside get_assigned_targets_and_loss on Xe3.
 #
-# Wheels are installed by direct URL against download.pytorch.org (rather
-# than the index) because pip's index resolution redirects through
-# download-r2.pytorch.org (Cloudflare R2 mirror) whose TLS handshake is
-# rejected by some corporate proxies (Fortinet). The direct wheel URLs
-# on the primary host succeed even when the R2 mirror does not.
+# We install the torch/torchvision wheels by direct URL from
+# download.pytorch.org (rather than from --index-url) because pip's index
+# resolution redirects wheel downloads through the Cloudflare R2 mirror
+# (download-r2.pytorch.org), whose TLS handshake is rejected by our
+# corporate proxy. The two large wheels are still served from S3 by the
+# primary host directly and succeed via the proxy.
+#
+# --no-deps + explicit dep install below because triton-xpu==3.7.1 is
+# ONLY served from the R2 mirror (S3 direct returns AccessDenied). We
+# skip triton-xpu entirely — it's used exclusively by torch.compile,
+# which Ultralytics YOLO training does not invoke.
 RUN pip install \
       --retries 8 \
       --timeout 120 \
+      --no-deps \
       "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
-      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl"
+      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl" \
+ && pip install \
+      --retries 8 \
+      --timeout 120 \
+      "filelock>=3.13" \
+      "typing-extensions>=4.10" \
+      "sympy>=1.13.3" \
+      "networkx>=3.0" \
+      "jinja2>=3.1" \
+      "fsspec>=2024.2.0" \
+      "pyyaml>=6.0" \
+      "intel-pti==0.16.0" \
+      "intel-cmplr-lib-rt==2025.3.2" \
+      "intel-sycl-rt==2025.3.2" \
+      "intel-opencl-rt==2025.3.2" \
+      "intel-openmp==2025.3.2"
 
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install -r /app/backend/requirements.txt
