@@ -7,6 +7,7 @@ BEFORE the expensive training step.
 """
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Callable
 
@@ -43,7 +44,9 @@ def ensure_base_weights(
     # Ultralytics drops the file in CWD by default when only a name is passed.
     for candidate in (Path.cwd() / f"{name}.pt", Path.home() / f".config/Ultralytics/{name}.pt"):
         if candidate.exists():
-            candidate.replace(dst)
+            # shutil.move handles cross-filesystem moves (bind-mount / named vol
+            # sit on a different device than the container overlay).
+            shutil.move(str(candidate), str(dst))
             break
     else:
         # If we can't find it, YOLO() would have raised — but be explicit.
