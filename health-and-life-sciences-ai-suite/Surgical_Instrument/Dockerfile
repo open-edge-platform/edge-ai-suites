@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxcb1 \
       curl \
       wget \
+      gnupg \
       gpg-agent \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
