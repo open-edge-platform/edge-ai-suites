@@ -11,6 +11,8 @@ from typing import Callable
 from . import xpu_compat  # noqa: F401
 from ultralytics import YOLO
 
+xpu_compat.install_select_device_xpu_shim()
+
 
 ExportProgress = Callable[[dict], None]
 

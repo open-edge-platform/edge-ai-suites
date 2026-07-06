@@ -87,11 +87,11 @@ def xpu_available() -> bool:
 
 
 def install_select_device_xpu_shim():
-    # Ultralytics 8.4.75's utils.torch_utils.select_device() only knows
-    # cpu/mps/cuda — an 'xpu:0' string falls through to the CUDA branch and
-    # raises "Invalid CUDA 'device=xpu:0' requested". Per-epoch val avoids
-    # this (Trainer passes its cached device), but final_eval builds a fresh
-    # Validator that calls select_device(args.device) and crashes.
+    # Consumer modules (validator, predictor, ...) bind select_device at
+    # import time via `from ultralytics.utils.torch_utils import select_device`,
+    # so patching only torch_utils.select_device leaves stale references. Patch
+    # every module that imported it as well.
+    import importlib
     from ultralytics.utils import torch_utils as _ut
 
     _orig = _ut.select_device
@@ -104,3 +104,22 @@ def install_select_device_xpu_shim():
         return _orig(device, batch, newline, verbose)
 
     _ut.select_device = _select
+
+    _consumers = (
+        "ultralytics.engine.validator",
+        "ultralytics.engine.predictor",
+        "ultralytics.engine.exporter",
+        "ultralytics.engine.trainer",
+        "ultralytics.utils.benchmarks",
+        "ultralytics.utils.checks",
+        "ultralytics.models.sam.predict",
+        "ultralytics.models.yolo.yoloe.val",
+        "ultralytics.solutions.similarity_search",
+    )
+    for _name in _consumers:
+        try:
+            _mod = importlib.import_module(_name)
+        except Exception:
+            continue
+        if getattr(_mod, "select_device", None) is not None:
+            _mod.select_device = _select
