@@ -1,5 +1,3 @@
-(rvc_index)=
-
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0//robotics-ai-suite/robot-vision-control">

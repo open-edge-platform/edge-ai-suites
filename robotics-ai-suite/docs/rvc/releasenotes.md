@@ -1,5 +1,3 @@
-(releasenotes)=
-
 # Release Notes
 
 Click each tab to learn about the new and updated features in each release of Stationary Robot.

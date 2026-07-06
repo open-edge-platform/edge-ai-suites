@@ -1,5 +1,3 @@
-(vision_main_node)=
-
 # Vision Component Container
 
 ## Preliminary Steps

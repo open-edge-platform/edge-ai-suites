@@ -1,5 +1,3 @@
-(install_rvc)=
-
 # Install RVC
 
 ## Requirements

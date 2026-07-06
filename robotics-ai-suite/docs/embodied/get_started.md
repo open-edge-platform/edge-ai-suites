@@ -31,3 +31,11 @@ get-started/installation/realsense
 
 :::
 hide_directive-->
+
+## Quick Start Guide Resources
+
+You can refer to the following resources, which include package installation, environment setup, GRUB customizations and real-time runtime tuning BKC. The express setup will use convenience scripts to automatically configure and install the necessary contents on your system. It also provides methods for converted OpenVINO models benchmarking and real-time benchmarking.
+
+- Robotics AI Suite: Humanoid on Intel® Core™ Ultra Series 3 Processor Quick Start Guide - [RDC #[921307]](https://cdrdv2.intel.com/v1/dl/getContent/921307)
+
+- Robotics AI Suite: Humanoid on Intel® Core™ Ultra Series 2 Processor Quick Start Guide (Intel Embodied Intelligence SDK Quick Start Guide) - [RDC #[865446]](https://cdrdv2.intel.com/v1/dl/getContent/865446)

@@ -1,5 +1,3 @@
-(pi05_lerobot_openvino)=
-
 # OpenVINO™ Optimization of Robotics VLA Model Pi0.5
 
 This example shows how to optimize the Vision-Language-Action (VLA) model Pi0.5 with Intel® OpenVINO™, compress model weights to INT8 and benchmark using the OpenVINO benchmark_app tool.
@@ -93,8 +91,6 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
        time = time * 0.999 + 0.001
        return time.to(dtype=torch.float32, device=device)
    ```
-
-(pi05_model_conversion)=
 
 ## Model Conversion and OpenVINO™ Optimization
 

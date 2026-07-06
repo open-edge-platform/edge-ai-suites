@@ -74,8 +74,6 @@ include the following steps:
 2. Install ROS packages using APT
 3. Environment setup
 
-(prepare-ros-environment-rvc)=
-
 ### Prepare your ROS 2 Environment
 
 In order to execute any ROS 2 command in a new shell, you first have to source

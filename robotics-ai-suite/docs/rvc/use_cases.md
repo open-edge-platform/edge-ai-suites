@@ -1,5 +1,3 @@
-(use_cases)=
-
 # Exemplary Use Cases
 
 Two exemplary use cases are provided within the RVC framework, each designed to demonstrate distinct capabilities of perception and motion control.
