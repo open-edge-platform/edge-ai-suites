@@ -99,6 +99,18 @@ RUN pip install \
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install -r /app/backend/requirements.txt
 
+# Re-pin torch+xpu after requirements.txt runs. Ultralytics 8.4.75's
+# transitive resolution pulls torch 2.12.1+cu130 from PyPI (CUDA build)
+# and silently replaces our XPU wheel. We force-reinstall the XPU wheel
+# by direct URL, --no-deps so no other package gets touched.
+RUN pip install \
+      --retries 8 \
+      --timeout 120 \
+      --no-deps \
+      --force-reinstall \
+      "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
+      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl"
+
 # Application code.
 COPY backend/ /app/backend/
 
