@@ -2,37 +2,61 @@
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
 # bootstrap that fetches CVC-ColonDB (manual-drop), trains YOLO11n on the
-# host's Intel Arc iGPU via torch+xpu, exports to OpenVINO IR, then streams
-# annotated frames over /api/video_feed.
+# host's Intel Arc / Xe iGPU via torch+xpu, exports to OpenVINO IR, then
+# streams annotated frames over /api/video_feed.
 #
-# The host mounts /dev/dri (and /dev/accel for NPU, optional). Container
-# just needs libze1 for level-zero GPU discovery.
+# The host mounts /dev/dri (and /dev/accel for NPU, optional). The container
+# needs the Intel graphics compute runtime (Level Zero GPU/NPU drivers +
+# OpenCL ICD) — installed from Intel's official Ubuntu 24.04 repo. Without
+# these, torch.xpu.device_count() returns 0 even when /dev/dri is mounted
+# and the process is in the render group.
 
-FROM python:3.11-slim
+FROM ubuntu:24.04
 
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    DEBIAN_FRONTEND=noninteractive
 
-# System deps: OpenCV runtime libs, level-zero for GPU, curl for HEALTHCHECK.
+# Base runtime: Python + OpenCV shared libs + curl for HEALTHCHECK.
+# The Intel graphics userspace (libze-intel-gpu, intel-opencl-icd, level-zero
+# NPU driver) is installed from Intel's compute-runtime repo below — this is
+# what the DL Streamer pipeline container also uses.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 \
+      python3-pip \
+      python3-venv \
       libglib2.0-0 \
       libgl1 \
       libsm6 \
       libxext6 \
       libxrender1 \
       libxcb1 \
-      libze1 \
       curl \
+      wget \
+      gpg-agent \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# torch + torchvision XPU wheels (Intel Arc iGPU) — installed from Intel's
-# index BEFORE the rest of the requirements, so ultralytics doesn't pull the
-# CPU-only torch as a dependency.
+RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
+      | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" \
+      > /etc/apt/sources.list.d/intel-gpu-noble.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      libze1 \
+      libze-intel-gpu1 \
+      intel-opencl-icd \
+      intel-media-va-driver-non-free \
+      intel-level-zero-npu \
+    && rm -rf /var/lib/apt/lists/*
+
+# torch + torchvision XPU wheels (Intel iGPU / Arc / Xe) — installed from
+# Intel's PyPI index BEFORE the rest of the requirements so ultralytics
+# doesn't pull the CPU-only torch as a dependency.
 RUN pip install \
       torch==2.7.1 \
       torchvision==0.22.1 \
@@ -60,4 +84,4 @@ EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=45m --retries=3 \
     CMD curl -fsS http://localhost:5001/api/readiness || exit 1
 
-CMD ["python", "-m", "backend.main_server"]
+CMD ["python3", "-m", "backend.main_server"]
