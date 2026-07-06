@@ -52,6 +52,7 @@ def train_model(
         })
 
     model = load_train_model(name)
+    xpu_compat.install_select_device_xpu_shim()
 
     # Wire per-epoch callback so the caller gets progress ticks.
     if progress:

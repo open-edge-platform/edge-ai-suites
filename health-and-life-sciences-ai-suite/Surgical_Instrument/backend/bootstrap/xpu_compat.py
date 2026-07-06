@@ -84,3 +84,23 @@ def xpu_device():
 
 def xpu_available() -> bool:
     return bool(getattr(torch, "xpu", None)) and torch.xpu.is_available()
+
+
+def install_select_device_xpu_shim():
+    # Ultralytics 8.4.75's utils.torch_utils.select_device() only knows
+    # cpu/mps/cuda — an 'xpu:0' string falls through to the CUDA branch and
+    # raises "Invalid CUDA 'device=xpu:0' requested". Per-epoch val avoids
+    # this (Trainer passes its cached device), but final_eval builds a fresh
+    # Validator that calls select_device(args.device) and crashes.
+    from ultralytics.utils import torch_utils as _ut
+
+    _orig = _ut.select_device
+
+    def _select(device="", batch=0, newline=False, verbose=True):
+        if isinstance(device, str) and device.startswith("xpu"):
+            return torch.device(device)
+        if isinstance(device, torch.device) and device.type == "xpu":
+            return device
+        return _orig(device, batch, newline, verbose)
+
+    _ut.select_device = _select
