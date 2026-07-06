@@ -45,6 +45,65 @@ Tip:
 
 - Size the number of streams according to the available hardware resources.
 
+## Proxy and no_proxy configuration (mandatory)
+
+Behind a corporte network, incorrect proxy settings are the most common cause of model-download failures and DL Streamer Pipeline Server crashes. Make sure both the Docker daemon proxy and `no_proxy` are set correctly and kept consistent.
+
+Docker daemon proxy (required for internet access during model download):
+
+- Configure the proxy for the Docker daemon.
+- Restart Docker after updating:
+
+  ```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+  ```
+
+`no_proxy` (required so DLSPS does not crash):
+
+- Add the required entries in `/etc/environment`, including your local network ranges:
+
+  ```bash
+  no_proxy=localhost,127.0.0.1,<add-local-network-ranges>
+  ```
+
+- Reload the environment:
+
+  ```bash
+  source /etc/environment
+  ```
+Note:
+
+- On an open network (no proxy), remove the proxy settings from the DLSPS (`dlstreamer-pipeline-server`) service in `compose.yaml`. This is a known bug and will be fixed soon.
+
+## DLSPS segfault from improper proxy configuration
+
+Symptoms:
+
+- Pipeline server failure.
+- Segmentation fault in the DLSPS (DL Streamer Pipeline Server) container.
+
+Details:
+
+- Improper or inconsistent proxy configuration can lead to segmentation faults in DLSPS.
+
+Workarounds:
+
+- Ensure both the Docker daemon proxy and `no_proxy` are configured correctly (see the proxy configuration issue above).
+- Avoid inconsistent proxy settings in `compose.yaml`.
+- Restart the containers after any configuration change.
+
+## Memory deallocation issue on Panther Lake (PTL)
+
+Impact:
+
+- On Panther Lake (PTL) systems, DLSPS may have memory deallocation issues, leading to pipeline instability over time.
+
+Mitigation:
+
+- Restart the services if instability is observed.
+- Monitor memory usage during long runs.
+
 ## WebRTC connectivity issues
 
 Symptoms:
@@ -110,7 +169,7 @@ Symptoms:
 
 Details:
 
-- The lag is a display artifact caused by the collector's `inputs.exec` plugin taking longer than expected to gather CPU frequency data on high-core-count GPU nodes (e.g. nodes with 192 CPUs). This can cause metric batches to queue up and be flushed slightly out of sync.
+- The lag is a display artifact caused by the metrics-manager Telegraf `inputs.exec` plugin taking longer than expected to gather CPU frequency data on high-core-count GPU nodes (e.g. nodes with 192 CPUs). This can cause metric batches to queue up and be flushed slightly out of sync.
 - The pipeline inference and captioning are unaffected; only the metrics visualization is delayed.
 
 ## Gemma model not working in GPU

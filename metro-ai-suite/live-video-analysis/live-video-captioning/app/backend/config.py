@@ -37,6 +37,7 @@ PIPELINE_SERVER_URL = os.environ.get(
     "PIPELINE_SERVER_URL", "http://dlstreamer-pipeline-server:8080"
 )
 PIPELINE_NAME = os.environ.get("PIPELINE_NAME", "genai_pipeline")
+
 # How often (in seconds) to poll the pipeline server for run health. 0 disables polling.
 # Keep this low (≤10 s) so the UI reflects a crashed pipeline server quickly.
 PIPELINE_POLL_INTERVAL = _read_non_negative_int("PIPELINE_POLL_INTERVAL", 8)

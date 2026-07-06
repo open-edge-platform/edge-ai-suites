@@ -210,6 +210,21 @@ const RunCardComponent = (function () {
         video.className = 'run-video';
         video.title = `WebRTC ${run.peerId}`;
 
+        // Wrap the iframe so a "Connecting…" overlay can sit on top of it while
+        // the pipeline spins up and before mediamtx has a publisher for the path.
+        const videoWrap = document.createElement('div');
+        videoWrap.className = 'video-wrap';
+
+        const videoOverlay = document.createElement('div');
+        videoOverlay.className = 'video-overlay';
+        videoOverlay.innerHTML = `
+            <div class="video-overlay-spinner"></div>
+            <div class="video-overlay-text">Connecting to stream…</div>
+        `;
+
+        videoWrap.appendChild(video);
+        videoWrap.appendChild(videoOverlay);
+
         const captionPanel = document.createElement('div');
         captionPanel.className = 'caption-panel';
 
@@ -284,13 +299,13 @@ const RunCardComponent = (function () {
         captionPanel.appendChild(watcher);
         captionPanel.appendChild(captionContent);
 
-        grid.appendChild(video);
+        grid.appendChild(videoWrap);
         grid.appendChild(captionPanel);
 
         wrap.appendChild(header);
         wrap.appendChild(grid);
 
-        return { wrap, video, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
+        return { wrap, video, videoWrap, videoOverlay, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
     }
 
     function validateAndPrepareRunName(rawName) {
@@ -320,7 +335,7 @@ const RunCardComponent = (function () {
      *
      * @param {object} ui - The object returned by createRunElement.
      */
-    function setRunErrorState(ui) {
+    function setRunErrorState(ui, message) {
         // Switch dot to pulsing red
         const dot = ui.wrap?.querySelector('.dot');
         if (dot) {
@@ -330,14 +345,17 @@ const RunCardComponent = (function () {
 
         // Show error banner in the watcher row
         if (ui.watcher) {
+            const text = message || 'Pipeline lost, click Remove to clear';
             ui.watcher.innerHTML = `
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <span style="color:#ef4444;font-weight:600;">Pipeline lost, click Remove to clear</span>
+                <span style="color:#ef4444;font-weight:600;"></span>
             `;
+            const span = ui.watcher.querySelector('span');
+            if (span) span.textContent = text;
             ui.watcher.style.gap = '6px';
             ui.watcher.style.display = 'flex';
             ui.watcher.style.alignItems = 'center';
@@ -350,9 +368,32 @@ const RunCardComponent = (function () {
         }
     }
 
+    /**
+     * Replace the "Connecting…" video overlay with an error message.
+     * Used when the pipeline fails to bring up the stream during startup.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     * @param {string} [message] - Error text to display over the video area.
+     */
+    function setVideoOverlayError(ui, message) {
+        if (!ui.videoOverlay) return;
+        ui.videoOverlay.style.display = '';
+        ui.videoOverlay.innerHTML = `
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div class="video-overlay-text" style="color:#ef4444;"></div>
+        `;
+        const textEl = ui.videoOverlay.querySelector('.video-overlay-text');
+        if (textEl) textEl.textContent = message || 'Stream failed to start';
+    }
+
     return {
         createRunElement,
         setRunErrorState,
+        setVideoOverlayError,
         validateAndPrepareRunName,
         getUniqueRunName,
         formatRunNameForDisplay

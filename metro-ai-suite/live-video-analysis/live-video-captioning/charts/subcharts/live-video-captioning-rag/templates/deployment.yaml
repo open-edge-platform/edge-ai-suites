@@ -86,7 +86,7 @@ spec:
             - name: https_proxy
               value: {{ .Values.global.httpsProxy | quote }}
             - name: no_proxy
-              value: {{ printf "%s,%s,mqtt-broker,dlstreamer-pipeline-server,mediamtx,coturn,video-caption-service,live-metrics-service,collector,live-video-captioning-rag,multimodal-embedding,vdms-vector-db" (default "" .Values.global.noProxy) .Values.global.modelDownload.serviceName | trimPrefix "," | quote }}
+              value: {{ printf "%s,%s,mqtt-broker,dlstreamer-pipeline-server,mediamtx,coturn,video-caption-service,metrics-manager,live-video-captioning-rag,multimodal-embedding,vdms-vector-db" (default "" .Values.global.noProxy) .Values.global.modelDownload.serviceName | trimPrefix "," | quote }}
           volumeMounts:
             - name: scripts-volume
               mountPath: /config

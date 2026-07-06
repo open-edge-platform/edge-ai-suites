@@ -19,7 +19,12 @@ from ..config import (
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
-from ..services import discover_pipelines_remote, http_json, get_mqtt_subscriber
+from ..services import (
+    discover_pipelines_remote,
+    http_json,
+    get_mqtt_subscriber,
+    get_pipeline_state,
+)
 from ..state import RUNS
 
 router = APIRouter(prefix="/api", tags=["captions"])
@@ -27,6 +32,12 @@ logger = logging.getLogger("app.runs")
 WEBRTC_PEER_ID_MAX_LENGTH = 8
 WEBRTC_PEER_ID_PREFIX = "s"
 DEFAULT_RESOLUTION_SUFFIX = "_Default_Resolution"
+
+# Pipeline states reported by the DL Streamer pipeline server that are considered
+# healthy while a stream is starting up. ``running`` means frames are flowing;
+# ``queued`` means the instance is scheduled and about to run. Any other state
+# (error, aborted, completed, …) means the stream has failed to come up.
+_HEALTHY_PIPELINE_STATES = {"running", "queued"}
 
 
 def _is_linux_video_device(source_uri: str) -> bool:
@@ -346,6 +357,69 @@ async def multiplexed_metadata_stream() -> StreamingResponse:
         media_type="text/event-stream",
         headers=headers,
     )
+
+
+@router.get("/generate_captions_alerts/{run_id}/stream-ready")
+async def stream_ready(run_id: str) -> dict[str, object]:
+    """Report whether the WebRTC stream for a run is publishing yet.
+
+    The DL Streamer pipeline needs a few seconds after start before it begins
+    publishing frames to mediamtx. The UI polls this endpoint and only loads the
+    video iframe once frames are flowing, avoiding mediamtx's "stream not
+    found, retrying" page.
+
+    This endpoint is the backend half of a two-stage readiness gate: the
+    backend answers "is the pipeline alive and producing?", mediamtx answers
+    "can the browser watch it yet?" (the UI confirms the latter with a WHEP
+    probe before loading the iframe).
+
+    Readiness is derived from the pipeline server alone: the run is ready when
+    its instance is ``RUNNING`` and reports a positive ``avg_fps`` — frames
+    moving through the pipeline are being published to mediamtx by the WebRTC
+    sink. This deliberately avoids the mediamtx control API, so mediamtx can
+    run with its API disabled. The pipeline state also lets the UI fail fast
+    when the instance leaves the ``RUNNING``/``QUEUED`` states (or vanishes)
+    instead of staying stuck on "Connecting…".
+    """
+    info = RUNS.get(run_id)
+    if not info:
+        raise HTTPException(status_code=404, detail={"message": "Run not found"})
+
+    reachable, state, avg_fps = await asyncio.to_thread(
+        get_pipeline_state, info.pipelineId
+    )
+
+    # Pipeline server temporarily unreachable – treat as "still starting" and
+    # let the UI keep waiting; the health monitor handles persistent outages.
+    if not reachable:
+        return {
+            "runId": run_id,
+            "peerId": info.peerId,
+            "ready": False,
+            "state": None,
+            "error": False,
+        }
+
+    # The instance has vanished or entered a non-healthy state (error, aborted,
+    # completed, …). The stream will never come up – report a hard error.
+    if state is None or state not in _HEALTHY_PIPELINE_STATES:
+        info.status = "error"
+        return {
+            "runId": run_id,
+            "peerId": info.peerId,
+            "ready": False,
+            "state": state,
+            "error": True,
+        }
+
+    # Healthy: ready once frames are flowing; otherwise keep waiting.
+    return {
+        "runId": run_id,
+        "peerId": info.peerId,
+        "ready": state == "running" and avg_fps > 0,
+        "state": state,
+        "error": False,
+    }
 
 
 @router.get("/generate_captions_alerts/{run_id}")

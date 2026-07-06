@@ -12,6 +12,7 @@ from .mqtt_subscriber import (
 )
 from .pipeline_health import (
     check_pipeline_health,
+    get_pipeline_state,
     start_pipeline_health_monitor,
     stop_pipeline_health_monitor,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "get_mqtt_subscriber",
     "shutdown_mqtt_subscriber",
     "check_pipeline_health",
+    "get_pipeline_state",
     "start_pipeline_health_monitor",
     "stop_pipeline_health_monitor",
     "discover_capture_cameras",

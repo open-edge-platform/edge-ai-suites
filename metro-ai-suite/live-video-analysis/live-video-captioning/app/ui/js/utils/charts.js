@@ -3,7 +3,7 @@
  */
 const ChartManager = (function() {
     let statsChart = null;
-    const datasetIndex = { cpu: 0, ram: 1, gpu: 2 };
+    const datasetIndex = { cpu: 0, ram: 1, gpu: 2, npu: 3 };
     const maxPoints = 60;
 
     function createConsolidatedChart(elId, metrics) {

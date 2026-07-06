@@ -93,6 +93,6 @@ RAG is optional and not required for the base Live Video Captioning application.
 
 ## Troubleshooting
 
-- If Docker cannot pull `intel/model-download:<TAG>`, check the `TAG` value in `.env`.
+- If Docker cannot pull `intel/model-download:<tag>`, check the `MODEL_DOWNLOAD_IMAGE_TAG` value in `.env` (defaults to `latest`; this is independent of the application image `TAG`).
 - If a gated model fails with an authentication error, set `HUGGINGFACEHUB_API_TOKEN` and rerun the command.
 - If a download is interrupted, rerun the same command. The ephemeral container is removed automatically when the helper exits.

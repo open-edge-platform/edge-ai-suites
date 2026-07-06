@@ -54,9 +54,10 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-left: 20px;
-    padding-top: 6px;
-    padding-right: 20px;
+    padding-left: 16px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-right: 16px;
     flex-shrink: 0;
 }
 
@@ -144,7 +145,7 @@ main {
     background: var(--panel);
     border: 3px solid var(--border);
     border-radius: 10px;
-    padding: 12px;
+    padding: 8px;
     box-shadow: var(--shadow);
 }
 
@@ -509,14 +510,14 @@ iframe {
 .controls {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 8px;
+    gap: 7px;
+    margin-bottom: 6px;
     flex-shrink: 0;
 }
 
 .field-row {
     display: flex;
-    gap: 10px;
+    gap: 7px;
     align-items: stretch;
 }
 
@@ -534,7 +535,7 @@ iframe {
 .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 /* Keep Start/Stop buttons on one row */
@@ -551,18 +552,18 @@ iframe {
 }
 
 .label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--muted);
 }
 
 .input {
-    padding: 6px 10px;
+    padding: 5px 8px;
     border-radius: 8px;
     border: 1px solid var(--input-border);
     background: var(--input-bg);
     color: var(--text);
     width: 100%;
-    font-size: 0.875rem;
+    font-size: 0.82rem;
 }
 
 /* Make keyboard focus visible without changing theme colors */
@@ -586,11 +587,11 @@ iframe {
 }
 
 .btn {
-    padding: 10px 15px;
+    padding: 8px 13px;
     border: none;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 0.875rem;
+    font-size: 0.82rem;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -624,8 +625,13 @@ iframe {
 
 .chart-values {
     display: flex;
-    gap: 12px;
-    font-size: 0.8rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    min-width: 0;
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
+    font-size: 0.78rem;
 }
 
 .chart-card {
@@ -641,8 +647,10 @@ iframe {
 
 .chart-header {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    gap: 6px 10px;
     font-size: 0.85rem;
     color: var(--muted);
     margin-bottom: 4px;
@@ -652,6 +660,16 @@ iframe {
 .chart-value {
     color: var(--text);
     font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Reserve a stable width for the numeric value so labels don't jump
+   as readings change (e.g. "—" -> "100.0%"). */
+.chart-value > span {
+    display: inline-block;
+    min-width: 2.6em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .chart-sub {
@@ -738,6 +756,50 @@ iframe {
     width: 100%;
     height: 100%;
     min-height: 0;
+}
+
+/* Video wrapper hosts the iframe plus the "Connecting…" overlay */
+.video-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(5, 8, 20, 0.82);
+    color: var(--text);
+    z-index: 2;
+    border-radius: 8px;
+}
+
+.video-overlay-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.video-overlay-spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--accent);
+    animation: video-overlay-spin 0.9s linear infinite;
+}
+
+@keyframes video-overlay-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Alert rules sub-box */

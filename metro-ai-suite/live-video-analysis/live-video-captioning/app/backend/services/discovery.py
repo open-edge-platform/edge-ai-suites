@@ -29,6 +29,11 @@ def _gpu_device_exists() -> bool:
     return any(dri_dir.glob("renderD*"))
 
 
+def _is_gpu_pipeline(pipeline_name: str) -> bool:
+    """Whether a pipeline targets the GPU, by naming convention (e.g. *_on_GPU)."""
+    return "_GPU" in pipeline_name.upper()
+
+
 def _default_pipeline_names(gpu_available: bool) -> set[str]:
     """Return preferred default pipeline names for current hardware."""
     if gpu_available:
@@ -176,6 +181,13 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         ]
 
         gpu_available = _gpu_device_exists()
+
+        # Hide GPU pipelines on hosts without a usable GPU. They cannot build there
+        # (e.g. DLStreamer's vah264dec needs VA-API) and would only surface as errors
+        # if offered in the UI or accepted by the run endpoint.
+        if not gpu_available:
+            results = [r for r in results if not _is_gpu_pipeline(r["pipeline_name"])]
+
         preferred_defaults = _default_pipeline_names(gpu_available)
         for row in results:
             row["pipeline_default"] = row["pipeline_name"] in preferred_defaults
@@ -184,7 +196,7 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
             if not gpu_available:
                 # Prefer a non-GPU fallback when GPU is not available.
                 for row in results:
-                    if "_GPU" not in row["pipeline_name"].upper():
+                    if not _is_gpu_pipeline(row["pipeline_name"]):
                         row["pipeline_default"] = True
                         break
 

@@ -16,6 +16,7 @@ from backend.services.discovery import (
     discover_pipelines_remote,
     _default_pipeline_names,
     _gpu_device_exists,
+    _is_gpu_pipeline,
 )
 
 
@@ -364,6 +365,44 @@ class TestDiscoverPipelinesRemote:
         assert len(defaults) == 1
         assert defaults[0]["pipeline_name"] == "genai_pipeline"
 
+    def test_gpu_pipelines_hidden_when_no_gpu(self):
+        """GPU pipelines are excluded from results on hosts without a GPU."""
+        payload = ["GenAI_Pipeline_on_CPU", "GenAI_Pipeline_on_GPU"]
+
+        with self._mock_http(payload), patch(
+            "backend.services.discovery._gpu_device_exists", return_value=False
+        ):
+            result = discover_pipelines_remote()
+
+        names = [r["pipeline_name"] for r in result]
+        assert names == ["GenAI_Pipeline_on_CPU"]
+
+    def test_gpu_pipelines_shown_when_gpu_available(self):
+        """GPU pipelines are retained when a GPU is detected."""
+        payload = ["GenAI_Pipeline_on_CPU", "GenAI_Pipeline_on_GPU"]
+
+        with self._mock_http(payload), patch(
+            "backend.services.discovery._gpu_device_exists", return_value=True
+        ):
+            result = discover_pipelines_remote()
+
+        names = {r["pipeline_name"] for r in result}
+        assert names == {"GenAI_Pipeline_on_CPU", "GenAI_Pipeline_on_GPU"}
+
+    def test_gpu_only_payload_without_gpu_falls_back_to_default(self):
+        """If only GPU pipelines exist and no GPU, the configured default is returned."""
+        payload = ["GenAI_Pipeline_on_GPU", "GenAI_Camera_Pipeline_on_GPU"]
+
+        with self._mock_http(payload), patch(
+            "backend.services.discovery._gpu_device_exists", return_value=False
+        ):
+            result = discover_pipelines_remote()
+
+        assert all(not _is_gpu_pipeline(r["pipeline_name"]) for r in result)
+        assert len(result) == 1
+        assert result[0]["pipeline_name"] == "genai_pipeline"
+        assert result[0]["pipeline_default"] is True
+
 
 class TestGpuHelpers:
     """Tests for GPU-related helper functions in discovery."""
@@ -379,3 +418,13 @@ class TestGpuHelpers:
             "GenAI_Pipeline_on_CPU",
             "GenAI_Camera_Pipeline_on_CPU",
         }
+
+    def test_is_gpu_pipeline_detects_gpu_names(self):
+        """Pipeline names ending in _GPU (any case) are classified as GPU pipelines."""
+        assert _is_gpu_pipeline("GenAI_Pipeline_on_GPU") is True
+        assert _is_gpu_pipeline("custom_gpu") is True
+
+    def test_is_gpu_pipeline_false_for_non_gpu_names(self):
+        """Non-GPU pipeline names are not classified as GPU pipelines."""
+        assert _is_gpu_pipeline("GenAI_Pipeline_on_CPU") is False
+        assert _is_gpu_pipeline("genai_pipeline") is False

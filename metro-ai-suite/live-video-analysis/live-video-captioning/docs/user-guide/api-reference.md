@@ -1,6 +1,6 @@
 # API Reference
 
-The backend is a FastAPI application that serves REST APIs, an SSE stream for captions/metadata (via MQTT), and WebSocket endpoints for metrics.
+The backend is a FastAPI application that serves REST APIs and an SSE stream for captions/metadata (via MQTT). System metrics (CPU, GPU, NPU, memory, power) are served separately by the bundled `metrics-manager` (`intel/metrics-manager`) over its own SSE stream.
 
 ## Interactive API docs
 

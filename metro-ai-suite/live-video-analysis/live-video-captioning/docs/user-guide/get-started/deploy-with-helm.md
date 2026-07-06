@@ -10,7 +10,7 @@ Before you begin, ensure that you have the following:
 - Helm installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. See [Kubernetes Documentation on Dynamic Volume Provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for details.
 - A worker node reachable by your browser client. Prefer a GPU-capable worker node when available, because the chart pins the media and inference workloads to the selected node and DL Streamer benefits most from GPU access.
-- A writable host path for collector signal files on the target node. By default the chart uses `/tmp/lvc/collector-signals`.
+- An Intel GPU/NPU-capable worker node is recommended so the `metrics-manager` can report GPU and NPU utilization (via qmassa). GPU/NPU metrics are simply omitted on nodes without the hardware.
 - An RTSP source reachable from the Kubernetes node that runs `dlstreamer-pipeline-server`.
 - Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html) which is responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
 
@@ -124,16 +124,16 @@ The chart pins the workloads that need to stay together to the target node selec
 - `video-caption-service`
 - `mediamtx`
 - `coturn`
-- `collector`
+- `metrics-manager`
 - `live-video-captioning-rag (if RAG is enabled)`
 
 These workloads are kept on the same worker because they rely on node-local access patterns:
 
 - `dlstreamer-pipeline-server`, `video-caption-service`, `live-video-captioning-rag` and `model-download` share the model PVCs that created by `model-download`.
-- `dlstreamer-pipeline-server` and `collector` need direct access to node hardware and host resources.
+- `dlstreamer-pipeline-server` and `metrics-manager` need direct access to node hardware and host resources.
 - `mediamtx` and `coturn` expose browser-facing WebRTC and TURN endpoints that must match the selected node's reachable IP.
 
-Other supporting services such as `mqtt-broker`, `live-metrics-service`, `multimodal-embedding` (when RAG is enabled), and `vdms-vectordb` (when RAG is enabled) do not require pinning to the same worker node.
+Other supporting services such as `mqtt-broker`, `multimodal-embedding` (when RAG is enabled), and `vdms-vector-db` (when RAG is enabled) do not require pinning to the same worker node.
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
@@ -334,7 +334,7 @@ helm uninstall lvc -n "$my_namespace"
 - If the dashboard opens but video does not start, confirm that `global.hostIP` is reachable from the browser. If your worker nodes do not have external IPs, this usually means using the node `INTERNAL-IP` over a reachable LAN or VPN. Also confirm that the RTSP source is reachable from the Kubernetes node.
 - If WebRTC negotiation fails, verify that `global.hostIP` points to the same node that runs `mediamtx` and `coturn`, and that the required ports are allowed by your network policy or firewall.
 - If detection is enabled but the pipeline cannot start, ensure the detection models PVC contains the required OpenVINO detection model artifacts.
-- If the collector does not report metrics, confirm that the host path in `collector.collectorSignalsHostPath` exists on the selected node and that the pod is scheduled there.
+- If the `metrics-manager` does not report metrics, confirm that the pod is scheduled on the selected node (it binds host ports `9090` and `9273`) and that it has the required privileged/hostPID access for GPU and NPU collection.
 - If the `live-video-captioning` and `video-caption-service` pods stuck in `Init` or `Pending` state, check whether the models successfully download or not.
 
    ```bash

@@ -148,6 +148,21 @@ const ApiService = (function () {
         return await resp.json();
     }
 
+    async function checkStreamReady(runId) {
+        try {
+            const resp = await fetch(`/api/generate_captions_alerts/${runId}/stream-ready`);
+            if (!resp.ok) return { ready: false, error: false, state: null };
+            const data = await resp.json();
+            return {
+                ready: data?.ready === true,
+                error: data?.error === true,
+                state: data?.state ?? null,
+            };
+        } catch (_err) {
+            return { ready: false, error: false, state: null };
+        }
+    }
+
     return {
         fetchModels,
         fetchDetectionModels,
@@ -156,6 +171,7 @@ const ApiService = (function () {
         fetchRuns,
         startRun,
         stopRun,
+        checkStreamReady,
         DEFAULT_MODEL,
         DEFAULT_PIPELINE
     };
