@@ -19,9 +19,15 @@ export interface PipelineWorkload {
   device: string;          // CPU | GPU | NPU
   status: string;          // running | stopped | error
   fps?: number;
-  infer_ms?: number;       // inference-only mean latency
-  latency_ms?: number;     // end-to-end mean latency
-  latency_p99_ms?: number; // end-to-end p99 (real, computed from last 120 samples)
+  // Model-only time (GStreamer core `latency` tracer, element-latency for element=det)
+  infer_ms?: number;       // mean, last 120 frames
+  infer_p99_ms?: number;   // p99,  last 120 frames
+  // Source→sink residence (Intel DLS `latency_tracer`, frame_latency)
+  e2e_mean_ms?: number;
+  e2e_p99_ms?: number;
+  // Legacy aliases (same values as e2e_*) — kept for older API payloads.
+  latency_ms?: number;
+  latency_p99_ms?: number;
 }
 
 export interface PipelinePerformance {

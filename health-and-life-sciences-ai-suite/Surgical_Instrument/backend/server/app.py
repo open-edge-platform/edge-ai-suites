@@ -3,8 +3,12 @@
 Replaces ``backend_mvp/mock_server.py``. Wire shape identical to the mock so
 the existing Redux UI works unmodified — the only differences are that the
 lifecycle drives a real :class:`Orchestrator` FSM (weights → dataset → train →
-export → ready) and frames come from a real :class:`InferenceWorker` running
-YOLO on the Arc iGPU.
+export → ready) and frames come from a real DL Streamer pipeline running in
+the ``surgical-pipeline`` container. This backend is a *consumer* of that
+pipeline: it POSTs /start /stop to the pipeline HTTP control plane, subscribes
+to the ``surgical/detections`` MQTT topic for per-frame metadata, tails the
+GStreamer ``latency_tracer`` log for infer + total latency, and reads annotated
+JPEGs from the shared ``/frames`` volume. See :mod:`backend.consumer`.
 
 Emitted shapes (unchanged from mock):
   GET  /api/health           -> {status, build_sha, uptime_s}
@@ -152,9 +156,11 @@ def _snapshot_full() -> dict[str, Any]:
         n_polyp = 0
         conf = 0.0
     fps = float(inf.get("delivered_fps", 0.0))
-    latency = float(inf.get("total_mean_ms", 0.0))
+    e2e_mean = float(inf.get("e2e_mean_ms", inf.get("total_mean_ms", 0.0)))
+    e2e_p99 = float(inf.get("e2e_p99_ms", inf.get("total_p99_ms", 0.0)))
+    proc_mean = float(inf.get("processing_mean_ms", 0.0))
+    proc_p99 = float(inf.get("processing_p99_ms", 0.0))
     infer_ms = float(inf.get("infer_mean_ms", 0.0))
-    total_p99 = float(inf.get("total_p99_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
 
     cfg = _cfg or {}
@@ -186,8 +192,13 @@ def _snapshot_full() -> dict[str, Any]:
             "uptime_s": round(float(inf.get("uptime_s", 0.0)), 1),
             "infer_mean_ms": round(infer_ms, 2),
             "infer_p99_ms": round(infer_p99, 2),
-            "total_mean_ms": round(latency, 2),
-            "total_p99_ms": round(total_p99, 2),
+            "processing_mean_ms": round(proc_mean, 2),
+            "processing_p99_ms": round(proc_p99, 2),
+            "e2e_mean_ms": round(e2e_mean, 2),
+            "e2e_p99_ms": round(e2e_p99, 2),
+            # Legacy aliases — same values as e2e_*.
+            "total_mean_ms": round(e2e_mean, 2),
+            "total_p99_ms": round(e2e_p99, 2),
         },
         "frame": (
             (_worker is not None and _worker.latest_frame_jpeg() is not None)
@@ -200,8 +211,14 @@ def _snapshot_full() -> dict[str, Any]:
                 "status": "running" if STATE.lifecycle in LIFECYCLE_RUN else "stopped",
                 "fps": round(fps, 2),
                 "infer_ms": round(infer_ms, 2),
-                "latency_ms": round(latency, 2),
-                "latency_p99_ms": round(total_p99, 2),
+                "infer_p99_ms": round(infer_p99, 2),
+                "processing_mean_ms": round(proc_mean, 2),
+                "processing_p99_ms": round(proc_p99, 2),
+                "e2e_mean_ms": round(e2e_mean, 2),
+                "e2e_p99_ms": round(e2e_p99, 2),
+                # Legacy keys the current UI may still read.
+                "latency_ms": round(e2e_mean, 2),
+                "latency_p99_ms": round(e2e_p99, 2),
             }],
             "pipeline_fps": round(fps, 2),
             "decode": f"{out_w}x{out_h} H.264",
@@ -403,37 +420,21 @@ def _do_start() -> None:
     global _worker, _last_stats, _last_dets, _last_frame_jpeg
     assert _cfg is not None
     try:
-        from ..pipeline.inference import InferenceWorker  # lazy — pulls torch
+        from ..consumer import InferenceConsumer
 
         # Fresh session — clear any frozen snapshot from the previous run.
         _last_stats = None
         _last_dets = None
         _last_frame_jpeg = None
 
-        p = _cfg["pipeline"]
-        ir_dir = _cfg["model"]["ir_dir"]
-        video_src = (
-            p.get("video_source")
-            or p.get("video_src")
-            or p.get("default_video")
-            or "videos/polyp_test.mp4"
-        )
         # STATE.device is the authoritative runtime choice (POST /api/device);
         # falls back to the config value at first boot via create_app().
-        device = (STATE.device or p.get("device", "gpu")).lower()
-        _worker = InferenceWorker(
-            ir_dir=ir_dir,
-            video_src=video_src,
-            device=device,
-            target_fps=float(p.get("target_fps", 30.0)),
-            output_size=tuple(p.get("output_size", (1920, 1080))),
-            infer_size=int(p.get("infer_size", 640)),
-            annotate=bool(p.get("annotate", True)),
-            jpeg_quality=int(p.get("jpeg_quality", 80)),
-        )
+        device = (STATE.device or _cfg.get("pipeline", {}).get("device", "GPU"))
+        _worker = InferenceConsumer(device=device)
         _worker.start()
-        # Wait briefly for the worker to produce the first frame; then mark running.
-        for _ in range(50):
+        # Wait briefly for the pipeline container to produce the first
+        # annotated frame; then mark running.
+        for _ in range(100):
             if _worker.latest_frame_jpeg() is not None:
                 break
             time.sleep(0.1)
@@ -465,6 +466,31 @@ def stop() -> Response:
 
     threading.Thread(target=_do_stop, name="inference-stop", daemon=True).start()
     return jsonify({"status": "stopping", "message": "inference stopping"})
+
+
+@app.post(f"{API}/reset")
+def reset() -> Response:
+    """Clear frozen post-stop state (frame + KPIs + error).
+
+    Called after Stop when the user wants a fresh slate — e.g. before
+    changing the inference device and pressing Start again. Rejected while
+    inference is running (Stop first).
+    """
+    global _last_stats, _last_dets, _last_frame_jpeg
+    if STATE.lifecycle in LIFECYCLE_RUN:
+        return jsonify({
+            "error": "cannot reset while running — stop inference first",
+            "lifecycle": STATE.lifecycle,
+        }), 409
+    _last_stats = None
+    _last_dets = None
+    _last_frame_jpeg = None
+    with STATE.lock:
+        STATE.error = None
+        if STATE.lifecycle == "error":
+            STATE.lifecycle = "ready"
+    _publish("full", _snapshot_full())
+    return jsonify({"status": "ok", "lifecycle": STATE.lifecycle})
 
 
 @app.post(f"{API}/device")

@@ -1,8 +1,15 @@
 # Surgical Instrument — single-host deployment.
 #
-# Two services, one published host port (UI :8080). The backend runs the
-# bootstrap → train → export → serve pipeline on the host's Intel Arc iGPU
-# and streams annotated frames to the UI over its private network.
+# Four services, one published host port (UI :8080):
+#   surgical-mqtt      — Eclipse Mosquitto broker on the internal network
+#   surgical-pipeline  — DL Streamer container, publishes detections+JPEG
+#   surgical-backend   — Flask API, consumes MQTT + JPEG + latency tracer
+#   surgical-ui        — Nginx reverse-proxy, only host-published service
+#
+# The backend runs the bootstrap → train → export → ready orchestrator on
+# the host's Intel Arc iGPU, then serves the UI. Runtime polyp inference
+# runs in the DL Streamer pipeline container and reaches the UI via the
+# shared `surgical-frames` volume + MQTT topic `surgical/detections`.
 #
 # The UI does NOT come online until the backend HEALTHCHECK passes. First
 # boot may take 20-35 min while YOLO11n trains on CVC-ColonDB — see
@@ -14,7 +21,7 @@
 #
 # Override on the CLI:
 #   make up UI_HOST_PORT=9090
-#   make up DETECTION_DEVICE=CPU
+#   make up DETECTION_DEVICE=GPU
 
 name: surgical-instrument
 
@@ -25,8 +32,62 @@ networks:
 volumes:
   # Cache dir survives across restarts (Ultralytics weights, HF datasets, etc.)
   surgical-cache:
+  # Shared JPEG + latency tracer between pipeline (rw) and backend (ro).
+  surgical-frames:
 
 services:
+
+  surgical-mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: surgical-mqtt
+    restart: unless-stopped
+    networks: [surgical-internal]
+    volumes:
+      - ./configs/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/#' -C 1 -W 3 >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  surgical-pipeline:
+    build:
+      context: ./pipeline
+      dockerfile: Dockerfile
+    image: surgical-pipeline:dev
+    container_name: surgical-pipeline
+    restart: unless-stopped
+    networks: [surgical-internal]
+    depends_on:
+      surgical-mqtt:
+        condition: service_healthy
+
+    # Intel Arc iGPU passthrough for DL Streamer (VAAPI + OpenCL / Level Zero).
+    # /dev/accel is the Meteor Lake NPU (accel0) — required when
+    # DETECTION_DEVICE=NPU. Comment out on hosts without an NPU.
+    group_add:
+      - "${RENDER_GID:-992}"
+      - "${VIDEO_GID:-44}"
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/accel:/dev/accel
+
+    volumes:
+      - ./models:/models:ro
+      - ./videos:/videos:ro
+      - surgical-frames:/frames
+
+    environment:
+      MQTT_HOST:   surgical-mqtt
+      MQTT_PORT:   "1883"
+      MQTT_TOPIC:  surgical/detections
+      FRAME_DIR:   /frames
+      VIDEO:       /videos/polyp_test.mp4
+      IR_XML:      /models/yolo11n_polyp/best_openvino_model/best.xml
+      # Customer requirement: 1080p @ 60 fps camera-to-screen.
+      TARGET_FPS:  "60"
+      THRESHOLD:   "0.5"
 
   surgical-backend:
     build:
@@ -36,9 +97,13 @@ services:
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
+    depends_on:
+      surgical-mqtt:
+        condition: service_healthy
 
-    # Intel Arc iGPU passthrough. `/dev/accel` is optional (NPU); leave in
-    # so the container can also discover it when present.
+    # Intel Arc iGPU passthrough for the bootstrap trainer (torch+xpu).
+    # Runtime inference is now in surgical-pipeline; the backend does not
+    # need the iGPU at serve time but the trainer does.
     group_add:
       - "${RENDER_GID:-992}"
       - "${VIDEO_GID:-44}"
@@ -54,10 +119,14 @@ services:
       - ./models:/models
       # Manual-drop location for the CVC-ColonDB archive (see quickstart).
       - ./datasets:/datasets
-      # Demo videos consumed by the inference worker.
+      # Demo videos consumed by the pipeline container (path exposed via
+      # /api/config for the UI).
       - ./videos:/videos
       # Weights / dataset download cache.
       - surgical-cache:/cache
+      # Read-only view of the shared frames volume — pipeline writes,
+      # backend reads.
+      - surgical-frames:/frames:ro
 
     environment:
       BACKEND_CONFIG: /app/backend/config/model.yaml
@@ -67,8 +136,16 @@ services:
       CACHE_DIR:      /cache
       HOST:           0.0.0.0
       PORT:           "5001"
-      # xpu | cpu — used by backend/main_infer + train device selection
-      DETECTION_DEVICE: ${DETECTION_DEVICE:-xpu}
+      # GPU | CPU | NPU — initial device for /api/device (can be changed
+      # from the UI when inference is stopped).
+      DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
+      # Consumer wiring — matches the surgical-pipeline container.
+      MQTT_HOST:      surgical-mqtt
+      MQTT_PORT:      "1883"
+      MQTT_TOPIC:     surgical/detections
+      PIPELINE_HOST:  surgical-pipeline
+      PIPELINE_PORT:  "8000"
+      FRAME_DIR:      /frames
 
     # start_period covers first-boot training (20-35 min on Arc iGPU).
     healthcheck:

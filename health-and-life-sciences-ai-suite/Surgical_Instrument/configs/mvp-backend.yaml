@@ -40,12 +40,15 @@ frame:
   jpeg_quality: 80
 
 model:
-  name: yolo_polyp
+  name: yolo11n_polyp
   device: ${DETECTION_DEVICE}  # CPU | GPU | NPU
   threshold: 0.5
-  ir_xml:  /models/yolo_polyp/best.xml
-  ir_bin:  /models/yolo_polyp/best.bin
-  model_proc: /models/yolo_polyp/yolo_polyp.json
+  ir_xml:  /models/yolo11n_polyp/best_openvino_model/best.xml
+  ir_bin:  /models/yolo11n_polyp/best_openvino_model/best.bin
+  # No model-proc — DLS 2026.1 auto-detects converter + labels from
+  # Ultralytics' metadata.yaml next to best.xml. A hand-written yolo_v8
+  # model-proc collapses confidence scores on YOLO11n IR (verified in
+  # Phase 5.0.5 smoke).
 
 source:
   # `file` for v1; `basler` enabled in Phase 6 follow-up

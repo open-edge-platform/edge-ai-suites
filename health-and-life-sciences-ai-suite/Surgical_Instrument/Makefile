@@ -165,13 +165,10 @@ backend-bootstrap:  ## Run the cache-first bootstrap (skips train if IR cached)
 	$(BACKEND_PY) -m backend.main_bootstrap
 
 .PHONY: backend-infer
-backend-infer:  ## Run standalone annotated inference on $(DEMO_VIDEO)
-	@test -x $(BACKEND_PY) || (echo "[backend-infer] run 'make backend-venv' first"; exit 1)
-	@test -f $(IR_DIR)/best.xml || (echo "[backend-infer] IR missing — run 'make assets' or 'make backend-bootstrap'"; exit 1)
-	@test -f $(DEMO_VIDEO)      || (echo "[backend-infer] $(DEMO_VIDEO) missing — run 'make assets'"; exit 1)
-	@mkdir -p out
-	$(BACKEND_PY) -m backend.main_infer --ir $(IR_DIR) --video $(DEMO_VIDEO) \
-		--out-video out/annotated.mp4 --out-csv out/per_frame.csv
+backend-infer:  ## (Removed in Phase 5 — inference now runs in the surgical-pipeline container)
+	@echo "[backend-infer] Inline Ultralytics inference was removed in Phase 5."
+	@echo "[backend-infer] Use 'make up' and drive the pipeline via the UI or:"
+	@echo "  curl -X POST http://<host>:<pipeline-port>/start -d '{\"device\":\"GPU\"}' -H 'Content-Type: application/json'"
 
 .PHONY: backend-serve
 backend-serve:  ## Run the real Phase 3 Flask server on :5001 (replaces mock-backend)

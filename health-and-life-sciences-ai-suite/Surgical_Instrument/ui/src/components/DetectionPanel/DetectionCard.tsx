@@ -97,51 +97,44 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
           )}
         </div>
 
-        {/* Row 3: session KPIs (per Start→Stop) */}
+        {/* Row 3: session KPIs (per Start→Stop) — grid table */}
         {showSession && (
           <div className="det-session">
-            <span className="det-session-label">SESSION</span>
-            {sessionDistinctPolyps !== undefined && (
-              <>
-                <span className="det-session-metric det-session-metric--hero">
-                  <strong>{sessionDistinctPolyps.toLocaleString()}</strong>
-                  <span className="det-session-unit">polyps detected</span>
+            <div className="det-session-header">
+              <span className="det-session-label">SESSION</span>
+              {sessionSeconds !== undefined && sessionSeconds > 0 && (
+                <span className="det-session-time">
+                  <span className="det-session-time-icon">⏱</span>
+                  {formatSessionTime(sessionSeconds)}
                 </span>
-                <span className="det-session-sep">·</span>
-              </>
-            )}
-            <span className="det-session-metric">
-              <strong>{(sessionFramesProcessed ?? 0).toLocaleString()}</strong>
-              <span className="det-session-unit">frames processed</span>
-            </span>
-            <span className="det-session-sep">·</span>
-            <span className="det-session-metric">
-              <strong>{(sessionFramesWithDetection ?? 0).toLocaleString()}</strong>
-              <span className="det-session-unit">with polyp</span>
-            </span>
-            <span className="det-session-sep">·</span>
-            <span className="det-session-metric">
-              <strong>{((sessionRate ?? 0) * 100).toFixed(1)}%</strong>
-              <span className="det-session-unit">detection rate</span>
-            </span>
-            {sessionPeakConfidence !== undefined && sessionPeakConfidence > 0 && (
-              <>
-                <span className="det-session-sep">·</span>
-                <span className="det-session-metric">
-                  <strong>{sessionPeakConfidence.toFixed(2)}</strong>
-                  <span className="det-session-unit">peak conf</span>
-                </span>
-              </>
-            )}
-            {sessionSeconds !== undefined && sessionSeconds > 0 && (
-              <>
-                <span className="det-session-sep">·</span>
-                <span className="det-session-metric">
-                  <strong>{formatSessionTime(sessionSeconds)}</strong>
-                  <span className="det-session-unit">session</span>
-                </span>
-              </>
-            )}
+              )}
+            </div>
+            <div className="det-session-grid">
+              {sessionDistinctPolyps !== undefined && (
+                <div className="det-session-cell det-session-cell--hero">
+                  <span className="det-session-value">{sessionDistinctPolyps.toLocaleString()}</span>
+                  <span className="det-session-label-sm">Polyps detected</span>
+                </div>
+              )}
+              <div className="det-session-cell">
+                <span className="det-session-value">{(sessionFramesProcessed ?? 0).toLocaleString()}</span>
+                <span className="det-session-label-sm">Frames processed</span>
+              </div>
+              <div className="det-session-cell">
+                <span className="det-session-value">{(sessionFramesWithDetection ?? 0).toLocaleString()}</span>
+                <span className="det-session-label-sm">Frames with polyp</span>
+              </div>
+              <div className="det-session-cell">
+                <span className="det-session-value">{((sessionRate ?? 0) * 100).toFixed(1)}%</span>
+                <span className="det-session-label-sm">Detection rate</span>
+              </div>
+              {sessionPeakConfidence !== undefined && sessionPeakConfidence > 0 && (
+                <div className="det-session-cell det-session-cell--conf">
+                  <span className="det-session-value">{(sessionPeakConfidence * 100).toFixed(1)}%</span>
+                  <span className="det-session-label-sm">Peak confidence</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

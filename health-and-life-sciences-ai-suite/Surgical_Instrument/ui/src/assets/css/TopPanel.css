@@ -22,7 +22,8 @@
 }
 
 .start-button,
-.stop-button {
+.stop-button,
+.reset-button {
   font-family: var(--font-text);
   font-size: 14px;
   font-weight: 500;
@@ -37,7 +38,8 @@
 }
 
 .start-button:hover:not(:disabled),
-.stop-button:hover:not(:disabled) {
+.stop-button:hover:not(:disabled),
+.reset-button:hover:not(:disabled) {
   background: #0071c5;
   color: white;
   border-color: #005a9e;
@@ -46,7 +48,8 @@
 }
 
 .start-button:disabled,
-.stop-button:disabled {
+.stop-button:disabled,
+.reset-button:disabled {
   color: #bbbaba;
   background: #f9f6f6;
   border: 2px solid #e6e7e8;

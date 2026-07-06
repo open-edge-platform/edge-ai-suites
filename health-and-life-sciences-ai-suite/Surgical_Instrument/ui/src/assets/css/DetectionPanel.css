@@ -262,18 +262,18 @@
   font-size: 12px;
 }
 
-/* ── Session cumulative bar (bottom of hero card) ── */
+/* ── Session cumulative KPIs (bottom of hero card) — grid layout ── */
 .det-session {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0 0;
-  margin-top: 6px;
+  padding: 10px 0 0;
+  margin-top: 8px;
   border-top: 1px dashed #e0e0e0;
   font-family: var(--font-text);
-  font-size: 11px;
-  color: #4a5568;
-  flex-wrap: wrap;
+}
+.det-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 .det-session-label {
   font-family: var(--font-display);
@@ -282,36 +282,71 @@
   letter-spacing: 0.8px;
   color: #6b7280;
   background: #f4f5f7;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
 }
-.det-session-metric {
+.det-session-time {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4px;
-}
-.det-session-metric strong {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+  background: #f4f5f7;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.det-session-time-icon {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.det-session-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.det-session-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 12px;
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  min-height: 52px;
+  justify-content: center;
+}
+.det-session-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
   font-weight: 700;
   color: #1a1a2e;
+  line-height: 1.1;
 }
-.det-session-metric--hero strong {
-  font-size: 16px;
-  color: #0b3d91;
-}
-.det-session-metric--hero .det-session-unit {
-  color: #0b3d91;
-  font-weight: 600;
-}
-.det-session-unit {
-  color: #6b7280;
+.det-session-label-sm {
+  font-family: var(--font-text);
   font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-top: 3px;
+  letter-spacing: 0.2px;
 }
-.det-session-sep {
-  color: #cbd5e0;
+.det-session-cell--hero {
+  background: linear-gradient(135deg, #eaf3ff 0%, #dbeafe 100%);
+  border-color: #b8daff;
+}
+.det-session-cell--hero .det-session-value {
+  color: #0b3d91;
+  font-size: 22px;
+}
+.det-session-cell--hero .det-session-label-sm {
+  color: #0b3d91;
   font-weight: 600;
+}
+.det-session-cell--conf .det-session-value {
+  color: #0f766e;
 }
 
 /* Padlock SVG icon in latch card */
@@ -468,6 +503,44 @@
   padding: 3px 7px;
   border-radius: 4px;
   backdrop-filter: blur(4px);
+}
+
+/* Box color legend — sits just above the detection-tag row */
+.det-video-legend {
+  position: absolute;
+  left: 8px;
+  bottom: 38px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 10px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  cursor: help;
+  max-width: calc(100% - 16px);
+}
+.det-video-legend-label {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #e5e7eb;
+  margin-right: 2px;
+}
+.det-video-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.det-video-legend-text {
+  color: #cbd5e0;
+  font-size: 9px;
+  margin-left: 3px;
 }
 
 /* Detection tags — bottom */

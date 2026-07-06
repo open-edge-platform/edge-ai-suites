@@ -2,16 +2,24 @@ import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
+import { resetDetectionState, setActiveDevice } from '../../redux/slices/detectionSlice';
 import { api } from '../../services/api';
 import '../../assets/css/TopPanel.css';
 
 const TopPanel = () => {
   const dispatch = useAppDispatch();
   const { isProcessing } = useAppSelector((state) => state.app);
+  const currentDevice = useAppSelector(
+    (state) =>
+      state.detection.data.modelInfo?.device ||
+      state.detection.data.pipelinePerformance?.workloads?.[0]?.device ||
+      'GPU'
+  );
   const [notification, setNotification] = useState<string>('');
   const [isBackendReady, setIsBackendReady] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleStart = async () => {
     if (!isBackendReady) {
@@ -70,6 +78,29 @@ const TopPanel = () => {
     }
   };
 
+  const handleReset = async () => {
+    if (isResetting || isProcessing || isStarting || isStopping) return;
+    try {
+      setIsResetting(true);
+      setNotification('🔄 Resetting session...');
+      // Preserve the currently-selected device so the dropdown stays on the
+      // user's choice — resetDetectionState clears modelInfo which drives it.
+      const dev = currentDevice;
+      await api.reset();
+      dispatch(resetDetectionState());
+      dispatch(setActiveDevice(dev));
+      setNotification('✅ Session cleared — ready to Start');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (err) {
+      console.error('[TopPanel] Reset failed:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setNotification(`❌ Reset failed: ${msg}`);
+      setTimeout(() => setNotification(''), 5000);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     const check = async () => {
@@ -110,6 +141,19 @@ const TopPanel = () => {
           title={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
         >
           {isStopping ? '⏳ Stopping...' : '⏹ Stop'}
+        </button>
+
+        <button
+          onClick={handleReset}
+          disabled={isResetting || isProcessing || isStarting || isStopping}
+          className="reset-button"
+          title={
+            isProcessing
+              ? 'Stop the pipeline before resetting'
+              : 'Clear the last session (frame + KPIs) so you can change device and Start fresh'
+          }
+        >
+          {isResetting ? '⏳ Resetting...' : '🔄 Reset'}
         </button>
       </div>
 

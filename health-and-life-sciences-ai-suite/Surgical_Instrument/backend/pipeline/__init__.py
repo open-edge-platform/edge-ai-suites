@@ -1,1 +1,0 @@
-"""Streaming inference pipeline."""

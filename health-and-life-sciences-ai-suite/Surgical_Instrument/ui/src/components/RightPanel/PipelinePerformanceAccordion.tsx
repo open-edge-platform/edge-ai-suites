@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import Accordion from '../common/Accordion';
 import { api, type Device } from '../../services/api';
@@ -52,7 +52,20 @@ export function PipelinePerformanceAccordion() {
     }
   };
 
-  const sseLookup: Record<string, { fps?: number; infer_ms?: number; latency_ms?: number; latency_p99_ms?: number; device?: string; status?: string }> = {};
+  const sseLookup: Record<string, {
+    fps?: number;
+    infer_ms?: number;
+    infer_p99_ms?: number;
+    processing_mean_ms?: number;
+    processing_p99_ms?: number;
+    e2e_mean_ms?: number;
+    e2e_p99_ms?: number;
+    // legacy aliases
+    latency_ms?: number;
+    latency_p99_ms?: number;
+    device?: string;
+    status?: string;
+  }> = {};
   if (pipelinePerf?.workloads) {
     for (const w of pipelinePerf.workloads) sseLookup[w.name] = w;
   }
@@ -85,9 +98,9 @@ export function PipelinePerformanceAccordion() {
               <th style={thStyle}>Workload</th>
               <th style={thStyle}>Model</th>
               <th style={thStyle}>Device</th>
-              <th style={thStyle}>FPS</th>
-              <th style={thStyle}>Infer</th>
-              <th style={thStyle}>P99</th>
+              <th style={thStyle} title="Frame arrival rate at the sink (throughput). Counted from MQTT metadata messages the backend receives.">FPS</th>
+              <th style={thStyle} title="gvadetect element residence: pure model + pre/post on the selected device. Source: GStreamer core `latency` tracer, element-latency for element=det. Format: mean · p99 (last 120 frames).">Inference (mean · p99)</th>
+              <th style={thStyle} title="Per-frame sum of element-latency for the processing chain (gvadetect + gvatrack + gvametaconvert + gvawatermark + jpegenc). Excludes decode and any playback pacing wait — this is the true camera-to-screen latency for a live-source deployment. Format: mean · p99 (last 120 frames).">Processing Latency (mean · p99)</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -141,11 +154,15 @@ export function PipelinePerformanceAccordion() {
                   <td style={numStyle}>
                     {sseRow.fps !== undefined ? sseRow.fps.toFixed(1) : '—'}
                   </td>
-                  <td style={numStyle}>
-                    {sseRow.infer_ms !== undefined && sseRow.infer_ms > 0 ? `${sseRow.infer_ms.toFixed(1)} ms` : '—'}
+                  <td style={numStyle} title="GStreamer core `latency` tracer → element-latency for element=det (gvadetect only)">
+                    {sseRow.infer_ms !== undefined && sseRow.infer_ms > 0
+                      ? `${sseRow.infer_ms.toFixed(1)} · ${(sseRow.infer_p99_ms ?? 0).toFixed(1)} ms`
+                      : '—'}
                   </td>
-                  <td style={numStyle}>
-                    {sseRow.latency_p99_ms !== undefined && sseRow.latency_p99_ms > 0 ? `${sseRow.latency_p99_ms.toFixed(1)} ms` : '—'}
+                  <td style={numStyle} title="Per-frame sum of element-latency across gvadetect + gvatrack + gvametaconvert + gvawatermark + jpegenc. Excludes decode and playback pacing — the camera-to-screen number for a live source.">
+                    {(sseRow.processing_mean_ms ?? 0) > 0
+                      ? `${(sseRow.processing_mean_ms ?? 0).toFixed(1)} · ${(sseRow.processing_p99_ms ?? 0).toFixed(1)} ms`
+                      : '—'}
                   </td>
                   <td style={cellStyle}>
                     <span style={{

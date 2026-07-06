@@ -173,6 +173,15 @@ export async function setDevice(device: Device): Promise<{ status: string; devic
   return data;
 }
 
+export async function resetSession(): Promise<{ status: string; lifecycle: string; error?: string }> {
+  const res = await fetch(`${BASE_URL}/reset`, { method: 'POST' });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error || `Failed to reset: ${res.status}`);
+  }
+  return data;
+}
+
 export const api = {
   pingBackend,
   getStreamingStatus,
@@ -187,6 +196,7 @@ export const api = {
   getFrameUrl,
   getConfig,
   setDevice,
+  reset: resetSession,
 };
 
 export default api;
