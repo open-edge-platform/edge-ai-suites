@@ -52,7 +52,6 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
       libze-intel-gpu1 \
       intel-opencl-icd \
       intel-media-va-driver-non-free \
-      intel-level-zero-npu \
     && rm -rf /var/lib/apt/lists/*
 
 # torch + torchvision XPU wheels (Intel iGPU / Arc / Xe) — installed from
