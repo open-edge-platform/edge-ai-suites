@@ -1748,21 +1748,36 @@ def update_config_file(ingestion_type="opcua"):
         os.chdir(original_dir) if 'original_dir' in locals() else None
         return False
 
-def execute_gpu_config_curl(device="gpu"):
+def execute_gpu_config_curl(device="gpu", sample_app=constants.WIND_SAMPLE_APP):
     """Execute curl command to post GPU configuration to the time-series analytics API.
     
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
+        sample_app (str): Sample app key used to pick UDF/model from SAMPLE_APPS_CONFIG
     """
     try:
-        logger.info(f"Executing curl command to post {device.upper()} configuration to API...")
+        logger.info(
+            f"Executing curl command to post {device.upper()} configuration for app '{sample_app}' to API..."
+        )
         
         # Create configuration with device field using SAMPLE_APPS_CONFIG
-        wind_config = constants.SAMPLE_APPS_CONFIG["wind-turbine-anomaly-detection"]
+        app_config = constants.SAMPLE_APPS_CONFIG.get(sample_app)
+        if not app_config:
+            logger.error(f"Unknown sample_app '{sample_app}'. Available apps: {list(constants.SAMPLE_APPS_CONFIG.keys())}")
+            return False
+
+        udf_name = app_config.get("udf")
+        model_name = app_config.get("model")
+        if not udf_name or not model_name:
+            logger.error(
+                f"Invalid app configuration for '{sample_app}'. Missing required keys 'udf' or 'model'."
+            )
+            return False
+
         gpu_config = {
             "udfs": {
-                "name": wind_config["udf"],
-                "models": wind_config["model"],
+                "name": udf_name,
+                "models": model_name,
                 "device": device
             },
             "alerts": {
@@ -4058,7 +4073,7 @@ def validate_multimodal_alerts_infrastructure():
     
     # Step 2: Wait for containers to stabilize
     logger.info("Waiting for multimodal containers to stabilize and begin data processing...")
-    time.sleep(60)  # Increased wait time for multimodal to process initial data
+    time.sleep(constants.MULTIMODAL_WAIT_FOR_VISION_DATA)
     
     # Step 3: Validate container processing instead of MQTT topics
     validation_results["processing_results"] = validate_multimodal_container_processing()

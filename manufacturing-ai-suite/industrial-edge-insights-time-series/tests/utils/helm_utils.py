@@ -2463,8 +2463,8 @@ def activate_multimodal_tsa_udf_config(namespace, device_value="cpu"):
     )
     payload = {
         "udfs": {
-            "name": constants.WELD_UDF,
-            "models": constants.WELD_MODEL,
+            "name": constants.MULTIMODAL_UDF,
+            "models": constants.MULTIMODAL_MODEL,
             "device": device_value,
         },
         "alerts": {
@@ -2858,28 +2858,29 @@ def check_services(namespace, timeout=30, interval=5):
     return False
 
 
-def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"):
+def execute_gpu_config_curl_helm(
+    device="gpu",
+    namespace="time-series-analytics",
+    sample_app=constants.WIND_SAMPLE_APP,
+):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.
     
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
         namespace (str): Kubernetes namespace for the deployment
+        sample_app (str): Sample app key used to pick UDF/model from SAMPLE_APPS_CONFIG
     """
     try:
-        logger.info(f"Executing curl command to post {device.upper()} configuration to API via Helm...")
-        
-        # Create configuration with device field using SAMPLE_APPS_CONFIG
-        wind_config = constants.SAMPLE_APPS_CONFIG["wind-turbine-anomaly-detection"]
-        gpu_config = {
-            "udfs": {
-                "name": wind_config["udf"],
-                "models": wind_config["model"],
-                "device": device
-            },
-            "alerts": {
-                "mqtt": constants.MQTT_ALERT
-            }
-        }
+        logger.info(
+            f"Executing curl command to post {device.upper()} configuration to API via Helm for app '{sample_app}'..."
+        )
+
+        # Build payload from sample-app configuration.
+        # Keep alert mode mqtt by default for backward compatibility with existing tests.
+        gpu_config = _build_udf_payload(sample_app, device, "mqtt")
+        if not gpu_config:
+            logger.error(f"Failed to build GPU payload for sample app '{sample_app}'")
+            return False
         
         # Convert config to JSON string for curl command
         gpu_config_json = json.dumps(gpu_config)
@@ -2905,17 +2906,25 @@ def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"
         )
         
         if success:
-            logger.info(f"{device.upper()} configuration POST via kubectl exec succeeded")
+            logger.info(
+                f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
+            )
             return True
         else:
-            logger.error(f"kubectl exec command failed for {device.upper()} configuration")
+            logger.error(
+                f"kubectl exec command failed for {device.upper()} configuration (app '{sample_app}')"
+            )
             return False
             
     except subprocess.TimeoutExpired:
-        logger.error(f"Timeout executing {device.upper()} configuration curl command")
+        logger.error(
+            f"Timeout executing {device.upper()} configuration curl command for app '{sample_app}'"
+        )
         return False
     except Exception as e:
-        logger.error(f"Exception during {device.upper()} configuration: {str(e)}")
+        logger.error(
+            f"Exception during {device.upper()} configuration for app '{sample_app}': {str(e)}"
+        )
         return False
 
 
