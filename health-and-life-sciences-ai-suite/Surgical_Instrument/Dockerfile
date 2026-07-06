@@ -65,6 +65,8 @@ RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
 RUN pip install \
       --retries 8 \
       --timeout 120 \
+      --trusted-host download.pytorch.org \
+      --trusted-host download-r2.pytorch.org \
       torch==2.12.1 \
       torchvision==0.27.1 \
       --index-url https://download.pytorch.org/whl/xpu
