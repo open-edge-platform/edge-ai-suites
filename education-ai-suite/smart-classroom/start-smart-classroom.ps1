@@ -4,7 +4,8 @@ param(
     [switch]$Restart,
     [switch]$Help,
     [switch]$NoElevate,
-    [switch]$Silent
+    [switch]$Silent,
+    [switch]$NoWindowsTerminal
 )
 
 # ============================================================================
@@ -31,6 +32,7 @@ if (-not $NoElevate) {
         if ($Restart) { $argList += " -Restart" }
         if ($Help) { $argList += " -Help" }
         if ($Silent) { $argList += " -Silent" }
+        if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -49,14 +51,15 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Help]
 
 Options:
-    -SkipProxy    Skip proxy configuration prompts
-    -Restart      Kill existing services and restart (no prompt)
-    -Silent       Unattended mode - auto-restart, skip all prompts
-    -NoElevate    Skip auto-elevation to Administrator (Windows)
-    -Help         Show this help message
+    -SkipProxy           Skip proxy configuration prompts
+    -Restart             Kill existing services and restart (no prompt)
+    -Silent              Unattended mode - auto-restart, skip all prompts
+    -NoElevate           Skip auto-elevation to Administrator (Windows)
+    -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
+    -Help                Show this help message
 
 Note: On Windows, the script automatically requests Administrator privileges.
 
@@ -191,7 +194,9 @@ function Stop-AllServices {
 }
 
 # Register Ctrl+C handler
-[Console]::TreatControlCAsInput = $false
+if (-not $Silent) {
+    [Console]::TreatControlCAsInput = $false
+}
 $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
     if ($script:servicesStarted) {
         Stop-AllServices
@@ -520,20 +525,6 @@ if ($Restart) {
     
     Write-Host ""
     Write-Host "  Starting all services..." -ForegroundColor Green
-
-    if ($Silent) {
-        Write-Host "  Silent mode: using existing virtual environments (faster startup)" -ForegroundColor Gray
-        $deleteVenvs = "N"
-    } else {
-        $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
-    }
-
-    if ($deleteVenvs.ToUpper() -eq "Y") {
-        Remove-VirtualEnvironments
-        Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
-    } else {
-        Write-Host "  Using existing virtual environments (faster startup)." -ForegroundColor Gray
-    }
 }
 
 # Summary
@@ -921,7 +912,7 @@ if ($noProxy) {
 }
 
 if ($IsWindowsOS) {
-    $wtExists = Get-Command wt -ErrorAction SilentlyContinue
+    $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
     # ========================================================================
     # TERMINAL 1: BACKEND (with paddleocr check)
@@ -976,21 +967,6 @@ Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 
 Set-Location '$ScriptDir'
 Write-Host "Changed to: `$PWD" -ForegroundColor Gray
-
-Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
 
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
@@ -1066,21 +1042,6 @@ if (-not `$venvValid) {
 
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 & "`$venvPath\Scripts\Activate.ps1"
-
-Write-Host ''
-Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
-if (`$LASTEXITCODE -ne 0) {
-    Write-Host ''
-    Write-Host '[RETRY] pip install failed, retrying with --no-cache-dir...' -ForegroundColor Yellow
-    python -m pip install --no-cache-dir -r .\requirements.txt
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host '[FAIL] pip install failed after retry!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
 
 Write-Host ''
 Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green

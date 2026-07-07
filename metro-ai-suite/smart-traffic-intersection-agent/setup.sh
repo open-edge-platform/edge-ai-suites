@@ -523,7 +523,7 @@ print_all_service_host_endpoints() {
             *vlm*|*ovms*)
                 SERVICE_NAME="OVMS API"
                 PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/v2${NC}"
                 ;;
         esac
     done

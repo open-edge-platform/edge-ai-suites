@@ -242,7 +242,7 @@ def test_time_series_ingested_data(setup_multimodal_environment):
         logger.info("✓ Time series data ingestion via Telegraf verified")
 
 def test_time_series_analytics_processing(setup_multimodal_environment):
-    """TC_007: Testing time series analytics processing with CatBoost model"""
+    """TC_007: Testing time series analytics processing with RandomForestClassifier model"""
     logger.info("TC_007: Testing time series analytics processing for weld anomaly detection")
     
     # Get multimodal app configuration from the sample app dict

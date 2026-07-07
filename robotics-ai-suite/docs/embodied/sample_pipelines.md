@@ -15,6 +15,7 @@ sample_pipelines/ORB_VSLAM
 sample_pipelines/llm_robotics
 sample_pipelines/robotics_diffusion_transformer
 sample_pipelines/pi05_with_rtc
+sample_pipelines/openclaw_agenticros_demo
 
 :::
 hide_directive-->

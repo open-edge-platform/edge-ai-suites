@@ -15,8 +15,8 @@ openvino-tokenizers==2025.3.0.0
 openvino-genai==2025.3.0.0
 optimum-intel==1.26.0
 
-torch==2.8.0
-torchvision==0.23.0
+torch>=2.9.1
+torchvision>=0.24.0
 transformers==4.53.3
 
 llama-index==0.14.19
