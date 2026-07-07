@@ -64,7 +64,7 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 
 ## Tech Stack
 
-- **Backend**: Python 3.12, FastAPI, LangChain, OpenVINO
+- **Backend**: Python 3.12, FastAPI, OpenVINO
 - **Frontend**: React, Vite, Node.js v18+
 - **Flutter**: Flutter 3.22+ / Dart 3.3+, Dio (HTTP), Riverpod (state management)
 - **Infrastructure**: FFmpeg, DL Streamer
@@ -76,11 +76,10 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 - Run commands from the **repository root** (`education-ai-suite/`) unless specified
 - The Flutter app root is `utils/flutter/` — run `flutter` commands from there
 - **Setup and startup for Flutter integration use PowerShell scripts**:
-  `setup.ps1` and `start-scrit.ps1` in `utils/flutter/`
+  `setup.ps1` and `start.ps1` in `utils/flutter/`
 - Skills invoke these scripts rather than executing commands directly
 - Target `http://127.0.0.1:9011` for the Content Search API
 - Target `http://127.0.0.1:8000` for the main backend API
-- Target `http://127.0.0.1:5173` for the frontend UI
 - Every new source/config file carries the SPDX header used across the repo
 
 ---

@@ -27,33 +27,6 @@ the output.**
 
 ## Workflow
 
-### 1. Verify Flutter SDK exists
-
-```powershell
-flutter --version
-```
-
-### 2. Install Flutter dependencies
-
-```powershell
-Push-Location utils\flutter
-flutter pub get
-Pop-Location
-```
-
-### 3. Create backend virtual environment and install requirements
-
-```powershell
-if (-not (Test-Path "venv_content_search")) {
-  python -m venv venv_content_search
-}
-
-& "venv_content_search\Scripts\python.exe" -m pip install --upgrade pip
-& "venv_content_search\Scripts\pip.exe" install -r "smart-classroom\content_search\requirements.txt"
-```
-
-### 4. Run Flutter setup script
-
 ```powershell
 .\utils\flutter\setup.ps1
 ```

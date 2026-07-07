@@ -22,19 +22,6 @@ Find out whether the Smart Classroom RAG system is healthy and what's broken.
 **Agent: execute every command below directly using your terminal tool and relay
 the result.** If the backend is not up, hand off to [`sc-up`](../sc-up/SKILL.md).
 
-## 0. Set corporate proxy (run this first)
-
-Required before any `flutter` command and before any outbound download. The
-Windows registry proxy is not inherited by the terminal automatically.
-
-```powershell
-$env:HTTPS_PROXY = "http://proxy-chain.intel.com:911"
-$env:HTTP_PROXY  = "http://proxy-chain.intel.com:911"
-$env:https_proxy = "http://proxy-chain.intel.com:911"
-$env:http_proxy  = "http://proxy-chain.intel.com:911"
-$env:NO_PROXY    = "localhost,127.0.0.1"
-$env:no_proxy    = "localhost,127.0.0.1"
-```
 
 Set `$BASE = "http://127.0.0.1:9011"` (or the value in `utils/flutter/assets/.env`).
 
@@ -132,12 +119,9 @@ Look for lines containing `ERROR`, `CRITICAL`, `Traceback`, or `ImportError`.
 
 ## 6. Flutter SDK health
 
-> **Proxy must be set (step 0) before running these commands.** On first run
 > `flutter --version` triggers a tool-cache build that downloads from pub.dev.
 
 ```powershell
-# Proxy vars must be set in this session (step 0) — confirm:
-Write-Host "HTTPS_PROXY=$env:HTTPS_PROXY"
 
 # Flutter version (must be 3.22+)
 flutter --version

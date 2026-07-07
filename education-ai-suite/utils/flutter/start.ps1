@@ -11,13 +11,7 @@
 
 Write-Host "`n=== Starting Smart Classroom RAG ===" -ForegroundColor Cyan
 
-# Set proxy
-$env:HTTP_PROXY  = "http://proxy-dmz.intel.com:911"
-$env:HTTPS_PROXY = "http://proxy-dmz.intel.com:912"
-$env:http_proxy  = "http://proxy-dmz.intel.com:911"
-$env:https_proxy = "http://proxy-dmz.intel.com:912"
-$env:NO_PROXY    = "localhost,127.0.0.1,::1,*.intel.com"
-$env:no_proxy    = "localhost,127.0.0.1,::1,*.intel.com"
+
 
 # Check prerequisites
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -36,6 +30,7 @@ if (-not (Test-Path (Join-Path $PSScriptRoot "pubspec.yaml"))) {
 
 # Start backend in separate window
 Write-Host "`nStarting Content Search backend..." -ForegroundColor Yellow
+Write-Host "  Backend will launch in a separate window" -ForegroundColor Gray
 $backendCmd = "Set-Location '$repoRoot'; & '$venvPython' '$backendScript'; Read-Host 'Backend stopped - press Enter to close'"
 
 Start-Process powershell.exe `
@@ -43,20 +38,24 @@ Start-Process powershell.exe `
     -WorkingDirectory $repoRoot
 
 Write-Host "[OK] Backend window opened" -ForegroundColor Green
-Write-Host "  Wait for 'Application startup complete' message before using the app" -ForegroundColor Yellow
 
-# Wait for backend to be ready
-Write-Host "`nWaiting for backend to be ready..." -ForegroundColor Yellow
-$deadline = (Get-Date).AddSeconds(60)
+# Wait for backend to be fully ready
+Write-Host "`nWaiting for backend to be fully healthy..." -ForegroundColor Yellow
+Write-Host "  This ensures backend is completely ready before launching Flutter" -ForegroundColor Gray
+Write-Host "  Checking health endpoint: http://127.0.0.1:9011/api/v1/system/health" -ForegroundColor Gray
+
+$deadline = (Get-Date).AddSeconds(20)
 $backendReady = $false
+$attempts = 0
 
 do {
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 1
+    $attempts++
     try {
         $response = Invoke-WebRequest -Uri "http://127.0.0.1:9011/api/v1/system/health" `
                                        -UseBasicParsing -TimeoutSec 5
         if ($response.StatusCode -eq 200) {
-            Write-Host "[OK] Backend is healthy" -ForegroundColor Green
+            Write-Host "`n[OK] Backend is fully healthy and ready (after $attempts seconds)" -ForegroundColor Green
             $backendReady = $true
             break
         }
@@ -66,17 +65,30 @@ do {
 } while ((Get-Date) -lt $deadline)
 
 if (-not $backendReady) {
-    Write-Host "`n⚠ Backend health check timed out" -ForegroundColor Yellow
-    Write-Host "  Continuing anyway - check the backend window for errors" -ForegroundColor Yellow
+    Write-Host "`n`n[X] Backend failed to become healthy within 60 seconds" -ForegroundColor Red
+    Write-Host "  Check the backend window for error messages" -ForegroundColor Yellow
+    Write-Host "  Common issues:" -ForegroundColor Yellow
+    Write-Host "    - Port 9011 already in use" -ForegroundColor Gray
+    Write-Host "    - Missing dependencies (run .\utils\flutter\setup.ps1)" -ForegroundColor Gray
+    Write-Host "    - Python environment issues" -ForegroundColor Gray
+    Write-Host "`nExiting without launching Flutter..." -ForegroundColor Red
+    exit 1
 }
 
-# Start Flutter app
-Write-Host "`nStarting Flutter app..." -ForegroundColor Yellow
-Push-Location $PSScriptRoot
+# Start Flutter app in separate window
+Write-Host "`nBackend is ready - now starting Flutter app..." -ForegroundColor Yellow
+Write-Host "  Flutter will launch in a separate window" -ForegroundColor Gray
 
-flutter run -d windows
+$flutterCmd = "Set-Location '$PSScriptRoot'; flutter run -d windows; Write-Host '`nFlutter app closed' -ForegroundColor Cyan; Read-Host 'Press Enter to close this window'"
 
-Pop-Location
+Start-Process powershell.exe `
+    -ArgumentList "-NoExit", "-Command", $flutterCmd `
+    -WorkingDirectory $PSScriptRoot
 
-Write-Host "`n=== Application Closed ===" -ForegroundColor Cyan
-Write-Host "Remember to close the backend window if still running" -ForegroundColor Yellow
+Write-Host "[OK] Flutter window opened" -ForegroundColor Green
+Write-Host "`n=== Startup Complete ===" -ForegroundColor Cyan
+Write-Host "Both services are running in separate windows:" -ForegroundColor Green
+Write-Host "  - Backend: Content Search service on port 9011" -ForegroundColor Gray
+Write-Host "  - Flutter: Smart Classroom app" -ForegroundColor Gray
+Write-Host "`nYou can now use commands like 'upload a file'" -ForegroundColor Yellow
+Write-Host "Remember to close both windows when done" -ForegroundColor Yellow

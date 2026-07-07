@@ -33,21 +33,7 @@ the output.**
 .\utils\flutter\start.ps1
 ```
 
-### 2. Verify backend health endpoint
-
-```powershell
-$BASE = "http://127.0.0.1:9011"
-Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing |
-  Select-Object -ExpandProperty Content
-```
-
-### 3. Verify Flutter app is running
-
-```powershell
-Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
-  Where-Object { $_.LocalPort -in 5173,9011 } |
-  Select-Object LocalAddress, LocalPort, OwningProcess
-```
+**Note:** The startup script already includes backend health verification. No additional health check is needed.
 
 ---
 
@@ -57,11 +43,9 @@ Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 |---|---|---|
 | `start.ps1` not found | Script missing in `utils/flutter/` | Add script or correct path |
 | Health endpoint unreachable | Backend not started by script | Run `sc-setup`, then rerun `sc-up` |
-| Flutter app not listening | Flutter process failed to start | Check terminal logs and rerun script |
 
 ---
 
 ## Output
 
-Report: **startup script launched** -> **health endpoint status** ->
-**ports listening**.
+Report: **startup script launched** -> **health endpoint status**.

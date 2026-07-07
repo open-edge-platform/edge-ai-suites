@@ -64,9 +64,7 @@ $BASE = "http://127.0.0.1:9011"
 $r = Invoke-WebRequest -Uri "$BASE/api/v1/object/files/list?page=1&page_size=50" `
      -UseBasicParsing
 $files = ($r.Content | ConvertFrom-Json).data.files
-$files | Select-Object file_name, file_hash, @{N="type";E={$_.meta.type}},
-    @{N="indexed";E={$_.index.indexed}},
-    @{N="vectors";E={$_.index.total_vectors}} |
+$files | Select-Object file_name, file_hash, @{N="type";E={$_.meta.type}}, |
     Format-Table -AutoSize
 ```
 
@@ -184,7 +182,6 @@ The Flutter app maps `GET /api/v1/object/files/list` through `FileAsset.fromJson
 | `file_name` | `fileName` | Display name |
 | `file_hash` | `fileHash` | SHA-256 hex — used as `file_key` for deletion |
 | `meta.type` | `fileType` | `"document"` \| `"video"` \| `"image"` |
-| `index.indexed` | `indexed` | `true` when vectors are ready |
 | `index.total_vectors` | `totalVectors` | Number of embedding chunks |
 
 ---
@@ -194,7 +191,6 @@ The Flutter app maps `GET /api/v1/object/files/list` through `FileAsset.fromJson
 | Symptom | Likely cause | Action |
 |---|---|---|
 | Empty files list | No files uploaded yet | Run `sc-upload` |
-| File shows `indexed: false` | Ingestion in progress or failed | Poll task status; check `sc-doctor` |
 | Delete returns 404 | Wrong `file_key` / file already deleted | Re-list files to get correct `file_hash` |
 | Tags list is empty | No tags set at upload time | Re-upload with `meta.tags` set |
 
@@ -202,5 +198,5 @@ The Flutter app maps `GET /api/v1/object/files/list` through `FileAsset.fromJson
 
 ## Output
 
-Report: **total file count** → **file names + types + indexed status** →
+Report: **total file count** → **file names + types + vector counts** →
 **available tags** → **deletion confirmation** (if requested).

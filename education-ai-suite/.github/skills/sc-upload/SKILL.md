@@ -33,18 +33,6 @@ Set `$BASE = "http://127.0.0.1:9011"` for all snippets.
 
 ### Set corporate proxy (required for any outbound download; localhost API calls bypass it)
 
-```powershell
-$env:HTTPS_PROXY = "http://proxy-chain.intel.com:911"
-$env:HTTP_PROXY  = "http://proxy-chain.intel.com:911"
-$env:https_proxy = "http://proxy-chain.intel.com:911"
-$env:http_proxy  = "http://proxy-chain.intel.com:911"
-$env:NO_PROXY    = "localhost,127.0.0.1"
-$env:no_proxy    = "localhost,127.0.0.1"
-```
-
-> The API calls below go to `127.0.0.1` which is in `NO_PROXY` and bypass the
-> proxy automatically. The block above is included so this skill is self-contained.
-
 Probe health first — if the backend is unreachable, use
 [`sc-doctor`](../sc-doctor/SKILL.md) / [`sc-up`](../sc-up/SKILL.md):
 
@@ -62,6 +50,10 @@ The file must be one of the supported extensions:
 
 ## 1. Upload and trigger ingestion
 
+**🤖 Agent instruction:** Before executing the command below, use the `ask_user` tool to:
+1. **Get the file path** to upload (user must provide full path)
+2. **Optionally ask for tags** (comma-separated, e.g., "knowledge,ai,tutorial")
+
 `POST /api/v1/object/upload-ingest` is a multipart form request with two fields:
 - `file` — the binary file
 - `meta` — a JSON string with optional metadata (tags, description)
@@ -71,14 +63,29 @@ full `meta` schema.
 
 ```powershell
 $BASE     = "http://127.0.0.1:9011"
-$FilePath = "utils\flutter\sample-files\6.KnowledgeBasedSystems.pdf"   # <-- replace with actual path
-$Tags     = "knowledge"                  # optional comma-separated tags
+# Agent: Set $FilePath to the user-provided file path from ask_user
+$FilePath = "<USER_PROVIDED_FILE_PATH>"
+# Agent: Set $Tags to user-provided tags (or empty string if none)
+$Tags     = "<USER_PROVIDED_TAGS_OR_EMPTY>"
+
+# Determine file type from extension
+$extension = [System.IO.Path]::GetExtension($FilePath).TrimStart('.').ToLower()
+$fileType = switch ($extension) {
+    { $_ -in @('pdf','txt','docx','doc','pptx','ppt','xlsx','xls') } { "document" }
+    { $_ -in @('jpg','jpeg','png') } { "image" }
+    { $_ -in @('mp4','avi','mov','mkv') } { "video" }
+    default { "document" }
+}
 
 # tags is a JSON array, not a comma-separated string
-$tagsArray = $Tags -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+$tagsArray = if ($Tags) { 
+    $Tags -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+} else { 
+    @() 
+}
 $meta = @{
     file_name = [System.IO.Path]::GetFileName($FilePath)
-    type      = "document"   # or "video" / "image" — match the file type
+    type      = $fileType
     tags      = $tagsArray
 } | ConvertTo-Json -Compress
 
@@ -117,7 +124,7 @@ $body | ConvertTo-Json -Depth 5
 ### 1b. Handle duplicate (code 40901)
 
 ```powershell
-# Extract task_id from the 40901 response, then clean it up
+# Agent: Extract task_id from the 40901 response ($body.data.task_id)
 $TASK_ID = $body.data.task_id
 Invoke-WebRequest -Uri "$BASE/api/v1/object/cleanup-task/$TASK_ID" `
     -Method Delete -UseBasicParsing
@@ -132,7 +139,8 @@ Poll `GET /api/v1/task/query/{task_id}` every 3 seconds.
 Terminal statuses are `COMPLETED`, `FAILED`, and `ALREADY_EXISTS`.
 
 ```powershell
-$TASK_ID = "<TASK_ID>"   # from step 1 response
+# Agent: Extract $TASK_ID from the response in step 1 ($body.data.task_id)
+$TASK_ID = $body.data.task_id
 $deadline = (Get-Date).AddMinutes(10)
 
 do {
