@@ -10,7 +10,7 @@ To make sure that your system has an NPU available, please follow
 the steps in the [dedicated guide on how to do so](https://www.intel.com/content/www/us/en/support/articles/000097597/processors.html).
 
 The full device name is Neural Processing Unit, but the Linux kernel driver uses
-the old name - Versatile Processing Unit (VPU).
+the old name - Vision Processing Unit (VPU).
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**

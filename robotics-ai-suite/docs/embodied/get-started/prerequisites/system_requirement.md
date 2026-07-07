@@ -7,7 +7,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 <!--hide_directive:::{tab-item}hide_directive--> **Intel® Core™ Ultra Series 2 processor**
 <!--hide_directive:sync: humblehide_directive-->
 
-| **Component** | **Specifications** |
+| **Component** | **Recommendation** |
 | --- | --- |
 | **Processor (CPU)** | The embodied SDK is powered by the **Arrow Lake 255H Processor**, a high-efficiency CPU designed for edge computing and AI-driven applications:<br>- Base Frequency: 2.0 GHz<br>- Max Turbo Frequency: 5.1 GHz<br>- Base Power Consumption: 28W |
 | **Memory (RAM)** | To ensure smooth multitasking and data processing, the Embodied Intelligence SDK prefers **64GB of LPDDR5X** memory:<br>- Memory Type: Dual-channel LPDDR5X<br>- Speed: 2R 7467 MT/s |
@@ -17,7 +17,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 <!--hide_directive:::{tab-item}hide_directive--> **Intel® Core™ Ultra Series 3 processor**
 <!--hide_directive:sync: jazzyhide_directive-->
 
-| **Component** | **Specifications** |
+| **Component** | **Recommendation** |
 | --- | --- |
 | **Processor (CPU)** | The embodied SDK is powered by the **Panther Lake 358H Processor**, a high-efficiency CPU designed for edge computing and AI-driven applications:<br>- Base Frequency: 1.9 GHz<br>- Max Turbo Frequency: 4.8 GHz<br>- Base Power Consumption: 25W |
 | **Memory (RAM)** | To ensure smooth multitasking and data processing, the Embodied Intelligence SDK prefers **64GB of LPDDR5X** memory:<br>- Memory Type: Dual-channel LPDDR5X<br>- Speed: 2R 9500 MT/s |
@@ -30,7 +30,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 <!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
 <!--hide_directive:sync: humblehide_directive-->
 
-| **Component** | **Specifications** |
+| **Component** | **Recommendation** |
 | ------------- | ------------------ |
 | **Operating System** | The Embodied Intelligence SDK runs on **Ubuntu distribution of the Linux OS version 22.04 LTS**, a long-term support (LTS) version optimized for stability, security, and performance in industrial and AI-driven applications. |
 | **Kernel** | The Embodied Intelligence SDK requires **kernel version 6.12.8 with Real-Time Kernel (RT)** capability for optimized performance in time-sensitive applications. |
@@ -40,7 +40,7 @@ This section outlines the system requirements for the Embodied Intelligence SDK,
 <!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
 <!--hide_directive:sync: jazzyhide_directive-->
 
-| **Component** | **Specifications** |
+| **Component** | **Recommendation** |
 | ------------- | ------------------ |
 | **Operating System** | The Embodied Intelligence SDK runs on **Ubuntu distribution of the Linux OS version 24.04 LTS**, a long-term support (LTS) version optimized for stability, security, and performance in industrial and AI-driven applications. |
 | **Kernel** | The Embodied Intelligence SDK requires **kernel version 6.17.11 with Real-Time Kernel (RT)** capability for optimized performance in time-sensitive applications. |

@@ -61,6 +61,18 @@ Alternatively, you can run the `clinfo` command as root.
 
 The Ubuntu 24.04 repositories do not contain compute packages for various Intel graphics products. To install these packages, you can use Intel's dedicated package repository.
 
+Visit the following GitHub repositories release pages and download all the Debian packages:
+
+- https://github.com/intel/intel-graphics-compiler/releases
+- https://github.com/intel/compute-runtime/releases
+
+Install all packages as root:
+```bash
+sudo dpkg -i *.deb
+```
+
+For reference, this software release was validated on the following package versions:
+
 ```bash
 # Download all *.deb packages
 wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.30.1/intel-igc-core-2_2.30.1+20950_amd64.deb --no-check-certificate
