@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_config.dart';
-import '../models/upload_entry.dart';
+import '../entities/upload_entry.dart';
 import 'service_providers.dart';
 
 /// Manages the list of UploadEntry objects and their full lifecycle:

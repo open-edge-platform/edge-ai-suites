@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/content_search_api_service.dart';
-import '../models/health_status.dart';
+import '../entities/health_status.dart';
 
 /// Singleton service instance shared across all notifiers.
 final contentSearchApiServiceProvider = Provider<ContentSearchApiService>(

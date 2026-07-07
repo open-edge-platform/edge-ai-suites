@@ -4,10 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import '../app_config.dart';
-import '../models/ingest_task_result.dart';
-import '../models/qa_models.dart';
-import '../models/health_status.dart';
-import '../models/file_asset.dart';
+import '../entities/ingest_task_result.dart';
+import '../entities/qa_models.dart';
+import '../entities/health_status.dart';
+import '../entities/file_asset.dart';
 
 /// Result of POST /api/v1/object/upload-ingest
 class UploadIngestResult {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/file_asset.dart';
+import '../entities/file_asset.dart';
 import '../providers/service_providers.dart';
 
 class FilesScreen extends ConsumerStatefulWidget {

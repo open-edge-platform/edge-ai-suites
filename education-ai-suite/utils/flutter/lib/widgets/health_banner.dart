@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/health_status.dart';
+import '../entities/health_status.dart';
 import '../providers/service_providers.dart';
 
 class HealthBanner extends ConsumerWidget {

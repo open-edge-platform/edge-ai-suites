@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../app_config.dart';
-import '../models/upload_entry.dart';
+import '../entities/upload_entry.dart';
 import '../providers/upload_notifier.dart';
 import '../widgets/health_banner.dart';
 import '../widgets/upload_entry_tile.dart';

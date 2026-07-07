@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/upload_entry.dart';
+import '../entities/upload_entry.dart';
 
 /// Displays one file's upload state as a card row.
 class UploadEntryTile extends StatefulWidget {

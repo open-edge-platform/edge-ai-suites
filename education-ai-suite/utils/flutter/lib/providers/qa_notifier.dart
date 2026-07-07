@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_config.dart';
-import '../models/qa_models.dart';
+import '../entities/qa_models.dart';
 import 'service_providers.dart';
 
 // ─── State ───────────────────────────────────────────────────────────────────

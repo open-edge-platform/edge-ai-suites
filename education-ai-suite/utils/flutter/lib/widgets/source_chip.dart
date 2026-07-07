@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/qa_models.dart';
+import '../entities/qa_models.dart';
 
 /// Small chip showing a source citation on an assistant message.
 

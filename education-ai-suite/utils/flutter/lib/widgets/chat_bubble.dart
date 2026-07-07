@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/qa_models.dart';
+import '../entities/qa_models.dart';
 import 'source_chip.dart';
 
 /// One chat bubble (user or assistant).
