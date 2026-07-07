@@ -153,11 +153,13 @@ class LvcApiClient:
                 out: list[str] = []
                 for p in items:
                     if isinstance(p, str):
-                        out.append(p)
+                        name = p
                     elif isinstance(p, dict):
                         name = p.get("pipeline_name") or p.get("name")
-                        if name:
-                            out.append(name)
+                    else:
+                        continue
+                    if name and "Camera" not in name:
+                        out.append(name)
                 return out
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code == 502 and attempt == 0:
