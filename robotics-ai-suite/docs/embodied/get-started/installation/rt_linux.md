@@ -409,7 +409,7 @@ swapoff -a
 ```
 ### Stop Unnecessary Services
 
-Many services run in the background, by default, on Linux. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
+On Linux, by default, many services run in the background, by default, on Linux. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
 
 ```bash
 systemctl -t service
@@ -428,7 +428,7 @@ systemctl stop fwupd-refresh.timer fwupd.service snapd.socket snapd.service
 
 The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads. 
 
-Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or very close to zero when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
+Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or close to zero, when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **i915**
@@ -447,7 +447,7 @@ echo 0 > /sys/class/drm/card0/gt_rc6_enable
 <!--hide_directive:::hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive-->  **Xe**
 
-Xe driver doesn’t support disable RC6. So there is no parameter for it. Try below methods to hold forcewake so that GT will always ON. Keep the debugfs file descriptor by letting a long‑lived shell process hold it open. Either method works as follow(replace PATH with the real forcewake_all path, e.g. /sys/kernel/debug/dri/0/forcewake_all):
+As the Xe driver does not support disabling RC6, there is no parameter for it. Try below methods to hold forcewake so that GT will always ON. Keep the debugfs file descriptor by letting a long‑lived shell process hold it open. Either method works as follows (replace PATH with the real forcewake_all path, e.g., /sys/kernel/debug/dri/0/forcewake_all):
 
 1. Open FD in current shell and keep it:
 
@@ -470,8 +470,8 @@ Xe driver doesn’t support disable RC6. So there is no parameter for it. Try be
 
 ## Verify Benchmark Performance
 
-After installing the real-time Linux kernel, it's a good idea to benchmark the system to establish confidence that the system is properly configured. Perform either of the following commands to install [Cyclictest](https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git). Cyclictest is most commonly used for benchmarking real-time systems. It is one of the most frequently used tools for evaluating the relative performance of an RT. Cyclictest accurately and repeatedly measures the difference between a thread's intended wake-up time and the time at which it actually wakes up to provide statistics about the system's latency. It can measure latency in real-time systems caused by the hardware, the firmware, and the operating system.
-Please use `rt-tests v2.6` to collect performance, which support to pin threads to specific isolated core and avoid main thread in same core with the measurement threads.
+After installing the real-time Linux kernel, it is a good idea to benchmark the system to confirm that the system is properly configured. Perform either of the following commands to install [Cyclictest](https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git). Cyclictest is most commonly used for benchmarking real-time systems. It is one of the most frequently used tools for evaluating the relative performance of an RT. Cyclictest accurately and repeatedly measures the difference between a thread's intended wake-up time and the time at which it actually wakes up to provide statistics about the system's latency. It can measure latency in real-time systems caused by the hardware, the firmware, and the operating system.
+Please use `rt-tests v2.6` to collect performance, which support pinning threads to a specific isolated core and avoid the main thread in the core with the measurement threads.
 
 Follow with below steps, you can find `cyclictest v2.6` in `rt-tests-2.6`:
 
