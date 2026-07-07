@@ -14,7 +14,7 @@ Smart NVR integrates with Intel® SceneScape to enable:
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- The `edge-ai-suites` repository cloned with the `metro-vision-ai-app-recipe` directory adjacent to `smart-nvr`
+- VSS (Video Search and Summarization) running and reachable from the NVR machine
 
 ## Deployment Modes
 
@@ -57,92 +57,36 @@ source setup.sh start
 ### Verify
 
 ```bash
-docker logs nvr-event-router -f
-# Expected output: "SceneScape MQTT client started"
+docker logs nvr-event-router | grep -i "scenescape\|subscribed"
+# Expected:
+#   Scenescape mode: starting multi-broker manager
+#   [si1] subscribed to scenescape/data/camera/# at <host>:1883
 ```
 
 The UI is available at `http://<host_ip>:7860`.
 
 ## Distributed Node Deployment
 
-In distributed mode, Smart Intersection runs on a dedicated machine (System 1) while the NVR stack runs on a separate machine (System 2).
-
-### System 1 (SI Node)
-
-```bash
-export NVR_SCENESCAPE=true
-# export RTSP_STREAM_PORT=<rtsp port>         # optional, default 8554
-# export RTSP_STREAM_HOST=<external_rtsp_ip>  # optional: set to use an external RTSP source; skips local demo streamer
-source setup.sh start-si
-```
-
-By default, `start-si` downloads demo videos and starts a local MediaMTX RTSP streamer. If `RTSP_STREAM_HOST` is set to a different machine's IP, the local streamer is skipped and SI reads from the external RTSP source instead.
-
-Upon successful startup, the script outputs the System 1 IP address required for System 2 configuration.
-
-### System 2 (NVR Node)
-
-```bash
-# Required
-export NVR_SCENESCAPE=true
-export SCENESCAPE_MQTT_BROKER=<system1_ip>
-export RTSP_STREAM_HOST=<system1_ip>
-export VSS_SUMMARY_IP=<vss_ip>
-export VSS_SUMMARY_PORT=<vss_port>
-export VSS_SEARCH_IP=<vss_ip>
-export VSS_SEARCH_PORT=<vss_port>
-# Optional 
-# export RTSP_STREAM_PORT=<rtsp port>      # default 8554
-# export MQTT_USER=<mqtt-username>         # optional, auto-generated if omitted
-# export MQTT_PASSWORD=<mqtt-password>     # optional, auto-generated if omitted
-source setup.sh start-nvr
-```
-
-System 2 connects to System 1's MQTT broker (port `1883` by default) for SceneScape events and RTSP server (port `8554` by default) for video streams.
+For distributed deployments where Smart Intersection runs on a dedicated machine
+(System 1) and the NVR stack runs on a separate machine (System 2), see
+[Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md).
 
 ## Stop Services
 
 ```bash
-# Single-node
-source setup.sh stop
-
-# Distributed node
-source setup.sh stop-nvr  # System 2
-source setup.sh stop-si   # System 1
-
-# Restart
-source setup.sh restart
+source setup.sh stop     # stop all services
+source setup.sh restart  # restart all services
 ```
 
-When stopping System 1, if a local RTSP streamer is running, the script prompts:
-
-```text
-Local RTSP streamer is running. Stop it too? [y/N]
-```
-
-- Enter `y` to stop both SI services and the RTSP streamer.
-- Enter `n` or press Enter to stop only SI services and leave the streamer running.
-  The streamer can be stopped independently with `source setup.sh stop-streamer`.
-
-### RTSP Streamer Only
-
-To start only the MediaMTX RTSP streamer without launching the full NVR or Smart Intersection stack, use the following command. This is intended for development and testing scenarios where video stream availability needs to be verified independently.
-
-```bash
-source setup.sh start-streamer
-```
-
-To stop the streamer:
-
-```bash
-source setup.sh stop-streamer
-```
+For distributed node stop commands, see [Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md#stop).
 
 ## Verify Integration
 
 ```bash
-docker logs nvr-event-router -f
-# Expected output: "SceneScape MQTT client started"
+docker logs nvr-event-router | grep -i "scenescape\|subscribed"
+# Expected:
+#   Scenescape mode: starting multi-broker manager
+#   [si1] subscribed to scenescape/data/camera/# at <host>:1883
 ```
 
 ## User Interface
@@ -225,9 +169,9 @@ docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 When reporting issues, verify the following:
 
 1. **Environment variables** — Confirm all required variables are exported: `env | grep -E "NVR_|SCENESCAPE|MQTT|VSS"`
-2. **MQTT connectivity** — Check logs for the message: `"SceneScape MQTT client started"`
+2. **MQTT connectivity** — Check logs for: `[si1] subscribed to scenescape/data/camera/#`
 3. **Smart Intersection** — Confirm SI containers are running: `docker ps | grep metro`
-4. **Distributed node connectivity** — Confirm System 2 can reach System 1 on port 1883 (MQTT) and port 8554 (RTSP)
+4. **Distributed node** — See [Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md) for connectivity and broker troubleshooting.
 5. **Resource utilization** — Run `docker stats --no-stream` to identify resource-constrained containers
 
 For general Smart NVR issues, refer to the [Troubleshooting Guide](./troubleshooting.md).
