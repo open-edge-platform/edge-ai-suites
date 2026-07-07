@@ -31,6 +31,8 @@ services:
       - ./configs/vllm/models:/checkpoints
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
+      no_proxy: "${no_proxy},${HOST_IP},seaweedfs-filer"
+      NO_PROXY: "${no_proxy},${HOST_IP},seaweedfs-filer"
     command:
       - vllm
       - serve
