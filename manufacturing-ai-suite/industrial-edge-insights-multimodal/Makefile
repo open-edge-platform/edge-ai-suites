@@ -36,7 +36,7 @@ SHA_ALGO="sha384"
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build --pull;
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
