@@ -49,9 +49,6 @@ ROS is a set of open-source software libraries and tools that help you build rob
    sudo apt install librealsense2
    ```
 
-   > **Note:**
-   > The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
-
 6. (Optional) Install the ROS wrappers for RealSense depth cameras:
 
    ```bash
@@ -100,9 +97,6 @@ ROS is a set of open-source software libraries and tools that help you build rob
    sudo apt install librealsense2-dkms
    sudo apt install librealsense2
    ```
-
-   > **Note:**
-   > The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
 
 6. (Optional) Install the ROS wrappers for RealSense depth cameras:
 

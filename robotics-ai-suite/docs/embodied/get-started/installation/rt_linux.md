@@ -409,7 +409,7 @@ swapoff -a
 ```
 ### Stop Unnecessary Services
 
-On Linux, by default, many services run in the background, by default, on Linux. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
+On Linux, by default, many services run in the background. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
 
 ```bash
 systemctl -t service
