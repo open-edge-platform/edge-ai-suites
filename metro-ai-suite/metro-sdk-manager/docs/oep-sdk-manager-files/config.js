@@ -25,15 +25,15 @@ const CONFIG = {
       type: "single",
       options: [
         {
-          label: "OEP Vision AI SDK",
+          label: "Metro Vision AI SDK",
           value: "OEP_VISION"
         },
         {
-          label: "OEP Gen AI SDK",
+          label: "Metro Gen AI SDK",
           value: "OEP_GENAI"
         },
         {
-          label: "Visual AI Demo Kit",
+          label: "Metro AI Demo Kit",
           value: "VISUAL_AI_DEMO"
         }
       ]
