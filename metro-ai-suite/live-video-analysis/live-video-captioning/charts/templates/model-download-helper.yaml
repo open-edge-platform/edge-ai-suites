@@ -8,7 +8,7 @@ data:
   download-model.sh: |-
     #!/bin/bash
     # Shared function to download models via model-download service
-    # Usage: download_model MODEL_NAME MODEL_TYPE WEIGHT_FORMAT HF_TOKEN OUTPUT_NAME
+    # Usage: download_model MODEL_NAME MODEL_TYPE WEIGHT_FORMAT HF_TOKEN OUTPUT_NAME [DEVICE]
 
     # Function to check the health of the model-download microservice
     check_model_download_service_health() {
@@ -70,6 +70,7 @@ data:
         local WEIGHT_FORMAT=$3  # ""=fp16, "int8", or "int4"
         local HF_TOKEN=${4:-""}  # default to empty
         local OUTPUT_NAME=${5:-""}
+        local DEVICE=$(echo "${6:-CPU}" | tr '[:lower:]' '[:upper:]')
         local TARGET_ROOT="/opt/data/ov_models"
         local MODEL_BASENAME="${MODEL_NAME##*/}"
         local MODEL_PROVIDER="${MODEL_NAME%%/*}"
@@ -79,8 +80,19 @@ data:
         # Keep model families isolated on the shared PVC.
         if [ "$MODEL_TYPE" = "vision" ]; then
             TARGET_ROOT="/opt/data/detection-models"
+            DEVICE="CPU"
         elif [ "$MODEL_TYPE" = "llm" ]; then
             TARGET_ROOT="/opt/data/llm_models"
+        fi
+
+        if [ "$MODEL_TYPE" = "vlm" ] || [ "$MODEL_TYPE" = "llm" ]; then
+            case "$DEVICE" in
+                CPU|GPU|NPU) ;;
+                *)
+                    echo "ERROR: Unsupported device '${DEVICE}'. Allowed values are CPU, GPU, NPU."
+                    exit 1
+                    ;;
+            esac
         fi
 
         # Fallback normalization when output name is not explicitly provided.
@@ -211,8 +223,8 @@ data:
                 # Build JSON payload based on model type
                 if [ "$MODEL_TYPE" = "vlm" ] || [ "$MODEL_TYPE" = "llm" ]; then
                         HUB="openvino"
-                        PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s","is_ovms":true,"config":{"precision":"%s"}}],"parallel_downloads":false}' \
-                            "$MODEL_NAME" "$HUB" "$MODEL_TYPE" "$WEIGHT_FORMAT")
+                        PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s","is_ovms":true,"config":{"precision":"%s","device":"%s"}}],"parallel_downloads":false}' \
+                            "$MODEL_NAME" "$HUB" "$MODEL_TYPE" "$WEIGHT_FORMAT" "$DEVICE")
                 elif [ "$MODEL_TYPE" = "vision" ]; then
                         HUB="ultralytics"
                         PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s"}],"parallel_downloads":false}' \
@@ -350,5 +362,5 @@ data:
         rm -rf "$staging_dir"
         rm -rf "$legacy_staging_dir"
 
-        echo "Successfully prepared ${MODEL_TYPE} model: ${MODEL_NAME} at ${TARGET_DIR}"
+        echo "Successfully prepared ${MODEL_TYPE} model: ${MODEL_NAME} for device ${DEVICE} at ${TARGET_DIR}"
     }

@@ -10,7 +10,7 @@ Before you begin, ensure that you have the following:
 - Helm installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. See [Kubernetes Documentation on Dynamic Volume Provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for details.
 - A worker node reachable by your browser client. Prefer a GPU-capable worker node when available, because the chart pins the media and inference workloads to the selected node and DL Streamer benefits most from GPU access.
-- A writable host path for collector signal files on the target node. By default the chart uses `/tmp/lvc/collector-signals`.
+- An Intel GPU/NPU-capable worker node is recommended so the `metrics-manager` can report GPU and NPU utilization (via qmassa). GPU/NPU metrics are simply omitted on nodes without the hardware.
 - An RTSP source reachable from the Kubernetes node that runs `dlstreamer-pipeline-server`.
 - Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html) which is responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
 
@@ -35,7 +35,7 @@ Before you begin, ensure that you have the following:
    | ENABLE_PLUGINS             | Comma-separated list of plugins to enable                                                                               | "openvino,ultralytics"                 |
    | OVMS_RELEASE_TAG           | OVMS release tag used by the script to enable support for newer models during OpenVINO conversion                           | default: `v2025.4.1`                   |
    | gpu.enabled                | For model-download service pod to be deployed on GPU                                                                    | true                                   |
-   | gpu.key                    | Label assigned to the GPU node on kubernetes cluster by the device plugin. Identify by running `kubectl describe node` | gpu.intel.com/i915 or gpu.intel.com/xe |
+   | gpu.key                    | The GPU node label that the device plugin assigns within the Kubernetes cluster. To find this label, execute `kubectl describe node <your_node_name>`. Ensure you're using the identical node specified in the affinity.value parameter below to get the label value. | gpu.intel.com/i915 or gpu.intel.com/xe |
    | affinity.enabled           | Set to true to deploy on dedicated node                                                                                 | true                                   |
    | affinity.value             | Your dedicated node name/value. Identify by running `kubectl get node`                                                  | <your_node_name>                       |
 
@@ -124,20 +124,22 @@ The chart pins the workloads that need to stay together to the target node selec
 - `video-caption-service`
 - `mediamtx`
 - `coturn`
-- `collector`
+- `metrics-manager`
 - `live-video-captioning-rag (if RAG is enabled)`
 
 These workloads are kept on the same worker because they rely on node-local access patterns:
 
 - `dlstreamer-pipeline-server`, `video-caption-service`, `live-video-captioning-rag` and `model-download` share the model PVCs that created by `model-download`.
-- `dlstreamer-pipeline-server` and `collector` need direct access to node hardware and host resources.
+- `dlstreamer-pipeline-server` and `metrics-manager` need direct access to node hardware and host resources.
 - `mediamtx` and `coturn` expose browser-facing WebRTC and TURN endpoints that must match the selected node's reachable IP.
 
-Other supporting services such as `mqtt-broker`, `live-metrics-service`, `multimodal-embedding` (when RAG is enabled), and `vdms-vectordb` (when RAG is enabled) do not require pinning to the same worker node.
+Other supporting services such as `mqtt-broker`, `multimodal-embedding` (when RAG is enabled), and `vdms-vector-db` (when RAG is enabled) do not require pinning to the same worker node.
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
-In [values-override.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
+In [values-override.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/values-override.yaml), set `global.nodeName` to specify the target Kubernetes node. This value references the built-in `kubernetes.io/hostname` label and requires no additional node labeling permissions.
+
+Ensure you use the same node name as specified in your model-download chart deployment.
 
 Example:
 
@@ -148,35 +150,38 @@ global:
 
 #### Get the IP of the selected node
 
-Use the same node that you selected for the pinned media workloads. First list the nodes and labels:
+Use the same node that you selected for the pinned workloads above.
 
-```bash
-kubectl get nodes --show-labels
-```
+Set the `global.hostIP`. The `global.hostIP` should be set the IP address that your browser can actually reach.
 
-Then inspect the selected node:
+Here's how to find it:
 
-```bash
-kubectl get node <node-name> -o wide
-```
+- Check what IPs your node has
+    ```bash
+    # Example: `kubectl get node worker4 -owide`
+    kubectl get node <your_node_name> -owide
+    ```
+  Look at the `INTERNAL-IP` and `EXTERNAL-IP` columns.
 
-Set `global.hostIP` to the node address that is reachable by the browser:
+- Choose the right IP based on your setup
+    - Use **INTERNAL-IP** if:
+       - Your node has no EXTERNAL-IP assigned, OR
+       - You're accessing from within the same network as the cluster (VPN, same LAN, etc.)
+    - Use **EXTERNAL-IP** if:
+       - Your node shows an EXTERNAL-IP in the ouput command above, AND
+       - Your browser cannot reach the internal network directly.
 
-- In clusters without worker-node external IPs, use `INTERNAL-IP`.
-- Use `EXTERNAL-IP` only if the node actually has one and your browser reaches the application through it.
-- Use `INTERNAL-IP` when your browser is on the same LAN or VPN and can reach the node directly.
+- Optionally, you can also print the value directly using commands below:
+    - For INTERNAL-IP:
+       ```bash
+       kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}'
+       ```
+    - For EXTERNAL-IP:
+       ```bash
+       kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
+       ```
 
-To print the value directly:
-
-```bash
-kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
-```
-
-If no external address is present, use:
-
-```bash
-kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}'
-```
+💡 Tip: When in doubt, try Internal IP first - it works in most development setups where you're connected to the same network as your cluster.
 
 Set that value in `global.hostIP`.
 
@@ -200,9 +205,9 @@ Prior to deployment, edit the sample override file at `charts/values-override.ya
 
 | Key | Description | Example |
 | --- | --- | --- |
-| `global.hostIP` | Browser-reachable IP of the selected node that runs the pinned media workloads. In many on-prem clusters this is the node `INTERNAL-IP`. Retrieve it with `kubectl get node <node-name> -o wide` | `192.168.1.20` |
+| `global.hostIP` | Browser-reachable IP of the selected node that runs the pinned workloads. In many on-prem clusters this is the node `INTERNAL-IP`. Retrieve it with `kubectl get node <node-name> -o wide` | `192.168.1.20` |
 | `global.nodeName` | Kubernetes node name used to pin the media, TURN, and host-coupled workloads to one worker node. Prefer a GPU-capable node when available | `worker4` |
-| `global.models` | List of VLM models from HuggingFace to export to OpenVINO format (at least one VLM required) | `OpenGVLab/InternVL2-1B` |
+| `global.models` | List of VLM model entries (at least one required).<br>Each entry supports:<br>- `modelId`: HuggingFace repo ID<br>- `modelType`: `"vlm"`<br>- `weightFormat`: `"int8"`, `"int4"`, or `"fp16"`<br>- `device`: `"CPU"`, `"GPU"`, `"NPU"`, CSV like `"CPU,GPU"`, or list like `["CPU", "NPU"]`<br>Output directory is derived from `modelId` under `/ov_models/<device>/`.<br>If `NPU` is selected, `weightFormat` is automatically forced to `"int4"`. | `models:`<br>`  - modelId: "OpenGVLab/InternVL2-1B"`<br>`    modelType: "vlm"`<br>`    weightFormat: "int8"`<br>`    device: "CPU,GPU"` |
 | `global.huggingface.apiToken` | HuggingfaceHub token to download gated model. | <your_huggingfacehub_token> |
 | `video-caption-service.env.enableDetectionPipeline` | Enables detection filtering in the pipeline. When set to `"true"` and configure `global.detectionModels` so the chart downloads the required detection models automatically | `"true"` or `"false"` |
 | `global.detectionModels` | List of detection model names to download (only required when `video-caption-service.enableDetectionPipeline` is enabled) | `["yolov8s"]` |
@@ -300,11 +305,12 @@ If you changed the service ports in your override values, use those instead.
 To start captioning after deployment:
 
 1. Open the dashboard URL in your browser.
-2. Enter an RTSP stream URL, unless you preconfigured `defaultRtspUrl`.
-3. Select the model you downloaded into the models PVC.
-4. Adjust the prompt and generation parameters if needed.
-5. Start the stream.
-6. To submit a query via the RAG chatbot, click on the `chat icon` button located at the top right of the dashboard. The button is only visible when RAG is enabled.
+2. Enter an RTSP stream URL (unless you preconfigured `defaultRtspUrl`) or select the available USB/webcam camera that connected to the node system.
+3. Select the device on which the VLM model will run (e.g., "CPU", "GPU", "NPU"), based on the hardware available on your host system.
+4. Select the model you downloaded into the models PVC.
+5. Adjust the prompt and generation parameters if needed.
+6. Start the stream.
+7. To submit a query via the RAG chatbot, click on the `chat icon` button located at the top right of the dashboard. The button is only visible when RAG is enabled.
 
 ## Upgrade the Release
 
@@ -334,7 +340,7 @@ helm uninstall lvc -n "$my_namespace"
 - If the dashboard opens but video does not start, confirm that `global.hostIP` is reachable from the browser. If your worker nodes do not have external IPs, this usually means using the node `INTERNAL-IP` over a reachable LAN or VPN. Also confirm that the RTSP source is reachable from the Kubernetes node.
 - If WebRTC negotiation fails, verify that `global.hostIP` points to the same node that runs `mediamtx` and `coturn`, and that the required ports are allowed by your network policy or firewall.
 - If detection is enabled but the pipeline cannot start, ensure the detection models PVC contains the required OpenVINO detection model artifacts.
-- If the collector does not report metrics, confirm that the host path in `collector.collectorSignalsHostPath` exists on the selected node and that the pod is scheduled there.
+- If the `metrics-manager` does not report metrics, confirm that the pod is scheduled on the selected node (it binds host ports `9090` and `9273`) and that it has the required privileged/hostPID access for GPU and NPU collection.
 - If the `live-video-captioning` and `video-caption-service` pods stuck in `Init` or `Pending` state, check whether the models successfully download or not.
 
    ```bash

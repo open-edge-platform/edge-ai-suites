@@ -126,7 +126,8 @@ class VideoAnalyticsPipelineService:
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
-        os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
+        # Comment out to use d3d12 decoders as d3d11 decoder + gvawatermark + encoder causes crash
+        # os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
 
     def _get_model_path(self, model_key: str) -> str:
         """Get full path to model"""
@@ -614,10 +615,10 @@ class VideoAnalyticsPipelineService:
         pipeline = [
             *self._get_source_elements(source, input_type),
             # Branch 1: ResNet18 classification
-            # "videorate",
-            # "!",
-            # "video/x-raw(memory:D3D11Memory),framerate=1/1",
-            # "!",
+            "videorate",
+            "!",
+            "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",

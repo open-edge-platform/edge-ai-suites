@@ -25,7 +25,7 @@ All components of the composite application share the visual pipeline solution's
 
 Deployment of the the full solution consists of two main stages:
 
-1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/main/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
+1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
 2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accellerated compute platform.
 
 ## Components of the Handheld Multi-Modal Application
