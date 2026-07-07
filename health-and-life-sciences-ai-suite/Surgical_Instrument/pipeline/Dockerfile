@@ -19,6 +19,7 @@ COPY launcher.py         /opt/launcher.py
 COPY pipeline_string.py  /opt/pipeline_string.py
 COPY mqtt_publisher.py   /opt/mqtt_publisher.py
 COPY bbox_filter.py      /opt/bbox_filter.py
+COPY watermark_green.py  /opt/watermark_green.py
 
 ENV PIPELINE_HTTP_PORT=8000 \
     FRAME_DIR=/frames

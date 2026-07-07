@@ -27,7 +27,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request
 
-from pipeline_string import VALID_DEVICES, build
+from pipeline_string import VALID_DEVICES, VALID_SOURCE_KINDS, build
 
 log = logging.getLogger("launcher")
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s")
@@ -41,6 +41,11 @@ MQTT_HOST   = os.environ.get("MQTT_HOST", "surgical-mqtt")
 MQTT_TOPIC  = os.environ.get("MQTT_TOPIC", "surgical/detections")
 FRAME_DIR   = Path(os.environ.get("FRAME_DIR", "/frames"))
 HTTP_PORT   = int(os.environ.get("PIPELINE_HTTP_PORT", "8000"))
+# Source defaults. `SOURCE_KIND` = file|v4l2|basler. `SOURCE_ARG` is the
+# path/device/serial. Both fall back to `VIDEO` (a file path) for
+# backward compat with the pre-multi-source docker-compose.yaml.
+SOURCE_KIND = os.environ.get("SOURCE_KIND", "file").lower()
+SOURCE_ARG  = os.environ.get("SOURCE_ARG", VIDEO)
 # If the pipeline restarts more than this many times within RESPAWN_WINDOW_S
 # seconds we give up (protects against a config error that instant-crashes).
 RESPAWN_MAX     = int(os.environ.get("RESPAWN_MAX", "6"))
@@ -53,6 +58,8 @@ FRAME_PATH  = FRAME_DIR / "latest.jpg"
 # ------------------------------------------------------------ state --------
 _proc: subprocess.Popen | None = None
 _proc_device: str | None = None
+_proc_source_kind: str | None = None
+_proc_source_arg: str | None = None
 _wanted_running: bool = False        # set True by /start, False by /stop
 _supervisor: threading.Thread | None = None
 _lock = threading.Lock()
@@ -65,9 +72,10 @@ def _reap_if_dead() -> None:
         _proc = None
 
 
-def _spawn(device: str) -> subprocess.Popen:
+def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     pipeline = build(
-        video=VIDEO,
+        source_kind=source_kind,
+        source_arg=source_arg,
         ir_xml=IR_XML,
         device=device,
         threshold=THRESHOLD,
@@ -154,6 +162,8 @@ def health():
             status="running" if _proc else "idle",
             pid=_proc.pid if _proc else None,
             device=_proc_device,
+            source_kind=_proc_source_kind,
+            source_arg=_proc_source_arg,
             wanted_running=_wanted_running,
             latency_log=str(LATENCY_LOG),
             frame_path=str(FRAME_PATH),
@@ -162,21 +172,31 @@ def health():
 
 @app.post("/start")
 def start():
-    global _proc, _proc_device, _wanted_running, _supervisor
+    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _wanted_running, _supervisor
     body = request.get_json(silent=True) or {}
     device = str(body.get("device", "GPU")).upper()
     if device not in VALID_DEVICES:
         return jsonify(error=f"unsupported device: {device}"), 400
+
+    # Source is optional on /start; falls back to env-derived default so
+    # the existing UI (which only sends `device`) keeps working.
+    src = body.get("source") or {}
+    source_kind = str(src.get("kind", SOURCE_KIND)).lower()
+    source_arg  = str(src.get("arg",  SOURCE_ARG))
+    if source_kind not in VALID_SOURCE_KINDS:
+        return jsonify(error=f"unsupported source_kind: {source_kind}"), 400
 
     with _lock:
         _reap_if_dead()
         if _proc is not None:
             return jsonify(error="pipeline already running", pid=_proc.pid), 409
         try:
-            _proc = _spawn(device)
+            _proc = _spawn(device, source_kind, source_arg)
         except Exception as exc:  # noqa: BLE001
             return jsonify(error=f"spawn failed: {exc}"), 500
         _proc_device = device
+        _proc_source_kind = source_kind
+        _proc_source_arg = source_arg
         _wanted_running = True
         # Give gst-launch a moment to fail fast (missing IR, bad pipeline).
         time.sleep(0.3)
@@ -184,22 +204,27 @@ def start():
             rc = _proc.returncode
             _proc = None
             _proc_device = None
+            _proc_source_kind = None
+            _proc_source_arg = None
             _wanted_running = False
             return jsonify(error=f"pipeline exited immediately (rc={rc})"), 500
 
         # Supervisor lives across the /start /stop cycle and respawns
         # gst-launch on EOS so the demo loops indefinitely.
         _supervisor = threading.Thread(
-            target=_supervisor_loop, args=(device,),
+            target=_supervisor_loop, args=(device, source_kind, source_arg),
             name="pipeline-supervisor", daemon=True,
         )
         _supervisor.start()
-        return jsonify(status="running", pid=_proc.pid, device=device), 200
+        return jsonify(
+            status="running", pid=_proc.pid, device=device,
+            source_kind=source_kind, source_arg=source_arg,
+        ), 200
 
 
 @app.post("/stop")
 def stop():
-    global _proc, _proc_device, _wanted_running
+    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _wanted_running
     with _lock:
         _wanted_running = False   # tell supervisor not to respawn
         _reap_if_dead()
@@ -222,6 +247,8 @@ def stop():
             _proc.wait(timeout=2)
         _proc = None
         _proc_device = None
+        _proc_source_kind = None
+        _proc_source_arg = None
         return jsonify(status="stopped", pid=pid), 200
 
 

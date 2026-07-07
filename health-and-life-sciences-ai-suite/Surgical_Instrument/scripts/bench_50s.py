@@ -1,41 +1,31 @@
 #!/usr/bin/env python3
-"""60-second-per-device benchmark for the DL Streamer polyp pipeline.
-
-Identical methodology to bench_50s.py but samples for 60 s so the run
-matches the 1080p @ 60 fps camera duty cycle called out in the customer
-requirement. Assumes the pipeline container is already pointed at a
-video source of >=60 s (see videos/polyp_test_60s.mp4, produced by
-concatenating polyp_test.mp4 three times).
+"""50-second-per-device benchmark for the DL Streamer polyp pipeline.
 
 For each device (GPU, CPU, NPU):
   1. Reset the backend session
   2. Set device
   3. Start
-  4. Sample /api/status every 2s for exactly 60s
+  4. Sample /api/status every 1s for exactly 50s
   5. Stop
-  6. Independently verify by grepping frame_latency and
-     element-latency straight from /frames/latency.log
+  6. Independently verify by grepping frame_latency from
+     /frames/latency.log via `docker exec` (no trust in backend parser)
   7. Query BBoxFilter drop counter from pipeline stderr
 
-Emits both a Markdown summary table and a JSON dump to
-`_dev_notes/bench_60s_<timestamp>.json` for the record.
+Prints a Markdown summary table when done.
 """
 from __future__ import annotations
 
 import json
-import pathlib
 import statistics
 import subprocess
 import sys
 import time
 import urllib.request
-from datetime import datetime, timezone
 
 
 BASE = "http://localhost:8080/api"
 DEVICES = ["GPU", "CPU", "NPU"]
-RUN_SECONDS = 60
-OUT_DIR = pathlib.Path(__file__).resolve().parents[1] / "_dev_notes"
+RUN_SECONDS = 50
 
 
 def post(path: str, body: dict | None = None) -> dict:
@@ -55,6 +45,7 @@ def get_status() -> dict:
 
 
 def raw_e2e_stats() -> tuple[float, float, int]:
+    """Grep frame_latency straight from the pipeline's log file."""
     proc = subprocess.run(
         ["docker", "exec", "surgical-pipeline", "bash", "-lc",
          "grep -oE 'frame_latency=\\(double\\)[0-9.]+' /frames/latency.log | "
@@ -70,25 +61,10 @@ def raw_e2e_stats() -> tuple[float, float, int]:
 
 
 def raw_infer_stats() -> tuple[float, float, int]:
+    """Grep gvadetect element-latency straight from the pipeline's log file."""
     proc = subprocess.run(
         ["docker", "exec", "surgical-pipeline", "bash", "-lc",
          "grep -oE 'element-latency,[^;]*element=\\(string\\)det[0-9]*,[^;]*time=\\(guint64\\)[0-9]+' "
-         "/frames/latency.log | grep -oE 'time=\\(guint64\\)[0-9]+' | awk -F')' '{print $2}'"],
-        capture_output=True, text=True, timeout=15,
-    )
-    vals = [int(v) / 1_000_000.0 for v in proc.stdout.strip().split("\n") if v.strip()]
-    if not vals:
-        return 0.0, 0.0, 0
-    vals.sort()
-    p99 = vals[max(0, int(round(len(vals) * 0.99)) - 1)]
-    return statistics.fmean(vals), p99, len(vals)
-
-
-def raw_element_stats(elem_name: str) -> tuple[float, float, int]:
-    """Per-element latency (ms) straight from the tracer log."""
-    proc = subprocess.run(
-        ["docker", "exec", "surgical-pipeline", "bash", "-lc",
-         f"grep -oE 'element-latency,[^;]*element=\\(string\\){elem_name},[^;]*time=\\(guint64\\)[0-9]+' "
          "/frames/latency.log | grep -oE 'time=\\(guint64\\)[0-9]+' | awk -F')' '{print $2}'"],
         capture_output=True, text=True, timeout=15,
     )
@@ -109,6 +85,7 @@ def bbox_dropped() -> int:
     last = 0
     for line in log.splitlines():
         if "BBoxFilter: dropped" in line:
+            # ' ... dropped 12 oversize ROIs ...'
             try:
                 last = int(line.split("dropped", 1)[1].strip().split()[0])
             except (IndexError, ValueError):
@@ -118,6 +95,8 @@ def bbox_dropped() -> int:
 
 def run_one(device: str) -> dict:
     print(f"\n=== {device} ===", flush=True)
+    # Always try /stop first so a leftover run from a previous iteration
+    # doesn't 409 the /reset.
     try:
         post("/stop")
         time.sleep(2)
@@ -127,6 +106,7 @@ def run_one(device: str) -> dict:
     post("/device", {"device": device})
     post("/start")
 
+    # wait 3s for pipeline to reach steady state, then sample 50s
     time.sleep(3)
     print(f"  sampling {RUN_SECONDS}s", flush=True)
     t0 = time.time()
@@ -134,7 +114,7 @@ def run_one(device: str) -> dict:
     while time.time() - t0 < RUN_SECONDS:
         try:
             last_status = get_status()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"    status error: {exc}", flush=True)
         elapsed = int(time.time() - t0)
         inf = (last_status.get("inference") or {})
@@ -153,14 +133,16 @@ def run_one(device: str) -> dict:
     except Exception:
         final = {}
     inf = final.get("inference") or {}
-    raw_e2e_mean, raw_e2e_p99, raw_e2e_n = raw_e2e_stats()
-    raw_inf_mean, raw_inf_p99, raw_inf_n = raw_infer_stats()
-
-    per_elem = {}
-    for elem in ("det", "gvatrack0", "gvametaconvert0", "drawer", "vajpegenc0"):
-        m, p, n = raw_element_stats(elem)
-        per_elem[elem] = {"mean_ms": m, "p99_ms": p, "n": n}
-
+    try:
+        raw_e2e_mean, raw_e2e_p99, raw_e2e_n = raw_e2e_stats()
+    except Exception as exc:  # noqa: BLE001
+        print(f"    raw e2e parse failed: {exc}", flush=True)
+        raw_e2e_mean, raw_e2e_p99, raw_e2e_n = 0.0, 0.0, 0
+    try:
+        raw_inf_mean, raw_inf_p99, raw_inf_n = raw_infer_stats()
+    except Exception as exc:  # noqa: BLE001
+        print(f"    raw infer parse failed: {exc}", flush=True)
+        raw_inf_mean, raw_inf_p99, raw_inf_n = 0.0, 0.0, 0
     dropped = bbox_dropped()
 
     try:
@@ -184,7 +166,6 @@ def run_one(device: str) -> dict:
         "raw_e2e_mean":   raw_e2e_mean,
         "raw_e2e_p99":    raw_e2e_p99,
         "raw_e2e_n":      raw_e2e_n,
-        "per_element": per_elem,
         "detection_rate": inf.get("detection_rate", 0.0),
         "distinct_polyps": inf.get("distinct_polyps", 0),
         "frames_processed": inf.get("frame_id", 0),
@@ -200,11 +181,12 @@ def main() -> None:
     for dev in DEVICES:
         try:
             results.append(run_one(dev))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"  {dev} FAILED: {exc}", flush=True)
             results.append({"device": dev, "error": str(exc)})
 
-    print("\n\n=================== 60-s BENCHMARK SUMMARY ===================\n")
+    # ---- summary ----
+    print("\n\n=================== 50-s BENCHMARK SUMMARY ===================\n")
     hdr = (
         "| Device | FPS | Infer mean · p99 (ms) | Processing mean · p99 (ms) | "
         "End-to-end mean · p99 (ms) | Detection rate | Distinct polyps | "
@@ -234,36 +216,20 @@ def main() -> None:
         )
 
     print("\n### Raw-log verification (independent of backend parser)\n")
-    print("| Device | Infer mean · p99 (raw ms, N) | E2E mean · p99 (raw ms, N) |")
-    print("|--------|-------------------------------|-----------------------------|")
+    print("| Device | Infer mean · p99 (raw ms, N samples) | E2E mean · p99 (raw ms, N samples) |")
+    print("|--------|---------------------------------------|-------------------------------------|")
     for r in results:
         if "error" in r:
             continue
         print(
-            f"| {r['device']} | "
+            f"| **{r['device']}** | "
             f"{r['raw_infer_mean']:.1f} · {r['raw_infer_p99']:.1f}  (N={r['raw_infer_n']}) | "
             f"{r['raw_e2e_mean']:.1f} · {r['raw_e2e_p99']:.1f}  (N={r['raw_e2e_n']}) |"
         )
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = OUT_DIR / f"bench_60s_{ts}.json"
-    out.write_text(json.dumps({"run_seconds": RUN_SECONDS, "timestamp_utc": ts, "results": results}, indent=2))
-    print(f"\n[saved raw JSON \u2192 {out}]")
-
-    print("\n### Per-element latency breakdown (raw ms, from tracer log)\n")
-    print("| Device | det | gvatrack0 | gvametaconvert0 | drawer | vajpegenc0 | sum (mean) |")
-    print("|--------|-----|-----------|-----------------|--------|------------|------------|")
-    for r in results:
-        if "error" in r:
-            continue
-        pe = r["per_element"]
-        s = sum(pe[e]["mean_ms"] for e in pe)
-        cells = " | ".join(
-            f"{pe[e]['mean_ms']:.2f}\u00b7{pe[e]['p99_ms']:.2f}" for e in
-            ("det", "gvatrack0", "gvametaconvert0", "drawer", "vajpegenc0")
-        )
-        print(f"| **{r['device']}** | {cells} | {s:.2f} |")
+    print("\nSources: Infer      = GStreamer core `latency` tracer → element-latency for element=det")
+    print("         Processing = per-frame sum of element-latency across gvadetect + gvatrack + gvametaconvert + gvawatermark + jpegenc")
+    print("         E2E        = Intel DL Streamer `latency_tracer` → frame_latency on latency_tracer_pipeline (source → sink residence, includes decode)")
 
 
 if __name__ == "__main__":

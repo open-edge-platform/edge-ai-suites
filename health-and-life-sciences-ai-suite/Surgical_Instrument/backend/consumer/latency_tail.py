@@ -72,8 +72,10 @@ _RE_PIPELINE = re.compile(
 _INFER_ELEM = re.compile(r"^(gvadetect|det)\d*$")
 
 # Elements in the "processing chain" — AI inference + tracker + metadata +
-# on-screen annotate + JPEG encode. DL Streamer renames `gvawatermark` to
-# `gvawatermarkimpl<N>` internally. `meta` is our tee's name, NOT a
+# on-screen annotate + JPEG encode. `drawer` is our custom gvapython that
+# replaced `gvawatermark` (single-green boxes; see pipeline/watermark_green.py);
+# it's named explicitly in pipeline_string.py so its element-latency ticks
+# land under a stable name here. `meta` is our tee's name, NOT a
 # gvametaconvert. `gvametaconvert0` is the one in the display chain (before
 # the tee); the MQTT branch has a separate gvapython publisher not counted
 # as "processing" here (it's I/O to an external broker).
@@ -81,8 +83,8 @@ _PROCESSING_ELEMENTS: tuple[str, ...] = (
     "det",              # gvadetect
     "gvatrack0",
     "gvametaconvert0",
-    "gvawatermarkimpl0",
-    "jpegenc0",
+    "drawer",           # gvapython single-green bbox drawer
+    "vajpegenc0",       # VA-API HW JPEG encoder on iGPU (was libjpeg-turbo/jpegenc0)
 )
 
 

@@ -100,7 +100,7 @@ export function PipelinePerformanceAccordion() {
               <th style={thStyle}>Device</th>
               <th style={thStyle} title="Frame arrival rate at the sink (throughput). Counted from MQTT metadata messages the backend receives.">FPS</th>
               <th style={thStyle} title="gvadetect element residence: pure model + pre/post on the selected device. Source: GStreamer core `latency` tracer, element-latency for element=det. Format: mean · p99 (last 120 frames).">Inference (mean · p99)</th>
-              <th style={thStyle} title="Per-frame sum of element-latency for the processing chain (gvadetect + gvatrack + gvametaconvert + gvawatermark + jpegenc). Excludes decode and any playback pacing wait — this is the true camera-to-screen latency for a live-source deployment. Format: mean · p99 (last 120 frames).">Processing Latency (mean · p99)</th>
+              <th style={thStyle} title="Per-frame sum of element-latency across the full AI + annotate + encode chain (gvadetect + gvatrack + gvametaconvert + bbox-draw + jpegenc). Excludes decode and any playback pacing wait — this is the true camera-to-screen latency for a live-source deployment. Format: mean · p99 (last 120 frames).">Pipeline Latency (mean · p99)</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -178,15 +178,6 @@ export function PipelinePerformanceAccordion() {
             })}
           </tbody>
         </table>
-
-        {(pipelinePerf?.pipeline_fps > 0 || totalFrames > 0) && (
-          <div style={{ marginTop: 12, padding: '8px 10px', background: '#f0f4f8', borderRadius: 4, fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <span><strong>Pipeline FPS:</strong> {(pipelinePerf?.pipeline_fps ?? 0).toFixed(1)}</span>
-            {pipelinePerf?.decode && <span style={{ color: '#666' }}>· decode {pipelinePerf.decode}</span>}
-            {uptime > 0 && <span style={{ color: '#666' }}>· uptime {fmtUptime(uptime)}</span>}
-            {totalFrames > 0 && <span style={{ color: '#666' }}>· {totalFrames.toLocaleString()} frames</span>}
-          </div>
-        )}
 
         {!isRunning && (
           <div style={{ marginTop: 6, fontSize: 10, color: '#6b7280', fontStyle: 'italic' }}>

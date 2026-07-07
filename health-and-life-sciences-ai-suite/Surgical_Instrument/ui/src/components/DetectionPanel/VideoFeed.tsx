@@ -117,13 +117,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
               <span style={{ fontSize: 13, fontWeight: 500 }}>Loading video feed…</span>
             </div>
           )}
-          <div className="det-video-legend" title="Each color represents a distinct tracked polyp instance. gvatrack assigns a persistent object ID; gvawatermark picks a color from a fixed palette keyed by that ID. When the tracker loses and re-acquires the same polyp (occlusion, sharp motion) it gets a new ID → new color.">
-            <span className="det-video-legend-label">Box color</span>
-            <span className="det-video-legend-dot" style={{ background: '#ff3b30' }} />
-            <span className="det-video-legend-dot" style={{ background: '#34c759' }} />
-            <span className="det-video-legend-dot" style={{ background: '#007aff' }} />
-            <span className="det-video-legend-text">= distinct tracked polyp instance (ID from gvatrack)</span>
-          </div>
         </div>
       ) : (
         <div className="det-video-placeholder">
