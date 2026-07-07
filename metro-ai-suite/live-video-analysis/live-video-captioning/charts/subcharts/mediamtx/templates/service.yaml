@@ -25,7 +25,3 @@ spec:
       port: {{ .Values.service.mediaUdpPort }}
       targetPort: media-udp
       protocol: UDP
-    - name: api
-      port: {{ .Values.service.apiContainerPort }}
-      targetPort: api
-      protocol: TCP

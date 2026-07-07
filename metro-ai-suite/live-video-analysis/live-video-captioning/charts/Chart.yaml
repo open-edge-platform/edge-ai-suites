@@ -7,7 +7,7 @@ description: >
   Live Video Captioning — real-time RTSP video captioning powered by Intel DL Streamer
   and OpenVINO Vision-Language Models (VLMs). Includes the caption service,
   DL Streamer pipeline server, MQTT broker, MediaMTX WebRTC relay, coturn TURN server,
-  live metrics service, and a system collector.
+  and a bundled metrics service.
 type: application
 version: 2026.1.0-rc2-helm
 appVersion: "2026.0.0"
@@ -41,12 +41,9 @@ dependencies:
   - name: video-caption-service
     version: "0.1.0"
     repository: "file://subcharts/video-caption-service"
-  - name: live-metrics-service
-    version: "0.1.0"
-    repository: "file://subcharts/live-metrics-service"
-  - name: collector
-    version: "0.1.0"
-    repository: "file://subcharts/collector"
+  - name: metrics-manager
+    version: "2026.1.0-helm"
+    repository: "file://subcharts/metrics-manager"
   - name: multimodal-embedding
     version: "0.1.0"
     repository: "file://subcharts/multimodal-embedding"

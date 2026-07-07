@@ -36,7 +36,7 @@ def _patch_config(monkeypatch, tmp_path):
     monkeypatch.setenv("MQTT_BROKER_PORT", "1883")
     monkeypatch.setenv("MQTT_TOPIC_PREFIX", "test-prefix")
     monkeypatch.setenv("PIPELINE_SERVER_URL", "http://mock-pipeline:8080")
-    monkeypatch.setenv("PIPELINE_NAME", "genai_pipeline")
+    monkeypatch.setenv("PIPELINE_NAME", "video_captioning_pipeline")
     monkeypatch.setenv("MODELS_DIR", str(tmp_path / "ov_models"))
     monkeypatch.setenv("DETECTION_MODELS_DIR", str(tmp_path / "ov_detection_models"))
 
@@ -90,8 +90,11 @@ def client(mock_mqtt, monkeypatch, tmp_path):
     monkeypatch.setattr("main.start_pipeline_health_monitor", MagicMock(return_value=None))
     monkeypatch.setattr("main.stop_pipeline_health_monitor", AsyncMock())
 
-    # Also patch in the runs module
-    monkeypatch.setattr("backend.routes.runs.get_mqtt_subscriber", _noop_get)
+    # Runs router no longer depends on MQTT subscriber directly in current code,
+    # but keep this patch optional for compatibility with older module layouts.
+    monkeypatch.setattr(
+        "backend.routes.runs.get_mqtt_subscriber", _noop_get, raising=False
+    )
 
     # Import app after all patches are in place
     from main import app

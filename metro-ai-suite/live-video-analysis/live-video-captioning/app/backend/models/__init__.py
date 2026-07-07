@@ -5,7 +5,9 @@
 from .requests import StartRunRequest
 from .responses import (
     RunInfo,
+    ModelInfo,
     ModelList,
+    DetectionModelList,
     PipelineInfo,
     PipelineInfoList,
     CameraDevice,
@@ -15,7 +17,9 @@ from .responses import (
 __all__ = [
     "StartRunRequest",
     "RunInfo",
+    "ModelInfo",
     "ModelList",
+    "DetectionModelList",
     "PipelineInfo",
     "PipelineInfoList",
     "CameraDevice",
