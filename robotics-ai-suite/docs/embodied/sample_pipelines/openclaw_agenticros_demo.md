@@ -398,10 +398,10 @@ curl -s http://127.0.0.1:18789/ | head -5
 
 **Verification Checklist:**
 
-- [ ] OVMS serving endpoint responds on `http://127.0.0.1:8000`
-- [ ] OpenClaw gateway service is active and running
-- [ ] no_proxy override is active for OpenClaw gateway (check systemctl show output)
-- [ ] Gateway is accessible on `http://127.0.0.1:18789` (curl returns response, not connection refused)
+- OVMS serving endpoint responds on `http://127.0.0.1:8000`
+- OpenClaw gateway service is active and running
+- no_proxy override is active for OpenClaw gateway (check systemctl show output)
+- Gateway is accessible on `http://127.0.0.1:18789` (curl returns response, not connection refused)
 
 **Important Configuration Notes:**
 
