@@ -94,8 +94,87 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
-# Configure Scenescape or default Frigate mode
-# Internal flags: SCENESCAPE_SI_ONLY=true (skip Frigate), SCENESCAPE_NVR_ONLY=true (skip SI/DLStreamer)
+# Generate Frigate config for scenescape mode (si1 uses env var or auto-detect; si2+ use env var or prompt)
+generate_scenescape_config() {
+    local config_file="./resources/frigate-config/config.yml"
+    local port="${RTSP_STREAM_PORT:-8554}"
+
+    local total_nodes
+    read -r -p "$(echo -e "${BLUE}How many SI nodes total? [1]: ${NC}")" total_nodes
+    total_nodes="${total_nodes:-1}"
+    if ! [[ "${total_nodes}" =~ ^[0-9]+$ ]] || [ "${total_nodes}" -lt 1 ]; then
+        print_warning "Invalid input, using 1 SI node."
+        total_nodes=1
+    fi
+
+    # Copy template and add cameras section
+    cp "./resources/frigate-config/config-scenescape.yml" "${config_file}"
+    printf '\ncameras:\n' >> "${config_file}"
+
+    # Loop through all SI nodes (si1 to siN)
+    for node_num in $(seq 1 "${total_nodes}"); do
+        local si_id="si${node_num}"
+        local rtsp_ip
+
+        if [ "${node_num}" -eq 1 ]; then
+            rtsp_ip="${RTSP_STREAM_HOST:-}"
+            if [ -z "${rtsp_ip}" ]; then
+                if [ "${SCENESCAPE_NVR_ONLY}" = "true" ]; then
+                    # NVR-only (System 2): SI is remote, prompt for its IP
+                    read -r -p "$(echo -e "${BLUE}  RTSP stream IP for si1: ${NC}")" rtsp_ip
+                else
+                    # Single-node (start): SI is local, auto-detect
+                    rtsp_ip="$(get_host_ip)"
+                fi
+            fi
+            if [ -z "${rtsp_ip}" ]; then
+                print_error "RTSP IP for si1 is required."
+                return 1
+            fi
+        else
+            local env_var="SI${node_num}_RTSP_HOST"
+            rtsp_ip="${!env_var:-}"
+            if [ -z "${rtsp_ip}" ]; then
+                read -r -p "$(echo -e "${BLUE}  RTSP stream IP for ${si_id}: ${NC}")" rtsp_ip
+            fi
+            if [ -z "${rtsp_ip}" ]; then
+                print_error "RTSP IP for ${si_id} is required. Skipping ${si_id}."
+                continue
+            fi
+        fi
+
+        for cam_num in 1 2 3 4; do
+            cat >> "${config_file}" <<CAMERA_BLOCK
+
+  ${si_id}-camera${cam_num}:
+    ffmpeg:
+      inputs:
+        - path: rtsp://${rtsp_ip}:${port}/camera${cam_num}
+          input_args: preset-rtsp-generic
+          roles:
+            - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v copy -movflags +faststart
+    detect:
+      enabled: false
+    motion:
+      enabled: false
+    snapshots:
+      enabled: false
+    record:
+      enabled: true
+      retain:
+        days: 1
+        mode: all
+CAMERA_BLOCK
+        done
+
+        print_success "Added ${si_id} (cameras 1-4, RTSP: ${rtsp_ip}:${port})"
+    done
+
+    printf '\nversion: 0.15-1\n' >> "${config_file}"
+}
+
 configure_scenescape_setup() {
 
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
@@ -115,10 +194,7 @@ configure_scenescape_setup() {
         fi
 
         if [ "${SCENESCAPE_SI_ONLY}" != "true" ]; then
-            # Configure Frigate for scenescape (uses remote RTSP_STREAM_HOST if set)
-            cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
-            sed -i "s/{RTSP_STREAM_IP}/${rtsp_ip}/g" "./resources/frigate-config/config.yml"
-            sed -i "s/{RTSP_STREAM_PORT}/${RTSP_STREAM_PORT}/g" "./resources/frigate-config/config.yml"
+            generate_scenescape_config
         fi
 
         print_success "Scenescape configuration activated"
@@ -371,17 +447,16 @@ start_si_services() {
     print_info "System 1 IP: ${CYAN}${HOST_IP}${NC}"
     print_info "On System 2 (SmartNVR machine), run:"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
-    echo -e "  ${CYAN}export MQTT_USER=<mqtt-username>${NC}"
-    echo -e "  ${CYAN}export MQTT_PASSWORD=<mqtt-password>${NC}"
-    echo -e "  ${CYAN}export SCENESCAPE_MQTT_BROKER=${HOST_IP}${NC}"
-    echo -e "  ${CYAN}export RTSP_STREAM_HOST=${nvr_rtsp_host}${NC}"
     echo -e "  ${CYAN}export VSS_SUMMARY_IP=<vss_ip>${NC}"
     echo -e "  ${CYAN}export VSS_SUMMARY_PORT=<vss_port>${NC}"
     echo -e "  ${CYAN}export VSS_SEARCH_IP=<vss_ip>${NC}"
     echo -e "  ${CYAN}export VSS_SEARCH_PORT=<vss_port>${NC}"
-    echo -e "  ${CYAN}# export SCENESCAPE_MQTT_PORT=<port>  # optional, default 1883${NC}"
-    echo -e "  ${CYAN}# export RTSP_STREAM_PORT=<port>      # optional, default ${RTSP_STREAM_PORT}${NC}"
-    echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # will prompt for SI RTSP IP(s)"
+    echo ""
+    print_info "SI1 RTSP: ${CYAN}${nvr_rtsp_host}:${RTSP_STREAM_PORT}${NC}  |  SI1 MQTT: ${CYAN}${HOST_IP}:1883${NC}"
+    print_info "On System 2, add the MQTT broker via POST /brokers/ API (or edit brokers.yaml before running start-nvr)."
+    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_HOST=${nvr_rtsp_host}   # skip si1 RTSP prompt${NC}"
+    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_PORT=<port>             # default ${RTSP_STREAM_PORT}${NC}"
 }
 
 stop_si_services() {
@@ -411,18 +486,6 @@ start_nvr_services() {
     HOST_IP=$(get_host_ip)
     export HOST_IP
 
-    if [ -z "${SCENESCAPE_MQTT_BROKER}" ]; then
-        print_error "SCENESCAPE_MQTT_BROKER is required in NVR-only mode."
-        print_info "Set it to System 1's IP: export SCENESCAPE_MQTT_BROKER=<system1_ip>"
-        return 1
-    fi
-
-    if [ -z "${RTSP_STREAM_HOST}" ]; then
-        print_error "RTSP_STREAM_HOST is required in NVR-only mode."
-        print_info "Set it to System 1's IP: export RTSP_STREAM_HOST=<system1_ip>"
-        return 1
-    fi
-
     if ! validate_environment; then
         print_error "Environment validation failed. Please set the required variables."
         return 1
@@ -437,12 +500,16 @@ start_nvr_services() {
     fi
 
     print_info "Starting Docker Compose services..."
-    export SCENESCAPE_MQTT_BROKER
     docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
         sleep 5
         print_success "SmartNVR services are starting up..."
         print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
+        if [ -n "${SCENESCAPE_MQTT_BROKER}" ]; then
+            print_info "MQTT broker seeded from env: ${SCENESCAPE_MQTT_BROKER}"
+        else
+            print_info "Add MQTT broker via POST /brokers/ API or edit resources/broker-config/brokers.yaml and restart."
+        fi
     else
         print_error "Docker Compose failed to start services."
         return 1
@@ -468,7 +535,7 @@ show_help() {
     echo -e "  ${RED}stop-streamer${NC}  - RTSP-only: stop MediaMTX streamer"
   echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless RTSP_STREAM_HOST is set)"
   echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI services (prompts to stop local RTSP streamer if running)"
-  echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (requires SCENESCAPE_MQTT_BROKER + RTSP_STREAM_HOST)"
+  echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (prompts for SI RTSP IP(s); MQTT broker via API or brokers.yaml)"
   echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
     echo -e "  ${BLUE}help${NC}           - Display this help message"
     echo ""
@@ -483,8 +550,11 @@ show_help() {
     echo -e "  ${CYAN}source setup.sh start-si${NC}"
     echo ""
     echo -e "  # Distributed Node — System 2 (SmartNVR):${NC}"
-    echo -e "  ${CYAN}export NVR_SCENESCAPE=true SCENESCAPE_MQTT_BROKER=<sys1_ip> RTSP_STREAM_HOST=<sys1_ip>${NC}"
-    echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
+    echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
+    echo -e "  ${CYAN}export VSS_SUMMARY_IP=<ip> VSS_SUMMARY_PORT=<port>${NC}"
+    echo -e "  ${CYAN}export VSS_SEARCH_IP=<ip> VSS_SEARCH_PORT=<port>${NC}"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # prompts for SI RTSP IP(s) interactively"
+    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_HOST=<sys1_ip>  to skip si1 prompt${NC}"
     echo ""
 }
 

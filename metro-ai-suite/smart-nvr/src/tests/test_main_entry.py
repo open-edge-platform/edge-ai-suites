@@ -8,13 +8,9 @@ import importlib
 
 
 def test_main_fastapi_startup_and_root(monkeypatch):
-    """Validate FastAPI root responds while suppressing startup side-effects.
-
-    NOTE: The production code does not expose a start_mqtt symbol; tests should
-    patch start_mqtt_clients instead for compatibility.
-    """
+    """Validate FastAPI root responds while suppressing startup side-effects."""
     monkeypatch.setattr("src.main.restore_camera_watchers_from_redis", AsyncMock())
-    monkeypatch.setattr("src.main.start_mqtt_clients", AsyncMock())
+    monkeypatch.setattr("src.main.start_frigate_client", AsyncMock())
     monkeypatch.setattr("src.main.redis.from_url", lambda *a, **k: AsyncMock())
 
     from src.main import app  # import after patches

@@ -3,7 +3,7 @@ services:
     container_name: frigate-vms
     image: ghcr.io/blakeblackshear/frigate:0.15.1
     restart: unless-stopped
-    shm_size: "64mb" 
+    shm_size: "1536mb" 
     networks:
       - nvr-network
     ports:
@@ -56,6 +56,7 @@ services:
       start_period: 20s
     volumes:
       - ../src:/app
+      - ../resources/broker-config:/app/resources/broker-config:rw
       - ../frigate-clips:/media/frigate/recordings
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -80,6 +81,9 @@ services:
       NVR_SCENESCAPE: ${NVR_SCENESCAPE}
       SCENESCAPE_MQTT_BROKER: ${SCENESCAPE_MQTT_BROKER:-${HOST_IP}}
       SCENESCAPE_MQTT_PORT: ${SCENESCAPE_MQTT_PORT:-1883}
+      BROKERS_CONFIG_PATH: ${BROKERS_CONFIG_PATH:-resources/broker-config/brokers.yaml}
+      MAX_CONCURRENT_EVENTS: ${MAX_CONCURRENT_EVENTS:-50}
+      BROKER_RECONNECT_DELAY: ${BROKER_RECONNECT_DELAY:-5.0}
 
   nvr-event-router-ui:
     container_name: nvr-event-router-ui

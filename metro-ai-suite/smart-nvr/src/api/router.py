@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from pydantic import BaseModel
 from api.endpoints.frigate_api import FrigateService
 from api.endpoints.summarization_api import SummarizationService
+from api.endpoints.brokers_api import broker_router
 from service.vms_service import VmsService
 from service import redis_store
 import requests
@@ -21,6 +22,7 @@ class CameraWatcherRequest(BaseModel):
     cameras: List[Dict[str, bool]]
 
 router = APIRouter()
+router.include_router(broker_router)
 frigate_service = FrigateService()
 summarization_service = SummarizationService()
 vms_service = VmsService(frigate_service, summarization_service)
