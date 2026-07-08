@@ -1,8 +1,16 @@
+#
+# Apache v2 license
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 import datetime
 import logging
 import os
 import time
 from typing import Any
+import base64
+from openai import OpenAI
 
 from flask import Flask, jsonify, render_template, request
 from influxdb import InfluxDBClient
@@ -10,16 +18,34 @@ from influxdb import InfluxDBClient
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
+vllm_client = OpenAI(
+    base_url= f"http://{os.getenv('VLLM_HOST', 'vllm-server')}:{os.getenv('VLLM_PORT', '8000')}/v1",
+    api_key="EMPTY",
+)
 
 def get_seaweed_public_image_base_path() -> str:
-    return os.getenv(
-        "SEAWEEDFS_PUBLIC_IMAGE_BASE_PATH",
-        "/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification",
+    return (
+        f"{os.getenv('OBJECT_STORE_URL', 'http://seaweedfs-filer:8888')}/buckets/{os.getenv('BUCKET_NAME', 'dlstreamer-pipeline-results/weld-defect-classification')}"
     ).rstrip("/")
-
-
+    
 def build_image_url(img_handle: str) -> str:
     return f"{get_seaweed_public_image_base_path()}/{img_handle}.jpg"
+
+def get_query_prompt() -> dict[str, Any]:
+    return {
+        "role": "system",
+        "content": (
+            "You are an expert weld quality inspector and metallurgical "
+                "engineer with deep knowledge of MIG/MAG/TIG arc welding "
+                "processes and industrial weld defect analysis per AWS D1.1 "
+                "and ISO 5817 standards. When shown a weld image alongside "
+                "time-series sensor readings, classify the weld quality, "
+                "identify any defect type, explain the root cause using "
+                "sensor evidence, assess severity, and recommend corrective "
+                "actions. Always structure your response with clearly "
+                "labelled sections."
+            ),
+        }
 
 
 def get_fusion_measurement_name() -> str:
@@ -114,14 +140,16 @@ def api_data() -> Any:
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": str(exc), "rows": []}), 500
 
-
 @app.route("/api/explain", methods=["POST"])
 def api_explain() -> Any:
     payload = request.get_json(silent=True) or {}
     selected_times = payload.get("selected_times", [])
     app.logger.info("Explain request received with %d selected time(s)", len(selected_times))
     resolved_images: list[dict[str, Any]] = []
-
+    message = {
+        "role" :    "user",
+        "content" : []
+    }
     for time_str in selected_times:
         try:
             datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
@@ -172,6 +200,7 @@ def api_explain() -> Any:
                         "image_url": image_url,
                     }
                 )
+
             
 
             query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"
@@ -180,7 +209,31 @@ def api_explain() -> Any:
             points_sensor = list(result_sensor.get_points())
             app.logger.info("Matched %d row(s) for sensor time=%s row: %s", len(points_sensor), points[0]['timeseries_timestamp'], points_sensor)
 
-            
+            vision_data = {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"{build_image_url(img_handle)}" if img_handle else None,
+                },
+            }
+
+            sensors_data = {
+                "type": "text",
+                "text": f"""
+                Given this weld image and the sensor telemetry, produce a structured
+                weld quality report covering defect classification, root cause, and remediation steps.  
+                Sensor Data:
+                    • Primary Weld Current: {points_sensor[0].get('Primary Weld Current', 'N/A')} A
+                    • Secondary Weld Voltage: {points_sensor[0].get('Secondary Weld Voltage', 'N/A')} V
+                    • Pressure: {points_sensor[0].get('Pressure', 'N/A')} bar
+                    • CO2 Weld Flow: {points_sensor[0].get('CO2 Weld Flow', 'N/A')} L/min
+                    • Feed: {points_sensor[0].get('Feed', 'N/A')} mm/min
+                    • Wire Consumed: {points_sensor[0].get('Wire Consumed', 'N/A')} mm
+                    """,
+            }
+
+            message["content"].append(vision_data)
+            message["content"].append(sensors_data)
+    
         except ValueError:
             return jsonify({"error": f"Invalid time format: {time_str}"}), 400
         except Exception as exc:  # noqa: BLE001
@@ -188,6 +241,28 @@ def api_explain() -> Any:
             return jsonify({"error": str(exc)}), 500
 
     # Simulate a short model/API processing time for the UI spinner.
+    
+
+    final_prompt = [get_query_prompt(), message]
+    app.logger.info("Sending final prompt to vLLM: %s", final_prompt)
+    # response = vllm_client.chat.completions.create(
+    #     model="unsloth/Qwen3.5-2B",
+    #     messages=final_prompt,
+    #     max_tokens=4096,
+    #     temperature=1.5,
+    #     extra_body={
+    #         "min_p": 0.1,
+    #         "chat_template_kwargs": {
+    #             "enable_thinking": False,
+    #         },
+    #     },
+    # )
+
+    # app.logger.info("Received response from vLLM: %s", response)
+    # if response.choices and len(response.choices) > 0:
+    #     vllm_output = response.choices[0].message.content
+    #     app.logger.info("vLLM output: %s", vllm_output)
+
     time.sleep(2)
 
     return jsonify(

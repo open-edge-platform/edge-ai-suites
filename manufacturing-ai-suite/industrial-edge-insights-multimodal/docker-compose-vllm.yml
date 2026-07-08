@@ -11,8 +11,6 @@ services:
     hostname: vllm-server
     restart: unless-stopped
     shm_size: ${VLLM_SHM_SIZE}
-    ports:
-      - "${VLLM_PORT}:${VLLM_PORT}"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
@@ -85,5 +83,9 @@ services:
       INFLUX_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUX_DB: datain
       FUSION_MEASUREMENT: fusion_result
+      OBJECT_STORE_URL: http://seaweedfs-filer:8888
+      BUCKET_NAME: dlstreamer-pipeline-results/weld-defect-classification
+      VLLM_HOST: vllm-server
+      VLLM_PORT: ${VLLM_PORT}
     networks:
       - timeseries_network
