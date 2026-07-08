@@ -1,27 +1,107 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-MODEL_CACHE_PATH="${PWD}/llm_models"
-DEVICE="CPU"
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-export USER_GROUP_ID=$(id -g ${USER})
-export MODEL_CACHE_PATH="$MODEL_CACHE_PATH"
-export LLM_MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
-export LLM_DEVICE="$DEVICE"
+set -Eeuo pipefail
 
-export EMBEDDING_MODEL_NAME=QwenText/qwen3-embedding-0.6b
-export VDMS_HOST="vdms-vector-db"
-export VDMS_PORT="55555"
-export EMBEDDING_MODEL="${EMBEDDING_MODEL_NAME}"
-export EMBEDDING_HOST="multimodal-embedding-serving"
-export EMBEDDING_HOST_PORT=8000
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_EXAMPLE="${ROOT_DIR}/.env.example"
+ENV_FILE="${ROOT_DIR}/.env"
+FORCE=false
 
-export EMBEDDING_OV_MODELS_DIR=/app/ov_models
-export EMBEDDING_SERVER_PORT=9777
-export EMBEDDING_DEVICE="$DEVICE"
-export EMBEDDING_USE_OV=true
+usage() {
+	cat <<EOF
+Usage: bash scripts/setup_env.sh [--force]
 
-# env for vdms-vector-db
-export VDMS_VDB_HOST_PORT=55555
-export VDMS_VDB_HOST=vdms-vector-db
+Creates ${ENV_FILE} from .env.example and fills values that are specific to
+this host, including HOST_IP, USER_GROUP_ID, and MODEL_CACHE_PATH.
 
-source scripts/setup.sh
+Options:
+	--force   Overwrite an existing .env file.
+	-h, --help  Show this help.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--force)
+			FORCE=true
+			shift
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		*)
+			echo "ERROR: Unknown option: $1" >&2
+			usage
+			exit 1
+			;;
+	esac
+done
+
+if [[ ! -f "${ENV_EXAMPLE}" ]]; then
+	echo "ERROR: Missing template: ${ENV_EXAMPLE}" >&2
+	exit 1
+fi
+
+if [[ -f "${ENV_FILE}" && "${FORCE}" != "true" ]]; then
+	echo ".env already exists. Leaving it unchanged."
+	echo "Use 'bash scripts/setup_env.sh --force' to regenerate it."
+	exit 0
+fi
+
+HOST_IP="$(ip route get 1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i == "src") {print $(i+1); exit}}')"
+HOST_IP="${HOST_IP:-127.0.0.1}"
+USER_GROUP_ID="$(id -g)"
+MODEL_CACHE_PATH="${ROOT_DIR}/llm_models"
+EMBEDDING_MODEL_NAME="${EMBEDDING_MODEL_NAME:-QwenText/qwen3-embedding-0.6b}"
+
+if [[ -r /etc/os-release ]]; then
+	# shellcheck disable=SC1091
+	. /etc/os-release
+	case "${ID:-}" in
+		debian|ubuntu)
+			;;
+		*)
+			echo "WARNING: This Docker Compose quickstart is validated only on Debian/Ubuntu." >&2
+			;;
+	esac
+fi
+
+tmp_file="$(mktemp)"
+trap 'rm -f "${tmp_file}"' EXIT
+
+while IFS= read -r line || [[ -n "$line" ]]; do
+	case "$line" in
+		HOST_IP=*)
+			printf 'HOST_IP=%s\n' "${HOST_IP}" >> "${tmp_file}"
+			;;
+		USER_GROUP_ID=*)
+			printf 'USER_GROUP_ID=%s\n' "${USER_GROUP_ID}" >> "${tmp_file}"
+			;;
+		MODEL_CACHE_PATH=*)
+			printf 'MODEL_CACHE_PATH=%s\n' "${MODEL_CACHE_PATH}" >> "${tmp_file}"
+			;;
+		EMBEDDING_MODEL_NAME=*)
+			printf 'EMBEDDING_MODEL_NAME=%s\n' "${EMBEDDING_MODEL_NAME}" >> "${tmp_file}"
+			;;
+		EMBEDDING_MODEL=*)
+			printf 'EMBEDDING_MODEL=%s\n' "${EMBEDDING_MODEL_NAME}" >> "${tmp_file}"
+			;;
+		*)
+			printf '%s\n' "$line" >> "${tmp_file}"
+			;;
+	esac
+done < "${ENV_EXAMPLE}"
+
+mv "${tmp_file}" "${ENV_FILE}"
+trap - EXIT
+
+echo "Created ${ENV_FILE}"
+echo "HOST_IP=${HOST_IP}"
+echo "USER_GROUP_ID=${USER_GROUP_ID}"
+echo "MODEL_CACHE_PATH=${MODEL_CACHE_PATH}"
+echo "EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}"
+echo "RAG Dashboard URL: http://${HOST_IP}:4172"

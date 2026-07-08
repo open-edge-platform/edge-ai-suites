@@ -50,13 +50,10 @@ By following this guide, you will learn how to:
      From the `live-video-analysis/live-video-captioning-rag` directory, use the helper script below to configure and export the application environment.
 
      ```bash
-     # Configure environment variables. By default, the application uses the CPU device for embedding and LLM.
-     # To use GPU, edit `setup_env.sh` and set: DEVICE="GPU"
-     # Set LLM_MODEL_ID to your prepared LLM model.
-     # Set EMBEDDING_MODEL_NAME to your desired embedding model.
-
-     # Source the script to apply the environment.
-     source scripts/setup_env.sh
+     # Generate .env from .env.example.
+     # By default, the application uses CPU for both embedding and LLM.
+     # To customize models or device, edit .env after running this command.
+     bash scripts/setup_env.sh
      ```
 
 5. Start the Live Video Captioning RAG sample application:
@@ -66,6 +63,8 @@ By following this guide, you will learn how to:
      ```bash
      docker compose up -d
      ```
+
+     > **Note:** Docker Compose automatically reads values from `.env` in the project root.
 
      > **Note:** The application will take some time to start. Check the container status and ensure that they are in the `"healthy/running"` state using the `docker ps` command before accessing the application.
 

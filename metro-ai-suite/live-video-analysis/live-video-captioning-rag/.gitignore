@@ -1,8 +1,12 @@
 .venv/
-venv
-llm_models
+.env
 .coverage
+.model_download_logs/
+venv
 *__pycache__*
+ov_models
+ov_detection_models
+llm_models
 charts/Chart.lock
 charts/charts
 charts/charts/*.tgz

@@ -16,16 +16,12 @@ This guide shows how to build the Live Video Captioning RAG sample application f
      export COPYLEFT_SOURCES=true
      ```
 
-3. Export the environment:
+3. Generate the environment file:
 
      ```bash
-     # Configure environment variables. By default, the application uses the CPU device for embedding and LLM.
-     # To use GPU, edit `setup_env.sh` and set: DEVICE="GPU"
-     # Set LLM_MODEL_ID to your prepared LLM model.
-     # Set EMBEDDING_MODEL_NAME to your desired embedding model.
-
-     # Source the script to apply the environment.
-     source scripts/setup_env.sh
+     # Generate .env from .env.example.
+     # To customize models or device, edit .env after running this command.
+     bash scripts/setup_env.sh
      ```
 
 4. Build the Docker image:
