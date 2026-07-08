@@ -1,3 +1,9 @@
+# TODO: Replace the blocking urllib calls in this module with an async HTTP
+# client (httpx.AsyncClient). That removes the asyncio.to_thread hop callers
+# need today and adds cancellation and connection pooling. It is a refactor
+# across all services (every caller becomes async), so until then wrapping
+# these sync helpers in asyncio.to_thread from async endpoints is the
+# expected pattern — never call them directly on the event loop.
 import json
 from typing import Any, Optional, Tuple
 from urllib import request as urllib_request
@@ -118,3 +124,5 @@ def try_get_json(url: str, timeout: int = 10) -> Tuple[Optional[int], Optional[d
         return err.code, body
     except (URLError, OSError):
         return None, None
+
+

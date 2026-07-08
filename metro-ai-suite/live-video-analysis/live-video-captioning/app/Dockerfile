@@ -12,7 +12,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 FROM base AS builder
 
 # Install uv
-RUN pip install --no-cache-dir uv==0.11.10
+COPY --from=ghcr.io/astral-sh/uv:0.11.21 /uv /usr/local/bin/uv
 
 # Set working directory
 WORKDIR /app

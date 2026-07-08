@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 from backend.models.responses import (
     RunInfo,
+    ModelInfo,
     ModelList,
     PipelineInfo,
     PipelineInfoList,
@@ -69,10 +70,16 @@ class TestModelList:
         assert ml.models == []
 
     def test_populated_model_list(self):
-        """ModelList stores an ordered list of model names."""
-        ml = ModelList(models=["InternVL2-1B", "InternVL2-2B"])
+        """ModelList stores an ordered list of model metadata objects."""
+        ml = ModelList(
+            models=[
+                ModelInfo(name="InternVL2-1B", device="cpu"),
+                ModelInfo(name="InternVL2-2B-gpu", device="gpu"),
+            ]
+        )
         assert len(ml.models) == 2
-        assert ml.models[0] == "InternVL2-1B"
+        assert ml.models[0].name == "InternVL2-1B"
+        assert ml.models[0].device == "cpu"
 
 
 class TestPipelineInfo:

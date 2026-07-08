@@ -1,47 +1,59 @@
-# Get Started Guide
+<!--hide_directive
+```{eval-rst}
+:orphan:
+```
+hide_directive-->
+
+# Smart Video Evaluation Tool 2 Guide
 
 - **Time to Complete:** 20min
 - **Programming Language:** C++
 
-## Get Started
+> **Note:** SVET2 is a legacy solution.
 
-The svet_app sample application is based on Intel VPP SDK. It can be configured to run typical video composition workloads. You can use it for performance evaluation and implementation reference.
+## About SVET2
 
-Figure 1 shows a typical multi-channel decode, composition, and display workload.
-![Multi-channel](./_images/svet-Multi-channel.png)
-Figure 1. Multi-channel Decode, Composition, and Display Workload
+**Smart Video Evaluation Tool 2 (SVET2)** is the NVR-focused reference application in this
+sample. Its binary is `svet_app`, and it is based on the Video Processing Platform SDK. Instead of writing
+code, you describe a video composition workload — decode, composition (multiview), and
+concurrent display — in a text configuration file, and `svet_app` executes it. This makes
+SVET2 well suited for performance evaluation and as an implementation reference.
 
-The workload above includes different blocks: input video file reader or RTSP reader, decoder, display channel, video layer, and display. The display channel represents an area of the video layer. The video layers are composites of multiple display channels to form a single surface that will be sent to display.
+This guide covers installing the dependencies, building `svet_app`, and running example NVR
+workloads from configuration files. For the workload model and the high-level architecture of
+`svet_app`, see [How It Works](./how-it-works.md#svet2-application-architecture).
 
-svet_app allows you to use a configuration file to specify the parameters of each function block, like the input video file path, codec, display channel’s position on the video layer, video layer's resolution, and composition fps. Chapter 4.0 provides an explanation of all parameters. The folder sample_config contains sample configuration files. For descriptions of each configuration file, refer to sample_config/README.md.
+`svet_app` uses a configuration file to specify the parameters of each function block, like
+the input video file path, codec, a display channel's position on the video layer, the video
+layer's resolution, and the composition fps. The `svet2/sample_config` folder contains sample
+configuration files. For descriptions of each configuration file and the configuration options,
+refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
-In Figure 2, the sample application svet_app consists of 4 main blocks, RTSP streaming in, video decode/post-process/composition/display, configuration parser, and pipeline manager. It depends on live555 and Intel VPP SDK libraries. Chapter 2.2 provide detailed steps to install these two dependencies.
-
-High-level Architecture of svet_app
-![Architecture](./_images/svet-Architecture.png)
-Figure 2. High-level Architecture of svet_app
-
-### Prerequisites
+## Prerequisites
 
 **Operating System:**
+
 - Ubuntu 24.04
 
 **Software:**
-- VPP SDK
+
+- Video Processing Platform SDK
 
 ## Installation Guide
 
-### 1System Installation
+### 1 System Installation
 
-Install Ubuntu* 24.04 and set up the network correctly and run the sudo apt update.
+Install Ubuntu\* 24.04, set up the network correctly, and run the sudo apt update.
 
 ### 2 Install Software Dependencies
 
-The svet_app sample application depends on Intel VPP SDK for video decode, encoding, and post-processing functionalities. It also depends on the live555 library for RTSP streaming.
+The `svet_app` sample application depends on the Video Processing Platform SDK for video decode,
+encoding, and post-processing functionalities. It also depends on the live555 library for RTSP
+streaming.
 
-#### 2.1 Install Intel VPP SDK
+#### 2.1 Install the Video Processing Platform SDK
 
-Install VPP SDK first.
+Install the Video Processing Platform SDK first.
 
 ```
 sudo -E wget -O- https://eci.intel.com/sed-repos/gpg-keys/GPG-PUB-KEY-INTEL-SED.gpg | sudo tee /usr/share/keyrings/sed-archive-keyring.gpg > /dev/null
@@ -55,7 +67,8 @@ sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 source /opt/intel/vppsdk/env.sh
 ```
 
-Assume the VPP SDK package directory is vppsdk and the default install path is /opt/intel/media/. Run command `vainfo` to verify the media stack is installed successfully:
+Assume the Video Processing Platform SDK package directory is `vppsdk` and the default install path is `/opt/intel/media/`.
+Run `vainfo` to verify the media stack is installed successfully:
 
 ```
 # sudo su
@@ -64,9 +77,9 @@ Assume the VPP SDK package directory is vppsdk and the default install path is /
 # /opt/intel/media/bin/vainfo
 ```
 
-In the terminal, you will see the output below:
+In the terminal, you should see the output similar to what is shown below:
 
-```
+```text
 Trying display: drm
 libva info: VA-API version 1.22.0
 libva info: User environment variable requested driver 'iHD'
@@ -82,23 +95,25 @@ vainfo: Supported profile and entrypoints
       VAProfileMPEG2Simple            : VAEntrypointEncSlice
 ```
 
-Then you can try to run one VPP SDK API test.
+Then, run a Video Processing Platform SDK API test.
 
-Note: Make sure there is at least one display connected to the device and switch to `root` and `init 3` before running the command below:
-
-```
-# sudo init 3
-# sudo su
-
-# cd /opt/intel/vppsdk/bin
-# source /opt/intel/vppsdk/env.sh
-# export MULTI_DISPLAY_PATCH=1
-# ./api_test --gtest_filter=*1_input_pipeline_setup*
-```
-
-It will start to run a decode and display pipeline. You will see below message if the test can run successfully.
+> **Note:** Make sure there is at least one display connected to the device and switch to
+> `root` and `init 3` before running the command below:
 
 ```
+sudo init 3
+sudo su
+
+cd /opt/intel/vppsdk/bin
+source /opt/intel/vppsdk/env.sh
+export MULTI_DISPLAY_PATCH=1
+./api_test --gtest_filter=*1_input_pipeline_setup*
+```
+
+It will start a decode and display pipeline. On a successful test run, you should see a message similar
+to the one below:
+
+```text
 [       OK ] testPipeline.1_input_pipeline_setup (23877 ms)
 [----------] 1 test from testPipeline (23877 ms total)
 [----------] Global test environment tear-down
@@ -108,30 +123,31 @@ It will start to run a decode and display pipeline. You will see below message i
 
 #### 2.2 Install the live555 library
 
-There is a `live555_install.sh` under the root directory of svet_app source code package. Make sure the network connection is good on your system, then run this script, and it will download, build, and install live555 libraries. The libraries will be installed to /usr/local/lib/.
+There is a `live555_install.sh` under the root directory of svet_app source code package. With a working network connection on your system, run this script: it will download, build, and install live555 libraries. The libraries will be installed to `/usr/local/lib/`.
 
-### 3 Build sample application svet_app
+### 3 Build the svet_app sample application
 
-If you have not run the commands below in the current terminal, run them first to set up the correct environment variables:
+If you have not run the commands below in the current terminal, run them first to set up the
+correct environment variables:
 
 ```
 $ source /opt/intel/vppsdk/env.sh
 $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
 
-Then run build.sh to build the svet_app binary:
+Then run `build.sh` to build the `svet_app` binary:
 
 ```
 $ ./build.sh
 ```
 
-If the build.sh runs successfully, you can find `svet_app` binary under the build directory.
+If the `build.sh` runs successfully, you can find the `svet_app` binary under the build directory.
 
-## Run Sample Application svet_app
+## Run the svet_app Sample Application
 
 ### 1 Configuration Files
 
-You can pass the configuration file to svet_app by option `load`.
+You can pass the configuration file to the `svet_app` with the `load` option.
 
 ```
 #./build/svet_app load  config_file.txt
@@ -139,7 +155,7 @@ You can pass the configuration file to svet_app by option `load`.
 
 You can use `quit` or `Ctrl+C` to exit the application.
 
-### 2 Switch to root and Set Environment Variables
+### 2 Switch to root and set environment variables
 
 Before running the sample application, make sure the environment variables are set correctly in the current bash:
 
@@ -151,9 +167,9 @@ Before running the sample application, make sure the environment variables are s
 # export MULTI_DISPLAY_PATCH=1
 ```
 
-Note: VPP SDK uses drm display, which requires that there is no X server running and with root privileges.
+> **Note:** the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
 
-### 3 Run Basic Decode and Display Pipeline
+### 3 Run a basic Decode and Display pipeline
 
 Run the command below:
 
@@ -162,7 +178,7 @@ Run the command below:
 ```
 
 It will start to decode the 1080p.h264 and show the video on the 1st display.
-The following is the content of the configuration file 1dec1disp.txt. Each line starts with a subcommand. You can refer to Chapter 4.0 for all the supported sub-commands.
+The following is the content of the `1dec1disp.txt` configuration file. Each line starts with a subcommand. For all the supported sub-commands and their options, refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
 ```
 newvl -I 0 -W 1920 -H 1080 –refresh=60 –fps=30 --format=nv12 --dispid=0
@@ -191,11 +207,11 @@ Configuration file `sample_config/multiview/16dec_4kdisp.txt` defines workload t
 ```
 
 You will see a 4x4 video on display:
-![Architecture](./_images/svet-16dec_4kdisp.png)
+![Architecture](./_assets/svet-16dec_4kdisp.png)
 Figure 3. Screenshot of sample_config/multiview/16dec_4kdisp.txt
 The following is the first line of sample_config/multiview/16dec_4kdisp.txt:
 
-```
+```text
 Newvl -i 0 -W 3840 -H 2160 --refresh=30 --format=nv12 --dispid=0
 ```
 
@@ -233,7 +249,7 @@ ctrl --cmd=stop  --time=0
 
 ## Uninstall
 
-### Uninstall svet_app
+### Uninstall the svet_app application
 
 `sudo rm -rf build`
 
@@ -242,12 +258,12 @@ ctrl --cmd=stop  --time=0
 `xargs sudo rm < live555-master/build/install_manifest.txt`
 `sudo rm -rf live555-master`
 
-### Uninstall VPP SDK
+### Uninstall the Video Processing Platform SDK
 
 `sudo apt remove intel-vppsdk`
 `sudo rm -rf /opt/intel/vppsdk`
 `sudo rm -rf /opt/intel/media`
 
-## Run Sample Application svet_app in docker
+## Run the svet_app Sample Application in Docker
 
-Build docker image and Run in docker container, for information see the [guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docker/README.md).
+Build Docker image and Run in Docker container, for information see the [Docker README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docker/README.md).

@@ -26,12 +26,12 @@ class TestConfigDefaults:
         assert cfg.APP_PORT == 9999
 
     def test_peer_id_default(self, monkeypatch):
-        """PEER_ID defaults to 'genai_pipeline'."""
+        """PEER_ID defaults to 'video_captioning_pipeline'."""
         monkeypatch.delenv("WEBRTC_PEER_ID", raising=False)
         import backend.config as cfg
 
         importlib.reload(cfg)
-        assert cfg.PEER_ID == "genai_pipeline"
+        assert cfg.PEER_ID == "video_captioning_pipeline"
 
     def test_signaling_url_default(self, monkeypatch):
         """SIGNALING_URL defaults to http://localhost:8889."""
