@@ -117,7 +117,7 @@ generate_scenescape_config() {
         local rtsp_ip
 
         if [ "${node_num}" -eq 1 ]; then
-            rtsp_ip="${RTSP_STREAM_HOST:-}"
+            rtsp_ip="${SI_RTSP_HOST:-}"
             if [ -z "${rtsp_ip}" ]; then
                 if [ "${SCENESCAPE_NVR_ONLY}" = "true" ]; then
                     # NVR-only (System 2): SI is remote, prompt for its IP
@@ -182,7 +182,7 @@ configure_scenescape_setup() {
 
         local metro_recipe_dir
         metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
-        local rtsp_ip="${RTSP_STREAM_HOST:-$(get_host_ip)}"
+        local rtsp_ip="${SI_RTSP_HOST:-$(get_host_ip)}"
 
         if [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
             # Configure SI stack: compose + DLStreamer
@@ -416,7 +416,7 @@ start_si_services() {
     export HOST_IP
 
     # Start local RTSP streamer only when no external stream source is provided and not already running
-    local rtsp_host="${RTSP_STREAM_HOST:-}"
+    local rtsp_host="${SI_RTSP_HOST:-}"
     if [ -z "${rtsp_host}" ] || [ "${rtsp_host}" = "${HOST_IP}" ] || [ "${rtsp_host}" = "localhost" ]; then
         if docker ps --filter "name=^mediamtx$" --filter "status=running" --format '{{.Names}}' | grep -q .; then
             print_info "Local RTSP streamer already running - skipping"
@@ -455,7 +455,7 @@ start_si_services() {
     echo ""
     print_info "SI1 RTSP: ${CYAN}${nvr_rtsp_host}:${RTSP_STREAM_PORT}${NC}  |  SI1 MQTT: ${CYAN}${HOST_IP}:1883${NC}"
     print_info "On System 2, add the MQTT broker via POST /brokers/ API (or edit brokers.yaml before running start-nvr)."
-    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_HOST=${nvr_rtsp_host}   # skip si1 RTSP prompt${NC}"
+    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=${nvr_rtsp_host}   # skip si1 RTSP prompt${NC}"
     echo -e "  ${CYAN}# Optional: export RTSP_STREAM_PORT=<port>             # default ${RTSP_STREAM_PORT}${NC}"
 }
 
@@ -533,7 +533,7 @@ show_help() {
     echo -e "  ${YELLOW}restart${NC}        - Single-node: restart everything"
     echo -e "  ${GREEN}start-streamer${NC} - RTSP-only: start MediaMTX streamer "
     echo -e "  ${RED}stop-streamer${NC}  - RTSP-only: stop MediaMTX streamer"
-  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless RTSP_STREAM_HOST is set)"
+  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless SI_RTSP_HOST is set)"
   echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI services (prompts to stop local RTSP streamer if running)"
   echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (prompts for SI RTSP IP(s); MQTT broker via API or brokers.yaml)"
   echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
@@ -554,7 +554,7 @@ show_help() {
     echo -e "  ${CYAN}export VSS_SUMMARY_IP=<ip> VSS_SUMMARY_PORT=<port>${NC}"
     echo -e "  ${CYAN}export VSS_SEARCH_IP=<ip> VSS_SEARCH_PORT=<port>${NC}"
     echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # prompts for SI RTSP IP(s) interactively"
-    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_HOST=<sys1_ip>  to skip si1 prompt${NC}"
+    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=<sys1_ip>  to skip si1 prompt${NC}"
     echo ""
 }
 

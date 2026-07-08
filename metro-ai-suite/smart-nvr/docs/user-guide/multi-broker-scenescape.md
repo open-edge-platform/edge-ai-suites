@@ -76,7 +76,7 @@ brokers:
 | `VSS_SEARCH_IP` / `VSS_SEARCH_PORT` | ✅ | — | Video Search Service endpoint. |
 | `MQTT_USER` | — | auto-generated | Local Mosquitto username (Frigate ↔ NVR). |
 | `MQTT_PASSWORD` | — | auto-generated | Local Mosquitto password. |
-| `RTSP_STREAM_HOST` | — | prompt | RTSP IP for si1. Prompts interactively (`start-nvr`) or auto-detected (`start`) if unset. |
+| `SI_RTSP_HOST` | — | prompt | RTSP IP for si1. Prompts interactively (`start-nvr`) or auto-detected (`start`) if unset. |
 | `SI{N}_RTSP_HOST` | — | prompt | RTSP IP for siN (N ≥ 2). Prompts interactively if unset. |
 | `RTSP_STREAM_PORT` | — | `8554` | RTSP port for all SI streams. |
 | `SCENESCAPE_MQTT_BROKER` | — | — | Legacy: seeds si1 MQTT broker into Redis on startup. Prefer `brokers.yaml` or the API. |
@@ -90,13 +90,13 @@ brokers:
 
 ```bash
 export NVR_SCENESCAPE=true
-# export RTSP_STREAM_HOST=<external_rtsp_ip>  # optional: use an external RTSP source
+# export SI_RTSP_HOST=<external_rtsp_ip>  # optional: use an external RTSP source
 # export RTSP_STREAM_PORT=<port>              # optional, default 8554
 source setup.sh start-si
 ```
 
 Downloads demo videos and starts a local MediaMTX RTSP streamer by default.
-Setting `RTSP_STREAM_HOST` to a remote IP skips the local streamer.
+Setting `SI_RTSP_HOST` to a remote IP skips the local streamer.
 
 On exit, the script prints System 1's IP and MQTT port — use these when adding the
 broker on System 2.
@@ -110,9 +110,8 @@ export VSS_SUMMARY_PORT=<port>
 export VSS_SEARCH_IP=<ip>
 export VSS_SEARCH_PORT=<port>
 
-# Optional: pre-set RTSP IPs to skip interactive prompts
-# export RTSP_STREAM_HOST=<si1_ip>
-# export SI2_RTSP_HOST=<si2_ip>
+# Optional: pre-set RTSP IP to skip interactive prompts
+# export SI_RTSP_HOST=<si1_ip>
 
 source setup.sh start-nvr
 ```
@@ -198,7 +197,7 @@ for the number of SI nodes, then appends 4 camera blocks per node
 
 | SI node | RTSP IP source |
 |---------|----------------|
-| si1 | `RTSP_STREAM_HOST` if set; else interactive prompt (`start-nvr`) or auto-detected (`start`) |
+| si1 | `SI_RTSP_HOST` if set; else interactive prompt (`start-nvr`) or auto-detected (`start`) |
 | si2..siN | `SI{N}_RTSP_HOST` → interactive prompt |
 
 All cameras use `RTSP_STREAM_PORT` (default `8554`).
