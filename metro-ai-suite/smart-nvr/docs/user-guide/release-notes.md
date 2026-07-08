@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Smart NVR
 
 - [Version 2026.1.0](#version-202610)
 - [Version 1.2.4](#version-124)

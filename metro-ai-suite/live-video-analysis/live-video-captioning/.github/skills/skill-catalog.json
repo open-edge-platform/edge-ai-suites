@@ -1,0 +1,46 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schemaVersion": "1.0",
+  "description": "Harness-neutral discovery catalog for Live Video Captioning workflow skills. Paths are relative to the repository root.",
+  "skillsRoot": ".github/skills",
+  "skills": [
+    {
+      "name": "lvc-run-app",
+      "path": ".github/skills/lvc-run-app/SKILL.md",
+      "description": "Run, start, or smoke-test the LVC Docker Compose stack (dashboard on :4173), drive a captioning run against an RTSP stream or simulator, verify captions flow, and check the dashboard.",
+      "triggers": [
+        "run lvc",
+        "start lvc",
+        "launch the stack",
+        "smoke test lvc",
+        "start a captioning run",
+        "simulate rtsp stream",
+        "check the dashboard",
+        "verify captions"
+      ],
+      "requires": [
+        "compose.yaml",
+        ".github/skills/lvc-run-app/smoke.sh",
+        "model_download_scripts/download_models.sh",
+        "docker compose"
+      ]
+    },
+    {
+      "name": "lvc-test",
+      "path": ".github/skills/lvc-test/SKILL.md",
+      "description": "Run the LVC backend unit test suite with pytest from app/ and check coverage (>= 80%).",
+      "triggers": [
+        "run the tests",
+        "test the backend",
+        "pytest",
+        "check coverage",
+        "verify backend changes"
+      ],
+      "requires": [
+        "app/",
+        "pytest"
+      ]
+    }
+  ]
+}
