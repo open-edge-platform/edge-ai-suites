@@ -49,8 +49,8 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 | `.github/skills/` | Workflow skills — automation for setup, startup, and operations |
 | `smart-classroom/` | Main Python services (backend, video analytics, OCR, ASR) |
 | `smart-classroom/content_search/` | Python RAG backend (FastAPI) |
-| `smart-classroom/setup-smart-classroom.ps1` | Setup script for system configuration |
-| `smart-classroom/start-smart-classroom.ps1` | Startup script for all services |
+| `utils/flutter/setup.ps1` | Setup script for Flutter integration |
+| `utils/flutter/start.ps1` | Startup script for Flutter app and backend |
 | `smart-classroom/ui/` | React frontend |
 | `utils/flutter/` | Flutter app for content search interactions |
 | `venv_content_search/` | Python virtual environment (created during setup) |
