@@ -5,16 +5,7 @@ description: >
   Search backend. Also lists available tags for use in Q&A filtering.
   Use when the user says "list files", "show indexed files", "what files are
   uploaded", "delete a file", "remove file", "list tags", or "manage files".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc operational files management"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC Files
 
@@ -27,20 +18,6 @@ Set `$BASE = "http://127.0.0.1:9011"` for all snippets.
 ---
 
 ## Preconditions
-
-### Set corporate proxy (required for any outbound download; localhost API calls bypass it)
-
-```powershell
-$env:HTTPS_PROXY = "http://proxy-chain.intel.com:911"
-$env:HTTP_PROXY  = "http://proxy-chain.intel.com:911"
-$env:https_proxy = "http://proxy-chain.intel.com:911"
-$env:http_proxy  = "http://proxy-chain.intel.com:911"
-$env:NO_PROXY    = "localhost,127.0.0.1"
-$env:no_proxy    = "localhost,127.0.0.1"
-```
-
-> The API calls below go to `127.0.0.1` which is in `NO_PROXY` and bypass the
-> proxy automatically. The block above is included so this skill is self-contained.
 
 Backend must be reachable — probe first:
 

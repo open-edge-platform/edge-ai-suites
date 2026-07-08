@@ -6,16 +6,7 @@ description: >
   application health.
   Use when the user says "start smart classroom", "run the app", "launch smart
   classroom", "bring up services", or "open smart classroom".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc flutter startup"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC Up
 

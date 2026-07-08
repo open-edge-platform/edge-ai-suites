@@ -8,16 +8,7 @@ description: >
   "ask a question", "query the content", "what does the document say", "search
   the knowledge base", "multi-turn Q&A", "qa endpoint", "answer from
   documents", or "RAG question".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc operational qa rag"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC QA
 

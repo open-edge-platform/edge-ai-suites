@@ -1,8 +1,3 @@
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # Upload Request — `meta` Schema Reference
 
 The `meta` field in `POST /api/v1/object/upload-ingest` is a **JSON string**

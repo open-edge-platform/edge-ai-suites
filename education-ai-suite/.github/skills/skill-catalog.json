@@ -1,7 +1,4 @@
 {
-  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
-  "SPDX-License-Identifier": "Apache-2.0",
-  "schemaVersion": "1.0",
   "description": "Harness-neutral discovery catalog for Smart Classroom RAG workflow skills. Paths are relative to the repository root (education-ai-suite/).",
   "skillsRoot": ".github/skills",
   "skills": [

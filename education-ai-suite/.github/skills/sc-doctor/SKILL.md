@@ -5,16 +5,7 @@ description: >
   then surface connectivity issues between Flutter and backend when unhealthy.
   Use when the user says "is the backend up", "check health", "backend
   unreachable", "debug backend", or "check connectivity".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc operational diagnostics"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC Doctor
 

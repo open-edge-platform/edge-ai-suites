@@ -1,8 +1,3 @@
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # Smart Classroom RAG — Skills
 
 Agent skills for the Smart Classroom RAG Flutter application. Each skill teaches

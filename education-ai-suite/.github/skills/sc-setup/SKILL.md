@@ -6,16 +6,7 @@ description: >
   environment, installs backend requirements, and runs utils/flutter/setup.ps1.
   Use when the user says "set up smart classroom", "run setup", "first time
   setup", "install dependencies", or "setup environment".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc flutter setup backend"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC Setup
 

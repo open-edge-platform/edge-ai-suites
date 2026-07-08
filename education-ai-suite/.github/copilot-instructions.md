@@ -1,8 +1,3 @@
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # Smart Classroom RAG — AI Agents
 
 ## Canonical Instructions
@@ -30,7 +25,7 @@ The system has multiple tiers:
 
 ---
 
-## Architecture at a Glance
+## Architecture 
 
 The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 

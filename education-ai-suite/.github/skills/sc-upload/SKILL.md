@@ -8,16 +8,7 @@ description: >
   Use when the user says "upload a file", "ingest a document", "upload pdf",
   "index a file", "add course material", "upload video", "upload image", or
   "ingest content".
-license: Apache-2.0
-metadata:
-  version: "1.0.0"
-  tags: "sc operational upload ingest"
 ---
-
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # SC Upload
 
