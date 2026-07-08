@@ -6,24 +6,24 @@ SPDX-License-Identifier: Apache-2.0
 
 # OpenClaw + AgenticROS Deployment
 
-This pipeline demonstrates the integration of OpenClaw and AgenticROS AI agent frameworks on Intel PTL (Panther Lake) platform, with LLM/VLM inference served by Intel OpenVINO Model Server (OVMS) for controlling JAKA Kargo robot in a Gazebo simulation environment.
+This pipeline demonstrates the integration of OpenClaw and AgenticROS AI agent frameworks on Intel PTL (Panther Lake) platform, with LLM/VLM inference served by OpenVINO™ Model Server (OVMS) for controlling JAKA Kargo robot in a Gazebo simulation environment.
 
-<p align="center">
-  <img src="./assets/images/AgenticROS.png" alt="AgenticROS Architecture Overview"><br>
-  <em>AgenticROS Architecture: OpenClaw UI → OpenClaw Gateway → AgenticROS Bridge → ROS2 Robot Control</em>
-</p>
+![AgenticROS System Architecture](./assets/images/AgenticROS.png)
+*AgenticROS Architecture: OpenClaw UI → OpenClaw Gateway → AgenticROS Bridge → ROS2 Robot Control*
 
 ## Overview
 
 This demo showcases:
+
 - **OpenClaw**: AI agent framework providing natural language interface and tool execution
 - **AgenticROS**: AI agent framework that bridges LLM/VLM capabilities with ROS2 robot control
-- **Intel OpenVINO Model Server (OVMS)**: Serving Qwen3-VL-8B-Instruct multimodal LLM/VLM on Intel PTL GPU
+- **OpenVINO™ Model Server (OVMS)**: Serving Qwen3-VL-8B-Instruct multimodal LLM/VLM on Intel PTL GPU
 - **Intel PTL (Panther Lake)**: Hardware platform providing XPU acceleration for AI inference
 - **JAKA Kargo Robot**: 6-DOF collaborative robot arm simulation
 - **AWS Small Warehouse**: Gazebo simulation environment
 
 The system enables natural language control of the robot, including:
+
 - Camera snapshot capture and analysis
 - Linear movement commands with closed-loop odometry control
 - Real-time visual feedback in OpenClaw UI
@@ -31,13 +31,15 @@ The system enables natural language control of the robot, including:
 ## Prerequisites
 
 ### System Requirements
+
 - Ubuntu 24.04 LTS (tested on Ubuntu 24.04 LTS)
-- Intel GPU with OpenVINO support (Intel PTL iGPU, Intel Arc dGPU)
+- Intel GPU with OpenVINO™ support (Intel PTL iGPU, Intel Arc dGPU)
 - Docker installed and running
 - At least 32GB RAM
 - 100GB free disk space for models and environments
 
 ### Software Requirements
+
 - ROS2 Jazzy
 - Python 3.12+
 - Intel oneAPI Base Toolkit (for XPU support)
@@ -46,7 +48,8 @@ The system enables natural language control of the robot, including:
 
 ## Installation
 
-> Path note: this guide uses `~/edge-ai-suites/...` as an example checkout root. If you cloned the repository elsewhere, replace those paths with your local repository root.
+> **Note:** This guide uses `~/edge-ai-suites/...` as an example checkout root. If you cloned
+> the repository elsewhere, replace those paths with your local repository root.
 
 ### 0. Clone Deployment Repository
 
@@ -55,7 +58,7 @@ First, clone this deployment folder with all submodules:
 ```bash
 # Clone the edge-ai-suites repository (if not already done)
 cd ~
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the deployment folder
 cd ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo
@@ -68,12 +71,13 @@ ls -la agenticros openclaw JAKA_KARGO aws-robomaker-small-warehouse-world
 ```
 
 **Submodules included:**
+
 - `agenticros` - Pinned to commit `675f108` (base commit before patches)
 - `openclaw` - Pinned to commit `637b073` (latest stable release)
 - `JAKA_KARGO` - Pinned to commit `f2f34f2` (Update Isaac Sim package)
 - `aws-robomaker-small-warehouse-world` - Pinned to commit `ee0af73` (Fix launch files for using gazebo_ros)
 
-### 1. Intel OpenVINO Model Server Setup
+### 1. OpenVINO™ Model Server Setup
 
 #### Download Qwen3-VL Model
 
@@ -94,14 +98,14 @@ hf download Qwen/Qwen3-VL-8B-Instruct --local-dir qwen3-vl-8b-instruct
 deactivate
 ```
 
-#### Convert Model to OpenVINO Format
+#### Convert Model to OpenVINO™ Format
 
 ```bash
-# Create Python virtual environment for OpenVINO conversion
+# Create Python virtual environment for OpenVINO™ conversion
 python3 -m venv ~/env_openvino
 source ~/env_openvino/bin/activate
 
-# Install OpenVINO conversion tools from requirements file
+# Install OpenVINO™ conversion tools from requirements file
 # Use the included requirements file (or download from robot-claw repo)
 pip install -r ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/requirements/qwen3_vl_openvino_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
@@ -125,16 +129,18 @@ deactivate
 
 **Requirements File Contents:**
 The `qwen3_vl_openvino_requirements.txt` includes:
-- `openvino==2025.4.0` - Intel OpenVINO toolkit
+
+- `openvino==2025.4.0` - OpenVINO™ toolkit
 - `optimum` and `optimum-intel` - Hugging Face model conversion tools
 - `nncf==3.1.0` - Neural Network Compression Framework
 - `transformers==5.0.0` - Hugging Face transformers
 
 **Validated on this host:** the public model download worked without Hugging Face login. If your environment enforces model access control, authenticate before downloading.
+
 - `qwen-vl-utils==0.0.14` - Qwen VL utilities
 - Additional dependencies for model conversion and quantization
 
-#### Start OpenVINO Model Server
+#### Start OpenVINO™ Model Server
 
 ```bash
 # Set target device for your platform
@@ -274,7 +280,8 @@ curl -sS http://localhost:8000/v3/chat/completions \
   }' | jq .
 ```
 
-**📝 OVMS Configuration Notes:**
+**OVMS Configuration Notes:**
+
 - **Version**: Use `openvino/model_server:latest-gpu` (OVMS 2026.1+) for Qwen3-VL support
 - **Port 8000**: REST endpoint for OpenAI-compatible API (v3/chat/completions)
 - **`-u 0`**: Run as root user to avoid permission issues
@@ -390,16 +397,18 @@ curl -s http://127.0.0.1:18789/ | head -5
 ```
 
 **Verification Checklist:**
-- ✅ OVMS serving endpoint responds on `http://127.0.0.1:8000`
-- ✅ OpenClaw gateway service is active and running
-- ✅ no_proxy override is active for OpenClaw gateway (check systemctl show output)
-- ✅ Gateway is accessible on `http://127.0.0.1:18789` (curl returns response, not connection refused)
 
-**📌 Important Configuration Notes:**
+- OVMS serving endpoint responds on `http://127.0.0.1:8000`
+- OpenClaw gateway service is active and running
+- no_proxy override is active for OpenClaw gateway (check systemctl show output)
+- Gateway is accessible on `http://127.0.0.1:18789` (curl returns response, not connection refused)
+
+**Important Configuration Notes:**
+
 - The above configuration shows only the OVMS-related sections
 - **no_proxy setting**: Required for OpenClaw to connect to OVMS (localhost:8000) and rosbridge (localhost:9090) without proxy interference
 - OpenClaw creates a default config during installation - always backup before modifying
-- `baseUrl`: Points to OVMS v3 API endpoint (http://127.0.0.1:8000/v3)
+- `baseUrl`: Points to OVMS v3 API endpoint (`http://127.0.0.1:8000/v3`)
 - `api`: Set to `openai-completions` for OpenAI-compatible API
 - `input`: Must include `["text", "image"]` for multimodal support (critical for camera snapshots)
 - `model.primary`: Uses `ovms/` provider prefix to reference the OVMS provider
@@ -426,7 +435,7 @@ sudo apt install -y \
   ros-jazzy-moveit-visual-tools \
   ros-jazzy-rviz2
 
-> Note: the launch files in this demo use Gazebo Sim through `ros_gz_sim`, so `ros-jazzy-ros-gz-sim` and `ros-jazzy-rosbridge-suite` must be installed. On the validation host.
+> Note: the launch files in this demo use Gazebo Sim through `ros_gz_sim`, so `ros-jazzy-ros-gz-sim` and `ros-jazzy-rosbridge-suite` must be installed on the validation host.
 
 # Verify ROS2 installation
 source /opt/ros/jazzy/setup.bash
@@ -497,6 +506,7 @@ echo "source ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-de
 ```
 
 **Key packages in the AgenticROS workspace:**
+
 - `agenticros_agent`: Core agent logic for AI-ROS bridging
 - `agenticros_bringup`: Launch files for bringing up robot simulations
 - `agenticros_msgs`: Custom ROS2 message definitions
@@ -598,17 +608,20 @@ The helper script adds this configuration (or add manually if needed):
     },
     "allow": ["agenticros", "memory-core", "vllm"],
     "load": {
-      "paths": ["~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/packages/agenticros"]
+      "paths": [
+        "~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/packages/agenticros"
+      ]
     }
   }
 }
 ```
 
-**📌 Important Notes:**
-- Do NOT set `"tools": {"profile": "coding"}` - this hides plugin tools from the model
-- Keep `transport.mode` as `"rosbridge"` for this deployment
-- Keep `rosbridge.url` as `"ws://localhost:9090"`
-- For JAKA simulation, use `cmdVelTopic: "/cmd_vel_unstamped"`
+> **Important Notes:**
+>
+> - Do NOT set `"tools": {"profile": "coding"}` - this hides plugin tools from the model
+> - Keep `transport.mode` as `"rosbridge"` for this deployment
+> - Keep `rosbridge.url` as `"ws://localhost:9090"`
+> - For JAKA simulation, use `cmdVelTopic: "/cmd_vel_unstamped"`
 
 #### Verify OpenClaw ROS2 Tool Calling
 
@@ -623,7 +636,6 @@ openclaw agent --local --session-id ros-tool-test-$(date +%s) \
 journalctl --user -u openclaw-gateway.service -n 60 --no-pager | grep -E 'ROS2 transport status|ROS2 transport connected'
 # Expected: Should show "ROS2 transport connected" or similar success message
 ```
-
 
 ## Running the Demo
 
@@ -648,22 +660,23 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
 ```
 
 **What this command does:**
+
 - Starts rosbridge WebSocket server on port 9090
 - Launches Gazebo with JAKA Kargo robot in AWS Small Warehouse
 - Enables Gazebo GUI for visualization (`use_gazebo_gui:=true`)
 
 **Expected result:**
-- ✅ Gazebo window opens with AWS Small Warehouse environment
-- ✅ JAKA Kargo robot is spawned in the warehouse
-- ✅ rosbridge WebSocket server running on port 9090
-- ✅ ROS2 topics are available: `/camera/image_raw`, `/cmd_vel`, `/odom`
 
-<p align="center">
-  <img src="./assets/images/gazebo_launch_validation.png" alt="Gazebo launch validation with JAKA Kargo in AWS Small Warehouse"><br>
-  <em>Gazebo simulation with JAKA Kargo robot in AWS Small Warehouse environment</em>
-</p>
+- Gazebo window opens with AWS Small Warehouse environment
+- JAKA Kargo robot is spawned in the warehouse
+- rosbridge WebSocket server running on port 9090
+- ROS2 topics are available: `/camera/image_raw`, `/cmd_vel`, `/odom`
+
+![Gazebo launch validation with JAKA Kargo in AWS Small Warehouse](./assets/images/gazebo_launch_validation.png)
+*Gazebo simulation with JAKA Kargo robot in AWS Small Warehouse environment*
 
 **Verification:**
+
 ```bash
 # Terminal 2: Check running topics
 ros2 topic list | grep -E "(camera|cmd_vel|odom)"
@@ -713,9 +726,10 @@ openclaw dashboard
 # or http://localhost:XXXX (port may vary)
 ```
 
-**Open the displayed URL in your web browser** (e.g., http://localhost:3000)
+**Open the displayed URL in your web browser** (e.g., `http://localhost:3000`)
 
 **Verify OpenClaw gateway status (optional):**
+
 ```bash
 systemctl --user status openclaw-gateway
 
@@ -724,10 +738,8 @@ systemctl --user status openclaw-gateway
 
 **Chat with Qwen3-VL in OpenClaw UI**
 
-<p align="center">
-  <img src="./assets/images/openclaw-ovms-validation.png" alt="OpenClaw OVMS Validation"><br>
-  <em>Validate the OpenClaw and OVMS setup through the OpenClaw UI chat</em>
-</p>
+![OpenClaw OVMS Validation](./assets/images/openclaw-ovms-validation.png)
+*Validate the OpenClaw and OVMS setup through the OpenClaw UI chat*
 
 ### Step 3: Interact with the Robot
 
@@ -736,59 +748,59 @@ systemctl --user status openclaw-gateway
 **Try these commands in the OpenClaw interface:**
 
 #### Camera Snapshot
-```
+
+```text
 What does the robot see
 ```
 
 **Expected behavior:**
-1. ✅ OpenClaw calls AgenticROS `camera_snapshot` tool
-2. ✅ AgenticROS subscribes to `/camera/image_raw/compressed`
-3. ✅ Image is captured and displayed in OpenClaw UI
-4. ✅ Qwen3-VL model analyzes the image and responds with description
 
-<p align="center">
-  <img src="./assets/images/camera_snapshot_validation.png" alt="Camera Snapshot Validation"><br>
-  <em>Validate the camera snapshot feature: OpenClaw captures and analyzes the robot's camera view</em>
-</p>
+1. OpenClaw calls AgenticROS `camera_snapshot` tool
+2. AgenticROS subscribes to `/camera/image_raw/compressed`
+3. Image is captured and displayed in OpenClaw UI
+4. Qwen3-VL model analyzes the image and responds with description
+
+![Camera Snapshot Validation](./assets/images/camera_snapshot_validation.png)
+*Validate the camera snapshot feature: OpenClaw captures and analyzes the robot's camera view*
 
 #### Movement Commands
-```
+
+```text
 Move the robot forward 1 meter
 ```
 
 **Expected behavior:**
-1. ✅ OpenClaw calls AgenticROS `cmd_vel_move` tool with `linear: 1.0, distance: 1.0`
-2. ✅ AgenticROS publishes to `/cmd_vel` topic
-3. ✅ Robot moves forward in Gazebo
-4. ✅ AgenticROS monitors `/odom` for closed-loop control
-5. ✅ Robot stops after traveling ~1 meter
 
-<p align="center">
-  <img src="./assets/images/move_forward_validation.png" alt="Robot Movement Validation"><br>
-  <em>JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback</em>
-</p>
+1. OpenClaw calls AgenticROS `cmd_vel_move` tool with `linear: 1.0, distance: 1.0`
+2. AgenticROS publishes to `/cmd_vel` topic
+3. Robot moves forward in Gazebo
+4. AgenticROS monitors `/odom` for closed-loop control
+5. Robot stops after traveling ~1 meter
 
-```
+![Robot Movement Validation](./assets/images/move_forward_validation.png)
+*JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback*
+
+```text
 Rotate the robot 90 degrees clockwise
 ```
 
 **Expected behavior:**
-1. ✅ OpenClaw calls `cmd_vel_move` with `angular: -1.57` (radians)
-2. ✅ Robot rotates in place in Gazebo
-3. ✅ AgenticROS stops robot after 90-degree rotation
 
-<p align="center">
-  <img src="./assets/images/rotate_robot_validation.png" alt="Robot Rotation Validation"><br>
-  <em>JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control</em>
-</p>
+1. OpenClaw calls `cmd_vel_move` with `angular: -1.57` (radians)
+2. Robot rotates in place in Gazebo
+3. AgenticROS stops robot after 90-degree rotation
+
+![Robot Rotation Validation](./assets/images/rotate_robot_validation.png)
+*JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control*
 
 ## Troubleshooting
 
 ### Gazebo Not Starting
 
-**Issue**: `Gazebo fails to start or crashes immediately`
+**Issue**: Gazebo fails to start or crashes immediately
 
 **Solution**:
+
 ```bash
 # Check Gazebo installation
 gazebo --version
@@ -812,9 +824,10 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
 
 ### OVMS Connection Failed
 
-**Issue**: `OpenClaw cannot connect to OVMS at http://localhost:8000`
+**Issue**: OpenClaw cannot connect to OVMS at `http://localhost:8000`
 
 **Solution**:
+
 ```bash
 # Check OVMS container status
 docker ps | grep ovms-qwen3-vl
@@ -831,9 +844,10 @@ docker restart ovms-qwen3-vl
 
 ### rosbridge Not Responding
 
-**Issue**: `OpenClaw shows "Disconnected from AgenticROS"`
+**Issue**: OpenClaw shows "Disconnected from AgenticROS"
 
 **Solution**:
+
 ```bash
 # Check rosbridge is running
 ps aux | grep rosbridge
@@ -850,9 +864,10 @@ ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 
 ### Camera Image Not Displaying
 
-**Issue**: `camera_snapshot tool returns error or image doesn't show in UI`
+**Issue**: `camera_snapshot` tool returns error or image does not show in the UI
 
 **Solution**:
+
 ```bash
 # Check camera topic is publishing
 ros2 topic hz /camera/image_raw/compressed
@@ -866,9 +881,10 @@ curl http://localhost:8080/images/latest.jpg
 
 ### Robot Not Moving
 
-**Issue**: `cmd_vel commands don't move the robot in Gazebo`
+**Issue**: `cmd_vel` commands do not move the robot in Gazebo
 
 **Solution**:
+
 ```bash
 # Check cmd_vel topic is subscribed
 ros2 topic info /cmd_vel
@@ -885,9 +901,10 @@ gz physics list
 
 ### Model Inference Too Slow
 
-**Issue**: `Qwen3-VL takes >10 seconds per response`
+**Issue**: `Qwen3-VL` takes more than 10 seconds per response
 
 **Solution**:
+
 ```bash
 # Check GPU utilization
 intel_gpu_top
