@@ -238,7 +238,7 @@ models:
     min_score: 0.65
 
   ocr:
-    enabled: true # Set to false to disable OCR features
+    enabled: false # Set to false to disable OCR features
     provider: openvino # native or openvino
     device: CPU # CPU or GPU
     concurrency: 2    # CapabilityRunner max_concurrency (worker pool size)
