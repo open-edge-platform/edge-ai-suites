@@ -49,7 +49,7 @@ After the script completes:
 
 ## 3. Optional: Validate With The Published Docker Image
 
-If you only need a smoke test of the project, install Docker Engine and Docker Compose by following `https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md`, then use the published image:
+If you only need a smoke test of the project, install Docker Engine and Docker Compose by following [Docker README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md), then use the published image:
 
 ```bash
 docker pull intel/tfcc:2026.1.0-ubuntu24
