@@ -56,9 +56,6 @@ spec:
             - name: media-udp
               containerPort: {{ .Values.service.mediaUdpPort }}
               protocol: UDP
-            - name: api
-              containerPort: {{ .Values.service.apiContainerPort }}
-              protocol: TCP
           env:
             - name: MTX_LOGLEVEL
               value: {{ .Values.env.logLevel | quote }}
@@ -86,12 +83,12 @@ spec:
             {{- include "lvc.proxyEnv" . | nindent 12 }}
           livenessProbe:
             tcpSocket:
-              port: api
+              port: whip
             initialDelaySeconds: 10
             periodSeconds: 30
           readinessProbe:
             tcpSocket:
-              port: api
+              port: whip
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:

@@ -1,377 +1,66 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import asyncio
-import json
 import logging
-import re
-import uuid
-from typing import AsyncGenerator, Optional
-from urllib.parse import quote
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from ..config import (
-    PIPELINE_NAME,
-    PIPELINE_SERVER_URL,
-    MQTT_TOPIC_PREFIX,
-    WEBRTC_BITRATE,
-    ENABLE_EMBEDDING,
-)
 from ..models import RunInfo, StartRunRequest
-from ..models.requests import DEFAULT_PROMPT
-from ..services import discover_pipelines_remote, http_json, get_mqtt_subscriber
-from ..state import RUNS
+from ..services import PipelineServer
 
 router = APIRouter(prefix="/api", tags=["captions"])
 logger = logging.getLogger("app.runs")
-WEBRTC_PEER_ID_MAX_LENGTH = 8
-WEBRTC_PEER_ID_PREFIX = "s"
-DEFAULT_RESOLUTION_SUFFIX = "_Default_Resolution"
-
-
-def _is_linux_video_device(source_uri: str) -> bool:
-    source = (source_uri or "").strip()
-    return source.startswith("/dev/video") and source[len("/dev/video") :].isdigit()
-
-
-def _is_camera_pipeline_name(pipeline_name: str) -> bool:
-    """Best-effort check for camera-capable pipeline identifiers."""
-    return "camera" in (pipeline_name or "").strip().lower()
-
-
-def _resolve_pipeline_name(requested_pipeline: str) -> str:
-    """Resolve requested pipeline name against discovered pipeline identifiers."""
-    normalized = (requested_pipeline or "").strip()
-    if not normalized:
-        return PIPELINE_NAME
-
-    discovered = discover_pipelines_remote()
-    allowed_names = {
-        (item.get("pipeline_name") or "").strip()
-        for item in discovered
-        if isinstance(item, dict)
-    }
-    # The /api/pipelines response intentionally hides proxy pipelines ending with
-    # _Default_Resolution. Accept those internal aliases only for discovered base names.
-    allowed_names.update(
-        {
-            f"{name}{DEFAULT_RESOLUTION_SUFFIX}"
-            for name in allowed_names
-            if name and not name.endswith(DEFAULT_RESOLUTION_SUFFIX)
-        }
-    )
-    for allowed_name in allowed_names:
-        if allowed_name == normalized:
-            return allowed_name
-
-    raise HTTPException(
-        status_code=400,
-        detail={
-            "message": f"Unknown pipelineName '{normalized}'. Choose one from /api/pipelines.",
-        },
-    )
-
-
-def _sanitize_run_name(run_name: str) -> str:
-    """Normalize a user-supplied run name into a safe run identifier."""
-    sanitized = re.sub(r"\s+", "_", run_name.strip())
-    return re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
-
-
-def _build_unique_run_name(requested_name: Optional[str]) -> Optional[str]:
-    """Return a sanitized, unique run name or None when no valid name was provided."""
-    if not requested_name or not requested_name.strip():
-        return None
-
-    sanitized = _sanitize_run_name(requested_name)
-    if not sanitized:
-        return None
-
-    run_name = sanitized
-    counter = 1
-    while run_name in RUNS:
-        run_name = f"{sanitized}_{counter}"
-        counter += 1
-
-    return run_name
-
-
-def _generate_peer_id() -> str:
-    """Generate a short, unique WebRTC peer ID accepted by the pipeline server."""
-    existing_peer_ids = {run.peerId for run in RUNS.values()}
-    peer_body_length = WEBRTC_PEER_ID_MAX_LENGTH - len(WEBRTC_PEER_ID_PREFIX)
-    if peer_body_length < 1:
-        raise RuntimeError("Invalid WebRTC peer ID configuration")
-
-    while True:
-        candidate = f"{WEBRTC_PEER_ID_PREFIX}{uuid.uuid4().hex[:peer_body_length]}"
-        if candidate not in existing_peer_ids:
-            return candidate
-
-
-def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
-    parameters = {
-        "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
-        "captioner_model_name": (req.modelName or "").strip()
-        or "OpenGVLab/InternVL2-2B",
-        "captioner_max_new_tokens": req.maxNewTokens,
-        "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
-        "detection_threshold": req.detectionThreshold,
-        "mqtt_publisher": {
-            "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-            "publish_frame": bool(
-                ENABLE_EMBEDDING
-            ),  # Only publish frames if embedding is enabled
-        },
-    }
-
-    optional_parameters = {
-        "captioner_frame_rate": req.frameRate,
-        "captioner_chunk_size": req.chunkSize,
-        "frame_width": req.frameWidth,
-        "frame_height": req.frameHeight,
-    }
-    parameters.update(
-        {key: value for key, value in optional_parameters.items() if value is not None}
-    )
-
-    if req.chunkSize is not None:
-        parameters["captioner_queue_size"] = max(1, req.chunkSize)
-
-    return parameters
-
-
-def _build_start_payload(req: StartRunRequest, run_id: str, peer_id: str) -> dict:
-    source_uri = (req.rtspUrl or "").strip()
-    if _is_linux_video_device(source_uri):
-        source = {"device": source_uri, "type": "webcam"}
-    else:
-        source = {"uri": source_uri, "type": "uri"}
-
-    return {
-        "source": source,
-        "destination": {
-            "frame": {"type": "webrtc", "peer-id": peer_id, "bitrate": WEBRTC_BITRATE},
-        },
-        "parameters": _build_pipeline_parameters(req, run_id),
-    }
-
-
-def _extract_pipeline_id(raw: str) -> str:
-    pipeline_id = raw.replace('"', "").strip()
-    if not pipeline_id:
-        raise HTTPException(
-            status_code=502,
-            detail={
-                "message": "Pipeline server returned empty pipeline id",
-                "body": raw,
-            },
-        )
-    return pipeline_id
-
+pipeline_server = PipelineServer()
 
 @router.post("/generate_captions_alerts")
 async def start_run(req: StartRunRequest) -> RunInfo:
     """Start a new video captioning run and generate captions and alerts."""
-    requested_source = (req.rtspUrl or "").strip()
-    requested_pipeline = (req.pipelineName or "").strip()
-    using_camera_source = _is_linux_video_device(requested_source)
-
-    pipeline_name = _resolve_pipeline_name(requested_pipeline)
-    if using_camera_source and not _is_camera_pipeline_name(pipeline_name):
-        if requested_pipeline:
-            detail_message = (
-                f"Pipeline '{pipeline_name}' is not camera-compatible. "
-                "Use a camera pipeline for /dev/videoN sources."
-            )
-        else:
-            detail_message = (
-                "Camera sources require a camera-compatible pipelineName when the "
-                "default PIPELINE_NAME is not camera-compatible."
-            )
-        raise HTTPException(status_code=400, detail={"message": detail_message})
-
-    if using_camera_source:
-        for existing in RUNS.values():
-            if (
-                existing.rtspUrl or ""
-            ).strip() == requested_source and existing.status == "running":
-                raise HTTPException(
-                    status_code=409,
-                    detail={
-                        "message": f"Camera device {requested_source} is already in use by run {existing.runId}",
-                    },
-                )
-
-    run_name = _build_unique_run_name(req.runName)
-
-    # Use runName for run_id if provided, otherwise generate UUID
-    if run_name:
-        run_id = run_name
-    else:
-        run_id = uuid.uuid4().hex[:10]
-
-    peer_id = _generate_peer_id()
-
-    # MQTT topic for this run's metadata
-    mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
-
-    encoded_pipeline_name = quote(pipeline_name, safe="")
-    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{encoded_pipeline_name}"
-    payload = _build_start_payload(req, run_id, peer_id)
-
-    logger.debug("Starting caption pipeline request")
-
-    raw = http_json("POST", start_url, payload=payload)
-    pipeline_id = _extract_pipeline_id(raw)
-
-    model_name = (req.modelName or "").strip() or "InternVL2-2B"
-    # Use full run_id for custom names, truncated for UUID-based
-    final_run_id = run_id if run_name else run_id[:10]
-    info = RunInfo(
-        runId=final_run_id,
-        pipelineId=pipeline_id,
-        peerId=peer_id,
-        mqttTopic=mqtt_topic,
-        modelName=model_name,
-        pipelineName=pipeline_name,
-        runName=run_name,
-        prompt=(req.prompt or "").strip() or DEFAULT_PROMPT,
-        maxTokens=req.maxNewTokens,
-        rtspUrl=req.rtspUrl,
-        frameRate=req.frameRate,
-        chunkSize=req.chunkSize,
-        frameWidth=req.frameWidth,
-        frameHeight=req.frameHeight,
-    )
-    RUNS[info.runId] = info
-    return info
+    return await pipeline_server.start_run(req)
 
 
 @router.get("/generate_captions_alerts")
 async def list_runs() -> list[RunInfo]:
     """List all active captioning runs."""
-    return list(RUNS.values())
-
-
-async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
-    """Generator that receives metadata from MQTT and multiplexes into a single SSE stream.
-
-    A status heartbeat is sent every second when no MQTT message arrives, carrying
-    the current status of every active run so the frontend can react when a run
-    transitions to ``"error"`` (detected by the background health monitor).
-    """
-    message_queue: asyncio.Queue = asyncio.Queue()
-    subscribed_runs: set[str] = set()
-
-    def on_message(run_id: str, data: dict, received_at: float):
-        """Callback for MQTT messages - puts them into the async queue."""
-        try:
-            asyncio.get_event_loop().call_soon_threadsafe(
-                message_queue.put_nowait, (run_id, data, received_at)
-            )
-        except Exception as e:
-            logger.error(f"Error queueing MQTT message: {e}")
-
-    mqtt_subscriber = await get_mqtt_subscriber()
-    try:
-
-        while True:
-            try:
-                # Update subscriptions based on current active runs
-                current_runs = set(RUNS.keys())
-
-                # Subscribe to new runs
-                new_runs = current_runs - subscribed_runs
-                for run_id in new_runs:
-                    mqtt_subscriber.subscribe_to_run(run_id, on_message)
-                    subscribed_runs.add(run_id)
-                    logger.info(f"Subscribed to MQTT topic for run {run_id}")
-
-                # Unsubscribe from stopped runs
-                stopped_runs = subscribed_runs - current_runs
-                for run_id in stopped_runs:
-                    mqtt_subscriber.unsubscribe_from_run(run_id)
-                    subscribed_runs.discard(run_id)
-                    logger.info(f"Unsubscribed from MQTT topic for run {run_id}")
-
-                # Process any messages in the queue with a short timeout
-                try:
-                    run_id, data, received_at = await asyncio.wait_for(
-                        message_queue.get(), timeout=1.0
-                    )
-
-                    # Wrap the data with runId for client-side demultiplexing
-                    envelope = {
-                        "runId": run_id,
-                        "data": data,
-                        "received_at": received_at,
-                    }
-                    yield f"data: {json.dumps(envelope)}\n\n"
-
-                except asyncio.TimeoutError:
-                    # No MQTT message – send a status heartbeat so the frontend
-                    # learns when a run transitions to "error".
-                    status_payload = {
-                        "type": "status",
-                        "runs": {rid: info.status for rid, info in RUNS.items()},
-                    }
-                    yield f"data: {json.dumps(status_payload)}\n\n"
-
-            except Exception as e:
-                logger.error(f"Error in multiplexed metadata generator: {e}")
-                yield ": error\n\n"
-                await asyncio.sleep(1)
-
-    finally:
-        # Reuse the already-resolved subscriber — avoids creating a new connection
-        # during app shutdown when the global subscriber may already be torn down.
-        for run_id in subscribed_runs:
-            mqtt_subscriber.unsubscribe_from_run(run_id)
-        logger.info("Cleaned up MQTT subscriptions")
+    return pipeline_server.list_runs()
 
 
 @router.get("/generate_captions_alerts/metadata-stream")
 async def multiplexed_metadata_stream() -> StreamingResponse:
     """Multiplexed SSE stream that provides captions and alerts metadata for all active runs."""
     logger.info("Multiplexed metadata stream requested")
-    headers = {
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Cache-Control",
-    }
-    return StreamingResponse(
-        _multiplexed_metadata_generator(),
-        media_type="text/event-stream",
-        headers=headers,
-    )
+    return pipeline_server.metadata_stream()
 
+
+
+@router.get("/generate_captions_alerts/{run_id}/stream-ready")
+async def stream_ready(run_id: str) -> dict[str, object]:
+    """Report whether the WebRTC stream for a run is publishing yet.
+
+    The DL Streamer pipeline needs a few seconds after start before it begins
+    publishing frames to mediamtx. The UI polls this endpoint and only loads the
+    video iframe once frames are flowing, avoiding mediamtx's "stream not
+    found, retrying" page.
+
+    This endpoint is the backend half of a two-stage readiness gate: the
+    backend answers "is the pipeline alive and producing?", mediamtx answers
+    "can the browser watch it yet?" (the UI confirms the latter with a WHEP
+    probe before loading the iframe).
+
+    Readiness is derived from the pipeline server alone: the run is ready when
+    its instance is ``RUNNING`` and reports a positive ``avg_fps`` — frames
+    moving through the pipeline are being published to mediamtx by the WebRTC
+    sink. This deliberately avoids the mediamtx control API, so mediamtx can
+    run with its API disabled. The pipeline state also lets the UI fail fast
+    when the instance leaves the ``RUNNING``/``QUEUED`` states (or vanishes)
+    instead of staying stuck on "Connecting…".
+    """
+    return await pipeline_server.stream_ready(run_id)
 
 @router.get("/generate_captions_alerts/{run_id}")
 async def get_run(run_id: str) -> RunInfo:
     """Get details of a specific captioning run."""
-    info = RUNS.get(run_id)
-    if not info:
-        raise HTTPException(status_code=404, detail={"message": "Run not found"})
-    return info
-
+    return pipeline_server.get_run(run_id)
 
 @router.delete("/generate_captions_alerts/{run_id}")
 async def stop_run(run_id: str) -> dict[str, str]:
     """Stop a running captioning pipeline."""
-    info = RUNS.get(run_id)
-    if not info:
-        raise HTTPException(status_code=404, detail={"message": "Run not found"})
-    stop_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/{info.pipelineId}"
-
-    # Try to stop pipeline on backend, but always remove from internal list
-    # A failure (502) usually means the pipeline is already stopped
-    try:
-        http_json("DELETE", stop_url)
-    except Exception:
-        # Pipeline may already be stopped or unreachable - continue cleanup
-        pass
-
-    RUNS.pop(run_id, None)
-    return {"status": "stopped", "runId": run_id}
+    return await pipeline_server.stop_run(run_id)

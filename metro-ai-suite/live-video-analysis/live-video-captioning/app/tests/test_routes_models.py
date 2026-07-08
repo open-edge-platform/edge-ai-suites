@@ -18,7 +18,10 @@ class TestListVlmModels:
 
     def test_returns_discovered_models(self, client):
         """Returns model names discovered from the directory."""
-        models = ["InternVL2-1B", "InternVL2-2B"]
+        models = [
+            {"name": "InternVL2-1B", "device": "cpu"},
+            {"name": "InternVL2-2B-gpu", "device": "gpu"},
+        ]
         with patch("backend.routes.models.discover_models", return_value=models):
             resp = client.get("/api/vlm-models")
         assert resp.status_code == 200

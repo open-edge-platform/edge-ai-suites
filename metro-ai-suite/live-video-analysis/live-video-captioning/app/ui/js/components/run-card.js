@@ -52,6 +52,26 @@ const RunCardComponent = (function () {
         return 'rtsp';
     }
 
+    function inferDeviceType(run) {
+        const selectedVlmDevice = (run.vlmDevice || '').toString().trim().toLowerCase();
+        if (selectedVlmDevice === 'npu') return 'NPU';
+        if (selectedVlmDevice === 'gpu') return 'GPU';
+        if (selectedVlmDevice === 'cpu') return 'CPU';
+
+        const pipelineNameLower = (run.pipelineName || '').toLowerCase();
+        if (pipelineNameLower.includes('npu')) return 'NPU';
+        if (pipelineNameLower.includes('gpu')) return 'GPU';
+        return 'CPU';
+    }
+
+    function formatDeviceLabel(deviceValue, fallback) {
+        const value = (deviceValue || '').toString().trim().toLowerCase();
+        if (value === 'npu') return 'NPU';
+        if (value === 'gpu') return 'GPU';
+        if (value === 'cpu') return 'CPU';
+        return fallback || 'N/A';
+    }
+
     function createRunElement(run, onStopCallback) {
         const wrap = document.createElement('div');
         wrap.className = 'card';
@@ -71,11 +91,13 @@ const RunCardComponent = (function () {
         headerLeft.style.fontSize = '0.85rem';
         headerLeft.style.flexWrap = 'wrap';
 
-        // Determine device from pipeline name
-        const deviceType = (run.pipelineName || '').toLowerCase().includes('gpu') ? 'GPU' : 'CPU';
+        // Determine device from selected VLM device (fallback to pipeline name for older runs)
+        const deviceType = inferDeviceType(run);
         const deviceIcon = deviceType === 'GPU'
             ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>'
-            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>';
+            : deviceType === 'NPU'
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><line x1="4" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="20" y2="12"/></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>';
 
         // Format run name for display: underscores become spaces
         const displayRunName = formatRunNameForDisplay(run.runId);
@@ -133,6 +155,12 @@ const RunCardComponent = (function () {
         tooltip.appendChild(tooltipTitle);
         tooltip.appendChild(createTooltipRow('Pipeline', run.pipelineName || 'N/A'));
         tooltip.appendChild(createTooltipRow('Stream Source', run.rtspUrl || 'N/A'));
+        tooltip.appendChild(
+            createTooltipRow(
+                'VLM Device',
+                formatDeviceLabel(run.vlmDevice, inferDeviceType(run))
+            )
+        );
         tooltip.appendChild(createTooltipRow('Max Tokens', String(run.maxTokens ?? 'N/A')));
         tooltip.appendChild(createTooltipRow('Prompt', run.prompt || 'N/A', 'info-tooltip-prompt'));
 
@@ -152,6 +180,14 @@ const RunCardComponent = (function () {
         }
         if (run.isEnabledDetection && (run.detectionModelName ?? '') !== '') {
             tooltip.appendChild(createTooltipRow('Detection Model', run.detectionModelName));
+        }
+        if (run.isEnabledDetection) {
+            tooltip.appendChild(
+                createTooltipRow(
+                    'Detection Device',
+                    formatDeviceLabel(run.detectionDevice, formatDeviceLabel(run.vlmDevice, 'CPU'))
+                )
+            );
         }
         if (run.isEnabledDetection && (run.detectionThreshold ?? '') !== '') {
             tooltip.appendChild(createTooltipRow('Detection Threshold', String(run.detectionThreshold)));
@@ -209,6 +245,21 @@ const RunCardComponent = (function () {
         const video = document.createElement('iframe');
         video.className = 'run-video';
         video.title = `WebRTC ${run.peerId}`;
+
+        // Wrap the iframe so a "Connecting…" overlay can sit on top of it while
+        // the pipeline spins up and before mediamtx has a publisher for the path.
+        const videoWrap = document.createElement('div');
+        videoWrap.className = 'video-wrap';
+
+        const videoOverlay = document.createElement('div');
+        videoOverlay.className = 'video-overlay';
+        videoOverlay.innerHTML = `
+            <div class="video-overlay-spinner"></div>
+            <div class="video-overlay-text">Connecting to stream…</div>
+        `;
+
+        videoWrap.appendChild(video);
+        videoWrap.appendChild(videoOverlay);
 
         const captionPanel = document.createElement('div');
         captionPanel.className = 'caption-panel';
@@ -284,13 +335,13 @@ const RunCardComponent = (function () {
         captionPanel.appendChild(watcher);
         captionPanel.appendChild(captionContent);
 
-        grid.appendChild(video);
+        grid.appendChild(videoWrap);
         grid.appendChild(captionPanel);
 
         wrap.appendChild(header);
         wrap.appendChild(grid);
 
-        return { wrap, video, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
+        return { wrap, video, videoWrap, videoOverlay, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
     }
 
     function validateAndPrepareRunName(rawName) {
@@ -320,7 +371,7 @@ const RunCardComponent = (function () {
      *
      * @param {object} ui - The object returned by createRunElement.
      */
-    function setRunErrorState(ui) {
+    function setRunErrorState(ui, message) {
         // Switch dot to pulsing red
         const dot = ui.wrap?.querySelector('.dot');
         if (dot) {
@@ -330,14 +381,17 @@ const RunCardComponent = (function () {
 
         // Show error banner in the watcher row
         if (ui.watcher) {
+            const text = message || 'Pipeline lost, click Remove to clear';
             ui.watcher.innerHTML = `
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <span style="color:#ef4444;font-weight:600;">Pipeline lost, click Remove to clear</span>
+                <span style="color:#ef4444;font-weight:600;"></span>
             `;
+            const span = ui.watcher.querySelector('span');
+            if (span) span.textContent = text;
             ui.watcher.style.gap = '6px';
             ui.watcher.style.display = 'flex';
             ui.watcher.style.alignItems = 'center';
@@ -350,9 +404,32 @@ const RunCardComponent = (function () {
         }
     }
 
+    /**
+     * Replace the "Connecting…" video overlay with an error message.
+     * Used when the pipeline fails to bring up the stream during startup.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     * @param {string} [message] - Error text to display over the video area.
+     */
+    function setVideoOverlayError(ui, message) {
+        if (!ui.videoOverlay) return;
+        ui.videoOverlay.style.display = '';
+        ui.videoOverlay.innerHTML = `
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div class="video-overlay-text" style="color:#ef4444;"></div>
+        `;
+        const textEl = ui.videoOverlay.querySelector('.video-overlay-text');
+        if (textEl) textEl.textContent = message || 'Stream failed to start';
+    }
+
     return {
         createRunElement,
         setRunErrorState,
+        setVideoOverlayError,
         validateAndPrepareRunName,
         getUniqueRunName,
         formatRunNameForDisplay
