@@ -8,10 +8,9 @@ SPDX-License-Identifier: Apache-2.0
 
 This pipeline demonstrates the integration of OpenClaw and AgenticROS AI agent frameworks on Intel PTL (Panther Lake) platform, with LLM/VLM inference served by Intel OpenVINO Model Server (OVMS) for controlling JAKA Kargo robot in a Gazebo simulation environment.
 
-<p align="center">
-  <img src="./assets/images/AgenticROS.png" alt="AgenticROS Architecture Overview"><br>
-  <em>AgenticROS Architecture: OpenClaw UI → OpenClaw Gateway → AgenticROS Bridge → ROS2 Robot Control</em>
-</p>
+![AgenticROS Architecture Overview](./assets/images/AgenticROS.png)
+
+*AgenticROS Architecture: OpenClaw UI → OpenClaw Gateway → AgenticROS Bridge → ROS2 Robot Control*
 
 ## Overview
 
@@ -658,10 +657,9 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
 - ✅ rosbridge WebSocket server running on port 9090
 - ✅ ROS2 topics are available: `/camera/image_raw`, `/cmd_vel`, `/odom`
 
-<p align="center">
-  <img src="./assets/images/gazebo_launch_validation.png" alt="Gazebo launch validation with JAKA Kargo in AWS Small Warehouse"><br>
-  <em>Gazebo simulation with JAKA Kargo robot in AWS Small Warehouse environment</em>
-</p>
+![Gazebo launch validation with JAKA Kargo in AWS Small Warehouse](./assets/images/gazebo_launch_validation.png)
+
+*Gazebo simulation with JAKA Kargo robot in AWS Small Warehouse environment*
 
 **Verification:**
 ```bash
@@ -724,10 +722,9 @@ systemctl --user status openclaw-gateway
 
 **Chat with Qwen3-VL in OpenClaw UI**
 
-<p align="center">
-  <img src="./assets/images/openclaw-ovms-validation.png" alt="OpenClaw OVMS Validation"><br>
-  <em>Validate the OpenClaw and OVMS setup through the OpenClaw UI chat</em>
-</p>
+![OpenClaw OVMS Validation](./assets/images/openclaw-ovms-validation.png)
+
+*Validate the OpenClaw and OVMS setup through the OpenClaw UI chat*
 
 ### Step 3: Interact with the Robot
 
@@ -746,10 +743,9 @@ What does the robot see
 3. ✅ Image is captured and displayed in OpenClaw UI
 4. ✅ Qwen3-VL model analyzes the image and responds with description
 
-<p align="center">
-  <img src="./assets/images/camera_snapshot_validation.png" alt="Camera Snapshot Validation"><br>
-  <em>Validate the camera snapshot feature: OpenClaw captures and analyzes the robot's camera view</em>
-</p>
+![Camera Snapshot Validation](./assets/images/camera_snapshot_validation.png)
+
+*Validate the camera snapshot feature: OpenClaw captures and analyzes the robot's camera view*
 
 #### Movement Commands
 ```
@@ -763,10 +759,9 @@ Move the robot forward 1 meter
 4. ✅ AgenticROS monitors `/odom` for closed-loop control
 5. ✅ Robot stops after traveling ~1 meter
 
-<p align="center">
-  <img src="./assets/images/move_forward_validation.png" alt="Robot Movement Validation"><br>
-  <em>JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback</em>
-</p>
+![Robot Movement Validation](./assets/images/move_forward_validation.png)
+
+*JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback*
 
 ```
 Rotate the robot 90 degrees clockwise
@@ -777,10 +772,9 @@ Rotate the robot 90 degrees clockwise
 2. ✅ Robot rotates in place in Gazebo
 3. ✅ AgenticROS stops robot after 90-degree rotation
 
-<p align="center">
-  <img src="./assets/images/rotate_robot_validation.png" alt="Robot Rotation Validation"><br>
-  <em>JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control</em>
-</p>
+![Robot Rotation Validation](./assets/images/rotate_robot_validation.png)
+
+*JAKA Kargo robot executing 90-degree clockwise rotation with angular velocity control*
 
 ## Troubleshooting
 
