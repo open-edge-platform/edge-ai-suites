@@ -1,10 +1,10 @@
 {
   "description": "Harness-neutral discovery catalog for Smart Classroom RAG workflow skills. Paths are relative to the repository root (education-ai-suite/).",
-  "skillsRoot": ".github/skills",
+  "skillsRoot": "utils/flutter/.github/skills",
   "skills": [
     {
       "name": "sc-setup",
-      "path": ".github/skills/sc-setup/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-setup/SKILL.md",
       "description": "Set up Flutter integration with the existing Content Search backend by checking Flutter availability, installing Flutter dependencies, creating backend venv, installing backend requirements, and running utils/flutter/setup.ps1.",
       "triggers": [
         "set up smart classroom",
@@ -22,7 +22,7 @@
     },
     {
       "name": "sc-up",
-      "path": ".github/skills/sc-up/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-up/SKILL.md",
       "description": "Bring up the Flutter implementation with the existing Content Search backend by running utils/flutter/start-scrit.ps1 and validating service health.",
       "triggers": [
         "start smart classroom",
@@ -40,7 +40,7 @@
     },
     {
       "name": "sc-doctor",
-      "path": ".github/skills/sc-doctor/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-doctor/SKILL.md",
       "description": "Check Content Search backend health by probing the health endpoint and diagnosing Flutter-to-backend connectivity issues.",
       "triggers": [
         "is the backend up",
@@ -60,7 +60,7 @@
     },
     {
       "name": "sc-upload",
-      "path": ".github/skills/sc-upload/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-upload/SKILL.md",
       "description": "Upload a file to the Content Search backend and poll the ingestion task until indexed (COMPLETED). Handles duplicate detection, cleanup, and retry. Works with PDFs, videos, images, and Office documents.",
       "triggers": [
         "upload a file",
@@ -79,7 +79,7 @@
     },
     {
       "name": "sc-qa",
-      "path": ".github/skills/sc-qa/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-qa/SKILL.md",
       "description": "Ask a natural-language question against indexed content via the RAG Q&A endpoint. Supports multi-turn conversation history, tag filtering, and returns cited sources.",
       "triggers": [
         "ask a question",
@@ -98,7 +98,7 @@
     },
     {
       "name": "sc-files",
-      "path": ".github/skills/sc-files/SKILL.md",
+      "path": "utils/flutter/.github/skills/sc-files/SKILL.md",
       "description": "List, inspect, filter, and delete files that have been indexed in the Content Search backend. Also lists available tags.",
       "triggers": [
         "list files",

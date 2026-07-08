@@ -479,8 +479,8 @@ To create a new skill:
 - [Main Education AI Suite README](../../README.md)
 - [Smart Classroom Backend Documentation](../../smart-classroom/README.md)
 - [Content Search API Documentation](../../smart-classroom/content_search/README.md)
-- [Skills Catalog](../../.github/skills/README.md)
-- [Copilot Instructions](../../.github/copilot-instructions.md)
+- [Skills Catalog](.github/skills/README.md)
+- [Copilot Instructions](.github/copilot-instructions.md)
 
 ---
 
