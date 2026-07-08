@@ -9,6 +9,5 @@ services:
     volumes:
       - /dev:/dev
     annotations:
-      io.katacontainers.config.hypervisor.enable_virtio_mem: "true"
       io.katacontainers.config.hypervisor.hot_plug_vfio: "root-port"
       io.katacontainers.config.hypervisor.pcie_root_port: "1"
