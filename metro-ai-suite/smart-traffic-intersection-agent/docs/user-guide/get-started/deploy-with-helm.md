@@ -430,6 +430,8 @@ Intel Trusted Compute runs workloads inside a hardware-isolated VM, protecting i
 
 > **Note:** When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. If only an integrated GPU is available on the system, Smart Intersection must be deployed with CPU-only inference before binding the GPU.
 
+> **Note:** When GPU is passthrough, GPU telemetry will not be available.
+
 ### 1. Install Trusted Compute
 
 Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.1 or later on your Kubernetes nodes. Complete the following sections:
