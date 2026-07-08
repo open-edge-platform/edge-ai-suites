@@ -42,7 +42,7 @@ Configure and start the Model Download service to manage LLM and embedding model
 ```bash
 cd $HOME/oep/edge-ai-libraries/microservices/model-download
 export REGISTRY="intel/"
-export TAG=2026.1.0-rc1
+export TAG=latest
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 source scripts/run_service.sh up --plugins openvino --model-path $HOME/oep/models/
 ```
@@ -64,7 +64,7 @@ export EMBEDDING_MODEL_NAME=Alibaba-NLP/gte-large-en-v1.5
 export RERANKER_MODEL=BAAI/bge-reranker-base
 export DEVICE="CPU"
 export REGISTRY="intel/"
-export TAG=2026.1.0-rc1
+export TAG=latest
 export MODEL_DOWNLOAD_HOST=localhost
 export MODEL_DOWNLOAD_PORT=8200
 source setup.sh llm=OVMS embed=OVMS
