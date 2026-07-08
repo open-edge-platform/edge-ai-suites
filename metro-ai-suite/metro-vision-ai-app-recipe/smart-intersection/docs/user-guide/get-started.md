@@ -175,7 +175,7 @@ Intel Trusted Compute runs workloads inside a hardware-isolated VM, protecting i
 
 ### 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://docs.openedgeplatform.intel.com/trusted-compute/baremetal-installation) to install Trusted Compute version 1.5.2 or later on your host system. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.2 or later on your host system. Complete the following sections:
 
 - Prerequisites
 - Download the Trusted Compute Package
