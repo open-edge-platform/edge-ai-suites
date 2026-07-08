@@ -46,8 +46,7 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 
 | Path | Purpose |
 |---|---|
-| `utils/flutter/.github/skills/` | Workflow skills — automation for setup, startup, and operations |
-| `utils/flutter/.cursor/rules/` | Cursor AI agent configuration |
+| `.github/skills/` | Workflow skills — automation for setup, startup, and operations |
 | `smart-classroom/` | Main Python services (backend, video analytics, OCR, ASR) |
 | `smart-classroom/content_search/` | Python RAG backend (FastAPI) |
 | `smart-classroom/setup-smart-classroom.ps1` | Setup script for system configuration |
