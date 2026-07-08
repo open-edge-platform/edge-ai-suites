@@ -8,7 +8,7 @@ This guide explains a simple Helm deployment for Smart Route Planning Agent.
 - Helm installed.
 - At least **2 instances of  Smart Traffic Intersection Agent** should be running and reachable. This is required for route planning to work correctly. (If no such instances are available, application can still be deployed and accessed by following this guide. However, no route planning will be done.)
 - Use this guide to deploy Smart Traffic Intersection Agent with Helm:
-  [Smart Traffic Intersection Agent - Deploy with Helm](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-traffic-intersection-agent/docs/user-guide/get-started/deploy-with-helm.md)
+  [Smart Traffic Intersection Agent - Deploy with Helm](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/get-started/deploy-with-helm.html)
 
 ## Helm Version
 
@@ -30,7 +30,7 @@ cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent/chart
 
 Follow these 2 simple steps:
 
-1. Set the version of the helm chart required. Check different versions available here: https://hub.docker.com/r/intel/smart-route-planning-agent
+1. Set the version of the helm chart required. Check different versions available here: <https://hub.docker.com/r/intel/smart-route-planning-agent>
 
     ```bash
     helm_version=<version>

@@ -11,12 +11,16 @@ This firmware is part of a collection of kernel mode drivers
 that together enable support for Intel graphics. The backports
 collection within <https://github.com/intel-gpu> includes:
 
-- [[i915]](https://github.com/intel-gpu/intel-gpu-i915-backports) - The main graphics driver, Intel® Graphics Driver.
+- [[i915]](https://github.com/intel-gpu/intel-gpu-i915-backports) - The i915 graphics driver, Intel® Graphics Driver.
+- [[Xe]](https://github.com/intel-gpu/xekmd-backports) - The Xe graphics driver, Intel® Graphics Driver.
 - [[cse]](https://github.com/intel-gpu/intel-gpu-cse-backports) - Intel® Converged Security Engine (Intel® CSE).
 - [[pmt]](https://github.com/intel-gpu/intel-gpu-pmt-backports) - Intel® Platform Monitoring Technology (Intel® PMT).
 - [[firmware]](https://github.com/intel-gpu/intel-gpu-firmware) - Contains firmware required by Intel® Graphics Driver.
 
 Each project is tagged consistently so when pulling these repositories pull the same tag.
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **i915**
 
 > **Tip:** If Intel® Graphics Driver is disabled, check the grub of cmdline:
 >
@@ -62,3 +66,56 @@ To verify that the GPU firmwares are installed, run `sudo dmesg | grep firmware`
 [    2.668725] i915 0000:00:02.0: [drm] GT1: HuC firmware i915/mtl_huc_gsc.bin version 8.5.4
 [    2.856236] i915 0000:00:02.0: [drm] GT1: Loaded GSC firmware i915/mtl_gsc_1.bin (cv1.0, r102.1.15.1926, svn 1)
 ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Xe**
+
+> **Tip:** If Intel® Graphics Driver is disabled, check the grub of cmdline:
+>
+> ```console
+> cat /proc/cmdline
+> xe.max_vfs=7 xe.force_probe=* modprobe.blacklist=i915 udmabuf.list_limit=8192
+> ```
+
+## Installation
+
+1. Get the correct Intel® Graphics Driver firmware with the following command:
+
+   ```bash
+   wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/xe/ptl_gsc_1.bin --no-check-certificate
+   wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/xe/ptl_guc_70.bin --no-check-certificate
+   wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/xe/ptl_huc.bin --no-check-certificate
+   ```
+
+2. Remove the `zst` firmware files with the following command (Optional):
+
+   ```bash
+   sudo rm /lib/firmware/xe/ptl_guc_70.bin.zst
+   sudo rm /lib/firmware/xe/ptl_gsc_1.bin.zst
+   sudo rm /lib/firmware/xe/ptl_huc.bin.zst
+   ```
+
+3. Update the Intel® Graphics Driver firmware with the following command:
+
+   ```bash
+   sudo cp ptl_guc_70.bin /lib/firmware/xe/
+   sudo cp ptl_gsc_1.bin /lib/firmware/xe/
+   sudo cp ptl_huc.bin /lib/firmware/xe/
+   sudo update-initramfs -u -k $(uname -r)
+   ```
+
+4. Reboot.
+
+## Verifying Installation
+
+To verify that the GPU firmwares are installed, run `sudo dmesg | grep firmware`, the result might be similar to the following:
+
+```console
+[    6.521802] xe 0000:00:02.0: [drm] GT0: Using GuC firmware from xe/ptl_guc_70.bin version 70.55.3
+[    6.527595] xe 0000:00:02.0: [drm] Finished loading DMC firmware i915/xe3lpd_dmc.bin (v2.32)
+[    6.732808] xe 0000:00:02.0: [drm] GT1: Using GuC firmware from xe/ptl_guc_70.bin version 70.55.3
+[    6.735527] xe 0000:00:02.0: [drm] GT1: Using HuC firmware from xe/ptl_huc.bin version 10.3.3
+
+```
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
