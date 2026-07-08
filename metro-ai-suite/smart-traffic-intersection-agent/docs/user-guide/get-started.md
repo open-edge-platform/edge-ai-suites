@@ -358,6 +358,8 @@ The DL Streamer Pipeline Server and OpenVINO model server (OVMS) containers will
 
 > **Note:** When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. If only an integrated GPU is available on the system, STIA will be deployed with GPU-accelerated inference while Smart Intersection must be deployed with CPU-only inference.
 
+> **Note:** When GPU is passthrough, GPU telemetry will not be available.
+
 ##### Prerequisites
 
 Before enabling GPU passthrough, ensure:
