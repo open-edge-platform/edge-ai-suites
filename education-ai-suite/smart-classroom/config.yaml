@@ -1,4 +1,4 @@
-app:
+﻿app:
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: False # True or False, applicable for provider: openvino
@@ -18,7 +18,7 @@ models:
     device: CPU # CPU Recommended
     temperature: 0.0
     diarization: False
-    hf_token: ""  # set via HF_TOKEN env var (do not commit)   # needed only if diarization=true
+    hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
     no_speech_threshold: 0.6
@@ -136,94 +136,94 @@ models:
           - Do not add extra headings.
       zh:
         Dialog: |
-          ?????????
+          总结课堂转录内容。
 
-          ????:
-          ?? = ????
-          ??_XX = ????
+          转录格式:
+          教师 = 教师发言
+          学生_XX = 学生发言
 
-          ??:
-          - ??????????
-          - ??????????
-          - ????????????
-          - ???????????????
+          指示:
+          - 提供完整的对话摘要。
+          - 保持讨论的整体流程。
+          - 包含教师讲解和学生提问。
+          - 忽略无意义的填充语或重复内容。
 
-          ?????????????? Markdown:
+          使用以下固定章节标题输出有效 Markdown:
 
-          ## ????
+          ## 教师总结
           - ...
 
-          ## ??
+          ## 问题
           - ...
 
-          ## ????
+          ## 关键要点
           - ...
 
-          ## ????
+          ## 课程结构
           - ...
 
-          ??:
-          - ??????????
-          - ?????????????
-          - ?????????
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
 
         Teacher: |
-          ?????? ?? ??????
+          仅总结转录中 教师 的讲解内容。
 
-          ??:
-          - ?????????
-          - ????????????
-          - ??????????
-          - ??????????,? "None"?
+          指示:
+          - 完全忽略学生对话。
+          - 严格聚焦教师的解释内容。
+          - 不要编造缺失的内容。
+          - 如果某个章节没有内容，写 "None"。
 
-          ?????????????? Markdown:
+          使用以下固定章节标题输出有效 Markdown:
 
-          ## ????
+          ## 教师总结
           - ...
 
-          ## ??
+          ## 问题
           - None
 
-          ## ????
+          ## 关键要点
           - ...
 
-          ## ????
+          ## 课程结构
           - ...
 
-          ??:
-          - ??????????
-          - ?????????????
-          - ?????????
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
 
 
         Hybrid: |
-          ? ?? ?????????,
-          ??????? ?? ??????????
+          以 教师 讲解为重点进行总结，
+          并在必要时使用 学生 提问作为上下文补充。
 
-          ??:
-          - ??????????
-          - ???????????????????
-          - ???????
-          - ???????????
+          指示:
+          - 教师讲解为主要内容。
+          - 仅在学生问题能帮助理解上下文时才包含。
+          - 不要编造内容。
+          - 忽略填充语或重复内容。
 
-          ?????????????? Markdown:
+          使用以下固定章节标题输出有效 Markdown:
 
-          ## ????
+          ## 教师总结
           - ...
 
-          ## ??
+          ## 问题
           - ...
 
-          ## ????
+          ## 关键要点
           - ...
 
-          ## ????
+          ## 课程结构
           - ...
 
-          ??:
-          - ??????????
-          - ?????????????
-          - ?????????
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
 
     model_hub: huggingface # huggingface or modelscope
 
@@ -241,8 +241,6 @@ models:
     enabled: false # Set to false to disable OCR features
     provider: openvino # native or openvino
     device: CPU # CPU or GPU
-    concurrency: 2    # CapabilityRunner max_concurrency (worker pool size)
-    queue_max: 16     # CapabilityRunner queue depth before 503 backpressure
     model_dir: models/ocr # Base directory for OCR models
     ocr_version: PP-OCRv6
     det_model: PP-OCRv6_small_det
@@ -307,7 +305,7 @@ mindmap:
               "topic": "Heisenberg Uncertainty Principle",
               "children": [
                 {"id": "position_momentum", "topic": "Cannot precisely know both position and momentum"},
-                {"id": "mathematical_formulation", "topic": "?x�?p = ?/2 mathematical relationship"},
+                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 mathematical relationship"},
                 {"id": "quantum_limitations", "topic": "Fundamental limit of quantum measurements"}
               ]
             }
@@ -316,62 +314,62 @@ mindmap:
       }
 
     zh: |
-      ?????jsMind JSON??,???????????????????????:
+      生成全面的jsMind JSON结构，准确捕获摘要中的所有关键概念。严格遵循以下规则：
  
-      1. ???????"meta"?"format"?"data"?????JSON??
-      2. ?format???"node_tree"
-      3. ????????id?"root"????
-      4. ??????????????,??????????????:
-         - ????????????(?"????????")
-         - ??????????"????"?"????"?"????"
-      5. ???????"id"?"topic"??
-      6. ?????"children"???
-      7. ??:???????????????:
-         - ???????????????
-         - ???????????????
-         - ?????????????????
-         - ?????? - ????????????
-      8. ????????????????????:
-         - ??"??A"??"????????????"
-         - ??"??"??"???????(??/??)"
-         - ?????????????
-      9. ??2-4???????????:
-         - ????(????)
-         - ???(?????????)
-         - ????(??????????)
-      10. ??????? - ??????????????????
-      11. ??????markdown????????????
-      12. ?????JSON??
-      13. ???????JSON???
+      1. 输出必须是包含"meta"、"format"和"data"属性的有效JSON对象
+      2. 将format设置为"node_tree"
+      3. 必须且只能有一个id为"root"的根节点
+      4. 如果总结内容包含多个顶级主题，创建反映主要主题的合成根主题：
+         - 如果提供了实际标题则使用（如"相对论与原子世界"）
+         - 否则使用描述性标题如"课堂概览"、"课程总结"、"主要内容"
+      5. 每个节点必须有"id"和"topic"属性
+      6. 子节点放在"children"数组中
+      7. 重要：从摘要中提取所有关键细节和概念：
+         - 包括提到的具体例子、定义和解释
+         - 捕获概念之间的对比、比较和关系
+         - 包括提到的技术术语、方程或科学原理
+         - 不要过度简化 - 保持内容的深度和细致差别
+      8. 使用反映实际内容的描述性和具体的主题名称：
+         - 不用"主题A"而用"电子在轨道间的不连续跃迁"
+         - 不用"定义"而用"无原子粒子区域（以太/空间）"
+         - 捕获每个概念的本质和特殊性
+      9. 创建2-4层级结构来正确组织信息：
+         - 主要主题（来自标题）
+         - 子概念（每个主题内的关键点）
+         - 具体细节（例子、解释、技术细节）
+      10. 确保概念准确性 - 每个节点应代表一个独特、有意义的概念
+      11. 不要包含任何markdown格式、代码块或解释性文本
+      12. 只输出原始JSON结构
+      13. 始终返回有效的JSON结构。
  
-      ???????:
+      良好特异性示例：
       {
         "meta": {
-          "name": "????",
-          "author": "??????",
+          "name": "物理课程",
+          "author": "人工智能助手",
           "version": "1.0"
         },
         "format": "node_tree", 
         "data": {
           "id": "root",
-          "topic": "?????????",
+          "topic": "量子力学与波动理论",
           "children": [
             {
-              "id": "?????",
-              "topic": "?????",
+              "id": "波粒二象性",
+              "topic": "波粒二象性",
               "children": [
-                {"id": "????", "topic": "??????????????"},
-                {"id": "????", "topic": "??????????"},
-                {"id": "????", "topic": "?????????"}
+                {"id": "光子特性", "topic": "光子同时表现出波动和粒子特性"},
+                {"id": "双缝实验", "topic": "双缝实验证明干涉现象"},
+                {"id": "测量效应", "topic": "测量导致波函数坍缩"}
               ]
             },
             {
-              "id": "??????",
-              "topic": "?????????",
+              "id": "不确定性原理",
+              "topic": "海森堡不确定性原理",
               "children": [
-                {"id": "????", "topic": "?????????????"},
-                {"id": "?????", "topic": "?x�?p = ?/2 ????"},
-                {"id": "????", "topic": "?????????"}
+                {"id": "位置动量", "topic": "无法同时精确知道位置和动量"},
+                {"id": "数学表达式", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
+                {"id": "量子限制", "topic": "量子测量的基本限制"}
               ]
             }
           ]
@@ -409,8 +407,8 @@ va_pipeline:
   pose_statistics:
     min_frames_for_transition: 3            # frames to confirm raise-hand for identified students
     min_frames_for_transition_unid: 15      # frames to confirm raise-hand for unidentified students
-    absence_threshold: 90                   # forget student after unseen for N frames (90 � 3s)
-    min_stand_frames: 10                    # frames a student must be seen before counting stand-up (10 � 0.3s)
+    absence_threshold: 90                   # forget student after unseen for N frames (90 ≈ 3s)
+    min_stand_frames: 10                    # frames a student must be seen before counting stand-up (10 ≈ 0.3s)
     center_dist_threshold: 0.1              # how close two bounding boxes must be to count as same person (0~1)
     unidentified_max: 50                    # max unidentified students to track
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
@@ -469,7 +467,7 @@ content_search:
     reranker:
       model: "BAAI/bge-reranker-base"
       device: "GPU"
-      dedup_time_threshold: 5    # seconds � frames closer than this from the same video are merged
+      dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
       overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
 
   qa:
@@ -479,15 +477,15 @@ content_search:
     context_window: 16384   # token budget for dynamic context selection; 
     retrieval_score_threshold: 85  # minimum relevance score (0-100) a chunk must have to be used as context
 
-# -- Telegram integration (OpenClaw bridge) ------------------------------------
+# ── Telegram integration (OpenClaw bridge) ────────────────────────────────────
 # Set enabled: true and fill in bot_token + chat_id to activate.
 # Smart Classroom will send session data to the shared Telegram group after
 # each pipeline stage completes; OpenClaw listens on the Linux side and
 # answers teacher / parent queries from that same group.
 telegram:
   enabled: false                          # flip to true to activate
-  api_id: 0                               # from my.telegram.org ? Your Apps
-  api_hash: "YOUR_API_HASH_HERE"          # from my.telegram.org ? Your Apps
+  api_id: 0                               # from my.telegram.org → Your Apps
+  api_hash: "YOUR_API_HASH_HERE"          # from my.telegram.org → Your Apps
   session_string: "YOUR_SESSION_STRING"   # generated by generate_session.py
   chat_id: "YOUR_CHAT_ID_HERE"            # negative number for the group chat
   class_name: "Class 10A - Physics"       # displayed in every Telegram message
@@ -498,7 +496,7 @@ telegram:
     username: ""                          # leave empty if no auth required
     password: ""                          # leave empty if no auth required
 
-# -- SCP integration (OpenClaw bridge � alternative to Telegram) --------------
+# ── SCP integration (OpenClaw bridge — alternative to Telegram) ──────────────
 # Use when the Windows machine cannot reach Telegram's servers directly.
 # Prerequisites:
 #   1. OpenSSH client installed on Windows (scp.exe / ssh.exe on PATH).
