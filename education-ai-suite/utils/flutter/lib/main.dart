@@ -1,3 +1,6 @@
+ // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+ // SPDX-License-Identifier: Apache-2.0
+
 // Smart Classroom — Flutter
 //
 // Integrates with the Content Search Service (port 9011) for:
