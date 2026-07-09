@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
+import { patchDetectionState } from '../../redux/slices/detectionSlice';
 import { api } from '../../services/api';
 import SettingsModal from '../Settings/SettingsModal';
 import '../../assets/css/TopPanel.css';
@@ -28,6 +29,9 @@ const TopPanel = () => {
       setNotification('Starting...');
       dispatch(startProcessing());
       dispatch(startAllWorkloads());
+      // Keep detection.systemStatus in sync so SettingsModal etc. reflect
+      // the running state even before the first SSE event arrives.
+      dispatch(patchDetectionState({ systemStatus: 'starting' }));
 
       const response = await api.start('all');
 
@@ -44,6 +48,7 @@ const TopPanel = () => {
       setNotification('Error starting pipeline');
       dispatch(stopProcessing());
       dispatch(stopAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
       setTimeout(() => setNotification(''), 5000);
     } finally {
       setIsStarting(false);
@@ -59,13 +64,22 @@ const TopPanel = () => {
       dispatch({ type: 'sse/disconnect' });
       dispatch(stopProcessing());
       dispatch(stopAllWorkloads());
+      // Mirror the backend lifecycle so SettingsModal, PipelinePerformance,
+      // VideoFeed etc. immediately reflect the stopped state. Without this
+      // the SSE-driven `systemStatus` stays stuck on the last-seen value
+      // ('running') because we just closed the SSE stream above.
+      dispatch(patchDetectionState({ systemStatus: 'stopping' }));
 
       await api.stop('all');
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
       setNotification('✅ Stopped successfully');
       setTimeout(() => setNotification(''), 3000);
     } catch (err) {
       console.error('[TopPanel] Stop failed:', err);
       setNotification('Failed to stop');
+      // Best-effort: assume backend reached ready even if the HTTP round-trip
+      // errored, so the user can still change settings.
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
       setTimeout(() => setNotification(''), 3000);
     } finally {
       setIsStopping(false);
@@ -133,8 +147,8 @@ const TopPanel = () => {
           <button
             onClick={() => setSettingsOpen(true)}
             className="settings-button"
-            aria-label="Open Settings to select camera/upload video/ reset hardware"
-            data-tooltip="Open Settings to select camera/upload video/ reset hardware"
+            aria-label="Open Settings to select camera/upload video/reset hardware device"
+            data-tooltip="Open Settings to select camera/upload video/reset hardware device"
             data-tooltip-pos="left"
           >
             <span className="settings-button-icon" aria-hidden="true">⚙</span>
