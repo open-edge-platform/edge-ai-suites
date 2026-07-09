@@ -26,7 +26,7 @@ cd scenescape
 
 The standard DL Streamer Pipeline Server image does not include the Basler pylon SDK or the `gencamsrc` GStreamer plugin. Follow the instructions below to build a custom image:
 
-[Integrate Pylon SDK — Step 2: Create the Docker Image](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md#step-2-create-the-docker-image)
+[Integrate Pylon SDK — Step 2: Create the Docker Image](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md#step-2-create-the-docker-image)
 
 > **Note:** Patch `gencamsrc` to propagate the PTP timestamp before building the image. By default, `gencamsrc` discards the camera's PTP hardware timestamp after setting the GStreamer buffer PTS. The following patch adds a `GstReferenceTimestampMeta` to each buffer so downstream elements such as `gvapython` can read the original camera timestamp before any clock correction occurs.
 

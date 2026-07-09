@@ -1,10 +1,10 @@
 # OS Setup
 
-To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 22.04 Desktop`) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
+To leverage all Embodied Intelligence SDK features, the target system should meet the [recommended system requirements](system_requirement.md). Also, the target system must have a compatible OS (`Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) Desktop` based on your processor type) so that you can install Deb packages from SDK. This section explains the procedure to install a compatible OS on the target system.
 
 Do the following to prepare the target system:
 
-1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 22.04 Desktop with **64bits** variant on to the target system.
+1. Follow the [Ubuntu Installation Guide](https://ubuntu.com/tutorials/install-ubuntu-desktop) to install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) Desktop with **64bits** variant on to the target system.
 
    > **Attention:**
    > Please review [Canonical Intellectual property rights policy](https://ubuntu.com/legal/intellectual-property-policy) regarding Canonical Ubuntu. Note that any redistribution of modified versions of Canonical Ubuntu must be approved, certified or provided by Canonical if you are going to associate it with the Trademarks. Otherwise you must remove and replace the Trademarks and will need to recompile the source code to create your own binaries.
@@ -25,7 +25,7 @@ Do the following to prepare the target system:
    | Hyper-Threading | Disabled | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel (VMX) Virtualization | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
    | X2APIC | Enabled | Intel Advanced Menu ⟶ CPU Configuration |
-   | Active SOC-North Efficient-cores | 0 | Intel Advanced Menu ⟶ CPU Configuration |
+   | Active SOC-North Efficient-cores | 0 (Intel® Core™ Ultra Series 2 processor)<br>All (Intel® Core™ Ultra Series 3 processor)<sup>*</sup> | Intel Advanced Menu ⟶ CPU Configuration |
    | Intel(R) SpeedStep | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Shift Technology | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
    | Intel(R) Turbo Mode | Enabled | Intel Advanced Menu ⟶ Power & Performance ⟶ CPU - Power Management Control |
@@ -43,7 +43,7 @@ Do the following to prepare the target system:
    | Low Power S0 Idle Capability | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Native ASPM | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
-
+   
    :::
    :::{tab-item} Generic (non-real-time)
 
@@ -74,6 +74,8 @@ Do the following to prepare the target system:
    :::
    ::::
 
+   **Note<sup>*</sup>**: Active SOC-North Efficient-cores can be enabled **all** on Intel® Core™ Ultra Series 3 (Panther Lake) processor, while still **0** on Intel® Core™ Ultra Series 2 (Arrow Lake) processor under Real-time Optimization.
+
 ## Automated Setup Script
 
 You can automate the software setup flow on this page with:
@@ -83,19 +85,19 @@ You can automate the software setup flow on this page with:
 Default OS setup automation (locale + APT repositories):
 
 ```bash
-sudo ./os_setup_install.sh
+sudo -E ./os_setup_install.sh
 ```
 
 Set date/time during setup:
 
 ```bash
-sudo ./os_setup_install.sh --set-date "2026-03-17 12:00"
+sudo -E ./os_setup_install.sh --set-date "2026-03-17 12:00"
 ```
 
 Enable additional options:
 
 ```bash
-sudo ./os_setup_install.sh --disable-auto-upgrades --fix-raw-github-host
+sudo -E ./os_setup_install.sh --disable-auto-upgrades --fix-raw-github-host
 ```
 
 For all available options:
@@ -147,6 +149,18 @@ This section explains the procedure to configure the APT package manager to use 
    ```bash
    sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
    ```
+   > **Note:** If error occur during download:
+   >
+   > ```bash
+   > ERROR: cannot verify eci.intel.com's certificate, issued by ‘CN=Sectigo Public Server Authentication CA OV R36,O=Sectigo Limited,C=GB’:
+   > Self-signed certificate encountered.
+   > To connect to eci.intel.com insecurely, use `--no-check-certificate'.
+   > ```
+   > You can try the following command:
+   >
+   > ```bash
+   > sudo apt install --only-upgrade ca-certificates 
+   > ```
 
 3. Add the signed entry to APT sources and configure the APT client to use the ECI APT repository:
 
@@ -160,6 +174,14 @@ This section explains the procedure to configure the APT package manager to use 
    ```bash
    sudo sed -i "s/APT::Periodic::Update-Package-Lists \"1\"/APT::Periodic::Update-Package-Lists \"0\"/g" "/etc/apt/apt.conf.d/20auto-upgrades"
    sudo sed -i "s/APT::Periodic::Unattended-Upgrade \"1\"/APT::Unattended-Upgrade \"0\"/g" "/etc/apt/apt.conf.d/20auto-upgrades"
+   sudo sed -i 's/APT::Periodic::Update-Package-Lists "1"/APT::Periodic::Update-Package-Lists "0"/' /etc/apt/apt.conf.d/10periodic
+   sudo sed -i 's/APT::Periodic::Download-Upgradeable-Packages "1"/APT::Periodic::Download-Upgradeable-Packages "0"/' /etc/apt/apt.conf.d/10periodic
+   sudo sed -i 's/APT::Periodic::AutocleanInterval "1"/APT::Periodic::AutocleanInterval "0"/' /etc/apt/apt.conf.d/10periodic
+   ```
+   Disables/hides the update notifier from automatically starting at login.
+  
+   ```bash
+   echo "Hidden=true" | sudo tee -a /etc/xdg/autostart/update-notifier.desktop
    ```
 
 4. Configure the ECI APT repository to have higher priority over other repositories:
@@ -174,31 +196,17 @@ This section explains the procedure to configure the APT package manager to use 
 1. Ensure that the [Ubuntu Universe repository](https://help.ubuntu.com/community/Repositories/Ubuntu) is enabled.
 
    ```bash
-   sudo apt install software-properties-common
-   sudo add-apt-repository universe
+   sudo apt install -y software-properties-common
+   sudo add-apt-repository -y universe
    ```
 
-2. Add the ROS 2 GPG key with apt.
+2. The [ros-apt-source](https://github.com/ros-infrastructure/ros-apt-source/) packages provide keys and apt source configuration for the various ROS repositories.
+
+   Installing the ros2-apt-source package will configure ROS 2 repositories for your system. Updates to repository configuration will occur automatically when new versions of this package are released to the ROS repositories.
 
    ```bash
    sudo apt update && sudo apt install curl -y
-   sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-   ```
-
-   **Note**: If your DNS cannot resolve `raw.githubusercontent.com`, modify the `/etc/hosts` file to directly connect to the `raw.githubusercontent` server:
-
-   ```bash
-   sudo bash -c "echo '185.199.108.133 raw.githubusercontent.com' >> /etc/hosts"
-   ```
-
-3. Add the repository to your sources list.
-
-   ```bash
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-   ```
-
-4. Update your apt repository caches after setting up the repositories.
-
-   ```bash
-   sudo apt update
+   export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}')
+   curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+   sudo dpkg -i /tmp/ros2-apt-source.deb
    ```

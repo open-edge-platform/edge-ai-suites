@@ -54,12 +54,41 @@ spec:
             - |
               . /shared/download-model.sh
 {{- range $idx, $model := .Values.global.models }}
-              MODEL_TARGET_DIR="/opt/data/ov_models/{{ $model.outputName }}"
-              if [ -d "$MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$MODEL_TARGET_DIR" 2>/dev/null)" ]; then
-                echo "Model output already exists at $MODEL_TARGET_DIR. Skipping download for {{ $model.modelId }}"
-              else
-                download_model "{{ $model.modelId }}" "{{ $model.modelType }}" "{{ $model.weightFormat }}" "$HF_TOKEN" "{{ $model.outputName }}"
-              fi
+              MODEL_DEVICES="{{- if kindIs "slice" $model.device -}}{{ join "," $model.device }}{{- else -}}{{ default "CPU" $model.device }}{{- end -}}"
+              OLD_IFS="$IFS"
+              IFS=','
+              for raw_device in $MODEL_DEVICES; do
+                device="$(echo "$raw_device" | xargs | tr '[:lower:]' '[:upper:]')"
+                if [ -z "$device" ]; then
+                  continue
+                fi
+
+                case "$device" in
+                  CPU|GPU|NPU) ;;
+                  *)
+                    echo "WARNING: Unsupported device '$device' for {{ $model.modelId }}. Skipping this device."
+                    continue
+                    ;;
+                esac
+
+                run_weight_format="{{ $model.weightFormat }}"
+                if [ "$device" = "NPU" ] && [ "$run_weight_format" != "int4" ]; then
+                  echo "Device NPU requires int4 precision. Overriding '{{ $model.weightFormat }}' to 'int4' for {{ $model.modelId }}."
+                  run_weight_format="int4"
+                fi
+
+                device_lower="$(echo "$device" | tr '[:upper:]' '[:lower:]')"
+                model_dir_name="{{ $model.modelId }}"
+                model_dir_name="${model_dir_name##*/}"
+                model_output_name="${device_lower}/${model_dir_name}"
+                MODEL_TARGET_DIR="/opt/data/ov_models/${model_output_name}"
+                if [ -d "$MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                  echo "Model output already exists at $MODEL_TARGET_DIR. Skipping download for {{ $model.modelId }} on device $device"
+                else
+                  download_model "{{ $model.modelId }}" "{{ $model.modelType }}" "$run_weight_format" "$HF_TOKEN" "$model_output_name" "$device"
+                fi
+              done
+              IFS="$OLD_IFS"
 {{- end }}
 {{- if eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
               if [ -n "$DETECTION_MODELS" ]; then

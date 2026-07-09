@@ -20,14 +20,14 @@ WMI==1.5.1
 # Scientific stack (stability-critical)
 numpy==2.2.6
 pandas==2.2.3
-pyarrow==16.1.0
+pyarrow>=23.0.1
 scikit-learn==1.6.1
 scipy==1.15.3
 
 # Torch stack
-torch==2.8.0
-torchaudio==2.8.0
-torchvision==0.23.0
+torch>=2.9.1
+torchaudio>=2.9.1
+torchvision>=0.24.0
 
 # HuggingFace ecosystem
 transformers==4.52.4
@@ -60,10 +60,9 @@ hf_xet==1.4.3
 ultralytics==8.4.39
 
 # OCR dependencies
-paddleocr==2.10.0
+paddleocr==3.7.0
 pyclipper
 PyMuPDF==1.26.3
-paddlepaddle==3.3.1
 beautifulsoup4==4.13.4
 fire==0.7.1
 rapidfuzz==3.13.0

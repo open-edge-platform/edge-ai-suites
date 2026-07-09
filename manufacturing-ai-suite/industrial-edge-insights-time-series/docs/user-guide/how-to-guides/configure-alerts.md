@@ -8,8 +8,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 
 #### Configure MQTT Alerts
 
-The following MQTT alerts are configured for both `Wind Turbine Anomaly Detection`
-and `Weld Defect Detection` sample apps. Refer to the `alerts` section of each app's `config.json`:
+The following MQTT alerts are configured for both `Wind Turbine Anomaly Detection` sample app. Refer to the `alerts` section of each app's `config.json`:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -18,12 +17,6 @@ and `Weld Defect Detection` sample apps. Refer to the `alerts` section of each a
 [wind-turbine-anomaly-detection/time-series-analytics-config/config.json](
 https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-[weld-defect-detection/time-series-analytics-config/config.json](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json)
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -40,12 +33,6 @@ Refer to the `alert()` section of each app's TICK script:
 [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
 https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-[weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -76,25 +63,11 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
   ```
-  <!--hide_directive:::
-  :::{tab-item}hide_directive--> **Weld Defect Detection**
-  <!--hide_directive:sync: tab2hide_directive-->
-
-  [weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
-
-  ```bash
-  docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
-  ```
 
   <!--hide_directive:::
   ::::hide_directive-->
 
 ### Docker - Publish OPC-UA Alerts
-
-> **Note:**
-> This section is applicable to `Wind Turbine Anomaly Detection` sample app only.
-> In other words, OPC UA alerts are not supported for the `Weld Defect Detection` sample app.
 
 #### Prerequisite
 
@@ -236,13 +209,6 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
   kubectl exec -it -n ts-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
   ```
 
-  <!--hide_directive:::
-  :::{tab-item} hide_directive--> **Weld Defect Detection**
-  <!--hide_directive:sync: tab2hide_directive-->
-
-  ```bash
-  kubectl exec -it -n ts-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
-  ```
 
   <!--hide_directive:::
   ::::hide_directive-->

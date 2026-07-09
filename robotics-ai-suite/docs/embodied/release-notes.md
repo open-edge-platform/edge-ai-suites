@@ -1,5 +1,19 @@
 # Release Notes: Embodied Intelligence SDK
 
+## Version 2026.1
+
+Embodied Intelligence SDK v26.1 introduces new sample pipeline - OpenClaw + AgenticROS and Intel Core Ultra 3 Platform support of below pipelines:
+- Pi0.5 with RTC
+- LLM Robotics Demo
+
+**New**
+- OpenClaw + AgenticROS: The sample pipeline demonstrates the integration of OpenClaw and AgenticROS AI agent frameworks on Intel PTL (Panther Lake) platform, with LLM/VLM inference served by Intel OpenVINO Model Server (OVMS) for controlling JAKA Kargo robot in a Gazebo simulation environment.
+
+**Enhanced**
+- LLM Robotics Demo: Migrate from ROS2 humble to jazzy; Support LLM `Qwen3`; Add TTS server `MeloTTS`.
+- Pi0.5 with RTC: Refactor the pipeline for better evaluation in MuJoCo simulator. 
+
+
 ## Version 2026.0
 
 Embodied Intelligence SDK v26.0 introduces π₀.₅ (Pi0.5) -

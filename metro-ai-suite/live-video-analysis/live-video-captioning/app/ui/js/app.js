@@ -9,7 +9,8 @@
         form: document.getElementById('pipelineForm'),
         promptInput: document.getElementById('promptInput'),
         modelNameSelect: document.getElementById('modelNameSelect'),
-        pipelineSelect: document.getElementById('pipelineSelect'),
+        pipelineTypeSelect: document.getElementById('pipelineTypeSelect'),
+        vlmDeviceSelect: document.getElementById('vlmDeviceSelect'),
         maxTokensInput: document.getElementById('maxTokensInput'),
         captionHistoryInput: document.getElementById('captionHistoryInput'),
         streamSourceTypeSelect: document.getElementById('streamSourceTypeSelect'),
@@ -26,8 +27,10 @@
         chatToggle: document.getElementById('chatToggle'),
         detectionModelField: document.getElementById('detectionModelField'),
         detectionThresholdField: document.getElementById('detectionThresholdField'),
+        detectionDeviceSelect: document.getElementById('detectionDeviceSelect'),
         detectionModelNameSelect: document.getElementById('detectionModelNameSelect'),
         detectionThresholdInput: document.getElementById('detectionThresholdInput'),
+        includeRoiBoundingBoxCheckbox: document.getElementById('includeRoiBoundingBoxCheckbox'),
         frameRateInput: document.getElementById('frameRateInput'),
         chunkSizeInput: document.getElementById('chunkSizeInput'),
         frameQualitySelect: document.getElementById('frameQualitySelect'),
@@ -38,23 +41,19 @@
         alertRulesList: document.getElementById('alertRulesList'),
         addAlertRuleBtn: document.getElementById('addAlertRuleBtn'),
         pipelineServerError: document.getElementById('pipelineServerError'),
+        modelCompatibilityWarningIcon: document.getElementById('modelCompatibilityWarningIcon'),
+        detectionModelCompatibilityWarningIcon: document.getElementById('detectionModelCompatibilityWarningIcon'),
     };
 
     const state = {
         selectedRunId: null,
         runs: new Map(),
         isStarting: false,
-        allPipelines: [],
+        hasSavedVlmDevicePreference: false,
+        hasGpuDevice: null,
+        hasNpuDevice: null,
     };
     const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
-
-    (function initDetectionVisibility() {
-        const enabledByFlag = cfg.enableDetectionPipeline === true;
-        const detectionSection = document.getElementById('detectionSection');
-        if (!enabledByFlag) {
-            setSectionVisible(detectionSection, false);
-        }
-    })();
 
     (function initChatToggleVisibility() {
         if (cfg.enableEmbedding !== true) {
@@ -73,6 +72,29 @@
     function setSectionVisible(el, show) {
         if (!el) return;
         el.style.display = show ? '' : 'none';
+    }
+
+    function syncPipelineTypeOptions() {
+        const select = els.pipelineTypeSelect;
+        if (!select) return;
+
+        const detectionEnabled = cfg.enableDetectionPipeline === true;
+        const detectionOption = select.querySelector('option[value="detection"]');
+
+        if (!detectionEnabled && detectionOption) {
+            detectionOption.remove();
+        }
+
+        if (!select.querySelector('option[value="detection"]') && detectionEnabled) {
+            const option = document.createElement('option');
+            option.value = 'detection';
+            option.textContent = 'Video Captioning Pipeline with Detection';
+            select.appendChild(option);
+        }
+
+        if (select.value !== 'detection' && select.value !== 'non-detection') {
+            select.value = 'non-detection';
+        }
     }
 
     function normalizeCaptionHistory(rawValue, fallback = 3) {
@@ -249,8 +271,10 @@
 
         // Disable inputs when hidden to avoid accidental submission
         const toDisableSelectors = [
+            '#detectionDeviceSelect',
             '#detectionModelNameSelect',
-            '#detectionThresholdInput'
+            '#detectionThresholdInput',
+            '#includeRoiBoundingBoxCheckbox'
         ];
         for (const sel of toDisableSelectors) {
             const el = document.querySelector(sel);
@@ -263,24 +287,57 @@
     }
 
     function toggleDetectionFieldsByText() {
-        const select = els.pipelineSelect;
-        if (!select) return;
+        showDetectionFields(getSelectedPipelineType() === 'detection');
+        updateDetectionDeviceOptions();
+        updateStartButtonAvailability();
+    }
 
-        const selectedOpt = select.options[select.selectedIndex];
-        const label = selectedOpt?.textContent || '';
-        const isDetection = label.includes('[Detection]');
+    function updateDetectionDeviceOptions() {
+        const deviceSelect = els.detectionDeviceSelect;
+        if (!deviceSelect) return;
 
-        showDetectionFields(isDetection);
+        const selectedVlmDevice = getSelectedVlmDevice();
+        const selectedDetectionDevice = (deviceSelect.value || '').toLowerCase();
+        const allowCpuOnly = selectedVlmDevice === 'cpu';
+        const hasGpu = state.hasGpuDevice === true;
+        const hasNpu = state.hasNpuDevice === true;
+
+        for (const opt of Array.from(deviceSelect.options)) {
+            const value = (opt.value || '').toLowerCase();
+            let allowed = false;
+            if (allowCpuOnly) {
+                allowed = value === 'cpu';
+            } else if (value === 'gpu') {
+                allowed = hasGpu;
+            } else if (value === 'npu') {
+                allowed = hasNpu;
+            }
+
+            // Keep the UI usable if capabilities are unknown or no accelerator exists.
+            if (!allowCpuOnly && !hasGpu && !hasNpu) {
+                allowed = value === 'cpu';
+            }
+
+            opt.hidden = !allowed;
+            opt.disabled = !allowed;
+        }
+
+        const selectedStillAllowed = Array.from(deviceSelect.options).some((opt) => {
+            return !opt.hidden && opt.value.toLowerCase() === selectedDetectionDevice;
+        });
+
+        if (!selectedStillAllowed) {
+            const firstVisible = Array.from(deviceSelect.options).find((o) => !o.hidden);
+            if (firstVisible) deviceSelect.value = firstVisible.value;
+        }
     }
 
     function getSelectedPipelineType() {
-        const select = els.pipelineSelect;
-        if (!select || select.selectedIndex < 0) return 'non-detection';
-
-        const opt = select.options[select.selectedIndex];
-        // Preferred: data attribute set by setPipelineOptions
-        const fromData = opt?.dataset?.pipelineType;
-        if (fromData === 'detection' || fromData === 'non-detection') return fromData;
+        const selected = (els.pipelineTypeSelect?.value || '').trim().toLowerCase();
+        if (cfg.enableDetectionPipeline === true && selected === 'detection') {
+            return 'detection';
+        }
+        return 'non-detection';
     }
 
     function resolveSignalingBase(url) {
@@ -299,10 +356,6 @@
 
     function updatePipelineInfo(text) {
         els.pipelineInfo.textContent = text;
-    }
-
-    function isCameraPipelineName(pipelineName) {
-        return typeof pipelineName === 'string' && pipelineName.includes('_Camera_');
     }
 
     function hasCameraSourceOption() {
@@ -342,46 +395,210 @@
         }
     }
 
-    function filterPipelinesBySourceType(pipelines) {
-        const sourceType = getSelectedSourceType();
-        const list = Array.isArray(pipelines) ? pipelines : [];
-        return list.filter((pipeline) => {
-            const name = pipeline?.pipeline_name;
-            if (typeof name !== 'string') return false;
-            return sourceType === 'camera'
-                ? isCameraPipelineName(name)
-                : !isCameraPipelineName(name);
-        });
-    }
-
-    function setModelOptions(models) {
+    function setModelOptions(models, previousSelection) {
         const select = els.modelNameSelect;
         if (!select) return;
         select.innerHTML = '';
-        const list = Array.isArray(models) && models.length ? models : [ApiService.DEFAULT_MODEL];
-        for (const name of list) {
+
+        // Accept both ModelInfo objects {name, device} and legacy plain strings
+        const list = Array.isArray(models)
+            ? models.map((m) => (typeof m === 'string' ? { name: m, device: 'cpu' } : m))
+            : [];
+
+        // Hide warning by default; will be shown below if needed
+        if (els.modelCompatibilityWarningIcon) {
+            els.modelCompatibilityWarningIcon.style.display = 'none';
+            els.modelCompatibilityWarningIcon.setAttribute('title', '');
+            els.modelCompatibilityWarningIcon.setAttribute('data-tooltip', '');
+            els.modelCompatibilityWarningIcon.setAttribute('aria-label', 'Model compatibility warning');
+        }
+
+        if (!list.length) {
+            // Show disabled placeholder so the select is not empty
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'No compatible models (required)';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+            select.disabled = true;
+
+            // Determine the right warning message
+            let msg;
+            const selectedVlmDevice = getSelectedVlmDevice();
+            if (ApiService.didModelsFetchFail()) {
+                msg = '⚠ Could not load model list. Is the backend running?';
+            } else if (selectedVlmDevice && selectedVlmDevice !== 'any') {
+                msg = `⚠ No ${selectedVlmDevice.toUpperCase()} models found. ` +
+                    `Download a ${selectedVlmDevice}-optimised model first (see model-preparation guide).`;
+            } else {
+                msg = '⚠ No models were found in the models directory. Download one model first before starting.';
+            }
+
+            if (els.modelCompatibilityWarningIcon) {
+                els.modelCompatibilityWarningIcon.style.display = 'inline-flex';
+                els.modelCompatibilityWarningIcon.setAttribute('data-tooltip', msg);
+                els.modelCompatibilityWarningIcon.setAttribute('aria-label', msg);
+            }
+
+            // Disable start button — no model to run with
+            if (els.startBtn) els.startBtn.disabled = true;
+            return;
+        }
+
+        select.disabled = false;
+
+        // Re-enable start button now that we have models
+        if (els.startBtn) els.startBtn.disabled = false;
+
+        for (const { name } of list) {
             const opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
             select.appendChild(opt);
         }
-        const preferred = list.includes(ApiService.DEFAULT_MODEL) ? ApiService.DEFAULT_MODEL : list[0];
-        select.value = preferred;
+
+        // Restore previous selection if still compatible, otherwise pick first
+        const names = list.map((m) => m.name);
+        const restore = previousSelection && names.includes(previousSelection)
+            ? previousSelection
+            : names[0];
+        select.value = restore;
     }
 
-    function setDetectionModelOptions(models) {
+    function getSelectedVlmDevice() {
+        const selected = (els.vlmDeviceSelect?.value || '').trim().toLowerCase();
+        return ['cpu', 'gpu', 'npu'].includes(selected) ? selected : 'cpu';
+    }
+
+    function getSelectedDetectionDevice() {
+        const selected = (els.detectionDeviceSelect?.value || '').trim().toLowerCase();
+        return ['cpu', 'gpu', 'npu'].includes(selected) ? selected : 'cpu';
+    }
+
+    function getCapabilityBasedDefaultDevice() {
+        return state.hasGpuDevice === true ? 'gpu' : 'cpu';
+    }
+
+    function setVlmDeviceOptionsByCapabilities() {
+        const select = els.vlmDeviceSelect;
+        if (!select) return;
+
+        const previous = (select.value || '').trim().toLowerCase();
+        const options = [];
+
+        options.push({ value: 'cpu', label: 'CPU' });
+        if (state.hasGpuDevice === true) {
+            options.push({ value: 'gpu', label: 'GPU' });
+        }
+        if (state.hasNpuDevice === true) {
+            options.push({ value: 'npu', label: 'NPU' });
+        }
+
+        // Fallback for partially reported capabilities to keep the UI usable.
+        if (options.length === 0) {
+            options.push({ value: 'cpu', label: 'CPU' });
+        }
+
+        select.innerHTML = '';
+        for (const option of options) {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.label;
+            select.appendChild(opt);
+        }
+
+        const settings = SettingsManager.loadSettings();
+        const saved = (settings?.vlmDevice || '').trim().toLowerCase();
+        const availableValues = options.map((o) => o.value);
+        const capabilityDefault = getCapabilityBasedDefaultDevice();
+        const selected = state.hasSavedVlmDevicePreference && availableValues.includes(saved)
+            ? saved
+            : (availableValues.includes(capabilityDefault) ? capabilityDefault : [previous, saved].find((value) => availableValues.includes(value)) || options[0].value);
+        select.value = selected;
+
+        updateDetectionDeviceOptions();
+        SettingsManager.saveSettings(els);
+    }
+
+    async function loadSystemCapabilities() {
+        const capabilities = await ApiService.fetchSystemCapabilities();
+        if (capabilities?.has_gpu === true || capabilities?.has_gpu === false) {
+            state.hasGpuDevice = capabilities.has_gpu;
+        } else {
+            state.hasGpuDevice = null;
+        }
+        if (capabilities?.has_npu === true || capabilities?.has_npu === false) {
+            state.hasNpuDevice = capabilities.has_npu;
+        } else {
+            state.hasNpuDevice = null;
+        }
+
+        setVlmDeviceOptionsByCapabilities();
+        refreshModelsBySelectedVlmDevice();
+    }
+
+    /**
+     * Filter the full model list to those compatible with the selected VLM device.
+     * Strict one-to-one matching: cpu↔cpu, gpu↔gpu, npu↔npu.
+     */
+    function getCompatibleModels(vlmDevice) {
+        const all = ApiService.getAllModels();
+        if (!vlmDevice) return all;
+        return all.filter((m) => m.device === vlmDevice);
+    }
+
+    /** Re-populate the model dropdown based on the currently selected VLM device. */
+    function refreshModelsBySelectedVlmDevice() {
+        const selectedVlmDevice = getSelectedVlmDevice();
+        const previousModel = els.modelNameSelect?.value || null;
+        const compatible = getCompatibleModels(selectedVlmDevice);
+        setModelOptions(compatible, previousModel);
+    }
+
+    function setDetectionModelOptions(models, warningMessage = '') {
         const select = els.detectionModelNameSelect;
         if (!select) return;
         select.innerHTML = '';
-        const list = Array.isArray(models) && models.length ? models : [ApiService.DEFAULT_DETECTION_MODEL];
-        for (const name of list) {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
+
+        if (els.detectionModelCompatibilityWarningIcon) {
+            els.detectionModelCompatibilityWarningIcon.style.display = 'none';
+            els.detectionModelCompatibilityWarningIcon.setAttribute('title', '');
+            els.detectionModelCompatibilityWarningIcon.setAttribute('data-tooltip', '');
+            els.detectionModelCompatibilityWarningIcon.setAttribute('aria-label', 'Detection model compatibility warning');
         }
-        const preferred = list.includes(ApiService.DEFAULT_DETECTION_MODEL) ? ApiService.DEFAULT_DETECTION_MODEL : list[0];
-        select.value = preferred;
+
+        const hasModels = Array.isArray(models) && models.length > 0;
+        if (!hasModels) {
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'No model found (required)';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+            select.disabled = true;
+        } else {
+            select.disabled = false;
+            for (const name of models) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+            select.value = models[0];
+        }
+
+        const message = warningMessage || (!hasModels
+            ? '⚠ No detection models found. Download a YOLO detection model first.(see model-preparation guide)'
+            : '');
+
+        if (message && els.detectionModelCompatibilityWarningIcon) {
+            els.detectionModelCompatibilityWarningIcon.style.display = 'inline-flex';
+            els.detectionModelCompatibilityWarningIcon.setAttribute('data-tooltip', message);
+            els.detectionModelCompatibilityWarningIcon.setAttribute('aria-label', message);
+        }
+
+        updateStartButtonAvailability();
     }
 
     function setCameraOptions(cameras) {
@@ -428,15 +645,22 @@
             return;
         }
 
+        const noVlmModel = !els.modelNameSelect
+            || els.modelNameSelect.disabled
+            || !(els.modelNameSelect.value || '').trim();
+
         const isCameraMode = getSelectedSourceType() === 'camera';
         const noUsableCamera = !els.cameraDeviceSelect
             || els.cameraDeviceSelect.disabled
             || !els.cameraDeviceSelect.value;
-        const noCompatiblePipeline = !els.pipelineSelect
-            || els.pipelineSelect.disabled
-            || !(els.pipelineSelect.value || '').trim();
+        const detectionRequired = getSelectedPipelineType() === 'detection';
+        const noDetectionModel = detectionRequired && (
+            !els.detectionModelNameSelect
+            || els.detectionModelNameSelect.disabled
+            || !(els.detectionModelNameSelect.value || '').trim()
+        );
 
-        els.startBtn.disabled = (isCameraMode && noUsableCamera) || noCompatiblePipeline;
+        els.startBtn.disabled = noVlmModel || (isCameraMode && noUsableCamera) || noDetectionModel;
     }
 
     async function loadCameraDevices() {
@@ -480,119 +704,50 @@
             loadCameraDevices();
         }
 
-        refreshPipelineOptionsBySourceType();
+        updateDetectionDeviceOptions();
 
         updateCameraWarningVisibility();
         updateStartButtonAvailability();
     }
 
-    function setPipelineOptions(pipelines) {
-        const select = els.pipelineSelect;
-        if (!select) return;
-        select.innerHTML = '';
-
-        const list = Array.isArray(pipelines) ? pipelines : [];
-
-        if (list.length === 0) {
-            const opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = 'No compatible pipeline available';
-            select.appendChild(opt);
-            select.disabled = true;
-            toggleDetectionFieldsByText();
-            return;
-        }
-
-        select.disabled = false;
-
-        const map = new Map();
-        for (const it of list) {
-            if (!it || typeof it !== 'object' || typeof it.pipeline_name !== 'string') continue;
-            const t = it.pipeline_type === 'detection' ? 'detection' : 'non-detection';
-            const displayName = (typeof it.pipeline_display_name === 'string' && it.pipeline_display_name.trim())
-                ? it.pipeline_display_name
-                : it.pipeline_name;
-            map.set(it.pipeline_name, {
-                pipeline_name: it.pipeline_name,
-                pipeline_display_name: displayName,
-                pipeline_type: t,
-                pipeline_default: it.pipeline_default === true,
-            });
-        }
-        const normalized = Array.from(map.values()).sort((a, b) => {
-            if (a.pipeline_type !== b.pipeline_type) {
-                return a.pipeline_type === 'non-detection' ? -1 : 1;
-            }
-            return a.pipeline_name.localeCompare(b.pipeline_name);
-        });
-
-        for (const { pipeline_name, pipeline_display_name, pipeline_type } of normalized) {
-            const opt = document.createElement('option');
-            opt.value = pipeline_name;
-            opt.textContent = pipeline_type === 'detection'
-                ? `${pipeline_display_name}  [Detection]`
-                : pipeline_display_name;
-            opt.dataset.pipelineType = pipeline_type;
-            select.appendChild(opt);
-        }
-
-        if (normalized.length > 0) {
-            const preferredDefault = normalized.find((p) => p.pipeline_default === true);
-            select.value = (preferredDefault || normalized[0]).pipeline_name;
-        }
-
-        toggleDetectionFieldsByText();
-    }
-
     async function loadModels() {
         try {
-            const models = await ApiService.fetchModels();
-            setModelOptions(models);
+            await ApiService.fetchModels();
+            // Initial model population is driven by selected VLM device.
+            refreshModelsBySelectedVlmDevice();
             SettingsManager.restoreSelectValues(els);
             updatePipelineInfo('Models loaded');
         } catch (_err) {
-            setModelOptions([ApiService.DEFAULT_MODEL]);
+            setModelOptions([]);
             SettingsManager.restoreSelectValues(els);
-            updatePipelineInfo('Model list unavailable, using default');
+            updatePipelineInfo('Model list unavailable');
         }
     }
 
     async function loadDetectionModels() {
         try {
             const detectionModels = await ApiService.fetchDetectionModels();
-            setDetectionModelOptions(detectionModels);
+            const fetchFailed = typeof ApiService.didDetectionModelsFetchFail === 'function'
+                ? ApiService.didDetectionModelsFetchFail()
+                : false;
+            const warning = fetchFailed
+                ? '⚠ Could not load detection model list. No detection model is available.'
+                : '';
+
+            setDetectionModelOptions(detectionModels, warning);
             SettingsManager.restoreSelectValues(els);
             updatePipelineInfo('Detection models loaded');
         } catch (_err) {
-            setDetectionModelOptions([ApiService.DEFAULT_DETECTION_MODEL]);
+            setDetectionModelOptions([], '⚠ Could not load detection model list. No detection model is available.');
             SettingsManager.restoreSelectValues(els);
-            updatePipelineInfo('Detection model list unavailable, using default');
-        }
-    }
-
-    function refreshPipelineOptionsBySourceType() {
-        const filtered = filterPipelinesBySourceType(state.allPipelines);
-        setPipelineOptions(filtered);
-        SettingsManager.restoreSelectValues(els);
-        toggleDetectionFieldsByText();
-        updateStartButtonAvailability();
-    }
-
-    async function loadPipelines() {
-        try {
-            const pipelines = await ApiService.fetchPipelines();
-            state.allPipelines = pipelines;
-            refreshPipelineOptionsBySourceType();
-        } catch (_err) {
-            if (els.pipelineServerError) {
-                els.pipelineServerError.textContent = 'Pipeline server not reachable. Please check the logs.';
-                els.pipelineServerError.style.display = '';
-            }
+            updatePipelineInfo('Detection model list unavailable');
         }
     }
 
     function tearDownRun(runId, current, message) {
         console.log(`Tearing down run ${runId}`);
+        // Cancel any in-flight stream-readiness polling for this run
+        if (typeof current?.cancelVideoPolling === 'function') current.cancelVideoPolling();
         // Remove UI reference from multiplexed stream handler
         MetadataStreamService.unregisterRunUI(runId);
         if (current?.wrap) current.wrap.remove();
@@ -634,12 +789,106 @@
         }
     }
 
-    function attachRunStreams(run, ui) {
+    function loadRunVideo(run, ui) {
         const base = resolveSignalingBase(cfg.signalingUrl);
         if (base) {
             ui.video.src = `${base}/${run.peerId}`;
         }
+        if (ui.videoOverlay) ui.videoOverlay.style.display = 'none';
+    }
 
+    function showStreamStartupError(runId, ui) {
+        // Guard against double-application: the SSE status heartbeat may also
+        // report this run as errored. The flag is shared with the metadata
+        // stream service so whichever path fires first wins.
+        if (ui._errorStateShown) return;
+        ui._errorStateShown = true;
+        RunCardComponent.setRunErrorState(ui, 'Stream failed to start, click Remove to clear');
+        RunCardComponent.setVideoOverlayError(ui, 'Stream failed to start');
+    }
+
+    async function mediamtxHasPublisher(peerId) {
+        // Confirm mediamtx has a publisher for the path before loading the
+        // iframe. The backend's fps-based readiness can lead mediamtx's track
+        // gathering by a moment, and loading too early briefly shows the raw
+        // "stream not found, retrying" page. An invalid-SDP probe against the
+        // WHEP endpoint settles it without creating a session: mediamtx
+        // replies 404 while the path has no publisher and 400 once it does.
+        // The Content-Type header is required — without it mediamtx rejects
+        // the request before looking up the path.
+        const base = resolveSignalingBase(cfg.signalingUrl);
+        if (!base) return true; // nothing to probe; keep legacy behaviour
+        try {
+            const resp = await fetch(`${base}/${peerId}/whep`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/sdp' },
+            });
+            return resp.status !== 404;
+        } catch (_err) {
+            // Probe unreachable (proxy/CORS/network) – don't block the video
+            // forever on a diagnostic request; fall back to loading the
+            // iframe, whose built-in page retries by itself.
+            return true;
+        }
+    }
+
+    function waitForStreamThenLoad(run, ui) {
+        // Two-stage readiness gate, each side answering the only question it
+        // can answer authoritatively: the backend answers "is the pipeline
+        // alive and producing?", mediamtx answers "can the browser watch it
+        // yet?". Poll the backend until the DL Streamer pipeline is RUNNING
+        // and frames are flowing, then load the iframe once mediamtx confirms
+        // a publisher for the path. This avoids showing mediamtx's raw
+        // "stream not found, retrying" page while the pipeline spins up. If
+        // the pipeline leaves the RUNNING/QUEUED states (i.e. it failed to
+        // start the stream) the card is switched to an error state instead of
+        // loading the video.
+        const POLL_INTERVAL_MS = 1000;
+        const MAX_WAIT_MS = 45000;
+        const started = Date.now();
+        let cancelled = false;
+
+        if (ui.videoOverlay) ui.videoOverlay.style.display = '';
+
+        const poll = async () => {
+            if (cancelled) return;
+            // Stop polling if the run card was removed (e.g. user clicked Stop).
+            if (!state.runs.has(run.runId)) return;
+
+            const result = await ApiService.checkStreamReady(run.runId);
+            if (cancelled || !state.runs.has(run.runId)) return;
+
+            // Pipeline is no longer RUNNING/QUEUED – the stream will never come
+            // up, so surface an error instead of waiting indefinitely.
+            if (result.error) {
+                showStreamStartupError(run.runId, ui);
+                return;
+            }
+
+            if (result.ready && await mediamtxHasPublisher(run.peerId)) {
+                if (cancelled || !state.runs.has(run.runId)) return;
+                loadRunVideo(run, ui);
+                return;
+            }
+
+            if (Date.now() - started >= MAX_WAIT_MS) {
+                // Timed out. If the pipeline is still running, mediamtx is just
+                // slow – load the iframe anyway. Otherwise show an error.
+                if (result.state === 'running') {
+                    loadRunVideo(run, ui);
+                } else {
+                    showStreamStartupError(run.runId, ui);
+                }
+                return;
+            }
+            setTimeout(poll, POLL_INTERVAL_MS);
+        };
+
+        poll();
+        return () => { cancelled = true; };
+    }
+
+    function attachRunStreams(run, ui) {
         // Store UI reference for the multiplexed metadata stream
         MetadataStreamService.registerRunUI(run.runId, ui);
 
@@ -651,6 +900,13 @@
         // Keep references for UI teardown
         state.runs.get(run.runId).wrap = ui.wrap;
         state.runs.get(run.runId).stopBtn = ui.stopBtn;
+
+        // Gate the iframe load on real stream readiness instead of loading it
+        // immediately (the pipeline needs a few seconds to start publishing).
+        // Must run after the run is registered in state.runs so the poller's
+        // liveness check passes.
+        const cancelPolling = waitForStreamThenLoad(run, ui);
+        state.runs.get(run.runId).cancelVideoPolling = cancelPolling;
     }
 
     async function restoreActiveRuns() {
@@ -673,6 +929,8 @@
                     metadataFile: runData.metadataFile,
                     modelName: runData.modelName || 'Unknown',
                     pipelineName: runData.pipelineName || '',
+                    vlmDevice: runData.vlmDevice || 'cpu',
+                    detectionDevice: runData.detectionDevice || 'cpu',
                     prompt: runData.prompt || 'N/A',
                     maxTokens: runData.maxTokens || 'N/A',
                     rtspUrl: runData.rtspUrl || 'N/A',
@@ -710,13 +968,10 @@
         const elements = {
             cpuVal: document.getElementById('cpuVal'),
             ramVal: document.getElementById('ramVal'),
-            gpuVal: document.getElementById('gpuVal'),
-            gpuDetail: document.getElementById('gpuDetail'),
-            gpuEngines: document.getElementById('gpuEngines'),
-            gpuFreq: document.getElementById('gpuFreq'),
-            gpuPower: document.getElementById('gpuPower'),
-            gpuTemp: document.getElementById('gpuTemp'),
+            gpuValues: document.getElementById('gpuValues'),
             gpuError: document.getElementById('gpuError'),
+            npuVal: document.getElementById('npuVal'),
+            npuStat: document.getElementById('npuStat'),
         };
 
         MetricsCollectorService.init(elements);
@@ -730,18 +985,14 @@
             : (els.rtspInput?.value || '').trim();
         const defaultPrompt = cfg.defaultPrompt || 'Describe what you see in one sentence.';
         const prompt = (els.promptInput.value || '').trim() || defaultPrompt;
-        const modelName = (els.modelNameSelect?.value || '').trim() || ApiService.DEFAULT_MODEL;
-        const pipelineName = (els.pipelineSelect?.value || '').trim();
-        if (!pipelineName) {
-            updatePipelineInfo('No compatible pipeline available for selected stream source type.');
-            updateStartButtonAvailability();
-            return;
-        }
+        const modelName = (els.modelNameSelect?.value || '').trim();
+        const vlmDevice = (els.vlmDeviceSelect?.value || 'cpu').trim().toLowerCase();
         const maxTokensRaw = (els.maxTokensInput?.value || '').toString().trim();
         const maxTokensParsed = Number.parseInt(maxTokensRaw, 10);
         const maxTokens = Number.isFinite(maxTokensParsed) && maxTokensParsed > 0 ? maxTokensParsed : 70;
         const selectedPipelineType = getSelectedPipelineType(); // 'detection' | 'non-detection'
         const isDetectionEnabled = (selectedPipelineType === 'detection');
+        const detectionDevice = isDetectionEnabled ? getSelectedDetectionDevice() : null;
         const detectionModelNameRaw = (els.detectionModelNameSelect?.value || '').trim();
         const detectionThresholdRaw = (els.detectionThresholdInput?.value || '').toString().trim();
         const detectionThresholdParsed = Number.parseFloat(detectionThresholdRaw);
@@ -753,6 +1004,9 @@
                 ? detectionThresholdParsed
                 : 0.5)
             : null;
+        const includeRoiBoundingBox = isDetectionEnabled
+            ? Boolean(els.includeRoiBoundingBoxCheckbox?.checked)
+            : false;
 
         // Frame rate, chunk size and frame dimensions
         const frameRateRaw = (els.frameRateInput?.value || '').toString().trim();
@@ -778,17 +1032,6 @@
             frameHeight = qualityPreset ? qualityPreset[1] : null;
         }
 
-        // Route to proxy pipeline when Default resolution is selected
-        const PROXY_PIPELINE_MAP = {
-            'GenAI_Pipeline_on_CPU': 'GenAI_Pipeline_on_CPU_Default_Resolution',
-            'GenAI_Pipeline_on_GPU': 'GenAI_Pipeline_on_GPU_Default_Resolution',
-            'GenAI_Camera_Pipeline_on_CPU': 'GenAI_Camera_Pipeline_on_CPU_Default_Resolution',
-            'GenAI_Camera_Pipeline_on_GPU': 'GenAI_Camera_Pipeline_on_GPU_Default_Resolution',
-        };
-        const effectivePipelineName = (qualityKey === 'default' && PROXY_PIPELINE_MAP[pipelineName])
-            ? PROXY_PIPELINE_MAP[pipelineName]
-            : pipelineName;
-
         // Alert color rules (alert mode only, per-run)
         const alertRules = cfg.alertMode ? readAlertRules() : [];
 
@@ -811,7 +1054,19 @@
         updateStartButtonAvailability();
         updatePipelineInfo('Starting pipeline...');
         try {
-            const requestBody = { rtspUrl, prompt, detectionModelName, detectionThreshold, modelName, maxNewTokens: maxTokens, pipelineName: effectivePipelineName };
+            const requestBody = {
+                rtspUrl,
+                prompt,
+                detectionModelName,
+                detectionThreshold,
+                modelName,
+                maxNewTokens: maxTokens,
+                streamSourceType,
+                pipelineType: selectedPipelineType,
+                vlmDevice,
+                detectionDevice,
+                includeRoiBoundingBox,
+            };
             if (runName) {
                 requestBody.runName = runName;
             }
@@ -830,7 +1085,9 @@
                 detectionModelName: detectionModelName,
                 detectionThreshold: detectionThreshold,
                 modelName: modelName,
-                pipelineName: pipelineName,
+                pipelineName: data.pipelineName || `Device: ${vlmDevice.toUpperCase()}`,
+                vlmDevice: vlmDevice,
+                detectionDevice: detectionDevice,
                 prompt: prompt,
                 maxTokens: maxTokens,
                 rtspUrl: rtspUrl,
@@ -860,6 +1117,13 @@
     }
 
     function init() {
+        const initialSettings = SettingsManager.loadSettings();
+        state.hasSavedVlmDevicePreference = Boolean(
+            initialSettings
+            && typeof initialSettings.vlmDevice === 'string'
+            && ['cpu', 'gpu', 'npu'].includes(initialSettings.vlmDevice.trim().toLowerCase())
+        );
+
         // Set application title based on alert mode
         const appTitleEl = document.getElementById('appTitle');
         if (appTitleEl && cfg.alertMode) {
@@ -898,6 +1162,8 @@
             });
         }
 
+        syncPipelineTypeOptions();
+
         // Restore settings from localStorage before loading options
         SettingsManager.restoreSettings(els, cfg);
         SettingsManager.setupSettingsPersistence(els);
@@ -910,8 +1176,19 @@
             els.captionHistoryInput.addEventListener('blur', applyCaptionHistorySetting);
         }
 
-        if (els.pipelineSelect) {
-            els.pipelineSelect.addEventListener('change', toggleDetectionFieldsByText);
+        if (els.pipelineTypeSelect) {
+            els.pipelineTypeSelect.addEventListener('change', () => {
+                SettingsManager.saveSettings(els);
+                toggleDetectionFieldsByText();
+            });
+        }
+
+        if (els.vlmDeviceSelect) {
+            els.vlmDeviceSelect.addEventListener('change', () => {
+                refreshModelsBySelectedVlmDevice();
+                updateDetectionDeviceOptions();
+                updateStartButtonAvailability();
+            });
         }
 
         if (els.streamSourceTypeSelect) {
@@ -926,6 +1203,7 @@
 
         loadCameraDevices();
         updateStreamSourceInputs();
+        toggleDetectionFieldsByText();
 
         function updateCustomDimensionsVisibility() {
             const isCustom = els.frameQualitySelect?.value === 'custom';
@@ -938,8 +1216,12 @@
             updateCustomDimensionsVisibility();
         }
 
-        loadModels();
-        loadPipelines();
+        loadSystemCapabilities().finally(() => {
+            loadModels();
+            if (cfg.enableDetectionPipeline === true) {
+                loadDetectionModels();
+            }
+        });
         initCollectorMetrics();
 
         // Restore active runs from backend
