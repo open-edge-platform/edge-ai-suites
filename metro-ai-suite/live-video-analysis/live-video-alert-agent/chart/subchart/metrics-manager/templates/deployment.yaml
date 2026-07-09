@@ -25,6 +25,19 @@ spec:
         {{- if .Values.telegraf.config }}
         checksum/telegraf-config: {{ include (print $.Template.BasePath "/configmap-telegraf.yaml") . | sha256sum }}
         {{- end }}
+        {{- $kubeMinorAnn := .Capabilities.KubeVersion.Minor | replace "+" "" | int }}
+        {{- $kubeMajorAnn := .Capabilities.KubeVersion.Major | replace "+" "" | int }}
+        {{- $apparmorNativeAnn := or (.Values.securityContext.appArmorProfileForce) (and (ge $kubeMajorAnn 1) (ge $kubeMinorAnn 30)) }}
+        {{- if and .Values.securityContext.appArmorProfile (not $apparmorNativeAnn) }}
+        {{- $type := .Values.securityContext.appArmorProfile.type | default "" }}
+        {{- if eq $type "Unconfined" }}
+        container.apparmor.security.beta.kubernetes.io/metrics-manager: unconfined
+        {{- else if eq $type "RuntimeDefault" }}
+        container.apparmor.security.beta.kubernetes.io/metrics-manager: runtime/default
+        {{- else if eq $type "Localhost" }}
+        container.apparmor.security.beta.kubernetes.io/metrics-manager: localhost/{{ .Values.securityContext.appArmorProfile.localhostProfile }}
+        {{- end }}
+        {{- end }}
         {{- with .Values.pod.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -74,6 +87,13 @@ spec:
             privileged: {{ .Values.securityContext.privileged }}
             runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
             readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+            {{- $kubeMinor := .Capabilities.KubeVersion.Minor | replace "+" "" | int }}
+            {{- $kubeMajor := .Capabilities.KubeVersion.Major | replace "+" "" | int }}
+            {{- $apparmorNative := or (.Values.securityContext.appArmorProfileForce) (and (ge $kubeMajor 1) (ge $kubeMinor 30)) }}
+            {{- if and .Values.securityContext.appArmorProfile $apparmorNative }}
+            appArmorProfile:
+              {{- toYaml .Values.securityContext.appArmorProfile | nindent 14 }}
+            {{- end }}
             {{- with .Values.securityContext.seccompProfile }}
             seccompProfile:
               {{- toYaml . | nindent 14 }}
@@ -172,6 +192,10 @@ spec:
               subPath: telegraf.conf
               readOnly: true
             {{- end }}
+            {{- if and .Values.customMetrics.enabled (ne .Values.customMetrics.storage "none") }}
+            - name: custom-metrics
+              mountPath: /app/custom-metrics
+            {{- end }}
       volumes:
         - name: sys
           hostPath:
@@ -190,4 +214,8 @@ spec:
         - name: telegraf-config
           configMap:
             name: {{ include "metrics-manager.fullname" . }}-telegraf
+        {{- end }}
+        {{- if and .Values.customMetrics.enabled (ne .Values.customMetrics.storage "none") }}
+        - name: custom-metrics
+          emptyDir: {}
         {{- end }}

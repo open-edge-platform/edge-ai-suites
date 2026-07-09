@@ -192,7 +192,7 @@ alert-agent-service:
 metrics-manager:
   image:
     repository: "intel/metrics-manager"
-    tag: "2026.1.0"
+    tag: "2026.1.0-rc2"
   service:
     type: NodePort
     metricsPort: 9090

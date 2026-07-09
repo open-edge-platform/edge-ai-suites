@@ -5,7 +5,7 @@
 
 image:
   repository: intel/metrics-manager
-  tag: "2026.1.0"
+  tag: "2026.1.0-rc2"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -48,7 +48,7 @@ hardware:
     enabled: true
 
 service:
-  type: NodePort
+  type: ClusterIP
   metricsPort: 9090
   telegrafPort: 9273
   telegrafHttpPort: 8186
