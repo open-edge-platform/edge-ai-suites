@@ -1,6 +1,8 @@
 # Release Notes: Live Video Search
 
-## Upcoming updates (post 2026.1.0)
+## Current Version (2026.2.0-ww28)
+
+**July 09, 2026**
 
 **Improved**
 
