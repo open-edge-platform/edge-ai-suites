@@ -31,7 +31,6 @@ MODEL_DOWNLOAD_PATH="${ROOT}/ovms_model"
 
 # Final model directories
 DEFAULT_MODEL_PATH="${ROOT}/ov_models"
-LLM_MODEL_PATH="${ROOT}/llm_models"
 DETECTION_MODEL_PATH="${ROOT}/ov_detection_models"
 
 MODEL_TYPE="vlm"
@@ -121,9 +120,9 @@ Required:
   --model <model_name>            Model identifier, e.g. "OpenGVLab/InternVL2-1B" or "yolov8s"
 
 Optional:
-  --type <vlm|vision|llm>          Model type (default: ${MODEL_TYPE})
-  --weight-format <int4|int8|fp16> Quantization for VLM/LLM OpenVINO conversion (default: ${PRECISION})
-  --device <CPU|GPU|NPU[,..]>      Target device(s) for VLM/LLM OpenVINO conversion (default: ${DEVICE})
+  --type <vlm|vision>               Model type (default: ${MODEL_TYPE})
+  --weight-format <int4|int8|fp16> Quantization for VLM OpenVINO conversion (default: ${PRECISION})
+  --device <CPU|GPU|NPU[,..]>      Target device(s) for VLM OpenVINO conversion (default: ${DEVICE})
   -h, --help                       Show this help
 
 Examples:
@@ -188,13 +187,6 @@ case "${MODEL_TYPE}" in
     FINAL_DIR="${DEFAULT_MODEL_PATH}"
     ensure_model_base_dir_for_current_user "$FINAL_DIR" "VLM"
     ;;
-  llm)
-    HUB="openvino"
-    PLUGINS="huggingface,openvino"
-    EXTRA_ARGS=(--type llm --is-ovms)
-    FINAL_DIR="${LLM_MODEL_PATH}"
-    ensure_model_base_dir_for_current_user "$FINAL_DIR" "LLM"
-    ;;
   vision)
     HUB="ultralytics"
     PLUGINS="ultralytics"
@@ -203,7 +195,7 @@ case "${MODEL_TYPE}" in
     ensure_model_base_dir_for_current_user "$FINAL_DIR" "Vision"
     ;;
   *)
-    err "Unknown model type: ${MODEL_TYPE}. Use vlm, vision, or llm."
+    err "Unknown model type: ${MODEL_TYPE}. Use vlm or vision."
     exit 1
     ;;
 esac
@@ -245,7 +237,7 @@ for DEVICE in "${DEVICE_LIST[@]}"; do
   ensure_ephemeral_container_absent "${EPHEMERAL_CONTAINER_NAME}"
 
   RUN_EXTRA_ARGS=("${EXTRA_ARGS[@]}")
-  if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
+  if [[ "${MODEL_TYPE}" == "vlm" ]]; then
     RUN_PRECISION="${PRECISION}"
     if [[ "${DEVICE}" == "NPU" && "${RUN_PRECISION}" != "int4" ]]; then
       warn "Device NPU only supports int4 today; overriding requested precision '${RUN_PRECISION}' to 'int4'."
@@ -274,7 +266,7 @@ for DEVICE in "${DEVICE_LIST[@]}"; do
     -v "${MODEL_DOWNLOAD_PATH}:/data" \
     alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R a+rwX /data"
 
-  if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
+  if [[ "${MODEL_TYPE}" == "vlm" ]]; then
     # Find the converted model inside the nested openvino structure
     # Structure: ovms_model/openvino_models/<device>/<precision>/<org>/<model>/
     DEVICE_LOWER="$(echo "${DEVICE}" | tr '[:upper:]' '[:lower:]')"
@@ -289,13 +281,7 @@ for DEVICE in "${DEVICE_LIST[@]}"; do
       MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
     fi
 
-    if [[ "${MODEL_TYPE}" == "vlm" ]]; then
-      TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL_BASENAME}"
-    elif [[ "${MODEL_TYPE}" == "llm" ]]; then
-      # For LLMs, keep provider/model grouped by device.
-      # Example: llm_models/gpu/microsoft/Phi-3.5-mini-instruct
-      TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL}"
-    fi
+    TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL_BASENAME}"
 
     if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
       mkdir -p "${TARGET_DIR}"
