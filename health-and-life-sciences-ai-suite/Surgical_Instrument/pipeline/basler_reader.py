@@ -113,7 +113,23 @@ def main() -> int:
     # Some ace-U models expose the older AcquisitionFrameRateAbs.
     _try_set("AcquisitionFrameRateAbs", float(fps))
     # Keep exposure short so we don't cap fps under office lighting.
+    #
+    # `ExposureAuto=Continuous` on its own is NOT enough: Basler's driver
+    # default for `AutoExposureTimeUpperLimit` is 500 000 µs (0.5 s), which
+    # caps sensor output at 2 fps in dim scenes. Any exposure > 1/fps forces
+    # the sensor below the target frame rate. Cap the upper limit at ~1/(2·fps)
+    # so auto-exposure can still adapt but never drags us below target.
+    # In an actual endoscopy setting the scope has its own light source and
+    # exposure will always be short (µs range) — this cap only matters for
+    # bench/demo use where the camera is pointed at ambient office lighting.
+    max_exposure_us = max(1000, int(1_000_000 / (fps * 2)))  # ≈ 8 333 µs @60 fps
     _try_set("ExposureAuto", "Continuous")
+    _try_set("AutoExposureTimeUpperLimit",     max_exposure_us)  # SFNC 2.x
+    _try_set("AutoExposureTimeAbsUpperLimit",  max_exposure_us)  # legacy alias
+    sys.stderr.write(
+        f"[basler_reader] target fps={fps} → AutoExposureTimeUpperLimit "
+        f"capped at {max_exposure_us} µs (≈ 1/{1_000_000 // max_exposure_us} s)\n"
+    )
 
     # BGR8 output so the downstream `rawvideoparse format=bgr` is a straight copy.
     converter = pylon.ImageFormatConverter()
