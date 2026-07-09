@@ -18,8 +18,8 @@
 [data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
-  background: #1a1a1a;
-  color: #fff;
+  background: #ffffff;
+  color: #2b2c30;
   font-family: var(--font-text, system-ui, sans-serif);
   font-size: 12px;
   font-weight: 500;
@@ -30,7 +30,8 @@
   width: max-content;
   white-space: normal;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid #cfd8e3;
+  box-shadow: 0 4px 16px rgba(43, 44, 48, 0.12);
 }
 
 [data-tooltip]::before {
@@ -51,7 +52,7 @@
   top: calc(100% + 0px);
   left: 50%;
   transform: translateX(-50%) translateY(-4px);
-  border-bottom-color: #1a1a1a;
+  border-bottom-color: #cfd8e3;
 }
 
 /* --- position: top --- */
@@ -65,7 +66,7 @@
   bottom: calc(100% + 0px);
   transform: translateX(-50%) translateY(4px);
   border-bottom-color: transparent;
-  border-top-color: #1a1a1a;
+  border-top-color: #cfd8e3;
 }
 
 /* --- position: left --- */
@@ -81,7 +82,7 @@
   right: calc(100% + 0px);
   transform: translateY(-50%) translateX(4px);
   border-bottom-color: transparent;
-  border-left-color: #1a1a1a;
+  border-left-color: #cfd8e3;
 }
 
 /* --- position: right --- */
@@ -95,7 +96,7 @@
   left: calc(100% + 0px);
   transform: translateY(-50%) translateX(-4px);
   border-bottom-color: transparent;
-  border-right-color: #1a1a1a;
+  border-right-color: #cfd8e3;
 }
 
 /* --- reveal on hover / keyboard focus --- */
