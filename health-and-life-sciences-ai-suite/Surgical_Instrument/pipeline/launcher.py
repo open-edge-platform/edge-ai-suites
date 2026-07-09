@@ -101,8 +101,24 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     # with spaces). Easiest & most robust is to hand the full pipeline string
     # to the shell so its own tokeniser handles quoting. stdout/stderr flow to
     # the container log so `docker logs` shows pipeline errors.
+    #
+    # For `basler`, the pipeline_string.py starts with `fdsrc fd=0`; a small
+    # Python helper (basler_reader.py) streams raw BGR frames from pypylon
+    # to stdout, which we pipe into gst-launch's fd=0. `exec` on the tail
+    # ensures the shell doesn't linger past the pipeline exit; PIPESTATUS/
+    # set -o pipefail isn't needed because our supervisor only cares that
+    # *any* pipe stage exiting takes the whole group down.
+    if source_kind == "basler":
+        cmd = (
+            f"exec python3 /opt/basler_reader.py {source_arg} "
+            f"--geometry 1920x1080@{TARGET_FPS} "
+            f"| exec gst-launch-1.0 {pipeline}"
+        )
+    else:
+        cmd = f"exec gst-launch-1.0 {pipeline}"
+
     return subprocess.Popen(
-        f"exec gst-launch-1.0 {pipeline}",
+        cmd,
         shell=True,
         env=env,
         start_new_session=True,

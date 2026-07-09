@@ -51,16 +51,24 @@ def _build_source(kind: str, arg: str, target_fps: int) -> list[str]:
             "videoconvert",
         ]
     if kind == "basler":
-        # Basler USB3 industrial camera via the DL Streamer `gencamsrc`
-        # plugin. Requires pylon SDK + gst-plugin-gencamsrc on top of the
-        # base image — the current pipeline/Dockerfile does NOT install
-        # these, so selecting this source kind before that add-on lands
-        # will fail with "no such element gencamsrc". Tracking as a
-        # follow-up to keep the base image slim for MTL/PTL bring-up.
-        # `arg` is the camera serial number.
+        # Basler USB3 industrial camera. The DL Streamer 2026.1 base image
+        # does not ship `gencamsrc` or Basler's `pylonsrc`, so we bridge
+        # via a small Python helper that streams raw BGR frames from
+        # pypylon to stdout; launcher.py pipes that stdout into
+        # `gst-launch-1.0` here on fd=0.
+        #
+        # `arg` is the camera serial number (used by basler_reader.py).
+        # The 1920x1080 geometry + framerate must match what
+        # basler_reader.py configures — kept in sync via the same
+        # target_fps and a fixed 1080p full-frame ROI (per acA1920-150uc
+        # native sensor). Change both together.
+        blocksize = 1920 * 1080 * 3  # BGR8 packed
         return [
-            f"gencamsrc serial={arg} pixel-format=ycbcr422_8",
-            f"video/x-raw,format=YUY2,width=1920,height=1080,framerate={target_fps}/1",
+            f"fdsrc fd=0 blocksize={blocksize} do-timestamp=true",
+            (
+                f"rawvideoparse format=bgr width=1920 height=1080 "
+                f"framerate={target_fps}/1"
+            ),
             "videoconvert",
         ]
     raise ValueError(
