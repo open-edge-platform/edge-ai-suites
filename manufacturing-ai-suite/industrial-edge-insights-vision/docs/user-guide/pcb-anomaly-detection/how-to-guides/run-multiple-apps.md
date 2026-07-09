@@ -58,7 +58,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    For the example above, modify the envs for pcb-anomaly-detection and pallet-defect-detection, i.e. `env_pcb-anomaly-detection` and `env_pallet-defect-detection`
 
    ```text
-   HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipelveine Serr is running.
+   HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
    MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
    MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
