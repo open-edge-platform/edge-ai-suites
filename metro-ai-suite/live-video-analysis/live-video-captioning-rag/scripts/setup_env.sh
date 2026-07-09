@@ -87,9 +87,6 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 		EMBEDDING_MODEL_NAME=*)
 			printf 'EMBEDDING_MODEL_NAME=%s\n' "${EMBEDDING_MODEL_NAME}" >> "${tmp_file}"
 			;;
-		EMBEDDING_MODEL=*)
-			printf 'EMBEDDING_MODEL=%s\n' "${EMBEDDING_MODEL_NAME}" >> "${tmp_file}"
-			;;
 		*)
 			printf '%s\n' "$line" >> "${tmp_file}"
 			;;
@@ -101,7 +98,5 @@ trap - EXIT
 
 echo "Created ${ENV_FILE}"
 echo "HOST_IP=${HOST_IP}"
-echo "USER_GROUP_ID=${USER_GROUP_ID}"
-echo "MODEL_CACHE_PATH=${MODEL_CACHE_PATH}"
-echo "EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}"
+echo "LVC Dashboard URL: http://${HOST_IP}:4173"
 echo "RAG Dashboard URL: http://${HOST_IP}:4172"
