@@ -96,30 +96,24 @@ def main() -> int:
 
     cam = _open_camera(args.serial)
 
-    # Configure resolution + fps. Not every model exposes all of these; guard.
+    # Configure resolution + fps. Not every model exposes all of these; guard
+    # via try/except because pypylon's __getattr__ calls GetNode() under the
+    # hood — a missing GenICam node raises LogicalErrorException, so
+    # `hasattr(cam, node)` never returns False.
     def _try_set(node: str, value):
-        if hasattr(cam, node):
-            try:
-                getattr(cam, node).SetValue(value)
-            except Exception as e:  # noqa: BLE001
-                sys.stderr.write(f"[basler_reader] warn: cannot set {node}={value}: {e}\n")
+        try:
+            getattr(cam, node).SetValue(value)
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f"[basler_reader] warn: cannot set {node}={value}: {e.__class__.__name__}\n")
 
     _try_set("Width",  w)
     _try_set("Height", h)
-    if hasattr(cam, "AcquisitionFrameRateEnable"):
-        try:
-            cam.AcquisitionFrameRateEnable.SetValue(True)
-        except Exception:
-            pass
+    _try_set("AcquisitionFrameRateEnable", True)
     _try_set("AcquisitionFrameRate", float(fps))
     # Some ace-U models expose the older AcquisitionFrameRateAbs.
     _try_set("AcquisitionFrameRateAbs", float(fps))
     # Keep exposure short so we don't cap fps under office lighting.
-    if hasattr(cam, "ExposureAuto"):
-        try:
-            cam.ExposureAuto.SetValue("Continuous")
-        except Exception:
-            pass
+    _try_set("ExposureAuto", "Continuous")
 
     # BGR8 output so the downstream `rawvideoparse format=bgr` is a straight copy.
     converter = pylon.ImageFormatConverter()
