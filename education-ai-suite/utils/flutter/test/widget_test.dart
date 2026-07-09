@@ -18,7 +18,7 @@ void main() {
 
     // Verify that the app title is present
     await tester.pumpAndSettle();
-    expect(find.text('Smart Classroom'), findsOneWidget);
+    expect(find.text('Smart Classroom RAG'), findsOneWidget);
     expect(find.text('Upload'), findsOneWidget);
   });
 
