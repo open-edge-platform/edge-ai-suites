@@ -109,7 +109,7 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     )
 
 
-def _supervisor_loop(device: str) -> None:
+def _supervisor_loop(device: str, source_kind: str, source_arg: str) -> None:
     """Respawn gst-launch on EOS/exit while /start was the last user intent.
 
     filesrc reads polyp_test.mp4 once and emits EOS. To match the old
@@ -142,7 +142,7 @@ def _supervisor_loop(device: str) -> None:
 
             log.info("supervisor: pipeline exited rc=%s — respawning (loop)", rc)
             try:
-                _proc = _spawn(device)
+                _proc = _spawn(device, source_kind, source_arg)
             except Exception as exc:  # noqa: BLE001
                 log.exception("supervisor: respawn failed: %s", exc)
                 _proc = None

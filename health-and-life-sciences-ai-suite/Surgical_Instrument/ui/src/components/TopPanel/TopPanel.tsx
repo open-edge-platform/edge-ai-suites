@@ -133,8 +133,8 @@ const TopPanel = () => {
           <button
             onClick={() => setSettingsOpen(true)}
             className="settings-button"
-            aria-label="Open Settings"
-            data-tooltip="Open settings"
+            aria-label="Open Settings to select camera/upload video/ reset hardware"
+            data-tooltip="Open Settings to select camera/upload video/ reset hardware"
             data-tooltip-pos="left"
           >
             <span className="settings-button-icon" aria-hidden="true">⚙</span>

@@ -130,6 +130,20 @@ RUN pip install \
 # Application code.
 COPY backend/ /app/backend/
 
+# ---------------------------------------------------------------------------
+# Slice E: Basler USB3 camera enumeration.
+# Intentionally placed AFTER the (expensive) torch+xpu install and the
+# `COPY backend/` step so tweaks to this layer never invalidate the multi-
+# gigabyte torch cache. `pypylon` bundles the pylon USB3 runtime; libusb
+# is the only apt dep the wheel needs. Actual USB access is granted at
+# `docker run` time via the /dev/bus/usb passthrough that `make up` wires
+# in when it detects a Basler vendor ID 2676 on the host.
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libusb-1.0-0 \
+ && rm -rf /var/lib/apt/lists/* \
+ && pip install --retries 4 --timeout 60 pypylon==4.0.0
+
 # Container-side paths. Override from compose to bind-mount host dirs.
 ENV BACKEND_CONFIG=/app/backend/config/model.yaml \
     MODELS_DIR=/models \
