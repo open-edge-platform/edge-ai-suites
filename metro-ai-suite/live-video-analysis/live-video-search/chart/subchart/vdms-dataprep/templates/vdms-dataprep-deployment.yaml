@@ -1,6 +1,26 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $dataprepGpuEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
-{{- $gpuHostPath := default "/dev/dri" (index $gpu "hostPath") -}}
+{{- $globalDevices := default (dict) .Values.global.devices -}}
+{{- $vdmsDevices := default (dict) (index $globalDevices "vdmsDataprep") -}}
+{{- $embeddingCfg := default (dict) (index $vdmsDevices "embedding") -}}
+{{- $detectionCfg := default (dict) (index $vdmsDevices "detection") -}}
+{{- $embeddingDevice := upper (default "CPU" (index $embeddingCfg "device")) -}}
+{{- $detectionDevice := upper (default "CPU" (index $detectionCfg "device")) -}}
+{{- $embeddingUsesGpu := eq $embeddingDevice "GPU" -}}
+{{- $embeddingUsesNpu := eq $embeddingDevice "NPU" -}}
+{{- $detectionUsesGpu := eq $detectionDevice "GPU" -}}
+{{- $detectionUsesNpu := eq $detectionDevice "NPU" -}}
+{{- $embeddingUsesAccelerator := or $embeddingUsesGpu $embeddingUsesNpu -}}
+{{- $detectionUsesAccelerator := or $detectionUsesGpu $detectionUsesNpu -}}
+{{- $dataprepGpuEnabled := or $embeddingUsesGpu $detectionUsesGpu -}}
+{{- $dataprepNpuEnabled := or $embeddingUsesNpu $detectionUsesNpu -}}
+{{- $dataprepUsesAccelerator := or $embeddingUsesAccelerator $detectionUsesAccelerator -}}
+{{- $embeddingKey := default "" (index $embeddingCfg "key") -}}
+{{- $detectionKey := default "" (index $detectionCfg "key") -}}
+{{- if and $embeddingUsesAccelerator (eq (trim $embeddingKey) "") -}}
+{{- fail "global.devices.vdmsDataprep.embedding.key is required when embedding.device is GPU or NPU" -}}
+{{- end -}}
+{{- if and $detectionUsesAccelerator (eq (trim $detectionKey) "") -}}
+{{- fail "global.devices.vdmsDataprep.detection.key is required when detection.device is GPU or NPU" -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,9 +41,17 @@ spec:
       {{- if .Values.hostIPC }}
       hostIPC: true
       {{- end }}
-      {{- with .Values.podSecurityContext }}
+      {{- if or .Values.podSecurityContext $dataprepUsesAccelerator }}
       securityContext:
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if $dataprepUsesAccelerator }}
+        supplementalGroups:
+          {{- range .Values.global.accelGroupIds }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       initContainers:
         - name: wait-for-dependencies
@@ -81,15 +109,25 @@ spec:
           startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $dataprepGpuEnabled }}
+          {{- if or $embeddingUsesAccelerator $detectionUsesAccelerator }}
           resources:
             requests:
-              {{ .Values.global.gpu.key }}: 1
+              {{- if $embeddingUsesAccelerator }}
+              {{ $embeddingKey }}: 1
+              {{- end }}
+              {{- if and $detectionUsesAccelerator (or (not $embeddingUsesAccelerator) (ne $detectionKey $embeddingKey)) }}
+              {{ $detectionKey }}: 1
+              {{- end }}
             limits:
-              {{ .Values.global.gpu.key }}: 1
+              {{- if $embeddingUsesAccelerator }}
+              {{ $embeddingKey }}: 1
+              {{- end }}
+              {{- if and $detectionUsesAccelerator (or (not $embeddingUsesAccelerator) (ne $detectionKey $embeddingKey)) }}
+              {{ $detectionKey }}: 1
+              {{- end }}
           {{- else if .Values.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: tmp
@@ -100,20 +138,15 @@ spec:
             - name: volume-data
               mountPath: /home/appuser/.cache/huggingface
               subPath: huggingface
-            {{- if .Values.modelPvc.enabled }}
-            - name: models-data
-              mountPath: {{ .Values.global.env.ovModelsDir }}
-              subPath: ovmodels
-            - name: models-data
-              mountPath: /app/models/yolox
-              subPath: yoloxmodels
-            {{- else }}
             - name: volume-data
               mountPath: {{ .Values.global.env.ovModelsDir }}
               subPath: ovmodels
             - name: volume-data
               mountPath: /app/models/yolox
               subPath: yoloxmodels
+            {{- if $dataprepNpuEnabled }}
+            - name: dev-accel
+              mountPath: /dev/accel
             {{- end }}
             {{- if $dataprepGpuEnabled }}
             - name: dev-dri
@@ -122,26 +155,14 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.modelPvc.enabled }}
-        - name: models-data
-          {{- if .Values.modelPvc.existingClaim }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.modelPvc.existingClaim }}
-          {{- else if .Values.global.usePvc }}
-          persistentVolumeClaim:
-            claimName: {{ include "lvs.dataprep.fullname" . }}-models-pvc
-          {{- else if .Values.global.volumeHostPath }}
-          hostPath:
-            path: {{ .Values.global.volumeHostPath }}
-            type: DirectoryOrCreate
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        {{- end }}
         - name: volume-data
           {{- if .Values.global.usePvc }}
           persistentVolumeClaim:
-            claimName: {{ .Values.global.sharedPvcName | default "lvs-pvc" }}
+            {{- if .Values.modelPvc.enabled }}
+            claimName: {{ .Values.modelPvc.existingClaim | default (printf "%s-dataprep-models-pvc" (include "lvs.dataprep.fullname" .)) }}
+            {{- else }}
+            claimName: {{ include "lvs.dataprep.fullname" . }}-dataprep-data-pvc
+            {{- end }}
           {{- else if .Values.global.volumeHostPath }}
           hostPath:
             path: {{ .Values.global.volumeHostPath }}
@@ -149,9 +170,15 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- if $dataprepNpuEnabled }}
+        - name: dev-accel
+          hostPath:
+            path: /dev/accel
+            type: Directory
+        {{- end }}
         {{- if $dataprepGpuEnabled }}
         - name: dev-dri
           hostPath:
-            path: {{ $gpuHostPath }}
+            path: /dev/dri
             type: Directory
         {{- end }}

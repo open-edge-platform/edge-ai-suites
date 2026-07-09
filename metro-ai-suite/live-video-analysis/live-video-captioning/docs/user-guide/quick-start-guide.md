@@ -59,6 +59,8 @@ bash scripts/setup_env.sh
 
 ## Step 3 — Download the AI Model (one-time, ~5 min)
 
+This downloads the AI model that powers the captions. It only needs to run once. The model parameter is configurable and the user is requested to confirm the license agreement before the download.
+
 ```bash
 ./model_download_scripts/download_models.sh \
   --model OpenGVLab/InternVL2-1B \
@@ -66,7 +68,19 @@ bash scripts/setup_env.sh
   --weight-format int8
 ```
 
-This downloads the AI model that powers the captions. It only needs to run once. The model parameter is configurable and the user is requested to confirm the license agreement before the download.
+### Specifying the conversion device
+
+By default, the model is converted to run on CPU. To explicitly run on other device:
+
+```bash
+# Specify your desired target device in the --device flag
+./model_download_scripts/download_models.sh \
+  --model OpenGVLab/InternVL2-1B \
+  --type vlm \
+  --weight-format int8 \
+  --device <CPU|GPU|NPU>
+```
+> Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 ---
 
@@ -93,8 +107,9 @@ Replace `<YOUR_IP>` with the IP address shown at the end of Step 2, or find it b
 ### Using the Dashboard
 
 1. **Enter your video source** — paste an RTSP camera URL (for example `rtsp://192.168.1.10/stream`) or select the USB/webcam device in case it is available.
-2. **Select a model** — choose from the available AI models in the drop-down list.
-3. **Click Start** — captions appear alongside the live video preview.
+2. **Select the VLM Device** - choose the hardware device on which the VLM model will run (e.g., "CPU", "GPU", "NPU"). The available options will vary depending on the devices present on your host system.
+3. **Select a model** — choose from the available AI models in the drop-down list.
+4. **Click Start** — captions appear alongside the live video preview.
 
 ---
 
@@ -118,6 +133,9 @@ docker compose down
 | "permission denied" with Docker | Run `sudo usermod -aG docker $USER`, then log out and back in |
 | "failed to resolve reference docker.io" with Docker | Docker daemon cannot reach Docker Hub over the network to download the microservices. This could be due to missing organization proxy configuration in docker setup. Follow [this](https://docs.docker.com/engine/daemon/proxy/) instruction to set it up. |
 | Hardware-encoded camera not supported | This application does not supported hardware-encoded format webcam (for example, H.264). Use a compatible webcam that provides raw video output(for example, YUYV/MJPEG). |
+| Model download fails with authentication error | Set the `HUGGINGFACEHUB_API_TOKEN` environment variable and rerun the command. |
+| Model download interrupted or fails due to network | Remove the `ovms_model` folder and the model-specific folder (`ov_models/` for VLMs), then rerun the command. The download container is automatically cleaned up when the helper exits. |
+
 
 ---
 

@@ -46,8 +46,6 @@ class MQTTSubscriber:
         self._connected = False
         self._callbacks: dict[str, list[Callable]] = {}  # topic -> list of callbacks
         self._message_queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
-        self._reconnect_delay = 1
-        self._max_reconnect_delay = 30
         self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     def _post_embedding_request(self, image_data: str, metadata: dict) -> None:
@@ -93,7 +91,6 @@ class MQTTSubscriber:
                 f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}"
             )
             self._connected = True
-            self._reconnect_delay = 1
             # Re-subscribe to all registered topics
             for topic in self._callbacks.keys():
                 client.subscribe(topic)

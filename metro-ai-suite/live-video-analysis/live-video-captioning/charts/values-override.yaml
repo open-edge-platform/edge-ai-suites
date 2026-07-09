@@ -28,24 +28,25 @@ global:
   modelDownload:
     serviceName: "model-download"
     port: 8000
-
-  # REQUIRED: at least one VLM entry.
-  # This VLM model is used in DLSPS pipeline to generate captions text for input video stream.
-  # Parameters:
+    # REQUIRED: at least one VLM entry.
+    # This VLM model is used in DLSPS pipeline to generate captions text for input video stream.
+    # Parameters:
     # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "OpenGVLab/InternVL2-1B"
-    # outputName: directory created under /models/ in the PVC to show under the model selection dropdown in the UI. e.g. "InternVL2-1B".
+    #          output directory is derived from the final segment of modelId
+    #          and created under /ov_models/<device>/ in the PVC.
     # modelType: "vlm"
     # weightFormat: "int8", or "int4" or "fp16"
+    # device: target conversion device(s): "CPU", "GPU", "NPU", or CSV/list (for multiple).
+    #         Example CSV: "CPU,GPU". Example list: ["CPU", "NPU"].
+    #         If NPU is selected, weightFormat is automatically forced to "int4".
   models:
     - modelId: "OpenGVLab/InternVL2-1B"
-      outputName: "InternVL2-1B"
       modelType: "vlm"
       weightFormat: "int8"
-
+      device: "CPU"
   # OPTIONAL: downloaded only when detection pipeline is enabled.
   detectionModels:
     - "yolov8s"
-
   # OPTIONAL: required only for gated Hugging Face models.
   huggingface:
     apiToken: ""
@@ -63,11 +64,11 @@ global:
   # The following values configure the RAG service and its choice of LLM and embedding models.
   # LLM Model for RAG
   # Parameters:
-    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
-    # modelType: "llm",
-    # weightFormat: "int8", or "int4" or "fp16"
-    # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-    #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
+  # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
+  # modelType: "llm",
+  # weightFormat: "int8", or "int4" or "fp16"
+  # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
+  #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
   llmModel:
     modelId: "microsoft/Phi-3.5-mini-instruct"
     modelType: "llm"
@@ -75,9 +76,8 @@ global:
     useGPU:
       enabled: false
       key: ""
-
-  # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
-  # Parameters:
+    # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
+    # Parameters:
     # modelId: HuggingFace repo ID for the embedding model, e.g. "QwenText/qwen3-embedding-0.6b"
     # useGPU: set to true to enable GPU usage for the embedding model; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
   embeddingModel:

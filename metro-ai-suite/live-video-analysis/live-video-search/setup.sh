@@ -200,57 +200,67 @@ export AGGREGATION_MAX_RESULTS=${AGGREGATION_MAX_RESULTS:-20}
 export AGGREGATION_INITIAL_K=${AGGREGATION_INITIAL_K:-1000}
 export AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS=${AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS:-0}
 
-# Device selection (CPU/GPU for embeddings)
-export VDMS_DATAPREP_DEVICE=${VDMS_DATAPREP_DEVICE:-""}
-export EMBEDDING_DEVICE=${EMBEDDING_DEVICE:-""}
+# Per-component device selection (CPU default | GPU | NPU). Each component is
+# independent — parity with the Helm charts. No "baseline" device.
+#   DATAPREP_EMBEDDING_DEVICE → embedding in vdms-dataprep (EMBEDDING_PROCESSING_MODE=sdk)
+#   DATAPREP_DETECTION_DEVICE → YOLOX object detection in vdms-dataprep
+#   MME_EMBEDDING_DEVICE      → embedding in multimodal-embedding-serving (EMBEDDING_PROCESSING_MODE=api)
+export DATAPREP_EMBEDDING_DEVICE=${DATAPREP_EMBEDDING_DEVICE:-"CPU"}
+export DATAPREP_DETECTION_DEVICE=${DATAPREP_DETECTION_DEVICE:-"CPU"}
+export MME_EMBEDDING_DEVICE=${MME_EMBEDDING_DEVICE:-"CPU"}
 
-if [ -n "$EMBEDDING_DEVICE" ] && [ -z "$VDMS_DATAPREP_DEVICE" ]; then
-    export VDMS_DATAPREP_DEVICE="$EMBEDDING_DEVICE"
-elif [ -z "$EMBEDDING_DEVICE" ]; then
-    export EMBEDDING_DEVICE="$VDMS_DATAPREP_DEVICE"
-fi
-
+# Easy-button: put embedding on GPU. Mode-aware — targets the component that
+# actually runs embedding in the active EMBEDDING_PROCESSING_MODE.
 if [ "$ENABLE_EMBEDDING_GPU" = true ]; then
-    export VDMS_DATAPREP_DEVICE=GPU
-    export EMBEDDING_DEVICE=GPU
+    if [ "${EMBEDDING_PROCESSING_MODE}" = "api" ]; then
+        export MME_EMBEDDING_DEVICE=GPU
+    else
+        export DATAPREP_EMBEDDING_DEVICE=GPU
+    fi
 fi
 
+# Validates host accelerator availability and enforces OpenVINO when any component
+# targets GPU/NPU. Operates on the per-component device values (no baseline device).
 configure_device() {
-    local device=${1:-"CPU"}
+    local accel="$1"  # "GPU", "NPU", or "CPU"
 
-    echo -e "${BLUE}Configuring device for embedding + dataprep: ${YELLOW}${device}${NC}"
-
-    if [[ "${device}" == GPU* ]]; then
-        echo -e "${YELLOW}⚙️  Setting up GPU configuration...${NC}"
-
+    if [[ "${accel}" == GPU* ]]; then
+        echo -e "${YELLOW}⚙️  GPU acceleration requested for one or more components...${NC}"
         if ! lspci | grep -i "vga.*intel" > /dev/null 2>&1; then
             echo -e "${RED}Warning: No Intel GPU detected. GPU mode may not work properly.${NC}"
         else
             echo -e "${GREEN}Intel GPU detected${NC}"
         fi
-
         if [[ ! -d "/dev/dri" ]]; then
             echo -e "${RED}Warning: /dev/dri not found. GPU acceleration may not be available.${NC}"
         else
             echo -e "${GREEN}DRI devices found for GPU acceleration${NC}"
         fi
-
-        export VDMS_DATAPREP_DEVICE="${device}"
-        export EMBEDDING_DEVICE="${device}"
+        export SDK_USE_OPENVINO=true
+    elif [[ "${accel}" == NPU* ]]; then
+        echo -e "${YELLOW}⚙️  NPU acceleration requested for one or more components...${NC}"
+        if [[ ! -e "/dev/accel/accel0" ]]; then
+            echo -e "${RED}Warning: /dev/accel/accel0 not found. NPU acceleration may not be available.${NC}"
+        else
+            echo -e "${GREEN}NPU device found for acceleration${NC}"
+        fi
         export SDK_USE_OPENVINO=true
     else
-        echo -e "${BLUE}CPU mode configured for embedding + dataprep${NC}"
-        export VDMS_DATAPREP_DEVICE="${device}"
-        export EMBEDDING_DEVICE="${device}"
+        echo -e "${BLUE}CPU mode configured for all components${NC}"
     fi
 }
 
-if [ -z "$VDMS_DATAPREP_DEVICE" ] && [ -z "$EMBEDDING_DEVICE" ]; then
-    configure_device "CPU"
-elif [[ "${VDMS_DATAPREP_DEVICE}" == GPU* ]] || [[ "${EMBEDDING_DEVICE}" == GPU* ]]; then
+if [[ "${DATAPREP_EMBEDDING_DEVICE}" == GPU* ]] || [[ "${MME_EMBEDDING_DEVICE}" == GPU* ]] || [[ "${DATAPREP_DETECTION_DEVICE}" == GPU* ]]; then
     configure_device "GPU"
+elif [[ "${DATAPREP_EMBEDDING_DEVICE}" == NPU* ]] || [[ "${MME_EMBEDDING_DEVICE}" == NPU* ]] || [[ "${DATAPREP_DETECTION_DEVICE}" == NPU* ]]; then
+    configure_device "NPU"
 else
     configure_device "CPU"
+fi
+
+export EMBEDDING_USE_OV=${EMBEDDING_USE_OV:-$SDK_USE_OPENVINO}
+if [[ "${MME_EMBEDDING_DEVICE}" == GPU* ]] || [[ "${MME_EMBEDDING_DEVICE}" == NPU* ]]; then
+    export EMBEDDING_USE_OV=true
 fi
 
 # Set DRI_MOUNT_PATH based on whether /dev/dri exists and is not empty
@@ -260,6 +270,14 @@ if [ -d /dev/dri ] && [ "$(ls -A /dev/dri)" ]; then
 else
     export DRI_MOUNT_PATH="/dev/null"
     echo -e "${YELLOW}/dev/dri not found or empty, will mount /dev/null instead.${NC}"
+fi
+
+if [ -e /dev/accel/accel0 ]; then
+    export ACCEL_MOUNT_PATH="/dev/accel/accel0"
+    echo -e "${GREEN}/dev/accel/accel0 found. Will mount for NPU.${NC}"
+else
+    export ACCEL_MOUNT_PATH="/dev/null"
+    echo -e "${YELLOW}/dev/accel/accel0 not found, will mount /dev/null instead.${NC}"
 fi
 
 # YOLOX models
