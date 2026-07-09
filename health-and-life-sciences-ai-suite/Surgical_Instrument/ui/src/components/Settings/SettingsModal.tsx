@@ -9,21 +9,30 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'devices' | 'source';
+type Tab = 'source' | 'devices';
 
 const DEVICE_OPTIONS: Device[] = ['GPU', 'CPU', 'NPU'];
 
-const DEVICE_HELP: Record<Device, string> = {
-  GPU: 'Intel Arc iGPU via OpenVINO (recommended).',
-  CPU: 'Fallback path — highest latency.',
-  NPU: 'Intel AI Boost NPU — lowest power.',
-};
+const buildDeviceHelp = (platform: Record<string, string> | null): Record<Device, string> => ({
+  GPU: platform && platform.iGPU
+    ? 'Runs on ' + platform.iGPU + ' via OpenVINO (recommended for polyp detection).'
+    : 'Runs on the integrated GPU via OpenVINO (recommended for polyp detection).',
+  CPU: platform && platform.Processor
+    ? 'Runs on ' + platform.Processor + ' as a fallback path (highest latency).'
+    : 'Runs on the host CPU as a fallback path (highest latency).',
+  NPU: platform && platform.NPU
+    ? 'Runs on ' + platform.NPU + ' for lowest power sustained inference.'
+    : 'Runs on the Intel AI Boost NPU for lowest power sustained inference.',
+});
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
   const systemStatus = useAppSelector((state) => state.detection.data.systemStatus);
   const modelInfo    = useAppSelector((state) => state.detection.data.modelInfo);
   const pipelinePerf = useAppSelector((state) => state.detection.data.pipelinePerformance);
+  const platform     = useAppSelector((state) => state.metrics.platform);
+
+  const deviceHelp = buildDeviceHelp(platform as Record<string, string> | null);
 
   const isProcessing = systemStatus === 'running' || systemStatus === 'starting';
 
@@ -32,7 +41,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     (pipelinePerf?.workloads?.[0]?.device as Device) ||
     'GPU';
 
-  const [activeTab, setActiveTab]         = useState<Tab>('devices');
+  const [activeTab, setActiveTab]         = useState<Tab>('source');
   const [pendingDevice, setPendingDevice] = useState<Device>(currentDevice);
   const [deviceBusy, setDeviceBusy]       = useState(false);
   const [deviceStatus, setDeviceStatus]   = useState<string>('');
@@ -41,17 +50,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   // Source (read-only for now — full picker lands in a follow-up slice
   // once GET /api/videos + GET /api/devices/cameras are wired up).
-  const [sourceKind, setSourceKind] = useState<string | null>(null);
   const [sourceArg,  setSourceArg]  = useState<string | null>(null);
 
   const refreshSource = useCallback(async () => {
     try {
       const cfg = await api.getConfig();
-      // getConfig returns { video_file, default_video, ... }
-      setSourceKind('file');
       setSourceArg(cfg.video_file || cfg.default_video || null);
     } catch {
-      setSourceKind(null);
       setSourceArg(null);
     }
   }, []);
@@ -121,58 +126,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {isProcessing && (
-          <div className="settings-banner settings-banner-running">
+          <div className="settings-running-banner">
             Pipeline is running — stop it before changing hardware or resetting the session.
           </div>
         )}
 
         <div className="settings-tabs">
           <button
-            className={`settings-tab ${activeTab === 'devices' ? 'active' : ''}`}
-            onClick={() => setActiveTab('devices')}
-          >
-            Hardware
-          </button>
-          <button
             className={`settings-tab ${activeTab === 'source' ? 'active' : ''}`}
             onClick={() => setActiveTab('source')}
           >
             Input Source
+          </button>
+          <button
+            className={`settings-tab ${activeTab === 'devices' ? 'active' : ''}`}
+            onClick={() => setActiveTab('devices')}
+          >
+            Devices
           </button>
         </div>
 
         <div className="settings-modal-content">
           {activeTab === 'devices' && (
             <div className="settings-section">
-              <div className="settings-section-title">Inference device</div>
-              <div className="settings-section-sub">
-                Choose where the polyp-detection model runs. Change is applied when you click Save.
-              </div>
+              <p className="settings-hint" style={{ marginBottom: 12 }}>
+                Choose which hardware accelerator runs the polyp-detection model.
+                Change is applied when you click Save.
+              </p>
 
-              <div className="settings-device-grid">
-                {DEVICE_OPTIONS.map((d) => (
-                  <label
-                    key={d}
-                    className={`settings-device-card ${pendingDevice === d ? 'selected' : ''} ${isProcessing ? 'disabled' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="settings-device"
-                      value={d}
-                      checked={pendingDevice === d}
-                      onChange={() => setPendingDevice(d)}
-                      disabled={isProcessing || deviceBusy}
-                    />
-                    <div className="settings-device-name">{d}</div>
-                    <div className="settings-device-help">{DEVICE_HELP[d]}</div>
-                    {currentDevice === d && (
-                      <div className="settings-device-current-tag">current</div>
-                    )}
-                  </label>
-                ))}
-              </div>
+              <table className="settings-device-table">
+                <thead>
+                  <tr>
+                    <th>Workload</th>
+                    <th>Model</th>
+                    <th>Device</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="settings-workload-name">Detection</td>
+                    <td className="settings-workload-models">Polyp detector (YOLOv9)</td>
+                    <td>
+                      <select
+                        className="settings-select"
+                        value={pendingDevice}
+                        onChange={(e) => setPendingDevice(e.target.value as Device)}
+                        disabled={isProcessing || deviceBusy}
+                      >
+                        {DEVICE_OPTIONS.map((d) => (
+                          <option key={d} value={d}>{d}{currentDevice === d ? ' (current)' : ''}</option>
+                        ))}
+                      </select>
+                      <div className="settings-device-help">{deviceHelp[pendingDevice]}</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-              <div className="settings-row-actions">
+              <div className="settings-actions">
                 <button
                   className="settings-btn settings-btn-primary"
                   onClick={handleApplyDevice}
@@ -185,20 +196,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 >
                   {deviceBusy ? 'Saving…' : 'Save'}
                 </button>
-                {deviceStatus && (
-                  <span className={`settings-inline-status ${deviceStatus.startsWith('Error') ? 'err' : 'ok'}`}>
-                    {deviceStatus}
-                  </span>
-                )}
-              </div>
-
-              <hr className="settings-hr" />
-
-              <div className="settings-section-title">Session</div>
-              <div className="settings-section-sub">
-                Clear the last run's frame + KPIs so you can start fresh with a new device or source.
-              </div>
-              <div className="settings-row-actions">
                 <button
                   className="settings-btn settings-btn-secondary"
                   onClick={handleReset}
@@ -207,9 +204,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 >
                   {resetBusy ? 'Resetting…' : 'Reset session'}
                 </button>
-                {resetStatus && (
-                  <span className={`settings-inline-status ${resetStatus.startsWith('Error') ? 'err' : 'ok'}`}>
-                    {resetStatus}
+                {deviceStatus && (
+                  <span className={`settings-status-inline ${deviceStatus.startsWith('Error') ? 'error' : 'success'}`}>
+                    {deviceStatus.startsWith('Error') ? deviceStatus : '✓ ' + deviceStatus}
+                  </span>
+                )}
+                {resetStatus && !deviceStatus && (
+                  <span className={`settings-status-inline ${resetStatus.startsWith('Error') ? 'error' : 'success'}`}>
+                    {resetStatus.startsWith('Error') ? resetStatus : '✓ ' + resetStatus}
                   </span>
                 )}
               </div>
@@ -218,33 +220,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {activeTab === 'source' && (
             <div className="settings-section">
-              <div className="settings-section-title">Current input</div>
-              <div className="settings-source-current">
-                <div className="settings-source-row">
-                  <span className="settings-source-label">Kind</span>
-                  <span className="settings-source-value">{sourceKind ?? '—'}</span>
-                </div>
-                <div className="settings-source-row">
-                  <span className="settings-source-label">Path</span>
-                  <span className="settings-source-value settings-mono">{sourceArg ?? '—'}</span>
+              <div className="settings-field-group">
+                <label className="settings-label">Active Video</label>
+                <div className="settings-active-video">
+                  <span className="settings-video-badge">
+                    📁 {sourceArg ?? '—'}
+                  </span>
+                  <span className="settings-video-default-tag">Default</span>
                 </div>
               </div>
 
-              <hr className="settings-hr" />
-
-              <div className="settings-section-title">Change input</div>
-              <div className="settings-source-placeholder">
-                <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                  Video upload and camera picker are coming next.
-                </div>
-                <div style={{ fontSize: 12, lineHeight: 1.55 }}>
-                  Today the backend already accepts a source override on <code>POST /api/start</code>:
-                  <pre className="settings-code">{`{
-  "device": "GPU",
-  "source": { "kind": "file|v4l2|basler", "arg": "..." }
-}`}</pre>
-                  The UI dropdowns for available videos and attached cameras will land in the next slice
-                  (needs <code>GET /api/videos</code> + <code>GET /api/devices/cameras</code>).
+              <div className="settings-field-group">
+                <label className="settings-label">Change Input</label>
+                <p className="settings-hint">
+                  The backend already accepts a source override on <code>POST /api/start</code>:
+                  {' '}<code>{'{ "device": "GPU", "source": { "kind": "file|v4l2|basler", "arg": "..." } }'}</code>.
+                </p>
+                <div className="settings-notice">
+                  <strong>Coming next:</strong> UI dropdowns for available video files and attached cameras.
+                  Depends on <code>GET /api/videos</code> (pending) and <code>GET /api/devices/cameras</code>
+                  (shipped — returns empty on hosts with no camera).
                 </div>
               </div>
             </div>
