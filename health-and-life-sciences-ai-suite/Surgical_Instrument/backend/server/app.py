@@ -393,7 +393,11 @@ def readiness() -> Response:
 @app.get(f"{API}/status")
 def status() -> Response:
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
-    inf = _worker.stats() if _worker else None
+    # Live worker wins; when stopped, fall through to the last-session
+    # snapshot frozen by /stop so the UI keeps rendering the final KPIs
+    # (fps, latency, detection totals) instead of blanking to zero.
+    # `_last_stats` is cleared on /start (fresh session) and /reset.
+    inf = _worker.stats() if _worker else _last_stats
     return jsonify({
         "lifecycle": STATE.lifecycle,
         "device": STATE.device,
