@@ -1,6 +1,12 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $dataprepGpuEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
-{{- $gpuDevice := default "" (index $gpu "device") -}}
+{{- $globalDevices := default (dict) .Values.global.devices -}}
+{{- $vdmsDevices := default (dict) (index $globalDevices "vdmsDataprep") -}}
+{{- $embeddingCfg := default (dict) (index $vdmsDevices "embedding") -}}
+{{- $detectionCfg := default (dict) (index $vdmsDevices "detection") -}}
+{{- $resolvedEmbeddingDevice := upper (default "CPU" (index $embeddingCfg "device")) -}}
+{{- $resolvedDetectionDevice := upper (default "CPU" (index $detectionCfg "device")) -}}
+{{- $embeddingUsesAccelerator := or (eq $resolvedEmbeddingDevice "GPU") (eq $resolvedEmbeddingDevice "NPU") -}}
+{{- $detectionUsesAccelerator := or (eq $resolvedDetectionDevice "GPU") (eq $resolvedDetectionDevice "NPU") -}}
+{{- $anyAccelerator := or $embeddingUsesAccelerator $detectionUsesAccelerator -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,10 +24,12 @@ data:
   MULTIMODAL_EMBEDDING_ENDPOINT: "http://multimodal-embedding-serving:8000/embeddings"
   MULTIMODAL_EMBEDDING_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
   EMBEDDING_PROCESSING_MODE: {{ .Values.global.env.embeddingProcessingMode | quote }}
-  SDK_USE_OPENVINO: {{ .Values.global.env.sdkUseOpenvino | quote }}
-  VDMS_DATAPREP_DEVICE: {{ ternary $gpuDevice "CPU" $dataprepGpuEnabled | quote }}
+  SDK_USE_OPENVINO: {{ ternary "true" .Values.global.env.sdkUseOpenvino $anyAccelerator | quote }}
+  EMBEDDING_DEVICE: {{ $resolvedEmbeddingDevice | quote }}
+  DETECTION_DEVICE: {{ $resolvedDetectionDevice | quote }}
   OV_MODELS_DIR: {{ .Values.global.env.ovModelsDir | quote }}
-  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $dataprepGpuEnabled | quote }}
+  OV_CACHE_DIR: {{ .Values.ovCacheDir | default "/app/ov_models/ov_cache" | quote }}
+  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $anyAccelerator | quote }}
   FRAME_INTERVAL: {{ .Values.global.env.frameInterval | quote }}
   ENABLE_OBJECT_DETECTION: {{ .Values.global.env.enableObjectDetection | quote }}
   DETECTION_CONFIDENCE: {{ .Values.global.env.detectionConfidence | quote }}

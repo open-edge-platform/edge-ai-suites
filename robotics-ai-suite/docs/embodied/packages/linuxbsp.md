@@ -1,6 +1,6 @@
 # Linux BSP
 
-The Embodied Intelligence SDK includes Intel's LTS Kernel v6.12 with Preempt RT patch to support the Arrow Lake platform, which includes the Linux Kernel v6.12, optimized configuration, and kernel boot parameters.
+The Embodied Intelligence SDK includes Intel's LTS Kernel v6.12 with Preempt RT patch to support the Arrow Lake platform and Intel's LTS Kernel v6.17 with Preempt RT patch to support the Panther Lake platform, which includes the Linux Kernel, optimized configuration, and kernel boot parameters.
 
 ## Quick Start
 
@@ -73,12 +73,12 @@ The Linux kernel source code comes with the default configuration. Refer to the 
 
 | kernel config fragment overrides (.cfg) | Comments |
 |---|---|
-| `CONFIG_HZ_250=y`<br>`CONFIG_NO_HZ=n`<br>`CONFIG_NO_HZ_FULL=y`<br>`CONFIG_NO_HZ_IDLE=n`<br>`CONFIG_ACPI_PROCESSOR=n`<br>`CONFIG_CPU_FREQ_GOV_ONDEMAND=n`<br>`CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=n`<br>`CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y`<br>`CONFIG_CPU_FREQ=n`<br>`CONFIG_CPU_IDLE=n` | Reduce task scheduling-clock overhead and disable CPU governor Linux OS features |
-| `ARCH_SUSPEND_POSSIBLE=n`<br>`CONFIG_SUSPEND=n`<br>`CONFIG_PM=n` | Disable Linux OS power-management runtime features |
+| `CONFIG_HZ_250=y`<br>`CONFIG_NO_HZ=n`<br>`CONFIG_NO_HZ_FULL=y`<br>`CONFIG_NO_HZ_IDLE=n`<br>`CONFIG_ACPI_PROCESSOR=y`<br>`CONFIG_CPU_FREQ_GOV_ONDEMAND=n`<br>`CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=n`<br>`CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y`<br>`CONFIG_CPU_FREQ=y`<br>`CONFIG_CPU_IDLE=y` | Reduce task scheduling-clock overhead and disable CPU governor Linux OS features |
+| `ARCH_SUSPEND_POSSIBLE=y`<br>`CONFIG_SUSPEND=y`<br>`CONFIG_PM=y` | Linux OS power-management runtime features |
 | `CONFIG_VIRT_CPU_ACCOUNTING=y`<br>`CONFIG_VIRT_CPU_ACCOUNTING_GEN=y` | Enable more accurate task and CPU time accounting |
-| `CONFIG_CPU_ISOLATION=y`<br>`CONFIG_RCU_NOCB_CPU=y`<br>`CONFIG_PREEMPT_RCU=y`<br>`CONFIG_HAVE_PREEMPT_LAZY=y`<br>`CONFIG_PREEMPT_LAZY=y`<br>`CONFIG_PREEMPT_RT=y` | Enable more preemptive task scheduling policies and CPU temporal-isolation |
+| `CONFIG_CPU_ISOLATION=y`<br>`CONFIG_RCU_NOCB_CPU=y`<br>`CONFIG_PREEMPT_RCU=y`<br>`CONFIG_PREEMPT_LAZY=y`<br>`CONFIG_PREEMPT_RT=y` | Enable more preemptive task scheduling policies and CPU temporal-isolation |
 
-You can find a file named `config-6.12.8-intel-ese-experimental-lts` in `/boot/` when the target had installed with `sudo apt install linux-intel-rt-experimental`, and copy it into Linux kernel source directory.
+You can find a file named `config-6.12.8-intel-ese-experimental-lts(config-6.17.11-intel-ese-experimental-lts)` in `/boot/` when the target had installed with `sudo apt install linux-intel-rt-experimental`, and copy it into Linux kernel source directory.
 
 1. To make changes to the configuration file, run the make command:
 
@@ -130,6 +130,21 @@ When the system boots up, verify the kernel version using the `uname` command:
 ```bash
 uname -mrs
 ```
+### cpupower
+
+`cpupower` is a standalone tool from the Linux kernel source tree. It is a Linux command-line tool used to manage and monitor CPU power management settings, including: CPU Frequency, CPU Governor, C-States, P-States and Turbo Boost. It is recommended to build the tool from kernel source code.
+
+```bash
+cd linux-intel-rt-experimental*/tools/power/cpupower
+make 
+sudo make install
+```
+
+> **Note:** Please ensure you had installed the following packages as dependences before compilation.
+>
+> ```bash
+> sudo apt install -y make build-essential libpci-dev libcap-dev gettext libncurses-dev
+> ```
 
 ## Packages
 

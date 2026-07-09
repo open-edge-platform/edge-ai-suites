@@ -22,8 +22,8 @@ flowchart LR
 - **dlstreamer-pipeline-server**: Intel DLStreamer Pipeline Server processing RTSP sources with GStreamer pipelines and `gvagenai` for VLM inference
 - **mediamtx**: WebRTC/WHIP signaling server for video streaming
 - **coturn**: TURN server for NAT traversal in WebRTC connections
-- **app**: Python FastAPI backend serving REST APIs, SSE metadata streams, and WebSocket metrics
-- **collector**: Intel VIP-PET system metrics collector (CPU, GPU, memory, power)
+- **app**: Python FastAPI backend serving REST APIs, SSE metadata streams, and WebSocket caption streams
+- **metrics-manager**: Bundled system metrics microservice (`intel/metrics-manager`, Telegraf collector + HTTP/SSE API) reporting CPU, GPU, NPU, memory, and power
 
 ## Learn More
 

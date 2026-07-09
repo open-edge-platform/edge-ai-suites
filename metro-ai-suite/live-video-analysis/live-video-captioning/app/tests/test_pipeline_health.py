@@ -332,3 +332,95 @@ async def test_pipeline_health_loop_logs_error_and_sleeps(monkeypatch):
 
     error_mock.assert_called_once()
     sleep_mock.assert_awaited_once_with(ph.PIPELINE_POLL_INTERVAL)
+
+
+# ---------------------------------------------------------------------------
+# get_pipeline_state
+# ---------------------------------------------------------------------------
+
+
+def test_get_pipeline_state_returns_running():
+    """A pipeline present in the status list returns its lowercased state."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(200, [_status_item("aabbccdd", "RUNNING")]),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is True
+    assert state == "running"
+    assert avg_fps == 30.0
+
+
+def test_get_pipeline_state_missing_fps_reports_zero():
+    """A status item without a usable avg_fps yields 0.0 instead of raising."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    item = {"id": "aabbccdd", "state": "RUNNING", "avg_fps": None}
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(200, [item]),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is True
+    assert state == "running"
+    assert avg_fps == 0.0
+
+
+def test_get_pipeline_state_matches_case_insensitively():
+    """Pipeline ID lookup is case-insensitive."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(200, [_status_item("AABBCCDD", "QUEUED")]),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is True
+    assert state == "queued"
+
+
+def test_get_pipeline_state_absent_returns_none_state():
+    """A pipeline missing from the status list is reachable with state=None."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(200, []),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is True
+    assert state is None
+
+
+def test_get_pipeline_state_unreachable_returns_false():
+    """An unreachable server reports reachable=False."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(None, None),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is False
+    assert state is None
+
+
+def test_get_pipeline_state_unexpected_response_returns_false():
+    """A non-200 / non-list response reports reachable=False."""
+    from backend.services.pipeline_health import get_pipeline_state
+
+    with patch(
+        "backend.services.pipeline_health._fetch_pipeline_statuses",
+        return_value=(500, None),
+    ):
+        reachable, state, avg_fps = get_pipeline_state("aabbccdd")
+
+    assert reachable is False
+    assert state is None
