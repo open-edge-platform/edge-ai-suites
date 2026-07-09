@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setActiveDevice, resetDetectionState } from '../../redux/slices/detectionSlice';
-import { api, type Device, type VideoItem } from '../../services/api';
+import {
+  api,
+  type Device,
+  type VideoItem,
+  type V4L2Camera,
+  type BaslerCamera,
+} from '../../services/api';
 import '../../assets/css/SettingsModal.css';
 
 interface SettingsModalProps {
@@ -10,6 +16,7 @@ interface SettingsModalProps {
 }
 
 type Tab = 'source' | 'devices';
+type SourceKind = 'file' | 'v4l2' | 'basler';
 
 const DEVICE_OPTIONS: Device[] = ['GPU', 'CPU', 'NPU'];
 
@@ -47,26 +54,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [sourceBusy, setSourceBusy]   = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Camera-source state (populated on modal open; empty on hosts with no camera)
+  const [pendingKind,   setPendingKind]   = useState<SourceKind>('file');
+  const [v4l2Cams,      setV4L2Cams]      = useState<V4L2Camera[]>([]);
+  const [baslerCams,    setBaslerCams]    = useState<BaslerCamera[]>([]);
+  const [baslerNote,    setBaslerNote]    = useState<string | null>(null);
+  const [pendingCamera, setPendingCamera] = useState<string | null>(null); // v4l2: /dev/videoN, basler: serial
+
   const refreshVideos = useCallback(async () => {
     try {
-      const [cfg, list] = await Promise.all([api.getConfig(), api.listVideos()]);
+      const [cfg, list, cams] = await Promise.all([
+        api.getConfig(),
+        api.listVideos(),
+        api.listCameras().catch(() => ({ v4l2: [], basler: [] } as { v4l2: V4L2Camera[]; basler: BaslerCamera[]; basler_note?: string })),
+      ]);
       setVideos(list.videos);
       setVideosDir(list.dir);
       setMaxUploadMB(list.max_upload_mb);
       setActiveVideo(cfg.video_file || null);
       setDefaultVideo(cfg.default_video || '');
-      // Prime dropdown selection with a pending choice, else the running file,
-      // else the first available video.
+      setV4L2Cams(cams.v4l2 || []);
+      setBaslerCams(cams.basler || []);
+      setBaslerNote(cams.basler_note || null);
+
+      // Prime the kind + selection from (pending > running-config > defaults).
       const pending = api.getPendingSource();
+      const runningKind = (cfg.source?.kind as SourceKind | undefined) ?? 'file';
+      const kind: SourceKind = (pending?.kind as SourceKind | undefined) ?? runningKind ?? 'file';
+      setPendingKind(kind);
+
+      // Video dropdown initial value
       const pendingName =
-        pending && pending.kind === 'file'
-          ? pending.arg.replace(/^.*\//, '')
-          : null;
+        pending && pending.kind === 'file' ? pending.arg.replace(/^.*\//, '') : null;
       const runningName = cfg.video_file ? cfg.video_file.replace(/^.*\//, '') : null;
       setPendingVideo(pendingName ?? runningName ?? list.videos[0]?.name ?? null);
+
+      // Camera dropdown initial value
+      let cam: string | null = null;
+      if (pending && (pending.kind === 'v4l2' || pending.kind === 'basler')) {
+        cam = pending.arg;
+      } else if (kind === 'v4l2' && (cams.v4l2 || []).length > 0) {
+        cam = cams.v4l2[0].device;
+      } else if (kind === 'basler' && (cams.basler || []).length > 0) {
+        cam = cams.basler[0].serial;
+      }
+      setPendingCamera(cam);
     } catch {
       setVideos([]);
+      setV4L2Cams([]);
+      setBaslerCams([]);
       setPendingVideo(null);
+      setPendingCamera(null);
     }
   }, []);
 
@@ -153,23 +191,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   const handleApplySource = () => {
-    if (!pendingVideo || sourceBusy || isProcessing) return;
+    if (sourceBusy || isProcessing) return;
+    // Build the outgoing source payload per selected kind.
+    let arg: string | null = null;
+    if (pendingKind === 'file') {
+      if (!pendingVideo) return;
+      arg = `${videosDir}/${pendingVideo}`;
+    } else if (pendingKind === 'v4l2') {
+      if (!pendingCamera) return;
+      arg = pendingCamera;                    // e.g. /dev/video0
+    } else if (pendingKind === 'basler') {
+      if (!pendingCamera) return;
+      arg = pendingCamera;                    // Basler serial number
+    }
+    if (!arg) return;
+
     setSourceBusy(true);
     setSourceStatus('');
     // Persist client-side; startWorkloads() will include this in the next
     // POST /api/start body. We don't hit the backend now because it rejects
     // source changes while running (409) and there's no dedicated
     // `POST /api/source` endpoint yet.
-    api.setPendingSource({ kind: 'file', arg: `${videosDir}/${pendingVideo}` });
+    api.setPendingSource({ kind: pendingKind, arg });
     setSourceStatus('Applied on next Start');
     setTimeout(() => setSourceStatus(''), 3000);
     setSourceBusy(false);
   };
 
+  // "Dirty" = pending selection differs from what's actually running now.
   const sourceDirty = (() => {
-    if (!pendingVideo) return false;
+    const pendingArg =
+      pendingKind === 'file'
+        ? (pendingVideo ? `${videosDir}/${pendingVideo}` : null)
+        : pendingCamera;
+    if (!pendingArg) return false;
+    // Compare against what /api/config reported. For `file` we compare basenames
+    // (activeVideo is the full path); for camera kinds we only know the running
+    // source is a camera when config.source.kind agrees.
     const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
-    return pendingVideo !== runningName;
+    if (pendingKind === 'file') {
+      return pendingVideo !== runningName;
+    }
+    // For v4l2/basler, dirtiness is "kind changed" or "we don't know the current
+    // camera arg" — err on the side of enabling Apply so the user can commit.
+    return true;
   })();
 
   return (
@@ -287,63 +352,166 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               <div className="settings-field-group">
-                <label className="settings-label">Select a video</label>
-                <select
-                  className="settings-select"
-                  value={pendingVideo ?? ''}
-                  onChange={(e) => setPendingVideo(e.target.value || null)}
-                  disabled={isProcessing || uploadBusy || videos.length === 0}
-                  style={{ minWidth: 320 }}
-                >
-                  {videos.length === 0 && <option value="">(no videos available)</option>}
-                  {videos.map((v) => {
-                    const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
-                    return (
-                      <option key={v.name} value={v.name}>
-                        {v.name} — {formatMB(v.size_bytes)}
-                        {v.name === runningName ? ' (current)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-                <p className="settings-hint" style={{ marginTop: 8 }}>
-                  Files live under <code>{videosDir}</code> inside the container (host <code>./videos</code>).
-                  New selection takes effect on the next Start.
-                </p>
-              </div>
-
-              <div className="settings-field-group">
-                <label className="settings-label">Upload a video</label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".mp4,.mkv,.avi,.mov,.ts,video/*"
-                  style={{ display: 'none' }}
-                  onChange={handleUpload}
-                />
-                <div className="settings-actions" style={{ marginTop: 0 }}>
-                  <button
-                    className="settings-btn settings-btn-secondary"
-                    onClick={handleChooseFile}
-                    disabled={uploadBusy || isProcessing}
-                    title={isProcessing ? 'Stop the pipeline first' : 'Upload a new video'}
-                  >
-                    {uploadBusy ? 'Uploading…' : 'Choose file…'}
-                  </button>
-                  <span className="settings-hint" style={{ marginLeft: 8 }}>
-                    Max {maxUploadMB} MB. Accepted: .mp4 .mkv .avi .mov .ts
-                  </span>
+                <label className="settings-label">Source type</label>
+                <div className="settings-source-kinds">
+                  <label className={`settings-source-kind ${pendingKind === 'file' ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="source-kind"
+                      value="file"
+                      checked={pendingKind === 'file'}
+                      onChange={() => setPendingKind('file')}
+                      disabled={isProcessing || uploadBusy}
+                    />
+                    <span>Video file</span>
+                  </label>
+                  <label className={`settings-source-kind ${pendingKind === 'v4l2' ? 'active' : ''} ${v4l2Cams.length === 0 ? 'disabled' : ''}`}>
+                    <input
+                      type="radio"
+                      name="source-kind"
+                      value="v4l2"
+                      checked={pendingKind === 'v4l2'}
+                      onChange={() => {
+                        setPendingKind('v4l2');
+                        if (!pendingCamera && v4l2Cams[0]) setPendingCamera(v4l2Cams[0].device);
+                      }}
+                      disabled={isProcessing || uploadBusy || v4l2Cams.length === 0}
+                    />
+                    <span>USB / v4l2 camera{v4l2Cams.length === 0 ? ' (none detected)' : ''}</span>
+                  </label>
+                  <label className={`settings-source-kind ${pendingKind === 'basler' ? 'active' : ''} ${baslerCams.length === 0 ? 'disabled' : ''}`}>
+                    <input
+                      type="radio"
+                      name="source-kind"
+                      value="basler"
+                      checked={pendingKind === 'basler'}
+                      onChange={() => {
+                        setPendingKind('basler');
+                        if (!pendingCamera && baslerCams[0]) setPendingCamera(baslerCams[0].serial);
+                      }}
+                      disabled={isProcessing || uploadBusy || baslerCams.length === 0}
+                    />
+                    <span>Basler camera{baslerCams.length === 0 ? ' (none detected)' : ''}</span>
+                  </label>
                 </div>
               </div>
+
+              {pendingKind === 'file' && (
+                <>
+                  <div className="settings-field-group">
+                    <label className="settings-label">Select a video</label>
+                    <select
+                      className="settings-select"
+                      value={pendingVideo ?? ''}
+                      onChange={(e) => setPendingVideo(e.target.value || null)}
+                      disabled={isProcessing || uploadBusy || videos.length === 0}
+                      style={{ minWidth: 320 }}
+                    >
+                      {videos.length === 0 && <option value="">(no videos available)</option>}
+                      {videos.map((v) => {
+                        const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
+                        return (
+                          <option key={v.name} value={v.name}>
+                            {v.name} — {formatMB(v.size_bytes)}
+                            {v.name === runningName ? ' (current)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <p className="settings-hint" style={{ marginTop: 8 }}>
+                      Files live under <code>{videosDir}</code> inside the container (host <code>./videos</code>).
+                      New selection takes effect on the next Start.
+                    </p>
+                  </div>
+
+                  <div className="settings-field-group">
+                    <label className="settings-label">Upload a video</label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".mp4,.mkv,.avi,.mov,.ts,video/*"
+                      style={{ display: 'none' }}
+                      onChange={handleUpload}
+                    />
+                    <div className="settings-actions" style={{ marginTop: 0 }}>
+                      <button
+                        className="settings-btn settings-btn-secondary"
+                        onClick={handleChooseFile}
+                        disabled={uploadBusy || isProcessing}
+                        title={isProcessing ? 'Stop the pipeline first' : 'Upload a new video'}
+                      >
+                        {uploadBusy ? 'Uploading…' : 'Choose file…'}
+                      </button>
+                      <span className="settings-hint" style={{ marginLeft: 8 }}>
+                        Max {maxUploadMB} MB. Accepted: .mp4 .mkv .avi .mov .ts
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {pendingKind === 'v4l2' && (
+                <div className="settings-field-group">
+                  <label className="settings-label">Select a camera</label>
+                  <select
+                    className="settings-select"
+                    value={pendingCamera ?? ''}
+                    onChange={(e) => setPendingCamera(e.target.value || null)}
+                    disabled={isProcessing || v4l2Cams.length === 0}
+                    style={{ minWidth: 320 }}
+                  >
+                    {v4l2Cams.length === 0 && <option value="">(no cameras detected)</option>}
+                    {v4l2Cams.map((c) => (
+                      <option key={c.device} value={c.device}>
+                        {c.device} — {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="settings-hint" style={{ marginTop: 8 }}>
+                    Cameras are auto-detected by <code>make up</code>/<code>make run</code> at container start.
+                    Plug a UVC camera in <em>before</em> starting the stack; hot-plug requires <code>make run</code> again.
+                  </p>
+                </div>
+              )}
+
+              {pendingKind === 'basler' && (
+                <div className="settings-field-group">
+                  <label className="settings-label">Select a Basler camera</label>
+                  <select
+                    className="settings-select"
+                    value={pendingCamera ?? ''}
+                    onChange={(e) => setPendingCamera(e.target.value || null)}
+                    disabled={isProcessing || baslerCams.length === 0}
+                    style={{ minWidth: 320 }}
+                  >
+                    {baslerCams.length === 0 && <option value="">(no Basler cameras detected)</option>}
+                    {baslerCams.map((c) => (
+                      <option key={c.serial} value={c.serial}>
+                        {c.model} — SN {c.serial} ({c.vendor})
+                      </option>
+                    ))}
+                  </select>
+                  {baslerNote && (
+                    <p className="settings-hint" style={{ marginTop: 8 }}>
+                      <em>{baslerNote}</em>
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="settings-actions">
                 <button
                   className="settings-btn settings-btn-primary"
                   onClick={handleApplySource}
-                  disabled={!sourceDirty || sourceBusy || isProcessing || !pendingVideo}
+                  disabled={
+                    !sourceDirty || sourceBusy || isProcessing ||
+                    (pendingKind === 'file'   && !pendingVideo) ||
+                    (pendingKind !== 'file'   && !pendingCamera)
+                  }
                   title={
                     isProcessing ? 'Stop the pipeline first'
-                    : !pendingVideo ? 'Select a video first'
+                    : (pendingKind === 'file' && !pendingVideo) ? 'Select a video first'
+                    : (pendingKind !== 'file' && !pendingCamera) ? 'Select a camera first'
                     : !sourceDirty ? 'Selection matches current source'
                     : 'Apply on next Start'
                   }

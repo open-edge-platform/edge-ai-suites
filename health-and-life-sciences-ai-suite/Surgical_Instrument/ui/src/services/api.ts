@@ -198,6 +198,23 @@ export async function uploadVideo(file: File): Promise<{ name: string; size_byte
   return data;
 }
 
+// ---- Cameras --------------------------------------------------------------
+
+export interface V4L2Camera { device: string; name: string; node: string; }
+export interface BaslerCamera { serial: string; model: string; vendor: string; }
+
+export interface CamerasResponse {
+  v4l2: V4L2Camera[];
+  basler: BaslerCamera[];
+  basler_note?: string;
+}
+
+export async function listCameras(): Promise<CamerasResponse> {
+  const res = await fetch(`${BASE_URL}/devices/cameras`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to list cameras: ${res.status}`);
+  return res.json();
+}
+
 // ---- Pending source (applied on the next start) --------------------------
 
 export type PipelineSource = { kind: 'file' | 'v4l2' | 'basler'; arg: string };
@@ -253,6 +270,7 @@ export const api = {
   reset: resetSession,
   listVideos,
   uploadVideo,
+  listCameras,
   setPendingSource,
   getPendingSource,
 };

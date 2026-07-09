@@ -329,3 +329,52 @@
     border-radius: 8px;
   }
 }
+
+/* --------------------------------------------------------------------------
+ * Input Source — source-kind picker (Slice B.3: camera options)
+ * Renders three radio "pills" (Video file / v4l2 / Basler) that swap the
+ * picker body below. Disabled state indicates zero detected devices of that
+ * kind on this host.
+ * -------------------------------------------------------------------------- */
+.settings-source-kinds {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.settings-source-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #e6e7e8;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #1f2933;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.settings-source-kind:hover:not(.disabled) {
+  background: #f4f8fc;
+  border-color: #b8d3ea;
+}
+
+.settings-source-kind.active {
+  background: #e5f0f9;
+  border-color: #0071c5;
+  color: #0071c5;
+  font-weight: 600;
+}
+
+.settings-source-kind.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.settings-source-kind input[type='radio'] {
+  accent-color: #0071c5;
+  margin: 0;
+}
