@@ -100,6 +100,7 @@ Thumbs.db
 .docker-cache/
 docker-compose.override.yaml
 docker-compose.override.yml
+docker-compose.*.override.yaml
 
 # Local training data / model artifacts (not versioned; bind-mounted at runtime)
 datasets/

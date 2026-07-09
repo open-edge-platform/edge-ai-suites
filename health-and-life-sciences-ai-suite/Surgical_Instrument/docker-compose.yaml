@@ -75,6 +75,15 @@ services:
       - /dev/dri:/dev/dri
       - /dev/accel:/dev/accel
 
+    # Grant the container permission to open v4l2 (video4linux2) character
+    # devices — kernel major 81. This is a permission-only grant: without a
+    # corresponding /dev/videoN bind-mount it does nothing, so hosts with no
+    # USB camera boot normally. To actually pass a camera through use
+    # `make up-with-camera`, which auto-detects /dev/video* at run-time and
+    # generates a compose override.
+    device_cgroup_rules:
+      - 'c 81:* rmw'
+
     volumes:
       - ./models:/models:ro
       - ./videos:/videos:ro
