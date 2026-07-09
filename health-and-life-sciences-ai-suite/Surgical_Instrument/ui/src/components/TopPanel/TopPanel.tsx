@@ -95,6 +95,14 @@ const TopPanel = () => {
             onClick={handleStart}
             disabled={isStarting || isProcessing || !isBackendReady}
             className="start-button"
+            data-tooltip={
+              !isBackendReady
+                ? 'Backend is offline — waiting for /api/health'
+                : isProcessing
+                ? 'Pipeline is already running'
+                : 'Start the pipeline with the current Input Source and accelerator'
+            }
+            data-tooltip-pos="bottom"
             style={{
               opacity: isBackendReady && !isProcessing && !isStarting ? 1 : 0.5,
               cursor: isBackendReady && !isProcessing && !isStarting ? 'pointer' : 'not-allowed',
@@ -110,7 +118,8 @@ const TopPanel = () => {
             onClick={handleStop}
             disabled={isStopping || !isProcessing}
             className="stop-button"
-            title={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
+            data-tooltip={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
+            data-tooltip-pos="bottom"
           >
             {isStopping ? 'Stopping...' : 'Stop'}
           </button>
@@ -135,7 +144,8 @@ const TopPanel = () => {
             onClick={() => setSettingsOpen(true)}
             className="settings-button"
             aria-label="Open Settings"
-            title="Settings — pick input source (video / camera), change accelerator (CPU / GPU / NPU), or reset the session"
+            data-tooltip="Settings — pick input source (video / camera), change accelerator (CPU / GPU / NPU), or reset the session"
+            data-tooltip-pos="left"
           >
             <span className="settings-button-icon" aria-hidden="true">⚙</span>
             <span className="settings-button-label">Settings</span>

@@ -7,6 +7,7 @@ import DisclaimerModal from './components/common/DisclaimerModal';
 import { MetricsPoller } from './components/common/MetricsPoller';
 import { api } from './services/api';
 import './App.css';
+import './assets/css/Tooltip.css';
 
 function App() {
   const [backendReady, setBackendReady] = useState(false);
