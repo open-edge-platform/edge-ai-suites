@@ -114,14 +114,6 @@ const TopPanel = () => {
           >
             {isStopping ? 'Stopping...' : 'Stop'}
           </button>
-
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="reset-button"
-            title="Open Settings — change hardware device, reset session, pick input source"
-          >
-            ⚙ Settings
-          </button>
         </div>
 
         <div className="notification-center">
@@ -138,7 +130,17 @@ const TopPanel = () => {
           )}
         </div>
 
-        <div className="spacer"></div>
+        <div className="top-panel-right">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="settings-button"
+            aria-label="Open Settings"
+            title="Settings — pick input source (video / camera), change accelerator (CPU / GPU / NPU), or reset the session"
+          >
+            <span className="settings-button-icon" aria-hidden="true">⚙</span>
+            <span className="settings-button-label">Settings</span>
+          </button>
+        </div>
       </div>
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />

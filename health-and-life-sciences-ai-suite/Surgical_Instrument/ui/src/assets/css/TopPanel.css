@@ -74,6 +74,57 @@
   display: inline-block;
 }
 
+/* Right-hand slot: settings icon-button. Mirrors .action-buttons' min-width so
+ * the centred .notification-center stays optically centred. */
+.top-panel-right {
+  min-width: 200px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.settings-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  color: #0071c5;
+  background: white;
+  border: 2px solid #82b6df;
+  border-radius: 4px;
+  padding: 8px 14px 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.settings-button:hover:not(:disabled) {
+  background: #0071c5;
+  color: white;
+  border-color: #005a9e;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 113, 197, 0.2);
+}
+
+.settings-button:focus-visible {
+  outline: 2px solid #66b3e5;
+  outline-offset: 2px;
+}
+
+.settings-button-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.settings-button-label {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Legacy: kept so any leftover `<div class="spacer">` still balances layout;
+ * remove once no consumers reference it. */
 .spacer {
   min-width: 200px;
 }
@@ -113,6 +164,20 @@
 
   .spacer {
     min-width: auto;
+  }
+
+  .top-panel-right {
+    min-width: auto;
+  }
+
+  .settings-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .settings-button-label {
+    /* Icon-only on narrow screens. */
+    display: none;
   }
 
   .start-button,
