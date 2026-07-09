@@ -114,7 +114,7 @@ In `charts/values-override.yaml`, set:
 
 ```yaml
 global:
-	nodeName: worker4
+  nodeName: worker4
 ```
 
 Use the same node that you used for model-download.

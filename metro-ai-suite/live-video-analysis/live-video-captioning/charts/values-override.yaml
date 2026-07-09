@@ -57,35 +57,6 @@ global:
   # Add camera host/IP and any internal services that must bypass proxy.
   noProxy: ""
 
-  # OPTIONAL: enable RAG subchart which deploys a retrieval-augmented generation service for enhanced captions. Set to true to enable.
-  enableRAG: false
-
-  # When set enableRAG to true, the RAG subchart deploys a retrieval-augmented generation service that enhances captions with LLM-generated descriptions.
-  # The following values configure the RAG service and its choice of LLM and embedding models.
-  # LLM Model for RAG
-  # Parameters:
-  # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
-  # modelType: "llm",
-  # weightFormat: "int8", or "int4" or "fp16"
-  # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-  #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
-  llmModel:
-    modelId: "microsoft/Phi-3.5-mini-instruct"
-    modelType: "llm"
-    weightFormat: "int8"
-    useGPU:
-      enabled: false
-      key: ""
-    # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
-    # Parameters:
-    # modelId: HuggingFace repo ID for the embedding model, e.g. "QwenText/qwen3-embedding-0.6b"
-    # useGPU: set to true to enable GPU usage for the embedding model; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-  embeddingModel:
-    modelId: "QwenText/qwen3-embedding-0.6b"
-    useGPU:
-      enabled: false
-      key: ""
-
 # -----------------------------------------------------------------------------
 # 2) VIDEO CAPTION SERVICE
 # -----------------------------------------------------------------------------
@@ -114,17 +85,3 @@ dlstreamer-pipeline-server:
   # Must point to the same shared models PVC used by video-caption-service.
   # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
   modelsPvcName: "models-pvc"
-
-# -----------------------------------------------------------------------------
-# 4) LIVE VIDEO CAPTIONING RAG (RETRIEVAL-AUGMENTED GENERATION)
-# -----------------------------------------------------------------------------
-live-video-captioning-rag:
-  # Set when reusing a pre-created/shared PVC (for example: models-pvc).
-  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
-  # Leave empty to use release-derived default name.
-  modelsPvcName: "models-pvc"
-  env:
-    # Number of output tokens for the LLM response.
-    maxTokens: 1024
-    # Number of candidate captions returned by the RAG retriever.
-    topK: 1

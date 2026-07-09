@@ -177,15 +177,6 @@ spec:
               value: {{ .Values.env.pipelineServerUrl | quote }}
             - name: METRICS_SERVICE_PORT
               value: {{ .Values.env.metricsServicePort | quote }}
-            {{- if .Values.global.enableRAG }}
-            - name: LIVE_VIDEO_RAG_HOST_PORT
-              value: {{ .Values.env.liveVideoRagHostPort | quote }}
-            - name: ENABLE_EMBEDDING
-              value: "true"
-            {{- else }}
-            - name: ENABLE_EMBEDDING
-              value: "false"
-            {{- end }}
             {{- include "lvc.proxyEnv" . | nindent 12 }}
           livenessProbe:
             httpGet:

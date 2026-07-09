@@ -125,15 +125,14 @@ The chart pins the workloads that need to stay together to the target node selec
 - `mediamtx`
 - `coturn`
 - `metrics-manager`
-- `live-video-captioning-rag (if RAG is enabled)`
 
 These workloads are kept on the same worker because they rely on node-local access patterns:
 
-- `dlstreamer-pipeline-server`, `video-caption-service`, `live-video-captioning-rag` and `model-download` share the model PVCs that created by `model-download`.
+- `dlstreamer-pipeline-server`, `video-caption-service`, and `model-download` share the model PVCs that created by `model-download`.
 - `dlstreamer-pipeline-server` and `metrics-manager` need direct access to node hardware and host resources.
 - `mediamtx` and `coturn` expose browser-facing WebRTC and TURN endpoints that must match the selected node's reachable IP.
 
-Other supporting services such as `mqtt-broker`, `multimodal-embedding` (when RAG is enabled), and `vdms-vector-db` (when RAG is enabled) do not require pinning to the same worker node.
+Other supporting services such as `mqtt-broker` do not require pinning to the same worker node.
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
@@ -234,27 +233,6 @@ global:
 >
 >If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
 
-#### Optional: Enable RAG with Live-Video-Captioning
-
-Live‑Video‑Captioning includes an optional RAG (Retrieval‑Augmented Generation) capability. You can leave this disabled for a standard captioning deployment, or enable it to add retrieval-backed chatbot features. When enabled, generated caption text is converted into embeddings and stored in a vector store along with the associated frame data and metadata. A RAG‑based chatbot service is included, allowing users to submit queries and receive LLM‑generated responses using context retrieved from the vector store.
-
-If you want to enable this optional feature, edit the override file at `charts/values-override.yaml` and configure the following additional parameters:
-
-| Key | Description | Example |
-| --- | --- | --- |
-| global.enableRAG | Set to `true` to enable RAG subchart to deploy RAG service | `true` or `false` |
-| global.llmModel.modelId  | Configure choice of LLM in RAG | `"microsoft/Phi-3.5-mini-instruct"` |
-| global.llmModel.weightFormat | Model Quantization | `"int4"` or `"int8"` or `"fp16"` |
-| global.embeddingModel.modelId | Configure choice of embedding model for embedding creation | `"QwenText/qwen3-embedding-0.6b"` |
-
-> **Note:** To deploy the llmModel or embeddingModel on a GPU, set `global.llmModel.useGPU.enabled` or `global.embeddingModel.useGPU.enabled` to `true`.
->
-> For `global.llmModel.useGPU.key`, set the value to the GPU resource key label that set in the configured `nodeName`, as the LLM models share the same PVC on that node.
->
-> For `global.embeddingModel.useGPU.key`, you may specify any available GPU resource key label if multiple GPU‑enabled nodes are present. The embedding model does not share the PVC and is managed independently by the embedding service.
->
-> A GPU resource key refers to the label assigned to a GPU‑enabled node by the Kubernetes device plugin. This label is used by Kubernetes to identify and schedule workloads onto nodes with specific GPU resources. You can identify the available GPU resource keys by running `kubectl describe node <node-name>`. Example values include `gpu.intel.com/i915` or `gpu.intel.com/xe`.
-
 ### Build Chart Dependencies
 
 Run the following command from the chart directory:
@@ -310,7 +288,6 @@ To start captioning after deployment:
 4. Select the model you downloaded into the models PVC.
 5. Adjust the prompt and generation parameters if needed.
 6. Start the stream.
-7. To submit a query via the RAG chatbot, click on the `chat icon` button located at the top right of the dashboard. The button is only visible when RAG is enabled.
 
 ## Upgrade the Release
 
@@ -370,5 +347,4 @@ helm uninstall lvc -n "$my_namespace"
 - [How it Works](../how-it-works.md)
 - [Object Detection Pipeline](../how-to-guides/configure-object-detection-pipeline.md)
 - [Build from Source](../get-started/build-from-source.md)
-- [Embedding Creation with RAG](../how-to-guides/configure-embedding-creation-with-rag.md)
 - [Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)
