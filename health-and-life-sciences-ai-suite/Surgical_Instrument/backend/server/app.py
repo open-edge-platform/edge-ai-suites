@@ -590,6 +590,42 @@ def platform_info() -> Response:
     })
 
 
+@app.get(f"{API}/devices/cameras")
+def devices_cameras() -> Response:
+    v4l2: list[dict] = []
+    try:
+        for entry in sorted(os.listdir("/sys/class/video4linux")):
+            name_path = f"/sys/class/video4linux/{entry}/name"
+            try:
+                with open(name_path, "r") as f:
+                    name = f.read().strip()
+            except OSError:
+                name = entry
+            v4l2.append({"device": f"/dev/{entry}", "name": name, "node": entry})
+    except FileNotFoundError:
+        pass
+
+    basler: list[dict] = []
+    basler_note: str | None = None
+    try:
+        from pypylon import pylon  # type: ignore
+        for d in pylon.TlFactory.GetInstance().EnumerateDevices():
+            basler.append({
+                "serial": d.GetSerialNumber(),
+                "model":  d.GetModelName(),
+                "vendor": d.GetVendorName(),
+            })
+    except ImportError:
+        basler_note = "pypylon not installed in backend image (ships in slice E)"
+    except Exception as e:
+        basler_note = f"pylon enumerate failed: {e}"
+
+    resp: dict = {"v4l2": v4l2, "basler": basler}
+    if basler_note:
+        resp["basler_note"] = basler_note
+    return jsonify(resp)
+
+
 @app.get(f"{API}/config")
 def config() -> Response:
     if _cfg is None:
