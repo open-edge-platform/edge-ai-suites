@@ -39,6 +39,8 @@ class InferenceConsumer:
         self,
         *,
         device: str = "GPU",
+        source_kind: str | None = None,
+        source_arg: str | None = None,
         pipeline_host: str | None = None,
         pipeline_port: int | None = None,
         mqtt_host: str | None = None,
@@ -48,6 +50,8 @@ class InferenceConsumer:
         min_track_len: int = 5,
     ) -> None:
         self._device = str(device).upper()
+        self._source_kind = source_kind
+        self._source_arg  = source_arg
         self._pipeline_host = pipeline_host or os.environ.get("PIPELINE_HOST", "surgical-pipeline")
         self._pipeline_port = int(pipeline_port or os.environ.get("PIPELINE_PORT", "8000"))
         self._mqtt_host = mqtt_host or os.environ.get("MQTT_HOST", "surgical-mqtt")
@@ -82,7 +86,11 @@ class InferenceConsumer:
         self._frames.clear()
 
         try:
-            self._client.start(self._device)
+            self._client.start(
+                self._device,
+                source_kind=self._source_kind,
+                source_arg=self._source_arg,
+            )
         except Exception:
             # Bring the consumers back down if the pipeline refuses to start.
             self._mqtt.stop()

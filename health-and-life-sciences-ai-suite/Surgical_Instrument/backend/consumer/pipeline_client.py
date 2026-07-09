@@ -24,10 +24,19 @@ class PipelineClient:
         r.raise_for_status()
         return r.json()
 
-    def start(self, device: str) -> dict[str, Any]:
+    def start(
+        self,
+        device: str,
+        *,
+        source_kind: str | None = None,
+        source_arg: str | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"device": device.upper()}
+        if source_kind is not None:
+            payload["source"] = {"kind": source_kind, "arg": source_arg}
         r = self._session.post(
             f"{self._base}/start",
-            json={"device": device.upper()},
+            json=payload,
             timeout=self._timeout,
         )
         if r.status_code == 409:

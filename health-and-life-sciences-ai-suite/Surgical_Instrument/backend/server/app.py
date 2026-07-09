@@ -66,6 +66,11 @@ class ServerState:
     lifecycle: str = "initializing"           # UI-facing lifecycle
     instance_id: Optional[str] = None
     device: str = "GPU"
+    # Selected pipeline input source. `source_kind` is one of file|v4l2|basler,
+    # `source_arg` is the path/device/serial. Both None → pipeline uses its own
+    # SOURCE_KIND/SOURCE_ARG env defaults (backward-compat with pre-slice-B UI).
+    source_kind: Optional[str] = None
+    source_arg: Optional[str] = None
     started_at: float = field(default_factory=time.time)
     error: Optional[str] = None
 
@@ -410,6 +415,20 @@ def start() -> Response:
             "bootstrap": boot,
         }), 409
 
+    # Optional per-request overrides. Persist to STATE so a subsequent Start
+    # (with no body) still uses the last user choice.
+    body = request.get_json(silent=True) or {}
+    dev = body.get("device")
+    if isinstance(dev, str) and dev.upper() in VALID_DEVICES:
+        STATE.device = dev.upper()
+    src = body.get("source")
+    if isinstance(src, dict):
+        kind = src.get("kind")
+        arg  = src.get("arg")
+        if kind in ("file", "v4l2", "basler") and isinstance(arg, str) and arg:
+            STATE.source_kind = kind
+            STATE.source_arg  = arg
+
     STATE.instance_id = f"srv-{int(time.time())}"
     _set_lifecycle("starting")
     threading.Thread(target=_do_start, name="inference-start", daemon=True).start()
@@ -430,7 +449,11 @@ def _do_start() -> None:
         # STATE.device is the authoritative runtime choice (POST /api/device);
         # falls back to the config value at first boot via create_app().
         device = (STATE.device or _cfg.get("pipeline", {}).get("device", "GPU"))
-        _worker = InferenceConsumer(device=device)
+        _worker = InferenceConsumer(
+            device=device,
+            source_kind=STATE.source_kind,
+            source_arg=STATE.source_arg,
+        )
         _worker.start()
         # Wait briefly for the pipeline container to produce the first
         # annotated frame; then mark running.
@@ -626,14 +649,126 @@ def devices_cameras() -> Response:
     return jsonify(resp)
 
 
+# ---------------------------------------------------------------------------
+# Videos — list + upload
+# ---------------------------------------------------------------------------
+
+VIDEO_EXTS      = {".mp4", ".mkv", ".avi", ".mov", ".ts"}
+MAX_UPLOAD_MB   = 500
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+
+
+def _videos_dir() -> str:
+    """Container path where mp4s live. Mounted from ./videos on the host."""
+    return os.environ.get("VIDEOS_DIR", "/videos")
+
+
+@app.get(f"{API}/videos")
+def list_videos() -> Response:
+    """Enumerate video files available to the pipeline.
+
+    Returns a plain list of {name, size_bytes, mtime}. `name` is the basename
+    only — the pipeline path is always `{VIDEOS_DIR}/{name}`.
+    """
+    d = _videos_dir()
+    out: list[dict] = []
+    try:
+        for entry in sorted(os.listdir(d)):
+            path = os.path.join(d, entry)
+            if not os.path.isfile(path):
+                continue
+            ext = os.path.splitext(entry)[1].lower()
+            if ext not in VIDEO_EXTS:
+                continue
+            try:
+                st = os.stat(path)
+            except OSError:
+                continue
+            out.append({
+                "name": entry,
+                "size_bytes": st.st_size,
+                "mtime": int(st.st_mtime),
+            })
+    except FileNotFoundError:
+        pass
+    return jsonify({"videos": out, "dir": d, "max_upload_mb": MAX_UPLOAD_MB})
+
+
+@app.post(f"{API}/videos")
+def upload_video() -> Response:
+    """Accept a multipart upload; save to VIDEOS_DIR under a sanitised name.
+
+    Rejects non-video extensions and files larger than MAX_UPLOAD_MB. Refuses
+    to overwrite an existing file (client should DELETE + re-POST if that's
+    the intent — no delete endpoint today, so effectively immutable).
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "no file part (expected multipart field 'file')"}), 400
+    f = request.files["file"]
+    if not f.filename:
+        return jsonify({"error": "empty filename"}), 400
+
+    # Sanitise: basename only, keep extension check strict.
+    name = os.path.basename(f.filename).replace("\\", "_")
+    ext  = os.path.splitext(name)[1].lower()
+    if ext not in VIDEO_EXTS:
+        return jsonify({
+            "error": f"unsupported extension {ext!r}; expected one of {sorted(VIDEO_EXTS)}",
+        }), 415
+
+    d = _videos_dir()
+    try:
+        os.makedirs(d, exist_ok=True)
+    except OSError as exc:
+        return jsonify({"error": f"videos dir not writable: {exc}"}), 500
+
+    dest = os.path.join(d, name)
+    if os.path.exists(dest):
+        return jsonify({"error": f"file already exists: {name}"}), 409
+
+    # Stream to disk in chunks; enforce size cap without loading fully in memory.
+    written = 0
+    try:
+        with open(dest, "wb") as out:
+            while True:
+                chunk = f.stream.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > MAX_UPLOAD_BYTES:
+                    out.close()
+                    os.remove(dest)
+                    return jsonify({
+                        "error": f"file exceeds {MAX_UPLOAD_MB} MB limit",
+                    }), 413
+                out.write(chunk)
+    except OSError as exc:
+        try:
+            os.remove(dest)
+        except OSError:
+            pass
+        return jsonify({"error": f"write failed: {exc}"}), 500
+
+    return jsonify({"name": name, "size_bytes": written, "path": dest}), 201
+
+
 @app.get(f"{API}/config")
 def config() -> Response:
     if _cfg is None:
         return jsonify({}), 503
     p = _cfg.get("pipeline", {})
+    # STATE.source_arg (set by POST /api/start body or POST /api/source) takes
+    # precedence over the config default so the UI reflects the user's last
+    # choice across a stop/start cycle.
+    default_video = p.get("default_video", "videos/polyp_test.mp4")
+    selected = STATE.source_arg if STATE.source_kind == "file" else None
     return jsonify({
-        "video_file": p.get("video_source") or p.get("video_src"),
-        "default_video": p.get("default_video", "videos/polyp_test.mp4"),
+        "video_file": selected,
+        "default_video": default_video,
+        "source": {
+            "kind": STATE.source_kind or "file",
+            "arg":  STATE.source_arg  or default_video,
+        },
         "devices": {"detect": STATE.device},
         "model": {
             "name": _cfg["model"]["name"],
