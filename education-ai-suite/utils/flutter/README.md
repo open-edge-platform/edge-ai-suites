@@ -20,7 +20,7 @@ A cross-platform Flutter application demonstrating **Retrieval Augmented Generat
 - [Quick Start](#quick-start)
 - [Using the Coding Companion](#using-the-coding-companion)
 - [Available Skills & Commands](#available-skills--commands)
-- [Sample Prompts for Coding Companion](#sample-prompts-for-coding-companion)
+- [Sample Commands for Coding Companion](#sample-commands-for-coding-companion)
 - [API Endpoints](#api-endpoints)
 - [Troubleshooting](#troubleshooting)
 - [Tech Stack](#tech-stack)
@@ -116,7 +116,7 @@ The Flutter app acts as a REST API client to the Content Search backend:
 - **View Tags**: List all available tags in the system
 
 ### 🤖 Agentic Companion
-- **Natural Language Interface**: Control the application via coding assistants
+- **Skill-Based Interface**: Control the application via explicit skill commands in coding assistants
 - **Autonomous Execution**: Skills run commands directly, no manual intervention
 - **Cross-Platform Agent Support**: Works with GitHub Copilot, Continue, Cursor, Claude Code, etc.
 ---
@@ -146,29 +146,29 @@ The Flutter app acts as a REST API client to the Content Search backend:
 
 ### Method 2: Coding Companion (Agentic Mode)
 
-Instead of manually running commands or clicking through UI, **use natural language** to control the application through your coding assistant.
+Instead of manually running commands or clicking through UI, **use skill commands** to control the application through your coding assistant.
 
 **How It Works**:
 1. Open this workspace in VS Code
 2. Start your coding companion (GitHub Copilot Chat, Continue, Cursor, etc.)
-3. Type natural language commands
+3. Invoke skills using `/<skill-name> "description or query"` syntax
 4. The agent reads the skill files (`.github/skills/`) and autonomously executes workflows
 
 **Example Workflow**:
 ```
-You: "Set up the Smart Classroom application"
+You: /sc-setup "first time set-up"
 Agent: [Reads sc-setup skill, runs setup.ps1, reports success]
 
-You: "Start the application"
+You: /sc-up "start the application"
 Agent: [Reads sc-up skill, runs start.ps1, verifies health endpoint]
 
-You: "Upload the PDF"
+You: /sc-upload "upload the PDF"
 Agent: [Reads sc-upload skill, uploads file, polls task until COMPLETED]
 
-You: "Ask a question: What is quantum computing?"
+You: /sc-qa "What is quantum computing?"
 Agent: [Reads sc-qa skill, calls Q&A API, returns answer with sources]
 
-You: "List all indexed files"
+You: /sc-files "list all indexed files"
 Agent: [Reads sc-files skill, calls files endpoint, displays table]
 ```
 
@@ -219,13 +219,13 @@ code .
 
 # 2. Open Copilot Chat / Continue / Cursor
 
-# 3. Type any of these commands:
-"set up smart classroom"
-"start smart classroom"
-"check if the backend is healthy"
-"upload sample-files/document.pdf"
-"ask a question: Explain the main concepts"
-"list all indexed files"
+# 3. Execute skills using explicit commands:
+/sc-setup "first time set-up"
+/sc-up "start the application"
+/sc-doctor "check backend health"
+/sc-upload "upload sample-files/document.pdf"
+/sc-qa "Explain the main concepts"
+/sc-files "list all indexed files"
 ```
 
 The agent will read the appropriate skill file and execute the workflow automatically.
@@ -241,7 +241,12 @@ The agent will read the appropriate skill file and execute the workflow automati
 - **Workflow Instructions**: Step-by-step PowerShell commands
 - **Troubleshooting Guide**: Common errors and fixes
 
-When you type a trigger phrase (e.g., "upload a file"), the agent:
+**Skill Invocation Syntax:**
+```
+/skill-name "description or query"
+```
+
+When you invoke a skill (e.g., `/sc-upload "upload my document"`), the agent:
 1. Searches for the matching skill
 2. Reads the skill's instructions
 3. Executes commands directly in your terminal
@@ -264,85 +269,86 @@ This application works with any AI coding assistant that can:
 
 All skills are located in `.github/skills/`. Here's what each skill does:
 
-| Skill | Purpose | Trigger Phrases | What It Does |
-|-------|---------|-----------------|--------------|
-| **sc-setup** | One-time environment setup | "set up smart classroom", "run setup", "first time setup", "install dependencies" | • Verifies Flutter SDK<br>• Runs `flutter pub get`<br>• Creates Python venv<br>• Installs backend requirements |
-| **sc-up** | Start application | "start smart classroom", "run the app", "launch smart classroom", "bring up services" | • Runs `start.ps1` script<br>• Starts backend on port 9011<br>• Launches Flutter app<br>• Verifies health endpoint |
-| **sc-doctor** | Health diagnostics | "is the backend up", "check health", "backend unreachable", "debug backend" | • Probes `/api/v1/system/health`<br>• Diagnoses connectivity issues<br>• Checks Python venv<br>• Reviews logs |
-| **sc-upload** | Upload & ingest files | "upload a file", "ingest a document", "upload pdf", "index a file", "add course material" | • Uploads file via multipart POST<br>• Polls task until COMPLETED<br>• Handles duplicates (cleanup-retry)<br>• Reports success/failure |
-| **sc-qa** | Ask questions (RAG) | "ask a question", "query the content", "what does the document say", "RAG question", "multi-turn Q&A" | • Sends question to `/api/v1/object/qa`<br>• Includes conversation history<br>• Supports tag filtering<br>• Returns answer + sources |
-| **sc-files** | Manage indexed files | "list files", "show indexed files", "delete a file", "remove file", "list tags", "manage files" | • Lists all files with metadata<br>• Shows available tags<br>• Deletes files by hash<br>• Filters by tags |
+| Skill | Purpose | Example Invocation | What It Does |
+|-------|---------|-------------------|--------------|
+| **sc-setup** | One-time environment setup | `/sc-setup "first time set-up"` | • Verifies Flutter SDK<br>• Runs `flutter pub get`<br>• Creates Python venv<br>• Installs backend requirements |
+| **sc-up** | Start application | `/sc-up "start the application"` | • Runs `start.ps1` script<br>• Starts backend on port 9011<br>• Launches Flutter app<br>• Verifies health endpoint |
+| **sc-doctor** | Health diagnostics | `/sc-doctor "check backend health"` | • Probes `/api/v1/system/health`<br>• Diagnoses connectivity issues<br>• Checks Python venv<br>• Reviews logs |
+| **sc-upload** | Upload & ingest files | `/sc-upload "upload my-document.pdf"` | • Uploads file via multipart POST<br>• Polls task until COMPLETED<br>• Handles duplicates (cleanup-retry)<br>• Reports success/failure |
+| **sc-qa** | Ask questions (RAG) | `/sc-qa "What is quantum computing?"` | • Sends question to `/api/v1/object/qa`<br>• Includes conversation history<br>• Supports tag filtering<br>• Returns answer + sources |
+| **sc-files** | Manage indexed files | `/sc-files "list all files"` | • Lists all files with metadata<br>• Shows available tags<br>• Deletes files by hash<br>• Filters by tags |
 
 ---
 
-## Sample Prompts for Coding Companion
+## Sample Commands for Coding Companion
 
-Copy-paste these into your AI coding assistant to see agentic mode in action:
+Execute these skills in your AI coding assistant to see agentic mode in action:
 
 ### 🔧 Setup & Launch
 ```
-Set up the Smart Classroom application for the first time.
+/sc-setup "first time set-up"
 ```
 
 ```
-Start the Smart Classroom application and verify the backend is healthy.
+/sc-up "start the application"
 ```
 
 ### 📤 Upload Content
 ```
-Upload the file at "C:\Users\...\Documents\my-course-notes.pdf" to the Content Search backend.
+/sc-upload "upload C:\Users\...\Documents\my-course-notes.pdf"
 ```
 
 ```
-Upload all PDF files in the sample-files directory.
+/sc-upload "upload all PDFs from sample-files/*.pdf"
 ```
 
 ### 💬 Ask Questions
 ```
-Ask a question against the indexed content: "What are the key concepts covered in the course?"
+/sc-qa "What are the key concepts covered in the course?"
 ```
 
 ```
-Ask a follow-up question: "Can you explain the second concept in more detail?" (maintains conversation history)
+/sc-qa "Can you explain the second concept in more detail?"
+# Note: Conversation history is maintained automatically
 ```
 
 ```
-Ask a question filtered by the tag "physics": "What is quantum entanglement?"
+/sc-qa "filter by tag physics: What is quantum entanglement?"
 ```
 
 ### 📁 File Management
 ```
-List all files currently indexed in the Content Search backend.
+/sc-files "list all indexed files"
 ```
 
 ```
-List all available tags in the system.
+/sc-files "list all available tags"
 ```
 
 ```
-Delete the file with hash abc123def456 from the indexed content.
+/sc-files "delete file with hash abc123def456"
 ```
 
 ### 🩺 Diagnostics
 ```
-Check if the Content Search backend is healthy and running.
+/sc-doctor "check backend health"
 ```
 
 ```
-Debug why the Flutter app can't connect to the backend.
+/sc-doctor "debug connectivity issues"
 ```
 
 ### 🚀 Full Workflow
 ```
-I want to test the Smart Classroom RAG pipeline:
-1. Set up the environment
-2. Start the application
-3. Upload sample-files/quantum-physics.pdf
-4. Ask the question: "What is quantum computing?"
-5. List all indexed files
+# Execute these skills in sequence:
+/sc-setup "first time set-up"
+/sc-up "start the application"
+/sc-upload "upload sample-files/quantum-physics.pdf"
+/sc-qa "What is quantum computing?"
+/sc-files "list all indexed files"
 ```
 
-The agent will execute all 5 steps autonomously!
+The agent will execute each step autonomously!
 
 ---
 

@@ -49,9 +49,9 @@ The Smart Classroom now includes a **Flutter application** (`utils/flutter/`) th
    - Interact via the Flutter desktop or web interface
 
 2. **Coding Companion (Agentic Mode)** - AI-assisted workflow:
-   - Use natural language commands in your coding assistant (GitHub Copilot)
+   - Use natural language commands in your coding assistant like GitHub Copilot, Claude, Cursor etc.,
    - Available skills automatically execute setup, upload files, ask questions, manage content
-   - Example: "set up smart classroom", "upload this PDF", "ask a question about the content"
+   - Example: `/sc-setup "first time set-up"`, `/sc-upload "upload a file"`, `/sc-qa "explain quantum computing"`
 
 For detailed setup instructions, architecture overview, and coding companion usage, see [**Flutter + RAG Documentation**](utils/flutter/README.md).
 

@@ -12,7 +12,7 @@ Full reference for `POST /api/v1/object/qa`.
     { "role": "assistant", "content": "Prior assistant reply" }
   ],
   "filter": {
-    "tags": "math,week1"
+    "tags": ["math,week1"]
   }
 }
 ```
@@ -24,7 +24,7 @@ Full reference for `POST /api/v1/object/qa`.
 | `question` | `string` | **Yes** | The natural-language question to answer. Must be non-empty. |
 | `history` | `array<{role, content}>` | No | Prior conversation turns. `role` must be `"user"` or `"assistant"`. Alternates user/assistant. Max 3 turns (6 messages) by default (`QA_MAX_HISTORY_TURNS` backend env var). |
 | `filter` | `object` | No | Retrieval scope filters. Currently supports `tags`. |
-| `filter.tags` | `string` | No | Comma-separated tag string (e.g. `"math,week1"`). Only chunks from files tagged with **all** specified tags are retrieved. Note: the *upload* `meta.tags` is a JSON array; this filter field is a comma-separated string. |
+| `filter.tags` | `array<string>` | No | Tag list. Only chunks from files tagged with at least one of the specified tags are retrieved (backend builds `$contains` clauses for list-valued `tags`). |
 
 ## Response body
 

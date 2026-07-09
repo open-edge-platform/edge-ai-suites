@@ -23,7 +23,7 @@
     {
       "name": "sc-up",
       "path": ".github/skills/sc-up/SKILL.md",
-      "description": "Bring up the Flutter implementation with the existing Content Search backend by running utils/flutter/start-scrit.ps1 and validating service health.",
+      "description": "Bring up the Flutter implementation with the existing Content Search backend by running utils/flutter/start.ps1 and validating service health.",
       "triggers": [
         "start smart classroom",
         "run the app",
@@ -35,7 +35,7 @@
       ],
       "requires": [
         "sc-setup completed successfully",
-        "utils/flutter/start-scrit.ps1 available"
+        "utils/flutter/start.ps1 available"
       ]
     },
     {

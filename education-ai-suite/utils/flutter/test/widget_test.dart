@@ -17,20 +17,19 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: SmartClassroomApp()));
 
     // Verify that the app title is present
-    expect(find.text('Smart Classroom'), findsOneWidget);
-
-    // Verify that we can find navigation elements
-    // (The actual UI elements will depend on your home_screen.dart implementation)
     await tester.pumpAndSettle();
+    expect(find.text('Smart Classroom'), findsOneWidget);
+    expect(find.text('Upload'), findsOneWidget);
   });
 
   testWidgets('Smart Classroom app has correct theme', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: SmartClassroomApp()));
 
     final MaterialApp app = tester.widget(find.byType(MaterialApp));
+    final expected = ColorScheme.fromSeed(seedColor: const Color(0xFF0071C5));
     
     // Verify Intel Blue color scheme
-    expect(app.theme?.colorScheme.primary, const Color(0xFF0071C5));
+    expect(app.theme?.colorScheme.primary, expected.primary);
     expect(app.debugShowCheckedModeBanner, false);
   });
 }

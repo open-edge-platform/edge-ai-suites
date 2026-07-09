@@ -129,7 +129,7 @@ $r = Invoke-WebRequest -Uri "$BASE/api/v1/object/tags" -UseBasicParsing
 # Then ask with a tag filter
 $body = @{
     question = "Summarize the key equations"
-    filter   = @{ tags = "mathematics,week1" }
+    filter   = @{ tags = @("mathematics","week1") }
 } | ConvertTo-Json -Depth 5
 
 $r = Invoke-WebRequest -Uri "$BASE/api/v1/object/qa" `

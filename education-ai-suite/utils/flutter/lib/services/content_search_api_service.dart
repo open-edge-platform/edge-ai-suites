@@ -41,15 +41,18 @@ class ContentSearchApiService {
       ),
     );
 
-    _dio.interceptors.add(
-      LogInterceptor(
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        logPrint: (o) => debugPrint('[ContentSearch] $o'),
-      ),
-    );
+     assert(() {
+       _dio.interceptors.add(
+         LogInterceptor(
+           requestHeader: true,
+           requestBody: true,
+           responseHeader: true,
+           responseBody: true,
+           logPrint: (o) => debugPrint('[ContentSearch] $o'),
+         ),
+       );
+       return true;
+     }());
   }
 
   // ─── Helper ───────────────────────────────────────────────────────────────

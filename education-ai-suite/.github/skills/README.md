@@ -29,7 +29,6 @@ A skill is a directory containing:
 
 | Skill | Purpose | Key interfaces |
 |---|---|---|
-| `sc-flutter-gen` | Generate complete Flutter app from scratch | Creates all Dart source files |
 | `sc-setup` | One-time setup of Flutter deps + Python venv | `flutter create`, `flutter pub get`, `python -m venv` |
 | `sc-up` | Start the backend and Flutter app together | Direct Python + Flutter commands |
 | `sc-doctor` | Health check, connectivity debug, backend logs | `GET /api/v1/system/health`, Python venv |

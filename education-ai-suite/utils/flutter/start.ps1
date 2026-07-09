@@ -42,38 +42,82 @@ Write-Host "[OK] Backend window opened" -ForegroundColor Green
 # Wait for backend to be fully ready
 Write-Host "`nWaiting for backend to be fully healthy..." -ForegroundColor Yellow
 Write-Host "  This ensures backend is completely ready before launching Flutter" -ForegroundColor Gray
-Write-Host "  Checking health endpoint: http://127.0.0.1:9011/api/v1/system/health" -ForegroundColor Gray
+Write-Host "  Health endpoint: http://127.0.0.1:9011/api/v1/system/health" -ForegroundColor Gray
 
-$deadline = (Get-Date).AddSeconds(20)
+# Give backend time to start up without interference from health checks
+Write-Host "`n  Initial startup delay (30 seconds)..." -ForegroundColor Gray
+Write-Host "  Allowing services to initialize without polling overhead" -ForegroundColor Gray
+Start-Sleep -Seconds 30
+
+Write-Host "`n  Now checking health status..." -ForegroundColor Gray
+$deadline = (Get-Date).AddSeconds(150)  # 2.5 minutes after initial wait
 $backendReady = $false
 $attempts = 0
+$lastStatus = "unknown"
 
 do {
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds 10  # Check every 10 seconds to reduce load
     $attempts++
     try {
         $response = Invoke-WebRequest -Uri "http://127.0.0.1:9011/api/v1/system/health" `
                                        -UseBasicParsing -TimeoutSec 5
         if ($response.StatusCode -eq 200) {
-            Write-Host "`n[OK] Backend is fully healthy and ready (after $attempts seconds)" -ForegroundColor Green
-            $backendReady = $true
-            break
+            # Parse JSON response to check actual health status
+            $healthData = $response.Content | ConvertFrom-Json
+            $lastStatus = $healthData.status
+            
+            if ($healthData.status -eq "ok") {
+                Write-Host "`n[OK] Backend is fully healthy (status: ok) after $attempts checks" -ForegroundColor Green
+                
+                # Show service statuses
+                if ($healthData.services) {
+                    Write-Host "  Service statuses:" -ForegroundColor Gray
+                    $healthData.services.PSObject.Properties | ForEach-Object {
+                        $serviceStatus = if ($_.Value -eq "healthy") { "[OK]" } else { "[X]" }
+                        $color = if ($_.Value -eq "healthy") { "Green" } else { "Red" }
+                        Write-Host "    $serviceStatus $($_.Name): $($_.Value)" -ForegroundColor $color
+                    }
+                }
+                
+                $backendReady = $true
+                break
+            } else {
+                # Backend is responding but status is "degraded"
+                Write-Host "`n  Backend status: $($healthData.status) (check $attempts)" -ForegroundColor Yellow
+                if ($healthData.services) {
+                    $unhealthyServices = @()
+                    $healthData.services.PSObject.Properties | ForEach-Object {
+                        if ($_.Value -ne "healthy") {
+                            $unhealthyServices += "$($_.Name): $($_.Value)"
+                        }
+                    }
+                    if ($unhealthyServices.Count -gt 0) {
+                        Write-Host "    Waiting for: $($unhealthyServices -join ', ')" -ForegroundColor Gray
+                    }
+                }
+            }
         }
     } catch {
-        Write-Host "." -NoNewline
+        Write-Host "`n  Waiting for backend to start... (check $attempts)" -ForegroundColor Gray
     }
 } while ((Get-Date) -lt $deadline)
 
 if (-not $backendReady) {
-    Write-Host "`n`n[X] Backend failed to become healthy within 60 seconds" -ForegroundColor Red
+    Write-Host "`n`n[X] Backend failed to become fully healthy" -ForegroundColor Red
+    Write-Host "  Total wait time: 3 minutes (30s initial + 2.5 minutes polling)" -ForegroundColor Yellow
+    Write-Host "  Last status: $lastStatus" -ForegroundColor Yellow
     Write-Host "  Check the backend window for error messages" -ForegroundColor Yellow
     Write-Host "  Common issues:" -ForegroundColor Yellow
     Write-Host "    - Port 9011 already in use" -ForegroundColor Gray
     Write-Host "    - Missing dependencies (run .\utils\flutter\setup.ps1)" -ForegroundColor Gray
     Write-Host "    - Python environment issues" -ForegroundColor Gray
+    Write-Host "    - VLM service taking longer than expected to load models" -ForegroundColor Gray
+    Write-Host "    - ChromaDB or other dependent services not starting" -ForegroundColor Gray
     Write-Host "`nExiting without launching Flutter..." -ForegroundColor Red
     exit 1
 }
+
+# Backend is ready - no additional delay needed
 
 # Start Flutter app in separate window
 Write-Host "`nBackend is ready - now starting Flutter app..." -ForegroundColor Yellow

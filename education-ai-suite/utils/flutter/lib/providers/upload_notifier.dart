@@ -64,10 +64,9 @@ class UploadNotifier extends StateNotifier<List<UploadEntry>> {
   /// Update the tag list for a staged entry.
   /// Only effective while status == staged (ignored otherwise).
   void updateEntryTags(String entryId, List<String> tags) {
-    final entry = state.firstWhere(
-      (e) => e.id == entryId,
-      orElse: () => state.first,
-    );
+    final idx = state.indexWhere((e) => e.id == entryId);
+    if (idx == -1) return;
+    final entry = state[idx];
     if (entry.status != TaskStatus.staged) return;
     _updateEntry(entryId, tags: tags);
   }
