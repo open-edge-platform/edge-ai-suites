@@ -2,28 +2,22 @@ import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
-import { resetDetectionState, setActiveDevice } from '../../redux/slices/detectionSlice';
 import { api } from '../../services/api';
+import SettingsModal from '../Settings/SettingsModal';
 import '../../assets/css/TopPanel.css';
 
 const TopPanel = () => {
   const dispatch = useAppDispatch();
   const { isProcessing } = useAppSelector((state) => state.app);
-  const currentDevice = useAppSelector(
-    (state) =>
-      state.detection.data.modelInfo?.device ||
-      state.detection.data.pipelinePerformance?.workloads?.[0]?.device ||
-      'GPU'
-  );
   const [notification, setNotification] = useState<string>('');
   const [isBackendReady, setIsBackendReady] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleStart = async () => {
     if (!isBackendReady) {
-      setNotification('❌ Backend is not ready');
+      setNotification('Backend is not ready');
       setTimeout(() => setNotification(''), 5000);
       return;
     }
@@ -31,7 +25,7 @@ const TopPanel = () => {
 
     try {
       setIsStarting(true);
-      setNotification('🚀 Starting...');
+      setNotification('Starting...');
       dispatch(startProcessing());
       dispatch(startAllWorkloads());
 
@@ -40,14 +34,14 @@ const TopPanel = () => {
       if (response.status === 'starting' || response.status === 'running' || response.status === 'ok') {
         const eventsUrl = api.getEventsUrl(['all']);
         dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
-        setNotification('✅ Running');
+        setNotification('Running');
         setTimeout(() => setNotification(''), 3000);
       } else {
         throw new Error('Start failed');
       }
     } catch (err) {
       console.error('[TopPanel] Start failed:', err);
-      setNotification('❌ Error starting pipeline');
+      setNotification('Error starting pipeline');
       dispatch(stopProcessing());
       dispatch(stopAllWorkloads());
       setTimeout(() => setNotification(''), 5000);
@@ -71,33 +65,10 @@ const TopPanel = () => {
       setTimeout(() => setNotification(''), 3000);
     } catch (err) {
       console.error('[TopPanel] Stop failed:', err);
-      setNotification('❌ Failed to stop');
+      setNotification('Failed to stop');
       setTimeout(() => setNotification(''), 3000);
     } finally {
       setIsStopping(false);
-    }
-  };
-
-  const handleReset = async () => {
-    if (isResetting || isProcessing || isStarting || isStopping) return;
-    try {
-      setIsResetting(true);
-      setNotification('🔄 Resetting session...');
-      // Preserve the currently-selected device so the dropdown stays on the
-      // user's choice — resetDetectionState clears modelInfo which drives it.
-      const dev = currentDevice;
-      await api.reset();
-      dispatch(resetDetectionState());
-      dispatch(setActiveDevice(dev));
-      setNotification('✅ Session cleared — ready to Start');
-      setTimeout(() => setNotification(''), 3000);
-    } catch (err) {
-      console.error('[TopPanel] Reset failed:', err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setNotification(`❌ Reset failed: ${msg}`);
-      setTimeout(() => setNotification(''), 5000);
-    } finally {
-      setIsResetting(false);
     }
   };
 
@@ -128,10 +99,10 @@ const TopPanel = () => {
             cursor: isBackendReady && !isProcessing && !isStarting ? 'pointer' : 'not-allowed',
           }}
         >
-          {!isBackendReady ? '⚠️ Offline'
-            : isStarting ? '⏳ Starting...'
-            : isProcessing ? '✅ Running'
-            : '▶️ Start'}
+          {!isBackendReady ? 'Offline'
+            : isStarting ? 'Starting...'
+            : isProcessing ? 'Running'
+            : 'Start'}
         </button>
 
         <button
@@ -140,20 +111,15 @@ const TopPanel = () => {
           className="stop-button"
           title={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
         >
-          {isStopping ? '⏳ Stopping...' : '⏹ Stop'}
+          {isStopping ? 'Stopping...' : 'Stop'}
         </button>
 
         <button
-          onClick={handleReset}
-          disabled={isResetting || isProcessing || isStarting || isStopping}
+          onClick={() => setSettingsOpen(true)}
           className="reset-button"
-          title={
-            isProcessing
-              ? 'Stop the pipeline before resetting'
-              : 'Clear the last session (frame + KPIs) so you can change device and Start fresh'
-          }
+          title="Open Settings — change hardware device, reset session, pick input source"
         >
-          {isResetting ? '⏳ Resetting...' : '🔄 Reset'}
+          Settings
         </button>
       </div>
 
@@ -172,6 +138,8 @@ const TopPanel = () => {
       </div>
 
       <div className="spacer"></div>
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 };
