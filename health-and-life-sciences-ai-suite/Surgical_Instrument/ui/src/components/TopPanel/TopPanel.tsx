@@ -88,59 +88,61 @@ const TopPanel = () => {
   }, []);
 
   return (
-    <div className="top-panel">
-      <div className="action-buttons">
-        <button
-          onClick={handleStart}
-          disabled={isStarting || isProcessing || !isBackendReady}
-          className="start-button"
-          style={{
-            opacity: isBackendReady && !isProcessing && !isStarting ? 1 : 0.5,
-            cursor: isBackendReady && !isProcessing && !isStarting ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {!isBackendReady ? 'Offline'
-            : isStarting ? 'Starting...'
-            : isProcessing ? 'Running'
-            : 'Start'}
-        </button>
+    <>
+      <div className="top-panel">
+        <div className="action-buttons">
+          <button
+            onClick={handleStart}
+            disabled={isStarting || isProcessing || !isBackendReady}
+            className="start-button"
+            style={{
+              opacity: isBackendReady && !isProcessing && !isStarting ? 1 : 0.5,
+              cursor: isBackendReady && !isProcessing && !isStarting ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {!isBackendReady ? 'Offline'
+              : isStarting ? 'Starting...'
+              : isProcessing ? 'Running'
+              : 'Start'}
+          </button>
 
-        <button
-          onClick={handleStop}
-          disabled={isStopping || !isProcessing}
-          className="stop-button"
-          title={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
-        >
-          {isStopping ? 'Stopping...' : 'Stop'}
-        </button>
+          <button
+            onClick={handleStop}
+            disabled={isStopping || !isProcessing}
+            className="stop-button"
+            title={!isProcessing ? 'No pipeline running' : 'Stop pipeline'}
+          >
+            {isStopping ? 'Stopping...' : 'Stop'}
+          </button>
 
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="reset-button"
-          title="Open Settings — change hardware device, reset session, pick input source"
-        >
-          Settings
-        </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="reset-button"
+            title="Open Settings — change hardware device, reset session, pick input source"
+          >
+            ⚙ Settings
+          </button>
+        </div>
+
+        <div className="notification-center">
+          {notification && (
+            <span style={{
+              padding: '8px 16px',
+              background: notification.includes('❌') ? '#fee' : notification.includes('⚠️') ? '#ffc' : '#efe',
+              borderRadius: '4px',
+              fontSize: '13px',
+              border: `1px solid ${notification.includes('❌') ? '#fcc' : notification.includes('⚠️') ? '#fc6' : '#cfc'}`,
+            }}>
+              {notification}
+            </span>
+          )}
+        </div>
+
+        <div className="spacer"></div>
       </div>
-
-      <div className="notification-center">
-        {notification && (
-          <span style={{
-            padding: '8px 16px',
-            background: notification.includes('❌') ? '#fee' : notification.includes('⚠️') ? '#ffc' : '#efe',
-            borderRadius: '4px',
-            fontSize: '13px',
-            border: `1px solid ${notification.includes('❌') ? '#fcc' : notification.includes('⚠️') ? '#fc6' : '#cfc'}`,
-          }}>
-            {notification}
-          </span>
-        )}
-      </div>
-
-      <div className="spacer"></div>
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
-    </div>
+    </>
   );
 };
 
