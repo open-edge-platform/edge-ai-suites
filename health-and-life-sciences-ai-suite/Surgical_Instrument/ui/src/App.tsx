@@ -3,6 +3,7 @@ import Header from './components/Header/Header';
 import TopPanel from './components/TopPanel/TopPanel';
 import Body from './components/common/Body';
 import Footer from './components/Footer/Footer';
+import DisclaimerModal from './components/common/DisclaimerModal';
 import { MetricsPoller } from './components/common/MetricsPoller';
 import { api } from './services/api';
 import './App.css';
@@ -54,6 +55,7 @@ function App() {
 
   return (
     <div className="app">
+      <DisclaimerModal />
       <MetricsPoller />
       <Header />
       {!backendReady && (

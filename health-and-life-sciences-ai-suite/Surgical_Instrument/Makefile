@@ -168,6 +168,98 @@ port-audit:  ## Assert only one host-published port exists (UI:8080)
 	if [ "$$N" -ne 1 ]; then echo "FAIL: expected 1 published port, found $$N"; exit 1; fi; \
 	echo "PASS: exactly 1 published port"
 
+# ---- Doctor: pre-flight health check (slice G) ------------------------------
+# `make doctor` is a read-only sanity sweep the operator can run before
+# `make up`. Every check prints [ OK ] / [WARN] / [FAIL] and the target exits
+# non-zero only if a genuinely fatal condition is found (missing Docker, no
+# demo asset, port collision). Warnings — e.g. NPU not visible — are fine on
+# hosts where the workload will run on CPU/GPU only.
+
+.PHONY: doctor
+doctor:  ## Pre-flight: check Docker, /dev/dri, models, videos, ports
+	@fail=0; \
+	printf "\n[doctor] --- host prerequisites ---\n"; \
+	if command -v docker >/dev/null 2>&1; then \
+	  printf "  [ OK ] docker : %s\n" "$$(docker --version)"; \
+	else \
+	  printf "  [FAIL] docker : not installed\n"; fail=1; \
+	fi; \
+	if docker compose version >/dev/null 2>&1; then \
+	  printf "  [ OK ] compose: %s\n" "$$(docker compose version --short)"; \
+	elif command -v docker-compose >/dev/null 2>&1; then \
+	  printf "  [WARN] compose: v1 detected (`docker-compose`) — v2 (`docker compose`) recommended\n"; \
+	else \
+	  printf "  [FAIL] compose: not installed\n"; fail=1; \
+	fi; \
+	if docker info >/dev/null 2>&1; then \
+	  printf "  [ OK ] docker daemon reachable\n"; \
+	else \
+	  printf "  [FAIL] docker daemon not reachable — is the service running and is your user in the docker group?\n"; fail=1; \
+	fi; \
+	printf "\n[doctor] --- accelerator visibility ---\n"; \
+	if [ -e /dev/dri ]; then \
+	  RENDERS=$$(ls /dev/dri/renderD* 2>/dev/null | wc -l); \
+	  printf "  [ OK ] /dev/dri present (renderD* count: %s)\n" "$$RENDERS"; \
+	else \
+	  printf "  [WARN] /dev/dri missing — GPU inference will not work; CPU-only fallback\n"; \
+	fi; \
+	if [ -e /dev/accel/accel0 ]; then \
+	  printf "  [ OK ] /dev/accel/accel0 present (NPU visible)\n"; \
+	else \
+	  printf "  [WARN] /dev/accel/accel0 missing — NPU device selection will fail; use CPU or GPU\n"; \
+	fi; \
+	if [ -n "$(RENDER_GID)" ]; then \
+	  printf "  [ OK ] render group gid=%s (auto-detected)\n" "$(RENDER_GID)"; \
+	else \
+	  printf "  [WARN] render group not on this host — /dev/dri passthrough may need manual chgrp\n"; \
+	fi; \
+	printf "\n[doctor] --- cameras (optional) ---\n"; \
+	CAMS=$$(ls /dev/video* 2>/dev/null); \
+	if [ -n "$$CAMS" ]; then \
+	  printf "  [ OK ] /dev/video* found: %s\n" "$$CAMS"; \
+	  printf "         (make up/run will auto-passthrough these; UI selects at runtime)\n"; \
+	else \
+	  printf "  [INFO] no /dev/video* — recorded-video only (fine for demo)\n"; \
+	fi; \
+	printf "\n[doctor] --- assets ---\n"; \
+	if [ -f "$(IR_DIR)/best.xml" ] && [ -f "$(IR_DIR)/best.bin" ]; then \
+	  SIZE=$$(du -sh "$(IR_DIR)" | awk '{print $$1}'); \
+	  printf "  [ OK ] cached IR : %s (%s)\n" "$(IR_DIR)" "$$SIZE"; \
+	else \
+	  printf "  [WARN] no cached IR at %s — first-boot train will kick in on 'make up'\n" "$(IR_DIR)"; \
+	fi; \
+	VIDS=$$(ls videos/*.mp4 videos/*.mkv videos/*.avi videos/*.mov videos/*.ts 2>/dev/null | wc -l); \
+	if [ "$$VIDS" -gt 0 ]; then \
+	  printf "  [ OK ] %s demo video(s) under ./videos/\n" "$$VIDS"; \
+	else \
+	  printf "  [FAIL] no video assets under ./videos/ — run 'make assets' or drop an mp4 in\n"; fail=1; \
+	fi; \
+	printf "\n[doctor] --- port availability ---\n"; \
+	if $(COMPOSE) ps --services --filter status=running 2>/dev/null | grep -q surgical-ui; then \
+	  printf "  [ OK ] port %s in use by our own stack (surgical-ui already up)\n" "$(UI_HOST_PORT)"; \
+	elif command -v ss >/dev/null 2>&1; then \
+	  if ss -Htln "sport = :$(UI_HOST_PORT)" 2>/dev/null | grep -q .; then \
+	    OWNER=$$(ss -Htlnp "sport = :$(UI_HOST_PORT)" 2>/dev/null | head -1); \
+	    printf "  [FAIL] port %s in use by another process: %s\n" "$(UI_HOST_PORT)" "$$OWNER"; \
+	    printf "         (override on the CLI: make up UI_HOST_PORT=9000)\n"; fail=1; \
+	  else \
+	    printf "  [ OK ] port %s free\n" "$(UI_HOST_PORT)"; \
+	  fi; \
+	else \
+	  printf "  [WARN] 'ss' not installed — cannot verify port %s is free\n" "$(UI_HOST_PORT)"; \
+	fi; \
+	printf "\n[doctor] --- compose config ---\n"; \
+	if $(COMPOSE) config >/dev/null 2>&1; then \
+	  printf "  [ OK ] docker-compose.yaml parses cleanly\n"; \
+	else \
+	  printf "  [FAIL] docker-compose.yaml is invalid (run '$(COMPOSE) config' to see why)\n"; fail=1; \
+	fi; \
+	printf "\n"; \
+	if [ "$$fail" -ne 0 ]; then \
+	  printf "[doctor] FAIL — fix the [FAIL] items above then re-run.\n\n"; exit 1; \
+	fi; \
+	printf "[doctor] all critical checks passed — 'make up' should succeed.\n\n"
+
 # ---- Dev-only targets (no Docker) -------------------------------------------
 
 .PHONY: mock-backend

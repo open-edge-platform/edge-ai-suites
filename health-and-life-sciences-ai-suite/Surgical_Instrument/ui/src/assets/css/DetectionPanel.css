@@ -843,3 +843,33 @@
   font-style: italic;
 }
 }
+/* --------------------------------------------------------------------------
+ * Slice F — persistent "NOT FOR CLINICAL USE" watermark on the live feed.
+ * Sits on top of the frame but below the modal overlay stacking context.
+ * Uses `pointer-events: none` so it never intercepts clicks or drags on the
+ * frame itself.
+ * -------------------------------------------------------------------------- */
+.det-video-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-22deg);
+  padding: 6px 22px;
+  border: 2px solid rgba(255, 68, 68, 0.85);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.32);
+  color: #ff4d4d;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(14px, 2.2vw, 22px);
+  letter-spacing: 0.14em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+
+.det-video-watermark--placeholder {
+  color: rgba(255, 77, 77, 0.85);
+  background: rgba(0, 0, 0, 0.15);
+}

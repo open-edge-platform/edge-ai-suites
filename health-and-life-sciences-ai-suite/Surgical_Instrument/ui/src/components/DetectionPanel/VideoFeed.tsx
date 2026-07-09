@@ -105,6 +105,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
             alt="Surgical Live Feed"
             style={{ display: 'block', width: '100%' }}
           />
+          <div className="det-video-watermark" aria-hidden="true">
+            NOT FOR CLINICAL USE
+          </div>
           {stale && (
             <div style={{
               position: 'absolute', inset: 0,
@@ -125,6 +128,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
           <span className="det-video-placeholder-sub">
             Press Start to begin streaming detection overlays
           </span>
+          <div className="det-video-watermark det-video-watermark--placeholder" aria-hidden="true">
+            NOT FOR CLINICAL USE
+          </div>
         </div>
       )}
     </div>
