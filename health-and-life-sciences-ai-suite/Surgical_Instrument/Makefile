@@ -124,6 +124,9 @@ up-with-camera:  ## Start stack with all attached /dev/video* passed through to 
 	echo "  surgical-pipeline:"                                                >> $(CAMERA_OVERRIDE); \
 	echo "    devices:"                                                       >> $(CAMERA_OVERRIDE); \
 	for c in $$CAMS; do echo "      - $$c:$$c"                                >> $(CAMERA_OVERRIDE); done; \
+	echo "  surgical-backend:"                                                >> $(CAMERA_OVERRIDE); \
+	echo "    volumes:"                                                       >> $(CAMERA_OVERRIDE); \
+	echo "      - /sys/class/video4linux:/sys/class/video4linux:ro"           >> $(CAMERA_OVERRIDE); \
 	echo "[up-with-camera] wrote $(CAMERA_OVERRIDE) with:"; sed -n 's/^      - /  /p' $(CAMERA_OVERRIDE)
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
