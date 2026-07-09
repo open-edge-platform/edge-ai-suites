@@ -5,7 +5,6 @@ import {
   api,
   type Device,
   type VideoItem,
-  type V4L2Camera,
   type BaslerCamera,
 } from '../../services/api';
 import '../../assets/css/SettingsModal.css';
@@ -16,7 +15,9 @@ interface SettingsModalProps {
 }
 
 type Tab = 'source' | 'devices';
-type SourceKind = 'file' | 'v4l2' | 'basler';
+// Customer memo scope: recorded file + live Basler industrial camera.
+// v4l2/UVC was a dev-time fallback and is intentionally not surfaced in the UI.
+type SourceKind = 'file' | 'basler';
 
 const DEVICE_OPTIONS: Device[] = ['GPU', 'CPU', 'NPU'];
 
@@ -56,31 +57,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   // Camera-source state (populated on modal open; empty on hosts with no camera)
   const [pendingKind,   setPendingKind]   = useState<SourceKind>('file');
-  const [v4l2Cams,      setV4L2Cams]      = useState<V4L2Camera[]>([]);
   const [baslerCams,    setBaslerCams]    = useState<BaslerCamera[]>([]);
   const [baslerNote,    setBaslerNote]    = useState<string | null>(null);
-  const [pendingCamera, setPendingCamera] = useState<string | null>(null); // v4l2: /dev/videoN, basler: serial
+  const [pendingCamera, setPendingCamera] = useState<string | null>(null); // Basler serial number
 
   const refreshVideos = useCallback(async () => {
     try {
       const [cfg, list, cams] = await Promise.all([
         api.getConfig(),
         api.listVideos(),
-        api.listCameras().catch(() => ({ v4l2: [], basler: [] } as { v4l2: V4L2Camera[]; basler: BaslerCamera[]; basler_note?: string })),
+        api.listCameras().catch(() => ({ basler: [] } as { basler: BaslerCamera[]; basler_note?: string })),
       ]);
       setVideos(list.videos);
       setVideosDir(list.dir);
       setMaxUploadMB(list.max_upload_mb);
       setActiveVideo(cfg.video_file || null);
       setDefaultVideo(cfg.default_video || '');
-      setV4L2Cams(cams.v4l2 || []);
       setBaslerCams(cams.basler || []);
       setBaslerNote(cams.basler_note || null);
 
       // Prime the kind + selection from (pending > running-config > defaults).
+      // Any legacy 'v4l2' value coming back from the backend is coerced to 'file'
+      // because the UI no longer surfaces v4l2 as a selectable source.
       const pending = api.getPendingSource();
-      const runningKind = (cfg.source?.kind as SourceKind | undefined) ?? 'file';
-      const kind: SourceKind = (pending?.kind as SourceKind | undefined) ?? runningKind ?? 'file';
+      const rawRunning = (cfg.source?.kind as string | undefined) ?? 'file';
+      const rawPending = (pending?.kind as string | undefined);
+      const coerce = (k: string | undefined): SourceKind =>
+        (k === 'basler' ? 'basler' : 'file');
+      const kind: SourceKind = coerce(rawPending) ?? coerce(rawRunning) ?? 'file';
       setPendingKind(kind);
 
       // Video dropdown initial value
@@ -89,19 +93,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       const runningName = cfg.video_file ? cfg.video_file.replace(/^.*\//, '') : null;
       setPendingVideo(pendingName ?? runningName ?? list.videos[0]?.name ?? null);
 
-      // Camera dropdown initial value
+      // Camera dropdown initial value — Basler only
       let cam: string | null = null;
-      if (pending && (pending.kind === 'v4l2' || pending.kind === 'basler')) {
+      if (pending && pending.kind === 'basler') {
         cam = pending.arg;
-      } else if (kind === 'v4l2' && (cams.v4l2 || []).length > 0) {
-        cam = cams.v4l2[0].device;
       } else if (kind === 'basler' && (cams.basler || []).length > 0) {
         cam = cams.basler[0].serial;
       }
       setPendingCamera(cam);
     } catch {
       setVideos([]);
-      setV4L2Cams([]);
       setBaslerCams([]);
       setPendingVideo(null);
       setPendingCamera(null);
@@ -197,9 +198,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     if (pendingKind === 'file') {
       if (!pendingVideo) return;
       arg = `${videosDir}/${pendingVideo}`;
-    } else if (pendingKind === 'v4l2') {
-      if (!pendingCamera) return;
-      arg = pendingCamera;                    // e.g. /dev/video0
     } else if (pendingKind === 'basler') {
       if (!pendingCamera) return;
       arg = pendingCamera;                    // Basler serial number
@@ -365,20 +363,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     />
                     <span>Video file</span>
                   </label>
-                  <label className={`settings-source-kind ${pendingKind === 'v4l2' ? 'active' : ''} ${v4l2Cams.length === 0 ? 'disabled' : ''}`}>
-                    <input
-                      type="radio"
-                      name="source-kind"
-                      value="v4l2"
-                      checked={pendingKind === 'v4l2'}
-                      onChange={() => {
-                        setPendingKind('v4l2');
-                        if (!pendingCamera && v4l2Cams[0]) setPendingCamera(v4l2Cams[0].device);
-                      }}
-                      disabled={isProcessing || uploadBusy || v4l2Cams.length === 0}
-                    />
-                    <span>USB / v4l2 camera{v4l2Cams.length === 0 ? ' (none detected)' : ''}</span>
-                  </label>
                   <label className={`settings-source-kind ${pendingKind === 'basler' ? 'active' : ''} ${baslerCams.length === 0 ? 'disabled' : ''}`}>
                     <input
                       type="radio"
@@ -448,30 +432,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     </div>
                   </div>
                 </>
-              )}
-
-              {pendingKind === 'v4l2' && (
-                <div className="settings-field-group">
-                  <label className="settings-label">Select a camera</label>
-                  <select
-                    className="settings-select"
-                    value={pendingCamera ?? ''}
-                    onChange={(e) => setPendingCamera(e.target.value || null)}
-                    disabled={isProcessing || v4l2Cams.length === 0}
-                    style={{ minWidth: 320 }}
-                  >
-                    {v4l2Cams.length === 0 && <option value="">(no cameras detected)</option>}
-                    {v4l2Cams.map((c) => (
-                      <option key={c.device} value={c.device}>
-                        {c.device} — {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="settings-hint" style={{ marginTop: 8 }}>
-                    Cameras are auto-detected by <code>make up</code>/<code>make run</code> at container start.
-                    Plug a UVC camera in <em>before</em> starting the stack; hot-plug requires <code>make run</code> again.
-                  </p>
-                </div>
               )}
 
               {pendingKind === 'basler' && (
