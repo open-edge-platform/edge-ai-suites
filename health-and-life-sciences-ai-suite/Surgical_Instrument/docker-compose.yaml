@@ -78,9 +78,10 @@ services:
     # Grant the container permission to open v4l2 (video4linux2) character
     # devices — kernel major 81. This is a permission-only grant: without a
     # corresponding /dev/videoN bind-mount it does nothing, so hosts with no
-    # USB camera boot normally. To actually pass a camera through use
-    # `make up-with-camera`, which auto-detects /dev/video* at run-time and
-    # generates a compose override.
+    # USB camera boot normally. `make up` / `make run` auto-detect
+    # /dev/video* at run-time and layer in a compose override that adds the
+    # actual device passthroughs; the UI's Input Source picker is the
+    # runtime selector.
     device_cgroup_rules:
       - 'c 81:* rmw'
 

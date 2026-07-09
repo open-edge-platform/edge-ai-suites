@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setActiveDevice, resetDetectionState } from '../../redux/slices/detectionSlice';
-import { api, type Device } from '../../services/api';
+import { api, type Device, type VideoItem } from '../../services/api';
 import '../../assets/css/SettingsModal.css';
 
 interface SettingsModalProps {
@@ -13,26 +13,13 @@ type Tab = 'source' | 'devices';
 
 const DEVICE_OPTIONS: Device[] = ['GPU', 'CPU', 'NPU'];
 
-const buildDeviceHelp = (platform: Record<string, string> | null): Record<Device, string> => ({
-  GPU: platform && platform.iGPU
-    ? 'Runs on ' + platform.iGPU + ' via OpenVINO (recommended for polyp detection).'
-    : 'Runs on the integrated GPU via OpenVINO (recommended for polyp detection).',
-  CPU: platform && platform.Processor
-    ? 'Runs on ' + platform.Processor + ' as a fallback path (highest latency).'
-    : 'Runs on the host CPU as a fallback path (highest latency).',
-  NPU: platform && platform.NPU
-    ? 'Runs on ' + platform.NPU + ' for lowest power sustained inference.'
-    : 'Runs on the Intel AI Boost NPU for lowest power sustained inference.',
-});
+const formatMB = (n: number) => (n / (1024 * 1024)).toFixed(1) + ' MB';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
   const systemStatus = useAppSelector((state) => state.detection.data.systemStatus);
   const modelInfo    = useAppSelector((state) => state.detection.data.modelInfo);
   const pipelinePerf = useAppSelector((state) => state.detection.data.pipelinePerformance);
-  const platform     = useAppSelector((state) => state.metrics.platform);
-
-  const deviceHelp = buildDeviceHelp(platform as Record<string, string> | null);
 
   const isProcessing = systemStatus === 'running' || systemStatus === 'starting';
 
@@ -48,16 +35,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [resetBusy, setResetBusy]         = useState(false);
   const [resetStatus, setResetStatus]     = useState<string>('');
 
-  // Source (read-only for now — full picker lands in a follow-up slice
-  // once GET /api/videos + GET /api/devices/cameras are wired up).
-  const [sourceArg,  setSourceArg]  = useState<string | null>(null);
+  // Source tab state
+  const [videos, setVideos]           = useState<VideoItem[]>([]);
+  const [videosDir, setVideosDir]     = useState<string>('/videos');
+  const [maxUploadMB, setMaxUploadMB] = useState<number>(500);
+  const [activeVideo, setActiveVideo] = useState<string | null>(null); // path currently running
+  const [defaultVideo, setDefaultVideo] = useState<string>('');
+  const [pendingVideo, setPendingVideo] = useState<string | null>(null); // basename selected in the dropdown
+  const [sourceStatus, setSourceStatus] = useState<string>('');
+  const [uploadBusy, setUploadBusy]   = useState(false);
+  const [sourceBusy, setSourceBusy]   = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const refreshSource = useCallback(async () => {
+  const refreshVideos = useCallback(async () => {
     try {
-      const cfg = await api.getConfig();
-      setSourceArg(cfg.video_file || cfg.default_video || null);
+      const [cfg, list] = await Promise.all([api.getConfig(), api.listVideos()]);
+      setVideos(list.videos);
+      setVideosDir(list.dir);
+      setMaxUploadMB(list.max_upload_mb);
+      setActiveVideo(cfg.video_file || null);
+      setDefaultVideo(cfg.default_video || '');
+      // Prime dropdown selection with a pending choice, else the running file,
+      // else the first available video.
+      const pending = api.getPendingSource();
+      const pendingName =
+        pending && pending.kind === 'file'
+          ? pending.arg.replace(/^.*\//, '')
+          : null;
+      const runningName = cfg.video_file ? cfg.video_file.replace(/^.*\//, '') : null;
+      setPendingVideo(pendingName ?? runningName ?? list.videos[0]?.name ?? null);
     } catch {
-      setSourceArg(null);
+      setVideos([]);
+      setPendingVideo(null);
     }
   }, []);
 
@@ -66,8 +75,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setPendingDevice(currentDevice);
     setDeviceStatus('');
     setResetStatus('');
-    refreshSource();
-  }, [isOpen, currentDevice, refreshSource]);
+    setSourceStatus('');
+    refreshVideos();
+  }, [isOpen, currentDevice, refreshVideos]);
 
   // Close on Escape
   useEffect(() => {
@@ -117,6 +127,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     }
   };
 
+  const handleChooseFile = () => {
+    if (uploadBusy || isProcessing) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleUpload = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const f = ev.target.files?.[0];
+    ev.target.value = ''; // allow re-selecting same name after error
+    if (!f) return;
+    setUploadBusy(true);
+    setSourceStatus('');
+    try {
+      const res = await api.uploadVideo(f);
+      await refreshVideos();
+      setPendingVideo(res.name);
+      setSourceStatus(`Uploaded ${res.name} (${formatMB(res.size_bytes)})`);
+      setTimeout(() => setSourceStatus(''), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSourceStatus(`Error: ${msg}`);
+    } finally {
+      setUploadBusy(false);
+    }
+  };
+
+  const handleApplySource = () => {
+    if (!pendingVideo || sourceBusy || isProcessing) return;
+    setSourceBusy(true);
+    setSourceStatus('');
+    // Persist client-side; startWorkloads() will include this in the next
+    // POST /api/start body. We don't hit the backend now because it rejects
+    // source changes while running (409) and there's no dedicated
+    // `POST /api/source` endpoint yet.
+    api.setPendingSource({ kind: 'file', arg: `${videosDir}/${pendingVideo}` });
+    setSourceStatus('Applied on next Start');
+    setTimeout(() => setSourceStatus(''), 3000);
+    setSourceBusy(false);
+  };
+
+  const sourceDirty = (() => {
+    if (!pendingVideo) return false;
+    const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
+    return pendingVideo !== runningName;
+  })();
+
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
@@ -127,7 +182,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         {isProcessing && (
           <div className="settings-running-banner">
-            Pipeline is running — stop it before changing hardware or resetting the session.
+            Pipeline is running — stop it before changing hardware, source, or resetting the session.
           </div>
         )}
 
@@ -150,7 +205,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {activeTab === 'devices' && (
             <div className="settings-section">
               <p className="settings-hint" style={{ marginBottom: 12 }}>
-                Choose which hardware accelerator runs the polyp-detection model.
+                Choose which accelerator runs the polyp-detection model.
                 Change is applied when you click Save.
               </p>
 
@@ -177,7 +232,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                           <option key={d} value={d}>{d}{currentDevice === d ? ' (current)' : ''}</option>
                         ))}
                       </select>
-                      <div className="settings-device-help">{deviceHelp[pendingDevice]}</div>
                     </td>
                   </tr>
                 </tbody>
@@ -224,23 +278,83 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <label className="settings-label">Active Video</label>
                 <div className="settings-active-video">
                   <span className="settings-video-badge">
-                    📁 {sourceArg ?? '—'}
+                    📁 {activeVideo ? activeVideo.replace(/^.*\//, '') : (defaultVideo.replace(/^.*\//, '') || '—')}
                   </span>
-                  <span className="settings-video-default-tag">Default</span>
+                  {!activeVideo && defaultVideo && (
+                    <span className="settings-video-default-tag">Default</span>
+                  )}
                 </div>
               </div>
 
               <div className="settings-field-group">
-                <label className="settings-label">Change Input</label>
-                <p className="settings-hint">
-                  The backend already accepts a source override on <code>POST /api/start</code>:
-                  {' '}<code>{'{ "device": "GPU", "source": { "kind": "file|v4l2|basler", "arg": "..." } }'}</code>.
+                <label className="settings-label">Select a video</label>
+                <select
+                  className="settings-select"
+                  value={pendingVideo ?? ''}
+                  onChange={(e) => setPendingVideo(e.target.value || null)}
+                  disabled={isProcessing || uploadBusy || videos.length === 0}
+                  style={{ minWidth: 320 }}
+                >
+                  {videos.length === 0 && <option value="">(no videos available)</option>}
+                  {videos.map((v) => {
+                    const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
+                    return (
+                      <option key={v.name} value={v.name}>
+                        {v.name} — {formatMB(v.size_bytes)}
+                        {v.name === runningName ? ' (current)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="settings-hint" style={{ marginTop: 8 }}>
+                  Files live under <code>{videosDir}</code> inside the container (host <code>./videos</code>).
+                  New selection takes effect on the next Start.
                 </p>
-                <div className="settings-notice">
-                  <strong>Coming next:</strong> UI dropdowns for available video files and attached cameras.
-                  Depends on <code>GET /api/videos</code> (pending) and <code>GET /api/devices/cameras</code>
-                  (shipped — returns empty on hosts with no camera).
+              </div>
+
+              <div className="settings-field-group">
+                <label className="settings-label">Upload a video</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".mp4,.mkv,.avi,.mov,.ts,video/*"
+                  style={{ display: 'none' }}
+                  onChange={handleUpload}
+                />
+                <div className="settings-actions" style={{ marginTop: 0 }}>
+                  <button
+                    className="settings-btn settings-btn-secondary"
+                    onClick={handleChooseFile}
+                    disabled={uploadBusy || isProcessing}
+                    title={isProcessing ? 'Stop the pipeline first' : 'Upload a new video'}
+                  >
+                    {uploadBusy ? 'Uploading…' : 'Choose file…'}
+                  </button>
+                  <span className="settings-hint" style={{ marginLeft: 8 }}>
+                    Max {maxUploadMB} MB. Accepted: .mp4 .mkv .avi .mov .ts
+                  </span>
                 </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  className="settings-btn settings-btn-primary"
+                  onClick={handleApplySource}
+                  disabled={!sourceDirty || sourceBusy || isProcessing || !pendingVideo}
+                  title={
+                    isProcessing ? 'Stop the pipeline first'
+                    : !pendingVideo ? 'Select a video first'
+                    : !sourceDirty ? 'Selection matches current source'
+                    : 'Apply on next Start'
+                  }
+                >
+                  Apply
+                </button>
+                {sourceStatus && (
+                  <span className={`settings-status-inline ${sourceStatus.startsWith('Error') ? 'error' : 'success'}`}>
+                    {sourceStatus.startsWith('Error') ? sourceStatus : '✓ ' + sourceStatus}
+                  </span>
+                )}
               </div>
             </div>
           )}

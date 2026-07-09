@@ -84,10 +84,18 @@ export async function isFrameAvailable(): Promise<boolean> {
 
 export async function startWorkloads(_target: WorkloadType = 'all'): Promise<StartResponse> {
   return safeApiCall(async () => {
+    // If the user has picked a source in the Settings modal, forward it in
+    // the body so the pipeline reboots on the correct input. The backend
+    // treats an empty body as "use the previously persisted STATE.source".
+    const body: Record<string, unknown> = {};
+    if (pendingSource) {
+      body.source = pendingSource;
+    }
     const res = await fetch(`${BASE_URL}/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       mode: 'cors',
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (res.status === 409 && data?.lifecycle === 'running') {
@@ -148,6 +156,7 @@ export interface PipelineConfig {
   video_file: string | null;
   default_video: string;
   devices: { detect: string };
+  source?: { kind: string; arg: string };
   pending?: boolean;
   fallback?: Record<string, { original: string; fallback: string }> | null;
 }
@@ -156,6 +165,51 @@ export async function getConfig(): Promise<PipelineConfig> {
   const res = await fetch(`${BASE_URL}/config`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch config: ${res.status}`);
   return res.json();
+}
+
+// ---- Videos ---------------------------------------------------------------
+
+export interface VideoItem {
+  name: string;
+  size_bytes: number;
+  mtime: number;
+}
+
+export interface VideosListResponse {
+  videos: VideoItem[];
+  dir: string;
+  max_upload_mb: number;
+}
+
+export async function listVideos(): Promise<VideosListResponse> {
+  const res = await fetch(`${BASE_URL}/videos`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to list videos: ${res.status}`);
+  return res.json();
+}
+
+export async function uploadVideo(file: File): Promise<{ name: string; size_bytes: number; path: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE_URL}/videos`, { method: 'POST', body: form });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    throw new Error(data?.error || `Upload failed: ${res.status}`);
+  }
+  return data;
+}
+
+// ---- Pending source (applied on the next start) --------------------------
+
+export type PipelineSource = { kind: 'file' | 'v4l2' | 'basler'; arg: string };
+
+let pendingSource: PipelineSource | null = null;
+
+export function setPendingSource(src: PipelineSource | null): void {
+  pendingSource = src;
+}
+
+export function getPendingSource(): PipelineSource | null {
+  return pendingSource;
 }
 
 export type Device = 'CPU' | 'GPU' | 'NPU';
@@ -197,6 +251,10 @@ export const api = {
   getConfig,
   setDevice,
   reset: resetSession,
+  listVideos,
+  uploadVideo,
+  setPendingSource,
+  getPendingSource,
 };
 
 export default api;
