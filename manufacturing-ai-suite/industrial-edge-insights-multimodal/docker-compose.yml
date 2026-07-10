@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.3
+    image: telegraf:1.38.4
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -91,8 +91,8 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
@@ -106,7 +106,6 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
-      MODEL_REGISTRY_URL: http://model-registry:8111
       REST_API_ROOT_PATH: "/ts-api"
       UDF_MAX_FILE_SIZE_MB: 100
     networks:
@@ -129,7 +128,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:13.0.1-ubuntu
+    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -228,7 +227,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.29.8-trixie-perl
+    image: nginx:1.31.1-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -319,8 +318,8 @@ services:
       ENABLE_WEBRTC: true
       WEBRTC_SIGNALING_SERVER: http://mediamtx:8889
       ENABLE_RTSP: true
-      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
-      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${S3_STORAGE_HOST}
@@ -336,11 +335,6 @@ services:
       OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT:-4840}
       OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME:-""}
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD:-""}
-      # Model Registry Microservice
-      MR_URL: ${MR_URL:-""}
-      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR:-""}
-      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT:-""}
-      MR_VERIFY_CERT: ${MR_VERIFY_CERT:-""}
       MQTT_HOST: ia-mqtt-broker
       MQTT_PORT: 1883
       LOG_LEVEL: ${LOG_LEVEL}
@@ -384,7 +378,7 @@ services:
     - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.18.1
+    image: bluenviron/mediamtx:1.18.2
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -522,7 +516,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.10.0
+    image: coturn/coturn:4.12.0
     container_name: coturn
     read_only: true
     security_opt:
@@ -530,7 +524,7 @@ services:
     ports:
       - "${COTURN_UDP_PORT}:3478"
       - "${COTURN_UDP_PORT}:3478/udp"
-    command: ["-v"]  # Verbose mode for logging
+    command: ["-v", "--external-ip=${HOST_IP}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
     networks:
     - timeseries_network
 networks:

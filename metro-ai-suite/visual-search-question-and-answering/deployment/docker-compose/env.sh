@@ -9,8 +9,8 @@ export USER_GROUP_ID
 export VIDEO_GROUP_ID
 export RENDER_GROUP_ID
 
-# Append the value of the public IP address to the no_proxy list 
-export no_proxy="localhost,127.0.0.1,::1,${host_ip}"
+# Append the value of the public IP address and Docker service names to the no_proxy list
+export no_proxy="localhost,127.0.0.1,::1,${host_ip},milvus-standalone,milvus-etcd,milvus-minio,multimodal-embedding-serving,dataprep-visualdata-milvus,retriever-milvus,vlm-openvino-serving,visual-search-qa-app"
 export no_proxy_env=${no_proxy},$HOST_IP
 export http_proxy=${http_proxy}
 export https_proxy=${https_proxy}
@@ -25,7 +25,7 @@ export DATA_INGEST_WITH_DETECT=true
 # huggingface mirror 
 export HF_ENDPOINT=https://hf-mirror.com
 
-export VLM_DEVICE="GPU.1"
+export VLM_DEVICE="${VLM_DEVICE:-GPU.1}"
 export HOST_DATA_PATH="$HOME/data"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
@@ -34,8 +34,7 @@ export DEFAULT_CLIP_DURATION=-1  # -1 means take the video till end
 export DEFAULT_NUM_FRAMES=64
 
 # OpenVINO configuration
-export EMBEDDING_USE_OV=false
-export EMBEDDING_DEVICE="GPU.1"
+export EMBEDDING_DEVICE="${EMBEDDING_DEVICE:-GPU.1}"
 export OV_PERFORMANCE_MODE=${OV_PERFORMANCE_MODE:-LATENCY}
 export EMBEDDING_USE_OV=true
 
@@ -45,7 +44,7 @@ export WORKERS=1
 export VLM_SEED=42
 export VLM_SERVICE_PORT=9764
 export DATAPREP_SERVICE_PORT=9990
-export RETRIEVER_SERVICE_PORT=7770
+export RETRIEVER_SERVICE_PORT=6008
 export VISUAL_SEARCH_QA_UI_PORT=17580
 export BACKEND_VQA_BASE_URL="http://${host_ip}:${VLM_SERVICE_PORT}"
 export BACKEND_SEARCH_BASE_URL="http://${host_ip}:${RETRIEVER_SERVICE_PORT}"

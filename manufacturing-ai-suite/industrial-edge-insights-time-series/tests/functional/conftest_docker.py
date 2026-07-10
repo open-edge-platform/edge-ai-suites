@@ -210,9 +210,7 @@ def setup_multimodal_environment(request):
         os.chdir(original_dir)
 
 
-# ---------------------------------------------------------------------------
 # Wind Turbine — dedicated module-scoped fixture
-# ---------------------------------------------------------------------------
 # Expected containers for MQTT and OPC-UA wind turbine deployments
 _WIND_MQTT_CONTAINERS = [
     constants.CONTAINERS["influxdb"]["name"],
@@ -328,6 +326,7 @@ def setup_wind_turbine_environment(request):
             pytest.fail("Wind Turbine OPC-UA deployment failed")
             return False
         opcua_name = constants.CONTAINERS["opcua_server"]["name"]
+        opcua_replica_prefix = opcua_name.rsplit("-", 1)[0] + "-"
         base = [c for c in _WIND_OPCUA_CONTAINERS if c != opcua_name]
         if num_of_streams is None:
             base.append(opcua_name)
@@ -336,10 +335,10 @@ def setup_wind_turbine_environment(request):
             return False
         if num_of_streams is not None and int(num_of_streams) >= 1:
             if not docker_utils.wait_until_scaled_containers_up(
-                opcua_name, int(num_of_streams),
+                opcua_replica_prefix, int(num_of_streams),
                 timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
             ):
-                pytest.fail(f"Wind Turbine OPC-UA: only some '{opcua_name}*' replicas came up")
+                pytest.fail(f"Wind Turbine OPC-UA: only some '{opcua_replica_prefix}*' replicas came up")
                 return False
         if not docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine OPC-UA: ts-api health endpoint did not respond in time")

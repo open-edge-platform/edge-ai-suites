@@ -11,11 +11,15 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 1. Clone the suite:
 
-2. **Navigate to the Directory**:
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   ```
 
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
-     ```
+2. Navigate to the directory:
+
+   ```bash
+   cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
+   ```
 
    ```bash
    git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -24,7 +28,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    cd metro-ai-suite/live-video-analysis/live-video-alert-agent
    ```
 
-2. Configure Image Registry and Tag:
+3. Configure the image registry and tag variables:
 
    ```bash
    export REGISTRY="intel/"
@@ -34,7 +38,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
 
-3. Configure the Environment:
+4. Configure the environment:
 
    Optional environment variables:
 
@@ -42,7 +46,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    # Pre-configure a video stream
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
-   # VLM model selection 
+   # VLM model selection
    export OVMS_SOURCE_MODEL=<vlm-model-name>   #Example: Openvino/Phi-3.5-vision-instruct-int4-ov
 
    # Log verbosity
@@ -90,7 +94,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    Configure MCP servers in `resources/mcp_servers.json`. See [API Reference](./api-reference.md#mcp) for details.
 
-4. Start the Application:
+5. Start the application:
+
    Run the following command from the project root:
 
    ```bash
@@ -102,7 +107,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    - An init container runs briefly to set up volume permissions.
    - Subsequent runs start instantly
 
-5. Verify Deployment:
+6. Verify the deployment:
+
    Check that containers are running:
 
    ```bash
@@ -115,7 +121,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    docker logs live-video-alert-agent
    ```
 
-6. Access the Dashboard:
+7. Access the dashboard:
+
    Open your browser and navigate to `http://localhost:9000` (Replace `localhost` with your
    server IP if accessing remotely).
 

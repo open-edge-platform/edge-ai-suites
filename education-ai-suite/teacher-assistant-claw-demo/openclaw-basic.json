@@ -1,0 +1,100 @@
+{
+    "agents": {
+        "defaults": {
+            "workspace": "~/.openclaw/workspace",
+            "model": {
+                "primary": "ovms/OpenVINO/Qwen3-8B-int4-ov"
+            },
+            "models": {
+                "ovms/OpenVINO/Qwen3-8B-int4-ov": {
+                    "alias": "OVMS Qwen3 8B"
+                }
+            },
+            "skills": [
+		"classroom_qa"
+		]
+        }
+    },
+    "gateway": {
+        "mode": "local",
+        "auth": {
+            "mode": "token"
+        },
+        "port": 18789,
+        "bind": "loopback",
+        "tailscale": {
+            "mode": "off",
+            "resetOnExit": false
+        },
+        "nodes": {
+            "denyCommands": [
+                "camera.snap",
+                "camera.clip",
+                "screen.record",
+                "contacts.add",
+                "calendar.add",
+                "reminders.add",
+                "sms.send",
+                "sms.search"
+            ]
+        }
+    },
+    "session": {
+        "dmScope": "per-channel-peer"
+    },
+    "tools": {
+        "web": {
+            "search": {
+                "provider": "duckduckgo",
+                "enabled": true
+            }
+        },
+        "allow": [
+            "message",
+            "read",
+            "write",
+            "edit",
+            "bash"
+        ]
+    },
+    "plugins": {
+        "entries": {
+            "duckduckgo": {
+                "enabled": true,
+                "config": {
+                    "webSearch": {
+                        "safeSearch": "off"
+                    }
+                }
+            }
+        }
+    },
+    "models": {
+        "mode": "merge",
+        "providers": {
+            "ovms": {
+                "baseUrl": "http://127.0.0.1:8000/v3",
+                "api": "openai-completions",
+                "apiKey": "unused",
+                "timeoutSeconds": 300,
+                "models": [
+                    {
+                        "id": "OpenVINO/Qwen3-8B-int4-ov",
+                        "name": "OVMS Qwen3 8B INT4",
+                        "reasoning": false,
+                        "input": [
+                            "text"
+                        ],
+                        "contextWindow": 32768,
+                        "contextTokens": 32768,
+                        "maxTokens": 8192,
+                        "compat": {
+                            "requiresStringContent": true,
+                            "strictMessageKeys": true
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

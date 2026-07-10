@@ -140,3 +140,4 @@ storage/
 *.p12
 secrets/
 certificates/
+resources/mqtt-secrets

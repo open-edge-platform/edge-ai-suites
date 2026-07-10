@@ -3,7 +3,9 @@
 This guide provides instructions on how to deploy the Handheld Multi-Modal application on a
 local machine.
 
-## (Optional) Configure the Proxy
+## (Optional) Configuring the Proxy
+
+> **Note**: If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
 Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a
@@ -65,7 +67,7 @@ docker info|grep -i PROXY
  No Proxy: localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager
 ```
 
-## Deploy the Application
+## Deploying the Application
 
 Download the compressed file:
 
@@ -88,6 +90,8 @@ cd handheld-multi-modal
 ./run up
 ```
 
+## Verifying the installation
+
 After the script finishes, verify that the containers are running (sample output below):
 
 ```text
@@ -106,7 +110,30 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
 
-After applications are deployed, see [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md#endpoints)
-to access a specific application. The applications do not provide authentication or
-authorization, hence are only available on the `localhost` and are not exposed under any
-external IP address.
+## Accessing Application User Interface
+
+This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
+They are bound to localhost only and are not exposed on any external IP address.
+Since the intended use is on handheld devices, the applications do not provide authentication
+or authorization.
+
+> **Notice**:
+> The "self-signed certificate" browser warning is expected.
+> Modern browsers require HTTPS to enable microphone input used by Open WebUI and
+  Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
+  TLS transport on the `localhost` bound addresses.
+
+
+
+| Service | URL | Notes |
+|---------|-----|-------|
+| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
+| Open WebUI | https://localhost:8443 | Conversational Agent backed by LLM — browser microphone enabled (via NGINX reverse proxy) |
+| Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
+| Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
+
+
+
+<!--
+Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md#endpoints)
+-->

@@ -39,7 +39,7 @@ trafficAgent:
     refreshInterval: "15"
     weatherMock: "false"
     vlmTimeoutSeconds: "1800"
-  # MQTT configuration (connects to SceneScape broker)
+  # MQTT configuration (connects to Scenescape broker)
   # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
   # If brokerNamespace is empty, it defaults to the release namespace.
   # If host is set explicitly, it takes precedence over the constructed FQDN.

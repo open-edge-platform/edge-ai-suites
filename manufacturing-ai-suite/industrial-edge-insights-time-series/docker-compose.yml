@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.3
+    image: telegraf:1.38.4
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -107,7 +107,6 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
-      MODEL_REGISTRY_URL: http://model-registry:8111
       SAMPLE_APP: ${SAMPLE_APP}
       REST_API_ROOT_PATH: "/ts-api"
       ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}
@@ -133,7 +132,7 @@ services:
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
-    image: grafana/grafana-oss:13.0.1-ubuntu
+    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -257,7 +256,7 @@ services:
     - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
-    image: nginx:1.29.8-trixie-perl
+    image: nginx:1.31.1-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"

@@ -1,6 +1,7 @@
-# Set Up SceneScape with Basler GigE Camera and PTP Support
+# Set Up Scenescape with Basler GigE Camera and PTP Support
 
 ## Choose a Camera That Supports PTP
+
 Use a Basler GigE camera model that supports IEEE 1588v2 PTP hardware timestamping. The Basler ace U series (for example, acA1920-40GC) is a validated option.
 
 ## Configure the Basler Camera with PTP Support
@@ -10,9 +11,9 @@ The Basler camera only supports IEEE 1588v2 over UDP, so the switch and host mus
 - [Configure MOXA Switch and Host for IEEE 1588v2](./configure-ptp-1588v2.md)
 - [Configure the Basler Camera to Use PTP Timestamps](./configure-basler-ptp-timestamps.md)
 
-## Set Up SceneScape with Basler GigE Support
+## Set Up Scenescape with Basler GigE Support
 
-### Step 1: Clone SceneScape
+### Step 1: Clone Scenescape
 
 ```bash
 git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0
@@ -52,7 +53,7 @@ services:
 
 The Basler GigE camera is connected to the private TSN switch network, while Docker containers use a bridge network by default. A macvlan network bridges the two, giving the `queuing-video` container a routable address on the camera subnet, for the Basler GigE camera detection to work correctly.
 
-Apply the patch to your SceneScape checkout:
+Apply the patch to your Scenescape checkout (adjust the path in the snippet below to match your local Scenescape checkout):
 
 ```bash
 git -C /path/to/scenescape apply \
@@ -65,9 +66,9 @@ git -C /path/to/scenescape apply \
 
 ### Step 5: Patch `sscape_adapter` to Publish the PTP Timestamp
 
-The `sscape_adapter.py` patch extracts the `GstReferenceTimestampMeta` added by the patched `gencamsrc` and uses the camera PTP timestamp as the frame `timestamp` field in the SceneScape MQTT message. Without this patch, the adapter falls back to the post-decode software timestamp.
+The `sscape_adapter.py` patch extracts the `GstReferenceTimestampMeta` added by the patched `gencamsrc` and uses the camera PTP timestamp as the frame `timestamp` field in the Scenescape MQTT message. Without this patch, the adapter falls back to the post-decode software timestamp.
 
-Apply the patch to your SceneScape checkout:
+Apply the patch to your Scenescape checkout:
 
 ```bash
 git -C /path/to/scenescape apply \
@@ -78,10 +79,10 @@ git -C /path/to/scenescape apply \
 
 ### Step 6: Configure the GStreamer Pipeline
 
-Update the pipeline definition in SceneScape (eg: `dlstreamer-pipeline-server/queuing-config.json`) to use `gencamsrc` as the source and insert the `gvapython` timestamp capture element before inference. Note down the serial number of your Basler camera and substitute it for `<basler-camera-serial>`:
+Update the pipeline definition in Scenescape (eg: `dlstreamer-pipeline-server/queuing-config.json`) to use `gencamsrc` as the source and insert the `gvapython` timestamp capture element before inference. Note down the serial number of your Basler camera and substitute it for `<basler-camera-serial>`:
 
 ```text
 gencamsrc serial=<basler-camera-serial> pixel-format=bayerrggb frame-rate=10 name=source ! bayer2rgb ! videoscale ! video/x-raw,width=1920,height=1080 ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model=/home/pipeline-server/models/intel/person-detection-retail-0013/FP32/person-detection-retail-0013.xml model-proc=/home/pipeline-server/models/object_detection/person/person-detection-retail-0013.json ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true
 ```
 
-> **Tip:** SceneScape tracking quality depends on the camera feed. You can either configure the camera for your real-world scene or point the camera at a monitor that plays the queuing demo video. The monitor-based setup is often the quickest way to validate Basler camera tracking behavior.
+> **Tip:** Scenescape tracking quality depends on the camera feed. You can either configure the camera for your real-world scene or point the camera at a monitor that plays the queuing demo video. The monitor-based setup is often the quickest way to validate Basler camera tracking behavior.

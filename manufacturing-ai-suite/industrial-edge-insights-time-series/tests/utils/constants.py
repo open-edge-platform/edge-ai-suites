@@ -84,18 +84,16 @@ TICK_DIR = "../../apps/wind-turbine-anomaly-detection/time-series-analytics-conf
 import os
 PYTEST_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../functional'))
 WIND_INGESTED_CSV= "/apps/wind-turbine-anomaly-detection/simulation-data/wind-turbine-anomaly-detection.csv"
-WELD_INGESTED_CSV= "/apps/weld-defect-detection/simulation-data/burnthrough_weld_12-14-22-0201-02.csv"
 EDGE_AI_SUITES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../industrial-edge-insights-time-series"))
 WIND_TURBINE_INGESTED_TOPIC = "wind-turbine-data"
+# Actual MQTT wire topic the publisher sends on and Telegraf's mqtt_consumer
+# subscribes to. WIND_TURBINE_INGESTED_TOPIC above is the InfluxDB measurement
+# name (set via Telegraf name_override), NOT the MQTT topic.
+WIND_TURBINE_MQTT_TOPIC = "wind-simulation-data"
 WIND_TURBINE_ANALYTICS_TOPIC = "wind-turbine-anomaly-data"
-WELD_INGESTED_TOPIC = "weld-sensor-data"
-WELD_ANALYTICS_TOPIC = "weld-sensor-anomaly-data"
-WELD_SAMPLE_APP = "weld-defect-detection"
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 WIND_UDF= "windturbine_anomaly_detector"
 WIND_MODEL= "windturbine_anomaly_detector.pkl"
-WELD_UDF= "weld_defect_detector"
-WELD_MODEL= "weld_defect_detector.pkl"
 TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series"
 
 WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick"
@@ -103,7 +101,7 @@ WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-
 # Configuration directory paths
 WINDTURBINE_CONFIG_DIR = "apps/wind-turbine-anomaly-detection/time-series-analytics-config"
 HELM_TIMESERIES = "apps/wind-turbine-anomaly-detection/time-series-analytics-config"
-HELM_WELD = "apps/weld-defect-detection/time-series-analytics-config"
+
 
 # KPI Test Constants
 KPI_DEPLOYMENT_TIME_THRESHOLD = 120  # Maximum acceptable deployment time in seconds
@@ -127,11 +125,7 @@ WIND_TURBINE_ALERT_LOG_TIMEOUT = 180        # Timeout for finding alert patterns
 WIND_TURBINE_GPU_LOG_TIMEOUT = 300          # Timeout for finding GPU log entry after GPU config POST
 WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU config POST so kapacitor fully restarts
                                            # with the new DEVICE env before we begin tailing logs
-WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before sending the GPU config POST.
-                                           # Mirrors the manual procedure (see docs) where a 25s pause after
-                                           # `make up_*_ingestion` is required for TSAM/kapacitor to finish the
-                                           # initial CPU UDF startup; without it the subsequent GPU POST can be
-                                           # acknowledged but never trigger a kapacitor UDF restart.
+WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before GPU POST; allows TSAM/kapacitor CPU UDF startup
 WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
 WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
 WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
@@ -180,27 +174,6 @@ SAMPLE_APPS_CONFIG = {
             "node_id": "ns=2;s=WindTurbineAlert"
         },
         "grafana_dashboard": "wind-turbine-dashboard"
-    },
-    "weld-defect-detection": {
-        "app_name": "weld-defect-detection", 
-        "display_name": "Weld Defect Detection",
-        "ingested_topic": "weld-sensor-data",
-        "analytics_topic": "weld-sensor-anomaly-data",
-        "alert_topic": "alerts/weld_defects",
-        "udf": "weld_defect_detector",
-        "model": "weld_defect_detector.cb",
-        "udf_deployment_package": "weld_anomaly_udf",
-        "config_dir": "apps/weld-defect-detection/time-series-analytics-config",
-        "udfs_dir": "apps/weld-defect-detection/time-series-analytics-config/udfs/",
-        "models_dir": "apps/weld-defect-detection/time-series-analytics-config/models/",
-        "tick_scripts_dir": "apps/weld-defect-detection/time-series-analytics-config/tick_scripts/",
-        "tick_script_path": "apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick",
-        "alert_config": {
-            "enabled": True,
-            "threshold": 0.7,
-            "node_id": "ns=2;s=WeldAlert"
-        },
-        "grafana_dashboard": "weld-anomaly-dashboard"
     },
     "multimodal-weld-detection": {
         "app_name": "multimodal-weld-detection",
@@ -265,9 +238,9 @@ OPCUA_ALERT = {
         }
 
 # Essential sample app name constants - access via SAMPLE_APPS_CONFIG and helper functions
-WELD_SAMPLE_APP = "weld-defect-detection"
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 MULTIMODAL_SAMPLE_APP = "multimodal-weld-detection"
+
 
 # Helper functions to get app configurations
 def get_app_config(app_name):
@@ -315,6 +288,12 @@ TEST_NGINX_STARTUP_DELAY = 10      # seconds
 TEST_CURL_TIMEOUT = 30             # seconds
 TEST_PROCESS_CHECK_TIMEOUT = 30    # seconds for process checks
 UDF_DEPLOYMENT_TIMEOUT = 180       # seconds (3 minutes) - aligned with 08Weekly fast approach
+KAPACITOR_READY_TIMEOUT = 600      # seconds - timeout for Kapacitor UDF task readiness
+KAPACITOR_POLL_INTERVAL = 10       # seconds - interval between Kapacitor task probes
+KAPACITOR_TASK_MARKER = "windturbine"  # substring expected in Kapacitor tasks
+KAPACITOR_UDF_INSTALL_TIMEOUT = 420    # seconds - max wait for Kapacitor to install UDF packages and restart
+KAPACITOR_UDF_POLL_INTERVAL = 10       # seconds - polling interval during UDF installation
+MQTT_SAMPLE_TIMEOUT = 240              # seconds - timeout for MQTT sample data verification
 POD_TERMINATION_TIMEOUT = 120      # seconds to wait for pods to terminate before helm install
 POD_CLEANUP_TIMEOUT = 60           # seconds to wait for pods to stop after helm uninstall
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT = 60    # seconds - standard pod cleanup timeout

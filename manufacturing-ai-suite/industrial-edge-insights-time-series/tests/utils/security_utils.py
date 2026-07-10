@@ -857,9 +857,7 @@ async def login_to_grafana_docker(port=3000):
         return False
 
 
-# ===========================
 # Port Utilities
-# ===========================
 
 def read_env_file(env_file_path: str):
     """
@@ -908,11 +906,7 @@ def get_docker_ports_from_env(project_root: str = None):
     # Map environment variable names to service names
     port_mapping = {}
     
-    # From .env file, we can see:
-    # GRAFANA_PORT=3000 -> maps to ia-grafana service
-    # OPCUA_SERVER_PORT=30003 -> maps to ia-opcua-server service (but internally uses 4840)
-    # Time series analytics uses hardcoded 5000 in docker-compose
-    # MQTT broker uses hardcoded 1883 in docker-compose
+    # Port mappings from .env: GRAFANA_PORT, OPCUA_SERVER_PORT, plus hardcoded TSAM 5000 and MQTT 1883
     
     if 'GRAFANA_PORT' in env_vars:
         port_mapping['grafana'] = int(env_vars['GRAFANA_PORT'])
@@ -925,9 +919,6 @@ def get_docker_ports_from_env(project_root: str = None):
     # These are hardcoded in docker-compose.yml
     port_mapping['mqtt'] = 1883
     port_mapping['time_series_analytics'] = 5000
-    
-    if 'MR_SERVER_PORT' in env_vars:
-        port_mapping['model_registry'] = int(env_vars['MR_SERVER_PORT'])
     
     return port_mapping
 

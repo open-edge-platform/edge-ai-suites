@@ -32,14 +32,14 @@ The setup script will:
 
 2. **[2] Application Dependency Check**
    - FFmpeg (auto-install if missing)
-   - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
+   - DL Streamer (auto-download and run installer [`dlstreamer-2026.1.0-win64.exe`](advance-setup-guide.md#b-install-dl-streamer))
 
 3. **[3] Configure Settings**
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
 
-4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
+4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
 ## Step 3: Access the Application
 
@@ -73,13 +73,22 @@ After initial setup is complete, use the start script for subsequent runs or aft
 .\start-smart-classroom.ps1
 ```
 
+**Optional Parameters:**
+- `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
+- `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
+
+```powershell
+# Example: Automated deployment
+.\start-smart-classroom.ps1 -Silent -NoElevate
+```
+
 The startup script performs:
 
 - **Service Detection** - Checks running services
-- **Restart Options** - Restart, skip, or abort choices
+- **Restart Options** - Restart, skip, or abort choices (auto in `-Silent` mode)
 - **Proxy Configuration** - Loads from `.proxy-config`
 - **Sequential Launch** - Backend -> Content Search -> Frontend
-- **Graceful Shutdown** - `Q` to stop all, `E` to keep running
+- **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
 ---
 

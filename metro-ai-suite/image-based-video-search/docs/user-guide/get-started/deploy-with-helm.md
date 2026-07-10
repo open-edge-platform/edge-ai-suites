@@ -26,14 +26,19 @@ Before You Begin, ensure the following:
 > **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
 
 - Download helm chart with the following command
+
     ```bash
     helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.3.0
     ```
+
 - unzip the package using the following command
+
     ```bash
     tar -xvf image-based-video-search-1.3.0.tgz
     ```
+
 - Get into the helm directory
+
     ```bash
     cd image-based-video-search
     ```
@@ -41,40 +46,48 @@ Before You Begin, ensure the following:
 ## Steps to Deploy
 
 1. **Clone the repo**:
-  - Clone the repo and go to helm directory
-    ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
-    cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
-    ```
+
+   - Clone the repo and go to helm directory
+
+     ```bash
+     git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+     cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
+     ```
 
 2. **Start the application**:
-  - Run below command in the terminal
-    ```bash
-    # Install the Image-Based Video Search chart in the ibvs namespace
-    helm install ibvs . --create-namespace -n ibvs
-    ```
 
-    Some containers in the deployment requires network access. If you are in a proxy
-    environment, pass the proxy environment variables as follows:
+   - Run below command in the terminal
 
-    ```bash
-    # Install the Image-Based Video Search chart in the ibvs namespace
-    # Replace the proxy values with the specific ones for your environment:
-    helm install ibvs . --create-namespace -n ibvs \
-        --set httpProxy="http://proxy.example.com:8080" \
-        --set httpsProxy="http://proxy.example.com:8080" \
-        --set noProxy="localhost\,127.0.0.1"
-    ```
+     ```bash
+     # Install the Image-Based Video Search chart in the ibvs namespace
+     helm install ibvs . --create-namespace -n ibvs
+     ```
+
+     Some containers in the deployment requires network access. If you are in a proxy
+     environment, pass the proxy environment variables as follows:
+
+     ```bash
+     # Install the Image-Based Video Search chart in the ibvs namespace
+     # Replace the proxy values with the specific ones for your environment:
+     helm install ibvs . --create-namespace -n ibvs \
+         --set httpProxy="http://proxy.example.com:8080" \
+         --set httpsProxy="http://proxy.example.com:8080" \
+         --set noProxy="localhost\,127.0.0.1"
+     ```
 
 3. **Open IBVS UI**:
-  - Now frontend should be accessible at `https://<ip-addr>:30443/`.
-    > **Note:** To access the above url remotely, replace the `<ip-addr>` with your system IP address.
+
+   - Now frontend should be accessible at `https://<ip-addr>:30443/`.
+
+     > **Note:** To access the above url remotely, replace the `<ip-addr>` with your system IP address.
 
 4. **Stop the application**:
-  - The app can be uninstalled using the following command:
-    ```bash
-    helm uninstall -n ibvs ibvs
-    ```
+
+   - The app can be uninstalled using the following command:
+
+     ```bash
+     helm uninstall -n ibvs ibvs
+     ```
 
 ## Supporting Resources
 

@@ -53,11 +53,11 @@ The core workflow is:
 
 #### Optional Components
 
-- **Intel® SceneScape Management UI:** A web-based user interface for advanced scene configuration, camera calibration, and visual rule setup. Provides intuitive tools for defining detection zones, traffic lanes, and monitoring areas through a graphical interface.
+- **Scenescape Management UI:** A web-based user interface for advanced scene configuration, camera calibration, and visual rule setup. Provides intuitive tools for defining detection zones, traffic lanes, and monitoring areas through a graphical interface.
 
-- **Intel® SceneScape Controller:** The backend service that manages scene configurations, processes spatial analytics, and coordinates between the Management UI and the video analytics pipeline. Handles complex scene understanding and geometric transformations.
+- **Scenescape Controller:** The backend service that manages scene configurations, processes spatial analytics, and coordinates between the Management UI and the video analytics pipeline. Handles complex scene understanding and geometric transformations.
 
-- **Intel® SceneScape Database (PostgreSQL):** A robust relational database that stores scene configurations, camera metadata, calibration parameters, and historical analytics data. Ensures data persistence and enables complex queries for reporting and analysis.
+- **Scenescape Database (PostgreSQL):** A robust relational database that stores scene configurations, camera metadata, calibration parameters, and historical analytics data. Ensures data persistence and enables complex queries for reporting and analysis.
 
 - **InfluxDB:** A time-series database optimized for storing and querying high-frequency transportation metrics such as vehicle counts, traffic flow rates, speed measurements, and system performance data. Enables efficient historical analysis and trend monitoring.
 
@@ -77,7 +77,7 @@ Key advantages include edge-based processing that reduces latency for time-criti
 
 **Advanced Capabilities with Optional Components:**
 
-When deployed with the optional Intel® SceneScape components, the system provides enhanced spatial analytics capabilities including precise vehicle trajectory tracking, accurate speed measurement, and advanced zone-based analytics. The InfluxDB integration enables long-term trend analysis, capacity planning, and performance optimization based on historical traffic patterns.
+When deployed with the optional Scenescape components, the system provides enhanced spatial analytics capabilities including precise vehicle trajectory tracking, accurate speed measurement, and advanced zone-based analytics. The InfluxDB integration enables long-term trend analysis, capacity planning, and performance optimization based on historical traffic patterns.
 
 ## Use Cases
 

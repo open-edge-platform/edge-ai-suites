@@ -678,46 +678,6 @@ jobs:
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           make down
-        
-      - name: Deploy Time Series Weld Defect Detection Sample App 
-        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
-        run: |
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
-          make down 
-          # Generate random values for sensitive environment variables
-          INFLUXDB_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-          INFLUXDB_PASSWORD=$(openssl rand -hex 10)
-          VISUALIZER_GRAFANA_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
-          VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
-
-          sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
-          sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
-          sed -i "s/VISUALIZER_GRAFANA_USER=.*/VISUALIZER_GRAFANA_USER=${VISUALIZER_GRAFANA_USER}/g" .env
-          sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
-          make build
-          echo "Deploying using mqtt ingestion"
-          make up_mqtt_ingestion app=weld-defect-detection
-
-      - name: DBS download and scan for Time Series Weld Defect Detection Sample App
-        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
-        run: |
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
-          docker run --rm --net host --pid host --userns host --cap-add audit_control \
-          -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
-          -v /etc:/etc:ro \
-          -v /usr/bin/containerd:/usr/bin/containerd:ro \
-          -v /usr/bin/runc:/usr/bin/runc:ro \
-          -v /usr/lib/systemd:/usr/lib/systemd:ro \
-          -v /var/lib:/var/lib:ro \
-          -v /var/run/docker.sock:/var/run/docker.sock:ro \
-          --label docker_bench_security \
-          docker-bench-security > dbs_scan_weld_anomaly_detection_sample_app.txt
-
-      - name: Undeploy Time Series Analytics microservice
-        if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
-        run: |
-          cd manufacturing-ai-suite/industrial-edge-insights-time-series/
-          make down
           
       - name: Upload Scan artifact to Github
         if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}

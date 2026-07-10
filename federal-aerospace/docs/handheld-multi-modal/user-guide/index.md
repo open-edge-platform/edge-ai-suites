@@ -8,31 +8,32 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/handheld-multi-modal/README.md">
      Readme
   </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/v2026.1.0/handheld-multi-modal.zip">
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.1/handheld-multi-modal.zip">
      Download Package
   </a>
 </div>
 hide_directive-->
 
 The Handheld Multi-Modal application is a full-stack AI inference and observability software
-collection optimized for Intel® edge hardware in handheld deployment scenarios.
+collection consisting of both single- and multi-modal components that are optimized for
+Intel® edge hardware in handheld deployment scenarios.
 
-The collection combines an LLM inference server, a speech-to-text service, a chat UI, and a
-metrics or dashboarding stack into a single composable solution. It runs alongside the
-[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html),
-sharing its Docker network.
+This composite application combines a conversational agent exposed via Chat UI that is backed by
+a LLM inference server, a speech-to-text service and
+[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
+All components of the composite application share the visual pipeline solution's Docker network.
 
-It assumes two main stages:
+Deployment of the the full solution consists of two main stages:
 
-1. Preparation of power-optimized OS that supports hardware acceleration, for example,
-   GPU or NPU, as well as Single Root I/O Virtualization (SR-IOV) for modern applications.
-2. Deployment of the composition pieces, such as a local LLM inference server.
+1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/main/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
+2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accellerated compute platform.
 
-## Handheld Multi-Modal Components
+## Components of the Handheld Multi-Modal Application
 
-The application combines LLM inference capability served through the OpenVINO Model Server
-platform, speech-to-text transcription through the Whisper service, a chat UI through the
-Open WebUI software, and metrics information through the Grafana dashboard.
+The application combines a conversational agent (Chat UI) exposed as Open WebUI component
+backed by LLM model served through the OpenVINO Model Server platform, a speech-to-text
+transcription functionality realized by the Whisper model, and observability dashboard
+exposed via Grafana dashboard for a live view of platform utilization and application metrics.
 
 ### Visual Pipeline and Platform Evaluation Tool
 
@@ -43,8 +44,16 @@ optimized hardware selection and performance tuning.
 
 For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 
-### Whisper Model
+> **Notice:**
+> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
+  Multi-Modal Application does not fully support pipelines that utilize
+  [Hugging Face](https://huggingface.co/) models, requiring access approval and downloading
+  via an access token. As a result the Video Summarization VLM pipeline is not available in
+  the preview release.
 
+### Speech To Text (Whisper Model)
+
+This component is responsible for speech to text functionality and uses Whisper model.
 Whisper is a general-purpose speech recognition model. It is trained on a large dataset of
 diverse audio and is also a multitasking model that can perform multilingual speech recognition,
 speech translation, and language identification.
@@ -55,10 +64,24 @@ For more information, see [Whisper documentation](https://github.com/openai/whis
 
 **Open WebUI** is an [extensible](https://docs.openwebui.com/features/extensibility/plugin),
 feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.
-It supports various LLM runners, such as **Ollama** and **OpenAI-compatible APIs**, with
+It supports various  runners, such as **Ollama** and **OpenAI-compatible APIs**, with
 a built-in inference engine for RAG, making it a powerful AI deployment solution.
 
 For more information, see [Web UI documentation](https://github.com/open-webui/open-webui).
+
+### Observability
+
+The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/), a data visualization and analytics tool. A Grafana Dashboard is
+supplied that aggregates and presents metrics from the components of the application
+and from the underlying platform. Metrics are streamed over websocket to Grafana
+for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exposed at
+`localhost:9273/metrics` address, from which data can be scraped for
+long-term persistence.
+
+## Composite Application installation
+
+Proceed to [Application Deployment](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/handheld-multi-modal-application/deploy-applications.html).
+and follow the guide to install Handheld Multi-Modal Application.
 
 <!--hide_directive
 :::{toctree}
