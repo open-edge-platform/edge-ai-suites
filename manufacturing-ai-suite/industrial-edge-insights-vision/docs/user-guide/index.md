@@ -1,6 +1,6 @@
 # Industrial Edge Insights - Vision
 
-Vision apps enable AI-powered real time monitoring for quality control purposes.
+Vision applications enable AI-powered real time monitoring for quality control purposes.
 Their use cases cover detecting deviations and anomalies in manufacturing processes
 by running inference workflows across multiple AI models on video feeds from
 visual monitoring systems located on-site, all operating efficiently on a single
@@ -44,7 +44,9 @@ Real-time visual monitoring of worker safety gear.
 ::::
 hide_directive-->
 
-[Win Vision AI](./win-vision-ai/index.md), in contrast to the other vision apps, is a more
+See [Industrial Edge Insights - Vision System Requirements] for the Pallet Defect Detection, PCB Anomaly Detection, Weld Porosity Detection, Worker and Safety Gear Detection common system requirements.
+
+[Win Vision AI](./win-vision-ai/index.md), in contrast to the other vision applications, is a more
 generalised Python-based Windows application for running multiple AI inference pipelines on
 any DL Streamer-compatible models, with flexible input and output options. It can be used as
 a reference application and architectural template for building custom AI vision solutions on
@@ -65,6 +67,7 @@ hide_directive-->
 :::{toctree}
 :hidden:
 
+get-started.md
 ./pallet-defect-detection/index.md
 ./pcb-anomaly-detection/index.md
 ./weld-porosity/index.md

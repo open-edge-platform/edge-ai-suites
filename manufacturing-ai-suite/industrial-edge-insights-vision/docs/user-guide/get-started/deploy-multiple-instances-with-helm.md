@@ -66,7 +66,7 @@ configured Kubernetes cluster.
   ```
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
-## Setup the application
+## Set up the application
 
 > **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
@@ -104,7 +104,7 @@ configured Kubernetes cluster.
         S3_STORAGE_PORT: 30802
     ```
 
-    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `weld1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances (two pallet-defect-detection instances and one weld-porosity instance) with the identifiers `pdd1`, `pdd2`, and `weld1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the below mentioned environment variables in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
@@ -119,6 +119,8 @@ configured Kubernetes cluster.
    ```
 
    > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   
+   > **Note:** For Worker Safety Gear Detection's GPU- or NPU-based pipelines, set ``privileged_access_required: true`` in the helm/values.yaml file to enable access to host hardware devices.
 
 4. Install prerequisites for all instances
 
@@ -155,23 +157,37 @@ configured Kubernetes cluster.
    kubectl logs -n <INSTANCE_NAME> -f <pod_name>
    ```
 
-2. Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+2. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
-
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+   
+   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
+   
+   | Application   | <VIDEOS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
+   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
+   | Weld Porosity Detection | weld-porosity/videos/welding |
+   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
+   
+   | Application   | <MODELS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection |
+   | PCB Anomaly Detection   | pcb-anomaly-detection |
+   | Weld Porosity Detection | weld-porosity |
+   | Worker Safety Gear Detection | worker-safety-gear-detection|  
 
 ### Start AI pipelines
 
 #### Start pipeline for all instances
 
-1. Fetch the list of pipeline loaded available to launch for all instances
+1. Fetch the list of pipeline loaded available to launch for all instances:
 
    ```sh
    ./sample_list.sh helm
@@ -179,7 +195,7 @@ configured Kubernetes cluster.
 
    This lists the pipeline loaded in DL Streamer Pipeline Server.
 
-   Output:
+   Output example of two pallet-defect-detection instances and one weld-porosity instance:
 
    ```text
    -------------------------------------------
@@ -262,7 +278,7 @@ configured Kubernetes cluster.
    ./sample_start.sh helm
    ```
 
-   Example Output:
+   Output example of two pallet-defect-detection instances and one weld-porosity instance:
 
    ```text
    No pipeline specified. Starting the first pipeline.
@@ -304,7 +320,7 @@ configured Kubernetes cluster.
    ------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
    Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 1<HOST_IP>:<NGINX_HTTPS_PORT>
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/payload.json
@@ -337,14 +353,14 @@ configured Kubernetes cluster.
    ./sample_list.sh helm -i <INSTANCE_NAME>
    ```
 
-    Example Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Instance name set to: pdd1
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
    Running sample app: pallet-defect-detection
-   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
@@ -371,7 +387,7 @@ configured Kubernetes cluster.
    ./sample_start.sh helm -i <INSTANCE_NAME> -p <PIPELINE_NAME>
    ```
 
-   Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Instance name set to: pdd2
@@ -391,7 +407,7 @@ configured Kubernetes cluster.
    Payload for pipeline 'pallet_defect_detection'  Response: "f3a34cd5062f11f1ab8defacc0acb924"
    ```
 
-3. Acess WebRTC stream:
+3. Access the WebRTC stream:
 
    Open a browser and navigate to
 
@@ -407,7 +423,7 @@ configured Kubernetes cluster.
    ./sample_list.sh helm -i <INSTANCE_NAME>
    ```
 
-    Example Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Environment variables loaded from .env
@@ -432,7 +448,7 @@ configured Kubernetes cluster.
    ./sample_start.sh helm -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
    ```
 
-   Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Instance name set to: pdd1
@@ -453,7 +469,7 @@ configured Kubernetes cluster.
    Payload for pipeline 'pallet_defect_detection_gpu'. Response: "3bd097ec065b11f1a30d3101230a4967"
    ```
 
-3. Access WebRTC stream:
+3. Access the WebRTC stream:
 
    Open a browser and navigate to:
 
@@ -473,7 +489,7 @@ configured Kubernetes cluster.
 
    This command lists status of pipeline instances launched during the lifetime of sample application of all instances in the config file
 
-   Output:
+   Output example of two pallet-defect-detection instances and one weld-porosity instance:
 
    ```text
    No arguments provided. Fetching status for all pipeline instances.
@@ -568,7 +584,7 @@ configured Kubernetes cluster.
    ./sample_stop.sh helm
    ```
 
-   Output
+   Output example of two pallet-defect-detection instances and one weld-porosity instance:
 
    ```text
    No pipelines specified. Stopping all pipeline instances
@@ -640,7 +656,7 @@ configured Kubernetes cluster.
    ./sample_stop.sh helm -i <INSTANCE_NAME>
    ```
 
-   Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
@@ -668,7 +684,7 @@ configured Kubernetes cluster.
    ./sample_stop.sh helm -i <INSTANCE_NAME> --id <INSTANCE_ID>
    ```
 
-   Output:
+   Output example for Pallet Defect Detection:
 
    ```text
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
@@ -700,7 +716,7 @@ Once application has been stopped, remove or rename the `config.yml` file if you
 
 Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
-1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+1. Run all the steps mentioned in above [section](#set-up-the-application) to set up the application.
 
 2. Install the Helm chart.
 
@@ -711,18 +727,33 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+   
+   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
+  
+   | Application   | <VIDEOS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
+   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
+   | Weld Porosity Detection | weld-porosity/videos/welding |
+   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
+   
+   | Application   | <MODELS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection |
+   | PCB Anomaly Detection   | pcb-anomaly-detection |
+   | Weld Porosity Detection | weld-porosity |
+   | Worker Safety Gear Detection | worker-safety-gear-detection|  
 
 4. Install the package `boto3` in your python environment if not installed.
 
-   It is recommended to create a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
+   Intel recommends creating a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
 
    ```sh
    sudo apt update && \
@@ -771,7 +802,9 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    python3 create_bucket_<INSTANCE_NAME>.py
    ```
 
-6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the `config.yml` for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pallet_defect_detection.  Please adjust the source path of models and videos appropriately for other sample applications.
+6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the `config.yml` for each instance. Ensure to give the correct path to the model as seen below.
+
+   Pallet Defect Detection:
 
    ```sh
    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -794,6 +827,75 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    }'
    ```
 
+   PCB Anomaly Detection:
+   
+   ```sh
+   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+      "source": {
+         "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+         "type": "uri"
+      },
+      "destination": {
+         "frame": {
+               "type": "webrtc",
+               "peer-id": "anomaly_s3"
+         }
+      },
+      "parameters": {
+         "classification-properties": {
+               "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+               "device": "CPU"
+         }
+      }
+   }'
+   ```
+   
+   Weld Porosity Classification:
+   
+   ```sh
+    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
+        "source": {
+            "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
+            "type": "uri"
+        },
+        "destination": {
+            "frame": {
+                "type": "webrtc",
+                "peer-id": "welds3"
+            }
+        },
+        "parameters": {
+            "classification-properties": {
+                "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
+                "device": "CPU"
+            }
+        }
+    }'
+   ```
+   
+   Worker Safety Gear Detection:
+   
+   ```sh
+    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+        "source": {
+            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
+            "type": "uri"
+        },
+        "destination": {
+            "frame": {
+                "type": "webrtc",
+                "peer-id": "worker_safety_gear_detection_s3"
+            }
+        },
+        "parameters": {
+            "detection-properties": {
+                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
+                "device": "CPU"
+            }
+        }
+    }'
+   ```
+
 7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
@@ -808,7 +910,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 ## MLOps using Model Download
 
-1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+1. Run all the steps mentioned in above [section](#set-up-the-application) to set up the application.
 
 2. Install the Helm chart
 
@@ -819,18 +921,33 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+   
+   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
+   
+   | Application   | <VIDEOS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
+   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
+   | Weld Porosity Detection | weld-porosity/videos/welding |
+   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
+   
+   | Application   | <MODELS_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet-defect-detection |
+   | PCB Anomaly Detection   | pcb-anomaly-detection |
+   | Weld Porosity Detection | weld-porosity |
+   | Worker Safety Gear Detection | worker-safety-gear-detection|
 
 4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
-   Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
+   Pallet Defect Detection:
 
    ```json
    [
@@ -857,27 +974,121 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        }
    ]
    ```
+   
+   PCB Anomaly Detection:
+   
+   ```json
+   [
+      {
+         "pipeline": "pcb_anomaly_detection_mlops",
+         "payload":{
+               "source": {
+                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+                  "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                  "type": "webrtc",
+                  "peer-id": "anomaly"
+               }
+               },
+               "parameters": {
+                  "classification-properties": {
+                     "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+                     "device": "CPU"
+                  }
+               }
+         }
+      }
+   ]
+   ```
+   
+   Weld Porosity Classification:
+   
+   ```json
+    [
+        {
+            "pipeline": "weld_porosity_classification_mlops",
+            "payload": {
+                "destination": {
+                    "frame": {
+                        "type": "webrtc",
+                        "peer-id": "weld"
+                    }
+                },
+                "parameters": {
+                    "classification-properties": {
+                        "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+   ```
+   
+   Worker Safety Gear Detection:
+   
+   ```json
+    [
+        {
+            "pipeline": "worker_safety_gear_detection_mlops",
+            "payload":{
+                "source": {
+                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
+                    "type": "uri"
+                },
+                "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "worker_safety"
+                }
+                },
+                "parameters": {
+                    "detection-properties": {
+                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+   ```
 
 5. Start the pipeline with the above payload.
 
-   Below is an example for starting an instance for pallet-defect-detection:
+   Replace "<APP>" with your sample application from the table that follows:
 
    ```sh
-   ./sample_start.sh helm -i <INSTANCE_NAME> -p pallet_defect_detection_mlops
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p <APP>_mlops
    ```
    Note the instance-id.
+   
+   | Application   | <APP> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | pallet_defect_detection |
+   | PCB Anomaly Detection   | pcb_anomaly_detection |
+   | Weld Porosity Detection | weld_porosity_classification |
+   | Worker Safety Gear Detection | worker_safety_gear_detection |
 
-6. Download and prepare the model. Below is an example for downloading and preparing model for pallet-defect-detection. Please modify MODEL_URL for the other sample applications.
+6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows: 
 
-   > **Note:** For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+   > **Note:** For sake of simplicity, Intel assumes that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/<MODEL_PATH>.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 
    unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
    ```
+
+   | Application   | <MODEL_PATH> Value                    |
+   | :----- | :--------------------------------------- |
+   | Pallet Defect Detection  | 06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection |
+   | PCB Anomaly Detection   | 6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection |
+   | Weld Porosity Detection | d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification |
+   | Worker Safety Gear Detection | 06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/worker-safety-gear-detection |
 
 7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
 
@@ -888,7 +1099,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-   > **Note:** If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample app and instance.
+   > **Note:** If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample application and instance.
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
 
@@ -898,7 +1109,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
 
-   Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
+   Pallet Defect Detection:
 
    ```json
    [
@@ -924,6 +1135,87 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
            }
        }
    ]
+   ```
+   
+   PCB Anomaly Detection:
+   
+   ```json
+   [
+      {
+         "pipeline": "pcb_anomaly_detection_mlops",
+         "payload":{
+               "source": {
+                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+                  "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                  "type": "webrtc",
+                  "peer-id": "anomaly"
+               }
+               },
+               "parameters": {
+                  "classification-properties": {
+                     "model": "/home/pipeline-server/resources/models/new-model/deployment/Anomaly classification/model/model.xml",
+                     "device": "CPU"
+                  }
+               }
+         }
+      }
+   ]
+   ```
+
+   Weld Porosity:
+
+   ```json
+    [
+        {
+            "pipeline": "weld_porosity_classification_mlops",
+            "payload": {
+                "destination": {
+                    "frame": {
+                        "type": "webrtc",
+                        "peer-id": "weld"
+                    }
+                },
+                "parameters": {
+                    "classification-properties": {
+                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Classification/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+    ```   
+
+   Worker Safety Gear Detection:
+   
+   ```json
+    [
+        {
+            "pipeline": "worker_safety_gear_detection_mlops",
+            "payload":{
+                "source": {
+                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
+                    "type": "uri"
+                },
+                "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "worker_safety"
+                }
+                },
+                "parameters": {
+                    "detection-properties": {
+                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+   ```
 
 10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
