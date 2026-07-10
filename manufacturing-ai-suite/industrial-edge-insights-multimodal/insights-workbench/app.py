@@ -24,14 +24,17 @@ vllm_client = OpenAI(
 )
 
 def get_seaweed_public_image_base_path() -> str:
+    """Return the public SeaweedFS base path used to serve weld images."""
     return (
         f"{os.getenv('OBJECT_STORE_URL', 'http://seaweedfs-filer:8888')}/buckets/{os.getenv('BUCKET_NAME', 'dlstreamer-pipeline-results/weld-defect-classification')}"
     ).rstrip("/")
     
 def build_image_url(img_handle: str) -> str:
+    """Build a full image URL for a SeaweedFS image handle."""
     return f"{get_seaweed_public_image_base_path()}/{img_handle}.jpg"
 
 def get_query_prompt() -> dict[str, Any]:
+    """Return the system prompt that guides weld-quality analysis responses."""
     return {
         "role": "system",
         "content": (
@@ -49,10 +52,12 @@ def get_query_prompt() -> dict[str, Any]:
 
 
 def get_fusion_measurement_name() -> str:
+    """Return the InfluxDB measurement name used for fused analytics output."""
     return os.getenv("FUSION_MEASUREMENT", "fusion_result")
 
 
 def get_influx_client() -> InfluxDBClient:
+    """Create and return an InfluxDB client from environment configuration."""
     host = os.getenv("INFLUX_HOST", "localhost")
     port = int(os.getenv("INFLUX_PORT", "8086"))
     username = os.getenv("INFLUX_USER", "admin")
@@ -70,6 +75,7 @@ def get_influx_client() -> InfluxDBClient:
 
 
 def list_measurements(client: InfluxDBClient) -> list[str]:
+    """List available InfluxDB measurements."""
     result = client.query("SHOW MEASUREMENTS")
     measurements: list[str] = []
 
@@ -86,6 +92,7 @@ def fetch_rows(
     page: int,
     page_size: int,
 ) -> tuple[list[dict[str, Any]], bool]:
+    """Fetch a page of fusion rows and indicate whether more rows are available."""
     offset = (page - 1) * page_size
 
     # Request one extra record so we can determine if there is a next page.
@@ -105,11 +112,13 @@ def fetch_rows(
 
 @app.route("/")
 def index() -> str:
+    """Render the main insights workbench page."""
     return render_template("index.html")
 
 
 @app.route("/api/measurements", methods=["GET"])
 def api_measurements() -> Any:
+    """Return the configured fusion measurement for the frontend selector."""
     try:
         measurement = get_fusion_measurement_name()
         measurements = [measurement]
@@ -120,6 +129,7 @@ def api_measurements() -> Any:
 
 @app.route("/api/data", methods=["GET"])
 def api_data() -> Any:
+    """Return paginated fusion rows for the dashboard table."""
     measurement = get_fusion_measurement_name()
     page = max(int(request.args.get("page", 1)), 1)
     page_size = max(min(int(request.args.get("page_size", 10)), 200), 1)
@@ -142,6 +152,7 @@ def api_data() -> Any:
 
 @app.route("/api/explain", methods=["POST"])
 def api_explain() -> Any:
+    """Build multimodal context from selected timestamps and return an explanation payload."""
     payload = request.get_json(silent=True) or {}
     selected_times = payload.get("selected_times", [])
     app.logger.info("Explain request received with %d selected time(s)", len(selected_times))
