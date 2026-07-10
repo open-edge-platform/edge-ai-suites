@@ -333,19 +333,7 @@
 
       const headerRow = document.createElement("tr");
       const selectAllTh = document.createElement("th");
-      const selectAllCheckbox = document.createElement("input");
-      selectAllCheckbox.type = "checkbox";
-      selectAllCheckbox.id = "selectAllRows";
-      selectAllCheckbox.setAttribute("aria-label", "Select all rows on current page");
-      selectAllCheckbox.addEventListener("change", (event) => {
-        const checked = event.target.checked;
-        const rowCheckboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
-        rowCheckboxes.forEach((checkbox) => {
-          checkbox.checked = checked;
-        });
-        updateExplainButtonState();
-      });
-      selectAllTh.appendChild(selectAllCheckbox);
+      selectAllTh.textContent = "Select";
       headerRow.appendChild(selectAllTh);
 
       columns.forEach((column) => {
@@ -364,14 +352,14 @@
         rowCheckbox.setAttribute("data-row-select", "true");
         rowCheckbox.setAttribute("data-row-json", JSON.stringify(row));
         rowCheckbox.setAttribute("aria-label", `Select row ${rowIndex + 1}`);
-        rowCheckbox.addEventListener("change", () => {
-          const rowCheckboxes = Array.from(
-            tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']")
-          );
-          const allChecked = rowCheckboxes.length > 0 && rowCheckboxes.every((checkbox) => checkbox.checked);
-          const selectAll = document.getElementById("selectAllRows");
-          if (selectAll) {
-            selectAll.checked = allChecked;
+        rowCheckbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+            const rowCheckboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
+            rowCheckboxes.forEach((checkbox) => {
+              if (checkbox !== event.target) {
+                checkbox.checked = false;
+              }
+            });
           }
           updateExplainButtonState();
         });
