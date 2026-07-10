@@ -18,4 +18,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8080", "app:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8080", "--timeout", "300", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "app:app"]

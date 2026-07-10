@@ -78,8 +78,8 @@ services:
     - no-new-privileges
     read_only: false
     environment:
-      no_proxy: "ia-influxdb,${no_proxy}"
-      NO_PROXY: "ia-influxdb,${no_proxy}"
+      no_proxy: "ia-influxdb,vllm-server,${no_proxy}"
+      NO_PROXY: "ia-influxdb,vllm-server,${no_proxy}"
       INFLUX_HOST: ia-influxdb
       INFLUX_PORT: 8086
       INFLUX_USER: ${INFLUXDB_USERNAME}

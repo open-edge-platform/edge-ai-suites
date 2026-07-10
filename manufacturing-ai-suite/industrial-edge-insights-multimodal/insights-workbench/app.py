@@ -17,8 +17,15 @@ from openai import OpenAI
 from flask import Flask, jsonify, render_template, request
 from influxdb import InfluxDBClient
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(process)d %(levelname)s %(name)s: %(message)s",
+    force=True,
+)
+
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
-app.logger.setLevel(logging.INFO)
 
 vllm_client = OpenAI(
     base_url= f"http://{os.getenv('VLLM_HOST', 'vllm-server')}:{os.getenv('VLLM_PORT', '8000')}/v1",
@@ -62,7 +69,7 @@ def get_vllm_health_url() -> str:
     """Return the vLLM health endpoint URL built from environment variables."""
     host = os.getenv("VLLM_HOST", "vllm-server")
     port = os.getenv("VLLM_PORT", "8000")
-    return f"http://{host}:{port}/health"
+    return f"http://{host}:{port}/docs"
 
 
 def get_influx_client() -> InfluxDBClient:
@@ -162,55 +169,51 @@ def api_data() -> Any:
 
 @app.route("/api/vllm/health", methods=["GET"])
 def api_vllm_health() -> Any:
-    """Check whether the vLLM server API is reachable and responding."""
+    """Check whether the vLLM server is accessible."""
+
     health_url = get_vllm_health_url()
 
+    logger.info("Checking vLLM endpoint: %s", health_url)
+
     try:
-        with urlopen(health_url, timeout=5) as response:  # noqa: S310
+        with urlopen(health_url, timeout=5) as response:
             status_code = response.getcode()
 
-        if status_code == 200:
-            return jsonify(
-                {
-                    "accessible": True,
-                    "status_code": status_code,
-                    "endpoint": health_url,
-                    "message": "vLLM server API is accessible.",
-                }
-            )
+        accessible = 200 <= status_code < 400
 
-        return (
-            jsonify(
-                {
-                    "accessible": False,
-                    "status_code": status_code,
-                    "endpoint": health_url,
-                    "message": "vLLM server API responded with non-OK status.",
-                }
-            ),
-            503,
+        logger.info(
+            "vLLM endpoint=%s status_code=%d accessible=%s",
+            health_url,
+            status_code,
+            accessible,
         )
-    except URLError as exc:
-        return (
-            jsonify(
-                {
-                    "accessible": False,
-                    "endpoint": health_url,
-                    "message": "Unable to reach vLLM server API.",
-                    "error": str(exc.reason),
-                }
-            ),
-            503,
+
+        return jsonify(
+            {
+                "accessible": accessible,
+            }
+        ), 200 if accessible else 503
+
+    except Exception as exc:
+        logger.error(
+            "Unable to access vLLM endpoint=%s error=%s",
+            health_url,
+            exc,
         )
-    except Exception as exc:  # noqa: BLE001
-        return jsonify({"accessible": False, "endpoint": health_url, "error": str(exc)}), 500
+
+        return jsonify(
+            {
+                "accessible": False,
+            }
+        ), 503
 
 @app.route("/api/explain", methods=["POST"])
 def api_explain() -> Any:
     """Build multimodal context from selected timestamps and return an explanation payload."""
     payload = request.get_json(silent=True) or {}
     selected_times = payload.get("selected_times", [])
-    app.logger.info("Explain request received with %d selected time(s)", len(selected_times))
+    logger.info("Explain request received with %d selected time(s)", len(selected_times))
+    ts_data = []
     resolved_images: list[dict[str, Any]] = []
     message = {
         "role" :    "user",
@@ -219,29 +222,29 @@ def api_explain() -> Any:
     for time_str in selected_times:
         try:
             datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
-            app.logger.info("Selected time=%s", time_str)
+            logger.info("Selected time=%s", time_str)
             client = get_influx_client()
             query = f"SELECT * FROM fusion_result WHERE time = '{time_str}'"
             result = client.query(query)
             points = list(result.get_points())
             if len(points) == 0:
-                app.logger.warning("No fusion_result row found for time=%s", time_str)
+                logger.warning("No fusion_result row found for time=%s", time_str)
                 continue
 
             row = points[0]
             vision_timestamp = row.get("vision_timestamp")
             if not vision_timestamp:
-                app.logger.warning("No vision_timestamp found in fusion row for time=%s", time_str)
+                logger.warning("No vision_timestamp found in fusion row for time=%s", time_str)
                 continue
 
             query_vision = (
                 f"SELECT * FROM \"vision-weld-classification-results\" "
                 f"WHERE search_time = '{vision_timestamp}'"
             )
-            app.logger.info("Querying vision data with query: %s", query_vision)
+            logger.info("Querying vision data with query: %s", query_vision)
             result_vision = client.query(query_vision)
             points_vision = list(result_vision.get_points())
-            app.logger.info(
+            logger.info(
                 "Matched %d row(s) for vision time=%s",
                 len(points_vision),
                 vision_timestamp,
@@ -251,7 +254,7 @@ def api_explain() -> Any:
                 frame_id = points_vision[0].get("frame_id")
                 img_handle = points_vision[0].get("img_handle")
                 image_url = build_image_url(str(img_handle)) if img_handle else None
-                app.logger.info(
+                logger.info(
                     "Retrieved frame_id=%s img_handle=%s image_url=%s",
                     frame_id,
                     img_handle,
@@ -264,16 +267,17 @@ def api_explain() -> Any:
                         "frame_id": frame_id,
                         "img_handle": img_handle,
                         "image_url": image_url,
+                        "image_load_url": f"/image-store/buckets/{os.getenv('BUCKET_NAME', 'dlstreamer-pipeline-results/weld-defect-classification')}/{img_handle}.jpg" if img_handle else None,
                     }
                 )
 
             
 
             query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"
-            app.logger.info("Querying sensor data with query: %s", query_sensor)
+            logger.info("Querying sensor data with query: %s", query_sensor)
             result_sensor = client.query(query_sensor)
             points_sensor = list(result_sensor.get_points())
-            app.logger.info("Matched %d row(s) for sensor time=%s row: %s", len(points_sensor), points[0]['timeseries_timestamp'], points_sensor)
+            logger.info("Matched %d row(s) for sensor time=%s row: %s", len(points_sensor), points[0]['timeseries_timestamp'], points_sensor)
 
             vision_data = {
                 "type": "image_url",
@@ -297,52 +301,57 @@ def api_explain() -> Any:
                     """,
             }
 
+            ts_data.append(
+                f"""
+                Sensor Data:
+                    • Primary Weld Current: {points_sensor[0].get('Primary Weld Current', 'N/A')} A
+                    • Secondary Weld Voltage: {points_sensor[0].get('Secondary Weld Voltage', 'N/A')} V
+                    • Pressure: {points_sensor[0].get('Pressure', 'N/A')} bar
+                    • CO2 Weld Flow: {points_sensor[0].get('CO2 Weld Flow', 'N/A')} L/min
+                    • Feed: {points_sensor[0].get('Feed', 'N/A')} mm/min
+                    • Wire Consumed: {points_sensor[0].get('Wire Consumed', 'N/A')} mm
+                    """
+            )
+
             message["content"].append(vision_data)
             message["content"].append(sensors_data)
     
         except ValueError:
             return jsonify({"error": f"Invalid time format: {time_str}"}), 400
         except Exception as exc:  # noqa: BLE001
-            app.logger.exception("Explain processing failed for time=%s", time_str)
+            logger.exception("Explain processing failed for time=%s", time_str)
             return jsonify({"error": str(exc)}), 500
 
     # Simulate a short model/API processing time for the UI spinner.
     
 
     final_prompt = [get_query_prompt(), message]
-    app.logger.info("Sending final prompt to vLLM: %s", final_prompt)
-    # response = vllm_client.chat.completions.create(
-    #     model="unsloth/Qwen3.5-2B",
-    #     messages=final_prompt,
-    #     max_tokens=4096,
-    #     temperature=1.5,
-    #     extra_body={
-    #         "min_p": 0.1,
-    #         "chat_template_kwargs": {
-    #             "enable_thinking": False,
-    #         },
-    #     },
-    # )
+    logger.info("Sending final prompt to vLLM: %s", final_prompt)
+    response = vllm_client.chat.completions.create(
+        model="unsloth/Qwen3.5-2B",
+        messages=final_prompt,
+        max_tokens=4096,
+        temperature=1.5,
+        extra_body={
+            "min_p": 0.1,
+            "chat_template_kwargs": {
+                "enable_thinking": False,
+            },
+        },
+    )
 
-    # app.logger.info("Received response from vLLM: %s", response)
-    # if response.choices and len(response.choices) > 0:
-    #     vllm_output = response.choices[0].message.content
-    #     app.logger.info("vLLM output: %s", vllm_output)
-
-    time.sleep(2)
+    vllm_output = ""
+    if response.choices and len(response.choices) > 0:
+        vllm_output = response.choices[0].message.content
+        logger.info("vLLM output: %s", vllm_output)
 
     return jsonify(
         {
             "title": "AI Assistant Output",
-            "section": "Root Cause Analysis",
-            "bullets": [
-                "WT-001 exhibited a sudden increase in vibration.",
-                "Temperature rose 15% above baseline.",
-                "Similar pattern observed in previous bearing failure.",
-            ],
-            "recommendation": "Inspect bearing assembly.",
+            "markdown": vllm_output,
             "selected_times": selected_times,
             "resolved_images": resolved_images,
+            "ts_data": ts_data,
         }
     )
 
