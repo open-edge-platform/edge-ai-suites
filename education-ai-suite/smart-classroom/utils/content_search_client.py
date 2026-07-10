@@ -1,7 +1,7 @@
 import requests
 import logging
 from utils.config_loader import config
-from utils.topic_faiss_indexer import parse_transcript_lines, build_topic_text
+from utils.transcript_parser import parse_transcript_lines, build_topic_text
 
 logger = logging.getLogger(__name__)
 
