@@ -14,7 +14,10 @@ import openvino as ov
 import torch
 import yaml
 from PIL import Image
+from providers.utils.model_utils import is_model_ready
 from providers.vlm_openvino_serving.utils.common import ErrorMessages, logger, settings
+
+__all__ = ["convert_model", "is_model_ready", "load_images", "load_model_config", "setup_seed"]
 
 
 def _convert_model_worker(
@@ -37,8 +40,17 @@ def _convert_model_worker(
 
     hf_tokenizer = AutoTokenizer.from_pretrained(model_id)
     hf_tokenizer.save_pretrained(cache_dir)
-    ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=False)
-    ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
+    add_special_tokens = model_type in ("embedding", "reranker")
+    needs_detokenizer = model_type in ("llm", "vlm")
+    if needs_detokenizer:
+        ov_tokenizer, ov_detokenizer = convert_tokenizer(
+            hf_tokenizer, add_special_tokens=add_special_tokens, with_detokenizer=True
+        )
+        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
+        ov.save_model(ov_detokenizer, f"{cache_dir}/openvino_detokenizer.xml")
+    else:
+        ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=add_special_tokens)
+        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
 
     if model_type == "embedding":
         embedding_model = OVModelForFeatureExtraction.from_pretrained(
@@ -89,7 +101,8 @@ def convert_model(
     """
     try:
         logger.debug(f"cache_ddir: {cache_dir}")
-        if is_model_ready(Path(cache_dir)):
+        require_detokenizer = model_type in ("llm", "vlm")
+        if is_model_ready(Path(cache_dir), require_detokenizer=require_detokenizer):
             logger.info(f"Optimized {model_id} exist in {cache_dir}. Skip process...")
         else:
             logger.info(f"Converting {model_id} model to OpenVINO format in subprocess...")
@@ -132,7 +145,7 @@ async def load_images(image_urls_or_files: List[str]):
             image_data = (
                 np.array(image.getdata())
                 .reshape(1, image.size[1], image.size[0], 3)
-                .astype(np.byte)
+                .astype(np.uint8)
             )
             images.append(image)
             image_tensors.append(ov.Tensor(image_data))
@@ -141,24 +154,6 @@ async def load_images(image_urls_or_files: List[str]):
         except Exception as e:
             raise RuntimeError(f"{ErrorMessages.LOAD_IMAGE_ERROR}: {e}")
     return images, image_tensors
-
-
-
-def is_model_ready(model_dir: Path) -> bool:
-    """
-    Check if the model is ready by verifying the existence of the OpenVINO model files.
-
-    Args:
-        model_dir (Path): The directory where the model is stored.
-
-    Returns:
-        bool: True if the model files exist, False otherwise.
-    """
-    if not model_dir.exists():
-        return False
-    import re
-    pattern = re.compile(r"(.*)?openvino(.*)?_model(.*)?.xml$")
-    return any(pattern.search(p.name) for p in model_dir.rglob("*.xml"))
 
 
 def load_model_config(

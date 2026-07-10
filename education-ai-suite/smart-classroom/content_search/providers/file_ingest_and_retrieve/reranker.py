@@ -3,20 +3,42 @@
 
 import logging
 import os
+import threading
 from collections import defaultdict
 from pathlib import Path
 
 import math
 
-import numpy as np
-from optimum.intel import OVModelForSequenceClassification
-from transformers import AutoTokenizer
+import openvino_genai as ov_genai
 
 from providers.file_ingest_and_retrieve.utils import extract_bucket_name, file_key_to_path
+from providers.utils.model_utils import is_model_ready, resolve_model_max_length
 
 logger = logging.getLogger(__name__)
 
 RRF_K = 60  # RRF constant — higher means scores drop off more slowly with rank, increasing diversity
+
+# Upper bound on documents returned by the rerank pipeline. TextRerankPipeline
+# defaults top_n=3, which would silently truncate candidates; set it high so
+# every candidate is scored and kept (matches the previous score-all behaviour).
+_RERANK_TOP_N = 10_000
+
+
+def _score_to_reranker_score(score: float, scores_are_probabilities: bool) -> float:
+    """Map a rerank score onto the logit scale expected downstream.
+
+    ``_compute_percentage_scores`` applies ``sigmoid(reranker_score)`` to derive
+    the 0-100 relevance score, and the previous implementation stored the raw
+    cross-encoder logit. ``TextRerankPipeline`` may instead return a normalized
+    probability in [0, 1]; if so, convert it back to a logit so the downstream
+    sigmoid recovers the same percentage. If the pipeline already returns logits
+    (values outside [0, 1]), use them directly.
+    """
+    if not scores_are_probabilities:
+        return float(score)
+    eps = 1e-6
+    s = min(max(float(score), eps), 1.0 - eps)
+    return math.log(s / (1.0 - s))
 
 # Sigmoid params for visual score rescaling, calibrated on xlm-roberta-base-ViT-B-32.
 VISUAL_SIGMOID_K_TEXT = 18.7          # text→image
@@ -50,17 +72,20 @@ class PostProcessor:
         self.document_collection_name = document_collection_name
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / reranker_model
-        if local_path.exists():
-            logger.info(f"Loading reranker OV IR from {local_path}")
-            self.tokenizer = AutoTokenizer.from_pretrained(str(local_path))
-            self.reranker_model = OVModelForSequenceClassification.from_pretrained(str(local_path), device=device)
-        else:
+        if not is_model_ready(local_path):
+            from providers.vlm_openvino_serving.utils.utils import convert_model
+
             logger.info(f"Converting reranker model {reranker_model} to OV IR and saving to {local_path}")
-            self.tokenizer = AutoTokenizer.from_pretrained(reranker_model)
-            self.reranker_model = OVModelForSequenceClassification.from_pretrained(reranker_model, export=True, device=device)
-            local_path.mkdir(parents=True, exist_ok=True)
-            self.tokenizer.save_pretrained(str(local_path))
-            self.reranker_model.save_pretrained(str(local_path))
+            convert_model(reranker_model, str(local_path), model_type="reranker")
+        logger.info(f"Loading reranker OV IR from {local_path}")
+        rerank_config = ov_genai.TextRerankPipeline.Config()
+        rerank_config.top_n = _RERANK_TOP_N
+        # Cap tokenization to the cross-encoder's context length so a long
+        # query+document pair is truncated rather than overflowing the fixed
+        # position-embedding table ("Eltwise shape infer ... mismatch").
+        rerank_config.max_length = resolve_model_max_length(local_path)
+        self.reranker_pipe = ov_genai.TextRerankPipeline(str(local_path), device.upper(), rerank_config)
+        self._rerank_lock = threading.Lock()
         logger.info(f"Reranker model '{reranker_model}' loaded successfully on device '{device}'.")
 
 
@@ -321,18 +346,21 @@ class PostProcessor:
                 without_text.append((idx, r))
 
         if with_text:
-            pairs = [[query, r["meta"]["chunk_text"]] for _, r in with_text]
-            logger.debug("[rerank] Scoring %d doc pairs with cross-encoder", len(pairs))
-            inputs = self.tokenizer(
-                pairs, padding=True, truncation=True, max_length=512, return_tensors="np",
-            )
-            logits = self.reranker_model(**inputs).logits.squeeze(-1)
-            scores = logits.astype(np.float32).tolist()
-            if isinstance(scores, float):
-                scores = [scores]
+            texts = [r["meta"]["chunk_text"] for _, r in with_text]
+            logger.debug("[rerank] Scoring %d doc pairs with cross-encoder", len(texts))
+            with self._rerank_lock:
+                ranked = self.reranker_pipe.rerank(query, texts)
 
-            for score, (_, r) in zip(scores, with_text):
-                r["reranker_score"] = score
+            raw_scores = [score for _, score in ranked]
+            # bge-style rerankers return a normalized probability in [0, 1];
+            # detect that so we can restore the logit scale the downstream
+            # sigmoid expects (see _score_to_reranker_score).
+            scores_are_probabilities = bool(raw_scores) and all(
+                0.0 <= s <= 1.0 for s in raw_scores
+            )
+            for text_idx, score in ranked:
+                _, r = with_text[text_idx]
+                r["reranker_score"] = _score_to_reranker_score(score, scores_are_probabilities)
 
             # Sort by reranker score descending
             with_text.sort(key=lambda x: x[1]["reranker_score"], reverse=True)
