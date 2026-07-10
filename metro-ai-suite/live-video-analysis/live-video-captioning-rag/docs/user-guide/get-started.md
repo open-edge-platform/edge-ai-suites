@@ -108,7 +108,7 @@ By default the model is converted on CPU. To explicitly set the device:
 
 The VLM models stored under `ov_models`.
 
-See [Model Preparation](../../../live-video-captioning/docs/user-guide/get-started/model-preparation.md) for detailed usage.
+See [Model Preparation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) for detailed usage.
 
 Download a LLM model for RAG.
 
@@ -172,7 +172,7 @@ docker compose down
 ### Caption pipeline with RTSP not Running in LVC Dashboard
 
 - If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so the stream connection does not go through the proxy.
-- For more detail on LVC, please refer to the [LVC Documentation](../../../live-video-captioning/docs/user-guide/get-started.md)
+- For more detail on LVC, please refer to the [LVC Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started.html)
 
 ### Embeddings are Not Being Stored
 

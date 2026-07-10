@@ -16,8 +16,8 @@ services:
       HTTP_PROXY: ${http_proxy}
       https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
-      no_proxy: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${no_proxy}
-      NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${NO_PROXY:-}
+      no_proxy: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,${no_proxy}
+      NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,${NO_PROXY:-}
       LLM_MODEL_ID: ${LLM_MODEL_ID}
       LLM_DEVICE: ${LLM_DEVICE}
       MAX_TOKENS: ${MAX_TOKENS:-1024}

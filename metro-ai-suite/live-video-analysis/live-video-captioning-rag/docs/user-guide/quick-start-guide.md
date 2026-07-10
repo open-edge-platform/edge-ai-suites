@@ -7,7 +7,7 @@ Live Video Captioning RAG works with Live Video Captioning to generate live capt
 > **Note:**
 >
 > 1. Setup and first run time depends on network speed because Docker images and models are downloaded.
-> 2. If you do not have a camera stream, configure a simulated RTSP stream by following [these instructions](../../../live-video-captioning/docs/user-guide/get-started/simulated-rtsp-stream-guide.md).
+> 2. If you do not have a camera stream, configure a simulated RTSP stream by following [these instructions](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/simulated-rtsp-stream-guide.html).
 
 ---
 
