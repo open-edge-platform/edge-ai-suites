@@ -1,6 +1,13 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $embedGpuEnabled := default false (index $gpu "multimodalEmbeddingEnabled") -}}
-{{- $gpuHostPath := default "/dev/dri" (index $gpu "hostPath") -}}
+{{- $globalDevices := default (dict) .Values.global.devices -}}
+{{- $mmDevices := default (dict) (index $globalDevices "multimodalEmbedding") -}}
+{{- $mmDevice := upper (default "CPU" (index $mmDevices "device")) -}}
+{{- $mmKey := default "" (index $mmDevices "key") -}}
+{{- $mmUsesGpu := eq $mmDevice "GPU" -}}
+{{- $mmUsesNpu := eq $mmDevice "NPU" -}}
+{{- $mmUsesAccelerator := or $mmUsesGpu $mmUsesNpu -}}
+{{- if and $mmUsesAccelerator (eq (trim $mmKey) "") -}}
+{{- fail "global.devices.multimodalEmbedding.key is required when device is GPU or NPU" -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,9 +35,17 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
-      {{- with .Values.podSecurityContext }}
+      {{- if or .Values.podSecurityContext $mmUsesAccelerator }}
       securityContext:
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if $mmUsesAccelerator }}
+        supplementalGroups:
+          {{- range .Values.global.accelGroupIds }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       containers:
         - name: multimodal-embedding-serving
@@ -58,12 +73,12 @@ spec:
           startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $embedGpuEnabled }}
+          {{- if $mmUsesAccelerator }}
           resources:
             requests:
-              {{ .Values.global.gpu.key }}: 1
+              {{ $mmKey }}: 1
             limits:
-              {{ .Values.global.gpu.key }}: 1
+              {{ $mmKey }}: 1
           {{- else if .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -74,45 +89,30 @@ spec:
             - name: volume-data
               mountPath: /home/appuser/.cache/huggingface
               subPath: huggingface
-            {{- if .Values.modelPvc.enabled }}
-            - name: models-data
-              mountPath: {{ .Values.global.env.ovModelsDir }}
-              subPath: ovmodels
-            {{- else }}
             - name: volume-data
               mountPath: {{ .Values.global.env.ovModelsDir }}
               subPath: ovmodels
-            {{- end }}
             - name: volume-data
               mountPath: /tmp/dataprep
               subPath: tmpvideos
-            {{- if $embedGpuEnabled }}
+            {{- if $mmUsesNpu }}
+            - name: dev-accel
+              mountPath: /dev/accel
+            {{- else if $mmUsesGpu }}
             - name: dev-dri
               mountPath: /dev/dri
             {{- end }}
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.modelPvc.enabled }}
-        - name: models-data
-          {{- if .Values.modelPvc.existingClaim }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.modelPvc.existingClaim }}
-          {{- else if .Values.global.usePvc }}
-          persistentVolumeClaim:
-            claimName: {{ include "lvs.mmes.fullname" . }}-models-pvc
-          {{- else if .Values.global.volumeHostPath }}
-          hostPath:
-            path: {{ .Values.global.volumeHostPath }}
-            type: DirectoryOrCreate
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        {{- end }}
         - name: volume-data
           {{- if .Values.global.usePvc }}
           persistentVolumeClaim:
-            claimName: {{ .Values.global.sharedPvcName | default "lvs-pvc" }}
+            {{- if .Values.modelPvc.enabled }}
+            claimName: {{ .Values.modelPvc.existingClaim | default (printf "%s-mmes-models-pvc" (include "lvs.mmes.fullname" .)) }}
+            {{- else }}
+            claimName: {{ include "lvs.mmes.fullname" . }}-mmes-data-pvc
+            {{- end }}
           {{- else if .Values.global.volumeHostPath }}
           hostPath:
             path: {{ .Values.global.volumeHostPath }}
@@ -120,10 +120,15 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        {{- if $embedGpuEnabled }}
+        {{- if $mmUsesNpu }}
+        - name: dev-accel
+          hostPath:
+            path: /dev/accel
+            type: Directory
+        {{- else if $mmUsesGpu }}
         - name: dev-dri
           hostPath:
-            path: {{ $gpuHostPath }}
+            path: /dev/dri
             type: Directory
         {{- end }}
       {{- with .Values.tolerations }}
