@@ -11,6 +11,7 @@ import os
 import yaml
 import secrets
 import string
+import shlex
 from datetime import datetime, timedelta
 from ruamel.yaml import YAML
 import logging
@@ -89,8 +90,7 @@ def _collect_live_logs(container_name, monitor_duration, search_pattern=None):
     try:
         # Run docker logs command for the duration
         process = subprocess.Popen(
-            f"docker logs -f {container_name}",
-            shell=True,
+            ["docker", "logs", "-f", container_name],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -161,7 +161,10 @@ _wait_for_stability = wait_for_stability
 
 def _run_command(cmd):
     """Execute shell commands."""
-    return subprocess.run(cmd, shell=True).returncode
+    # Convert string to list if needed to avoid shell=True
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    return subprocess.run(cmd).returncode
 
 def _check_and_set_working_directory():
     """Check current working directory and change to wind turbine directory."""
@@ -537,34 +540,43 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
                 wait_for_stability(45)
             
             # Container log checking using docker logs with grep
-            grep_command = f"docker logs {resource_name} 2>&1 | grep -i '{log_level_upper}'"
-            logger.info(f"Executing command: {grep_command}")
+            logger.info(f"Checking logs for {log_level_upper} in container '{resource_name}'")
             
-            result = subprocess.run(grep_command, shell=True, capture_output=True, text=True)
+            # Get logs without shell=True
+            logs_result = subprocess.run(
+                ["docker", "logs", resource_name],
+                capture_output=True,
+                text=True,
+                stderr=subprocess.STDOUT
+            )
             
-            if result.returncode == 0 and result.stdout.strip():
-                # Found matching logs
-                lines = result.stdout.strip().split('\n')
+            if logs_result.returncode == 0:
+                # Search for the log level in the output
+                lines = [line for line in logs_result.stdout.split('\n') if log_level_upper in line.upper()]
                 count = len(lines)
                 
-                if log_level_upper == "ERROR":
-                    logger.error(f"✗ Found {count} {log_level_upper} log entries in container '{resource_name}'")
-                    logger.error("Sample error entries:")
-                    for i, line in enumerate(lines[:3]):
-                        logger.error(f"  {i+1}: {line}")
-                    if count > 3:
-                        logger.error(f"  ... and {count - 3} more error entries")
-                    return False
+                if count > 0:
+                    if log_level_upper == "ERROR":
+                        logger.error(f"✗ Found {count} {log_level_upper} log entries in container '{resource_name}'")
+                        logger.error("Sample error entries:")
+                        for i, line in enumerate(lines[:3]):
+                            logger.error(f"  {i+1}: {line}")
+                        if count > 3:
+                            logger.error(f"  ... and {count - 3} more error entries")
+                        return False
+                    else:
+                        logger.info(f"✓ Found {count} {log_level_upper} log entries in container '{resource_name}'")
+                        logger.info("Sample log entries:")
+                        for i, line in enumerate(lines[:3]):
+                            logger.info(f"  {i+1}: {line}")
+                        if count > 3:
+                            logger.info(f"  ... and {count - 3} more entries")
+                        return True
                 else:
-                    logger.info(f"✓ Found {count} {log_level_upper} log entries in container '{resource_name}'")
-                    logger.info("Sample log entries:")
-                    for i, line in enumerate(lines[:3]):
-                        logger.info(f"  {i+1}: {line}")
-                    if count > 3:
-                        logger.info(f"  ... and {count - 3} more entries")
-                    return True
+                    logger.info(f"✗ No {log_level_upper} log entries found in container '{resource_name}'")
+                    return False
             else:
-                logger.info(f"✗ No {log_level_upper} log entries found in container '{resource_name}'")
+                logger.error(f"✗ Failed to get logs from container '{resource_name}'")
                 return False
                 
         elif resource_type == "pod":

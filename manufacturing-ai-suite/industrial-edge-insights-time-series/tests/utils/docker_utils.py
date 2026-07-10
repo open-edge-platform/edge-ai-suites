@@ -14,6 +14,7 @@ import threading
 import copy
 import random
 import re
+import shlex
 from pathlib import Path
 import pytest
 import logging
@@ -39,15 +40,20 @@ except ImportError:
 
 def run_command(cmd, capture_output=False):
     """
-    Execute shell commands. 
-    Note: This function uses shell=True but only for predefined commands 
-    from constants/makefiles, not user input.
+    Execute shell commands.
+    Args:
+        cmd: Command string or list of command arguments
+        capture_output: Whether to capture stdout/stderr
     """
+    # Convert string to list if needed to avoid shell=True
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    
     if capture_output:
-        proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True)
         return proc.returncode, proc.stdout + proc.stderr
     else:
-        proc = subprocess.run(cmd, shell=True)
+        proc = subprocess.run(cmd)
         return proc.returncode
 
 def get_container_logs(container_name, tail=None):
@@ -4131,13 +4137,14 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         # Convert to JSON
         gpu_config_json = json.dumps(gpu_config)
         
-        # Construct curl command for multimodal deployment - use port 9092 for Kapacitor
+        # Construct curl command for multimodal deployment using external API endpoint
+        # as documented in get-started.md
         curl_command = [
-            "docker", "exec", "ia-time-series-analytics-microservice",
-            "curl", "-X", "POST",
-            "http://localhost:9092/kapacitor/v1/config",
+            "curl", "-k", "-X", "POST",
+            f"{constants.DOCKER_TSA_API_BASE_URL}/config",
+            "-H", "accept: application/json",
             "-H", "Content-Type: application/json",
-            f"-d", f"{gpu_config_json}"
+            "-d", gpu_config_json
         ]
         
         # Execute curl command
@@ -4174,15 +4181,16 @@ def check_system_gpu_devices():
         # Method 1: Check for Intel GPU devices
         try:
             result = subprocess.run(
-                ["lspci", "|", "grep", "-i", "vga"], 
-                shell=True,
-                capture_output=True, 
+                ["lspci"],
+                capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
-            if result.returncode == 0 and "intel" in result.stdout.lower():
-                gpu_devices.append("Intel iGPU")
-                logger.info("Intel iGPU detected via lspci")
+            if result.returncode == 0:
+                vga_lines = [line for line in result.stdout.splitlines() if "vga" in line.lower()]
+                if any("intel" in line.lower() for line in vga_lines):
+                    gpu_devices.append("Intel iGPU")
+                    logger.info("Intel iGPU detected via lspci")
         except:
             pass
         
@@ -5457,12 +5465,10 @@ def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_def
     Activate the DL Streamer Pipeline Server pipeline on a Docker-based multimodal deployment
     with the model inference targeted at the specified device (CPU/GPU/NPU).
 
-    Sends a POST request to the dlstreamer-pipeline-server REST API
-    (http://localhost:8080/pipelines/user_defined_pipelines/<pipeline_name>) via
-    `docker exec` against the dlstreamer-pipeline-server container, which is the
-    Docker-deployment equivalent of:
+    Sends a POST request to the dlstreamer-pipeline-server REST API using the external
+    endpoint as documented in get-started.md:
 
-        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+        curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
              -X POST -H 'Content-Type: application/json' -d '{ ... "device": "GPU" ... }'
 
     Args:
@@ -5511,10 +5517,11 @@ def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_def
 
         payload_json = json.dumps(dlstreamer_payload)
 
+        # Use external API endpoint as documented in get-started.md
         curl_command = [
-            "docker", "exec", "dlstreamer-pipeline-server",
-            "curl", "-X", "POST",
-            f"http://localhost:8080/pipelines/user_defined_pipelines/{pipeline_name}",
+            "curl", "-k",
+            f"{constants.DOCKER_DSPS_API_BASE_URL}/pipelines/user_defined_pipelines/{pipeline_name}",
+            "-X", "POST",
             "-H", "Content-Type: application/json",
             "-d", payload_json
         ]
@@ -5594,12 +5601,15 @@ def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database=
             if hasattr(constants, "MULTIMODAL_SAMPLE_APP") and hasattr(constants, "get_app_config") \
             else None
 
-        analytics_measurement = (
-            multimodal_config.get("analytics_topic") if multimodal_config else None
-        ) or getattr(constants, "WELD_ANALYTICS_TOPIC", "weld-sensor-anomaly-data")
-        vision_measurement = (
-            multimodal_config.get("vision_measurement") if multimodal_config else None
-        ) or "vision-weld-classification-results"
+        # Get measurement names from constants config (avoid hardcoding)
+        if multimodal_config:
+            analytics_measurement = multimodal_config.get("analytics_topic")
+            vision_measurement = multimodal_config.get("vision_measurement")
+        else:
+            # Fallback to direct access to constants if get_app_config not available
+            analytics_measurement = getattr(constants, "WELD_ANALYTICS_TOPIC", 
+                                           constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("analytics_topic"))
+            vision_measurement = constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("vision_measurement")
 
         verify_tables = [analytics_measurement, vision_measurement]
 

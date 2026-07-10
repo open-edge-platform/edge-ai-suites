@@ -15,6 +15,8 @@ Sequence (chronological, mirrors the documented user-guide flow):
     4. Activate the DL Streamer pipeline on the chosen device via
        ``POST /pipelines/user_defined_pipelines/<pipeline_name>``
        (`helm_utils.activate_multimodal_dlstreamer_pipeline`).
+    5. Verify InfluxDB contains time-series analytics sensor measurements
+       (`helm_utils.verify_multimodal_influxdb_data`).
 """
 
 import os
@@ -57,8 +59,7 @@ def _has_npu_devices():
 
 
 def _run_multimodal_helm_npu_flow(device):
-    """Execute the four documented multimodal helm steps sequentially."""
-    device_lower = device.lower()
+    """Execute the five documented multimodal helm steps sequentially."""
     device_upper = device.upper()
 
     # Pre-check: pods are healthy before activation
@@ -81,9 +82,9 @@ def _run_multimodal_helm_npu_flow(device):
     assert step2, "Failed to upload multimodal UDF tar package"  # nosec B101
 
     # Step 3: Activate the TSA UDF config on chosen device
-    logger.info(f"Step 3: Activating Time Series Analytics UDF (device='{device_lower}')")
+    logger.info(f"Step 3: Activating Time Series Analytics UDF (device='{device_upper}')")
     step3 = helm_utils.activate_multimodal_tsa_udf_config(
-        namespace_multi, device_value=device_lower
+        namespace_multi, device_value=device_upper
     )
     logger.info(f"activate_multimodal_tsa_udf_config result: {step3}")
     assert step3, f"Failed to activate Time Series Analytics UDF on {device_upper}"  # nosec B101
@@ -96,9 +97,24 @@ def _run_multimodal_helm_npu_flow(device):
     logger.info(f"activate_multimodal_dlstreamer_pipeline result: {step4}")
     assert step4, f"Failed to activate DL Streamer pipeline on {device_upper}"  # nosec B101
 
-    # Allow processed data to land in InfluxDB
-    logger.info(f"Waiting {wait_time_multi}s for {device_upper} inference output to settle...")
-    time.sleep(wait_time_multi)
+    # Step 5: Verify InfluxDB contains sensor data from Time Series Analytics
+    logger.info("Step 5: Verifying sensor measurements in InfluxDB")
+    logger.info(
+        f"Waiting {constants.TEST_DATA_PROCESSING_DELAY}s for {device_upper} "
+        f"inference output to be written to InfluxDB..."
+    )
+    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
+    
+    influx_result = helm_utils.verify_multimodal_influxdb_data(chart_path_multi, namespace_multi)
+    assert influx_result and influx_result.get("success"), (  # nosec B101
+        f"InfluxDB verification failed: {influx_result.get('error') if influx_result else 'No result returned'}"
+    )
+    assert influx_result.get("sensor_data_count", 0) > 0, (  # nosec B101
+        "Time Series Analytics measurement data missing from InfluxDB"
+    )
+    logger.info(
+        f"✓ Successfully verified InfluxDB sensor data (sensor={influx_result['sensor_data_count']})"
+    )
 
 
 @pytest.mark.npu
@@ -107,6 +123,6 @@ def _run_multimodal_helm_npu_flow(device):
     reason="No NPU devices detected on this system",
 )
 def test_npu_multimodal_helm(setup_multimodal_helm_environment, request):
-    """TC_NPU_MM_HELM_01: Multimodal NPU inference flow (4 documented steps) end-to-end."""
+    """TC_NPU_MM_HELM_01: Multimodal NPU inference flow (5 documented steps) end-to-end."""
     logger.info("TC_NPU_MM_HELM_01: Multimodal NPU inference flow (Helm)")
     _run_multimodal_helm_npu_flow(device="NPU")

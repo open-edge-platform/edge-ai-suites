@@ -1348,12 +1348,12 @@ def verify_multimodal_influxdb_data(chart_path, namespace=None, database=constan
     sensor_measurement = (
         constants.get_app_influxdb_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("ingested_topic")
-        or "weld-sensor-data"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("ingested_topic")
     )
     vision_measurement = (
         constants.get_app_vision_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("vision_measurement")
-        or "vision-weld-classification-results"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("vision_measurement")
     )
 
     for key, measurement in (("sensor_data_count", sensor_measurement), ("vision_data_count", vision_measurement)):
@@ -2302,8 +2302,8 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
         payload = {
             "udfs": {
-                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_defect_detector"),
-                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_defect_detector.cb"),
+                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_anomaly_detector"),
+                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_anomaly_detector.pkl"),
                 "device": device_value
             },
             "alerts": {
@@ -2491,12 +2491,76 @@ def activate_multimodal_tsa_udf_config(namespace, device_value="cpu"):
     return True
 
 
-def activate_multimodal_dlstreamer_pipeline(namespace, device_value="CPU",
-                                            pipeline_name="weld_defect_classification",
-                                            mqtt_topic="vision_weld_defect_classification",
-                                            s3_bucket="dlstreamer-pipeline-results",
-                                            s3_folder_prefix="weld-defect-classification",
-                                            webrtc_peer_id="samplestream"):
+def cleanup_failed_dlstreamer_pipelines(namespace):
+    """Clean up any failed or error-state DL Streamer pipeline instances.
+    
+    Returns:
+        int: Number of failed instances cleaned up, or -1 on error.
+    """
+    dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+    if not dlstreamer_pod:
+        logger.warning("DL Streamer pod not found for cleanup")
+        return -1
+    
+    try:
+        # Get pipeline status
+        status_command = [
+            "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+            "-c", "dlstreamer-pipeline-server", "--",
+            "curl", "-s", "http://localhost:8080/pipelines/status"
+        ]
+        result = subprocess.run(status_command, capture_output=True, text=True, timeout=10)
+        
+        if result.returncode != 0:
+            logger.warning(f"Failed to get pipeline status: {result.stderr}")
+            return -1
+        
+        # Parse status JSON
+        try:
+            status_list = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            logger.warning("Could not parse pipeline status JSON")
+            return 0
+        
+        cleaned_count = 0
+        for instance in status_list:
+            state = instance.get("state", "")
+            instance_id = instance.get("id", "")
+            
+            if state in ["ERROR", "ABORTED"] and instance_id:
+                logger.info(f"Cleaning up failed pipeline instance {instance_id} (state={state})")
+                delete_command = [
+                    "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+                    "-c", "dlstreamer-pipeline-server", "--",
+                    "curl", "-s", "-X", "DELETE",
+                    f"http://localhost:8080/pipelines/{instance_id}"
+                ]
+                delete_result = subprocess.run(delete_command, capture_output=True, text=True, timeout=10)
+                if delete_result.returncode == 0:
+                    logger.info(f"✓ Deleted failed pipeline instance {instance_id}")
+                    cleaned_count += 1
+                else:
+                    logger.warning(f"Failed to delete instance {instance_id}: {delete_result.stderr}")
+        
+        if cleaned_count > 0:
+            logger.info(f"Cleaned up {cleaned_count} failed pipeline instance(s)")
+        
+        return cleaned_count
+        
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Error during pipeline cleanup: {exc}")
+        return -1
+
+
+def activate_multimodal_dlstreamer_pipeline(
+    namespace,
+    device_value="CPU",
+    pipeline_name=constants.MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+    mqtt_topic=constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("vision_topic"),
+    s3_bucket=constants.MULTIMODAL_DLSTREAMER_S3_BUCKET,
+    s3_folder_prefix=constants.MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX,
+    webrtc_peer_id=constants.MULTIMODAL_WEBRTC_PEER_ID,
+):
     """Step 4: Activate the DL Streamer pipeline on the chosen device (CPU/GPU/NPU).
 
     Equivalent to:
@@ -2508,6 +2572,9 @@ def activate_multimodal_dlstreamer_pipeline(namespace, device_value="CPU",
         f"[Multimodal Step 4] Activating DL Streamer pipeline '{pipeline_name}' "
         f"on device '{device_upper}'"
     )
+
+    # Clean up any failed pipeline instances first
+    cleanup_failed_dlstreamer_pipelines(namespace)
 
     dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
     if not dlstreamer_pod:
@@ -2531,22 +2598,21 @@ def activate_multimodal_dlstreamer_pipeline(namespace, device_value="CPU",
         },
         "parameters": {
             "classification-properties": {
-                "model": (
-                    "/home/pipeline-server/resources/models/"
-                    "weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml"
-                ),
+                "model": constants.MULTIMODAL_DLSTREAMER_MODEL_XML_PATH,
                 "device": device_upper,
             }
         },
     }
 
+    # Add -w flag to capture HTTP status code for proper validation
     activate_command = [
         "kubectl", "exec", dlstreamer_pod, "-n", namespace,
         "-c", "dlstreamer-pipeline-server", "--",
-        "curl", "-X", "POST",
+        "curl", "-sS", "-X", "POST",
         f"http://localhost:8080/pipelines/user_defined_pipelines/{pipeline_name}",
         "-H", "Content-Type: application/json",
         "-d", json.dumps(dlstreamer_payload),
+        "-w", "\n%{http_code}",
     ]
     logger.info(f"Activating DL Streamer Pipeline via kubectl exec: {' '.join(activate_command)}")
     try:
@@ -2555,15 +2621,37 @@ def activate_multimodal_dlstreamer_pipeline(namespace, device_value="CPU",
         logger.error(f"Failed to invoke DL Streamer activation: {exc}")
         return False
 
-    if result.returncode == 0:
-        logger.info(f"✓ DL Streamer Pipeline '{pipeline_name}' activated on {device_upper}.")
-        logger.info(f"Response: {result.stdout}")
-        return True
-    logger.error(
-        f"DL Streamer Pipeline activation failed (rc={result.returncode}): "
-        f"{result.stderr or result.stdout}"
-    )
-    return False
+    if result.returncode != 0:
+        logger.error(
+            f"DL Streamer Pipeline activation failed (curl rc={result.returncode}): "
+            f"{result.stderr or result.stdout}"
+        )
+        return False
+
+    # Parse HTTP status code from response
+    stdout = (result.stdout or "").rstrip()
+    if not stdout:
+        logger.error("DL Streamer activation returned empty output")
+        return False
+
+    lines = stdout.splitlines()
+    http_code = lines[-1].strip() if lines else ""
+    body = "\n".join(lines[:-1]).strip()
+
+    if not http_code.isdigit():
+        logger.error(f"DL Streamer activation returned invalid HTTP status: {http_code}")
+        return False
+
+    if not http_code.startswith("2"):
+        logger.error(
+            f"DL Streamer Pipeline activation failed with HTTP {http_code}. "
+            f"Response: {body or result.stderr}"
+        )
+        return False
+
+    logger.info(f"✓ DL Streamer Pipeline '{pipeline_name}' activated on {device_upper}.")
+    logger.info(f"Response: {body}")
+    return True
 
 
 def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):

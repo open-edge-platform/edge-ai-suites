@@ -58,7 +58,6 @@ def _has_npu_devices():
 
 def _run_multimodal_npu_flow(context, device):
     """Execute the four multimodal GPU/NPU steps sequentially."""
-    device_lower = device.lower()
     device_upper = device.upper()
 
     # Step 1: Deploy the multimodal stack
@@ -73,9 +72,9 @@ def _run_multimodal_npu_flow(context, device):
     time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
 
     # Step 2: Configure Time Series Analytics UDF for NPU
-    logger.info(f"Step 2: Posting Time Series Analytics UDF config with device='{device_lower}'")
+    logger.info(f"Step 2: Posting Time Series Analytics UDF config with device='{device_upper}'")
     tsa_config = _load_multimodal_tsa_config()
-    tsa_result = docker_utils.execute_multimodal_gpu_config_curl(tsa_config, device=device_lower)
+    tsa_result = docker_utils.execute_multimodal_gpu_config_curl(tsa_config, device=device_upper)
     logger.info(f"TSA {device_upper} config result: {tsa_result}")
     assert tsa_result, f"Failed to post Time Series Analytics {device_upper} configuration"  # nosec B101
 
@@ -94,14 +93,19 @@ def _run_multimodal_npu_flow(context, device):
 
     # Step 4: Verify InfluxDB contains both analytics and vision multimodal measurements
     logger.info("Step 4: Verifying multimodal measurements in InfluxDB")
+    
+    # Get measurement names from constants
+    sensor_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("analytics_topic")
+    vision_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("vision_measurement")
+    
     influx_response = docker_utils.execute_influxdb_commands_multimodal()
     logger.info(f"Multimodal InfluxDB response (truncated): {str(influx_response)[:500]}")
     assert influx_response, "InfluxDB query for multimodal measurements returned no response"  # nosec B101
-    assert "weld-sensor-anomaly-data" in influx_response, (  # nosec B101
-        "Time Series Analytics measurement 'weld-sensor-anomaly-data' missing from InfluxDB"
+    assert sensor_measurement in influx_response, (  # nosec B101
+        f"Time Series Analytics measurement '{sensor_measurement}' missing from InfluxDB"
     )
-    assert "vision-weld-classification-results" in influx_response, (  # nosec B101
-        "DL Streamer measurement 'vision-weld-classification-results' missing from InfluxDB"
+    assert vision_measurement in influx_response, (  # nosec B101
+        f"DL Streamer measurement '{vision_measurement}' missing from InfluxDB"
     )
 
 
