@@ -1195,10 +1195,10 @@ Worker Safety Gear Detection:
    > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
    
    **Pallet Defect Detection**
-   ![WebRTC streaming](pallet-defect-detection/_assets/webrtc-streaming.png)
+   ![WebRTC streaming](../pallet-defect-detection/_assets/webrtc-streaming.png)
    
    **PCB Anomaly Detection**
-   ![WebRTC streaming](pcb-anomaly-detection/_assets/webrtc-streaming.png)
+   ![WebRTC streaming](../pcb-anomaly-detection/_assets/webrtc-streaming.png)
 
 ## Troubleshooting
 
