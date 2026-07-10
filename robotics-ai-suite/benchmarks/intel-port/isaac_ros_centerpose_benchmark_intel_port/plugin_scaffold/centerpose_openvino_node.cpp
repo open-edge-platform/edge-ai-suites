@@ -33,7 +33,7 @@ CenterPoseOpenVINONode::CenterPoseOpenVINONode(const rclcpp::NodeOptions & optio
 
   RCLCPP_INFO(
     get_logger(),
-    "CenterPoseOpenVINONode initialized (minimal Intel plugin): model_path='%s', device='%s', threads=%ld",
+    "CenterPoseOpenVINONode initialized (minimal Intel plugin): model_path='%s', device='%s', threads=%d",
     model_path.c_str(), openvino_device.c_str(), num_infer_threads);
 }
 

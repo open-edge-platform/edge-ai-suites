@@ -51,3 +51,17 @@ launch_test src/isaac_ros_benchmark/benchmarks/isaac_ros_apriltag_benchmark/scri
 - R2B_PLAYBACK_BUFFER_SIZE (default 80)
 - APRILTAG_FAMILY (default 36h11)
 - APRILTAG_SIZE_METERS (default 0.162)
+
+## Integrity And Reproducibility Variables
+
+- ISAAC_ROS_BENCHMARK_REF (default pinned commit)
+- ROS2_BENCHMARK_REF (default pinned commit)
+- R2B_METADATA_SHA256 (default set; metadata.yaml is verified by default)
+- R2B_STORAGE_SHA256 (default empty; r2b_storage_0.db3 verification is skipped unless set)
+
+If you want integrity verification for the DB file, set R2B_STORAGE_SHA256 before running setup:
+
+```bash
+export R2B_STORAGE_SHA256=<expected_sha256_for_r2b_storage_0.db3>
+./setup_apriltag_intel.sh
+```

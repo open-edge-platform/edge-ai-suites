@@ -106,7 +106,10 @@ log "Setup complete. To run benchmark:"
 cat <<EOF
 cd "$WS"
 source /opt/ros/${ROS_DISTRO}/setup.bash
+# Required so benchmark scripts resolve assets from the target workspace.
 export ISAAC_ROS_WS="$WS"
+# Optional integrity check: set expected SHA256 for r2b_storage_0.db3 before setup.
+# export R2B_STORAGE_SHA256=<expected_sha256_for_r2b_storage_0.db3>
 export R2B_PUBLISHER_UPPER_FPS=80
 export R2B_PLAYBACK_BUFFER_SIZE=80
 launch_test src/isaac_ros_benchmark/benchmarks/isaac_ros_apriltag_benchmark/scripts/isaac_ros_apriltag_intel.py

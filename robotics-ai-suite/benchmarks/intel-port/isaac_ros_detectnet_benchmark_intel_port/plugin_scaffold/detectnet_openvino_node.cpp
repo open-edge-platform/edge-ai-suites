@@ -13,7 +13,7 @@ DetectNetOpenVINONode::DetectNetOpenVINONode(const rclcpp::NodeOptions & options
   const auto model_path = declare_parameter<std::string>("model_path", "");
   const auto openvino_device = declare_parameter<std::string>("openvino_device", "CPU");
   const auto num_infer_threads = declare_parameter<int>("num_infer_threads", 0);
-  (void)declare_parameter<double>("score_threshold", 0.3);
+  const auto score_threshold = declare_parameter<double>("score_threshold", 0.3);
   (void)declare_parameter<int>("network_width", 544);
   (void)declare_parameter<int>("network_height", 544);
 
@@ -30,8 +30,11 @@ DetectNetOpenVINONode::DetectNetOpenVINONode(const rclcpp::NodeOptions & options
 
   RCLCPP_INFO(
     get_logger(),
-    "DetectNetOpenVINONode initialized (minimal Intel plugin): model_path='%s', device='%s', threads=%ld",
-    model_path.c_str(), openvino_device.c_str(), num_infer_threads);
+    "DetectNetOpenVINONode initialized (minimal Intel plugin): model_path='%s', device='%s', threads=%d, score_threshold=%.3f",
+    model_path.c_str(), openvino_device.c_str(), num_infer_threads, score_threshold);
+  RCLCPP_WARN(
+    get_logger(),
+    "score_threshold is parsed but not applied in this minimal plugin implementation yet.");
 }
 
 void DetectNetOpenVINONode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg)

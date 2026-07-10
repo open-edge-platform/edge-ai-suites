@@ -95,14 +95,15 @@ sudo apt install -y \
   ros-${ROS_DISTRO}-launch-testing-ament-cmake \
   wget unzip
 
+need_cmd uv
+
 log "Creating Python virtual environment at $WS/.venv"
-python3 -m venv "$WS/.venv"
+uv venv "$WS/.venv"
 # shellcheck disable=SC1091
 source "$WS/.venv/bin/activate"
 
-log "Installing Python runtime dependencies in virtual environment"
-python3 -m pip install --upgrade pip
-python3 -m pip install --upgrade openvino numpy opencv-python
+log "Installing Python runtime dependencies from intel-port/pyproject.toml"
+UV_PROJECT_ENVIRONMENT="$WS/.venv" uv sync --project "$SCRIPT_DIR/.." --no-dev
 
 mkdir -p "$WS/src"
 
@@ -152,6 +153,7 @@ cd "$WS"
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source install/setup.bash
 source "$WS/.venv/bin/activate"
+# Required so benchmark scripts resolve assets from the target workspace.
 export ISAAC_ROS_WS="$WS"
 export OV_DEVICE=CPU
 export OV_NUM_INFER_THREADS=8

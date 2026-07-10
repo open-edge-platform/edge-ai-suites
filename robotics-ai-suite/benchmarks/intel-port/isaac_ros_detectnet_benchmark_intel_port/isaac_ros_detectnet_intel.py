@@ -52,7 +52,7 @@ def _env_float(name: str, default: float, minimum: float = 0.0) -> float:
 
 OV_DEVICE = os.environ.get('OV_DEVICE', os.environ.get('OPENVINO_DEVICE', 'CPU'))
 OV_NUM_INFER_THREADS = _env_int('OV_NUM_INFER_THREADS', 0)
-OV_INIT_WAIT_SEC = _env_float('OV_INIT_WAIT_SEC', 3.0)
+DEFAULT_OV_INIT_WAIT_SEC = _env_float('OV_INIT_WAIT_SEC', 3.0)
 
 # Tune benchmark search space and buffering based on platform capability.
 R2B_PUBLISHER_UPPER_FPS = _env_float('R2B_PUBLISHER_UPPER_FPS', 80.0)
@@ -137,7 +137,7 @@ def launch_setup(container_prefix, container_sigterm_timeout):
         plugin='isaac_ros_benchmark::DetectNetOpenVINONode',
         parameters=[{
             'model_path': model_path,
-            'confidence_threshold': 0.35,
+            'score_threshold': 0.35,
             'network_width': NETWORK_RESOLUTION['width'],
             'network_height': NETWORK_RESOLUTION['height'],
             'openvino_device': OV_DEVICE,
@@ -201,8 +201,8 @@ class TestDetectNetIntel(ROS2BenchmarkTest):
         },
     )
 
-    # Wait for model to initialize
-    OV_INIT_WAIT_SEC = OV_INIT_WAIT_SEC
+    # Copy module-level default into class attrs so pre_benchmark_hook can use self.OV_INIT_WAIT_SEC
+    OV_INIT_WAIT_SEC = DEFAULT_OV_INIT_WAIT_SEC
 
     def pre_benchmark_hook(self):
         time.sleep(self.OV_INIT_WAIT_SEC)
