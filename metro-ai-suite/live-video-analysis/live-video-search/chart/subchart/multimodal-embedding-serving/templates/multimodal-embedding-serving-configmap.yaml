@@ -1,6 +1,9 @@
-{{- $gpu := default (dict) .Values.global.gpu -}}
-{{- $embedGpuEnabled := default false (index $gpu "multimodalEmbeddingEnabled") -}}
-{{- $gpuDevice := default "" (index $gpu "device") -}}
+{{- $globalDevices := default (dict) .Values.global.devices -}}
+{{- $mmDevices := default (dict) (index $globalDevices "multimodalEmbedding") -}}
+{{- $mmDevice := upper (default "CPU" (index $mmDevices "device")) -}}
+{{- $mmUsesGpu := eq $mmDevice "GPU" -}}
+{{- $mmUsesNpu := eq $mmDevice "NPU" -}}
+{{- $mmUsesAccelerator := or $mmUsesGpu $mmUsesNpu -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,9 +12,10 @@ metadata:
     {{- include "lvs.mmes.labels" . | nindent 4 }}
 data:
   EMBEDDING_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
-  EMBEDDING_DEVICE: {{ ternary $gpuDevice (.Values.global.env.embeddingDevice | default "CPU") $embedGpuEnabled | quote }}
-  EMBEDDING_USE_OV: {{ .Values.global.env.embeddingUseOv | quote }}
+  EMBEDDING_DEVICE: {{ $mmDevice | quote }}
+  EMBEDDING_USE_OV: {{ ternary "true" .Values.global.env.embeddingUseOv $mmUsesAccelerator | quote }}
   EMBEDDING_OV_MODELS_DIR: {{ .Values.global.env.ovModelsDir | quote }}
+  OV_CACHE_DIR: {{ .Values.ovCacheDir | default "/app/ov_models/ov_cache" | quote }}
   DEFAULT_START_OFFSET_SEC: {{ .Values.global.env.defaultStartOffsetSec | quote }}
   DEFAULT_CLIP_DURATION: {{ .Values.global.env.defaultClipDuration | quote }}
   DEFAULT_NUM_FRAMES: {{ .Values.global.env.defaultNumFrames | quote }}
@@ -22,7 +26,7 @@ data:
   VIDEO_FRAME_SHM_POOL_BLOCK_SIZE: {{ .Values.global.env.videoFrameShmPoolBlockSize | default 6220800 | int | quote }}
   VIDEO_FRAME_SHM_POOL_BLOCKS_MULTIPLIER: {{ .Values.global.env.videoFrameShmPoolBlocksMultiplier | default 2 | quote }}
   VIDEO_FRAME_LOG_LEVEL: {{ .Values.global.env.videoFrameLogLevel | default "INFO" | quote }}
-  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $embedGpuEnabled | quote }}
+  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $mmUsesAccelerator | quote }}
   HF_HOME: "/home/appuser/.cache/huggingface"
   HF_TOKEN_PATH: "/tmp/hf_token"
   HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
