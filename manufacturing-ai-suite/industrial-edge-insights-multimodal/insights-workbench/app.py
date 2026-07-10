@@ -8,6 +8,8 @@ import datetime
 import logging
 import os
 import time
+from urllib.error import URLError
+from urllib.request import urlopen
 from typing import Any
 import base64
 from openai import OpenAI
@@ -54,6 +56,13 @@ def get_query_prompt() -> dict[str, Any]:
 def get_fusion_measurement_name() -> str:
     """Return the InfluxDB measurement name used for fused analytics output."""
     return os.getenv("FUSION_MEASUREMENT", "fusion_result")
+
+
+def get_vllm_health_url() -> str:
+    """Return the vLLM health endpoint URL built from environment variables."""
+    host = os.getenv("VLLM_HOST", "vllm-server")
+    port = os.getenv("VLLM_PORT", "8000")
+    return f"http://{host}:{port}/health"
 
 
 def get_influx_client() -> InfluxDBClient:
@@ -149,6 +158,52 @@ def api_data() -> Any:
         )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": str(exc), "rows": []}), 500
+
+
+@app.route("/api/vllm/health", methods=["GET"])
+def api_vllm_health() -> Any:
+    """Check whether the vLLM server API is reachable and responding."""
+    health_url = get_vllm_health_url()
+
+    try:
+        with urlopen(health_url, timeout=5) as response:  # noqa: S310
+            status_code = response.getcode()
+
+        if status_code == 200:
+            return jsonify(
+                {
+                    "accessible": True,
+                    "status_code": status_code,
+                    "endpoint": health_url,
+                    "message": "vLLM server API is accessible.",
+                }
+            )
+
+        return (
+            jsonify(
+                {
+                    "accessible": False,
+                    "status_code": status_code,
+                    "endpoint": health_url,
+                    "message": "vLLM server API responded with non-OK status.",
+                }
+            ),
+            503,
+        )
+    except URLError as exc:
+        return (
+            jsonify(
+                {
+                    "accessible": False,
+                    "endpoint": health_url,
+                    "message": "Unable to reach vLLM server API.",
+                    "error": str(exc.reason),
+                }
+            ),
+            503,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"accessible": False, "endpoint": health_url, "error": str(exc)}), 500
 
 @app.route("/api/explain", methods=["POST"])
 def api_explain() -> Any:
