@@ -211,7 +211,7 @@ up: check_env_variables validate_host_ip down
 .PHONY: check_models
 check_models:
 	@echo "Checking if vllm models are available..."
-	@for dir in configs/vllm/models; do \
+	@for dir in configs/vllm/models; configs/vllm/huggingface; do \
 		if [ ! -d "$$dir" ]; then \
 			echo "Error: $$dir directory does not exist."; \
 			exit 1; \
