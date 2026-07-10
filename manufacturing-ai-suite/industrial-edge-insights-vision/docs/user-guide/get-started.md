@@ -255,10 +255,9 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
 - [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](./how-to-guides/view-telemetry-data.md)
-- For the Pallet Defect Detection, PCB Anomaly Detection, and Worker Safety Gear Detection applications, see [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
-- For the Weld Porosity application, see [Publish metadata to MQTT](./how-to-guides/start-mqtt-publisher.md)
-- For the Pallet Defect Detection and Worker Safety Gear Detection applications, see [Integrate Balluff SDK with supported cameras](./how-to-guides/integrate-balluff-sdk.md)
-- For the Pallet Defect Detection and Worker Safety Gear Detection applications, see [Integrate Pylon SDK for Basler camera support](./how-to-guides/integrate-pylon-sdk.md)
+- For the Pallet Defect Detection and PCB Anomaly Detection applications, see [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
+- For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./how-to-guides/integrate-balluff-sdk.md)
+- For the Pallet Defect Detection application, see [Integrate Pylon SDK for Basler camera support](./how-to-guides/integrate-pylon-sdk.md)
 
 ## Troubleshooting
 

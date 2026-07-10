@@ -1193,8 +1193,12 @@ Worker Safety Gear Detection:
 11. View the WebRTC streaming on `https://<host_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
-
-   ![WebRTC streaming](../_assets/webrtc-streaming.png)
+   
+   **Pallet Defect Detection**
+   ![WebRTC streaming](pallet-defect-detection/_assets/webrtc-streaming.png)
+   
+   **PCB Anomaly Detection**
+   ![WebRTC streaming](pcb-anomaly-detection/_assets/webrtc-streaming.png)
 
 ## Troubleshooting
 
