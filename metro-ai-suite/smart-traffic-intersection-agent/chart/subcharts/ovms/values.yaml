@@ -1,0 +1,112 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# =============================================================================
+# OVMS (OpenVINO Model Server) Subchart Values
+# =============================================================================
+
+# -- Whether to deploy OVMS. Set false to use an external VLM serving endpoint.
+enabled: true
+
+image:
+  # -- OVMS image repository.
+  repository: openvino/model_server
+  # -- OVMS image tag (CPU path).
+  tag: "2026.1"
+  # -- OVMS image tag for GPU-enabled deployments.
+  gpuTag: "2026.1-gpu"
+  # -- Image pull policy.
+  pullPolicy: IfNotPresent
+
+# Init container that downloads and converts the VLM model before OVMS starts.
+initImage:
+  # -- Init container image repository (needs python3, pip3).
+  repository: python
+  # -- Init container image tag.
+  tag: "3.12-slim"
+  # -- Init container image pull policy.
+  pullPolicy: IfNotPresent
+
+# -- Number of OVMS replicas.
+replicas: 1
+
+trustedCompute:
+  # -- Enable Kata Containers runtimeClass for Trusted Compute environments.
+  # Cannot be combined with gpu.enabled.
+  enabled: false
+
+service:
+  # -- Kubernetes Service type. NodePort exposes OVMS outside the cluster.
+  type: NodePort
+  # -- HTTP REST port exposed by the Service.
+  port: 8000
+
+env:
+  # -- HuggingFace model name to serve.
+  # Validated default: an OpenVINO-converted vision-language model for traffic scene analysis.
+  # Override with any compatible HuggingFace vision-language model.
+  modelName: "OpenVINO/Phi-3.5-vision-instruct-int8-ov"
+  # -- Inference target device when GPU is disabled. Ignored when gpu.enabled=true.
+  targetDevice: "CPU"
+  # -- Model weight format. Auto-detected based on device (GPU/NPU → int4, CPU → int8)
+  # when left empty. Override with "int4" or "int8" as needed.
+  weightFormat: ""
+  # -- Maximum number of completion tokens for VLM inference.
+  maxCompletionTokens: "1500"
+  # -- OVMS log level.
+  logLevel: "INFO"
+
+# -- HuggingFace access token for downloading gated models.
+# A Kubernetes Secret is created from this value when non-empty.
+# Prefer setting via --set huggingfaceToken=<token> at install time.
+huggingfaceToken: ""
+
+gpu:
+  # -- Enable Intel GPU for VLM inference. Automatically sets targetDevice=GPU.
+  enabled: true
+  # -- Intel GPU Kubernetes device plugin resource name.
+  # Use "gpu.intel.com/i915" for integrated / Arc A-series.
+  # Use "gpu.intel.com/xe" for Data Center GPU Flex / Max (Xe).
+  resourceName: "gpu.intel.com/i915"
+  # -- Number of GPU resources to request.
+  resourceLimit: 1
+  # -- GIDs of the "render" group to add to supplementalGroups (needed for /dev/dri access).
+  # All common distro values included by default so the chart works across environments:
+  #   44 (Alpine), 109 (Ubuntu/Debian), 992 (Fedora/RHEL/SUSE).
+  # Override via --set-json 'ovms.gpu.renderGroupIds=[<your-gid>]'.
+  # Find the correct GID on a node: getent group render
+  renderGroupIds:
+    - 44
+    - 109
+    - 992
+
+# -- Optional: pin the OVMS pod to nodes with GPUs.
+nodeSelector: {}
+#   intel.feature.node.kubernetes.io/gpu: "true"
+
+healthcheck:
+  # -- Seconds to wait before the first liveness/readiness probe.
+  initialDelaySeconds: 10
+  # -- Probe interval in seconds.
+  periodSeconds: 10
+  # -- Probe timeout in seconds.
+  timeoutSeconds: 10
+  # -- Number of consecutive failures before the pod is considered unhealthy.
+  # High value accommodates slow model downloads on first boot.
+  failureThreshold: 180
+
+resources:
+  requests:
+    memory: "12Gi"
+
+persistence:
+  # -- Enable a PersistentVolumeClaim for the model cache.
+  # Disable only in ephemeral/test environments; the model will re-download on every start.
+  enabled: true
+  # -- PVC storage size. Must accommodate the full downloaded model.
+  size: 20Gi
+  # -- StorageClass name. Leave empty to use the cluster default.
+  storageClass: ""
+  # -- Retain the PVC (and cached model) when the chart is uninstalled.
+  # Set true to avoid re-downloading the model on every install cycle.
+  keepOnUninstall: true
