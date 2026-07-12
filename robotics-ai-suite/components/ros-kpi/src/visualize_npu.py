@@ -37,7 +37,10 @@ from typing import List, Optional
 
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
+try:
+    from ._accel import np  # type: ignore[import-not-found]
+except ImportError:  # running as a script (e.g., `python src/visualize_npu.py`)
+    from _accel import np  # Intel dpnp/numpy shim
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 

@@ -21,3 +21,4 @@ The source code of this component can be found here:
 - [Turtlesim ROS 2 Sample Application](turtlesim-ros2-sample-application.md)
 - [Wandering Application in a Waffle Gazebo Simulation](launch-wandering-application-gazebo-sim-waffle.md)
 - [Gazebo Pick & Place Demo](picknplace.md)
+- [RVC Robot Vision and Control Demo](rvc.md)

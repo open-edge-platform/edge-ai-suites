@@ -15,7 +15,10 @@ import sys
 from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
-import numpy as np
+try:
+    from ._accel import np, ne  # type: ignore[import-not-found]
+except ImportError:  # running as a script (e.g., `python src/visualize_timing.py`)
+    from _accel import np, ne  # Intel dpnp/numpy shim + numexpr
 
 
 def parse_timing_log(log_file):
@@ -727,7 +730,8 @@ def plot_topic_activity_heatmap(data, output_file=None):
     # Create time bins (e.g., 100 bins across the duration)
     num_bins = min(100, int(duration) + 1)
     time_bins = np.linspace(start_time, end_time, num_bins + 1)
-    bin_centers = (time_bins[:-1] + time_bins[1:]) / 2
+    _lo, _hi = time_bins[:-1], time_bins[1:]
+    bin_centers = ne.evaluate("(_lo + _hi) / 2") if ne is not None else (_lo + _hi) / 2
 
     # Create heatmap matrix
     heatmap_data = np.zeros((len(sorted_topics), num_bins))
@@ -829,7 +833,8 @@ def plot_topic_delay_heatmap(data, output_file=None):
     # Create time bins (e.g., 100 bins across the duration)
     num_bins = min(100, int(duration) + 1)
     time_bins = np.linspace(start_time, end_time, num_bins + 1)
-    bin_centers = (time_bins[:-1] + time_bins[1:]) / 2
+    _lo, _hi = time_bins[:-1], time_bins[1:]
+    bin_centers = ne.evaluate("(_lo + _hi) / 2") if ne is not None else (_lo + _hi) / 2
 
     # Create heatmap matrix
     heatmap_data = np.zeros((len(sorted_topics), num_bins))

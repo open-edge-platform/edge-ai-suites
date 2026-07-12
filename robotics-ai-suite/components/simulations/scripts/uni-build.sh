@@ -47,6 +47,7 @@ find . -maxdepth 1 -name "*.changes" -delete 2>/dev/null || true
 
 find package -name "*.deb" -delete 2>/dev/null || true
 find PicknPlace -name "*.deb" -delete 2>/dev/null || true
+find RVC -name "*.deb" -delete 2>/dev/null || true
 
 echo "✅ Old .deb files cleaned"
 
@@ -55,7 +56,7 @@ echo "➡️ Preparing Debian directories"
 current_dir="$(pwd)"
 
 # Build ALL packages for BOTH distributions
-packages="package/turtlesim_tutorial package/realsense2_tutorial PicknPlace/robot_config PicknPlace/gazebo_plugins PicknPlace/picknplace PicknPlace"
+packages="package/turtlesim_tutorial package/realsense2_tutorial PicknPlace/robot_config PicknPlace/gazebo_plugins PicknPlace/picknplace PicknPlace RVC/rvc RVC"
 
 for pkg in $packages; do
     SRC_DIR="${current_dir}/${pkg}/${ROS_DISTRO_INPUT}/debian"
@@ -128,6 +129,7 @@ done
 mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" PicknPlace/robot_config/debian/control
 mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" PicknPlace/gazebo_plugins/debian/control
 mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" PicknPlace/picknplace/debian/control
+mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" RVC/rvc/debian/control
 
 # === Build All Packages ===
 echo "Building packages for ${ROS_DISTRO_INPUT}"
@@ -139,6 +141,8 @@ packages=(
   "PicknPlace/gazebo_plugins:Gazebo Plugins"
   "PicknPlace/picknplace:PicknPlace Main"
   "PicknPlace:Meta Package"
+  "RVC/rvc:RVC Main"
+  "RVC:RVC Meta Package"
 )
 
 total_packages=${#packages[@]}
@@ -181,6 +185,7 @@ cp ./*.deb "/tmp/${ROS_DISTRO_INPUT}_debian_packages/" 2>/dev/null || true
 # Copy packages from subdirectories
 find package -name "*.deb" -exec cp {} "/tmp/${ROS_DISTRO_INPUT}_debian_packages/" \; 2>/dev/null || true
 find PicknPlace -name "*.deb" -exec cp {} "/tmp/${ROS_DISTRO_INPUT}_debian_packages/" \; 2>/dev/null || true
+find RVC -name "*.deb" -exec cp {} "/tmp/${ROS_DISTRO_INPUT}_debian_packages/" \; 2>/dev/null || true
 
 echo "Built packages:"
 ls -la "/tmp/${ROS_DISTRO_INPUT}_debian_packages/"
