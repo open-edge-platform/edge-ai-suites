@@ -21,7 +21,7 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 3. Run the following `docker compose` command:
 
    ```bash
-   docker compose build
+   docker compose -f docker/docker-compose.yml build
    ```
 
 ## Run the Application
@@ -29,7 +29,13 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 - Run the application using the following command:
 
   ```bash
-  docker compose up
+  docker compose -f docker/docker-compose.yml up
+  ```
+
+- For NPU deployments, include the NPU override file:
+
+  ```bash
+  docker compose -f docker/docker-compose.yml -f docker/docker-compose.npu.yml up
   ```
 
 - Ensure that the application is running by checking the container status:
@@ -43,7 +49,7 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 - (Optional) To force a clean rebuild run the following:
 
   ```bash
-  docker compose up --build
+  docker compose -f docker/docker-compose.yml up --build
   ```
 
 Notes:

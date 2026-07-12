@@ -37,6 +37,12 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export HF_TOKEN=<your-huggingface-token>
    ```
 
+   For NPU deployments, also set the NPU device node path and use the NPU compose override when starting the stack:
+
+   ```bash
+   export OVMS_TARGET_DEVICE=NPU
+   ```
+
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
 
 4. Configure the environment:
@@ -70,6 +76,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    ```bash
    export AGENT_MODE=false
+   export COMPOSE_PROFILES=[]
    ```
 
    **Action tools**
@@ -101,7 +108,13 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    Run the following command from the project root:
 
    ```bash
-   docker compose up -d
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+
+   For NPU deployments:
+
+   ```bash
+   docker compose -f docker/docker-compose.yml -f docker/docker-compose.npu.yml up -d
    ```
 
    **Note:**
@@ -199,25 +212,22 @@ curl http://localhost:9000/tools
 To stop all services:
 
 ```bash
-docker compose down
+docker compose -f docker/docker-compose.yml down
 ```
 
 ### Restarting After Changes
 
 ```bash
 # Restart both services
-docker compose restart
+docker compose -f docker/docker-compose.yml restart
 
 # Restart only the application (VLM service keeps running)
-docker compose restart live-video-alert-agent
+docker compose -f docker/docker-compose.yml restart live-video-alert-agent
 ```
 
 ### Viewing Logs
 
 ```bash
-# Follow all logs
-docker compose logs -f
-
 # VLM service logs
 docker logs -f ovms-vlm
 
@@ -234,11 +244,11 @@ If you need to re-download the model or switch models:
 
 ```bash
 # Remove everything including model cache
-docker compose down -v
+docker compose -f docker/docker-compose.yml down -v
 
 # Set environment and start fresh
 export RTSP_URL=rtsp://<camera-ip>:<port>/stream
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ## Troubleshooting
@@ -260,15 +270,15 @@ docker exec ovms-vlm ls -lah /models    # Should be owned by ovms
 
 ```bash
 # Check status
-docker compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # View logs
-docker compose logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Clean restart
-docker compose down -v
+docker compose -f docker/docker-compose.yml down -v
 export RTSP_URL=<your-url>
-docker compose up -d
+docker compose -f docker/docker-compose.yml logs -f up -d
 ```
 
 ## Learn More

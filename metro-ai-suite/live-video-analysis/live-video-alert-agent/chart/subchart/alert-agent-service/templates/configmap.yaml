@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-{{- if .Values.subscriptions }}
+{{- if or .Values.subscriptions .Values.subscriptionDefault }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,7 +11,13 @@ metadata:
 data:
   config.yaml: |
     # Managed by Helm — subscription defaults for alert-agent-service.
-    # Edit .Values.subscriptions to change routing/dedup/escalation.
+    # Edit .Values.subscriptions / .Values.subscriptionDefault to change rules.
+    {{- if .Values.subscriptionDefault }}
+    default:
+      {{- toYaml .Values.subscriptionDefault | nindent 6 }}
+    {{- end }}
+    {{- if .Values.subscriptions }}
     subscriptions:
       {{- toYaml .Values.subscriptions | nindent 6 }}
+    {{- end }}
 {{- end }}

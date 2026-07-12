@@ -6,10 +6,10 @@
 # Environment variables (set via docker-compose):
 #     VLM_NAME            OVMS servable name for the VLM model
 #     VLM_REPO            HuggingFace repo ID for the VLM model
-#     VLM_TARGET_DEVICE   OpenVINO target device for VLM (CPU, GPU)
+#     VLM_TARGET_DEVICE   OpenVINO target device for VLM (CPU, GPU, NPU)
 #     LLM_NAME            OVMS servable name for the LLM model
 #     LLM_REPO            HuggingFace repo ID for the LLM model
-#     LLM_TARGET_DEVICE   OpenVINO target device for LLM (CPU, GPU)
+#     LLM_TARGET_DEVICE   OpenVINO target device for LLM (CPU, GPU, NPU)
 #     HF_TOKEN            HuggingFace token for gated models (optional)
 
 set -euo pipefail

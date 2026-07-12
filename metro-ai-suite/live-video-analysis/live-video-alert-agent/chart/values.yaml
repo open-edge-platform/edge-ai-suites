@@ -23,6 +23,15 @@ global:
     #   getent group render video | cut -d: -f3
     supplementalGroups: [109, 110, 992]
 
+  npu:
+    enabled: false
+    # key: NPU resource label from device plugin (for example npu.intel.com/accel)
+    key: ""
+    device: ""
+    count: 1
+    # Host device path mounted into OVMS when targeting NPU.
+    devicePath: "/dev/accel/accel0"
+
   nodeSelector: {}
 
   serviceAccount:
@@ -31,7 +40,7 @@ global:
   # Registry prefix for first-party images, e.g. "myregistry.example.com/"
   registry: ""
 
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
   utilities:

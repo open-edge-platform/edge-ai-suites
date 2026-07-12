@@ -123,6 +123,10 @@ spec:
             - name: dev-dri
               mountPath: /dev/dri
           {{- end }}
+          {{- if $useNpu }}
+            - name: dev-accel
+              mountPath: {{ .Values.global.npu.devicePath | quote }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -143,6 +147,12 @@ spec:
         - name: dev-dri
           hostPath:
             path: /dev/dri
+        {{- end }}
+        {{- if $useNpu }}
+        - name: dev-accel
+          hostPath:
+            path: {{ .Values.global.npu.devicePath | quote }}
+            type: CharDevice
         {{- end }}
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:

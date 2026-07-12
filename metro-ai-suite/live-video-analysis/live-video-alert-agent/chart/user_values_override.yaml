@@ -33,6 +33,16 @@ global:
     # GIDs for GPU device access. Verify on your node: getent group render video | cut -d: -f3
     # supplementalGroups: [109, 110, 992]
 
+  # NPU controls
+  npu:
+    enabled: false
+    # Set `key` based on the NPU device plugin resource on your cluster.
+    key: "npu.intel.com/accel"
+    # Set `device` to NPU when enabled is true.
+    device: "NPU"
+    # Host device path exposed to OVMS for NPU execution.
+    devicePath: "/dev/accel/accel0"
+
 app:
   # Set registry to override global.registry for the app image only.
   # Use this when the app image is in a different registry than other components.
