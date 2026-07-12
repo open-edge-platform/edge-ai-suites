@@ -1,0 +1,454 @@
+services:
+  ntpserver:
+    image: docker.io/dockurr/chrony:4.6.1
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+    networks:
+      scenescape:
+        aliases:
+          - ntpserv
+    restart: unless-stopped
+
+  broker:
+    image: docker.io/library/eclipse-mosquitto:2.0.22
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+    ports:
+      - "1883:1883"
+      - "1884:1884"
+    volumes:
+      - ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf:/mosquitto/config/mosquitto.conf
+    secrets:
+      - root-cert
+      - broker-cert
+      - broker-key
+    entrypoint: [
+        "/bin/sh",
+        "-e",
+        "-c",
+        "cp -r /run/secrets /mosquitto/secrets  && \
+        /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf",
+      ]
+    networks:
+      scenescape:
+        aliases:
+          - broker.scenescape.intel.com
+    user: "${UID}:${GID}"
+    restart: unless-stopped
+
+  node-red:
+    image: docker.io/nodered/node-red:4.1
+    user: root
+    environment:
+      TZ: America/Los_Angeles
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+    networks:
+      - scenescape
+    volumes:
+      - ./${SAMPLE_APP}/src/node-red/flows.json:/data/flows.json
+      - ./${SAMPLE_APP}/src/node-red/flows_cred.json:/tmp/flows_cred.json
+      - ./${SAMPLE_APP}/src/node-red/settings.js:/data/settings.js
+      - ./${SAMPLE_APP}/src/node-red/install_package.sh:/data/install_package.sh
+      - node-red-node-modules-smart-corridor:/usr/src/node-red/node_modules
+    secrets:
+      - influxdb2-admin-token
+      - root-cert
+      - broker-cert
+      - broker-key
+    depends_on:
+      influxdb2:
+        condition: service_started
+      broker:
+        condition: service_started
+    entrypoint: [
+        "/bin/bash",
+        "-e",
+        "-c",
+        "cp /tmp/flows_cred.json /data/flows_cred.json && \
+        sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
+        bash /data/install_package.sh && \
+        /usr/src/node-red/entrypoint.sh",
+      ]
+    restart: unless-stopped
+
+  influxdb2:
+    image: docker.io/library/influxdb:2.7.11
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
+      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb2-admin-token
+      DOCKER_INFLUXDB_INIT_ORG: ITM
+      DOCKER_INFLUXDB_INIT_BUCKET: SS-Anthem
+      DOCKER_INFLUXDB_INIT_RETENTION: 1w
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+    secrets:
+      - influxdb2-admin-username
+      - influxdb2-admin-password
+      - influxdb2-admin-token
+    volumes:
+      - type: volume
+        source: influxdb2-data-smart-corridor
+        target: /var/lib/influxdb2
+      - type: volume
+        source: influxdb2-config-smart-corridor
+        target: /etc/influxdb2
+    restart: unless-stopped
+    networks:
+      - scenescape
+
+  grafana:
+    image: docker.io/grafana/grafana:11.6.0
+    user: root
+    volumes:
+      - ./${SAMPLE_APP}/src/grafana/data/dashboards/anthem-intersection.json:/tmp/anthem-intersection.json
+      - ./${SAMPLE_APP}/src/grafana/dashboards.yml:/tmp/dashboards.yml
+      - ./${SAMPLE_APP}/src/grafana/datasources.yml:/tmp/datasources.yml
+      - grafana-storage-smart-corridor:/var/lib/grafana
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com,influxdb2
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com,influxdb2
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      GF_PANELS_DISABLE_SANITIZE_HTML: true
+      GF_SECURITY_ALLOW_EMBEDDING: true
+    restart: unless-stopped
+    networks:
+      - scenescape
+    secrets:
+      - influxdb2-admin-token
+    depends_on:
+      influxdb2:
+        condition: service_started
+    entrypoint: [
+        "/bin/bash",
+        "-e",
+        "-c",
+        "mkdir -p /var/lib/grafana/dashboards && \
+        cp /tmp/anthem-intersection.json /var/lib/grafana/dashboards/anthem-intersection.json && \
+        mkdir -p /etc/grafana/provisioning/dashboards && \
+        cp /tmp/dashboards.yml /etc/grafana/provisioning/dashboards/main.yml && \
+        mkdir -p /etc/grafana/provisioning/datasources && \
+        cp /tmp/datasources.yml /etc/grafana/provisioning/datasources/datasources.yml && \
+        sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /etc/grafana/provisioning/datasources/datasources.yml && \
+        /run.sh",
+      ]
+
+  dlstreamer-pipeline-server:
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+    networks:
+      - scenescape
+    privileged: true
+    entrypoint: ["./run.sh"]
+    devices:
+      - "/dev/dri:/dev/dri"
+    device_cgroup_rules:
+      - "c 189:* rmw"
+      - "c 209:* rmw"
+      - "a 189:* rwm"
+    group_add:
+      - "44"
+      - "109"
+      - "110"
+      - "990"
+      - "992"
+      - "993"
+      - "994"
+      - "996"
+    depends_on:
+      - broker
+      - ntpserver
+    environment:
+      - ENABLE_RTSP=true
+      - RUN_MODE=EVA
+      - GENICAM=Balluff
+      - DETECTION_DEVICE=CPU
+      - CLASSIFICATION_DEVICE=CPU
+      - ADD_UTCTIME_TO_METADATA=true
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
+      - REST_SERVER_PORT=8080
+      - MQTT_HOST=broker.scenescape.intel.com
+      - MQTT_PORT=1883
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      # NPU related environment variables
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+    volumes:
+      - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json
+      - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts
+      - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos
+      - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models/intersection:/home/pipeline-server/models/object_detection/intersection
+      - ./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models/vehicle_reid:/home/pipeline-server/models/vehicle_reid
+      - dlstreamer-pipeline-server-pipeline-root-smart-corridor:/var/cache/pipeline_root:uid=1999,gid=1999
+      - dlstreamer-pipeline-server-tmp-smart-corridor:/tmp
+      - "/dev:/dev"
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+    restart: unless-stopped
+
+  pgserver:
+    image: postgres:17.6
+    env_file:
+      - ./${SAMPLE_APP}/src/secrets/pgserver/pgserver.env
+    networks:
+      - scenescape
+    environment:
+      POSTGRES_USER: scenescape
+      POSTGRES_DB: scenescape
+    volumes:
+      - pgserver-db-smart-corridor:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scenescape -d scenescape"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    image: intel/scenescape-manager:2026.1.0
+    init: true
+    networks:
+      scenescape:
+        aliases:
+          - web.scenescape.intel.com
+    depends_on:
+      pgserver:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - SUPASS=${SUPASS}
+      - EXAMPLEDB=/home/scenescape/SceneScape/${SAMPLE_APP}-ri.tar.bz2
+      - DBHOST=pgserver
+      - DBPORT=5432
+    command: >
+      webserver
+      --dbtype postgres
+      --broker broker.scenescape.intel.com
+      --brokerauth /run/secrets/browser.auth
+      --brokerrootcert /run/secrets/certs/scenescape-ca.pem
+    healthcheck:
+      test: "curl --insecure -X GET https://web.scenescape.intel.com:443/api/v1/database-ready | grep 'true'"
+      interval: 10s
+      timeout: 120s
+      retries: 10
+      start_period: 10s
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - pgserver-media-smart-corridor:/workspace/media
+      - pgserver-migrations-smart-corridor:/workspace/migrations
+      - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/home/scenescape/SceneScape/user_access_config.json
+      - ./${SAMPLE_APP}/src/webserver/${SAMPLE_APP}-ri.tar.bz2:/home/scenescape/SceneScape/${SAMPLE_APP}-ri.tar.bz2
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: web-cert
+        target: certs/scenescape-web.crt
+      - source: web-key
+        target: certs/scenescape-web.key
+      - django
+      - browser.auth
+      - controller.auth
+    restart: unless-stopped
+
+  vdms:
+    image: intellabs/vdms:v2.12.0
+    init: true
+    networks:
+      scenescape:
+        aliases:
+          - vdms.scenescape.intel.com
+    environment:
+      - OVERRIDE_ca_file=/run/secrets/certs/scenescape-ca.pem
+      - OVERRIDE_cert_file=/run/secrets/certs/scenescape-vdms-s.crt
+      - OVERRIDE_key_file=/run/secrets/certs/scenescape-vdms-s.key
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: vdms-server-cert
+        target: certs/scenescape-vdms-s.crt
+      - source: vdms-server-key
+        target: certs/scenescape-vdms-s.key
+    restart: unless-stopped
+
+  scene:
+    image: intel/scenescape-controller:2026.1.0
+    init: true
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - CONTROLLER_ENABLE_METRICS
+      - CONTROLLER_METRICS_ENDPOINT
+      - CONTROLLER_METRICS_EXPORT_INTERVAL_S
+      - CONTROLLER_ENABLE_TRACING
+      - CONTROLLER_TRACING_ENDPOINT
+      - CONTROLLER_TRACING_SAMPLE_RATIO
+    networks:
+      scenescape:
+    configs:
+      - source: tracker-config
+        target: /home/scenescape/SceneScape/tracker-config.json
+    depends_on:
+      web:
+        condition: service_healthy
+      broker:
+        condition: service_started
+      ntpserver:
+        condition: service_started
+      vdms:
+        condition: service_started
+    command: >
+      --restauth /run/secrets/controller.auth
+      --brokerauth /run/secrets/controller.auth
+      --broker broker.scenescape.intel.com
+      --ntp ntpserv
+    volumes:
+      - pgserver-media-smart-corridor:/home/scenescape/SceneScape/media
+      - ./${SAMPLE_APP}/src/controller/vdms_adapter_patched.py:/usr/local/lib/python3.11/site-packages/controller/vdms_adapter.py:ro
+      #- ./${SAMPLE_APP}/src/controller/moving_object_patched.py:/usr/local/lib/python3.11/site-packages/controller/moving_object.py:ro
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: vdms-client-cert
+        target: certs/scenescape-vdms-c.crt
+      - source: vdms-client-key
+        target: certs/scenescape-vdms-c.key
+      - django
+      - controller.auth
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.30.2-alpine
+    container_name: nginx-reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
+    networks:
+      - scenescape
+    depends_on:
+      - dlstreamer-pipeline-server
+      - grafana
+      - node-red
+      - influxdb2
+      - web
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+    restart: unless-stopped
+
+networks:
+  scenescape:
+
+secrets:
+  root-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-ca.pem
+  broker-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-broker.crt
+  broker-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-broker.key
+  web-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-web.crt
+  web-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-web.key
+  influxdb2-admin-username:
+    file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-username
+  influxdb2-admin-password:
+    file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-password
+  influxdb2-admin-token:
+    file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-token
+  django:
+    file: ./${SAMPLE_APP}/src/secrets/django
+  browser.auth:
+    file: ./${SAMPLE_APP}/src/secrets/browser.auth
+  controller.auth:
+    file: ./${SAMPLE_APP}/src/secrets/controller.auth
+  vdms-server-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.crt
+  vdms-server-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.key
+  vdms-client-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-c.crt
+  vdms-client-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-c.key
+
+configs:
+  mosquitto-secure:
+    file: ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf
+  tracker-config:
+    # Use this configuration file to run tracking with time-chunking enabled
+    # file: ./controller/config/tracker-config-time-chunking.json
+    file: ./${SAMPLE_APP}/src/controller/tracker-config.json
+
+volumes:
+  dlstreamer-pipeline-server-pipeline-root-smart-corridor:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  dlstreamer-pipeline-server-tmp-smart-corridor:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  influxdb2-data-smart-corridor:
+  influxdb2-config-smart-corridor:
+  grafana-storage-smart-corridor:
+  pgserver-db-smart-corridor:
+  pgserver-migrations-smart-corridor:
+  pgserver-media-smart-corridor:
+  sample-data-smart-corridor:
+  node-red-node-modules-smart-corridor:
