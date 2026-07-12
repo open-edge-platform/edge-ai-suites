@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Intel Corporation
+---
+# PID gains for the gripper JointTrajectoryController.
+# Higher P-gain = more responsive finger and mimic tracking under GazeboSimSystem.
+# Loaded by the controller_manager spawner at startup via --param-file so no
+# runtime `ros2 param set` calls are needed.
+# /** wildcard ensures the gains match /arm1/gripper_controller regardless of
+# namespace depth when loaded via the spawner's --param-file argument.
+/**:
+  ros__parameters:
+    gains:
+      arm1__left_finger_joint:
+        p: 100.0
+        i: 10.0
+        d: 1.0
