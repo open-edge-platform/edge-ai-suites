@@ -2556,16 +2556,15 @@ def activate_multimodal_dlstreamer_pipeline(
     namespace,
     device_value="CPU",
     pipeline_name=constants.MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
-    mqtt_topic=constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("vision_topic"),
-    s3_bucket=constants.MULTIMODAL_DLSTREAMER_S3_BUCKET,
-    s3_folder_prefix=constants.MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX,
-    webrtc_peer_id=constants.MULTIMODAL_WEBRTC_PEER_ID,
+    pipeline_request_file=None,
 ):
     """Step 4: Activate the DL Streamer pipeline on the chosen device (CPU/GPU/NPU).
 
-    Equivalent to:
-        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/<pipeline> \\
-             -X POST -H 'Content-Type: application/json' -d '{... "device": <device_value> ...}'
+    Reads the pipeline request from the config file and modifies only the device parameter,
+    matching the user documentation approach:
+        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/<pipeline> \
+             -X POST -H 'Content-Type: application/json' \
+             -d "$(sed 's/"device": "CPU"/"device": "<device>"/' pipeline-request-cpu.json)"
     """
     device_upper = device_value.upper()
     logger.info(
@@ -2580,29 +2579,39 @@ def activate_multimodal_dlstreamer_pipeline(
     if not dlstreamer_pod:
         return False
 
-    dlstreamer_payload = {
-        "destination": {
-            "metadata": {
-                "type": "mqtt",
-                "topic": mqtt_topic,
-            },
-            "frame": [
-                {"type": "webrtc", "peer-id": webrtc_peer_id, "overlay": False},
-                {
-                    "type": "s3_write",
-                    "bucket": s3_bucket,
-                    "folder_prefix": s3_folder_prefix,
-                    "block": False,
-                },
-            ],
-        },
-        "parameters": {
-            "classification-properties": {
-                "model": constants.MULTIMODAL_DLSTREAMER_MODEL_XML_PATH,
-                "device": device_upper,
-            }
-        },
-    }
+    # Use the pipeline request file from configs (same as user documentation)
+    if pipeline_request_file is None:
+        pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
+    
+    # Resolve path relative to helm_utils directory
+    utils_dir = os.path.dirname(os.path.abspath(__file__))
+    json_file_path = os.path.join(utils_dir, pipeline_request_file)
+    
+    if not os.path.exists(json_file_path):
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    
+    try:
+        # Read the base pipeline request JSON file
+        with open(json_file_path, 'r') as f:
+            dlstreamer_payload = json.load(f)
+        
+        # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
+        if "parameters" in dlstreamer_payload and "classification-properties" in dlstreamer_payload["parameters"]:
+            dlstreamer_payload["parameters"]["classification-properties"]["device"] = device_upper
+        else:
+            logger.error("Invalid pipeline request JSON structure")
+            return False
+    
+    except FileNotFoundError:
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in pipeline request file: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Error reading pipeline request file: {e}")
+        return False
 
     # Add -w flag to capture HTTP status code for proper validation
     activate_command = [

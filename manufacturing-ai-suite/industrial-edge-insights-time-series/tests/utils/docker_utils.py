@@ -27,7 +27,16 @@ sys.path.append(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 
 import constants
-from constants import CONTAINERS, MULTIMODAL_APPLICATION_DIRECTORY
+from constants import (
+    CONTAINERS,
+    MULTIMODAL_APPLICATION_DIRECTORY,
+    MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+    MULTIMODAL_DLSTREAMER_MODEL_XML_PATH,
+    MULTIMODAL_DLSTREAMER_MQTT_TOPIC,
+    MULTIMODAL_DLSTREAMER_S3_BUCKET,
+    MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX,
+    MULTIMODAL_WEBRTC_PEER_ID,
+)
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
 # Try to import security_utils, but make it optional for multimodal tests
@@ -5206,7 +5215,7 @@ def execute_seaweedfs_bucket_query():
         dict: Result with success status, jpg_files list, and bucket URL used
     """
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
-    bucket_url = f"https://localhost:{nginx_port}/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/?limit=5000"
+    bucket_url = f"https://localhost:{nginx_port}/image-store/buckets/{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}/?limit=5000"
     
     # Use existing function to get bucket files
     bucket_result = get_seaweedfs_bucket_files(bucket_url)
@@ -5215,17 +5224,19 @@ def execute_seaweedfs_bucket_query():
     return bucket_result
 
 
-def check_s3_image_file_size(img_filename, bucket_path="dlstreamer-pipeline-results/weld-defect-classification"):
+def check_s3_image_file_size(img_filename, bucket_path=None):
     """
     Check if a specific S3 image file is empty or has content using curl HEAD request
 
     Args:
         img_filename (str): Image filename to check (e.g., "ZZHR95D2V4.jpg")
-        bucket_path (str): S3 bucket path
+        bucket_path (str): S3 bucket path (default: uses constants)
 
     Returns:
         dict: Result with file size, empty status, and file details  
     """
+    if bucket_path is None:
+        bucket_path = f"{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}"
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
     file_url = f"https://localhost:{nginx_port}/image-store/buckets/{bucket_path}/{img_filename}"
     
@@ -5455,12 +5466,9 @@ def get_seaweedfs_bucket_files(bucket_url):
         }
 
 
-def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_defect_classification",
-                                           model_path="/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
-                                           mqtt_topic="vision_weld_defect_classification",
-                                           s3_bucket="dlstreamer-pipeline-results",
-                                           s3_folder_prefix="weld-defect-classification",
-                                           webrtc_peer_id="samplestream"):
+def execute_dlstreamer_pipeline_activation(device="GPU",
+                                           pipeline_name=MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+                                           pipeline_request_file=None):
     """
     Activate the DL Streamer Pipeline Server pipeline on a Docker-based multimodal deployment
     with the model inference targeted at the specified device (CPU/GPU/NPU).
@@ -5469,16 +5477,13 @@ def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_def
     endpoint as documented in get-started.md:
 
         curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
-             -X POST -H 'Content-Type: application/json' -d '{ ... "device": "GPU" ... }'
+             -X POST -H 'Content-Type: application/json' \
+             -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
 
     Args:
         device (str): Device for model inference ('CPU', 'GPU', or 'NPU'). Case-insensitive; uppercased before send.
         pipeline_name (str): Name of the user-defined pipeline to activate.
-        model_path (str): Path to the model.xml inside the dlstreamer-pipeline-server container.
-        mqtt_topic (str): MQTT topic where vision metadata is published.
-        s3_bucket (str): S3 bucket name for storing frames.
-        s3_folder_prefix (str): Folder prefix within the S3 bucket.
-        webrtc_peer_id (str): WebRTC peer-id for the frame destination.
+        pipeline_request_file (str): Path to the pipeline request JSON file. If None, uses the default from constants.
 
     Returns:
         bool: True if the pipeline was activated successfully, False otherwise.
@@ -5487,35 +5492,30 @@ def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_def
         device_value = device.upper()
         logger.info(f"Activating DL Streamer pipeline '{pipeline_name}' on device {device_value} (Docker)")
 
-        dlstreamer_payload = {
-            "destination": {
-                "metadata": {
-                    "type": "mqtt",
-                    "topic": mqtt_topic
-                },
-                "frame": [
-                    {
-                        "type": "webrtc",
-                        "peer-id": webrtc_peer_id,
-                        "overlay": False
-                    },
-                    {
-                        "type": "s3_write",
-                        "bucket": s3_bucket,
-                        "folder_prefix": s3_folder_prefix,
-                        "block": False
-                    }
-                ]
-            },
-            "parameters": {
-                "classification-properties": {
-                    "model": model_path,
-                    "device": device_value
-                }
-            }
-        }
-
-        payload_json = json.dumps(dlstreamer_payload)
+        # Use the pipeline request file from configs (same as user documentation)
+        if pipeline_request_file is None:
+            pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
+        
+        # Resolve path relative to this utils directory
+        utils_dir = os.path.dirname(os.path.abspath(__file__))
+        json_file_path = os.path.join(utils_dir, pipeline_request_file)
+        
+        if not os.path.exists(json_file_path):
+            logger.error(f"Pipeline request file not found: {json_file_path}")
+            return False
+        
+        # Read the base pipeline request JSON file
+        with open(json_file_path, 'r') as f:
+            pipeline_request = json.load(f)
+        
+        # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
+        if "parameters" in pipeline_request and "classification-properties" in pipeline_request["parameters"]:
+            pipeline_request["parameters"]["classification-properties"]["device"] = device_value
+        else:
+            logger.error("Invalid pipeline request JSON structure")
+            return False
+        
+        payload_json = json.dumps(pipeline_request)
 
         # Use external API endpoint as documented in get-started.md
         curl_command = [
@@ -5541,9 +5541,16 @@ def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_def
     except subprocess.TimeoutExpired:
         logger.error("DL Streamer pipeline activation curl command timed out")
         return False
+    except FileNotFoundError as e:
+        logger.error(f"Pipeline request file not found: {e}")
+        return False
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in pipeline request file: {e}")
+        return False
     except Exception as e:
         logger.error(f"Error executing DL Streamer pipeline activation: {e}")
         return False
+
 
 
 def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database="datain", limit=5):

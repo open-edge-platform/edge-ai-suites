@@ -245,9 +245,14 @@ MULTIMODAL_DLSTREAMER_MODEL_XML_PATH = (
     "/home/pipeline-server/resources/models/"
     "weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml"
 )
+MULTIMODAL_DLSTREAMER_MQTT_TOPIC = "vision_weld_defect_classification"
 MULTIMODAL_DLSTREAMER_S3_BUCKET = "dlstreamer-pipeline-results"
 MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX = "weld-defect-classification"
 MULTIMODAL_WEBRTC_PEER_ID = "samplestream"
+MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE = (
+    "../../../industrial-edge-insights-multimodal/configs/"
+    "dlstreamer-pipeline-server/pipeline-request-cpu.json"
+)
 
 # Essential sample app name constants - access via SAMPLE_APPS_CONFIG and helper functions
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
