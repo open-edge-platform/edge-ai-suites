@@ -561,12 +561,38 @@ if (-not $SkipProxy -and -not $Silent) {
         if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
         if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
         if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
-        if (-not $httpProxy -and -not $httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
+        if (-not $httpProxy -and -not $httpsProxy) { 
+            Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
+            
+            # Check environment for proxy settings
+            Write-Host ""
+            Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+            $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+            $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+            $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+            
+            $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+            if ($envProxies) {
+                $envProxies | ForEach-Object {
+                    Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+                }
+                Write-Host ""
+                Write-Host "  Environment variables detected. You can save these to .proxy-config." -ForegroundColor Yellow
+            } else {
+                Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+            }
+        }
         Write-Host ""
 
-        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        if (-not $httpProxy -and -not $httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save environment proxy settings to .proxy-config" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
         
@@ -596,12 +622,56 @@ if (-not $SkipProxy -and -not $Silent) {
             $noProxy = ""
             Write-Host "  No proxy - using direct connection." -ForegroundColor Yellow
         } else {
-            Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+            # If .proxy-config is empty but environment has proxy, save environment values
+            if (-not $httpProxy -and -not $httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+                $httpProxy = $envHttpProxy
+                $httpsProxy = $envHttpsProxy
+                $noProxy = $envNoProxy
+                
+                $proxyConfig = @{
+                    httpProxy = $httpProxy
+                    httpsProxy = $httpsProxy
+                    noProxy = $noProxy
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+                if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
+                if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
+                if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
+            } else {
+                Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+            }
         }
     } else {
         Write-Host ""
-        Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
-        Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
+        Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        Write-Host ""
+        
+        # Check environment variables for proxy settings
+        $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+        $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+        $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+        
+        $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+        if ($envProxies) {
+            $envProxies | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+            }
+            Write-Host ""
+            Write-Host "  Environment variables detected. You can save these or configure different settings." -ForegroundColor Yellow
+        } else {
+            Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+        }
+        Write-Host ""
+        
+        if ($envHttpProxy -or $envHttpsProxy) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save current environment proxy settings to .proxy-config" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
+            Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
         
@@ -625,13 +695,31 @@ if (-not $SkipProxy -and -not $Silent) {
             $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
             Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
         } else {
-            $proxyConfig = @{
-                httpProxy = ""
-                httpsProxy = ""
-                noProxy = ""
+            # If environment variables exist, save them; otherwise save empty config
+            if ($envHttpProxy -or $envHttpsProxy) {
+                $httpProxy = $envHttpProxy
+                $httpsProxy = $envHttpsProxy
+                $noProxy = $envNoProxy
+                
+                $proxyConfig = @{
+                    httpProxy = $httpProxy
+                    httpsProxy = $httpsProxy
+                    noProxy = $noProxy
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+                if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
+                if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
+                if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
+            } else {
+                $proxyConfig = @{
+                    httpProxy = ""
+                    httpsProxy = ""
+                    noProxy = ""
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
             }
-            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
-            Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
         }
     }
     
@@ -681,9 +769,17 @@ if (-not $SkipProxy -and -not $Silent) {
         }
         
         if (-not $httpProxy -and -not $httpsProxy) {
+            Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+            Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
+            }
             Write-Host "  No proxy configured in .proxy-config" -ForegroundColor Gray
         }
     } else {
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
+        }
         Write-Host "  No .proxy-config file found" -ForegroundColor Gray
     }
 }
