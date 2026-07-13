@@ -186,6 +186,10 @@ spec:
             - name: dev-dri
               mountPath: /dev/dri
             {{- end }}
+            {{- if .Values.hardware.npu.enabled }}
+            - name: dev-accel
+              mountPath: {{ .Values.hardware.npu.devicePath | quote }}
+            {{- end }}
             {{- if .Values.telegraf.config }}
             - name: telegraf-config
               mountPath: /etc/telegraf/telegraf.conf
@@ -209,6 +213,12 @@ spec:
         - name: dev-dri
           hostPath:
             path: /dev/dri
+        {{- end }}
+        {{- if .Values.hardware.npu.enabled }}
+        - name: dev-accel
+          hostPath:
+            path: {{ .Values.hardware.npu.devicePath | quote }}
+            type: CharDevice
         {{- end }}
         {{- if .Values.telegraf.config }}
         - name: telegraf-config

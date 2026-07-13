@@ -11,8 +11,8 @@ task: "text_generation"
 runAsUser: 5000
 
 targetDevice:
-  device: "GPU"
-  key: "gpu.intel.com/i915"
+  device: "NPU"
+  key: "npu.intel.com/i915"
   count: 1
 
 modelStorage:

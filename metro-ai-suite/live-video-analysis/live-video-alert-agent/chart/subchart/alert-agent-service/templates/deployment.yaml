@@ -18,7 +18,7 @@ spec:
         app: {{ include "alert-agent-service.fullname" . }}
         app.kubernetes.io/component: alert-agent-service
         app.kubernetes.io/instance: {{ .Release.Name }}
-      {{- if .Values.subscriptions }}
+      {{- if or .Values.subscriptions .Values.subscriptionDefault }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       {{- end }}
@@ -94,7 +94,7 @@ spec:
               value: {{ .Values.mcpEnabled | quote }}
             - name: ACTION_WORKERS
               value: {{ .Values.actionWorkers | quote }}
-            {{- if .Values.subscriptions }}
+            {{- if or .Values.subscriptions .Values.subscriptionDefault }}
             - name: SUBSCRIPTION_CONFIG_PATH
               value: "/app/resources/config.yaml"
             {{- end }}
@@ -135,14 +135,14 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.subscriptions }}
+          {{- if or .Values.subscriptions .Values.subscriptionDefault }}
           volumeMounts:
             - name: subscription-config
               mountPath: /app/resources/config.yaml
               subPath: config.yaml
               readOnly: true
           {{- end }}
-      {{- if .Values.subscriptions }}
+      {{- if or .Values.subscriptions .Values.subscriptionDefault }}
       volumes:
         - name: subscription-config
           configMap:

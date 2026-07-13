@@ -46,6 +46,17 @@ nodeSelector: {}
 affinity: {}
 tolerations: []
 
+subscriptionDefault:
+  tools:
+    - log_alert
+  dedup:
+    enabled: true
+    strategy: field_hash
+    fields:
+      - source_id
+    window_seconds: 30
+    on_missing: skip
+
 subscriptions:
   - alert_name: vehicle
     tools:

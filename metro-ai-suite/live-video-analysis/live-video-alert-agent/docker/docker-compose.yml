@@ -22,7 +22,7 @@ services:
       - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-GPU}}
     volumes:
       - ovms-models:/models
-      - ./scripts/init_ovms.sh:/init_ovms.sh:ro
+      - ../scripts/init_ovms.sh:/init_ovms.sh:ro
     entrypoint: ["/bin/bash", "/init_ovms.sh"]
     networks:
       - app_network
@@ -113,7 +113,9 @@ services:
 
   live-video-alert-agent:
     image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: live-video-alert-agent
     restart: unless-stopped
     ports:
@@ -140,8 +142,8 @@ services:
       - MCP_ENABLED=${MCP_ENABLED:-true}
       
     volumes:
-      - ./resources:/app/resources
-      - ./src/config.py:/app/src/config.py:ro
+      - ../resources:/app/resources
+      - ../src/config.py:/app/src/config.py:ro
       - snapshots:/app/snapshots
 
     healthcheck:
@@ -198,9 +200,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./resources/config.yaml:/app/resources/config.yaml:ro
-      - ./resources/mcp_server.json:/app/resources/mcp_server.json:ro
-      - ./resources/streams.json:/app/resources/streams.json:ro
+      - ../resources/config.yaml:/app/resources/config.yaml:ro
+      - ../resources/mcp_server.json:/app/resources/mcp_server.json:ro
+      - ../resources/streams.json:/app/resources/streams.json:ro
     depends_on:
       mqtt:
         condition: service_started
@@ -225,7 +227,7 @@ services:
       - app_network
 
   metrics-manager:
-    image: docker.io/intel/metrics-manager:2026.1.0-rc2
+    image: docker.io/intel/metrics-manager:2026.1.0
     container_name: metrics-manager
     ports:
       - "${METRICS_PORT:-9090}:9090"

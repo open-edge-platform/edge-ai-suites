@@ -23,7 +23,7 @@ spec:
       automountServiceAccountToken: false
       {{- $useGpu := or (eq (.Values.targetDevice.device | upper) "GPU") (and (not .Values.targetDevice.device) .Values.global.gpu.enabled) }}
       {{- $useNpu := or (eq (.Values.targetDevice.device | upper) "NPU") (and (not .Values.targetDevice.device) (not .Values.global.gpu.enabled) .Values.global.npu.enabled) }}
-      {{- if $useGpu }}
+      {{- if or $useGpu $useNpu }}
       securityContext:
         supplementalGroups: {{ toJson .Values.global.gpu.supplementalGroups }}
       {{- end }}
@@ -77,18 +77,10 @@ spec:
             {{- if or $useGpu $useNpu }}
             limits:
               {{- if $useGpu }}
-              {{- if .Values.targetDevice.key }}
-              {{ .Values.targetDevice.key }}: {{ .Values.targetDevice.count | default 1 }}
-              {{- else }}
-              {{ required "global.gpu.key or ovms.targetDevice.key must be set for GPU" .Values.global.gpu.key }}: {{ .Values.global.gpu.count | default 1 }}
-              {{- end }}
+              {{ required "global.gpu.key must be set for GPU" .Values.global.gpu.key }}: {{ .Values.global.gpu.count | default 1 }}
               {{- end }}
               {{- if $useNpu }}
-              {{- if .Values.targetDevice.key }}
-              {{ .Values.targetDevice.key }}: {{ .Values.targetDevice.count | default 1 }}
-              {{- else }}
-              {{ required "global.npu.key or ovms.targetDevice.key must be set for NPU" .Values.global.npu.key }}: 1
-              {{- end }}
+              {{ required "global.npu.key must be set for NPU" .Values.global.npu.key }}: 1
               {{- end }}
             {{- end }}
           ports:
@@ -123,7 +115,11 @@ spec:
             - name: dev-dri
               mountPath: /dev/dri
           {{- end }}
-      {{- with .Values.nodeSelector }}
+          {{- if $useNpu }}
+            - name: dev-accel
+              mountPath: {{ .Values.global.npu.devicePath | quote }}
+          {{- end }}
+      {{- with (.Values.nodeSelector | default .Values.global.nodeSelector)}}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -143,6 +139,11 @@ spec:
         - name: dev-dri
           hostPath:
             path: /dev/dri
+        {{- end }}
+        {{- if $useNpu }}
+        - name: dev-accel
+          hostPath:
+            path: {{ .Values.global.npu.devicePath | quote }}
         {{- end }}
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:

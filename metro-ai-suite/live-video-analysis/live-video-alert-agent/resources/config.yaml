@@ -1,5 +1,16 @@
 # Subscription config for alert-agent-service (live-video-alert-agent deployment).
 
+default:
+  tools:
+    - log_alert
+  dedup:
+    enabled: true
+    strategy: field_hash
+    fields:
+      - source_id
+    window_seconds: 30
+    on_missing: skip
+
 subscriptions:
   # Repeated vehicle detections from the same camera are suppressed for 30s.
   - alert_name: vehicle
