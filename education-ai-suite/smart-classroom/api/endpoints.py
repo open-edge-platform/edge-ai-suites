@@ -22,11 +22,14 @@ from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
+from components.va.media_service import ensure_media_service_running
 from utils.session_manager import generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
 from dto.ocr_dto import OCRExtractRequest, OCRResponse
 from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
+from utils.telegram_sender import get_sender
+from utils.scp_sender import get_scp_sender
 
 import logging
 logger = logging.getLogger(__name__)
@@ -265,6 +268,11 @@ def start_video_analytics_pipeline(
     # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
         try:
+            # Ensure the MediaMTX RTSP server is up before any pipeline pushes to
+            # it. Started on demand. Failures are surfaced as a 500 by the outer
+            # handler below.
+            ensure_media_service_running()
+
             # Create or get service for this session
             if x_session_id not in va_services:
                 project_config = RuntimeConfig.get_section("Project")
@@ -276,6 +284,33 @@ def start_video_analytics_pipeline(
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
                 va_services[x_session_id].x_session_id = x_session_id
+
+                # ── Register callback: fires when ALL pipelines finish (EOS or manual stop) ──
+                _sid      = x_session_id
+                _location = location
+                _pname    = name
+                def _on_all_pipelines_done(session_id, _svc=va_services[x_session_id],
+                                           _loc=_location, _n=_pname):
+                    from utils.scp_sender import write_engagement_reports, get_scp_sender
+                    from utils.telegram_sender import get_sender
+                    try:
+                        _session_dir     = os.path.join(_loc, _n, session_id)
+                        _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
+                        # Use the same engine as the /class-statistics UI endpoint
+                        va_stats, _ = _svc.get_pose_stats(_front_posture)
+                        logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
+                        # Always write the files regardless of sender config
+                        write_engagement_reports(session_id, _session_dir, va_stats)
+                        _scp = get_scp_sender()
+                        if _scp:
+                            _scp.send_engagement_package_async(session_id, _session_dir, va_stats)
+                        _tg = get_sender()
+                        if _tg:
+                            _tg.send_engagement_package_async(session_id, _session_dir, _front_posture)
+                    except Exception as _e:
+                        logger.error(f"[VA done] Failed to generate/send reports: {_e}", exc_info=True)
+                va_services[x_session_id].on_all_pipelines_done = _on_all_pipelines_done
+                # ───────────────────────────────────────────────────────────────────────────
 
             service = va_services[x_session_id]
 
@@ -450,6 +485,24 @@ def stop_video_analytics_pipeline(
                         "session_id": x_session_id,
                         "error": str(e)
                     })                                   
+
+            # ── Telegram: Package B+C (Q2 engagement + Q4 participation) ────
+            # Triggered once all stop requests for this session are processed.
+            # Uses front_posture.txt for video stats; transcription.txt for audio.
+            project_config = RuntimeConfig.get_section("Project")
+            location = project_config.get("location", "outputs")
+            name     = project_config.get("name", "default")
+            session_dir     = os.path.join(location, name, x_session_id)
+            va_posture_file = os.path.join(location, name, x_session_id, "va", "front_posture.txt")
+            sender = get_sender()
+            if sender:
+                sender.send_engagement_package_async(
+                    x_session_id, session_dir, va_posture_file
+                )
+            # Report generation and SCP send are triggered automatically by
+            # service.on_all_pipelines_done, which fires from stop_pipeline()
+            # when the last pipeline is removed, or from _monitor_pipeline on EOS.
+            # ────────────────────────────────────────────────────────────────
 
             return JSONResponse(content={"results": results}, status_code=200)
 
@@ -686,6 +739,24 @@ def content_segmentation(request: SummaryRequest):
     try:
         contents_json = pipeline.run_content_segmentation()
         logger.info("✅ content segmentation generated successfully.")
+
+        # ── Telegram: Package A (Q1 topics + Q3 absentee data) ──────────────
+        # All audio outputs are ready: transcription, summary, mindmap, topics.
+        # Send is fire-and-forget — does not block the API response.
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location", "outputs"),
+            project_config.get("name", "default"),
+            request.session_id,
+        )
+        sender = get_sender()
+        if sender:
+            sender.send_content_package_async(request.session_id, session_dir)
+        scp = get_scp_sender()
+        if scp:
+            scp.send_content_package_async(request.session_id, session_dir)
+        # ────────────────────────────────────────────────────────────────────
+
         return JSONResponse(content={"session_id": request.session_id})
 
     except HTTPException as http_exc:

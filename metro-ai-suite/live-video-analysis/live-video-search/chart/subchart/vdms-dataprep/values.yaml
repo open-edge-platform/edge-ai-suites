@@ -2,7 +2,6 @@ global:
   volumeHostPath: ''
   usePvc: true
   keepPvc: false
-  sharedPvcName: ''
   env:
     defaultBucketName: vdms-bucket
     detectionConfidence: '0.85'
@@ -19,12 +18,16 @@ global:
     roiConsolidationIouThreshold: '0.2'
     sdkUseOpenvino: 'true'
     vsIndexName: video_frame_embeddings
-  gpu:
-    multimodalEmbeddingEnabled: false
-    vdmsDataprepEnabled: false
-    key: ''
-    device: ''
-    hostPath: /dev/dri
+  accelGroupIds:
+    - 992
+  devices:
+    vdmsDataprep:
+      embedding:
+        device: CPU
+        key: ''
+      detection:
+        device: CPU
+        key: ''
   proxy:
     httpProxy: ''
     httpsProxy: ''
@@ -59,6 +62,11 @@ securityContext:
     type: RuntimeDefault
 
 resources: {}
+
+# OpenVINO model cache directory. Points at the persistent ov_models mount so an
+# NPU/GPU first-compile is written once and reused across restarts (avoids slow
+# recompilation and startup-probe crash loops). Used when device is GPU/NPU.
+ovCacheDir: "/app/ov_models/ov_cache"
 
 modelPvc:
   enabled: true

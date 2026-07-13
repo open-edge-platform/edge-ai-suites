@@ -11,6 +11,10 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
 ## Installation
 
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
+
 1. Register the server's public key:
 
    ```bash
@@ -38,36 +42,75 @@ ROS is a set of open-source software libraries and tools that help you build rob
    sudo apt update
    ```
 
-5. Configure APT preferences to pin the librealsense2 version:
-
-   This step pins the RealSense SDK to version 2.55.1-0~realsense.12474, which has been validated with
-   the ROS 2 Humble integration and the tutorials in this documentation. This prevents
-   automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
-
-   ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
-   ```
-
-6. Install the RealSense drivers and libraries:
+5. Install the RealSense drivers and libraries:
 
    ```bash
    sudo apt install librealsense2-dkms
    sudo apt install librealsense2
    ```
 
-   > **Note:**
-   > The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
-
-7. (Optional) Install the ROS wrappers for RealSense depth cameras:
+6. (Optional) Install the ROS wrappers for RealSense depth cameras:
 
    ```bash
    sudo apt install ros-humble-realsense2-camera
    ```
 
-8. (Optional) Install other tools or packages of RealSense depth cameras:
+7. (Optional) Install other tools or packages of RealSense depth cameras:
 
     See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
     to install librealsense packages and more other tools from RealSense depth camera sources.
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+1. Register the server's public key:
+
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+   ```
+
+2. Ensure that apt HTTPS support is installed:
+
+   ```bash
+
+   sudo apt-get install apt-transport-https
+   ```
+
+3. Add the server to the list of repositories:
+
+   ```bash
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
+
+4. Update your apt repository caches after setting up the repositories:
+
+   ```bash
+
+   sudo apt update
+   ```
+
+5. Install the RealSense drivers and libraries:
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+6. (Optional) Install the ROS wrappers for RealSense depth cameras:
+
+   ```bash
+   sudo apt install ros-jazzy-realsense2-camera
+   ```
+
+7. (Optional) Install other tools or packages of RealSense depth cameras:
+
+    See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
+    to install librealsense packages and more other tools from RealSense depth camera sources.
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Troubleshooting
 

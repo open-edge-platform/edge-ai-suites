@@ -800,7 +800,7 @@ mkdir -p ~/.gazebo/models
 # Restore the Gazebo tools registry path if `gz` is missing commands
 export GZ_CONFIG_PATH="/opt/ros/jazzy/opt/gz_tools_vendor/share/gz:${GZ_CONFIG_PATH:-}"
 source /opt/ros/jazzy/setup.bash
-source ~/yy/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/install/setup.bash
+source ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/install/setup.bash
 
 # Try launching with verbose output
 ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \

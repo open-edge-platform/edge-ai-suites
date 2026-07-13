@@ -26,11 +26,14 @@ This is for legacy **.doc/.ppt/.xls** support, only install if such formats requ
 1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
 2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
 3. Add to PATH:
+
    ```powershell
    # Open PowerShell as Administrator:
    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
    ```
+
 4. Verify installation:
+
    ```python
    import shutil
    shutil.which("soffice") is not None
@@ -49,10 +52,11 @@ python .\start_services.py
 ```
 
 `start_services.py` will:
+
 1. Start ChromaDB
 2. Start Video Preprocess on port `8001`
-4. Start VLM on port `9900`
-5. Start the File Ingest & Retrieve server on port `9990`
+3. Start VLM on port `9900`
+4. Start the File Ingest & Retrieve server on port `9990`
 
 All settings (ports, credentials, paths) are read from `../config.yaml`.
 

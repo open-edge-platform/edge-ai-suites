@@ -1,5 +1,3 @@
-(camera_setup)=
-
 # Camera Setup
 
 RVC supports Intel® RealSense™ D4xx cameras, with many [Exemplary Use Cases](../use_cases.md) utilizing

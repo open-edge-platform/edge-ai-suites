@@ -22,6 +22,10 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     tls_ca_bundle: str = ""
     mqtt_host: str = "localhost"
     mqtt_port: int = 1883
+    mqtt_tls_enabled: bool = False
+    mqtt_ca_bundle: str = ""
+    mqtt_client_cert: str = ""
+    mqtt_client_key: str = ""
     # Broker address as seen by the Pipeline Server (used in the destination payload
     # so gvametapublish can connect). Defaults to the Pipeline Server's MQTT_HOST env var
     # value (container name on the DLStreamer Vision network). Set to "host.docker.internal" if the
@@ -45,3 +49,39 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     # in Nx. For example, -300 corrects for ~300 ms of inference latency.
     # Has no effect when sender_ntp_unix_timestamp_ns is present in the payload.
     metadata_timestamp_offset_ms: int = 0
+    # DLS pipeline name to be run. This is populated from config/config.yaml
+    pipeline_name: str = ""
+    # Fields to display in the Nx Witness device-agent settings panel.
+    # Each entry is a raw Nx settings item dict (type, name, caption, defaultValue, range, ...).
+    # If non-empty these replace any items already defined in nx_integration.json.
+    display_fields: list[dict] = Field(default_factory=list)
+
+    def nx_settings_fields(self) -> list[dict]:
+        """Return the Nx device-agent settings items for this app.
+
+        Builds the per-app fields shown in the Nx Witness camera settings panel.
+        Captions are derived from ``display_name`` so the bundled manifest stays
+        generic. If ``display_fields`` is set in config.yaml it fully overrides
+        these defaults, allowing app-specific fields to be added without code
+        changes. App-specific defaults can be customised by subclassing.
+        """
+        if self.display_fields:
+            return self.display_fields
+        return [
+            {
+                "type": "CheckBox",
+                "name": "pipelineEnabled",
+                "caption": f"Enable {self.display_name} pipeline",
+                "description": f"Start or stop the {self.display_name} pipeline for this camera",
+                "defaultValue": False,
+            },
+            {
+                "type": "ComboBox",
+                "name": "device",
+                "caption": "Device",
+                "description": "Inference device for the pipeline",
+                "defaultValue": "CPU",
+                "range": ["CPU", "GPU", "NPU"],
+            },
+        ]
+

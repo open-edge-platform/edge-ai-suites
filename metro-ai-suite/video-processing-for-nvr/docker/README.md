@@ -1,4 +1,4 @@
-# Build and run docker image
+# Build And Run Docker Image
 
 ## System requirements
 
@@ -6,21 +6,24 @@
 * Ubuntu 24.04
 
 **Software:**
-* VPP SDK
+* Video Processing Platform SDK
 
-## Build docker image  
-1. Build docker image for reference application `bash build_sample.sh`  
-Make sure docker is corrently installed and configured. 
+## Build Docker image
 
-## Download the yolov8n_with_preprocess.xml model  
-1. Download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/yolov8-optimization/yolov8-object-detection.ipynb)
+1. Build Docker image for reference application `bash build_sample.sh`
+Make sure Docker is correctly installed and configured.
 
-## Run docker container  
+## Download the yolov8n_with_preprocess.xml model
+
+1. Download and convert yolo model with [openvino notebook](https://github.com/openvinotoolkit/openvino_notebooks/blob/2026.0/notebooks/yolov8-optimization/yolov8-object-detection.ipynb)
+
+## Run Docker container
+
 1. Run `sudo init 3` switch to non-GUI mode
-2. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`  
+2. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
-## Run docker compose 
+## Run Docker Compose
 
 If you want to build the image.Using the provided script to build the image is highly recommended.
 
@@ -41,7 +44,7 @@ docker compose build
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
 
-If you want to stop the program, press Ctrl+C 
+If you want to stop the program, press Ctrl+C
 
 Upon successful execution, the following logs will be displayed:
 ```
@@ -92,8 +95,10 @@ vppsample-1 exited with code 0
 vppsample-1  | [2026-06-01 21:25:14.097] [thread 328] [info]: [decode.cpp:releaseFrame@Line1492] decode release frame
 ```
 
-## Uninstall docker image
-1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` remove all vppsample docker images
+## Uninstall Docker image
+
+1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` to remove all vppsample Docker images.
 
 ## Caution
+
 This container image is intended for demo purposes only and not intended for production use. To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile) which will require the image to be rebuilt.

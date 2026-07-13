@@ -6,7 +6,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north_h264.ts name=source ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=5/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=3 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "rtspsrc location=rtsp://{RTSP_STREAM_IP}:{RTSP_STREAM_PORT}/camera1 protocols=tcp latency=200 name=source ! rtph264depay ! h264parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=12/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -41,9 +41,9 @@
                                 "cameraid": {
                                     "type": "string"
                                 },
-                                "metadatagenpolicy" : {
+                                "metadatagenpolicy": {
                                     "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
+                                    "description": "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
                                 },
                                 "publish_frame": {
                                     "type": "boolean",
@@ -54,7 +54,7 @@
                     }
                 },
                 "payload": {
-                    "destination":{
+                    "destination": {
                         "frame": {
                             "type": "rtsp",
                             "path": "camera1"
@@ -76,7 +76,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east_h264.ts name=source ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=5/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=3 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "rtspsrc location=rtsp://{RTSP_STREAM_IP}:{RTSP_STREAM_PORT}/camera2 protocols=tcp latency=200 name=source ! rtph264depay ! h264parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=12/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -111,9 +111,9 @@
                                 "cameraid": {
                                     "type": "string"
                                 },
-                                "metadatagenpolicy" : {
+                                "metadatagenpolicy": {
                                     "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
+                                    "description": "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
                                 },
                                 "publish_frame": {
                                     "type": "boolean",
@@ -124,7 +124,7 @@
                     }
                 },
                 "payload": {
-                    "destination":{
+                    "destination": {
                         "frame": {
                             "type": "rtsp",
                             "path": "camera2"
@@ -146,7 +146,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south_h264.ts name=source ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=5/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=3 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "rtspsrc location=rtsp://{RTSP_STREAM_IP}:{RTSP_STREAM_PORT}/camera3 protocols=tcp latency=200 name=source ! rtph264depay ! h264parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=12/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -181,9 +181,9 @@
                                 "cameraid": {
                                     "type": "string"
                                 },
-                                "metadatagenpolicy" : {
+                                "metadatagenpolicy": {
                                     "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
+                                    "description": "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
                                 },
                                 "publish_frame": {
                                     "type": "boolean",
@@ -194,7 +194,7 @@
                     }
                 },
                 "payload": {
-                    "destination":{
+                    "destination": {
                         "frame": {
                             "type": "rtsp",
                             "path": "camera3"
@@ -216,7 +216,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west_h264.ts name=source ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=5/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=3 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "rtspsrc location=rtsp://{RTSP_STREAM_IP}:{RTSP_STREAM_PORT}/camera4 protocols=tcp latency=200 name=source ! rtph264depay ! h264parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=12/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! videoconvert ! video/x-raw,format=I420 ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -251,9 +251,9 @@
                                 "cameraid": {
                                     "type": "string"
                                 },
-                                "metadatagenpolicy" : {
+                                "metadatagenpolicy": {
                                     "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
+                                    "description": "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
                                 },
                                 "publish_frame": {
                                     "type": "boolean",
@@ -264,7 +264,7 @@
                     }
                 },
                 "payload": {
-                    "destination":{
+                    "destination": {
                         "frame": {
                             "type": "rtsp",
                             "path": "camera4"

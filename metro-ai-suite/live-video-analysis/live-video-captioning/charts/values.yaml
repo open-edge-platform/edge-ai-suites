@@ -65,7 +65,7 @@ global:
 
   modelDownload:
     serviceName: "model-download" # REQUIRED: e.g., model-download (Service name for model-download service which deployed previously using model-download chart)
-    port: 8000   # REQUIRED: e.g., 8200 or 8000 (use service port, not NodePort)
+    port: 8000 # REQUIRED: e.g., 8200 or 8000 (use service port, not NodePort)
 
   # ------- Models --------------------------------------------------------------
   # Single source of truth for which VLM models are downloaded and used.
@@ -74,17 +74,20 @@ global:
   #
   # Fields per entry:
   #   modelId     — HuggingFace repo ID passed to optimum-cli
-  #   outputName  — directory created under /models/ in the PVC; must match the
-  #                 captioner_model_name expected by the caption service
+  #               — output directory name is derived from the final segment of modelId
+  #                 and created under /ov_models/<device>/ in the PVC.
   #   weightFormat — "" (fp16 default), "int8", or "int4"
+  #   device      — target device(s) for conversion and per-device output folders.
+  #                 Accepts either a CSV string (e.g. "CPU,GPU") or a list
+  #                 (e.g. ["CPU", "GPU", "NPU"]). Defaults to "CPU".
+  #                 When device includes NPU, weightFormat is forced to "int4".
   #
   # Type: list of objects
   models:
     - modelId: "OpenGVLab/InternVL2-1B"
-      outputName: "InternVL2-1B"
       modelType: "vlm"
       weightFormat: ""
-
+      device: "CPU"
   # Detection models to download when the object-detection pipeline is enabled.
   # Each entry matches the model argument accepted by DL Streamer's
   # download_public_models.sh helper and is stored under:
@@ -93,7 +96,6 @@ global:
   # Type: list of strings
   detectionModels:
     - "yolov8s"
-
   # HuggingFace API token for gated models (e.g. google/gemma-3-4b-it); not needed for public models
   huggingface:
     apiToken: ""
@@ -105,28 +107,28 @@ global:
   # These values are used by the live-video-captioning-rag subchart.
   # LLM Model for RAG
   # Parameters:
-    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
-    # modelType: "llm",
-    # weightFormat: "int8", or "int4" or "fp16"
-    # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-    #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
+  # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
+  # modelType: "llm",
+  # weightFormat: "int8", or "int4" or "fp16"
+  # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
+  #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
   llmModel:
     modelId: "microsoft/Phi-3.5-mini-instruct"
     modelType: "llm"
     weightFormat: "int8"
     useGPU:
       enabled: false
-      key: ""  # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
-
-  # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
-  # Parameters:
+      key: "" # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
+    # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
+    # Parameters:
     # modelId: HuggingFace repo ID for the embedding model, e.g. "QwenText/qwen3-embedding-0.6b"
     # useGPU: set to true to enable GPU usage for the embedding model; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-  embeddingModel:  # Multimodal embedding model for RAG.
+  embeddingModel:
+    # Multimodal embedding model for RAG.
     modelId: "QwenText/qwen3-embedding-0.6b"
     useGPU:
       enabled: false
-      key: ""  # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
+      key: "" # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. SUBCHART OVERRIDES
@@ -146,7 +148,7 @@ dlstreamer-pipeline-server:
   fullnameOverride: "dlstreamer-pipeline-server"
 
   # Shared models PVC name. Leave empty to auto-derive from release name.
-  modelsPvcName: ""       # defaults to <release>-live-video-captioning-models if empty
+  modelsPvcName: "" # defaults to <release>-live-video-captioning-models if empty
 
 # ── mediamtx ─────────────────────────────────────────────────────────────────
 mediamtx:
@@ -167,20 +169,36 @@ video-caption-service:
   fullnameOverride: "video-caption-service"
 
   # Shared models PVC name. Leave empty to auto-derive from release name.
-  modelsPvcName: ""       # defaults to <release>-live-video-captioning-models
+  modelsPvcName: "" # defaults to <release>-live-video-captioning-models
 
-# ── live-metrics-service ─────────────────────────────────────────────────────
-live-metrics-service:
-  fullnameOverride: "live-metrics-service"
+# ── metrics-manager ──────────────────────────────────────────────────────────
+# Upstream metrics-manager chart (edge-ai-libraries) vendored under
+# ./subcharts/metrics-manager. It bundles Telegraf system telemetry with a
+# FastAPI REST surface and a Server-Sent Events stream consumed by the UI.
+metrics-manager:
+  # Keep the Kubernetes Service name fixed at "metrics-manager" regardless of
+  # release name. The UI/backend reach the SSE stream at <node>:9090 and the
+  # no_proxy list references this name.
+  fullnameOverride: "metrics-manager"
 
-# ── collector ────────────────────────────────────────────────────────────────
-collector:
-  fullnameOverride: "collector"
+  service:
+    type: ClusterIP
+    metricsPort: 9090
+    telegrafPort: 9273
+    # Bind the SSE/REST port (and Prometheus port) on the node so the browser
+    # dashboard can reach the metrics stream directly at <node-ip>:9090.
+    hostPorts:
+      metrics: 9090
+      telegraf: 9273
+      telegrafHttp: ""
 
-  # Host path on the node used to emit collector signal files (e.g. fps.txt).
-  # The DaemonSet mounts this host directory at /app/.collector-signals.
-  # Type: string
-  collectorSignalsHostPath: "/tmp/lvc/collector-signals"
+  # Hardware metrics collection needs privileged access and the host PID
+  # namespace (qmassa GPU/NPU monitoring). Defaults already enable these; kept
+  # explicit here for visibility.
+  pod:
+    hostPID: true
+  securityContext:
+    privileged: true
 
 # ── multimodal-embedding ───────────────────────────────────────────────────
 multimodal-embedding:

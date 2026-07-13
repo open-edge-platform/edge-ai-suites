@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="Marker_ID_1">
+    <static>false</static>
+    <link name="link">
+      <pose>0.0 0.0 0.01 0.0 0.0 0.0</pose>      
+      <collision name="collision">
+        <geometry>
+          <!-- Box or plane geometry is used -->
+        <box><size>0.045 0.045 0.045</size></box></geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>2.5</mu>
+	      <mu2>2.5</mu2>
+            </ode>   
+          </friction>
+          <contact>
+            <ode>
+	      <min_depth>0.001</min_depth>
+	      <max_vel>0.01</max_vel>
+	      <kp>100000</kp>
+	      <kd>10.0</kd>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <!-- Box or plane geometry is used -->
+        <box><size>0.045 0.045 0.045</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>1 1 1 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://marker_0/materials/textures/marker0.png</albedo_map>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+      <inertial>
+        <mass>0.05</mass>
+        <inertia>
+          <ixx>2.25e-5</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>2.25e-5</iyy>
+          <iyz>0.0</iyz>
+          <izz>2.25e-5</izz>
+        </inertia>
+      </inertial>
+    </link>
+  </model>
+</sdf>

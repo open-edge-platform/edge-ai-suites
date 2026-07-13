@@ -1,0 +1,39 @@
+---
+description: Smart-Classroom Cursor agent router — canonical instructions and workflow skills
+alwaysApply: true
+---
+
+# Smart Classroom AI Agent Guide
+
+## Project Documentation
+
+This project uses centralized agent instructions in [`copilot-instructions.md`](../../.github/copilot-instructions.md) for all AI coding assistants.
+
+## Available Automation Skills
+
+When the task touches setup, startup, health checks, file upload/ingestion,
+Q&A (RAG), or file management, discover and read the relevant `SKILL.md` under
+[`.github/skills/`](../../.github/skills/). Prefer
+[`skill-catalog.json`](../../.github/skills/skill-catalog.json) for routing, but
+do not assume a fixed list of skill files.
+
+Available skills:
+- `sc-setup` — One-time setup: install dependencies and configure system
+- `sc-up` — Start all services (backend, content search, frontend)
+- `sc-doctor` — Check health, debug backend connectivity
+- `sc-upload` — Upload and ingest files, poll until indexed
+- `sc-qa` — Ask questions via the RAG Q&A endpoint
+- `sc-files` — List, inspect, or delete indexed files; list tags
+
+## Development Workflow & Conventions
+
+- Prefer the repo's real interfaces:
+  - Flutter setup: `utils/flutter/setup.ps1`
+  - Flutter startup: `utils/flutter/start.ps1`
+  - Content Search API at `http://127.0.0.1:9011`
+  - Main backend API at `http://127.0.0.1:8000`
+- Run commands from the repository root unless specified
+- Run Flutter commands from `utils/flutter/`
+- Skills invoke PowerShell scripts rather than executing commands directly
+- Run commands in the real environment when possible and investigate failures
+  before giving up

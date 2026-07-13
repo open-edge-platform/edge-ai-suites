@@ -33,12 +33,21 @@ INSTALL_RT_TESTS=false
 DISABLE_TIMER_MIGRATION=false
 DISABLE_SWAP=false
 CSTATE_CPU_RANGE=""
+STOP_UNNECESSARY_SERVICES=false
+DRY_RUN=false
+
+STOP_SERVICES=(
+  fwupd-refresh.timer
+  fwupd.service
+  snapd.socket
+  snapd.service
+)
 
 print_usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME [options]
 
-Automates the setup flow in docs/embodied/get-started/installation/rt_linux.rst
+Automates the setup flow in docs/embodied/get-started/installation/rt_linux.md
 and linked prerequisites/docs references, including invoking os_setup_install.sh.
 
 Options:
@@ -46,13 +55,15 @@ Options:
   --os-set-date "YYYY-MM-DD HH:MM" Pass date setting to os_setup_install.sh
   --os-disable-auto-upgrades       Pass auto-upgrade disable to os_setup_install.sh
   --os-fix-raw-github-host         Pass DNS workaround to os_setup_install.sh
+  --dry-run                        Print commands without making system changes
 
   --kernel rt|generic              Kernel flavor to install (default: rt)
-  --apply-rt-grub-tuning           Apply grub sed tuning from rt_linux.rst and run update-grub
+  --apply-rt-grub-tuning           Apply grub sed tuning from rt_linux.md and run update-grub
 
   --disable-timer-migration        Set /proc/sys/kernel/timer_migration to 0
   --disable-swap                   Run swapoff -a
   --disable-cstate-cpus START-END  Disable cpuidle states (state1..max) for CPU range
+  --stop-unnecessary-services      Stop fwupd/snapd services from rt_linux.md
 
   --install-rt-tests               Install deps and build rt-tests-2.6 (cyclictest)
   -h, --help                       Show this help
@@ -62,6 +73,37 @@ Notes:
   - Reboot and selecting the target grub entry are manual steps.
   - CAT/DVFS MSR examples in the guide are platform-specific and not auto-applied.
 EOF
+}
+
+UBUNTU_VERSION=""
+UBUNTU_CODENAME=""
+
+detect_supported_ubuntu() {
+  if [[ ! -r /etc/os-release ]]; then
+    echo "Cannot read /etc/os-release" >&2
+    exit 1
+  fi
+
+  # shellcheck disable=SC1091
+  source /etc/os-release
+
+  if [[ "${ID:-}" != "ubuntu" ]]; then
+    echo "Unsupported OS: ${PRETTY_NAME:-unknown}. Only Ubuntu is supported." >&2
+    exit 1
+  fi
+
+  UBUNTU_VERSION="${VERSION_ID:-}"
+  UBUNTU_CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
+
+  case "$UBUNTU_VERSION" in
+    22.04|24.04)
+      log "Detected Ubuntu ${UBUNTU_VERSION} (${UBUNTU_CODENAME}) branch"
+      ;;
+    *)
+      echo "Unsupported Ubuntu version: ${UBUNTU_VERSION}. Supported versions: 22.04, 24.04." >&2
+      exit 1
+      ;;
+  esac
 }
 
 while [[ $# -gt 0 ]]; do
@@ -79,6 +121,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --os-fix-raw-github-host)
       OS_FIX_RAW_GITHUB_HOST=true
+      ;;
+    --dry-run)
+      DRY_RUN=true
       ;;
     --kernel)
       shift
@@ -101,6 +146,9 @@ while [[ $# -gt 0 ]]; do
       shift
       [[ $# -gt 0 ]] || { echo "Missing value for --disable-cstate-cpus" >&2; exit 1; }
       CSTATE_CPU_RANGE="$1"
+      ;;
+    --stop-unnecessary-services)
+      STOP_UNNECESSARY_SERVICES=true
       ;;
     -h|--help)
       print_usage
@@ -133,6 +181,11 @@ log_skipped_section() {
 }
 
 run_sudo() {
+  if [[ "$DRY_RUN" == true ]]; then
+    log "[dry-run] $(printf '%q ' "$@")"
+    return 0
+  fi
+
   if [[ "${EUID}" -eq 0 ]]; then
     "$@"
   else
@@ -147,9 +200,15 @@ require_cmd() {
   }
 }
 
-log "Selected flow: kernel=${KERNEL_FLAVOR}, run-os-setup=${RUN_OS_SETUP}, apply-rt-grub-tuning=${APPLY_RT_GRUB_TUNING}, disable-timer-migration=${DISABLE_TIMER_MIGRATION}, disable-swap=${DISABLE_SWAP}, disable-cstate-cpus=${CSTATE_CPU_RANGE:-none}, install-rt-tests=${INSTALL_RT_TESTS}"
+detect_supported_ubuntu
 
-# Log sections from rt_linux.rst that are intentionally skipped in this run.
+if [[ "$DRY_RUN" == true ]]; then
+  log "Dry-run mode enabled: no changes will be made"
+fi
+
+log "Selected flow: ubuntu=${UBUNTU_VERSION}, kernel=${KERNEL_FLAVOR}, run-os-setup=${RUN_OS_SETUP}, apply-rt-grub-tuning=${APPLY_RT_GRUB_TUNING}, disable-timer-migration=${DISABLE_TIMER_MIGRATION}, disable-swap=${DISABLE_SWAP}, disable-cstate-cpus=${CSTATE_CPU_RANGE:-none}, stop-unnecessary-services=${STOP_UNNECESSARY_SERVICES}, install-rt-tests=${INSTALL_RT_TESTS}"
+
+# Log sections from rt_linux.md that are intentionally skipped in this run.
 [[ "$RUN_OS_SETUP" == false ]] && log_skipped_section "Prerequisites OS setup script invocation"
 [[ "$KERNEL_FLAVOR" != "rt" ]] && log_skipped_section "Install the real-time Linux kernel (linux-intel-rt-experimental)"
 [[ "$KERNEL_FLAVOR" != "generic" ]] && log_skipped_section "Install generic kernel alternative (linux-intel-experimental note)"
@@ -157,6 +216,7 @@ log "Selected flow: kernel=${KERNEL_FLAVOR}, run-os-setup=${RUN_OS_SETUP}, apply
 [[ "$DISABLE_TIMER_MIGRATION" == false ]] && log_skipped_section "Timer Migration Disable runtime tuning"
 [[ "$DISABLE_SWAP" == false ]] && log_skipped_section "Disable Swap runtime tuning"
 [[ -z "$CSTATE_CPU_RANGE" ]] && log_skipped_section "Per-core C-State Disable runtime tuning"
+[[ "$STOP_UNNECESSARY_SERVICES" == false ]] && log_skipped_section "Stop Unnecessary Services runtime tuning"
 [[ "$INSTALL_RT_TESTS" == false ]] && log_skipped_section "Verify Benchmark Performance helper (rt-tests download/build)"
 log_skipped_section "Select [Experimental] ECI Ubuntu boot entry after reboot (manual)"
 log_skipped_section "Use Cache Allocation Technology example (manual/platform specific)"
@@ -170,6 +230,7 @@ if [[ "$RUN_OS_SETUP" == true ]]; then
   [[ -n "$OS_SET_DATE" ]] && os_args+=(--set-date "$OS_SET_DATE")
   [[ "$OS_DISABLE_AUTO_UPGRADES" == true ]] && os_args+=(--disable-auto-upgrades)
   [[ "$OS_FIX_RAW_GITHUB_HOST" == true ]] && os_args+=(--fix-raw-github-host)
+  [[ "$DRY_RUN" == true ]] && os_args+=(--dry-run)
   "$OS_SETUP_SCRIPT" "${os_args[@]}"
 else
   log "Skipping OS setup script (--skip-os-setup)"
@@ -187,7 +248,7 @@ if [[ -d /lib/firmware/i915/experimental ]]; then
     log "Detected expected i915 experimental firmware files"
   else
     log "Warning: i915 experimental firmware files not fully found in /lib/firmware/i915/experimental/"
-    log "If needed, install the firmware version documented in rt_linux.rst"
+    log "If needed, install the firmware version documented in rt_linux.md"
   fi
 else
   log "Warning: /lib/firmware/i915/experimental/ not found"
@@ -204,10 +265,24 @@ fi
 if [[ "$APPLY_RT_GRUB_TUNING" == true ]]; then
   GRUB_FILE="/etc/grub.d/10_eci_experimental"
   if [[ -f "$GRUB_FILE" ]]; then
-    log "Applying rt_linux.rst GRUB tuning to ${GRUB_FILE}"
+    log "Applying rt_linux.md GRUB tuning to ${GRUB_FILE}"
     run_sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' "$GRUB_FILE"
-    run_sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' "$GRUB_FILE"
-    run_sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' "$GRUB_FILE"
+
+    if [[ "$UBUNTU_VERSION" == "22.04" ]]; then
+      run_sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' "$GRUB_FILE"
+      run_sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' "$GRUB_FILE"
+      run_sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' "$GRUB_FILE"
+      run_sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' "$GRUB_FILE"
+    else
+      run_sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' "$GRUB_FILE"
+      run_sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' "$GRUB_FILE"
+      run_sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' "$GRUB_FILE"
+      run_sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' "$GRUB_FILE"
+      run_sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' "$GRUB_FILE"
+      run_sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' "$GRUB_FILE"
+      run_sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' "$GRUB_FILE"
+    fi
+
     run_sudo update-grub
   else
     log "Warning: ${GRUB_FILE} not found; skipping GRUB tuning"
@@ -222,6 +297,12 @@ fi
 if [[ "$DISABLE_SWAP" == true ]]; then
   log "Disabling swap"
   run_sudo swapoff -a
+fi
+
+if [[ "$STOP_UNNECESSARY_SERVICES" == true ]]; then
+  require_cmd systemctl
+  log "Stopping unnecessary services: ${STOP_SERVICES[*]}"
+  run_sudo systemctl stop "${STOP_SERVICES[@]}"
 fi
 
 if [[ -n "$CSTATE_CPU_RANGE" ]]; then
@@ -258,7 +339,7 @@ fi
 
 if [[ "$INSTALL_RT_TESTS" == true ]]; then
   log "Installing cyclictest build dependency"
-  run_sudo apt install -y libnuma-dev
+  run_sudo apt install -y libnuma-dev build-essential
 
   work_dir="${PWD}/rt-tests-2.6"
   tarball="${PWD}/rt-tests-2.6.tar.gz"
@@ -267,6 +348,7 @@ if [[ "$INSTALL_RT_TESTS" == true ]]; then
     require_cmd wget
     require_cmd tar
     require_cmd make
+    require_cmd gcc
     wget -O "$tarball" https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
     tar zxvf "$tarball"
     (cd "$work_dir" && make)

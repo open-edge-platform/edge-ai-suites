@@ -8,13 +8,15 @@ export type StartResponse = {
 };
 export type StopResponse = { status: string; message: string };
 
-// Derive the backend origin from the browser host so prebuilt UI images
-// still call the machine that actually served the page.
-const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-const API_PORT = (import.meta as any).env?.VITE_API_PORT || '8001';
-const BASE_URL = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${API_HOST}:${API_PORT}`
-  : `http://${API_HOST}:${API_PORT}`;
+// Default: call the aggregator through the UI nginx reverse proxy
+// (`/api/...`). Keeps the browser on a single origin so the UI works
+// behind SSH tunnels, ingress, and reverse proxies without exposing
+// port 8001 externally.
+//
+// Override with VITE_API_BASE_URL at build time for deployments that
+// need to talk to the aggregator directly (e.g. an absolute URL like
+// `http://10.0.0.5:8001`).
+const BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined) || '/api';
 const AGGREGATOR_URL = BASE_URL;
 // const METRICS_URL = import.meta.env.VITE_METRICS_BASE_URL || `http://${API_HOST}:${METRICS_PORT}`;
 
@@ -187,8 +189,9 @@ export async function getWorkloadDevices(): Promise<{
 export function getEventsUrl(workloads: WorkloadType[]): string {
   const params = workloads.map(w => `workload=${w}`).join('&');
   return `${BASE_URL}/events?${params}`;
-  
-  // Example: http://<HOST_IP>:8001/events?workload=rppg&workload=ai-ecg&workload=mdpnp&workload=3d-pose
+
+  // Default resolves to `/api/events?...` (proxied by nginx to the aggregator).
+  // Override with VITE_API_BASE_URL to call the aggregator directly.
 }
 
 export const api = {

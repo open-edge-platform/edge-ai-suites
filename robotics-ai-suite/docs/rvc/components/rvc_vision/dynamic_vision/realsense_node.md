@@ -1,5 +1,3 @@
-(realsense_node)=
-
 # Realsense node
 
 The vision launcher automatically spawns all the component of the container, and it accept the following parameters

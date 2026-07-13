@@ -1,6 +1,6 @@
 # Get Started
 
-Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics. This guide starts the **Live Video Search** stack (Smart NVR + VSS Search) using Docker Compose.
+Live Video Search is a Metro AI Suite sample that adapts the Visual Search and Summarization (VSS) pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics. This guide starts the **Live Video Search** stack (Smart NVR + VSS Search) using Docker Compose.
 
 ## Prerequisites
 
@@ -122,22 +122,27 @@ You can customize the application behavior by setting the following optional env
     IoU(A, B) = \frac{|A \cap B|}{|A \cup B|}
     $$
 
-3. To use GPU acceleration for embedding generation, set the following variable before running the setup script:
+3. To use accelerator offload for embedding generation, you can use either the GPU shortcut or explicit device selection:
 
     ```bash
-    # Enable GPU embeddings
+    # Mode-aware GPU shortcut for embedding:
+    #   EMBEDDING_PROCESSING_MODE=sdk → DataPrep embedding on GPU
+    #   EMBEDDING_PROCESSING_MODE=api → MME embedding on GPU
     export ENABLE_EMBEDDING_GPU=true
     ```
 
-4. To explicitly select devices for DataPrep and the Multimodal Embedding service, set:
+4. To explicitly select devices for each component, set any of the following (each defaults to `CPU`):
 
     ```bash
-    # CPU or GPU
-    export VDMS_DATAPREP_DEVICE=GPU
-    export EMBEDDING_DEVICE=GPU
+    # CPU / GPU / NPU
+    export DATAPREP_EMBEDDING_DEVICE=NPU   # embedding in vdms-dataprep (sdk mode)
+    export DATAPREP_DETECTION_DEVICE=NPU   # YOLOX object detection in vdms-dataprep
+    export MME_EMBEDDING_DEVICE=NPU        # embedding in multimodal-embedding-serving (api mode)
     ```
 
-    If unset, both default to CPU. Setting `ENABLE_EMBEDDING_GPU=true` forces both to GPU.
+    Each component is configured independently — there is no "baseline" device. Any component left unset defaults to `CPU`.
+
+    > **NPU note:** Not all embedding backends and model combinations support NPU. Check supported model/device combinations at the [OpenVINO Supported Models](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html) page before selecting `NPU`.
 
 ## Configure Cameras
 
@@ -287,7 +292,8 @@ For RTSP test mode, start again with:
 - `source setup.sh --start-rtsp-test`
 
 ### Accuracy of search results
-The accuracy of search results vary based on multiple factors as listed in the VSS troubleshooting guide. The same considerations hold true for Live Video Search too as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised that the user not use the RTSP test mode to check accuracy of the search results. Live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search used exclusively to note the performance on given hardware platform.
+
+The accuracy of search results vary based on multiple factors as listed in the [VSS troubleshooting guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/troubleshooting.html#accuracy-of-search-results). The same considerations hold true for Live Video Search, as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised not to use the RTSP test mode to check the accuracy of the search results; live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search is used exclusively to note the performance on a given hardware platform.
 
 ## References
 

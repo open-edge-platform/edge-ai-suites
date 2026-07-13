@@ -1,5 +1,3 @@
-(rvc_visualization)=
-
 # RVC Visualization
 
 ## Rviz2 Plugin

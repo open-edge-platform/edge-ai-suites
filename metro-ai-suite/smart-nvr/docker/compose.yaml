@@ -23,7 +23,7 @@ services:
         tmpfs:
           size: 1000000000 # 1GB cache
       - ../resources/videos:/videos # Add volume for video files
-      - ../frigate-clips:/media/frigate/recordings # Shared volume for Frigate output clips
+      - ../frigate-clips:/media/frigate/recordings
     depends_on:
        mqtt-broker:
          condition: service_healthy
@@ -56,10 +56,9 @@ services:
       start_period: 20s
     volumes:
       - ../src:/app
-      - ../frigate-clips:/media/frigate/recordings # Shared volume for watcher to access Frigate recordings
+      - ../frigate-clips:/media/frigate/recordings
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs:/mosquitto/secrets:ro
     depends_on:
       frigate:
         condition: service_healthy
@@ -79,6 +78,8 @@ services:
       MQTT_PASSWORD: ${MQTT_PASSWORD} 
       HOST_IP: ${HOST_IP}
       NVR_SCENESCAPE: ${NVR_SCENESCAPE}
+      SCENESCAPE_MQTT_BROKER: ${SCENESCAPE_MQTT_BROKER:-${HOST_IP}}
+      SCENESCAPE_MQTT_PORT: ${SCENESCAPE_MQTT_PORT:-1883}
 
   nvr-event-router-ui:
     container_name: nvr-event-router-ui
@@ -114,7 +115,6 @@ services:
       - mosquitto_log:/mosquitto/log
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ../edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs:/mosquitto/secrets:ro
     environment:
       MQTT_USER: ${MQTT_USER} 
       MQTT_PASSWORD: ${MQTT_PASSWORD} 

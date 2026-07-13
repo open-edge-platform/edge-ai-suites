@@ -41,13 +41,13 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/hmi-augmented-worker/docs/                     @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/hmi-augmented-worker/README.md                 @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/            @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/            @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux @open-edge-platform/open-edge-platform-docs-write
 
-/manufacturing-ai-suite/industrial-edge-insights-time-series/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
-/manufacturing-ai-suite/industrial-edge-insights-time-series/docs/      @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe  @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md  @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-time-series/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux
+/manufacturing-ai-suite/industrial-edge-insights-time-series/docs/      @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md  @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @tanvidhola-ux @open-edge-platform/open-edge-platform-docs-write
 
 /manufacturing-ai-suite/industrial-edge-insights-vision/                @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel
 /manufacturing-ai-suite/industrial-edge-insights-vision/docs/           @ajagadi1 @sugnanprabhu @rrajore @sajeevrajput @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
@@ -124,12 +124,17 @@ README.md          @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/docs/       @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/visual-search-question-and-answering/README.md   @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
+/metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/vms-adapter-plugin/README.md                     @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write
+
 # ============================================================================
 # Retail-AI Suite
 # ============================================================================
 
 # Retail-ai patterns - to be defined when content is added
 
+/retail-ai-suite/README.md              @xwu2intel @avinash-palleti @open-edge-platform/open-edge-platform-docs-write
 
 # ============================================================================
 # Robotics-AI Suite

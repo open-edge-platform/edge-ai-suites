@@ -1,5 +1,3 @@
-(model-depthanythingv2)=
-
 # Monocular Depth Estimation: Depth Anything V2
 
 Monocular depth estimation is the process of predicting depth information from a single image, which is a challenging

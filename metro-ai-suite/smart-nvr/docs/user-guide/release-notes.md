@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Smart NVR
 
 - [Version 2026.1.0](#version-202610)
 - [Version 1.2.4](#version-124)
@@ -25,7 +25,7 @@
 
 **Known Issues**
 
-- Intel® SceneScape integration is currently not supported when deploying with Helm charts.
+- Scenescape integration is currently not supported when deploying with Helm charts.
 - Smart NVR will not work on either Standalone or Developer Node versions of
   Edge Microvisor Toolkit due to its incompatibility with Frigate.
 - The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit
@@ -67,7 +67,7 @@
 
 - Continuous Video Streaming: Introduced support for uninterrupted video streaming based on user-selected cameras.
 - Helm Chart Support: Deployment via Helm charts is now supported, simplifying installation and configuration.
-- Rules Engine Integration: Enabled communication between the rules engine and Intel® SceneScape, demonstrated using the Smart Intersection RI integration.
+- Rules Engine Integration: Enabled communication between the rules engine and Scenescape, demonstrated using the Smart Intersection RI integration.
 - Unit Testing: Added comprehensive unit test cases to improve reliability and maintainability.
 
 ### Version 1.2.0

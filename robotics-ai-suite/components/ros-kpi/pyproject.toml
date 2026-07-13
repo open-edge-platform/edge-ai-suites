@@ -5,7 +5,7 @@
 # Intel-operated generative artificial intelligence solutions.
 [project]
 name = "ros2-kpi"
-version = "0.2.2"
+version = "0.2.3"
 description = "ROS2 Monitoring Stack for KPI Analysis"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,7 +15,6 @@ dependencies = [
     "psutil>=5.9.0",
     "prometheus-client>=0.19.0",
     "pyyaml>=6.0.3",
-    "pillow>=12.2.0",
     "jsonschema>=4.0.0",
     "openpyxl>=3.1.0",
 ]
@@ -51,6 +50,40 @@ dev = [
     "black>=26.3.1",
     "ruff>=0.1.0",
     "autopep8>=2.3.1",
+]
+# Intel-optimized numeric libraries.
+#
+# Install with:  uv sync --group intel
+#
+# mkl         — Intel MKL runtime (BLAS/LAPACK/FFT).  Packages linked against
+#               MKL (e.g. numpy from Intel Distribution for Python, scipy built
+#               with MKL) will automatically use it when present.  Stock PyPI
+#               numpy ships with bundled OpenBLAS and is unaffected; for full
+#               MKL-backed numpy use Intel Distribution for Python (conda).
+# mkl-service — Python bindings to control MKL at runtime: set thread count,
+#               CPU affinity, and threading layer.  _accel.py calls
+#               mkl.set_num_threads() automatically on import.
+# numexpr     — Fast multi-threaded evaluation of numpy array expressions using
+#               Intel VML (Vector Math Library) for transcendentals (exp, log,
+#               sin, …) and TBB for parallelism.  Exposed as ``ne`` by _accel.py.
+# dpnp        — Data Parallel NumPy: numpy-compatible API that dispatches to
+#               oneAPI SYCL kernels on Intel CPUs/iGPUs via level-zero.
+#               Activated automatically by src/_accel.py when present;
+#               all source files import ``np`` from _accel instead of numpy
+#               directly, so no further code changes are required.
+#               Requires the Intel GPU driver stack (level-zero + intel-opencl-icd)
+#               which is present on all target systems with Intel integrated GPUs.
+#
+# pillow-simd — AVX2-accelerated drop-in for Pillow.  Both packages provide
+#               the PIL namespace and cannot coexist; pillow is not listed in
+#               base dependencies because matplotlib already installs it as a
+#               transitive dependency.  pillow-simd replaces that copy.
+intel = [
+    "mkl>=2024.0",
+    "mkl-service>=2.4.2",
+    "numexpr>=2.10.0",
+    "dpnp>=0.16.0",
+    "pillow-simd>=9.5.0",
 ]
 
 [project.scripts]

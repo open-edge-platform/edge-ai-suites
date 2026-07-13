@@ -15,7 +15,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
-> Note: DL Streamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+> Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
 **Run your shell with admin privileges before starting the application**
 
@@ -331,3 +331,10 @@ To uninstall the application, follow these steps:
 
 :::
 hide_directive-->
+
+## Learn More
+
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
+- [Get Started](./get-started.md): Quick installation and setup instructions.
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.

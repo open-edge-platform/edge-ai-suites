@@ -1,5 +1,3 @@
-(grasp_interface_plugin)=
-
 # Grasp Interface Plugin
 
 The messages from the vision component are subscribed by the

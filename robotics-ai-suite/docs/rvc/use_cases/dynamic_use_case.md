@@ -1,5 +1,3 @@
-(dynamic_use_case)=
-
 # Dynamic Vision Use Case
 
 This exemplary use case shows how the robot actively tracks a group of objects
@@ -30,6 +28,7 @@ designated destination.
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 :maxdepth: 1
 
 dynamic_use_case/system_config

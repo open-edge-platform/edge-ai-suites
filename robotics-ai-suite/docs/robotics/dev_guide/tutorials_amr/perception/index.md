@@ -11,6 +11,6 @@ realsense-ros2-sample-application
 pointcloud-groundfloor-segmentation
 orb-extractor/index
 openvino/index.md
-
+gmsl/index.md
 :::
 hide_directive-->

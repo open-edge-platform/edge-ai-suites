@@ -6,11 +6,10 @@ by running inference workflows across multiple AI models on video feeds from
 visual monitoring systems located on-site, all operating efficiently on a single
 industrial PC.
 
-[Pallet Defect Detection](./pallet-defect-detection/index.md), [PCB Anomaly Detection](./pcb-anomaly-detection/index.md), [Weld Porosity](./weld-porosity/index.md) and [Worker Safety Gear Detection](./worker-safety-gear-detection/index.md) seamlessly combine multiple microservices to provide real-time video analysis
+[Pallet Defect Detection](./pallet-defect-detection/index.md) and [PCB Anomaly Detection](./pcb-anomaly-detection/index.md) seamlessly combine multiple microservices to provide real-time video analysis
 enhancing quality control and compliance of manufacturing processes. Using AI-driven
-real-time analytics, edge devices can detect manufacturing defects, safety risks and
-worker compliance issues, that could impact quality, efficiency and safety of
-manufacturing operations.
+real-time analytics, edge devices can detect manufacturing defects and anomalies
+that could impact quality, efficiency and safety of manufacturing operations.
 
 <!--hide_directive
 ::::{grid} 1 2 3 4
@@ -26,20 +25,6 @@ Real-time visual monitoring of pallet condition.
 :link: ./pcb-anomaly-detection/index.html
 
 Real-time visual detection of anomalies in printed circuit boards.
-:::
-
-:::{grid-item-card} Weld Porosity
-:class-card: homepage-card-container-big
-:link: ./weld-porosity/index.html
-
-Real-time visual detection of welding defects.
-:::
-
-:::{grid-item-card} Worker Safety Gear Detection
-:class-card: homepage-card-container-big
-:link: ./worker-safety-gear-detection/index.html
-
-Real-time visual monitoring of worker safety gear.
 :::
 ::::
 hide_directive-->
@@ -67,8 +52,6 @@ hide_directive-->
 
 ./pallet-defect-detection/index.md
 ./pcb-anomaly-detection/index.md
-./weld-porosity/index.md
-./worker-safety-gear-detection/index.md
 ./win-vision-ai/index.md
 
 :::

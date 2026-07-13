@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 param(
     [switch]$Help,
-    [switch]$NoElevate  
+    [switch]$NoElevate,
+    [switch]$Silent
 )
 
 # ============================================================================
@@ -25,6 +26,7 @@ if (-not $NoElevate) {
         
         $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
         if ($Help) { $argList += " -Help" }
+        if ($Silent) { $argList += " -Silent" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -43,11 +45,12 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Setup Script
 
-Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate]
+Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent]
 
 Options:
     -Help       Show this help message
     -NoElevate  Skip auto-elevation to Administrator (Windows)
+    -Silent     Unattended mode - auto-install dependencies, no prompts
 
 System Requirements:
   - OS: Windows 11
@@ -60,7 +63,7 @@ System Requirements:
 
 Application Dependencies:
   - FFmpeg: Required for audio processing
-  - DL Streamer: Required for video pipelines (v2026.0.0 verified)
+  - DL Streamer: Required for video pipelines (v2026.1.0 verified)
 
 Proxy Configuration:
   If behind a corporate firewall, the script will prompt for proxy settings.
@@ -112,7 +115,7 @@ if (Test-Path $proxyConfigFile) {
     $script:httpProxy = $proxyConfig.httpProxy
     $script:httpsProxy = $proxyConfig.httpsProxy
     $script:noProxy = $proxyConfig.noProxy
-    
+
     Write-Host ""
     Write-Host "  Saved proxy settings found:" -ForegroundColor Cyan
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
@@ -120,12 +123,17 @@ if (Test-Path $proxyConfigFile) {
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
     if (-not $script:httpProxy -and -not $script:httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
     Write-Host ""
-    
-    Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-    Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-    Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
-    Write-Host ""
-    $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
+
+    if ($Silent) {
+        Write-Host "  Silent mode: using saved proxy settings" -ForegroundColor Gray
+        $changeProxy = "N"
+    } else {
+        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
+    }
     
     if ($changeProxy -match "^[Yy]") {
         Write-Host ""
@@ -159,11 +167,17 @@ if (Test-Path $proxyConfigFile) {
     Write-Host ""
     Write-Host "  No proxy configuration found." -ForegroundColor Gray
     Write-Host ""
-    Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
-    Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
-    Write-Host ""
-    $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
-    
+
+    if ($Silent) {
+        Write-Host "  Silent mode: assuming no proxy (direct connection)" -ForegroundColor Gray
+        $configureProxy = "N"
+    } else {
+        Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
+        Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
+    }
+
     if ($configureProxy -match "^[Yy]") {
         Write-Host ""
         Write-Host "Enter proxy settings:" -ForegroundColor Yellow
@@ -263,14 +277,72 @@ Write-Host "[1] CHECK SYSTEM REQUIREMENTS" -ForegroundColor Green
 Write-Host "------------------------------" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "System Requirements:" -ForegroundColor Yellow
-Write-Host "  OS: Windows 11" -ForegroundColor Gray
-Write-Host "  Processor: Intel Core Ultra Series 1, 2, or 3 (with iGPU)" -ForegroundColor Gray
-Write-Host "  Memory: 32 GB RAM (minimum)" -ForegroundColor Gray
-Write-Host "  Storage: 50 GB free (for models and logs)" -ForegroundColor Gray
-Write-Host "  GPU: Intel iGPU (Core Ultra, Arc) for summarization" -ForegroundColor Gray
-Write-Host "  NPU: Intel NPU (Core Ultra) for Video pipelines" -ForegroundColor Gray
-Write-Host "  NPU Driver: https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor Cyan
+$systemRequirementsDocPath = Join-Path $PSScriptRoot "docs\user-guide\get-started\system-requirements.md"
+$systemRequirementsDocUrl = "https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements"
+
+function Show-SystemRequirementsFromDoc {
+    param(
+        [string]$DocPath,
+        [string]$DocUrl,
+        [string]$SectionHeader = "Software and Hardware Requirements"
+    )
+
+    Write-Host "System Requirements:" -ForegroundColor Yellow
+
+    if (-not (Test-Path $DocPath)) {
+        return
+    }
+
+    $docLines = Get-Content -Path $DocPath -Encoding UTF8
+    $sectionStart = -1
+    for ($i = 0; $i -lt $docLines.Count; $i++) {
+        if ($docLines[$i] -match "^##\s+$([regex]::Escape($SectionHeader))\s*$") {
+            $sectionStart = $i
+            break
+        }
+    }
+
+    if ($sectionStart -eq -1) {
+        return
+    }
+
+    $sectionEnd = $docLines.Count
+    for ($j = $sectionStart + 1; $j -lt $docLines.Count; $j++) {
+        if ($docLines[$j] -match "^##\s+") {
+            $sectionEnd = $j
+            break
+        }
+    }
+
+    $sectionLines = $docLines[($sectionStart + 1)..($sectionEnd - 1)]
+    foreach ($line in $sectionLines) {
+        if ($line -match "^\s*-\s+") {
+            $displayLine = $line.Trim()
+            $displayLine = $displayLine -replace "^-\s+", "  "
+            $displayLine = $displayLine -replace "\*\*", ""
+            $displayLine = $displayLine -replace "\[([^\]]+)\]\(([^\)]+)\)", '$1 ($2)'
+            Write-Host $displayLine -ForegroundColor Gray
+        }
+    }
+
+    Write-Host ""
+}
+
+Show-SystemRequirementsFromDoc -DocPath $systemRequirementsDocPath -DocUrl $systemRequirementsDocUrl
+Write-Host "  Source:" -ForegroundColor Yellow
+Write-Host "  $systemRequirementsDocUrl" -ForegroundColor Cyan
+Write-Host ""
+if ($Silent) {
+    Write-Host "Silent mode: proceeding with setup automatically..." -ForegroundColor Gray
+} else {
+    Write-Host "Please review the system requirements above." -ForegroundColor Yellow
+    $proceedChecks = Read-Host "Would you like to proceed with the setup? (Y/N)"
+    if ($proceedChecks -notmatch "^[Yy]") {
+        Write-Host ""
+        Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+        exit 0
+    }
+}
 Write-Host ""
 
 $checksFailed = $false
@@ -367,19 +439,46 @@ try {
     
     foreach ($gpu in $gpuList) {
         $gpuNames += $gpu.Name
-        if ($gpu.Name -match "Intel.*(Arc|Iris|UHD|Graphics)") {
+        if ($gpu.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)") {
             $intelGpuFound = $true
         }
     }
     
     if ($intelGpuFound) {
-        $intelGpu = ($gpuList | Where-Object { $_.Name -match "Intel" } | Select-Object -First 1).Name
-        Write-Host "  [OK] $intelGpu" -ForegroundColor Green
+        $intelGpuObj = $gpuList | Where-Object { $_.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)" } | Select-Object -First 1
+        Write-Host "  [OK] $($intelGpuObj.Name)" -ForegroundColor Green
+
+        # Driver version check
+        $installedVersion = $intelGpuObj.DriverVersion
+        if ($installedVersion) {
+            $majorVersion = [int]($installedVersion.Split('.')[0])
+
+            # Latest known driver for supported GPUs (Arc / Core Ultra use the 32.x branch)
+            $latestVersionMap = @{
+                32 = "32.0.101.8826"   # Arc / Iris Xe / Core Ultra Series 1, 2, 3
+            }
+
+            Write-Host "  Driver version: $installedVersion" -ForegroundColor Gray
+
+            if ($latestVersionMap.ContainsKey($majorVersion)) {
+                $latestVersion = $latestVersionMap[$majorVersion]
+
+                if ([version]$installedVersion -ge [version]$latestVersion) {
+                    Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
+                } else {
+                    Write-Host "  [WARN] Driver is outdated - latest is $latestVersion" -ForegroundColor Yellow
+                    Write-Host "         Please Download and install the latest version (https://www.intel.com/content/www/us/en/search.html)" -ForegroundColor Cyan
+                    $warnings += "Intel GPU driver is outdated (installed: $installedVersion, latest: $latestVersion)"
+                }
+            } else {
+                Write-Host "  [INFO] Unknown driver family (v$majorVersion) - verify manually at https://www.intel.com/content/www/us/en/search.html" -ForegroundColor DarkYellow
+            }
+        }
     } else {
-        Write-Host "  [WARN] Intel GPU not detected" -ForegroundColor Yellow
+        Write-Host "  [WARN] Supported Intel GPU not detected" -ForegroundColor Yellow
         Write-Host "         Found: $($gpuNames -join ', ')" -ForegroundColor DarkYellow
-        Write-Host "         Intel iGPU (Core Ultra, Arc) recommended for summarization" -ForegroundColor DarkYellow
-        $warnings += "Intel GPU recommended for summarization acceleration"
+        Write-Host "         Required: Intel iGPU (Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration" -ForegroundColor DarkYellow
+        $warnings += "Intel iGPU (Core Ultra Series 1, Arc GPU, or higher) required for summarization acceleration"
     }
 } catch {
     Write-Host "  [WARN] Could not detect GPU" -ForegroundColor Yellow
@@ -517,32 +616,121 @@ try {
     }
     
     if ($npuDevices) {
-        $npuName = ($npuDevices | Select-Object -First 1).FriendlyName
-        $npuStatus = ($npuDevices | Select-Object -First 1).Status
+        $npuDevice = $npuDevices | Select-Object -First 1
+        $npuName = $npuDevice.FriendlyName
+        $npuStatus = $npuDevice.Status
+        
         if ($npuStatus -eq "OK") {
             Write-Host "  [OK] $npuName" -ForegroundColor Green
+            
+            # Try to get driver version information from registry and WMI
+            $npuDriverVersion = $null
+            try {
+                $instanceId = $npuDevice.InstanceId
+                
+                # Method 1: Check device registry for DriverVersion
+                $regPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$instanceId"
+                if (Test-Path $regPath) {
+                    $deviceProps = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+                    
+                    # Try to get from Device Parameters
+                    $deviceParamsPath = "$regPath\Device Parameters"
+                    if (Test-Path $deviceParamsPath) {
+                        $deviceParams = Get-ItemProperty -Path $deviceParamsPath -ErrorAction SilentlyContinue
+                        if ($deviceParams -and $deviceParams.DriverVersion) {
+                            $npuDriverVersion = $deviceParams.DriverVersion
+                        }
+                    }
+                    
+                    # Fallback: Check direct properties
+                    if (-not $npuDriverVersion -and $deviceProps.DriverVersion) {
+                        $npuDriverVersion = $deviceProps.DriverVersion
+                    }
+                }
+                
+                # Method 2: Use WMI to find driver by device name
+                if (-not $npuDriverVersion) {
+                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue | 
+                                    Where-Object { $_.DeviceName -match "Intel.*(NPU|Neural|AI Boost|VPU)" }
+                    
+                    if ($signedDrivers) {
+                        $driver = $signedDrivers | Select-Object -First 1
+                        if ($driver.DriverVersion) {
+                            $npuDriverVersion = $driver.DriverVersion
+                        }
+                    }
+                }
+                
+                if ($npuDriverVersion) {
+                    Write-Host "  Driver version: $npuDriverVersion" -ForegroundColor Gray
+                    
+                    # Define known latest versions for NPU drivers
+                    $latestVersionMap = @{
+                        "32" = "32.0.100.4778"   # Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)
+                    }
+                    
+                    # Parse version and compare
+                    $installedMajor = [int]($npuDriverVersion.Split('.')[0])
+                    
+                    if ($latestVersionMap.ContainsKey($installedMajor.ToString())) {
+                        $latestVersion = $latestVersionMap[$installedMajor.ToString()]
+                        
+                        try {
+                            $installedVersion = [version]$npuDriverVersion
+                            $latestVersionObj = [version]$latestVersion
+                            
+                            if ($installedVersion -ge $latestVersionObj) {
+                                Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
+                            } else {
+                                Write-Host "  [WARN] NPU driver is outdated - latest is $latestVersion" -ForegroundColor Yellow
+                                Write-Host "         Please download and install the latest version" -ForegroundColor Cyan
+                                Write-Host "         https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor Cyan
+                                $warnings += "Intel NPU driver is outdated (installed: $npuDriverVersion, latest: $latestVersion)"
+                            }
+                        } catch {
+                            Write-Host "  [INFO] Could not parse driver version - manual verification may be needed" -ForegroundColor DarkYellow
+                        }
+                    } else {
+                        Write-Host "  [INFO] Unknown driver family (v$installedMajor) - verify manually at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                    }
+                } else {
+                    Write-Host "  [INFO] Could not retrieve driver version - verify at https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html" -ForegroundColor DarkYellow
+                }
+            } catch {
+                Write-Host "  [INFO] Could not check driver version details" -ForegroundColor DarkYellow
+            }
         } else {
             Write-Host "  [WARN] $npuName (Status: $npuStatus)" -ForegroundColor Yellow
             Write-Host "         NPU driver may need to be updated" -ForegroundColor DarkYellow
             Write-Host ""
-            $updateDriver = Read-Host "  Do you want to update the NPU driver? (Y/N)"
-            if ($updateDriver -match "^[Yy]") {
-                Install-NPUDriver | Out-Null
+            if ($Silent) {
+                Write-Host "  [SKIP] Silent mode: skipping NPU driver update" -ForegroundColor Yellow
+                $warnings += "NPU detected but status is $npuStatus (skipped in silent mode)"
             } else {
-                $warnings += "NPU detected but status is $npuStatus"
+                $updateDriver = Read-Host "  Do you want to update the NPU driver? (Y/N)"
+                if ($updateDriver -match "^[Yy]") {
+                    Install-NPUDriver | Out-Null
+                } else {
+                    $warnings += "NPU detected but status is $npuStatus"
+                }
             }
         }
     } else {
         Write-Host "  [WARN] Intel NPU not detected" -ForegroundColor Yellow
         Write-Host "         Intel NPU (Core Ultra Series) recommended for Video pipelines" -ForegroundColor DarkYellow
         Write-Host ""
-        $installNpu = Read-Host "  Do you want to install the Intel NPU driver? (Y/N)"
-        if ($installNpu -match "^[Yy]") {
-            if (-not (Install-NPUDriver)) {
-                $warnings += "Intel NPU driver installation pending (restart may be required)"
-            }
+        if ($Silent) {
+            Write-Host "  [SKIP] Silent mode: skipping NPU driver installation" -ForegroundColor Yellow
+            $warnings += "Intel NPU not detected (skipped in silent mode)"
         } else {
-            $warnings += "Intel NPU recommended for Video pipelines"
+            $installNpu = Read-Host "  Do you want to install the Intel NPU driver? (Y/N)"
+            if ($installNpu -match "^[Yy]") {
+                if (-not (Install-NPUDriver)) {
+                    $warnings += "Intel NPU driver installation pending (restart may be required)"
+                }
+            } else {
+                $warnings += "Intel NPU recommended for Video pipelines"
+            }
         }
     }
 } catch {
@@ -582,11 +770,80 @@ function Install-Python312 {
             
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Python $Version installed successfully" -ForegroundColor Green
-                Write-Host "  NOTE: You may need to restart PowerShell for PATH changes" -ForegroundColor Cyan
                 
                 Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
                 
+                # Detect Python installation directory
+                $pythonExe = $null
+                $versionShort = "Python" + ($Version -replace "^(\d+)\.(\d+).*", '$1$2')  # e.g. Python312
+                $candidatePaths = @(
+                    "C:\Program Files\$versionShort",
+                    "C:\Program Files (x86)\$versionShort",
+                    "$env:LOCALAPPDATA\Programs\Python\$versionShort"
+                )
+                foreach ($candidate in $candidatePaths) {
+                    if (Test-Path "$candidate\python.exe") {
+                        $pythonExe = "$candidate\python.exe"
+                        break
+                    }
+                }
+                # Fallback: ask where.exe
+                if (-not $pythonExe) {
+                    try {
+                        $whereResult = (where.exe python 2>$null) | Select-Object -First 1
+                        if ($whereResult -and (Test-Path $whereResult)) { $pythonExe = $whereResult }
+                    } catch {}
+                }
+                
+                if ($pythonExe) {
+                    $pythonDir     = Split-Path -Parent $pythonExe
+                    $pythonScripts = Join-Path $pythonDir "Scripts"
+                    
+                    function Add-PathEntries {
+                        param(
+                            [string]$Scope,
+                            [string[]]$Entries
+                        )
+
+                        try {
+                            $currentPath = [System.Environment]::GetEnvironmentVariable("Path", $Scope)
+                            if (-not $currentPath) { $currentPath = "" }
+                            $pathParts = @($currentPath -split ";" | Where-Object { $_ -and $_.Trim() })
+                            foreach ($entry in $Entries) {
+                                if (-not (Test-Path $entry)) { continue }
+
+                                $exists = $false
+                                foreach ($part in $pathParts) {
+                                    if ($part.TrimEnd('\\') -ieq $entry.TrimEnd('\\')) {
+                                        $exists = $true
+                                        break
+                                    }
+                                }
+                                if ($exists) {
+                                    Write-Host "  Already in $Scope PATH: $entry" -ForegroundColor DarkGray
+                                    continue
+                                }
+                                $pathParts += $entry
+                                Write-Host "  Added to $Scope PATH: $entry" -ForegroundColor Gray
+                            }
+                            $newPath = ($pathParts -join ";")
+                            [System.Environment]::SetEnvironmentVariable("Path", $newPath, $Scope)
+                        } catch {
+                            Write-Host "  [WARN] Could not update $Scope PATH: $($_.Exception.Message)" -ForegroundColor Yellow
+                        }
+                    }
+
+                    $entriesToAdd = @($pythonDir, $pythonScripts)
+                    Add-PathEntries -Scope "Machine" -Entries $entriesToAdd
+                    Add-PathEntries -Scope "User" -Entries $entriesToAdd
+                    Write-Host "  [OK] Python PATH entries updated" -ForegroundColor Green
+                } else {
+                    Write-Host "  [WARN] Could not locate Python install dir - PATH not updated" -ForegroundColor Yellow
+                }
+                
+                # Refresh current session PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+                Write-Host "  NOTE: Restart PowerShell if 'python' is still not recognised" -ForegroundColor Cyan
                 
                 return $true
             } else {
@@ -632,8 +889,13 @@ try {
 # Auto-install if not found or wrong version
 if ($pythonNeedsInstall) {
     Write-Host ""
-    $installChoice = Read-Host "  Install Python 3.12.10 now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing Python 3.12.10..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install Python 3.12.10 now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-Python312) {
             # Verify installation
@@ -641,6 +903,84 @@ if ($pythonNeedsInstall) {
                 $newPythonVersion = python --version 2>&1
                 if ($newPythonVersion -match "Python 3\.12") {
                     $pythonInstalled = $true
+                } else {
+                    $defaultPythonCmd = Get-Command python -ErrorAction SilentlyContinue
+                    $defaultPythonPath = if ($defaultPythonCmd) { $defaultPythonCmd.Source } else { "unknown" }
+
+                    Write-Host "  [WARN] python --version points to a different default interpreter: $newPythonVersion" -ForegroundColor Yellow
+                    Write-Host "  [INFO] Current default python path: $defaultPythonPath" -ForegroundColor DarkYellow
+                    Write-Host "  [INFO] Attempting to make Python 3.12 the default by prioritizing PATH entries..." -ForegroundColor Gray
+
+                    $python312Exe = $null
+                    $python312Candidates = @(
+                        "C:\Program Files\Python312\python.exe",
+                        "C:\Program Files (x86)\Python312\python.exe",
+                        "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+                    )
+
+                    foreach ($candidate in $python312Candidates) {
+                        if (Test-Path $candidate) {
+                            $python312Exe = $candidate
+                            break
+                        }
+                    }
+
+                    if (-not $python312Exe) {
+                        try {
+                            $whereResults = where.exe python 2>$null
+                            foreach ($wherePath in $whereResults) {
+                                if ($wherePath -match "Python312\\python\.exe$" -and (Test-Path $wherePath)) {
+                                    $python312Exe = $wherePath
+                                    break
+                                }
+                            }
+                        } catch {}
+                    }
+
+                    if ($python312Exe) {
+                        $python312Dir = Split-Path -Parent $python312Exe
+                        $python312Scripts = Join-Path $python312Dir "Scripts"
+                        $priorityEntries = @($python312Dir, $python312Scripts)
+
+                        foreach ($scope in @("Machine", "User")) {
+                            try {
+                                $currentPath = [System.Environment]::GetEnvironmentVariable("Path", $scope)
+                                if (-not $currentPath) { $currentPath = "" }
+
+                                $pathParts = @($currentPath -split ";" | Where-Object { $_ -and $_.Trim() })
+
+                                foreach ($entry in $priorityEntries) {
+                                    $pathParts = @($pathParts | Where-Object { $_.TrimEnd('\\') -ine $entry.TrimEnd('\\') })
+                                }
+
+                                $existingPriorityEntries = @($priorityEntries | Where-Object { Test-Path $_ })
+                                $newPath = (@($existingPriorityEntries + $pathParts) -join ";")
+                                [System.Environment]::SetEnvironmentVariable("Path", $newPath, $scope)
+                                Write-Host "  [OK] Prioritized Python 3.12 in $scope PATH" -ForegroundColor Green
+                            } catch {
+                                Write-Host "  [WARN] Could not prioritize Python 3.12 in $scope PATH: $($_.Exception.Message)" -ForegroundColor Yellow
+                            }
+                        }
+
+                        $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+                        $recheckedPythonVersion = python --version 2>&1
+                        $recheckedPythonCmd = Get-Command python -ErrorAction SilentlyContinue
+                        $recheckedPythonPath = if ($recheckedPythonCmd) { $recheckedPythonCmd.Source } else { "unknown" }
+
+                        if ($recheckedPythonVersion -match "Python 3\.12") {
+                            Write-Host "  [OK] python now points to Python 3.12 ($recheckedPythonVersion)" -ForegroundColor Green
+                            Write-Host "  [INFO] Default python path is now: $recheckedPythonPath" -ForegroundColor DarkGray
+                            $pythonInstalled = $true
+                        } else {
+                            Write-Host "  [WARN] python still resolves to: $recheckedPythonVersion" -ForegroundColor Yellow
+                            Write-Host "  [HINT] Default python path remains: $recheckedPythonPath" -ForegroundColor DarkYellow
+                            $warnings += "Installed Python 3.12, but python --version still resolves to '$recheckedPythonVersion' at '$recheckedPythonPath'. PATH precedence still points to a different interpreter."
+                        }
+                    } else {
+                        Write-Host "  [WARN] Python 3.12 executable was installed but could not be located for PATH prioritization" -ForegroundColor Yellow
+                        $warnings += "Installed Python 3.12, but could not locate Python312 executable to prioritize PATH. python --version currently reports: $newPythonVersion"
+                    }
                 }
             } catch {
                 Write-Host "  [WARN] Python installed but not yet in PATH" -ForegroundColor Yellow
@@ -759,8 +1099,13 @@ try {
 # Auto-install if not found or needs upgrade
 if (-not $nodeInstalled) {
     Write-Host ""
-    $installChoice = Read-Host "  Install Node.js v22 LTS now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing Node.js v22 LTS..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install Node.js v22 LTS now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-NodeJS) {
             # Verify installation
@@ -823,11 +1168,15 @@ if ($warnings.Count -gt 0) {
         Write-Host "  - $warn" -ForegroundColor DarkYellow
     }
     Write-Host ""
-    $continueSetup = Read-Host "Do you still want to continue with the setup? (Y/N)"
-    if ($continueSetup -notmatch "^[Yy]") {
-        Write-Host ""
-        Write-Host "Setup cancelled by user." -ForegroundColor Yellow
-        exit 0
+    if ($Silent) {
+        Write-Host "Silent mode: continuing with $($warnings.Count) warning(s)..." -ForegroundColor Yellow
+    } else {
+        $continueSetup = Read-Host "Do you still want to continue with the setup? (Y/N)"
+        if ($continueSetup -notmatch "^[Yy]") {
+            Write-Host ""
+            Write-Host "Setup cancelled by user." -ForegroundColor Yellow
+            exit 0
+        }
     }
 }
 
@@ -914,185 +1263,6 @@ function Install-FFmpeg {
     }
 }
 
-function Install-DLStreamerDLLs {
-    Write-Host ""
-    Write-Host "  ============================================" -ForegroundColor Cyan
-    Write-Host "  DL Streamer DLLs-Only Installation" -ForegroundColor Cyan
-    Write-Host "  ============================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  This method extracts pre-built DLLs to C:/" -ForegroundColor Gray
-    Write-Host "  and configures the PATH environment variable." -ForegroundColor Gray
-    Write-Host ""
-    
-    $dlsVersion = "2026.0.0"
-    $zipName = "dlstreamer_dlls_$dlsVersion.zip"
-    $downloadUrl = "https://github.com/open-edge-platform/dlstreamer/releases/download/v$dlsVersion/$zipName"
-    $extractPath = "C:\"
-    $dlstreamerDllPath = "C:\dlls_windows"
-    
-    try {
-        Write-Host "  Step 1: Download DLLs package" -ForegroundColor Yellow
-        $zipPath = Join-Path $env:TEMP $zipName
-        
-        Write-Host "    Downloading from GitHub releases..." -ForegroundColor Gray
-        Write-Host "    URL: $downloadUrl" -ForegroundColor DarkGray
-        if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        
-        $downloadSuccess = $false
-        
-        try {
-            Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing
-            if (Test-Path $zipPath) {
-                $fileSize = (Get-Item $zipPath).Length
-                if ($fileSize -gt 1MB) {
-                    $downloadSuccess = $true
-                    Write-Host "    [OK] Downloaded: $zipName ($([math]::Round($fileSize/1MB, 1)) MB)" -ForegroundColor Green
-                } else {
-                    Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
-                    Write-Host "    [WARN] Download incomplete, trying alternative method..." -ForegroundColor Yellow
-                }
-            }
-        } catch {
-            Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
-        }
-        
-        if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
-            Write-Host "    Trying curl.exe..." -ForegroundColor Gray
-            try {
-                $curlArgs = @("-L", "-o", "`"$zipPath`"", "--connect-timeout", "60", "--max-time", "600")
-                if ($script:httpProxy) {
-                    $curlArgs += @("-x", $script:httpProxy)
-                }
-                $curlArgs += $downloadUrl
-                
-                $curlProcess = Start-Process -FilePath "curl.exe" -ArgumentList $curlArgs -Wait -PassThru -NoNewWindow
-                
-                if ((Test-Path $zipPath) -and ((Get-Item $zipPath).Length -gt 1MB)) {
-                    $downloadSuccess = $true
-                    $fileSize = (Get-Item $zipPath).Length
-                    Write-Host "    [OK] Downloaded with curl: $zipName ($([math]::Round($fileSize/1MB, 1)) MB)" -ForegroundColor Green
-                }
-            } catch {
-                Write-Host "    [WARN] curl download failed: $_" -ForegroundColor Yellow
-            }
-        }
-        
-        if (-not $downloadSuccess) {
-            Write-Host "    [FAIL] Download failed. Please download manually:" -ForegroundColor Red
-            Write-Host "    $downloadUrl" -ForegroundColor Cyan
-            return $false
-        }
-        
-        Write-Host ""
-        
-        Write-Host "  Step 2: Extract to C:/" -ForegroundColor Yellow
-        
-        if (Test-Path $dlstreamerDllPath) {
-            Write-Host "    Removing existing folder: $dlstreamerDllPath" -ForegroundColor Gray
-            Remove-Item -Path $dlstreamerDllPath -Recurse -Force -ErrorAction SilentlyContinue
-        }
-        
-        Write-Host "    Extracting $zipName to $extractPath..." -ForegroundColor Gray
-        try {
-            Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
-            Write-Host "    [OK] Extracted to: $dlstreamerDllPath" -ForegroundColor Green
-        } catch {
-            Write-Host "    [FAIL] Extraction failed: $_" -ForegroundColor Red
-            Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
-            return $false
-        }
-        
-        Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
-        
-        Write-Host ""
-        
-        Write-Host "  Step 3: Configure PATH environment variable" -ForegroundColor Yellow
-        
-        $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-        
-        if ($currentPath -notlike "*$dlstreamerDllPath*") {
-            $newPath = "$currentPath;$dlstreamerDllPath"
-            [System.Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
-            Write-Host "    [OK] Added to system PATH: $dlstreamerDllPath" -ForegroundColor Green
-            
-            $env:Path = "$env:Path;$dlstreamerDllPath"
-        } else {
-            Write-Host "    [OK] Already in system PATH: $dlstreamerDllPath" -ForegroundColor Green
-        }
-        
-        [System.Environment]::SetEnvironmentVariable("DLSTREAMER_DIR", $dlstreamerDllPath, "Machine")
-        $env:DLSTREAMER_DIR = $dlstreamerDllPath
-        Write-Host "    [OK] Set DLSTREAMER_DIR: $dlstreamerDllPath" -ForegroundColor Green
-        
-        Write-Host ""
-        
-        Write-Host "  Step 4: Install Python Dependencies" -ForegroundColor Yellow
-        
-        $requirementsFile = Join-Path $dlstreamerDllPath "requirements.txt"
-        if (Test-Path $requirementsFile) {
-            Write-Host "    Installing Python dependencies from requirements.txt..." -ForegroundColor Gray
-            try {
-                Push-Location $dlstreamerDllPath
-                $pipOutput = python -m pip install -r requirements.txt 2>&1
-                Pop-Location
-                Write-Host "    [OK] Python dependencies installed" -ForegroundColor Green
-            } catch {
-                Write-Host "    [WARN] Could not install Python dependencies: $_" -ForegroundColor Yellow
-                Write-Host "           Run manually: cd `$env:DLSTREAMER_DIR; python -m pip install -r requirements.txt" -ForegroundColor DarkYellow
-            }
-        } else {
-            Write-Host "    [INFO] No requirements.txt found, skipping Python dependencies" -ForegroundColor Gray
-        }
-        
-        Write-Host ""
-        
-        Write-Host "  Step 5: Run Python Environment Setup Script" -ForegroundColor Yellow
-        
-        $setupPythonScript = Join-Path $dlstreamerDllPath "setup_dls_env.ps1"
-        if (Test-Path $setupPythonScript) {
-            Write-Host "    Running setup_dls_env.ps1..." -ForegroundColor Gray
-            Write-Host "    This configures PYTHONPATH, PYGI_DLL_DIRS, and GI_TYPELIB_PATH" -ForegroundColor DarkGray
-            try {
-                & $setupPythonScript
-                Write-Host "    [OK] Python environment configured for current session" -ForegroundColor Green
-                Write-Host ""
-                Write-Host "    Note: Re-run the following script in new PowerShell sessions:" -ForegroundColor DarkYellow
-                Write-Host "          $setupPythonScript" -ForegroundColor Cyan
-            } catch {
-                Write-Host "    [WARN] Could not run setup script: $_" -ForegroundColor Yellow
-                Write-Host "           Run manually: & '$setupPythonScript'" -ForegroundColor DarkYellow
-            }
-        } else {
-            Write-Host "    [INFO] setup_dls_env.ps1 not found at: $setupPythonScript" -ForegroundColor Gray
-        }
-        
-        Write-Host ""
-        Write-Host "  ============================================" -ForegroundColor Green
-        Write-Host "  DL Streamer DLLs Installation Complete!" -ForegroundColor Green
-        Write-Host "  ============================================" -ForegroundColor Green
-        Write-Host ""
-        Write-Host "  Installation path: $dlstreamerDllPath" -ForegroundColor Gray
-        Write-Host "  DLSTREAMER_DIR:    $dlstreamerDllPath" -ForegroundColor Gray
-        Write-Host ""
-        Write-Host "  For new PowerShell sessions, run:" -ForegroundColor Yellow
-        Write-Host "    & `"$setupPythonScript`"" -ForegroundColor Cyan
-        Write-Host ""
-        
-        return $true
-        
-    } catch {
-        Write-Host "    [FAIL] DL Streamer DLLs installation error: $_" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "  Manual Installation:" -ForegroundColor Yellow
-        Write-Host "    1. Download: $downloadUrl" -ForegroundColor Cyan
-        Write-Host "    2. Extract to C:/" -ForegroundColor Gray
-        Write-Host "    3. Add $dlstreamerDllPath to system PATH" -ForegroundColor Gray
-        Write-Host ""
-        return $false
-    }
-}
-
 Write-Host "Checking FFmpeg..." -ForegroundColor White
 $ffmpegInstalled = $false
 
@@ -1108,8 +1278,13 @@ try {
 
 if (-not $ffmpegInstalled) {
     Write-Host ""
-    $installChoice = Read-Host "  Install FFmpeg now? (Y/N)"
-    
+    if ($Silent) {
+        Write-Host "  Silent mode: auto-installing FFmpeg..." -ForegroundColor Yellow
+        $installChoice = "Y"
+    } else {
+        $installChoice = Read-Host "  Install FFmpeg now? (Y/N)"
+    }
+
     if ($installChoice -match "^[Yy]") {
         if (Install-FFmpeg) {
             # Verify installation
@@ -1138,60 +1313,24 @@ if (-not $ffmpegInstalled) {
 Write-Host ""
 Write-Host "Checking DL Streamer..." -ForegroundColor White
 
-$dlStreamerPath = $env:DLSTREAMER_DIR
 $dlStreamerFound = $false
+$dlStreamerRequiredVersion = "2026.1.0"
 
-if ($dlStreamerPath -and (Test-Path $dlStreamerPath)) {
-    $dlStreamerFound = $true
-    Write-Host "  [OK] DL Streamer found at: $dlStreamerPath" -ForegroundColor Green
+# The full DL Streamer check (detection + version-gate + install/reinstall flow)
+# lives in Scripts\check_dlstreamer.ps1. Delegate to it and act on its exit code.
+$dlStreamerCheckScript = Join-Path $PSScriptRoot "Scripts\check_dlstreamer.ps1"
+if (Test-Path $dlStreamerCheckScript) {
+    & $dlStreamerCheckScript -Install -RequiredVersion $dlStreamerRequiredVersion -HttpProxy $script:httpProxy -HttpsProxy $script:httpsProxy
+    switch ($LASTEXITCODE) {
+        0       { $dlStreamerFound = $true }                          # present and meets required version
+        1       { $dlStreamerFound = $true; $appChecksFailed = $true } # present but required reinstall failed
+        default { $dlStreamerFound = $false; $appChecksFailed = $true } # not installed / install skipped or failed
+    }
 } else {
-    # Check common installation paths (including DLLs-only extraction path)
-    $commonPaths = @(
-        "C:\Program Files\Intel\dlstreamer",
-        "C:\Intel\dlstreamer",
-        "C:\Program Files (x86)\Intel\dlstreamer",
-        "C:\dlls_windows"
-    )
-    
-    if ($env:INTEL_OPENVINO_DIR) {
-        $commonPaths += "$env:INTEL_OPENVINO_DIR\..\dlstreamer"
-    }
-    
-    foreach ($path in $commonPaths) {
-        if (Test-Path $path) {
-            $dlStreamerFound = $true
-            Write-Host "  [OK] DL Streamer found at: $path" -ForegroundColor Green
-            break
-        }
-    }
-}
-
-if (-not $dlStreamerFound) {
-    Write-Host "  [INFO] DL Streamer is not installed" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  DL Streamer is required for video analytics pipelines." -ForegroundColor Gray
-    Write-Host "  Latest verified version: 2026.0.0" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "  This will download dlstreamer_dlls_2026.0.0.zip, extract to C:/," -ForegroundColor Gray
-    Write-Host "  and add C:\dlls_windows to the system PATH." -ForegroundColor Gray
-    Write-Host ""
-    $installChoice = Read-Host "  Install DL Streamer 2026.0.0 now? (Y/N)"
-    
-    if ($installChoice -match "^[Yy]") {
-        if (Install-DLStreamerDLLs) {
-            $dlStreamerFound = $true
-        } else {
-            Write-Host "  [FAIL] DL Streamer DLLs installation failed" -ForegroundColor Red
-            Write-Host "         Please download manually from:" -ForegroundColor Cyan
-            Write-Host "         https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.0.0/dlstreamer_dlls_2026.0.0.zip" -ForegroundColor Cyan
-            Write-Host "         Extract to C:/ and add C:\dlls_windows to PATH" -ForegroundColor Gray
-            $appChecksFailed = $true
-        }
-    } else {
-        Write-Host "  [SKIP] DL Streamer installation skipped" -ForegroundColor Yellow
-        Write-Host "         Please install manually from: https://github.com/open-edge-platform/dlstreamer/releases" -ForegroundColor Cyan
-        $appChecksFailed = $true
-    }
+    Write-Host "  [WARN] DL Streamer check script not found at:" -ForegroundColor Yellow
+    Write-Host "         $dlStreamerCheckScript" -ForegroundColor DarkYellow
+    Write-Host "         Skipping DL Streamer verification." -ForegroundColor DarkYellow
+    $appChecksFailed = $true
 }
 
 if ($appChecksFailed) {
@@ -1212,8 +1351,8 @@ if ($appChecksFailed) {
     
     if (-not $dlStreamerFound) {
         Write-Host "  DL Streamer (required for video pipelines):" -ForegroundColor White
-        Write-Host "    https://github.com/open-edge-platform/dlstreamer/releases" -ForegroundColor Cyan
-        Write-Host "    Download dlstreamer_dlls_2026.0.0.zip, extract to C:/, add C:\dlls_windows to PATH" -ForegroundColor Gray
+        Write-Host "    https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe" -ForegroundColor Cyan
+        Write-Host "    Download and run the installer" -ForegroundColor Gray
         Write-Host ""
         Write-Host "  Installation Guide:" -ForegroundColor White
         Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md" -ForegroundColor Cyan
@@ -1225,16 +1364,21 @@ if ($appChecksFailed) {
     Write-Host "WARNING: Some application dependencies are missing." -ForegroundColor Yellow
     Write-Host "         Certain features may not function correctly." -ForegroundColor DarkYellow
     Write-Host ""
-    $skipChoice = Read-Host "Do you still want to continue with the setup? (Y/N)"
-    
-    if ($skipChoice -match "^[Yy]") {
-        Write-Host ""
-        Write-Host "  Continuing setup with missing dependencies..." -ForegroundColor Yellow
+    if ($Silent) {
+        Write-Host "Silent mode: continuing with missing dependencies..." -ForegroundColor Yellow
         Write-Host ""
     } else {
-        Write-Host ""
-        Write-Host "  Setup cancelled. Please install the missing dependencies and try again." -ForegroundColor Gray
-        exit 1
+        $skipChoice = Read-Host "Do you still want to continue with the setup? (Y/N)"
+
+        if ($skipChoice -match "^[Yy]") {
+            Write-Host ""
+            Write-Host "  Continuing setup with missing dependencies..." -ForegroundColor Yellow
+            Write-Host ""
+        } else {
+            Write-Host ""
+            Write-Host "  Setup cancelled. Please install the missing dependencies and try again." -ForegroundColor Gray
+            exit 1
+        }
     }
 } else {
     Write-Host ""
@@ -1318,7 +1462,12 @@ Write-Host "Current language: $currentLanguage" -ForegroundColor Cyan
 Write-Host ""
 
 # Ask if user wants to change ASR settings
-$changeAsr = Read-Host "Do you want to change ASR settings? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing ASR settings" -ForegroundColor Gray
+    $changeAsr = "N"
+} else {
+    $changeAsr = Read-Host "Do you want to change ASR settings? (Y/N)"
+}
 
 if ($changeAsr -match "^[Yy]") {
     Write-Host ""
@@ -1443,7 +1592,12 @@ Write-Host "      document_max_mb: $currentDocMax    # maximum upload size for d
 Write-Host "      video_max_mb: $currentVideoMax      # maximum upload size for videos (MB)" -ForegroundColor Gray
 Write-Host ""
 
-$changeUploadLimits = Read-Host "Do you want to change upload size limits? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing upload size limits" -ForegroundColor Gray
+    $changeUploadLimits = "N"
+} else {
+    $changeUploadLimits = Read-Host "Do you want to change upload size limits? (Y/N)"
+}
 
 if ($changeUploadLimits.ToUpper() -eq "Y") {
     Write-Host ""
@@ -1485,7 +1639,12 @@ Write-Host "  ocr:" -ForegroundColor White
 Write-Host "    enabled: $currentOcr" -ForegroundColor Gray
 Write-Host ""
 
-$changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing OCR setting" -ForegroundColor Gray
+    $changeOcr = "N"
+} else {
+    $changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+}
 
 if ($changeOcr.ToUpper() -eq "Y") {
     Write-Host ""
@@ -1548,27 +1707,85 @@ Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
-# LAUNCH STARTUP SCRIPT
+# PYTHON VIRTUAL ENVIRONMENTS
 # ============================================================================
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "   LAUNCHING SMART CLASSROOM" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "   CREATING VIRTUAL ENVIRONMENTS" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$startupScript = Join-Path $ScriptDir "start-smart-classroom.ps1"
+$venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 
-if (Test-Path $startupScript) {
-    Write-Host "Starting: $startupScript" -ForegroundColor Yellow
-    Write-Host ""
-    
-    # Execute the startup script with -SkipProxy since proxy was already configured in setup
-    & $startupScript -SkipProxy
-} else {
-    Write-Host "ERROR: start-smart-classroom.ps1 not found at:" -ForegroundColor Red
-    Write-Host "  $startupScript" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Please run it manually:" -ForegroundColor Yellow
-    Write-Host "  cd `"$ScriptDir`"" -ForegroundColor Gray
-    Write-Host "  .\start-smart-classroom.ps1" -ForegroundColor Gray
-    exit 1
+$recreateVenvs = $false
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+    if ($Silent) {
+        Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
+        $recreateVenvs = $false
+    } else {
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        $recreateVenvs = $response.ToUpper() -eq "Y"
+        if ($recreateVenvs) {
+            Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } else {
+            Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
+        }
+    }
 }
+Write-Host ""
+
+Write-Host "Setting up Backend virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvBackend)) {
+    Remove-Item $venvBackend -Recurse -Force
+}
+if (-not (Test-Path $venvBackend)) {
+    python -m venv $venvBackend
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create Backend venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
+}
+Write-Host ""
+
+Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+    Remove-Item $venvContentSearch -Recurse -Force
+}
+if (-not (Test-Path $venvContentSearch)) {
+    python -m venv $venvContentSearch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+}
+Write-Host ""
+
+# ============================================================================
+# SETUP COMPLETE
+# ============================================================================
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "   SETUP COMPLETE!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "Smart Classroom setup has finished successfully." -ForegroundColor Green
+Write-Host ""
+Write-Host "To start the services, run:" -ForegroundColor Yellow
+Write-Host "  .\start-smart-classroom.ps1" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Or with options:" -ForegroundColor Gray
+Write-Host "  .\start-smart-classroom.ps1 -SkipProxy       # Skip proxy configuration" -ForegroundColor Gray
+Write-Host "  .\start-smart-classroom.ps1 -Restart         # Force restart all services" -ForegroundColor Gray
+Write-Host ""

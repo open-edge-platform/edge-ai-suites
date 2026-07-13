@@ -63,6 +63,14 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+# Optional wandering-specific latency extraction (sibling module)
+try:
+    from wandering_metrics import extract_goal_calc_latency as _extract_goal_calc_latency
+    from wandering_metrics import extract_goal_response_latency as _extract_goal_response_latency
+except ImportError:  # pragma: no cover
+    _extract_goal_calc_latency = None  # type: ignore[assignment]
+    _extract_goal_response_latency = None  # type: ignore[assignment]
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  Internal topic filter  (bookkeeping / action plumbing / ROS2 internals)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1020,7 +1028,7 @@ def build_performance_kpi(
         }
 
     _cpu_mean, _cpu_max = _compute_resource_cpu_stats(session_dir)
-    return {
+    payload = {
         'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
         'mean_latency_ms':  sys_lat,
@@ -1045,6 +1053,19 @@ def build_performance_kpi(
             'hardware':          _hardware_info(),
         },
     }
+    _log = session_dir / 'wandering_launch.log'
+    if _log.exists():
+        _log_text = _log.read_text(errors='replace')
+        if _extract_goal_calc_latency is not None:
+            _gcl = _extract_goal_calc_latency(_log_text)
+            if _gcl:
+                payload.setdefault('wandering', {})['goal_calc_latency_ms'] = _gcl
+        _bag = session_dir / 'bag'
+        if _extract_goal_response_latency is not None and _bag.exists():
+            _grl = _extract_goal_response_latency(_log_text, _bag)
+            if _grl:
+                payload.setdefault('wandering', {})['goal_response_latency_ms'] = _grl
+    return payload
 
 
 def print_performance_summary(all_results: List[dict]) -> None:
@@ -1327,6 +1348,11 @@ def main() -> None:
                 print(f'    • {err}')
         else:
             print('  KPI JSON schema validation passed ✓')
+        _gcl = (payload.get('wandering') or {}).get('goal_calc_latency_ms')
+        if _gcl:
+            print(f'  Goal-calc latency    mean={_gcl["mean_ms"]:.1f}ms  '
+                  f'p90={_gcl["p90_ms"]:.1f}ms  max={_gcl["max_ms"]:.1f}ms  '
+                  f'(n={_gcl["n"]} transitions)')
 
     # ── Tabular KPI export (CSV / Excel) ─────────────────────────────────────
     if args.csv_out or args.xlsx_out:

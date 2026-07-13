@@ -1,5 +1,3 @@
-(robotics_diffusion_transformer)=
-
 # Robotics Diffusion Transformer (RDT)
 
 Robotics Diffusion Transformer (RDT) is the largest bimanual manipulation foundation model with strong generalizability. RDT employs the diffusion transformer as its scalable backbone, with special designs for language-conditioned bimanual manipulation. RDT proposes the Physically Interpretable Unified Action Space, a unified action format for various robots with gripper arms, which enables the model to learn generalizable physical knowledge across diverse robotic datasets.
@@ -37,8 +35,6 @@ Each task consists of 400 steps. The following GIFs demonstrate the two tasks.
 ## Prerequisites
 
 Please make sure you have finished setup steps in [Get Started](../get_started.md).
-
-(rdt_installation)=
 
 ## Installation
 

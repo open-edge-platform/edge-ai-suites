@@ -13,7 +13,7 @@ OEP SDK Manager is a comprehensive development tool that streamlines discovering
 
 | SDK | Install Script | Tutorials | Description |
 |:----|:---------------|:----------|:------------|
-| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DLStreamer, OpenVINO, Pipeline Server, SceneScape — visual AI inference & spatial analytics |
+| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DLStreamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
 | OEP Gen AI SDK | `scripts/oep-gen-ai-sdk.sh` | `docs/user-guide/oep-gen-ai-sdk/` | Audio Analyzer, VLM serving, embedding, document ingestion |
 | Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DLStreamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
 
@@ -53,7 +53,7 @@ metro-sdk-manager/
 - **Install Scripts**: Bash (strict mode: `set -euo pipefail`)
 - **Docker Images**: Each SDK defines its images array in the install script
 - **Source Repos**: GitHub repos (edge-ai-libraries, edge-ai-suites) cloned at specific release branches
-- **Current Release Branch**: `release-2026.1.0` (RC1) — Docker images use `-rc1` suffix tags where available
+- **Current Release Branch**: `release-2026.1.0` (latest available release branch) — Docker images are pinned to the latest available stable tags where possible
 - **Linting**: ShellCheck, markdownlint, doc8, pylint, black, yamllint, reuse (license), Trivy
 - **Build System**: GNU Make with Python virtualenv (provided by CI; `Makefile` and `requirements.txt` are gitignored)
 
