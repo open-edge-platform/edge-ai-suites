@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.venv-*/
+*.egg-info/
+
+# Models and vector store (large binary artifacts)
+models/
+storage/
+
+# HuggingFace cache
+.cache/
+
+# Semantic chunks staging
+chunks/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Logs and temp
+*.log
+/tmp/

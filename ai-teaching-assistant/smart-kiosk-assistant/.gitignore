@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+
+# Generated TTS audio output — runtime artefacts
+generated_audio/
+
+# Hugging Face model cache
+.cache/
+
+# Uploaded/temp audio chunks
+chunks/
+
+# Session storage
+storage/
+.ui-dev/

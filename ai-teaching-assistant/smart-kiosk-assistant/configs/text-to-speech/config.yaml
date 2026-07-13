@@ -1,0 +1,45 @@
+# Kiosk-pinned config for the text-to-speech service.
+#
+# This file is mounted into the text-to-speech container by
+# voice-enabled-interactions/smart-kiosk-assistant/docker-compose.yml,
+# replacing the service config so the kiosk always boots a known-good
+# version regardless of changes in edge-ai-libraries.
+app:
+  name: Text To Speech
+  clear_storage_on_startup: true  # true | false — delete all session folders under storage/ at startup
+
+models:
+  tts:
+    # Model id. Permitted values:
+    #   SpeechT5: microsoft/speecht5_tts
+    #   Qwen:     Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice
+    name: microsoft/speecht5_tts
+    # Inference runtime backend. Permitted values: openvino | pytorch
+    runtime: openvino
+    # Inference device. Permitted values: CPU | GPU
+    #   SpeechT5: CPU or GPU
+    #   Qwen:     CPU or GPU
+    device: CPU
+    # Model precision. Permitted values: int8 | int4 | fp16 | fp32
+    # NOTE: int4 on iGPU produces noise; GPU fp16 works great post-warmup
+    dtype: int8
+    # Model variant. Permitted values:
+    #   SpeechT5: default
+    #   Qwen:     custom_voice | voice_design
+    model_variant: custom_voice
+    # Default speaker/voice. Permitted values:
+    #   SpeechT5: default
+    #   Qwen custom_voice example: Ryan
+    #   Qwen voice_design: speaker can be omitted
+    default_speaker: Ryan
+    # Default language. Permitted values: English (the service currently supports English only)
+    default_language: English
+    models_base_path: models           # directory for downloaded/exported model assets
+    use_local_cache: true              # true | false — reuse locally cached/exported models
+
+audio:
+  output_format: wav                   # output audio format. Permitted values: wav
+  sample_width: 16                     # output sample width in bits. Permitted values: 16
+
+pipeline:
+  persist_outputs: true                # true | false — write synthesized audio + metadata to storage/<session_id>/

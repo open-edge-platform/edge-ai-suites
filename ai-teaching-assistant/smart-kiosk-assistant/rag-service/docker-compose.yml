@@ -1,0 +1,27 @@
+services:
+  rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${REGISTRY:-intel}/rag-service:${RELEASE_TAG:-latest}
+    container_name: rag-service
+    user: "1000:1000"
+    ports:
+      - "8020:8020"
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - "${RENDER_GID:-992}"
+    environment:
+      MPLCONFIGDIR: /tmp/matplotlib
+    volumes:
+      - rag_service_models:/app/rag-service/models
+      - rag_service_storage:/app/rag-service/storage
+      - rag_service_hf_cache:/app/rag-service/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  rag_service_models:
+  rag_service_storage:
+  rag_service_hf_cache:
