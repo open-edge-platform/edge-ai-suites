@@ -43,13 +43,6 @@ securityContext:
   seccompProfile:
     type: Unconfined
 
-hardware:
-  gpu:
-    enabled: true
-  npu:
-    enabled: false
-    devicePath: "/dev/accel/accel0"
-
 service:
   type: ClusterIP
   metricsPort: 9090

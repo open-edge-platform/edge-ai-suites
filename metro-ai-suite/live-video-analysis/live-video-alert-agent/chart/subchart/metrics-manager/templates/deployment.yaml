@@ -182,13 +182,13 @@ spec:
             - name: run
               mountPath: /run
               readOnly: true
-            {{- if .Values.hardware.gpu.enabled }}
+            {{- if .Values.global.gpu.enabled }}
             - name: dev-dri
               mountPath: /dev/dri
             {{- end }}
-            {{- if .Values.hardware.npu.enabled }}
+            {{- if .Values.global.npu.enabled }}
             - name: dev-accel
-              mountPath: {{ .Values.hardware.npu.devicePath | quote }}
+              mountPath: {{ .Values.global.npu.devicePath | quote }}
             {{- end }}
             {{- if .Values.telegraf.config }}
             - name: telegraf-config
@@ -209,15 +209,15 @@ spec:
           hostPath:
             path: /run
             type: Directory
-        {{- if .Values.hardware.gpu.enabled }}
+        {{- if .Values.global.gpu.enabled }}
         - name: dev-dri
           hostPath:
             path: /dev/dri
         {{- end }}
-        {{- if .Values.hardware.npu.enabled }}
+        {{- if .Values.global.npu.enabled }}
         - name: dev-accel
           hostPath:
-            path: {{ .Values.hardware.npu.devicePath | quote }}
+            path: {{ .Values.global.npu.devicePath | quote }}
             type: CharDevice
         {{- end }}
         {{- if .Values.telegraf.config }}
