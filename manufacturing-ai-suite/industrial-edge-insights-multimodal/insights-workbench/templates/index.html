@@ -567,7 +567,7 @@
         const payload = await response.json();
 
         if (!response.ok) {
-          throw new Error(payload.error || "Failed to load data");
+          throw new Error("Failed to load data");
         }
 
         state.hasMore = payload.has_more;
@@ -622,7 +622,7 @@
 
         const payload = await response.json();
         if (!response.ok) {
-          throw new Error(payload.error || "Failed to generate explanation");
+          throw new Error("Failed to generate explanation");
         }
 
         explainHeader.textContent = payload.title || "AI Assistant Output";

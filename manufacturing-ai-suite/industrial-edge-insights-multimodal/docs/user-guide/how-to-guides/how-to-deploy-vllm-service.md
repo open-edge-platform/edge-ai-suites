@@ -16,7 +16,7 @@ This guide explains how to deploy the multimodal sample app with the vLLM servic
 
 Download `Qwen3.5 2B` model and `Qwen 3.5 2B fine tuned LoRA adapter`
 
-> Please review the [Qwen3.5 2B license](https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE) before downloading.
+> Please review and accept the [Qwen3.5 2B license](https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 
 ```bash
 mkdir -p configs/vllm/huggingface configs/vllm/models && \
