@@ -9,3 +9,7 @@ services:
   ovms-llm:
     devices:
       - "${NPU_DEVICE_PATH:-/dev/accel/accel0}:${NPU_DEVICE_PATH:-/dev/accel/accel0}"
+  
+  metrics-manager:
+    devices:
+      - "${NPU_DEVICE_PATH:-/dev/accel/accel0}:${NPU_DEVICE_PATH:-/dev/accel/accel0}"

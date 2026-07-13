@@ -217,6 +217,9 @@ metrics-manager:
   hardware:
     gpu:
       enabled: true
+    npu:
+      enabled: false
+      devicePath: "/dev/accel/accel0"
   resources:
     requests:
       cpu: "100m"

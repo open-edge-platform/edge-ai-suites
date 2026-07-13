@@ -227,7 +227,7 @@ services:
       - app_network
 
   metrics-manager:
-    image: docker.io/intel/metrics-manager:2026.1.0-rc2
+    image: docker.io/intel/metrics-manager:2026.1.0
     container_name: metrics-manager
     ports:
       - "${METRICS_PORT:-9090}:9090"
