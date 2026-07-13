@@ -5,8 +5,6 @@ interface VideoFeedProps {
   frameUrl: string | null;
   fps: number;
   systemStatus: DetectionState['systemStatus'];
-  polypDetected: boolean;
-  polypCount: number;
   isExpanded?: boolean;
   panelExpanded?: boolean;
   onExpand?: () => void;
@@ -20,8 +18,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
   frameUrl,
   fps,
   systemStatus,
-  polypDetected,
-  polypCount,
 }) => {
   const [frameSrc, setFrameSrc] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
@@ -88,12 +84,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
           }`}
         />
         {systemStatus.toUpperCase()}
-      </div>
-
-      <div className="det-video-overlays">
-        <span className={`det-video-tag ${polypDetected ? '' : 'det-video-tag--off'}`}>
-          Polyp: {polypDetected ? `Detected (${polypCount})` : 'Not Detected'}
-        </span>
       </div>
 
       <span className="det-video-fps">{fps.toFixed(1)} FPS</span>

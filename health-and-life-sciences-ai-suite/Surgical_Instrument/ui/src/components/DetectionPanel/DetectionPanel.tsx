@@ -31,8 +31,6 @@ const DetectionPanel: React.FC<DetectionPanelProps> = ({ expanded = false }) => 
           frameUrl={detection.frameUrl}
           fps={detection.fps}
           systemStatus={detection.systemStatus}
-          polypDetected={detection.polyp.detected}
-          polypCount={detection.polyp.count}
           isExpanded={isVideoExpanded}
           panelExpanded={expanded}
           onExpand={() => handleExpand('video')}

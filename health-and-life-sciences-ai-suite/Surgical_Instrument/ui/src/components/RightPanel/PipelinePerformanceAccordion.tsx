@@ -71,16 +71,6 @@ export function PipelinePerformanceAccordion() {
   }
 
   const modelInfo = useAppSelector((state) => state.detection.data.modelInfo);
-  const totalFrames = useAppSelector((state) => state.detection.data.totalFrames);
-  const uptime = useAppSelector((state) => state.detection.data.uptime);
-
-  const fmtUptime = (s: number) => {
-    if (!s || s <= 0) return '—';
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = Math.floor(s % 60);
-    return h > 0 ? `${h}h ${m}m ${sec}s` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-  };
 
   const thStyle: React.CSSProperties = {
     padding: '8px 10px', color: '#fff', fontWeight: 600, fontSize: '11px',
@@ -100,7 +90,7 @@ export function PipelinePerformanceAccordion() {
               <th style={thStyle}>Device</th>
               <th style={thStyle} title="Frame arrival rate at the sink (throughput). Counted from MQTT metadata messages the backend receives.">FPS</th>
               <th style={thStyle} title="gvadetect element residence: pure model + pre/post on the selected device. Source: GStreamer core `latency` tracer, element-latency for element=det. Format: mean · p99 (last 120 frames).">Inference (mean · p99)</th>
-              <th style={thStyle} title="Per-frame sum of element-latency across the full AI + annotate + encode chain (gvadetect + gvatrack + gvametaconvert + bbox-draw + jpegenc). Excludes decode and any playback pacing wait — this is the true camera-to-screen latency for a live-source deployment. Format: mean · p99 (last 120 frames).">Pipeline Latency (mean · p99)</th>
+              <th style={thStyle} title="DL Streamer pipeline end-to-end frame residence (`latency_tracer_pipeline.frame_latency`) over the rolling window. Format: mean · p99.">E2E (DLS frame_latency) mean · p99</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -159,9 +149,9 @@ export function PipelinePerformanceAccordion() {
                       ? `${sseRow.infer_ms.toFixed(1)} · ${(sseRow.infer_p99_ms ?? 0).toFixed(1)} ms`
                       : '—'}
                   </td>
-                  <td style={numStyle} title="Per-frame sum of element-latency across gvadetect + gvatrack + gvametaconvert + gvawatermark + jpegenc. Excludes decode and playback pacing — the camera-to-screen number for a live source.">
-                    {(sseRow.processing_mean_ms ?? 0) > 0
-                      ? `${(sseRow.processing_mean_ms ?? 0).toFixed(1)} · ${(sseRow.processing_p99_ms ?? 0).toFixed(1)} ms`
+                  <td style={numStyle} title="DL Streamer latency_tracer_pipeline.frame_latency, aggregated as mean · p99 over the rolling window.">
+                    {(sseRow.e2e_mean_ms ?? 0) > 0
+                      ? `${(sseRow.e2e_mean_ms ?? 0).toFixed(1)} · ${(sseRow.e2e_p99_ms ?? 0).toFixed(1)} ms`
                       : '—'}
                   </td>
                   <td style={cellStyle}>

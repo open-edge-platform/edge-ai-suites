@@ -125,7 +125,14 @@ def run_one(device: str) -> dict:
         pass
     post("/reset")
     post("/device", {"device": device})
-    post("/start")
+    # Explicitly pin the source to the recorded video so the bench is
+    # reproducible even if a prior UI session left the pipeline configured
+    # for a live camera. Without this the run inherits whatever `source`
+    # was last set and can silently produce 0-detection numbers.
+    post("/start", {
+        "device": device,
+        "source": {"kind": "file", "arg": "/videos/polyp_test.mp4"},
+    })
 
     time.sleep(3)
     print(f"  sampling {RUN_SECONDS}s", flush=True)

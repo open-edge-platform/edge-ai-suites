@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setActiveDevice, resetDetectionState } from '../../redux/slices/detectionSlice';
+import { setActiveDevice, resetDetectionState, patchDetectionState } from '../../redux/slices/detectionSlice';
+import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
+import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
 import {
   api,
   type Device,
@@ -38,10 +40,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const [activeTab, setActiveTab]         = useState<Tab>('source');
   const [pendingDevice, setPendingDevice] = useState<Device>(currentDevice);
-  const [deviceBusy, setDeviceBusy]       = useState(false);
-  const [deviceStatus, setDeviceStatus]   = useState<string>('');
   const [resetBusy, setResetBusy]         = useState(false);
   const [resetStatus, setResetStatus]     = useState<string>('');
+  const [restartBusy, setRestartBusy]     = useState(false);
+  const [restartStatus, setRestartStatus] = useState<string>('');
 
   // Source tab state
   const [videos, setVideos]           = useState<VideoItem[]>([]);
@@ -52,7 +54,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [pendingVideo, setPendingVideo] = useState<string | null>(null); // basename selected in the dropdown
   const [sourceStatus, setSourceStatus] = useState<string>('');
   const [uploadBusy, setUploadBusy]   = useState(false);
-  const [sourceBusy, setSourceBusy]   = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Camera-source state (populated on modal open; empty on hosts with no camera)
@@ -112,9 +113,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   useEffect(() => {
     if (!isOpen) return;
     setPendingDevice(currentDevice);
-    setDeviceStatus('');
     setResetStatus('');
     setSourceStatus('');
+    setRestartStatus('');
     refreshVideos();
   }, [isOpen, currentDevice, refreshVideos]);
 
@@ -126,45 +127,131 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
+  // Derived flags — declared before the early-return so all handlers below
+  // (including handleApplyAndRestart) can reference them via closure.
   const deviceDirty = pendingDevice !== currentDevice;
 
-  const handleApplyDevice = async () => {
-    if (!deviceDirty || deviceBusy || isProcessing) return;
-    setDeviceBusy(true);
-    setDeviceStatus('');
+  if (!isOpen) return null;
+
+  // Wait until the backend reports lifecycle in the given set, or timeout.
+  const waitForLifecycle = async (want: Set<string>, timeoutMs = 8000): Promise<boolean> => {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      try {
+        const snap = await api.getStatusSnapshot();
+        if (snap && typeof snap.lifecycle === 'string' && want.has(snap.lifecycle)) {
+          return true;
+        }
+      } catch {
+        /* keep polling */
+      }
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    return false;
+  };
+
+  // Shared stop → (optional /api/reset) → start cycle used by both the
+  // "Apply & Restart" (Input Source tab) and "Reset Session & Restart"
+  // (Devices tab) buttons. Handles the running / stopped cases uniformly.
+  const runRestart = async (opts: {
+    setBusy: (b: boolean) => void;
+    setStatus: (s: string) => void;
+    applyDevice: boolean;      // POST /api/device with pendingDevice
+    resetSession: boolean;     // POST /api/reset between stop and start
+    applySource: boolean;      // stash pendingKind/pendingVideo/pendingCamera for /api/start
+  }): Promise<void> => {
+    opts.setBusy(true);
+    opts.setStatus('Applying changes…');
     try {
-      await api.setDevice(pendingDevice);
-      dispatch(setActiveDevice(pendingDevice));
-      setDeviceStatus('Saved');
-      setTimeout(() => setDeviceStatus(''), 2500);
+      // 1) Stop first if the pipeline is currently running.
+      if (isProcessing) {
+        dispatch({ type: 'sse/disconnect' });
+        dispatch(stopProcessing());
+        dispatch(stopAllWorkloads());
+        dispatch(patchDetectionState({ systemStatus: 'stopping' }));
+        opts.setStatus('Stopping pipeline…');
+        try { await api.stop('all'); } catch { /* fall through to poll */ }
+        await waitForLifecycle(new Set(['ready', 'error']));
+        dispatch(patchDetectionState({ systemStatus: 'ready' }));
+      }
+
+      // 2) Apply device change (backend rejects while running — safe now).
+      if (opts.applyDevice && deviceDirty) {
+        opts.setStatus('Applying device change…');
+        await api.setDevice(pendingDevice);
+        dispatch(setActiveDevice(pendingDevice));
+      }
+
+      // 3) Clear frozen post-stop KPIs + frame if requested.
+      if (opts.resetSession) {
+        opts.setStatus('Resetting session…');
+        try {
+          await api.reset();
+          dispatch(resetDetectionState());
+          // Preserve the freshly-applied device selection.
+          dispatch(setActiveDevice(opts.applyDevice ? pendingDevice : currentDevice));
+        } catch (err) {
+          // Reset failure shouldn't abort the restart — surface it but continue.
+          const msg = err instanceof Error ? err.message : String(err);
+          opts.setStatus(`Reset warning: ${msg}`);
+        }
+      }
+
+      // 4) Queue source change; startWorkloads() will include it in the body.
+      if (opts.applySource) {
+        let arg: string | null = null;
+        if (pendingKind === 'file') {
+          arg = pendingVideo ? `${videosDir}/${pendingVideo}` : null;
+        } else if (pendingKind === 'basler') {
+          arg = pendingCamera;
+        }
+        if (arg) {
+          api.setPendingSource({ kind: pendingKind, arg });
+        }
+      }
+
+      // 5) Start the pipeline with the new settings.
+      opts.setStatus('Starting pipeline…');
+      dispatch(startProcessing());
+      dispatch(startAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'starting' }));
+      const resp = await api.start('all');
+      if (resp.status === 'starting' || resp.status === 'running' || resp.status === 'ok') {
+        const eventsUrl = api.getEventsUrl(['all']);
+        dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
+        opts.setStatus('Pipeline restarted');
+        setTimeout(() => opts.setStatus(''), 3000);
+      } else {
+        throw new Error(`Start failed: ${JSON.stringify(resp)}`);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setDeviceStatus(`Error: ${msg}`);
+      dispatch(stopProcessing());
+      dispatch(stopAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
+      opts.setStatus(`Error: ${msg}`);
     } finally {
-      setDeviceBusy(false);
+      opts.setBusy(false);
     }
   };
 
-  const handleReset = async () => {
-    if (resetBusy || isProcessing) return;
-    setResetBusy(true);
-    setResetStatus('');
-    try {
-      const dev = currentDevice;
-      await api.reset();
-      dispatch(resetDetectionState());
-      dispatch(setActiveDevice(dev));
-      setResetStatus('Session cleared');
-      setTimeout(() => setResetStatus(''), 2500);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setResetStatus(`Error: ${msg}`);
-    } finally {
-      setResetBusy(false);
-    }
-  };
+  const handleApplyAndRestart = () =>
+    runRestart({
+      setBusy: setRestartBusy,
+      setStatus: setRestartStatus,
+      applyDevice: true,
+      resetSession: false,
+      applySource: true,
+    });
+
+  const handleResetAndRestart = () =>
+    runRestart({
+      setBusy: setResetBusy,
+      setStatus: setResetStatus,
+      applyDevice: true,
+      resetSession: true,
+      applySource: true,
+    });
 
   const handleChooseFile = () => {
     if (uploadBusy || isProcessing) return;
@@ -191,50 +278,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     }
   };
 
-  const handleApplySource = () => {
-    if (sourceBusy || isProcessing) return;
-    // Build the outgoing source payload per selected kind.
-    let arg: string | null = null;
-    if (pendingKind === 'file') {
-      if (!pendingVideo) return;
-      arg = `${videosDir}/${pendingVideo}`;
-    } else if (pendingKind === 'basler') {
-      if (!pendingCamera) return;
-      arg = pendingCamera;                    // Basler serial number
-    }
-    if (!arg) return;
-
-    setSourceBusy(true);
-    setSourceStatus('');
-    // Persist client-side; startWorkloads() will include this in the next
-    // POST /api/start body. We don't hit the backend now because it rejects
-    // source changes while running (409) and there's no dedicated
-    // `POST /api/source` endpoint yet.
-    api.setPendingSource({ kind: pendingKind, arg });
-    setSourceStatus('Applied on next Start');
-    setTimeout(() => setSourceStatus(''), 3000);
-    setSourceBusy(false);
-  };
-
-  // "Dirty" = pending selection differs from what's actually running now.
-  const sourceDirty = (() => {
-    const pendingArg =
-      pendingKind === 'file'
-        ? (pendingVideo ? `${videosDir}/${pendingVideo}` : null)
-        : pendingCamera;
-    if (!pendingArg) return false;
-    // Compare against what /api/config reported. For `file` we compare basenames
-    // (activeVideo is the full path); for camera kinds we only know the running
-    // source is a camera when config.source.kind agrees.
-    const runningName = activeVideo ? activeVideo.replace(/^.*\//, '') : null;
-    if (pendingKind === 'file') {
-      return pendingVideo !== runningName;
-    }
-    // For v4l2/basler, dirtiness is "kind changed" or "we don't know the current
-    // camera arg" — err on the side of enabling Apply so the user can commit.
-    return true;
-  })();
-
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
@@ -242,12 +285,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           <h2>Settings</h2>
           <button className="settings-close-btn" onClick={onClose} title="Close (Esc)">×</button>
         </div>
-
-        {isProcessing && (
-          <div className="settings-running-banner">
-            Pipeline is running — stop it before changing hardware, source, or resetting the session.
-          </div>
-        )}
 
         <div className="settings-tabs">
           <button
@@ -268,8 +305,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {activeTab === 'devices' && (
             <div className="settings-section">
               <p className="settings-hint" style={{ marginBottom: 12 }}>
-                Choose which accelerator runs the polyp-detection model.
-                Change is applied when you click Save.
+                Choose which accelerator runs the polyp-detection model. Clicking
+                <strong> Reset Session &amp; Restart</strong> will stop the pipeline (if running),
+                switch to the selected device, clear session counters, and start again
+                with the current input source.
               </p>
 
               <table className="settings-device-table">
@@ -289,7 +328,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                         className="settings-select"
                         value={pendingDevice}
                         onChange={(e) => setPendingDevice(e.target.value as Device)}
-                        disabled={isProcessing || deviceBusy}
+                        disabled={resetBusy}
                       >
                         {DEVICE_OPTIONS.map((d) => (
                           <option key={d} value={d}>{d}{currentDevice === d ? ' (current)' : ''}</option>
@@ -303,32 +342,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className="settings-actions">
                 <button
                   className="settings-btn settings-btn-primary"
-                  onClick={handleApplyDevice}
-                  disabled={!deviceDirty || deviceBusy || isProcessing}
+                  onClick={handleResetAndRestart}
+                  disabled={resetBusy || restartBusy}
                   title={
-                    isProcessing ? 'Stop the pipeline first'
-                    : !deviceDirty ? 'No change to save'
-                    : 'Apply device change'
+                    deviceDirty
+                      ? `Stop, switch to ${pendingDevice}, clear the session, and restart the pipeline`
+                      : 'Clear session counters and restart the pipeline on the current device + source'
                   }
                 >
-                  {deviceBusy ? 'Saving…' : 'Save'}
+                  {resetBusy
+                    ? 'Restarting…'
+                    : (isProcessing ? 'Reset Session & Restart' : 'Reset Session & Start')}
                 </button>
-                <button
-                  className="settings-btn settings-btn-secondary"
-                  onClick={handleReset}
-                  disabled={resetBusy || isProcessing}
-                  title={isProcessing ? 'Stop the pipeline first' : 'Clear the last session'}
-                >
-                  {resetBusy ? 'Resetting…' : 'Reset session'}
-                </button>
-                {deviceStatus && (
-                  <span className={`settings-status-inline ${deviceStatus.startsWith('Error') ? 'error' : 'success'}`}>
-                    {deviceStatus.startsWith('Error') ? deviceStatus : '✓ ' + deviceStatus}
-                  </span>
-                )}
-                {resetStatus && !deviceStatus && (
+                {resetStatus && (
                   <span className={`settings-status-inline ${resetStatus.startsWith('Error') ? 'error' : 'success'}`}>
-                    {resetStatus.startsWith('Error') ? resetStatus : '✓ ' + resetStatus}
+                    {resetStatus.startsWith('Error') || resetBusy ? resetStatus : '✓ ' + resetStatus}
                   </span>
                 )}
               </div>
@@ -337,6 +365,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {activeTab === 'source' && (
             <div className="settings-section">
+              <p className="settings-hint" style={{ marginBottom: 12 }}>
+                Pick a video file or a Basler camera, then click
+                <strong> Apply &amp; Restart</strong>. If the pipeline is running it will be
+                stopped, restarted with the new source, and continue on the currently selected
+                inference device.
+              </p>
+
               <div className="settings-field-group">
                 <label className="settings-label">Active Video</label>
                 <div className="settings-active-video">
@@ -359,7 +394,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       value="file"
                       checked={pendingKind === 'file'}
                       onChange={() => setPendingKind('file')}
-                      disabled={isProcessing || uploadBusy}
+                      disabled={uploadBusy || restartBusy}
                     />
                     <span>Video file</span>
                   </label>
@@ -373,7 +408,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                         setPendingKind('basler');
                         if (!pendingCamera && baslerCams[0]) setPendingCamera(baslerCams[0].serial);
                       }}
-                      disabled={isProcessing || uploadBusy || baslerCams.length === 0}
+                      disabled={uploadBusy || restartBusy || baslerCams.length === 0}
                     />
                     <span>Basler camera{baslerCams.length === 0 ? ' (none detected)' : ''}</span>
                   </label>
@@ -388,7 +423,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       className="settings-select"
                       value={pendingVideo ?? ''}
                       onChange={(e) => setPendingVideo(e.target.value || null)}
-                      disabled={isProcessing || uploadBusy || videos.length === 0}
+                      disabled={uploadBusy || restartBusy || videos.length === 0}
                       style={{ minWidth: 320 }}
                     >
                       {videos.length === 0 && <option value="">(no videos available)</option>}
@@ -404,7 +439,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     </select>
                     <p className="settings-hint" style={{ marginTop: 8 }}>
                       Files live under <code>{videosDir}</code> inside the container (host <code>./videos</code>).
-                      New selection takes effect on the next Start.
                     </p>
                   </div>
 
@@ -421,8 +455,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       <button
                         className="settings-btn settings-btn-secondary"
                         onClick={handleChooseFile}
-                        disabled={uploadBusy || isProcessing}
-                        title={isProcessing ? 'Stop the pipeline first' : 'Upload a new video'}
+                        disabled={uploadBusy || isProcessing || restartBusy}
+                        title={isProcessing ? 'Stop the pipeline first (uploads share the videos volume)' : 'Upload a new video'}
                       >
                         {uploadBusy ? 'Uploading…' : 'Choose file…'}
                       </button>
@@ -441,7 +475,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     className="settings-select"
                     value={pendingCamera ?? ''}
                     onChange={(e) => setPendingCamera(e.target.value || null)}
-                    disabled={isProcessing || baslerCams.length === 0}
+                    disabled={restartBusy || baslerCams.length === 0}
                     style={{ minWidth: 320 }}
                   >
                     {baslerCams.length === 0 && <option value="">(no Basler cameras detected)</option>}
@@ -462,23 +496,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className="settings-actions">
                 <button
                   className="settings-btn settings-btn-primary"
-                  onClick={handleApplySource}
+                  onClick={handleApplyAndRestart}
                   disabled={
-                    !sourceDirty || sourceBusy || isProcessing ||
+                    restartBusy || resetBusy ||
                     (pendingKind === 'file'   && !pendingVideo) ||
-                    (pendingKind !== 'file'   && !pendingCamera)
+                    (pendingKind === 'basler' && !pendingCamera)
                   }
                   title={
-                    isProcessing ? 'Stop the pipeline first'
-                    : (pendingKind === 'file' && !pendingVideo) ? 'Select a video first'
-                    : (pendingKind !== 'file' && !pendingCamera) ? 'Select a camera first'
-                    : !sourceDirty ? 'Selection matches current source'
-                    : 'Apply on next Start'
+                    (pendingKind === 'file'   && !pendingVideo)   ? 'Select a video first'
+                    : (pendingKind === 'basler' && !pendingCamera) ? 'Select a camera first'
+                    : isProcessing ? 'Stop, apply the new source + device, and restart the pipeline'
+                    : 'Start the pipeline with the selected source + device'
                   }
                 >
-                  Apply
+                  {restartBusy
+                    ? 'Restarting…'
+                    : (isProcessing ? 'Apply & Restart' : 'Apply & Start')}
                 </button>
-                {sourceStatus && (
+                {restartStatus && (
+                  <span className={`settings-status-inline ${restartStatus.startsWith('Error') ? 'error' : 'success'}`}>
+                    {restartStatus.startsWith('Error') || restartBusy ? restartStatus : '✓ ' + restartStatus}
+                  </span>
+                )}
+                {sourceStatus && !restartStatus && (
                   <span className={`settings-status-inline ${sourceStatus.startsWith('Error') ? 'error' : 'success'}`}>
                     {sourceStatus.startsWith('Error') ? sourceStatus : '✓ ' + sourceStatus}
                   </span>
@@ -489,7 +529,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         <div className="settings-modal-footer">
-          <button className="settings-btn settings-btn-secondary" onClick={onClose}>Close</button>
+          <button
+            className="settings-btn settings-btn-secondary"
+            onClick={onClose}
+            disabled={restartBusy || resetBusy}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

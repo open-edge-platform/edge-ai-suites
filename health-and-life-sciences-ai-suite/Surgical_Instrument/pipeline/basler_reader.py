@@ -85,11 +85,25 @@ def _open_camera(serial: str | None) -> "pylon.InstantCamera":
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Basler → stdout raw BGR bridge.")
+    p = argparse.ArgumentParser(description="Basler → stdout raw video bridge.")
     p.add_argument("serial", nargs="?", default=None,
                    help="Camera serial (omit to grab first device)")
     p.add_argument("--geometry", type=_parse_geometry, default="1920x1080@60",
                    help="Frame geometry as WxH@fps (default 1920x1080@60)")
+    p.add_argument("--pixel-format", choices=("bgr", "uyvy"),
+                   default="bgr",
+                   help="Output raw pixel format on stdout (default bgr for "
+                        "backward compat). 'uyvy' switches the camera itself "
+                        "to native YCbCr422_8 output (2 B/px, packed UYVY) "
+                        "and skips pylon's ImageFormatConverter entirely. "
+                        "That's the fastest path: sensor debayer + colour "
+                        "convert both happen in the camera FPGA, and the "
+                        "downstream pipeline uses `vapostproc` (iGPU media "
+                        "engine, ~1 ms) for UYVY\u2192NV12 instead of software "
+                        "`videoconvert` (~19 ms). NV12 and converter-based "
+                        "YUY2 modes were removed \u2014 pylon's converter can "
+                        "only output RGB/BGR/Mono for Bayer-native models "
+                        "like acA1920-150uc.")
     args = p.parse_args()
     w, h, fps = args.geometry if isinstance(args.geometry, tuple) \
         else _parse_geometry(args.geometry)
@@ -131,10 +145,52 @@ def main() -> int:
         f"capped at {max_exposure_us} µs (≈ 1/{1_000_000 // max_exposure_us} s)\n"
     )
 
-    # BGR8 output so the downstream `rawvideoparse format=bgr` is a straight copy.
-    converter = pylon.ImageFormatConverter()
-    converter.OutputPixelFormat = pylon.PixelType_BGR8packed
-    converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+    # Output pixel format. Two paths:
+    #
+    #   --pixel-format bgr   (default, backward-compat)
+    #     Camera stays on its BayerBG8 default. `ImageFormatConverter` runs
+    #     a debayer + BGR8 pack in the pylon runtime (SIMD, ~2 ms). Downstream
+    #     pipeline uses `rawvideoparse format=bgr ! videoconvert` (or
+    #     `vapostproc`) to reach NV12 for gvadetect. 3 B/px on the wire.
+    #
+    #   --pixel-format uyvy  (fastest — recommended when supported)
+    #     Camera is switched to native `YCbCr422_8` — the sensor FPGA does
+    #     debayer + YUV422 pack internally, and we write the raw grabbed
+    #     buffer straight to stdout (no ImageFormatConverter). Byte layout
+    #     is UYVY (Cb Y0 Cr Y1), 2 B/px. Downstream pipeline uses
+    #     `rawvideoparse format=uyvy ! vapostproc ! ...NV12` (VA hardware
+    #     colour convert on iGPU media engine, ~1 ms) instead of the ~19 ms
+    #     software `videoconvert`. Requires that the camera advertises
+    #     YCbCr422_8 in its PixelFormat symbolics — we validate that up
+    #     front and exit non-zero otherwise so the pipeline can never
+    #     silently mis-align the blocksize.
+    use_converter = args.pixel_format == "bgr"
+    if args.pixel_format == "uyvy":
+        symbolics = list(cam.PixelFormat.GetSymbolics())
+        if "YCbCr422_8" not in symbolics:
+            sys.stderr.write(
+                f"[basler_reader] camera does not advertise YCbCr422_8 in its "
+                f"PixelFormat symbolics ({symbolics}); refusing to fall back "
+                f"(would misalign pipeline). Use --pixel-format bgr instead.\n"
+            )
+            sys.exit(4)
+        cam.PixelFormat.SetValue("YCbCr422_8")
+        bytes_per_px = 2
+        sys.stderr.write(
+            f"[basler_reader] output format = camera-native YCbCr422_8 "
+            f"(UYVY, {bytes_per_px} B/px, blocksize={int(w*h*bytes_per_px)})\n"
+        )
+        converter = None
+    else:
+        # bgr — go through pylon's software converter.
+        bytes_per_px = 3
+        converter = pylon.ImageFormatConverter()
+        converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+        converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+        sys.stderr.write(
+            f"[basler_reader] output format = PixelType_BGR8packed "
+            f"({bytes_per_px} B/px, blocksize={int(w*h*bytes_per_px)})\n"
+        )
 
     stop = {"flag": False}
     signal.signal(signal.SIGTERM, lambda *_: stop.update(flag=True))
@@ -160,11 +216,16 @@ def main() -> int:
                 )
                 res.Release()
                 continue
-            img = converter.Convert(res)
-            # `GetBuffer()` returns bytes/bytearray of BGR packed pixels.
-            sys.stdout.buffer.write(img.GetBuffer())
+            if use_converter:
+                img = converter.Convert(res)
+                # `GetBuffer()` returns bytes/bytearray of packed BGR pixels.
+                sys.stdout.buffer.write(img.GetBuffer())
+                img.Release()
+            else:
+                # Camera is already emitting the target pixel format; write
+                # the raw grabbed buffer straight through (UYVY packed).
+                sys.stdout.buffer.write(res.GetBuffer())
             sys.stdout.buffer.flush()
-            img.Release()
             res.Release()
             frames += 1
             # Log every ~2s so `docker logs` gives operator feedback.

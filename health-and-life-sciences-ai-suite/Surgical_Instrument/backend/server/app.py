@@ -605,15 +605,128 @@ def hardware_metrics() -> Response:
     })
 
 
+# ---------------------------------------------------------------------------
+# Platform detection — runtime-derived from host /proc + /sys (which containers
+# share with the host kernel), so the same image reports MTL on MTL and PTL on
+# PTL without any config knobs.
+# ---------------------------------------------------------------------------
+
+# Known Intel PCI device IDs we want to give a friendly name to.
+# Anything not in the table falls back to "Intel <class> [8086:xxxx]".
+_INTEL_GPU_NAMES: dict[str, str] = {
+    "7d55": "Intel Arc Graphics (Meteor Lake-P, Xe-LPG)",
+    "7d67": "Intel Arc Graphics (Meteor Lake-U, Xe-LPG)",
+    "7d40": "Intel Arc Graphics (Meteor Lake, Xe-LPG)",
+    "7d45": "Intel Arc Graphics (Meteor Lake, Xe-LPG)",
+    "b0a0": "Intel Xe3 Graphics (Panther Lake)",
+    "b080": "Intel Xe3 Graphics (Panther Lake)",
+    "64a0": "Intel Arc Graphics (Lunar Lake, Xe2)",
+    "7d51": "Intel Arc Graphics (Arrow Lake, Xe-LPG+)",
+}
+
+_INTEL_NPU_NAMES: dict[str, str] = {
+    "7d1d": "Intel AI Boost NPU (Meteor Lake, NPU 3720)",
+    "643e": "Intel AI Boost NPU (Arrow Lake, NPU 3720)",
+    "7d1e": "Intel AI Boost NPU (Lunar Lake, NPU 4.0)",
+    "b01d": "Intel AI Boost NPU (Panther Lake, NPU 4.0)",
+}
+
+
+def _read_first_line(path: str) -> str:
+    try:
+        with open(path, "r") as f:
+            return f.readline().strip()
+    except OSError:
+        return ""
+
+
+def _cpu_model() -> str:
+    try:
+        with open("/proc/cpuinfo", "r") as f:
+            for line in f:
+                if line.lower().startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "unknown CPU"
+
+
+def _mem_total_gib() -> str:
+    try:
+        with open("/proc/meminfo", "r") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    kb = int(line.split()[1])
+                    return f"{kb / (1024 * 1024):.1f} GiB"
+    except (OSError, ValueError, IndexError):
+        pass
+    return "unknown"
+
+
+def _os_pretty() -> str:
+    # Prefer host os-release if the compose file bind-mounts it; fall back
+    # to the container OS (still useful — tells the operator what image
+    # they're on) plus the host kernel version, which containers share.
+    for candidate in ("/host_etc/os-release", "/etc/os-release"):
+        try:
+            with open(candidate, "r") as f:
+                for line in f:
+                    if line.startswith("PRETTY_NAME="):
+                        return line.split("=", 1)[1].strip().strip('"')
+        except OSError:
+            continue
+    return "unknown"
+
+
+def _host_kernel() -> str:
+    return _read_first_line("/proc/sys/kernel/osrelease") or "unknown"
+
+
+def _detect_intel_devices() -> tuple[str, str]:
+    """Return (iGPU, NPU) friendly names from /sys/bus/pci/devices."""
+    igpu = "not detected"
+    npu = "not detected"
+    root = "/sys/bus/pci/devices"
+    try:
+        entries = os.listdir(root)
+    except OSError:
+        return igpu, npu
+    for dev in sorted(entries):
+        base = f"{root}/{dev}"
+        vendor = _read_first_line(f"{base}/vendor").lower()
+        if vendor != "0x8086":
+            continue
+        did = _read_first_line(f"{base}/device").lower().replace("0x", "")
+        klass = _read_first_line(f"{base}/class").lower()
+        # class 0x030000 == VGA, 0x038000 == other display
+        is_gpu = klass.startswith("0x0300") or klass.startswith("0x0380") or did in _INTEL_GPU_NAMES
+        # class 0x120000 == Processing accelerator, 0x118000 == Signal-processing
+        is_npu = klass.startswith("0x1200") or klass.startswith("0x1180") or did in _INTEL_NPU_NAMES
+        if is_gpu and igpu == "not detected":
+            igpu = _INTEL_GPU_NAMES.get(did, f"Intel iGPU [8086:{did}]")
+        elif is_npu and npu == "not detected":
+            # Prefer a name-table hit — some PCH IDs (e.g. 0xb03e) share
+            # class 0x1200 with the NPU but aren't the NPU.
+            if did in _INTEL_NPU_NAMES:
+                npu = _INTEL_NPU_NAMES[did]
+            elif npu == "not detected":
+                # Only fall back to a generic label if we haven't already
+                # matched a known NPU on this bus.
+                npu = f"Intel NPU [8086:{did}]"
+    return igpu, npu
+
+
 @app.get(f"{API}/platform-info")
 def platform_info() -> Response:
+    igpu, npu = _detect_intel_devices()
+    os_line = _os_pretty()
+    kernel = _host_kernel()
     return jsonify({
-        "Processor": "Intel Core Ultra 7 165HL (Meteor Lake)",
-        "NPU":       "Intel AI Boost NPU 3720",
-        "iGPU":      "Intel Arc Graphics (Xe-LPG)",
-        "Memory":    "32 GiB DDR5-5600",
-        "Storage":   "1 TB NVMe SSD",
-        "OS":        "Ubuntu 24.04 LTS",
+        "Processor": _cpu_model(),
+        "NPU":       npu,
+        "iGPU":      igpu,
+        "Memory":    _mem_total_gib(),
+        "OS":        f"{os_line} (kernel {kernel})" if kernel != "unknown" else os_line,
     })
 
 

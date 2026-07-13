@@ -74,17 +74,6 @@
   color: #333;
 }
 
-/* Running info banner */
-.settings-running-banner {
-  background: #e3f2fd;
-  color: #1565c0;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 24px;
-  border-bottom: 1px solid #90caf9;
-  text-align: center;
-}
-
 .settings-tabs {
   display: flex;
   background: #fff;

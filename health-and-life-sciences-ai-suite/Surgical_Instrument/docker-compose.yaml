@@ -143,9 +143,17 @@ services:
       # Persistent SYCL / OpenCL kernel cache. Without this, every fresh
       # container recreate triggers 10-15 min of JIT compilation on Xe3.
       - surgical-sycl-cache:/root/.cache
-      # Read-only view of the shared frames volume — pipeline writes,
-      # backend reads.
-      - surgical-frames:/frames:ro
+      # Shared frames volume — pipeline writes JPEG + latency log; backend
+      # reads them and must be able to unlink `latest.jpg` on Start so a
+      # stale frame from a previous session (e.g. a Basler frame left over
+      # after switching to a file source) is not served during the first
+      # start-up second. Read-only would silently drop the unlink and leak
+      # the old frame to the UI.
+      - surgical-frames:/frames
+      # Host OS release info — surfaced by /api/platform-info so the UI
+      # reports the actual host distro (e.g. Ubuntu 25.10 on PTL) rather
+      # than the backend container's baked-in image OS.
+      - /etc/os-release:/host_etc/os-release:ro
 
     environment:
       BACKEND_CONFIG: /app/backend/config/model.yaml

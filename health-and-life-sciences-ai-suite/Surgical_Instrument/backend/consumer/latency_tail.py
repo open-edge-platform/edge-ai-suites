@@ -72,19 +72,24 @@ _RE_PIPELINE = re.compile(
 _INFER_ELEM = re.compile(r"^(gvadetect|det)\d*$")
 
 # Elements in the "processing chain" — AI inference + tracker + metadata +
-# on-screen annotate + JPEG encode. `drawer` is our custom gvapython that
-# replaced `gvawatermark` (single-green boxes; see pipeline/watermark_green.py);
-# it's named explicitly in pipeline_string.py so its element-latency ticks
-# land under a stable name here. `meta` is our tee's name, NOT a
+# on-screen annotate + JPEG encode. For the file/v4l2 branches the drawer
+# is our custom gvapython (named `drawer`; see pipeline/watermark_green.py).
+# For the basler branch the drawer is DL Streamer's built-in `gvawatermark`
+# (VA-memory native, no colour convert) — it appears in tracer logs as
+# `gvawatermarkimpl0`. Both names are listed so the same allowlist works
+# regardless of source_kind. `meta` is our tee's name, NOT a
 # gvametaconvert. `gvametaconvert0` is the one in the display chain (before
 # the tee); the MQTT branch has a separate gvapython publisher not counted
 # as "processing" here (it's I/O to an external broker).
 _PROCESSING_ELEMENTS: tuple[str, ...] = (
-    "det",              # gvadetect
+    "det",                # gvadetect (explicit name)
+    "gvadetect0",         # gvadetect (default auto name)
     "gvatrack0",
     "gvametaconvert0",
-    "drawer",           # gvapython single-green bbox drawer
-    "vajpegenc0",       # VA-API HW JPEG encoder on iGPU (was libjpeg-turbo/jpegenc0)
+    "drawer",             # gvapython single-green bbox drawer (file/v4l2)
+    "gvawatermark0",      # gvawatermark auto name
+    "gvawatermarkimpl0",  # gvawatermark internal impl (basler VA-native path)
+    "vajpegenc0",         # VA-API HW JPEG encoder on iGPU (was libjpeg-turbo/jpegenc0)
 )
 
 
@@ -213,9 +218,18 @@ class LatencyTail:
         # first frame or two.
         elem_means = [self._mean(v) for v in elem_snap.values() if v]
         elem_p99s = [self._p99(v) for v in elem_snap.values() if v]
-        # Only report a processing number once we've observed every
-        # element at least once — otherwise it under-reports.
-        if len(elem_means) == len(_PROCESSING_ELEMENTS):
+        # Report processing once we have at least an inference element and
+        # at least one render/encode element observed. Requiring every
+        # historical element name to be present can pin this to zero when
+        # the active pipeline variant omits optional stages.
+        has_infer = bool(elem_snap.get("det") or elem_snap.get("gvadetect0"))
+        has_render = bool(
+            elem_snap.get("gvawatermark0")
+            or elem_snap.get("gvawatermarkimpl0")
+            or elem_snap.get("drawer")
+            or elem_snap.get("vajpegenc0")
+        )
+        if has_infer and has_render and elem_means:
             proc_mean = sum(elem_means)
             proc_p99 = sum(elem_p99s)
         else:

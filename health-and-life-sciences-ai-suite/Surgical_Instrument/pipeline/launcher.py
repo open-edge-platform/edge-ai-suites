@@ -103,15 +103,25 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     # the container log so `docker logs` shows pipeline errors.
     #
     # For `basler`, the pipeline_string.py starts with `fdsrc fd=0`; a small
-    # Python helper (basler_reader.py) streams raw BGR frames from pypylon
+    # Python helper (basler_reader.py) streams raw YUY2 frames from pypylon
     # to stdout, which we pipe into gst-launch's fd=0. `exec` on the tail
     # ensures the shell doesn't linger past the pipeline exit; PIPESTATUS/
     # set -o pipefail isn't needed because our supervisor only cares that
     # *any* pipe stage exiting takes the whole group down.
+    #
+    # basler_reader.py streams raw camera-native YCbCr422_8 (UYVY, 2 B/px)
+    # frames from pypylon on stdout — no `pylon.ImageFormatConverter`, no
+    # software colour convert. pipeline_string.py's basler branch consumes
+    # them via `fdsrc ! rawvideoparse format=uyvy ! vapostproc ! NV12` in VA
+    # memory, and the drawer branch is `gvawatermark` (VA-native), so the
+    # entire video path stays on the iGPU media engine — no `videoconvert`
+    # anywhere. `--pixel-format bgr` remains available as a fallback for
+    # cameras that do not advertise YCbCr422_8 (basler_reader.py fails fast
+    # in that case).
     if source_kind == "basler":
         cmd = (
             f"exec python3 /opt/basler_reader.py {source_arg} "
-            f"--geometry 1920x1080@{TARGET_FPS} "
+            f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy "
             f"| exec gst-launch-1.0 {pipeline}"
         )
     else:
