@@ -162,7 +162,7 @@ alert-agent-service:
   image:
     registry: intel
     repository: alert-agent-service
-    tag: 2026.2.0
+    tag: 2026.2.0-rc1
   port: 8000
   service:
     type: ClusterIP
