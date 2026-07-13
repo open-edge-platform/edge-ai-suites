@@ -162,7 +162,7 @@ alert-agent-service:
   image:
     registry: intel
     repository: alert-agent-service
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0
   port: 8000
   service:
     type: ClusterIP
@@ -201,7 +201,7 @@ alert-agent-service:
 metrics-manager:
   image:
     repository: "intel/metrics-manager"
-    tag: "2026.1.0-rc2"
+    tag: "2026.1.0"
   service:
     type: NodePort
     metricsPort: 9090

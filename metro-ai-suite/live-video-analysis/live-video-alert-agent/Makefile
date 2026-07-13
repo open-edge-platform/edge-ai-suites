@@ -63,7 +63,7 @@ COMPONENTS := live-video-alert-agent
 DOCKER_DIR := docker
 
 # Intel platform images (pre-built, fixed release tags)
-METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.1.0-rc2
+METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.1.0
 PLATFORM_IMAGES       := $(METRICS_MANAGER_IMAGE)
 
 # ==============================================================================
