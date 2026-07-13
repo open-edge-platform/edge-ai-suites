@@ -26,7 +26,7 @@ services:
     volumes:
       - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
       - "/run/udev:/run/udev:ro"
-      - ./configs/vllm/models:/checkpoints
+      - ./configs/vllm/models:/lora-adapters
       - ./configs/vllm/huggingface:/root/.cache/huggingface
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
@@ -55,7 +55,7 @@ services:
       - ${VLLM_SERVED_MODEL_NAME}
       - --enable-lora
       - --lora-modules
-      - qwen3.5-2b-adapter=/checkpoints/checkpoint-432/
+      - qwen3.5-2b-adapter=/lora-adapters/qwen3.5-2b-vlm-weld-explainability-lora/
       - -tp=${VLLM_TENSOR_PARALLEL_SIZE}
       - --quantization
       - ${VLLM_QUANTIZATION}
