@@ -1,0 +1,845 @@
+/* =============================================
+   DetectionPanel — mirrors LeftPanel layout system
+   ============================================= */
+
+/* ── Panel content container ── */
+.det-panel-content {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  background: #f5f7fa;
+}
+
+.det-panel-content::-webkit-scrollbar { width: 4px; }
+.det-panel-content::-webkit-scrollbar-track { background: transparent; }
+.det-panel-content::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+.det-panel-content::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+
+/* ── Grid ── */
+.det-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.det-grid--has-expanded {
+  height: auto;
+}
+
+.det-grid__expanded {
+  flex: 1 1 auto;
+  min-height: 400px;
+  max-height: 65vh;
+}
+
+/* Collapsed row */
+.det-collapsed-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.det-collapsed-row .det-video {
+  aspect-ratio: 4 / 3;
+}
+
+/* ── Section Labels ── */
+.det-section-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin: 6px 0 2px 2px;
+  display: block;
+}
+
+/* ── Detection grid — full width column stack ── */
+.det-detection-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+/* ── Generic card base ── */
+.det-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e6e7e8;
+  padding: 12px 14px;
+  transition: box-shadow 0.2s;
+}
+
+.det-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.det-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.det-card-title {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   DETECTION CARDS
+   ═══════════════════════════════════════════ */
+
+.det-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e9ea;
+  border-left: 4px solid #ccc;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  min-height: 56px;
+}
+
+.det-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+/* Left accent bar */
+.det-accent {
+  width: 4px;
+  flex-shrink: 0;
+  background: #ccc;
+  border-radius: 4px 0 0 4px;
+  margin-left: -4px;
+}
+
+.det-card--on   { border-left-color: #2e7d32; }
+.det-card--on   .det-accent { background: #2e7d32; }
+.det-card--warn { border-left-color: #e65100; }
+.det-card--warn .det-accent { background: #e65100; }
+.det-card--off  { border-left-color: #c62828; }
+.det-card--off  .det-accent { background: #c62828; }
+
+.det-body {
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Row 1: icon + title + pill */
+.det-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Row 2: subtitle */
+.det-row--sub {
+  margin-top: 1px;
+}
+
+.det-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.det-title {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a2e;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status pill */
+.det-pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.det-pill--on   { background: #e8f5e9; color: #2e7d32; }
+.det-pill--warn { background: #fff3e0; color: #e65100; }
+.det-pill--off  { background: #ffebee; color: #c62828; }
+
+/* Sub text */
+.det-sub {
+  font-family: var(--font-text);
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.det-sub--absent {
+  color: #c62828;
+  font-weight: 500;
+}
+
+/* Confidence — only shown when low */
+.det-conf {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #9ca3af;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.det-conf--warn {
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* Inline confidence next to title (hero variant, high-confidence path) */
+.det-conf-inline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: auto;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+/* ── Hero variant: larger typography for the single-workload polyp card ── */
+.det-card--hero {
+  min-height: 88px;
+  border-left-width: 6px;
+}
+.det-card--hero .det-body {
+  padding: 12px 16px 10px;
+  gap: 4px;
+}
+.det-card--hero .det-icon {
+  font-size: 22px;
+}
+.det-card--hero .det-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.det-card--hero .det-pill {
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+}
+.det-card--hero .det-sub {
+  font-size: 12px;
+}
+.det-card--hero .det-sub--absent {
+  font-size: 12px;
+}
+
+/* ── Session cumulative KPIs (bottom of hero card) — grid layout ── */
+.det-session {
+  padding: 10px 0 0;
+  margin-top: 8px;
+  border-top: 1px dashed #e0e0e0;
+  font-family: var(--font-text);
+}
+.det-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.det-session-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #6b7280;
+  background: #f4f5f7;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.det-session-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+  background: #f4f5f7;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.det-session-time-icon {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.det-session-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.det-session-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 12px;
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  min-height: 52px;
+  justify-content: center;
+}
+.det-session-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.1;
+}
+.det-session-label-sm {
+  font-family: var(--font-text);
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-top: 3px;
+  letter-spacing: 0.2px;
+}
+.det-session-cell--hero {
+  background: linear-gradient(135deg, #eaf3ff 0%, #dbeafe 100%);
+  border-color: #b8daff;
+}
+.det-session-cell--hero .det-session-value {
+  color: #0b3d91;
+  font-size: 22px;
+}
+.det-session-cell--hero .det-session-label-sm {
+  color: #0b3d91;
+  font-weight: 600;
+}
+.det-session-cell--conf .det-session-value {
+  color: #0f766e;
+}
+
+/* Padlock SVG icon in latch card */
+.det-latch-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════
+   VIDEO FEED
+   ═══════════════════════════════════════════ */
+
+.det-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1a1a2e;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #d0d0d0;
+  flex-shrink: 0;
+}
+
+/* Expanded: fill available space but stay 16:9 so overlays align */
+.det-video--expanded {
+  width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+/* Panel full width (right panel collapsed) — keep 16:9 */
+.det-video--panel-full:not(.det-video--expanded) {
+  aspect-ratio: 16 / 9;
+}
+
+.det-video img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Placeholder — must be absolute to fill aspect-ratio box */
+.det-video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-text);
+  gap: 8px;
+  background: #1a1a2e;
+}
+
+.det-video-placeholder-icon  { font-size: 36px; opacity: 0.4; }
+.det-video-placeholder-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); }
+.det-video-placeholder-sub   {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+/* Loading spinner overlay */
+.det-video-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: detectionSpin 0.7s linear infinite;
+}
+@keyframes detectionSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Expand button — bottom-right */
+.det-video-expand-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.det-video-expand-btn:hover { background: rgba(0, 113, 197, 0.8); }
+
+/* Status badge — top-left */
+.det-video-status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  backdrop-filter: blur(4px);
+}
+
+.det-video-status--running { background: rgba(27,122,46,0.85);  color: #fff; }
+.det-video-status--error   { background: rgba(198,40,40,0.85);  color: #fff; }
+.det-video-status--other   { background: rgba(60,60,60,0.75);   color: #eee; }
+
+.det-video-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.9;
+}
+
+.det-video-status-dot--pulse {
+  animation: det-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes det-pulse {
+  0%, 100% { opacity: 0.9; transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* FPS badge — top-right */
+.det-video-fps {
+  position: absolute;
+  top: 8px;
+  right: 38px;
+  z-index: 5;
+  background: rgba(0,0,0,0.55);
+  color: #4caf50;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+/* Box color legend — sits just above the detection-tag row */
+.det-video-legend {
+  position: absolute;
+  left: 8px;
+  bottom: 38px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 10px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  cursor: help;
+  max-width: calc(100% - 16px);
+}
+.det-video-legend-label {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #e5e7eb;
+  margin-right: 2px;
+}
+.det-video-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.det-video-legend-text {
+  color: #cbd5e0;
+  font-size: 9px;
+  margin-left: 3px;
+}
+
+/* Detection tags — bottom */
+.det-video-overlays {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 38px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.det-video-tag {
+  background: rgba(0,0,0,0.55);
+  color: #a5d6a7;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+}
+
+.det-video-tag--warn { color: #ffcc80; }
+.det-video-tag--off  { color: #bdbdbd; }
+
+/* ═══════════════════════════════════════════
+   rPPG CARD
+   ═══════════════════════════════════════════ */
+
+.det-rppg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Vitals row: large BPM + stats column */
+.det-rppg-vitals {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* BPM block */
+.det-rppg-bpm-block {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.det-rppg-value {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+  color: #c62828;
+  transition: color 0.4s;
+}
+
+/* HR status colours — neonatal range 100–160 bpm */
+.det-rppg-value--normal  { color: #c62828; }
+.det-rppg-value--low     { color: #1565c0; }
+.det-rppg-value--high    { color: #e65100; }
+.det-rppg-value--unknown { color: #9e9e9e; }
+
+.det-rppg-unit {
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: #6b7280;
+  align-self: flex-end;
+  margin-bottom: 4px;
+}
+
+/* Trend arrow */
+.det-rppg-trend {
+  font-size: 16px;
+  font-weight: 700;
+  align-self: flex-end;
+  margin-bottom: 3px;
+  line-height: 1;
+}
+
+.det-rppg-trend--up     { color: #e65100; }
+.det-rppg-trend--down   { color: #1565c0; }
+.det-rppg-trend--stable { color: #2e7d32; }
+
+/* Stats column: MIN / MAX / CONF (conf only when low) */
+.det-rppg-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.det-rppg-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.det-rppg-stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+  width: 28px;
+  text-align: right;
+}
+
+.det-rppg-stat-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 28px;
+  text-align: right;
+}
+
+.det-rppg-stat-value--warn { color: #e65100; }
+
+/* Session badge */
+.det-rppg-session {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.det-rppg-session--active   { background: #e8f5e9; color: #2e7d32; }
+.det-rppg-session--inactive { background: #f0f0f0; color: #888; }
+
+/* HR alert banner — only shown when abnormal */
+.det-rppg-alert {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+.det-rppg-alert--low  { background: #e3f2fd; color: #1565c0; border-left: 3px solid #1565c0; }
+.det-rppg-alert--high { background: #fff3e0; color: #e65100; border-left: 3px solid #e65100; }
+
+/* Waveform canvas */
+.det-rppg-canvas-wrap {
+  width: 100%;
+  height: 64px;
+  background: #fafafa;
+  border-radius: 5px;
+  border: 1px solid #e6e7e8;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.det-rppg-canvas-label {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.7;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.det-rppg-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Session progress bar */
+.det-rppg-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.det-rppg-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #e8e9ea;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.det-rppg-progress-fill {
+  height: 100%;
+  background: #bdbdbd;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+
+.det-rppg-progress-fill--active {
+  background: #c62828;
+  transition: width 1s linear;
+}
+
+.det-rppg-progress-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Low signal warning strip — only shown when confidence < 50% */
+.det-rppg-warn-strip {
+  font-family: var(--font-text);
+  font-size: 10px;
+  font-weight: 500;
+  color: #e65100;
+  background: #fff3e0;
+  border-left: 3px solid #e65100;
+  padding: 4px 8px;
+  border-radius: 0 4px 4px 0;
+  margin-top: 6px;
+}
+
+/* ── Removed: .det-card-expand-btn, .det-rppg-card--expanded ── */
+/* rPPG is no longer expandable                                    */
+
+/* ── Removed: .det-signal, .det-signal-dot ── */
+/* Signal dots replaced by SVG padlock in LatchStatusCard         */
+/* and clean ✓/✗ pills in DetectionCard                           */
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+
+   @media (max-width: 900px) {
+    .det-detection-grid,
+    .det-collapsed-row {
+      grid-template-columns: 1fr;
+    }
+
+  .det-grid__expanded {
+    min-height: 300px;
+    max-height: none;
+  }
+
+  .det-video--panel-full:not(.det-video--expanded) {
+    aspect-ratio: 16 / 9;
+  }
+
+/* Action recognition activity card */
+.det-action-labels {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.det-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.det-action-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.det-action-cat {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+.det-action-detail {
+  color: #888;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+.det-action-conf {
+  color: #90caf9;
+  font-weight: 600;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.det-action-warming {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #888;
+  font-style: italic;
+}
+}
