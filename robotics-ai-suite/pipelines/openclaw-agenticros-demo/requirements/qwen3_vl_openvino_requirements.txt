@@ -23,7 +23,7 @@ networkx==3.4.2
 ninja==1.13.0
 nncf==3.1.0
 numpy==2.2.6
-onnx==1.21.0
+onnx==1.22.0
 onnx-ir==0.2.0
 onnxscript==0.6.2
 openvino==2025.4.0
