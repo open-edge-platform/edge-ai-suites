@@ -9,7 +9,7 @@ enabled: true
 
 image:
   repository: intel/metrics-manager
-  tag: ""
+  tag: "2026.1.0"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
