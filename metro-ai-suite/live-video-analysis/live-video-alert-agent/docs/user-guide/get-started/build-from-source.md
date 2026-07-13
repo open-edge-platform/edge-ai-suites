@@ -35,6 +35,15 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 - For NPU deployments, include the NPU override file:
 
   ```bash
+  export OVMS_TARGET_DEVICE=NPU
+  docker compose -f docker/docker-compose.yml -f docker/docker-compose.npu.yml up
+  ```
+
+  You can also run a mixed configuration (for example, GPU for VLM and NPU for LLM):
+
+  ```bash
+  export VLM_TARGET_DEVICE=GPU
+  export LLM_TARGET_DEVICE=NPU
   docker compose -f docker/docker-compose.yml -f docker/docker-compose.npu.yml up
   ```
 
@@ -55,3 +64,4 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 Notes:
 
 - The default port is `9000`, but can be changed in the compose yaml.
+- Use pre-converted OpenVINO IR models from the [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO) for best compatibility. These models are optimized for OVMS and require no additional conversion.

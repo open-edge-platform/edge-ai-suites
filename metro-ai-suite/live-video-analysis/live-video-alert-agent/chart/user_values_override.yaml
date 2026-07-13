@@ -93,10 +93,8 @@ ovms-llm:
   sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
   targetDevice:
     device: "GPU"
-    key: "gpu.intel.com/i915"
 #VLM model configuration
 ovms:
   sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
   targetDevice:
     device: "GPU"
-    key: "gpu.intel.com/i915"

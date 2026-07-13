@@ -37,10 +37,17 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export HF_TOKEN=<your-huggingface-token>
    ```
 
-   For NPU deployments, also set the NPU device node path and use the NPU compose override when starting the stack:
+   For NPU deployments, set the target device to NPU and optionally specify the device node path:
 
    ```bash
    export OVMS_TARGET_DEVICE=NPU
+   ```
+
+   You can also use a mixed configuration (for example, GPU for VLM and NPU for LLM):
+
+   ```bash
+   export VLM_TARGET_DEVICE=GPU
+   export LLM_TARGET_DEVICE=NPU
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -59,6 +66,11 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    # Log verbosity
    export LOG_LEVEL=DEBUG
    ```
+
+   > **Model Selection:** Use pre-converted OpenVINO IR models from the
+   > [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
+   > for best compatibility. These models are optimized for OVMS and require no
+   > additional conversion.
 
    **Agentic dispatch**
 

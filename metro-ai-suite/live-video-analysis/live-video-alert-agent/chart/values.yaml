@@ -30,7 +30,7 @@ global:
     device: ""
     count: 1
     # Host device path mounted into OVMS when targeting NPU.
-    devicePath: "/dev/accel/accel0"
+    devicePath: ""
 
   nodeSelector: {}
 
