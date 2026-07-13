@@ -1,0 +1,442 @@
+.info-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .info-modal {
+    background: white;
+    border-radius: 8px;
+    width: 85%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .info-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f5f5f5;
+  }
+  
+  .info-modal-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2B2C30;
+    font-family: var(--font-text);
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 20px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+  }
+  
+  .close-btn:hover {
+    color: #2B2C30;
+  }
+  
+  .info-tabs {
+    display: flex;
+    padding: 0;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-text);
+  }
+  
+  .tab:hover {
+    color: #0071c5;
+  }
+  
+  .tab.active {
+    color: #0071c5;
+    border-bottom-color: #0071c5;
+  }
+  
+  .info-modal-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    background: #fafafa;
+  }
+  
+  .info-section {
+    margin-bottom: 0;
+  }
+  
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2B2C30;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: var(--font-text);
+  }
+  
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .info-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 16px;
+    transition: border-color 0.2s ease;
+  }
+  
+  .info-card:hover {
+    border-color: #0071c5;
+  }
+  
+  /* Workload Cards */
+  .workload-card {
+    border-left: 3px solid #0071c5;
+  }
+  
+  .workload-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2B2C30;
+    margin: 0 0 8px 0;
+    font-family: var(--font-text);
+  }
+  
+  .workload-description {
+    font-size: 12px;
+    color: #6c757d;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+    font-family: var(--font-text);
+  }
+  
+  .info-metrics {
+    margin: 12px 0;
+  }
+  
+  .info-metrics strong {
+    display: block;
+    font-size: 11px;
+    color: #2B2C30;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-family: var(--font-text);
+  }
+  
+  .metrics-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .metric-badge {
+    padding: 4px 10px;
+    background: #f0f0f0;
+    color: #2B2C30;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font-text);
+  }
+  
+  .medical-terms {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    border-left: 3px solid #0071c5;
+  }
+  
+  .medical-terms strong {
+    display: block;
+    margin-bottom: 10px;
+    color: #2B2C30;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-text);
+  }
+  
+  .term-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .term-item:last-child {
+    border-bottom: none;
+  }
+  
+  .term-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  
+  .term-abbr {
+    font-weight: 600;
+    color: #2B2C30;
+    font-size: 12px;
+    font-family: var(--font-text);
+  }
+  
+  .term-separator {
+    color: #6c757d;
+    font-size: 11px;
+  }
+  
+  .term-full {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
+    font-family: var(--font-text);
+  }
+  
+  .term-def {
+    font-size: 11px;
+    color: #6c757d;
+    margin: 4px 0;
+    line-height: 1.5;
+    font-family: var(--font-text);
+  }
+  
+  .term-range {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 3px 8px;
+    background: #e8f4f8;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #0071c5;
+    font-weight: 500;
+    font-family: var(--font-text);
+  }
+  
+  /* Vital Signs Cards */
+  .vital-card {
+    border-left: 3px solid #0071c5;
+  }
+  
+  .vital-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .vital-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2B2C30;
+    margin: 0;
+    font-family: var(--font-text);
+  }
+  
+  .vital-unit-badge {
+    padding: 3px 8px;
+    background: #f0f0f0;
+    color: #6c757d;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: var(--font-text);
+  }
+  
+  .vital-description {
+    font-size: 11px;
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    font-family: var(--font-text);
+  }
+  
+  .vital-ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .range-item {
+    padding: 8px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: var(--font-text);
+  }
+  
+  .range-item.normal {
+    background: #f0f8f0;
+    color: #2B2C30;
+    border-left: 3px solid #4caf50;
+  }
+  
+  .range-item.critical-low,
+  .range-item.critical-high {
+    background: #fff5f5;
+    color: #2B2C30;
+    border-left: 3px solid #f44336;
+  }
+  
+  .range-item strong {
+    font-weight: 600;
+  }
+  
+  /* ECG Cards */
+  .ecg-card {
+    border-left: 3px solid #0071c5;
+  }
+  
+  .ecg-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  
+  .ecg-code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    background: #0071c5;
+    color: white;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 8px;
+    font-family: var(--font-text);
+  }
+  
+  .ecg-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2B2C30;
+    font-family: var(--font-text);
+  }
+  
+  .ecg-card p {
+    font-size: 11px;
+    color: #6c757d;
+    line-height: 1.6;
+    margin: 0;
+    font-family: var(--font-text);
+  }
+  
+  /* Units Cards */
+  .unit-card {
+    border-left: 3px solid #0071c5;
+  }
+  
+  .unit-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .unit-abbr {
+    font-weight: 600;
+    color: #2B2C30;
+    font-size: 12px;
+    font-family: var(--font-text);
+  }
+  
+  .unit-separator {
+    color: #6c757d;
+    font-size: 11px;
+  }
+  
+  .unit-full {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
+    font-family: var(--font-text);
+  }
+  
+  .unit-usage {
+    font-size: 11px;
+    color: #6c757d;
+    margin: 6px 0 0 0;
+    font-family: var(--font-text);
+  }
+  
+  /* Scrollbar */
+  .info-modal-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .info-modal-content::-webkit-scrollbar-track {
+    background: #f5f5f5;
+  }
+  
+  .info-modal-content::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 3px;
+  }
+  
+  .info-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+  }
+  
+  @media (max-width: 768px) {
+    .info-modal {
+      width: 95%;
+      max-height: 95vh;
+    }
+  
+    .info-modal-header h2 {
+      font-size: 14px;
+    }
+  
+    .tab {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+  
+    .info-modal-content {
+      padding: 12px;
+    }
+  }
