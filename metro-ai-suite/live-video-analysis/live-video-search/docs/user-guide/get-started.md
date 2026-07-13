@@ -122,22 +122,27 @@ You can customize the application behavior by setting the following optional env
     IoU(A, B) = \frac{|A \cap B|}{|A \cup B|}
     $$
 
-3. To use GPU acceleration for embedding generation, set the following variable before running the setup script:
+3. To use accelerator offload for embedding generation, you can use either the GPU shortcut or explicit device selection:
 
     ```bash
-    # Enable GPU embeddings
+    # Mode-aware GPU shortcut for embedding:
+    #   EMBEDDING_PROCESSING_MODE=sdk → DataPrep embedding on GPU
+    #   EMBEDDING_PROCESSING_MODE=api → MME embedding on GPU
     export ENABLE_EMBEDDING_GPU=true
     ```
 
-4. To explicitly select devices for DataPrep and the Multimodal Embedding service, set:
+4. To explicitly select devices for each component, set any of the following (each defaults to `CPU`):
 
     ```bash
-    # CPU or GPU
-    export VDMS_DATAPREP_DEVICE=GPU
-    export EMBEDDING_DEVICE=GPU
+    # CPU / GPU / NPU
+    export DATAPREP_EMBEDDING_DEVICE=NPU   # embedding in vdms-dataprep (sdk mode)
+    export DATAPREP_DETECTION_DEVICE=NPU   # YOLOX object detection in vdms-dataprep
+    export MME_EMBEDDING_DEVICE=NPU        # embedding in multimodal-embedding-serving (api mode)
     ```
 
-    If unset, both default to CPU. Setting `ENABLE_EMBEDDING_GPU=true` forces both to GPU.
+    Each component is configured independently — there is no "baseline" device. Any component left unset defaults to `CPU`.
+
+    > **NPU note:** Not all embedding backends and model combinations support NPU. Check supported model/device combinations at the [OpenVINO Supported Models](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html) page before selecting `NPU`.
 
 ## Configure Cameras
 

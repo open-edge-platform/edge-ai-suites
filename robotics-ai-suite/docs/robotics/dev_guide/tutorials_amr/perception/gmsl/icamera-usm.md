@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 # GMSL Ingestion Guide icamera-usm
 
 
-This tutorial will cover getting GMSL RGB camera stream working as a ROS node to enable quick ingest of GMSL RBG Camera streams. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
+This tutorial will cover getting GMSL RGB camera stream working as a ROS node to enable quick ingest of GMSL RBG Camera streams. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
 
 
 The current tested cameras for this tutorials are the following
@@ -96,7 +96,7 @@ source /opt/ros/$ROS_DISTRO/share/icamera_usm/generate_ai_models.sh --dest ~/tes
 
 ## Run a sample inference pipeline
 ```bash
-ros2 launch icamera_usm usm_multi.launch.py 
+ros2 launch icamera_usm usm_multi.launch.py
 ```
 By default the example only connectes to `camera0` to inference on multiple cameras use the following command. The user will add extra argument `cameras` followed by the extra cameras `camera0` to `cameraX`. To identify what camera streams are available execute `ros2 topic list`, this will show all the published topics. Topics for camera start with the namespace `/icamera`
 
@@ -109,7 +109,7 @@ There are three models downloaded with the `generate_ai_models.sh` script: `yolo
 You can change the model they would like to use bu using the extra arg `model`. The following example provides the same model with the extra arg:
 
 ```bash
-ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml 
+ros2 launch icamera_usm usm_multi.launch.py cameras:=camera0,camera1 model:=$HOME/new_test/models/yolov8/FP16/yolov8n.xml
 ```
 
 You can use RVIZ to visualize the output of the inference. First create a new RVIZ file using `vim`:

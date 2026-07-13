@@ -6,7 +6,6 @@ global:
     source: download
     hostPath: ''
   keepPvc: false
-  sharedPvcName: ''
   usePvc: true
   volumeHostPath: ''
   credentials:
@@ -34,8 +33,6 @@ persistence:
     size: 30Gi
   pgData:
     size: 20Gi
-  sharedData:
-    size: 50Gi
   storageClassName: ''
   vdmsDb:
     size: 50Gi

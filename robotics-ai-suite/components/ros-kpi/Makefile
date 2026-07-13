@@ -189,8 +189,8 @@ enable-power-mon:
 install:
 	@echo "Installing required dependencies..."
 	@echo ""
-	@echo "[1/3] Installing system packages (sysstat, python3-tk, curl)..."
-	@sudo apt-get update -qq && sudo apt-get install -y sysstat python3-tk curl
+	@echo "[1/3] Installing system packages (sysstat, python3-tk, curl, build-essential)..."
+	@sudo apt-get update -qq && sudo apt-get install -y sysstat python3-tk curl build-essential
 	@echo ""
 	@echo "[2/3] Installing uv (Astral)..."
 	@if command -v uv >/dev/null 2>&1; then \

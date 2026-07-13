@@ -77,7 +77,7 @@ configured Kubernetes cluster.
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-   > **Note:** These steps demonstrate launching two pallet-defect-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
+   > **Note:** These steps demonstrate launching two pallet-defect-detection instances and one pcb-anomaly-detection instance. Modify the sample apps and instances as needed for your use case.
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
@@ -96,15 +96,15 @@ configured Kubernetes cluster.
         COTURN_PORT: 30479
         S3_STORAGE_PORT: 30801
 
-    weld-porosity:
-      weld1:
+    pcb-anomaly-detection:
+      pcb1:
         NGINX_HTTP_PORT: 30082
         NGINX_HTTPS_PORT: 30445
         COTURN_PORT: 30480
         S3_STORAGE_PORT: 30802
     ```
 
-    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `weld1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the below mentioned environment variables in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
@@ -231,10 +231,10 @@ configured Kubernetes cluster.
        ...
 
    -------------------------------------------
-   Status of: weld1 (SAMPLE_APP: weld-porosity)
+   Status of: pcb1 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
@@ -300,33 +300,31 @@ configured Kubernetes cluster.
    Payload for pipeline 'pallet_defect_detection' Response: "b35b2a20062e11f1b059efacc0acb924"
 
    ------------------------------------------
-   Processing instance: weld1 from SAMPLE_APP: weld-porosity
+   Processing instance: pcb1 from SAMPLE_APP: pcb-anomaly-detection
    ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: 1<HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/payload.json
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/payload.json
    Payload loaded successfully.
-   Starting first pipeline: weld_porosity_classification
-   Launching pipeline: weld_porosity_classification
-   Extracting payload for pipeline: weld_porosity_classification
-   Found 1 payload(s) for pipeline: weld_porosity_classification
-   Payload for pipeline 'weld_porosity_classification'  Response: "b366127e062e11f19d9a75f141417eac"
+   Starting first pipeline: pcb_anomaly_detection
+   Launching pipeline: pcb_anomaly_detection
+   Extracting payload for pipeline: pcb_anomaly_detection
+   Found 1 payload(s) for pipeline: pcb_anomaly_detection
+   Payload for pipeline 'pcb_anomaly_detection'  Response: "b366127e062e11f19d9a75f141417eac"
    ```
 
 3. Access the WebRTC stream
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & weld1 set to 30445.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & pcb1 set to 30445.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/weld/             # Weld Porosity
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/worker_safety/    # Worker Safety Gear detection
    ```
 
 #### Start pipeline for a particular instance only
@@ -522,9 +520,9 @@ configured Kubernetes cluster.
        "state": "RUNNING"
    }
    ]
-   Processing instance: weld1 from sample app: weld-porosity
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Processing instance: pcb1 from sample app: pcb-anomaly-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    [
    {
@@ -614,10 +612,10 @@ configured Kubernetes cluster.
    }
 
    -------------------------------------------
-   Processing instance: weld1 (SAMPLE_APP: weld-porosity)
+   Processing instance: pcb1 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200

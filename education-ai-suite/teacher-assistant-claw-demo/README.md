@@ -2,6 +2,8 @@
 
 The OpenClaw-based agent functions as the "Teacher Assistant" persona that enables teachers and school staff to query and generate custom reports from classroom session data. This guide sets up a **local, standalone demo** using sample session data and OVMS for on-device inference.
 
+> **Data note:** This demo uses sample input data from `workspace/smart_classroom_incoming`. You can add your own data to `~/.openclaw/workspace/smart_classroom_incoming` for custom analysis.
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                  Teacher Assistant Demo                 │
@@ -38,21 +40,12 @@ The following tools must be available on the system:
 
 ---
 
-## ⚙️ Setup OVMS
-
-OVMS should be setup before OpenClaw installation to ensure easy discoverability and configuration. Run the following script to start the OVMS container in the background:
-
-``` bash
-./setup-ovms.sh
-```
-
-> **Note:** The first run downloads the model (~5GB). The download happens in the background while you proceed with Steps 1–2. The model will be ready by the time you reach Step 3.
-
----
-
 ## 🚀 Setup OpenClaw
 
 Perform the following steps to setup OpenClaw agent for the Teacher Assistant demo.
+
+> **Tip:** Copy and run each command block as a whole.  
+> Commands use `&&`, so the next command runs only if the previous one succeeds.
 
 ---
 
@@ -69,7 +62,19 @@ cd education-ai-suite/teacher-assistant-claw-demo
 
 ---
 
-### Step 2: Install and configure OpenClaw
+### Step 2: Setup OVMS
+
+Run the following script to start the OVMS container in the background:
+
+``` bash
+./setup-ovms.sh
+```
+
+> **Note:** The first run downloads the model (~5GB), so this step may take a few minutes.
+
+---
+
+### Step 3: Install and configure OpenClaw
 
 Install OpenClaw, apply configuration from the repo, start the gateway, and deploy the workspace:
 
@@ -81,56 +86,36 @@ openclaw gateway install &&
 openclaw skills update
 ```
 
-<details>
-<summary>Useful debugging commands</summary>
-
-``` bash
-openclaw gateway status
-openclaw status
-openclaw config get gateway.auth.token
-```
-
-</details>
-
-
-<details>
-<summary>Workspace structure created by the script</summary>
-
-```
-~/.openclaw/workspace/
-├── SOUL.md                          # Agent persona and behavior
-├── AGENTS.md                        # Agent definitions
-├── smart_classroom_incoming/        # Data directory for session reports
-│   └── 2026-06-15/                  # Sample session folder
-│       ├── summary.md
-│       ├── topics.json
-│       ├── engagement_report.json
-│       └── session_meta.json
-└── skills/
-    └── classroom_qa/
-        └── SKILL.md                 # Smart Classroom QA skill definition
-```
-
-</details>
-
-> **Note:** The `~/.openclaw/workspace/smart_classroom_incoming/` directory is where session reports are stored for the agent to analyze. Sample data is included for testing. You can add additional session folders there at any time — the agent will pick them up automatically.
-
 ---
 
-### Step 3: Run OpenClaw agent
+### Step 4: Run OpenClaw agent
 
-Wait for OVMS to finish loading the model (it has been downloading in the background since the OVMS setup), then start the agent:
+Start the agent. This waits for the model to finish loading, then opens the chat:
 
 ``` bash
-until curl -s http://localhost:8000/v3/models | grep -q "Qwen3-8B-int4-ov"; do echo "Waiting for OVMS to load the model..."; sleep 5; done
-openclaw chat
+./run-agent.sh
 ```
 
-Try the following example prompt to verify the agent can read the sample session data:
+If the model isn't ready in time, the script stops with clear next steps on screen (see `Troubleshooting`).
+
+Try this example prompt to verify the agent works:
 
 ```
 Summarize the lesson from June 15
 ```
+
+---
+
+## 🛠️ Troubleshooting
+
+If OVMS model download stops with an HTTP/2 stream error, first check logs to identify the cause, then rerun setup:
+
+``` bash
+docker logs --tail 200 teacher-assistant-ovms
+./setup-ovms.sh
+```
+
+Then rerun Step 4.
 
 ---
 

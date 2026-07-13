@@ -20,35 +20,35 @@ your ROS 2 installation can communicate with the Motor Control Unit (MCU).
 To install the Deb package of the Wandering tutorial on Jackal robots,
 run the following command:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-wandering-jackal-tutorial
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-wandering-jackal-tutorial
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 Make sure that you are logged in as the ``administrator`` user.
 Run the following script, which will start the Wandering Application. After
 a few seconds, the Jackal robot will start moving and the
 RTAB-Map SLAM application will create the map.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 Before running the script, set the ``ROBOT_NAMESPACE`` environment variable
 to match the namespace configured in your ``/etc/clearpath/robot.yaml`` file.
@@ -68,16 +68,16 @@ The script reads ``ROBOT_NAMESPACE`` at startup, sources ``/etc/clearpath/setup.
 to obtain the correct ``ROS_DOMAIN_ID``, and overrides it from
 ``/etc/clearpath/robot.yaml`` to ensure it matches the robot's MCU configuration.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 /opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 [wandering-jackal-rviz2](../../../../images/wandering-jackal-rviz2.png)
 
@@ -103,9 +103,9 @@ of the camera-related topics depend on the version of the installed
 `realsense2-camera` package.
 The camera-related topics start with:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - ``/sensors/camera_0/camera/`` if the ``ros-jazzy-realsense2-camera`` package is version 4.55
 - ``/sensors/camera_0/`` if the ``ros-jazzy-realsense2-camera`` package is version 4.54
@@ -122,9 +122,9 @@ used by Clearpath's remapped camera output) and strips that suffix to derive
 ``${ROBOT_NAMESPACE}``, for example
 ``/j100_0812/sensors/camera_0/camera`` or ``/j100_0812/sensors/camera_0``.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 - ``/sensors/camera_0/camera/`` if the ``ros-humble-realsense2-camera`` package is version 4.55
 - ``/sensors/camera_0/`` if the ``ros-humble-realsense2-camera`` package is version 4.54
@@ -135,8 +135,8 @@ package, the shell script
 checks the name of the camera-related topics and assigns the variable
 ``${CAMERA_NAMESPACE}`` according to the identified camera namespace.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Adaptation of the depthimage_to_laserscan Node
 
@@ -146,9 +146,9 @@ scan. The node expects that it can subscribe to the topics ``depth`` and
 This requirement is fulfilled by remapping the following topics, which are
 published by the ``camera`` node of the Jackal robot:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - if ``ros-jazzy-realsense2-camera`` version is 4.55 (``ros_parameters`` key ``camera``):
 
@@ -179,22 +179,22 @@ ros2 run depthimage_to_laserscan depthimage_to_laserscan_node --ros-args \
          -p output_frame:=camera_0_depth_frame &
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 - if ``ros-humble-realsense2-camera`` version is 4.55:
 
- |Topic name expected by the node|True topic name on the Jackal robot|
- |---|---|
- |``depth``|``/sensors/camera_0/camera/depth/image_rect_raw``|
- |``depth_camera_info``|``/sensors/camera_0/camera/depth/camera_info``|
+  |Topic name expected by the node|True topic name on the Jackal robot|
+  |---|---|
+  |``depth``|``/sensors/camera_0/camera/depth/image_rect_raw``|
+  |``depth_camera_info``|``/sensors/camera_0/camera/depth/camera_info``|
 
 - if ``ros-humble-realsense2-camera`` version is 4.54:
 
   |Topic name expected by the node|True topic name on the Jackal robot|
   |---|---|
-  |``depth`|``/sensors/camera_0/depth/image_rect_raw``|
+  |``depth``|``/sensors/camera_0/depth/image_rect_raw``|
   |``depth_camera_info``|``/sensors/camera_0/depth/camera_info``|
 
 The script ``/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
@@ -209,8 +209,8 @@ ros2 run depthimage_to_laserscan depthimage_to_laserscan_node --ros-args \
          -p output_frame:=camera_0_depth_frame &
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 The ``depthimage_to_laserscan`` node publishes the topic ``/scan``, which is
 subscribed by several other nodes. The laser scan messages, which are broadcast
@@ -237,9 +237,9 @@ the ``jackal_mcu`` node of the Jackal robot:
 |---|---|
 |``/imu/data_raw``|``/sensors/imu_0/data_raw``|
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 The script
 ``/opt/ros/jazzy/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
@@ -254,9 +254,9 @@ ros2 run imu_filter_madgwick imu_filter_madgwick_node --ros-args \
 The IMU topic is prefixed with ``${ROBOT_NAMESPACE}`` because Clearpath
 publishes all sensor topics under the robot's namespace.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 The script
 ``/opt/ros/humble/share/wandering_jackal_tutorial/scripts/wandering_jackal.sh``
@@ -268,8 +268,8 @@ ros2 run imu_filter_madgwick imu_filter_madgwick_node --ros-args \
          --remap /imu/data_raw:=/sensors/imu_0/data_raw &
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Adaptation of the rgbd_sync Node
 
@@ -279,9 +279,9 @@ The node expects that it can subscribe to the topics
 This requirement is fulfilled by remapping the following topics, which are
 published by the ``camera`` node of the Jackal robot:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - if ``ros-jazzy-realsense2-camera`` version is 4.55:
 
@@ -311,9 +311,9 @@ Both launch files can be found in the folder
 The launch files derive the full topic paths from the ``ROBOT_NAMESPACE``
 environment variable at launch time.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 - if ``ros-humble-realsense2-camera`` version is 4.55:
 
@@ -341,8 +341,8 @@ The definition of the remapping can be found in the launch files
 Both launch files can be found in the folder
 ``/opt/ros/humble/share/wandering_jackal_tutorial/launch/``.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Adaptation of the rtabmap Node
 
@@ -350,9 +350,9 @@ This node implements the RTAB-Map SLAM approach.
 The node expects that it can subscribe to the topic ``rgbd_image``.
 The topic ``rgbd_image`` is a remapped representation of the topic
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 - ``${ROBOT_NAMESPACE}/sensors/camera_0/camera/rgbd_image`` if the ``ros-jazzy-realsense2-camera`` package is version 4.55,
 - ``${ROBOT_NAMESPACE}/sensors/camera_0/rgbd_image`` if the ``ros-jazzy-realsense2-camera`` package is version 4.54,
@@ -375,9 +375,9 @@ The definition of the remapping can be found in the launch files
 Both launch files can be found in the folder
 ``/opt/ros/jazzy/share/wandering_jackal_tutorial/launch/``.
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 - ``/sensors/camera_0/camera/rgbd_image`` if the ``ros-humble-realsense2-camera`` package is version 4.55,
 - ``/sensors/camera_0/rgbd_image`` if the ``ros-humble-realsense2-camera`` package is version 4.54,
@@ -389,5 +389,5 @@ The definition of the remapping can be found in the launch files
 Both launch files can be found in the folder
 ``/opt/ros/humble/share/wandering_jackal_tutorial/launch/``.
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->

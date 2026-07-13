@@ -116,8 +116,6 @@ Click on the applications below to get started.
 
 - [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
 - [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
-- [Weld Porosity Classification](./docs/user-guide/weld-porosity/get-started.md)
-- [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)
 
 ---
 

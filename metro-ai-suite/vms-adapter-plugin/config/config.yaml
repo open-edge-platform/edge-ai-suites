@@ -40,6 +40,8 @@ analytics_apps:
     mqtt_client_key: "${MQTT_CLIENT_KEY:-}"
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST:-172.18.0.1}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
+    # DLS pipeline to be run for Nx Witness client
+    pipeline_name: "${DLS_PIPELINE_NAME:-}"
     # Map detection labels (case-insensitive) to Nx Witness object typeIds.
     # Labels not listed here fall back to "python.detected.object".
     # These types are also registered in the Nx manifest automatically at startup.

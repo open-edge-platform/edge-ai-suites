@@ -22,7 +22,7 @@ else
 	$(error Unsupported ROS_DISTRO: $(ROS_DISTRO). Supported: humble, jazzy)
 endif
 
-PACKAGES := package/turtlesim_tutorial package/realsense2_tutorial PicknPlace/robot_config PicknPlace/gazebo_plugins PicknPlace/picknplace PicknPlace
+PACKAGES := package/turtlesim_tutorial package/realsense2_tutorial PicknPlace/robot_config PicknPlace/gazebo_plugins PicknPlace/picknplace PicknPlace RVC/rvc RVC
 
 .DEFAULT_GOAL := help
 .PHONY: license-check package test lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json source-package clean help
@@ -165,6 +165,7 @@ test:
 			cd test_ws && \
 			cp -r ../package ./src/ && \
 			cp -r ../PicknPlace ./src/ && \
+			cp -r ../RVC ./src/ && \
 			colcon build --executor sequential --event-handlers console_direct+ && \
 			colcon test --return-code-on-test-failure --executor sequential --event-handlers console_direct+ && \
 			colcon test-result --verbose"
