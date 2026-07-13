@@ -32,6 +32,9 @@ services:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
       no_proxy: "${no_proxy},${HOST_IP},seaweedfs-filer"
       NO_PROXY: "${no_proxy},${HOST_IP},seaweedfs-filer"
+      # Disable all outbound Hugging Face / Transformers network calls so the
+      # container uses only the locally mounted model files. This prevents
+      # unintended internet access and ensures reproducible, air-gapped deployments.
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
     command:

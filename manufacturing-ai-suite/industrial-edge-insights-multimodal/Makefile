@@ -223,8 +223,29 @@ check_models:
 		echo "Models found in $$dir directory."; \
 	done
 
+.PHONY: check_hardware
+check_hardware:
+	@echo "Checking hardware compatibility (Panther Lake or above required)..."
+	@cpu_model=$$(grep -m1 "model name" /proc/cpuinfo | cut -d: -f2 | xargs); \
+	echo "Detected CPU: $$cpu_model"; \
+	if ! echo "$$cpu_model" | grep -qi "intel"; then \
+		echo "Error: An Intel processor is required. Panther Lake (Core Ultra 3xx) or above."; \
+		exit 1; \
+	fi; \
+	model_num=$$(echo "$$cpu_model" | grep -oiP 'Ultra\s+[3579]\s+\K\d{3}'); \
+	if [ -z "$$model_num" ]; then \
+		echo "Error: Intel Core Ultra processor not detected. Panther Lake (Core Ultra 3xx) or above is required."; \
+		exit 1; \
+	fi; \
+	gen=$$(echo "$$model_num" | cut -c1); \
+	if [ "$$gen" -lt 3 ]; then \
+		echo "Error: Panther Lake (Intel Core Ultra 3xx) or above is required. Detected: $$cpu_model"; \
+		exit 1; \
+	fi; \
+	echo "Hardware check passed: Intel Core Ultra $${model_num} detected."
+
 .PHONY: up_vllm
-up_vllm: check_env_variables validate_host_ip down check_models
+up_vllm: check_env_variables validate_host_ip down check_models check_hardware
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
 	echo "Starting Docker containers..."; \
