@@ -327,10 +327,10 @@ def api_explain() -> Any:
     response = vllm_client.chat.completions.create(
         model=os.getenv("VLLM_SERVED_MODEL_NAME", "unsloth/Qwen3.5-2B"),
         messages=final_prompt,
-        max_tokens=int(os.getenv("VLLM_MAX_NUM_BATCHED_TOKENS", "4096")),
-        temperature=float(os.getenv("VLLM_TEMPERATURE", "1.5")),
+        max_tokens=int(os.getenv("VLLM_CLIENT_TOKEN", "4096")),
+        temperature=float(os.getenv("VLLM_CLIENT_TEMPERATURE", "1.5")),
         extra_body={
-            "min_p": 0.1,
+            "min_p": float(os.getenv("VLLM_CLIENT_MIN_P", "0.1")),
             "chat_template_kwargs": {
                 "enable_thinking": False,
             },
