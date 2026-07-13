@@ -202,7 +202,7 @@ up: check_env_variables validate_host_ip down
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
-		cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json; \
+		cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 		$(DOCKER_COMPOSE) up -d; \
 	fi; \
 	$(MAKE) upload_tar_file
@@ -232,7 +232,7 @@ up_vllm: check_env_variables validate_host_ip down check_models
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
-		cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json; || exit 1; \
+		cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml up -d; \
 	fi; \
 	$(MAKE) upload_tar_file

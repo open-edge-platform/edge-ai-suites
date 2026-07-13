@@ -90,5 +90,8 @@ services:
       BUCKET_NAME: dlstreamer-pipeline-results/weld-defect-classification
       VLLM_HOST: vllm-server
       VLLM_PORT: ${VLLM_PORT}
+      VLLM_SERVED_MODEL_NAME: ${VLLM_SERVED_MODEL_NAME}
+      VLLM_MAX_NUM_BATCHED_TOKENS: ${VLLM_MAX_NUM_BATCHED_TOKENS}
+      VLLM_TEMPERATURE: ${VLLM_TEMPERATURE}
     networks:
       - timeseries_network

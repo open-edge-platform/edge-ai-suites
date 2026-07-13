@@ -431,7 +431,7 @@
     const explainHeader = document.getElementById("explainHeader");
     const explainBody = document.getElementById("explainBody");
     const AUTO_REFRESH_INTERVAL_MS = 10000;
-    const APP_BASE_PATH = window.location.pathname.startsWith("/insight-ui") ? "/insight-ui" : "";
+    const APP_BASE_PATH = window.location.pathname.startsWith("/insights-ui") ? "/insights-ui" : "";
 
     function buildApiUrl(path, params) {
       const normalizedPath = path.startsWith("/") ? path : `/${path}`;
