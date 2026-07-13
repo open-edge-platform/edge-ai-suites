@@ -48,4 +48,16 @@ if __name__ == "__main__":
 
     import uvicorn
     logger.info("App started, Starting Server...")
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+    # timeout_graceful_shutdown bounds how long uvicorn waits for open
+    # connections to close on CTRL+C. Several endpoints stream status via
+    # never-ending "while True" async generators (e.g. /pipeline-status,
+    # /class-statistics); without a timeout uvicorn hangs forever on
+    # "Waiting for connections to close", never returns, and the atexit
+    # cleanup handlers that stop MediaMTX and gst-launch-1.0 never run.
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=False,
+        timeout_graceful_shutdown=5,
+    )
