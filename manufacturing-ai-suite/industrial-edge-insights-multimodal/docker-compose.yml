@@ -133,7 +133,7 @@ services:
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     restart: unless-stopped
-    read_only: false
+    read_only: true
     depends_on:
       - ia-influxdb
     security_opt:

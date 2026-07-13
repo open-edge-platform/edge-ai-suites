@@ -94,7 +94,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "<iframe\n  src=\"/insight-ui/\"\n  width=\"100%\"\n  height=\"100%\"\n  frameborder=\"0\"\n  style=\"border:none;\"\n</iframe>",
+                "content": "<iframe\n  src=\"/insights-ui/\"\n  width=\"100%\"\n  height=\"100%\"\n  frameborder=\"0\"\n  style=\"border:none;\"\n</iframe>",
                 "mode": "html"
               },
               "fieldConfig": {

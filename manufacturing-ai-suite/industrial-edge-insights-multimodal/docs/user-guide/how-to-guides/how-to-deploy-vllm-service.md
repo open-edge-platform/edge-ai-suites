@@ -14,38 +14,37 @@ This guide explains how to deploy the multimodal sample app with the vLLM servic
 
 ## Download Models
 
-1. Download `Qwen3.5 2B` model
+Download `Qwen3.5 2B` model and `Qwen 3.5 2B fine tuned LoRA adapter`
 
 > Please review the [Qwen3.5 2B license](https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 
 ```bash
-mkdir -p config/vllm/huggingface && \
-cd config/vllm/huggingface && \
+mkdir -p configs/vllm/huggingface && \
+cd configs/vllm/huggingface && \
 rm -rf .modelenv && \
 python3 -m venv .modelenv && \
 source .modelenv/bin/activate && \
 pip3 install huggingface_hub==1.23.0 && \
-rm -rf Qwen3.5-2B && \
-huggingface-cli download Qwen/Qwen3.5-2B --local-dir ./Qwen3.5-2B && \
+rm -rf huggingface models && \
+huggingface-cli download Qwen/Qwen3.5-2B --local-dir ./huggingface/Qwen3.5-2B && \
+huggingface-cli download Intel/qwen3.5-2b-vlm-weld-explainability-lora --local-dir models/qwen3.5-2b-vlm-weld-explainability-lora && \
 deactivate && \
 cd ../../..
 ```
-
-2. Download `checkpoint-432` fine-tuned model
-
-> To be Updated once model is huggingface
 
 ## Deploy the vLLM Service
 
 Run:
 
 ```bash
-make up_vllm
+ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+ make up_vllm
 ```
 
 For a fresh build before deployment:
 
 ```bash
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make build
 make up_vllm
 ```
@@ -54,7 +53,12 @@ make up_vllm
 
 1. Check overall stack health:
 
+   > **Note:** The command `make status` may show errors in containers like ia-grafana when the user has not logged in
+   > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
+   > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
+
    ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
@@ -75,6 +79,7 @@ make up_vllm
 To bring down the full stack:
 
 ```bash
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make down
 ```
 

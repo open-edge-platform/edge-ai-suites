@@ -7,13 +7,10 @@
 import datetime
 import logging
 import os
-import time
-from urllib.error import URLError
-from urllib.request import urlopen
 from typing import Any
-import base64
-from openai import OpenAI
+from urllib.request import urlopen
 
+from openai import OpenAI
 from flask import Flask, jsonify, render_template, request
 from influxdb import InfluxDBClient
 
@@ -326,9 +323,9 @@ def api_explain() -> Any:
     
 
     final_prompt = [get_query_prompt(), message]
-    logger.info("Sending final prompt to vLLM: %s", final_prompt)
+    logger.debug("Sending final prompt to vLLM: %s", final_prompt)
     response = vllm_client.chat.completions.create(
-        model="unsloth/Qwen3.5-2B",
+        model=os.getenv("VLLM_SERVED_MODEL_NAME", "unsloth/Qwen3.5-2B"),
         messages=final_prompt,
         max_tokens=4096,
         temperature=1.5,
@@ -343,7 +340,8 @@ def api_explain() -> Any:
     vllm_output = ""
     if response.choices and len(response.choices) > 0:
         vllm_output = response.choices[0].message.content
-        logger.info("vLLM output: %s", vllm_output)
+        logger.info("vLLM response received with %d characters", len(vllm_output))
+        logger.debug("vLLM output: %s", vllm_output)
 
     return jsonify(
         {

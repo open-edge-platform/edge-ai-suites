@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Insight Services</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -669,7 +670,7 @@
               lineDiv.style.color = '#22395f';
               
               // Parse individual line as markdown
-              lineDiv.innerHTML = marked.parse(line || ' ');
+              lineDiv.innerHTML = DOMPurify.sanitize(marked.parse(line || ' '));
               explainBody.appendChild(lineDiv);
               
               // Trigger fade-in animation
