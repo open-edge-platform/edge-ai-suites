@@ -1715,7 +1715,7 @@ Write-Host "   CREATING VIRTUAL ENVIRONMENTS" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$venvBackend = Join-Path $ScriptDir "smartclassroom"
+$venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 
 $recreateVenvs = $false

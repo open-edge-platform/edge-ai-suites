@@ -25,6 +25,7 @@ models:
     logprob_threshold: -1.0
     min_duration_sec: 0.25
     min_words: 2
+    max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
   
   diarization: #Only applicable when diarization is set to True for ASR
     provider: "huggingface"
