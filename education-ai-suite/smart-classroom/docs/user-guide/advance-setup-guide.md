@@ -303,7 +303,7 @@ models:
 
 - **Error: `CL_OUT_OF_RESOURCES`** during summarization of longer audio inputs
   Summarization of longer transcripts may require additional GPU memory. If this error occurs, increase the GPU memory allocation in the **Intel® Graphics Software** application under the **Graphics** tab before rerunning the workflow.
-
+  ![GPU Troubleshooting](./_assets/troubleshooting-gpu.png)
 
 ### Known Issues
 
