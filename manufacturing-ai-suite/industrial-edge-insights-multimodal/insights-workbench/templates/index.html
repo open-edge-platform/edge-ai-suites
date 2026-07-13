@@ -408,6 +408,7 @@
           <button id="explainBtn" class="explain-btn" disabled>Explain</button>
           <button id="prevBtn">Previous</button>
           <button id="nextBtn">Next</button>
+          <button id="resetBtn">Reset</button>
         </div>
       </div>
 
@@ -591,6 +592,10 @@
       if (!state.hasMore) return;
       state.page += 1;
       await loadPage();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      window.location.reload();
     });
 
     explainBtn.addEventListener("click", async () => {
