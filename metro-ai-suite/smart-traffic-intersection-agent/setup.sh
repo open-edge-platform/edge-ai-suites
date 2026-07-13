@@ -620,7 +620,7 @@ start_service() {
     prepare_ovms_model || return 1
 
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
