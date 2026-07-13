@@ -34,6 +34,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export REGISTRY="intel/"
    export TAG="latest"
    export OVMS_TARGET_DEVICE=GPU
+   export RENDER_DEVICE_GID=$(stat -c "%g" /dev/dri/render*)
    export HF_TOKEN=<your-huggingface-token>
    ```
 
