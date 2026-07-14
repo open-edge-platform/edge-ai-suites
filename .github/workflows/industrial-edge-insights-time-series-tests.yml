@@ -264,11 +264,52 @@ jobs:
       - name: Load images into k3s
         if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
         run: |
-          echo "Loading docker images into k3s..."
-          docker images --format "{{.Repository}}:{{.Tag}}" | grep "^intel/ia-" | grep -v "<none>" | while read image; do
-              echo "Importing image: $image"
-              docker save "$image" | sudo k3s ctr images import -
-          done
+          echo "=== Loading docker images into k3s ==="
+          # Load ALL locally built images (not just intel/ia-*) so Helm-deployed
+          # workloads can find every dependency. Exclude only k8s/k3s infra images
+          # (already present in the cluster) and dangling <none> tags.
+          docker images --format "{{.Repository}}:{{.Tag}}" \
+            | grep -v "<none>" \
+            | grep -v "^k8s.gcr.io" \
+            | grep -v "^registry.k8s.io" \
+            | grep -v "^rancher" \
+            | while read -r image; do
+                echo "Importing image: $image"
+                docker save "$image" | sudo k3s ctr images import -
+              done
+          echo "=== Images imported into k3s ==="
+          sudo k3s ctr images ls | grep -i "intel" || echo "No intel images found in k3s"
+
+      - name: Install Intel GPU device plugin for k3s
+        if: ${{ inputs.include_gpu_tests == 'yes' || inputs.tests == 'timeseries-all' || inputs.tests == 'multimodal-all' || inputs.tests == 'all-tests' }}
+        run: |
+          # Helm/k3s (unlike Docker's --device /dev/dri) requires a device plugin
+          # to expose Intel GPUs as schedulable Kubernetes resources
+          # (gpu.intel.com/i915). Detect a GPU first; skip cleanly if none present
+          # so this step never breaks CPU-only runs.
+          GPU_AVAILABLE=false
+          if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then GPU_AVAILABLE=true; fi
+          if lspci 2>/dev/null | grep -iqE 'vga.*intel|display.*intel|3d.*intel'; then GPU_AVAILABLE=true; fi
+          if ls /dev/dri/renderD* >/dev/null 2>&1; then GPU_AVAILABLE=true; fi
+
+          if [ "$GPU_AVAILABLE" != "true" ]; then
+            echo "No GPU detected on this runner; skipping Intel GPU device plugin installation."
+            exit 0
+          fi
+
+          echo "=== Installing Intel GPU device plugin for k3s ==="
+          # Node Feature Discovery: labels nodes with detected Intel GPU capabilities.
+          kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=main' || true
+          # Intel GPU device plugin: exposes gpu.intel.com/i915 resources to pods.
+          kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=main' || true
+
+          echo "Waiting for Intel GPU device plugin to be ready..."
+          kubectl wait --for=condition=ready pod -l app=intel-gpu-plugin -n node-feature-discovery --timeout=120s 2>/dev/null \
+            || kubectl wait --for=condition=ready pod -l app=intel-gpu-plugin -n default --timeout=120s 2>/dev/null \
+            || echo "GPU device plugin pod not ready yet (continuing; tests self-skip if GPU unavailable)."
+
+          echo "=== GPU resources visible on nodes ==="
+          kubectl describe nodes | grep -i "gpu.intel.com" || echo "No GPU resources visible yet"
 
       - name: Cleanup cluster before Time Series Wind and Weld tests
         run: |
