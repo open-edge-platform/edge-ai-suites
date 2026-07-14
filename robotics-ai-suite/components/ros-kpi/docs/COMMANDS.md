@@ -199,7 +199,7 @@ make fastmapping                            # single run with record + plot
 
 ### gpu_pid_analyzer.py
 
-Per-process Intel GPU utilisation with full engine-class breakdown.
+Per-process Intel GPU utilization with full engine-class breakdown.
 Requires `qmassa` installed via `make install-qmassa`.
 
 ```bash

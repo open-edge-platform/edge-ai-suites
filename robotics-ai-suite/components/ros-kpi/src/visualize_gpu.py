@@ -41,7 +41,7 @@ from typing import Dict, List, Optional, Tuple
 import matplotlib.dates as mdates  # pylint: disable=import-error
 import matplotlib.pyplot as plt  # pylint: disable=import-error
 from matplotlib.ticker import MaxNLocator  # pylint: disable=import-error
-import numpy as np  # pylint: disable=import-error
+from _accel import np  # Intel dpnp/numpy shim
 
 from gpu_engine_defs import ENGINE_CLASSES as _ENGINE_CLASSES, ENG_COLORS as _ENG_COLORS
 

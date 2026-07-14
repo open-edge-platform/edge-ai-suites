@@ -1,0 +1,23 @@
+# --- Runtime + orchestrator ---
+flask==3.0.3
+pyyaml==6.0.2
+requests==2.32.3
+tqdm==4.66.5
+psutil==6.0.0
+
+# --- Pipeline consumer (Phase 5) ---
+# The heavy inference stack (Ultralytics + torch + OpenCV) is still needed
+# for the first-boot bootstrap (weights fetch → CVC-ColonDB train → OpenVINO
+# export). Runtime inference now happens inside the `surgical-pipeline`
+# container (DL Streamer); this backend just subscribes to its MQTT topic.
+paho-mqtt==1.6.1
+
+# --- Bootstrap-only: training + export (Ultralytics + OpenVINO) ---
+# Install order (see backend/README paths):
+#   pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/xpu
+#   pip install -r requirements.txt
+ultralytics==8.4.75
+openvino==2026.2.0
+opencv-python==4.10.0.84
+numpy==2.1.3
+pillow==10.4.0

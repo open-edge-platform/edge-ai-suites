@@ -84,7 +84,7 @@ test-e2e:
 		echo \"deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" | tee /etc/apt/sources.list.d/oneAPI.list > /dev/null && \
 		apt-get -qq update && apt-get -q install -y wget python3 python3-pip xvfb graphicsmagick fluxbox wmctrl ffmpeg xdotool x11-utils && \
 		$(if $(filter humble,$(ROS_DISTRO)),python3 -m pip install --upgrade pip &&) \
-		pip3 install pytest Pillow $(if $(filter humble,$(ROS_DISTRO)),-U,--break-system-packages) && \
+		pip3 install $(if $(filter humble,$(ROS_DISTRO)),'pytest<8',pytest) Pillow $(if $(filter humble,$(ROS_DISTRO)),-U,--break-system-packages) && \
 		find . -name '*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -exec apt-get -q install -y {} \; && \
 		source /opt/ros/$(ROS_DISTRO)/setup.bash && \
 		export ROS_DOMAIN_ID=1 && \

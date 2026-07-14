@@ -37,17 +37,31 @@ global:
     enableObjectDetection: 'true'
     detectionConfidence: '0.85'
     ovPerformanceMode: 'THROUGHPUT'
-  # GPU controls
-  gpu:
-    multimodalEmbeddingEnabled: false
-    vdmsDataprepEnabled: false
-    # Set `key` and `device` if GPU is enabled.
-    # Update as per the cluster node label key for GPU assigned by the device plugin.
-    key: ''
-    # key: 'gpu.intel.com/xe'
-    # Set `device` when GPU mode is enabled.
-    # Set value to `GPU` to deploy on GPU.
-    device: 'GPU'
+  # Accelerator controls (GPU / NPU)
+  # Host group ids that own the accelerator device nodes on the target node
+  # (/dev/dri for GPU, /dev/accel for NPU). Added to the pod supplementalGroups
+  # so the non-root container user can open the device when a service uses a
+  # GPU or NPU. These gids are host-specific — check the node with
+  # `ls -ln /dev/accel` and `ls -ln /dev/dri` and override to match.
+  accelGroupIds:
+    - 992
+
+  # Per-service accelerator selection. This is the single source of truth for
+  # device placement of multimodal-embedding-serving and vdms-dataprep.
+  # Set device to CPU | GPU | NPU. When GPU/NPU, key is required and must match
+  # the cluster device-plugin resource key (e.g. gpu.intel.com/i915,
+  # npu.intel.com/accel).
+  devices:
+    multimodalEmbedding:
+      device: CPU # CPU | GPU | NPU
+      key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+    vdmsDataprep:
+      embedding:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+      detection:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
 # Optional USB camera override (used with usb_camera_override.yaml profile)
 frigate:
   usbCameraDevice: '/dev/video0'

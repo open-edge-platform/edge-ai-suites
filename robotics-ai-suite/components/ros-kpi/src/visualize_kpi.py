@@ -42,7 +42,7 @@ import matplotlib
 matplotlib.use("Agg")   # non-interactive backend — safe in CI / headless environments
 import matplotlib.patches as mpatches  # noqa: E402
 import matplotlib.pyplot as plt        # noqa: E402
-import numpy as np                     # noqa: E402
+from _accel import np                  # Intel dpnp/numpy shim  # noqa: E402
 
 
 # ──────────────────────────────────────────────────────────────────────────────

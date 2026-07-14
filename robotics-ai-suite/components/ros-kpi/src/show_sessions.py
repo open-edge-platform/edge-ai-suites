@@ -124,21 +124,24 @@ def _session_summary(session_dir: Path) -> dict:
     Extract key metrics for a single session directory.
 
     Returns a dict with: dur_s, thr_hz, lat_ms, e2e_ms, drop_pct, goals,
-    has_kpi, has_l2, host, throttled.
+    has_kpi, has_l2, host, throttled, cpu_thr, gpu_thr, goal_calc_ms,
+    goal_response_ms.
     """
     info: dict = {
-        'dur_s':     _session_duration(session_dir),
-        'thr_hz':    None,
-        'lat_ms':    None,
-        'e2e_ms':    None,
-        'drop_pct':  None,
-        'goals':     _count_goals(session_dir),
-        'has_kpi':   False,
-        'has_l2':    False,
-        'host':      None,
-        'throttled': False,
-        'cpu_thr':   False,
-        'gpu_thr':   False,
+        'dur_s':           _session_duration(session_dir),
+        'thr_hz':          None,
+        'lat_ms':          None,
+        'e2e_ms':          None,
+        'drop_pct':        None,
+        'goals':           _count_goals(session_dir),
+        'has_kpi':         False,
+        'has_l2':          False,
+        'host':            None,
+        'throttled':       False,
+        'cpu_thr':         False,
+        'gpu_thr':         False,
+        'goal_calc_ms':    None,
+        'goal_response_ms': None,
     }
 
     kpi1 = _load_json(session_dir / 'kpi.json')
@@ -153,6 +156,10 @@ def _session_summary(session_dir: Path) -> dict:
             info['throttled'] = True
             info['cpu_thr'] = bool(thermal.get('cpu_throttled'))
             info['gpu_thr'] = bool(thermal.get('gpu_throttled'))
+        _gcl = (kpi1.get('wandering') or {}).get('goal_calc_latency_ms') or {}
+        info['goal_calc_ms'] = _gcl.get('mean_ms')
+        _grl = (kpi1.get('wandering') or {}).get('goal_response_latency_ms') or {}
+        info['goal_response_ms'] = _grl.get('mean_ms')
 
     kpi2 = _load_json(session_dir / 'kpi_level2_traced.json')
     if kpi2:
@@ -193,6 +200,12 @@ def _fmt_session_line(name: str, info: dict, prefix: str) -> str:
 
     if info['goals']:
         parts.append(f'  goals={info["goals"]}')
+
+    if info.get('goal_calc_ms') is not None:
+        parts.append(f'  gcl={info["goal_calc_ms"]:5.1f}ms')
+
+    if info.get('goal_response_ms') is not None:
+        parts.append(f'  grl={info["goal_response_ms"]:5.1f}ms')
 
     if info['throttled']:
         hw = []
