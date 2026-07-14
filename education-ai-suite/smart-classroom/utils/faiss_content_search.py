@@ -1,6 +1,6 @@
 import json
 import faiss
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 from pathlib import Path
 from utils.config_loader import config
 
@@ -17,7 +17,7 @@ class FaissContentSearcher:
         if not self.meta_path.exists():
             raise FileNotFoundError(f"FAISS metadata not found: {self.meta_path}")
 
-        self.embedder = SentenceTransformer(MODEL_NAME)
+        # self.embedder = SentenceTransformer(MODEL_NAME)
         self.index = faiss.read_index(str(self.index_path))
 
         with open(self.meta_path, "r", encoding="utf-8") as f:

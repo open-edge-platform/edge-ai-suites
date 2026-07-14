@@ -5,7 +5,8 @@ param(
     [switch]$Help,
     [switch]$NoElevate,
     [switch]$Silent,
-    [switch]$NoWindowsTerminal
+    [switch]$NoWindowsTerminal,
+    [switch]$Electron
 )
 
 # ============================================================================
@@ -33,6 +34,7 @@ if (-not $NoElevate) {
         if ($Help) { $argList += " -Help" }
         if ($Silent) { $argList += " -Silent" }
         if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
+        if ($Electron) { $argList += " -Electron" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
         
         try {
@@ -51,7 +53,7 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Electron] [-Help]
 
 Options:
     -SkipProxy           Skip proxy configuration prompts
@@ -59,6 +61,7 @@ Options:
     -Silent              Unattended mode - auto-restart, skip all prompts
     -NoElevate           Skip auto-elevation to Administrator (Windows)
     -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
+    -Electron            Launch the UI as an Electron desktop app instead of a browser tab
     -Help                Show this help message
 
 Note: On Windows, the script automatically requests Administrator privileges.
@@ -66,7 +69,8 @@ Note: On Windows, the script automatically requests Administrator privileges.
 Services Launched (in order):
     1. Backend (port 8000)     - Main Python pipeline service (with paddleocr if OCR enabled)
     2. Content Search (9011)   - RAG, video summarization, semantic search
-    3. Frontend (port 5173)    - React UI
+    3. Frontend (port 5173)    - React UI (opens as an Electron desktop window when -Electron is set;
+                                 the dev server still runs on port 5173)
 
 "@ -ForegroundColor Cyan
     exit 0
@@ -561,12 +565,38 @@ if (-not $SkipProxy -and -not $Silent) {
         if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
         if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
         if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
-        if (-not $httpProxy -and -not $httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
+        if (-not $httpProxy -and -not $httpsProxy) { 
+            Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
+            
+            # Check environment for proxy settings
+            Write-Host ""
+            Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+            $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+            $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+            $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+            
+            $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+            if ($envProxies) {
+                $envProxies | ForEach-Object {
+                    Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+                }
+                Write-Host ""
+                Write-Host "  Environment variables detected. You can save these to .proxy-config." -ForegroundColor Yellow
+            } else {
+                Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+            }
+        }
         Write-Host ""
 
-        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        if (-not $httpProxy -and -not $httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save environment proxy settings to .proxy-config" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
         
@@ -596,12 +626,56 @@ if (-not $SkipProxy -and -not $Silent) {
             $noProxy = ""
             Write-Host "  No proxy - using direct connection." -ForegroundColor Yellow
         } else {
-            Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+            # If .proxy-config is empty but environment has proxy, save environment values
+            if (-not $httpProxy -and -not $httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+                $httpProxy = $envHttpProxy
+                $httpsProxy = $envHttpsProxy
+                $noProxy = $envNoProxy
+                
+                $proxyConfig = @{
+                    httpProxy = $httpProxy
+                    httpsProxy = $httpsProxy
+                    noProxy = $noProxy
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+                if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
+                if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
+                if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
+            } else {
+                Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+            }
         }
     } else {
         Write-Host ""
-        Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
-        Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
+        Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        Write-Host ""
+        
+        # Check environment variables for proxy settings
+        $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+        $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+        $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+        
+        $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+        if ($envProxies) {
+            $envProxies | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+            }
+            Write-Host ""
+            Write-Host "  Environment variables detected. You can save these or configure different settings." -ForegroundColor Yellow
+        } else {
+            Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+        }
+        Write-Host ""
+        
+        if ($envHttpProxy -or $envHttpsProxy) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save current environment proxy settings to .proxy-config" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
+            Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
         
@@ -625,13 +699,31 @@ if (-not $SkipProxy -and -not $Silent) {
             $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
             Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
         } else {
-            $proxyConfig = @{
-                httpProxy = ""
-                httpsProxy = ""
-                noProxy = ""
+            # If environment variables exist, save them; otherwise save empty config
+            if ($envHttpProxy -or $envHttpsProxy) {
+                $httpProxy = $envHttpProxy
+                $httpsProxy = $envHttpsProxy
+                $noProxy = $envNoProxy
+                
+                $proxyConfig = @{
+                    httpProxy = $httpProxy
+                    httpsProxy = $httpsProxy
+                    noProxy = $noProxy
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+                if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
+                if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
+                if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
+            } else {
+                $proxyConfig = @{
+                    httpProxy = ""
+                    httpsProxy = ""
+                    noProxy = ""
+                }
+                $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+                Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
             }
-            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
-            Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
         }
     }
     
@@ -681,9 +773,17 @@ if (-not $SkipProxy -and -not $Silent) {
         }
         
         if (-not $httpProxy -and -not $httpsProxy) {
+            Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+            Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
+            }
             Write-Host "  No proxy configured in .proxy-config" -ForegroundColor Gray
         }
     } else {
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
+        }
         Write-Host "  No .proxy-config file found" -ForegroundColor Gray
     }
 }
@@ -911,6 +1011,34 @@ if ($noProxy) {
     $proxyCommands += "`$env:no_proxy='$noProxy'; `$env:NO_PROXY='$noProxy'; "
 }
 
+# ============================================================================
+# FRONTEND LAUNCH MODE (browser dev server vs Electron desktop app)
+# ============================================================================
+# In Electron mode the frontend terminal runs `npm run electron:dev`, which
+# starts the Vite dev server on 5173 and opens the Electron window pointed at
+# it. The runtime binary is downloaded lazily the first time `electron` runs,
+# and that download uses @electron/get's own proxy vars. We set them for the
+# whole frontend terminal so both npm and the first-launch download go through
+# the proxy.
+$frontendProxyCommands = ""
+if ($Electron) {
+    $frontendStartCommand = "npm run electron:dev"
+    $frontendHeader = "FRONTEND UI (ELECTRON DESKTOP APP)"
+    $frontendStartMsg = "Starting Electron desktop app (dev server on port 5173)..."
+    $frontendTitle = "Electron"
+
+    $electronProxy = if ($httpsProxy) { $httpsProxy } elseif ($httpProxy) { $httpProxy } else { "" }
+    if ($electronProxy) {
+        $frontendProxyCommands = $proxyCommands +
+            "`$env:ELECTRON_GET_USE_PROXY='true'; `$env:GLOBAL_AGENT_HTTPS_PROXY='$electronProxy'; `$env:GLOBAL_AGENT_HTTP_PROXY='$electronProxy'; "
+    }
+} else {
+    $frontendStartCommand = "npm run dev -- --host 0.0.0.0 --port 5173"
+    $frontendHeader = "FRONTEND UI"
+    $frontendStartMsg = "Starting Frontend (port 5173)..."
+    $frontendTitle = "Frontend"
+}
+
 if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
@@ -1075,13 +1203,16 @@ python .\start_services.py
         Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
     } else {
         Write-Host ""
-        Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
-        
+        Write-Host "Launching Terminal 3: $frontendTitle..." -ForegroundColor Yellow
+
         $frontendScript = @"
 `$ErrorActionPreference = 'Continue'
 
+# Set proxy for Electron download (if applicable)
+$frontendProxyCommands
+
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  FRONTEND UI' -ForegroundColor Cyan
+Write-Host '  $frontendHeader' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
 
@@ -1093,19 +1224,19 @@ Write-Host 'Installing npm dependencies...' -ForegroundColor Yellow
 npm install
 
 Write-Host ''
-Write-Host 'Starting Frontend (port 5173)...' -ForegroundColor Green
+Write-Host '$frontendStartMsg' -ForegroundColor Green
 Write-Host ''
-npm run dev -- --host 0.0.0.0 --port 5173
+$frontendStartCommand
 "@
     $frontendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($frontendScript))
 
     if ($wtExists) {
-        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Frontend powershell -NoExit -EncodedCommand $frontendEncoded"
+        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title $frontendTitle powershell -NoExit -EncodedCommand $frontendEncoded"
     } else {
         Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $frontendEncoded" | Out-Null
     }
 
-    Write-Host "  Frontend terminal launched" -ForegroundColor Green
+    Write-Host "  $frontendTitle terminal launched" -ForegroundColor Green
     Write-Host ""
     }  # End of skipFrontend check
     
@@ -1128,9 +1259,16 @@ Write-Host ""
 Write-Host "Services:" -ForegroundColor Yellow
 Write-Host "  1. Backend        -> http://localhost:8000  [HEALTHY]" -ForegroundColor White
 Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
-Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
-Write-Host ""
-Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
+if ($Electron) {
+    Write-Host "  3. Frontend       -> Electron desktop app (dev server http://localhost:5173)  [HEALTHY]" -ForegroundColor White
+    Write-Host ""
+    Write-Host "The Smart Classroom Electron window should now be open." -ForegroundColor Cyan
+    Write-Host "(You can also open http://localhost:5173 in a browser.)" -ForegroundColor DarkGray
+} else {
+    Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
+}
 Write-Host ""
 
 if ($Silent) {

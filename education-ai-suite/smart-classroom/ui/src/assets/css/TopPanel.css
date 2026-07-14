@@ -103,4 +103,48 @@
   color: #333;
 }
 
+/* ---------------------------------------------------------------------------
+   Electron custom title bar (Window Controls Overlay).
+   These rules only apply when running inside Electron (body.electron). 
+   The top panel becomes the draggable title bar; interactive controls opt back
+   out of dragging.
+   --------------------------------------------------------------------------- */
+body.electron .top-panel {
+  -webkit-app-region: drag;
+  /* Reserve room on the right for the native window controls overlay
+     (Windows/Linux). Falls back to the normal 2rem padding elsewhere. */
+  padding-right: calc(2rem + (100vw - env(titlebar-area-width, 100vw)));
+}
 
+body.electron .top-panel .action-slot,
+body.electron .top-panel .brand-slot .logo,
+body.electron .top-panel .menu-icon,
+body.electron .top-panel .content-search-btn,
+body.electron .top-panel .content-search-back-btn,
+body.electron .top-panel button,
+body.electron .top-panel input,
+body.electron .top-panel select {
+  -webkit-app-region: no-drag;
+}
+
+/* Title-bar menu button that opens the native application menu. */
+.app-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.app-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
