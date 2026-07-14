@@ -308,6 +308,51 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
         self.unregister_run(run_id)
         return result
 
+    # ── Nx Witness UI pipeline control ─────────────────────────────────────────────
+
+    def nx_extract_settings(self, raw_settings: dict) -> dict:
+        """Extract LVC settings from the Nx device-agent values dict.
+
+        Tries the namespaced key ``<app_id>.<field>`` first (multi-app), then
+        the flat ``<field>`` key (single-app).
+        """
+        app_id = self._config.app_id
+        return {
+            "pipelineEnabled": bool(
+                raw_settings.get(f"{app_id}.pipelineEnabled", raw_settings.get("pipelineEnabled", False))
+            ),
+            "device": str(
+                raw_settings.get(f"{app_id}.device", raw_settings.get("device", "CPU"))
+            ),
+            "prompt": str(
+                raw_settings.get(f"{app_id}.prompt", raw_settings.get("prompt", ""))
+            ),
+        }
+
+    async def nx_start(self, camera_id: str, rtsp_url: str, settings: dict) -> str | None:
+        """Start an LVC pipeline from Nx Witness UI settings."""
+        payload: dict = {
+            "rtspUrl": rtsp_url,
+            "device": settings.get("device", "CPU"),
+        }
+        prompt = settings.get("prompt", "")
+        if prompt:
+            payload["prompt"] = prompt
+        pipeline_name = self._config.pipeline_name
+        if pipeline_name:
+            payload["pipelineName"] = pipeline_name
+        try:
+            run = await self._api.start_run(payload)
+            if run is None:
+                return None
+            run_id = run.get("runId") or ""
+            if run_id:
+                self.register_run(run_id, camera_id)
+            return run_id or None
+        except Exception as exc:
+            logger.error("nx_lvc_start_failed", error=str(exc))
+            return None
+
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         run = await self._api.get_run(run_id)
         return self._enrich_run(run) if run else None

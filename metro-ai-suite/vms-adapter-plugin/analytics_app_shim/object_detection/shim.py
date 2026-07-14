@@ -290,6 +290,49 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
             self._runs.pop(run_id, None)
         return ok
 
+    # ── Nx Witness UI pipeline control ─────────────────────────────────────────────
+
+    def nx_extract_settings(self, raw_settings: dict) -> dict:
+        """Extract DLS settings from the Nx device-agent values dict.
+
+        Tries the namespaced key ``<app_id>.<field>`` first (multi-app), then
+        the flat ``<field>`` key (single-app).
+        """
+        app_id = self._config.app_id
+        return {
+            "pipelineEnabled": bool(
+                raw_settings.get(f"{app_id}.pipelineEnabled", raw_settings.get("pipelineEnabled", False))
+            ),
+            "device": str(
+                raw_settings.get(f"{app_id}.device", raw_settings.get("device", "CPU"))
+            ),
+        }
+
+    async def nx_start(self, camera_id: str, rtsp_url: str, settings: dict) -> str | None:
+        """Start a DLStreamer pipeline from Nx Witness UI settings."""
+        pipeline_name = self._config.pipeline_name
+        if not pipeline_name:
+            logger.error("nx_od_pipeline_name_not_configured", app_id=self.app_id)
+            return None
+        # _param_model is bare BaseModel until fetch_schema() runs; guard against
+        # the unlikely race where the polling task fires before schema fetch completes.
+        if not self._pipeline_root_map:
+            logger.warning("nx_od_schema_not_ready", app_id=self.app_id)
+            return None
+        device = settings.get("device", "CPU")
+        params = self._param_model.model_validate({
+            "pipeline_name": pipeline_name,
+            "camera_id": rtsp_url,
+            "camera_id_ref": camera_id,
+            "parameters": {"detection-properties": {"device": device}},
+        })
+        try:
+            result = await self.start(params)
+            return result.get("run_id") or None
+        except Exception as exc:
+            logger.error("nx_od_start_failed", app_id=self.app_id, error=str(exc))
+            return None
+
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Get status of a pipeline instance by its hex UUID run_id."""
         return await self._api.get_run(run_id)

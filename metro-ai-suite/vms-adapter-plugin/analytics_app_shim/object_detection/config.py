@@ -56,6 +56,17 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     # If non-empty these replace any items already defined in nx_integration.json.
     display_fields: list[dict] = Field(default_factory=list)
 
+    def nx_object_type_ids(self) -> list[str]:
+        """Return the Nx object ``typeIds`` this app emits.
+
+        Derived from ``label_type_map`` values so a VMS shim can register them in
+        its analytics manifest generically, without knowing this app exists. This
+        mirrors :meth:`nx_settings_fields`: app-specific data is exposed through a
+        generic hook so VMS-side code stays app-agnostic. Apps that do not push
+        object detections simply omit this method.
+        """
+        return sorted(set(self.label_type_map.values()))
+
     def nx_settings_fields(self) -> list[dict]:
         """Return the Nx device-agent settings items for this app.
 

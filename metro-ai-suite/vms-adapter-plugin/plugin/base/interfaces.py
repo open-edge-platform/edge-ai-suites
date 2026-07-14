@@ -217,6 +217,39 @@ class IAnalyticsAppShim(ABC):
         """Stop a run by ID. Return True on success. Override in concrete shims."""
         return False
 
+    # ── Nx Witness UI pipeline control (optional) ──────────────────────────────────
+
+    def nx_extract_settings(self, raw_settings: dict) -> dict:
+        """Extract this app's relevant settings from the full Nx device-agent values dict.
+
+        The dict keys in ``raw_settings`` may be flat (single-app deployment) or
+        namespaced as ``<app_id>.<field>`` (multi-app deployment, where the
+        ``settings_factory`` prefixes each field with the owning app's ``app_id``).
+        Implementations should handle both forms.
+
+        Return an **empty dict** to opt out of Nx polling-based pipeline control.
+        Default: returns empty dict (this app does not participate).
+        """
+        return {}
+
+    async def nx_start(self, camera_id: str, rtsp_url: str, settings: dict) -> str | None:
+        """Start a pipeline triggered by the Nx Witness UI.
+
+        Called by the NxWitness shim polling loop when ``pipelineEnabled`` becomes
+        True or any settings field changes.  ``settings`` is the output of
+        :meth:`nx_extract_settings`.  Returns the ``run_id`` string on success,
+        or ``None`` on failure.
+        Default: no-op (returns None).
+        """
+        return None
+
+    async def nx_stop(self, run_id: str) -> bool:
+        """Stop a pipeline previously started via :meth:`nx_start`.
+
+        Default: delegates to :meth:`stop_run`.
+        """
+        return await self.stop_run(run_id)
+
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Return details for a single run, or None if not found."""
         return None
