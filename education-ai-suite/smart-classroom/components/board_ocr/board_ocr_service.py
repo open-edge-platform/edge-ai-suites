@@ -45,7 +45,7 @@ def read_board_ocr(session_id: Optional[str]) -> dict:
       - "frame_extraction_in_progress" (still extracting frames from the source)
       - "not_started"                  (nothing running, no file)
     """
-    from components.board_summary.board_ocr_pipeline import (
+    from components.board_ocr.board_ocr_pipeline import (
         get_active_session_id,
         get_status,
     )
