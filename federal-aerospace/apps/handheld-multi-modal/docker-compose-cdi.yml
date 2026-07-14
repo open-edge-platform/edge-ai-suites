@@ -106,6 +106,7 @@ services:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
+      - DEFAULT_MODEL_PARAMS={"max_tokens":1024}
       # ONLY NEEDED IF OFFLINE MODE IS DESIRED
       # - OFFLINE_MODE=true
       # - HF_HUB_OFFLINE=1
