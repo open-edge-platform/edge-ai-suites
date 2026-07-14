@@ -301,6 +301,10 @@ models:
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
 
+- **Error: `CL_OUT_OF_RESOURCES`** during summarization of longer audio inputs
+  Summarization of longer transcripts may require additional GPU memory. If this error occurs, increase the GPU memory allocation in the **Intel® Graphics Software** application under the **Graphics** tab before rerunning the workflow.
+  ![GPU Troubleshooting](./_assets/troubleshooting-gpu.png)
+
 ### Known Issues
 
 - **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.

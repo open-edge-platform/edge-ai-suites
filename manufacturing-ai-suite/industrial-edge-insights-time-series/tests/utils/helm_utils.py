@@ -1348,12 +1348,12 @@ def verify_multimodal_influxdb_data(chart_path, namespace=None, database=constan
     sensor_measurement = (
         constants.get_app_influxdb_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("ingested_topic")
-        or "weld-sensor-data"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("ingested_topic")
     )
     vision_measurement = (
         constants.get_app_vision_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("vision_measurement")
-        or "vision-weld-classification-results"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("vision_measurement")
     )
 
     for key, measurement in (("sensor_data_count", sensor_measurement), ("vision_data_count", vision_measurement)):
@@ -1973,6 +1973,47 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
     return result
         
 
+def _wait_for_ts_api_ready(timeout=180, interval=5,
+                           probe_url="https://localhost:30001/ts-api/config"):
+    """Poll the ts-api NodePort until nginx accepts the connection.
+
+    More reliable than a fixed sleep or a blind retry loop: returns as soon as the
+    endpoint responds with any HTTP status (curl rc 0). Connection-refused (rc 7)
+    means nginx is not yet bound to the NodePort and we keep waiting.
+
+    Args:
+        timeout (int): Total seconds to wait before giving up.
+        interval (int): Seconds between probes.
+        probe_url (str): URL to probe (defaults to the ts-api config endpoint).
+
+    Returns:
+        bool: True when the endpoint becomes reachable, False on timeout.
+    """
+    deadline = time.time() + timeout
+    attempt = 0
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            result = subprocess.run(
+                ["curl", "-k", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                 "--connect-timeout", "3", probe_url],
+                capture_output=True, text=True, timeout=10,
+            )
+        except subprocess.SubprocessError as exc:
+            logger.debug("ts-api probe subprocess error: %s", exc)
+            time.sleep(interval)
+            continue
+        if result.returncode == 0 and result.stdout.strip().isdigit():
+            logger.info("ts-api endpoint reachable on attempt %s (HTTP %s).",
+                        attempt, result.stdout.strip())
+            return True
+        logger.info("ts-api not ready (attempt %s, curl rc=%s). Retrying in %ss...",
+                    attempt, result.returncode, interval)
+        time.sleep(interval)
+    logger.error("ts-api endpoint not reachable after %ss.", timeout)
+    return False
+
+
 def _upload_udf_tar_via_api(config_dir, sample_app):
     """Create a tar archive of UDF artifacts and upload it via the ts-api REST endpoint.
 
@@ -2036,6 +2077,15 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 logger.debug("Skipping absent/empty optional folder 'models'.")
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
+
+        # Wait for nginx + ts-api to actually accept connections on NodePort 30001
+        # before attempting upload (avoids transient curl rc=7 connection refused).
+        if not _wait_for_ts_api_ready():
+            logger.error(
+                "ts-api endpoint not reachable; aborting UDF tar upload for '%s'.",
+                sample_app,
+            )
+            return False
 
         # Upload the tar via curl (mirrors make upload_tar_file)
         logger.info("Uploading UDF tar package to %s", upload_endpoint)
@@ -2252,8 +2302,8 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
         payload = {
             "udfs": {
-                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_defect_detector"),
-                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_defect_detector.cb"),
+                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_anomaly_detector"),
+                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_anomaly_detector.pkl"),
                 "device": device_value
             },
             "alerts": {
@@ -2330,6 +2380,288 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         return False
     finally:
         os.chdir(original_dir)
+
+
+# -----------------------------------------------------------------------------
+# Standalone multimodal helm steps (chronological breakdown of
+# `setup_multimodal_udf_deployment_package`). These let a test execute the
+# documented four-step CPU/GPU activation flow explicitly:
+#   1. copy_dlstreamer_models_to_pod
+#   2. upload_udf_tar_package (already defined above)
+#   3. activate_multimodal_tsa_udf_config
+#   4. activate_multimodal_dlstreamer_pipeline
+# -----------------------------------------------------------------------------
+
+def _get_multimodal_pod(namespace, grep_token):
+    """Return the first multimodal pod whose name contains ``grep_token``."""
+    pod_command = (
+        f"kubectl get pods -n {namespace} "
+        "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | "
+        f"grep {grep_token} | head -n 1"
+    )
+    result = subprocess.run(pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0 or not result.stdout:
+        logger.error(f"No pod found in namespace '{namespace}' matching '{grep_token}'.")
+        return None
+    return result.stdout.decode("utf-8").strip().replace("'", "")
+
+
+def copy_dlstreamer_models_to_pod(chart_path, namespace):
+    """Step 1: ``kubectl cp`` the multimodal DL Streamer models into the pod.
+
+    Equivalent to:
+        cd .../industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/
+        kubectl cp models <pod>:/home/pipeline-server/resources/ \
+            -c dlstreamer-pipeline-server -n <namespace>
+    """
+    original_dir = os.getcwd()
+    try:
+        logger.info("[Multimodal Step 1] Copying DL Streamer models to dlstreamer-pipeline-server pod")
+        os.chdir(chart_path)
+        os.chdir("../")
+
+        dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+        if not dlstreamer_pod:
+            return False
+        logger.info(f"Found DL Streamer pod: {dlstreamer_pod}")
+
+        models_path = "configs/dlstreamer-pipeline-server/models"
+        if not os.path.exists(models_path):
+            logger.warning(f"DL Streamer models directory not found at '{models_path}', skipping.")
+            return True
+
+        kubectl_cp = [
+            "kubectl", "cp", models_path,
+            f"{dlstreamer_pod}:/home/pipeline-server/resources/",
+            "-c", "dlstreamer-pipeline-server", "-n", namespace,
+        ]
+        logger.info(f"Copying DL Streamer models: {' '.join(kubectl_cp)}")
+        result = subprocess.run(kubectl_cp, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            logger.error(f"Error copying DL Streamer models: {result.stderr.decode('utf-8')}")
+            return False
+        logger.info("✓ DL Streamer models copied successfully.")
+        return True
+    except Exception as exc:
+        logger.error(f"Error copying DL Streamer models to pod: {exc}")
+        return False
+    finally:
+        os.chdir(original_dir)
+
+
+def activate_multimodal_tsa_udf_config(namespace, device_value="cpu"):
+    """Step 3: POST the multimodal TSA UDF config to ``/ts-api/config`` and reload.
+
+    Equivalent to:
+        curl -s -X POST https://localhost:30001/ts-api/config -k \\
+            -H 'Content-Type: application/json' -d '{... "device": <device_value> ...}'
+        # followed by a restart
+    """
+    logger.info(
+        f"[Multimodal Step 3] Activating Time Series Analytics UDF config "
+        f"(device='{device_value}')"
+    )
+    payload = {
+        "udfs": {
+            "name": constants.MULTIMODAL_UDF,
+            "models": constants.MULTIMODAL_MODEL,
+            "device": device_value,
+        },
+        "alerts": {
+            "mqtt": {
+                "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
+                "name": "my_mqtt_broker",
+            }
+        },
+    }
+    json_payload = json.dumps(payload)
+    logger.info(f"Time Series UDF payload: {json_payload}")
+
+    if not _post_ts_api_config(json_payload, target_namespace=namespace):
+        logger.error("Failed to post Time Series UDF configuration.")
+        return False
+
+    logger.info("Restarting ts-api configuration to apply new UDF changes...")
+    if not _restart_ts_api_config(target_namespace=namespace):
+        logger.error("Failed to restart ts-api configuration after UDF update.")
+        return False
+
+    logger.info(f"✓ Time Series Analytics UDF activated on {device_value.upper()}.")
+    return True
+
+
+def cleanup_failed_dlstreamer_pipelines(namespace):
+    """Clean up any failed or error-state DL Streamer pipeline instances.
+    
+    Returns:
+        int: Number of failed instances cleaned up, or -1 on error.
+    """
+    dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+    if not dlstreamer_pod:
+        logger.warning("DL Streamer pod not found for cleanup")
+        return -1
+    
+    try:
+        # Get pipeline status
+        status_command = [
+            "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+            "-c", "dlstreamer-pipeline-server", "--",
+            "curl", "-s", "http://localhost:8080/pipelines/status"
+        ]
+        result = subprocess.run(status_command, capture_output=True, text=True, timeout=10)
+        
+        if result.returncode != 0:
+            logger.warning(f"Failed to get pipeline status: {result.stderr}")
+            return -1
+        
+        # Parse status JSON
+        try:
+            status_list = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            logger.warning("Could not parse pipeline status JSON")
+            return 0
+        
+        cleaned_count = 0
+        for instance in status_list:
+            state = instance.get("state", "")
+            instance_id = instance.get("id", "")
+            
+            if state in ["ERROR", "ABORTED"] and instance_id:
+                logger.info(f"Cleaning up failed pipeline instance {instance_id} (state={state})")
+                delete_command = [
+                    "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+                    "-c", "dlstreamer-pipeline-server", "--",
+                    "curl", "-s", "-X", "DELETE",
+                    f"http://localhost:8080/pipelines/{instance_id}"
+                ]
+                delete_result = subprocess.run(delete_command, capture_output=True, text=True, timeout=10)
+                if delete_result.returncode == 0:
+                    logger.info(f"✓ Deleted failed pipeline instance {instance_id}")
+                    cleaned_count += 1
+                else:
+                    logger.warning(f"Failed to delete instance {instance_id}: {delete_result.stderr}")
+        
+        if cleaned_count > 0:
+            logger.info(f"Cleaned up {cleaned_count} failed pipeline instance(s)")
+        
+        return cleaned_count
+        
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Error during pipeline cleanup: {exc}")
+        return -1
+
+
+def activate_multimodal_dlstreamer_pipeline(
+    namespace,
+    device_value="CPU",
+    pipeline_name=constants.MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+    pipeline_request_file=None,
+):
+    """Step 4: Activate the DL Streamer pipeline on the chosen device (CPU/GPU/NPU).
+
+    Reads the pipeline request from the config file and modifies only the device parameter,
+    matching the user documentation approach:
+        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/<pipeline> \
+             -X POST -H 'Content-Type: application/json' \
+             -d "$(sed 's/"device": "CPU"/"device": "<device>"/' pipeline-request-cpu.json)"
+    """
+    device_upper = device_value.upper()
+    logger.info(
+        f"[Multimodal Step 4] Activating DL Streamer pipeline '{pipeline_name}' "
+        f"on device '{device_upper}'"
+    )
+
+    # Clean up any failed pipeline instances first
+    cleanup_failed_dlstreamer_pipelines(namespace)
+
+    dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+    if not dlstreamer_pod:
+        return False
+
+    # Use the pipeline request file from configs (same as user documentation)
+    if pipeline_request_file is None:
+        pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
+    
+    # Resolve path relative to helm_utils directory
+    utils_dir = os.path.dirname(os.path.abspath(__file__))
+    json_file_path = os.path.join(utils_dir, pipeline_request_file)
+    
+    if not os.path.exists(json_file_path):
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    
+    try:
+        # Read the base pipeline request JSON file
+        with open(json_file_path, 'r') as f:
+            dlstreamer_payload = json.load(f)
+        
+        # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
+        if "parameters" in dlstreamer_payload and "classification-properties" in dlstreamer_payload["parameters"]:
+            dlstreamer_payload["parameters"]["classification-properties"]["device"] = device_upper
+        else:
+            logger.error("Invalid pipeline request JSON structure")
+            return False
+    
+    except FileNotFoundError:
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in pipeline request file: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Error reading pipeline request file: {e}")
+        return False
+
+    # Add -w flag to capture HTTP status code for proper validation
+    activate_command = [
+        "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+        "-c", "dlstreamer-pipeline-server", "--",
+        "curl", "-sS", "-X", "POST",
+        f"http://localhost:8080/pipelines/user_defined_pipelines/{pipeline_name}",
+        "-H", "Content-Type: application/json",
+        "-d", json.dumps(dlstreamer_payload),
+        "-w", "\n%{http_code}",
+    ]
+    logger.info(f"Activating DL Streamer Pipeline via kubectl exec: {' '.join(activate_command)}")
+    try:
+        result = subprocess.run(activate_command, capture_output=True, text=True, timeout=30)
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Failed to invoke DL Streamer activation: {exc}")
+        return False
+
+    if result.returncode != 0:
+        logger.error(
+            f"DL Streamer Pipeline activation failed (curl rc={result.returncode}): "
+            f"{result.stderr or result.stdout}"
+        )
+        return False
+
+    # Parse HTTP status code from response
+    stdout = (result.stdout or "").rstrip()
+    if not stdout:
+        logger.error("DL Streamer activation returned empty output")
+        return False
+
+    lines = stdout.splitlines()
+    http_code = lines[-1].strip() if lines else ""
+    body = "\n".join(lines[:-1]).strip()
+
+    if not http_code.isdigit():
+        logger.error(f"DL Streamer activation returned invalid HTTP status: {http_code}")
+        return False
+
+    if not http_code.startswith("2"):
+        logger.error(
+            f"DL Streamer Pipeline activation failed with HTTP {http_code}. "
+            f"Response: {body or result.stderr}"
+        )
+        return False
+
+    logger.info(f"✓ DL Streamer Pipeline '{pipeline_name}' activated on {device_upper}.")
+    logger.info(f"Response: {body}")
+    return True
+
 
 def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     original_dir = os.getcwd()
@@ -2623,28 +2955,29 @@ def check_services(namespace, timeout=30, interval=5):
     return False
 
 
-def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"):
+def execute_gpu_config_curl_helm(
+    device="gpu",
+    namespace="time-series-analytics",
+    sample_app=constants.WIND_SAMPLE_APP,
+):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.
     
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
         namespace (str): Kubernetes namespace for the deployment
+        sample_app (str): Sample app key used to pick UDF/model from SAMPLE_APPS_CONFIG
     """
     try:
-        logger.info(f"Executing curl command to post {device.upper()} configuration to API via Helm...")
-        
-        # Create configuration with device field using SAMPLE_APPS_CONFIG
-        wind_config = constants.SAMPLE_APPS_CONFIG["wind-turbine-anomaly-detection"]
-        gpu_config = {
-            "udfs": {
-                "name": wind_config["udf"],
-                "models": wind_config["model"],
-                "device": device
-            },
-            "alerts": {
-                "mqtt": constants.MQTT_ALERT
-            }
-        }
+        logger.info(
+            f"Executing curl command to post {device.upper()} configuration to API via Helm for app '{sample_app}'..."
+        )
+
+        # Build payload from sample-app configuration.
+        # Keep alert mode mqtt by default for backward compatibility with existing tests.
+        gpu_config = _build_udf_payload(sample_app, device, "mqtt")
+        if not gpu_config:
+            logger.error(f"Failed to build GPU payload for sample app '{sample_app}'")
+            return False
         
         # Convert config to JSON string for curl command
         gpu_config_json = json.dumps(gpu_config)
@@ -2670,17 +3003,25 @@ def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"
         )
         
         if success:
-            logger.info(f"{device.upper()} configuration POST via kubectl exec succeeded")
+            logger.info(
+                f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
+            )
             return True
         else:
-            logger.error(f"kubectl exec command failed for {device.upper()} configuration")
+            logger.error(
+                f"kubectl exec command failed for {device.upper()} configuration (app '{sample_app}')"
+            )
             return False
             
     except subprocess.TimeoutExpired:
-        logger.error(f"Timeout executing {device.upper()} configuration curl command")
+        logger.error(
+            f"Timeout executing {device.upper()} configuration curl command for app '{sample_app}'"
+        )
         return False
     except Exception as e:
-        logger.error(f"Exception during {device.upper()} configuration: {str(e)}")
+        logger.error(
+            f"Exception during {device.upper()} configuration for app '{sample_app}': {str(e)}"
+        )
         return False
 
 
