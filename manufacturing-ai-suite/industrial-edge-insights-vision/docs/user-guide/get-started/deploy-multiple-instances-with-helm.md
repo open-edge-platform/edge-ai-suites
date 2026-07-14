@@ -958,7 +958,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows: 
 
-   > **Note:** For sake of simplicity, Intel assumes that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
+   > **Note:** For sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/<MODEL_PATH>.zip'
