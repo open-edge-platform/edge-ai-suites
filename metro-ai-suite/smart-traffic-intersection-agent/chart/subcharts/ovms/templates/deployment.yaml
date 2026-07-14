@@ -1,53 +1,53 @@
 {{/*
-Copyright (C) 2025 Intel Corporation
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if and .Values.vlmServing.trustedCompute.enabled .Values.vlmServing.gpu.enabled -}}
-{{- fail "Invalid configuration: vlmServing.trustedCompute.enabled and vlmServing.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- if and .Values.trustedCompute.enabled .Values.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
 {{- end -}}
-{{- $targetDevice := ternary "GPU" .Values.vlmServing.env.targetDevice .Values.vlmServing.gpu.enabled -}}
+{{- $targetDevice := ternary "GPU" .Values.env.targetDevice .Values.gpu.enabled -}}
 {{- $needsGpu := contains "GPU" $targetDevice -}}
-{{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}
-{{- $sanitized := .Values.vlmServing.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
-{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.vlmServing.env.modelName -}}
+{{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.env.weightFormat -}}
+{{- $sanitized := .Values.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
+{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.env.modelName -}}
 {{- $storageName := ternary (printf "%s_%s" $sanitized $targetDevice) (printf "%s_%s_%s" $sanitized $targetDevice $weightFormat) $isOpenvino -}}
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "stia.vlmServing.fullname" . }}
+  name: {{ include "ovms.fullname" . }}
   labels:
-    {{- include "stia.labels" . | nindent 4 }}
-    app.kubernetes.io/component: vlm-serving
+    {{- include "ovms.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ovms
 spec:
-  replicas: {{ .Values.vlmServing.replicas }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ include "stia.vlmServing.fullname" . }}
+      app: {{ include "ovms.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ include "stia.vlmServing.fullname" . }}
-        {{- include "stia.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: vlm-serving
+        app: {{ include "ovms.fullname" . }}
+        {{- include "ovms.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ovms
     spec:
-      {{- if .Values.vlmServing.trustedCompute.enabled }}
+      {{- if .Values.trustedCompute.enabled }}
       runtimeClassName: kata-qemu
       {{- end }}
       {{- if $needsGpu }}
       securityContext:
         supplementalGroups:
-          {{- toYaml .Values.vlmServing.gpu.renderGroupIds | nindent 10 }}
+          {{- toYaml .Values.gpu.renderGroupIds | nindent 10 }}
       {{- end }}
-      {{- with .Values.vlmServing.nodeSelector }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
         - name: ovms-model-init
-          image: "{{ .Values.vlmServing.initImage.repository }}:{{ .Values.vlmServing.initImage.tag }}"
-          imagePullPolicy: {{ .Values.vlmServing.initImage.pullPolicy }}
+          image: "{{ .Values.initImage.repository }}:{{ .Values.initImage.tag }}"
+          imagePullPolicy: {{ .Values.initImage.pullPolicy }}
           command:
             - /bin/sh
             - -c
@@ -83,30 +83,30 @@ spec:
                 . /config/ovms-init.sh
               fi
           args:
-            - {{ .Values.vlmServing.env.modelName | quote }}
+            - {{ .Values.env.modelName | quote }}
             - {{ $weightFormat | quote }}
-            - {{ .Values.vlmServing.huggingfaceToken | quote }}
+            - {{ .Values.huggingfaceToken | quote }}
             - {{ $targetDevice | quote }}
           env:
             - name: http_proxy
-              value: {{ .Values.global.proxy.httpProxy | quote }}
+              value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
+              value: {{ .Values.global.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
+              value: "{{ .Values.global.noProxy }},.svc,.svc.cluster.local,.cluster.local"
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"
-          {{- if .Values.vlmServing.trustedCompute.enabled }}
+          {{- if .Values.trustedCompute.enabled }}
           resources:
             limits:
-              cpu: {{ (.Values.vlmServing.resources.limits).cpu | default "6" | quote }}
-              memory: {{ (.Values.vlmServing.resources.limits).memory | default "20Gi" | quote }}
+              cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+              memory: {{ (.Values.resources.limits).memory | default "20Gi" | quote }}
             requests:
-              cpu: {{ (.Values.vlmServing.resources.requests).cpu | default "4" | quote }}
-              memory: {{ (.Values.vlmServing.resources.requests).memory | default "12Gi" | quote }}
-          {{- else if or (.Values.vlmServing.resources.requests) (.Values.vlmServing.resources.limits) }}
+              cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+              memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+          {{- else if or (.Values.resources.requests) (.Values.resources.limits) }}
           resources:
-            {{- toYaml .Values.vlmServing.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: ov-models
@@ -115,9 +115,9 @@ spec:
               mountPath: /config
               readOnly: true
       containers:
-        - name: {{ .Values.vlmServing.name }}
-          image: "{{- if $needsGpu -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.gpuTag }}{{- else -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}{{- end -}}"
-          imagePullPolicy: {{ .Values.vlmServing.image.pullPolicy }}
+        - name: ovms
+          image: {{ include "ovms.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "--port"
             - "9000"
@@ -126,7 +126,7 @@ spec:
             - "--config_path"
             - "/models/config.json"
             - "--log_level"
-            - {{ .Values.vlmServing.env.logLevel | quote }}
+            - {{ .Values.env.logLevel | quote }}
             - "--metrics_enable"
           ports:
             - name: http
@@ -134,11 +134,11 @@ spec:
               protocol: TCP
           env:
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }}"
+              value: "{{ .Values.global.noProxy }},.svc,.svc.cluster.local,.cluster.local,{{ include "ovms.fullname" . }}"
             - name: http_proxy
-              value: {{ .Values.global.proxy.httpProxy | quote }}
+              value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
+              value: {{ .Values.global.httpsProxy | quote }}
           volumeMounts:
             - name: ov-models
               mountPath: /models
@@ -151,27 +151,26 @@ spec:
             httpGet:
               path: /v2/health/live
               port: http
-            initialDelaySeconds: {{ .Values.vlmServing.healthcheck.initialDelaySeconds }}
-            periodSeconds: {{ .Values.vlmServing.healthcheck.periodSeconds }}
-            timeoutSeconds: {{ .Values.vlmServing.healthcheck.timeoutSeconds }}
-            failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           readinessProbe:
             httpGet:
               path: /v2/health/ready
               port: http
-            initialDelaySeconds: {{ .Values.vlmServing.healthcheck.initialDelaySeconds }}
-            periodSeconds: {{ .Values.vlmServing.healthcheck.periodSeconds }}
-            timeoutSeconds: {{ .Values.vlmServing.healthcheck.timeoutSeconds }}
-            failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           resources:
-            {{- $res := deepCopy .Values.vlmServing.resources }}
-            {{- if .Values.vlmServing.trustedCompute.enabled }}
+            {{- $res := deepCopy .Values.resources }}
+            {{- if .Values.trustedCompute.enabled }}
             {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
             {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6")) }}
             {{- end }}
             {{- if $needsGpu }}
-            {{- $res := deepCopy .Values.vlmServing.resources }}
-            {{- $gpuLimits := dict .Values.vlmServing.gpu.resourceName (.Values.vlmServing.gpu.resourceLimit | int) }}
+            {{- $gpuLimits := dict .Values.gpu.resourceName (.Values.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
             {{- toYaml $res | nindent 12 }}
             {{- else }}
@@ -181,15 +180,15 @@ spec:
             allowPrivilegeEscalation: false
       volumes:
         - name: ov-models
-          {{- if .Values.vlmServing.persistence.enabled }}
+          {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "stia.vlmServing.fullname" . }}-models
+            claimName: {{ include "ovms.fullname" . }}-models
           {{- else }}
           emptyDir: {}
           {{- end }}
         - name: init-script
           configMap:
-            name: {{ include "stia.vlmServing.fullname" . }}-init-script
+            name: {{ include "ovms.fullname" . }}-init-script
             defaultMode: 0755
         {{- if $needsGpu }}
         - name: dri-device

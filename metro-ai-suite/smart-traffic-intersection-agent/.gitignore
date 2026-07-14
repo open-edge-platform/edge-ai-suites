@@ -18,6 +18,8 @@ env/
 .venv/
 .env/
 
+**/charts
+
 # Ignore log files
 *.log
 
