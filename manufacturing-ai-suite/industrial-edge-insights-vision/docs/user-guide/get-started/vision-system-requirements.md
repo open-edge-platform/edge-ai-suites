@@ -8,7 +8,6 @@ See the specific system requirements for **HMI Augmented Worker** and **Win Visi
 
 | Requirement | Industrial Edge Insights - Vision |
 |---|---|
-| Sample Application(s) | Pallet Defect Detection and PCB Anomaly Detection |
 | Processor | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors |
 | RAM (minimum) | 16 GB |
 | Storage (minimum) | 64 GB |
