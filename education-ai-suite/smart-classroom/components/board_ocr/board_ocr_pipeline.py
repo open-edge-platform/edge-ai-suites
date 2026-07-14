@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -74,13 +75,16 @@ class FrameExtractor:
 
     def __init__(self, source: str, output_dir: Path):
         self.source = source
+        self.input_source = self._prepare_input_source(source)
         self.output_dir = Path(output_dir)
+        self.log_path = self.output_dir.parent / "frame_extractor.log"
         board_cfg = getattr(config, "board_ocr", None)
         self.frame_interval = str(getattr(board_cfg, "frame_rate", "1/3") or "1/3").strip()
 
         self._process: Optional[subprocess.Popen] = None
         self._monitor_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        self._log_fh = None
 
     @property
     def is_running(self) -> bool:
@@ -98,13 +102,20 @@ class FrameExtractor:
         cmd = self._build_command()
         logger.info(f"Starting frame extractor: {' '.join(cmd)}")
 
+        # ffmpeg writes all of its output (progress + errors) to stderr; send it
+        # straight to frame_extractor.log instead of the console.
+        try:
+            self.log_path.parent.mkdir(parents=True, exist_ok=True)
+            self._log_fh = open(self.log_path, "w", encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"Could not open frame extractor log {self.log_path}: {e}")
+            self._log_fh = None
+
         try:
             self._process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                encoding="utf-8",
-                errors="replace",
+                stderr=self._log_fh or subprocess.DEVNULL,
                 creationflags=(
                     subprocess.CREATE_NEW_PROCESS_GROUP
                     if sys.platform == "win32"
@@ -125,9 +136,32 @@ class FrameExtractor:
 
         logger.info(
             f"Frame extractor started (pid={self._process.pid}, "
-            f"source={self.source}, interval={self.frame_interval})"
+            f"source={self.input_source}, interval={self.frame_interval})"
         )
         return True
+
+    def _prepare_input_source(self, source: str) -> str:
+        """Normalize local file paths before passing them to FFmpeg."""
+        src = (source or "").strip()
+        if len(src) >= 2 and src[0] == src[-1] and src[0] in {'"', "'"}:
+            src = src[1:-1].strip()
+
+        lowered = src.lower()
+        if lowered.startswith(("rtsp://", "http://", "https://", "file://")):
+            return src
+    
+        expanded = Path(os.path.expandvars(os.path.expanduser(src)))
+        candidate = expanded.resolve() if expanded.is_absolute() else (Path.cwd() / expanded).resolve()
+
+        if not candidate.exists():
+            logger.error(f"Board OCR source path does not exist: {candidate}")
+            return str(candidate)
+
+        if candidate.is_dir():
+            logger.error(f"Board OCR source must be a file, not a directory: {candidate}")
+            return str(candidate)
+        result = f"file:{candidate.as_posix()}"
+        return result
 
     def stop(self, timeout: float = 10.0):
         """Stop the FFmpeg process gracefully."""
@@ -175,7 +209,7 @@ class FrameExtractor:
         cmd += [
             "-hwaccel", "qsv",
             "-hwaccel_output_format", "qsv",
-            "-i", self.source,
+            "-i", self.input_source,
         ]
 
         output_pattern = (self.output_dir / "frame_%06d.jpg").as_posix()
@@ -189,26 +223,26 @@ class FrameExtractor:
         return cmd
 
     def _monitor(self):
-        """Monitor the FFmpeg process and log unexpected exits."""
-        while not self._stop_event.is_set():
-            if self._process is None:
-                break
+        """Wait for ffmpeg to exit and report an unexpected failure.
 
-            ret = self._process.poll()
-            if ret is not None:
-                if not self._stop_event.is_set() and ret != 0:
-                    stderr_tail = ""
-                    try:
-                        stderr_tail = self._process.stderr.read()[-500:]
-                    except Exception:
-                        pass
-                    logger.warning(
-                        f"Frame extractor exited unexpectedly (code={ret}). "
-                        f"stderr: {stderr_tail}"
-                    )
-                break
+        ffmpeg's output is written directly to frame_extractor.log (see start()).
+        This just waits for the process to end and, unless we asked it to stop,
+        logs an error with the exit code pointing at the log for details.
+        """
+        proc = self._process
+        if proc is None:
+            return
 
-            time.sleep(2)
+        ret = proc.wait()
+        if self._log_fh is not None:
+            self._log_fh.close()
+            self._log_fh = None
+
+        if not self._stop_event.is_set() and ret != 0:
+            logger.error(
+                f"Frame extractor exited unexpectedly (code={ret}); "
+                f"see {self.log_path} for details."
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -239,6 +273,7 @@ class BoardOCRWorker:
         device: str,
         lang: str,
         session_id: str,
+        extractor: Optional["FrameExtractor"] = None,
     ):
         self.frames_dir = Path(frames_dir)
         self.output_file = Path(output_file)
@@ -246,12 +281,15 @@ class BoardOCRWorker:
         self.device = device
         self.lang = lang
         self.session_id = session_id
+        self._extractor = extractor
 
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._ocr_model = None
         self._last_kept_thumb: Optional[np.ndarray] = None
         self._frame_count = 0
+        self._finalized = False
+        self._finalize_lock = threading.Lock()
 
     def start(self) -> bool:
         """Start the worker thread. Returns False if OCR model init fails."""
@@ -286,6 +324,19 @@ class BoardOCRWorker:
         if self._thread is not None:
             self._thread.join(timeout=timeout)
             self._thread = None
+        self._finalize()
+
+    def _finalize(self) -> None:
+        """Run the output-cleaning pass exactly once (idempotent).
+
+        Called both when the worker finishes on its own (extraction ended and
+        the backlog drained) and when it is stopped externally by the content
+        pipeline's EOS/stop. The guard ensures the cleaning runs only once.
+        """
+        with self._finalize_lock:
+            if self._finalized:
+                return
+            self._finalized = True
         try:
             self.clean_output()
         except Exception as e:
@@ -317,6 +368,13 @@ class BoardOCRWorker:
         self._last_kept_thumb = thumb
         return False
 
+    def _extraction_ended(self) -> bool:
+        """True once the ffmpeg extraction process is no longer running.
+        """
+        if self._extractor is None:
+            return False
+        return not self._extractor.is_running
+
     def _run(self):
         while not self._stop.is_set():
             try:
@@ -326,6 +384,14 @@ class BoardOCRWorker:
                 frames = []
 
             if not frames:
+                # ffmpeg has exited and the backlog is fully drained: the worker
+                # is done, so clean the output and exit on its own instead of
+                # idling until the content pipeline stops it.
+                if self._extraction_ended() and not self.has_pending_frames():
+                    logger.info(
+                        "Board OCR: extraction ended and backlog drained; finishing"
+                    )
+                    break
                 time.sleep(_POLL_INTERVAL)
                 continue
 
@@ -340,6 +406,7 @@ class BoardOCRWorker:
                 self._process_frame(frame_path)
 
         logger.info("Board OCR worker stopped")
+        self._finalize()
 
     def _process_frame(self, frame_path: Path):
         try:
@@ -583,6 +650,7 @@ class BoardOCRPipeline:
             device=getattr(ocr_cfg, "device", "CPU"),
             lang=getattr(ocr_cfg, "lang", "en"),
             session_id=self.session_id,
+            extractor=self._extractor,
         )
         if not self._worker.start():
             logger.error("Failed to start OCR worker, stopping frame extractor")
