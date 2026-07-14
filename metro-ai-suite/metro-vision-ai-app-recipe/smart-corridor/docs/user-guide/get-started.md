@@ -94,9 +94,15 @@ On the child machine, clone the repo and run the install script **without** sett
 
 3. Run the install script:
 
-   ```bash
-   ./install.sh smart-corridor
-   ```
+   - Use the installation script to configure the application and download required models:
+
+     ```bash
+     ./install.sh smart-corridor
+     ```
+
+> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+> specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+> `./install.sh smart-corridor <HOST_IP>`
 
    The installer detects a child deployment (no `TOTAL_REMOTE_CHILD` in `.env`) and
    automatically:
@@ -140,9 +146,15 @@ On the parent machine, configure the `.env` file to declare how many remote chil
 
 3. Run the install script:
 
-   ```bash
-   ./install.sh smart-corridor
-   ```
+   - Use the installation script to configure the application and download required models:
+
+     ```bash
+     ./install.sh smart-corridor
+     ```
+
+> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+> specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+> `./install.sh smart-corridor <HOST_IP>`
 
    The installer detects a parent deployment and automatically:
    - Keeps the parent pipeline config (camera1–camera4 + camera5)
