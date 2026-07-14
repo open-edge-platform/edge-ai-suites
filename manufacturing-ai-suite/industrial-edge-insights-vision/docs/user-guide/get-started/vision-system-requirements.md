@@ -1,19 +1,19 @@
 # Industrial Edge Insights - Vision System Requirements
 
-This section shows detailed hardware, software, and platform requirements for Industrial Edge Insights - Vision applications, which consists the Pallet Defect Detection and PCB Anomaly Detection use cases.
+This section shows detailed hardware, software, and platform requirements for Industrial Edge Insights - Vision applications, which comprises the Pallet Defect Detection and PCB Anomaly Detection use cases.
 
 See the specific system requirements for **HMI Augmented Worker** and **Win Vision AI** in their respective sections.
 
 ## System Requirements
 
-| Requirement | Industrial Edge Insights - Vision | Industrial Edge Insights - Time Series | Industrial Edge Insights - Multimodal |
-|---|---|---|---|
-| Sample Application(s) | Pallet Defect Detection and PCB Anomaly Detection | Weld Defect Detection and Wind Turbine Anomaly Detection | Multimodal - Weld Defect Detection |
+| Requirement | Industrial Edge Insights - Vision |
+|---|---|
+| Sample Application(s) | Pallet Defect Detection and PCB Anomaly Detection |
 | Processor | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors |
-| RAM (minimum) | 16 GB | 16 GB | 16 GB |
-| Storage (minimum) | 64 GB | 64 GB | 64 GB |
+| RAM (minimum) | 16 GB |
+| Storage (minimum) | 64 GB |
 | Operating system | Ubuntu 22.04 LTS or Ubuntu 24.04 LTS |
-| Python Programming Language Version | 3.10 or higher | 3.10 or higher | 3.10 or higher |
+| Python Programming Language Version | 3.10 or higher |
 | Docker Engine | Docker Engine 27.3.1 or higher |
 | Other required software or tools | Git, jq, unzip |
 
