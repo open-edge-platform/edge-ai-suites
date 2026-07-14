@@ -56,6 +56,10 @@ _GLUED_LOWER_UPPER_RE = re.compile(r'([a-z])([A-Z])')
 _GLUED_CJK_RE = re.compile(r'([a-zA-Z])([一-鿿])')
 _GLUED_CJK_REV_RE = re.compile(r'([一-鿿])([a-zA-Z])')
 
+# Tokens reserved below the embedding model's limit for the pipeline's
+# instruction prefix ("passage: ") plus the [CLS]/[SEP] special tokens.
+_CHUNK_TOKEN_MARGIN = 16
+
 
 def _clean_text(text: str) -> str:
     """Collapse newlines to spaces and insert spaces between glued words."""
@@ -156,6 +160,15 @@ class DocumentParser:
         else:
             self.splitter = None  # unstructured basic chunking will be used
             logger.info("Using unstructured basic chunking.")
+
+        # Token ceiling so semantic chunks stay within the embedding model's
+        # context window and get split rather than tail-truncated at embed time.
+        self._max_chunk_tokens = None
+        self._count_tokens = None
+        if embed_model is not None:
+            model_max = getattr(embed_model, "max_length", 512) or 512
+            self._max_chunk_tokens = max(64, int(model_max) - _CHUNK_TOKEN_MARGIN)
+            self._count_tokens = getattr(embed_model, "count_tokens", None)
 
         self.excluded_embed_metadata_keys = [
             "file_size",
@@ -295,8 +308,87 @@ class DocumentParser:
             all_nodes.extend(page_nodes)
 
         all_nodes = self._merge_short_chunks(all_nodes)
+        all_nodes = self._split_long_chunks(all_nodes)
         logger.info(f"SemanticSplitter: {file_path} → {len(all_nodes)} chunks across {len(pages)} pages")
         return all_nodes
+
+    def _split_long_chunks(self, nodes: List[BaseNode]) -> List[BaseNode]:
+        """Split chunks exceeding the embedding model's token budget.
+
+        The semantic splitter and short-chunk merging can emit chunks longer than
+        the model's context window; those would be tail-truncated at embedding
+        time, silently dropping content. Re-split them on sentence boundaries
+        (packing sentences up to the budget) so all text is embedded.
+        """
+        if not nodes or not self._max_chunk_tokens or self._count_tokens is None:
+            return nodes
+
+        budget = self._max_chunk_tokens
+        result: List[BaseNode] = []
+        split_count = 0
+        for node in nodes:
+            text = node.get_content()
+            if self._count_tokens(text) <= budget:
+                result.append(node)
+                continue
+            pieces = self._pack_sentences(text, budget)
+            if len(pieces) <= 1:
+                result.append(node)
+                continue
+            split_count += 1
+            for piece in pieces:
+                result.append(TextNode(
+                    text=piece,
+                    metadata=dict(node.metadata),
+                    excluded_embed_metadata_keys=self.excluded_embed_metadata_keys,
+                    excluded_llm_metadata_keys=self.excluded_llm_metadata_keys,
+                ))
+        if split_count:
+            logger.info(f"Split {split_count} over-long chunk(s) to fit {budget}-token budget "
+                        f"→ {len(result)} total chunks.")
+        return result
+
+    def _pack_sentences(self, text: str, budget: int) -> List[str]:
+        """Greedily pack sentences into pieces each within ``budget`` tokens."""
+        pieces: List[str] = []
+        buf = ""
+        for sentence in _bilingual_sentence_splitter(text):
+            # A single sentence over budget can't be packed — hard-split it.
+            if self._count_tokens(sentence) > budget:
+                if buf.strip():
+                    pieces.append(buf.strip())
+                    buf = ""
+                pieces.extend(self._hard_split_by_chars(sentence, budget))
+                continue
+            candidate = f"{buf} {sentence}" if buf else sentence
+            if buf and self._count_tokens(candidate) > budget:
+                pieces.append(buf.strip())
+                buf = sentence
+            else:
+                buf = candidate
+        if buf.strip():
+            pieces.append(buf.strip())
+        return [p for p in pieces if p]
+
+    def _hard_split_by_chars(self, text: str, budget: int) -> List[str]:
+        """Split a single over-long span that has no usable sentence breaks.
+
+        Estimates chars-per-token from the whole span, slices by characters, then
+        shrinks any slice that still overshoots the token budget.
+        """
+        total = self._count_tokens(text)
+        if total <= budget:
+            return [text.strip()] if text.strip() else []
+        approx_chars = max(1, int(len(text) * budget / total))
+        pieces: List[str] = []
+        start = 0
+        while start < len(text):
+            end = min(len(text), start + approx_chars)
+            while end > start + 1 and self._count_tokens(text[start:end]) > budget:
+                end -= max(1, (end - start) // 8)
+            pieces.append(text[start:end].strip())
+            start = end
+        return [p for p in pieces if p]
 
     def _merge_short_chunks(self, nodes: List[BaseNode]) -> List[BaseNode]:
         """Merge chunks shorter than semantic_min_chunk_size into the following chunk."""

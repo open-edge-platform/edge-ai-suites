@@ -1,0 +1,62 @@
+# Surgical Instrument backend configuration.
+# Loaded by backend_mvp/app.py at startup. Env vars override (uppercase, dot → underscore).
+
+app:
+  name: surgical-instrument
+  build_sha: dev
+  host: 0.0.0.0
+  port: 5001
+  log_level: INFO
+
+# Inference mode. Only "dlstreamer" is supported in v1.
+inference_mode: dlstreamer
+
+pipeline:
+  # HTTP control plane exposed by surgical-pipeline container.
+  host: surgical-pipeline
+  port: 8000
+  start_timeout_s: 30
+  stop_timeout_s: 10
+
+mqtt:
+  host: surgical-mqtt
+  port: 1883
+  username: surgical
+  password: ${MQTT_PASSWORD}   # filled from env at startup
+  topic: surgical/detections
+  client_id: surgical-backend
+  qos: 1
+  keepalive: 30
+
+metrics:
+  host: surgical-metrics
+  port: 9000
+  poll_interval_s: 1.0
+
+frame:
+  # Where the pipeline drops JPEGs that backend serves over /video/stream and /frame/latest.
+  input_dir: /frames
+  freshness_threshold_s: 1.0
+  jpeg_quality: 80
+
+model:
+  name: yolo11n_polyp
+  device: ${DETECTION_DEVICE}  # CPU | GPU | NPU
+  threshold: 0.5
+  ir_xml:  /models/yolo11n_polyp/best_openvino_model/best.xml
+  ir_bin:  /models/yolo11n_polyp/best_openvino_model/best.bin
+  # No model-proc — DLS 2026.1 auto-detects converter + labels from
+  # Ultralytics' metadata.yaml next to best.xml. A hand-written yolo_v8
+  # model-proc collapses confidence scores on YOLO11n IR (verified in
+  # Phase 5.0.5 smoke).
+
+source:
+  # `file` for v1; `basler` enabled in Phase 6 follow-up
+  type: file
+  file_path: /videos/polyp_test.mp4
+  basler:
+    serial_number: ""
+    trigger_mode: software
+
+ui:
+  non_clinical_disclaimer: "Not for clinical use. Developer reference implementation."

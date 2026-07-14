@@ -10,7 +10,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
 ## Express Setup
 
-The Express Setup will use a convenience script to automatically configure and install the necessary content on your system. If you prefer to perform the steps yourself, use the [Step-by-step Setup](#step-by-step-setup) guide.
+The Express Setup will use an installation tool to automatically configure and install the necessary content on your system. If you prefer to perform the steps yourself, use the [Step-by-step Setup](#step-by-step-setup) guide.
 
 ### 1. Express Setup: Install Canonical Ubuntu OS
 
@@ -44,87 +44,66 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
-### 2. Express Setup: Execute Convenience Script
+### 2. Express Setup: Execute Robotics AI Suite Installer
 
-Download and execute the convenience script. Note: This script may take anywhere from 10 to 30 minutes depending on your network and system performance.
+1. Open a terminal prompt which will be used to execute the remaining steps.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+2. Download and execute the Robotics AI Suite Installer.
 
-> **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
-> ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
+   ```bash
+   wget https://amrdocs.intel.com/downloads/robotics-installer
+   wget https://amrdocs.intel.com/downloads/robotics-installer.sha256
+   (sha256sum -c robotics-installer.sha256 || \
+   (echo "ERROR: SHA sum incorrect"; exit 1)) && \
+   chmod +x robotics-installer && \
+   sudo -E ./robotics-installer
+   ```
 
-```bash
-wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
-chmod +x setup-robotics-jazzy.sh
-export USE_PROXY=0
-./setup-robotics-jazzy.sh
-```
+   > **Note:** If you are behind a network proxy, make sure you have
+   > defined ``http_proxy`` and ``https_proxy`` environment variables
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+   ![Installer](../images/install/installer_1.png)
 
-> **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
-> ``*oneapi*`` ``ros-*`` ``*openvino*`` ``*gazebo*`` ``*realsense*``
+3. Select an installation profile to install.
 
-```bash
-wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-humble.sh
-chmod +x setup-robotics-humble.sh
-export USE_PROXY=0
-./setup-robotics-humble.sh
-```
+   ![Installer](../images/install/installer_2.png)
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+4. Enable/Disable optional components.
 
-> **Note:** If you are behind a network proxy, make sure you have
-> defined ``http_proxy`` and ``https_proxy`` environment variables and
-> modify the command above to be `export USE_PROXY=1`
+   ![Installer](../images/install/installer_3.png)
+
+5. The installer will perform pre-flight checks. Ensure that all checks passed, then press ``Enter`` to continue.
+
+   ![Installer](../images/install/installer_4.png)
+
+6. The installer will list all the steps which will be performed. Press ``Enter`` to proceed with the installation.
+   The installation may take anywhere from 10 to 30 minutes depending on your network and system performance.
+
+   > **Note:** The installer will first initialize the system by uninstalling any packages with names matching the following patterns:
+   > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
+
+   ![Installer](../images/install/installer_5.png)
+
+   ![Installer](../images/install/installer_6.png)
+
+7. If the installation is successful, you will see a dialog simliar to the following:
+
+   ![Installer](../images/install/installer_7.png)
 
 ### 3. Express Setup: Prepare your ROS 2 Environment
 
-In order to execute any ROS 2 command in a new shell, you first have to source
-the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your
-ROS 2 communication graph.
+The Robotics AI Suite Installer automatically sets ``ROS_DOMAIN_ID`` environment variable
+to a random number between 0 and 100 within your ``.bashrc`` configuration.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+To use ROS 2 commands in a new shell, source ROS 2 shell setup script:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-export ROS_DOMAIN_ID=42
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
-
-```bash
-source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=42
-```
-
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
-
-> **Note:** The value 42 serves just as an example. Use an individual ID for every ROS 2
+> **Note:** Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
 > node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
 > in handling messages.
-
-- If you miss to source the ROS 2 setup bash script, you will not be able
-  to execute any ROS 2 command.
-
-- If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
-  be executed and may partially behave as expected. But you have to expect a diversity of
-  unexpected behaviors too.
-
-  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
-    expected to participate in a given ROS 2 graph.
-  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
-    graph, in order to avoid conflicts in message handling.
 
 ### 4. Express Setup: Next steps
 
@@ -330,17 +309,15 @@ echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 
 #### 2.3 Important Notes
 
-- If you miss to source the ROS 2 setup bash script, you will not be able
-  to execute any ROS 2 command.
+To use ROS 2 commands in a new shell, source ROS 2 shell setup script:
 
-- If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
-  be executed and may partially behave as expected. But you have to expect a diversity of
-  unexpected behaviors too.
+```bash
+source /opt/ros/jazzy/setup.bash
+```
 
-  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
-    expected to participate in a given ROS 2 graph.
-  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
-    graph, in order to avoid conflicts in message handling.
+> **Note:** Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
+> node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
+> in handling messages.
 
 ### 3. Set up the Autonomous Mobile Robot APT Repositories
 
@@ -351,32 +328,23 @@ This section explains the procedure to configure the APT package manager to use 
 2. Download the APT key to the system keyring:
 
    ```bash
-   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   sudo -E wget -O- https://amr-docs.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-AMR.gpg | sudo tee /usr/share/keyrings/amr-archive-keyring.gpg > /dev/null
    ```
 
 3. Add the signed entry to Autonomous Mobile Robot APT sources and configure the APT client to use the Autonomous Mobile Robot APT repositories:
 
    ```bash
-   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list > /dev/null
-   echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee -a /etc/apt/sources.list.d/eci.list > /dev/null
-   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee /etc/apt/sources.list.d/amr.list > /dev/null
-   echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee -a /etc/apt/sources.list.d/amr.list > /dev/null
+   echo "deb [signed-by=/usr/share/keyrings/amr-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee /etc/apt/sources.list.d/amr.list > /dev/null
+   echo "deb-src [signed-by=/usr/share/keyrings/amr-archive-keyring.gpg] https://amrdocs.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) amr main" | sudo tee -a /etc/apt/sources.list.d/amr.list > /dev/null
    ```
 
 4. Configure the Autonomous Mobile Robot APT repository to have higher priority over other repositories:
 
    ```bash
-   echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
    echo -e "Package: *\nPin: origin amrdocs.intel.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/amr
    ```
 
-5. Configure the Autonomous Mobile Robot APT repository to ignore FLANN 1.19 version
-
-   ```bash
-   echo -e "\nPackage: libflann*\nPin: version 1.19.*\nPin-Priority: -1\n\nPackage: flann*\nPin: version 1.19.*\nPin-Priority: -1" | sudo tee -a /etc/apt/preferences.d/isar
-   ```
-
-6. Configure the APT repository of the Intel® oneAPI Base Toolkit:
+5. Configure the APT repository for the Intel® oneAPI Base Toolkit:
 
    ```bash
    wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
@@ -385,6 +353,25 @@ This section explains the procedure to configure the APT package manager to use 
    echo -e "Package: intel-oneapi-compiler-*\nPin: version 2025.3.*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/oneapi > /dev/null
    echo -e "Package: intel-oneapi-mkl-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/oneapi > /dev/null
    ```
+
+6. For latest Intel silicon support, add the Canonical ``kobuk`` Private Package Archive (PPA):
+
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
+   ```
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
+
+   *``kobuk`` PPA not availble for Ubuntu 22.04.*
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 ### 4. Install OpenVINO™ Packages
 
@@ -925,76 +912,104 @@ sudo reboot
 
 At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
-## Optional - Enabling Intel® GPU
+## Optional - Enabling Intel® Silcon on Ubuntu 22.04
 
-If you are using Intel® silcon on an older OS distribution (Ex: Ubuntu 22)
+If you are using Intel® silcon on an Ubuntu 22
 and are having trouble getting the Intel® GPU functioning, you may
 need to install a newer Linux kernel, firmware, and GPU drivers from
 development.
 
-1. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
+1. Download the ECI APT key to the system keyring:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ```bash
+   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   ```
+
+2. Add the signed entry to ECI APT sources and configure the APT client to use the ECI APT repository:
+
+   ```bash
+   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list > /dev/null
+   echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee -a /etc/apt/sources.list.d/eci.list > /dev/null
+   ```
+
+3. Configure the ECI APT repository to have higher priority over other repositories:
+
+   ```bash
+   echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
+   ```
+
+4. For latest Intel silicon support, add the Canonical ``kisak`` Private Package Archives (PPA):
 
    ```bash
    sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
-2. Install mesa packages from ``kisak`` PPA:
-
-   <!--hide_directive:::::{tab-set}hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+5. Install mesa packages from ``kisak`` PPA:
 
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
    ```
 
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive:::::hide_directive-->
-
-3. Install the latest Linux kernel:
+6. Install the latest supported Linux kernel:
 
    ```bash
-   sudo apt install linux-intel-rt-experimental
+   sudo apt install linux-intel-experimental
    ```
 
-4. Install the ``eci-customizations`` package to populate the GRUB menu
-   with the latest Linux kernel:
+7. Install the ``eci-customizations`` package to populate the GRUB menu:
 
    ```bash
    sudo apt install eci-customizations
    ```
 
-5. Install GuC and HuC Linux firmware package:
+8. Install Linux firmware package:
 
    ```bash
    sudo apt install linux-firmware
    ```
 
-6. Reboot the system to allow the latest Linux kernel to boot.
+9. Reboot the system to allow the kernel and firmware to load.
+
+## Optional - Enabling Real-time Linux kernel
+
+1. Download the ECI APT key to the system keyring:
+
+   ```bash
+   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   ```
+
+2. Add the signed entry to ECI APT sources and configure the APT client to use the ECI APT repository:
+
+   ```bash
+   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list > /dev/null
+   echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee -a /etc/apt/sources.list.d/eci.list > /dev/null
+   ```
+
+3. Configure the ECI APT repository to have higher priority over other repositories:
+
+   ```bash
+   echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
+   ```
+
+4. Install the latest supported real-time Linux kernel:
+
+   ```bash
+   sudo apt install linux-intel-rt-experimental
+   ```
+
+5. Install the ``eci-customizations`` package to populate the GRUB menu:
+
+   ```bash
+   sudo apt install eci-customizations
+   ```
+
+6. Install Linux firmware package:
+
+   ```bash
+   sudo apt install linux-firmware
+   ```
+
+7. Reboot the system to allow the real-time Linux kernel to boot.
 
 ## Installation Troubleshooting
 
