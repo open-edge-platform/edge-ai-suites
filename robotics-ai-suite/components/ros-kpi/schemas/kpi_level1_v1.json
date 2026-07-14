@@ -326,6 +326,39 @@
           }
         }
       }
+    },
+    "wandering": {
+      "type": ["object", "null"],
+      "description": "Wandering-scenario-specific metrics. Present only for wandering runs.",
+      "additionalProperties": false,
+      "properties": {
+        "goal_calc_latency_ms": {
+          "type": "object",
+          "description": "Wall-clock time from current goal result to next goal dispatched.",
+          "additionalProperties": false,
+          "required": ["mean_ms", "p50_ms", "p90_ms", "max_ms", "n"],
+          "properties": {
+            "mean_ms": {"type": "number", "minimum": 0, "description": "Mean goal-calc latency in ms."},
+            "p50_ms":  {"type": "number", "minimum": 0, "description": "Median goal-calc latency in ms."},
+            "p90_ms":  {"type": "number", "minimum": 0, "description": "90th-percentile goal-calc latency in ms."},
+            "max_ms":  {"type": "number", "minimum": 0, "description": "Maximum goal-calc latency in ms."},
+            "n":       {"type": "integer", "minimum": 1, "description": "Number of goal transitions measured."}
+          }
+        },
+        "goal_response_latency_ms": {
+          "type": "object",
+          "description": "Wall-clock time from goal dispatched (NavigateToPose sent) to first /cmd_vel published for that goal.",
+          "additionalProperties": false,
+          "required": ["mean_ms", "p50_ms", "p90_ms", "max_ms", "n"],
+          "properties": {
+            "mean_ms": {"type": "number", "minimum": 0, "description": "Mean goal-response latency in ms."},
+            "p50_ms":  {"type": "number", "minimum": 0, "description": "Median goal-response latency in ms."},
+            "p90_ms":  {"type": "number", "minimum": 0, "description": "90th-percentile goal-response latency in ms."},
+            "max_ms":  {"type": "number", "minimum": 0, "description": "Maximum goal-response latency in ms."},
+            "n":       {"type": "integer", "minimum": 1, "description": "Number of goal cycles measured."}
+          }
+        }
+      }
     }
   }
 }

@@ -184,8 +184,8 @@ if(ROS_DISTRO STREQUAL "jazzy")
     protobuf::libprotobuf
   )
 else()
-  target_link_libraries(VacuumToolPlugin ${GAZEBO_LIBS})
-  target_link_libraries(ConveyorBeltPlugin ${GAZEBO_LIBS})
+  target_link_libraries(VacuumToolPlugin ${GAZEBO_LIBS} protobuf::libprotobuf)
+  target_link_libraries(ConveyorBeltPlugin ${GAZEBO_LIBS} protobuf::libprotobuf)
 endif()
 
 # Link generated interfaces to ConveyorBeltPlugin

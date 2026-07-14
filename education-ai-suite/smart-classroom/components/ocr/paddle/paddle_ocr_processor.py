@@ -2,7 +2,7 @@ import os
 # PP-OCRv6 PIR models crash paddle's oneDNN executor
 os.environ.setdefault("FLAGS_use_mkldnn", "0")
 from components.ocr.base_ocr import BaseOCR
-from typing import List
+from typing import List, Tuple
 import logging
 from utils.config_loader import config
 
@@ -69,3 +69,17 @@ class PaddleOCRProcessor(BaseOCR):
             lines.extend(rec_texts)
 
         return "\n".join(lines)
+
+    def extract_text_with_scores(self, file_path: str) -> Tuple[str, List[float]]:
+        result = self.ocr(file_path)
+
+        if not result:
+            return "", []
+        lines, scores = [], []
+        for item in result:
+            rec_texts = getattr(item, "rec_texts", None) or item.get("rec_texts", [])
+            rec_scores = getattr(item, "rec_scores", None) or item.get("rec_scores", [])
+            lines.extend(rec_texts)
+            scores.extend(float(s) for s in rec_scores)
+
+        return "\n".join(lines), scores

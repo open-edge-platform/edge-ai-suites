@@ -34,7 +34,7 @@ def setup_helm_environment(request):
     """Setup Helm environment before running tests."""
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
-    
+    assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
@@ -93,6 +93,12 @@ def setup_helm_environment(request):
         logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace)
         assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
+
+    services_cleanup_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_result:
+        logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace)
+        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."
 
 @pytest.fixture(scope="function")
 def setup_helm_weld_environment(request):
@@ -159,6 +165,12 @@ def setup_helm_weld_environment(request):
         helm_utils.force_cleanup_namespace(namespace)
         assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
 
+    services_cleanup_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_result:
+        logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace)
+        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."
+
 @pytest.fixture(scope="function")
 def setup_multimodal_helm_environment():
     """Install and tear down the multimodal Helm chart for tests that require it."""
@@ -210,3 +222,9 @@ def setup_multimodal_helm_environment():
         logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace_multi)
         assert helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
+
+    services_cleanup_result = helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
+    if not services_cleanup_result:
+        logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
+        helm_utils.force_cleanup_namespace(namespace_multi)
+        assert helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."

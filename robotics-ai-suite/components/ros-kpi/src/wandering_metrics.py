@@ -43,6 +43,7 @@ Subcommands
 import sys
 import os
 import re
+import statistics
 import time
 
 
@@ -223,6 +224,164 @@ def cmd_compare(  # pylint: disable=too-many-locals
 
     print(f"  Full run logs: {out_dir or os.path.dirname(labeled_logs[0][1])}")
     print()
+
+
+# ── goal-calc latency ────────────────────────────────────────────────────────
+
+_RESULT_RE = re.compile(
+    r'\[wandering-\d+\] \[(?:INFO|WARN)\] \[(\d+\.\d+)\] '
+    r'\[wandering_mapper\]: Result for goal'
+)
+_SEND_RE = re.compile(
+    r'\[wandering-\d+\] \[INFO\] \[(\d+\.\d+)\] '
+    r'\[wandering_mapper\]: Sending target goal'
+)
+
+
+def _goal_calc_latencies_ms(text: str) -> list:
+    """Return per-transition goal-calc latency values in milliseconds.
+
+    Each value is the wall-clock time from 'Result for goal' (current goal
+    completes) to the next 'Sending target goal' (next goal dispatched).
+    The first 'Sending target goal' before any result is excluded.
+    """
+    events: list = []
+    for m in _RESULT_RE.finditer(text):
+        events.append((float(m.group(1)), 'result'))
+    for m in _SEND_RE.finditer(text):
+        events.append((float(m.group(1)), 'send'))
+    events.sort()
+
+    latencies: list = []
+    last_result = None
+    for ts, kind in events:
+        if kind == 'result':
+            last_result = ts
+        elif kind == 'send' and last_result is not None:
+            delta_ms = (ts - last_result) * 1000.0
+            if delta_ms >= 0:
+                latencies.append(delta_ms)
+            last_result = None
+    return latencies
+
+
+def extract_goal_calc_latency(text: str):
+    """Compute goal-calc latency stats from wandering_launch.log text.
+
+    Returns a dict with mean_ms, p50_ms, p90_ms, max_ms, n, or None if
+    no goal transitions are found.
+    """
+    latencies = _goal_calc_latencies_ms(text)
+    if len(latencies) < 1:
+        return None
+    srt = sorted(latencies)
+    n = len(srt)
+
+    def _pct(pct: float) -> float:
+        idx = (n - 1) * pct / 100.0
+        lo = int(idx)
+        frac = idx - lo
+        return srt[lo] + frac * (srt[min(lo + 1, n - 1)] - srt[lo])
+
+    return {
+        'mean_ms': round(statistics.mean(latencies), 3),
+        'p50_ms':  round(_pct(50), 3),
+        'p90_ms':  round(_pct(90), 3),
+        'max_ms':  round(max(latencies), 3),
+        'n':       n,
+    }
+
+
+# ── goal-response latency ─────────────────────────────────────────────────────
+
+_NS_PER_S = 1_000_000_000
+
+
+def _goal_response_latencies_ms(log_text: str, bag_dir) -> list:
+    """Return per-goal goal-response latency values in milliseconds.
+
+    Each value is the wall-clock time from 'Sending target goal' (goal
+    dispatched by wandering_mapper) to the first /cmd_vel message published
+    after that goal was sent, as recorded in the rosbag.
+
+    Parameters
+    ----------
+    log_text:
+        Full text of wandering_launch.log.
+    bag_dir:
+        Path to the session bag directory (contains metadata.yaml + *.mcap).
+    """
+    try:
+        from analyze_bag_e2e import _load_bag_timestamps  # noqa: PLC0415
+    except ImportError:
+        try:
+            from src.analyze_bag_e2e import _load_bag_timestamps  # type: ignore[no-redef]  # noqa: PLC0415
+        except ImportError:
+            return []
+
+    from pathlib import Path  # noqa: PLC0415
+    bag_path = Path(bag_dir)
+    try:
+        topic_ts = _load_bag_timestamps(bag_path, ['/cmd_vel'])
+    except Exception:  # noqa: BLE001
+        return []
+
+    cmd_vel_ns = topic_ts.get('/cmd_vel', [])
+    if not cmd_vel_ns:
+        return []
+
+    # Goal-sent timestamps from the log (float seconds → nanoseconds)
+    goal_sent_ns = sorted(
+        int(float(m.group(1)) * _NS_PER_S)
+        for m in _SEND_RE.finditer(log_text)
+    )
+    if not goal_sent_ns:
+        return []
+
+    # For each goal, find the first /cmd_vel timestamp that comes after it
+    latencies: list = []
+    cmd_idx = 0
+    for goal_ns in goal_sent_ns:
+        # Advance past any cmd_vel messages that predate this goal
+        while cmd_idx < len(cmd_vel_ns) and cmd_vel_ns[cmd_idx] <= goal_ns:
+            cmd_idx += 1
+        if cmd_idx >= len(cmd_vel_ns):
+            break
+        delta_ms = (cmd_vel_ns[cmd_idx] - goal_ns) / 1e6
+        if delta_ms >= 0:
+            latencies.append(delta_ms)
+
+    return latencies
+
+
+def extract_goal_response_latency(log_text: str, bag_dir):
+    """Compute goal-response latency stats from wandering_launch.log + rosbag.
+
+    Measures the wall-clock time from each 'Sending target goal' event to the
+    first /cmd_vel message published after that goal was dispatched.
+
+    Returns a dict with mean_ms, p50_ms, p90_ms, max_ms, n, or None if the
+    bag is unavailable, /cmd_vel is not recorded, or no goals are found.
+    """
+    latencies = _goal_response_latencies_ms(log_text, bag_dir)
+    if len(latencies) < 1:
+        return None
+    srt = sorted(latencies)
+    n = len(srt)
+
+    def _pct(pct: float) -> float:
+        idx = (n - 1) * pct / 100.0
+        lo = int(idx)
+        frac = idx - lo
+        return srt[lo] + frac * (srt[min(lo + 1, n - 1)] - srt[lo])
+
+    return {
+        'mean_ms': round(statistics.mean(latencies), 3),
+        'p50_ms':  round(_pct(50), 3),
+        'p90_ms':  round(_pct(90), 3),
+        'max_ms':  round(max(latencies), 3),
+        'n':       n,
+    }
 
 
 # ── entry point ───────────────────────────────────────────────────────────────

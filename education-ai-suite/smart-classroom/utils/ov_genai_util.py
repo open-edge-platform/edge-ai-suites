@@ -12,26 +12,39 @@ class YieldingTextStreamer(ov_genai.StreamerBase):
         self._token_cache = []
         self._print_len = 0
 
-    def put(self, token_id) -> bool:
-        self._token_cache.append(token_id)
-        self.total_tokens += 1
+    def get_stop_flag(self):
+        """Check whether generation should be stopped."""
+        return ov_genai.StreamingStatus.RUNNING
+
+    def write(self, token) -> ov_genai.StreamingStatus:
+        """Process token(s) and manage the decoding buffer."""
+        # Handle both single token and list of tokens
+        if isinstance(token, list):
+            self._token_cache.extend(token)
+            self.total_tokens += len(token)
+        else:
+            self._token_cache.append(token)
+            self.total_tokens += 1
 
         text = self.tokenizer.decode(self._token_cache, skip_special_tokens=self.skip_special_tokens)
         new_text = text[self._print_len:]
         if not new_text:
-            return False
+            return ov_genai.StreamingStatus.RUNNING
 
         if self._is_safe_to_emit(new_text):
             self._queue.put(new_text)
             self._print_len = len(text)
         else:
-            last_token_text = self.tokenizer.decode([token_id], skip_special_tokens=True)
+            # Get the last token for boundary detection
+            last_token = token if not isinstance(token, list) else token[-1]
+            last_token_text = self.tokenizer.decode([last_token], skip_special_tokens=True)
             if last_token_text.startswith(" "):
                 prev_chunk = text[self._print_len : len(text) - len(last_token_text)]
                 if prev_chunk:
                     self._queue.put(prev_chunk)
                     self._print_len += len(prev_chunk)
-        return False
+        
+        return self.get_stop_flag()
 
     def end(self):
         if self._token_cache:

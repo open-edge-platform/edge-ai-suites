@@ -1,0 +1,41 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/*.egg-info
+
+# Local virtualenvs & caches (rebuilt inside the image)
+.venv*/
+.cache/
+
+# Node artifacts (UI has its own build context)
+ui/node_modules/
+ui/dist/
+ui/.vite/
+
+# Large runtime bind-mount contents — supplied at runtime, not baked in
+models/
+datasets/
+videos/
+out/
+model_cache/
+
+# Dev-only scratch and legacy MVP mock (not shipped)
+_dev_notes/
+backend_mvp/
+poc/
+.venv-mock/
+
+# VCS + editor
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Compose / docker
+docker-compose*.yaml
+Dockerfile
+.dockerignore
