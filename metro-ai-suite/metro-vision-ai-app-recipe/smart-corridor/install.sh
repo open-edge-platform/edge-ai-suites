@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
+HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
+
 docker run --rm -t \
     -e http_proxy -e https_proxy -e no_proxy \
+    -e HOST_IP="$HOST_IP" \
     -v $(pwd)/init.sh:/init.sh \
     -v $(pwd)/chart:/chart \
     -v $(pwd)/src:/src \
@@ -16,6 +19,31 @@ if [ "${ENABLE_TC}" = "true" ]; then
 fi
 
 sudo chown -R $USER:$USER src/secrets
+
+# If this is a parent deployment (TOTAL_REMOTE_CHILD set in .env), run CA federation
+ENV_FILE="../.env"
+if [[ -f "$ENV_FILE" ]]; then
+    TOTAL_REMOTE_CHILD=$(grep -E "^TOTAL_REMOTE_CHILD=" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
+    TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD:--1}
+    if [[ "$TOTAL_REMOTE_CHILD" -gt 0 ]] 2>/dev/null; then
+        echo "Parent deployment detected (TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD})"
+        echo "Running CA bundle..."
+        bash ./ca-bundle.sh
+    elif [[ "$TOTAL_REMOTE_CHILD" -eq 0 ]]; then
+        echo "Single Node Parent deployment detected(TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD})"
+        echo "No child deployments — skipping CA bundle"
+    else
+        # Child deployment: use child appdata and config
+        echo "Child deployment detected — using smart-corridor-child-ri.tar.bz2"
+        ln -sf smart-corridor-child-ri.tar.bz2 src/webserver/smart-corridor-ri.tar.bz2
+        echo "Child deployment detected — using config_child.json"
+        ln -sf config_child.json src/dlstreamer-pipeline-server/config.json
+    fi
+else
+    # No .env — default to child
+    echo "Error: .env file not found."
+    exit 1
+fi
 
 mkdir -p src/nginx/ssl
 cd src/nginx/ssl

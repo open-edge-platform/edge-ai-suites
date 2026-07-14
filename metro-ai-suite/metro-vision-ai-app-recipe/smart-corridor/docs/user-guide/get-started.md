@@ -50,6 +50,116 @@ To get started:
 > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `./install.sh smart-corridor <HOST_IP>`
 
+## Multi-Machine Deployment (Parent / Child)
+
+The Smart Corridor application supports multi-machine deployments where one **parent** machine
+aggregates scene data from one or more **child** machines. Each child runs its own set of
+camera pipelines and sends tracking data to the parent's scene controller.
+
+### Deployment Architecture
+
+```
+Parent Machine (e.g., 10.223.22.95)
+├── SceneScape Controller (aggregates all scenes)
+├── SceneScape Manager (Web UI)
+├── DLStreamer (local cameras: camera1–camera4)
+├── MQTT Broker (port 1883 TLS, 1882 internal)
+└── CA Server (port 8888, serves CA cert to parent)
+
+Child Machine (e.g., 10.223.22.20)
+├── DLStreamer (child cameras: camera401–camera404)
+├── MQTT Broker (port 1883 TLS)
+└── CA Server (port 8888, serves CA cert to parent)
+```
+
+> **Note:** For a single-machine deployment (no remote children), skip this section and go
+> directly to [Deploy a Parent Machine](#deploy-a-parent-machine).
+
+### Deploy a Child Machine
+
+On the child machine, clone the repo and run the install script **without** setting
+`TOTAL_REMOTE_CHILD` in the `.env` file:
+
+1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
+
+2. Configure the `.env` file:
+
+   ```bash
+   cd metro-ai-suite/metro-vision-ai-app-recipe/
+   cat > .env << 'EOF'
+   SAMPLE_APP=smart-corridor
+   ENABLE_OPEN_TELEMETRY=true
+   EOF
+   ```
+
+3. Run the install script:
+
+   ```bash
+   ./install.sh smart-corridor
+   ```
+
+   The installer detects a child deployment (no `TOTAL_REMOTE_CHILD` in `.env`) and
+   automatically:
+   - Uses child-specific scene data (`smart-corridor-child-ri.tar.bz2`)
+   - Uses child-specific pipeline config (`config_child.json` with camera401–camera404)
+
+4. Start the application:
+
+   ```bash
+   export SUPASS=$(cat ./smart-corridor/src/secrets/supass)
+   docker compose up -d
+   ```
+
+### Deploy a Parent Machine
+
+On the parent machine, configure the `.env` file to declare how many remote children exist:
+
+1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
+
+2. Configure the `.env` file with the remote child IPs:
+
+   ```bash
+   SAMPLE_APP=smart-corridor
+   TOTAL_REMOTE_CHILD=1
+   REMOTE_IP_1=<CHILD_MACHINE_IP>
+   ```
+
+   For multiple child nodes:
+
+   ```bash
+   TOTAL_REMOTE_CHILD=2
+   REMOTE_IP_1=10.223.22.20
+   REMOTE_IP_2=10.223.22.30
+   ```
+
+   For Single Node deployment with no child nodes:
+
+   ```bash
+   TOTAL_REMOTE_CHILD=0
+   ```
+
+3. Run the install script:
+
+   ```bash
+   ./install.sh smart-corridor
+   ```
+
+   The installer detects a parent deployment and automatically:
+   - Keeps the parent pipeline config (camera1–camera4 + camera5)
+   - Runs `ca-bundle.sh` to fetch CA certificates from each remote child and build a
+     combined trust bundle for TLS connectivity
+
+ 
+### Important Notes for Multi-Machine Deployments
+
+- **Deploy children first**: The parent's `ca-bundle.sh` fetches CA certificates from
+  children via HTTP (port 8888). Children must be running before the parent install.
+- **Network access**: Port 8888 (CA server) and port 1883 (MQTT TLS) must be accessible
+  between machines.
+- **Scene configuration**: After deployment, add the remote child scene in the SceneScape
+  Web UI under the parent scene's settings (using the child's broker IP and port 1883).
+- **Time synchronization**: Ensure NTP is synchronized across all machines to avoid tracking lag.
+
 ## Run the Application
 
 1. **Start the Application**:

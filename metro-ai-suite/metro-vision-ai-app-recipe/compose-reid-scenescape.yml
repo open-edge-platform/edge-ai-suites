@@ -349,7 +349,7 @@ services:
     command: >
       --restauth /run/secrets/controller.auth
       --brokerauth /run/secrets/controller.auth
-      --broker broker.scenescape.intel.com
+      --broker broker.scenescape.intel.com:1882
       --ntp ntpserv
     volumes:
       - pgserver-media-smart-corridor:/home/scenescape/SceneScape/media
@@ -364,6 +364,17 @@ services:
         target: certs/scenescape-vdms-c.key
       - django
       - controller.auth
+    restart: unless-stopped
+
+  ca-server:
+    image: busybox:1.37
+    ports:
+      - "${CA_SERVER_PORT:-8888}:8888"
+    volumes:
+      - ./${SAMPLE_APP}/src/secrets/certs/scenescape-ca.pem:/var/www/scenescape-ca.pem:ro
+    command: ["httpd", "-f", "-p", "8888", "-h", "/var/www"]
+    networks:
+      - scenescape
     restart: unless-stopped
 
   nginx:

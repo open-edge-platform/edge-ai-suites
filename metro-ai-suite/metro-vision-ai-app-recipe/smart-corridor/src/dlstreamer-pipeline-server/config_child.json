@@ -2,7 +2,7 @@
     "config": {
         "pipelines": [
             {
-                "name": "intersection-cam1",
+                "name": "intersection-cam401",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -57,7 +57,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera1"
+                            "path": "camera401"
                         }
                     },
                     "parameters": {
@@ -65,14 +65,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera1",
+                            "cameraid": "camera401",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam2",
+                "name": "intersection-cam402",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -127,7 +127,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera2"
+                            "path": "camera402"
                         }
                     },
                     "parameters": {
@@ -135,14 +135,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera2",
+                            "cameraid": "camera402",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam3",
+                "name": "intersection-cam403",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -197,7 +197,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera3"
+                            "path": "camera403"
                         }
                     },
                     "parameters": {
@@ -205,14 +205,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera3",
+                            "cameraid": "camera403",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam4",
+                "name": "intersection-cam404",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -267,7 +267,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera4"
+                            "path": "camera404"
                         }
                     },
                     "parameters": {
@@ -275,87 +275,17 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera4",
+                            "cameraid": "camera404",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection2-cam5",
+                "name": "intersection-cam401-gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east_h264.ts name=source ! decodebin3 ! videorate ! videoconvert ! video/x-raw,format=BGR,framerate=15/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model-instance-id=detect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ntp_config": {
-                            "element": {
-                                "name": "timesync",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "ntpServer": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "camera_config": {
-                            "element": {
-                                "name": "datapublisher",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "intrinsics": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number",
-                                        "description": "Camera intrinsics as [diagonal_fov] or [horizontal_fov, vertical_fov] or [fx,fy,cx,cy] "
-                                    }
-                                },
-                                "cameraid": {
-                                    "type": "string"
-                                },
-                                "metadatagenpolicy" : {
-                                    "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
-                                },
-                                "publish_frame": {
-                                    "type": "boolean",
-                                    "description": "Publish frame to mqtt"
-                                }
-                            }
-                        }
-                    }
-                },
-                "payload": {
-                    "destination":{
-                        "frame": {
-                            "type": "rtsp",
-                            "path": "camera5"
-                        }
-                    },
-                    "parameters": {
-                        "ntp_config": {
-                            "ntpServer": "ntpserv"
-                        },
-                        "camera_config": {
-                            "cameraid": "camera5",
-                            "metadatagenpolicy": "reidPolicy"
-                        }
-                    }
-                }
-            },
-            {
-                "name": "intersection-cam1-gpu",
-                "source": "gstreamer",
-                "queue_maxsize": 50,
-                "auto_start": true,
                 "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north_h264.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
@@ -407,7 +337,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera1"
+                            "path": "camera401"
                         }
                     },
                     "parameters": {
@@ -415,14 +345,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera1",
+                            "cameraid": "camera401",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam2-gpu",
+                "name": "intersection-cam402-gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
@@ -477,7 +407,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera2"
+                            "path": "camera402"
                         }
                     },
                     "parameters": {
@@ -485,17 +415,17 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera2",
+                            "cameraid": "camera402",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam3-gpu",
+                "name": "intersection-cam403-gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "auto_start": true,
+                "auto_start": false,
                 "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south_h264.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
@@ -547,7 +477,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera3"
+                            "path": "camera403"
                         }
                     },
                     "parameters": {
@@ -555,17 +485,17 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera3",
+                            "cameraid": "camera403",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam4-gpu",
+                "name": "intersection-cam404-gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "auto_start": true,
+                "auto_start": false,
                 "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west_h264.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
@@ -617,7 +547,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera4"
+                            "path": "camera404"
                         }
                     },
                     "parameters": {
@@ -625,84 +555,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera4",
+                            "cameraid": "camera404",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-            "name": "intersection2-cam5-gpu",
-                "source": "gstreamer",
-                "queue_maxsize": 50,
-                "auto_start": false,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east_h264.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ntp_config": {
-                            "element": {
-                                "name": "timesync",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "ntpServer": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "camera_config": {
-                            "element": {
-                                "name": "datapublisher",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "intrinsics": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number",
-                                        "description": "Camera intrinsics as [diagonal_fov] or [horizontal_fov, vertical_fov] or [fx,fy,cx,cy] "
-                                    }
-                                },
-                                "cameraid": {
-                                    "type": "string"
-                                },
-                                "metadatagenpolicy" : {
-                                    "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
-                                },
-                                "publish_frame": {
-                                    "type": "boolean",
-                                    "description": "Publish frame to mqtt"
-                                }
-                            }
-                        }
-                    }
-                },
-                "payload": {
-                    "destination":{
-                        "frame": {
-                            "type": "rtsp",
-                            "path": "camera5"
-                        }
-                    },
-                    "parameters": {
-                        "ntp_config": {
-                            "ntpServer": "ntpserv"
-                        },
-                        "camera_config": {
-                            "cameraid": "camera5",
-                            "metadatagenpolicy": "reidPolicy"
-                        }
-                    }
-                }
-            },
-            {
-                "name": "intersection-cam1-npu",
+                "name": "intersection-cam401-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -757,7 +617,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera1"
+                            "path": "camera401"
                         }
                     },
                     "parameters": {
@@ -765,14 +625,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera1",
+                            "cameraid": "camera401",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam2-npu",
+                "name": "intersection-cam402-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -827,7 +687,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera2"
+                            "path": "camera402"
                         }
                     },
                     "parameters": {
@@ -835,14 +695,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera2",
+                            "cameraid": "camera402",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam3-npu",
+                "name": "intersection-cam403-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -897,7 +757,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera3"
+                            "path": "camera403"
                         }
                     },
                     "parameters": {
@@ -905,14 +765,14 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera3",
+                            "cameraid": "camera403",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
             },
             {
-                "name": "intersection-cam4-npu",
+                "name": "intersection-cam404-npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,
@@ -967,7 +827,7 @@
                     "destination":{
                         "frame": {
                             "type": "rtsp",
-                            "path": "camera4"
+                            "path": "camera404"
                         }
                     },
                     "parameters": {
@@ -975,77 +835,7 @@
                             "ntpServer": "ntpserv"
                         },
                         "camera_config": {
-                            "cameraid": "camera4",
-                            "metadatagenpolicy": "reidPolicy"
-                        }
-                    }
-                }
-            },
-            {
-                "name": "intersection2-cam5-npu",
-                "source": "gstreamer",
-                "queue_maxsize": 50,
-                "auto_start": false,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east_h264.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=NPU batch-size=4 nireq=4 model-instance-id=npudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ntp_config": {
-                            "element": {
-                                "name": "timesync",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "ntpServer": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "camera_config": {
-                            "element": {
-                                "name": "datapublisher",
-                                "property": "kwarg",
-                                "format": "json"
-                            },
-                            "type": "object",
-                            "properties": {
-                                "intrinsics": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number",
-                                        "description": "Camera intrinsics as [diagonal_fov] or [horizontal_fov, vertical_fov] or [fx,fy,cx,cy] "
-                                    }
-                                },
-                                "cameraid": {
-                                    "type": "string"
-                                },
-                                "metadatagenpolicy" : {
-                                    "type": "string",
-                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
-                                },
-                                "publish_frame": {
-                                    "type": "boolean",
-                                    "description": "Publish frame to mqtt"
-                                }
-                            }
-                        }
-                    }
-                },
-                "payload": {
-                    "destination":{
-                        "frame": {
-                            "type": "rtsp",
-                            "path": "camera5"
-                        }
-                    },
-                    "parameters": {
-                        "ntp_config": {
-                            "ntpServer": "ntpserv"
-                        },
-                        "camera_config": {
-                            "cameraid": "camera5",
+                            "cameraid": "camera404",
                             "metadatagenpolicy": "reidPolicy"
                         }
                     }

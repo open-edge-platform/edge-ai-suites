@@ -16,6 +16,7 @@ CERTDOMAIN="scenescape.intel.com"
 CERTPASS=$(openssl rand -base64 33)
 DBPASS=${DBPASS:-"$(openssl rand -base64 12)"}
 EXEC_PATH="$(dirname "$(readlink -f "$0")")"
+HOST_IP="${HOST_IP:-$(hostname -I 2>/dev/null | cut -f1 -d' ')}"
 MQTTUSERS="controller.auth=scenectrl browser.auth=webuser"
 SECRETSDIR="$EXEC_PATH/../secrets"
 
@@ -63,13 +64,13 @@ openssl ecparam -name secp384r1 -genkey -noout -out $SECRETSDIR/certs/scenescape
 chmod 0644 $SECRETSDIR/certs/scenescape-broker.key
 echo Generating CSR for broker.$CERTDOMAIN
 openssl req -new -out $SECRETSDIR/certs/scenescape-broker.csr -key $SECRETSDIR/certs/scenescape-broker.key \
-    -config <(sed -e "s/##CN##/broker.$CERTDOMAIN/" -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN/" \
+    -config <(sed -e "s/##CN##/broker.$CERTDOMAIN/" -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN\nIP.1=$HOST_IP/" \
     -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
 echo Generating certificate for broker.$CERTDOMAIN
 openssl x509 -passin pass:$CERTPASS -req -in $SECRETSDIR/certs/scenescape-broker.csr \
     -CA $SECRETSDIR/certs/scenescape-ca.pem -CAkey $SECRETSDIR/ca/scenescape-ca.key -CAcreateserial \
     -out $SECRETSDIR/certs/scenescape-broker.crt -days 360 -extensions x509_ext -extfile \
-    <(sed -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN/" -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
+    <(sed -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN\nIP.1=$HOST_IP/" -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
 chmod 0644 $SECRETSDIR/certs/scenescape-broker.crt
 
 # Generate VDMS server key and certificate

@@ -1,7 +1,0 @@
-{
-    "max_unreliable_time_s": 0.333,
-    "non_measurement_time_dynamic_s": 0.267,
-    "non_measurement_time_static_s": 0.533,
-    "effective_object_update_rate": 30,
-    "time_chunking_enabled": false
-}
