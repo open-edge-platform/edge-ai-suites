@@ -23,7 +23,7 @@ You can only access the Open WebUI chat UI through  the NGINX TLS reverse proxy.
 |------------------------------------------------------------|-------------------------------|----------------------------------------------------------------|
 | Open WebUI chat UI                                         | https://localhost:8443        | Chat UI                                                        |
 | OpenVINO model server's API, compatible with OpenAI format | http://localhost:9000/v3      | Direct host access; also used internally by Open WebUI chat UI |
-| OpenVINO model server metrics                              | http://localhost:yrre/metrics | Prometheus metrics                                             |
+| OpenVINO model server metrics                              | http://localhost:6443/metrics | Prometheus metrics                                             |
 
 ## Changing the model
 
