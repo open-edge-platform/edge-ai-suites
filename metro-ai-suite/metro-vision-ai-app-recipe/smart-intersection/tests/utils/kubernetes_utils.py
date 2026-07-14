@@ -48,7 +48,7 @@ def wait_for_pods_ready(namespace, timeout=300, interval=10):
   raise TimeoutError("Pods did not become ready in time.")
 
 def get_scenescape_kubernetes_url():
-  """Get the Kubernetes URL for SceneScape service."""
+  """Get the Kubernetes URL for Scenescape service."""
   global SCENESCAPE_KUBERNETES_URL
   if SCENESCAPE_KUBERNETES_URL is None:
     web_node_port = get_node_port("smart-intersection-web", "smart-intersection")

@@ -56,7 +56,7 @@ This script sets these important values:
 | `EVAM_HOST_PORT` | `8040` | Port for the pipeline management REST API. |
 | `WHIP_SERVER_PORT` | `8889` | Port for WebRTC/WHIP signaling (mediamtx). |
 | `MQTT_PORT` | `1883` | Port for the internal MQTT broker. |
-| `WEBRTC_BITRATE` | `5000` | WebRTC stream bitrate in kbps. Lower values reduce bandwidth. |
+| `WEBRTC_BITRATE` | `2048` | WebRTC stream bitrate in kbps. Lower values reduce bandwidth. |
 | `ENABLE_DETECTION_PIPELINE` | `false` | Enables optional object-detection pre-filtering when set to `true`. |
 | `ALERT_MODE` | `false` | Enables alert-style visual highlighting based on keyword rules when set to `true`. |
 | `CAPTION_HISTORY` | `3` | Number of previous captions shown in the UI. |
@@ -66,7 +66,7 @@ This script sets these important values:
 
 ### 3. Download Models (one-time)
 
-Download a VLM model that is required to generate captions. For example:
+Download a VLM model that is required to generate captions. For default CPU example:
 
 ```bash
 ./model_download_scripts/download_models.sh \
@@ -92,12 +92,13 @@ By default the model is converted on CPU. To explicitly set the device:
   --model <vlm-model-of-choice-from-huggingface> \
   --type vlm \
   --weight-format int8 \
-  --device <CPU|GPU>
+  --device <CPU|GPU|NPU>
 ```
+> Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 See [Model Preparation](./get-started/model-preparation.md) for detailed usage.
 
-### 4. Customize your deployment
+### 4. Customize your deployment (Optional)
 
 Before starting, edit `.env` to enable the features you need. The table below summarises the common customizations:
 
@@ -189,9 +190,10 @@ http://<HOST_IP>:4173
 Then:
 
 1. Enter an RTSP stream URL or select the available USB/webcam camera.
-2. Select a VLM model.
-3. Adjust the prompt and maximum token settings if needed.
-4. Click **Start**.
+2. Select the device on which the VLM model will run (e.g., "CPU", "GPU", "NPU"), based on the hardware available on your host system.
+3. Select a VLM model.
+4. Adjust the prompt and maximum token settings if needed.
+5. Click **Start**.
 
 If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so the stream connection does not go through the proxy.
 

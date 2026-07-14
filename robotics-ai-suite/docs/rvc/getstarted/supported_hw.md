@@ -1,5 +1,3 @@
-(supported_hw)=
-
 # Supported Peripherals
 
 Stationary Robot is developed, tested and validated with a limited set of peripherals.

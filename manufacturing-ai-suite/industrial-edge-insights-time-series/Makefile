@@ -5,7 +5,7 @@
 #
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
-SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-defect-detection
+SAMPLE_APP_LIST := wind-turbine-anomaly-detection
 HELM_REGISTRY := oci://registry-1.docker.io/intel
 MAKEFLAGS += --no-print-directory
 
@@ -125,7 +125,7 @@ check_env_variables:
 batch:
 	@if [ -z "$(filter up_mqtt_ingestion up_opcua_ingestion,$(MAKECMDGOALS))" ]; then \
 		echo "Error: 'batch' must be used with 'up_mqtt_ingestion' or 'up_opcua_ingestion'."; \
-		echo "Example: make up_mqtt_ingestion batch app=weld-defect-detection"; \
+		echo "Example: make up_mqtt_ingestion batch app=wind-turbine-anomaly-detection"; \
 		exit 1; \
 	fi
 
@@ -190,10 +190,7 @@ if [ "$(CONFIG_JSON_FILE)" = "config-batch.json" ]; then \
 	if [ "$(SAMPLE_APP)" = "wind-turbine-anomaly-detection" ]; then \
 		src_model=windturbine_anomaly_detector.pkl; \
 		dst_model=windturbine_anomaly_detector_batch.pkl; \
-	elif [ "$(SAMPLE_APP)" = "weld-defect-detection" ]; then \
-		src_model=weld_defect_detector.pkl; \
-		dst_model=weld_defect_detector_batch.pkl; \
-	fi; \
+	fi;\
 	if [ -z "$$src_model" ]; then \
 		echo "Error: '${src_model}' not found for sample app '$(SAMPLE_APP)'."; \
 		exit 1; \
@@ -252,10 +249,6 @@ up_mqtt_ingestion: check_env_variables down
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
-	@if [ "$(app)" = "weld-defect-detection" ]; then \
-		echo "The weld-defect-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
-		exit 1; \
-	fi; \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
@@ -344,19 +337,25 @@ gen_helm_charts:
 	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
 	@echo "Helm packages generated with version: ${version}"
 
-# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
-# and have logged into that. Applies mainly when one is dealing with internal docker registry.
-# If you are using docker hub, ensure to have logged in with `docker login` command
-# before running this command.
-.PHONY: push_helm_charts
-push_helm_charts: gen_helm_charts
+# To generate the helm charts in tar.gz file format
+.PHONY: gen_helm_charts_targz
+gen_helm_charts_targz: gen_helm_charts
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
 	@mkdir -p helm-packages
 	@rm -f helm-packages/*.tgz
 	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
 	echo "Helm chart packaged successfully: $$pkg_file"; \
+
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts_targz
+	@echo "Pushing helm charts for ${SAMPLE_APP}"
 	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
 	cd ..
+
 # Help
 .PHONY: help
 help:
@@ -382,14 +381,14 @@ help:
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make gen_helm_charts app=weld-defect-detection"
+	@echo "      Example: make gen_helm_charts app=wind-turbine-anomaly-detection"
 	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make push_helm_charts app=weld-defect-detection"
+	@echo "      Example: make push_helm_charts app=wind-turbine-anomaly-detection"
 	@echo "  make <ingestion_target> batch      - Run batch processing with an ingestion target"
 	@echo "      Required: ingestion_target must be up_mqtt_ingestion or up_opcua_ingestion"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make up_mqtt_ingestion batch app=weld-defect-detection"
+	@echo "      Example: make up_mqtt_ingestion batch app=wind-turbine-anomaly-detection"
 	@echo "      Example: make up_opcua_ingestion batch app=wind-turbine-anomaly-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."

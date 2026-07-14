@@ -1,9 +1,9 @@
-# Quick Start Guide
+# Get Started with Smart Classroom
 
 > **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
 > PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
-## Step 1: Clone Repository
+## Step 1: Clone the Repository
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -13,16 +13,16 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
-  cd education-ai-suite
-  cd smart-classroom
+  cd education-ai-suite\smart-classroom
 ```
-## Step 2: Run Setup Script (First-Time Only)
+## Step 2: Run the Setup Script (First-Time Only)
 
 ```powershell
 .\setup-smart-classroom.ps1
 ```
 
-> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
+> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python
+> dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
 
 The setup script will:
 
@@ -32,14 +32,14 @@ The setup script will:
 
 2. **[2] Application Dependency Check**
    - FFmpeg (auto-install if missing)
-   - DL Streamer (auto-download and extract `dlstreamer_dlls_2026.0.0.zip` to `C:\dlls_windows`)
+   - DL Streamer (auto-download and run installer [`dlstreamer-2026.1.0-win64.exe`](advance-setup-guide.md#b-install-dl-streamer))
 
 3. **[3] Configure Settings**
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
 
-4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
+4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
 ## Step 3: Access the Application
 
@@ -73,21 +73,31 @@ After initial setup is complete, use the start script for subsequent runs or aft
 .\start-smart-classroom.ps1
 ```
 
+**Optional Parameters:**
+- `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
+- `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
+- `-NoWindowsTerminal` - Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions/Ansible)
+
+```powershell
+# Example: Automated deployment
+.\start-smart-classroom.ps1 -Silent -NoElevate -NoWindowsTerminal
+```
+
 The startup script performs:
 
 - **Service Detection** - Checks running services
-- **Restart Options** - Restart, skip, or abort choices
+- **Restart Options** - Restart, skip, or abort choices (auto in `-Silent` mode)
 - **Proxy Configuration** - Loads from `.proxy-config`
 - **Sequential Launch** - Backend -> Content Search -> Frontend
-- **Graceful Shutdown** - `Q` to stop all, `E` to keep running
+- **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
 ---
 
 ## Manual Setup
 
- **[Advance Setup Guide](advance-setup-guide.md)**:  Follow step-by-step instructions to set up the application.
+**[Advanced Setup Guide](advance-setup-guide.md)**:  Follow step-by-step instructions to set up the application.
 
-Advance Setup guide covers:
+Advanced Setup guide covers:
 
 - **Step 1:** Install Dependencies (FFmpeg, DL Streamer, Python, Content Search)
 - **Step 2:** Configuration (config.yaml settings)
@@ -106,3 +116,9 @@ Advance Setup guide covers:
 | Backend | 8000 | http://localhost:8000/health |
 | Content Search | 9011 | http://localhost:9011/api/v1/system/health |
 | Frontend | 5173 | http://localhost:5173 |
+
+## Learn More
+
+- [System Requirements](./get-started/system-requirements.md): Hardware, software, supported models, and weight formats.
+- [Application Flow](./application-flow.md): End-to-end application flow.
+- [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.

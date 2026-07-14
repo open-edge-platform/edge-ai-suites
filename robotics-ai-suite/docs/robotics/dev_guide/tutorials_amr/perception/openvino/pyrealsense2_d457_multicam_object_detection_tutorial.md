@@ -51,24 +51,24 @@ Complete the [GMSL setup guide](../../../gmsl-guide/configure-gmsl-serdes-acpi.m
 
 ### Install ``librealsense2`` and ``realsense2`` tools
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install -y ros-jazzy-librealsense2-tools
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install -y ros-humble-librealsense2-tools
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Install UV
 
@@ -83,70 +83,70 @@ source $HOME/.local/bin/env
 
 ### Load the Intel IPU Driver
 
-::::{tab-set}
-:::{tab-item} **IPU7**
-:sync: ipu7
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **IPU7**
+<!--hide_directive:sync: ipu7hide_directive-->
 
 ```bash
 sudo modprobe intel-ipu7-isys
 ```
 
-:::
-:::{tab-item} **IPU6**
-:sync: ipu6
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **IPU6**
+<!--hide_directive:sync: ipu6hide_directive-->
 
 ```bash
 sudo modprobe intel-ipu6-isys
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Install and run multi-camera object detection tutorial using the Intel® RealSense™ Depth Camera D457
 
 ### Install
 
-Install the multi-camera object detection tutorial by using the following command.
+Install the multi-camera object detection tutorial by using the following command:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install -y ros-humble-pyrealsense2-ai-demo
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Setup uv venv
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 cd /opt/ros/humble/share/pyrealsense2-ai-demo
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 
 ```bash
@@ -166,9 +166,9 @@ This will take couple minutes
 
 Run the below commands to start the tutorial.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
@@ -213,9 +213,9 @@ uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.json
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_isx031_4cameras.js
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -229,8 +229,8 @@ source /opt/ros/humble/setup.bash
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 All the four cameras are started after approximately 15-20 secs, as shown in the below picture.
 

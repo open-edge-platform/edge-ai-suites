@@ -15,3 +15,5 @@ __pycache__/
 tests/**/__pycache__/
 tests/__pycache__/
 tests/functional/tests.log
+
+configs/time-series-analytics-microservice/*.tar

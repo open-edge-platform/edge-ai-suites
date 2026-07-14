@@ -40,8 +40,12 @@ PRECISION="int8"
 MODEL=""
 
 EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh}"
-IMAGE_TAG="${TAG:-latest}"
+# Tag for the ephemeral intel/model-download container. Kept separate from the
+# application image TAG (used by compose.yaml) to avoid pinning the app release
+# tag onto the model-download image, which has its own tag stream.
+IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-latest}"
 OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
+EPHEMERAL_CONTAINER_NAME="${MODEL_DOWNLOAD_EPHEMERAL_CONTAINER_NAME:-model-download-ephemeral}"
 
 ensure_model_base_dir_for_current_user() {
   local dir_path="$1"
@@ -82,6 +86,32 @@ ensure_model_base_dir_for_current_user() {
   fi
 }
 
+ensure_ephemeral_container_absent() {
+  local container_name="$1"
+  local max_attempts=5
+  local attempt
+
+  for attempt in $(seq 1 "$max_attempts"); do
+    if ! docker container inspect "$container_name" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    warn "Found existing container '${container_name}'. Removing (attempt ${attempt}/${max_attempts})..."
+    if ! docker rm -f "$container_name" >/dev/null 2>&1; then
+      warn "Failed to remove '${container_name}' on attempt ${attempt}."
+    fi
+
+    if ! docker container inspect "$container_name" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 1
+  done
+
+  err "Container '${container_name}' is still present after ${max_attempts} attempts."
+  return 1
+}
+
 usage() {
   cat <<EOF
 Usage:
@@ -93,7 +123,7 @@ Required:
 Optional:
   --type <vlm|vision|llm>          Model type (default: ${MODEL_TYPE})
   --weight-format <int4|int8|fp16> Quantization for VLM/LLM OpenVINO conversion (default: ${PRECISION})
-  --device <CPU|GPU|NPU>           Target device for VLM/LLM OpenVINO conversion (default: ${DEVICE})
+  --device <CPU|GPU|NPU[,..]>      Target device(s) for VLM/LLM OpenVINO conversion (default: ${DEVICE})
   -h, --help                       Show this help
 
 Examples:
@@ -107,6 +137,7 @@ while [[ $# -gt 0 ]]; do
     --model)              MODEL="${2:-}"; shift 2 ;;
     --model=*)            MODEL="${1#*=}"; shift ;;
     --device)             DEVICE="${2:-}"; shift 2 ;;
+    --device=*)           DEVICE="${1#*=}"; shift ;;
     --type)               MODEL_TYPE="${2:-}"; shift 2 ;;
     --weight-format)      PRECISION="${2:-}"; shift 2 ;;
     -h|--help)            usage; exit 0 ;;
@@ -130,18 +161,37 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
+declare -a DEVICE_LIST=()
+IFS=',' read -r -a RAW_DEVICE_LIST <<< "${DEVICE}"
+for raw_device in "${RAW_DEVICE_LIST[@]}"; do
+  device="$(echo "${raw_device}" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')"
+  [[ -z "${device}" ]] && continue
+  case "${device}" in
+    CPU|GPU|NPU) DEVICE_LIST+=("${device}") ;;
+    *)
+      err "Invalid device: ${device}. Allowed values are CPU, GPU, NPU (comma-separated for multiple)."
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ${#DEVICE_LIST[@]} -eq 0 ]]; then
+  err "At least one valid --device value is required."
+  exit 1
+fi
+
 case "${MODEL_TYPE}" in
   vlm)
     HUB="openvino"
     PLUGINS="huggingface,openvino"
-    EXTRA_ARGS=(--type vlm --is-ovms --precision "${PRECISION}" --device "${DEVICE}")
+    EXTRA_ARGS=(--type vlm --is-ovms)
     FINAL_DIR="${DEFAULT_MODEL_PATH}"
     ensure_model_base_dir_for_current_user "$FINAL_DIR" "VLM"
     ;;
   llm)
     HUB="openvino"
     PLUGINS="huggingface,openvino"
-    EXTRA_ARGS=(--type llm --is-ovms --precision "${PRECISION}" --device "${DEVICE}")
+    EXTRA_ARGS=(--type llm --is-ovms)
     FINAL_DIR="${LLM_MODEL_PATH}"
     ensure_model_base_dir_for_current_user "$FINAL_DIR" "LLM"
     ;;
@@ -160,6 +210,10 @@ esac
 
 mkdir -p "${MODEL_DOWNLOAD_PATH}"
 
+if [[ "${MODEL_TYPE}" == "vision" ]]; then
+  DEVICE_LIST=("CPU")
+fi
+
 log "Downloading ${MODEL_TYPE} model '${MODEL}' with the ephemeral model-download container."
 log "Models will be stored under: ${FINAL_DIR}"
 
@@ -168,6 +222,11 @@ EPHEMERAL_SCRIPT=$(curl -fsSL "${EPHEMERAL_SCRIPT_URL}") || {
   err "Please verify the URL is correct and accessible."
   exit 1
 }
+
+EPHEMERAL_SCRIPT_FILE="$(mktemp -t lvc-get-model-XXXXXX.sh)"
+trap 'rm -f "${EPHEMERAL_SCRIPT_FILE}"' EXIT
+printf '%s\n' "${EPHEMERAL_SCRIPT}" > "${EPHEMERAL_SCRIPT_FILE}"
+chmod +x "${EPHEMERAL_SCRIPT_FILE}"
 
 # Use ovms_model as the staging download path
 DOWNLOAD_ARGS=(
@@ -180,73 +239,92 @@ DOWNLOAD_ARGS=(
   --ovms-release-tag "${OVMS_RELEASE_TAG}"
 )
 
-echo "${EPHEMERAL_SCRIPT}" | bash -s -- \
-  "${DOWNLOAD_ARGS[@]}" \
-  "${EXTRA_ARGS[@]}"
+for DEVICE in "${DEVICE_LIST[@]}"; do
+  mkdir -p "${MODEL_DOWNLOAD_PATH}"
 
-# ----------- Flatten directory -----------
-# The ephemeral container runs as root, so fix ownership before moving files.
-log "Flattening model directory..."
+  ensure_ephemeral_container_absent "${EPHEMERAL_CONTAINER_NAME}"
 
-# Fix ownership of the staging directory (container creates files as root)
-PARENT_DIR="$(dirname "$MODEL_DOWNLOAD_PATH")"
-docker run --rm -u root \
-  -v "${PARENT_DIR}:/parent" \
-  alpine:3.22 sh -c "chown $(id -u):$(id -g) /parent && chmod u+rwx /parent"
-
-docker run --rm -u root \
-  -v "${MODEL_DOWNLOAD_PATH}:/data" \
-  alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R u+rwX /data"
-
-if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
-  # Find the converted model inside the nested openvino structure
-  # Structure: ovms_model/openvino_models/<device>/<precision>/<org>/<model>/
-  DEVICE_LOWER="$(echo "${DEVICE}" | tr '[:upper:]' '[:lower:]')"
-  PRECISION_LOWER="$(echo "${PRECISION}" | tr '[:upper:]' '[:lower:]')"
-  NESTED_DIR="${MODEL_DOWNLOAD_PATH}/openvino_models/${DEVICE_LOWER}/${PRECISION_LOWER}"
-
-  MODEL_BASENAME="${MODEL##*/}"
-  MODEL_SRC="${NESTED_DIR}/${MODEL}"
-
-  if [[ ! -d "${MODEL_SRC}" ]]; then
-    # Try finding it
-    MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
+  RUN_EXTRA_ARGS=("${EXTRA_ARGS[@]}")
+  if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
+    RUN_PRECISION="${PRECISION}"
+    if [[ "${DEVICE}" == "NPU" && "${RUN_PRECISION}" != "int4" ]]; then
+      warn "Device NPU only supports int4 today; overriding requested precision '${RUN_PRECISION}' to 'int4'."
+      RUN_PRECISION="int4"
+    fi
+    RUN_EXTRA_ARGS+=(--precision "${RUN_PRECISION}")
+    RUN_EXTRA_ARGS+=(--device "${DEVICE}")
+    log "Processing device ${DEVICE} with precision ${RUN_PRECISION} for model '${MODEL}'."
   fi
 
-  if [[ "${MODEL_TYPE}" == "vlm" ]]; then
+  bash "${EPHEMERAL_SCRIPT_FILE}" \
+    "${DOWNLOAD_ARGS[@]}" \
+    "${RUN_EXTRA_ARGS[@]}"
+
+  # ----------- Flatten directory -----------
+  # The ephemeral container runs as root, so fix ownership before moving files.
+  log "Flattening model directory..."
+
+  # Fix ownership of the staging directory (container creates files as root)
+  PARENT_DIR="$(dirname "$MODEL_DOWNLOAD_PATH")"
+  docker run --rm -u root \
+    -v "${PARENT_DIR}:/parent" \
+    alpine:3.22 sh -c "chown $(id -u):$(id -g) /parent && chmod a+rwx /parent"
+
+  docker run --rm -u root \
+    -v "${MODEL_DOWNLOAD_PATH}:/data" \
+    alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R a+rwX /data"
+
+  if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
+    # Find the converted model inside the nested openvino structure
+    # Structure: ovms_model/openvino_models/<device>/<precision>/<org>/<model>/
+    DEVICE_LOWER="$(echo "${DEVICE}" | tr '[:upper:]' '[:lower:]')"
+    PRECISION_LOWER="$(echo "${RUN_PRECISION}" | tr '[:upper:]' '[:lower:]')"
+    NESTED_DIR="${MODEL_DOWNLOAD_PATH}/openvino_models/${DEVICE_LOWER}/${PRECISION_LOWER}"
+
+    MODEL_BASENAME="${MODEL##*/}"
+    MODEL_SRC="${NESTED_DIR}/${MODEL}"
+
+    if [[ ! -d "${MODEL_SRC}" ]]; then
+      # Try finding it
+      MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
+    fi
+
+    if [[ "${MODEL_TYPE}" == "vlm" ]]; then
+      TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL_BASENAME}"
+    elif [[ "${MODEL_TYPE}" == "llm" ]]; then
+      # For LLMs, preserve the org/model structure if present
+      TARGET_DIR="${FINAL_DIR}/${MODEL}"
+    fi
+
+    if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
+      mkdir -p "${TARGET_DIR}"
+      mv "${MODEL_SRC}"/* "${TARGET_DIR}"/
+      log "Relocated model to: ${TARGET_DIR}"
+    else
+      err "Could not find model files in nested structure at: ${NESTED_DIR}"
+      err "Listing staging directory contents:"
+      find "${MODEL_DOWNLOAD_PATH}" -type d | head -20
+      exit 1
+    fi
+
+  elif [[ "${MODEL_TYPE}" == "vision" ]]; then
+    MODEL_BASENAME="${MODEL##*/}"
     TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
-  elif [[ "${MODEL_TYPE}" == "llm" ]]; then
-    # For LLMs, preserve the org/model structure if present
-    TARGET_DIR="${FINAL_DIR}/${MODEL}"
-  fi
-
-  if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
     mkdir -p "${TARGET_DIR}"
-    mv "${MODEL_SRC}"/* "${TARGET_DIR}"/
+    # Vision models may be nested under ultralytics/public/<model>.
+    # Flatten to: ov_detection_models/<model>/public/<model>
+    if [[ -d "${MODEL_DOWNLOAD_PATH}/ultralytics/public" ]]; then
+      mv "${MODEL_DOWNLOAD_PATH}/ultralytics/public" "${TARGET_DIR}"/
+    elif [[ -d "${MODEL_DOWNLOAD_PATH}/public" ]]; then
+      mv "${MODEL_DOWNLOAD_PATH}/public" "${TARGET_DIR}"/
+    else
+      err "Could not find vision model files under ${MODEL_DOWNLOAD_PATH}/ultralytics/public or ${MODEL_DOWNLOAD_PATH}/public"
+      exit 1
+    fi
     log "Relocated model to: ${TARGET_DIR}"
-  else
-    err "Could not find model files in nested structure at: ${NESTED_DIR}"
-    err "Listing staging directory contents:"
-    find "${MODEL_DOWNLOAD_PATH}" -type d | head -20
-    exit 1
   fi
 
-elif [[ "${MODEL_TYPE}" == "vision" ]]; then
-  MODEL_BASENAME="${MODEL##*/}"
-  TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
-  mkdir -p "${TARGET_DIR}"
-  # Vision models may be nested under ultralytics/public/<model>.
-  # Flatten to: ov_detection_models/<model>/public/<model>
-  if [[ -d "${MODEL_DOWNLOAD_PATH}/ultralytics/public" ]]; then
-    mv "${MODEL_DOWNLOAD_PATH}/ultralytics/public" "${TARGET_DIR}"/
-  elif [[ -d "${MODEL_DOWNLOAD_PATH}/public" ]]; then
-    mv "${MODEL_DOWNLOAD_PATH}/public" "${TARGET_DIR}"/
-  else
-    err "Could not find vision model files under ${MODEL_DOWNLOAD_PATH}/ultralytics/public or ${MODEL_DOWNLOAD_PATH}/public"
-    exit 1
-  fi
-  log "Relocated model to: ${TARGET_DIR}"
-fi
+done
 
 # Clean up staging directory
 rm -rf "${MODEL_DOWNLOAD_PATH}"

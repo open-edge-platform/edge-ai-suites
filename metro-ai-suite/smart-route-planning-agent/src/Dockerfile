@@ -10,10 +10,11 @@ ARG USER_GROUP_ID=1000
 WORKDIR /app
 
 # Copy code into the container
+RUN pip install --no-cache-dir "uv>=0.9.22,<1.0.0"
 COPY . .
+RUN uv sync
 
 # Upgrade pip and install dependencies directly from pyproject.toml
-RUN pip install uv && uv sync
 
 # Create non-root user and change ownership
 RUN groupadd -g ${USER_GROUP_ID} routeuser && \

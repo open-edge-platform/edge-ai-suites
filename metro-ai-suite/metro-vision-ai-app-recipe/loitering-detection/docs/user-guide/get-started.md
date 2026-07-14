@@ -40,8 +40,7 @@ By following this guide, you will learn how to:
      ./install.sh loitering-detection
      ```
 
-   > **Note:** For environments requiring a specific host IP address (such as when using Edge
-   > Manageability Toolkit or deploying across different network interfaces), you can explicitly
+   > **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
    > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
    > your target IP address.)
 
@@ -68,8 +67,8 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Intel® SceneScape)
-     - Intel® SceneScape services (for Smart Intersection only)
+     - Node-RED (for applications without Scenescape)
+     - Scenescape services (for Smart Intersection only)
 
      </details>
 

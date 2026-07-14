@@ -123,7 +123,6 @@ void ConveyorBeltPlugin::Configure(
            << " vmax=" << this->max_velocity_
            << " pub_rate=" << this->publish_rate_ << " limits=["
            << this->lower_limit_ << ", " << this->upper_limit_ << "]\n";
-
   } catch (const std::exception &e) {
     std::cerr << "Exception occured :" << e.what() << std::endl;
     return;
@@ -232,15 +231,6 @@ void ConveyorBeltPlugin::PreUpdate(const gazebo::UpdateInfo &_info,
     this->publishStatus();
     this->last_pub_sim_ = sim_ns;
   }
-
-  // // Optional debug:
-  static int k = 0;
-  if ((k++ % 200) == 0)
-    gzmsg << "[belt_joint] q=" << (std::isfinite(q) ? q : -1)
-          << " s_accum=" << this->travel_accum_
-          << " v_cmd=" << this->belt_velocity_
-          << " upper=" << this->upper_limit_ << " resetting=" << std::boolalpha
-          << this->pending_reset_ << std::noboolalpha << "\n";
 }
 
 /////////////////////////////////////////////////

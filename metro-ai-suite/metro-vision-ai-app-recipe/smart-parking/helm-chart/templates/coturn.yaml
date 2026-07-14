@@ -57,7 +57,14 @@ spec:
               - ALL
             add:
               - NET_BIND_SERVICE
-        args: ["-v"]  # Enable verbose logging
+        args:
+          - "-v"
+          - "--external-ip={{ $.Values.env.HOST_IP }}"
+          - "--user={{ $.Values.webrtcturnserver.username }}:{{ $.Values.webrtcturnserver.password }}"
+          - "--realm=turn.local"
+          - "--no-tls"
+          - "--no-dtls"
+          - "--lt-cred-mech"
         ports:
         - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
           protocol: TCP

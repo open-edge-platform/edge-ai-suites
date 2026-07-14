@@ -72,7 +72,6 @@ def _get_sample_app_config_dir(chart_path, sample_app):
 
     relative_map = {
         constants.WIND_SAMPLE_APP: constants.HELM_TIMESERIES,
-        constants.WELD_SAMPLE_APP: constants.HELM_WELD,
     }
     relative_path = relative_map.get(sample_app)
     if not relative_path:
@@ -139,7 +138,6 @@ def _build_udf_payload(sample_app, device_value, alert_mode):
     if not udf_name or not model_name:
         fallback = {
             constants.WIND_SAMPLE_APP: (constants.WIND_UDF, constants.WIND_MODEL),
-            constants.WELD_SAMPLE_APP: (constants.WELD_UDF, constants.WELD_MODEL),
         }.get(sample_app)
         if fallback:
             udf_name, model_name = fallback
@@ -343,6 +341,129 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
+def _dump_unhealthy_pods(namespace):
+    """Dump describe + logs for every non-Running pod or pods with high restart counts.
+
+    Best-effort: every kubectl invocation is wrapped so a failure here never
+    masks the original test-failure assertion.
+
+    A pod is considered unhealthy if:
+    - STATUS is not in {Running, Completed, Succeeded}
+    - READY column shows not all containers ready (e.g., 0/1)
+    - Restart count exceeds threshold (catches pods that restart frequently but
+      may appear Running at the moment of check)
+    """
+    HEALTHY_STATUSES = {"Running", "Completed", "Succeeded"}
+    RESTART_THRESHOLD = 5  # Flag pods with >5 restarts as potentially unstable
+    try:
+        result = subprocess.run(
+            ["kubectl", "get", "pods", "-n", namespace, "--no-headers"],
+            capture_output=True, text=True, check=False, timeout=30,
+        )
+        pods = []
+        for line in result.stdout.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split()
+            if len(cols) < 3:
+                continue
+            name, ready, status = cols[0], cols[1], cols[2]
+            if status == "Terminating":
+                continue  # leftover from previous release; not actionable
+            ready_ok = False
+            if "/" in ready:
+                num, den = ready.split("/", 1)
+                ready_ok = (num == den and num != "0")
+
+            # Check restart count (cols[3] if present, format: "5" or "5 (3h ago)")
+            high_restarts = False
+            if len(cols) >= 4:
+                try:
+                    # Extract numeric part (handles "5" and "5 (3h ago)" formats)
+                    restart_str = cols[3].split("(")[0].strip()
+                    restarts = int(restart_str)
+                    if restarts > RESTART_THRESHOLD:
+                        high_restarts = True
+                        logger.warning(f"Pod {name} has {restarts} restarts (threshold={RESTART_THRESHOLD})")
+                except (ValueError, IndexError):
+                    pass  # Can't parse restarts, ignore
+
+            if (not ready_ok) or (status not in HEALTHY_STATUSES) or high_restarts:
+                if name not in pods:
+                    pods.append(name)
+
+        if not pods:
+            logger.info(f"No unhealthy pods found to dump in '{namespace}'.")
+            return
+
+        logger.error(f"dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
+        for pod in pods:
+            logger.error(f"\n===== describe pod {pod} =====")
+            try:
+                desc = subprocess.run(
+                    ["kubectl", "describe", "pod", "-n", namespace, pod],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(desc.stdout)
+                if desc.stderr:
+                    logger.error(f"[stderr] {desc.stderr}")
+            except Exception as e:
+                logger.error(f"describe failed: {e}")
+
+            logger.error(f"\n===== logs {pod} (current, --tail=200) =====")
+            try:
+                cur = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(cur.stdout or "(no current logs)")
+                if cur.stderr:
+                    logger.error(f"[stderr] {cur.stderr}")
+            except Exception as e:
+                logger.error(f"current logs failed: {e}")
+
+            logger.error(f"\n===== logs {pod} (previous, --tail=200) =====")
+            try:
+                prev = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--previous", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(prev.stdout or "(no previous logs)")
+                if prev.stderr:
+                    logger.error(f"[stderr] {prev.stderr}")
+            except Exception as e:
+                logger.error(f"previous logs failed: {e}")
+
+        logger.error(f"\n===== recent events in '{namespace}' =====")
+        try:
+            evs = subprocess.run(
+                ["kubectl", "get", "events", "-n", namespace,
+                 "--sort-by=.lastTimestamp"],
+                capture_output=True, text=True, check=False, timeout=30,
+            )
+            logger.error(evs.stdout)
+        except Exception as e:
+            logger.error(f"events dump failed: {e}")
+    except Exception as e:
+        logger.error(f"_dump_unhealthy_pods crashed: {e}")
+
+
+def dump_pod_diagnostics(namespace):
+    """Public wrapper to dump diagnostic info for unhealthy pods.
+    
+    This function is called by test fixtures when Helm install or pod verification
+    fails, to provide debugging information in CI/CD logs.
+    
+    Args:
+        namespace: Kubernetes namespace to check for unhealthy pods
+    """
+    logger.info(f"Dumping pod diagnostics for namespace '{namespace}'...")
+    _dump_unhealthy_pods(namespace)
+
+
 def verify_pods(namespace, timeout=300, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 
@@ -375,6 +496,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     logger.error("Timeout reached. No pods found in namespace.")
+                    _dump_unhealthy_pods(namespace)
                     return False
                 time.sleep(interval)
                 continue
@@ -427,6 +549,7 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
+                _dump_unhealthy_pods(namespace)
                 return False
 
             # Wait before checking again
@@ -652,16 +775,16 @@ def uninstall_helm_charts(release_name, namespace):
     """Check if a Helm release is installed in the specified namespace and uninstall it if found."""
 
     try:
-        # List Helm releases in the specified namespace
-        list_command = f"helm list -n {namespace} -q"
-        result = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
+        list_command = ["helm", "list", "-n", namespace, "-q"]
+        result = subprocess.run(list_command, capture_output=True, text=True, check=True)
         releases = result.stdout.strip().split()
 
-        # Check if the release is present
         if release_name in releases:
             logger.info(f"Release '{release_name}' found in namespace '{namespace}'. Uninstalling...")
-            uninstall_command = f"helm uninstall {release_name} -n {namespace}"
-            subprocess.run(uninstall_command, shell=True, check=True)
+            uninstall_command = ["helm", "uninstall", release_name, "-n", namespace]
+            uninstall_result = subprocess.run(uninstall_command, capture_output=True, text=True, check=True)
+            if uninstall_result.stdout.strip():
+                logger.info(uninstall_result.stdout.strip())
             logger.info(f"Release '{release_name}' uninstalled successfully.")
             return True
         else:
@@ -669,7 +792,15 @@ def uninstall_helm_charts(release_name, namespace):
             return True
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"An error occurred while executing a command: {e.stderr}")
+        logger.error(
+            "Failed to uninstall Helm release '%s' in namespace '%s'. Command: %s Return code: %s Stdout: %s Stderr: %s",
+            release_name,
+            namespace,
+            e.cmd,
+            e.returncode,
+            (e.stdout or "").strip(),
+            (e.stderr or "").strip(),
+        )
         return False
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
@@ -770,7 +901,7 @@ def _wait_for_pod_ready(pod_name, namespace, timeout=180):
         return False
 
 
-def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_INGESTED_TOPIC, timeout=180, interval=10):
+def wait_for_mqtt_sample(namespace, topic=constants.WIND_TURBINE_MQTT_TOPIC, timeout=180, interval=10):
     """Subscribe from inside the broker pod until a single message is observed on the topic."""
     pod_name = _wait_for_pod_with_substring(namespace, "mqtt-broker")
     if not pod_name:
@@ -834,8 +965,6 @@ def verify_mqtt_alerts_via_subscription(namespace, alert_type, timeout=180, inte
     # Determine alert topic based on alert type
     if alert_type.lower() == "mqtt":
         alert_topic = "alerts/wind_turbine"
-    elif alert_type.lower() == "mqtt_weld":
-        alert_topic = "alerts/weld_defects"
     else:
         logger.error("Unknown alert type for MQTT subscription: %s", alert_type)
         return False
@@ -963,11 +1092,6 @@ def execute_influxdb_commands(namespace, chart_path, sample_app=constants.WIND_S
             measurements = (
                 constants.WIND_TURBINE_INGESTED_TOPIC,
                 constants.WIND_TURBINE_ANALYTICS_TOPIC,
-            )
-        elif sample_app == constants.WELD_SAMPLE_APP:
-            measurements = (
-                constants.WELD_INGESTED_TOPIC,
-                constants.WELD_ANALYTICS_TOPIC,
             )
         else:
             logger.error("Unknown sample app '%s' for InfluxDB validation.", sample_app)
@@ -1224,12 +1348,12 @@ def verify_multimodal_influxdb_data(chart_path, namespace=None, database=constan
     sensor_measurement = (
         constants.get_app_influxdb_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("ingested_topic")
-        or "weld-sensor-data"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("ingested_topic")
     )
     vision_measurement = (
         constants.get_app_vision_measurement(constants.MULTIMODAL_SAMPLE_APP)
         or mm_config.get("vision_measurement")
-        or "vision-weld-classification-results"
+        or constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("vision_measurement")
     )
 
     for key, measurement in (("sensor_data_count", sensor_measurement), ("vision_data_count", vision_measurement)):
@@ -1429,29 +1553,60 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.error(f"An unexpected error occurred: {e}")
         return None, False
 
-def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
-    """Run make gen_helm_chart in the parent directory."""
+def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
+    """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
+    
+    This generates the helm chart AND packages it into a .tgz file in helm-packages/.
+    This matches the workflow behavior which uses gen_helm_charts_targz.
+    
+    For multimodal, uses `make gen_helm_charts` + manual packaging since
+    multimodal Makefile doesn't have gen_helm_charts_targz target.
+    """
     original_dir = os.getcwd()
     try:
-        
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
 
-        # Run the make command
-        logger.info("Generating Helm chart...")
-        result = subprocess.run(["make", "gen_helm_charts", "app=" + sample_app], capture_output=True, text=True, check=True)
-        logger.info(result.stdout)
-        logger.info("Helm chart generated successfully.")
+        is_multimodal = (sample_app == constants.MULTIMODAL_SAMPLE_APP)
+        
+        if is_multimodal:
+            # Multimodal Makefile doesn't have gen_helm_charts_targz or app= parameter
+            logger.info("Generating Helm chart for multimodal (no app parameter)...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+            logger.info("Helm chart generated. Now packaging...")
+            
+            # Package the helm chart manually
+            subprocess.run(["mkdir", "-p", "helm-packages"], check=True)
+            pkg_result = subprocess.run(
+                ["helm", "package", "helm/", "-d", "helm-packages/"],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(pkg_result.stdout)
+        else:
+            # Time-series Makefile has gen_helm_charts_targz with app= parameter
+            logger.info(f"Generating and packaging Helm chart for app={sample_app}...")
+            result = subprocess.run(
+                ["make", "gen_helm_charts_targz", "app=" + sample_app],
+                capture_output=True, text=True, check=True,
+            )
+            logger.info(result.stdout)
+        
+        logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
 
         return True
     except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to generate Helm chart: {e.stderr}")
+        logger.error(f"Failed to generate Helm chart targz: {e.stderr}")
         return False
     finally:
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
+
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
@@ -1558,6 +1713,8 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "The directory '/.cache/pip' or its parent directory is not owned",  # pip cache warning
             "error while sending usage report",  # Kapacitor telemetry timeout (benign)
             "usage.influxdata.com",  # InfluxData usage reporting endpoint timeout
+            "failed to write points to InfluxDB",  # Transient error during InfluxDB restart
+            "connection refused",  # Transient connection refused during pod restarts
         ]
         
         # Check if "error" exists in logs (case-insensitive)
@@ -1567,7 +1724,7 @@ def check_pod_logs_for_errors(namespace, pod_name):
             is_benign = any(pattern.lower() in logs_lower for pattern in benign_patterns)
             
             if is_benign:
-                logger.info(f"Benign pip warnings found in logs for pod {pod_name} (expected during package installation). Logs:\n{logs}")
+                logger.info(f"Benign transient errors found in logs for pod {pod_name} (expected during restarts). Logs:\n{logs}")
                 return True
             else:
                 logger.error(f"Error found in logs for pod {pod_name}:")
@@ -1612,152 +1769,6 @@ def restart_deployment(namespace, pod):
         logger.error(f"An unexpected error occurred: {e}")
         return False
 
-def with_model_registry(chart_path, input):
-    """Check time-series pod after model registry is enabled in the configuration."""
-    original_dir = os.getcwd()
-    try:
-        # Step 1: Create a TAR archive
-        if input == "mqtt":
-            assert setup_mqtt_alerts(chart_path) == True
-            logger.info("MQTT alerts setup in tick script completed successfully.")
-        elif input == "opcua":
-            assert setup_opcua_alerts(chart_path) == True
-            logger.info("OPC UA alerts setup in tick script completed successfully.")
-        os.chdir(chart_path)
-        os.chdir('../' + constants.HELM_TIMESERIES)
-         # Create the directory
-        os.makedirs('wind-turbine-anomaly-detection', exist_ok=True)
-
-        # Copy the files into the new directory
-        logger.info("Copying files to 'wind-turbine-anomaly-detection' directory...")
-        result = subprocess.run(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'wind-turbine-anomaly-detection/.'], check=True)
-        if result.stdout:
-            logger.info("Files copied successfully to 'wind-turbine-anomaly-detection' directory.")
-        elif result.stderr:
-            logger.error(f"Error copying files: {result.stderr.decode('utf-8')}")
-        tar_command = f"tar cf windturbine_anomaly_detector.tar udfs models tick_scripts"
-        result = subprocess.run(tar_command, shell=True, capture_output=True, text=True, check=True)
-        logger.info("TAR archive created successfully.")
-        if result.stdout:
-            logger.info(f"TAR command output: {result.stdout}")
-        if result.stderr:
-            logger.error(f"TAR command stderr: {result.stderr}")
-        
-
-        # Step 2: Upload the tar file using kubectl exec to avoid port-forwarding
-        # Find the model registry pod
-        model_registry_pod_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | "
-            "grep model-registry | head -n 1"
-        )
-        result = subprocess.run(model_registry_pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0 and result.stdout:
-            model_registry_pod = result.stdout.decode('utf-8').strip().replace("'", "")
-            logger.info(f"Found model registry pod: {model_registry_pod}")
-        else:
-            logger.error("Model registry pod not found.")
-            return False
-
-        # Copy the TAR file to the model registry pod first
-        kubectl_cp_command = [
-            'kubectl', 'cp', 'windturbine_anomaly_detector.tar',
-            f'{model_registry_pod}:/tmp/windturbine_anomaly_detector.tar',
-            '-n', namespace
-        ]
-        logger.info(f"Copying TAR file to model registry pod: {' '.join(kubectl_cp_command)}")
-        result = subprocess.run(kubectl_cp_command, capture_output=True, text=True)
-        if result.returncode != 0:
-            logger.error(f"Error copying TAR file to pod: {result.stderr}")
-            return False
-
-        # Upload using curl from within the pod (in-cluster call)
-        upload_command = [
-            'kubectl', 'exec', model_registry_pod, '-n', namespace, '--',
-            'curl', '-L', '-X', 'POST', 'http://localhost:8080/models',
-            '-H', 'Content-Type: multipart/form-data',
-            '-F', 'name="windturbine_anomaly_detector"',
-            '-F', 'version="1.0"',
-            '-F', 'file=@/tmp/windturbine_anomaly_detector.tar;type=application/x-tar'
-        ]
-        logger.info(f"Uploading model via kubectl exec: {' '.join(upload_command)}")
-        result = subprocess.run(upload_command, capture_output=True, text=True)
-        if result.returncode == 0:
-            logger.info(f"Model upload command output: {result.stdout}")
-            logger.info("Model uploaded successfully.")
-        else:
-            logger.error(f"Model upload command errors: {result.stderr}")
-
-        # Step 3: Send configuration update using kubectl exec
-        config_payload1 = json.dumps({
-            "model_registry": {
-                "enable": True,
-                "version": "1.0"
-            },
-            "udfs": {
-                "name": constants.WIND_UDF,
-                "models": constants.WIND_MODEL
-            },
-            "alerts": {
-                "mqtt": {
-                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
-                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
-                    "name": "my_mqtt_broker"
-                }
-            }
-        })
-        
-        config_payload2 = json.dumps({
-            "model_registry": {
-                "enable": True,
-                "version": "1.0"
-            },
-            "udfs": {
-                "name": constants.WIND_UDF,
-                "models": constants.WIND_MODEL
-            },
-            "alerts": {
-                "opcua": {
-                    "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
-                    "namespace": 1,
-                    "node_id": 2004
-                }
-            }
-        })
-        logger.info(f"Sending configuration update command based on input: {input}")
-        # Execute the configuration update command using kubectl exec instead of port forwarding
-        if input == "mqtt":
-            success = _post_ts_api_config(payload=config_payload1, method="POST")
-            if success:
-                logger.info("Configuration for mqtt updated successfully via kubectl exec")
-                return True
-            else:
-                logger.error("Failed to update mqtt configuration via kubectl exec")
-                return False
-
-        elif input == "opcua":
-            success = _post_ts_api_config(payload=config_payload2, method="POST")
-            if success:
-                logger.info("Configuration for opcua updated successfully via kubectl exec")
-                return True
-            else:
-                logger.error("Failed to update opcua configuration via kubectl exec")
-                return False
-
-        # If input is neither mqtt nor opcua, return False
-        else:
-            logger.error("Invalid input. Please enter 'mqtt' or 'opcua'.")
-            return False
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"An error occurred while executing a command: {e.stderr}")
-        return False
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-        return False
-    finally:
-        os.chdir(original_dir)
-        logger.info(f"Restored working directory to: {os.getcwd()}")
 
 def verify_pods_logs(namespace, log_type):
     """Verify logs for all pods in the namespace."""
@@ -1962,6 +1973,47 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
     return result
         
 
+def _wait_for_ts_api_ready(timeout=180, interval=5,
+                           probe_url="https://localhost:30001/ts-api/config"):
+    """Poll the ts-api NodePort until nginx accepts the connection.
+
+    More reliable than a fixed sleep or a blind retry loop: returns as soon as the
+    endpoint responds with any HTTP status (curl rc 0). Connection-refused (rc 7)
+    means nginx is not yet bound to the NodePort and we keep waiting.
+
+    Args:
+        timeout (int): Total seconds to wait before giving up.
+        interval (int): Seconds between probes.
+        probe_url (str): URL to probe (defaults to the ts-api config endpoint).
+
+    Returns:
+        bool: True when the endpoint becomes reachable, False on timeout.
+    """
+    deadline = time.time() + timeout
+    attempt = 0
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            result = subprocess.run(
+                ["curl", "-k", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                 "--connect-timeout", "3", probe_url],
+                capture_output=True, text=True, timeout=10,
+            )
+        except subprocess.SubprocessError as exc:
+            logger.debug("ts-api probe subprocess error: %s", exc)
+            time.sleep(interval)
+            continue
+        if result.returncode == 0 and result.stdout.strip().isdigit():
+            logger.info("ts-api endpoint reachable on attempt %s (HTTP %s).",
+                        attempt, result.stdout.strip())
+            return True
+        logger.info("ts-api not ready (attempt %s, curl rc=%s). Retrying in %ss...",
+                    attempt, result.returncode, interval)
+        time.sleep(interval)
+    logger.error("ts-api endpoint not reachable after %ss.", timeout)
+    return False
+
+
 def _upload_udf_tar_via_api(config_dir, sample_app):
     """Create a tar archive of UDF artifacts and upload it via the ts-api REST endpoint.
 
@@ -2025,6 +2077,15 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 logger.debug("Skipping absent/empty optional folder 'models'.")
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
+
+        # Wait for nginx + ts-api to actually accept connections on NodePort 30001
+        # before attempting upload (avoids transient curl rc=7 connection refused).
+        if not _wait_for_ts_api_ready():
+            logger.error(
+                "ts-api endpoint not reachable; aborting UDF tar upload for '%s'.",
+                sample_app,
+            )
+            return False
 
         # Upload the tar via curl (mirrors make upload_tar_file)
         logger.info("Uploading UDF tar package to %s", upload_endpoint)
@@ -2241,8 +2302,8 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
         payload = {
             "udfs": {
-                "name": constants.WELD_UDF,
-                "models": constants.WELD_MODEL,
+                "name": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("udf", "weld_anomaly_detector"),
+                "models": constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("model", "weld_anomaly_detector.pkl"),
                 "device": device_value
             },
             "alerts": {
@@ -2320,6 +2381,288 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
     finally:
         os.chdir(original_dir)
 
+
+# -----------------------------------------------------------------------------
+# Standalone multimodal helm steps (chronological breakdown of
+# `setup_multimodal_udf_deployment_package`). These let a test execute the
+# documented four-step CPU/GPU activation flow explicitly:
+#   1. copy_dlstreamer_models_to_pod
+#   2. upload_udf_tar_package (already defined above)
+#   3. activate_multimodal_tsa_udf_config
+#   4. activate_multimodal_dlstreamer_pipeline
+# -----------------------------------------------------------------------------
+
+def _get_multimodal_pod(namespace, grep_token):
+    """Return the first multimodal pod whose name contains ``grep_token``."""
+    pod_command = (
+        f"kubectl get pods -n {namespace} "
+        "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | "
+        f"grep {grep_token} | head -n 1"
+    )
+    result = subprocess.run(pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0 or not result.stdout:
+        logger.error(f"No pod found in namespace '{namespace}' matching '{grep_token}'.")
+        return None
+    return result.stdout.decode("utf-8").strip().replace("'", "")
+
+
+def copy_dlstreamer_models_to_pod(chart_path, namespace):
+    """Step 1: ``kubectl cp`` the multimodal DL Streamer models into the pod.
+
+    Equivalent to:
+        cd .../industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server/
+        kubectl cp models <pod>:/home/pipeline-server/resources/ \
+            -c dlstreamer-pipeline-server -n <namespace>
+    """
+    original_dir = os.getcwd()
+    try:
+        logger.info("[Multimodal Step 1] Copying DL Streamer models to dlstreamer-pipeline-server pod")
+        os.chdir(chart_path)
+        os.chdir("../")
+
+        dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+        if not dlstreamer_pod:
+            return False
+        logger.info(f"Found DL Streamer pod: {dlstreamer_pod}")
+
+        models_path = "configs/dlstreamer-pipeline-server/models"
+        if not os.path.exists(models_path):
+            logger.warning(f"DL Streamer models directory not found at '{models_path}', skipping.")
+            return True
+
+        kubectl_cp = [
+            "kubectl", "cp", models_path,
+            f"{dlstreamer_pod}:/home/pipeline-server/resources/",
+            "-c", "dlstreamer-pipeline-server", "-n", namespace,
+        ]
+        logger.info(f"Copying DL Streamer models: {' '.join(kubectl_cp)}")
+        result = subprocess.run(kubectl_cp, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            logger.error(f"Error copying DL Streamer models: {result.stderr.decode('utf-8')}")
+            return False
+        logger.info("✓ DL Streamer models copied successfully.")
+        return True
+    except Exception as exc:
+        logger.error(f"Error copying DL Streamer models to pod: {exc}")
+        return False
+    finally:
+        os.chdir(original_dir)
+
+
+def activate_multimodal_tsa_udf_config(namespace, device_value="cpu"):
+    """Step 3: POST the multimodal TSA UDF config to ``/ts-api/config`` and reload.
+
+    Equivalent to:
+        curl -s -X POST https://localhost:30001/ts-api/config -k \\
+            -H 'Content-Type: application/json' -d '{... "device": <device_value> ...}'
+        # followed by a restart
+    """
+    logger.info(
+        f"[Multimodal Step 3] Activating Time Series Analytics UDF config "
+        f"(device='{device_value}')"
+    )
+    payload = {
+        "udfs": {
+            "name": constants.MULTIMODAL_UDF,
+            "models": constants.MULTIMODAL_MODEL,
+            "device": device_value,
+        },
+        "alerts": {
+            "mqtt": {
+                "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
+                "name": "my_mqtt_broker",
+            }
+        },
+    }
+    json_payload = json.dumps(payload)
+    logger.info(f"Time Series UDF payload: {json_payload}")
+
+    if not _post_ts_api_config(json_payload, target_namespace=namespace):
+        logger.error("Failed to post Time Series UDF configuration.")
+        return False
+
+    logger.info("Restarting ts-api configuration to apply new UDF changes...")
+    if not _restart_ts_api_config(target_namespace=namespace):
+        logger.error("Failed to restart ts-api configuration after UDF update.")
+        return False
+
+    logger.info(f"✓ Time Series Analytics UDF activated on {device_value.upper()}.")
+    return True
+
+
+def cleanup_failed_dlstreamer_pipelines(namespace):
+    """Clean up any failed or error-state DL Streamer pipeline instances.
+    
+    Returns:
+        int: Number of failed instances cleaned up, or -1 on error.
+    """
+    dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+    if not dlstreamer_pod:
+        logger.warning("DL Streamer pod not found for cleanup")
+        return -1
+    
+    try:
+        # Get pipeline status
+        status_command = [
+            "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+            "-c", "dlstreamer-pipeline-server", "--",
+            "curl", "-s", "http://localhost:8080/pipelines/status"
+        ]
+        result = subprocess.run(status_command, capture_output=True, text=True, timeout=10)
+        
+        if result.returncode != 0:
+            logger.warning(f"Failed to get pipeline status: {result.stderr}")
+            return -1
+        
+        # Parse status JSON
+        try:
+            status_list = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            logger.warning("Could not parse pipeline status JSON")
+            return 0
+        
+        cleaned_count = 0
+        for instance in status_list:
+            state = instance.get("state", "")
+            instance_id = instance.get("id", "")
+            
+            if state in ["ERROR", "ABORTED"] and instance_id:
+                logger.info(f"Cleaning up failed pipeline instance {instance_id} (state={state})")
+                delete_command = [
+                    "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+                    "-c", "dlstreamer-pipeline-server", "--",
+                    "curl", "-s", "-X", "DELETE",
+                    f"http://localhost:8080/pipelines/{instance_id}"
+                ]
+                delete_result = subprocess.run(delete_command, capture_output=True, text=True, timeout=10)
+                if delete_result.returncode == 0:
+                    logger.info(f"✓ Deleted failed pipeline instance {instance_id}")
+                    cleaned_count += 1
+                else:
+                    logger.warning(f"Failed to delete instance {instance_id}: {delete_result.stderr}")
+        
+        if cleaned_count > 0:
+            logger.info(f"Cleaned up {cleaned_count} failed pipeline instance(s)")
+        
+        return cleaned_count
+        
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Error during pipeline cleanup: {exc}")
+        return -1
+
+
+def activate_multimodal_dlstreamer_pipeline(
+    namespace,
+    device_value="CPU",
+    pipeline_name=constants.MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+    pipeline_request_file=None,
+):
+    """Step 4: Activate the DL Streamer pipeline on the chosen device (CPU/GPU/NPU).
+
+    Reads the pipeline request from the config file and modifies only the device parameter,
+    matching the user documentation approach:
+        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/<pipeline> \
+             -X POST -H 'Content-Type: application/json' \
+             -d "$(sed 's/"device": "CPU"/"device": "<device>"/' pipeline-request-cpu.json)"
+    """
+    device_upper = device_value.upper()
+    logger.info(
+        f"[Multimodal Step 4] Activating DL Streamer pipeline '{pipeline_name}' "
+        f"on device '{device_upper}'"
+    )
+
+    # Clean up any failed pipeline instances first
+    cleanup_failed_dlstreamer_pipelines(namespace)
+
+    dlstreamer_pod = _get_multimodal_pod(namespace, "deployment-dlstreamer-pipeline-server")
+    if not dlstreamer_pod:
+        return False
+
+    # Use the pipeline request file from configs (same as user documentation)
+    if pipeline_request_file is None:
+        pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
+    
+    # Resolve path relative to helm_utils directory
+    utils_dir = os.path.dirname(os.path.abspath(__file__))
+    json_file_path = os.path.join(utils_dir, pipeline_request_file)
+    
+    if not os.path.exists(json_file_path):
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    
+    try:
+        # Read the base pipeline request JSON file
+        with open(json_file_path, 'r') as f:
+            dlstreamer_payload = json.load(f)
+        
+        # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
+        if "parameters" in dlstreamer_payload and "classification-properties" in dlstreamer_payload["parameters"]:
+            dlstreamer_payload["parameters"]["classification-properties"]["device"] = device_upper
+        else:
+            logger.error("Invalid pipeline request JSON structure")
+            return False
+    
+    except FileNotFoundError:
+        logger.error(f"Pipeline request file not found: {json_file_path}")
+        return False
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in pipeline request file: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Error reading pipeline request file: {e}")
+        return False
+
+    # Add -w flag to capture HTTP status code for proper validation
+    activate_command = [
+        "kubectl", "exec", dlstreamer_pod, "-n", namespace,
+        "-c", "dlstreamer-pipeline-server", "--",
+        "curl", "-sS", "-X", "POST",
+        f"http://localhost:8080/pipelines/user_defined_pipelines/{pipeline_name}",
+        "-H", "Content-Type: application/json",
+        "-d", json.dumps(dlstreamer_payload),
+        "-w", "\n%{http_code}",
+    ]
+    logger.info(f"Activating DL Streamer Pipeline via kubectl exec: {' '.join(activate_command)}")
+    try:
+        result = subprocess.run(activate_command, capture_output=True, text=True, timeout=30)
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Failed to invoke DL Streamer activation: {exc}")
+        return False
+
+    if result.returncode != 0:
+        logger.error(
+            f"DL Streamer Pipeline activation failed (curl rc={result.returncode}): "
+            f"{result.stderr or result.stdout}"
+        )
+        return False
+
+    # Parse HTTP status code from response
+    stdout = (result.stdout or "").rstrip()
+    if not stdout:
+        logger.error("DL Streamer activation returned empty output")
+        return False
+
+    lines = stdout.splitlines()
+    http_code = lines[-1].strip() if lines else ""
+    body = "\n".join(lines[:-1]).strip()
+
+    if not http_code.isdigit():
+        logger.error(f"DL Streamer activation returned invalid HTTP status: {http_code}")
+        return False
+
+    if not http_code.startswith("2"):
+        logger.error(
+            f"DL Streamer Pipeline activation failed with HTTP {http_code}. "
+            f"Response: {body or result.stderr}"
+        )
+        return False
+
+    logger.info(f"✓ DL Streamer Pipeline '{pipeline_name}' activated on {device_upper}.")
+    logger.info(f"Response: {body}")
+    return True
+
+
 def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     original_dir = os.getcwd()
     try:
@@ -2332,12 +2675,9 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
             file_path = f'{os.getcwd()}/tick_scripts/windturbine_anomaly_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt"
-        elif sample_app == constants.WELD_SAMPLE_APP:
-            os.chdir('../' + constants.HELM_WELD)
-            logger.debug(f"Current working directory: {os.getcwd()}")
-            file_path = f'{os.getcwd()}/tick_scripts/weld_defect_detector.tick'
-            logger.info(f"File path for tick script: {file_path}")
-            setup = "mqtt_weld"
+        else:
+            logger.error(f"Unsupported sample_app for Helm MQTT alert setup: {sample_app}")
+            return False
 
         success = common_utils.update_alert_in_tick_script(file_path, setup)
         if success:
@@ -2430,7 +2770,7 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
     
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
+    sample_app = "wind-turbine-anomaly-detection" 
     
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):
@@ -2532,28 +2872,112 @@ def check_pods(namespace, timeout=180, interval=5):
     logger.warning(f"Timeout reached after {timeout}s. Some pods may still exist in namespace '{namespace}'.")
     return False
 
-def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"):
+
+def force_cleanup_namespace(namespace):
+    """Best-effort cleanup for lingering namespaced resources before reinstall."""
+    cleanup_commands = [
+        ["kubectl", "delete", "pod", "--all", "-n", namespace, "--grace-period=0", "--force", "--ignore-not-found=true"],
+        ["kubectl", "delete", "svc", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "deploy", "--all", "-n", namespace, "--ignore-not-found=true"],
+        ["kubectl", "delete", "replicaset", "--all", "-n", namespace, "--ignore-not-found=true"],
+    ]
+
+    logger.warning(f"Forcing cleanup of lingering resources in namespace '{namespace}'.")
+    cleanup_ok = True
+
+    for command in cleanup_commands:
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            if result.stdout.strip():
+                logger.debug(result.stdout.strip())
+            if result.stderr.strip():
+                logger.debug(result.stderr.strip())
+            if result.returncode != 0:
+                cleanup_ok = False
+                logger.warning(
+                    "Force cleanup command returned non-zero exit code %s: %s",
+                    result.returncode,
+                    " ".join(command),
+                )
+        except Exception as e:
+            cleanup_ok = False
+            logger.warning(f"Force cleanup command failed for namespace '{namespace}': {e}")
+
+    return cleanup_ok
+
+
+def check_services(namespace, timeout=30, interval=5):
+    """
+    Checks if services (especially NodePort) have been deleted in the specified namespace.
+    Returns True if no services are found within the timeout period, otherwise returns False.
+    
+    This is important to avoid NodePort allocation conflicts when reinstalling Helm charts.
+
+    :param namespace: The Kubernetes namespace to check.
+    :param timeout: The maximum time to wait in seconds (default is 30 seconds).
+    :param interval: The interval between checks in seconds (default is 5 seconds).
+    :return: True if no services are found within the timeout, False otherwise.
+    """
+    start_time = time.time()
+    
+    while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout:
+            logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+            return False
+        try:
+            # Execute the kubectl command to get services in the namespace
+            result = subprocess.run(
+                ["kubectl", "get", "svc", "-n", namespace],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            # Debug: Print the command output
+            logger.debug(f"Command output: {result.stdout.strip()}")
+            # Check if the output contains "No resources found"
+            if not result.stdout.strip() or "No resources found" in result.stdout:
+                logger.info(f"No services found in {namespace} namespace.")
+                return True
+            else:
+                logger.info(f"Services are still terminating in {namespace} namespace. Waiting...")
+
+        except subprocess.CalledProcessError as e:
+            if "not found" in str(e).lower():
+                logger.info(f"Namespace {namespace} not found - considered as no services running.")
+                return True
+            logger.warning(f"An error occurred while checking services: {e}")
+
+        # Wait for the specified interval before checking again
+        time.sleep(interval)
+
+    logger.warning(f"Timeout reached after {timeout}s. Some services may still exist in namespace '{namespace}'.")
+    return False
+
+
+def execute_gpu_config_curl_helm(
+    device="gpu",
+    namespace="time-series-analytics",
+    sample_app=constants.WIND_SAMPLE_APP,
+):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.
     
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
         namespace (str): Kubernetes namespace for the deployment
+        sample_app (str): Sample app key used to pick UDF/model from SAMPLE_APPS_CONFIG
     """
     try:
-        logger.info(f"Executing curl command to post {device.upper()} configuration to API via Helm...")
-        
-        # Create configuration with device field using SAMPLE_APPS_CONFIG
-        wind_config = constants.SAMPLE_APPS_CONFIG["wind-turbine-anomaly-detection"]
-        gpu_config = {
-            "udfs": {
-                "name": wind_config["udf"],
-                "models": wind_config["model"],
-                "device": device
-            },
-            "alerts": {
-                "mqtt": constants.MQTT_ALERT
-            }
-        }
+        logger.info(
+            f"Executing curl command to post {device.upper()} configuration to API via Helm for app '{sample_app}'..."
+        )
+
+        # Build payload from sample-app configuration.
+        # Keep alert mode mqtt by default for backward compatibility with existing tests.
+        gpu_config = _build_udf_payload(sample_app, device, "mqtt")
+        if not gpu_config:
+            logger.error(f"Failed to build GPU payload for sample app '{sample_app}'")
+            return False
         
         # Convert config to JSON string for curl command
         gpu_config_json = json.dumps(gpu_config)
@@ -2579,17 +3003,25 @@ def execute_gpu_config_curl_helm(device="gpu", namespace="time-series-analytics"
         )
         
         if success:
-            logger.info(f"{device.upper()} configuration POST via kubectl exec succeeded")
+            logger.info(
+                f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
+            )
             return True
         else:
-            logger.error(f"kubectl exec command failed for {device.upper()} configuration")
+            logger.error(
+                f"kubectl exec command failed for {device.upper()} configuration (app '{sample_app}')"
+            )
             return False
             
     except subprocess.TimeoutExpired:
-        logger.error(f"Timeout executing {device.upper()} configuration curl command")
+        logger.error(
+            f"Timeout executing {device.upper()} configuration curl command for app '{sample_app}'"
+        )
         return False
     except Exception as e:
-        logger.error(f"Exception during {device.upper()} configuration: {str(e)}")
+        logger.error(
+            f"Exception during {device.upper()} configuration for app '{sample_app}': {str(e)}"
+        )
         return False
 
 
@@ -2658,9 +3090,7 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
         return False
 
 
-# =================================================================
 # SEAWEED / S3 STORAGE HELM FUNCTIONS
-# =================================================================
 
 def verify_seaweed_essential_pods(namespace):
     """

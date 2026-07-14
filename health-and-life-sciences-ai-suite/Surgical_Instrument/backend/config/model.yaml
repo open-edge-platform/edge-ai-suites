@@ -1,0 +1,106 @@
+# Surgical Instrument backend — model + pipeline configuration.
+#
+# Env-var expansion is done at load time (see bootstrap/config.py).
+# The three "persist" dirs (models_dir, datasets_dir, cache_dir) are meant to
+# be bind-mounted as Docker volumes so a trained IR survives across runs.
+
+paths:
+  models_dir:   ${MODELS_DIR:-./models}
+  datasets_dir: ${DATASETS_DIR:-./datasets}
+  videos_dir:   ${VIDEOS_DIR:-./videos}
+  cache_dir:    ${CACHE_DIR:-./.cache}
+
+model:
+  # Ultralytics base weights — auto-downloaded on first use by name.
+  name: yolo11n
+  base_weights: yolo11n.pt
+
+  # Cache-first: if this IR + marker are both present the bootstrap skips
+  # dataset fetch + train + export and jumps straight to ready.
+  ir_dir: ${MODELS_DIR:-./models}/yolo11n_polyp/best_openvino_model
+  artifact_marker: ${MODELS_DIR:-./models}/yolo11n_polyp/.trained_ok
+
+dataset:
+  name: CVC-ColonDB
+  # Primary source: CVC-Colon lab, Universitat Autònoma de Barcelona
+  #   download page: https://pages.cvc.uab.es/CVC-Colon/index.php/databases/
+  #   direct link:   http://mv.cvc.uab.es/projects/colon-qa/cvccolondb
+  #   citation:      Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166-3182
+  #   license:       research use only per CVC terms — accept on their site
+  #                  before downloading; we never redistribute the data
+  #
+  # Manual-drop flow (no third-party mirrors):
+  #   1) On a machine with network access to the CVC lab, visit the URL above
+  #      and download the CVC-ColonDB archive (accept their terms).
+  #   2) Place the archive OR the extracted folder inside `raw_dir` below.
+  #      Accepted archive types: .zip, .tar, .tar.gz, .tgz. If your download
+  #      is .rar, extract it locally first.
+  #   3) `make backend-bootstrap` will auto-detect images + masks, convert
+  #      binary masks to YOLO bounding-box labels via OpenCV connected-
+  #      components, split 70/15/15 into train/val/test, and write data.yaml.
+  #   4) Subsequent runs cache on `output_dir/data.yaml`.
+  raw_dir:    ${DATASETS_DIR:-./datasets}/CVC-ColonDB/raw
+  output_dir: ${DATASETS_DIR:-./datasets}/CVC-ColonDB
+  convert:
+    class_id:      0        # single class: Polyp
+    min_area_px:   10       # discard mask blobs smaller than this (noise)
+    train_pct:     0.70
+    val_pct:       0.15
+    test_pct:      0.15
+    split_seed:    42       # matches upstream research splits for reproducibility
+  class_names: [Polyp]
+
+train:
+  # xpu | cuda | cpu. Runs on the Intel iGPU by default (Arc on Meteor
+  # Lake, Xe3 on Panther Lake). Matches the poc/gabriel_test/.venv
+  # recipe that trained YOLO11n on Arc iGPU in ~21 min for 50 epochs.
+  # Requires torch>=2.12.1+xpu — earlier torch-xpu versions stall in
+  # Ultralytics' loss/assign kernels on Xe3.
+  device: xpu
+  epochs: 50
+  imgsz: 640
+  batch: 8
+  workers: 4
+  optimizer: AdamW
+  lr0: 0.001
+  lrf: 0.01
+  weight_decay: 0.0005
+  momentum: 0.937
+  warmup_epochs: 3.0
+  cos_lr: false
+  box: 7.5
+  cls: 0.5
+  dfl: 1.5
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 10.0
+  translate: 0.1
+  scale: 0.2
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.05
+  close_mosaic: 10
+  patience: 0            # disable early-stop — deterministic full-epoch runs
+  save_period: 10
+  amp: false             # XPU + Ultralytics check_amp incompatibility
+
+export:
+  format: openvino
+  half: true             # FP16 IR
+  imgsz: 640
+
+pipeline:
+  # Default video source used by the InferenceWorker when no explicit
+  # video is provided by the user. May be an mp4 path or an integer index
+  # (e.g. "0" for /dev/video0). File paths that end in .mp4/.mkv/.avi are
+  # looped on EOF.
+  default_video: ${VIDEOS_DIR:-./videos}/polyp_test.mp4
+  output_size: [1920, 1080]
+  infer_size: 640
+  target_fps: 30
+  warmup_frames: 5
+  # cpu | gpu | npu — mapped to Ultralytics device string intel:{...}
+  device: gpu
+  annotate: true
+  jpeg_quality: 80

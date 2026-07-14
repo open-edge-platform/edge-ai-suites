@@ -89,19 +89,28 @@ Common optional values:
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
 | `global.keepPvc` | Retain PVCs on uninstall | `true` or `false` |
-| `global.gpu.multimodalEmbeddingEnabled` | Enable MME on GPU | `true` or `false` |
-| `global.gpu.vdmsDataprepEnabled` | Enable DataPrep on GPU | `true` or `false` |
-| `global.gpu.key` | GPU resource key from device plugin | `gpu.intel.com/xe` / `gpu.intel.com/i915` |
-| `global.gpu.device` | Device mode for GPU deployment | `GPU` |
+| `global.devices.multimodalEmbedding.device` | MME embedding execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.multimodalEmbedding.key` | MME accelerator key (required when device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.vdmsDataprep.embedding.device` | DataPrep embedding execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.vdmsDataprep.embedding.key` | DataPrep embedding accelerator key (required when embedding.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.vdmsDataprep.detection.device` | DataPrep detection execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.vdmsDataprep.detection.key` | DataPrep detection accelerator key (required when detection.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.accelGroupIds` | Host group ids owning the accelerator device nodes (`/dev/dri`, `/dev/accel`); added to the pod `supplementalGroups` when a service uses GPU/NPU | `[992]` |
 | `frigate.usbCameraDevice` | USB device path (used with USB profile) | `/dev/video0` |
 
 > **Note:** Scenario selection is profile-driven. Use override profiles for mode switching (`default_override.yaml`, `rtsp_test_override.yaml`, `usb_camera_override.yaml`) instead of setting mode switches in `user_values_override.yaml`.
 
 > **Tag Resolution Note:** `global.tag` is the fallback image tag. If `global.vssStackTag` is non-empty, VSS-side services use it instead of `global.tag`. If `global.smartNvrStackTag` is non-empty, Smart NVR-side services use it instead of `global.tag`. Leaving stack-specific tags empty makes those services inherit `global.tag`.
 
-> **Device Note:** `global.env.embeddingDevice` defaults to `CPU` in chart values and is internally resolved for non-GPU mode.
+> **Device Note:** All device selection is per-component via the `global.devices.*` block. Each component defaults to `CPU` and requires its matching `key` only when set to `GPU` or `NPU`.
 
-> **GPU Note:** If enabling GPU for search embeddings, set both `global.gpu.multimodalEmbeddingEnabled=true` and `global.gpu.vdmsDataprepEnabled=true`, and also set `global.gpu.key` and `global.gpu.device`.
+> **Accelerator Note:** MME and DataPrep use independent per-component accelerator settings via `global.devices.multimodalEmbedding.*`, `global.devices.vdmsDataprep.embedding.*`, and `global.devices.vdmsDataprep.detection.*`. This is the single source of truth for device placement; there is no separate legacy `global.gpu` flow.
+
+> **Device Permissions Note:** When a component runs on GPU or NPU, its host accelerator nodes (`/dev/dri` for GPU, `/dev/accel` for NPU) are mounted and the gids in `global.accelGroupIds` are added to the pod `supplementalGroups` so the non-root container user can open the device. These gids are host-specific — check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri` and override `global.accelGroupIds` to match (default `[992]`).
+
+> **OpenVINO Cache Note:** On GPU/NPU, MME and DataPrep write the first-time OpenVINO model compilation to `ovCacheDir` (default `/app/ov_models/ov_cache`) on the persistent models mount, so the compile is reused across pod restarts instead of recompiling on every start.
+
+> **Storage Note:** MME and DataPrep now use independent PVCs (`<release>-live-video-search-mmes-models-pvc` and `<release>-live-video-search-dataprep-models-pvc`, with per-service `*-data-pvc` fallback), so they are no longer coupled through a shared PVC.
 
 ### 3. Build Helm Dependencies
 
@@ -152,14 +161,17 @@ helm install lvs . -f user_values_override.yaml -f rtsp_test_override.yaml -n $m
 helm install lvs . -f user_values_override.yaml -f usb_camera_override.yaml -n $my_namespace
 ```
 
-#### Use Case 4: GPU-enabled MME + DataPrep
+#### Use Case 4: Accelerator-enabled MME + DataPrep (GPU or NPU)
 
 First update `user_values_override.yaml`:
 
-- `global.gpu.multimodalEmbeddingEnabled: true`
-- `global.gpu.vdmsDataprepEnabled: true`
-- `global.gpu.key: <gpu-resource-key>`
-- `global.gpu.device: GPU`
+- `global.devices.multimodalEmbedding.device: GPU|NPU`
+- `global.devices.multimodalEmbedding.key: <accelerator-resource-key>` (for example `gpu.intel.com/xe` or `npu.intel.com/accel`)
+- `global.devices.vdmsDataprep.embedding.device: GPU|NPU`
+- `global.devices.vdmsDataprep.embedding.key: <accelerator-resource-key>`
+- `global.devices.vdmsDataprep.detection.device: GPU|NPU`
+- `global.devices.vdmsDataprep.detection.key: <accelerator-resource-key>`
+- `global.accelGroupIds: [<gid>]` (host gids owning `/dev/dri` and `/dev/accel`; check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri`)
 
 Then deploy with your selected scenario profile (example: default):
 
@@ -235,7 +247,7 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
 ## Troubleshooting
 
 - **Pods stay Pending or not Ready:**
-  Check storage provisioning, node capacity, and device plugin availability (for GPU mode).
+  Check storage provisioning, node capacity, and device plugin availability (for GPU/NPU accelerator mode).
 
 - **Node allocation/scheduling issues caused by PVC affinity conflicts (often from old PVCs):**
   Delete old release PVCs and redeploy:
@@ -244,11 +256,17 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   ```
 
+- **`VolumeBinding` "object has been modified" warning during scheduling:**
+  A one-off `FailedScheduling ... running PreBind plugin "VolumeBinding": ... the object has been modified` warning that is immediately followed by a successful `Scheduled` event is a transient optimistic-lock retry and is safe to ignore — it self-heals on the scheduler's next attempt. The MME and DataPrep pods now reference each model PVC through a single volume, so this should no longer recur. If a pod stays `Pending` and the warning repeats indefinitely, treat it as a real failure: check that the model PVC is `Bound` (`kubectl get pvc -n "$my_namespace"`) and that the `WaitForFirstConsumer` storage class can provision on the target node.
+
 - **Search not returning expected results:**
   Verify `global.env.embeddingModelName` and confirm clips are ingested.
 
 - **USB mode does not detect camera:**
   Confirm device path and override `frigate.usbCameraDevice` in `user_values_override.yaml` when not using `/dev/video0`.
 
-- **GPU deployment fails validation:**
-  Ensure both MME and DataPrep GPU flags are aligned, and both `global.gpu.key` and `global.gpu.device` are set.
+- **Accelerator deployment fails validation:**
+  Verify the required key is set for each accelerator path (`global.devices.multimodalEmbedding.key` for MME, `global.devices.vdmsDataprep.embedding.key` / `global.devices.vdmsDataprep.detection.key` for DataPrep) whenever the matching device is set to `GPU` or `NPU`.
+
+- **Accelerator pod cannot access the device (NPU/GPU init fails):**
+  Confirm `global.accelGroupIds` matches the host gids owning `/dev/accel` (NPU) and `/dev/dri` (GPU) on the scheduled node (`ls -ln /dev/accel`, `ls -ln /dev/dri`). The non-root container needs these in its `supplementalGroups` to open the device.

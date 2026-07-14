@@ -2,7 +2,7 @@
 
 This document describes the executables built under `build/`, their parameters, and the output to expect from a successful run.
 
-For KITTI-format evaluation after inference, see `https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/tools/README_eval.md`.
+For KITTI-format evaluation after inference, see [KITTI 3D Object Detection Evaluation](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/tools/README_eval.md).
 
 For the quickest end-to-end run, prefer the published Docker image:
 

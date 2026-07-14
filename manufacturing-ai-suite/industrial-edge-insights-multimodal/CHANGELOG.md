@@ -17,21 +17,40 @@ All notable changes to this project are documented in this file.
 - Renamed sample app "Weld Anomaly Detection" to "Weld Defect Detection" across all configs, docs, and scripts. ([#2504])
 - Updated UDF package upload format from zip to tar archives. ([#2441])
 - Updated version to `2026.1.0`. ([#2387])
+- Updated DL Streamer Pipeline Server image version. ([#2772])
+- Updated `gvawatermark` pipeline rendering configuration for DL Streamer Pipeline Server. ([#2723])
+- Updated image suffix and Helm chart version to `rc1`. ([#2717])
+- Removed `tmpfs` size options for SeaweedFS in Docker Compose configuration. ([#2726])
 
 ### Security
 - Updated Docker Compose service image versions to address security vulnerabilities. ([#2579])
 - Addressed Bandit security findings in weld data simulator and functional tests. ([#2347])
 - Bumped `requests` to 2.33.0 in test requirements. ([#2343])
+- Fixed Trivy-reported vulnerabilities by updating SeaweedFS and Coturn container image versions. ([#2971])
+- Fixed security vulnerability issues in Helm templates. ([#2869])
 
 ### Fixed
 - Fixed Helm automation deployment issues. ([#2424])
 - Fixed failing functional test cases. ([#2450])
 - Fixed minor issue in architecture diagram. ([#2568])
+- Fixed DL Streamer Pipeline Server proxy environment variable handling to support both proxy and non-proxy environments. ([#2727])
+- Improved stability and consistency of multimodal automation test suite. ([#2468])
+- Fixed get-started guide with step to stop and restart the pipeline when switching inference device. ([#2910])
 
 ### Documentation
 - Distinguished Time-Series vs Multimodal Weld Defect Detection documentation. ([#2607])
 - Fixed broken reference in Weld Defect Detection documentation. ([#2581])
 - Fixed multimodal article documentation. ([#2489])
+- Updated Helm deployment documentation to describe running inference on different device targets (CPU/GPU/NPU). ([#2933])
+- Updated documentation links and references. ([#2857])
+- Minor documentation updates. ([#2789])
+- Updated release branch references in documentation for 2026.1. ([#2766])
+- Fixed documentation issues. ([#2752])
+- Updated clone commands to include explicit branch or release-tag parameter. ([#2662])
+- Removed "project" instances from GitHub navigation box directives in documentation index. ([#2385])
+- Language and formatting review of documentation. ([#2990])
+- Fixed punctuation and minor corrections in release notes. ([#2947])
+- Miscellaneous documentation fixes. ([#2932])
 
 ---
 [#2283]: https://github.com/open-edge-platform/edge-ai-suites/pull/2283
@@ -56,6 +75,23 @@ All notable changes to this project are documented in this file.
 [#2630]: https://github.com/open-edge-platform/edge-ai-suites/pull/2630
 [#2639]: https://github.com/open-edge-platform/edge-ai-suites/pull/2639
 [#2641]: https://github.com/open-edge-platform/edge-ai-suites/pull/2641
+[#2662]: https://github.com/open-edge-platform/edge-ai-suites/pull/2662
+[#2717]: https://github.com/open-edge-platform/edge-ai-suites/pull/2717
+[#2723]: https://github.com/open-edge-platform/edge-ai-suites/pull/2723
+[#2726]: https://github.com/open-edge-platform/edge-ai-suites/pull/2726
+[#2727]: https://github.com/open-edge-platform/edge-ai-suites/pull/2727
+[#2752]: https://github.com/open-edge-platform/edge-ai-suites/pull/2752
+[#2766]: https://github.com/open-edge-platform/edge-ai-suites/pull/2766
+[#2772]: https://github.com/open-edge-platform/edge-ai-suites/pull/2772
+[#2789]: https://github.com/open-edge-platform/edge-ai-suites/pull/2789
+[#2857]: https://github.com/open-edge-platform/edge-ai-suites/pull/2857
+[#2869]: https://github.com/open-edge-platform/edge-ai-suites/pull/2869
+[#2910]: https://github.com/open-edge-platform/edge-ai-suites/pull/2910
+[#2932]: https://github.com/open-edge-platform/edge-ai-suites/pull/2932
+[#2933]: https://github.com/open-edge-platform/edge-ai-suites/pull/2933
+[#2947]: https://github.com/open-edge-platform/edge-ai-suites/pull/2947
+[#2971]: https://github.com/open-edge-platform/edge-ai-suites/pull/2971
+[#2990]: https://github.com/open-edge-platform/edge-ai-suites/pull/2990
 ---
 
 ## [2026.0] - March 2026

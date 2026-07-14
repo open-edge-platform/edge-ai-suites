@@ -12,7 +12,7 @@ REQUIRED_OS = "Windows 11"
 REQUIRED_PYTHON_MAJOR = 3
 REQUIRED_PYTHON_MINOR = 12
 REQUIRED_NODE_MAJOR = 18  # Minimum required Node.js version
-MIN_DLSTREAMER_VERSION = (2026, 0, 0)
+MIN_DLSTREAMER_VERSION = (2026, 1, 0)
 
 
 def check_meteor_lake(processor_name: str) -> bool:
@@ -159,7 +159,7 @@ def show_warning_and_prompt_user_to_continue():
 - \033[1mGPU/Accelerator:\033[0m Intel® iGPU (Intel® Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
 - \033[1mPython:\033[0m 3.12
 - \033[1mNode.js:\033[0m v18+ (for frontend)
-- \033[1mDL Streamer:\033[0m 2026.0.0+ (for video analytics pipelines)
+- \033[1mDL Streamer:\033[0m 2026.1.0+ (for video analytics pipelines)
 
 \033[90m------------------------------------------------------------\033[0m
 """)

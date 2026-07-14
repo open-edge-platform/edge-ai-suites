@@ -85,6 +85,12 @@ class VideoAnalyticsPipelineService:
         # Pipeline error events for status reporting (consumed by monitor_pipeline_status)
         self.pipeline_errors: Dict[str, List[str]] = {}
 
+        # Callback fired once when all pipelines have finished (EOS or stopped).
+        # Signature: on_all_pipelines_done(session_id: str) -> None
+        self.on_all_pipelines_done = None
+        self._reports_generated = False   # guard: fire at most once per service instance
+        self._any_pipeline_ran  = False   # guard: don't fire before any pipeline was launched
+
         ps = getattr(config.va_pipeline, "pose_statistics", None)
         self.min_frames_for_transition = getattr(ps, "min_frames_for_transition", 3) if ps else 3
         self.min_frames_for_transition_unid = getattr(ps, "min_frames_for_transition_unid", 15) if ps else 15
@@ -116,20 +122,12 @@ class VideoAnalyticsPipelineService:
         """Setup GStreamer environment variables"""
         current_path = os.environ.get("GST_PLUGIN_PATH", "")
 
-        # Select plugin folder based on GStreamer version
-        gst_version = self._get_gstreamer_version()
-        if gst_version and gst_version.startswith("1.26."):
-            plugin_dir = self.plugin_path / "dlstreamer-2025"
-            self.logger.info(f"GStreamer {gst_version} detected, using old plugin")
-        else:
-            plugin_dir = self.plugin_path
-            self.logger.info(f"GStreamer {gst_version or 'unknown'} detected, using default plugin")
-
-        os.environ["GST_PLUGIN_PATH"] = f"{plugin_dir};{current_path}"
+        os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
-        os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
+        # Comment out to use d3d12 decoders as d3d11 decoder + gvawatermark + encoder causes crash
+        # os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
 
     def _get_model_path(self, model_key: str) -> str:
         """Get full path to model"""
@@ -299,6 +297,7 @@ class VideoAnalyticsPipelineService:
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
+                    self._fire_done_callback_if_all_finished()
                     break
                 else:
                     # Unexpected exit — record error for status reporting
@@ -345,12 +344,32 @@ class VideoAnalyticsPipelineService:
                             f"Pipeline '{pipeline_name}' reached maximum retry limit ({self.max_retries}). "
                             f"Giving up."
                         )
+                        self._fire_done_callback_if_all_finished()
                         break
 
             # Check every 2 seconds
             time.sleep(2)
 
         self.logger.info(f"Monitor thread for pipeline '{pipeline_name}' stopped")
+
+    def _fire_done_callback_if_all_finished(self):
+        """Fire on_all_pipelines_done once when no pipeline processes remain running."""
+        if self._reports_generated or not self._any_pipeline_ran:
+            return
+        still_running = [
+            name for name, proc in self.pipelines.items()
+            if proc.poll() is None
+        ]
+        if still_running:
+            self.logger.debug(f"[VA] Pipelines still running: {still_running} — reports deferred.")
+            return
+        self._reports_generated = True
+        self.logger.info("[VA] All pipelines finished — triggering engagement report generation.")
+        if callable(self.on_all_pipelines_done):
+            try:
+                self.on_all_pipelines_done(getattr(self, "x_session_id", None))
+            except Exception as exc:
+                self.logger.error(f"[VA] on_all_pipelines_done callback raised: {exc}", exc_info=True)
 
     def _launch_pipeline_internal(
         self, pipeline_name: str, options: PipelineOptions, command: List[str]
@@ -596,10 +615,10 @@ class VideoAnalyticsPipelineService:
         pipeline = [
             *self._get_source_elements(source, input_type),
             # Branch 1: ResNet18 classification
-            # "videorate",
-            # "!",
-            # "video/x-raw(memory:D3D11Memory),framerate=1/1",
-            # "!",
+            "videorate",
+            "!",
+            "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -768,6 +787,7 @@ class VideoAnalyticsPipelineService:
             self.logger.info(
                 f"Started monitoring thread for pipeline '{pipeline_name}'"
             )
+            self._any_pipeline_ran = True
 
             return True
 
@@ -826,6 +846,7 @@ class VideoAnalyticsPipelineService:
                 self.logger.info(f"Pipeline '{pipeline_name}' killed")
 
             del self.pipelines[pipeline_name]
+            self._fire_done_callback_if_all_finished()
 
             # Stop monitoring thread
             if pipeline_name in self.monitor_stop_flags:
@@ -1394,6 +1415,7 @@ class VideoAnalyticsPipelineService:
                 "stand_count": 0,
                 "raise_up_count": 0,
                 "stand_reid": [],
+                "raise_reid": [],
             }
 
         person_count_samples = state["person_count_samples"]
@@ -1411,10 +1433,18 @@ class VideoAnalyticsPipelineService:
             for sid, cnt in sorted(state["student_stand_counts"].items())
             if cnt > 0
         ]
+        raise_reid = [
+            {"student_id": sid, "count": cnt}
+            for sid, cnt in sorted(
+                state["student_raise_counts"].items(), key=lambda x: x[1], reverse=True
+            )
+            if cnt > 0
+        ]
 
         return {
             "student_count": student_count,
             "stand_count": stand_count,
             "raise_up_count": raise_up_count,
             "stand_reid": stand_reid,
+            "raise_reid": raise_reid,
         }

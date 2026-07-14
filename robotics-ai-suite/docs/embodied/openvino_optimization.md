@@ -1,8 +1,6 @@
-(pi05_lerobot_openvino)=
-
 # OpenVINO™ Optimization of Robotics VLA Model Pi0.5
 
-This example shows how to optimize the Vision-Language-Action (VLA) model Pi0.5 with Intel® OpenVINO™, compress model weights to INT8 and benchmark using the OpenVINO benchmark_app tool.
+This example shows how to optimize the Vision-Language-Action (VLA) model Pi0.5 with OpenVINO™, compress model weights to INT8 and benchmark using the OpenVINO™ `benchmark_app` tool.
 
 ## What Steps VLA Models Perform
 
@@ -19,9 +17,9 @@ Pi0.5 is a state-of-the-art VLA model which supports long horizon tasks and open
 This tutorial covers:
 
 - Converting the Pi0.5 model from PyTorch to ONNX
-- Exporting the ONNX model to OpenVINO intermediate representation
+- Exporting the ONNX model to OpenVINO™ intermediate representation
 - Compressing model weights to INT8 using NNCF
-- Benchmarking the model using the OpenVINO benchmark tool
+- Benchmarking the model using the OpenVINO™ benchmark tool
 - Validating the optimized model outputs
 
 ## Source Code
@@ -46,7 +44,7 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
    pip install -e ".[pi]"
    ```
 
-3. Install additional dependencies including OpenVINO and NNCF:
+3. Install additional dependencies including OpenVINO™ and NNCF:
 
    ```bash
    pip install onnx==1.20.0 openvino==2025.4.0 nncf==2.19.0
@@ -94,8 +92,6 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
        return time.to(dtype=torch.float32, device=device)
    ```
 
-(pi05_model_conversion)=
-
 ## Model Conversion and OpenVINO™ Optimization
 
 1. Clone the edge-ai-suites repository and then run the `convert_pytorch_onnx.py` script. This will download the HuggingFace Pi0.5 model taken from [here](https://huggingface.co/lerobot/pi05_base) and will convert it to ONNX using the `torch.onnx.export` method.
@@ -113,7 +109,7 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
    python onnx_to_ov_ir.py
    ```
 
-   The snippet below shows how in this script the ONNX representation of the model is converted to OpenVINO using the `openvino.convert_model` method:
+   The snippet below shows how in this script the ONNX representation of the model is converted to OpenVINO™ using the `openvino.convert_model` method:
 
    ```python
    ov_model = ov.convert_model("pi05_onnx/pi05.onnx")
@@ -127,9 +123,9 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
                compress_to_fp16=True)
    ```
 
-4. Run the `nncf_int8_compression.py` file to quantize the OpenVINO Pi0.5 model to INT8.
+4. Run the `nncf_int8_compression.py` file to quantize the OpenVINO™ Pi0.5 model to INT8.
 
-   The snippet below shows how the uncompressed OpenVINO model is compressed to INT8 using Intel Neural Network Compression (NNCF):
+   The snippet below shows how the uncompressed OpenVINO™ model is compressed to INT8 using Intel Neural Network Compression (NNCF):
 
    ```python
    from nncf import compress_weights
@@ -144,11 +140,11 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
 
 ## Benchmarking
 
-To benchmark the model using the OpenVINO `benchmark_tool` application on CPU:
+To benchmark the model using the OpenVINO™ `benchmark_tool` application on CPU:
 
-1. Convert the Pi0.5 model to OpenVINO as described in the [Model Conversion and OpenVINO™ Optimization](#model-conversion-and-openvino-optimization) section.
+1. Convert the Pi0.5 model to OpenVINO™ as described in the [Model Conversion and OpenVINO™ Optimization](#model-conversion-and-openvino-optimization) section.
 
-2. Run the following command to utilize OpenVINO command line `benchmark_tool` with the compressed Pi0.5 model:
+2. Run the following command to utilize OpenVINO™ command line `benchmark_tool` with the compressed Pi0.5 model:
 
    ```bash
    benchmark_app -m pi05_lerobot_ov_ir_INT8/model.xml -hint latency -shape "images[1,1,3,224,224],img_masks[1,1],lang_tokens[1,200],lang_masks[1,200],state[1,32],actions[1,50,32]" -d CPU
@@ -156,7 +152,7 @@ To benchmark the model using the OpenVINO `benchmark_tool` application on CPU:
 
 ## Validation (Optional)
 
-To validate the outputs of the model ensuring that model predictions are the same before and after OpenVINO optimization:
+To validate the outputs of the model ensuring that model predictions are the same before and after OpenVINO™ optimization:
 
 1. Ensure you have run the `convert_pytorch_onnx.py` script (see [Model Conversion and OpenVINO™ Optimization](#model-conversion-and-openvino-optimization)). This will generate a random input tensor and pass it through the original HuggingFace Pi0.5 model and save both the model input and output in the validation folder.
 

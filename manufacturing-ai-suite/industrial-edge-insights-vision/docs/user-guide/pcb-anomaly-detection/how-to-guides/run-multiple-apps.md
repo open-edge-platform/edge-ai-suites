@@ -43,19 +43,19 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
        COTURN_UDP_PORT: 3479
        MINIO_SERVER_PORT: 9001
 
-   weld-porosity:
-     weld1:
+   pallet-defect-detection:
+     pdd1:
        NGINX_HTTP_PORT: 10080
        NGINX_HTTPS_PORT: 10443
        COTURN_UDP_PORT: 3480
        MINIO_SERVER_PORT: 10001
    ```
 
-   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and pdd1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
-   For the example above, modify the envs for pcb-anomaly-detection and weld-porosity, i.e. `env_pcb-anomaly-detection` and `env_weld-porosity`
+   For the example above, modify the envs for pcb-anomaly-detection and pallet-defect-detection, i.e. `env_pcb-anomaly-detection` and `env_pallet-defect-detection`
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -160,10 +160,10 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
          }
          ...
    -------------------------------------------
-   Status of: weld1 (SAMPLE_APP: weld-porosity)
+   Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
@@ -231,31 +231,31 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    Payload for pipeline 'pcb_anomaly_detection'. Response: "1127a5530b0011f1bf5ab18e98b8d602"
 
    ------------------------------------------
-   Processing instance: weld1 from SAMPLE_APP: weld-porosity
+   Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
    ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/payload.json
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/payload.json
    Payload loaded successfully.
-   Starting first pipeline: weld_porosity_classification
-   Launching pipeline: weld_porosity_classification
-   Extracting payload for pipeline: weld_porosity_classification
-   Found 1 payload(s) for pipeline: weld_porosity_classification
-   Payload for pipeline 'weld_porosity_classification'. Response: "1130ca860b0011f1aa88a902d69c78e2"
+   Starting first pipeline: pallet_defect_detection
+   Launching pipeline: pallet_defect_detection
+   Extracting payload for pipeline: pallet_defect_detection
+   Found 1 payload(s) for pipeline: pallet_defect_detection
+   Payload for pipeline 'pallet_defect_detection'. Response: "1130ca860b0011f1aa88a902d69c78e2"
    ```
 
 3. Access WebRTC stream:
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pcb1 has nginx port set to 8443, pcb2 set to 9443 & weld1 set to 10443.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pcb1 has nginx port set to 8443, pcb2 set to 9443 & pdd1 set to 10443.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/weld/             # Weld Porosity
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/             # Pallet Defect Detection
    ```
 
 ### Start pipeline for a particular instance only
@@ -458,9 +458,9 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
       "state": "RUNNING"
    }
    ]
-   Processing instance: weld1 from sample app: weld-porosity
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Processing instance: pdd1 from sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    [
    {
@@ -559,10 +559,10 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
    }
 
    -------------------------------------------
-   Processing instance: weld1 (SAMPLE_APP: weld-porosity)
+   Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200

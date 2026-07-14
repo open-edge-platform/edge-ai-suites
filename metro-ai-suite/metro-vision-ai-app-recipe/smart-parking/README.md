@@ -22,7 +22,6 @@ coding or deep learning expertise. Its key features are:
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md)
 - [Deploy with Docker Compose](./docs/user-guide/get-started.md#run-the-application)
 - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md)
-- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/deploy-with-edge-orchestrator.md)
 
 ## How It Works
 

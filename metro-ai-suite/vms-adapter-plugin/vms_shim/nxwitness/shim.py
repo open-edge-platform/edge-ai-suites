@@ -31,6 +31,7 @@ built using the documented ``/rest/v4/devices/{id}/footage`` endpoint.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from datetime import datetime
@@ -48,6 +49,7 @@ import structlog
 from plugin.base.interfaces import IVmsShim
 from plugin.core.config import VmsInstanceConfig
 from plugin.core.models.domain import Camera, CommandResult
+from vms_shim.nxwitness.settings_factory import apply_settings_model
 
 if TYPE_CHECKING:
     from plugin.core.pipeline.orchestrator import Orchestrator
@@ -109,6 +111,12 @@ class NxWitnessVmsShim(IVmsShim):
         self._engine_id: str | None = None
         # Device agents that have already been enabled for this session
         self._enabled_device_agents: set[str] = set()
+        # Orchestrator reference (set in on_startup)
+        self._orchestrator: Any = None
+        # Per-device pipeline run tracking: device_id → instance_id
+        self._device_pipeline_runs: dict[str, str] = {}
+        # Previous settings per device for change detection
+        self._device_prev_settings: dict[str, dict] = {}
 
     @property
     def camera_id_prefix(self) -> str:
@@ -512,6 +520,10 @@ class NxWitnessVmsShim(IVmsShim):
             if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig) and ca_cfg.label_type_map:
                 _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
 
+        # Build the Nx device-agent settings panel from all configured apps so the
+        # bundled manifest stays generic and any app added to config.yaml shows up.
+        apply_settings_model(manifests, list(orchestrator.config.analytics_apps))
+
         try:
             result = await self.register_analytics(manifests)
         except Exception:
@@ -547,6 +559,129 @@ class NxWitnessVmsShim(IVmsShim):
         username = result.get("username") or ""
         if username and password:
             self.set_integration_credentials(username, password)
+
+        self._orchestrator = orchestrator
+        task = asyncio.create_task(
+            self._poll_device_agent_settings(),
+            name=f"nx-settings-poll-{self._config.name}",
+        )
+        orchestrator.add_background_task(task)
+        logger.info("nx_settings_poll_started", vms=self._config.name)
+
+    async def _poll_device_agent_settings(self, interval: int = 5) -> None:
+        """Poll device agent settings from Nx Witness every *interval* seconds."""
+        while True:
+            await asyncio.sleep(interval)
+            try:
+                cameras = await self.discover_cameras()
+                for camera in cameras:
+                    device_id = camera.camera_id.removeprefix("nx:")
+                    settings = await self.get_device_agent_settings(device_id)
+                    if settings:
+                        logger.debug(
+                            "nx_device_agent_settings_poll",
+                            device_id=device_id,
+                            camera_name=camera.name,
+                            pipeline_enabled=settings["pipelineEnabled"],
+                            device=settings["device"],
+                        )
+                        await self._reconcile_pipeline(camera, device_id, settings)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                logger.error("nx_settings_poll_error", error=str(exc))
+
+    async def _reconcile_pipeline(self, camera: Any, device_id: str, settings: dict) -> None:
+        """Start or stop a DLStreamer pipeline based on current Nx client settings."""
+        prev = self._device_prev_settings.get(device_id, {})
+        self._device_prev_settings[device_id] = settings
+
+        enabled = settings["pipelineEnabled"]
+        device = settings["device"]
+
+        settings_changed = (
+            prev.get("pipelineEnabled") != enabled
+            or prev.get("device") != device
+        )
+
+        run_id = self._device_pipeline_runs.get(device_id)
+
+        if not enabled:
+            if run_id:
+                await self._stop_pipeline_for_device(device_id)
+            return
+
+        # enabled=True: start if not running or device changed
+        if run_id and not settings_changed:
+            return
+
+        if run_id:
+            await self._stop_pipeline_for_device(device_id)
+
+        await self._start_pipeline_for_device(camera, device_id, device)
+
+    async def _start_pipeline_for_device(
+        self, camera: Any, device_id: str, device: str,
+    ) -> None:
+        """Start a DLStreamer pipeline using values from config."""
+        if not self._orchestrator:
+            logger.error("nx_start_pipeline_no_orchestrator", device_id=device_id)
+            return
+
+        od_shim = self._orchestrator.analytics_app_shims.get("dls_vision")
+        if od_shim is None:
+            logger.error("nx_start_pipeline_no_od_shim", device_id=device_id)
+            return
+
+        pipeline_name = od_shim._config.pipeline_name
+
+        if not pipeline_name:
+            logger.error("nx_poll_pipeline_name_not_configured", device_id=device_id)
+            return
+
+        rtsp_url = await self.get_live_stream_url(camera.camera_id)
+        if not rtsp_url:
+            logger.error("nx_start_pipeline_no_rtsp", device_id=device_id)
+            return
+
+        parameters: dict = {"detection-properties": {"device": device}}
+
+        params = od_shim.param_model.model_validate({
+            "pipeline_name": pipeline_name,
+            "camera_id": rtsp_url,
+            "camera_id_ref": camera.camera_id,
+            "parameters": parameters,
+        })
+
+        try:
+            result = await od_shim.start(params)
+            run_id = result.get("run_id", "")
+            self._device_pipeline_runs[device_id] = run_id
+            logger.info(
+                "nx_dls_pipeline_started",
+                device_id=device_id,
+                pipeline_name=pipeline_name,
+                device=device,
+                run_id=run_id,
+            )
+        except Exception as exc:
+            logger.error("nx_dls_pipeline_start_failed", device_id=device_id, error=str(exc))
+
+    async def _stop_pipeline_for_device(self, device_id: str) -> None:
+        """Stop the running DLStreamer pipeline for the given device."""
+        run_id = self._device_pipeline_runs.pop(device_id, None)
+        if not run_id:
+            return
+
+        if not self._orchestrator:
+            return
+
+        od_shim = self._orchestrator.analytics_app_shims.get("dls_vision")
+        if od_shim is None:
+            return
+
+        ok = await od_shim.stop_run(run_id)
+        logger.info("nx_dls_pipeline_stopped", device_id=device_id, run_id=run_id, success=ok)
 
     async def handle_register(self, body: dict[str, Any], db: Any, vms_name: str) -> Any:
         """Handle POST /vms/{name}/register for Nx Witness.
@@ -848,6 +983,43 @@ class NxWitnessVmsShim(IVmsShim):
         except httpx.HTTPError as exc:
             logger.error("nx_device_agent_enable_error", error=str(exc), device_id=device_id)
             return False
+
+    async def get_device_agent_settings(self, device_id: str) -> dict:
+        """Read device agent settings set by the user in the Nx Witness client.
+
+        Returns a dict with ``pipelineEnabled`` (bool) and ``pipelineName`` (str).
+        """
+        ready = await self._ensure_integration_session()
+        if not ready:
+            return {}
+
+        engine_id = await self._get_engine_id()
+        if not engine_id:
+            return {}
+
+        logger.debug("nx_get_device_agent_settings", device_id=device_id, engine_id=engine_id)
+        try:
+            resp = await self._integration_client.get(  # type: ignore[union-attr]
+                f"/rest/v4/analytics/engines/{engine_id}/deviceAgents/{device_id}/settings"
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            # Nx v4 wraps user-set values under "values"
+            values = data.get("values", data)
+            settings = {
+                "pipelineEnabled": bool(values.get("pipelineEnabled", False)),
+                "device": str(values.get("device", "CPU")),
+            }
+            logger.debug(
+                "nx_device_agent_settings_read",
+                device_id=device_id,
+                pipeline_enabled=settings["pipelineEnabled"],
+                device=settings["device"],
+            )
+            return settings
+        except httpx.HTTPError as exc:
+            logger.error("nx_get_device_agent_settings_failed", error=str(exc), device_id=device_id)
+            return {}
 
     async def push_analytics_objects(
         self,

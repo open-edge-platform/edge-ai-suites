@@ -1,4 +1,4 @@
-# Smart NVR Overview
+# Smart NVR
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -89,10 +89,10 @@ support the features.
 get-started
 how-to-use-application
 development-guide
-Integrate SceneScape with Smart NVR <scenescape-integration.md>
+Integrate Scenescape with Smart NVR <scenescape-integration.md>
 api-reference
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->
