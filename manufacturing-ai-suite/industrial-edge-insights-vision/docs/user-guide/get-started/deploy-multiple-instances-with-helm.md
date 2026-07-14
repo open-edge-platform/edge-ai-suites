@@ -742,7 +742,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 4. Install the package `boto3` in your python environment if not installed.
 
-   Intel recommends creating a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
+   Intel recommends creating a virtual environment and installing it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
 
    ```sh
    sudo apt update && \
