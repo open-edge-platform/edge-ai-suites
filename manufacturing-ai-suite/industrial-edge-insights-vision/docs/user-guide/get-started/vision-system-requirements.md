@@ -1,23 +1,22 @@
-# System Requirements
+# Industrial Edge Insights - Vision System Requirements
 
-This page provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
+This section shows detailed hardware, software, and platform requirements for Industrial Edge Insights - Vision applications, which comprises the Pallet Defect Detection and PCB Anomaly Detection use cases.
 
-## Supported Platforms
+See the specific system requirements for **HMI Augmented Worker** and **Win Vision AI** in their respective sections.
 
-**Operating Systems**
+## System Requirements
 
-- Ubuntu 22.04 LTS
-- Ubuntu 24.04 LTS
+| Requirement | Industrial Edge Insights - Vision |
+|---|---|
+| Processor | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors |
+| RAM (minimum) | 16 GB |
+| Storage (minimum) | 64 GB |
+| Operating system | Ubuntu 22.04 LTS or Ubuntu 24.04 LTS |
+| Python Programming Language Version | 3.10 or higher |
+| Docker Engine | Docker Engine 27.3.1 or higher |
+| Other required software or tools | Git, jq, unzip |
 
-## Minimum Requirements
-
-| **Component**      | **Minimum Requirement**   |
-|--------------------|---------------------------|
-| **Processor**      | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors   |
-| **Memory**         | 16 GB                     |
-| **Disk Space**     | 64 GB                     |
-
-### Validated Platforms
+## Validated Platforms
 
 | Product / Family     | CPU |  iGPU |  NPU |
 |----------------------|-----------|------------|-----------|
@@ -32,20 +31,11 @@ This page provides detailed hardware, software, and platform requirements to hel
 > **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
 > Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
-## Software Requirements
-
-**Required Software**:
-
-- Docker 27.3.1 or higher
-- Python 3.10+
-- Git, jq, unzip
-
 ## Validation
 
 Ensure all required software are installed and configured before proceeding to [Get Started](../get-started.md).
 
 ## Supporting Resources
 
-- [Overview](../index.md)
 - [Get Started Guide](../get-started.md)
-- [API Reference](../api-reference.md)
+
