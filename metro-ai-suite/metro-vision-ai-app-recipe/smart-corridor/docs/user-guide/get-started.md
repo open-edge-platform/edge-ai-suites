@@ -26,7 +26,7 @@ To get started:
 
 ## Setup and First Use
 
-1. **Clone the Suite**:
+**Clone the Suite**:
 
    Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -38,17 +38,6 @@ To get started:
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/metro-vision-ai-app-recipe/
    ```
-
-2. **Setup Application and Download Assets**:
-   - Use the installation script to configure the application and download required models:
-
-     ```bash
-     ./install.sh smart-corridor
-     ```
-
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
-> specify the IP address (Replace `<HOST_IP>` with your target IP address.):
-> `./install.sh smart-corridor <HOST_IP>`
 
 ## Multi-Machine Deployment (Parent / Child)
 
@@ -100,9 +89,9 @@ On the child machine, clone the repo and run the install script **without** sett
      ./install.sh smart-corridor
      ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
-> specify the IP address (Replace `<HOST_IP>` with your target IP address.):
-> `./install.sh smart-corridor <HOST_IP>`
+    > **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+    > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+    > `./install.sh smart-corridor <HOST_IP>`
 
    The installer detects a child deployment (no `TOTAL_REMOTE_CHILD` in `.env`) and
    automatically:
@@ -152,9 +141,9 @@ On the parent machine, configure the `.env` file to declare how many remote chil
      ./install.sh smart-corridor
      ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
-> specify the IP address (Replace `<HOST_IP>` with your target IP address.):
-> `./install.sh smart-corridor <HOST_IP>`
+    > **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+    > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+    > `./install.sh smart-corridor <HOST_IP>`
 
    The installer detects a parent deployment and automatically:
    - Keeps the parent pipeline config (camera1–camera4 + camera5)
