@@ -1,12 +1,13 @@
-# Benchmark Pallet Defect Detection
+# Benchmark Vision AI Detection Apps
 
-This guide demonstrates how to benchmark the pallet defect detection pipeline to determine optimal stream density and performance characteristics.
+This guide demonstrates how to benchmark the detection pipeline to determine
+optimal stream density and performance characteristics.
 
 ## Contents
 
 ### Prerequisites
 
-> Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
+> **Note:** Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
 - `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed
@@ -21,7 +22,7 @@ Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge
 
 **Arguments:**
 
-- `-p <pipeline_name>` : **(Required)** The name of the pipeline to benchmark (e.g., pallet_defect_detection)
+- `-p <pipeline_name>` : **(Required)** The name of the pipeline to benchmark (e.g., pallet_defect_detection or pcb_anomaly_classification)
 - `-l <lower_bound>` : **(Required)** Starting lower bound for number of streams
 - `-u <upper_bound>` : **(Required)** Starting upper bound for number of streams
 - `-t <target_fps>` : Target FPS threshold (default: 14.95)
@@ -33,12 +34,14 @@ The benchmark script automatically uses the configured sample application and it
 
 1. **Application Selection**: The script reads `SAMPLE_APP` from the `.env` file to determine which application to benchmark
 2. **Payload Configuration**: Uses the standard `payload.json` file from the selected application directory (`apps/${SAMPLE_APP}/payload.json`)
-3. **Pipeline Selection**: Choose from available pipelines in the payload file (e.g., `pallet_defect_detection`, `pallet_defect_detection_gpu`)
+3. **Pipeline Selection**: Choose from available pipelines in the payload file:
 
-Available pipelines for pallet defect detection:
 
 - **`pallet_defect_detection`**: CPU-based detection pipeline
 - **`pallet_defect_detection_gpu`**: GPU-accelerated detection pipeline with optimized settings
+- **`pcb_anomaly_classification`**: CPU-based anomaly classification pipeline
+- **`pcb_anomaly_classification_gpu`**: GPU-accelerated anomaly classification pipeline with optimized settings
+
 
 ### Recommended Pipeline Parameters
 
@@ -55,9 +58,13 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization
 - `nireq=2`: Number of inference requests to run in parallel
 - `ie-config="GPU_THROUGHPUT_STREAMS=2"`: Intel OpenVINO engine streams configuration
-- `threshold=0.7`: Detection confidence threshold (70%)
+- `threshold=0.7`: (recommended for Pallet Defect Detection) Detection confidence threshold (70%)
 
 ### Steps to run benchmarks
+
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+<!--hide_directive :sync: tab1   hide_directive-->
 
 1. **Set up the environment**: Ensure `SAMPLE_APP=pallet-defect-detection` is set in your `.env` file
 
@@ -74,6 +81,30 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ```
 
    > NOTE: The script automatically uses the payload.json file from the configured sample application directory.
+
+
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive :sync: tab2   hide_directive-->
+
+1. **Set up the environment**: Ensure `SAMPLE_APP=pcb-anomaly-detection` is set in your `.env` file
+
+2. **Test CPU performance**:
+   ```bash
+   ./benchmark_start.sh -p pcb_anomaly_classification -l 1 -u 10 -t 25.0 -i 30
+   ```
+
+3. **Test GPU performance** (if available):
+   ```bash
+   ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
+   ```
+
+   > NOTE: The script automatically uses the payload.json file from the configured sample application directory.
+
+<!--hide_directive
+:::
+::::
+hide_directive-->
+
 
 ### Understanding Results
 
@@ -126,6 +157,22 @@ throughput cumulative: 173.8
 4. **Debug Mode**
    Add `--trace` to see detailed execution steps:
 
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: tab1   hide_directive-->
+
    ```bash
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
    ```
+
+   <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive :sync: tab2   hide_directive-->
+
+   ```bash
+   ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 10 --trace
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
