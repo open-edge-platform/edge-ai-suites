@@ -29,8 +29,6 @@ Real-time visual detection of anomalies in printed circuit boards.
 ::::
 hide_directive-->
 
-See [Industrial Edge Insights - Vision System Requirements] for the Pallet Defect Detection, PCB Anomaly Detection, Weld Porosity Detection, Worker and Safety Gear Detection common system requirements.
-
 [Win Vision AI](./win-vision-ai/index.md), in contrast to the other vision applications, is a more
 generalised Python-based Windows application for running multiple AI inference pipelines on
 any DL Streamer-compatible models, with flexible input and output options. It can be used as

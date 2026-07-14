@@ -35,8 +35,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
    | PCB Anomaly Detection   | pcb-anomaly-detection |
-   | Weld Porosity Detection | weld-porosity |
-   | Worker Safety Gear Detection | worker-safety-gear-detection |
 
 3. Edit the following environment variables in the `.env` file. Replace "<APP>" with the desired value from the table that follows:
 
@@ -56,8 +54,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
    | PCB Anomaly Detection   | pcb-anomaly-detection |
-   | Weld Porosity Detection | weld-porosity |
-   | Worker Safety Gear Detection | worker-safety-gear-detection |
 
 4. Install the prerequisites. Run with sudo if needed.
 
@@ -135,8 +131,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
    | PCB Anomaly Detection   | pcb_anomaly_detection |
-   | Weld Porosity Detection | weld_porosity_classification |
-   | Worker Safety Gear Detection | worker_safety_gear_detection |
    
    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server. Refer to the table for different options.
 
@@ -174,8 +168,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | https://<HOST_IP>/mediamtx/pdd/ |
    | PCB Anomaly Detection   | https://<HOST_IP>/mediamtx/anomaly/ |
-   | Weld Porosity Detection | https://<HOST_IP>/mediamtx/weld/ |
-   | Worker Safety Gear Detection | https://<HOST_IP>/mediamtx/worker_safety/ |
 
 4. Get the status of running pipeline instance(s):
 

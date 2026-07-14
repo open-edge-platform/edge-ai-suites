@@ -119,8 +119,6 @@ configured Kubernetes cluster.
    ```
 
    > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
-   
-   > **Note:** For Worker Safety Gear Detection's GPU- or NPU-based pipelines, set ``privileged_access_required: true`` in the helm/values.yaml file to enable access to host hardware devices.
 
 4. Install prerequisites for all instances
 
@@ -173,15 +171,11 @@ configured Kubernetes cluster.
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   | Weld Porosity Detection | weld-porosity/videos/welding |
-   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
    
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
    | PCB Anomaly Detection   | pcb-anomaly-detection |
-   | Weld Porosity Detection | weld-porosity |
-   | Worker Safety Gear Detection | worker-safety-gear-detection|  
 
 ### Start AI pipelines
 
@@ -195,7 +189,7 @@ configured Kubernetes cluster.
 
    This lists the pipeline loaded in DL Streamer Pipeline Server.
 
-   Output example of two pallet-defect-detection instances and one weld-porosity instance:
+   Output example of two pallet-defect-detection instances and one pcb-anomaly-detection instance:
 
    ```text
    -------------------------------------------
@@ -278,7 +272,7 @@ configured Kubernetes cluster.
    ./sample_start.sh helm
    ```
 
-   Output example of two pallet-defect-detection instances and one weld-porosity instance:
+   Output example of two pallet-defect-detection instances and one pcb-anomaly-detection instance:
 
    ```text
    No pipeline specified. Starting the first pipeline.
@@ -488,7 +482,7 @@ configured Kubernetes cluster.
 
    This command lists status of pipeline instances launched during the lifetime of sample application of all instances in the config file
 
-   Output example of two pallet-defect-detection instances and one weld-porosity instance:
+   Output example of two pallet-defect-detection instances and one pcb-anomaly-detection instance:
 
    ```text
    No arguments provided. Fetching status for all pipeline instances.
@@ -583,7 +577,7 @@ configured Kubernetes cluster.
    ./sample_stop.sh helm
    ```
 
-   Output example of two pallet-defect-detection instances and one weld-porosity instance:
+   Output example of two pallet-defect-detection instances and one pcb-anomaly-detection instance:
 
    ```text
    No pipelines specified. Stopping all pipeline instances
@@ -740,15 +734,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   | Weld Porosity Detection | weld-porosity/videos/welding |
-   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
    
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
    | PCB Anomaly Detection   | pcb-anomaly-detection |
-   | Weld Porosity Detection | weld-porosity |
-   | Worker Safety Gear Detection | worker-safety-gear-detection|  
 
 4. Install the package `boto3` in your python environment if not installed.
 
@@ -848,52 +838,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
       }
    }'
    ```
-   
-   Weld Porosity Classification:
-   
-   ```sh
-    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
-        "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
-            "type": "uri"
-        },
-        "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "welds3"
-            }
-        },
-        "parameters": {
-            "classification-properties": {
-                "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
-   ```
-   
-   Worker Safety Gear Detection:
-   
-   ```sh
-    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
-        "source": {
-            "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
-            "type": "uri"
-        },
-        "destination": {
-            "frame": {
-                "type": "webrtc",
-                "peer-id": "worker_safety_gear_detection_s3"
-            }
-        },
-        "parameters": {
-            "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
-                "device": "CPU"
-            }
-        }
-    }'
-   ```
 
 7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
@@ -934,15 +878,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   | Weld Porosity Detection | weld-porosity/videos/welding |
-   | Worker Safety Gear Detection | worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest|
    
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
    | PCB Anomaly Detection   | pcb-anomaly-detection |
-   | Weld Porosity Detection | weld-porosity |
-   | Worker Safety Gear Detection | worker-safety-gear-detection|
 
 4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
@@ -1001,58 +941,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
       }
    ]
    ```
-   
-   Weld Porosity Classification:
-   
-   ```json
-    [
-        {
-            "pipeline": "weld_porosity_classification_mlops",
-            "payload": {
-                "destination": {
-                    "frame": {
-                        "type": "webrtc",
-                        "peer-id": "weld"
-                    }
-                },
-                "parameters": {
-                    "classification-properties": {
-                        "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
-                        "device": "CPU"
-                    }
-                }
-            }
-        }
-    ]
-   ```
-   
-   Worker Safety Gear Detection:
-   
-   ```json
-    [
-        {
-            "pipeline": "worker_safety_gear_detection_mlops",
-            "payload":{
-                "source": {
-                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
-                    "type": "uri"
-                },
-                "destination": {
-                "frame": {
-                    "type": "webrtc",
-                    "peer-id": "worker_safety"
-                }
-                },
-                "parameters": {
-                    "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/worker-safety-gear-detection/deployment/Detection/model/model.xml",
-                        "device": "CPU"
-                    }
-                }
-            }
-        }
-    ]
-   ```
 
 5. Start the pipeline with the above payload.
 
@@ -1067,8 +955,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
    | PCB Anomaly Detection   | pcb_anomaly_detection |
-   | Weld Porosity Detection | weld_porosity_classification |
-   | Worker Safety Gear Detection | worker_safety_gear_detection |
 
 6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows: 
 
@@ -1086,8 +972,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | 06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection |
    | PCB Anomaly Detection   | 6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection |
-   | Weld Porosity Detection | d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification |
-   | Worker Safety Gear Detection | 06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/worker-safety-gear-detection |
 
 7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
 
@@ -1162,58 +1046,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
          }
       }
    ]
-   ```
-
-   Weld Porosity:
-
-   ```json
-    [
-        {
-            "pipeline": "weld_porosity_classification_mlops",
-            "payload": {
-                "destination": {
-                    "frame": {
-                        "type": "webrtc",
-                        "peer-id": "weld"
-                    }
-                },
-                "parameters": {
-                    "classification-properties": {
-                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Classification/model/model.xml",
-                        "device": "CPU"
-                    }
-                }
-            }
-        }
-    ]
-    ```   
-
-   Worker Safety Gear Detection:
-   
-   ```json
-    [
-        {
-            "pipeline": "worker_safety_gear_detection_mlops",
-            "payload":{
-                "source": {
-                    "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",
-                    "type": "uri"
-                },
-                "destination": {
-                "frame": {
-                    "type": "webrtc",
-                    "peer-id": "worker_safety"
-                }
-                },
-                "parameters": {
-                    "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
-                        "device": "CPU"
-                    }
-                }
-            }
-        }
-    ]
    ```
 
 10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
