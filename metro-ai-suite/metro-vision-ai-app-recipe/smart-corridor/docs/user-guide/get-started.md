@@ -61,12 +61,12 @@ Child Machine (e.g., 10.223.22.20)
 └── CA Server (port 8888, serves CA cert to parent)
 ```
 
-> **Note:** For a single-machine deployment (no remote children), skip this section and go
-> directly to [Deploy a Parent Machine](#deploy-a-parent-machine).
+> **Note:** For a single-node deployment (no remote child), skip this section and go
+> directly to [Deploy a Parent Node](#deploy-a-parent-node).
 
-### Deploy a Child Machine
+### Deploy a Child Node
 
-On the child machine, clone the repo and run the install script **without** setting
+On the child node, clone the repo and run the install script **without** setting
 `TOTAL_REMOTE_CHILD` in the `.env` file:
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
@@ -105,9 +105,9 @@ On the child machine, clone the repo and run the install script **without** sett
    docker compose up -d
    ```
 
-### Deploy a Parent Machine
+### Deploy a Parent Node
 
-On the parent machine, configure the `.env` file to declare how many remote children exist:
+On the parent machine, configure the `.env` file to declare how many remote child nodes exist:
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
 
@@ -153,8 +153,8 @@ On the parent machine, configure the `.env` file to declare how many remote chil
  
 ### Important Notes for Multi-Machine Deployments
 
-- **Deploy children first**: The parent's `ca-bundle.sh` fetches CA certificates from
-  children via HTTP (port 8888). Children must be running before the parent install.
+- **Deploy child nodes first**: The parent's `ca-bundle.sh` fetches CA certificates from
+  child nodes via HTTP (port 8888). **Child nodes must be running before the parent node installation.**
 - **Network access**: Port 8888 (CA server) and port 1883 (MQTT TLS) must be accessible
   between machines.
 - **Scene configuration**: After deployment, add the remote child scene in the SceneScape
