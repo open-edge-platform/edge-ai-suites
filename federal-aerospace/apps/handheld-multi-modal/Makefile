@@ -130,8 +130,10 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 		sed -i 's|SAMEORIGIN|frame-ancestors|' $(VIPPET_CWD)/ui/nginx.conf; \
 		echo "✓ nginx.conf patched (frame-ancestors added)"; \
 	fi; \
-	## pallet_defect_detection needs updated model server (higher than 2026.1.0), otherwise it will fail to download
+	# pallet_defect_detection needs updated model server (higher than 2026.1.0), otherwise it will fail to download
 	yq -i -y 'del(.[] | select(.name == "pallet_defect_detection"))' $(VIPPET_CWD)/shared/models/supported_models.yaml; \
+	# disable HTTP port with metrics
+	yq -i -y '.services."metrics-manager".ports = ["9090:9090"]' $(VIPPET_CWD)/compose.yml; \
 	echo "✓ vippet configured (telegraf.conf copied)"
 
 vippet-up: vippet-configure ## Start vippet (builds images, installs all models, starts stack)
