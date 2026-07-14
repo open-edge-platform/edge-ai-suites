@@ -357,10 +357,7 @@ export_model_for_ovms() {
         -o "$get_model_script" || { echo -e "${RED}ERROR: Failed to download get_model.sh${NC}"; return 1; }
     chmod +x "$get_model_script"
 
-    local hub="huggingface"
-
     echo -e "${BLUE}==> Downloading/converting model via model-download ephemeral container...${NC}"
-    echo -e "[ovms-service] ${BLUE}Hub:           ${YELLOW}${hub}${NC}"
 
     # Pass HuggingFace token via env var if set
     if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
