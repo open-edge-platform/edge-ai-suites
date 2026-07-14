@@ -19,6 +19,13 @@ DELETE_CHUNK_AFTER_USE = config.pipeline.delete_chunks_after_use
 threads_limit = config.models.asr.threads_limit
 THREADS_LIMIT = threads_limit if threads_limit and threads_limit > 0 else None
 
+# Max characters allowed per merged segment. A positive value splits long
+# same-speaker runs into multiple segments (so a single-speaker session isn't
+# collapsed into one block); 0 / Null disables merging entirely (segments are
+# left as-is).
+_max_chars = getattr(config.models.asr, "max_chars_per_segment", None)
+MAX_CHARS_PER_SEGMENT = _max_chars if isinstance(_max_chars, int) and _max_chars > 0 else 0
+
 # ===== Speaker label localization map =====
 
 SPEAKER_LABEL_MAP = {
@@ -53,6 +60,7 @@ class ASRComponent(PipelineComponent):
         self.model_name = model_name
         self.speaker_text_len = {}
         self.threads_limit = THREADS_LIMIT
+        self.max_chars_per_segment = MAX_CHARS_PER_SEGMENT
         self.enable_diarization = ENABLE_DIARIZATION
         self.all_segments = []
 
@@ -92,6 +100,24 @@ class ASRComponent(PipelineComponent):
             if not c.isspace() and not unicodedata.category(c).startswith("P")
         )
 
+    # Characters that mark a natural sentence/clause boundary we can safely
+    # split a segment on (ASCII + common CJK punctuation).
+    _SENTENCE_END_CHARS = frozenset(".!?…;。！？；")
+    # Closing quotes/brackets that may trail the actual sentence-ending mark,
+    # e.g.  he said "go!"  or  （见下文。）
+    _TRAILING_WRAP_CHARS = frozenset("\"'”’)）]】}」』")
+
+    @classmethod
+    def _ends_at_sentence_boundary(cls, text: str) -> bool:
+        # True when `text` ends on sentence-ending punctuation, ignoring any
+        # trailing closing quotes/brackets. Used to avoid cutting a segment
+        # mid-word / mid-sentence when the length cap is exceeded.
+        stripped = text.rstrip()
+        idx = len(stripped) - 1
+        while idx >= 0 and stripped[idx] in cls._TRAILING_WRAP_CHARS:
+            idx -= 1
+        return idx >= 0 and stripped[idx] in cls._SENTENCE_END_CHARS
+
     def _denoised_segments(self):
         # Drop segments with =1 meaningful character ?almost always ASR noise
         # (stray punctuation, "?,", "?,", "a") that inflates token count
@@ -103,6 +129,14 @@ class ASRComponent(PipelineComponent):
         ]
 
     def _merge_segments_by_speaker(self):
+        limit = self.max_chars_per_segment
+
+        # Cap disabled (limit <= 0): skip merging entirely (and the denoising /
+        # sorting that feeds it) and return the raw segments as-is, so nothing
+        # is ever dropped or collapsed.
+        if limit <= 0:
+            return self.all_segments
+
         denoised = self._denoised_segments()
         if not denoised:
             return []
@@ -110,12 +144,18 @@ class ASRComponent(PipelineComponent):
         ordered = sorted(denoised, key=lambda s: s["start"])
         merged = []
         for seg in ordered:
-            if merged and merged[-1]["speaker"] == seg["speaker"]:
-                prev = merged[-1]
-                prev["text"] = f"{prev['text']} {seg['text']}".strip()
-                prev["end"] = max(prev["end"], seg["end"])
-            else:
-                merged.append(dict(seg))
+            prev = merged[-1] if merged else None
+            if prev is not None and prev["speaker"] == seg["speaker"]:
+                within_cap = len(prev["text"]) + 1 + len(seg["text"]) <= limit
+                # Under the cap: keep merging. Over the cap: don't break yet
+                # unless the accumulated text already ends on a sentence
+                # boundary — otherwise keep buffering so we never split a word
+                # or sentence mid-way, and cut at the next punctuation instead.
+                if within_cap or not self._ends_at_sentence_boundary(prev["text"]):
+                    prev["text"] = f"{prev['text']} {seg['text']}".strip()
+                    prev["end"] = max(prev["end"], seg["end"])
+                    continue
+            merged.append(dict(seg))
         return merged
     
     def process(self, input_generator):
