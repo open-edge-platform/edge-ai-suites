@@ -14,13 +14,13 @@
 #
 # Usage
 #   .\src\setup_genicam_runtime.ps1
-#   .\src\setup_genicam_runtime.ps1 -ReleaseTag "v2026.1.0-rc2"
+#   .\src\setup_genicam_runtime.ps1 -ReleaseTag "2026.1"
 #   .\src\setup_genicam_runtime.ps1 -BinDir "D:\my\bin" -TempDir "D:\tmp"
 #
 # Parameters
 #   -ReleaseTag  GitHub release tag for edge-ai-libraries containing
 #                gstgencamsrc-plugin.zip with gstgencamsrc.dll.
-#                Default: v2026.1.0-rc2
+#                Default: 2026.1
 #   -BinDir   Destination folder for gstgencamsrc.dll.
 #             Default: <repo-root>\bin  (relative to this script's location)
 #   -OutDir   Destination folder for the GenICam VC120 runtime DLLs.
@@ -30,7 +30,7 @@
 # ==============================================================================
 
 param(
-    [string]$ReleaseTag = "v2026.1.0-rc2",
+    [string]$ReleaseTag = "2026.1",
     [string]$BinDir  = "$PSScriptRoot\..\bin",
     [string]$OutDir  = "",
     [string]$TempDir = "C:\tmp"

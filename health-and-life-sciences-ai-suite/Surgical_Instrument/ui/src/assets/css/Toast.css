@@ -1,0 +1,42 @@
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #0071c5;
+    color: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    min-width: 300px;
+  }
+  
+  .toast-message {
+    flex: 1;
+    margin-right: 16px;
+    font-size: 14px;
+  }
+  
+  .toast-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .copy-button,
+  .close-button {
+    background: #fff;
+    color: #0071c5;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .copy-button:hover,
+  .close-button:hover {
+    background: #e6e7e8;
+  }

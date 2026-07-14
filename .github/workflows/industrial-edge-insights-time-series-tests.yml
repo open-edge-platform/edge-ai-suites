@@ -28,11 +28,19 @@ on:
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
           test_docker_influxdb_retention,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
-          test_docker_deployment_multimodal, test_helm_deployment_multimodal.
+          test_GPU_docker, test_GPU_helm,
+          test_docker_deployment_multimodal, test_helm_deployment_multimodal,
+          test_GPU_docker_multimodal, test_GPU_helm_multimodal,
+          test_NPU_docker_multimodal, test_NPU_helm_multimodal.
           Node ID format (single function): test_docker_deployment_wind_turbine::test_make_up_mqtt.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
+      include_gpu_tests:
+        description: 'Include GPU tests in all-tests/timeseries-all selectors (yes/no)'
+        required: false
+        type: string
+        default: 'no'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
@@ -43,6 +51,14 @@ on:
         required: false
         type: string
         default: 'ubuntu-24.04'
+      suites_repo:
+        description: 'Repository to checkout (leave empty to use current repository)'
+        required: false
+        type: string
+      suites_ref:
+        description: 'Branch or tag to checkout from suites_repo (leave empty to use tag input)'
+        required: false
+        type: string
   workflow_call:
     inputs:
       tag:
@@ -63,11 +79,19 @@ on:
           test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
           test_docker_influxdb_retention,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
-          test_docker_deployment_multimodal, test_helm_deployment_multimodal.
+          test_GPU_docker, test_GPU_helm,
+          test_docker_deployment_multimodal, test_helm_deployment_multimodal,
+          test_GPU_docker_multimodal, test_GPU_helm_multimodal,
+          test_NPU_docker_multimodal, test_NPU_helm_multimodal.
           Node ID format (single function): test_docker_deployment_wind_turbine::test_make_up_mqtt.
           Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
+      include_gpu_tests:
+        description: 'Include GPU tests in all-tests/timeseries-all selectors (yes/no)'
+        required: false
+        type: string
+        default: 'no'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
@@ -78,6 +102,14 @@ on:
         required: false
         type: string
         default: 'ubuntu-24.04'
+      suites_repo:
+        description: 'Repository to checkout (leave empty to use current repository)'
+        required: false
+        type: string
+      suites_ref:
+        description: 'Branch or tag to checkout from suites_repo (leave empty to use tag input)'
+        required: false
+        type: string
 permissions: {}
 
 env:
@@ -98,18 +130,20 @@ jobs:
           TAG: ${{ inputs.tag || github.ref }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+          INCLUDE_GPU_TESTS: ${{ inputs.include_gpu_tests || 'no' }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           echo "tag/ref         : $TAG"
           echo "build           : $BUILD"
           echo "tests           : $TESTS"
+          echo "include_gpu_tests: $INCLUDE_GPU_TESTS"
           echo "skip_long_tests : $SKIP_LONG_TESTS"
 
       - name: Checkout edge-ai-suites repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          # Use current repository (supports forks) and specified tag/branch or current ref
-          ref: ${{ inputs.tag || github.ref }}
+          repository: ${{ inputs.suites_repo || github.repository }}
+          ref: ${{ inputs.suites_ref || inputs.tag || github.ref }}
           persist-credentials: false
 
       - name: Resolve edge-ai-libraries ref
@@ -288,12 +322,13 @@ jobs:
       - name: Run Time Series Wind and Weld functional tests
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+          INCLUDE_GPU_TESTS: ${{ inputs.include_gpu_tests || 'no' }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Core time-series test files excluding security.
           TIMESERIES_CORE_TESTS="test_docker_deployment_stability \
             test_docker_deployment_wind_turbine test_docker_influxdb_retention \
-            test_helm_deployment_wind_turbine \
+            test_helm_deployment_wind_turbine test_GPU_docker test_GPU_helm \
             test_helm_influxdb_retention"
 
           # Skip if only multimodal tests are selected
@@ -345,10 +380,10 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
-          # When running the full suite, ignore GPU tests (require GPU-capable runners).
-          # GPU test files remain individually selectable via the `tests` input.
+          # When running the full suite, ignore GPU tests unless explicitly enabled.
+          # GPU test files remain individually selectable via the tests input.
           IGNORE_ARGS=()
-          if [[ "$RUN_ALL_TS" == "true" ]]; then
+          if [[ "$RUN_ALL_TS" == "true" && "$INCLUDE_GPU_TESTS" != "yes" ]]; then
             IGNORE_ARGS=(
               --ignore=test_GPU_docker.py
               --ignore=test_GPU_helm.py
@@ -741,7 +776,9 @@ jobs:
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Multimodal-specific test files
-          MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal"
+          MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal \
+            test_GPU_docker_multimodal test_GPU_helm_multimodal \
+            test_NPU_docker_multimodal test_NPU_helm_multimodal"
 
           # Skip if only timeseries tests are selected
           # Parse comma-separated input, trim whitespace from each entry

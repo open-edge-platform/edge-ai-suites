@@ -15,6 +15,7 @@ OPENAI_CLIP_MEAN = np.array([0.48145466, 0.4578275, 0.40821073], dtype=np.float3
 OPENAI_CLIP_STD = np.array([0.26862954, 0.26130258, 0.27577711], dtype=np.float32)
 IMAGE_SIZE = 224
 MAX_SEQ_LEN = 77
+ONNX_OPSET_VERSION = 18
 
 
 class CLIPHandler:
@@ -79,8 +80,9 @@ class CLIPHandler:
             model.visual, dummy_image, onnx_visual,
             input_names=["image"],
             output_names=["image_features"],
-            dynamic_axes={"image": {0: "batch"}},
-            opset_version=14,
+            dynamic_shapes=({0: torch.export.Dim("batch")},),
+            opset_version=ONNX_OPSET_VERSION,
+            dynamo=True,
         )
 
         # Export text encoder
@@ -90,21 +92,32 @@ class CLIPHandler:
             model.text, dummy_text, onnx_text,
             input_names=["input_ids"],
             output_names=["text_features"],
-            dynamic_axes={"input_ids": {0: "batch", 1: "seq_len"}},
-            opset_version=14,
+            dynamic_shapes=({0: torch.export.Dim("batch"), 1: torch.export.Dim("seq_len")},),
+            opset_version=ONNX_OPSET_VERSION,
+            dynamo=True,
         )
 
-        # Convert ONNX to OpenVINO IR
-        import openvino as ov
-        ov_visual = ov.convert_model(onnx_visual)
-        ov.save_model(ov_visual, str(model_dir / "visual.xml"), compress_to_fp16=True)
+        # Convert ONNX to OpenVINO IR.
+        # openvino's convert_model probes the PyTorch frontend first, which calls
+        # torch.export.load() on the .onnx file and logs a noisy (harmless) failure
+        # before falling back to the ONNX frontend. Silence just that probe.
+        torch_export_log = logging.getLogger("torch.export")
+        prev_level = torch_export_log.level
+        torch_export_log.setLevel(logging.ERROR)
+        try:
+            import openvino as ov
+            ov_visual = ov.convert_model(onnx_visual)
+            ov.save_model(ov_visual, str(model_dir / "visual.xml"), compress_to_fp16=True)
 
-        ov_text = ov.convert_model(onnx_text)
-        ov.save_model(ov_text, str(model_dir / "text.xml"), compress_to_fp16=True)
+            ov_text = ov.convert_model(onnx_text)
+            ov.save_model(ov_text, str(model_dir / "text.xml"), compress_to_fp16=True)
+        finally:
+            torch_export_log.setLevel(prev_level)
 
         # Clean up ONNX intermediates
-        os.remove(onnx_visual)
-        os.remove(onnx_text)
+        for onnx_file in (onnx_visual, onnx_text):
+            for stale in model_dir.glob(Path(onnx_file).name + "*"):
+                stale.unlink(missing_ok=True)
 
         # Save tokenizer locally
         tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")

@@ -450,21 +450,23 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                     </div>
                   )}
 
-                  <div className="side-streams-container">
-                    {isValidStream(streams.back) && (
-                      <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
-                        <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
-                      </div>
-                    )}
+                  {(isValidStream(streams.back) || isValidStream(streams.content)) && (
+                    <div className="side-streams-container">
+                      {isValidStream(streams.back) && (
+                        <div className="side-stream">
+                          <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
+                          <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
+                        </div>
+                      )}
 
-                    {isValidStream(streams.content) && (
-                      <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
-                        <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
-                      </div>
-                    )}
-                  </div>
+                      {isValidStream(streams.content) && (
+                        <div className="side-stream">
+                          <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
+                          <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )} 
 

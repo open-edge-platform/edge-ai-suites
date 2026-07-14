@@ -1,0 +1,126 @@
+/* Lightweight CSS-only tooltip. Add `data-tooltip="…"` to any element.
+ * Optional `data-tooltip-pos="top|bottom|left|right"` (default: bottom).
+ * Skips native browser tooltips (no `title=`) to avoid double-render + long delay. */
+
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after,
+[data-tooltip]::before {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+  z-index: 10001;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: #ffffff;
+  color: #2b2c30;
+  font-family: var(--font-text, system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 4px;
+  max-width: 260px;
+  width: max-content;
+  white-space: normal;
+  text-align: center;
+  border: 1px solid #cfd8e3;
+  box-shadow: 0 4px 16px rgba(43, 44, 48, 0.12);
+}
+
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  border: 5px solid transparent;
+}
+
+/* --- position: bottom (default) --- */
+[data-tooltip]::after,
+[data-tooltip][data-tooltip-pos='bottom']::after {
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+}
+[data-tooltip]::before,
+[data-tooltip][data-tooltip-pos='bottom']::before {
+  top: calc(100% + 0px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  border-bottom-color: #cfd8e3;
+}
+
+/* --- position: top --- */
+[data-tooltip][data-tooltip-pos='top']::after {
+  top: auto;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+}
+[data-tooltip][data-tooltip-pos='top']::before {
+  top: auto;
+  bottom: calc(100% + 0px);
+  transform: translateX(-50%) translateY(4px);
+  border-bottom-color: transparent;
+  border-top-color: #cfd8e3;
+}
+
+/* --- position: left --- */
+[data-tooltip][data-tooltip-pos='left']::after {
+  top: 50%;
+  left: auto;
+  right: calc(100% + 10px);
+  transform: translateY(-50%) translateX(4px);
+}
+[data-tooltip][data-tooltip-pos='left']::before {
+  top: 50%;
+  left: auto;
+  right: calc(100% + 0px);
+  transform: translateY(-50%) translateX(4px);
+  border-bottom-color: transparent;
+  border-left-color: #cfd8e3;
+}
+
+/* --- position: right --- */
+[data-tooltip][data-tooltip-pos='right']::after {
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%) translateX(-4px);
+}
+[data-tooltip][data-tooltip-pos='right']::before {
+  top: 50%;
+  left: calc(100% + 0px);
+  transform: translateY(-50%) translateX(-4px);
+  border-bottom-color: transparent;
+  border-right-color: #cfd8e3;
+}
+
+/* --- reveal on hover / keyboard focus --- */
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::after,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+[data-tooltip][data-tooltip-pos='left']:hover::after,
+[data-tooltip][data-tooltip-pos='left']:hover::before,
+[data-tooltip][data-tooltip-pos='left']:focus-visible::after,
+[data-tooltip][data-tooltip-pos='left']:focus-visible::before,
+[data-tooltip][data-tooltip-pos='right']:hover::after,
+[data-tooltip][data-tooltip-pos='right']:hover::before,
+[data-tooltip][data-tooltip-pos='right']:focus-visible::after,
+[data-tooltip][data-tooltip-pos='right']:focus-visible::before {
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Disabled buttons still keep pointer events for hover to fire the tooltip. */
+[data-tooltip]:disabled {
+  pointer-events: auto;
+}
