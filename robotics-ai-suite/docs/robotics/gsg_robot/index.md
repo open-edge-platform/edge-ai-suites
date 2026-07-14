@@ -92,29 +92,18 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 ### 3. Express Setup: Prepare your ROS 2 Environment
 
-In order to execute any ROS 2 command in a new shell, you first have to source
-the ROS 2 ``setup.bash``. This will set the ``ROS_DOMAIN_ID`` for your
-ROS 2 communication graph.
+The Robotics AI Suite Installer automatically sets ``ROS_DOMAIN_ID`` environment variable
+to a random number between 0 and 100 within your ``.bashrc`` configuration.
+
+To use ROS 2 commands in a new shell, source ROS 2 shell setup script:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ```
 
-> **Note:** Use an individual ``ROS_DOAMIN_ID`` for every ROS 2
+> **Note:** Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
 > node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
 > in handling messages.
-
-- If you miss to source the ROS 2 setup bash script, you will not be able
-  to execute any ROS 2 command.
-
-- If you do not have a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
-  be executed and may partially behave as expected. But you have to expect a diversity of
-  unexpected behaviors too.
-
-  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
-    expected to participate in a given ROS 2 graph.
-  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
-    graph, in order to avoid conflicts in message handling.
 
 ### 4. Express Setup: Next steps
 
@@ -320,17 +309,15 @@ echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 
 #### 2.3 Important Notes
 
-- If you miss to source the ROS 2 setup bash script, you will not be able
-  to execute any ROS 2 command.
+To use ROS 2 commands in a new shell, source ROS 2 shell setup script:
 
-- If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
-  be executed and may partially behave as expected. But you have to expect a diversity of
-  unexpected behaviors too.
+```bash
+source /opt/ros/jazzy/setup.bash
+```
 
-  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
-    expected to participate in a given ROS 2 graph.
-  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
-    graph, in order to avoid conflicts in message handling.
+> **Note:** Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
+> node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
+> in handling messages.
 
 ### 3. Set up the Autonomous Mobile Robot APT Repositories
 
@@ -357,7 +344,7 @@ This section explains the procedure to configure the APT package manager to use 
    echo -e "Package: *\nPin: origin amrdocs.intel.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/amr
    ```
 
-5. Configure the APT repository of the Intel® oneAPI Base Toolkit:
+5. Configure the APT repository for the Intel® oneAPI Base Toolkit:
 
    ```bash
    wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
@@ -926,9 +913,9 @@ sudo reboot
 
 At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
-## Optional - Enabling Intel® GPU
+## Optional - Enabling Intel® Silcon on Ubuntu 22.04
 
-If you are using Intel® silcon on an older OS distribution (Ex: Ubuntu 22)
+If you are using Intel® silcon on an Ubuntu 22
 and are having trouble getting the Intel® GPU functioning, you may
 need to install a newer Linux kernel, firmware, and GPU drivers from
 development.
@@ -952,69 +939,78 @@ development.
    echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
    ```
 
-4. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
-
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+4. For latest Intel silicon support, add the Canonical ``kisak`` Private Package Archives (PPA):
 
    ```bash
    sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 5. Install mesa packages from ``kisak`` PPA:
-
-   <!--hide_directive:::::{tab-set}hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
    ```
 
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive:::::hide_directive-->
-
-6. Install the latest Linux kernel:
+6. Install the latest supported Linux kernel:
 
    ```bash
-   sudo apt install linux-intel-rt-experimental
+   sudo apt install linux-intel-experimental
    ```
 
-7. Install the ``eci-customizations`` package to populate the GRUB menu
-   with the latest Linux kernel:
+7. Install the ``eci-customizations`` package to populate the GRUB menu:
 
    ```bash
    sudo apt install eci-customizations
    ```
 
-8. Install GuC and HuC Linux firmware package:
+8. Install Linux firmware package:
 
    ```bash
    sudo apt install linux-firmware
    ```
 
-9. Reboot the system to allow the latest Linux kernel to boot.
+9. Reboot the system to allow the kernel and firmware to load.
+
+## Optional - Enabling Real-time Linux kernel
+
+1. Download the ECI APT key to the system keyring:
+
+   ```bash
+   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   ```
+
+2. Add the signed entry to ECI APT sources and configure the APT client to use the ECI APT repository:
+
+   ```bash
+   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list > /dev/null
+   echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee -a /etc/apt/sources.list.d/eci.list > /dev/null
+   ```
+
+3. Configure the ECI APT repository to have higher priority over other repositories:
+
+   ```bash
+   echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" | sudo tee /etc/apt/preferences.d/isar
+   ```
+
+4. Install the latest supported real-time Linux kernel:
+
+   ```bash
+   sudo apt install linux-intel-rt-experimental
+   ```
+
+5. Install the ``eci-customizations`` package to populate the GRUB menu:
+
+   ```bash
+   sudo apt install eci-customizations
+   ```
+
+6. Install Linux firmware package:
+
+   ```bash
+   sudo apt install linux-firmware
+   ```
+
+7. Reboot the system to allow the real-time Linux kernel to boot.
 
 ## Installation Troubleshooting
 
