@@ -312,7 +312,6 @@ configured Kubernetes cluster.
    ------------------------------------------
    Processing instance: pcb1 from SAMPLE_APP: pcb-anomaly-detection
    ------------------------------------------
-
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
    Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: 1<HOST_IP>:<NGINX_HTTPS_PORT>
