@@ -264,7 +264,7 @@ jobs:
       - name: Load images into k3s
         if: ${{ inputs.build != 'no' || (inputs.tag || 'main') == 'main' }}
         run: |
-          echo "=== Loading docker images into k3s ==="
+          echo "=== Loading locally built images into k3s ==="
           # Load ALL locally built images (not just intel/ia-*) so Helm-deployed
           # workloads can find every dependency. Exclude only k8s/k3s infra images
           # (already present in the cluster) and dangling <none> tags.
@@ -274,11 +274,28 @@ jobs:
             | grep -v "^registry.k8s.io" \
             | grep -v "^rancher" \
             | while read -r image; do
-                echo "Importing image: $image"
+                echo "Importing $image"
                 docker save "$image" | sudo k3s ctr images import -
               done
+
+          echo "=== Pre-pulling public images required by Helm charts into k3s ==="
+          # The Helm chart references public images that k3s won't find locally.
+          # Pull them into Docker first, then import into k3s so pods start without
+          # hitting Docker Hub at test time (avoids ErrImagePull on restricted runners).
+          PUBLIC_IMAGES=(
+            "eclipse-mosquitto:2.0.22"
+            "grafana/grafana-oss:13.0.1-security-01-ubuntu"
+            "influxdb:1.12.4"
+            "nginx:1.31.1-trixie-perl"
+            "telegraf:1.38.4"
+          )
+          for img in "${PUBLIC_IMAGES[@]}"; do
+            echo "Pulling and importing: $img"
+            docker pull "$img" && docker save "$img" | sudo k3s ctr images import - || echo "Warning: failed to pre-pull $img (will attempt registry pull at pod startup)"
+          done
+
           echo "=== Images imported into k3s ==="
-          sudo k3s ctr images ls | grep -i "intel" || echo "No intel images found in k3s"
+          sudo k3s ctr images ls | grep -E "intel|mosquitto|grafana|influxdb|nginx|telegraf" || echo "No matching images found"
 
       - name: Install Intel GPU device plugin for k3s
         if: ${{ inputs.include_gpu_tests == 'yes' || inputs.tests == 'timeseries-all' || inputs.tests == 'multimodal-all' || inputs.tests == 'all-tests' }}
