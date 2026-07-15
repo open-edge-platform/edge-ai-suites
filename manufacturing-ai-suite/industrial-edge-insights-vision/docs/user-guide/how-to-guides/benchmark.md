@@ -83,7 +83,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    > NOTE: The script automatically uses the payload.json file from the configured sample application directory.
 
 
-<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 1. **Set up the environment**: Ensure `SAMPLE_APP=pcb-anomaly-detection` is set in your `.env` file
 
@@ -164,7 +164,7 @@ throughput cumulative: 173.8
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```bash

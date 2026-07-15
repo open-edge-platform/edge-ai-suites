@@ -35,7 +35,7 @@ The following is an example of the pallet defect detection pipeline, which is in
     },
 ```
 
-<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 The following is an example of the PCB anomaly detection pipeline, which is included in the `pipeline-server-config.json` file.
@@ -118,7 +118,7 @@ Follow this procedure to start the pipeline.
    }'
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    Start this pipeline with the following cURL command.
@@ -155,7 +155,7 @@ Follow this procedure to start the pipeline.
 
    *Example of a Pallet Defect Detection pipeline instance ID*
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ![Example of an instance ID for a pipeline](../_assets/pcb-instance-id.png "pcb anomaly detection instance id")

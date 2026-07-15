@@ -44,7 +44,7 @@ The following demonstrates running two AI pipelines.
    }'
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -96,7 +96,7 @@ The following demonstrates running two AI pipelines.
    }'
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -135,7 +135,7 @@ The following demonstrates running two AI pipelines.
 
    You can see boxes, shipping labels, and defects being detected. You have successfully run the sample application.
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ![Example of WebRTC streaming using mediamtx](../_assets/pcb-webrtc-streaming.png)

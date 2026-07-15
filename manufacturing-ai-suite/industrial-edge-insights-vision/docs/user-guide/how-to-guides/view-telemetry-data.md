@@ -8,8 +8,8 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
 
 - Open `https://<HOST_IP>/prometheus` in your browser to view the prometheus console and try out the below queries:
 
-   >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
   - `cpu_usage_percentage`
   - `memory_usage_bytes`
@@ -25,8 +25,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 1. Stop the sample application with the following command.
 
-
-    >If you're running multiple instances of app, stop the services using `./run.sh down` instead.
+   > If you are running multiple instances of an app, stop the services using `./run.sh down` instead.
 
    ```sh
    docker compose down -v

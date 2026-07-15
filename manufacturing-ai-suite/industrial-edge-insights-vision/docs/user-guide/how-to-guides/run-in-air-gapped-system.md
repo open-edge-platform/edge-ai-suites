@@ -41,7 +41,7 @@ This guide explains how to run Vision AI Detection Apps in an environment withou
    ./sample_start.sh -p pallet_defect_detection
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-anomaly hide_directive-->
 
    ```bash
@@ -63,7 +63,7 @@ This guide explains how to run Vision AI Detection Apps in an environment withou
    https://127.0.0.1/mediamtx/pdd/
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-anomaly hide_directive-->
 
    ```text

@@ -11,7 +11,6 @@ You can also bring your own video file source. This article will show you how to
 > available to pipeline server. However for helm, you need to manually copy those to the
 > container.
 
-
 ## File Location
 
 The model and the input video file are placed in the `resources/<app name>/` folder, under
@@ -35,7 +34,7 @@ the `model` and `video` directories:
         - warehouse.avi
 ```
 
-<!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+<!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 ```text
@@ -131,7 +130,7 @@ hide_directive-->
        }'
    ```
 
-   <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -189,7 +188,7 @@ hide_directive-->
    To use the above built image, change `imagePullPolicy` to `imagePullPolicy: IfNotPresent`
    in `values.yaml`.
 
-   <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -212,7 +211,6 @@ hide_directive-->
      pipeline.
    - for a **classification model**, use `gvaclassify` - as used in the `pcb_anomaly_detection`
      pipeline.
-
 
 3. The `pipeline-server-config.json` is volume mounted into DL Streamer Pipeline Server in
    `provision-configmap.yaml`, like so:
@@ -262,7 +260,8 @@ hide_directive-->
            }
        }'
    ```
-   <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+
+   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh

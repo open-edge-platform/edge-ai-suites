@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](./vision-system-requirements.md)
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
 - **Tools Installed**: Install the required tools:
@@ -82,7 +82,7 @@ configured Kubernetes cluster.
    ```sh
    cp helm/<VALUES_APP>.yaml helm/values.yaml
    ```
-   
+
    | Application   | <VALUES_APP> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | values_pallet-defect-detection |
@@ -93,18 +93,18 @@ configured Kubernetes cluster.
    > **Note:** Download the Helm chart if you are not using the Helm chart provided in
    > `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
-   - Download the Helm chart with the following command. Replace "<APP_VERSION>" with the desired value from the table that follows: 
+   - Download the Helm chart with the following command. Replace "<APP_VERSION>" with the desired value from the table that follows:
 
      ```bash
      helm pull oci://registry-1.docker.io/intel/<APP_VERSION>
      ```
-	 
+
    | Application   | <APP_VERSION> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection-reference-implementation --version 2.7.0 |
    | PCB Anomaly Detection   | pcb-anomaly-detection --version 1.3.0 |
 
-   - Extract the package using the following command. Replace "<APP_FILENAME>" with the desired value from the table that follows: 
+   - Extract the package using the following command. Replace "<APP_FILENAME>" with the desired value from the table that follows:
 
      ```bash
      tar -xvf <APP_FILENAME>.tgz
@@ -114,7 +114,7 @@ configured Kubernetes cluster.
    | Pallet Defect Detection  | pallet-defect-detection-reference-implementation-2.7.0 |
    | PCB Anomaly Detection   | pcb-anomaly-detection-1.3.0 |
 
-   - Replace the helm directory. Replace "<APP>" with the desired value from the table that follows: 
+   - Replace the helm directory. Replace "<APP>" with the desired value from the table that follows:
 
      ```bash
      rm -rf helm && mv <APP> helm
@@ -127,7 +127,7 @@ configured Kubernetes cluster.
 4. Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows:
 
    Pallet Defect Detection:
-   
+
    ```yaml
    env:
        HOST_IP: <host_IP>   # host IP address
@@ -140,9 +140,9 @@ configured Kubernetes cluster.
        username: <username>  # WebRTC credentials e.g. intel1234
        password: <password>
    ```
-   
+
    PCB Anomaly Detection:
-   
+
    ```yaml
    env:
        HOST_IP: <host_IP>   # host IP address
@@ -192,19 +192,19 @@ configured Kubernetes cluster.
    # The following is an example for Pallet Defect Detection. Edit the source path of models and videos for other sample applications.
 
    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the desired values from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
 
    kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
    ```
-   
+
    | Application   | <VIDEOS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
@@ -249,7 +249,7 @@ configured Kubernetes cluster.
        ...
    ]
    ```
-   
+
    ```text
 	# Output example for PCB Anomaly Detection
 	Environment variables loaded from <work_dir>/manufacturing-ai-suite/industrial-edge-insights-vision/.env
@@ -279,13 +279,13 @@ configured Kubernetes cluster.
 		...
 	]
    ```
-   
-4. Start the sample application with a pipeline. Replace "<APP>" with the desired value from the table that follows: 
+
+4. Start the sample application with a pipeline. Replace "<APP>" with the desired value from the table that follows:
 
    ```sh
    ./sample_start.sh helm -p <APP>
    ```
-   
+
    | Application   | <APP> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
@@ -311,7 +311,7 @@ configured Kubernetes cluster.
    Posting payload to REST server at http://<host_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
    ```
-   
+
    ```sh
    # Output example for PCB Anomaly Detection
    Environment variables loaded from <work_dir>/manufacturing-ai-suite/industrial-edge-insights-vision/.env
@@ -328,12 +328,12 @@ configured Kubernetes cluster.
    Posting payload to REST server at http://<host_IP>:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
    Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
    ```
-   
+
    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
 
 ### Start GPU- and NPU-Based Pipelines
 
-For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines. Replace "<APP>" with the desired value from the table that follows: 
+For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines. Replace "<APP>" with the desired value from the table that follows:
 
 **For GPU-based pipelines:**
 
@@ -423,7 +423,7 @@ For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../
    "state": "RUNNING"
    }
    ```
-   
+
    ```sh
    # Output example for PCB Anomaly Detection
    No pipelines specified. Stopping all pipeline instances
@@ -471,7 +471,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    # Below is an example for Pallet Defect Detection. Edit the source path of models and videos for other sample applications.
 
    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the desired values from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
@@ -483,11 +483,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection | 
+   | PCB Anomaly Detection   | pcb-anomaly-detection |
 
 4. Install the package `boto3` in your python environment if not installed.
 
@@ -543,7 +543,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 6. Start the pipeline with the following cURL command,  with `<host_IP>` set to system IP address. Give the correct path to the model as seen below.
 
    > **Note:** If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace `30443` with `<NGINX_HTTPS_PORT>`.
-   
+
 Pallet Defect Detection:
 
    ```sh
@@ -566,7 +566,7 @@ Pallet Defect Detection:
        }
    }'
    ```
-   
+
 PCB Anomaly Detection:
 
    ```sh
@@ -618,19 +618,19 @@ PCB Anomaly Detection:
    # Below is an example for Pallet Defect Detection. Edit the source path of models and videos for other sample applications.
 
    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the desired values from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n apps
 
    kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
    ```
-   
+
    | Application   | <VIDEOS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
@@ -665,9 +665,9 @@ PCB Anomaly Detection:
        }
    ]
    ```
-   
+
    PCB Anomaly Detection:
-   
+
    ```json
    [
        {
@@ -694,12 +694,12 @@ PCB Anomaly Detection:
    ]
    ```
 
-5. Start the pipeline with the above payload. Replace "<APP>" with the desired value from the table that follows: 
+5. Start the pipeline with the above payload. Replace "<APP>" with the desired value from the table that follows:
 
    ```sh
    ./sample_start.sh helm -p <APP>_mlops
    ```
-   
+
    | Application   | <APP> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
@@ -709,7 +709,7 @@ PCB Anomaly Detection:
 
 6. Download and prepare the model.
 
-   > **Note:** For sake of simplicity, assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service. Replace "<model_path>" with the desired value from the table that follows: 
+   > **Note:** For sake of simplicity, assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service. Replace "<model_path>" with the desired value from the table that follows:
 
    ```sh
    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/<model_path>.zip'
@@ -770,9 +770,9 @@ PCB Anomaly Detection:
        }
    ]
    ```
-   
+
    PCB Anomaly Detection:
-   
+
    ```json
    [
        {
@@ -813,12 +813,12 @@ PCB Anomaly Detection:
 11. View the WebRTC streaming on `https://<host_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
-   
+
    **Pallet Defect Detection**
-   ![WebRTC streaming](../pallet-defect-detection/_assets/webrtc-streaming.png)
-   
+   ![WebRTC streaming](../_assets/pdd-webrtc-streaming.png)
+
    **PCB Anomaly Detection**
-   ![WebRTC streaming](../pcb-anomaly-detection/_assets/webrtc-streaming.png)
+   ![WebRTC streaming](../_assets/pcb-webrtc-streaming.png)
 
 ## Troubleshooting
 

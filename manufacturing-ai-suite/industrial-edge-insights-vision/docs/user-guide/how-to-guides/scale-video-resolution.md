@@ -17,7 +17,7 @@ The following is a sample pipeline with image resizing using the **videoscale** 
 "{auto_source} name=source ! decodebin ! videoscale ! video/x-raw, width=1920, height=1080 ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink"
 ```
 
-<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 ```text
