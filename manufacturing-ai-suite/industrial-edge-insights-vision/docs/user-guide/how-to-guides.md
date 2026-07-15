@@ -12,6 +12,7 @@ This section collects guides for Vision AI sample applications.
 :::{toctree}
 
 Change Video Source <./how-to-guides/change-input-video-source.md>
+Enable MLOps <./how-to-guides/enable-mlops.md>
 Run Benchmarks <./how-to-guides/benchmark.md>
 
 :::
