@@ -166,12 +166,14 @@ Write-Host "Final status: $($task.status)"
 ```powershell
 $r = Invoke-WebRequest -Uri "$BASE/api/v1/object/files/list?page=1&page_size=20" `
      -UseBasicParsing
-($r.Content | ConvertFrom-Json).data.files |
-    Select-Object file_key, file_name, file_type, status |
+$files = ($r.Content | ConvertFrom-Json).data.files
+$files | Select-Object file_name, @{N="type";E={$_.meta.type}}, @{N="vectors";E={$_.index.vector_count}}, status |
     Format-Table -AutoSize
 ```
 
-The newly ingested file should appear with `status = indexed` (or equivalent).
+**Note**: The file is searchable when the task status is `COMPLETED`. Vector indexing may
+take a few additional seconds to appear in the list, but the task completion is the
+source of truth for searchability.
 
 ---
 
@@ -245,3 +247,6 @@ This prevents orphaned data and allows re-upload with the same file.
 
 Report: **task_id** → **status polling log** → **final `COMPLETED`** →
 file appears in `GET /api/v1/object/files/list`.
+
+**Note**: Task `COMPLETED` status means the file is searchable. Vector counts in the file
+list may take a few seconds to update, but searchability is determined by task completion.
