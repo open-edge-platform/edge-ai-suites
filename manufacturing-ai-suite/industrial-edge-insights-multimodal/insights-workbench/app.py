@@ -232,11 +232,11 @@ def api_explain() -> Any:
         "role" :    "user",
         "content" : []
     }
+    client = get_influx_client()
     for time_str in selected_times:
         try:
             datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
             logger.info("Selected time=%s", time_str)
-            client = get_influx_client()
             query = f"SELECT * FROM fusion_result WHERE time = '{time_str}'"
             result = client.query(query)
             points = list(result.get_points())
@@ -254,7 +254,7 @@ def api_explain() -> Any:
                 f"SELECT * FROM \"vision-weld-classification-results\" "
                 f"WHERE search_time = '{vision_timestamp}'"
             )
-            logger.info("Querying vision data with query: %s", query_vision)
+            logger.debug("Querying vision data with query: %s", query_vision)
             result_vision = client.query(query_vision)
             points_vision = list(result_vision.get_points())
             logger.info(
@@ -272,7 +272,7 @@ def api_explain() -> Any:
                 img_handle = points_vision[0].get("img_handle")
                 image_url = build_image_url(str(img_handle)) if img_handle else None
                 image_data_url = build_image_data_url(image_url) if image_url else None
-                logger.info(
+                logger.debug(
                     "Retrieved frame_id=%s img_handle=%s image_url=%s",
                     frame_id,
                     img_handle,
@@ -292,10 +292,12 @@ def api_explain() -> Any:
             
 
             query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"
-            logger.info("Querying sensor data with query: %s", query_sensor)
+            logger.debug("Querying sensor data with query: %s", query_sensor)
             result_sensor = client.query(query_sensor)
             points_sensor = list(result_sensor.get_points())
-            logger.info("Matched %d row(s) for sensor time=%s row: %s", len(points_sensor), points[0]['timeseries_timestamp'], points_sensor)
+            logger.debug("Matched %d row(s) for sensor time=%s", len(points_sensor), points[0]['timeseries_timestamp'])
+
+            logger.info(f"Found {len(points_sensor)} sensor data point(s) for time={time_str}")
 
             vision_data = {
                 "type": "image_url",
