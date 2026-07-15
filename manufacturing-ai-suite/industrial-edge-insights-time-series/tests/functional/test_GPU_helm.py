@@ -46,10 +46,29 @@ def _run_gpu_helm_test(request):
     time.sleep(wait_time)
 
     curl_result = helm_utils.execute_gpu_config_curl_helm(
-        device="gpu", namespace=namespace
+        device="gpu", namespace=namespace, sample_app=constants.WIND_SAMPLE_APP
     )
     logger.info(f"curl_result: {curl_result}")
     assert curl_result, "GPU configuration test via REST API failed"
+
+    logger.info("Verifying pods are healthy after GPU configuration update...")
+    pods_ok = helm_utils.verify_pods(namespace)
+    logger.info(f"Post-GPU config pod health result: {pods_ok}")
+    assert pods_ok is True, "Pods are not healthy after GPU configuration update"
+
+    logger.info(
+        f"Grace period {constants.WIND_TURBINE_GPU_RESTART_GRACE}s for TSAM to apply GPU configuration..."
+    )
+    time.sleep(constants.WIND_TURBINE_GPU_RESTART_GRACE)
+
+    logger.info("Checking TSAM pod logs for GPU markers...")
+    gpu_log_result = helm_utils.check_log_gpu_helm(
+        namespace,
+        timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT,
+        interval=10,
+    )
+    logger.info(f"GPU log check result (Helm): {gpu_log_result}")
+    assert gpu_log_result is True, "GPU keywords not found in TSAM pod logs"
 
 
 @pytest.mark.gpu

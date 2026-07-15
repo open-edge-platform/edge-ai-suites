@@ -379,7 +379,7 @@ def plot_timing(
         import matplotlib
         matplotlib.use("Agg" if not show else matplotlib.get_backend())
         import matplotlib.pyplot as plt
-        import numpy as np
+        from _accel import np  # Intel dpnp/numpy shim
     except ImportError:
         print("matplotlib not available — skipping plots", file=sys.stderr)
         return
@@ -532,7 +532,7 @@ def plot_resources(
         matplotlib.use("Agg" if not show else matplotlib.get_backend())
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
-        import numpy as np
+        from _accel import np, ne  # Intel dpnp/numpy shim + numexpr
     except ImportError:
         print("matplotlib not available — skipping plots", file=sys.stderr)
         return
@@ -557,9 +557,11 @@ def plot_resources(
     y          = np.arange(n)
 
     # Colour scale: proportional to CPU %
-    cpu_norm   = cpu_means / (cpu_means.max() + 1e-9)
+    _cpu_max   = float(cpu_means.max()) + 1e-9
+    _rss_max   = float(rss_means.max()) + 1e-9
+    cpu_norm   = ne.evaluate("cpu_means / _cpu_max") if ne is not None else cpu_means / _cpu_max
     cpu_colors = [plt.cm.RdYlGn_r(0.15 + 0.75 * v) for v in cpu_norm]
-    rss_norm   = rss_means / (rss_means.max() + 1e-9)
+    rss_norm   = ne.evaluate("rss_means / _rss_max") if ne is not None else rss_means / _rss_max
     rss_colors = [plt.cm.Blues(0.25 + 0.65 * v) for v in rss_norm]
 
     sw, sh, dpi = _screen_inches()

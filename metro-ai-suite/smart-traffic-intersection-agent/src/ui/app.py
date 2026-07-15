@@ -1,14 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import asyncio
 import logging
 import os
 import sys
 
 import aiohttp
 import gradio as gr
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import Request
+from fastapi.responses import StreamingResponse
 
 from config import Config
 from data_loader import update_components, fetch_intersection_data
@@ -74,6 +74,7 @@ def _metrics_panel_html():
         <div class="chart-card">
           <div class="chart-header"><span>CPU</span><span class="chart-value" id="cpuVal">—</span></div>
           <div class="chart-wrap"><canvas id="cpuChart"></canvas></div>
+          <div class="gpu-detail-row" id="cpuFreq"></div>
         </div>
         <div class="chart-card">
           <div class="chart-header"><span>RAM</span><span class="chart-value" id="ramVal">—</span></div>
@@ -88,17 +89,22 @@ def _metrics_panel_html():
           <div class="gpu-detail-row" id="gpuPower"></div>
           <div class="gpu-detail-row" id="gpuTemp"></div>
         </div>
+        <div class="chart-card">
+          <div class="chart-header"><span>NPU</span><span class="chart-value" id="npuVal">—</span></div>
+          <div class="chart-wrap"><canvas id="npuChart"></canvas></div>
+          <div class="gpu-detail-row" id="npuDetail"></div>
+        </div>
       </div>
       <div class="metrics-status">
-        <span class="dot" id="collectorStatusDot"></span>
-        Collector: <span id="collectorStatus">Disconnected</span>
+        <span class="dot" id="metricsManagerStatusDot"></span>
+        Metrics Manager: <span id="metricsManagerStatus">Disconnected</span>
       </div>
     </div>
     """
 
 
 def _metrics_js():
-    """Return JavaScript code for Chart.js + Telegraf metrics.
+    """Return JavaScript code for Chart.js + Metrics Manager SSE metrics.
 
     Executed on page load via the Gradio ``js`` parameter (evaluated by
     ``new Function()``, so raw JS — no ``<script>`` wrapper needed).
@@ -163,79 +169,190 @@ def _metrics_js():
           createStatChart('cpuChart', 'CPU %', '#1ad0ff');
           createStatChart('ramChart', 'RAM %', '#8ca0c2');
           createStatChart('gpuChart', 'GPU %', '#ffb347');
+          createStatChart('npuChart', 'NPU %', '#a78bfa');
 
           /* ── DOM refs ── */
           var cpuVal    = document.getElementById('cpuVal');
           var ramVal    = document.getElementById('ramVal');
           var gpuVal    = document.getElementById('gpuVal');
+          var npuVal    = document.getElementById('npuVal');
+          var cpuFreq   = document.getElementById('cpuFreq');
           var gpuEngines = document.getElementById('gpuEngines');
           var gpuFreq   = document.getElementById('gpuFreq');
           var gpuPower  = document.getElementById('gpuPower');
           var gpuTemp   = document.getElementById('gpuTemp');
+          var npuDetail = document.getElementById('npuDetail');
           var gpuError  = document.getElementById('gpuError');
-          var collectorStatus    = document.getElementById('collectorStatus');
-          var collectorStatusDot = document.getElementById('collectorStatusDot');
+          var metricsManagerStatus    = document.getElementById('metricsManagerStatus');
+          var metricsManagerStatusDot = document.getElementById('metricsManagerStatusDot');
 
           var gpuEngineData = {};
           var gpuPowerValue = null;
           var pkgPowerValue = null;
 
-          /* ── Telegraf metric processor (same as LVC) ── */
+          function asNumber(value) {
+            var parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : null;
+          }
+
+          function setMetricValue(el, value, suffix, precision) {
+            if (!el || value === null) return;
+            el.textContent = value.toFixed(precision === undefined ? 1 : precision) + suffix;
+          }
+
+          function labelsOf(metric) {
+            return metric.labels || metric.tags || {};
+          }
+
+          function isMetricName(name, candidates) {
+            return candidates.indexOf(name) !== -1;
+          }
+
+          function processPrometheusSample(metric) {
+            var name = metric.name || '';
+            var labels = labelsOf(metric);
+            var value = asNumber(metric.value);
+            if (value === null) return;
+
+            if (isMetricName(name, ['cpu_usage_user'])) {
+              if (!labels.cpu || labels.cpu === 'cpu-total') {
+                pushSample('cpu', value);
+                setMetricValue(cpuVal, value, '%');
+              }
+              return;
+            }
+
+            if (isMetricName(name, ['mem_used_percent'])) {
+              pushSample('ram', value);
+              setMetricValue(ramVal, value, '%');
+              return;
+            }
+
+            if (isMetricName(name, ['cpu_frequency_avg_frequency'])) {
+              if (cpuFreq) {
+                cpuFreq.textContent = 'Freq: ' + (value / 1000).toFixed(0) + ' MHz';
+                cpuFreq.style.display = 'block';
+              }
+              return;
+            }
+
+            if (isMetricName(name, ['gpu_engine_usage_usage', 'gpu_engine_usage'])) {
+              var engine = labels.engine || labels.type;
+              if (engine) gpuEngineData[String(engine).toUpperCase()] = value;
+              return;
+            }
+
+            if (isMetricName(name, ['gpu_frequency_value', 'gpu_frequency']) && labels.type === 'cur_freq') {
+              if (gpuFreq) {
+                gpuFreq.textContent = 'Freq: ' + value.toFixed(0) + ' MHz';
+                gpuFreq.style.display = 'block';
+              }
+              return;
+            }
+
+            if (isMetricName(name, ['gpu_power_value', 'gpu_power'])) {
+              if (labels.type === 'gpu_cur_power') gpuPowerValue = value;
+              else if (labels.type === 'pkg_cur_power') pkgPowerValue = value;
+              return;
+            }
+
+            if (isMetricName(name, ['temp_temp', 'temp'])) {
+              var sensor = String(labels.sensor || '').toLowerCase();
+              if (gpuTemp && sensor.indexOf('package') >= 0) {
+                gpuTemp.textContent = 'Temp: ' + value.toFixed(1) + '°C';
+                gpuTemp.style.display = 'block';
+              }
+              return;
+            }
+
+            if (isMetricName(name, ['npu_utilization'])) {
+              pushSample('npu', value);
+              setMetricValue(npuVal, value, '%');
+              if (npuDetail) {
+                npuDetail.textContent = 'Utilization: ' + value.toFixed(1) + '%';
+                npuDetail.style.display = 'block';
+              }
+              return;
+            }
+
+            if (isMetricName(name, ['npu_power']) && npuDetail) {
+              npuDetail.textContent = 'Power: ' + value.toFixed(1) + 'W';
+              npuDetail.style.display = 'block';
+            }
+          }
+
+          function processLegacyMetric(metric) {
+            var name   = metric.name || '';
+            var fields = metric.fields || {};
+            var tags   = metric.tags || {};
+
+            switch (name) {
+              case 'cpu':
+                if (fields.usage_user !== undefined) {
+                  var cpu = asNumber(fields.usage_user);
+                  if (cpu !== null) {
+                    pushSample('cpu', cpu);
+                    setMetricValue(cpuVal, cpu, '%');
+                  }
+                }
+                break;
+
+              case 'mem':
+                if (fields.used_percent !== undefined) {
+                  var mem = asNumber(fields.used_percent);
+                  if (mem !== null) {
+                    pushSample('ram', mem);
+                    setMetricValue(ramVal, mem, '%');
+                  }
+                }
+                break;
+
+              case 'gpu_engine_usage':
+                if (fields.usage !== undefined && tags.engine) {
+                  var usage = asNumber(fields.usage);
+                  if (usage !== null) gpuEngineData[tags.engine.toUpperCase()] = usage;
+                }
+                break;
+
+              case 'gpu_frequency':
+                if (fields.value !== undefined && tags.type === 'cur_freq') {
+                  var legacyFreq = asNumber(fields.value);
+                  if (legacyFreq !== null && gpuFreq) {
+                    gpuFreq.textContent = 'Freq: ' + legacyFreq.toFixed(0) + ' MHz';
+                    gpuFreq.style.display = 'block';
+                  }
+                }
+                break;
+
+              case 'gpu_power':
+                if (fields.value !== undefined) {
+                  var power = asNumber(fields.value);
+                  if (power !== null && tags.type === 'gpu_cur_power') gpuPowerValue = power;
+                  else if (power !== null && tags.type === 'pkg_cur_power') pkgPowerValue = power;
+                }
+                break;
+
+              case 'temp':
+                if (fields.temp !== undefined) {
+                  var temp = asNumber(fields.temp);
+                  var sensor = String(tags.sensor || '').toLowerCase();
+                  if (temp !== null && gpuTemp && sensor.indexOf('package') >= 0) {
+                    gpuTemp.textContent = 'Temp: ' + temp.toFixed(1) + '°C';
+                    gpuTemp.style.display = 'block';
+                  }
+                }
+                break;
+            }
+          }
+
           function processMetrics(metrics) {
             gpuPowerValue = null;
             pkgPowerValue = null;
+            gpuEngineData = {};
 
             metrics.forEach(function(metric) {
-              var name   = metric.name || '';
-              var fields = metric.fields || {};
-              var tags   = metric.tags || {};
-
-              switch (name) {
-                case 'cpu':
-                  if (fields.usage_user !== undefined) {
-                    var cpu = fields.usage_user;
-                    pushSample('cpu', cpu);
-                    if (cpuVal) cpuVal.textContent = cpu.toFixed(1) + '%';
-                  }
-                  break;
-
-                case 'mem':
-                  if (fields.used_percent !== undefined) {
-                    var mem = fields.used_percent;
-                    pushSample('ram', mem);
-                    if (ramVal) ramVal.textContent = mem.toFixed(1) + '%';
-                  }
-                  break;
-
-                case 'gpu_engine_usage':
-                  if (fields.usage !== undefined && tags.engine) {
-                    gpuEngineData[tags.engine.toUpperCase()] = fields.usage;
-                  }
-                  break;
-
-                case 'gpu_frequency':
-                  if (fields.value !== undefined && tags.type === 'cur_freq') {
-                    if (gpuFreq) { gpuFreq.textContent = 'Freq: ' + fields.value + ' MHz'; gpuFreq.style.display = 'block'; }
-                  }
-                  break;
-
-                case 'gpu_power':
-                  if (fields.value !== undefined) {
-                    if (tags.type === 'gpu_cur_power') gpuPowerValue = fields.value;
-                    else if (tags.type === 'pkg_cur_power') pkgPowerValue = fields.value;
-                  }
-                  break;
-
-                case 'temp':
-                  if (fields.temp !== undefined) {
-                    var sensor = tags.sensor || '';
-                    if (gpuTemp && sensor.indexOf('package') >= 0) {
-                      gpuTemp.textContent = 'Temp: ' + fields.temp + '°C';
-                      gpuTemp.style.display = 'block';
-                    }
-                  }
-                  break;
-              }
+              if (metric.fields) processLegacyMetric(metric);
+              else processPrometheusSample(metric);
             });
 
             /* GPU power display */
@@ -254,66 +371,64 @@ def _metrics_js():
             }
 
             /* Overall GPU usage = max engine */
-            var engineMetrics = metrics.filter(function(m){ return m.name === 'gpu_engine_usage'; });
-            if (engineMetrics.length > 0) {
-              var maxGpu = Math.max.apply(null, engineMetrics.map(function(m){ return m.fields.usage || 0; }));
+            var engineValues = Object.keys(gpuEngineData).map(function(key){ return gpuEngineData[key] || 0; });
+            if (engineValues.length > 0) {
+              var maxGpu = Math.max.apply(null, engineValues);
               pushSample('gpu', maxGpu);
-              if (gpuVal) gpuVal.textContent = maxGpu.toFixed(1) + '%';
+              setMetricValue(gpuVal, maxGpu, '%');
               if (gpuError) gpuError.style.display = 'none';
             }
           }
 
-          /* ── WebSocket ── */
-          /* Connect to metrics via same host:port as the UI page */
-          var browserHost = window.location.hostname;
-          var browserPort = window.location.port || (location.protocol === 'https:' ? '443' : '80');
-          var wsProto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
-          var WS_URL = wsProto + '//' + browserHost + ':' + browserPort + '/ws/metrics';
+          /* ── Metrics Manager SSE ── */
+          var source = null;
+          var STREAM_URL = '/metrics/stream';
 
-          var socket = null;
-          var backoff = 1000;
-          var maxAttempts = 10;
-          var attempts = 0;
+          function setConnectionState(connected, label) {
+            if (metricsManagerStatus) {
+              metricsManagerStatus.textContent = label;
+              metricsManagerStatus.className = connected ? 'status-connected' : 'status-disconnected';
+            }
+            if (metricsManagerStatusDot) {
+              if (connected) metricsManagerStatusDot.classList.add('active');
+              else metricsManagerStatusDot.classList.remove('active');
+            }
+          }
 
-          function connect(url) {
-            if (socket && (socket.readyState === 0 || socket.readyState === 1)) return;
-            console.log('[metrics] connecting to', url);
-            socket = new WebSocket(url);
+          function connect() {
+            if (source && source.readyState !== EventSource.CLOSED) return;
+            console.log('[metrics] connecting to', STREAM_URL);
+            source = new EventSource(STREAM_URL);
 
-            socket.onopen = function() {
+            source.onopen = function() {
               console.log('[metrics] connected');
-              attempts = 0;
-              backoff = 1000;
-              if (collectorStatus) { collectorStatus.textContent = 'Connected'; collectorStatus.className = 'status-connected'; }
-              if (collectorStatusDot) collectorStatusDot.classList.add('active');
+              setConnectionState(true, 'Connected');
             };
 
-            socket.onmessage = function(ev) {
+            source.onmessage = function(ev) {
               try {
                 var msg = JSON.parse(ev.data);
-                if (msg.metrics && Array.isArray(msg.metrics)) processMetrics(msg.metrics);
+                if (msg.error) {
+                  console.warn('[metrics] stream error:', msg.error);
+                  setConnectionState(false, 'Stream error');
+                  return;
+                }
+                if (msg.metrics && Array.isArray(msg.metrics)) {
+                  processMetrics(msg.metrics);
+                  setConnectionState(true, 'Connected');
+                }
               } catch (e) { console.warn('[metrics] parse error:', e); }
             };
 
-            socket.onclose = function(ev) {
-              console.log('[metrics] closed', ev.code);
-              if (collectorStatus) { collectorStatus.textContent = 'Disconnected'; collectorStatus.className = 'status-disconnected'; }
-              if (collectorStatusDot) collectorStatusDot.classList.remove('active');
-              if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(function(){ backoff = Math.min(backoff * 2, 15000); connect(WS_URL); }, backoff);
-              }
-            };
-
-            socket.onerror = function() {
-              try { socket.close(); } catch(ex) {}
+            source.onerror = function() {
+              setConnectionState(false, 'Reconnecting');
             };
           }
 
-          connect(WS_URL);
+          connect();
 
           window.addEventListener('beforeunload', function() {
-            if (socket) socket.close();
+            if (source) source.close();
           });
         });
       }
@@ -539,52 +654,35 @@ def create_dashboard_interface():
     return interface
 
 
-def _mount_metrics_proxy(app):
-    """Mount a WebSocket proxy on the Gradio FastAPI app for live metrics."""
-    metrics_ws_url = os.getenv(
-        "METRICS_WS_URL", "ws://live-metrics-service:9090/ws/clients"
-    )
+def _mount_metrics_stream_proxy(app):
+    """Mount a same-origin SSE proxy for Metrics Manager live telemetry."""
+    metrics_stream_url = Config.get_metrics_stream_url()
 
-    @app.websocket("/ws/metrics")
-    async def ws_metrics_proxy(websocket: WebSocket):
-        await websocket.accept()
-        session = None
-        try:
-            session = aiohttp.ClientSession()
-            async with session.ws_connect(metrics_ws_url) as upstream:
-
-                async def forward_to_client():
-                    async for msg in upstream:
-                        if msg.type == aiohttp.WSMsgType.TEXT:
-                            await websocket.send_text(msg.data)
-                        elif msg.type == aiohttp.WSMsgType.BINARY:
-                            await websocket.send_bytes(msg.data)
-                        elif msg.type in (
-                            aiohttp.WSMsgType.CLOSED,
-                            aiohttp.WSMsgType.ERROR,
-                        ):
-                            break
-
-                async def forward_to_upstream():
-                    try:
-                        while True:
-                            data = await websocket.receive_text()
-                            await upstream.send_str(data)
-                    except WebSocketDisconnect:
-                        pass
-
-                await asyncio.gather(forward_to_client(), forward_to_upstream())
-        except WebSocketDisconnect:
-            logger.debug("Metrics proxy client disconnected")
-        except Exception as e:
-            logger.error(f"Metrics proxy error: {e}")
+    @app.get("/metrics/stream")
+    async def metrics_stream_proxy(request: Request):
+        async def stream_metrics():
+            timeout = aiohttp.ClientTimeout(total=None, connect=5, sock_read=30)
+            headers = {"Accept": "text/event-stream"}
             try:
-                await websocket.close(code=1011, reason="Metrics service unavailable")
-            except Exception:
-                pass
-        finally:
-            if session:
-                await session.close()
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async with session.get(metrics_stream_url, headers=headers) as upstream:
+                        upstream.raise_for_status()
+                        async for chunk in upstream.content.iter_any():
+                            if await request.is_disconnected():
+                                break
+                            yield chunk
+            except Exception as e:
+                logger.error("Metrics Manager stream proxy error: %s", e)
+                yield b'data: {"error": "Metrics Manager stream unavailable"}\n\n'
+
+        return StreamingResponse(
+            stream_metrics(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
 
 
 def main():
@@ -614,10 +712,10 @@ def main():
             prevent_thread_lock=True,
         )
 
-        # Mount the WebSocket proxy *after* launch() so we attach to the
+        # Mount the metrics stream proxy *after* launch() so we attach to the
         # actual FastAPI app instance that uvicorn is serving.
-        _mount_metrics_proxy(interface.server_app)
-        logger.info("Metrics WebSocket proxy mounted at /ws/metrics")
+        _mount_metrics_stream_proxy(interface.server_app)
+        logger.info("Metrics Manager stream proxy mounted at /metrics/stream")
 
         # Block the main thread so the server keeps running.
         interface.block_thread()
