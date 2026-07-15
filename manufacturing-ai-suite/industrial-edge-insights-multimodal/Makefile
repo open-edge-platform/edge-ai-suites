@@ -314,7 +314,8 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
-	@cp -f configs/grafana/* helm/
+	@cp -f configs/grafana/provisioning/* helm/
+	@cp -f configs/grafana/weld_defect_detection.json helm/
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/
