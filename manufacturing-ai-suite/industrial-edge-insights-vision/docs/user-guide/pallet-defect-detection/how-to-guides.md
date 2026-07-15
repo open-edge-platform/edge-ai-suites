@@ -34,7 +34,6 @@ This section collects guides for Pallet Defect Detection sample application.
 ./how-to-guides/use-npu-for-inference
 ./how-to-guides/export-and-optimize-geti-model
 ./how-to-guides/use-your-ai-model-and-video
-./how-to-guides/change-input-video-source
 ./how-to-guides/scale-video-resolution
 Integrate Balluff SDK <./how-to-guides/integrate-balluff-sdk>
 Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
