@@ -14,6 +14,8 @@ This section collects guides for Vision AI sample applications.
 Change Video Source <./how-to-guides/change-input-video-source.md>
 Enable MLOps <./how-to-guides/enable-mlops.md>
 Run Benchmarks <./how-to-guides/benchmark.md>
+Use your own model and Video <./how-to-guides/use-your-ai-model-and-video.md>
+View Telemetry Data <./how-to-guides/view-telemetry-data.md>
 
 :::
 hide_directive-->

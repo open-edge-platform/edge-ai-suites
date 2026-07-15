@@ -28,13 +28,11 @@ This section collects guides for PCB Anomaly Detection sample application.
 ./how-to-guides/run-multiple-ai-pipelines
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
-./how-to-guides/use-your-ai-model-and-video
 ./how-to-guides/scale-video-resolution
 ./how-to-guides/store-frames-in-s3
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops
 ./how-to-guides/start-mqtt-publisher
-./how-to-guides/view-telemetry-data
 ./how-to-guides/run-in-air-gapped-system
 
 :::

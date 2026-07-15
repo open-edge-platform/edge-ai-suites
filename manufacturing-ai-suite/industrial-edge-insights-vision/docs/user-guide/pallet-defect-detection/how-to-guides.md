@@ -33,7 +33,6 @@ This section collects guides for Pallet Defect Detection sample application.
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
 ./how-to-guides/export-and-optimize-geti-model
-./how-to-guides/use-your-ai-model-and-video
 ./how-to-guides/scale-video-resolution
 Integrate Balluff SDK <./how-to-guides/integrate-balluff-sdk>
 Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
@@ -41,7 +40,6 @@ Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops
 ./how-to-guides/start-mqtt-publisher
-./how-to-guides/view-telemetry-data
 ./how-to-guides/run-in-air-gapped-system
 
 :::

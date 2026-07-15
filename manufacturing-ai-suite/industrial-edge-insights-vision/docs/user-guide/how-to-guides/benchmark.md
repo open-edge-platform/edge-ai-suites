@@ -64,7 +64,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-<!--hide_directive :sync: tab1   hide_directive-->
+<!--hide_directive :sync: pallet-detect hide_directive-->
 
 1. **Set up the environment**: Ensure `SAMPLE_APP=pallet-defect-detection` is set in your `.env` file
 
@@ -84,8 +84,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 
 
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-<!--hide_directive :sync: tab2   hide_directive-->
-
+<!--hide_directive :sync: pcb-detect hide_directive-->
 1. **Set up the environment**: Ensure `SAMPLE_APP=pcb-anomaly-detection` is set in your `.env` file
 
 2. **Test CPU performance**:
@@ -159,14 +158,14 @@ throughput cumulative: 173.8
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
-   <!--hide_directive:sync: tab1   hide_directive-->
+   <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
    ```
 
    <!--hide_directive :::{tab-item} hide_directive-->**PCB Anomaly Detection**
-   <!--hide_directive :sync: tab2   hide_directive-->
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```bash
    ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 10 --trace
