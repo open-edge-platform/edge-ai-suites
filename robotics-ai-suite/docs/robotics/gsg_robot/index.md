@@ -328,7 +328,7 @@ This section explains the procedure to configure the APT package manager to use 
 2. Download the APT key to the system keyring:
 
    ```bash
-   sudo -E wget -O- https://amr-docs.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-AMR.gpg | sudo tee /usr/share/keyrings/amr-archive-keyring.gpg > /dev/null
+   sudo -E wget -O- https://amrdocs.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-AMR.gpg | sudo tee /usr/share/keyrings/amr-archive-keyring.gpg > /dev/null
    ```
 
 3. Add the signed entry to Autonomous Mobile Robot APT sources and configure the APT client to use the Autonomous Mobile Robot APT repositories:
