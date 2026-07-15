@@ -261,5 +261,4 @@ For troubleshooting common deployment issues, refer to the [Troubleshooting sect
 
 ## Learn More
 
-- [Deploy with Helm](./deploy-with-helm.md): Standard (non-Trusted-Compute) Helm deployment guide
 - [Trusted Compute Documentation](https://github.com/open-edge-platform/trusted-compute): Complete guide to Intel Trusted Compute
