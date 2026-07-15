@@ -270,7 +270,22 @@ export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of tr
 
 # To mock the weather data (say in airgapped deployment)
 export WEATHER_MOCK=True
+
+# Metrics Manager backs the System Telemetry panel and accepts STIA application metrics.
+# Override these only when using a non-default Metrics Manager endpoint or stable host label.
+export METRICS_MANAGER_HOSTNAME=intersection-1
+export METRICS_MANAGER_URL=http://metrics-manager:9090
+export METRICS_STREAM_URL=http://metrics-manager:9090/metrics/stream
+export METRICS_PUSH_ENABLED=True
+export METRICS_PUSH_TIMEOUT_SECONDS=1.0
+export METRICS_MANAGER_PRIVILEGED=False      # Set True only when NPU telemetry requires it
 ```
+
+The **System Telemetry** panel in the UI is backed by Metrics Manager. If you override the
+Metrics Manager endpoint, keep `METRICS_MANAGER_URL` and `METRICS_STREAM_URL` reachable from
+the Traffic Intersection Agent container. Docker Compose uses the published
+`intel/metrics-manager:2026.1.0` image by default; set `METRICS_MANAGER_IMAGE` and
+`METRICS_MANAGER_TAG` only when deploying a custom Metrics Manager build.
 
 ### Customizing the video used by sample application
 

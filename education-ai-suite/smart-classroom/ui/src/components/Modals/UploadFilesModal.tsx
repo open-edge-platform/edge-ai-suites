@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
-import { 
-  startVideoAnalyticsPipeline, 
-  uploadAudio, 
+import {
+  startVideoAnalyticsPipeline,
+  uploadAudio,
   storeAudioDuration,
   createSession,
-  startMonitoring,  
-  stopMonitoring,    
+  startMonitoring,
+  stopMonitoring,
   startPipelineMonitoring
 } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { 
-  setUploadedAudioPath, 
-  startProcessing, 
-  processingFailed, 
-  resetFlow, 
-  setSessionId, 
-  setActiveStream, 
-  startStream, 
-  setFrontCameraStream, 
-  setBackCameraStream, 
-  setBoardCameraStream, 
-  setVideoAnalyticsLoading, 
-  setVideoAnalyticsActive, 
+import {
+  setUploadedAudioPath,
+  startProcessing,
+  processingFailed,
+  resetFlow,
+  setSessionId,
+  setActiveStream,
+  startStream,
+  setFrontCameraStream,
+  setBackCameraStream,
+  setBoardCameraStream,
+  setVideoAnalyticsLoading,
+  setVideoAnalyticsActive,
   setProcessingMode,
   setAudioStatus,
   setVideoStatus,
@@ -42,12 +42,17 @@ interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
- 
+
 const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [frontCameraPath, setFrontCameraPath] = useState<File | null>(null);
   const [rearCameraPath, setRearCameraPath] = useState<File | null>(null);
   const [boardCameraPath, setBoardCameraPath] = useState<File | null>(null);
+  // Absolute filesystem paths acquired in Electron (empty on the plain web app,
+  // where the browser hides the real path and the base directory is used instead).
+  const [frontVideoFullPath, setFrontVideoFullPath] = useState<string>('');
+  const [rearVideoFullPath, setRearVideoFullPath] = useState<string>('');
+  const [boardVideoFullPath, setBoardVideoFullPath] = useState<string>('');
   const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -56,12 +61,38 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
 
+  const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
+
+  // In Electron, resolve the file's real absolute path so the backend video
+  // pipelines can read it directly. Returns '' on the web (no path setter runs).
+  const resolveFullPath = (file: File): string => {
+    try {
+      return window.electronAPI?.getPathForFile?.(file) ?? '';
+    } catch {
+      return '';
+    }
+  };
+
+  // A selected video whose absolute path could not be resolved still needs the
+  // base directory (web / fallback).
+  const videoMissingFullPath =
+    (frontCameraPath !== null && !frontVideoFullPath) ||
+    (rearCameraPath !== null && !rearVideoFullPath) ||
+    (boardCameraPath !== null && !boardVideoFullPath);
+  // Hide the manual base-directory field in Electron once every selected video
+  // has a resolved absolute path; keep showing it otherwise (web / fallback).
+  const showBaseDirectory = !isElectron || videoMissingFullPath;
+
   const constructFilePath = (fileName: string): string => {
     const normalizedBaseDirectory = baseDirectory.endsWith("\\") ? baseDirectory : `${baseDirectory}\\`;
     return `${normalizedBaseDirectory}${fileName}`;
   };
- 
-  const handleFileSelect = (setter: React.Dispatch<React.SetStateAction<File | null>>, accept: string) => {
+
+  const handleFileSelect = (
+    setter: React.Dispatch<React.SetStateAction<File | null>>,
+    accept: string,
+    pathSetter?: React.Dispatch<React.SetStateAction<string>>
+  ) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = accept;
@@ -78,18 +109,21 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         } else {
           isValidFile = true;
         }
-        
+
         if (isValidFile) {
           setter(file);
+          pathSetter?.(resolveFullPath(file));
           console.log('Selected file:', file);
           setError(null);
         } else {
           setter(null);
+          pathSetter?.('');
           const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
           setError(`Please select only ${expectedTypes} files.`);
         }
       } else {
         setter(null);
+        pathSetter?.('');
         console.log('No file selected');
       }
     };
@@ -184,7 +218,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       return;
     }
 
-    if (hasVideoFiles && !baseDirectory.trim()) {
+    // Video pipelines need a full path. In Electron it is acquired automatically;
+    // on the web it is reconstructed from the base directory, so require that only
+    // for any selected video whose absolute path wasn't resolved.
+    if (hasVideoFiles && videoMissingFullPath && !baseDirectory.trim()) {
       setError('Base directory is required when video files are selected.');
       return;
     }
@@ -207,7 +244,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       back: rearCameraPath ? rearCameraPath.name : 'null',
       board: boardCameraPath ? boardCameraPath.name : 'null'
     });
-    
+
     dispatch(setUploadedVideoFiles({
       front: frontCameraPath,
       back: rearCameraPath,
@@ -231,7 +268,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
-      
+
       try {
         if (monitoringActive) {
           await stopMonitoring();
@@ -260,7 +297,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         } catch (durationError) {
           console.error('⚠️ Failed to store audio duration:', durationError);
         }
-        
+
         dispatch(setProcessingMode('audio'));
       } else {
         console.log('📝 No audio file provided, skipping audio upload');
@@ -273,9 +310,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         boardCameraPath: boardCameraPath ? `File: ${boardCameraPath.name}` : 'null'
       });
 
-      const frontFullPath = frontCameraPath ? constructFilePath(frontCameraPath.name) : "";
-      const rearFullPath = rearCameraPath ? constructFilePath(rearCameraPath.name) : "";
-      const boardFullPath = boardCameraPath ? constructFilePath(boardCameraPath.name) : "";
+      // Prefer the absolute path acquired in Electron; fall back to the base
+      // directory + filename reconstruction used by the plain web app.
+      const frontFullPath = frontCameraPath ? (frontVideoFullPath || constructFilePath(frontCameraPath.name)) : "";
+      const rearFullPath = rearCameraPath ? (rearVideoFullPath || constructFilePath(rearCameraPath.name)) : "";
+      const boardFullPath = boardCameraPath ? (boardVideoFullPath || constructFilePath(boardCameraPath.name)) : "";
 
       console.log('📹 Constructed file paths for video analytics:', {
         front: frontFullPath,
@@ -312,7 +351,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           back: rearCameraPath ? rearCameraPath.name : 'null',
           board: boardCameraPath ? boardCameraPath.name : 'null'
         });
-        
+
         dispatch(setUploadedVideoFiles({
           front: frontCameraPath,
           back: rearCameraPath,
@@ -346,12 +385,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       } else {
         console.log('📹 No valid video files provided, skipping video analytics');
       }
-    
+
       const finalNotification = getSuccessNotification(hasAudioFile, hasValidVideo, videoAnalyticsStarted);
-  
+
       console.log(finalNotification)
       setNotification(finalNotification);
-    
+
       console.log('✅ Processing summary:', {
         audioFile: hasAudioFile,
         videoFiles: hasValidVideo,
@@ -370,21 +409,25 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     }
   };
 
-   return (
+  return (
     <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
       <div className="upload-files-modal">
         <h2>{t('uploadFiles.title')}</h2>
         <hr className="modal-title-line" />
         <div className="modal-body">
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.baseDirectoryLabel')}</label>
-            <input
-              type="text"
-              value={baseDirectory}
-              onChange={(e) => setBaseDirectory(e.target.value)}
-              placeholder="Enter the base directory"
-            />
-          </div>
+          {/* The base directory only reconstructs video paths on the plain web
+              app; in Electron the full path is acquired automatically, so hide it. */}
+          {showBaseDirectory && (
+            <div className="modal-input-group">
+              <label>{t('uploadFiles.baseDirectoryLabel')}</label>
+              <input
+                type="text"
+                value={baseDirectory}
+                onChange={(e) => setBaseDirectory(e.target.value)}
+                placeholder="Enter the base directory"
+              />
+            </div>
+          )}
           <div className="modal-input-group modal-title fw-semibold">
             <label>{t('uploadFiles.audioFileLabel')}</label>
             <div className="file-input-wrapper">
@@ -407,15 +450,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             <div className="file-input-wrapper">
               <input
                 type="text"
-                value={frontCameraPath?.name || ''}
+                value={frontVideoFullPath || frontCameraPath?.name || ''}
                 readOnly
                 placeholder="Select a front camera file"
+                title={frontVideoFullPath || frontCameraPath?.name || ''}
               />
               <img
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4')}
+                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
               />
             </div>
           </div>
@@ -425,15 +469,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             <div className="file-input-wrapper">
               <input
                 type="text"
-                value={rearCameraPath?.name || ''}
+                value={rearVideoFullPath || rearCameraPath?.name || ''}
                 readOnly
                 placeholder="Select a back camera file"
+                title={rearVideoFullPath || rearCameraPath?.name || ''}
               />
               <img
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setRearCameraPath, '.mp4')}
+                onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
               />
             </div>
           </div>
@@ -443,15 +488,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
             <div className="file-input-wrapper">
               <input
                 type="text"
-                value={boardCameraPath?.name || ''}
+                value={boardVideoFullPath || boardCameraPath?.name || ''}
                 readOnly
                 placeholder="Select a board camera file"
+                title={boardVideoFullPath || boardCameraPath?.name || ''}
               />
               <img
                 src={folderIcon}
                 alt="Choose File"
                 className="folder-icon"
-                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4')}
+                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
               />
             </div>
           </div>
@@ -471,5 +517,5 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     </Modal>
   );
 };
- 
+
 export default UploadFilesModal;

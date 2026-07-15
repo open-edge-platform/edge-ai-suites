@@ -525,6 +525,24 @@ print_all_service_host_endpoints() {
                 PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/v2${NC}"
                 ;;
+            *metrics-manager*)
+                SERVICE_NAME="Metrics Manager API"
+                PORT=$(docker port "$CONTAINER_NAME" 9090 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                    echo -e "${BLUE}Access Metrics Manager Stream -> http://$HOST_IP:$PORT/metrics/stream${NC}"
+                fi
+
+                PORT=$(docker port "$CONTAINER_NAME" 9273 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access Metrics Manager Telegraf/Prometheus -> http://$HOST_IP:$PORT/metrics${NC}"
+                fi
+
+                PORT=$(docker port "$CONTAINER_NAME" 8186 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access Metrics Manager Telegraf HTTP -> http://$HOST_IP:$PORT/write${NC}"
+                fi
+                ;;
         esac
     done
     echo -e "${MAGENTA}=======================================================${NC}"
@@ -602,7 +620,7 @@ start_service() {
     prepare_ovms_model || return 1
 
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
@@ -622,7 +640,7 @@ restart_service() {
             echo -e "${BLUE}==> Restarting Traffic Intersection Agent Backend/UI ...${NC}"
             
             # Restart only the agent-specific services (exclude nginx override which requires RI compose)
-            local AGENT_SERVICES="traffic-agent ovms-service live-metrics-service collector"
+            local AGENT_SERVICES="traffic-agent ovms-service metrics-manager"
             
             # Stop the Traffic Intersection Agent Backend/UI Service
             docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME stop $AGENT_SERVICES

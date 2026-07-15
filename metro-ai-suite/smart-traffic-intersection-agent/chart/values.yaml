@@ -2,176 +2,147 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # =============================================================================
-# Smart Traffic Intersection Agent - Helm Chart Values
+# Smart Traffic Intersection Agent — Helm Chart Values
 # =============================================================================
 
 global:
-  proxy:
-    noProxy: ""
-    httpProxy: ""
-    httpsProxy: ""
+  noProxy: ""
+  httpProxy: ""
+  httpsProxy: ""
 
+image:
+  repository: intel/smart-traffic-intersection-agent
+  tag: "latest"
+  pullPolicy: Always
 
+replicas: 1
 
+service:
+  type: NodePort
+  backendPort: 8081
+  uiPort: 7860
+
+# Intersection identification
+intersection:
+  name: "intersection_1"
+  latitude: "37.51358"
+  longitude: "-122.25591"
+
+# Application settings
+env:
+  logLevel: "INFO"
+  refreshInterval: "15"
+  weatherMock: "false"
+  vlmTimeoutSeconds: "1800"
+
+# MQTT configuration (connects to Scenescape broker)
+# The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
+# If brokerNamespace is empty, it defaults to the release namespace.
+# If host is set explicitly, it takes precedence over the constructed FQDN.
+mqtt:
+  host: ""
+  serviceName: "smart-intersection-broker"
+  brokerNamespace: ""
+  port: "1883"
+
+# Traffic analysis thresholds
+traffic:
+  highDensityThreshold: "10"
+  moderateDensityThreshold: ""
+  bufferDuration: ""
+
+# Leave all empty to auto-wire to the bundled metricsManager subchart.
+# Set these when metricsManager.enabled=false and an external Metrics Manager is used.
+metrics:
+  managerUrl: ""
+  streamUrl: ""
+  healthUrl: ""
+  pushEnabled: ""
+  pushTimeoutSeconds: "1.0"
+
+# Health check configuration
+healthcheck:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+resources:
+
+# Volume for persistent agent data
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+tls:
+  # CA certificate for MQTT broker TLS
+  caCert: ""
+  # If caCertSecretName is set, use an existing secret instead of creating one.
+  caCertSecretName: "smart-intersection-ca-secret"
+  # Key name inside the external secret (required when caCertSecretName is set).
+  caCertKey: "root-cert"
 
 # =============================================================================
-# Traffic Agent Configuration
+# OVMS subchart overrides
 # =============================================================================
-trafficAgent:
-  name: traffic-agent
-  image:
-    repository: intel/smart-traffic-intersection-agent
-    tag: "latest"
-    pullPolicy: Always
-  replicas: 1
-  service:
-    type: NodePort
-    backendPort: 8081
-    uiPort: 7860
-  # Intersection identification
-  intersection:
-    name: "intersection_1"
-    latitude: "37.51358"
-    longitude: "-122.25591"
-  # Application settings
+ovms:
+  enabled: true
+
+  # Uncomment below to override the image tag.
+  # image:
+  #   tag: "2026.1"
+  #   gpuTag: "2026.1-gpu"
+
   env:
-    logLevel: "INFO"
-    refreshInterval: "15"
-    weatherMock: "false"
-    vlmTimeoutSeconds: "1800"
-  # MQTT configuration (connects to Scenescape broker)
-  # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
-  # If brokerNamespace is empty, it defaults to the release namespace.
-  # If host is set explicitly, it takes precedence over the constructed FQDN.
-  mqtt:
-    host: ""
-    serviceName: "smart-intersection-broker"
-    brokerNamespace: ""
-    port: "1883"
-  # Traffic analysis thresholds
-  traffic:
-    highDensityThreshold: "10"
-    moderateDensityThreshold: ""
-    bufferDuration: ""
-  # Health check configuration
-  healthcheck:
-    initialDelaySeconds: 10
-    periodSeconds: 30
-    timeoutSeconds: 10
-    failureThreshold: 3
-  resources:
-  # Volume for persistent agent data
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClass: ""
-
-# =============================================================================
-# OVMS (OpenVINO Model Server) Configuration
-# =============================================================================
-vlmServing:
-  name: ovms-service
-  image:
-    repository: openvino/model_server
-    tag: "2026.1"
-    gpuTag: "2026.1-gpu"
-    pullPolicy: IfNotPresent
-  # Init container image for model export (needs python3, pip3)
-  # Aligned with edge-ai-libraries sample apps (VSS, DocSum)
-  initImage:
-    repository: python
-    tag: "3.12-slim"
-    pullPolicy: IfNotPresent
-  replicas: 1
-  trustedCompute:
-    enabled: false
-  service:
-    type: NodePort
-    port: 8000
-  env:
-    # Validated default OpenVINO-converted VLM model for traffic scene analysis.
-    # Users can override with any compatible HuggingFace vision-language model via:
-    #   --set vlmServing.env.modelName="<org/model-name>"
+    # Model Name: Override with `--set ovms.env.modelName="<model>"` during helm install/upgrade.
     modelName: "OpenVINO/Phi-3.5-vision-instruct-int8-ov"
     targetDevice: "CPU"
-    # Weight format: auto-detected based on device (GPU/NPU → int4, CPU → int8)
-    # Override with: --set vlmServing.env.weightFormat="int4"
+    # Weight Format: Default int4 for GPU/NPU, int8 for CPU when left empty.
     weightFormat: ""
     maxCompletionTokens: "1500"
     logLevel: "INFO"
+
+  # For gated model downloads. Prefer --set ovms.huggingfaceToken=<token> at install time.
   huggingfaceToken: ""
-  # GPU settings - set enabled=true to run VLM inference on Intel GPU
-  # When enabled, target device is automatically set to "GPU"
+
   gpu:
     enabled: true
-    # Intel GPU resource exposed by the device plugin
-    # Use "gpu.intel.com/i915" for integrated / Arc A-series
-    # Use "gpu.intel.com/xe" for Data Center GPU Flex / Max (Xe)
     resourceName: "gpu.intel.com/i915"
     resourceLimit: 1
-    # GIDs of the "render" group to add to supplementalGroups (needed for /dev/dri access).
-    # All common distro values are included by default so the chart works across environments:
-    #   44 (some minimal/Alpine), 109 (Ubuntu/Debian), 992 (Fedora/RHEL/SUSE)
-    # Override or extend via --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
-    # To find the correct GID on a node: getent group render
+    # GIDs of the "render" group (needed for /dev/dri access).
+    # 44=Alpine, 109=Ubuntu/Debian, 992=Fedora/RHE L/SUSE.
     renderGroupIds:
       - 44
       - 109
       - 992
-  # Optional: pin VLM pod to nodes with GPUs
+
   nodeSelector: {}
-  #   e.g.  intel.feature.node.kubernetes.io/gpu: "true"
-  healthcheck:
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    timeoutSeconds: 10
-    failureThreshold: 180
-  resources:
-    requests:
-      memory: "12Gi"
-  # Volume for model cache
+
+  # Service port — mirrored here so the traffic-agent deployment template can
+  # construct the VLM_BASE_URL without depending on subchart.
+  service:
+    port: 8000
+
+  # Model cache volume
   persistence:
     enabled: true
     size: 20Gi
     storageClass: ""
-    # Keep the PVC (and downloaded model) when the chart is uninstalled.
-    # Set to true to avoid re-downloading the model on every install cycle.
     keepOnUninstall: true
 
-# =============================================================================
-# TLS / Secrets Configuration
-# =============================================================================
-tls:
-  # CA certificate for MQTT broker TLS
-  caCert: ""
-  # If caCertSecretName is set, use an existing secret instead of creating one
-  # The Smart Intersection RI (release-2026.0.0) creates "smart-intersection-ca-secret"
-  caCertSecretName: "smart-intersection-ca-secret"
-  # Key name inside the external secret (required when caCertSecretName is set)
-  # The key will be mapped to the expected filename "scenescape-ca.pem"
-  # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
-  caCertKey: "root-cert"
+  trustedCompute:
+    enabled: false
 
 # =============================================================================
-# Live Metrics Service (subchart)
+# Metrics Manager subchart overrides
 # =============================================================================
-# Keys MUST match the subchart chart name "live-metrics-service".
-# The condition field in Chart.yaml enables/disables the subchart.
-live-metrics-service:
-  # Set to false to skip deploying the live-metrics relay
+metricsManager:
   enabled: true
-  # Service name is derived from the Helm release name automatically.
-  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+  nameOverride: "metrics-manager"
 
-# =============================================================================
-# Collector / Telegraf (subchart)
-# =============================================================================
-# Keys MUST match the subchart chart name "collector".
-collector:
-  # Set to false to skip deploying the Telegraf collector.
-  # Requires live-metrics-service.enabled=true to function.
-  enabled: true
-  # Service name is derived from the Helm release name automatically.
-  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
-  # The WebSocket URL is constructed dynamically in the collector deployment template
-  # to use the release-scoped live-metrics-service name.
+  service:
+    metricsPort: 9090
+
+  securityContext:
+    privileged: false

@@ -19,6 +19,13 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
   const menuIconRef = useRef<HTMLImageElement>(null);
   const { t } = useTranslation();
 
+  const isElectron = !!window.electronAPI?.isElectron;
+
+  const openAppMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    window.electronAPI?.popupMenu({ x: rect.left, y: rect.bottom });
+  };
+
   const openSettings = () => {
     setIsSettingsOpen(true);
   };
@@ -31,6 +38,16 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
     return (
       <header className="top-panel">
         <div className="brand-slot">
+          {isElectron && (
+            <button
+              className="app-menu-btn"
+              onClick={openAppMenu}
+              aria-label={t('menu.appMenu', 'Application menu')}
+              title={t('menu.appMenu', 'Application menu')}
+            >
+              &#9776;
+            </button>
+          )}
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
         </div>
@@ -50,6 +67,16 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
   return (
     <header className="top-panel">
       <div className="brand-slot">
+        {isElectron && (
+          <button
+            className="app-menu-btn"
+            onClick={openAppMenu}
+            aria-label={t('menu.appMenu', 'Application menu')}
+            title={t('menu.appMenu', 'Application menu')}
+          >
+            &#9776;
+          </button>
+        )}
         <img src={BrandSlot} alt="Intel Logo" className="logo" />
         <span className="app-title">{t('header.title')}</span>
       </div>
