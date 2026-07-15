@@ -212,7 +212,7 @@ jobs:
 
           # Determine which sample apps need helm charts based on selected tests
           # Only generate for Helm tests, not Docker tests
-          WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security"
+          WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security test_GPU_helm"
 
           GENERATE_WIND=false
 
@@ -829,11 +829,24 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
+          # When running the full suite (all-tests / multimodal-all), exclude GPU and NPU
+          # test files unless explicitly opted in. They remain individually selectable
+          # via the tests input (e.g. tests=test_GPU_helm_multimodal).
+          IGNORE_ARGS=()
+          if [[ "$RUN_ALL_MM" == "true" && "$INCLUDE_GPU_TESTS" != "yes" ]]; then
+            IGNORE_ARGS=(
+              --ignore=test_GPU_docker_multimodal.py
+              --ignore=test_GPU_helm_multimodal.py
+              --ignore=test_NPU_docker_multimodal.py
+              --ignore=test_NPU_helm_multimodal.py
+            )
+          fi
+
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
           echo "========== Collecting tests =========="
           if [[ "$RUN_ALL_MM" == "true" ]]; then
-            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" 2>&1 || true
           else
             pytest --collect-only -q "${MARKER_ARGS[@]}" "${MM_TEST_FILES[@]}" 2>&1 || true
           fi
@@ -844,7 +857,7 @@ jobs:
           set +e
           if [[ "$RUN_ALL_MM" == "true" ]]; then
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}"
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}"
           else
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
               --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${MM_TEST_FILES[@]}"
