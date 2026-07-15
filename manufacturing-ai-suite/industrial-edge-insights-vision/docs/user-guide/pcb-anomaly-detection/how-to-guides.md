@@ -25,7 +25,6 @@ This section collects guides for PCB Anomaly Detection sample application.
 
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
-./how-to-guides/scale-video-resolution
 ./how-to-guides/store-frames-in-s3
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops

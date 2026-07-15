@@ -15,6 +15,7 @@ Run Multiple Apps <./how-to-guides/run-multiple-apps.md>
 Manage Pipelines <./how-to-guides/manage-pipelines.md>
 Run Multiple AI Pipelines <./how-to-guides/run-multiple-ai-pipelines.md>
 Change Video Source <./how-to-guides/change-input-video-source.md>
+Scale Video Resolution <./how-to-guides/scale-video-resolution.md>
 Enable MLOps <./how-to-guides/enable-mlops.md>
 Run Benchmarks <./how-to-guides/benchmark.md>
 Use your own model and Video <./how-to-guides/use-your-ai-model-and-video.md>

@@ -51,6 +51,7 @@ hide_directive-->
 :hidden:
 
 get-started.md
+how-to-guides.md
 ./pallet-defect-detection/index.md
 ./pcb-anomaly-detection/index.md
 Troubleshooting <./troubleshooting.md>
