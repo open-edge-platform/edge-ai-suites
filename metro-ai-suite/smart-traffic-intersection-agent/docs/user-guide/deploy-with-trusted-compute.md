@@ -215,9 +215,14 @@ This will restore the display manager and graphical display on the host.
 
 To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
+## Other Deployment Options
+
+For Kubernetes-based deployments with Trusted Compute:
+
+- **[Deploy with Helm and Trusted Compute](./get-started/deploy-with-trusted-compute-helm.md)**: Use Helm to deploy the application with Trusted Compute to a Kubernetes cluster for scalable and production-ready deployments with hardware isolation.
+
 ## Learn More
 
-- [Get Started](./get-started.md): Main deployment guide for Smart Traffic Intersection Agent
 - [System Requirements](./get-started/system-requirements.md): Hardware and software requirements
 - [Trusted Compute Documentation](https://github.com/open-edge-platform/trusted-compute): Complete guide to Intel Trusted Compute
 - [Troubleshooting](./get-started.md#troubleshooting): Common issues and solutions
