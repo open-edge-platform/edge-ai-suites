@@ -60,7 +60,11 @@ Compute the OVMS image reference, selecting GPU or CPU tag based on gpu.enabled 
 {{- $tcGpu := and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled -}}
 {{- $targetDevice := ternary "GPU" .Values.env.targetDevice .Values.gpu.enabled -}}
 {{- $useGpu := or (contains "GPU" $targetDevice) $tcGpu -}}
-{{- printf "%s:%s" .Values.image.repository (ternary .Values.image.gpuTag .Values.image.tag $useGpu) -}}
+{{- if $useGpu -}}
+{{- printf "%s:%s" .Values.image.repository .Values.image.gpuTag -}}
+{{- else -}}
+{{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}
+{{- end }}
 {{- end }}
 
 {{/*
