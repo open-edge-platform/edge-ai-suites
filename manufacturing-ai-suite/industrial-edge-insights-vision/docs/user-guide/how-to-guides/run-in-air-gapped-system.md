@@ -1,6 +1,6 @@
-# Run in Air-Gapped System
+# Run Vision AI Detection Apps in an Air-Gapped System
 
-This guide explains how to run the PCB Anomaly Detection application in an environment without internet access.
+This guide explains how to run Vision AI Detection Apps in an environment without internet access.
 
 ## Prerequisites
 
@@ -33,15 +33,47 @@ This guide explains how to run the PCB Anomaly Detection application in an envir
 
 2. Start the pipeline:
 
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
+
+   ```bash
+   ./sample_start.sh -p pallet_defect_detection
+   ```
+
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-anomaly hide_directive-->
+
    ```bash
    ./sample_start.sh -p pcb_anomaly_detection
    ```
 
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
 3. Open a browser and navigate to:
+
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
+
+   ```text
+   https://127.0.0.1/mediamtx/pdd/
+   ```
+
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-anomaly hide_directive-->
 
    ```text
    https://127.0.0.1/mediamtx/anomaly/
    ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
    > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
