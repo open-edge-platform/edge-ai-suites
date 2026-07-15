@@ -6,6 +6,7 @@
 
 import datetime
 import base64
+import json
 import logging
 import mimetypes
 import os
@@ -62,15 +63,8 @@ def build_image_data_url(image_url: str) -> str | None:
 
 def get_query_prompt() -> dict[str, Any]:
     """Return the system prompt that guides weld-quality analysis responses."""
-    return {
-        "role": "system",
-        "content": [
-            {
-                "type": "text",
-                "text": "You are an expert weld quality inspector and metallurgical engineer with deep knowledge of MIG/MAG/TIG arc welding processes and industrial weld defect analysis per AWS D1.1 and ISO 5817 standards. When shown a weld image alongside time-series sensor readings, you classify the weld quality, identify any defect type, explain the root cause using sensor evidence, assess severity, and recommend corrective actions. Always structure your response with clearly labelled sections.",
-            }
-        ]
-    }
+    with open("/app/prompt_template.json", encoding="utf-8") as prompt_file:
+        return json.load(prompt_file)
 
 
 def get_fusion_measurement_name() -> str:
