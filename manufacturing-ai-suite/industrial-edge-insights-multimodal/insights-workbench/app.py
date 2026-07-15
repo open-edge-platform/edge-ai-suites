@@ -5,7 +5,9 @@
 #
 
 import datetime
+import base64
 import logging
+import mimetypes
 import os
 from typing import Any
 from urllib.request import urlopen
@@ -39,22 +41,36 @@ def build_image_url(img_handle: str) -> str:
     """Build a full image URL for a SeaweedFS image handle."""
     return f"{get_seaweed_public_image_base_path()}/{img_handle}.jpg"
 
+
+def build_image_data_url(image_url: str) -> str | None:
+    """Download an image and return it as a base64 data URL."""
+    try:
+        with urlopen(image_url, timeout=10) as response:
+            image_bytes = response.read()
+            header_mime = response.headers.get_content_type()
+
+        mime_type = header_mime if header_mime and header_mime != "application/octet-stream" else None
+        if not mime_type:
+            guessed_mime, _ = mimetypes.guess_type(image_url)
+            mime_type = guessed_mime or "image/jpeg"
+
+        b64_image = base64.b64encode(image_bytes).decode("utf-8")
+        return f"data:{mime_type};base64,{b64_image}"
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Unable to build data URL for image=%s error=%s", image_url, exc)
+        return None
+
 def get_query_prompt() -> dict[str, Any]:
     """Return the system prompt that guides weld-quality analysis responses."""
     return {
         "role": "system",
-        "content": (
-            "You are an expert weld quality inspector and metallurgical "
-                "engineer with deep knowledge of MIG/MAG/TIG arc welding "
-                "processes and industrial weld defect analysis per AWS D1.1 "
-                "and ISO 5817 standards. When shown a weld image alongside "
-                "time-series sensor readings, classify the weld quality, "
-                "identify any defect type, explain the root cause using "
-                "sensor evidence, assess severity, and recommend corrective "
-                "actions. Always structure your response with clearly "
-                "labelled sections."
-            ),
-        }
+        "content": [
+            {
+                "type": "text",
+                "text": "You are an expert weld quality inspector and metallurgical engineer with deep knowledge of MIG/MAG/TIG arc welding processes and industrial weld defect analysis per AWS D1.1 and ISO 5817 standards. When shown a weld image alongside time-series sensor readings, you classify the weld quality, identify any defect type, explain the root cause using sensor evidence, assess severity, and recommend corrective actions. Always structure your response with clearly labelled sections.",
+            }
+        ]
+    }
 
 
 def get_fusion_measurement_name() -> str:
@@ -247,10 +263,15 @@ def api_explain() -> Any:
                 vision_timestamp,
             )
 
+            img_handle = None
+            image_url = None
+            image_data_url = None
+
             if len(points_vision) > 0:
                 frame_id = points_vision[0].get("frame_id")
                 img_handle = points_vision[0].get("img_handle")
                 image_url = build_image_url(str(img_handle)) if img_handle else None
+                image_data_url = build_image_data_url(image_url) if image_url else None
                 logger.info(
                     "Retrieved frame_id=%s img_handle=%s image_url=%s",
                     frame_id,
@@ -279,7 +300,7 @@ def api_explain() -> Any:
             vision_data = {
                 "type": "image_url",
                 "image_url": {
-                    "url": f"{build_image_url(img_handle)}" if img_handle else None,
+                    "url": image_data_url,
                 },
             }
 
@@ -325,15 +346,12 @@ def api_explain() -> Any:
     final_prompt = [get_query_prompt(), message]
     logger.debug("Sending final prompt to vLLM: %s", final_prompt)
     response = vllm_client.chat.completions.create(
-        model=os.getenv("VLLM_SERVED_MODEL_NAME", "unsloth/Qwen3.5-2B"),
+        model=os.getenv("VLLM_ADAPTER_NAME", "qwen3.5-2b-adapter"),
         messages=final_prompt,
-        max_tokens=int(os.getenv("VLLM_CLIENT_TOKEN", "4096")),
+        max_tokens=int(os.getenv("VLLM_CLIENT_TOKEN", "2048")),
         temperature=float(os.getenv("VLLM_CLIENT_TEMPERATURE", "1.5")),
         extra_body={
             "min_p": float(os.getenv("VLLM_CLIENT_MIN_P", "0.1")),
-            "chat_template_kwargs": {
-                "enable_thinking": False,
-            },
         },
     )
 
