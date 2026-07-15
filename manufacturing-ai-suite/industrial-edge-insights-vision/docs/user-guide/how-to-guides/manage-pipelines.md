@@ -1,10 +1,42 @@
-# Manage Pipeline
+# Manage Pipelines in Vision AI Detection Apps
 
 This section describes how to create custom AI pipelines for the sample application and the commands to manage these pipelines.
 
 ## Create Pipelines
 
 The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for Docker Compose deployment) and similarly inside the Helm directory (for Helm based deployment).
+
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+<!--hide_directive :sync: pallet-detect hide_directive-->
+
+The following is an example of the pallet defect detection pipeline, which is included in the `pipeline-server-config.json` file.
+
+```sh
+    "pipelines": [
+    {
+        "name": "pallet_defect_detection",
+        "source": "gstreamer",
+        "queue_maxsize": 50,
+        "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "detection-properties": {
+                    "element": {
+                        "name": "detection",
+                        "format": "element-properties"
+                    }
+                }
+            }
+        },
+        "auto_start": false,
+        "publish_frame": true
+    },
+```
+
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive :sync: pcb-detect hide_directive-->
 
 The following is an example of the PCB anomaly detection pipeline, which is included in the `pipeline-server-config.json` file.
 
@@ -30,6 +62,11 @@ The following is an example of the PCB anomaly detection pipeline, which is incl
         "publish_frame": true
     },
 ```
+
+<!--hide_directive
+:::
+::::
+hide_directive-->
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
 
@@ -58,9 +95,33 @@ Follow this procedure to start the pipeline.
     ]
    ```
 
-2. You use a Client URL (cURL) command to start the pipeline.
+2. Use a Client URL (cURL) command to start the pipeline.
 
-   In this example, a pipeline included in this sample application is `pcb_anomaly_detection`. Start this pipeline with the following cURL command.
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
+
+   Start this pipeline with the following cURL command.
+
+   ```bash
+   curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection -X POST -H 'Content-Type: application/json' -d '{
+       "source": {
+           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+           "type": "uri"
+       },
+       "parameters": {
+           "detection-properties": {
+               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+               "device": "CPU"
+           }
+       }
+   }'
+   ```
+
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   Start this pipeline with the following cURL command.
 
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection -X POST -H 'Content-Type: application/json' -d '{
@@ -77,13 +138,34 @@ Follow this procedure to start the pipeline.
    }'
    ```
 
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
 3. Take note of the instance ID (without quotes).
 
    Each pipeline has its **instance ID**. You will need the instance ID to stop the pipeline later.
 
-   ![Example of an instance ID for a pipeline](../_assets/instance-id.png)
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
 
-   Figure 1: Example of a pipeline instance ID
+   ![Example of an instance ID for a pipeline](../_assets/pdd-instance-id.png "pallet defect detection instance id")
+
+   *Example of a Pallet Defect Detection pipeline instance ID*
+
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ![Example of an instance ID for a pipeline](../_assets/pcb-instance-id.png "pcb anomaly detection instance id")
+
+   *Example of a PCB Anomaly Detection pipeline instance ID*
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 ## Get Statistics of the Running Pipelines
 
@@ -91,7 +173,7 @@ Request the pipeline statistics with this cURL command.
 
 Replace `HOST_IP` with the IP address of your system.
 
-```sh
+```bash
 curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
 ```
 
@@ -101,13 +183,12 @@ Stop the pipeline with the following cURL command.
 
 Replace `HOST_IP` with the IP address of your system and `instance_id` with the instance ID (without quotes) of the running pipeline.
 
-```sh
+```bash
 curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 ```
 
-> **Note:** The instance ID is shown in the Terminal when the
-> [pipeline was started](#start-the-pipeline) or when
-> [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
+> **Note:**
+> The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
 
 ## Additional Usage
 

@@ -14,12 +14,12 @@ If not available, you can simulate this by downloading the appropriate sample mo
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-<!--hide_directive :sync: tab1   hide_directive-->
+<!--hide_directive :sync: pallet-detect   hide_directive-->
 
 [Download Pallet Defect Detection Model](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/INT8/pallet_defect_detection.zip)
 
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-<!--hide_directive :sync: tab2   hide_directive-->
+<!--hide_directive :sync: pcb-detect   hide_directive-->
 
 [Download PCB Anomaly Detection Model](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/FP16/pcb-anomaly-detection.zip)
 
@@ -41,14 +41,14 @@ hide_directive-->
 
    <!--hide_directive ::::{tab-set} hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-   <!--hide_directive :sync: tab1   hide_directive-->
+   <!--hide_directive :sync: pallet-detect   hide_directive-->
 
    ```sh
    cp .env_pallet-defect-detection .env
    ```
 
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-   <!--hide_directive :sync: tab2   hide_directive-->
+   <!--hide_directive :sync: pcb-detect   hide_directive-->
 
    ```sh
    cp .env_pcb-anomaly-detection .env
@@ -93,7 +93,7 @@ hide_directive-->
 
    <!--hide_directive ::::{tab-set} hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-   <!--hide_directive :sync: tab1   hide_directive-->
+   <!--hide_directive :sync: pallet-detect   hide_directive-->
 
    `apps/pallet-defect-detection/payload.json`
 
@@ -124,7 +124,7 @@ hide_directive-->
    ```
 
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-   <!--hide_directive :sync: tab2   hide_directive-->
+   <!--hide_directive :sync: pcb-detect   hide_directive-->
 
    `apps/pcb-anomaly-detection/payload.json`
 
@@ -163,14 +163,14 @@ hide_directive-->
 
    <!--hide_directive ::::{tab-set} hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-   <!--hide_directive :sync: tab1   hide_directive-->
+   <!--hide_directive :sync: pallet-detect   hide_directive-->
 
    ```sh
    ./sample_start.sh -p pallet_defect_detection_mlops
    ```
 
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-   <!--hide_directive :sync: tab2   hide_directive-->
+   <!--hide_directive :sync: pcb-detect   hide_directive-->
 
    ```sh
    ./sample_start.sh -p pcb_anomaly_detection_mlops
@@ -187,12 +187,12 @@ hide_directive-->
 
    <!--hide_directive ::::{tab-set} hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-   <!--hide_directive :sync: tab1   hide_directive-->
+   <!--hide_directive :sync: pallet-detect   hide_directive-->
 
    ![WebRTC streaming](../_assets/pdd-webrtc-streaming.png)
 
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-   <!--hide_directive :sync: tab2   hide_directive-->
+   <!--hide_directive :sync: pcb-detect   hide_directive-->
 
    ![WebRTC streaming](../_assets/pcb-webrtc-streaming.png)
 
@@ -220,7 +220,7 @@ hide_directive-->
 
     <!--hide_directive ::::{tab-set} hide_directive-->
     <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-    <!--hide_directive :sync: tab1   hide_directive-->
+    <!--hide_directive :sync: pallet-detect   hide_directive-->
 
     `apps/pallet-defect-detection/payload.json`
 
@@ -257,7 +257,7 @@ hide_directive-->
     ```
 
     <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-    <!--hide_directive :sync: tab2   hide_directive-->
+    <!--hide_directive :sync: pcb-detect   hide_directive-->
 
     `apps/pcb-anomaly-detection/payload.json`
 

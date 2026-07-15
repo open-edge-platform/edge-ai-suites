@@ -7,7 +7,7 @@ Typically, a pipeline is started with a cURL request with JSON payload containin
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-<!--hide_directive :sync: tab1   hide_directive-->
+<!--hide_directive :sync: pallet-detect   hide_directive-->
 
 ```bash
 curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
@@ -25,7 +25,7 @@ curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -
 ```
 
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-<!--hide_directive :sync: tab2   hide_directive-->
+<!--hide_directive :sync: pcb-detect   hide_directive-->
 
 ```bash
 curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
@@ -51,7 +51,7 @@ To change the input video source for the pipeline, refer to the following table:
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-<!--hide_directive :sync: tab1   hide_directive-->
+<!--hide_directive :sync: pallet-detect   hide_directive-->
 
 | Video Source | Source Section of the cURL Request                          | Remark                          |
 |--------------|-------------------------------------------------------------|---------------------------------|
@@ -61,7 +61,7 @@ To change the input video source for the pipeline, refer to the following table:
    |
 
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-<!--hide_directive :sync: tab2   hide_directive-->
+<!--hide_directive :sync: pcb-detect   hide_directive-->
 
 | Video Source | Source Section of the cURL Request                          | Remark                          |
 |--------------|-------------------------------------------------------------|---------------------------------|

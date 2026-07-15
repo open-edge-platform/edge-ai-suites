@@ -11,6 +11,7 @@ This section collects guides for Vision AI sample applications.
 <!--hide_directive
 :::{toctree}
 
+Manage Pipelines <./how-to-guides/manage-pipelines.md>
 Change Video Source <./how-to-guides/change-input-video-source.md>
 Enable MLOps <./how-to-guides/enable-mlops.md>
 Run Benchmarks <./how-to-guides/benchmark.md>
