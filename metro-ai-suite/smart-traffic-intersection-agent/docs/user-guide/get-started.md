@@ -420,6 +420,7 @@ source setup.sh --setup
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
+./deploy-with-trusted-compute
 
 :::
 hide_directive-->
