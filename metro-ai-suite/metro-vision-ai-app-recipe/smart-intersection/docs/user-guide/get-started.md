@@ -259,6 +259,7 @@ applications.
 
 get-started/system-requirements.md
 get-started/deploy-with-helm.md
+get-started/deploy-with-trusted-compute-helm.md
 
 :::
 hide_directive-->
