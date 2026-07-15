@@ -426,108 +426,7 @@ helm install stia . -n traffic -f values-override.yaml \
 
 ## Deploy with Trusted Compute
 
-Intel Trusted Compute runs workloads inside a hardware-isolated VM, protecting inference workloads and model data from untrusted co-tenants on the same host.
-
-> **Note:** When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. If only an integrated GPU is available on the system, Smart Intersection must be deployed with CPU-only inference before binding the GPU.
-
-> **Note:** When GPU is passthrough, GPU telemetry will not be available.
-
-### 1. Install Trusted Compute
-
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.1 or later on your Kubernetes nodes. Complete the following sections:
-1. Prerequisites
-2. Download the Trusted Compute Package
-3. Kubernetes Option
-
-### 2. Deploy the Application
-
-Choose one of the following paths based on whether you need GPU acceleration.
-
-> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy with Helm](#steps-to-deploy-with-helm) section above.
-
----
-
-#### a. Deploy with Trusted Compute (CPU)
-
-```bash
-helm install stia . -n <your-namespace> --create-namespace \
-  --set ovms.trustedCompute.enabled=true \
-  --set ovms.gpu.enabled=false
-```
-
-#### b. Deploy with Trusted Compute (GPU)
-
-##### Prerequisites
-
-Before enabling GPU passthrough, ensure:
-
-- Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
-- Trusted Compute version 1.5.1 or later
-- Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
-- Smart Intersection is deployed and running (required as a prerequisite for this application)
-
-##### Step 1: Bind GPU to vfio-pci
-
-> **Note:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
-
-Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver.
-
-```bash
-sudo ./tools/intel-igpu-vfio-bind.sh bind
-```
-
-##### Step 2: Deploy with GPU Enabled
-
-```bash
-helm install stia . -n <your-namespace> --create-namespace \
-  --set ovms.trustedCompute.enabled=true \
-  --set ovms.trustedCompute.tc_gpu_enabled=true \
-  --set ovms.gpu.enabled=false
-```
-
----
-
-The OVMS VLM serving pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and model data from untrusted co-tenants on the same host.
-
-> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
-
-### 3. Verify Trusted Compute Deployment
-
-Verify that the pods are running with the Trusted Compute runtime:
-
-```bash
-# Check that OVMS pods are using the trusted compute runtime class
-kubectl get pods -n <your-namespace> -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.runtimeClassName}{"\n"}{end}' | grep ovms
-
-# Verify the pods are running
-kubectl get pods -n <your-namespace>
-
-# Check OVMS pod logs to ensure containers started successfully
-kubectl logs -n <your-namespace> -l app=stia-ovms-service
-```
-
-You should see the OVMS VLM serving pods running with the Trusted Compute runtime class.
-
-Once the pods are ready, access the application using the URLs listed in the [Step 9: Access the Application](#step-9-access-the-application) section.
-
-### 4. Clean Up Deployment
-
-**Step 1. Uninstall the application:**
-
-```bash
-helm uninstall stia -n <your-namespace>
-kubectl delete namespace <your-namespace>
-```
-
-**Step 2. Revert GPU binding** (if deployed with GPU):
-
-```bash
-sudo ./tools/intel-igpu-vfio-bind.sh unbind
-```
-
-**Step 3. Clean Up the Trusted Compute Deployment**
-
-To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
+To deploy the Smart Traffic Intersection Agent with Intel Trusted Compute for hardware-isolated workloads (CPU or GPU passthrough), refer to the [Deploy with Trusted Compute using Helm](./deploy-with-trusted-compute-helm.md) guide.
 
 ---
 
@@ -593,10 +492,6 @@ To uninstall Trusted Compute from the Kubernetes nodes after you have removed th
   # Delete the required PVC from the namespace
   kubectl delete pvc <pvc-name> -n <your-namespace>
   ```
-
-## Clean Up the Trusted Compute Deployment
-
-To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Related Links
 
