@@ -71,7 +71,7 @@ Edit the config.json and add the following pipeline.
             {
                 "name": "loitering_detection_vms_mqtt",
                 "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -330,6 +330,7 @@ analytics_apps:
     mqtt_port: ${MQTT_PORT:-1883}
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
+    pipeline_name: "${DLS_PIPELINE_NAME:-loitering_detection_vms_mqtt}"
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
@@ -480,43 +481,115 @@ A `200 OK` response confirms the device agent is enabled.
 
 ---
 
-## Part 6 — Discover Cameras and Launch a Pipeline Run from the VAP Dashboard
+## Part 6 — Start a Pipeline Run
 
-### 6.1 Open the Provider Dashboard
+The recommended way to start and stop a pipeline is directly from the **Nx Witness
+desktop client**. VAP polls the Nx Witness API every 5 seconds and reacts to
+per-camera settings changes automatically — no dashboard interaction is needed.
 
-Open a browser and navigate to:
+---
 
-```
-https://localhost:3443
-```
+### 6.1 Discover Cameras
 
-The dashboard loads and connects to the VAP backend through the UI proxy at `https://localhost:3443/v1`.
-
-### 6.2 Discover Cameras from Nx Witness
-
-1. In the **Camera Discovery** panel on the left, click **Discover Cameras**.
-2. VAP queries the Nx Witness REST API (`GET /rest/v4/devices`) and stores discovered cameras in PostgreSQL.
-3. The camera list updates. Each Nx camera appears with its name and the prefix `nx:` followed by its UUID, for example: `nx:e3e9a385-7fe0-3ba5-5482-a86cde7faf48`.
-
-Alternatively, trigger discovery via the API:
+Before starting a pipeline, VAP must know about your cameras. Trigger discovery
+once after VAP starts:
 
 ```bash
 curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
-### 6.3 Enable a Camera for Analytics
+Or open the dashboard at `https://localhost:3443` and click **Discover Cameras**
+in the Camera Discovery panel. Cameras are stored in PostgreSQL and reused across
+restarts.
 
-In the **Camera Discovery** panel, find the camera you want to use. Click the toggle next to it to mark it as **enabled**. Only enabled cameras appear in the analytics run form.
+---
 
-You can also enable a camera via the API:
+### 6.2 Start the Pipeline from the Nx Witness Client (Recommended)
+
+#### 6.2.1 Open Camera Settings
+
+1. Open the **Nx Witness desktop client** and connect to your server.
+2. In the resource tree, right-click the camera you want to enable analytics on.
+3. Select **Camera Settings**.
+
+#### 6.2.2 Navigate to the Integration Panel
+
+1. In the Camera Settings window, click the **Integrations** tab.
+2. Click **DLStreamerAnalyticsIntegrationVMS** to expand the per-camera settings.
+
+You will see:
+
+| Field | Type | Description |
+|---|---|---|
+| **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera |
+| **Device** | Dropdown | Inference device: `CPU`, `GPU`, or `NPU` |
+
+<img src="../_assets/DLStreamerAnalyticsIntegrationVMS_LD_pipeline_enable_UI.png" alt="DLStreamerAnalyticsIntegrationVMS settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
+
+#### 6.2.3 Enable the Pipeline
+
+1. Select the **Device** from the dropdown (e.g. `GPU`).
+2. Check the **Enable Loitering Detection Pipeline** checkbox.
+3. Click **Apply** and then click **OK**.
+
+VAP detects the change within 5 seconds and starts the pipeline automatically.
+Watch the VAP logs to confirm:
 
 ```bash
+docker compose logs -f vms-backend
+```
+
+Expected log output:
+
+```
+[info] {'source': {'uri': '<rtsp_url>', 'type': 'uri', 'properties': {'protocols': 'tcp',
+        'add-reference-timestamp-meta': True, 'latency': 100}},
+        'destination': {'metadata': {'type': 'mqtt', 'host': '<PIPELINE_SERVER_MQTT_HOST>:1883',
+        'topic': 'nx/dls_vision/<device-uuid>'}},
+        'parameters': {'detection-properties': {'device': 'GPU'}}}
+[info] nx_dls_pipeline_started  device=GPU  device_id=<device-uuid>
+        pipeline_name=loitering_detection_vms_mqtt
+        run_id=<hex-instance-id>
+```
+
+#### 6.2.4 Stop the Pipeline
+
+1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
+3. Click **Apply** and then click **OK**.
+
+VAP stops the run on the next poll. 
+
+Expected log output:
+
+```
+[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+```
+
+---
+
+### 6.3 Start the Pipeline from the VAP Dashboard (Optional)
+
+<details>
+<summary>Click to expand — starting a pipeline from the provider dashboard</summary>
+
+#### Open the Dashboard
+
+Open a browser and navigate to `https://localhost:3443`.
+
+#### Enable a Camera for Analytics
+
+In the **Camera Discovery** panel, find the camera and click the toggle to mark
+it as **enabled**.
+
+```bash
+# Or via API:
 curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
   -d '{"camera_ids": ["nx:<device-uuid>"], "enabled": true}'
 ```
 
-### 6.4 Configure and Start the loitering detection pipeline Run
+#### Configure and start the loitering detection pipeline run
 
 1. In the **Analytics Engine** panel, click **Discover Apps**. Depending upon your configuration you should see **Loitering Detection** in the Analytics App section. Click the radio button.
 
@@ -547,9 +620,25 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 6. Click **Start Analysis**.
 
-### 6.5 What Happens When You Click Start
+#### Stop the Run
 
-When you click **Start Run**, VAP executes the following:
+When you want to stop the detection, go back to the VAP dashboard **Analytics Engine Conguration** panel for **DLStreamer Vision** and click **Stop Analysis** on the active run.
+
+Or via the API:
+
+```bash
+curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_id>
+```
+
+This sends `DELETE /pipelines/<instance_id>` to the DLStreamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
+
+</details>
+
+---
+
+### 6.4 What Happens When VAP Starts a Pipeline
+
+When VAP starts a pipeline run, it executes the following:
 
 1. Resolves the selected `camera_id` (`nx:<uuid>`) to an RTSP URL via `NxWitnessVmsShim.get_live_stream_url()`.
 2. Builds an MQTT publish topic: `nx/dls_vision/<device-uuid>` (the topic where dls_vision publishes and VAP subscribes).
@@ -571,8 +660,8 @@ When you click **Start Run**, VAP executes the following:
      },
      "parameters": {
         "detection-properties": {
-          "model": "//home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
-          "device": "GPU"
+          "model": "<model-path>",
+          "device": "<selected-device>"
       }
      }
    }
@@ -580,22 +669,6 @@ When you click **Start Run**, VAP executes the following:
 
 4. The Pipeline Server starts the GStreamer pipeline, consuming the RTSP stream and publishing inference results to the MQTT broker.
 5. VAP's `MqttSubscriber` (running as a background task since startup) receives messages on the wildcard topic `+/dls_vision/+`.
-
-### 6.6 Verify the Run Is Active
-
-Check active runs in the dashboard **Analytics Engine** panel — the run should appear in the active runs list.
-
-Or via the API:
-
-```bash
-curl -k https://localhost:3443/v1/analytics-apps/dls_vision/runs | python3 -m json.tool
-```
-
-Check the Pipeline Server directly:
-
-```bash
-curl http://<HOST_IP>:8080/pipelines/status | python3 -m json.tool
-```
 
 ---
 
@@ -619,20 +692,7 @@ Within a few seconds of starting the run, detection bounding boxes should appear
 
 If detections do not appear, see the [Troubleshooting](#troubleshooting) section.
 
-### 7.3 Stop the Pipeline Run
-
-When you want to stop the detection, go back to the VAP dashboard **Analytics Engine Conguration** panel for **DLStreamer Vision** and click **Stop Analysis** on the active run.
-
-Or via the API:
-
-```bash
-curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_id>
-```
-
-This sends `DELETE /pipelines/<instance_id>` to the DLStreamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
-
-
-### 7.4 Stop the plugin
+### 7.3 Stop the plugin
 
 To stop the VAP, 
 

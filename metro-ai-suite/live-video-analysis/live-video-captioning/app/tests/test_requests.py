@@ -20,7 +20,7 @@ class TestStartRunRequestValid:
         req = StartRunRequest(rtspUrl="rtsp://192.168.1.10:554/stream")
         assert req.rtspUrl == "rtsp://192.168.1.10:554/stream"
         assert req.maxNewTokens == 70
-        assert req.modelName == "OpenGVLab/InternVL2-2B"
+        assert req.modelName == "InternVL2-1B"
 
     def test_rtsps_scheme_accepted(self):
         """rtsps:// scheme is accepted as valid."""
@@ -51,7 +51,6 @@ class TestStartRunRequestValid:
             maxNewTokens=200,
             detectionModelName="yolov5",
             detectionThreshold=0.8,
-            pipelineName="my_pipe",
             runName="demo_run",
         )
         assert req.prompt == "What is happening?"
@@ -59,8 +58,15 @@ class TestStartRunRequestValid:
         assert req.maxNewTokens == 200
         assert req.detectionModelName == "yolov5"
         assert req.detectionThreshold == 0.8
-        assert req.pipelineName == "my_pipe"
         assert req.runName == "demo_run"
+
+    def test_detection_device_field_accepted(self):
+        """Detection device value is parsed and stored."""
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            detectionDevice="npu",
+        )
+        assert req.detectionDevice == "npu"
 
     def test_linux_video_device_path_accepted(self):
         """Linux V4L2 camera paths are accepted."""
@@ -155,3 +161,62 @@ class TestStartRunRequestBoundaries:
         """Valid thresholds within [0.0, 1.0] are accepted."""
         req = StartRunRequest(rtspUrl="rtsp://10.0.0.1/s", detectionThreshold=threshold)
         assert req.detectionThreshold == threshold
+
+
+# ---------------------------------------------------------------------------
+# Selector validators
+# ---------------------------------------------------------------------------
+class TestStartRunRequestSelectors:
+    """Validation and normalization for stream/pipeline selectors."""
+
+    def test_stream_source_type_valid_values_are_normalized(self):
+        req_rtsp = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            streamSourceType=" RTSP ",
+        )
+        req_camera = StartRunRequest(
+            rtspUrl="/dev/video0",
+            streamSourceType=" Camera ",
+        )
+        assert req_rtsp.streamSourceType == "rtsp"
+        assert req_camera.streamSourceType == "camera"
+
+    def test_stream_source_type_none_is_accepted(self):
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            streamSourceType=None,
+        )
+        assert req.streamSourceType is None
+
+    def test_stream_source_type_invalid_rejected(self):
+        with pytest.raises(ValidationError, match="streamSourceType must be either 'rtsp' or 'camera'"):
+            StartRunRequest(
+                rtspUrl="rtsp://10.0.0.1/stream",
+                streamSourceType="usb",
+            )
+
+    def test_pipeline_type_valid_values_are_normalized(self):
+        req_detection = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=" Detection ",
+        )
+        req_non_detection = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=" NON-DETECTION ",
+        )
+        assert req_detection.pipelineType == "detection"
+        assert req_non_detection.pipelineType == "non-detection"
+
+    def test_pipeline_type_none_is_accepted(self):
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=None,
+        )
+        assert req.pipelineType is None
+
+    def test_pipeline_type_invalid_rejected(self):
+        with pytest.raises(ValidationError, match="pipelineType must be either 'detection' or 'non-detection'"):
+            StartRunRequest(
+                rtspUrl="rtsp://10.0.0.1/stream",
+                pipelineType="smart",
+            )

@@ -1090,7 +1090,7 @@ As per the business logic mentioned in previous steps, you will see that when a 
 ## Supporting Resources
 
 - [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Euclidean Distance Algorithms](https://en.wikipedia.org/wiki/Euclidean_distance)

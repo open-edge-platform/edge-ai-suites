@@ -11,7 +11,6 @@ global:
   volumeHostPath: ""
   usePvc: true
   keepPvc: false
-  sharedPvcName: ""
 
   persistence:
     rwxEnabled: false
@@ -22,12 +21,26 @@ global:
     httpsProxy: ""
     noProxy: "localhost,127.0.0.1,.svc.cluster.local"
 
-  gpu:
-    multimodalEmbeddingEnabled: false
-    vdmsDataprepEnabled: false
-    key: ""
-    device: ""
-    hostPath: "/dev/dri"
+  # Host group ids owning the accelerator device nodes (/dev/dri for GPU,
+  # /dev/accel for NPU). When a service uses a GPU or NPU these gids are added to
+  # the pod's supplementalGroups so the non-root container user can open the
+  # device. The gids are host-specific; override to match the target node
+  # (check with `ls -ln /dev/accel` and `ls -ln /dev/dri`).
+  accelGroupIds:
+    - 992
+
+  devices:
+    # Multimodal Embedding Serving
+    multimodalEmbedding:
+      device: "CPU" # CPU | GPU | NPU
+      key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+    vdmsDataprep:
+      embedding:
+        device: "CPU" # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+      detection:
+        device: "CPU" # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
 
   credentials:
     minioRootUser: ""
@@ -63,7 +76,6 @@ global:
     ovModelsDir: "/app/ov_models"
     ovPerformanceMode: "THROUGHPUT"
     embeddingUseOv: "true"
-    embeddingDevice: "CPU"
     defaultStartOffsetSec: "0"
     defaultClipDuration: "-1"
     defaultNumFrames: "64"
@@ -143,8 +155,6 @@ persistence:
   pgData:
     size: 20Gi
   vdmsDb:
-    size: 50Gi
-  sharedData:
     size: 50Gi
   ovModels:
     size: 30Gi

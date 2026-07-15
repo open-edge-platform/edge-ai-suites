@@ -63,6 +63,7 @@
     <disable_collisions link1="vacuum_gripper_base" link2="wrist_3_link" reason="Never"/>
     
     <!-- Parallel gripper self-collisions -->
+    <disable_collisions link1="forearm_link" link2="gripper_base" reason="Never"/>
     <disable_collisions link1="ee_link" link2="gripper_base" reason="Adjacent"/>
     <disable_collisions link1="gripper_base" link2="wrist_3_link" reason="Adjacent"/>
     <disable_collisions link1="gripper_base" link2="left_finger" reason="Adjacent"/>

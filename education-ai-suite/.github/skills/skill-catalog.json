@@ -1,0 +1,118 @@
+{
+  "description": "Harness-neutral discovery catalog for Smart Classroom RAG workflow skills. Paths are relative to the repository root (education-ai-suite/).",
+  "skillsRoot": ".github/skills",
+  "skills": [
+    {
+      "name": "sc-setup",
+      "path": ".github/skills/sc-setup/SKILL.md",
+      "description": "Set up Flutter integration with the existing Content Search backend by checking Flutter availability, installing Flutter dependencies, creating backend venv, installing backend requirements, and running utils/flutter/setup.ps1.",
+      "triggers": [
+        "set up smart classroom",
+        "first time setup",
+        "install dependencies",
+        "run setup",
+        "setup environment",
+        "configure system"
+      ],
+      "requires": [
+        "Windows 11",
+        "Python 3.12 in PATH",
+        "Flutter SDK in PATH"
+      ]
+    },
+    {
+      "name": "sc-up",
+      "path": ".github/skills/sc-up/SKILL.md",
+      "description": "Bring up the Flutter implementation with the existing Content Search backend by running utils/flutter/start.ps1 and validating service health.",
+      "triggers": [
+        "start smart classroom",
+        "run the app",
+        "launch smart classroom",
+        "bring up services",
+        "start backend",
+        "start content search",
+        "open smart classroom"
+      ],
+      "requires": [
+        "sc-setup completed successfully",
+        "utils/flutter/start.ps1 available"
+      ]
+    },
+    {
+      "name": "sc-doctor",
+      "path": ".github/skills/sc-doctor/SKILL.md",
+      "description": "Check Content Search backend health by probing the health endpoint and diagnosing Flutter-to-backend connectivity issues.",
+      "triggers": [
+        "is the backend up",
+        "check health",
+        "smart classroom is broken",
+        "debug backend",
+        "backend unreachable",
+        "check connectivity",
+        "flutter doctor",
+        "why won't it start",
+        "backend logs"
+      ],
+      "requires": [
+        "curl or Invoke-WebRequest",
+        "Python venv (venv_content_search/)"
+      ]
+    },
+    {
+      "name": "sc-upload",
+      "path": ".github/skills/sc-upload/SKILL.md",
+      "description": "Upload a file to the Content Search backend and poll the ingestion task until indexed (COMPLETED). Handles duplicate detection, cleanup, and retry. Works with PDFs, videos, images, and Office documents.",
+      "triggers": [
+        "upload a file",
+        "ingest a document",
+        "upload pdf",
+        "index a file",
+        "add course material",
+        "upload video",
+        "upload image",
+        "ingest content"
+      ],
+      "requires": [
+        "healthy Content Search backend (run sc-doctor first)",
+        "a supported file: pdf, txt, docx, pptx, xlsx, jpg, jpeg, png, mp4, avi, mov, mkv"
+      ]
+    },
+    {
+      "name": "sc-qa",
+      "path": ".github/skills/sc-qa/SKILL.md",
+      "description": "Ask a natural-language question against indexed content via the RAG Q&A endpoint. Supports multi-turn conversation history, tag filtering, and returns cited sources.",
+      "triggers": [
+        "ask a question",
+        "query the content",
+        "what does the document say",
+        "search the knowledge base",
+        "multi-turn Q&A",
+        "qa endpoint",
+        "answer from documents",
+        "RAG question"
+      ],
+      "requires": [
+        "healthy Content Search backend",
+        "at least one COMPLETED ingestion (run sc-upload first)"
+      ]
+    },
+    {
+      "name": "sc-files",
+      "path": ".github/skills/sc-files/SKILL.md",
+      "description": "List, inspect, filter, and delete files that have been indexed in the Content Search backend. Also lists available tags.",
+      "triggers": [
+        "list files",
+        "show indexed files",
+        "what files are uploaded",
+        "delete a file",
+        "remove file",
+        "list tags",
+        "what tags exist",
+        "manage files"
+      ],
+      "requires": [
+        "healthy Content Search backend"
+      ]
+    }
+  ]
+}

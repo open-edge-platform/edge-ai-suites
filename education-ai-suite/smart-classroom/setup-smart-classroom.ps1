@@ -121,16 +121,42 @@ if (Test-Path $proxyConfigFile) {
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
     if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
-    if (-not $script:httpProxy -and -not $script:httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
+    if (-not $script:httpProxy -and -not $script:httpsProxy) { 
+        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
+        
+        # Check environment for proxy settings
+        Write-Host ""
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+        $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+        $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+        
+        $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+        if ($envProxies) {
+            $envProxies | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+            }
+            Write-Host ""
+            Write-Host "  Environment variables detected. You can save these to .proxy-config." -ForegroundColor Yellow
+        } else {
+            Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+        }
+    }
     Write-Host ""
 
     if ($Silent) {
         Write-Host "  Silent mode: using saved proxy settings" -ForegroundColor Gray
         $changeProxy = "N"
     } else {
-        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        if (-not $script:httpProxy -and -not $script:httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save environment proxy settings to .proxy-config" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
     }
@@ -161,19 +187,60 @@ if (Test-Path $proxyConfigFile) {
         $script:httpsProxy = ""
         Write-Host "  No proxy - using direct connection." -ForegroundColor Yellow
     } else {
-        Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+        # If .proxy-config is empty but environment has proxy, save environment values
+        if (-not $script:httpProxy -and -not $script:httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            $script:httpProxy = $envHttpProxy
+            $script:httpsProxy = $envHttpsProxy
+            $script:noProxy = $envNoProxy
+            
+            $proxyConfig = @{
+                httpProxy = $script:httpProxy
+                httpsProxy = $script:httpsProxy
+                noProxy = $script:noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+            if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
+            if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
+            if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
+        } else {
+            Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+        }
     }
 } else {
     Write-Host ""
-    Write-Host "  No proxy configuration found." -ForegroundColor Gray
+    Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
+    Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+    Write-Host ""
+    
+    # Check environment variables for proxy settings
+    $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+    $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+    $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+    
+    $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+    if ($envProxies) {
+        $envProxies | ForEach-Object {
+            Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+        }
+        Write-Host ""
+        Write-Host "  Environment variables detected. You can save these or configure different settings." -ForegroundColor Yellow
+    } else {
+        Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+    }
     Write-Host ""
 
     if ($Silent) {
-        Write-Host "  Silent mode: assuming no proxy (direct connection)" -ForegroundColor Gray
+        Write-Host "  Silent mode: using environment proxy settings if available" -ForegroundColor Gray
         $configureProxy = "N"
     } else {
-        Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
-        Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        if ($envHttpProxy -or $envHttpsProxy) {
+            Write-Host "  [Y] Yes  - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No   - Save current environment proxy settings to .proxy-config" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes  - Configure proxy (save to .proxy-config)" -ForegroundColor White
+            Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
     }
@@ -200,13 +267,31 @@ if (Test-Path $proxyConfigFile) {
         $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
         Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
     } else {
-        $proxyConfig = @{
-            httpProxy = ""
-            httpsProxy = ""
-            noProxy = ""
+        # If environment variables exist, save them; otherwise save empty config
+        if ($envHttpProxy -or $envHttpsProxy) {
+            $script:httpProxy = $envHttpProxy
+            $script:httpsProxy = $envHttpsProxy
+            $script:noProxy = $envNoProxy
+            
+            $proxyConfig = @{
+                httpProxy = $script:httpProxy
+                httpsProxy = $script:httpsProxy
+                noProxy = $script:noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+            if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
+            if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
+            if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
+        } else {
+            $proxyConfig = @{
+                httpProxy = ""
+                httpsProxy = ""
+                noProxy = ""
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
         }
-        $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
-        Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
     }
 }
 
@@ -1704,6 +1789,73 @@ Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host ""
+
+# ============================================================================
+# PYTHON VIRTUAL ENVIRONMENTS
+# ============================================================================
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "   CREATING VIRTUAL ENVIRONMENTS" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+$venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
+
+$recreateVenvs = $false
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+    if ($Silent) {
+        Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
+        $recreateVenvs = $false
+    } else {
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        $recreateVenvs = $response.ToUpper() -eq "Y"
+        if ($recreateVenvs) {
+            Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } else {
+            Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
+        }
+    }
+}
+Write-Host ""
+
+Write-Host "Setting up Backend virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvBackend)) {
+    Remove-Item $venvBackend -Recurse -Force
+}
+if (-not (Test-Path $venvBackend)) {
+    python -m venv $venvBackend
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create Backend venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
+}
+Write-Host ""
+
+Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
+if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+    Remove-Item $venvContentSearch -Recurse -Force
+}
+if (-not (Test-Path $venvContentSearch)) {
+    python -m venv $venvContentSearch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+} else {
+    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+}
 Write-Host ""
 
 # ============================================================================

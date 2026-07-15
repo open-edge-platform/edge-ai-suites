@@ -253,6 +253,11 @@ services:
       - vol_nginx_tmpfs:/etc/nginx/:rw
     networks:
       - timeseries_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:15443/ -k || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     depends_on:
       - ia-grafana
       - ia-time-series-analytics-microservice

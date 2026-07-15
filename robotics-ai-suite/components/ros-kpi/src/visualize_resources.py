@@ -16,7 +16,10 @@ from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import numpy as np
+try:
+    from ._accel import np  # type: ignore[import-not-found]
+except ImportError:  # running as a script (e.g., `python src/visualize_resources.py`)
+    from _accel import np  # Intel dpnp/numpy shim
 
 
 def parse_pidstat_log(log_file):

@@ -2,6 +2,17 @@
 Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
+{{- $metricsManagerEnabled := .Values.metricsManager.enabled -}}
+{{- $metricsManagerName := include "stia.metricsManager.fullname" . -}}
+{{- $defaultMetricsManagerUrl := printf "http://%s:%v" $metricsManagerName .Values.metricsManager.service.metricsPort -}}
+{{- $metricsManagerUrl := default $defaultMetricsManagerUrl .Values.metrics.managerUrl -}}
+{{- $metricsStreamUrl := default (printf "%s/metrics/stream" $metricsManagerUrl) .Values.metrics.streamUrl -}}
+{{- $metricsHealthUrl := default (printf "%s/health" $metricsManagerUrl) .Values.metrics.healthUrl -}}
+{{- $defaultMetricsPushEnabled := ternary "true" "false" $metricsManagerEnabled -}}
+{{- $metricsPushEnabled := $defaultMetricsPushEnabled -}}
+{{- if ne (toString .Values.metrics.pushEnabled) "" -}}
+{{- $metricsPushEnabled = toString .Values.metrics.pushEnabled -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,7 +21,7 @@ metadata:
     {{- include "stia.labels" . | nindent 4 }}
     app.kubernetes.io/component: traffic-agent
 spec:
-  replicas: {{ .Values.trafficAgent.replicas }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: {{ include "stia.trafficAgent.fullname" . }}
@@ -22,9 +33,9 @@ spec:
         app.kubernetes.io/component: traffic-agent
     spec:
       containers:
-        - name: {{ .Values.trafficAgent.name }}
-          image: "{{ .Values.trafficAgent.image.repository }}:{{ .Values.trafficAgent.image.tag }}"
-          imagePullPolicy: {{ .Values.trafficAgent.image.pullPolicy }}
+        - name: traffic-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: backend
               containerPort: 8081
@@ -34,68 +45,74 @@ spec:
               protocol: TCP
           env:
             - name: LOG_LEVEL
-              value: {{ .Values.trafficAgent.env.logLevel | quote }}
+              value: {{ .Values.env.logLevel | quote }}
             - name: USE_API
               value: "true"
             - name: REFRESH_INTERVAL
-              value: {{ .Values.trafficAgent.env.refreshInterval | quote }}
+              value: {{ .Values.env.refreshInterval | quote }}
             # Proxy settings
             - name: http_proxy
-              value: {{ .Values.global.proxy.httpProxy | quote }}
+              value: {{ .Values.global.httpProxy | quote }}
             - name: HTTP_PROXY
-              value: {{ .Values.global.proxy.httpProxy | quote }}
+              value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
+              value: {{ .Values.global.httpsProxy | quote }}
             - name: HTTPS_PROXY
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
+              value: {{ .Values.global.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
+              value: "{{ .Values.global.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.ovms.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if $metricsManagerEnabled }},{{ $metricsManagerName }}{{- end }}"
             - name: NO_PROXY
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
+              value: "{{ .Values.global.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.ovms.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if $metricsManagerEnabled }},{{ $metricsManagerName }}{{- end }}"
             # MQTT configuration
             - name: MQTT_HOST
               value: {{ include "stia.mqttHost" . | quote }}
             - name: MQTT_PORT
-              value: {{ .Values.trafficAgent.mqtt.port | quote }}
+              value: {{ .Values.mqtt.port | quote }}
             # Intersection configuration
             - name: INTERSECTION_NAME
-              value: {{ .Values.trafficAgent.intersection.name | quote }}
+              value: {{ .Values.intersection.name | quote }}
             - name: INTERSECTION_LATITUDE
-              value: {{ .Values.trafficAgent.intersection.latitude | quote }}
+              value: {{ .Values.intersection.latitude | quote }}
             - name: INTERSECTION_LONGITUDE
-              value: {{ .Values.trafficAgent.intersection.longitude | quote }}
+              value: {{ .Values.intersection.longitude | quote }}
             # Weather configuration
             - name: WEATHER_MOCK
-              value: {{ .Values.trafficAgent.env.weatherMock | quote }}
-            # VLM configuration - point to OVMS K8s service
+              value: {{ .Values.env.weatherMock | quote }}
+            # VLM configuration — point to OVMS subchart K8s service
             - name: VLM_BASE_URL
-              value: "http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}"
+              value: "http://{{ include "stia.ovms.fullname" . }}:{{ .Values.ovms.service.port }}"
             - name: VLM_MODEL_NAME
-              value: {{ .Values.vlmServing.env.modelName | quote }}
+              value: {{ .Values.ovms.env.modelName | quote }}
             - name: VLM_TARGET_DEVICE
-              value: {{ if .Values.vlmServing.gpu.enabled }}"GPU"{{ else }}{{ .Values.vlmServing.env.targetDevice | quote }}{{ end }}
+              value: {{ if .Values.ovms.gpu.enabled }}"GPU"{{ else }}{{ .Values.ovms.env.targetDevice | quote }}{{ end }}
             - name: VLM_WEIGHT_FORMAT
-              value: {{ .Values.vlmServing.env.weightFormat | quote }}
+              value: {{ .Values.ovms.env.weightFormat | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
-              value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
+              value: {{ .Values.ovms.env.maxCompletionTokens | quote }}
             - name: VLM_TIMEOUT_SECONDS
-              value: {{ .Values.trafficAgent.env.vlmTimeoutSeconds | quote }}
+              value: {{ .Values.env.vlmTimeoutSeconds | quote }}
             # Traffic analysis configuration
             - name: HIGH_DENSITY_THRESHOLD
-              value: {{ .Values.trafficAgent.traffic.highDensityThreshold | quote }}
-            {{- if .Values.trafficAgent.traffic.moderateDensityThreshold }}
+              value: {{ .Values.traffic.highDensityThreshold | quote }}
+            {{- if .Values.traffic.moderateDensityThreshold }}
             - name: MODERATE_DENSITY_THRESHOLD
-              value: {{ .Values.trafficAgent.traffic.moderateDensityThreshold | quote }}
+              value: {{ .Values.traffic.moderateDensityThreshold | quote }}
             {{- end }}
-            {{- if .Values.trafficAgent.traffic.bufferDuration }}
+            {{- if .Values.traffic.bufferDuration }}
             - name: TRAFFIC_BUFFER_DURATION
-              value: {{ .Values.trafficAgent.traffic.bufferDuration | quote }}
+              value: {{ .Values.traffic.bufferDuration | quote }}
             {{- end }}
-            # Live metrics WebSocket URL (connects to live-metrics-service subchart)
-            {{- if index .Values "live-metrics-service" "enabled" }}
-            - name: METRICS_WS_URL
-              value: "ws://{{ .Release.Name }}-live-metrics-service:9090/ws/clients"
-            {{- end }}
+            # Metrics Manager endpoints
+            - name: METRICS_PUSH_ENABLED
+              value: {{ $metricsPushEnabled | quote }}
+            - name: METRICS_MANAGER_URL
+              value: {{ $metricsManagerUrl | quote }}
+            - name: METRICS_STREAM_URL
+              value: {{ $metricsStreamUrl | quote }}
+            - name: METRICS_HEALTH_URL
+              value: {{ $metricsHealthUrl | quote }}
+            - name: METRICS_PUSH_TIMEOUT_SECONDS
+              value: {{ .Values.metrics.pushTimeoutSeconds | quote }}
           {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
           volumeMounts:
             - name: ca-cert
@@ -106,20 +123,20 @@ spec:
             httpGet:
               path: /health
               port: backend
-            initialDelaySeconds: {{ .Values.trafficAgent.healthcheck.initialDelaySeconds }}
-            periodSeconds: {{ .Values.trafficAgent.healthcheck.periodSeconds }}
-            timeoutSeconds: {{ .Values.trafficAgent.healthcheck.timeoutSeconds }}
-            failureThreshold: {{ .Values.trafficAgent.healthcheck.failureThreshold }}
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           readinessProbe:
             httpGet:
               path: /health
               port: backend
-            initialDelaySeconds: {{ .Values.trafficAgent.healthcheck.initialDelaySeconds }}
-            periodSeconds: {{ .Values.trafficAgent.healthcheck.periodSeconds }}
-            timeoutSeconds: {{ .Values.trafficAgent.healthcheck.timeoutSeconds }}
-            failureThreshold: {{ .Values.trafficAgent.healthcheck.failureThreshold }}
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           resources:
-            {{- toYaml .Values.trafficAgent.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
       {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}

@@ -8,8 +8,8 @@ services:
     hostname: mqtt-broker
     container_name: mqtt-broker
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -34,6 +34,10 @@ services:
     entrypoint: [ "./run.sh" ]
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      # Air-gapped: resolve the public Google STUN host to the local host so
+      # WebRTC ICE never reaches out to the internet (paired with coturn
+      # listening on the Google STUN port 19302 below).
+      - "stun.l.google.com:${HOST_IP:-127.0.0.1}"
     depends_on:
       - mediamtx
       - mqtt-broker
@@ -41,8 +45,8 @@ services:
       - "${EVAM_HOST_PORT:-8040}:${EVAM_PORT:-8080}"
       - "8556:8554"
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,host.docker.internal,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,host.docker.internal,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -97,29 +101,32 @@ services:
       - app_network
 
   mediamtx:
-    image: bluenviron/mediamtx:1.11.3
+    image: bluenviron/mediamtx:1.15.6
     container_name: mediamtx
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
       - HTTPS_PROXY=$https_proxy
       - MTX_LOGLEVEL=info
+      - MTX_API=no
       - MTX_RTSP=no
       - MTX_RTMP=no
       - MTX_SRT=no
       - MTX_HLS=no
       - MTX_WEBRTCTRACKGATHERTIMEOUT=30s
       - MTX_WEBRTCADDRESS=:8889
+      # Advertise the host as a direct ICE candidate so same-host/LAN clients
+      # connect peer-to-peer; the TURN server below remains the NAT fallback.
+      - MTX_WEBRTCADDITIONALHOSTS=${HOST_IP:-localhost}
       - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP:-localhost}:3478
       - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME:-localhost}
       - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD:-localpass}
     ports:
       - "${WHIP_SERVER_PORT}:8889"
-      - "8189:8189"
-      - "9997:9997"
+      - "8189:8189/udp"
     restart: unless-stopped
     networks:
       - app_network
@@ -128,14 +135,17 @@ services:
     image: coturn/coturn:4.12
     container_name: coturn
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
       - HTTPS_PROXY=$https_proxy
     ports:
       - "3478:3478/udp"
+      # Air-gapped: also answer STUN on Google's public port (stun.l.google.com:19302)
+      # so clients pointed at the default Google STUN endpoint stay on-host.
+      - "19302:3478/udp"
     command: [ "-v" ] # Verbose mode for logging
     networks:
       - app_network
@@ -148,8 +158,8 @@ services:
         COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: video-caption-service
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -191,21 +201,17 @@ services:
         condition: service_started
       mqtt-broker:
         condition: service_started
-      live-metrics-service:
+      metrics-manager:
         condition: service_healthy
     networks:
       - app_network
 
-  live-metrics-service:
-    image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
-    build:
-      context: ../live-metrics-service
-      args:
-        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
-    container_name: live-metrics-service
+  metrics-manager:
+    image: docker.io/intel/metrics-manager:2026.1.0-rc2
+    container_name: metrics-manager
     environment:
-      - no_proxy=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${NO_PROXY:-}
+      - no_proxy=localhost,127.0.0.1,video-caption-service,metrics-manager,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,video-caption-service,metrics-manager,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -213,41 +219,32 @@ services:
       - METRICS_PORT=9090
       - LOG_LEVEL=INFO
       - CORS_ORIGINS=*
+      # Interval (ms) at which the SSE stream pushes metrics to the dashboard.
+      # Lower = more frequent UI updates, higher CPU. Range: 100-5000.
+      - PROMETHEUS_POLLER_INTERVAL_MS=${METRICS_POLL_INTERVAL_MS:-1000}
     ports:
       - "${METRICS_SERVICE_PORT:-9090}:9090"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9090/health" ]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 2s
-    restart: unless-stopped
-    networks:
-      - app_network
-
-  collector:
-    image: docker.io/intel/vippet-collector:2026.0.0
-    container_name: collector
-    ports:
       - "9273:9273"
     privileged: true
+    pid: host # qmassa needs it for GPU/NPU monitoring
+    security_opt:
+      - apparmor:unconfined
     devices:
-      - "/sys:/sys"
-      - "/dev:/dev"
-      - "/run:/run"
-      - "/proc:/proc"
-    pid: host # qmassa needs it
+      - "/dev/dri:/dev/dri"
     volumes:
-      - "./shared/collector-signals:/app/.collector-signals"
-      - "../live-metrics-service/telegraf.conf:/etc/telegraf/telegraf.conf:ro"
+      # The image ships a complete default telegraf config that collects CPU,
+      # memory, temperature and (via qmassa / npu_reader) GPU + NPU metrics, so
+      # no custom telegraf.conf mount is required. /sys and /run are needed for
+      # the GPU/NPU readers.
+      - "/sys:/sys:ro"
+      - "/run:/run:ro"
+    healthcheck:
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=8)" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     restart: on-failure:5
-    environment:
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
-      - no_proxy=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${no_proxy}
-      - WEBSOCKET_URL=ws://live-metrics-service:9090/ws/collector
-    depends_on:
-      - live-metrics-service
     networks:
       - app_network
 
@@ -260,8 +257,8 @@ services:
       - EMBEDDING
     ipc: host
     environment:
-      no_proxy: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
-      no_proxy_env: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
+      no_proxy: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
+      no_proxy_env: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
@@ -299,8 +296,8 @@ services:
       - EMBEDDING
     ipc: host
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
-      - no_proxy_env=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - no_proxy_env=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,metrics-manager,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - OVERRIDE_db_root_path=/db

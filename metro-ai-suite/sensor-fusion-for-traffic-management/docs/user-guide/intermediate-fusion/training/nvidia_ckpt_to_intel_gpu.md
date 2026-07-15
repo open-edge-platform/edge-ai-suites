@@ -1,6 +1,6 @@
 # Running NVIDIA's V2X-I PointPillars Dense FP16 Model on Intel GPU
 
-**Purpose.** This guide describes how to take a model trained with NVIDIA's [CUDA-V2XFusion](https://github.com/NVIDIA-AI-IOT/Lidar_AI_Solution/tree/master/CUDA-V2XFusion) reference design and deploy it on Intel GPU via the [intermediate-fusion](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion) deploy binary.
+**Purpose.** This guide describes how to take a model trained with NVIDIA's [CUDA-V2XFusion](https://github.com/NVIDIA-AI-IOT/Lidar_AI_Solution/tree/master/CUDA-V2XFusion) reference design and deploy it on Intel GPU via the [intermediate-fusion](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion) deploy binary.
 
 **Audience.** Customers who already hold a CUDA-V2XFusion-trained checkpoint — either NVIDIA's provided reference model `dense_epoch_100_.pth`, or a checkpoint you produced yourself by following NVIDIA's reference training flow — and want to run inference on Intel platform without any retraining or C++ changes on the deploy side.
 

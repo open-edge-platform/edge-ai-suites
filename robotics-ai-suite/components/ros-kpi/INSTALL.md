@@ -29,7 +29,7 @@ make install
 ```
 
 This will:
-- Install system packages (`sysstat`, `python3-tk`, `curl`)
+- Install system packages (`sysstat`, `python3-tk`, `curl`, `build-essential`)
 - Download and install **uv** (Astral) automatically via `curl` if not already present
 - Verify Docker and ROS 2 availability
 
@@ -82,6 +82,67 @@ uv run python -c "import rclpy; print('✅ ROS2 (rclpy) OK')"
 # Check system tools
 which iostat && echo "✅ sysstat OK"
 ```
+
+## Intel Acceleration (Recommended on Intel iGPU Systems)
+
+On systems with Intel integrated GPUs (all supported target platforms), the
+optional `intel` dependency group activates four acceleration layers:
+
+| Layer | Package | What it does |
+|---|---|---|
+| MKL runtime + threading | `mkl`, `mkl-service` | Provides Intel MKL BLAS/LAPACK/FFT; `_accel.py` pins thread count to available CPUs on startup |
+| Array expression evaluation | `numexpr` | Evaluates element-wise numpy expressions via Intel VML and TBB — used in visualisation normalisations |
+| Data-parallel numpy | `dpnp` | Dispatches array operations to the iGPU via oneAPI SYCL / level-zero — used by all `src/` visualiser scripts through `_accel.py` |
+| PNG plot saving | `pillow-simd` | AVX2-accelerated replacement for `pillow`; Intel iGPU systems get the SIMD version via `uv sync --group intel` |
+
+### System prerequisites
+
+`dpnp` requires the Intel GPU driver stack.  Install it once on the target
+system:
+
+```bash
+# Verify the GPU is visible to level-zero
+ls /dev/dri/render*        # should list at least renderD128
+```
+
+### Install the intel group
+
+`pillow-simd` and the standard `pillow` package both provide the `PIL`
+namespace and cannot coexist.  Because `pillow` is not listed as a direct
+project dependency (matplotlib brings it in transitively), running the
+following is sufficient:
+
+```bash
+uv sync --group intel
+```
+
+`pillow-simd` is compiled from source during the first sync — this is normal
+and takes ~10 seconds.  `build-essential` is installed automatically by
+`make install`.
+
+### Verify Intel acceleration
+
+```bash
+uv run python -c "
+import sys; sys.path.insert(0, 'src')
+from _accel import np, ne, _BACKEND, _NE
+print(f'Array backend : {_BACKEND}')   # dpnp when level-zero drivers present
+print(f'numexpr active: {_NE}')
+import PIL; print(f'Pillow        : {PIL.__version__}')  # should contain 'post'
+"
+```
+
+Expected output on a system with Intel iGPU drivers:
+
+```text
+Array backend : dpnp
+numexpr active: True
+Pillow        : 9.5.0.post2
+```
+
+If `Array backend : numpy` is shown, `dpnp` is not installed or its import
+failed — array operations fall back to standard numpy automatically with no
+code changes required.
 
 ## Quick Start
 

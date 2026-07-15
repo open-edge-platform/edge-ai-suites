@@ -25,11 +25,11 @@ The synergy between Pi0.5 and RTC enables sophisticated generalist control on st
 
 *(Figure source: [RTC Paper](https://arxiv.org/abs/2506.07339) Real-Time Execution of Action Chunking Flow Policies)*
 
-This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline, covering both MuJoCo simulation for policy validation and a modular workflow for deployment on real ALOHA robots.
+This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO™ toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline, covering both MuJoCo simulation for policy validation and a modular workflow for deployment on real ALOHA robots.
 
 ## Installation
 
-This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. Please get the source code from Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/pi05-rtc-ov). To set up the environment, you need to initialize and patch the submodule:
+This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO™ acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. Please get the source code from the Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/pi05-rtc-ov). To set up the environment, you need to initialize and patch the submodule:
 
 ```bash
 git submodule update --init lerobot
@@ -68,7 +68,7 @@ pip install -e .[pi-ov] --extra-index https://download.pytorch.org/whl/cpu
 
 ## Model Preparation
 
-Running model inference with the OpenVINO toolkit requires converting the model to the OpenVINO IR format. You can use the [checkpoint](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) finetuned on a simulation task for convenience. Alternatively, you can convert your own checkpoints trained using the LeRobot framework.
+Running model inference with the OpenVINO™ toolkit requires converting the model to the OpenVINO™ IR format. You can use the [checkpoint](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) finetuned on a simulation task for convenience. Alternatively, you can convert your own checkpoints trained using the LeRobot framework.
 
 ```bash
 cd examples/pi05_with_openvino
@@ -76,15 +76,15 @@ cd examples/pi05_with_openvino
 
 ### Convert Pi0.5 model without RTC
 
-To convert the standard Pi05 model to OpenVINO IR (without RTC support), use the `convert_ov.py` script.
+To convert the standard Pi05 model to OpenVINO™ IR (without RTC support), use the `convert_ov.py` script.
 
 **Arguments:**
 
 - `--torch_dir`: Path to the pretrained PyTorch model checkpoint or the Hugging Face repo. Default: "lerobot/pi05_base"
-- `--ov_output_dir`: Directory for saving the OpenVINO IR model.
+- `--ov_output_dir`: Directory for saving the OpenVINO™ IR model.
 - `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs).
 - `--compress_int8`: (Optional) Compress weights to INT8. `nncf` is required.
-- `--save_fp32`: (Optional) Save an OpenVINO model in FP32 format (FP16 by default).
+- `--save_fp32`: (Optional) Save an OpenVINO™ model in FP32 format (FP16 by default).
 - `--override`: (Optional) Overwrite existing files.
 - `--camera_num`, `-c`: (Optional) Number of cameras (batch size for image input). Default: 4.
 
@@ -122,7 +122,7 @@ uv run --extra pi-ov --with nncf scripts/convert_ov.py \
 
 ### Convert Pi0.5 model with RTC
 
-To convert the Pi05 model to OpenVINO IR with RTC support, use the `convert_ov_rtc.py` script. The arguments are the same as above.
+To convert the Pi05 model to OpenVINO™ IR with RTC support, use the `convert_ov_rtc.py` script. The arguments are the same as above.
 
 Examples (`uv`):
 
@@ -135,9 +135,9 @@ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
     --override
 ```
 
-Exported OpenVINO models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference.
+Exported OpenVINO™ models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference.
 
-> **Note:** When it is unnecessary to enable the RTC function (e.g., the first inference step that doesn't have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
+> **Note:** When the RTC function is unnecessary (e.g., the first inference step that does not have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
 
 ## Run Pipeline
 
@@ -178,7 +178,7 @@ Bind the `xe` driver to the iGPU, as it provides better performance than `i915` 
 
 ### Inference Benchmarking
 
-Run the `benchmark_pi05_ov_rtc.py` script to benchmark the policy inference pipeline, which includes preprocessing, model inference, and postprocessing. You can find usage examples of the `PI05Policy` with OpenVINO support in the script.
+Run the `benchmark_pi05_ov_rtc.py` script to benchmark the policy inference pipeline, which includes preprocessing, model inference, and postprocessing. You can find usage examples of the `PI05Policy` with OpenVINO™ support in the script.
 
 ```bash
 uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
@@ -190,7 +190,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 **Arguments:**
 
-- `--model_dir`: Directory containing an OpenVINO model (.xml and .bin files).
+- `--model_dir`: Directory containing an OpenVINO™ model (.xml and .bin files).
 - `--device`: Target device for inference (e.g., "CPU", "GPU"). Default: "CPU".
 - `-n`, `--num_runs`: Number of inference runs to average for benchmarking. Default: 10.
 - `--camera_num`, `-c`: Number of cameras used in the model. **This should be the same as the setting used during model conversion**. Default: 4.
@@ -199,8 +199,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
 - `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
 
-> **Note**: If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
-
+> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
 
 ### Evaluation Script Overview
 
@@ -220,13 +219,13 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--max_steps`: Max steps per episode. Default: `400`.
 - `--fps`: Control Frequency (Hz). Default: `50.0`.
 
-**OpenVINO:**
+**OpenVINO™:**
 
-- `--use_ov`: Use an OpenVINO model for inference.
-- `--ov_model_path`: Path to the OpenVINO IR model directory (containing `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
-- `--ov_device`: String with an OpenVINO device name (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
+- `--use_ov`: Use an OpenVINO™ model for inference.
+- `--ov_model_path`: Path to the OpenVINO™ IR model directory (containing `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
+- `--ov_device`: String with an OpenVINO™ device name (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
 
-> **Note:** OpenVINO inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO model.
+> **Note:** OpenVINO™ inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO™ model.
 >
 > Since dataset statistics are required for normalization, you need to provide them via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
 
@@ -250,11 +249,11 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 ### Simulation Pipeline
 
-> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
+> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
 
 > **Note:** If you encounter MESA warnings, try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
 
-#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO™ model
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -267,7 +266,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
 
 > **Note:** `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
 
-#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model with RTC
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO™ model with RTC
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -284,7 +283,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
 
 The real-robot pipeline focuses on running inference on the physical ALOHA hardware.
 
-#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO model
+#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO™ model
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -296,7 +295,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO model with RTC
+#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO™ model with RTC
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -310,7 +309,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --rtc_horizon 45
 ```
 
-**Tip**: When running OpenVINO inference on Intel platforms, pinning the process to P-cores can help achieve more stable inference performance. For example, prefix your command with `taskset`:
+**Tip**: When running OpenVINO™ inference on Intel platforms, pinning the process to P-cores can help achieve more stable inference performance. For example, prefix your command with `taskset`:
 
 ```bash
 taskset -c 0-5 uv run --extra pi-ov examples/aloha/eval_aloha.py ...

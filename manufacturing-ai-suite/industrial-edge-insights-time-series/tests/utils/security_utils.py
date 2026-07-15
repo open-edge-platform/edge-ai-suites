@@ -19,6 +19,7 @@ from ruamel.yaml import YAML
 import logging
 import re
 import asyncio
+from decimal import Decimal, InvalidOperation
 import constants
 from influxdb_client import InfluxDBClient
 import pandas as pd
@@ -38,7 +39,7 @@ def fetch_credentials(chart_path, type):
 def fetch_influxdb_credentials(chart_path):
     """Fetch INFLUXDB_USERNAME and INFLUXDB_PASSWORD from values.yaml."""
     try:
-        values_yaml_path = os.path.expandvars(chart_path + 'values.yaml')
+        values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
         logger.info(f"Fetching InfluxDB credentials from: {values_yaml_path}")
     
         # Open and read the YAML file
@@ -68,7 +69,7 @@ def fetch_influxdb_credentials(chart_path):
 def fetch_grafana_credentials(chart_path):
     """Fetch GRAFANA_USERNAME and GRAFANA_PASSWORD from values.yaml."""
     try:
-        values_yaml_path = os.path.expandvars(chart_path + 'values.yaml')
+        values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
         logger.info(f"Fetching Grafana credentials from: {values_yaml_path}")
 
         # Open and read the YAML file
@@ -437,11 +438,15 @@ def update_continuous_simulator_ingestion():
     except subprocess.CalledProcessError as e:
         logger.error(f"An error occurred while updating the file: {e}")
 
-def fetch_wind_turbine_data():
+def fetch_wind_turbine_data(chart_path=None):
     try:
-        # Read the CSV file into a DataFrame
         logger.info("Reading CSV file for wind turbine data...")
-        csv_file_path = constants.EDGE_AI_SUITES_DIR + constants.WIND_INGESTED_CSV
+
+        chart_csv_path = None
+        if chart_path:
+            chart_csv_path = os.path.join(os.path.expandvars(chart_path), "simulation-data", "wind-turbine-anomaly-detection.csv")
+
+        csv_file_path = chart_csv_path if chart_csv_path and os.path.exists(chart_csv_path) else constants.EDGE_AI_SUITES_DIR + constants.WIND_INGESTED_CSV
         df = pd.read_csv(csv_file_path)
         logger.info("CSV file read successfully in path: " + csv_file_path)
         # Fetch the first record of the wind_power column
@@ -453,7 +458,7 @@ def fetch_wind_turbine_data():
         return first_wind_power, last_wind_speed, total_records
 
     except FileNotFoundError:
-        print(f"File not found: {constants.EDGE_AI_SUITES_DIR + './simulator/simulation_data/wind_turbine_data.csv'}")
+        print(f"File not found: {chart_csv_path or constants.EDGE_AI_SUITES_DIR + './simulator/simulation_data/wind_turbine_data.csv'}")
         return None, None, None
     except KeyError as e:
         print(f"Column not found: {e}")
@@ -493,6 +498,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the first record response
         influx_first_record = parse_influxdb_response(first_record_response)
+        if influx_first_record is None:
+            logger.error("Failed to parse first record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -507,6 +515,9 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the last record response
         influx_last_record = parse_influxdb_response(last_record_response)
+        if influx_last_record is None:
+            logger.error("Failed to parse last record from InfluxDB response")
+            return False
 
         influx_commands = (
             f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
@@ -521,20 +532,20 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         # Parse the count response
         influx_total_count = parse_influxdb_response(count_response)
-        # Convert all values to strings for comparison
-        first_wind_speed = str(first_wind_speed)
-        last_wind_speed = str(last_wind_speed)
-        total_records = str(total_records)
+        if influx_total_count is None:
+            logger.error("Failed to parse count from InfluxDB response")
+            return False
+        
         # Verify the data integrity
-        if influx_first_record != first_wind_speed:
+        if not values_match(influx_first_record, first_wind_speed):
             logger.error(f"First record mismatch: InfluxDB={influx_first_record}, Expected={first_wind_speed}")
             return False
 
-        if influx_last_record != last_wind_speed:
+        if not values_match(influx_last_record, last_wind_speed):
             logger.error(f"Last record mismatch: InfluxDB={influx_last_record}, Expected={last_wind_speed}")
             return False
 
-        if influx_total_count != total_records:
+        if not values_match(influx_total_count, total_records):
             logger.error(f"Total count mismatch: InfluxDB={influx_total_count}, Expected={total_records}")
             return False
 
@@ -546,10 +557,63 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         return False
 
 def parse_influxdb_response(response):
-    # Implement parsing logic based on the response format
-    # This is a placeholder function and needs to be customized
-    # according to the actual response format from InfluxDB
-    return response.split('\n')[-1].split()[-1]  # Example parsing logic
+    """Parse InfluxDB CLI response to extract the value.
+    
+    InfluxDB CLI typically returns output like:
+    name: measurement
+    time                     wind_speed
+    ----                     ----------
+    2024-01-01T00:00:00Z     5.5
+    
+    This function extracts the last value from the last non-empty line.
+    
+    Returns:
+        str: The extracted value, or None if parsing fails.
+    """
+    if not response:
+        logger.warning("Empty InfluxDB response received")
+        return None
+    
+    try:
+        # Split response into lines and filter out empty lines
+        lines = [line.strip() for line in response.strip().split('\n') if line.strip()]
+        
+        if not lines:
+            logger.warning("No data lines in InfluxDB response")
+            return None
+        
+        # Get the last line which should contain the data
+        last_line = lines[-1]
+        
+        # Skip header lines (containing 'time', '----', or 'name:')
+        if 'time' in last_line.lower() or '----' in last_line or last_line.startswith('name:'):
+            logger.warning(f"InfluxDB response appears to have no data rows: {response[:200]}")
+            return None
+        
+        # Split the line and get the last column (the value)
+        columns = last_line.split()
+        if not columns:
+            logger.warning(f"Could not parse columns from line: {last_line}")
+            return None
+        
+        return columns[-1]
+    except Exception as e:
+        logger.error(f"Error parsing InfluxDB response: {e}, response: {response[:200] if response else 'None'}")
+        return None
+
+
+def values_match(actual, expected):
+    """Compare InfluxDB values robustly across equivalent numeric string formats."""
+    if actual is None or expected is None:
+        return actual == expected
+
+    actual_text = str(actual).strip()
+    expected_text = str(expected).strip()
+
+    try:
+        return Decimal(actual_text) == Decimal(expected_text)
+    except (InvalidOperation, ValueError):
+        return actual_text == expected_text
 
 def verify_docker_file_integrity():
     try:

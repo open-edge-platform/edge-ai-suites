@@ -3,19 +3,25 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:localhost:5173 && cross-env ELECTRON_START_URL=http://localhost:5173 electron electron/main.cjs\"",
+    "electron:preview": "npm run build && electron electron/main.cjs",
+    "electron:build": "npm run build && electron-builder --win portable"
   },
   "engines": {
-    "node": ">=20.16.0"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@videojs/http-streaming": "^3.17.4",
     "axios": "^1.12.0",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3",
     "i18next": "^25.4.2",
     "jsmind": "^0.9.1",
     "react": "^19.1.0",
@@ -31,16 +37,18 @@
     "@eslint/js": "^9.30.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.39.3",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
-    "vite": "^7.0.8"
-  },
-  "overrides": {
-    "lodash-es": ">=4.17.23"
+    "vite": "^8.1.4",
+    "wait-on": "^9.0.10"
   }
 }

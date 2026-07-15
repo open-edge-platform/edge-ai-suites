@@ -75,7 +75,40 @@
                     </label>
                     <div class="field-row">
                         <label class="field">
-                            <span class="label">Select Model</span>
+                            <span class="label" title="Choose the pipeline variant.">Select Pipeline</span>
+                            <select id="pipelineTypeSelect" class="input" title="Choose the pipeline variant.">
+                                <option value="non-detection" selected>Video Captioning Pipeline</option>
+                                <option value="detection">Video Captioning Pipeline with Detection</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span class="label"
+                                title="Select where the vision-language model runs for caption generation. CPU works on most systems. GPU requires a compatible GPU. NPU requires a supported NPU.">VLM
+                                Device</span>
+                            <select id="vlmDeviceSelect" class="input"
+                                title="Select where the vision-language model runs for caption generation. CPU works on most systems. GPU requires a compatible GPU. NPU requires a supported NPU.">
+                                <option value="cpu" selected>CPU</option>
+                                <option value="gpu">GPU</option>
+                                <option value="npu">NPU</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="field-row">
+                        <label class="field">
+                            <span class="label">Select Model
+                                <span id="modelCompatibilityWarningIcon"
+                                    class="inline-warning-tooltip critical-warning-tooltip" style="display:none;"
+                                    tabindex="0" role="img" aria-label="Model compatibility warning" title=""
+                                    data-tooltip="">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M12 3L2.8 19.5A1.2 1.2 0 0 0 3.8 21h16.4a1.2 1.2 0 0 0 1-1.5L12 3z"
+                                            fill="none" stroke="currentColor" stroke-width="1.8" />
+                                        <line x1="12" y1="9" x2="12" y2="14" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" />
+                                        <circle cx="12" cy="17" r="1.1" fill="currentColor" />
+                                    </svg>
+                                </span>
+                            </span>
                             <select id="modelNameSelect" class="input"></select>
                         </label>
                         <label class="field">
@@ -123,10 +156,6 @@
                     </div>
                     <div class="field-row">
                         <label class="field">
-                            <span class="label">Select Pipeline</span>
-                            <select id="pipelineSelect" class="input"></select>
-                        </label>
-                        <label class="field">
                             <span class="label">Run Name</span>
                             <input id="runNameInput" class="input" type="text"
                                 placeholder="Enter Run Name (Optional)" />
@@ -135,16 +164,47 @@
                     <div id="detectionSection" class="field-group" style="display: none;">
                         <div class="field">
                             <span class="label">
-                                <label class="text-label">Detection Properties</label>
+                                <label class="text-label">Detection Properties
+                                    <span class="inline-help-tooltip" tabindex="0" role="img"
+                                        aria-label="Detection properties help"
+                                        data-tooltip="These detection properties configure the selected YOLO detection model to detect labels that the selected model was trained on. Detection Device selects the hardware (CPU/GPU/NPU) used for detection, and Detection Threshold sets the minimum confidence score for showing detections.">?</span>
+                                </label>
                             </span>
                         </div>
-
+                        <div class="field-row">
+                            <label class="checkbox-field" id="roiBoundingBoxField"
+                                title="Enable ROI/object bounding box overlay on output frame. Uncheck to hide bounding boxes.">
+                                <input id="includeRoiBoundingBoxCheckbox" type="checkbox" />
+                                <span class="label">Include ROI Bounding Box</span>
+                            </label>
+                        </div>
                         <div class="field-row">
                             <label class="field" id="detectionModelField">
-                                <span class="label">Detection Model</span>
+                                <span class="label">Detection Model
+                                    <span id="detectionModelCompatibilityWarningIcon"
+                                        class="inline-warning-tooltip critical-warning-tooltip" style="display:none;"
+                                        tabindex="0" role="img" aria-label="Detection model compatibility warning"
+                                        title="" data-tooltip="">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path d="M12 3L2.8 19.5A1.2 1.2 0 0 0 3.8 21h16.4a1.2 1.2 0 0 0 1-1.5L12 3z"
+                                                fill="none" stroke="currentColor" stroke-width="1.8" />
+                                            <line x1="12" y1="9" x2="12" y2="14" stroke="currentColor"
+                                                stroke-width="1.8" stroke-linecap="round" />
+                                            <circle cx="12" cy="17" r="1.1" fill="currentColor" />
+                                        </svg>
+                                    </span>
+                                </span>
                                 <select id="detectionModelNameSelect" class="input"></select>
                             </label>
-
+                            <label class="field" id="detectionDeviceField">
+                                <span class="label">Detection Device</span>
+                                <select id="detectionDeviceSelect" class="input"
+                                    title="Select where gvadetect runs. Software detection pipelines use SYSTEM memory and support CPU only. Hardware detection pipelines use VAMemory, so only GPU/NPU are supported.">
+                                    <option value="cpu" selected>CPU</option>
+                                    <option value="gpu">GPU</option>
+                                    <option value="npu">NPU</option>
+                                </select>
+                            </label>
                             <label class="field" id="detectionThresholdField">
                                 <span class="label">Detection Threshold</span>
                                 <input id="detectionThresholdInput" class="input" type="number" min="0" max="1"
@@ -163,7 +223,6 @@
                                 Rule</button>
                         </div>
                     </div>
-
                     <div class="field-row" style="justify-content: space-between; align-items: center;">
                         <div class="status" style="margin: 0; flex-shrink: 0;">
                             <span class="dot active"></span>
@@ -183,8 +242,10 @@
                             <span>System Metrics</span>
                             <div class="chart-values">
                                 <span class="chart-value" style="color:#1ad0ff">CPU <span id="cpuVal">—</span></span>
+                                <span class="chart-value gpu-values" id="gpuValues" style="display:none;"></span>
+                                <span class="chart-value" id="npuStat" style="color:#b388ff; display:none;">NPU <span
+                                        id="npuVal">—</span></span>
                                 <span class="chart-value" style="color:#8ca0c2">RAM <span id="ramVal">—</span></span>
-                                <span class="chart-value" style="color:#ffb347">GPU <span id="gpuVal">—</span></span>
                             </div>
                         </div>
                         <div class="gpu-error" id="gpuError"

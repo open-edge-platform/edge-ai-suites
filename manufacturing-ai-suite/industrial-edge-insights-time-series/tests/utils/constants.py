@@ -94,6 +94,8 @@ WIND_TURBINE_ANALYTICS_TOPIC = "wind-turbine-anomaly-data"
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 WIND_UDF= "windturbine_anomaly_detector"
 WIND_MODEL= "windturbine_anomaly_detector.pkl"
+MULTIMODAL_UDF = "weld_anomaly_detector"
+MULTIMODAL_MODEL = "weld_anomaly_detector.pkl"
 TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series"
 
 WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick"
@@ -128,7 +130,7 @@ WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU confi
 WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before GPU POST; allows TSAM/kapacitor CPU UDF startup
 WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
 WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
-WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
+WIND_TURBINE_OPCUA_ALERT_SETTLE = 360         # Max time to wait for OPC UA alerts after restart when polling logs
 # Required for OPC-UA multi-stream so each scaled OPC-UA server container binds to a unique host port
 WIND_TURBINE_OPCUA_PORT_MAPPING = "30003-30100"
 
@@ -185,14 +187,14 @@ SAMPLE_APPS_CONFIG = {
         "fusion_topic": "fusion/anomaly_detection_results",
         "fusion_measurement": "fusion_result",
         "alert_topic": "alerts/weld_defect_detection",
-        "udf": "weld_defect_detector",
-        "model": "weld_defect_detector.cb",
+        "udf": "weld_anomaly_detector",
+        "model": "weld_anomaly_detector.pkl",
         "udf_deployment_package": "weld_anomaly_udf",
         "config_dir": "configs/time-series-analytics-microservice",
         "udfs_dir": "configs/time-series-analytics-microservice/udfs/",
         "models_dir": "configs/time-series-analytics-microservice/models/",
         "tick_scripts_dir": "configs/time-series-analytics-microservice/tick_scripts/",
-        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_defect_detector.tick",
+        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick",
         "alert_config": {
             "enabled": True,
             "threshold": 0.7,
@@ -236,6 +238,21 @@ OPCUA_ALERT = {
             "namespace": 1,
             "node_id": 2004
         }
+
+# Multimodal DL Streamer pipeline defaults
+MULTIMODAL_DLSTREAMER_PIPELINE_NAME = "weld_defect_classification"
+MULTIMODAL_DLSTREAMER_MODEL_XML_PATH = (
+    "/home/pipeline-server/resources/models/"
+    "weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml"
+)
+MULTIMODAL_DLSTREAMER_MQTT_TOPIC = "vision_weld_defect_classification"
+MULTIMODAL_DLSTREAMER_S3_BUCKET = "dlstreamer-pipeline-results"
+MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX = "weld-defect-classification"
+MULTIMODAL_WEBRTC_PEER_ID = "samplestream"
+MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE = (
+    "../../../industrial-edge-insights-multimodal/configs/"
+    "dlstreamer-pipeline-server/pipeline-request-cpu.json"
+)
 
 # Essential sample app name constants - access via SAMPLE_APPS_CONFIG and helper functions
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
@@ -296,9 +313,10 @@ KAPACITOR_UDF_POLL_INTERVAL = 10       # seconds - polling interval during UDF i
 MQTT_SAMPLE_TIMEOUT = 240              # seconds - timeout for MQTT sample data verification
 POD_TERMINATION_TIMEOUT = 120      # seconds to wait for pods to terminate before helm install
 POD_CLEANUP_TIMEOUT = 60           # seconds to wait for pods to stop after helm uninstall
+SERVICE_TERMINATION_TIMEOUT = 30   # seconds to wait for services (especially NodePort) to be deleted before helm install
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT = 60    # seconds - standard pod cleanup timeout
 PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI = 120  # seconds - extended timeout for multimodal (dual-service) cleanup
-PODS_VERIFY_TIMEOUT = 300          # seconds - timeout for verify_pods after Helm install
+PODS_VERIFY_TIMEOUT = 600          # seconds - timeout for verify_pods after Helm install (raised for slower GitHub-hosted runners where upstream image pulls happen on first use)
 MQTT_PORT_INT = CONTAINERS["mqtt_broker"]["port"]
 MULTIMODAL_DOCKER_PRE_TEARDOWN_WAIT = 5   # seconds before teardown validations
 MULTIMODAL_DOCKER_POST_TEARDOWN_WAIT = 10 # seconds to let containers stop
@@ -306,5 +324,13 @@ MULTIMODAL_DOCKER_FUSION_READY_WAIT = 10  # seconds to ensure fusion logs propag
 
 # MediaMTX streaming constants - access via nginx proxy
 MEDIAMTX_STREAM_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/samplestream"
+
+# Documented DL Streamer Pipeline Server API endpoints
+DOCKER_DSPS_API_BASE_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/dsps-api"
+HELM_DSPS_API_BASE_URL = "https://localhost:30001/dsps-api"
+
+# Documented Time Series Analytics Microservice API endpoints
+DOCKER_TSA_API_BASE_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/ts-api"
+HELM_TSA_API_BASE_URL = "https://localhost:30001/ts-api"
 
 OPCUA_SERVER_PORT = 30003
