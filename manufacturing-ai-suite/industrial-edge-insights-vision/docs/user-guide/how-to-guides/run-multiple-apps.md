@@ -1,11 +1,11 @@
-# Run Multiple Apps
+# Run Multiple Vision AI Detection Apps
 
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](../get-started/vision-system-requirements.md)
 
 ## Overview
 
@@ -51,11 +51,11 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
        MINIO_SERVER_PORT: 10001
    ```
 
-   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and pcb1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
-   For the example above, modify the envs for pallet-defect-detection and pcb-anomaly-detection, i.e. `env_pallet-defect-detection` and `env_pcb-anomaly-detection`
+   For the example above, modify the envs for pallet-defect-detection and pcb-anomaly-detection, i.e., `.env_pallet-defect-detection` and `.env_pcb-anomaly-detection`
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -77,8 +77,8 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    - Parses through the `config.yml`
    - Downloads resources for each instance
-   - Creates a folder temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file and payload.json
-   - Updates and adds the ports mentioned in `config.yml` to the respective .env file
+   - Creates a `temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>` folder that contains configs folder, `.env` file and `payload.json`
+   - Updates and adds the ports mentioned in `config.yml` to the respective `.env` file
    - Sets executable permissions for scripts
 
 ## Deploy the Applications
@@ -192,7 +192,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    > **Important:** Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
 
-   Output:
+   Example output:
 
    ```text
    No pipeline specified. Starting the first pipeline.
@@ -248,7 +248,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 3. Access WebRTC stream:
 
-   The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
+   The inference stream can be viewed on WebRTC, in a browser, at the following URL depending on the SAMPLE_APP:
 
    > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 8443, pdd2 set to 9443 & pcb1 set to 10443.
 
@@ -259,13 +259,13 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 ### Start pipeline for a particular instance only
 
-1. Fetch the list of pipeline for <INSTANCE_NAME>:
+1. Fetch the list of pipelines for <INSTANCE_NAME>:
 
    ```bash
    ./sample_list.sh -i <INSTANCE_NAME>
    ```
 
-   Example Output:
+   Example output for the `pdd1` instance:
 
    ```text
    Instance name set to: pdd1
@@ -299,7 +299,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
    ```
 
-   Output:
+   Example output for the `pdd1` instance:
 
    ```text
    Instance name set to: pdd1
@@ -327,7 +327,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-id of SAMPLE_APP>/
    ```
 
-### Start pipeline for a particular instance from a custom payload.json
+### Start pipeline for a particular instance from a custom `payload.json`
 
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
@@ -335,7 +335,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ./sample_list.sh -i <INSTANCE_NAME>
    ```
 
-   Example Output:
+   Example output for the `pdd1` instance:
 
    ```text
    Instance name set to: pdd1
@@ -363,13 +363,13 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
+2. Start the pipeline for <INSTANCE_NAME> where the pipeline is loaded from <file>:
 
    ```bash
    ./sample_start.sh -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
    ```
 
-   Output:
+   Example output for the `pdd1` instance:
 
    ```text
    Instance name set to: pdd1
@@ -402,13 +402,13 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 ### Check Pipeline Status
 
-1. Check status of all instances:
+1. Check the status of all instances:
 
    ```bash
    ./sample_status.sh
    ```
 
-   Output:
+   Example output:
 
    ```text
    No arguments provided. Fetching status for all pipeline instances.
@@ -481,13 +481,13 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Check status of only a particular instance. You may refer to the `config.yml` for the instance names
+2. Check the status of only a particular instance. Refer to `config.yml` for the instance names.
 
    ```bash
    ./sample_status.sh -i <INSTANCE_NAME>
    ```
 
-3. Check status of a particular instance_id of an instance
+3. Check the status of a particular instance_id of an instance.
 
    ```bash
    ./sample_status.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
@@ -511,7 +511,7 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
    ./sample_stop.sh
    ```
 
-   Output:
+   Example output:
 
    ```text
    No pipelines specified. Stopping all pipeline instances
@@ -577,13 +577,13 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
    }
    ```
 
-2. Stop pipelines of given instance:
+2. Stop pipelines of a given instance:
 
    ```bash
    ./sample_stop.sh -i <INSTANCE_NAME>
    ```
 
-   Output:
+   Example output for the `pdd2` instance:
 
    ```text
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd2
@@ -611,7 +611,7 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
    ./sample_stop.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
    ```
 
-   Output:
+   Example output for the `pdd1` instance:
 
    ```text
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1

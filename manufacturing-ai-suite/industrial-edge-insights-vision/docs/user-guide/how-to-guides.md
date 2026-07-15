@@ -11,6 +11,7 @@ This section collects guides for Vision AI sample applications.
 <!--hide_directive
 :::{toctree}
 
+Run Multiple Apps <./how-to-guides/run-multiple-apps.md>
 Manage Pipelines <./how-to-guides/manage-pipelines.md>
 Run Multiple AI Pipelines <./how-to-guides/run-multiple-ai-pipelines.md>
 Change Video Source <./how-to-guides/change-input-video-source.md>

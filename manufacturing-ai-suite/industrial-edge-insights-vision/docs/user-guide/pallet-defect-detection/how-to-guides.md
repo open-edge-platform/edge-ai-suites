@@ -27,7 +27,6 @@ This section collects guides for Pallet Defect Detection sample application.
 :hidden:
 
 ./how-to-guides/generating-model-from-geti
-./how-to-guides/run-multiple-apps.md
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
 ./how-to-guides/export-and-optimize-geti-model

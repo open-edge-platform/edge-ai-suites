@@ -23,7 +23,6 @@ This section collects guides for PCB Anomaly Detection sample application.
 :::{toctree}
 :hidden:
 
-./how-to-guides/run-multiple-apps
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
 ./how-to-guides/scale-video-resolution
