@@ -2,8 +2,6 @@
 
 The following are options to help you resolve issues with the sample application.
 
----
-
 ## WebRTC Stream on web browser
 
 The firewall may prevent you from viewing the video stream on web browser. Please disable the firewall using this command.
@@ -12,8 +10,6 @@ The firewall may prevent you from viewing the video stream on web browser. Pleas
 sudo ufw disable
 ```
 
----
-
 ## Error Logs
 
 View the container logs using this command.
@@ -21,8 +17,6 @@ View the container logs using this command.
 ```sh
 docker logs -f <CONTAINER_NAME>
 ```
-
----
 
 ## Resolving Time Sync Issues in Prometheus
 
@@ -75,13 +69,9 @@ You can following the below steps to synchronize system time using NTP.
 
 This should resolve the time discrepancy in Prometheus.
 
----
-
 ## Axis RTSP camera freezes or pipeline stops
 
 Restart the DL Streamer pipeline server container with the pipeline that has this RTSP source.
-
----
 
 ## Deploying with Intel® GPU K8S Extension
 
@@ -94,13 +84,19 @@ gpu:
    count: 1
 ```
 
----
-
 ## Inferencing on NPU
 
-To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required prerequisites. Refer to the instructions [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers) to install Intel® NPU drivers.
+To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required prerequisites. Refer to the relevant [DL Streamer instructions](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers) to install Intel® NPU drivers.
 
----
+## NPU Inference Failures with Geti-Trained Models
+
+If you experience errors or failures when running an NPU workload with a model trained in Intel® Geti™, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
+
+**Resolution**: Follow the [Export and Optimize Geti™ Model](./how-to-guides/export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+
+## Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
+
+This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
 
 ## Unable to parse JSON payload due to missing `jq` package
 
@@ -114,8 +110,6 @@ sudo apt update
 sudo apt install jq
 ```
 
----
-
 ## Unable to run GPU inference on some Arrow Lake machines with `resource allocation failed` errors
 
 For example:
@@ -127,7 +121,7 @@ There are few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from OpenVINO™ documentation [here](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the relevant [OpenVINO™ documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
 
 ## Deploying on Edge Microvisor Toolkit
 
@@ -144,6 +138,3 @@ sudo apt install unzip
 To install `jq`, refer to the following
 [instructions](#unable-to-parse-json-payload-due-to-missing-jq-package).
 
----
-
-*Intel, the Intel logo, OpenVINO, and the OpenVINO logo are trademarks of Intel Corporation or its subsidiaries.*

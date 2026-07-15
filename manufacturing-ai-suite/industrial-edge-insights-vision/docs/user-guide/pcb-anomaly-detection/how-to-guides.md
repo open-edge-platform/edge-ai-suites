@@ -35,7 +35,6 @@ This section collects guides for PCB Anomaly Detection sample application.
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops
 ./how-to-guides/start-mqtt-publisher
-./how-to-guides/benchmark
 ./how-to-guides/view-telemetry-data
 ./how-to-guides/run-in-air-gapped-system
 

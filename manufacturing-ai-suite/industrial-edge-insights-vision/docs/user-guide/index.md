@@ -53,6 +53,7 @@ hide_directive-->
 get-started.md
 ./pallet-defect-detection/index.md
 ./pcb-anomaly-detection/index.md
+Troubleshooting <./troubleshooting.md>
 ./win-vision-ai/index.md
 
 :::

@@ -79,7 +79,6 @@ This sample application offers the following features:
 
 how-to-guides
 api-reference
-troubleshooting
 Release Notes <release-notes>
 
 :::
