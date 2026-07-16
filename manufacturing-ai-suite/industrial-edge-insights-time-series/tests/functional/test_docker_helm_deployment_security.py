@@ -178,7 +178,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
                 shell=True, capture_output=True, text=True, check=False
             ).stdout
             
-            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, password=[REDACTED]")
+            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, credential=[REDACTED]")
             logger.info("Last 50 lines of Grafana pod logs:")
             logger.info("-" * 80)
             for i, line in enumerate(grafana_logs.split('\n')[-50:], 1):
