@@ -68,7 +68,6 @@ A dataset is a collection of images and videos in your project, together with th
 
 To use the Geti™ software for dataset creation and annotation, see [Building a Good Dataset](https://docs.geti.intel.com/docs/user-guide/learn-geti/dataset-creation).
 
-
 ### Step 6: Upload Training Images
 
 Browse and upload your training dataset images:

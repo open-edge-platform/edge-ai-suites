@@ -96,7 +96,7 @@ If you experience errors or failures when running an NPU workload with a model t
 
 ## Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
 
-This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
+This is a [tracked known issue](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
 
 ## Unable to parse JSON payload due to missing `jq` package
 
@@ -137,4 +137,3 @@ sudo apt install unzip
 
 To install `jq`, refer to the following
 [instructions](#unable-to-parse-json-payload-due-to-missing-jq-package).
-

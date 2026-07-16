@@ -67,14 +67,13 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-4. Install prerequisites for all the instances:
+4. Install prerequisites for all instances:
 
    ```bash
    ./setup.sh
    ```
 
-   This does the following:
-
+   This:
    - Parses through the `config.yml`
    - Downloads resources for each instance
    - Creates a `temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>` folder that contains configs folder, `.env` file and `payload.json`

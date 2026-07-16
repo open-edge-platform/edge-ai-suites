@@ -21,7 +21,7 @@ defects before they impact operations.
 ## How It Works
 
 This sample application consists of the following microservices:
-DL Streamer Pipeline Server, MediaMTX server,Coturn server,
+DL Streamer Pipeline Server, MediaMTX server, Coturn server,
 Open Telemetry Collector, Prometheus and Minio.
 
 You start the pallet defect detection pipeline with a REST request using Client URL (cURL).
