@@ -1956,7 +1956,7 @@
         "kind": "Panel",
         "spec": {
           "id": 34,
-          "title": "Speech to text Processing Time Last",
+          "title": "Speech to text Processing Ratio Last",
           "description": "",
           "links": [],
           "data": {
@@ -2011,7 +2011,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "times",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
