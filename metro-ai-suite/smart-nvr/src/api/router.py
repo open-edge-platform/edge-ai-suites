@@ -1,5 +1,5 @@
 
-# Copyright (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # --- Camera Watcher API (moved to end for formatting) ---
 
@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from api.endpoints.frigate_api import FrigateService
 from api.endpoints.summarization_api import SummarizationService
 from api.endpoints.brokers_api import broker_router
+from api.endpoints.vss_api import vss_router
 from service.vms_service import VmsService
 from service import redis_store
 import requests
@@ -23,6 +24,7 @@ class CameraWatcherRequest(BaseModel):
 
 router = APIRouter()
 router.include_router(broker_router)
+router.include_router(vss_router)
 frigate_service = FrigateService()
 summarization_service = SummarizationService()
 vms_service = VmsService(frigate_service, summarization_service)

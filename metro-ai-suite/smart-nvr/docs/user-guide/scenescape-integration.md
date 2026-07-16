@@ -39,10 +39,8 @@ In single-node mode, all services run on one machine. The setup script performs 
 
 ```bash
 export NVR_SCENESCAPE=true
-export VSS_SUMMARY_IP=<vss_ip>
-export VSS_SUMMARY_PORT=<vss_port>
-export VSS_SEARCH_IP=<vss_ip>
-export VSS_SEARCH_PORT=<vss_port>
+export VSS_IP=<vss_ip>
+export VSS_PORT=<vss_port>                        # optional, default 12345
 # export RTSP_STREAM_PORT=<rtsp port>      # optional, default 8554
 # export MQTT_USER=<mqtt-username>         # optional, auto-generated if omitted
 # export MQTT_PASSWORD=<mqtt-password>     # optional, auto-generated if omitted

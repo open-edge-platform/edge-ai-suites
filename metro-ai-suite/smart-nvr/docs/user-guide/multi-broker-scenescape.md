@@ -72,8 +72,8 @@ brokers:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NVR_SCENESCAPE` | ✅ | — | Must be `true` to enable SceneScape mode. |
-| `VSS_SUMMARY_IP` / `VSS_SUMMARY_PORT` | ✅ | — | Video Summarization Service endpoint. |
-| `VSS_SEARCH_IP` / `VSS_SEARCH_PORT` | ✅ | — | Video Search Service endpoint. |
+| `VSS_IP` | ✅ | — | VSS service IP. The single nginx proxy serves both summary and search. |
+| `VSS_PORT` | — | `12345` | VSS service port. |
 | `MQTT_USER` | — | auto-generated | Local Mosquitto username (Frigate ↔ NVR). |
 | `MQTT_PASSWORD` | — | auto-generated | Local Mosquitto password. |
 | `SI_RTSP_HOST` | — | prompt | RTSP IP for si1. Prompts interactively (`start-nvr`) or auto-detected (`start`) if unset. |
@@ -105,10 +105,8 @@ broker on System 2.
 
 ```bash
 export NVR_SCENESCAPE=true
-export VSS_SUMMARY_IP=<ip>
-export VSS_SUMMARY_PORT=<port>
-export VSS_SEARCH_IP=<ip>
-export VSS_SEARCH_PORT=<port>
+export VSS_IP=<ip>
+export VSS_PORT=<port>              # optional, default 12345
 
 # Optional: pre-set RTSP IP to skip interactive prompts
 # export SI_RTSP_HOST=<si1_ip>

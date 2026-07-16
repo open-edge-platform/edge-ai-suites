@@ -301,29 +301,14 @@ validate_environment() {
         fi
     fi
 
-    # Check for VSS IP and port
-    if [ -z "${VSS_SUMMARY_IP}" ]; then
-        print_error "VSS_SUMMARY_IP environment variable is required"
-        print_info "Please set it to the IP address of your Video Summarization Service"
+    # Check for VSS endpoint — one nginx proxy serves both summary and search
+    if [ -z "${VSS_IP}" ]; then
+        print_error "VSS_IP environment variable is required"
+        print_info "Please set it to the IP address of your Video Search and Summarization (VSS) service"
         return 1
     fi
-
-    if [ -z "${VSS_SUMMARY_PORT}" ]; then
-        print_error "VSS_SUMMARY_PORT environment variable is required"
-        print_info "Please set it to the port of your Video Summarization Service (typically 12345)"
-        return 1
-    fi
-    if [ -z "${VSS_SEARCH_IP}" ]; then
-        print_error "VSS_SEARCH_IP environment variable is required"
-        print_info "Please set it to the IP address of your Video Search Service"
-        return 1
-    fi
-
-    if [ -z "${VSS_SEARCH_PORT}" ]; then
-        print_error "VSS_SEARCH_PORT environment variable is required"
-        print_info "Please set it to the port of your Video Search Service (typically 12345)"
-        return 1
-    fi
+    export VSS_PORT="${VSS_PORT:-12345}"
+    print_info "Using VSS endpoint: ${VSS_IP}:${VSS_PORT}"
     
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         if [ -z "${VLM_SERVING_IP}" ]; then
@@ -447,10 +432,8 @@ start_si_services() {
     print_info "System 1 IP: ${CYAN}${HOST_IP}${NC}"
     print_info "On System 2 (SmartNVR machine), run:"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
-    echo -e "  ${CYAN}export VSS_SUMMARY_IP=<vss_ip>${NC}"
-    echo -e "  ${CYAN}export VSS_SUMMARY_PORT=<vss_port>${NC}"
-    echo -e "  ${CYAN}export VSS_SEARCH_IP=<vss_ip>${NC}"
-    echo -e "  ${CYAN}export VSS_SEARCH_PORT=<vss_port>${NC}"
+    echo -e "  ${CYAN}export VSS_IP=<vss_ip>${NC}"
+    echo -e "  ${CYAN}export VSS_PORT=<vss_port>   # optional, default 12345${NC}"
     echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # will prompt for SI RTSP IP(s)"
     echo ""
     print_info "SI1 RTSP: ${CYAN}${nvr_rtsp_host}:${RTSP_STREAM_PORT}${NC}  |  SI1 MQTT: ${CYAN}${HOST_IP}:1883${NC}"
@@ -551,8 +534,7 @@ show_help() {
     echo ""
     echo -e "  # Distributed Node — System 2 (SmartNVR):${NC}"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
-    echo -e "  ${CYAN}export VSS_SUMMARY_IP=<ip> VSS_SUMMARY_PORT=<port>${NC}"
-    echo -e "  ${CYAN}export VSS_SEARCH_IP=<ip> VSS_SEARCH_PORT=<port>${NC}"
+    echo -e "  ${CYAN}export VSS_IP=<ip>   # VSS_PORT optional, default 12345${NC}"
     echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # prompts for SI RTSP IP(s) interactively"
     echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=<sys1_ip>  to skip si1 prompt${NC}"
     echo ""

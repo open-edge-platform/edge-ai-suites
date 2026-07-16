@@ -79,11 +79,9 @@ export http_proxy=<http-proxy>
 export https_proxy=<https-proxy>
 export no_proxy=<no_proxy>
 
-# VSS Service Endpoints
-export VSS_SUMMARY_IP=<vss-summary-device-ip>
-export VSS_SUMMARY_PORT=<vss-summary-port>        # Default: 12345
-export VSS_SEARCH_IP=<vss-search-device-ip>
-export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
+# VSS Service Endpoint
+export VSS_IP=<vss-device-ip>
+export VSS_PORT=<vss-port>                         # Default: 12345
 
 # MQTT Configuration
 export MQTT_USER=<mqtt-username>

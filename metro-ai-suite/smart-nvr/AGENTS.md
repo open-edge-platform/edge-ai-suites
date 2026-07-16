@@ -15,8 +15,12 @@ into the runtime image.
 - `src/`: backend service code.
   - `src/main.py`: FastAPI app entry point.
   - `src/api/`: API router and endpoint service wrappers.
+    - `src/api/endpoints/brokers_api.py`: CRUD endpoints for runtime multi-broker management.
+    - `src/api/endpoints/vss_api.py`: `GET /vss-features` — detects active VSS deployment mode.
   - `src/service/`: Redis, MQTT, Frigate, watcher, dispatcher, and rule logic.
+    - `src/service/broker_manager.py`: async multi-broker MQTT connection lifecycle (connect/reconnect/stop).
   - `src/model/`: Pydantic/domain models.
+    - `src/model/broker.py`: Broker configuration model.
   - `src/tests/`: backend tests.
 - `ui/`: Python UI code.
   - `ui/main.py`: Gradio UI entry point.
@@ -54,9 +58,13 @@ Common stack commands:
 
 ```bash
 ./build.sh
-source setup.sh start
+source setup.sh start           # single-node: all services
 source setup.sh stop
-source setup.sh start-streamer
+source setup.sh start-si        # distributed System 1: SI + RTSP streamer
+source setup.sh stop-si
+source setup.sh start-nvr       # distributed System 2: NVR only
+source setup.sh stop-nvr
+source setup.sh start-streamer  # RTSP streamer only
 source setup.sh stop-streamer
 ```
 
@@ -69,12 +77,15 @@ Important environment variables used by the stack include:
 
 - `NVR_GENAI`
 - `NVR_SCENESCAPE`
-- `VSS_SUMMARY_IP`
-- `VSS_SUMMARY_PORT`
-- `VSS_SEARCH_IP`
-- `VSS_SEARCH_PORT`
+- `VSS_IP`
+- `VSS_PORT`
 - `VLM_SERVING_IP`
 - `VLM_SERVING_PORT`
+- `SI_RTSP_HOST`
+- `SCENESCAPE_MQTT_BROKER`
+- `MAX_CONCURRENT_EVENTS`
+- `BROKER_RECONNECT_DELAY`
+- `BROKERS_CONFIG_PATH`
 - `MQTT_USER`
 - `MQTT_PASSWORD`
 - `REGISTRY_URL`

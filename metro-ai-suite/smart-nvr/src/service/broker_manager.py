@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import json
@@ -137,6 +137,8 @@ async def load_yaml_brokers(path: str = BROKERS_CONFIG_PATH, request=None):
         )
         await redis_store.save_broker(legacy.id, legacy.model_dump(), request)
         logger.info("Seeded default si1 broker from environment")
+
+    await sync_yaml_from_redis(request=request, path=path)
 
 
 _YAML_HEADER = (

@@ -1,22 +1,4 @@
 # Scenescape-mode MQTT brokers. Active when NVR_SCENESCAPE=true.
 # host = MQTT broker IP only. RTSP is configured separately in the Frigate config.
 # Broker id must match the SI node prefix in Frigate camera names (e.g. si1 -> si1-camera1).
-brokers:
-- id: si1
-  name: Smart Intersection 1
-  host: <si1_ip>
-  port: 1883
-  topic: scenescape/data/camera/#
-  type: scenescape
-  use_tls: true
-  throttle_interval: 2.0
-  enabled: true
-- id: si2
-  name: Smart Intersection 2
-  host: <si2_ip>
-  port: 1883
-  topic: scenescape/data/camera/#
-  type: scenescape
-  use_tls: true
-  throttle_interval: 2.0
-  enabled: true
+brokers: []
