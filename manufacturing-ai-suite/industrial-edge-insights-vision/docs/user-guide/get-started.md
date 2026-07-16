@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- [System Requirements](./get-started/system-requirements.md)
+- [System Requirements](./get-started/vision-system-requirements.md)
 
 ## Set up the application
 
@@ -131,7 +131,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
    | PCB Anomaly Detection   | pcb_anomaly_detection |
-   
+
    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server. Refer to the table for different options.
 
    > **IMPORTANT:** Before you run `sample_start.sh` script, make sure that
@@ -163,7 +163,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the URL stated in the table that follows.
    > If you are running multiple instances of the application, provide the `NGINX_HTTPS_PORT` number in the url for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace 443 with `<NGINX_HTTPS_PORT>`.
-   
+
    | Application   | URL                   |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | https://<HOST_IP>/mediamtx/pdd/ |

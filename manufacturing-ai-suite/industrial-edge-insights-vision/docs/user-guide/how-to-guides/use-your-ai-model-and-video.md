@@ -8,7 +8,7 @@ You can also bring your own video file source. This article will show you how to
 > You can manually add your files next to them.
 >
 > For compose-based deployment, the entire resources directory is a volume mounted and made
-> available to pipeline server. However for helm, you need to manually copy those to the
+> available to pipeline server. However for Helm, you need to manually copy those to the
 > container.
 
 ## File Location
@@ -57,7 +57,7 @@ the `model` and `video` directories:
 ::::
 hide_directive-->
 
-> **Note**
+> **Note:**
 > You can customize the directory structure for different resources and use cases.
 
 
@@ -97,11 +97,11 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > Note: If you're running multiple instances of an app, make sure to provide
-   > `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with
+   > **Note:** If you are running multiple instances of an app, make sure to provide
+   > `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with
      `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
-   > If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the
+   > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the
      default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 
@@ -169,9 +169,9 @@ hide_directive-->
    `dlstreamer-pipeline-server` pod to make them available for application while launching
    pipelines.
 
-   > **NOTE** It is assumed that the sample app is already deployed in the cluster
+   > **Note:** This guide assumes that the sample app is already deployed in the cluster
    >
-   > For multi-instance app deployment, use the instance name in the name space i.e.
+   > For multi-instance app deployment, use the instance name in the name space, i.e.,
      `-n <INSTANCE_NAME>` instead of `-n app`. `<INSTANCE_NAME>` is present in config.yml
      for multi instance app deployment.
 
@@ -232,11 +232,11 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > Note: If you're running multiple instances of an app, make sure to provide
-   > `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with
+   > **Note:** If you are running multiple instances of an app, make sure to provide
+   > `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with
      `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
-   > If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the
+   > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the
      default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive::::{tab-set} hide_directive-->

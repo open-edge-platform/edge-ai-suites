@@ -79,7 +79,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > **Note:** The script automatically uses the payload.json file from the configured sample application directory.
+   > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
 
 <!--hide_directive ::: hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
@@ -99,7 +99,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > **Note:** The script automatically uses the payload.json file from the configured sample application directory.
+   > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
 
 <!--hide_directive
 :::
@@ -140,7 +140,7 @@ throughput cumulative: 173.8
    - Check network connectivity to localhost
 
 2. **Pipeline Startup Failures**
-   - Check model file paths in payload.json
+   - Check model file paths in `payload.json`
    - Verify video file accessibility
    - Monitor system resources (CPU, memory, GPU)
    - Ensure the correct SAMPLE_APP is set in .env file

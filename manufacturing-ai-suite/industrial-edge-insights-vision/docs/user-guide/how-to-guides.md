@@ -16,7 +16,9 @@ Manage Pipelines <./how-to-guides/manage-pipelines.md>
 Run Multiple AI Pipelines <./how-to-guides/run-multiple-ai-pipelines.md>
 Change Video Source <./how-to-guides/change-input-video-source.md>
 Scale Video Resolution <./how-to-guides/scale-video-resolution.md>
+Publish Frames to S3 Storage <./how-to-guides/store-frames-in-s3.md>
 Enable MLOps <./how-to-guides/enable-mlops.md>
+Start MQTT Publisher <./how-to-guides/start-mqtt-publisher.md>
 Run Benchmarks <./how-to-guides/benchmark.md>
 Use your own model and Video <./how-to-guides/use-your-ai-model-and-video.md>
 View Telemetry Data <./how-to-guides/view-telemetry-data.md>
