@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Ensure you meet the [System Requirements](./system-requirements.md) for this application.
+- Ensure you meet the [System Requirements](./vision-system-requirements.md) for this application.
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
 - **Tools Installed**: Install the required tools:
@@ -61,9 +61,11 @@ configured Kubernetes cluster.
   ```
 
   Verify the GPU and NPU resources are advertised on nodes:
+
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
+
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Set up the application
@@ -106,7 +108,7 @@ configured Kubernetes cluster.
 
     > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances (two pallet-defect-detection instances and one pcb-anomaly-detection instance) with the identifiers `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-3. Edit the below mentioned environment variables in all the `helm/values_<SAMPLE_APP>.yaml` files:
+3. Edit the environment variables mentioned below in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
    ```yaml
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -126,11 +128,11 @@ configured Kubernetes cluster.
    ./setup.sh helm
    ```
 
-   This does the following:
+   This:
    - Parses through the `config.yml`
    - Downloads resources for each instance
-   - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and values.yaml.
-   - Updates and adds the ports mentioned in `config.yml` to the respective values.yaml file
+   - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and `values.yaml`.
+   - Updates and adds the ports mentioned in `config.yml` to the respective `values.yaml` file
    - Sets executable permissions for scripts
 
 ## Deploy the application
@@ -159,19 +161,19 @@ configured Kubernetes cluster.
 
    ```sh
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
    kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   
+
    | Application   | <VIDEOS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
@@ -330,14 +332,14 @@ configured Kubernetes cluster.
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & pcb1 set to 30445.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance `pdd1` has nginx port set to 30443, `pdd2` set to 30444, and `pcb1` set to 30445.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
    ```
 
-#### Start pipeline for a particular instance only
+#### Start a pipeline for a particular instance only
 
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
@@ -721,19 +723,19 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ```sh
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
    kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-  
+
    | Application   | <VIDEOS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
@@ -741,7 +743,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 4. Install the package `boto3` in your python environment if not installed.
 
-   Intel recommends creating a virtual environment and installing it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
+   This guide recommends creating a virtual environment and installing it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
 
    ```sh
    sudo apt update && \
@@ -816,7 +818,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ```
 
    PCB Anomaly Detection:
-   
+
    ```sh
    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
       "source": {
@@ -865,19 +867,19 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ```sh
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
+
    # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
    kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
    kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   
+
    | Application   | <VIDEOS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
    | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
+
    | Application   | <MODELS_PATH> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet-defect-detection |
@@ -912,9 +914,9 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        }
    ]
    ```
-   
+
    PCB Anomaly Detection:
-   
+
    ```json
    [
       {
@@ -948,14 +950,15 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ```sh
    ./sample_start.sh helm -i <INSTANCE_NAME> -p <APP>_mlops
    ```
+
    Note the instance-id.
-   
+
    | Application   | <APP> Value                    |
    | :----- | :--------------------------------------- |
    | Pallet Defect Detection  | pallet_defect_detection |
    | PCB Anomaly Detection   | pcb_anomaly_detection |
 
-6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows: 
+6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows:
 
    > **Note:** For sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
 
@@ -1018,9 +1021,9 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        }
    ]
    ```
-   
+
    PCB Anomaly Detection:
-   
+
    ```json
    [
       {

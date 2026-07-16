@@ -1,26 +1,11 @@
 # How-to Guides
 
-This section collects guides for Pallet Defect Detection sample application.
+This section collects guides specific for the Pallet Defect Detection sample application. For more, refer to the [Vision How-to Guides](../how-to-guides.md) section.
 
-- [Run multiple apps](./how-to-guides/run-multiple-apps.md)
-- [Manage pipelines](./how-to-guides/manage-pipelines.md)
-- [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
-- [Use GPU For Inference](./how-to-guides/use-gpu-for-inference.md)
-- [Use NPU For Inference](./how-to-guides/use-npu-for-inference.md)
-- [Use Your AI Model and Video](./how-to-guides/use-your-ai-model-and-video.md)
-- [Change the Input Video Source](./how-to-guides/change-input-video-source.md)
-- [Scale Video Resolution](./how-to-guides/scale-video-resolution.md)
+- [Generating Model from Geti™](./how-to-guides/generating-model-from-geti.md)
+- [Export and Optimize Geti™ Model](./how-to-guides/export-and-optimize-geti-model.md)
 - [Integrate Balluff SDK with supported cameras](./how-to-guides/integrate-balluff-sdk.md)
 - [Integrate pylon SDK for Basler camera support](./how-to-guides/integrate-pylon-sdk.md)
-- [Publish frames to S3 storage](./how-to-guides/store-frames-in-s3.md)
-- [Publish metadata to OPC UA](./how-to-guides/use-opcua-publisher.md)
-- [Enable MLOps](./how-to-guides/enable-mlops.md)
-- [Start MQTT publisher](./how-to-guides/start-mqtt-publisher.md)
-- [Benchmarks](./how-to-guides/benchmark.md)
-- [View Open Telemetry data](./how-to-guides/view-telemetry-data.md)
-- [Launching Multiple Instances of Apps](./how-to-guides/run-multiple-apps.md)
-- [Generating Model from Geti™](./how-to-guides/generating-model-from-geti.md)
-- [Run in Air-Gapped System](./how-to-guides/run-in-air-gapped-system.md)
 
 <!--hide_directive
 :::{toctree}

@@ -25,18 +25,34 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    cd manufacturing-ai-suite/industrial-edge-insights-vision
    ```
 
-2. Set the application-specific environment variable file. Replace "<APP>" with the desired value from the table that follows:
+2. Set the application-specific environment variable file:
+
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
-   cp .env_<APP> .env
+   cp .env_pallet-defect-detection .env
    ```
 
-   | Application   | <APP> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection |
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
-3. Edit the following environment variables in the `.env` file. Replace "<APP>" with the desired value from the table that follows:
+   ```bash
+   cp .env_pcb-anomaly-detection .env
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
+3. Edit the following environment variables in the `.env` file:
+
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -48,12 +64,30 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
 
    # application directory
-   SAMPLE_APP=<APP>
+   SAMPLE_APP=pallet-defect-detection
    ```
-   | Application   | <APP> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection |
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```bash
+   HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
+
+   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+
+   MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
+   MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
+
+   # application directory
+   SAMPLE_APP=pcb-anomaly-detection
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 4. Install the prerequisites. Run with sudo if needed.
 
@@ -63,7 +97,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
-   > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md).
+   > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md).
 
 ## Deploy the Application
 
@@ -121,18 +155,30 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ]
    ```
 
-3. Start the sample application with a pipeline. Replace "<APP>" with the desired value from the table that follows:
+3. Start the sample application with a pipeline:
+
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
-   ./sample_start.sh -p <APP>
+   ./sample_start.sh -p pallet_defect_detection
    ```
 
-   | Application   | <APP> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet_defect_detection |
-   | PCB Anomaly Detection   | pcb_anomaly_detection |
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
-   This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server. Refer to the table for different options.
+   ```bash
+   ./sample_start.sh -p pcb_anomaly_detection
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
+   This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server.
 
    > **IMPORTANT:** Before you run `sample_start.sh` script, make sure that
    > `jq` is installed on your system. See the
@@ -158,16 +204,32 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
    ```
 
-   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Intel® Geti™, follow [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
+   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Intel® Geti™, follow [Generating a Model from Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
 
-   > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the URL stated in the table that follows.
+   > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the application URL below.
    > If you are running multiple instances of the application, provide the `NGINX_HTTPS_PORT` number in the url for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace 443 with `<NGINX_HTTPS_PORT>`.
 
-   | Application   | URL                   |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | https://<HOST_IP>/mediamtx/pdd/ |
-   | PCB Anomaly Detection   | https://<HOST_IP>/mediamtx/anomaly/ |
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
+
+   ```text
+   https://<HOST_IP>/mediamtx/pdd/
+   ```
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```text
+   https://<HOST_IP>/mediamtx/anomaly/
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 4. Get the status of running pipeline instance(s):
 
@@ -175,7 +237,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ./sample_status.sh
    ```
 
-   This command lists the statuses of pipeline instances launched during the lifetime of sample application.
+   This command lists the statuses of pipeline instances launched during the lifetime of the sample application.
 
    Example Output for Pallet Defect Detection:
 
@@ -240,7 +302,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
-- For the Pallet Defect Detection application, see [Generate a custom model with Intel® Geti™](./how-to-guides/generating-model-from-geti.md)
+- For the Pallet Defect Detection application, see [Generate a custom model with Intel® Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
@@ -248,8 +310,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 - [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](./how-to-guides/view-telemetry-data.md)
 - For the Pallet Defect Detection and PCB Anomaly Detection applications, see [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
-- For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./how-to-guides/integrate-balluff-sdk.md)
-- For the Pallet Defect Detection application, see [Integrate Pylon SDK for Basler camera support](./how-to-guides/integrate-pylon-sdk.md)
+- For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-balluff-sdk.md)
+- For the Pallet Defect Detection application, see [Integrate Pylon SDK for Basler camera support](./pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md)
 
 ## Troubleshooting
 
@@ -259,7 +321,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 :::{toctree}
 :hidden:
 
-./get-started/vision-system-requirements
+Vision System Requirements <./get-started/vision-system-requirements.md>
 ./get-started/environment-variables
 ./get-started/deploy-with-helm
 ./get-started/deploy-multiple-instances-with-helm

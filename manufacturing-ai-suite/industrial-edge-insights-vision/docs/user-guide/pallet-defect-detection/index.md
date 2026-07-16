@@ -78,7 +78,6 @@ This sample application offers the following features:
 :hidden:
 
 how-to-guides
-api-reference
 Release Notes <release-notes>
 
 :::

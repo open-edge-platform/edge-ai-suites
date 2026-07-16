@@ -6,7 +6,7 @@ Note: You may observe a watermark in the camera feed when testing with a non-Bal
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](../../get-started/vision-system-requirements.md)
 
 ## Cloning and building the docker image
 

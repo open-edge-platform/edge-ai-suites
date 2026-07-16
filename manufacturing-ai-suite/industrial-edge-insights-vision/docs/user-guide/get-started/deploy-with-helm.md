@@ -61,6 +61,7 @@ configured Kubernetes cluster.
   ```
 
   Verify the GPU and NPU resources are advertised on nodes:
+
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
@@ -805,10 +806,10 @@ PCB Anomaly Detection:
     ./sample_start.sh helm -p <APP>_mlops
     ```
 
-   | Application   | <APP> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet_defect_detection |
-   | PCB Anomaly Detection   | pcb_anomaly_detection |
+    | Application   | <APP> Value                    |
+    | :----- | :--------------------------------------- |
+    | Pallet Defect Detection  | pallet_defect_detection |
+    | PCB Anomaly Detection   | pcb_anomaly_detection |
 
 11. View the WebRTC streaming on `https://<host_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
