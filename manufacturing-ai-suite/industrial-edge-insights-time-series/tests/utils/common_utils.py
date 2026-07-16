@@ -545,7 +545,7 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
             # Get logs without shell=True
             logs_result = subprocess.run(
                 ["docker", "logs", resource_name],
-                capture_output=True,
+                stdout=subprocess.PIPE,
                 text=True,
                 stderr=subprocess.STDOUT
             )
