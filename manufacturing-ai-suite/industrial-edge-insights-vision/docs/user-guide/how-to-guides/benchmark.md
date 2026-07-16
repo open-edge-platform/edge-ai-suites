@@ -42,7 +42,6 @@ The benchmark script automatically uses the configured sample application and it
 - **`pcb_anomaly_classification`**: CPU-based anomaly classification pipeline
 - **`pcb_anomaly_classification_gpu`**: GPU-accelerated anomaly classification pipeline with optimized settings
 
-
 ### Recommended Pipeline Parameters
 
 These are the recommended parameters by Edge Benchmarking and Workloads team for workload with similar characteristics. These are configurable parameters that can be adjusted based on your specific requirements:
@@ -62,9 +61,9 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 
 ### Steps to run benchmarks
 
-<!--hide_directive ::::{tab-set} hide_directive-->
-<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-<!--hide_directive :sync: pallet-detect hide_directive-->
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->**Pallet Defect Detection**
+<!--hide_directive:sync: pallet-detecthide_directive-->
 
 1. **Set up the environment**: Ensure `SAMPLE_APP=pallet-defect-detection` is set in your `.env` file
 
@@ -80,30 +79,32 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > NOTE: The script automatically uses the payload.json file from the configured sample application directory.
+   > **Note:** The script automatically uses the payload.json file from the configured sample application directory.
 
-
-<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
+
 1. **Set up the environment**: Ensure `SAMPLE_APP=pcb-anomaly-detection` is set in your `.env` file
 
 2. **Test CPU performance**:
+
    ```bash
    ./benchmark_start.sh -p pcb_anomaly_classification -l 1 -u 10 -t 25.0 -i 30
    ```
 
 3. **Test GPU performance** (if available):
+
    ```bash
    ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > NOTE: The script automatically uses the payload.json file from the configured sample application directory.
+   > **Note:** The script automatically uses the payload.json file from the configured sample application directory.
 
 <!--hide_directive
 :::
 ::::
 hide_directive-->
-
 
 ### Understanding Results
 
@@ -164,7 +165,8 @@ throughput cumulative: 173.8
    ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
    ```
 
-   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```bash

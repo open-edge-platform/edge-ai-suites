@@ -34,7 +34,8 @@ the `model` and `video` directories:
         - warehouse.avi
 ```
 
-<!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 ```text
@@ -130,7 +131,8 @@ hide_directive-->
        }'
    ```
 
-   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -188,7 +190,8 @@ hide_directive-->
    To use the above built image, change `imagePullPolicy` to `imagePullPolicy: IfNotPresent`
    in `values.yaml`.
 
-   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
@@ -261,7 +264,8 @@ hide_directive-->
        }'
    ```
 
-   <!--hide_directive ::: :::{tab-item} hide_directive-->**PCB Anomaly Detection**
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh

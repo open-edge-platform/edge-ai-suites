@@ -24,7 +24,8 @@ curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -
 }'
 ```
 
-<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 ```bash
@@ -60,7 +61,8 @@ To change the input video source for the pipeline, refer to the following table:
 | Web Camera   | <pre><code>"source": {<br>  "device": "/dev/video0",<br>  "type": "webcam"<br>}</code></pre> | The pipeline in **pipeline-server-config.json** in the helm chart needs to be changed as follows: <pre><code>"pipeline": "v4l2src device=/dev/video0 name=source ! video/x-raw,format=YUY2 ! videoconvert ! video/x-raw,format=RGB ! gvadetect name=detection model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",</code></pre>`
    |
 
-<!--hide_directive ::: :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
 <!--hide_directive :sync: pcb-detect hide_directive-->
 
 | Video Source | Source Section of the cURL Request                          | Remark                          |
