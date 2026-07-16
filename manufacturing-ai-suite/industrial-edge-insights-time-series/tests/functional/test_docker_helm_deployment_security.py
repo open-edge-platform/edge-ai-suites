@@ -50,7 +50,7 @@ def test_authentication_influx_grafana(setup_helm_environment, telegraf_input_pl
     assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     # Access the test cases dictionary
     influxdb_username, influxdb_password = security_utils.fetch_credentials(chart_path, "influxdb")
-    logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: {influxdb_password}")
+    logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: {'*' * len(influxdb_password)}")
     influxdb_login_result = security_utils.influxdb_login(namespace, chart_path)
     logger.info(f"influxdb_login result: {influxdb_login_result}")
     assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
@@ -144,14 +144,14 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
             
             # Check if credentials appear in logs (debug info)
             username_found = influxdb_creds[0] in influxdb_logs
-            password_found = influxdb_creds[1] in influxdb_logs
+            credential_dec = influxdb_creds[1] in influxdb_logs
             logger.info(f"DEBUG: Username '{influxdb_creds[0]}' found in logs: {username_found}")
-            logger.info(f"DEBUG: Password found in logs: {password_found}")
+            logger.info(f"DEBUG: Password found in logs: {credential_dec}")
             
-            if username_found or password_found:
+            if username_found or credential_dec:
                 logger.error("⚠️  SECURITY ISSUE: Credentials detected in InfluxDB logs!")
                 logger.error(f"   - Username visible: {username_found}")
-                logger.error(f"   - Password visible: {password_found}")
+                logger.error(f"   - Password visible: {credential_dec}")
                 logger.error("   Test will FAIL - this is the expected security behavior")
             else:
                 logger.info("✓ PASS: No credentials found in InfluxDB logs")
@@ -187,14 +187,14 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
             
             # Check if credentials appear in logs (debug info)
             username_found = grafana_creds[0] in grafana_logs
-            password_found = grafana_creds[1] in grafana_logs
+            credential_dec = grafana_creds[1] in grafana_logs
             logger.info(f"DEBUG: Username '{grafana_creds[0]}' found in logs: {username_found}")
-            logger.info(f"DEBUG: Password found in logs: {password_found}")
+            logger.info(f"DEBUG: Password found in logs: {credential_dec}")
             
-            if username_found or password_found:
+            if username_found or credential_dec:
                 logger.error("⚠️  SECURITY ISSUE: Credentials detected in Grafana logs!")
                 logger.error(f"   - Username visible: {username_found}")
-                logger.error(f"   - Password visible: {password_found}")
+                logger.error(f"   - Password visible: {credential_dec}")
                 logger.error("   Test will FAIL - this is the expected security behavior")
             else:
                 logger.info("✓ PASS: No credentials found in Grafana logs")
