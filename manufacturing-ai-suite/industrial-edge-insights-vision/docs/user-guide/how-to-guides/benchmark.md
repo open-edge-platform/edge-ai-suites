@@ -61,9 +61,9 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 
 ### Steps to run benchmarks
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->**Pallet Defect Detection**
-<!--hide_directive:sync: pallet-detecthide_directive-->
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive-->**Pallet Defect Detection**
+<!--hide_directive :sync: pallet-detect hide_directive-->
 
 1. **Set up the environment**: Ensure `SAMPLE_APP=pallet-defect-detection` is set in your `.env` file
 
