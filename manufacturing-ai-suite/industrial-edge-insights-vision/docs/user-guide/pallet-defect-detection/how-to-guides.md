@@ -27,12 +27,9 @@ This section collects guides for Pallet Defect Detection sample application.
 :hidden:
 
 ./how-to-guides/generating-model-from-geti
-./how-to-guides/use-gpu-for-inference
-./how-to-guides/use-npu-for-inference
 ./how-to-guides/export-and-optimize-geti-model
 Integrate Balluff SDK <./how-to-guides/integrate-balluff-sdk>
 Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
-./how-to-guides/use-opcua-publisher
 
 :::
 hide_directive-->

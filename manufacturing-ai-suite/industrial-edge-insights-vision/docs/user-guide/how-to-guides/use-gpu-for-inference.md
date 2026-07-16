@@ -1,4 +1,4 @@
-# Use GPU for Inference
+# Use GPU For Inference in Vision AI Detection Apps
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ The changes above adds the container user to the `render` group and provides acc
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, `vajpegdec`, etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
 Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® GPUs (integrated and discrete).
 
@@ -44,15 +44,32 @@ If you have multiple GPUs (integrated/discrete), please follow [this](https://do
 
 ## Tutorial on how to use GPU specific pipelines
 
-> **Note:** This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
+> **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
-The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+<!--hide_directive :sync: pallet-detect hide_directive-->
+
+The pipeline `pallet_defect_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. Start the pipeline as follows:
+
+```sh
+./sample_start.sh -p pallet_defect_detection_gpu
+```
+
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive :sync: pcb-detect hide_directive-->
+
+The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. Start the pipeline as follows:
 
 ```sh
 ./sample_start.sh -p pcb_anomaly_detection_gpu
 ```
 
-Go to grafana as explained in [get-started](../get-started.md) to view the dashboard.
+<!--hide_directive
+:::
+::::
+hide_directive-->
 
 ## Deploying with Helm
 
@@ -66,4 +83,5 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 ```
+
 > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.

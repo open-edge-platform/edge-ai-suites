@@ -1,4 +1,4 @@
-# Use NPU for inference
+# Use NPU for Inference in Vision AI Detection Apps
 
 ## Prerequisites
 
@@ -54,11 +54,28 @@ DL Streamer inference elements also provides property such as `device=NPU` and `
 
 > **Note:** This sample application already provides a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
 
-The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contains NPU specific elements and uses NPU backend for inferencing. Follow the steps below to run the pipeline.
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+<!--hide_directive :sync: pallet-detect hide_directive-->
+
+The pipeline `pallet_defect_detection_npu` in `pipeline-server-config.json` contains NPU specific elements and uses NPU backend for inferencing.
+
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive :sync: pcb-detect hide_directive-->
+
+The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contains NPU specific elements and uses NPU backend for inferencing.
+
+<!--hide_directive
+:::
+::::
+hide_directive-->
+
+Follow the steps below to run the pipeline.
 
 ### Steps
 
-1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#setup-the-application) to setup the application and then bring the services up
+1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
     > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
@@ -68,17 +85,42 @@ The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contai
 
 2. Start the pipeline.
 
+  <!--hide_directive ::::{tab-set} hide_directive-->
+  <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+  <!--hide_directive :sync: pallet-detect hide_directive-->
+
     ```sh
-    ./sample_start.sh -p pcb_anomaly_detection_npu
+    ./sample_start.sh -p pallet_defect_detection_npu
     ```
 
-    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
+    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
 
-    > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+    > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
     ```bash
-    https://<HOST_IP>/mediamtx/anomaly/
+    https://<HOST_IP>/mediamtx/pdd/
     ```
+
+    <!--hide_directive ::: hide_directive-->
+    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+    <!--hide_directive :sync: pcb-detect hide_directive-->
+
+     ```sh
+     ./sample_start.sh -p pcb_anomaly_detection_npu
+     ```
+
+     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
+
+     > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+
+     ```bash
+     https://<HOST_IP>/mediamtx/anomaly/
+     ```
+
+    <!--hide_directive
+    :::
+    ::::
+    hide_directive-->
 
 ## Deploying with Helm
 

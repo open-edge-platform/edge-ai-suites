@@ -76,7 +76,6 @@ This sample application offers the following features:
 :hidden:
 
 how-it-works
-how-to-guides
 api-reference
 Release Notes <release-notes>
 
