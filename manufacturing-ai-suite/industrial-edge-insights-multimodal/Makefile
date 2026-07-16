@@ -4,12 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-INCLUDE ?= default_INCLUDE
 HELM_REGISTRY = oci://registry-1.docker.io/intel
 MAKEFLAGS += --no-print-directory
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
-DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
 
@@ -195,16 +193,12 @@ post_config:
 
 .PHONY: up
 up: check_env_variables validate_host_ip down
-	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
-	if [ $(INCLUDE) = 'validation' ]; then \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
-	else \
-		cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
-		$(DOCKER_COMPOSE) up -d; \
-	fi; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+	$(DOCKER_COMPOSE) up -d; \
 	$(MAKE) upload_tar_file
 
 
@@ -246,16 +240,12 @@ check_hardware:
 
 .PHONY: up_vllm
 up_vllm: check_env_variables validate_host_ip down check_models check_hardware
-	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
-	if [ $(INCLUDE) = 'validation' ]; then \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
-	else \
-		cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml up -d; \
-	fi; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml up -d; \
 	$(MAKE) upload_tar_file
 
 

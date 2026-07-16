@@ -75,12 +75,17 @@ services:
     build:
       context: $PWD/insights-workbench
       dockerfile: $PWD/insights-workbench/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
     restart: unless-stopped
     depends_on:
       - ia-influxdb
     security_opt:
     - no-new-privileges
-    read_only: false
+    read_only: true
+    volumes:
+      - vol_insights_workbench_tmpfs:/tmp:rw
     environment:
       no_proxy: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
       NO_PROXY: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
@@ -100,3 +105,10 @@ services:
       VLLM_ADAPTER_NAME: ${VLLM_ADAPTER_NAME}
     networks:
       - timeseries_network
+
+volumes:
+  vol_insights_workbench_tmpfs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
