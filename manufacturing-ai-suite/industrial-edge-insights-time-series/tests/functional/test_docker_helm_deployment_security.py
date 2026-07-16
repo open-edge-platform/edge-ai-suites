@@ -50,7 +50,7 @@ def test_authentication_influx_grafana(setup_helm_environment, telegraf_input_pl
     assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     # Access the test cases dictionary
     influxdb_username, influxdb_password = security_utils.fetch_credentials(chart_path, "influxdb")
-    logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: {'*' * len(influxdb_password)}")
+    logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: [REDACTED]")
     influxdb_login_result = security_utils.influxdb_login(namespace, chart_path)
     logger.info(f"influxdb_login result: {influxdb_login_result}")
     assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
@@ -178,7 +178,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
                 shell=True, capture_output=True, text=True, check=False
             ).stdout
             
-            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, password={'*' * len(grafana_creds[1])}")
+            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, password=[REDACTED]")
             logger.info("Last 50 lines of Grafana pod logs:")
             logger.info("-" * 80)
             for i, line in enumerate(grafana_logs.split('\n')[-50:], 1):
