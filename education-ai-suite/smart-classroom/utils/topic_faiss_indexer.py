@@ -1,11 +1,11 @@
 # utils/topic_faiss_indexer.py
-
 import json
 import re
 import faiss
 import numpy as np
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+from utils.transcript_parser import parse_transcript_lines, build_topic_text
+# from sentence_transformers import SentenceTransformer
 from utils.config_loader import config
 
 # -----------------------------
@@ -16,36 +16,6 @@ EMBEDDING_MODEL = config.models.embedding.name
 
 _timestamp_pattern = re.compile(r"\[(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\]\s*(.*)")
 
-
-def parse_transcript_lines(transcript_text: str) -> list:
-    """Parse a timestamped transcript into a list of {start, end, text} dicts."""
-    lines = []
-    for raw_line in transcript_text.splitlines():
-        raw_line = raw_line.strip()
-        if not raw_line:
-            continue
-        match = _timestamp_pattern.match(raw_line)
-        if match:
-            lines.append({
-                "start": float(match.group(1)),
-                "end": float(match.group(2)),
-                "text": match.group(3)
-            })
-    return lines
-
-
-def build_topic_text(topic: dict, transcript_lines: list) -> str:
-    """Collect transcript lines whose time window overlaps with a topic."""
-    start_time = topic["start_time"]
-    end_time = topic["end_time"]
-    texts = [
-        line["text"]
-        for line in transcript_lines
-        if not (line["end"] < start_time or line["start"] > end_time)
-    ]
-    return " ".join(texts)
-
-
 class TopicFaissIndexer:
     def __init__(self, index_dir: Path):
         self.index_dir = index_dir
@@ -54,7 +24,7 @@ class TopicFaissIndexer:
         self.index_path = self.index_dir / "topics.faiss"
         self.meta_path = self.index_dir / "topics_meta.json"
 
-        self.embedder = SentenceTransformer(EMBEDDING_MODEL)
+        # self.embedder = SentenceTransformer(EMBEDDING_MODEL)
         self.dim = self.embedder.get_sentence_embedding_dimension()
 
         self.index = faiss.IndexFlatIP(self.dim)

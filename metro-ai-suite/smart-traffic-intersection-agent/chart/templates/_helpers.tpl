@@ -57,16 +57,27 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{/*
 Define the fully qualified name for the traffic-agent.
+The traffic-agent is the parent chart; its K8s resources are named {release}-traffic-agent.
 */}}
 {{- define "stia.trafficAgent.fullname" -}}
-{{ .Release.Name | trunc 57 | trimSuffix "-" }}-{{ .Values.trafficAgent.name }}
+{{ printf "%s-traffic-agent" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Define the fully qualified name for the VLM serving.
+Define the fully qualified name for the OVMS subchart service.
+Mirrors what the ovms subchart's fullname helper generates ({release}-ovms),
+allowing the traffic-agent deployment to construct the VLM base URL.
 */}}
-{{- define "stia.vlmServing.fullname" -}}
-{{ .Release.Name | trunc 57 | trimSuffix "-" }}-{{ .Values.vlmServing.name }}
+{{- define "stia.ovms.fullname" -}}
+{{ printf "%s-ovms" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Define the fully qualified name for the Metrics Manager subchart service.
+Mirrors what the metrics-manager subchart fullname helper generates.
+*/}}
+{{- define "stia.metricsManager.fullname" -}}
+{{ printf "%s-metrics-manager" .Release.Name | trunc 47 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -82,15 +93,15 @@ Define the name of the CA cert secret.
 
 {{/*
 MQTT broker FQDN.
-If .Values.trafficAgent.mqtt.host is set, use it directly.
+If .Values.mqtt.host is set, use it directly.
 Otherwise, construct from serviceName + brokerNamespace.
 If brokerNamespace is empty, default to the release namespace.
 */}}
 {{- define "stia.mqttHost" -}}
-{{- if .Values.trafficAgent.mqtt.host }}
-{{- .Values.trafficAgent.mqtt.host }}
+{{- if .Values.mqtt.host }}
+{{- .Values.mqtt.host }}
 {{- else }}
-{{- $ns := default .Release.Namespace .Values.trafficAgent.mqtt.brokerNamespace }}
-{{- printf "%s.%s.svc.cluster.local" .Values.trafficAgent.mqtt.serviceName $ns }}
+{{- $ns := default .Release.Namespace .Values.mqtt.brokerNamespace }}
+{{- printf "%s.%s.svc.cluster.local" .Values.mqtt.serviceName $ns }}
 {{- end }}
 {{- end }}

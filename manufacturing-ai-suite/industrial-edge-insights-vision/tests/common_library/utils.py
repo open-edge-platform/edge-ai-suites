@@ -55,12 +55,8 @@ class utils:
             os.chdir(self.base_dir)
             if value.get("app") == "pdd":
                 subprocess.check_output("cp .env_pallet-defect-detection .env", shell=True, executable='/bin/bash')
-            elif value.get("app") == "weld":
-                subprocess.check_output("cp .env_weld-porosity .env", shell=True, executable='/bin/bash')
             elif value.get("app") == "pcb":
                 subprocess.check_output("cp .env_pcb-anomaly-detection .env", shell=True, executable='/bin/bash')
-            elif value.get("app") == "wsg":
-                subprocess.check_output("cp .env_worker-safety-gear-detection .env", shell=True, executable='/bin/bash')
 
             # Update .env file with required variables
             self._update_env_file({
@@ -131,15 +127,11 @@ class utils:
             
             config_paths = {
                 "pdd": "apps/pallet-defect-detection/configs/pipeline-server-config.json",
-                "weld": "apps/weld-porosity/configs/pipeline-server-config.json", 
-                "pcb": "apps/pcb-anomaly-detection/configs/pipeline-server-config.json",
-                "wsg": "apps/worker-safety-gear-detection/configs/pipeline-server-config.json"
+                "pcb": "apps/pcb-anomaly-detection/configs/pipeline-server-config.json"
             }
             helm_config_paths = {
                 "pdd": "helm/apps/pallet-defect-detection/pipeline-server-config.json",
-                "weld": "helm/apps/weld-porosity/pipeline-server-config.json", 
-                "pcb": "helm/apps/pcb-anomaly-detection/pipeline-server-config.json",
-                "wsg": "helm/apps/worker-safety-gear-detection/pipeline-server-config.json"
+                "pcb": "helm/apps/pcb-anomaly-detection/pipeline-server-config.json"
             }
             config_path = os.path.join(self.path, "manufacturing-ai-suite/industrial-edge-insights-vision",  helm_config_paths.get(value.get("app"), helm_config_paths["pdd"]) if deployment_type == "helm" else config_paths.get(value.get("app"), config_paths["pdd"]))
 
@@ -432,16 +424,12 @@ class utils:
             # Direct path mapping without app_configs
             app_paths = {
                 "pdd": "helm/values_pallet-defect-detection.yaml",
-                "weld": "helm/values_weld-porosity.yaml", 
-                "pcb": "helm/values_pcb-anomaly-detection.yaml",
-                "wsg": "helm/values_worker-safety-gear-detection.yaml"
+                "pcb": "helm/values_pcb-anomaly-detection.yaml"
             }
             
             app_names = {
                 "pdd": "pallet-defect-detection",
-                "weld": "weld-porosity",
-                "pcb": "pcb-anomaly-detection",
-                "wsg": "worker-safety-gear-detection"
+                "pcb": "pcb-anomaly-detection"
             }
             
             helm_values_path = app_paths.get(app_type, app_paths["pdd"])
@@ -548,17 +536,9 @@ class utils:
                     "video_src": "resources/pallet-defect-detection/videos/warehouse.avi",
                     "models_src": "resources/pallet-defect-detection/models/*"
                 },
-                "weld": {
-                    "video_src": "resources/weld-porosity/videos/welding.avi",
-                    "models_src": "resources/weld-porosity/models/*"
-                },
                 "pcb": {
                     "video_src": "resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi",
                     "models_src": "resources/pcb-anomaly-detection/models/*"
-                },
-                "wsg": {
-                    "video_src": "resources/worker-safety-gear-detection/videos/Safety_Full_Hat_and_Vest.avi",
-                    "models_src": "resources/worker-safety-gear-detection/models/*"
                 }
             }
             

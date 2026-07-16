@@ -94,6 +94,8 @@ WIND_TURBINE_ANALYTICS_TOPIC = "wind-turbine-anomaly-data"
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 WIND_UDF= "windturbine_anomaly_detector"
 WIND_MODEL= "windturbine_anomaly_detector.pkl"
+MULTIMODAL_UDF = "weld_anomaly_detector"
+MULTIMODAL_MODEL = "weld_anomaly_detector.pkl"
 TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series"
 
 WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick"
@@ -185,14 +187,14 @@ SAMPLE_APPS_CONFIG = {
         "fusion_topic": "fusion/anomaly_detection_results",
         "fusion_measurement": "fusion_result",
         "alert_topic": "alerts/weld_defect_detection",
-        "udf": "weld_defect_detector",
-        "model": "weld_defect_detector.cb",
+        "udf": "weld_anomaly_detector",
+        "model": "weld_anomaly_detector.pkl",
         "udf_deployment_package": "weld_anomaly_udf",
         "config_dir": "configs/time-series-analytics-microservice",
         "udfs_dir": "configs/time-series-analytics-microservice/udfs/",
         "models_dir": "configs/time-series-analytics-microservice/models/",
         "tick_scripts_dir": "configs/time-series-analytics-microservice/tick_scripts/",
-        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_defect_detector.tick",
+        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick",
         "alert_config": {
             "enabled": True,
             "threshold": 0.7,
@@ -236,6 +238,21 @@ OPCUA_ALERT = {
             "namespace": 1,
             "node_id": 2004
         }
+
+# Multimodal DL Streamer pipeline defaults
+MULTIMODAL_DLSTREAMER_PIPELINE_NAME = "weld_defect_classification"
+MULTIMODAL_DLSTREAMER_MODEL_XML_PATH = (
+    "/home/pipeline-server/resources/models/"
+    "weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml"
+)
+MULTIMODAL_DLSTREAMER_MQTT_TOPIC = "vision_weld_defect_classification"
+MULTIMODAL_DLSTREAMER_S3_BUCKET = "dlstreamer-pipeline-results"
+MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX = "weld-defect-classification"
+MULTIMODAL_WEBRTC_PEER_ID = "samplestream"
+MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE = (
+    "../../../industrial-edge-insights-multimodal/configs/"
+    "dlstreamer-pipeline-server/pipeline-request-cpu.json"
+)
 
 # Essential sample app name constants - access via SAMPLE_APPS_CONFIG and helper functions
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
@@ -307,5 +324,13 @@ MULTIMODAL_DOCKER_FUSION_READY_WAIT = 10  # seconds to ensure fusion logs propag
 
 # MediaMTX streaming constants - access via nginx proxy
 MEDIAMTX_STREAM_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/samplestream"
+
+# Documented DL Streamer Pipeline Server API endpoints
+DOCKER_DSPS_API_BASE_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/dsps-api"
+HELM_DSPS_API_BASE_URL = "https://localhost:30001/dsps-api"
+
+# Documented Time Series Analytics Microservice API endpoints
+DOCKER_TSA_API_BASE_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/ts-api"
+HELM_TSA_API_BASE_URL = "https://localhost:30001/ts-api"
 
 OPCUA_SERVER_PORT = 30003

@@ -20,5 +20,42 @@ The main features are as follows:
 - Rear Camera Pipeline: **Re-Identification (ReID)** to track students consistently across camera views
 - Board Camera Pipeline: **Board content classification**
 
-For full setup, usage, and contribution guide, see
-[**Read the Detailed Documentation**](smart-classroom/README.md).
+**Content Search & RAG**:
+
+- **Retrieval Augmented Generation (RAG)**: Upload educational content (PDFs, documents, videos, images) and ask natural language questions
+- **Multi-modal AI**: Combines vector search with LLM-powered question answering using OpenVINO
+- **Multiple UI Options**: React-based web interface and Flutter cross-platform application(RAG)
+- **Intelligent Q&A**: Context-aware question answering with cited sources
+- **Content Management**: File upload, indexing, tagging, and management capabilities
+
+
+### Flutter + RAG Integration
+
+The Smart Classroom now includes a **Flutter application** (`utils/flutter/`) that provides a modern, cross-platform interface for the Content Search RAG pipeline. This integration demonstrates how educational applications can leverage local AI inference via OpenVINO for intelligent Retrieval Augmented Generation.
+
+**Key Features**:
+- Upload and ingest educational materials (documents, presentations, videos, images)
+- Ask questions against indexed content with cited sources
+- Multi-turn conversational Q&A with conversation history
+- Tag-based content filtering
+- File management (list, filter, delete indexed files)
+- Cross-platform support (Windows desktop, Web)
+
+**Two Ways to Use the Application**:
+
+1. **Flutter UI** - Traditional graphical interface:
+   - Run `.\utils\flutter\setup.ps1` to install dependencies
+   - Run `.\utils\flutter\start.ps1` to launch the application
+   - Interact via the Flutter desktop or web interface
+
+2. **Coding Companion (Agentic Mode)** - AI-assisted workflow:
+   - Use natural language commands in your coding assistant like GitHub Copilot, Claude, Cursor etc.,
+   - Available skills automatically execute setup, upload files, ask questions, manage content
+   - Example: `/sc-setup "first time set-up"`, `/sc-upload "upload a file"`, `/sc-qa "explain quantum computing"`
+
+For detailed setup instructions, architecture overview, and coding companion usage, see [**Flutter + RAG Documentation**](utils/flutter/README.md).
+
+## Full Documentation
+
+For comprehensive setup, usage, and contribution guide, see
+[**Smart Classroom Documentation**](smart-classroom/README.md).

@@ -98,19 +98,21 @@ def _count_goals(sess: Path) -> int:
 
 def _load_session(sess: Path) -> dict:
     row: dict = {
-        'name':      sess.name,
-        'dur_s':     _session_duration(sess),
-        'e2e_mean':  None,
-        'e2e_p90':   None,
-        'thr_hz':    None,
-        'drop_pct':  None,
-        'goals':     _count_goals(sess),
-        'throttled': False,
-        'cpu_thr':   False,
-        'gpu_thr':   False,
-        'pipeline':  None,
-        'host':      None,
-        'has_l2':    False,
+        'name':           sess.name,
+        'dur_s':          _session_duration(sess),
+        'e2e_mean':       None,
+        'e2e_p90':        None,
+        'thr_hz':         None,
+        'drop_pct':       None,
+        'goals':              _count_goals(sess),
+        'goal_calc_mean':     None,
+        'goal_response_mean': None,
+        'throttled':          False,
+        'cpu_thr':        False,
+        'gpu_thr':        False,
+        'pipeline':       None,
+        'host':           None,
+        'has_l2':         False,
     }
 
     kpi1 = _load_json(sess / 'kpi.json')
@@ -123,6 +125,10 @@ def _load_session(sess: Path) -> dict:
             row['throttled'] = True
             row['cpu_thr'] = bool(thermal.get('cpu_throttled'))
             row['gpu_thr'] = bool(thermal.get('gpu_throttled'))
+        _gcl = (kpi1.get('wandering') or {}).get('goal_calc_latency_ms') or {}
+        row['goal_calc_mean'] = _gcl.get('mean_ms')
+        _grl = (kpi1.get('wandering') or {}).get('goal_response_latency_ms') or {}
+        row['goal_response_mean'] = _grl.get('mean_ms')
 
     kpi2 = _load_json(sess / 'kpi_level2_traced.json')
     if kpi2:
@@ -149,8 +155,12 @@ def _load_session(sess: Path) -> dict:
 # Table rendering
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _bar(ch: str = '━') -> str:
-    return ch * _W
+_GCL_COL_W = 11  # width of the optional 'gcl mean' column including leading spaces (2 spaces + 9-char field)
+_GRL_COL_W = 11  # width of the optional 'grl mean' column
+
+
+def _bar(ch: str = '━', w: int = _W) -> str:
+    return ch * w
 
 
 def _ms(v: Optional[float]) -> str:
@@ -171,6 +181,9 @@ def _dur(v: Optional[float]) -> str:
 
 def build_table(bench_dir: Path, rows: list[dict]) -> str:
     lines = []
+    has_gcl = any(r.get('goal_calc_mean') is not None for r in rows)
+    has_grl = any(r.get('goal_response_mean') is not None for r in rows)
+    w = _W + (_GCL_COL_W if has_gcl else 0) + (_GRL_COL_W if has_grl else 0)
 
     # ── header ──
     bench_name = bench_dir.name
@@ -178,20 +191,23 @@ def build_table(bench_dir: Path, rows: list[dict]) -> str:
     host = next((r['host'] for r in rows if r['host']), None)
     pipeline = next((r['pipeline'] for r in rows if r['pipeline']), None)
 
-    lines.append(_bar())
+    lines.append(_bar(w=w))
     lines.append(f'  Benchmark Summary: {bench_name}   ({n} runs)')
     if host:
         lines.append(f'  Host: {host}')
     if pipeline:
         lines.append(f'  Pipeline: {pipeline}')
-    lines.append(_bar())
+    lines.append(_bar(w=w))
 
     # ── column header ──
     lines.append(
         f'  {"Run":<19}  {"Dur":>6}  {"e2e mean":>9}  {"e2e p90":>8}'
-        f'  {"thr Hz":>6}  {"drop":>5}  {"goals":>5}  {"":3}'
+        f'  {"thr Hz":>6}  {"drop":>5}  {"goals":>5}'
+        + (f'  {"gcl mean":>9}' if has_gcl else '')
+        + (f'  {"grl mean":>9}' if has_grl else '')
+        + f'  {"":3}'
     )
-    lines.append('  ' + '─' * (_W - 2))
+    lines.append('  ' + '─' * (w - 2))
 
     # ── per-run rows ──
     for r in rows:
@@ -216,12 +232,14 @@ def build_table(bench_dir: Path, rows: list[dict]) -> str:
             f'  {_hz(r["thr_hz"])}'
             f'  {_pct(r["drop_pct"])}'
             f'  {goals_str}'
-            f'  {flag}'
+            + (f'  {_ms(r.get("goal_calc_mean"))}' if has_gcl else '')
+            + (f'  {_ms(r.get("goal_response_mean"))}' if has_grl else '')
+            + f'  {flag}'
         )
 
     # ── aggregate footer ──
     l2_rows = [r for r in rows if r['has_l2']]
-    lines.append('  ' + '─' * (_W - 2))
+    lines.append('  ' + '─' * (w - 2))
     if l2_rows:
         def _avg(key):
             vals = [r[key] for r in l2_rows if r[key] is not None]
@@ -236,11 +254,13 @@ def build_table(bench_dir: Path, rows: list[dict]) -> str:
             f'  {_hz(_avg("thr_hz"))}'
             f'  {_pct(_avg("drop_pct"))}'
             f'  {total_goals:>5}'
+            + (f'  {_ms(mean([r["goal_calc_mean"] for r in rows if r.get("goal_calc_mean") is not None]))}' if has_gcl else '')
+            + (f'  {_ms(mean([r["goal_response_mean"] for r in rows if r.get("goal_response_mean") is not None]))}' if has_grl else '')
         )
     else:
         lines.append('  No Level 2 results available.')
 
-    lines.append(_bar())
+    lines.append(_bar(w=w))
     return '\n'.join(lines)
 
 

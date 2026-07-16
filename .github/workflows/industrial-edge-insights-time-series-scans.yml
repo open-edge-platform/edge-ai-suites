@@ -770,7 +770,7 @@ jobs:
         uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f # v3.28.18
         with:
           category: "/language:python"
-          upload: "never"
+          upload: "always"
           output: results-timeseries
 
       - name: Set up Python
@@ -850,7 +850,7 @@ jobs:
         uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f # v3.28.18
         with:
           category: "/language:python"
-          upload: "never"
+          upload: "always"
           output: results-multimodal
 
       - name: Set up Python

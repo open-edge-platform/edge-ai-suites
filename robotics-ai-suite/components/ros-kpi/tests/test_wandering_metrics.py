@@ -23,6 +23,10 @@ from wandering_metrics import (
     _extract_rtf,
     _extract_hz,
     _verdict,
+    _goal_calc_latencies_ms,
+    extract_goal_calc_latency,
+    _goal_response_latencies_ms,
+    extract_goal_response_latency,
 )
 
 
@@ -171,6 +175,204 @@ VERDICT_CASES = [
                          ids=[c[0] for c in VERDICT_CASES])
 def test_verdict(case_id, throttled, expected):
     assert _verdict(throttled) == expected
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  _goal_calc_latencies_ms / extract_goal_calc_latency
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Synthetic log matching the wandering_launch.log format:
+#   First "Sending" has no preceding "Result" → excluded
+#   result@T=10.000 → send@T=10.100  → 100 ms
+#   result@T=20.000 (abort) → send@T=20.050 → 50 ms
+#   result@T=30.000 (final, no following send) → excluded
+_WANDERING_LOG = (
+    '[wandering-21] [INFO] [1000000.100000000] [wandering_mapper]: '
+    'Sending target goal [1.0, 2.0, 0.0]\n'
+    '[wandering-21] [INFO] [1000010.000000000] [wandering_mapper]: '
+    'Result for goal abc123\n'
+    '[wandering-21] [INFO] [1000010.100000000] [wandering_mapper]: '
+    'Sending target goal [3.0, 4.0, 0.0]\n'
+    '[wandering-21] [WARN] [1000020.000000000] [wandering_mapper]: '
+    'Result for goal def456\n'
+    '[wandering-21] [WARN] [1000020.000010000] [wandering_mapper]: '
+    'Goal was aborted. Will add it to the blocked list\n'
+    '[wandering-21] [INFO] [1000020.050000000] [wandering_mapper]: '
+    'Sending target goal [5.0, 6.0, 0.0]\n'
+    '[wandering-21] [INFO] [1000030.000000000] [wandering_mapper]: '
+    'Result for goal ghi789\n'
+)
+
+
+def test_goal_calc_latencies_ms_basic():
+    lats = _goal_calc_latencies_ms(_WANDERING_LOG)
+    assert len(lats) == 2
+    assert abs(lats[0] - 100.0) < 1e-3
+    assert abs(lats[1] - 50.0) < 1e-3
+
+
+def test_goal_calc_latencies_ms_empty():
+    assert not _goal_calc_latencies_ms('')
+
+
+def test_goal_calc_latencies_ms_no_result_before_send():
+    # Only sends, no results → nothing paired
+    log = (
+        '[wandering-21] [INFO] [1000001.000000000] [wandering_mapper]: '
+        'Sending target goal [1.0, 2.0, 0.0]\n'
+    )
+    assert not _goal_calc_latencies_ms(log)
+
+
+def test_extract_goal_calc_latency_stats():
+    result = extract_goal_calc_latency(_WANDERING_LOG)
+    assert result is not None
+    assert result['n'] == 2
+    assert abs(result['mean_ms'] - 75.0) < 1e-3
+    assert abs(result['p50_ms'] - 75.0) < 1e-3   # midpoint of [50, 100]
+    assert abs(result['p90_ms'] - 95.0) < 1e-3   # 0.9*(100-50)+50
+    assert abs(result['max_ms'] - 100.0) < 1e-3
+
+
+def test_extract_goal_calc_latency_too_few_transitions():
+    # Zero transitions → returns None
+    log = (
+        '[wandering-21] [INFO] [1000010.000000000] [wandering_mapper]: '
+        'Result for goal abc123\n'
+        # No following Sending target goal
+    )
+    assert extract_goal_calc_latency(log) is None
+
+
+def test_extract_goal_calc_latency_single_transition():
+    # One transition is enough to return data
+    log = (
+        '[wandering-21] [INFO] [1000010.000000000] [wandering_mapper]: '
+        'Result for goal abc123\n'
+        '[wandering-21] [INFO] [1000010.100000000] [wandering_mapper]: '
+        'Sending target goal [3.0, 4.0, 0.0]\n'
+    )
+    result = extract_goal_calc_latency(log)
+    assert result is not None
+    assert result['n'] == 1
+    assert abs(result['mean_ms'] - 100.0) < 1e-3
+    assert abs(result['max_ms'] - 100.0) < 1e-3
+
+
+def test_extract_goal_calc_latency_no_data():
+    assert extract_goal_calc_latency('nothing relevant here') is None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  _goal_response_latencies_ms / extract_goal_response_latency
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# The function reads /cmd_vel timestamps from a rosbag via _load_bag_timestamps.
+# We mock that function to avoid needing a real bag on disk.
+#
+# _WANDERING_LOG has three "Sending target goal" events at (seconds):
+#   T1 = 1000000.100  →  T1_ns = 1_000_000_100_000_000
+#   T2 = 1000010.100  →  T2_ns = 1_000_010_100_000_000
+#   T3 = 1000020.050  →  T3_ns = 1_000_020_050_000_000
+#
+# Mock /cmd_vel timestamps (first after each goal):
+#   T1_ns + 50  ms = 1_000_000_150_000_000  → 50 ms
+#   T2_ns + 100 ms = 1_000_010_200_000_000  → 100 ms
+#   T3_ns + 150 ms = 1_000_020_200_000_000  → 150 ms
+#
+# Expected stats: n=3, mean=100ms, p50=100ms, p90=140ms, max=150ms
+
+_T1_NS = 1_000_000_100_000_000
+_T2_NS = 1_000_010_100_000_000
+_T3_NS = 1_000_020_050_000_000
+
+_MOCK_CMD_VEL_NS = sorted([
+    _T1_NS + 50_000_000,   # 50 ms after T1
+    _T2_NS + 100_000_000,  # 100 ms after T2
+    _T3_NS + 150_000_000,  # 150 ms after T3
+])
+
+# A cmd_vel timestamp that predates all goals (should never be matched)
+_EARLY_CMD_VEL_NS = _T1_NS - 1_000_000_000
+
+
+def _mock_load_timestamps(bag_dir, topics):
+    """Fake _load_bag_timestamps returning preset /cmd_vel timestamps."""
+    return {'/cmd_vel': _MOCK_CMD_VEL_NS}
+
+
+def test_goal_response_latencies_ms_basic():
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _mock_load_timestamps)
+        lats = _goal_response_latencies_ms(_WANDERING_LOG, '/fake/bag')
+    assert len(lats) == 3
+    assert abs(lats[0] - 50.0) < 1e-3
+    assert abs(lats[1] - 100.0) < 1e-3
+    assert abs(lats[2] - 150.0) < 1e-3
+
+
+def test_goal_response_latencies_ms_no_cmd_vel_in_bag():
+    def _empty(bag_dir, topics):
+        return {}
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _empty)
+        lats = _goal_response_latencies_ms(_WANDERING_LOG, '/fake/bag')
+    assert not lats
+
+
+def test_goal_response_latencies_ms_no_sends_in_log():
+    log_without_sends = (
+        '[wandering-21] [INFO] [1000010.000000000] [wandering_mapper]: '
+        'Result for goal abc123\n'
+    )
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _mock_load_timestamps)
+        lats = _goal_response_latencies_ms(log_without_sends, '/fake/bag')
+    assert not lats
+
+
+def test_goal_response_latencies_ms_bag_load_error():
+    def _raise(bag_dir, topics):
+        raise FileNotFoundError('no bag')
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _raise)
+        lats = _goal_response_latencies_ms(_WANDERING_LOG, '/fake/bag')
+    assert not lats
+
+
+def test_goal_response_latencies_ms_early_cmd_vel_excluded():
+    """cmd_vel messages before any goal send should not be counted."""
+    def _early(bag_dir, topics):
+        return {'/cmd_vel': [_EARLY_CMD_VEL_NS]}
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _early)
+        lats = _goal_response_latencies_ms(_WANDERING_LOG, '/fake/bag')
+    assert not lats
+
+
+def test_extract_goal_response_latency_stats():
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _mock_load_timestamps)
+        result = extract_goal_response_latency(_WANDERING_LOG, '/fake/bag')
+    assert result is not None
+    assert result['n'] == 3
+    assert abs(result['mean_ms'] - 100.0) < 1e-3
+    assert abs(result['p50_ms'] - 100.0) < 1e-3
+    assert abs(result['p90_ms'] - 140.0) < 1e-3
+    assert abs(result['max_ms'] - 150.0) < 1e-3
+
+
+def test_extract_goal_response_latency_no_data():
+    def _empty(bag_dir, topics):
+        return {}
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr('analyze_bag_e2e._load_bag_timestamps', _empty)
+        result = extract_goal_response_latency(_WANDERING_LOG, '/fake/bag')
+    assert result is None
 
 
 if __name__ == '__main__':
