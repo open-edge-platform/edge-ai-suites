@@ -63,7 +63,7 @@ def build_image_data_url(image_url: str) -> str | None:
 
 def get_query_prompt() -> dict[str, Any]:
     """Return the system prompt that guides weld-quality analysis responses."""
-    with open("/app/prompt_template.json", encoding="utf-8") as prompt_file:
+    with open("/app/system_prompt.json", encoding="utf-8") as prompt_file:
         return json.load(prompt_file)
 
 

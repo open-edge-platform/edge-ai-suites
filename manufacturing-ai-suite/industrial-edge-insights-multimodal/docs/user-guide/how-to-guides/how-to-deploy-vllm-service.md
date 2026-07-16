@@ -14,9 +14,11 @@ This guide explains how to deploy the multimodal sample app with the vLLM servic
 
 ## Download Models
 
-Download `Qwen3.5 2B` model and `Qwen 3.5 2B fine tuned LoRA adapter`
+**Download `Qwen3.5 2B` model and `Qwen 3.5 2B fine tuned LoRA adapter`**
 
 > Please review and accept the [Qwen3.5 2B license](https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE) before downloading.
+>
+> The LoRA adapter was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
 
 ```bash
 mkdir -p configs/vllm/huggingface configs/vllm/models && \
