@@ -41,6 +41,11 @@ VIPPET_DOCKER_TAG ?= $(_VIPPET_VER).0-$(_VIPPET_DATE)-weekly
 VIPPET_DIR := $(SELF_DIR)/../vippet-fedaero
 VIPPET_CWD := $(VIPPET_DIR)/$(VIPPET_PATH)
 
+MODELS_RETRIES  ?= 20
+MODELS_STATUS_INTERVAL ?= 30
+MODELS_LICENSE_FILE ?= .license-accepted
+MODELS_SUPPORTED_FILE ?= $(VIPPET_CWD)/shared/models/supported_models.yaml
+
 # ---------------------------------------------------------------------------
 # Packaging config (used by 'stage' / 'vippet' targets)
 # ---------------------------------------------------------------------------
@@ -55,7 +60,8 @@ TEMPLATE_DIR := $(SELF_DIR)/templates
 	up up-cdi up-standalone down down-cdi down-standalone restart restart-cdi \
 	build rebuild clean health test urls build-whisper \
 	stage vippet \
-	restler-build restler-stt restler-package
+	restler-build restler-stt restler-package \
+	models-license models-download models-status
 
 help: ## Show this help
 	@awk ' \
@@ -116,6 +122,18 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 			$(VIPPET_CWD)/compose.yml; \
 		echo "✓ compose.yml patched (pipelines volume added)"; \
 	fi; \
+    if grep -q '80:80' $(VIPPET_CWD)/compose.yml; then \
+		yq -i -y '(.services[] | select(.ports[]? == "80:80") | .ports) = []' $(VIPPET_CWD)/compose.yml; \
+		echo "✓ compose.yml patched (80:80 port mapping removed)"; \
+    fi; \
+	if ! grep -q 'frame-ancestors' $(VIPPET_CWD)/ui/nginx.conf; then \
+		sed -i 's|SAMEORIGIN|frame-ancestors|' $(VIPPET_CWD)/ui/nginx.conf; \
+		echo "✓ nginx.conf patched (frame-ancestors added)"; \
+	fi; \
+	# pallet_defect_detection needs updated model server (higher than 2026.1.0), otherwise it will fail to download
+	yq -i -y 'del(.[] | select(.name == "pallet_defect_detection"))' $(VIPPET_CWD)/shared/models/supported_models.yaml; \
+	# disable HTTP port with metrics
+	yq -i -y '.services."metrics-manager".ports = ["9090:9090"]' $(VIPPET_CWD)/compose.yml; \
 	echo "✓ vippet configured (telegraf.conf copied)"
 
 vippet-up: vippet-configure ## Start vippet (builds images, installs all models, starts stack)
@@ -132,8 +150,10 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	else \
 		echo 'METRICS_MANAGER_HOSTNAME=ptl' >> .env; \
 	fi && \
-	$(MAKE) build-onvif-discovery build-models install-models-all run && \
+	$(MAKE) build-onvif-discovery run && \
 	echo "✓ vippet running"
+	# fedaero makefile
+	$(MAKE) models-license models-download models-status 
 
 vippet-down: ## Stop vippet
 	@cd $(VIPPET_CWD) && docker compose down
@@ -220,22 +240,23 @@ clean: ## Remove staging scratch (.work). Add CONFIRM=yes to also stop container
 health: ## Show service health status
 	$(COMPOSE) ps --format "table {{.Service}}\t{{.Status}}"
 
-test: ## Test service connectivity (OVMS may need several minutes on first boot)
+test: ## Test service connectivity
 	@echo "Testing services..."
-	@echo "  Note: OVMS downloads the model on first start — allow a few minutes if just deployed."
-	@curl -sfk https://localhost:7443/api/health > /dev/null && echo "✓ Grafana"     || echo "✗ Grafana"
-	@curl -sf  http://localhost:9000/v3/models   > /dev/null && echo "✓ OVMS"        || echo "✗ OVMS (may still be loading model)"
-	@curl -sfk https://localhost:8443            > /dev/null && echo "✓ Open WebUI"  || echo "✗ Open WebUI"
-	@curl -sfk https://localhost:5443/health     > /dev/null && echo "✓ Whisper STT" || echo "✗ Whisper STT"
+	@curl -sfk https://localhost:443             > /dev/null && echo "✓ Single pane page"  || echo "✗ Single pane page"
+	@curl -sfk https://localhost:1443            > /dev/null && echo "✓ ViPPET"            || echo "✗ ViPPET"
+	@curl -sfk https://localhost:5443/health     > /dev/null && echo "✓ Whisper STT"       || echo "✗ Whisper STT"
+	@curl -sfk https://localhost:6443/metrics    > /dev/null && echo "✓ OVMS"              || echo "✗ OVMS"
+	@curl -sfk https://localhost:7443/api/health > /dev/null && echo "✓ Grafana"           || echo "✗ Grafana"
+	@curl -sfk https://localhost:8443            > /dev/null && echo "✓ Open WebUI"        || echo "✗ Open WebUI"
 
 urls: ## Print service endpoints
 	@echo ""
-	@echo "  Open WebUI       https://localhost:8443   (via nginx)"
-	@echo "  Grafana          https://localhost:7443   (via nginx)"
-	@echo "  Whisper STT      https://localhost:5443   (via nginx)"
-	@echo "  VIPPET UI        https://localhost:443    (via nginx)"
-	@echo "  OVMS API         http://localhost:9000/v3"
-	@echo "  OVMS metrics     http://localhost:9000/metrics"
+	@echo "  Single pane page        https://localhost:443    (via nginx)"
+	@echo "  VIPPET UI               https://localhost:1443   (via nginx)"
+	@echo "  Whisper STT             https://localhost:5443   (via nginx)"
+	@echo "  OVMS metrics            https://localhost:6443   (via nginx)"
+	@echo "  Grafana                 https://localhost:7443   (via nginx)"
+	@echo "  Open WebUI              https://localhost:8443   (via nginx)"
 	@echo ""
 
 # Packaging — called by the federal-aerospace top-level Makefile
@@ -355,3 +376,58 @@ restler-package: ## Assemble RESTler evidence ZIP for submission (run after rest
 	echo ""; \
 	echo ">> ZIP ready: $(RESTLER_EVIDENCE_ZIP)"; \
 	unzip -l "$(RESTLER_EVIDENCE_ZIP)" | awk '/---/{found=1; next} found && /---/{exit} found{print "  " $$4}'
+
+
+models-download:
+	echo "Downloading all supported models (this may take a while)..."; \
+	MODELS=$$(cat $(MODELS_SUPPORTED_FILE)|yq --compact-output '[.[].name]'); \
+	for i in $$(seq 1 $(MODELS_RETRIES)); do \
+		CODE=$$(curl -s -o /dev/null -w '%{http_code}' \
+			'http://localhost:7860/api/v1/models/download' -X POST \
+			-H 'Content-Type: application/json' \
+			--data-raw "{\"names\":$$MODELS}"); \
+		case "$$CODE" in \
+			2[0-9][0-9]) exit 0;; \
+			409)         exit 0;;  # 409 Conflict is expected if request is executed while models are already being downloaded \
+			*)           echo "  [$$i/$(MODELS_RETRIES)] HTTP $$CODE — retrying...";; \
+		esac; \
+		[ $$i -eq $(MODELS_RETRIES) ] && break; \
+		sleep 5; \
+    done; \
+
+models-status:
+	@for i in $$(seq 1 $(MODELS_RETRIES)); do \
+		STATUS=$$(curl -sf http://localhost:7860/api/v1/models | jq -c '[.[] | {display_name, install_status}]'); \
+		if [ -z "$$STATUS" ]; then \
+			echo "  [$$i/$(MODELS_RETRIES)] API not reachable yet..."; \
+		else \
+			echo "$$STATUS" | jq -r '.[] | "  \(.display_name)\t\(.install_status)"' | column -t -s "$$(printf '\t')"; \
+			if echo "$$STATUS" | jq -e 'length > 0 and all(.[]; .install_status == "installed")' >/dev/null; then \
+				echo "✓ All models installed"; \
+				exit 0; \
+			fi; \
+		fi; \
+		[ $$i -eq $(MODELS_RETRIES) ] && break; \
+		echo "  [$$i/$(MODELS_RETRIES)] not all installed yet, retrying in $(MODELS_STATUS_INTERVAL)s..."; \
+		sleep $(MODELS_STATUS_INTERVAL); \
+	done; \
+	echo "✗ Timeout: not all models installed after $$(( $(MODELS_RETRIES) * $(MODELS_STATUS_INTERVAL) ))s"; \
+	exit 1
+
+models-license:
+	@if [ -f $(MODELS_LICENSE_FILE) ]; then \
+		echo "✓ License already accepted ($(MODELS_LICENSE_FILE))"; \
+		exit 0; \
+	fi; \
+	echo "  By proceeding, you agree to license agreements for following models:  $$(cat $(MODELS_SUPPORTED_FILE)|yq '[.[].display_name] |join (",")')"; \
+	printf "  Do you accept the license agreements? [y/N] "; \
+	read ans; \
+	case "$$ans" in \
+		[Yy]|[Yy][Ee][Ss]) \
+			touch $(MODELS_LICENSE_FILE); \
+			;; \
+		*) \
+			echo "✗ License not accepted — aborting."; \
+			exit 1; \
+			;; \
+	esac

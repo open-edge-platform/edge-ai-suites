@@ -6,25 +6,38 @@
 
 services:
   vllm-server:
-    image: ${VLLM_IMAGE}:${VLLM_IMAGE_TAG}
-    container_name: ${VLLM_CONTAINER_NAME}
+    image: ${VLLM_IMAGE}
+    container_name: vllm-server
+    hostname: vllm-server
     restart: unless-stopped
     shm_size: ${VLLM_SHM_SIZE}
-    ports:
-      - "${VLLM_PORT}:${VLLM_PORT}"
     devices:
-      - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
+      # Following devices under /dev filesystem will be needed based on usecase
+      # dri - GPU
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
     group_add:
-      - "109"
-      - "110"
-      - "992"
-      - "993"
+    # render group ID for ubuntu 20.04 host OS
+    - "109"
+    # render group ID for ubuntu 22.04 host OS
+    - "110"
+    # render group IDs for ubuntu 24.04 host OS
+    - "992"
+    - "993"
     volumes:
-      - /dev/dri/by-path:/dev/dri/by-path:ro
+      - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
       - "/run/udev:/run/udev:ro"
-      - ${FINE_TUNING_HOST_PATH}:/checkpoints
+      - ./configs/vllm/models:/lora-adapters
+      - ./configs/vllm/huggingface:/root/.cache/huggingface
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
+      no_proxy: "${no_proxy},${HOST_IP},seaweedfs-filer"
+      NO_PROXY: "${no_proxy},${HOST_IP},seaweedfs-filer"
+      # Disable all outbound Hugging Face / Transformers network calls so the
+      # container uses only the locally mounted model files. This prevents
+      # unintended internet access and ensures reproducible, air-gapped deployments.
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      VLLM_LOGGING_LEVEL: ${LOG_LEVEL}
     command:
       - vllm
       - serve
@@ -46,7 +59,44 @@ services:
       - ${VLLM_SERVED_MODEL_NAME}
       - --enable-lora
       - --lora-modules
-      - ${VLLM_LORA_ADAPTER_NAME}=${VLLM_LORA_ADAPTER_PATH}
+      - ${VLLM_ADAPTER_NAME}=/lora-adapters/qwen3.5-2b-vlm-weld-explainability-lora/
       - -tp=${VLLM_TENSOR_PARALLEL_SIZE}
       - --quantization
       - ${VLLM_QUANTIZATION}
+      - --attention-backend
+      - TRITON_ATTN
+    networks:
+      - timeseries_network
+      
+  ia-insights-workbench:
+    container_name: ia-insights-workbench
+    hostname: ia-insights-workbench
+    image: ${DOCKER_REGISTRY}intel/ia-insights-workbench:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    build:
+      context: $PWD/insights-workbench
+      dockerfile: $PWD/insights-workbench/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - ia-influxdb
+    security_opt:
+    - no-new-privileges
+    read_only: false
+    environment:
+      no_proxy: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
+      NO_PROXY: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
+      INFLUX_HOST: ia-influxdb
+      INFLUX_PORT: 8086
+      INFLUX_USER: ${INFLUXDB_USERNAME}
+      INFLUX_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUX_DB: datain
+      FUSION_MEASUREMENT: fusion_result
+      OBJECT_STORE_URL: http://seaweedfs-filer:8888
+      BUCKET_NAME: dlstreamer-pipeline-results/weld-defect-classification
+      VLLM_HOST: vllm-server
+      VLLM_PORT: ${VLLM_PORT}
+      VLLM_CLIENT_TEMPERATURE: ${VLLM_CLIENT_TEMPERATURE}
+      VLLM_CLIENT_TOKEN: ${VLLM_CLIENT_TOKEN}
+      VLLM_CLIENT_MIN_P: ${VLLM_CLIENT_MIN_P}
+      VLLM_ADAPTER_NAME: ${VLLM_ADAPTER_NAME}
+    networks:
+      - timeseries_network

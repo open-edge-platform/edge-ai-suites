@@ -56,7 +56,7 @@ services:
 
   # OpenVINO Model Server
   ovms:
-    image: openvino/model_server:latest-gpu
+    image: openvino/model_server@sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00 # tag: latest-gpu
     container_name: ovms
     restart: unless-stopped
     init: true
@@ -88,7 +88,7 @@ services:
 
   # OpenWebUI - LLM Chat Interface
   open-webui:
-    image: ghcr.io/open-webui/open-webui:main
+    image: ghcr.io/open-webui/open-webui:v0.9.6-slim
     container_name: open-webui
     restart: unless-stopped
     networks:
@@ -108,6 +108,7 @@ services:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
+      - DEFAULT_MODEL_PARAMS={"max_tokens":1024}
       # ONLY NEEDED IF OFFLINE MODE IS DESIRED
       # - OFFLINE_MODE=true
       # - HF_HUB_OFFLINE=1
@@ -156,10 +157,15 @@ services:
     networks:
       - fedaero
     ports:
+      - "127.0.0.1:80:80"       # redirect to single pane HTTPS
+      - "127.0.0.1:443:443"     # Single pane dashboard over HTTPS
+      - "127.0.0.1:1443:1443"   # VIPPET UI over HTTPS
+      - "127.0.0.1:5443:5443"   # Whisper STT over HTTPS
+      - "127.0.0.1:6443:6443"   # OVMS Prometheus metrics over HTTPS
       - "127.0.0.1:7443:7443"   # Grafana over HTTPS
       - "127.0.0.1:8443:8443"   # Open WebUI over HTTPS
-      - "127.0.0.1:5443:5443"   # Whisper STT over HTTPS
     volumes:
+      - ./apps/nginx/single-pane.html:/usr/share/nginx/html/single-pane.html:ro
       - ./apps/nginx/nginx-standalone.conf:/etc/nginx/nginx.conf:ro
       - ./data/nginx-certs:/etc/nginx/certs
     # Generate a self-signed cert on first start if not present, then start nginx
