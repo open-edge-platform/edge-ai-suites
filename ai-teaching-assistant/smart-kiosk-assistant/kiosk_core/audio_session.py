@@ -1,3 +1,4 @@
+import io
 import logging
 import tempfile
 import threading
@@ -422,8 +423,30 @@ class BrowserStreamSession(BaseAudioSession):
         self._push_queue: Queue[np.ndarray | None] = Queue()
 
     def push_audio(self, wav_bytes: bytes) -> None:
-        """Called from the HTTP handler for each incoming audio chunk."""
-        audio = np.frombuffer(wav_bytes, dtype=np.int16)
+        """Called from the HTTP handler for each incoming audio chunk.
+
+        Browser clients post WAV-wrapped chunks. Decode the WAV container first
+        (stripping the RIFF header and downmixing to mono) and fall back to raw
+        int16 PCM only when the payload is not a valid WAV.
+        """
+        audio: np.ndarray
+        try:
+            with wave.open(io.BytesIO(wav_bytes), "rb") as wav_file:
+                channels = wav_file.getnchannels()
+                sample_width = wav_file.getsampwidth()
+                raw = wav_file.readframes(wav_file.getnframes())
+            if sample_width != 2:
+                raise ValueError(f"Unsupported WAV sample width: {sample_width * 8}-bit")
+            audio = np.frombuffer(raw, dtype=np.int16)
+            if channels > 1:
+                audio = audio.reshape(-1, channels)[:, 0]
+        except Exception:
+            # Backward compatibility for clients that post raw PCM bytes.
+            audio = np.frombuffer(wav_bytes, dtype=np.int16)
+
+        if len(audio) == 0:
+            return
+
         # Split into frame-sized pieces so _process_frame_stream sees uniform frames
         for start in range(0, len(audio), self._frame_samples):
             frame = audio[start : start + self._frame_samples]

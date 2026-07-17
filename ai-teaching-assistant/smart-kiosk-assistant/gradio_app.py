@@ -874,7 +874,7 @@ def _esc(t: str) -> str:
 
 _INGEST_NOTE_HTML = """
 <div class="ingest-note">
-  Upload a <strong>.txt</strong> or <strong>.md</strong> file to update the assistant&#39;s knowledge base.
+    Upload a <strong>.txt</strong>, <strong>.md</strong>, <strong>.docx</strong>, or <strong>.pdf</strong> file to update the assistant&#39;s knowledge base.
   Or pick a built-in sample knowledge base below and ingest it in one click.
   <strong>This replaces the existing knowledge base.</strong>
 </div>
@@ -892,7 +892,7 @@ def _sample_download_value(sample_name: str | None) -> str | None:
     return sample_path if sample_path and os.path.exists(sample_path) else None
 
 
-def _ingest_doc_common(file, idle_upload_label: str = "📄 Upload .txt / .md & Ingest", idle_sample_label: str = "Use Sample & Ingest") -> Generator:
+def _ingest_doc_common(file, idle_upload_label: str = "📄 Upload .txt / .md / .docx / .pdf & Ingest", idle_sample_label: str = "Use Sample & Ingest") -> Generator:
     """Clear the current knowledge base and ingest the selected document.
 
     Outputs are `[ingest_status, ingest_btn, sample_ingest_btn]` — the streaming
@@ -1081,7 +1081,10 @@ def _open_session(sr: int, history: list[dict] | None = None) -> dict[str, Any]:
             "chunk_seconds": kiosk_config.DEFAULT_CHUNK_SECONDS,  # 5.0s
             "silence_timeout_seconds": 2.0,
             "max_session_seconds": 60.0,
-            "silence_threshold": 900,
+            # Browser-mic audio is normalized before int16 conversion and
+            # typically has lower RMS than native mic streams, so use a lower
+            # speech-detection threshold to avoid gating out normal speech.
+            "silence_threshold": 300,
             "language": "en", "temperature": 0.0,
             "analyzer_url": ANALYZER_URL, "rag_url": RAG_URL, "tts_url": TTS_URL,
             "tts_model": "speecht5", "tts_language": "English",
@@ -1541,8 +1544,8 @@ def create_app() -> gr.Blocks:
                     )
                     sample_ingest_btn = gr.Button("Use Sample & Ingest", variant="secondary", size="sm")
                     ingest_btn = gr.UploadButton(
-                        "📄 Upload .txt / .md & Ingest",
-                        file_types=[".txt", ".md"],
+                        "📄 Upload .txt / .md / .docx / .pdf & Ingest",
+                        file_types=[".txt", ".md", ".docx", ".pdf"],
                         file_count="single",
                         variant="primary",
                         size="sm",

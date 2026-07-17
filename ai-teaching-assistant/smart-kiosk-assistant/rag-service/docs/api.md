@@ -67,13 +67,14 @@ Response:
 
 ### `POST /api/v1/context/file`
 
-Upload a UTF-8 `.txt` or `.md` file using multipart form-data with the `file` field.
+Upload a `.txt`, `.md`, `.docx`, or `.pdf` file using multipart form-data with the `file` field.
 
 Validation rules:
 
-- only `.txt` and `.md` files are accepted
+- only `.txt`, `.md`, `.docx`, and `.pdf` files are accepted
 - file size is limited to 10 MB
-- content must decode as UTF-8
+- `.txt` and `.md` content must decode as UTF-8
+- `.docx` and `.pdf` files must contain extractable text (encrypted PDFs are rejected)
 - ingest is rejected if token count exceeds `RAG_MAX_INGEST_TOKENS` (default `25000`)
 
 ### `GET /api/v1/context/stats`

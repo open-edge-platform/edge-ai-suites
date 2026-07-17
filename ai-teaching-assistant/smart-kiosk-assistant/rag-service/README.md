@@ -6,7 +6,7 @@ This service listens on port `8020` and can run either as part of the five-servi
 
 ## Responsibilities
 
-- Accept knowledge-base ingestion as raw text or uploaded `.txt` and `.md` files.
+- Accept knowledge-base ingestion as raw text or uploaded `.txt`, `.md`, `.docx`, and `.pdf` files.
 - Persist embeddings and metadata in a local Chroma collection.
 - Retrieve relevant chunks for each query, apply runtime context, and construct the answer prompt.
 - Stream answers to kiosk-core over Server-Sent Events.
@@ -29,7 +29,7 @@ Within the top-level compose deployment, `kiosk-core` treats `rag-service` as it
 |---|---|
 | `GET /health` | Liveness probe for compose health checks and local verification |
 | `POST /api/v1/context` | Ingest raw text into the active collection |
-| `POST /api/v1/context/file` | Ingest a `.txt` or `.md` upload |
+| `POST /api/v1/context/file` | Ingest a `.txt`, `.md`, `.docx`, or `.pdf` upload |
 | `GET /api/v1/context/stats` | Inspect collection metadata and document counts |
 | `DELETE /api/v1/context` | Clear the active collection |
 | `POST /api/v1/query` | Stream a grounded answer for kiosk-core |

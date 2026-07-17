@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
+from docx import Document as DocxDocument
+from pypdf import PdfReader
 
 from dto.query_dto import ContextRequest, IngestResponse, QueryRequest
 from pipeline import get_shared_pipeline
@@ -16,7 +19,49 @@ router = APIRouter()
 
 _MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 _MAX_INGEST_TOKENS = int(os.getenv("RAG_MAX_INGEST_TOKENS", "25000"))
-_ALLOWED_INGEST_SUFFIXES = {".txt", ".md"}
+_ALLOWED_INGEST_SUFFIXES = {".txt", ".md", ".docx", ".pdf"}
+
+
+def _extract_text_from_file(filename: str, raw: bytes) -> str:
+    suffix = Path(filename).suffix.lower()
+
+    if suffix in {".txt", ".md"}:
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise HTTPException(status_code=422, detail="Context file must be UTF-8 encoded") from exc
+
+    if suffix == ".docx":
+        try:
+            doc = DocxDocument(io.BytesIO(raw))
+            return "\n".join(p.text for p in doc.paragraphs)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(status_code=422, detail="Unable to parse .docx file") from exc
+
+    if suffix == ".pdf":
+        try:
+            reader = PdfReader(io.BytesIO(raw))
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(status_code=422, detail="Unable to parse .pdf file") from exc
+
+        if getattr(reader, "is_encrypted", False):
+            try:
+                # Empty password works for some PDFs with trivial protection.
+                reader.decrypt("")
+            except Exception:  # noqa: BLE001
+                pass
+            if getattr(reader, "is_encrypted", False):
+                raise HTTPException(status_code=422, detail="Encrypted PDFs are not supported")
+
+        page_texts: list[str] = []
+        for page in reader.pages:
+            page_texts.append(page.extract_text() or "")
+        return "\n".join(page_texts)
+
+    raise HTTPException(
+        status_code=415,
+        detail="Only .txt, .md, .docx and .pdf files are supported",
+    )
 
 
 def _validate_token_budget(pipeline, text: str) -> None:
@@ -88,7 +133,7 @@ async def ingest_context_file(file: UploadFile = File(...)) -> IngestResponse:
     if suffix not in _ALLOWED_INGEST_SUFFIXES:
         raise HTTPException(
             status_code=415,
-            detail="Only .txt and .md files are supported",
+            detail="Only .txt, .md, .docx and .pdf files are supported",
         )
 
     raw = await file.read()
@@ -97,10 +142,9 @@ async def ingest_context_file(file: UploadFile = File(...)) -> IngestResponse:
             status_code=413,
             detail=f"File too large. Maximum allowed size is {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
         )
-    try:
-        text = raw.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise HTTPException(status_code=422, detail="Context file must be UTF-8 encoded") from exc
+    text = _extract_text_from_file(filename, raw)
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="No extractable text found in file")
 
     pipeline = get_shared_pipeline()
     _validate_token_budget(pipeline, text)
