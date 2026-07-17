@@ -1,7 +1,7 @@
 import threading
 import time
 
-from capability_runner import CapabilityRunner, QueueFullError, OomError
+from model_manager.capability.runner import CapabilityRunner, QueueFullError, OomError
 
 
 def test_returns_result():

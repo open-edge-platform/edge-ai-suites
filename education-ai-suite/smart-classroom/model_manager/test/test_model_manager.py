@@ -4,13 +4,13 @@ import os
 
 # Ensure smart-classroom root is on sys.path so components.ocr is importable
 # when tests are run from the model_manager/ directory.
-_SC_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_SC_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _SC_ROOT not in sys.path:
     sys.path.insert(0, _SC_ROOT)
 
 from model_manager import ModelManager
 from components.ocr.ocr_handle import OcrHandler
-from model_manager.capability_state import CapabilityState
+from model_manager.capability.state import CapabilityState
 
 
 def test_instance_returns_same_object():
@@ -166,4 +166,3 @@ def test_ocr_handler_reads_concurrency_from_config():
     assert handler._runner._queue_max == 20
 
     handler.shutdown()
-

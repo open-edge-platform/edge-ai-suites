@@ -5,9 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 try:
-    from model_manager.capability_state import CapabilityState
+    from model_manager.capability.state import CapabilityState
 except ImportError:
-    from capability_state import CapabilityState
+    from model_manager.capability import CapabilityState
 
 
 _OCR_MAX_CONCURRENCY = 2   # fallback if config key absent
@@ -98,9 +98,9 @@ class OcrHandler:
                     max_concurrency, queue_max = self._concurrency_config()
                     self._max_concurrency = max_concurrency
                     try:
-                        from model_manager.capability_runner import CapabilityRunner
+                        from model_manager.capability.runner import CapabilityRunner
                     except ImportError:
-                        from capability_runner import CapabilityRunner
+                        from model_manager.capability import CapabilityRunner
                     self._runner = CapabilityRunner(
                         processor.extract_text,
                         max_concurrency=max_concurrency,

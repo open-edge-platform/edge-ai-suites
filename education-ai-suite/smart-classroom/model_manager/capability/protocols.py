@@ -1,5 +1,5 @@
-from typing import Any, Dict, Iterator, List, Protocol, Union, runtime_checkable
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Protocol, Union, runtime_checkable
 
 # Result type aliases mirroring the shapes returned by the existing
 # capability implementations (components/asr, components/ocr, components/llm).
