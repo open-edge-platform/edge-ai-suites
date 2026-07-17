@@ -248,6 +248,62 @@ foreach ($Service in $Services) {
 }
 
 # =============================================================================
+# STEP 4.5: Build React UI
+# =============================================================================
+
+Write-Step "Building React web UI..."
+
+$ReactDir = Join-Path $KioskDir "kiosk-ui-react"
+if (Test-Path (Join-Path $ReactDir "package.json")) {
+    $NodeOk = $false
+    try {
+        $NodeVersion = node --version 2>$null
+        if ($NodeVersion) { $NodeOk = $true }
+    }
+    catch {}
+
+    if (-not $NodeOk) {
+        Write-Info "Node.js not found. Attempting to install via winget..."
+        try {
+            winget install OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements --silent | Out-Null
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+            $NodeVersion = node --version 2>$null
+            if ($NodeVersion) { $NodeOk = $true }
+        }
+        catch {}
+    }
+
+    if (-not $NodeOk) {
+        Write-Error-Custom "Node.js is required to build the React UI. Install Node.js LTS and re-run setup."
+        exit 1
+    }
+
+    Write-Success "Node.js found: $NodeVersion"
+    Push-Location $ReactDir
+    try {
+        Write-Step "Installing UI dependencies (npm install)..."
+        npm install --no-fund --no-audit
+        if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
+        # Ensure esbuild's native binary is present even if install scripts were skipped.
+        if (Test-Path "node_modules/esbuild/install.js") { node "node_modules/esbuild/install.js" | Out-Null }
+        Write-Step "Building UI bundle (npm run build)..."
+        npm run build
+        if ($LASTEXITCODE -ne 0) { throw "npm run build failed" }
+        Write-Success "React UI built to kiosk-ui-react/dist"
+    }
+    catch {
+        Write-Error-Custom "Failed to build React UI: $_"
+        exit 1
+    }
+    finally {
+        Pop-Location
+    }
+}
+else {
+    Write-Info "kiosk-ui-react not found, skipping UI build"
+}
+
+# =============================================================================
 # STEP 5: Create Directories for Data/Logs/Cache
 # =============================================================================
 

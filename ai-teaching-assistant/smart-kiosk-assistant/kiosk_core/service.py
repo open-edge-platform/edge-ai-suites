@@ -59,6 +59,20 @@ class SessionService:
     def get_session(self, session_id: str) -> dict[str, object]:
         return self._get_session_obj(session_id).snapshot()
 
+    def get_response_audio_path(self, session_id: str, index: int) -> str:
+        """Return the filesystem path of a synthesized response-audio segment.
+
+        Raises KeyError if the session or the requested segment does not exist.
+        """
+        snapshot = self._get_session_obj(session_id).snapshot()
+        for segment in snapshot.get("tts_audio_segments", []):
+            if int(segment.get("index", -1)) == int(index):
+                audio_file = str(segment.get("audio_file", ""))
+                if audio_file and Path(audio_file).is_file():
+                    return audio_file
+                raise KeyError(f"Audio file missing for session {session_id} segment {index}")
+        raise KeyError(f"No response-audio segment {index} for session {session_id}")
+
     def list_sessions(self) -> list[dict[str, object]]:
         with self._lock:
             return [session.snapshot() for session in self._sessions.values()]

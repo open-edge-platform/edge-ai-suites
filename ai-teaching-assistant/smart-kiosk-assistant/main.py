@@ -1,4 +1,6 @@
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from kiosk_core.api.endpoints import router as api_router
 from kiosk_core.models import FileSessionStartRequest, SessionStartRequest, SessionStopResponse
@@ -9,10 +11,28 @@ app = FastAPI(title="kiosk-core")
 service = SessionService()
 app.include_router(api_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/v1/sessions/{session_id}/response-audio/{index}")
+def get_response_audio(session_id: str, index: int):
+    """Serve a synthesized response-audio WAV segment for browser playback."""
+    try:
+        path = service.get_response_audio_path(session_id, index)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return FileResponse(path, media_type="audio/wav", filename=f"response_{index:03d}.wav")
 
 
 @app.get("/api/v1/devices")

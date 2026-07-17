@@ -146,9 +146,9 @@ $Services = @(
         Name = "kiosk-ui"
         Port = 7860
         Path = "$KioskDir"
-        MainFile = "gradio_app.py"
-        HealthUrl = $null  # Gradio doesn't have /health
-        Description = "Gradio Web UI"
+        MainFile = "kiosk_ui_server.py"
+        HealthUrl = "http://127.0.0.1:7860/healthz"
+        Description = "React Web UI"
     }
 )
 
