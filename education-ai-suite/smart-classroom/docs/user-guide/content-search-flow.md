@@ -92,10 +92,10 @@ After at least one file upload is complete, the **Search** tab becomes available
 ### Search for Text
 
 1. Select the **Text Search** tab.
-2. Type your query in the text area (maximum: 100 characters)
+2. Type your query in the text area (maximum: 100 characters).
 3. Select the content types to search across: **Documents**, **Images**, and **Videos**
-   (any combination)
-4. (Optional) Filter results by tag using the **Filter by tags** drop-down menu
+   (any combination).
+4. (Optional) Filter results by tag using the **Filter by tags** drop-down menu.
 5. Set the number of **Top Results** to return (default: 10)
 6. Click **Search**
 
