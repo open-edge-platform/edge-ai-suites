@@ -767,6 +767,7 @@ jobs:
             exit 1
           fi
           echo "CODEQL_PYTHON_QUERIES_DIR=$CODEQL_PYTHON_QUERIES_DIR" >> "$GITHUB_ENV"
+          echo "CODEQL_PYTHON_SUITE=$CODEQL_PYTHON_QUERIES_DIR/codeql-suites/python-code-scanning.qls" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -778,7 +779,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-timeseries/codeql-db \
-            "$CODEQL_PYTHON_QUERIES_DIR" \
+            "$CODEQL_PYTHON_SUITE" \
             --format=sarifv2.1.0 \
             --output=results-timeseries/python.sarif
 
@@ -858,6 +859,7 @@ jobs:
             exit 1
           fi
           echo "CODEQL_PYTHON_QUERIES_DIR=$CODEQL_PYTHON_QUERIES_DIR" >> "$GITHUB_ENV"
+          echo "CODEQL_PYTHON_SUITE=$CODEQL_PYTHON_QUERIES_DIR/codeql-suites/python-code-scanning.qls" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -869,7 +871,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-multimodal/codeql-db \
-            "$CODEQL_PYTHON_QUERIES_DIR" \
+            "$CODEQL_PYTHON_SUITE" \
             --format=sarifv2.1.0 \
             --output=results-multimodal/python.sarif
 
