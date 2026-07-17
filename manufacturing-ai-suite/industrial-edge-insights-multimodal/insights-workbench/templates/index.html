@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Insight Services</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #11203a;
+      --muted: #5f6d82;
+      --accent: #0f62fe;
+      --accent-dark: #0043ce;
+      --border: #d6deeb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, #eaf2ff 0%, transparent 35%),
+        radial-gradient(circle at 90% 100%, #e9fff2 0%, transparent 35%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: none;
+      margin: 16px 0;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(16, 32, 58, 0.06);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    button {
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 0.95rem;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      cursor: pointer;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .explain-btn {
+      background: #c9d1de;
+      color: #30405e;
+      border-color: #b4bfd0;
+      cursor: not-allowed;
+    }
+
+    .explain-btn.enabled {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .explain-btn.enabled:hover {
+      background: var(--accent-dark);
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-left: auto;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f7fd;
+      color: #243b60;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .footer {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pager {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .message {
+      padding: 18px 20px;
+      color: var(--muted);
+    }
+
+    .explain-output {
+      margin: 24px 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfcff;
+      overflow: hidden;
+    }
+
+    .explain-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      color: #22395f;
+      background: #f4f7fd;
+    }
+
+    .explain-body {
+      padding: 12px 14px;
+      color: #22395f;
+      line-height: 1.5;
+    }
+
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d2d9e8;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4,
+    .markdown-content h5,
+    .markdown-content h6 {
+      margin: 12px 0 8px 0;
+      font-weight: 600;
+      color: #11203a;
+    }
+
+    .markdown-content h1 { font-size: 1.4rem; }
+    .markdown-content h2 { font-size: 1.2rem; }
+    .markdown-content h3 { font-size: 1.05rem; }
+
+    .markdown-content p {
+      margin: 8px 0;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      margin: 8px 0;
+      padding-left: 24px;
+    }
+
+    .markdown-content li {
+      margin: 4px 0;
+    }
+
+    .markdown-content code {
+      background: #f4f7fd;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Courier New", monospace;
+      font-size: 0.9rem;
+      color: #0f62fe;
+    }
+
+    .markdown-content pre {
+      background: #f4f7fd;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .markdown-content pre code {
+      background: none;
+      padding: 0;
+      color: #11203a;
+    }
+
+    .markdown-content blockquote {
+      border-left: 4px solid var(--accent);
+      padding-left: 12px;
+      margin: 8px 0;
+      color: #5f6d82;
+      font-style: italic;
+    }
+
+    .markdown-content strong {
+      font-weight: 600;
+      color: #11203a;
+    }
+
+    .markdown-content em {
+      font-style: italic;
+    }
+
+    .markdown-content table {
+      border-collapse: collapse;
+      margin: 8px 0;
+      width: 100%;
+    }
+
+    .markdown-content th,
+    .markdown-content td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .markdown-content th {
+      background: #f4f7fd;
+      font-weight: 600;
+    }
+
+    .data-display-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(16, 32, 58, 0.04);
+    }
+
+    .data-display-table td {
+      padding: 12px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .data-display-table td:first-child {
+      width: 40%;
+      text-align: center;
+    }
+
+    .data-display-table td:last-child {
+      width: 60%;
+      background: #fbfcff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Courier New", monospace;
+      font-size: 0.9rem;
+      color: #22395f;
+      line-height: 1.5;
+    }
+
+    .data-display-table img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(16, 32, 58, 0.1);
+    }
+
+    /* ── vLLM startup overlay ── */
+    #vllmOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      background:
+        radial-gradient(circle at 10% 0%, #eaf2ff 0%, transparent 35%),
+        radial-gradient(circle at 90% 100%, #e9fff2 0%, transparent 35%),
+        var(--bg);
+    }
+
+    #vllmOverlay.hidden { display: none; }
+
+    .vllm-spinner {
+      width: 52px;
+      height: 52px;
+      border: 5px solid #d2d9e8;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .vllm-label {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .vllm-sublabel {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      .footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pager {
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- vLLM startup overlay -->
+  <div id="vllmOverlay">
+    <div class="vllm-spinner" aria-hidden="true"></div>
+    <div class="vllm-label" id="vllmLabel">Starting vLLM server&hellip;</div>
+    <div class="vllm-sublabel" id="vllmSublabel">This may take a few minutes. Checking again in 30s.</div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <h1>Fusion Analytics Results</h1>
+      </div>
+
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyMessage" class="message" hidden>No data available.</div>
+
+      <div class="footer">
+        <div id="pageInfo">Page 1</div>
+        <div id="status" class="status">Loading data...</div>
+        <div class="pager">
+          <button id="explainBtn" class="explain-btn" disabled>Explain</button>
+          <button id="prevBtn">Previous</button>
+          <button id="nextBtn">Next</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div id="explainOutput" class="explain-output" hidden>
+        <div id="explainHeader" class="explain-header">AI Assistant Output</div>
+        <div id="explainBody" class="explain-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const explainBtn = document.getElementById("explainBtn");
+    const statusEl = document.getElementById("status");
+    const pageInfoEl = document.getElementById("pageInfo");
+    const tableHead = document.getElementById("tableHead");
+    const tableBody = document.getElementById("tableBody");
+    const emptyMessage = document.getElementById("emptyMessage");
+    const explainOutput = document.getElementById("explainOutput");
+    const explainHeader = document.getElementById("explainHeader");
+    const explainBody = document.getElementById("explainBody");
+    const AUTO_REFRESH_INTERVAL_MS = 10000;
+    const APP_BASE_PATH = window.location.pathname.startsWith("/insights-ui") ? "/insights-ui" : "";
+
+    function buildApiUrl(path, params) {
+      const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+      const url = new URL(`${APP_BASE_PATH}${normalizedPath}`, window.location.origin);
+
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+      }
+
+      return url.toString();
+    }
+
+    let state = {
+      page: 1,
+      pageSize: 10,
+      hasMore: false,
+      loading: false,
+      explainLoading: false,
+    };
+
+    function setLoading(loading) {
+      state.loading = loading;
+      prevBtn.disabled = loading || state.page <= 1;
+      nextBtn.disabled = loading || !state.hasMore;
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function hasSelectedRows() {
+      return Boolean(tableBody.querySelector("input[type='checkbox'][data-row-select='true']:checked"));
+    }
+
+    function updateExplainButtonState() {
+      const enabled = hasSelectedRows() && !state.loading && !state.explainLoading;
+      explainBtn.disabled = !enabled;
+      explainBtn.classList.toggle("enabled", enabled);
+    }
+
+    function getSelectedTimes() {
+      const selectedTimes = [];
+      const checkboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
+      checkboxes.forEach((checkbox) => {
+        if (!checkbox.checked) {
+          return;
+        }
+
+        const rowJson = checkbox.getAttribute("data-row-json");
+        if (rowJson) {
+          const row = JSON.parse(rowJson);
+          if (row.time) {
+            selectedTimes.push(row.time);
+          }
+        }
+      });
+
+      return selectedTimes;
+    }
+
+    function buildTable(rows) {
+      tableHead.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      if (!rows || rows.length === 0) {
+        emptyMessage.hidden = false;
+        updateExplainButtonState();
+        return;
+      }
+
+      emptyMessage.hidden = true;
+      const columns = Object.keys(rows[0]);
+
+      const headerRow = document.createElement("tr");
+      const selectAllTh = document.createElement("th");
+      selectAllTh.textContent = "Select";
+      headerRow.appendChild(selectAllTh);
+
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+
+      rows.forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+
+        const selectTd = document.createElement("td");
+        const rowCheckbox = document.createElement("input");
+        rowCheckbox.type = "checkbox";
+        rowCheckbox.setAttribute("data-row-select", "true");
+        rowCheckbox.setAttribute("data-row-json", JSON.stringify(row));
+        rowCheckbox.setAttribute("aria-label", `Select row ${rowIndex + 1}`);
+        rowCheckbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+            const rowCheckboxes = tableBody.querySelectorAll("input[type='checkbox'][data-row-select='true']");
+            rowCheckboxes.forEach((checkbox) => {
+              if (checkbox !== event.target) {
+                checkbox.checked = false;
+              }
+            });
+          }
+          updateExplainButtonState();
+        });
+        selectTd.appendChild(rowCheckbox);
+        tr.appendChild(selectTd);
+
+        columns.forEach((column) => {
+          const td = document.createElement("td");
+          const value = row[column];
+          td.textContent = value == null ? "" : String(value);
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+
+      updateExplainButtonState();
+    }
+
+    async function loadPage() {
+      setLoading(true);
+      setStatus(`Loading page ${state.page}...`);
+
+      try {
+        const response = await fetch(buildApiUrl("/api/data", {
+          page: String(state.page),
+          page_size: String(state.pageSize),
+        }));
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error("Failed to load data");
+        }
+
+        state.hasMore = payload.has_more;
+        buildTable(payload.rows);
+        pageInfoEl.textContent = `Page ${state.page}`;
+        setStatus(`Loaded ${payload.rows.length} rows.`);
+      } catch (error) {
+        setStatus(error.message);
+        buildTable([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    prevBtn.addEventListener("click", async () => {
+      if (state.page <= 1) return;
+      state.page -= 1;
+      await loadPage();
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      if (!state.hasMore) return;
+      state.page += 1;
+      await loadPage();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    explainBtn.addEventListener("click", async () => {
+      const selectedTimes = getSelectedTimes();
+      if (selectedTimes.length === 0) {
+        return;
+      }
+
+      state.explainLoading = true;
+      updateExplainButtonState();
+      explainOutput.hidden = false;
+      explainHeader.textContent = "AI Assistant Output";
+      explainBody.innerHTML = '<div class="spinner-wrap"><span class="spinner" aria-hidden="true"></span><span>Generating analysis...</span></div>';
+      setStatus("Generating explanation...");
+
+      try {
+        const response = await fetch(buildApiUrl("/api/explain"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ selected_times: selectedTimes }),
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error("Failed to generate explanation");
+        }
+
+        explainHeader.textContent = payload.title || "AI Assistant Output";
+
+        // Initialize explainBody with the data table
+        explainBody.innerHTML = '';
+
+        // Display image and time-series data in a two-column table
+        if (payload.resolved_images && payload.resolved_images.length > 0 && payload.ts_data && payload.ts_data.length > 0) {
+          const imgData = payload.resolved_images[0];
+          const tsData = payload.ts_data[0];
+          const imageUrl = imgData.image_load_url || imgData.image_url;
+
+          const dataTable = document.createElement('table');
+          dataTable.className = 'data-display-table';
+
+          const tbody = document.createElement('tbody');
+          const row = document.createElement('tr');
+
+          // Left column: Image
+          const leftCell = document.createElement('td');
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          leftCell.appendChild(img);
+
+          // Right column: Time-series data
+          const rightCell = document.createElement('td');
+          rightCell.textContent = tsData;
+
+          row.appendChild(leftCell);
+          row.appendChild(rightCell);
+          tbody.appendChild(row);
+          dataTable.appendChild(tbody);
+
+          explainBody.appendChild(dataTable);
+        }
+
+        // Now display markdown line by line
+        if (payload.markdown) {
+          const lines = payload.markdown.split('\n');
+          let delay = 0;
+          const lineDelay = 50; // milliseconds per line
+
+          lines.forEach((line, index) => {
+            setTimeout(() => {
+              const lineDiv = document.createElement('div');
+              lineDiv.style.opacity = '0';
+              lineDiv.style.transition = 'opacity 0.3s ease-in';
+              lineDiv.style.lineHeight = '1.6';
+              lineDiv.style.color = '#22395f';
+              
+              // Parse individual line as markdown
+              lineDiv.innerHTML = DOMPurify.sanitize(marked.parse(line || ' '));
+              explainBody.appendChild(lineDiv);
+              
+              // Trigger fade-in animation
+              requestAnimationFrame(() => {
+                lineDiv.style.opacity = '1';
+              });
+            }, delay);
+            delay += lineDelay;
+          });
+        } else {
+          explainBody.innerHTML = "<p>No explanation available.</p>";
+        }
+        setStatus(`Explanation generated for ${selectedTimes.length} selected time value(s).`);
+      } catch (error) {
+        explainBody.textContent = error.message;
+        setStatus(error.message);
+      } finally {
+        state.explainLoading = false;
+        updateExplainButtonState();
+      }
+    });
+
+    setInterval(async () => {
+      if (state.loading || hasSelectedRows()) {
+        return;
+      }
+
+      await loadPage();
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    // ── vLLM readiness gate ──────────────────────────────────────────────────
+    const vllmOverlay  = document.getElementById("vllmOverlay");
+    const vllmLabel    = document.getElementById("vllmLabel");
+    const vllmSublabel = document.getElementById("vllmSublabel");
+    const VLLM_POLL_MS = 30_000;
+    const PHASE_LABELS = [
+      "Starting vLLM server\u2026",
+      "Loading model\u2026",
+      "Initializing\u2026",
+    ];
+    let vllmPhase = 0;
+
+    async function checkVllmReady() {
+      try {
+        const res = await fetch(buildApiUrl("/api/vllm/health"));
+        const data = await res.json();
+        if (data.accessible === true) {
+          vllmOverlay.classList.add("hidden");
+          loadPage();
+          updateExplainButtonState();
+          return true;
+        }
+      } catch (_) {
+        // server not yet reachable — keep waiting
+      }
+      return false;
+    }
+
+    async function vllmReadinessLoop() {
+      const ready = await checkVllmReady();
+      if (ready) return;
+
+      vllmPhase = (vllmPhase + 1) % PHASE_LABELS.length;
+      vllmLabel.textContent = PHASE_LABELS[vllmPhase];
+
+      setTimeout(vllmReadinessLoop, VLLM_POLL_MS);
+    }
+
+    // Kick off: check immediately, then poll every 30 s until ready.
+    // Main loadPage() is deferred until the overlay clears.
+    vllmReadinessLoop();
+  </script>
+</body>
+</html>

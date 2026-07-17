@@ -242,6 +242,7 @@ docker logs -f <container_name> | grep -i error
 - [How to deploy with Helm](./get-started/deploy-with-helm.md): Guide for deploying with Helm.
 - [How to configure MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to update config](./how-to-guides/how-to-update-config.md): Guide updating configuration of Time Series Analytics Microservice.
+- [How to deploy vLLM service](./how-to-guides/how-to-deploy-vllm-service.md): Guide for deploying the sample app with vLLM enabled.
 
 <!--hide_directive
 :::{toctree}

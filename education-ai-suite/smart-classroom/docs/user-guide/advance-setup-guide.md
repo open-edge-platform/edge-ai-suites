@@ -46,15 +46,6 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
-### E. Enable OCR Features (Optional)
-
-If you need OCR functionality for document text extraction, enable OCR in `config.yaml`:
-
-```yaml
-ocr:
-  enabled: true
-```
-
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -102,6 +93,26 @@ content_search:
     document_max_mb: 100    # maximum upload size for documents (MB)
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
+
+### D. Enable OCR Features (Optional)
+
+If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
+
+```yaml
+models:
+  ocr:
+    enabled: true
+```
+
+Board OCR is supported to extract text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report.
+
+```yaml
+board_ocr:
+  enabled: true        # requires ocr.enabled: true
+  frame_rate: "1/3"    # frames per second sampled from the board video
+```
+
+> **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -183,9 +194,39 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+### Optional: Run as an Electron Desktop App
+
+The UI can run as a Windows desktop app instead of a browser tab.
+This is an additive layer: it connects to the same backend services,
+so those must be running as in the previous steps.
+
+```bash
+cd <path-to>\edge-ai-suites\education-ai-suite\smart-classroom\ui
+npm install
+
+# Development: opens the desktop window and starts the dev server on 5173
+npm run electron:dev
+
+# Production preview: builds the UI and runs the packaged launch path, no dev server.
+npm run electron:preview
+
+# Package a standalone Windows portable executable:
+#   release\SmartClassroom-<version>-portable.exe
+npm run electron:build
+```
+
+> **Note** The Electron runtime binary is fetched lazily the **first time Electron runs**
+> (`npm run electron:dev` / `electron:preview`). Behind a proxy, the first launch
+> needs the proxy variables `ELECTRON_GET_USE_PROXY=true` and
+> `GLOBAL_AGENT_HTTPS_PROXY=<proxy>` in addition to the usual
+> `HTTP_PROXY` / `HTTPS_PROXY`. The `npm run electron:build` downloads
+> its own copy via electron-builder and honors the standard `HTTPS_PROXY`.
+
 ## Step 6: Access the UI
 
-After starting the frontend you can open the Smart Classroom UI in a browser:
+After starting the frontend you can open the Smart Classroom UI in a browser
+(or, if you used `npm run electron:dev`, in the Electron desktop window
+that opens automatically):
 
 Local machine:
 
@@ -301,9 +342,13 @@ models:
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
 
+- **Error: `CL_OUT_OF_RESOURCES`** during summarization of longer audio inputs
+  Summarization of longer transcripts may require additional GPU memory. If this error occurs, increase the GPU memory allocation in the **Intel® Graphics Software** application under the **Graphics** tab before rerunning the workflow.
+  ![GPU Troubleshooting](./_assets/troubleshooting-gpu.png)
+
 ### Known Issues
 
-- **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
+- **Manual Video File Path Input**: In web browser, users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to use Electron desktop app for seamless operation.
 - **Live Video Monitoring Timeout**: Live video monitoring sessions will automatically stop after 45 minutes if the user does not reload the page to start a new session.
 - **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
 - **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.

@@ -1,0 +1,107 @@
+# Surgical Instrument — local-only / generated artifacts
+
+# POC scratch — soft-archived, never tracked
+poc/
+
+# Local-only mock backend — replaced by real Flask backend in Phase 3.
+# Kept on disk (not tracked) so the UI can be exercised standalone during dev.
+backend_mvp/
+
+# Generated reports & demo media
+**/*.docx
+**/*.mp4
+**/*.mkv
+**/*.avi
+**/*.mov
+**/*.pptx
+**/*.xlsx
+**/*.pdf
+
+# Tracer / benchmark / profiling output
+**/tracer_logs/
+**/per_frame/
+**/per_element_traced/
+**/detections/
+**/artifacts/
+**/benchmarks/
+**/*.svg
+!ui/**/*.svg
+out/
+
+# Model binaries / caches (use `make assets` to fetch)
+models/**/*.bin
+models/**/*.blob
+models/**/*.onnx
+models/**/*.pt
+models/**/*.pth
+models/**/*.hdf5
+**/model_cache/
+**/.cache/
+
+# Uploads / runtime data
+uploads/
+runs/
+logs/
+*.log
+
+# Task / progress scratch (per user preference — never commit these)
+TASK_*.md
+PROGRESS_*.md
+SCRATCH_*.md
+NOTES_*.md
+**/TASK_*.md
+
+# Developer reference notes — local only, never commit
+_dev_notes/
+**/PROGRESS_*.md
+**/SCRATCH_*.md
+**/NOTES_*.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.venv-*/
+venv/
+env/
+*.egg-info/
+build/
+dist/
+
+# Node / Vite / React
+node_modules/
+ui/dist/
+ui/.vite/
+ui/coverage/
+*.tsbuildinfo
+
+# Env files / secrets — only commit *.example
+.env
+.env.*
+!.env.example
+*.passwd
+mqtt_passwd
+**/secrets/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Docker / runtime
+.docker-cache/
+docker-compose.override.yaml
+docker-compose.override.yml
+docker-compose.*.override.yaml
+
+# Local training data / model artifacts (not versioned; bind-mounted at runtime)
+datasets/
+models/

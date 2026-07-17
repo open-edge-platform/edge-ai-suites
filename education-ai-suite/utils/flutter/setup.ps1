@@ -59,7 +59,8 @@ Pop-Location
 # Create Python venv
 Write-Host "`nCreating Python virtual environment..." -ForegroundColor Yellow
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$venvPath = Join-Path $repoRoot "venv_content_search"
+$contentSearchPath = Join-Path $repoRoot "smart-classroom\content_search"
+$venvPath = Join-Path $contentSearchPath "venv_content_search"
 
 if (-not (Test-Path $venvPath)) {
     python -m venv $venvPath

@@ -61,6 +61,10 @@ env:
   # Type: string
   captionHistory: "3"
 
+  # KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+  # The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+  VLM_CACHE_SIZE: 4
+
   # DL Streamer pipeline server REST URL.
   # Must match dlstreamer-pipeline-server fullnameOverride.
   # Type: string

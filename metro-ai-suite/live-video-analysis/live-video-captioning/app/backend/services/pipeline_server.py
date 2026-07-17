@@ -18,6 +18,7 @@ from ..config import (
     NPU_FORCED_RESOLUTION,
     PIPELINE_SERVER_URL,
     WEBRTC_BITRATE,
+    VLM_CACHE_SIZE,
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
@@ -34,8 +35,7 @@ class PipelineServer:
     WEBRTC_PEER_ID_MAX_LENGTH = 8
     WEBRTC_PEER_ID_PREFIX = "s"
     DEFAULT_RESOLUTION_SUFFIX = "_Default_Resolution"
-    CPU_SCHEDULER_CONFIG = "max_num_batched_tokens=256,cache_size=4,enable_prefix_caching=true,dynamic_split_fuse=true,use_cache_eviction=true"
-    GPU_SCHEDULER_CONFIG = "max_num_batched_tokens=512,cache_size=8,enable_prefix_caching=true,dynamic_split_fuse=true,use_cache_eviction=true"
+    SCHEDULER_CONFIG = f"max_num_batched_tokens=256,cache_size={VLM_CACHE_SIZE},enable_prefix_caching=true,dynamic_split_fuse=true,use_cache_eviction=true"
     HEALTHY_PIPELINE_STATES = {"running", "queued"}
 
     @staticmethod
@@ -305,10 +305,8 @@ class PipelineServer:
                 captioner_properties.pop("scheduler-config", None)
 
             scheduler_config = None
-            if selected_vlm_device == "cpu":
-                scheduler_config = self.CPU_SCHEDULER_CONFIG
-            elif selected_vlm_device == "gpu":
-                scheduler_config = self.GPU_SCHEDULER_CONFIG
+            if selected_vlm_device in {"cpu", "gpu"}:
+                scheduler_config = self.SCHEDULER_CONFIG
 
             if scheduler_config is not None:
                 # Element-properties use hyphenated GStreamer property names.

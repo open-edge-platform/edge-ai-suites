@@ -22,7 +22,7 @@
 .left-panel,
 .right-panel {
   overflow-y: auto;
-  height: calc(100vh - 64px - 56px - 48px);
+  height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
   box-sizing: border-box;
   padding: 12px 8px;
 }
@@ -35,7 +35,7 @@
 /* When video is fullscreen, push panels below it */
 .container.fullscreen .left-panel,
 .container.fullscreen .right-panel {
-  margin-top: calc(70vh - 64px - 56px);
+  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
   position: relative;
   /* //z-index: 10000; */
 }
@@ -48,7 +48,7 @@
 }
 
 .container.fullscreen .panels-wrapper {
-  margin-top: calc(70vh - 64px - 56px);
+  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
   align-items: stretch;
 }
 
@@ -59,7 +59,7 @@
 
 .video-wrapper.fullscreen {
   position: fixed;
-  top: calc(64px + 56px); /* Header + top bar */
+  top: calc(var(--top-panel-height) + var(--header-bar-height)); /* Header + top bar */
   left: 0;
   right: 0;
   height: 70vh;

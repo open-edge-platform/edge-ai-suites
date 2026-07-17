@@ -173,6 +173,8 @@ spec:
               value: {{ .Values.env.enableDetectionPipeline | quote }}
             - name: CAPTION_HISTORY
               value: {{ .Values.env.captionHistory | quote }}
+            - name: VLM_CACHE_SIZE
+              value: {{ .Values.env.VLM_CACHE_SIZE | quote }}
             - name: PIPELINE_SERVER_URL
               value: {{ .Values.env.pipelineServerUrl | quote }}
             - name: METRICS_SERVICE_PORT
