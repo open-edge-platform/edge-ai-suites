@@ -100,7 +100,7 @@ After at least one file upload is complete, the **Search** tab becomes available
 6. Click **Search**
 
 The text query feature searches both the visual collection (CLIP embeddings) and the textual collection
-[BAAI General Embedding (BGE) embeddings]. Textual results are reranked by a cross-encoder, and results from both
+BAAI General Embedding (BGE) embeddings. Textual results are reranked by a cross-encoder, and results from both
 modalities are merged using Reciprocal Rank Fusion (RRF).
 
 ![Text Search with Results](./_assets/content-search_searchResult.png)
