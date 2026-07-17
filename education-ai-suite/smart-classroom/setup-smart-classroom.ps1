@@ -295,6 +295,16 @@ if (Test-Path $proxyConfigFile) {
     }
 }
 
+# Apply proxy settings as environment variables so pip and other tools pick them up
+if ($script:httpProxy)  { $env:HTTP_PROXY  = $script:httpProxy }
+if ($script:httpsProxy) { $env:HTTPS_PROXY = $script:httpsProxy }
+if ($script:noProxy)    { $env:NO_PROXY    = $script:noProxy }
+
+# Build pip proxy argument list
+$pipProxyArgs = @()
+if ($script:httpsProxy) { $pipProxyArgs = @("--proxy", $script:httpsProxy) }
+elseif ($script:httpProxy) { $pipProxyArgs = @("--proxy", $script:httpProxy) }
+
 # Function to download with proxy support
 function Invoke-WebRequestWithProxy {
     param(
@@ -1882,8 +1892,8 @@ if (-not (Test-Path $venvBackend)) {
         exit 1
     }
     Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
-    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input @pipProxyArgs
+    & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input @pipProxyArgs
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
@@ -1901,8 +1911,8 @@ if (-not (Test-Path $venvContentSearch)) {
         exit 1
     }
     Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input @pipProxyArgs
+    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input @pipProxyArgs
     Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
 } else {
     Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
