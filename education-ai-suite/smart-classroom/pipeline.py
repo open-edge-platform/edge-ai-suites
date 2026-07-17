@@ -27,7 +27,8 @@ class Pipeline:
         # Bind models during construction
         self.transcription_pipeline = [
             AudioStreamReader(self.session_id),
-            ASRComponent(self.session_id, provider=config.models.asr.provider, model_name=config.models.asr.name, device=config.models.asr.device, temperature=config.models.asr.temperature) 
+            # ASRComponent now gets provider/model/device from ModelManager
+            ASRComponent(self.session_id, temperature=config.models.asr.temperature) 
         ]
 
         self.summarizer_pipeline = [
