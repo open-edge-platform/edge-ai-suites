@@ -140,9 +140,9 @@ Click **Reset** to clear all search inputs and results.
 The **Q&A** tab provides a conversational interface for asking questions about uploaded content.
 
 1. Switch to the **Q&A** tab.
-2. (Optional) Select tags to narrow the context using the **Filter by tag** selector
-3. Type your question in the input area (maximum: 500 characters)
-4. Press **Enter** or click the **Send** button
+2. (Optional) Select tags to narrow the context using the **Filter by tag** selector.
+3. Type your question in the input area (maximum: 500 characters).
+4. Press **Enter** or click the **Send** button.
 
 The system retrieves the most relevant chunks from uploaded content, assembles them as context, and
 sends them to the VLM to generate a grounded answer. Each response includes:
