@@ -42,8 +42,7 @@ class AsrHandler:
 
     def _concurrency_config(self) -> tuple[int, int]:
         """Read max_concurrency and queue_max from runtime config."""
-        runtime_cfg = RuntimeConfig.get_instance()
-        asr_cfg = runtime_cfg.get("asr", {})
+        asr_cfg = RuntimeConfig.get_section("asr")
         max_concurrency = asr_cfg.get("max_concurrency", 1)
         queue_max = asr_cfg.get("queue_max", 8)
         return max_concurrency, queue_max
