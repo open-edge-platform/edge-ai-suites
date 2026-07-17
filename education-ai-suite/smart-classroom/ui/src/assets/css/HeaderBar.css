@@ -8,7 +8,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 2rem;
-  height: 56px;
+  height: var(--header-bar-height);
   width: 100%;
   background-color: #fff;
   font-family: "IntelOne Display", var(--font-display), system-ui, sans-serif;
@@ -161,9 +161,12 @@ button.text-button[disabled] {
 
 /* Large Desktop (1200px and up) */
 @media (min-width: 1200px) {
+  :root {
+    --header-bar-height: 64px;
+  }
+
   .header-bar {
     padding: 0 3rem;
-    height: 64px;
   }
   
   button.text-button,
@@ -203,9 +206,12 @@ button.text-button[disabled] {
 
 /* Tablet (768px to 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
+  :root {
+    --header-bar-height: 52px;
+  }
+
   .header-bar {
     padding: 0 1rem;
-    height: 52px;
   }
   
   .navbar-left {

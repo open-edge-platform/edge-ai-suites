@@ -53,7 +53,8 @@ def setup_helm_environment(request):
         assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install."
 
     case = helm_utils.password_test_cases["test_case_4"]
-    values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
+    # Resolve relative path from pytest.ini to absolute path
+    values_yaml_path = os.path.abspath(os.path.expandvars(os.path.join(os.path.dirname(__file__), chart_path, 'values.yaml')))
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
 
     # Get telegraf_input_plugin from test parameters if available

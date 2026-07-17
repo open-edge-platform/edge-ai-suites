@@ -35,9 +35,15 @@ class ContentSegmentationComponent(PipelineComponent):
                     "- Merge adjacent related segments aggressively\n"
                     "- Do NOT split mid-sentence\n"
                     "- Use only timestamps present in the transcript\n\n"
+                    "CRITICAL ALIGNMENT RULE:\n"
+                    "- BEFORE assigning a topic title to a time range, READ the actual text within [start_time-end_time]\n"
+                    "- The topic title MUST describe what is ACTUALLY said in that time range\n"
+                    "- Do NOT predict what 'should' be discussed — describe what IS discussed\n"
+                    "- VERIFY: Does your topic title match the actual words spoken in that segment?\n\n"
                     "Topic title rules (IMPORTANT — titles are used for semantic search and embedding):\n"
                     "- Each title must be a descriptive sentence of 10–15 words (or equivalent in Chinese)\n"
                     "- The title must clearly summarize WHAT was taught in that segment\n"
+                    "- Base the title ONLY on the actual content within the timestamp range\n"
                     "- Write as if describing the segment to someone who hasn't seen the transcript\n"
                     + ("- LANGUAGE: Write ONLY in Simplified Chinese. Example: '解释牛顿第三定律如何应用于火箭推进及示例'\n"
                        if use_zh
@@ -53,13 +59,16 @@ class ContentSegmentationComponent(PipelineComponent):
                 "content": (
                     f"Segment this transcript into 15–25 topics (MAXIMUM 25, merge aggressively if needed).\n\n"
                     f"{transcript_text}\n\n"
-                    f"Remember:\n"
-                    f"1. Output ONLY a JSON array with 15–25 objects. Count before you output.\n"
-                    f"2. Each topic title must be a descriptive 10–15 word sentence useful for semantic search.\n"
-                    + (f"3. WRITE ALL TITLES IN SIMPLIFIED CHINESE ONLY. No English at all.\n"
+                    f"CRITICAL INSTRUCTIONS:\n"
+                    f"1. READ the actual text at each timestamp range BEFORE writing the topic title\n"
+                    f"2. Topic titles must describe what IS said, not what you think should be said\n"
+                    f"3. Output ONLY a JSON array with 15–25 objects. Count before you output.\n"
+                    f"4. Each topic title must be a descriptive 10–15 word sentence useful for semantic search.\n"
+                    + (f"5. WRITE ALL TITLES IN SIMPLIFIED CHINESE ONLY. No English at all.\n"
                        if use_zh
-                       else "3. Write all titles in English.\n")
-                    + f"4. Topic titles are critical—they are embedded and searchable, so make them clear and complete."
+                       else "5. Write all titles in English.\n")
+                    + f"6. Topic titles are critical—they are embedded and searchable, so make them clear and complete.\n"
+                    f"7. VERIFY: For each topic, check that the title matches the actual content in that time range."
                 )
             }
         ]

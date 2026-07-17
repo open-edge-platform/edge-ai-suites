@@ -17,3 +17,5 @@ tests/__pycache__/
 tests/functional/tests.log
 
 configs/time-series-analytics-microservice/*.tar
+configs/grafana/provisioning/*.json
+configs/vllm*
