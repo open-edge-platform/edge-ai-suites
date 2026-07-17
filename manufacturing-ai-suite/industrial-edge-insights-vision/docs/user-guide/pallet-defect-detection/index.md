@@ -77,7 +77,6 @@ This sample application offers the following features:
 :::{toctree}
 :hidden:
 
-get-started
 how-to-guides
 api-reference
 troubleshooting

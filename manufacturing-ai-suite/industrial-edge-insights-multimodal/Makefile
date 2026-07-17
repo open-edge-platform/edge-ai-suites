@@ -36,7 +36,7 @@ SHA_ALGO="sha384"
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build --pull;
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
@@ -196,14 +196,68 @@ post_config:
 .PHONY: up
 up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	export NGINX_CONFIG_PATH=./configs/nginx/nginx.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
+		cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 		$(DOCKER_COMPOSE) up -d; \
 	fi; \
 	$(MAKE) upload_tar_file
+
+
+.PHONY: check_models
+check_models:
+	@echo "Checking if vllm models are available..."
+	@for dir in configs/vllm/models configs/vllm/huggingface; do \
+		if [ ! -d "$$dir" ]; then \
+			echo "Error: $$dir directory does not exist."; \
+			exit 1; \
+		fi; \
+		if [ -z "$$(ls -A $$dir 2>/dev/null)" ]; then \
+			echo "Error: $$dir directory is empty."; \
+			exit 1; \
+		fi; \
+		echo "Models found in $$dir directory."; \
+	done
+
+.PHONY: check_hardware
+check_hardware:
+	@echo "Checking hardware compatibility (Panther Lake or above required)..."
+	@cpu_model=$$(grep -m1 "model name" /proc/cpuinfo | cut -d: -f2 | xargs); \
+	echo "Detected CPU: $$cpu_model"; \
+	if ! echo "$$cpu_model" | grep -qi "intel"; then \
+		echo "Error: An Intel processor is required. Panther Lake (Core Ultra 3xx) or above."; \
+		exit 1; \
+	fi; \
+	model_num=$$(echo "$$cpu_model" | grep -oiP 'Ultra\s+[3579]\s+\K\d{3}'); \
+	if [ -z "$$model_num" ]; then \
+		echo "Error: Intel Core Ultra processor not detected. Panther Lake (Core Ultra 3xx) or above is required."; \
+		exit 1; \
+	fi; \
+	gen=$$(echo "$$model_num" | cut -c1); \
+	if [ "$$gen" -lt 3 ]; then \
+		echo "Error: Panther Lake (Intel Core Ultra 3xx) or above is required. Detected: $$cpu_model"; \
+		exit 1; \
+	fi; \
+	echo "Hardware check passed: Intel Core Ultra $${model_num} detected."
+
+.PHONY: up_vllm
+up_vllm: check_env_variables validate_host_ip down check_models check_hardware
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
+	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	if [ $(INCLUDE) = 'validation' ]; then \
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
+	else \
+		cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f docker-compose-vllm.yml up -d; \
+	fi; \
+	$(MAKE) upload_tar_file
+
 
 # Status of the deployed containers
 .PHONY: status
@@ -260,7 +314,8 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
-	@cp -f configs/grafana/* helm/
+	@cp -f configs/grafana/provisioning/* helm/
+	@cp -f configs/grafana/weld_defect_detection.json helm/
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/

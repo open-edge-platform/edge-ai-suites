@@ -48,4 +48,10 @@ if __name__ == "__main__":
 
     import uvicorn
     logger.info("App started, Starting Server...")
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=False,
+        timeout_graceful_shutdown=5,
+    )

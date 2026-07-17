@@ -102,6 +102,19 @@ Each VLM output directory is placed under its target device path so the UI can a
 | `GPU` | `ov_models/gpu/InternVL2-1B` | `GPU` |
 | `NPU` | `ov_models/npu/InternVL2-1B` | `NPU` |
 
+### VLM Models Supported/Validated
+
+The following VLM models are validated:
+
+| Model Name | Supported Hardware Devices | OVMS Release TAG Version |
+| --- | --- | --- |
+| OpenGVLab/InternVL2-1B | CPU, GPU, NPU | v2026.1 |
+| OpenGVLab/InternVL2-2B | CPU, GPU, NPU | v2026.1 |
+| openbmb/MiniCPM-V-2_6  | CPU, GPU, NPU | v2026.1 |
+| Qwen/Qwen2-VL-2B-Instruct | CPU, GPU, NPU | v2025.4.1 |
+
+> Note: Set `.env` `OVMS_RELEASE_TAG` to the version listed above. Some models require an older OVMS `transformers` version, and using a different tag can cause OpenVINO conversion to fail.
+
 ## Optional: Download an Object-Detection Model
 
 Download a YOLO model only if you plan to enable the object-detection pipeline:

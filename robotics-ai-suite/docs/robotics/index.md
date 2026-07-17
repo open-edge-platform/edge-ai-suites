@@ -21,6 +21,18 @@ Beyond autonomous mobility, this package demonstrates map building and Simultane
 The Autonomous Mobile Robot addresses industrial, manufacturing, consumer market, and smart cities use cases, facilitating data collection, storage, and analytics across various nodes on the factory floor.
 Develop, build, and deploy end-to-end mobile robot applications with this purpose-built, open, and modular software development kit that includes libraries, middleware, and sample applications based on the open source ROS 2 Humble robot operating system.
 
+## Architecture
+
+The Autonomous Mobile Robot collection groups its components into **sensing**, **perception**, **SLAM & mapping**, **navigation**, and the **application** layer — all on ROS 2 and accelerated on Intel® Core™ / Core™ Ultra. Intel-optimized components (marked ★) sit alongside upstream ROS 2 packages such as Nav2.
+
+![Autonomous Mobile Robot application component grouping](../images/architecture/AMR-Application-Grouping.png)
+
+The reference `Wandering` application ties these together end-to-end. Sensors feed perception and SLAM; the Wandering application — two Intel ROS 2 nodes, `WanderingMapper` (builds the occupancy map and picks the next unexplored frontier) and `GoalCatcher` (issues `NavigateToPose` goals) — drives exploration through Nav2, while obstacles from Object Detection, ADBScan, and GroundFloor Segmentation continuously update the Nav2 costmap. Nav2 then commands the robot base.
+
+![AMR reference application: Wandering plus Nav2](../images/architecture/AMR-Reference-Application.png)
+
+For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+
 Click each icon to learn more.
 
 <!--hide_directive

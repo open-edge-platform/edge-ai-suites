@@ -80,6 +80,16 @@ A **Media Server (MediaMTX)** receives processed video from all three pipelines 
 - RTSP streaming for real-time playback
 - HLS/WebRTC streaming for browser-based viewing
 
+### Board Content OCR
+
+Extracts text from the IFPD or whiteboard captured by the content pipeline, enabling post-class review of all written or projected content.
+
+- **Frame Extraction** — FFmpeg (Intel QSV hardware decode) samples JPEG frames at a configurable rate (default: 1 fps every 3 seconds).
+- **Deduplication** — Frames with fewer than 0.1% of pixels changed by more than 25 intensity units are skipped.
+- **OCR & Confidence Gating** — PaddleOCR extracts text; frames with mean confidence below threshold are dropped.
+- **Post-processing** — Near-duplicate consecutive records are merged to reduce downstream LLM token usage.
+- **Output** — Results are written as JSON-lines to `board_ocr.txt` (`{frame, source_frame, timestamp, text}`).
+
 ## Content Search Pipeline
 
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.

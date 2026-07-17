@@ -119,9 +119,10 @@ class ContentSearchApiService {
     final data = body['data'] as Map<String, dynamic>? ?? {};
 
     if (code == 40901) {
+      // Duplicate detected - use actual backend status from existing task
       return UploadIngestResult(
         taskId: data['task_id'] as String? ?? '',
-        status: 'ALREADY_EXISTS',
+        status: data['status'] as String? ?? 'UNKNOWN',
         fileKey: data['file_key'] as String?,
         isDuplicate: true,
       );

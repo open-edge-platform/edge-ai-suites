@@ -57,13 +57,13 @@ sub-services: vector store, LLM endpoint, object storage.
 
 ```powershell
 # venv exists?
-Test-Path "venv_content_search\Scripts\python.exe"
+Test-Path "smart-classroom\content_search\venv_content_search\Scripts\python.exe"
 
 # Python version
-& "venv_content_search\Scripts\python.exe" --version
+& "smart-classroom\content_search\venv_content_search\Scripts\python.exe" --version
 
 # Key packages installed?
-& "venv_content_search\Scripts\pip.exe" list |
+& "smart-classroom\content_search\venv_content_search\Scripts\pip.exe" list |
     Select-String "fastapi|langchain|uvicorn|chromadb|faiss"
 ```
 
