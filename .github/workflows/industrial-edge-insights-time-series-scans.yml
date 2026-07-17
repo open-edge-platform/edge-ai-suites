@@ -744,7 +744,7 @@ jobs:
           name: DBS_multimodal_weld_defect_detection
           path:  manufacturing-ai-suite/industrial-edge-insights-multimodal/dbs_scan_*
 
-    codeql-timeseries-job:
+  codeql-timeseries-job:
     name: CodeQL Scan - Time Series Python
     if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
     runs-on: ubuntu-24.04
@@ -829,7 +829,7 @@ jobs:
           name: Time Series Sample app CodeQL Reports
           path: codeql_timeseries_reports.zip
 
-    codeql-multimodal-job:
+  codeql-multimodal-job:
     name: CodeQL Scan - Multimodal Python
     if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'multimodal') || (inputs.application == 'both')) }}
     runs-on: ubuntu-24.04
