@@ -1088,14 +1088,6 @@ if (-not `$venvValid) {
         Read-Host 'Press Enter to close'
         exit 1
     }
-    
-    Write-Host 'Installing backend requirements...' -ForegroundColor Yellow
-    & "`$venvPath\Scripts\python.exe" -m pip install --no-cache-dir -r '$ScriptDir\requirements.txt'
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host 'Failed to install backend requirements!' -ForegroundColor Red
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
 }
 
 Write-Host 'Activating virtual environment...' -ForegroundColor Gray
@@ -1171,14 +1163,6 @@ if (-not `$venvValid) {
     if (`$LASTEXITCODE -ne 0) {
         Write-Host 'Failed to create virtual environment!' -ForegroundColor Red
         Write-Host 'Try running: Remove-Item -Path venv_content_search -Recurse -Force' -ForegroundColor Yellow
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-    
-    Write-Host 'Installing Content Search requirements...' -ForegroundColor Yellow
-    & "`$venvPath\Scripts\python.exe" -m pip install --no-cache-dir -r .\requirements.txt
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host 'Failed to install Content Search requirements!' -ForegroundColor Red
         Read-Host 'Press Enter to close'
         exit 1
     }
