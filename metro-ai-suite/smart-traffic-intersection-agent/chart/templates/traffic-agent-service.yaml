@@ -10,14 +10,14 @@ metadata:
     {{- include "stia.labels" . | nindent 4 }}
     app.kubernetes.io/component: traffic-agent
 spec:
-  type: {{ .Values.trafficAgent.service.type }}
+  type: {{ .Values.service.type }}
   ports:
     - name: backend
-      port: {{ .Values.trafficAgent.service.backendPort }}
+      port: {{ .Values.service.backendPort }}
       targetPort: 8081
       protocol: TCP
     - name: ui
-      port: {{ .Values.trafficAgent.service.uiPort }}
+      port: {{ .Values.service.uiPort }}
       targetPort: 7860
       protocol: TCP
   selector:

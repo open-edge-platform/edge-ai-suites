@@ -1,0 +1,17 @@
+{{/*
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and .Values.enabled .Values.telegraf.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "metrics-manager.fullname" . }}-telegraf
+  labels:
+    {{- include "metrics-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-manager
+data:
+  telegraf.conf: |
+{{ .Values.telegraf.config | indent 4 }}
+{{- end }}

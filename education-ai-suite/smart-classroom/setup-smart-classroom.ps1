@@ -74,7 +74,7 @@ This script will:
   1. Configure proxy for downloads (if needed)
   2. Check system requirements (OS, RAM, Python, Node.js, etc.)
   3. Check application dependencies (FFmpeg, DL Streamer)
-  4. Configure smart-classroom settings (language, upload limits, OCR)
+  4. Configure smart-classroom settings (language, upload limits, OCR, board OCR)
   5. Launch the startup script
 
 "@ -ForegroundColor Cyan
@@ -1754,6 +1754,55 @@ if ($changeOcr.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
+# [3.4] Board OCR Configuration
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "[3.4] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Extract current Board OCR enabled value
+$boardOcrMatch = [regex]::Match($configContent, "board_ocr:\s*\n\s*enabled:\s*(true|false)")
+$currentBoardOcr = if ($boardOcrMatch.Success) { $boardOcrMatch.Groups[1].Value } else { "false" }
+
+Write-Host "Current Board OCR configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  board_ocr:" -ForegroundColor White
+Write-Host "    enabled: $currentBoardOcr" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: Board OCR requires OCR to be enabled (ocr.enabled: true)." -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing Board OCR setting" -ForegroundColor Gray
+    $changeBoardOcr = "N"
+} else {
+    $changeBoardOcr = Read-Host "Do you want to change Board OCR setting? (Y/N)"
+}
+
+if ($changeBoardOcr.ToUpper() -eq "Y") {
+    Write-Host ""
+    Write-Host "Board OCR Options:" -ForegroundColor Yellow
+    Write-Host "  true  - Enable Board OCR (extracts text from the teacher's display for summary)" -ForegroundColor Gray
+    Write-Host "  false - Disable Board OCR" -ForegroundColor Gray
+    Write-Host ""
+
+    $newBoardOcr = Read-Host "Enable Board OCR? (true/false, blank = $currentBoardOcr)"
+
+    if ($newBoardOcr.ToLower() -eq "true" -or $newBoardOcr.ToLower() -eq "false") {
+        $configContent = $configContent -replace "(board_ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newBoardOcr.ToLower())"
+        Write-Host "  Board OCR enabled set to $($newBoardOcr.ToLower())" -ForegroundColor Gray
+        Write-Host "Board OCR configuration updated." -ForegroundColor Green
+    } else {
+        Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+    }
+} else {
+    Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+}
+
+Write-Host ""
+
+# ============================================================================
 # SAVE CONFIG FILE
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
@@ -1781,6 +1830,7 @@ $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matc
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
+$finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
@@ -1789,6 +1839,7 @@ Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================

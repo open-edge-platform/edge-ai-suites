@@ -107,6 +107,10 @@ video-caption-service:
     # Number of previous captions shown in timeline ("0" = current only).
     captionHistory: "3"
 
+    # KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+    # The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+    VLM_CACHE_SIZE: 4
+
 # -----------------------------------------------------------------------------
 # 3) DLSTREAMER PIPELINE SERVER
 # -----------------------------------------------------------------------------
