@@ -31,7 +31,7 @@ services:
       # Models
       - ./configs/vllm/models:/lora-adapters
       # HuggingFace cache
-      - ./configs/vllm/huggingface:/root/.cache/huggingface
+      - ./configs/vllm/huggingface:/home/ubuntu/.cache/huggingface
       # Writable caches
       - vol_vllm_server_tmpfs:/tmp:rw
       - vol_vllm_server_tmpfs:/home/ubuntu/.cache:rw
