@@ -11,7 +11,7 @@ if _SC_ROOT not in sys.path:
 from model_manager import ModelManager
 from components.ocr.ocr_handle import OcrHandler
 from components.asr.asr_handle import AsrHandler
-from model_manager.capability_state import CapabilityState
+from model_manager.capability.state import CapabilityState
 
 
 def test_instance_returns_same_object():

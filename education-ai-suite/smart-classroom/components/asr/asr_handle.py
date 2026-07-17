@@ -5,8 +5,8 @@ import logging
 from threading import Lock
 from typing import Optional
 
-from model_manager.capability_state import CapabilityState
-from model_manager.capability_runner import CapabilityRunner
+from model_manager.capability.state import CapabilityState
+from model_manager.capability.runner import CapabilityRunner
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 

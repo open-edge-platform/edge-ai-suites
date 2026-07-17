@@ -10,7 +10,7 @@ setup_logger()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from api.endpoints import register_routes
-from model_manager.capability_runner import QueueFullError, OomError
+from model_manager.capability.runner import QueueFullError, OomError
 from utils.runtime_config_loader import RuntimeConfig
 from utils.ensure_model import ensure_model
 from utils.preload_models import preload_models
@@ -66,9 +66,6 @@ if __name__ == "__main__":
     
     #system_check()
     RuntimeConfig.ensure_config_exists()
-    
-    from model_manager import ModelManager
-    ModelManager.instance().warmup(["ocr"])
 
     ensure_model()
     preload_models()
