@@ -101,7 +101,6 @@ else
 
     # Download NPU packages for Ubuntu 24.04
     echo "Downloading NPU packages for Ubuntu 24.04..."
-    #尝试一下老版本
     sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.33.0/linux-npu-driver-v1.33.0.20260529-26625960453-ubuntu2404.tar.gz
 
     sudo tar -xf linux-npu-driver-v1.33.0.20260529-26625960453-ubuntu2404.tar.gz
@@ -121,11 +120,8 @@ else
 
     # Check if Level Zero is installed
     #if ! dpkg -l level-zero >/dev/null 2>&1; then
-        #echo "Level Zero not found, installing..."
-        
+        #echo "Level Zero not found, installing..."        
         #sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb
-
-        #老版本
         #sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.18.5/level-zero_1.18.5+u24.04_amd64.deb
         #sudo dpkg -i level-zero*.deb
     #fi
