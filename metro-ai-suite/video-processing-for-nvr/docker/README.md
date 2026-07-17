@@ -9,7 +9,7 @@
 * Video Processing Platform SDK
 
 ## Build Docker image
-
+eg:To enable NPU support, please run export NPU_ON=true before building.
 1. Build Docker image for reference application `bash build_sample.sh`
 Make sure Docker is correctly installed and configured.
 
