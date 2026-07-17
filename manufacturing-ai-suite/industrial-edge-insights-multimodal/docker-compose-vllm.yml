@@ -11,6 +11,8 @@ services:
     hostname: vllm-server
     restart: unless-stopped
     shm_size: ${VLLM_SHM_SIZE}
+    read_only: true
+    user: "1000:1000"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
@@ -26,8 +28,16 @@ services:
     volumes:
       - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
       - "/run/udev:/run/udev:ro"
+      # Models
       - ./configs/vllm/models:/lora-adapters
+      # HuggingFace cache
       - ./configs/vllm/huggingface:/root/.cache/huggingface
+      # Writable caches
+      - vol_vllm_server_tmpfs:/tmp:rw
+      - vol_vllm_server_tmpfs:/home/ubuntu/.cache:rw
+      - vol_vllm_server_tmpfs:/home/ubuntu/.config:rw
+      - vol_vllm_server_tmpfs:/home/ubuntu/.triton:rw
+
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
       no_proxy: "${no_proxy},${HOST_IP},seaweedfs-filer"
@@ -38,6 +48,11 @@ services:
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
       VLLM_LOGGING_LEVEL: ${LOG_LEVEL}
+      HOME: /home/ubuntu
+      XDG_CACHE_HOME: /home/ubuntu/.cache
+      HF_HOME: /home/ubuntu/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /home/ubuntu/.cache/huggingface
+      TRANSFORMERS_CACHE: /home/ubuntu/.cache/huggingface
     command:
       - vllm
       - serve
@@ -108,6 +123,11 @@ services:
 
 volumes:
   vol_insights_workbench_tmpfs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_vllm_server_tmpfs:
     driver: local
     driver_opts:
       type: tmpfs
