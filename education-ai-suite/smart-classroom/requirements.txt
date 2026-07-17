@@ -25,9 +25,9 @@ scikit-learn==1.6.1
 scipy==1.15.3
 
 # Torch stack
-torch>=2.9.1
-torchaudio>=2.9.1
-torchvision>=0.24.0
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
 
 # HuggingFace ecosystem
 transformers==4.52.4
@@ -39,7 +39,7 @@ safetensors==0.6.2
 
 # Whisper / audio
 openai-whisper==20250625
-speechbrain==1.0.3
+speechbrain>=1.0.4
 pyannote.audio==4.0.4
 
 # Vector search

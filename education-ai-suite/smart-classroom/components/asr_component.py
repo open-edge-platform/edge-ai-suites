@@ -366,7 +366,7 @@ class ASRComponent(PipelineComponent):
             StorageManager.update_csv(
                 path=os.path.join(project_path, "performance_metrics.csv"),
                 new_data={
-                    "configuration.asr_model": f"{self.provider}/{self.model_name}",
+                    "configuration.asr_model": f"{self.asr_handler.provider}/{self.asr_handler.model_name}",
                     "performance.transcription_time": round(transcription_time, 4)
                 }
             )
