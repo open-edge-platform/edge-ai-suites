@@ -76,7 +76,7 @@ This sample application offers the following features:
 :hidden:
 
 how-it-works
-Release Notes <release-notes>
+
 
 :::
 hide_directive-->

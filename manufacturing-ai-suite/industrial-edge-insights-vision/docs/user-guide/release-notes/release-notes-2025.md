@@ -1,6 +1,8 @@
-# Release Notes: Pallet Defect Detection 2025
+# Release Notes: Pallet Defect Detection 2025 and PCB Anomaly Detection 2025
 
-## Version 2.5.0
+## Pallet Defect Detection 2025
+
+### Version 2.5.0
 
 **December 2025**
 
@@ -15,7 +17,7 @@
 
 - Optimized pipelines and quantized the model from FP32 to INT8.
 
-## Version 2.4.0
+### Version 2.4.0
 
 **August 2025**
 
@@ -25,7 +27,7 @@
 - Model Registry is now accessed as environment variables.
 - Redesigned based on the common application template for Manufacturing AI Suite.
 
-## Version 2.3.0
+### Version 2.3.0
 
 **April 2025**
 
@@ -38,7 +40,7 @@
 - The GPU parameter that can be set appropriately to utilize underlying GPU is
   available in values.yaml for the Helm chart.
 
-## Version 2.2.0
+### Version 2.2.0
 
 **March 2025**
 
@@ -57,7 +59,7 @@
 - Removed the Visualizer microservice.
 - Updated the documentation.
 
-## Version 2.1.0
+### Version 2.1.0
 
 **March 2025**
 
@@ -78,7 +80,7 @@
 
 - Changes to fix the Grafana multiple pipeline issue.
 
-## Version 2.0.0
+### Version 2.0.0
 
 **February 2025**
 
@@ -93,3 +95,28 @@
 - Migrated pipelines to use gvadetect, including updates to the design diagram
   and documentation.
 - Updated PDD documentation adding MRaaS related documentation.
+
+## PCB Anomaly Detection 2025
+
+### Version 1.1.0
+
+**December 2025**
+
+**New**
+
+- Consumed the latest DL Streamer Pipeline Server version 2025.2.
+- Introduced the nginx server as a reverse proxy and TLS.
+
+**Improved**
+
+- Optimized pipelines.
+
+### Version 1.0.0
+
+**August 2025**
+
+**New**
+
+- Consumed the latest DL Streamer Pipeline Server version 3.1.0.
+- Added support for PCB anomaly detection.
+- Documentation release for PCB anomaly detection.

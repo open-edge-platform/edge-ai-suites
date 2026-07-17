@@ -1,13 +1,13 @@
-# Release Notes: PCB Anomaly Detection
+# Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
-## Version 1.3.0
+## Version 2.7.0 (Pallet Defect Detection) and Version 1.3.0 (PCB Anomaly Detection)
 
 **New**
 
-- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
-- Deprecated EMF deployment packages.
+- Qualified on the Intel® Core™ Series 3 processor.
+- Deprecated Edge Manageability Framework deployment packages.
 
-## Version 1.2.0
+## Version 2.6.0 (Pallet Defect Detection) and Version 1.2.0 (PCB Anomaly Detection)
 
 **New**
 
@@ -21,11 +21,11 @@ the Model Registry.
 **Improved**
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
-- Retrained the Model with Geti software v2.13.1.
+- Retrained the Model with Geti™ software v2.13.1.
 - NGINX, COTURN and MINIO ports were made configurable as environment variables.
 - Removed the Model Registry service and its references.
 
-<!--hide-directive
+<!--hide_directive
 :::{toctree}
 :hidden:
 

@@ -57,6 +57,7 @@ how-to-guides.md
 api-reference.md
 Troubleshooting <./troubleshooting.md>
 ./win-vision-ai/index.md
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

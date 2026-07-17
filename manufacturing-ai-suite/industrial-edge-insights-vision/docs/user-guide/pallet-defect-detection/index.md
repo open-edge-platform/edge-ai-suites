@@ -78,7 +78,7 @@ This sample application offers the following features:
 :hidden:
 
 how-to-guides
-Release Notes <release-notes>
+
 
 :::
 hide_directive-->
