@@ -91,7 +91,7 @@ After at least one file upload is complete, the **Search** tab becomes available
 
 ### Search for Text
 
-1. Select the **Text Search** tab
+1. Select the **Text Search** tab.
 2. Type your query in the text area (maximum: 100 characters)
 3. Select the content types to search across: **Documents**, **Images**, and **Videos**
    (any combination)
