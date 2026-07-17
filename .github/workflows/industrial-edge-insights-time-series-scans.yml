@@ -761,6 +761,7 @@ jobs:
           curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
           unzip -q codeql.zip
           echo "$PWD/codeql" >> "$GITHUB_PATH"
+          echo "CODEQL_PACKS_DIR=$PWD/codeql/qlpacks" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -772,7 +773,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-timeseries/codeql-db \
-            codeql/python-queries \
+            "$CODEQL_PACKS_DIR/codeql/python-queries" \
             --format=sarifv2.1.0 \
             --output=results-timeseries/python.sarif
 
@@ -846,6 +847,7 @@ jobs:
           curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
           unzip -q codeql.zip
           echo "$PWD/codeql" >> "$GITHUB_PATH"
+          echo "CODEQL_PACKS_DIR=$PWD/codeql/qlpacks" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -857,7 +859,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-multimodal/codeql-db \
-            codeql/python-queries \
+            "$CODEQL_PACKS_DIR/codeql/python-queries" \
             --format=sarifv2.1.0 \
             --output=results-multimodal/python.sarif
 
