@@ -34,14 +34,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export REGISTRY="intel/"
    export TAG="latest"
    export OVMS_TARGET_DEVICE=GPU
-   export RENDER_DEVICE_GID=$(stat -c "%g" /dev/dri/render*)
+   export RENDER_DEVICE_GID=$(stat -c "%g" /dev/dri/render*) #run this when deploying for GPU or NPU
    export HF_TOKEN=<your-huggingface-token>
-   ```
-
-   For NPU deployments, set the target device to NPU and optionally specify the device node path:
-
-   ```bash
-   export OVMS_TARGET_DEVICE=NPU
    ```
 
    You can also use a mixed configuration (for example, GPU for VLM and NPU for LLM):
@@ -71,8 +65,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    > **Model Selection:** Use pre-converted OpenVINO IR models from the
    > [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
    > for best compatibility. These models are optimized for OVMS and require no
-   > additional conversion.
-
+   > additional conversion. Use models optimized for NPU while deploying on NPU.
+   
    **Agentic dispatch**
 
    The `alert-agent-service` microservice handles agentic dispatch automatically.

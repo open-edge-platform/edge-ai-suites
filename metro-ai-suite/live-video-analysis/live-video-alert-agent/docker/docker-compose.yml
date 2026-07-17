@@ -166,7 +166,7 @@ services:
       - app_network
 
   alert-agent-service:
-    image: intel/alert-agent-service:2026.2.0-rc1
+    image: intel/alert-agent-service:latest
     container_name: alert-agent-service
     restart: unless-stopped
     ports:
