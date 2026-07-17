@@ -761,7 +761,12 @@ jobs:
           curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
           unzip -q codeql.zip
           echo "$PWD/codeql" >> "$GITHUB_PATH"
-          echo "CODEQL_PACKS_DIR=$PWD/codeql/qlpacks" >> "$GITHUB_ENV"
+          CODEQL_PYTHON_QUERIES_DIR=$(find "$PWD/codeql/qlpacks/codeql/python-queries" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)
+          if [[ -z "$CODEQL_PYTHON_QUERIES_DIR" ]]; then
+            echo "Failed to locate CodeQL python query pack directory" >&2
+            exit 1
+          fi
+          echo "CODEQL_PYTHON_QUERIES_DIR=$CODEQL_PYTHON_QUERIES_DIR" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -773,7 +778,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-timeseries/codeql-db \
-            "$CODEQL_PACKS_DIR/codeql/python-queries" \
+            "$CODEQL_PYTHON_QUERIES_DIR" \
             --format=sarifv2.1.0 \
             --output=results-timeseries/python.sarif
 
@@ -847,7 +852,12 @@ jobs:
           curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
           unzip -q codeql.zip
           echo "$PWD/codeql" >> "$GITHUB_PATH"
-          echo "CODEQL_PACKS_DIR=$PWD/codeql/qlpacks" >> "$GITHUB_ENV"
+          CODEQL_PYTHON_QUERIES_DIR=$(find "$PWD/codeql/qlpacks/codeql/python-queries" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)
+          if [[ -z "$CODEQL_PYTHON_QUERIES_DIR" ]]; then
+            echo "Failed to locate CodeQL python query pack directory" >&2
+            exit 1
+          fi
+          echo "CODEQL_PYTHON_QUERIES_DIR=$CODEQL_PYTHON_QUERIES_DIR" >> "$GITHUB_ENV"
 
       - name: Run CodeQL CLI Scan
         run: |
@@ -859,7 +869,7 @@ jobs:
             --overwrite
 
           codeql database analyze results-multimodal/codeql-db \
-            "$CODEQL_PACKS_DIR/codeql/python-queries" \
+            "$CODEQL_PYTHON_QUERIES_DIR" \
             --format=sarifv2.1.0 \
             --output=results-multimodal/python.sarif
 
