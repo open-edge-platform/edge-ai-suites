@@ -1,4 +1,4 @@
-# Generating a Model from Geti™ Software
+# Generate a Model with Geti™ Software
 
 This guide walks you through the process of installing the Geti™ software, setting up a pallet defect detection project, training a model, and deploying it.
 
@@ -152,7 +152,7 @@ Change the model backbone from the default architecture to other architectures f
    - Other available backbone architectures
 5. Click **Start** to begin training with your selected backbone
 
-For detailed information, refer the tutorial: [Geti™ Software - Model Training and Optimization](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/model-training-and-optimization/)
+For detailed information, refer to the tutorial: [Geti™ Software - Model Training and Optimization](https://docs.geti.intel.com/docs/user-guide/geti-fundamentals/model-training-and-optimization/)
 ![Advanced Model Training](../_assets/train_model.png)
 
 Monitor your selected backbone training progress:

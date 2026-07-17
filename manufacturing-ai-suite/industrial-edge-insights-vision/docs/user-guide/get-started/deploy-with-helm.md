@@ -474,13 +474,13 @@ For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../
 ::::
 hide_directive-->
 
-1. Get status of pipeline instance(s) running.
+1. Get the status of pipeline instance(s) running.
 
    ```sh
    ./sample_status.sh helm
    ```
 
-   This command lists status of pipeline instances launched during the lifetime of the sample application.
+   This command lists the status of pipeline instances launched during the lifetime of the sample application.
 
    Example output:
 
@@ -897,7 +897,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Download and prepare the model.
 
-    > **Note:** For sake of simplicity, assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+    > **Note:** For the sake of simplicity, assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
     <!--hide_directive::::{tab-set} hide_directive-->
     <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**

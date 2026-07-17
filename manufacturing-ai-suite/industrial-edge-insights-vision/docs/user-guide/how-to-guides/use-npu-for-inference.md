@@ -77,7 +77,7 @@ Follow the steps below to run the pipeline.
 
 1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
-    > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
+    > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
     ```sh
     docker compose up -d
@@ -95,7 +95,7 @@ Follow the steps below to run the pipeline.
 
     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
 
-    > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
     ```bash
     https://<HOST_IP>/mediamtx/pdd/
@@ -111,7 +111,7 @@ Follow the steps below to run the pipeline.
 
      This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
 
-     > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+     > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
      ```bash
      https://<HOST_IP>/mediamtx/anomaly/

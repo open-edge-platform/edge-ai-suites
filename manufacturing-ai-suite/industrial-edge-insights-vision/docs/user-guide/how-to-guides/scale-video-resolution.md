@@ -3,7 +3,7 @@
 You can scale the video resolution in the following scenarios:
 
 - Optimize performance and capacity based on your requirements.
-- Meet the input image requirements for Intel® Geti™ platform models.
+- Meet the input image requirements for Geti™ platform models.
 
 In the **pipeline** section of the `pipeline-server-config.json` file, use the **videoscale** element to change the resolution of the video.
 

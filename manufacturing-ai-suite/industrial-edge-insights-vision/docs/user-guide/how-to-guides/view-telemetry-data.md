@@ -2,13 +2,13 @@
 
 DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported metrics currently are:
 
-- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server python process
-- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server python process
+- `cpu_usage_percentage`: Tracks CPU usage percentage of DL Streamer Pipeline Server Python process
+- `memory_usage_bytes`: Tracks memory usage in bytes of DL Streamer Pipeline Server Python process
 - `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `https://<HOST_IP>/prometheus` in your browser to view the prometheus console and try out the below queries:
 
-   > **Note:** If you are running multiple instances of apps, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
   - `cpu_usage_percentage`
@@ -25,7 +25,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 1. Stop the sample application with the following command.
 
-   > If you are running multiple instances of an app, stop the services using `./run.sh down` instead.
+   > If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
 
    ```sh
    docker compose down -v

@@ -60,10 +60,6 @@ hide_directive-->
 > **Note:**
 > You can customize the directory structure for different resources and use cases.
 
-
-
-
-
 ## Docker compose deployment
 
 1. The `resources` folder containing both the model and video file is a volume mounted
@@ -97,14 +93,12 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > **Note:** If you are running multiple instances of an app, make sure to provide
-   > `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with
+   > **Note:** If you are running multiple instances of the application, make sure to provide
+   > `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with
      `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the
      default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-
-
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -160,8 +154,6 @@ hide_directive-->
    :::
    ::::
    hide_directive-->
-
-
 
 ## Helm chart deployment
 
@@ -232,8 +224,8 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > **Note:** If you are running multiple instances of an app, make sure to provide
-   > `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with
+   > **Note:** If you are running multiple instances of the application, make sure to provide
+   > `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with
      `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the

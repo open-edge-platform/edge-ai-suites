@@ -54,7 +54,7 @@
 
 **Improved**
 
-- The Pallet Defect Detection AI model updated to Geti 2.7.1.
+- The Pallet Defect Detection AI model updated to Geti™ 2.7.1.
 - Updated EVAM image to v2.4.0 and model-registry image to v1.0.3.
 - Removed the Visualizer microservice.
 - Updated the documentation.

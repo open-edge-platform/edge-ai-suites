@@ -56,7 +56,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 - `inference-interval=1`: Run inference on every frame
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization
 - `nireq=2`: Number of inference requests to run in parallel
-- `ie-config="GPU_THROUGHPUT_STREAMS=2"`: Intel OpenVINO engine streams configuration
+- `ie-config="GPU_THROUGHPUT_STREAMS=2"`: OpenVINO™ engine streams configuration
 - `threshold=0.7`: (recommended for Pallet Defect Detection) Detection confidence threshold (70%)
 
 ### Steps to run benchmarks

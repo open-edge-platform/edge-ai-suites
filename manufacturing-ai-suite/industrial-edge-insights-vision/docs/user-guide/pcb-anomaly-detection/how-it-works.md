@@ -12,5 +12,5 @@ This Sample Application enables real-time anomaly detection in printed circuit b
 ## Supporting Resources
 
 - [Vision Get Started Guide](../get-started.md)
-- [API Reference](./api-reference.md)
+- [API Reference](../api-reference.md)
 - [System Requirements](../get-started/vision-system-requirements.md)

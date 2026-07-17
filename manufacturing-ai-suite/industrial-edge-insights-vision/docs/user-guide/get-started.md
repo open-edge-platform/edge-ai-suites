@@ -97,7 +97,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
-   > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md).
+   > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md).
 
 ## Deploy the Application
 
@@ -204,10 +204,10 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
    ```
 
-   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Intel® Geti™, follow [Generating a Model from Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
+   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Geti™, follow [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
 
    > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the application URL below.
-   > If you are running multiple instances of the application, provide the `NGINX_HTTPS_PORT` number in the url for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > If you are running multiple instances of the application, provide the `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace 443 with `<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive ::::{tab-set} hide_directive-->
@@ -302,16 +302,16 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
-- For the Pallet Defect Detection application, see [Generate a custom model with Intel® Geti™](./pallet-defect-detection/how-to-guides/generating-model-from-geti.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
 - [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](./how-to-guides/view-telemetry-data.md)
-- For the Pallet Defect Detection and PCB Anomaly Detection applications, see [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
+- [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
+- For the Pallet Defect Detection application, see [Generate a model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md)
 - For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-balluff-sdk.md)
-- For the Pallet Defect Detection application, see [Integrate Pylon SDK for Basler camera support](./pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md)
+- For the Pallet Defect Detection application, see [Integrate pylon SDK for Basler camera support](./pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md)
 
 ## Troubleshooting
 
