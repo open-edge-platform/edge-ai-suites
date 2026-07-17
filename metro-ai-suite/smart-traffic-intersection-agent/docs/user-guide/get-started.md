@@ -27,30 +27,6 @@ an introduction.
   export TAG="latest"
   ```
 
-## Using Edge Microvisor Toolkit
-
-If you are running STIA on an OS image built with **Edge Microvisor Toolkit (EMT)** — an Azure Linux-based build pipeline for Intel® platforms — the deployment approach depends on the EMT flavor. Refer to the detailed documentation for [EMT-D](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image) and [EMT-S](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for full details.
-
-### EMT-D (Mutable)
-
-EMT-D is a **mutable** image that supports standard package management. You can run the `setup.sh` script directly on the node after installing any required dependencies using `dnf` or `tdnf`.
-
-### EMT-S (Immutable)
-
-EMT-S is an **immutable** OS image — standard package managers such as `apt` are not available, and the `setup.sh` script **cannot be run directly on the EMT-S node** (doing so will fail with `sudo: apt: command not found`). Use one of the following approaches:
-
-- **Option 1 (USB provisioning):** While preparing the USB drive, copy the required Docker images under `/opt/user-apps` on the image, then flash and deploy the Edge node.
-- **Option 2 (Remote copy):** On a Ubuntu development system, pull/build all required Docker images and prepare the project directory. Copy the entire directory to the EMT-S node without modifications and deploy from there. This approach has been verified to successfully bring up all containers.
-
-If any packages must be installed on EMT-S, use the installroot method (replace `<package>` with the required package name):
-
-```bash
-sudo env no_proxy="localhost,127.0.0.1" dnf --installroot=/opt/user-apps/tools/ -y install <package>
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/user-apps/tools/usr/lib/
-```
-
-Refer to the [EMT-S documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for further details.
-
 ## Quick Start with Setup Script
 
 Intel recommends using the automated setup script that handles environment configuration,
@@ -73,8 +49,20 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ### 2. Set the required environment variables
 
 ```bash
-export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+export VLM_MODEL_NAME=<supported_model_name>
 ```
+
+The application has been validated with following models:
+
+| Model | `VLM_MODEL_NAME` |
+|-------|-----------------|
+| Microsoft Phi-3.5 Vision (pre-converted) | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` |
+| Microsoft Phi-3.5 Vision (raw, auto-converted) | `microsoft/Phi-3.5-vision-instruct` |
+| Qwen2-VL 2B (pre-converted) | `OpenVINO/Qwen2-VL-2B-Instruct-int4-ov` |
+| Qwen2-VL 7B (pre-converted) | `OpenVINO/Qwen2-VL-7B-Instruct-int4-ov` |
+| InternVL2 1B (pre-converted) | `OpenVINO/InternVL2-1B-int4-ov` |
+
+> **Note:** Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
 
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
@@ -171,8 +159,10 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
+
+   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
@@ -214,8 +204,10 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
+
+   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
