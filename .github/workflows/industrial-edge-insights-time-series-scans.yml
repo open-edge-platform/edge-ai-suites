@@ -758,8 +758,8 @@ jobs:
       - name: Install CodeQL CLI
         run: |
           CODEQL_VERSION=2.26.0
-          curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
-          unzip -q codeql.zip
+          curl -L -o codeql-bundle.tar.gz "https://github.com/github/codeql-action/releases/download/codeql-bundle-v${CODEQL_VERSION}/codeql-bundle-linux64.tar.gz"
+          tar -xzf codeql-bundle.tar.gz
           echo "$PWD/codeql" >> "$GITHUB_PATH"
           CODEQL_PYTHON_QUERIES_DIR=$(find "$PWD/codeql/qlpacks/codeql/python-queries" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)
           if [[ -z "$CODEQL_PYTHON_QUERIES_DIR" ]]; then
@@ -849,8 +849,8 @@ jobs:
       - name: Install CodeQL CLI
         run: |
           CODEQL_VERSION=2.26.0
-          curl -L -o codeql.zip "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip"
-          unzip -q codeql.zip
+          curl -L -o codeql-bundle.tar.gz "https://github.com/github/codeql-action/releases/download/codeql-bundle-v${CODEQL_VERSION}/codeql-bundle-linux64.tar.gz"
+          tar -xzf codeql-bundle.tar.gz
           echo "$PWD/codeql" >> "$GITHUB_PATH"
           CODEQL_PYTHON_QUERIES_DIR=$(find "$PWD/codeql/qlpacks/codeql/python-queries" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)
           if [[ -z "$CODEQL_PYTHON_QUERIES_DIR" ]]; then
