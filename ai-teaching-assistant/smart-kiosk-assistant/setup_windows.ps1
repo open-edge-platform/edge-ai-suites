@@ -384,6 +384,73 @@ else {
 }
 
 # =============================================================================
+# STEP 6.5: Pre-build / warm up AI models
+#
+# Each model-backed service downloads its source model and exports it to
+# OpenVINO IR on first startup (inside the FastAPI lifespan, BEFORE the
+# /health endpoint becomes available). On a fresh machine this first-run
+# export can take many minutes and exceeds the health-check window used by
+# start_kiosk.ps1, making services look like they "never come up".
+#
+# We do that heavy one-time work here, during setup, where there is no
+# health-check timeout. After this completes, start_kiosk.ps1 finds the
+# exported models already on disk and every service becomes healthy quickly.
+# =============================================================================
+
+Write-Step "Pre-building AI models (one-time; this can take several minutes)..."
+
+$ModelServices = @(
+    @{ Name = "rag-service"; Path = "$KioskDir\rag-service" },
+    @{ Name = "text-to-speech"; Path = "$EdgeAIDir\microservices\text-to-speech" },
+    @{ Name = "audio-analyzer"; Path = "$EdgeAIDir\microservices\audio-analyzer" }
+)
+
+# Python snippet that reproduces exactly what each service does at startup:
+# ensure the model is downloaded/exported, then load it into memory once.
+$WarmupPy = @"
+import sys
+try:
+    from utils.ensure_model import ensure_model
+    from utils.preload_models import preload_models
+    ensure_model()
+    preload_models()
+    print('WARMUP_OK')
+except Exception as exc:
+    print('WARMUP_FAILED: ' + repr(exc))
+    sys.exit(1)
+"@
+
+foreach ($Service in $ModelServices) {
+    $VenvPath = Join-Path $Service.Path "venv"
+    $PythonExe = Join-Path $VenvPath "Scripts\python.exe"
+
+    if (-not (Test-Path $PythonExe)) {
+        Write-Error-Custom "Skipping model warmup for $($Service.Name): missing $PythonExe"
+        continue
+    }
+
+    Write-Step "Warming up models for $($Service.Name) (downloads + OpenVINO export on first run)..."
+    Push-Location $Service.Path
+    try {
+        $WarmupPy | & $PythonExe -
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "Models ready for $($Service.Name)"
+        }
+        else {
+            Write-Error-Custom "Model warmup failed for $($Service.Name) (exit code $LASTEXITCODE)"
+            Write-Info "The service will retry the export on first startup, which may be slow."
+        }
+    }
+    catch {
+        Write-Error-Custom "Model warmup errored for $($Service.Name): $_"
+        Write-Info "The service will retry the export on first startup, which may be slow."
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+# =============================================================================
 # STEP 7: Verify Installation
 # =============================================================================
 
