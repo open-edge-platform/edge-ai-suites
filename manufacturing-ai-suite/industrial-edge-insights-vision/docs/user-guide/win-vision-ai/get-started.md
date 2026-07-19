@@ -267,15 +267,17 @@ input:
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
-`serial`, `pixel-format`, `width`, and `height` are all required fields. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` pipeline. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+
+> **Note:** If specified, `width` and `height` values must be greater than 60.
 
 ```yaml
 input:
   type: camera
   serial: <camera_serial_number> # required — camera serial number
   pixel-format: mono8 # required — e.g. mono8
-  width: 1280 # required — frame width in pixels
-  height: 720 # required — frame height in pixels
+  width: 1280 # optional — frame width in pixels (must be > 60 if set)
+  height: 720 # optional — frame height in pixels (must be > 60 if set)
 ```
 
 <!--hide_directive:::
@@ -481,6 +483,7 @@ Press **Ctrl+C** if you need to forcefully stop the application.
 ## Advanced: Raw Pipeline Mode
 
 Pass complete GStreamer strings directly — `models` and `pipelines` sections are ignored:
+> **Note:** When using `whipclientsink` (in raw pipeline mode), the WHIP endpoint path must include the `/whip` suffix (e.g. `http://localhost:8889/front/whip`). The browser viewer URL does **not** include `/whip` — open `http://localhost:8889/front` to watch the stream.
 
 ```yaml
 raw_pipelines:
