@@ -1,8 +1,10 @@
-# Release Notes: Handheld Multi-Modal Application
+# Release Notes: Federal And Aerospace Suite
 
-## Version 2026.1
+## Version 2026.1.1
 
-Initial release (preview) version of the application. The application is optimized for AI inference on portable devices, focusing on SWaP-C compliance (Size, Weight, Power, and Cost).
+Initial release (preview) version of the application and the Infrastructure blueprint.
+The application is optimized for AI inference on portable devices, focusing on SWaP-C
+compliance (Size, Weight, Power, and Cost).
 
 **New**
 
@@ -18,4 +20,4 @@ The application introduces the following features:
 
 - When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
 - The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld Multi-Modal Application does not fully support pipelines that utilize Hugging Face models requiring access approval and downloading via an access token. As a result the Video Summarization VLM pipeline is not available in the preview release.
-- Incorrect power readings may occur on images built with 6.18-intel kernel, resulting in spurious analytic data. This is a known issue that is currently undergoing a detailed root-cause analysis.
+- Ubuntu ISO file download status is not known on build failure.
