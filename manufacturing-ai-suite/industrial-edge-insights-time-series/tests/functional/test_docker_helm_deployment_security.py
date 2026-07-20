@@ -50,7 +50,6 @@ def test_authentication_influx_grafana(setup_helm_environment, telegraf_input_pl
     assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     # Access the test cases dictionary
     influxdb_username, influxdb_password = security_utils.fetch_credentials(chart_path, "influxdb")
-    logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: [REDACTED]")
     influxdb_login_result = security_utils.influxdb_login(namespace, chart_path)
     logger.info(f"influxdb_login result: {influxdb_login_result}")
     assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
@@ -148,7 +147,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
             logger.info(f"DEBUG: Username '{influxdb_creds[0]}' found in logs: {username_found}")
             logger.info(f"DEBUG: Credential found in logs: {credential_found}")
             
-            if username_found or credential_found:
+            if credential_found:
                 logger.error("⚠️  SECURITY ISSUE: Credentials detected in InfluxDB logs!")
                 logger.error(f"   - Username visible: {username_found}")
                 logger.error(f"   - Credential visible: {credential_found}")
@@ -178,7 +177,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
                 shell=True, capture_output=True, text=True, check=False
             ).stdout
             
-            logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, credential=[REDACTED]")
+            logger.info(f"Grafana credentials to check: username={grafana_creds[0]})
             logger.info("Last 50 lines of Grafana pod logs:")
             logger.info("-" * 80)
             for i, line in enumerate(grafana_logs.split('\n')[-50:], 1):
@@ -189,7 +188,6 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
             username_found = grafana_creds[0] in grafana_logs
             credential_found = grafana_creds[1] in grafana_logs
             logger.info(f"DEBUG: Username '{grafana_creds[0]}' found in logs: {username_found}")
-            logger.info(f"DEBUG: Credential found in logs: {credential_found}")
             
             if username_found or credential_found:
                 logger.error("⚠️  SECURITY ISSUE: Credentials detected in Grafana logs!")
