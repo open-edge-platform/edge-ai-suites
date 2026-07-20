@@ -6,7 +6,7 @@ SHELL := /bin/bash
 
 # ---- Tunables (override on the CLI: `make up UI_HOST_PORT=9000`) -----------
 UI_HOST_PORT       ?= 8080
-DETECTION_DEVICE   ?= xpu
+DETECTION_DEVICE   ?= GPU
 COMPOSE            ?= docker compose
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
 # works without editing this file. Override on the CLI if needed.
