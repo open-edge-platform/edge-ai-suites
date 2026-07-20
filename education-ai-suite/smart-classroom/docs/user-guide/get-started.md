@@ -38,6 +38,7 @@ The setup script will:
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
+   - [3.4] Board OCR Configuration
 
 4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
