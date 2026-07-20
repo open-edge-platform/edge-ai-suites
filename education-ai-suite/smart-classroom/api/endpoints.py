@@ -42,7 +42,9 @@ def create_session():
 
 @router.get("/health")
 def health():
-    return JSONResponse(content={"status": "ok"}, status_code=200)
+    from model_manager import ModelManager
+    hub = ModelManager.instance().health()
+    return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
 @router.post("/upload-audio")
 def upload_audio(file: UploadFile = File(...)):
@@ -980,7 +982,7 @@ def ocr_detect_file_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/ocr/extract-text", response_model=OCRResponse)
-async def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
+def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
     return ocr_extract_text(file, x_session_id)
 
 

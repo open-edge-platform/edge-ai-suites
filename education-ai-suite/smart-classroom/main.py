@@ -7,8 +7,10 @@ from utils import system_checker
 from utils.logger_config import setup_logger
 setup_logger()
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from api.endpoints import register_routes
+from model_manager.capability.runner import QueueFullError, OomError
 from utils.runtime_config_loader import RuntimeConfig
 from utils.ensure_model import ensure_model
 from utils.preload_models import preload_models
@@ -35,6 +37,27 @@ app.add_middleware(
 
 register_routes(app)
 
+
+@app.exception_handler(QueueFullError)
+async def _queue_full_handler(request: Request, exc: QueueFullError):
+    """Map QueueFullError to HTTP 503 with a Retry-After hint."""
+    return JSONResponse(
+        status_code=503,
+        headers={"Retry-After": "2"},
+        content={"detail": str(exc), "retryAfterSeconds": 2},
+    )
+
+
+@app.exception_handler(OomError)
+async def _oom_handler(request: Request, exc: OomError):
+    """Map OomError (GPU/CPU memory pressure) to HTTP 503 with a Retry-After hint."""
+    return JSONResponse(
+        status_code=503,
+        headers={"Retry-After": "5"},
+        content={"detail": str(exc), "retryAfterSeconds": 5, "reason": "memory_pressure"},
+    )
+
+
 def system_check():
     if (not system_checker.check_system_requirements()) and (not system_checker.show_warning_and_prompt_user_to_continue()):
         sys.exit(1)
@@ -43,6 +66,7 @@ if __name__ == "__main__":
     
     #system_check()
     RuntimeConfig.ensure_config_exists()
+
     ensure_model()
     preload_models()
 

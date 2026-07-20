@@ -49,15 +49,22 @@ Edit `user_values_override.yaml` with values for your environment:
 | `global.gpu.key` | GPU resource key from the device plugin | `gpu.intel.com/i915` |
 | `global.gpu.device` | Target device for inference | `GPU` |
 | `global.gpu.supplementalGroups` | Linux group IDs for GPU device access. Run `getent group render video \| cut -d: -f3` on the GPU node to find values | `[109, 44]` |
+| `global.npu.enabled` | Enable Intel NPU for inference | `true` / `false` |
+| `global.npu.key` | NPU resource key from the device plugin | `npu.intel.com/accel` |
+| `global.npu.device` | Target device for NPU inference | `NPU` |
+| `global.npu.devicePath` | Host device path for the NPU accelerator | `/dev/accel/accel0` |
 | `app.rtspUrl` | RTSP stream URL to load at startup (optional) | `rtsp://host:port/stream` |
 | `app.mcpEnabled` | Enable MCP (Model Context Protocol) tool integration | `true` / `false` |
 | `app.mcpServersConfig` | MCP server configuration JSON (see `resources/mcp_servers.json` for format) | See `values.yaml` |
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
 
 > **Note:**
->
 > - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
 > - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
+> - GPU and NPU can be enabled independently. For example, use GPU for the VLM and NPU for the LLM by enabling both and setting the appropriate `device` value in each `ovms` / `ovms-llm` section.
+
+> **Model Selection:**
+> Use pre-converted OpenVINO IR models from the [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO) for best compatibility. These models are optimized for OVMS and require no additional conversion. Set the model repository name in `ovms.sourceModel` (VLM) or `ovms-llm.sourceModel` (LLM).
 
 ### 3. Build Helm Dependencies
 
@@ -144,6 +151,7 @@ helm upgrade $my_release . -f user_values_override.yaml -n $my_namespace
 
 - **`ImagePullBackOff`:** Check image name and tag overrides in `user_values_override.yaml`. Ensure registry is reachable.
 - **GPU not working:** Verify device plugin resource key with `kubectl describe node <gpu-node> | grep gpu.intel.com`.
+- **NPU not detected:** Verify the NPU device plugin is installed and the resource is visible: `kubectl describe node <npu-node> | grep npu.intel.com`. Ensure `global.npu.devicePath` matches the host device (default: `/dev/accel/accel0`).
 - **Check logs:**
 
   ```bash
