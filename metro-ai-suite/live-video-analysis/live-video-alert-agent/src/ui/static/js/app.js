@@ -54,9 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             eventSource.close();
             eventSource = null;
         }
-        if (metricsWs) {
-            metricsWs.close();
-            metricsWs = null;
+        if (metricsSource) {
+            metricsSource.close();
+            metricsSource = null;
         }
     });
 });
@@ -697,13 +697,16 @@ async function fetchData() {
 }
 
 
-// ============== SYSTEM METRICS (WebSocket from live-metrics-service) ==============
-let metricsWs = null;
+// ============== SYSTEM METRICS (SSE from metrics-manager) ==============
+let metricsSource = null;
 let metricsReconnectTimer = null;
+let metricsReconnectAttempts = 0;
+const maxMetricsReconnectAttempts = 10;
+const metricsReconnectDelay = 3000;
 let systemChart = null;
 
 // Track GPU engine metrics for aggregation
-const gpuEngineUsages = [];
+const gpuEngineUsages = new Map();
 
 const MAX_DATA_POINTS = 60;
 
@@ -711,6 +714,15 @@ const MAX_DATA_POINTS = 60;
 const DS_CPU = 0;
 const DS_GPU = 1;
 const DS_MEM = 2;
+const DS_NPU = 3;
+
+function getMetricsServiceUrl() {
+    const cfg = window.RUNTIME_CONFIG || {};
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    const host = window.location.hostname;
+    const port = cfg.metricsPort || '9090';
+    return `${protocol}//${host}:${port}/metrics/stream`;
+}
 
 function createCombinedChart(canvasId) {
     const ctx = document.getElementById(canvasId)?.getContext('2d');
@@ -757,6 +769,18 @@ function createCombinedChart(canvasId) {
                     data: [],
                     borderColor: '#a855f7',
                     backgroundColor: makeGradient('#a855f7'),
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 0,
+                    pointHoverRadius: 3,
+                    spanGaps: true
+                },
+                {
+                    label: 'NPU %',
+                    data: [],
+                    borderColor: '#f59e0b',
+                    backgroundColor: makeGradient('#f59e0b'),
                     borderWidth: 2,
                     fill: true,
                     tension: 0.35,
@@ -815,7 +839,7 @@ function initMetricsCharts() {
     systemChart = createCombinedChart('system-chart');
 }
 
-function pushCombinedSample(cpuVal, gpuVal, memVal) {
+function pushCombinedSample(cpuVal, gpuVal, memVal, npuVal) {
     if (!systemChart) return;
     const labels = systemChart.data.labels;
     labels.push(new Date().toLocaleTimeString());
@@ -825,6 +849,7 @@ function pushCombinedSample(cpuVal, gpuVal, memVal) {
     datasets[DS_CPU].data.push(cpuVal ?? null);
     datasets[DS_GPU].data.push(gpuVal ?? null);
     datasets[DS_MEM].data.push(memVal ?? null);
+    datasets[DS_NPU].data.push(npuVal ?? null);
 
     for (const ds of datasets) {
         if (ds.data.length > MAX_DATA_POINTS) ds.data.shift();
@@ -832,15 +857,19 @@ function pushCombinedSample(cpuVal, gpuVal, memVal) {
     systemChart.update('none');
 }
 
-function initMetricsWebSocket() {
-    const port = (window.RUNTIME_CONFIG || {}).metricsPort || 9090;
-    const wsUrl = `ws://${window.location.hostname}:${port}/ws/clients`;
+function connectMetricsStream() {
+    const streamUrl = getMetricsServiceUrl();
 
-    if (metricsWs) metricsWs.close();
+    if (metricsSource && metricsSource.readyState !== EventSource.CLOSED) {
+        return;
+    }
 
-    metricsWs = new WebSocket(wsUrl);
+    console.log('Connecting to metrics-manager SSE stream:', streamUrl);
+    metricsSource = new EventSource(streamUrl);
 
-    metricsWs.onopen = () => {
+    metricsSource.onopen = () => {
+        console.log('Metrics SSE connected');
+        metricsReconnectAttempts = 0;
         updateMetricsStatus(true);
         if (metricsReconnectTimer) {
             clearTimeout(metricsReconnectTimer);
@@ -848,10 +877,10 @@ function initMetricsWebSocket() {
         }
     };
 
-    metricsWs.onmessage = (event) => {
+    metricsSource.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
-            if (data.metrics) {
+            if (data.metrics && Array.isArray(data.metrics)) {
                 processMetrics(data.metrics);
             }
         } catch (err) {
@@ -859,22 +888,22 @@ function initMetricsWebSocket() {
         }
     };
 
-    metricsWs.onclose = () => {
+    metricsSource.onerror = () => {
         updateMetricsStatus(false);
-        scheduleMetricsReconnect();
-    };
 
-    metricsWs.onerror = () => {
-        updateMetricsStatus(false);
-    };
-}
+        if (metricsSource.readyState === EventSource.CLOSED) {
+            metricsSource.close();
+            metricsSource = null;
 
-function scheduleMetricsReconnect() {
-    if (metricsReconnectTimer) return;
-    metricsReconnectTimer = setTimeout(() => {
-        metricsReconnectTimer = null;
-        initMetricsWebSocket();
-    }, 5000);
+            if (metricsReconnectAttempts < maxMetricsReconnectAttempts) {
+                metricsReconnectAttempts++;
+                console.log(`Metrics SSE reconnect attempt (${metricsReconnectAttempts}/${maxMetricsReconnectAttempts})...`);
+                metricsReconnectTimer = setTimeout(connectMetricsStream, metricsReconnectDelay);
+            } else {
+                console.error('Max reconnect attempts reached for metrics SSE');
+            }
+        }
+    };
 }
 
 function updateMetricsStatus(connected) {
@@ -892,62 +921,58 @@ function updateMetricsStatus(connected) {
 }
 
 function processMetrics(metrics) {
-    // Reset GPU engine tracking
-    gpuEngineUsages.length = 0;
+    // Reset GPU engine tracking per batch
+    gpuEngineUsages.clear();
 
     let cpuVal = null;
     let gpuVal = null;
     let memVal = null;
+    let npuVal = null;
 
     metrics.forEach(metric => {
-        switch (metric.name) {
-            case 'cpu':
-                const cpuUsage = metric.fields?.usage_idle != null
-                    ? parseFloat((100 - metric.fields.usage_idle).toFixed(1))
-                    : null;
-                if (cpuUsage != null) {
-                    cpuVal = cpuUsage;
+        const { name, value } = metric;
+        const labels = metric.labels || {};
+
+        switch (name) {
+            case 'cpu_usage_user':
+                // Prefer the aggregate "cpu-total" series when present
+                if (labels.cpu === undefined || labels.cpu === 'cpu-total') {
+                    cpuVal = value;
                     const cpuEl = document.getElementById('metrics-cpu-val');
-                    if (cpuEl) cpuEl.textContent = cpuUsage.toFixed(1) + '%';
+                    if (cpuEl) cpuEl.textContent = value.toFixed(1) + '%';
                 }
                 break;
-            case 'gpu_engine_usage':
-                // Collect all GPU engine usages
-                const engineUsage = metric.fields?.usage;
-                if (engineUsage != null) {
-                    gpuEngineUsages.push(parseFloat(engineUsage));
+
+            case 'mem_used_percent':
+                memVal = value;
+                const memEl = document.getElementById('metrics-mem-val');
+                if (memEl) memEl.textContent = value.toFixed(1) + '%';
+                break;
+
+            case 'gpu_engine_usage_usage':
+                if (labels.engine) {
+                    gpuEngineUsages.set(labels.engine.toUpperCase(), value);
                 }
                 break;
-            case 'nvidia_smi':
-            case 'gpu':
-                const gpuUsage = metric.fields?.utilization_gpu || metric.fields?.usage_percent || 0;
-                if (gpuUsage != null) {
-                    gpuVal = parseFloat(gpuUsage);
-                    const gpuEl = document.getElementById('metrics-gpu-val');
-                    if (gpuEl) gpuEl.textContent = gpuVal.toFixed(1) + '%';
-                }
-                break;
-            case 'mem':
-                const memPercent = metric.fields?.used_percent;
-                if (memPercent != null) {
-                    memVal = parseFloat(memPercent);
-                    const memEl = document.getElementById('metrics-mem-val');
-                    if (memEl) memEl.textContent = memVal.toFixed(1) + '%';
-                }
+
+            case 'npu_utilization':
+                npuVal = value;
+                const npuEl = document.getElementById('metrics-npu-val');
+                if (npuEl) npuEl.textContent = value.toFixed(1) + '%';
                 break;
         }
     });
 
-    // Calculate overall GPU usage from maximum engine utilization
-    if (gpuEngineUsages.length > 0) {
-        const maxGpuUsage = Math.max(...gpuEngineUsages);
+    // GPU usage (max across engines)
+    if (gpuEngineUsages.size > 0) {
+        const maxGpuUsage = Math.max(...Array.from(gpuEngineUsages.values()));
         gpuVal = maxGpuUsage;
         const gpuEl = document.getElementById('metrics-gpu-val');
         if (gpuEl) gpuEl.textContent = maxGpuUsage.toFixed(1) + '%';
     }
 
-    // Push all three values as a single time-aligned sample
-    pushCombinedSample(cpuVal, gpuVal, memVal);
+    // Push all values as a single time-aligned sample
+    pushCombinedSample(cpuVal, gpuVal, memVal, npuVal);
 }
 
 // Initialize metrics system when page loads
@@ -955,7 +980,7 @@ function initMetricsSystem() {
     if (typeof Chart === 'undefined') return;
     setTimeout(() => {
         initMetricsCharts();
-        initMetricsWebSocket();
+        connectMetricsStream();
     }, 100);
 }
 
