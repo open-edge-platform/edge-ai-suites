@@ -9,7 +9,7 @@
 * Video Processing Platform SDK
 
 ## Build Docker image
-eg:To enable NPU support, please run export NPU_ON=true before building.
+
 1. Build Docker image for reference application `bash build_sample.sh`
 Make sure Docker is correctly installed and configured.
 
@@ -20,7 +20,8 @@ Make sure Docker is correctly installed and configured.
 ## Run Docker container
 
 1. Run `sudo init 3` switch to non-GUI mode
-2. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`
+eg:To enable NPU support, please run export NPU_ON=true before building.
+3. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run Docker Compose
