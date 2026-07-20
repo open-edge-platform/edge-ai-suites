@@ -83,7 +83,7 @@ async def health_check(db: Session = Depends(get_db)):
     # VLM and video_preprocess only required when video summarization is enabled
     if vs_enabled:
         vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
-        vlm_port = os.getenv("VLM_PORT", "9900")
+        vlm_port = os.getenv("VLM_PORT", "8000")
         vlm_status = await _check_http_health(f"http://{vlm_host}:{vlm_port}/health")
 
         preprocess_host = os.getenv("PREPROCESS_HOST", "127.0.0.1")

@@ -13,7 +13,8 @@ OcrResult = Union[str, List[List]]
 
 @runtime_checkable
 class TextGen(Protocol):
-    def generate(self, prompt: str, *, stream: bool = True,
+    def generate(self, prompt: str, *, images: list | None = None,
+                 stream: bool = True,
                  max_new_tokens: int | None = None,
                  temperature: float | None = None) -> Iterator[str]: ...
 
