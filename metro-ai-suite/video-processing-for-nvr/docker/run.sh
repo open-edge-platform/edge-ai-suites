@@ -40,7 +40,8 @@ if [[ "$NPU_ON" == "true" ]]; then
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
-	      -e DISPLAY_NEW_PLATFORM=1 \
+	    -e DISPLAY_NEW_PLATFORM=1 \
+		-e NPU_ON=${NPU_ON} \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
         --device /dev/accel \
@@ -48,13 +49,9 @@ if [[ "$NPU_ON" == "true" ]]; then
         --group-add $(stat -c "%g" /dev/accel/accel0 2>/dev/null) \
         --user root \
         -e DISPLAY=$DISPLAY \
-	      -e ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so \
-	      -e ZE_ENABLE_PCI_ID_DEVICE_OVERRIDE=4d51 \
-	      -e LD_LIBRARY_PATH=/opt/intel/openvino_2025/runtime/lib/intel64:/usr/lib/x86_64-linux-gnu:/usr/local/lib:${LD_LIBRARY_PATH} \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/root/.Xauthority:rw \
+	    -e LD_LIBRARY_PATH=/opt/intel/openvino_2025/runtime/lib/intel64:/usr/lib/x86_64-linux-gnu:/usr/local/lib:${LD_LIBRARY_PATH} \
         -w /home/vpp \
-	      --entrypoint /home/vpp/vppsample/docker/run_dec_det.sh \
+	    --entrypoint /home/vpp/vppsample/docker/run_dec_det.sh \
         -v "$MODEL_DIR:/models:ro" \
         $DOCKER_IMAGE \
         "/models/$MODEL_FILE"
