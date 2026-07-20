@@ -1516,12 +1516,8 @@ def verify_influxdb_retention(namespace, chart_path, response):
     try:
         # Step 1: Identify the InfluxDB pod
         influxdb_username, influxdb_password, influxdb_retention_duration = fetch_influxdb_credentials(chart_path)
-        pod_name_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep influxdb | head -n 1"
-        )
-        result = subprocess.run(pod_name_command, shell=True, capture_output=True, text=True, check=True)
-        pod_name = result.stdout.strip()
+        pod_names = get_pod_names(namespace)
+        pod_name = next((name for name in pod_names if "influxdb" in name), "")
 
         if not pod_name:
             logger.error("InfluxDB pod not found.")
@@ -1530,18 +1526,23 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.info(f"InfluxDB pod found: {pod_name}")
 
         # Step 2: Execute InfluxDB commands inside the pod
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            f"-execute 'SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1'  | awk 'NR==4 {{print $1}}'"
-        )
-
-        exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
         logger.info(f"Executing InfluxDB query inside pod '{pod_name}': 'SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1;' with redacted credentials.")
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
-        response = result.stdout.strip()
+        result = subprocess.run(
+            [
+                "kubectl", "exec", "-n", namespace, pod_name, "--",
+                "influx", "-username", influxdb_username, "-password", influxdb_password,
+                "-database", "datain",
+                "-execute", f"SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1"
+            ],
+            capture_output=True, text=True, check=True
+        )
+        # The 4th line of the influx CLI table output holds the first data row;
+        # its first whitespace-separated field is the time value (replicates the previous `awk 'NR==4 {print $1}'`).
+        output_lines = result.stdout.splitlines()
+        response = output_lines[3].split()[0] if len(output_lines) > 3 and output_lines[3].split() else ""
 
         if response:
-            logger.info(f"First time value in '{constants.WIND_TURBINE_INGESTED_TOPIC}':", response)
+            logger.info(f"First time value in '{constants.WIND_TURBINE_INGESTED_TOPIC}': {response}")
             return response, True
         else:
             logger.error(f"No time data found in '{constants.WIND_TURBINE_INGESTED_TOPIC}'.")
@@ -1741,21 +1742,24 @@ def restart_deployment(namespace, pod):
     try:
         # List deployments in the specified namespace
         logger.info(f"Listing deployments in namespace '{namespace}':")
-        list_command = f"kubectl get deployments -n {namespace}"
-        subprocess.run(list_command, shell=True, check=True)
+        subprocess.run(["kubectl", "get", "deployments", "-n", namespace], check=True)
 
         # Get deployment names using jsonpath
-        list_names_command = f"kubectl get deployments -n {namespace} -o jsonpath='{{.items[*].metadata.name}}'"
-        result = subprocess.run(list_names_command, shell=True, capture_output=True, text=True, check=True)
-        
+        result = subprocess.run(
+            ["kubectl", "get", "deployments", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name}"],
+            capture_output=True, text=True, check=True
+        )
+
         # Get the list of deployment names
         deployments = result.stdout.strip().split()
 
         # Check if pod is in the list of deployments
         if f"deployment-{pod}" in deployments:
             logger.info(f"Found pod deployment '{pod}'. Restarting...")
-            restart_command = f"kubectl rollout restart deployments 'deployment-{pod}' -n {namespace}"
-            subprocess.run(restart_command, shell=True, check=True)
+            subprocess.run(
+                ["kubectl", "rollout", "restart", "deployments", f"deployment-{pod}", "-n", namespace],
+                check=True
+            )
             logger.info(f"'{pod}' deployment restarted successfully.")
             return True
         else:
@@ -2224,14 +2228,9 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         os.chdir("../")
 
         logger.info("Step 1: Copying DL Streamer models to dlstreamer-pipeline-server pod")
-        dlstreamer_pod_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | "
-            "grep deployment-dlstreamer-pipeline-server | head -n 1"
-        )
-        result = subprocess.run(dlstreamer_pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0 and result.stdout:
-            dlstreamer_pod = result.stdout.decode('utf-8').strip().replace("'", "")
+        pod_names = get_pod_names(namespace)
+        dlstreamer_pod = next((name for name in pod_names if "deployment-dlstreamer-pipeline-server" in name), "")
+        if dlstreamer_pod:
             logger.info(f"Found DL Streamer pod: {dlstreamer_pod}")
         else:
             logger.error("DL Streamer pod not found.")
@@ -2271,14 +2270,9 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
                     logger.error(f"Error copying {item}: {result.stderr}")
                     return False
 
-        ts_pod_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | "
-            "grep deployment-time-series-analytics-microservice | head -n 1"
-        )
-        result = subprocess.run(ts_pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0 and result.stdout:
-            ts_pod = result.stdout.decode('utf-8').strip().replace("'", "")
+        pod_names = get_pod_names(namespace)
+        ts_pod = next((name for name in pod_names if "deployment-time-series-analytics-microservice" in name), "")
+        if ts_pod:
             logger.info(f"Found Time Series Analytics pod: {ts_pod}")
         else:
             logger.error("Time Series Analytics pod not found.")
@@ -2394,16 +2388,12 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
 def _get_multimodal_pod(namespace, grep_token):
     """Return the first multimodal pod whose name contains ``grep_token``."""
-    pod_command = (
-        f"kubectl get pods -n {namespace} "
-        "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | "
-        f"grep {grep_token} | head -n 1"
-    )
-    result = subprocess.run(pod_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode != 0 or not result.stdout:
+    pod_names = get_pod_names(namespace)
+    pod_name = next((name for name in pod_names if grep_token in name), None)
+    if not pod_name:
         logger.error(f"No pod found in namespace '{namespace}' matching '{grep_token}'.")
         return None
-    return result.stdout.decode("utf-8").strip().replace("'", "")
+    return pod_name
 
 
 def copy_dlstreamer_models_to_pod(chart_path, namespace):
@@ -3041,8 +3031,11 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
         logger.info(f"Checking for GPU keywords in {namespace} namespace logs...")
         
         # Get time-series analytics pod name
-        get_pod_cmd = f"kubectl get pods -n {namespace} -l app=ia-time-series-analytics-microservice -o jsonpath='{{.items[0].metadata.name}}'"
-        result = subprocess.run(get_pod_cmd, shell=True, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-time-series-analytics-microservice",
+             "-o", "jsonpath={.items[0].metadata.name}"],
+            capture_output=True, text=True, timeout=30
+        )
         
         if result.returncode != 0 or not result.stdout.strip():
             logger.error(f"Failed to get time-series analytics pod name: {result.stderr}")
@@ -3057,8 +3050,10 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
         while time.time() - start_time < timeout:
             try:
                 # Get recent logs from the pod
-                logs_cmd = f"kubectl logs -n {namespace} {pod_name} --tail=1000"
-                result = subprocess.run(logs_cmd, shell=True, capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod_name, "--tail=1000"],
+                    capture_output=True, text=True, timeout=10
+                )
                 
                 if result.returncode == 0:
                     logs = result.stdout

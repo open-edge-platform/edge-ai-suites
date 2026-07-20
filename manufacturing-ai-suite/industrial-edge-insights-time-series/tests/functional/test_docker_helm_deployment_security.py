@@ -124,15 +124,16 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     logger.info("=" * 80)
     try:
         influxdb_pod_name = subprocess.run(
-            f"kubectl get pods -n {namespace} -l app=influxdb -o jsonpath='{{.items[0].metadata.name}}'",
-            shell=True, capture_output=True, text=True, check=False
+            ["kubectl", "get", "pods", "-n", namespace, "-l", "app=influxdb",
+             "-o", "jsonpath={.items[0].metadata.name}"],
+            capture_output=True, text=True, check=False
         ).stdout.strip()
         
         if influxdb_pod_name:
             logger.info(f"InfluxDB pod name: {influxdb_pod_name}")
             influxdb_logs = subprocess.run(
-                f"kubectl logs -n {namespace} {influxdb_pod_name} --tail=50",
-                shell=True, capture_output=True, text=True, check=False
+                ["kubectl", "logs", "-n", namespace, influxdb_pod_name, "--tail=50"],
+                capture_output=True, text=True, check=False
             ).stdout
             
             logger.info(f"InfluxDB credentials to check: username={influxdb_creds[0]}, password={'*' * len(influxdb_creds[1])}")
@@ -167,15 +168,16 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     logger.info("=" * 80)
     try:
         grafana_pod_name = subprocess.run(
-            f"kubectl get pods -n {namespace} -l app=ia-grafana -o jsonpath='{{.items[0].metadata.name}}'",
-            shell=True, capture_output=True, text=True, check=False
+            ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-grafana",
+             "-o", "jsonpath={.items[0].metadata.name}"],
+            capture_output=True, text=True, check=False
         ).stdout.strip()
         
         if grafana_pod_name:
             logger.info(f"Grafana pod name: {grafana_pod_name}")
             grafana_logs = subprocess.run(
-                f"kubectl logs -n {namespace} {grafana_pod_name} --tail=50",
-                shell=True, capture_output=True, text=True, check=False
+                ["kubectl", "logs", "-n", namespace, grafana_pod_name, "--tail=50"],
+                capture_output=True, text=True, check=False
             ).stdout
             
             logger.info(f"Grafana credentials to check: username={grafana_creds[0]}, password={'*' * len(grafana_creds[1])}")

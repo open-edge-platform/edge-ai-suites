@@ -139,12 +139,8 @@ def influxdb_login(namespace, chart_path):
     try:
         # Step 1: Identify the InfluxDB pod
         influxdb_username, influxdb_password = fetch_influxdb_credentials(chart_path)
-        pod_name_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep influxdb | head -n 1"
-        )
-        result = subprocess.run(pod_name_command, shell=True, capture_output=True, text=True, check=True)
-        pod_name = result.stdout.strip()
+        pod_names = helm_utils.get_pod_names(namespace)
+        pod_name = next((name for name in pod_names if "influxdb" in name), "")
 
         if not pod_name:
             logger.error("InfluxDB pod not found.")
@@ -153,16 +149,18 @@ def influxdb_login(namespace, chart_path):
         logger.info(f"InfluxDB pod found: {pod_name}")
 
         # Step 2: Execute InfluxDB commands inside the pod
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            "-execute 'SHOW MEASUREMENTS';"
-        )
-        exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
         logger.info(f"Executing InfluXDB measurement query 'SHOW MEASUREMENTS' in namespace '%s' on pod '%s' with redacted credentials.",
             namespace,
             pod_name,
         )
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "kubectl", "exec", "-n", namespace, pod_name, "--",
+                "influx", "-username", influxdb_username, "-password", influxdb_password,
+                "-database", "datain", "-execute", "SHOW MEASUREMENTS;"
+            ],
+            capture_output=True, text=True, check=True
+        )
         response = result.stdout.strip()
         logger.info(f"InfluxDB response: {response}")
         if "measurements" in response.lower():
@@ -409,33 +407,37 @@ def check_nmap_docker(target, ports):
         logger.error(f"An error occurred: {e}")
         return False
 
+def _replace_in_file(file_path, old_text, new_text):
+    """Replace the first occurrence of ``old_text`` with ``new_text`` in ``file_path``."""
+    with open(file_path, "r", encoding="utf-8") as handle:
+        content = handle.read()
+
+    if old_text not in content:
+        raise ValueError(f"Expected text not found in {file_path}")
+
+    with open(file_path, "w", encoding="utf-8") as handle:
+        handle.write(content.replace(old_text, new_text, 1))
+
 def update_continuous_simulator_ingestion():
     try:
-        # Define the sed command to update the line in the file
-        opcua_file= constants.EDGE_AI_SUITES_DIR+"./simulator/opcua-server/opcua_server.py"
-        sed_command = (
-            f"sed -i 's/continous_simulator_ingestion = (os.getenv(\"CONTINUOUS_SIMULATOR_INGESTION\", \"true\")).lower()/"
-            f"continous_simulator_ingestion = (os.getenv(\"CONTINUOUS_SIMULATOR_INGESTION\", \"false\")).lower()/' {opcua_file}"
+        # Update the line in the opcua simulator file
+        opcua_file = constants.EDGE_AI_SUITES_DIR + "./simulator/opcua-server/opcua_server.py"
+        _replace_in_file(
+            opcua_file,
+            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()',
+            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false")).lower()',
         )
-
-        # Execute the sed command
-        subprocess.run(sed_command, shell=True, check=True)
-
         logger.info(f"Updated 'CONTINUOUS_SIMULATOR_INGESTION' to 'false' in opcua file {opcua_file}.")
-    
-        # Define the sed command to update the line in the file
-        mqtt_file= constants.EDGE_AI_SUITES_DIR+"./simulator/mqtt-publisher/publisher.py"
-        sed_command = (
-            f"sed -i 's/continous_simulator_ingestion = (os.getenv(\"CONTINUOUS_SIMULATOR_INGESTION\", \"true\")).lower()/"
-            f"continous_simulator_ingestion = (os.getenv(\"CONTINUOUS_SIMULATOR_INGESTION\", \"false\")).lower()/' {mqtt_file}"
+
+        # Update the line in the mqtt publisher file
+        mqtt_file = constants.EDGE_AI_SUITES_DIR + "./simulator/mqtt-publisher/publisher.py"
+        _replace_in_file(
+            mqtt_file,
+            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()',
+            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false")).lower()',
         )
-        
-        # Execute the sed command
-        subprocess.run(sed_command, shell=True, check=True)
         logger.info(f"Updated 'CONTINUOUS_SIMULATOR_INGESTION' to 'false' in mqtt file {mqtt_file}.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"An error occurred while updating the file: {e}")
-    except subprocess.CalledProcessError as e:
+    except (OSError, ValueError) as e:
         logger.error(f"An error occurred while updating the file: {e}")
 
 def fetch_wind_turbine_data(chart_path=None):
@@ -471,12 +473,8 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
     try:
         influxdb_username, influxdb_password = fetch_influxdb_credentials(chart_path)
         # Step 1: Find the InfluxDB pod name
-        pod_name_command = (
-            f"kubectl get pods -n {namespace} "
-            "-o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep influxdb | head -n 1"
-        )
-        result = subprocess.run(pod_name_command, shell=True, capture_output=True, text=True, check=True)
-        pod_name = result.stdout.strip()
+        pod_names = helm_utils.get_pod_names(namespace)
+        pod_name = next((name for name in pod_names if "influxdb" in name), "")
 
         if not pod_name:
             logger.error("InfluxDB pod not found.")
@@ -485,14 +483,17 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         logger.info(f"InfluxDB pod found: {pod_name}")
 
         # Step 2: Execute InfluxDB commands inside the pod to fetch data
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            f"-execute 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;'"
-        )
-        exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;' "
                     f"with redacted credentials.")
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "kubectl", "exec", "-n", namespace, pod_name, "--",
+                "influx", "-username", influxdb_username, "-password", influxdb_password,
+                "-database", "datain",
+                "-execute", f"SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;"
+            ],
+            capture_output=True, text=True, check=True
+        )
         first_record_response = result.stdout.strip()
         logger.info(f"First record response: {first_record_response}")
 
@@ -502,14 +503,17 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
             logger.error("Failed to parse first record from InfluxDB response")
             return False
 
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            f"-execute 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;'"
-        )
-        exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;' "
                     f"with redacted credentials.")
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "kubectl", "exec", "-n", namespace, pod_name, "--",
+                "influx", "-username", influxdb_username, "-password", influxdb_password,
+                "-database", "datain",
+                "-execute", f"SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;"
+            ],
+            capture_output=True, text=True, check=True
+        )
         last_record_response = result.stdout.strip()
         logger.info(f"Last record response: {last_record_response}")
 
@@ -519,14 +523,17 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
             logger.error("Failed to parse last record from InfluxDB response")
             return False
 
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            f"-execute 'SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";'"
-        )
-        exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";' "
                     f"with redacted credentials.")
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "kubectl", "exec", "-n", namespace, pod_name, "--",
+                "influx", "-username", influxdb_username, "-password", influxdb_password,
+                "-database", "datain",
+                "-execute", f"SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";"
+            ],
+            capture_output=True, text=True, check=True
+        )
         count_response = result.stdout.strip()
         logger.info(f"Count response: {count_response}")
 
@@ -859,14 +866,16 @@ def influxdb_login_docker(container_name="ia-influxdb"):
 
         # Use environment variable to pass password securely to InfluxDB CLI
         # The InfluxDB CLI reads INFLUX_PASSWORD from environment
-        influx_commands = (
-            f"influx -username {influxdb_username} -database datain "
-            "-execute 'SHOW MEASUREMENTS'"
-        )
-        exec_command = f"docker exec -e INFLUX_PASSWORD={influxdb_password} {container_name} {influx_commands}"
         logger.info(f"Executing InfluxDB command - 'SHOW MEASUREMENTS'  in container '{container_name}' with configured credentials (credentials not shown)")
         
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                "docker", "exec", "-e", f"INFLUX_PASSWORD={influxdb_password}", container_name,
+                "influx", "-username", influxdb_username, "-database", "datain",
+                "-execute", "SHOW MEASUREMENTS"
+            ],
+            capture_output=True, text=True
+        )
         response = result.stdout.strip()
         error_output = result.stderr.strip()
         
