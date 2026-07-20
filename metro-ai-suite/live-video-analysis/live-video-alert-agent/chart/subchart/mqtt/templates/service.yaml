@@ -1,0 +1,21 @@
+{{/*
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mqtt.fullname" . }}
+  labels:
+    {{- include "mqtt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mqtt
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ include "mqtt.fullname" . }}
+  ports:
+    - name: mqtt
+      port: {{ .Values.service.port }}
+      targetPort: mqtt
+      protocol: TCP

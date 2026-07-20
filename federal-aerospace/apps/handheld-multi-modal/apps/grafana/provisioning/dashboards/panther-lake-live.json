@@ -1718,7 +1718,7 @@
         "kind": "Panel",
         "spec": {
           "id": 32,
-          "title": "Speech To Text Processing Over Time",
+          "title": "Speech To Text Processing Ratio",
           "description": "",
           "links": [],
           "data": {
@@ -1775,7 +1775,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "times",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -1956,7 +1956,7 @@
         "kind": "Panel",
         "spec": {
           "id": 34,
-          "title": "Speech to text Processing Time Last",
+          "title": "Speech to text Processing Ratio Last",
           "description": "",
           "links": [],
           "data": {
@@ -2011,7 +2011,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "times",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -2590,7 +2590,7 @@
         "30s",
         "1m"
       ],
-      "hideTimepicker": false,
+      "hideTimepicker": true,
       "fiscalYearStartMonth": 0
     },
     "title": "Panther Lake Live Dashboard",

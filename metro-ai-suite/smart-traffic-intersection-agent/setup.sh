@@ -128,6 +128,9 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
             docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
             if [ -d "${OVMS_CONFIG_DIR}" ]; then
                 echo -e "${YELLOW}Removing OVMS model cache (${OVMS_CONFIG_DIR})...${NC}"
+                # Model files may be root-owned (created inside Docker container).
+                # Fix ownership first so rm -rf can delete them.
+                docker run --rm -v "${OVMS_CONFIG_DIR}:/ovms_dir" busybox chown -R "$(id -u):$(id -g)" /ovms_dir 2>/dev/null || true
                 rm -rf "${OVMS_CONFIG_DIR}"
             fi
         fi
@@ -281,7 +284,7 @@ export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
 export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
 
 # ============================================================================
-# OVMS Model Export Functions (host-side, following PR #2109 pattern)
+# OVMS Model Export Functions (host-side, using model-download ephemeral container)
 # ============================================================================
 
 sanitize_ovms_metadata_name() {
@@ -330,15 +333,12 @@ ovms_config_has_model() {
     grep -q "\"name\": \"${model_name}\"" "$config_path" 2>/dev/null
 }
 
-# Export and convert a HuggingFace model for OVMS on the host
+# Export and convert a model for OVMS using the model-download ephemeral container.
+# Replaces the previous host-side python venv + export_model.py approach.
 export_model_for_ovms() {
     local source_model="$1"
     local target_device="$2"
     local weight_format="$3"
-    local pipeline_type="$4"
-    local cache_size="$5"
-    local extra_args=()
-    local export_status
     local storage_model_name
 
     if [ -z "$source_model" ]; then
@@ -348,140 +348,100 @@ export_model_for_ovms() {
 
     storage_model_name=$(get_ovms_storage_model_name "$source_model" "$target_device" "$weight_format")
     echo -e "[ovms-service] ${BLUE}Storage model name: ${YELLOW}${storage_model_name}${NC}" >&2
-
-    if [ -n "$pipeline_type" ]; then
-        extra_args+=(--pipeline_type "$pipeline_type")
-    fi
-
     export storage_model_name
 
-    (
-        mkdir -p "${OVMS_CONFIG_DIR}"
-        cd "${OVMS_CONFIG_DIR}" || exit 1
+    local get_model_script="${OVMS_CONFIG_DIR}/get_model.sh"
 
-        echo -e "Downloading latest export_model.py from OVMS repository..." >&2
-        curl -fsSL https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/export_model.py -o export_model.py || exit 1
+    echo -e "${BLUE}==> Fetching get_model.sh from edge-ai-libraries...${NC}"
+    curl -fsSL "https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh" \
+        -o "$get_model_script" || { echo -e "${RED}ERROR: Failed to download get_model.sh${NC}"; return 1; }
+    chmod +x "$get_model_script"
 
-        echo -e "Creating Python virtual environment for model export..." >&2
-        python_ver=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-        venv_pkg="python${python_ver}-venv"
-        if ! dpkg-query -W -f='${Status}' "$venv_pkg" 2>/dev/null | grep -q "ok installed"; then
-            echo -e "Installing ${venv_pkg} package..." >&2
-            sudo apt install -y "$venv_pkg" || exit 1
-        else
-            echo -e "${venv_pkg} is already installed, skipping installation" >&2
-        fi
+    echo -e "${BLUE}==> Downloading/converting model via model-download ephemeral container...${NC}"
 
-        python3 -m venv ovms_venv || exit 1
-        # shellcheck disable=SC1091
-        source ovms_venv/bin/activate || exit 1
-
-        if is_openvino_namespace_model "$source_model"; then
-            echo -e "${GREEN}Model '${source_model}' is from OpenVINO namespace (pre-converted).${NC}" >&2
-            echo -e "${YELLOW}Skipping full requirements — only need huggingface_hub for download.${NC}" >&2
-            if ! pip install --no-cache-dir 'huggingface_hub<0.27' jinja2; then
-                echo -e "${RED}ERROR: Failed to install minimal dependencies for OpenVINO model.${NC}" >&2
-                deactivate
-                rm -rf ovms_venv
-                exit 1
-            fi
-        else
-            local ovms_requirements_url="https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/requirements.txt"
-            local tmp_requirements
-            tmp_requirements=$(mktemp)
-
-            if ! curl -fsSL "$ovms_requirements_url" -o "$tmp_requirements"; then
-                echo -e "${RED}ERROR: Failed to download OVMS requirements.${NC}" >&2
-                rm -f "$tmp_requirements"
-                deactivate
-                rm -rf ovms_venv
-                exit 1
-            fi
-
-            if grep -q '^transformers' "$tmp_requirements"; then
-                sed -i 's/^transformers.*/transformers==4.53.3/' "$tmp_requirements"
-            else
-                echo 'transformers==4.53.3' >> "$tmp_requirements"
-            fi
-
-            if ! pip install --no-cache-dir -r "$tmp_requirements"; then
-                echo -e "${RED}ERROR: Failed to install OVMS requirements.${NC}" >&2
-                rm -f "$tmp_requirements"
-                deactivate
-                rm -rf ovms_venv
-                exit 1
-            fi
-            rm -f "$tmp_requirements"
-        fi
-
-        if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
-            pip install --no-cache-dir -U 'huggingface_hub[hf_xet]==0.36.0' || exit 1
-            echo -e "${BLUE}Logging in to Hugging Face to access gated models...${NC}" >&2
-            hf auth login --token "$HUGGINGFACE_TOKEN" || exit 1
-        fi
-
-        mkdir -p models
-
-        if ! python3 export_model.py text_generation \
-            --source_model "$source_model" \
-            --model_name "$storage_model_name" \
-            --weight-format "$weight_format" \
-            --config_file_path models/config.json \
-            --model_repository_path models \
-            --target_device "$target_device" \
-            --cache_size "$cache_size" \
-            "${extra_args[@]}"; then
-            echo -e "${RED}ERROR: Failed to export the model '${source_model}' for OVMS.${NC}" >&2
-            deactivate
-            rm -rf ovms_venv
-            exit 1
-        fi
-
-        echo -e "Cleaning up virtual environment..." >&2
-        deactivate
-        rm -rf ovms_venv
-    )
-    export_status=$?
-    if [ $export_status -ne 0 ]; then
-        return $export_status
+    # Pass HuggingFace token via env var if set
+    if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
+        export HF_TOKEN="${HUGGINGFACE_TOKEN}"
     fi
 
-    echo "$storage_model_name"
+    bash "$get_model_script" \
+        --model-name "$source_model" \
+        --hub openvino \
+        --type vlm \
+	--is-ovms \
+        --precision "$weight_format" \
+        --device "$target_device" \
+        --model-path "${OVMS_CONFIG_DIR}/models" \
+        --plugins openvino
+
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${RED}ERROR: Model download/conversion failed for '${source_model}' (exit code: ${exit_code}).${NC}"
+        local log_dir="${PWD}/.model_download_logs"
+        local latest_log
+        latest_log=$(ls -t "${log_dir}"/model_download_*.log 2>/dev/null | head -1)
+        if [ -n "$latest_log" ]; then
+            echo -e "${YELLOW}==> Last 30 lines from log: ${latest_log}${NC}"
+            tail -30 "$latest_log"
+        else
+            echo -e "${YELLOW}No model download log found in: ${log_dir}${NC}"
+        fi
+        return 1
+    fi
+
+    # get_model.sh places config_all.json under openvino_models/{device}/{precision}/.
+    # The base_paths inside it are relative to that directory.
+    # Copy it to models/config.json, prefixing each base_path so it is relative to the models root.
+    local models_root="${OVMS_CONFIG_DIR}/models"
+    local generated_config
+    generated_config=$(find "${models_root}/openvino_models" -name "config_all.json" 2>/dev/null | head -1)
+
+    if [ -n "$generated_config" ]; then
+        local config_rel_dir
+        config_rel_dir=$(dirname "${generated_config#${models_root}/}")
+
+        # Prefix every base_path value with the directory that config_all.json lives in
+        python3 - "${generated_config}" "${config_rel_dir}" "${models_root}/config.json" << 'PYEOF'
+import json, sys
+
+src, prefix, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(src) as f:
+    cfg = json.load(f)
+for entry in cfg.get("model_config_list", []):
+    c = entry.get("config", {})
+    if "base_path" in c:
+        c["base_path"] = prefix + "/" + c["base_path"]
+    c.pop("target_device", None)
+with open(dst, "w") as f:
+    json.dump(cfg, f, indent=4)
+print(f"Created {dst} with {len(cfg['model_config_list'])} model(s)")
+PYEOF
+        echo -e "${GREEN}==> Created config.json from ${generated_config}${NC}"
+    else
+        echo -e "${YELLOW}WARNING: Could not find generated config_all.json under ${models_root}/openvino_models. OVMS may not start.${NC}"
+    fi
+
+    echo "$source_model"
 }
 
 ensure_ovms_model() {
     local model_name="$1"
     local target_device="$2"
     local weight_format="$3"
-    local pipeline_type="$4"
     local ovms_model_config="${OVMS_CONFIG_DIR}/models/config.json"
-    local storage_model_name
-    local model_path
 
-    storage_model_name=$(get_ovms_storage_model_name "$model_name" "$target_device" "$weight_format")
-    model_path="${OVMS_CONFIG_DIR}/models/${storage_model_name}"
+    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${model_name}${NC}"
 
-    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}" >&2
-
-    if [ -d "$model_path" ] && [ -f "${model_path}/graph.pbtxt" ]; then
-        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already exists. Skipping export.${NC}" >&2
-
-        if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
-            echo -e "[ovms-service] ${GREEN}Model is registered in OVMS config.${NC}" >&2
-        else
-            echo -e "[ovms-service] ${YELLOW}Model exists but not in config. Will re-register.${NC}" >&2
-        fi
-
-        echo "$storage_model_name"
+    if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${model_name}"; then
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${model_name}${GREEN} already registered in OVMS config. Skipping export.${NC}"
+        echo "$model_name"
     else
-        echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}" >&2
+        echo -e "[ovms-service] ${YELLOW}Model ${RED}${model_name}${YELLOW} not found. Exporting...${NC}"
 
         export_model_for_ovms \
             "$model_name" \
             "$target_device" \
-            "$weight_format" \
-            "$pipeline_type" \
-            "$(get_ovms_cache_size "$target_device")" || return 1
+            "$weight_format" || return 1
     fi
 }
 
@@ -567,8 +527,7 @@ prepare_ovms_model() {
     storage_name=$(ensure_ovms_model \
         "$VLM_MODEL_NAME" \
         "$VLM_TARGET_DEVICE" \
-        "$weight_format" \
-        "VLM_CB") || return 1
+        "$weight_format") || return 1
 
     export VLM_STORAGE_MODEL_NAME="$storage_name"
     echo -e "[ovms-service] ${GREEN}VLM Storage Model: ${YELLOW}${VLM_STORAGE_MODEL_NAME}${NC}"
