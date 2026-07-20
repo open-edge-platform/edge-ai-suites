@@ -20,4 +20,4 @@ The application introduces the following features:
 
 - When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
 - The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld Multi-Modal Application does not fully support pipelines that utilize Hugging Face models requiring access approval and downloading via an access token. As a result the Video Summarization VLM pipeline is not available in the preview release.
-- Ubuntu ISO file download status is not known on build failure.
+- Ubuntu OS ISO file download status is not known on build failure.
