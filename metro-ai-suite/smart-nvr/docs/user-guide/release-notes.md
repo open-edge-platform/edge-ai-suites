@@ -5,7 +5,7 @@
 
 ## Current Release
 
-<!--## Version 2026.2.0-->
+<!--### Version 2026.2.0-->
 
 <!--date TBD-->
 
