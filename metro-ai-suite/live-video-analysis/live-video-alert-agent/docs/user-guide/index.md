@@ -12,8 +12,8 @@
 hide_directive-->
 
 Deploy AI-powered video alerting using OpenVINO Vision Language Models to process RTSP streams,
-generate real-time alerts from natural language prompts, and respond automatically through
-a configurable agentic action pipeline.
+generate real-time alerts from natural language prompts, and delegate automated action dispatch
+to the alert-agent-service microservice.
 
 ## Use Cases
 
@@ -21,7 +21,7 @@ a configurable agentic action pipeline.
 
 **Safety Monitoring**: Deploy prompts like "Is there a fire?" or "Is anyone wearing a safety vest?" to trigger immediate notifications via webhook or MQTT.
 
-**Agentic Alert Response**: Use Google ADK or a local LLM to reason about alert severity and automatically select which tools to invoke — snapshot, webhook, or MQTT.
+**Agentic Alert Response**: Use the alert-agent-service to handle ADK-powered tool reasoning and automatically select actions such as snapshots, webhooks, or MQTT notifications.
 
 **Custom Alerts**: Use natural language to define what constitutes an alert without retraining a model.
 
@@ -29,11 +29,11 @@ a configurable agentic action pipeline.
 
 **Dynamic Alert Prompts**: Define and modify alerts (prompts) in real-time through the UI or REST API without redeploying.
 
-**Agentic Tool Dispatch**: When an alert fires, an action agent decides which tools to invoke — powered by Google ADK, an OVMS-hosted LLM, or deterministic rule-based execution.
+**Agentic Tool Dispatch**: When an alert fires, the live-video-alert-agent sends the action request to the external alert-agent-service, which performs ADK-powered or rule-based tool dispatch.
 
 **Alert State Management**: Per-stream, per-alert cooldowns and consecutive-detection escalation suppress noise while ensuring persistent conditions trigger escalated responses.
 
-**Built-in Action Tools**: `log_alert`, `capture_snapshot`, `trigger_webhook` (HMAC-signed), `publish_mqtt` (MQTTv5).
+**Built-in Action Tools**: The alert-agent-service provides `log_alert`, `capture_snapshot`, `trigger_webhook` (HMAC-signed), `publish_mqtt` (MQTTv5), and related MCP-managed tools.
 
 **Concurrent Multi-Camera**: Each camera stream runs in its own independent asyncio task — slow or stalled cameras do not block others.
 

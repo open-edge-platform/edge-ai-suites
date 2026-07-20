@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: alert-agent-service
+description: Alert Agent Service subchart — ADK-based alert processing with LLM
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

@@ -19,11 +19,11 @@ Both services are defined in the root [`docker-compose.yml`](../../docker-compos
 
 You can only access the Open WebUI chat UI through  the NGINX TLS reverse proxy. The container port is not exposed to the host.
 
-| Endpoint | URL | Notes |
-|----------|-----|-------|
-| Open WebUI chat UI | https://localhost:8443 | Chat UI |
-| OpenVINO model server's API, compatible with OpenAI format | http://localhost:9000/v3 | Direct host access; also used internally by Open WebUI chat UI|
-| OpenVINO model server metrics | http://localhost:9000/metrics | Prometheus metrics |
+| Endpoint                                                   | URL                           | Notes                                                          |
+|------------------------------------------------------------|-------------------------------|----------------------------------------------------------------|
+| Open WebUI chat UI                                         | https://localhost:8443        | Chat UI                                                        |
+| OpenVINO model server's API, compatible with OpenAI format | http://localhost:9000/v3      | Direct host access; also used internally by Open WebUI chat UI |
+| OpenVINO model server metrics                              | http://localhost:6443/metrics | Prometheus metrics                                             |
 
 ## Changing the model
 
