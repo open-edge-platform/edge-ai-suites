@@ -1,6 +1,6 @@
-# Release Notes
+# Release Notes: Image-Based Video Search
 
-- [Version 1.3.4](#version-130)
+- [Version 1.3.0](#version-130)
 - [Version 1.2.0](#version-120)
 - [Version 1.1.0](#version-110)
 - [Version 1.0.1](#version-101)
