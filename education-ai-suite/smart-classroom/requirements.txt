@@ -4,12 +4,15 @@ funasr==1.2.7
 # OpenVINO stack
 openvino==2026.2.1
 openvino-genai==2026.2.1.0
+openvino-tokenizers==2026.2.1
 optimum==1.26.1
 optimum-intel==1.24.0
 nncf==2.19.0
 
 # Core runtime
 pydantic==2.11.7
+pydantic-settings==2.10.1
+python-dotenv>=1.2.2
 pydub==0.25.1
 python-multipart>=0.0.27
 pywin32==311
