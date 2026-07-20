@@ -436,6 +436,25 @@ export async function fetchMindmap(sessionId: string): Promise<string> {
   return data.mindmap;
 }
 
+/**
+ * Upload a mind-map screenshot (PNG blob, captured in-browser via html2canvas)
+ * for the given session. The backend saves it as the report's mind-map image;
+ * it never re-renders the mind map itself. Best-effort: callers should not block
+ * report generation on this succeeding.
+ */
+export async function uploadMindmapImage(sessionId: string, png: Blob): Promise<void> {
+  const form = new FormData();
+  form.append("file", png, "mindmap.png");
+  const res = await fetch(`${BASE_URL}/report/${encodeURIComponent(sessionId)}/mindmap-image`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(errText || `HTTP ${res.status}`);
+  }
+}
+
 export async function getResourceMetrics(sessionId: string): Promise<any> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/metrics`, {
@@ -1251,4 +1270,194 @@ export async function csGetFilesList(): Promise<{
     }
     return await res.json();
   });
+}
+
+// ===== Report Generation =====
+
+export type ReportStreamEvent =
+  | { type: 'report_ready' }
+  | { type: 'error'; message: string }
+  | { type: 'token'; token: string }
+  | { type: 'partial_report'; content: string }  // raw-filled skeleton, before the LLM
+  | { type: 'report'; content: string }           // final report (template path)
+  | { type: 'done' };
+
+// Stream a class report from the backend (POST /report/generate).
+// The backend emits NDJSON lines of two shapes:
+//   {type: 'partial_report'|'report'|'report_ready', ...}
+//   {token: '...', error: '...'}
+// which are normalized here into ReportStreamEvent.
+export async function* streamGenerateReport(
+  sessionId: string,
+  selectedFields?: string[],
+  manualFields?: Record<string, string>,
+  opts: { signal?: AbortSignal } = {}
+): AsyncGenerator<ReportStreamEvent> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}/report/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        selected_fields: selectedFields ?? null,
+        manual_fields: manualFields ?? null,
+      }),
+      signal: opts.signal,
+      cache: 'no-store',
+      keepalive: true,
+    });
+  } catch (err) {
+    yield { type: 'error', message: 'Network error while generating report.' };
+    yield { type: 'done' };
+    return;
+  }
+
+  if (!res.ok) {
+    let detail = `Report generation failed (${res.status})`;
+    try {
+      const e = await res.json();
+      if (e?.detail) detail = e.detail;
+    } catch {
+      // ignore non-JSON error bodies
+    }
+    yield { type: 'error', message: detail };
+    yield { type: 'done' };
+    return;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    yield { type: 'error', message: 'Streaming not supported' };
+    yield { type: 'done' };
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      let json: any;
+      try { json = JSON.parse(trimmed); } catch { continue; }
+      if (json.type === 'report_ready') { yield { type: 'report_ready' }; continue; }
+      if (json.type === 'partial_report') { yield { type: 'partial_report', content: json.content || '' }; continue; }
+      if (json.type === 'report') { yield { type: 'report', content: json.content || '' }; continue; }
+      if (json.error) { yield { type: 'error', message: json.error }; continue; }
+      if (typeof json.token === 'string' && json.token) { yield { type: 'token', token: json.token }; }
+    }
+  }
+  yield { type: 'done' };
+}
+
+// Direct link to download the generated report in the requested format
+// (GET /report/{id}/download?format=docx|pdf).
+export function getReportDownloadUrl(sessionId: string, format: 'docx' | 'pdf' = 'docx'): string {
+  return `${BASE_URL}/report/${sessionId}/download?format=${format}`;
+}
+
+// Download the generated report as .docx via fetch->blob, so a missing report
+// (404 JSON) surfaces as an error instead of navigating the page to raw JSON.
+export async function downloadReport(sessionId: string): Promise<void> {
+  const res = await fetch(getReportDownloadUrl(sessionId, 'docx'), { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `Download failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `class_report_${sessionId}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Download the generated report as .pdf via fetch->blob. The backend handles
+// server-side conversion from .docx to .pdf.
+export async function downloadReportPdf(sessionId: string): Promise<void> {
+  const res = await fetch(getReportDownloadUrl(sessionId, 'pdf'), { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `PDF download failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `class_report_${sessionId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Fetch a previously generated report's markdown (GET /report/{id}).
+// Returns '' when no report exists yet (404), so callers can render an empty state.
+export async function getReport(sessionId: string): Promise<string> {
+  const res = await fetch(`${BASE_URL}/report/${sessionId}`, { cache: 'no-store' });
+  if (res.status === 404) return '';
+  if (!res.ok) throw new Error(`Failed to load report (${res.status})`);
+  const data = await res.json();
+  return data.report || '';
+}
+
+// ===== Report Field Catalog (checkbox list) =====
+
+export interface TemplateFieldMeta {
+  code: string;
+  kind: 'raw' | 'generated';
+  input?: 'manual';        // teacher types this in (basic info)
+  always_on?: boolean;     // auto metadata, not a toggleable checkbox (e.g. report_time)
+  label_key?: string;      // preferred i18n key for UI labels
+  label?: { en: string; zh: string }; // legacy inline labels (backward compatibility)
+}
+export interface TemplateFieldGroup {
+  group_key?: string;      // preferred i18n key for UI group titles
+  group?: { en: string; zh: string }; // legacy inline names (backward compatibility)
+  fields: TemplateFieldMeta[];
+}
+
+// The report field catalog exposed as checkboxes (GET /report/template-fields).
+export async function getTemplateFields(): Promise<{ groups: TemplateFieldGroup[] }> {
+  const res = await fetch(`${BASE_URL}/report/template-fields`, { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `Failed to load fields (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+// Re-project an existing report onto a new checkbox selection — no LLM re-run
+// (POST /report/{id}/reselect). Reuses the session's cached fields; only which
+// fields appear changes. Used when the teacher toggles fields after generating.
+export async function reselectReport(
+  sessionId: string,
+  selectedFields: string[],
+  manualFields?: Record<string, string>,
+): Promise<{ report: string }> {
+  const res = await fetch(`${BASE_URL}/report/${sessionId}/reselect`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selected_fields: selectedFields, manual_fields: manualFields ?? null }),
+  });
+  if (!res.ok) {
+    let detail = `Re-selection failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const data = await res.json();
+  return { report: data.report || '' };
 }

@@ -12,6 +12,7 @@ features:
   video_analytics:    { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
+  report:             { enabled: false }
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -66,6 +67,8 @@ models:
           - Preserve the flow of discussion.
           - Include both teacher explanations and questions.
           - Ignore filler or repetition.
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
 
@@ -76,6 +79,12 @@ models:
           - ...
 
           ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
           - ...
 
           ## Session Outline
@@ -95,6 +104,8 @@ models:
           - Focus strictly on teacher explanations.
           - Do not invent missing content.
           - If a section has no content, write "None".
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
 
@@ -105,6 +116,12 @@ models:
           - None
 
           ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
           - ...
 
           ## Session Outline
@@ -125,6 +142,8 @@ models:
           - Include student questions only when they clarify context.
           - Do not invent content.
           - Ignore filler.
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
 
@@ -135,6 +154,12 @@ models:
           - ...
 
           ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
           - ...
 
           ## Session Outline
@@ -157,6 +182,8 @@ models:
           - 保持讨论的整体流程。
           - 包含教师讲解和学生提问。
           - 忽略无意义的填充语或重复内容。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
 
@@ -167,6 +194,12 @@ models:
           - ...
 
           ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
           - ...
 
           ## 课程结构
@@ -185,6 +218,8 @@ models:
           - 严格聚焦教师的解释内容。
           - 不要编造缺失的内容。
           - 如果某个章节没有内容，写 "None"。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
 
@@ -195,6 +230,12 @@ models:
           - None
 
           ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
           - ...
 
           ## 课程结构
@@ -215,6 +256,8 @@ models:
           - 仅在学生问题能帮助理解上下文时才包含。
           - 不要编造内容。
           - 忽略填充语或重复内容。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
 
@@ -225,6 +268,12 @@ models:
           - ...
 
           ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
           - ...
 
           ## 课程结构
@@ -483,6 +532,12 @@ board_ocr:
   enabled: true # requires ocr.enabled=true
   frame_rate: "1/3"    # frame/seconds
   debug: false
+
+report:
+  max_keywords: 8
+  max_difficulty_points: 4
+  pacing_slow_max: 260
+  pacing_fast_min: 520
 
 content_search:
   host_addr: "127.0.0.1"
