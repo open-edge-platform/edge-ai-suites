@@ -12,7 +12,7 @@
 The following instructions assume Docker engine is correctly set up in the host system.
 If not, follow the [installation guide for docker engine](https://docs.docker.com/engine/install/ubuntu/).
 
-1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
+1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follow.
 
    Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -95,7 +95,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ./setup.sh
    ```
 
-   This script sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
+   This script sets up the application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
    > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md).
 
@@ -126,7 +126,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Example Output for Pallet Defect Detection:
 
    ```bash
-   # Example output for Pallet Defect Detection
    Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
    Running sample app: pallet-defect-detection
    Checking status of dlstreamer-pipeline-server...
@@ -188,7 +187,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Example Output for Pallet Defect Detection:
 
    ```bash
-   # Example output for Pallet Defect Detection
    Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
    Running sample app: pallet-defect-detection
    Checking status of dlstreamer-pipeline-server...
@@ -242,7 +240,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Example Output for Pallet Defect Detection:
 
    ```bash
-   # Example output for Pallet Defect Detection
    Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
    Running sample app: pallet-defect-detection
    [
@@ -268,7 +265,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Example Output for Pallet Defect Detection:
 
    ```bash
-   # Example output for Pallet Defect Detection
    No pipelines specified. Stopping all pipeline instances
    Environment variables loaded from [WORKDIR]/manufacturing-ai-suite/industrial-edge-insights-vision/.env
    Running sample app: pallet-defect-detection
