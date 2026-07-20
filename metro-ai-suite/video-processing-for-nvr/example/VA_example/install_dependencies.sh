@@ -62,8 +62,8 @@ echo "Install openvino dependency"
 echo "************************************************************************"
 
 cd ${WORKING_DIR}
-sudo cp -r openvino  /opt/intel/openvino_2025
-cd /opt/intel/openvino_2025
+sudo cp -r openvino  /opt/intel/openvino_2026
+cd /opt/intel/openvino_2026
 sudo -E ./install_dependencies/install_openvino_dependencies.sh
 
 
