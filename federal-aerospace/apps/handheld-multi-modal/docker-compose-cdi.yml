@@ -102,7 +102,6 @@ services:
       - WHISPER_COMPUTE_TYPE=float32
       - WEBUI_AUTH=False
       - WEBUI_SECRET_KEY=dummy
-      - ENABLE_RAG_LOCAL_WEB_FETCH=true
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
