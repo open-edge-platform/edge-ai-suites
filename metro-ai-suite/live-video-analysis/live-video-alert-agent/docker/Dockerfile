@@ -5,10 +5,13 @@
 # Stage 1 — dependency installer (uses uv for fast, reproducible installs)
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim AS builder
+ENV UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
 
 # ---------------------------------------------------------------------------
 # Stage 2 — lean runtime image
@@ -37,7 +40,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application source
 COPY --chown=appuser:appuser src/ ./src/
-COPY --chown=appuser:appuser resources/tools.json ./resources/tools.json
 COPY third_party_programs.txt ./
 RUN mkdir -p /app/snapshots /app/config /app/resources \
     && chown -R appuser:appuser /app/snapshots /app/config /app/resources

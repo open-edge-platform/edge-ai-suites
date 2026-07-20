@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 image:
@@ -13,29 +13,14 @@ service:
 rtspUrl: ""
 logLevel: "INFO"
 
-# Agentic dispatch — mirrors USE_ADK env var
-useAdk: true
-
 # Video capture
 captureFps: 10
 
-# Action tools — webhook
-webhookUrl: ""
-webhookSecret: ""
-
-# Action tools — MQTT
-mqttBroker: ""
-mqttPort: 1883
-mqttUsername: ""
-mqttPassword: ""
-mqttBaseTopic: "alerts/live-video"
+# Alert Agent Service
+alertAgentServiceTimeout: "30.0"
 
 # MCP integration
 mcpEnabled: true
-
-# Host path for collector-signals — must match collector.collectorSignalsPath.
-# The app writes fps.txt here; the collector reads it via telegraf.
-collectorSignalsPath: /opt/lva/collector-signals
 
 resources:
   requests:
