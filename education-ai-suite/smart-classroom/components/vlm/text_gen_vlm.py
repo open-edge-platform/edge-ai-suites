@@ -1,20 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Warm, load-once VLM adapter — the sole ``text_gen`` backend.
-
-Loads an ``ov_genai.VLMPipeline`` (used text-only) once and keeps it resident;
-there is no per-call load/destroy and no ``audio_pipeline_lock``. ``generate``
-mirrors the streaming contract of the retired summarizer
-(``utils.ov_genai_util.YieldingTextStreamer``) so downstream callers — Summary,
-Mindmap, Segmentation and content-search Q&A — iterate tokens exactly as before.
-
-Serialization and back-pressure (single warm pipe, FIFO queue) are provided by
-the ``CapabilityRunner`` in ``TextGenHandler``; this class owns only model
-lifecycle and generation. The converted IR is written to the same on-disk
-location content-search uses (``models/openvino/<name>/<weight>``) so both
-processes share one converted model.
-"""
 
 from __future__ import annotations
 
@@ -33,7 +19,6 @@ from utils.ov_genai_util import YieldingTextStreamer
 
 logger = logging.getLogger(__name__)
 
-# smart-classroom repo root: components/vlm/text_gen_vlm.py -> parents[2]
 _SC_ROOT = Path(__file__).resolve().parents[2]
 _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
@@ -41,15 +26,6 @@ _DEFAULT_MAX_NEW_TOKENS = 5120
 
 
 def _import_convert_helpers():
-    """Import ``convert_model`` / ``is_model_ready`` from the VLM serving package.
-
-    Both come from ``components.vlm.vlm_openvino_serving.utils.utils`` (which
-    re-exports ``is_model_ready`` in its ``__all__``) so the warm VLM reuses the
-    exact same conversion + readiness logic. That module still pulls
-    ``providers.utils.model_utils`` from content_search, so the content_search
-    directory is *appended* (never inserted at the front) to avoid shadowing the
-    main app's modules -- matching the pattern used in ``api/vlm_chat.py``.
-    """
     if str(_CONTENT_SEARCH_DIR) not in sys.path:
         sys.path.append(str(_CONTENT_SEARCH_DIR))
     from components.vlm.vlm_openvino_serving.utils.utils import (  # noqa: E402
@@ -73,9 +49,6 @@ class VLMTextGen:
         self._load_config()
         self._load()
 
-    # ------------------------------------------------------------------
-    # Introspection
-    # ------------------------------------------------------------------
     @property
     def device(self) -> Optional[str]:
         return self._device
@@ -84,9 +57,6 @@ class VLMTextGen:
     def model_name(self) -> Optional[str]:
         return self._model_name
 
-    # ------------------------------------------------------------------
-    # Lifecycle
-    # ------------------------------------------------------------------
     def _load_config(self) -> None:
         from utils.config_loader import config
 
@@ -147,6 +117,13 @@ class VLMTextGen:
         self.tokenizer = AutoTokenizer.from_pretrained(
             str(model_dir), extra_special_tokens={}
         )
+        if "qwen3" in self._model_name.lower():
+            _think_tokens = ["<think>", "</think>"]
+            _existing = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
+            _missing = [t for t in _think_tokens if t not in _existing]
+            if _missing:
+                self.tokenizer.add_special_tokens({"additional_special_tokens": _missing})
+                logger.info("Registered think tags as special tokens: %s", _missing)
         logger.info("Warm VLM ready.")
 
     def release(self) -> None:

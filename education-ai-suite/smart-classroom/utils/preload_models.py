@@ -6,17 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 def preload_models():
-    """Preload models at startup.
-
-    ModelManager-backed capabilities are warmed via models.capability_registry:
-    a capability is warmed when its config block exists and is not explicitly
-    disabled (an ``enabled: false`` flag opts out, e.g. models.ocr.enabled;
-    blocks without the flag -- such as text_gen -- are always warmed). ASR is a
-    ModelManager capability that is kept out of the registry and warmed whenever
-    a provider is configured. The summarizer, mindmap and segmentation
-    components share the warm ``text_gen`` VLM, so warming ``text_gen`` (via the
-    registry) is sufficient -- no separate summarizer preload is required.
-    """
+    """Preload models at startup."""
+    
     registry = getattr(config.models, "capability_registry", None) or []
     to_warm = [
         capability

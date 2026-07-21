@@ -17,12 +17,7 @@ class SummarizerComponent(PipelineComponent):
         self.session_id = session_id
         self.mode = mode.lower()
         self.temperature = temperature
-
-        # The summarizer now shares the warm in-process VLM managed by
-        # ModelManager instead of loading its own LLM. Model selection, device
-        # and weight format come from config.models.text_gen; the provider,
-        # model_name and device passed in are retained for compatibility with
-        # existing callers but are no longer used to build a model.
+        
         text_gen = config.models.text_gen
         SummarizerComponent._model = ModelManager.instance().text_gen()
         SummarizerComponent._config = ("vlm", text_gen.vlm_name, text_gen.device)
@@ -106,11 +101,6 @@ class SummarizerComponent(PipelineComponent):
         think_filter = StreamThinkFilter()
 
         try:
-            # The warm VLM streams through openvino_genai's YieldingTextStreamer,
-            # but the CapabilityRunner wraps it in a plain generator for
-            # back-pressure, so the streamer's own token counters are not
-            # reachable here. Accumulate the raw stream and derive metrics from
-            # the tokenizer instead.
             streamer = self.summarizer.generate(prompt)
             for token in streamer:
                 if first_token_time is None:

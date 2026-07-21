@@ -2,8 +2,6 @@ import threading
 import sys
 import os
 
-# Ensure smart-classroom root is on sys.path so components.ocr is importable
-# when tests are run from the model_manager/ directory.
 _SC_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _SC_ROOT not in sys.path:
     sys.path.insert(0, _SC_ROOT)
@@ -40,9 +38,6 @@ def test_instance_thread_safe():
 
 def test_placeholder_methods():
     mgr = ModelManager.instance()
-
-    # ocr_vlm is the only remaining unimplemented capability; ocr, asr and
-    # text_gen are all wired to real handlers.
     for method in (mgr.ocr_vlm,):
         try:
             method()
@@ -274,10 +269,6 @@ def test_health_asr_memory_key_present_when_loaded():
     # cleanup
     mgr.shutdown()
 
-
-# ---------------------------------------------------------------------------
-# text_gen capability (ModelManager wiring)
-# ---------------------------------------------------------------------------
 
 def test_text_gen_returns_handler_and_does_not_raise():
     """text_gen() is implemented — it returns a handler, never NotImplementedError."""

@@ -26,6 +26,8 @@ if str(REPO_ROOT) not in sys.path:
 
 os.chdir(CONTENT_SEARCH_DIR)
 
+from utils.config import DEFAULT_VLM_MODEL  
+
 def _load_config_to_env(config_path: str = "config.yaml") -> None:
     path = REPO_ROOT / config_path
     if not path.exists():
@@ -56,17 +58,12 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("DOCUMENT_MAX_MB", storage.get("document_max_mb", 100))
         _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
-        # VLM (client target). The standalone :9900 server is retired; these
-        # env vars point content-search clients (Q&A, video summarization) at the
-        # warm VLM now hosted by the main app. See MAIN_APP_* below for the gate.
         vlm = cs.get("vlm", {})
         _set("VLM_HOST", vlm.get("host_addr", "127.0.0.1"))
         _set("VLM_PORT", vlm.get("port", "8000"))
-        _set("VLM_MODEL_NAME", vlm.get("model_name", "Qwen/Qwen2.5-VL-3B-Instruct"))
+        _set("VLM_MODEL_NAME", vlm.get("model_name", DEFAULT_VLM_MODEL))
         _set("VLM_DEVICE", vlm.get("device", "CPU"))
 
-        # Main App (smart-classroom :8000) — hosts the warm VLM + /v1/chat/completions.
-        # content-search waits for this to become ready before ingest/Q&A.
         main_app = cs.get("main_app", {})
         _set("MAIN_APP_HOST", main_app.get("host_addr", "127.0.0.1"))
         _set("MAIN_APP_PORT", main_app.get("port", "8000"))
@@ -294,18 +291,11 @@ def main() -> None:
 
     chroma_exe = _env("CHROMA_EXE", "")
     if chroma_exe:
-        # Explicit override (e.g. a signed/allowed chroma launcher).
         chroma_cmd = [chroma_exe, "run",
                       "--host", _env("CHROMA_HOST", "127.0.0.1"),
                       "--port", _env("CHROMA_PORT", "9090"),
                       "--path", _env("CHROMA_DATA_DIR", "./data/chroma_data")]
     else:
-        # Launch Chroma through the (signed) Python interpreter instead of the
-        # pip-generated ``chroma.exe`` console-script shim. That shim is
-        # unsigned, so Windows Smart App Control / Application Control policies
-        # can block it with ``OSError: [WinError 4551]``. Invoking the Typer app
-        # via ``python -c`` reuses the already-trusted interpreter and takes the
-        # exact same ``run`` arguments.
         chroma_cmd = [sys.executable, "-c", "from chromadb.cli.cli import app; app()",
                       "run",
                       "--host", _env("CHROMA_HOST", "127.0.0.1"),

@@ -1,17 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Handler that fronts the warm ``text_gen`` VLM with a CapabilityRunner.
-
-Mirrors ``components/ocr/ocr_handle.py``: the raw capability (``VLMTextGen``)
-is loaded lazily on first use and kept resident, and every call is routed
-through a ``CapabilityRunner`` enforcing the ``max_concurrency`` / ``queue_max``
-limits. With ``max_concurrency=1`` this is a true FIFO queue — concurrent
-callers (in-proc Summary/Mindmap/Segmentation and the re-exposed HTTP endpoint)
-serialize behind the single warm pipeline. Queue saturation raises
-``QueueFullError`` and a GPU OOM raises ``OomError`` while the capability stays
-resident (no process restart).
-"""
 
 from threading import Lock
 from typing import Iterator, Optional, Union
@@ -25,8 +14,8 @@ except ImportError:
     from model_manager.capability import CapabilityState
 
 
-_TEXT_GEN_MAX_CONCURRENCY = 1   # design default: one warm VLM, no parallel gen
-_TEXT_GEN_QUEUE_MAX = 8         # fallback if config key absent (design §6.1)
+_TEXT_GEN_MAX_CONCURRENCY = 1  
+_TEXT_GEN_QUEUE_MAX = 8        
 
 
 def _process_memory_mb() -> Optional[float]:
@@ -39,12 +28,6 @@ def _process_memory_mb() -> Optional[float]:
 
 
 class TextGenHandler:
-    """Owns VLM selection, runner wiring, and the ``generate`` API.
-
-    The VLM is loaded lazily on the first call and kept resident. All calls
-    are routed through a CapabilityRunner that enforces concurrency/queue
-    limits.
-    """
 
     def __init__(self) -> None:
         self._runner = None
@@ -52,7 +35,7 @@ class TextGenHandler:
         self._provider: Optional[str] = "vlm"
         self._device: Optional[str] = None
         self._state = CapabilityState.UNLOADED
-        self._max_concurrency: int = _TEXT_GEN_MAX_CONCURRENCY  # updated from config on first load
+        self._max_concurrency: int = _TEXT_GEN_MAX_CONCURRENCY 
         self._lock = Lock()
 
     def generate(
@@ -64,7 +47,6 @@ class TextGenHandler:
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
     ) -> Union[Iterator[str], str]:
-        """Generate from ``prompt`` (optionally with ``images``) through the runner."""
         return self._get_runner().submit(
             prompt,
             images=images,
@@ -74,7 +56,6 @@ class TextGenHandler:
         )
 
     def load(self) -> None:
-        """Force the VLM and runner to initialise (warmup)."""
         self._get_runner()
 
     @property
@@ -83,7 +64,6 @@ class TextGenHandler:
 
     @property
     def loaded(self) -> bool:
-        """Alias for ``state == READY``."""
         return self._state == CapabilityState.READY
 
     @property
@@ -100,12 +80,10 @@ class TextGenHandler:
 
     @property
     def tokenizer(self):
-        """HF tokenizer of the warm VLM; loads the capability on first access."""
         self._get_runner()
         return self._vlm.tokenizer
 
     def memory_stats(self) -> dict:
-        """Return process memory stats. Only meaningful when loaded."""
         stats: dict = {}
         rss = _process_memory_mb()
         if rss is not None:
@@ -113,25 +91,22 @@ class TextGenHandler:
         return stats
 
     def shutdown(self) -> None:
-        """Transition READY → EVICTING → UNLOADED, releasing the VLM (GPU)."""
         with self._lock:
             if self._state == CapabilityState.READY:
                 self._state = CapabilityState.EVICTING
             if self._vlm is not None:
                 try:
                     self._vlm.release()
-                except Exception:  # noqa: BLE001 - shutdown best-effort
+                except Exception:  
                     logger.warning("text_gen VLM release failed", exc_info=True)
             self._runner = None
             self._vlm = None
             self._device = None
             self._state = CapabilityState.UNLOADED
 
-    # ------------------------------------------------------------------
-    # Internal wiring
-    # ------------------------------------------------------------------
+
     def _get_runner(self):
-        if self._state == CapabilityState.READY:  # fast path
+        if self._state == CapabilityState.READY:  
             return self._runner
         with self._lock:
             if self._runner is None:
@@ -156,7 +131,6 @@ class TextGenHandler:
         return self._runner
 
     def _concurrency_config(self):
-        """Return (max_concurrency, queue_max) from config, with fallback to defaults."""
         try:
             from utils.config_loader import config
             text_gen = getattr(config.models, "text_gen", None)
@@ -170,7 +144,6 @@ class TextGenHandler:
             return _TEXT_GEN_MAX_CONCURRENCY, _TEXT_GEN_QUEUE_MAX
 
     def _build_vlm(self):
-        """Instantiate the warm VLM adapter and record its device."""
         from components.vlm.text_gen_vlm import VLMTextGen
 
         vlm = VLMTextGen()

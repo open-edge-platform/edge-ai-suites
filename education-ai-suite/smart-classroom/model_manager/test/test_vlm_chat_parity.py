@@ -1,24 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Golden-output / wire-parity checks for the re-exposed VLM endpoint.
-
-The standalone ``:9900`` VLM microservice is retired; the warm VLM is now
-hosted inside the main app and re-exposed at ``POST /v1/chat/completions`` on
-``:8000``. Content-search's ``QAService`` and ``video_preprocess`` clients
-consume that endpoint by reading ``data["choices"][0]["message"]["content"]``
-(non-streaming) or the SSE ``chat.completion.chunk`` deltas (streaming), so the
-wire contract is the golden output that must stay byte-compatible with the
-retired server.
-
-These are live integration tests. They SKIP when the main app is not reachable
-on ``SC_BASE_URL`` (default ``http://127.0.0.1:8000``), so the suite stays green
-in unit-only environments. Set ``SC_GOLDEN_PROMPT``/``SC_GOLDEN_TEXT`` to assert
-exact deterministic parity against a captured golden response.
-
-Stdlib only (urllib/json) so no extra test dependency is required.
-"""
-
 import json
 import os
 from unittest import SkipTest
@@ -27,7 +9,7 @@ from urllib.error import URLError
 
 
 _BASE_URL = os.getenv("SC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-_MODEL = os.getenv("SC_GOLDEN_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct")
+_MODEL = os.getenv("SC_GOLDEN_MODEL", "Qwen/Qwen3-VL-8B-Instruct")
 
 
 def _require_server() -> None:

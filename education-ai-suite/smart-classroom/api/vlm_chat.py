@@ -109,7 +109,7 @@ def _model_name(requested: Optional[str]) -> str:
         name = getattr(getattr(config.models, "text_gen", None), "vlm_name", None)
         if name:
             return str(name)
-    except Exception:  # noqa: BLE001 - config best-effort
+    except Exception:  
         pass
     return requested or "text_gen"
 
@@ -167,8 +167,6 @@ async def chat_completions(request: Request):
     model_name = _model_name(chat_req.model)
     handler = ModelManager.instance().text_gen()
 
-    # QueueFullError / OomError intentionally propagate to the app-level handlers
-    # in main.py (HTTP 503 + Retry-After). Only invalid input is handled here.
     if chat_req.stream:
         token_iter = handler.generate(
             prompt,

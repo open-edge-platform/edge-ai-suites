@@ -10,8 +10,8 @@ except ImportError:
     from model_manager.capability import CapabilityState
 
 
-_OCR_MAX_CONCURRENCY = 2   # fallback if config key absent
-_OCR_QUEUE_MAX = 16        # fallback if config key absent (design §6.1 default)
+_OCR_MAX_CONCURRENCY = 2  
+_OCR_QUEUE_MAX = 16      
 
 
 def _process_memory_mb() -> Optional[float]:
@@ -24,18 +24,13 @@ def _process_memory_mb() -> Optional[float]:
 
 
 class OcrHandler:
-    """Owns OCR processor selection, runner wiring, and the extract_text API.
-
-    The processor is loaded lazily on the first call. All calls are routed
-    through a CapabilityRunner that enforces the concurrency/queue limits.
-    """
 
     def __init__(self) -> None:
         self._runner = None
         self._provider: Optional[str] = None
         self._device: Optional[str] = None
         self._state = CapabilityState.UNLOADED
-        self._max_concurrency: int = _OCR_MAX_CONCURRENCY  # updated from config on first load
+        self._max_concurrency: int = _OCR_MAX_CONCURRENCY  
         self._lock = Lock()
 
     def extract_text(self, image) -> str:
@@ -84,11 +79,8 @@ class OcrHandler:
             self._device = None
             self._state = CapabilityState.UNLOADED
 
-    # ------------------------------------------------------------------
-    # Internal wiring
-    # ------------------------------------------------------------------
     def _get_runner(self):
-        if self._state == CapabilityState.READY:  # fast path
+        if self._state == CapabilityState.READY:  
             return self._runner
         with self._lock:
             if self._runner is None:

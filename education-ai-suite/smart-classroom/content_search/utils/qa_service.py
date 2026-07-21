@@ -8,6 +8,7 @@ import logging
 import traceback
 import httpx
 
+from utils.config import DEFAULT_VLM_MODEL
 from utils.search_service import search_service
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class QAService:
         host = os.getenv("VLM_HOST", "127.0.0.1")
         port = os.getenv("VLM_PORT", "8000")
         self.vlm_url = f"http://{host}:{port}/v1/chat/completions"
-        self.model_name = os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct")
+        self.model_name = os.getenv("VLM_MODEL_NAME", DEFAULT_VLM_MODEL)
         self.timeout = 120.0
 
     async def ask(
