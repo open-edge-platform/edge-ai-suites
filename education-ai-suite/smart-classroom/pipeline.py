@@ -34,10 +34,7 @@ class Pipeline:
         self.summarizer_pipeline = [
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
         ]
-
-        # Summary, mindmap and segmentation all share the single warm text_gen
-        # VLM managed by ModelManager (same singleton handler used by the
-        # summarizer component), instead of loading their own LLM.
+        
         text_gen_handler = ModelManager.instance().text_gen()
 
         self.mindmap_component = MindmapComponent(
