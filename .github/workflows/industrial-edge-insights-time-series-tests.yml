@@ -191,24 +191,23 @@ jobs:
           path: edge-ai-libraries
           persist-credentials: false
 
-      - name: Update WEEKLY_BUILD_DATE in .env files
+      - name: Update WEEKLY_BUILD_DATE in .env and Helm values files
         if: ${{ (inputs.build || 'yes') == 'no' }}
         env:
           WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
           if [[ -z "$WEEKLY_BUILD_DATE_INPUT" ]]; then
-            echo "weekly_build_date input is empty; keeping existing .env values"
+            echo "weekly_build_date input is empty; skipping .env and Helm values update"
             exit 0
           fi
 
-          update_weekly_build_date() {
+          # Update WEEKLY_BUILD_DATE in a docker .env file
+          update_env_file() {
             local env_file="$1"
-
             if [[ ! -f "$env_file" ]]; then
-              echo "Skipping missing file: $env_file"
+              echo "Skipping missing .env file: $env_file"
               return
             fi
-
             if grep -q '^WEEKLY_BUILD_DATE=' "$env_file"; then
               sed -i "s|^WEEKLY_BUILD_DATE=.*|WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}|" "$env_file"
             else
@@ -217,9 +216,24 @@ jobs:
             echo "Updated WEEKLY_BUILD_DATE in $env_file"
           }
 
-          update_weekly_build_date "${{ github.workspace }}/edge-ai-libraries/microservices/time-series-analytics/docker/.env"
-          update_weekly_build_date "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env"
-          update_weekly_build_date "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"
+          # Update weekly_build_date in a Helm values.yaml file
+          update_helm_values() {
+            local values_file="$1"
+            if [[ ! -f "$values_file" ]]; then
+              echo "Skipping missing Helm values file: $values_file"
+              return
+            fi
+            sed -i "s/weekly_build_date: .*/weekly_build_date: \"${WEEKLY_BUILD_DATE_INPUT}\"/" "$values_file"
+            echo "Updated weekly_build_date in $values_file"
+          }
+
+          # Docker .env files
+          update_env_file "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env"
+          update_env_file "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"
+
+          # Helm values.yaml files
+          update_helm_values "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml"
+          update_helm_values "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml"
 
       - name: Building Time Series Analytics microservices
         if: ${{ (inputs.build || 'yes') == 'yes' }}
@@ -299,6 +313,101 @@ jobs:
 
           if [[ "$GENERATE_WIND" == "false" ]]; then
             echo "No helm tests selected, skipping helm chart generation"
+          fi
+
+      - name: Pull Helm charts from OCI registry
+        if: ${{ (inputs.build || 'yes') == 'no' }}
+        env:
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+          WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
+        run: |
+          TS_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security test_GPU_helm"
+          MM_HELM_TESTS="test_helm_deployment_multimodal test_GPU_helm_multimodal test_NPU_helm_multimodal"
+
+          PULL_TS=false
+          PULL_MM=false
+
+          IFS=',' read -ra SELECTED <<< "$TESTS"
+          for t in "${SELECTED[@]}"; do
+            t="$(echo "$t" | xargs)"
+            test_file="${t%%::*}"; test_file="${test_file%.py}"
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
+              PULL_TS=true
+            fi
+            if [[ "$t" == "all-tests" || "$t" == "multimodal-all" ]]; then
+              PULL_MM=true
+            fi
+            if echo "$TS_HELM_TESTS" | grep -qw "$test_file"; then PULL_TS=true; fi
+            if echo "$MM_HELM_TESTS" | grep -qw "$test_file"; then PULL_MM=true; fi
+          done
+
+          # Pull a chart .tgz, then patch weekly_build_date inside it and repack.
+          # The published chart has weekly_build_date: "" so we must inject the
+          # value before tests run, since helm install reads values from the .tgz.
+          pull_and_patch_chart() {
+            local oci_ref="$1"
+            local chart_version="$2"
+            local dest_dir="$3"
+
+            mkdir -p "$dest_dir"
+            echo "Pulling $oci_ref:$chart_version ..."
+            helm pull "$oci_ref" --version "$chart_version" --destination "$dest_dir"
+
+            if [[ -z "$WEEKLY_BUILD_DATE_INPUT" ]]; then
+              echo "No weekly_build_date provided; skipping patch"
+              return
+            fi
+
+            local tgz
+            tgz=$(ls "$dest_dir"/*.tgz | tail -1)
+            echo "Patching weekly_build_date=$WEEKLY_BUILD_DATE_INPUT in $tgz ..."
+
+            local tmp_dir
+            tmp_dir=$(mktemp -d)
+            tar -xzf "$tgz" -C "$tmp_dir"
+
+            # Patch values.yaml inside the extracted chart directory
+            find "$tmp_dir" -maxdepth 2 -name values.yaml | while read vf; do
+              sed -i "s/weekly_build_date: .*/weekly_build_date: \"${WEEKLY_BUILD_DATE_INPUT}\"/" "$vf"
+              echo "  Patched weekly_build_date in $vf"
+            done
+
+            # Repackage into the same helm-packages directory
+            rm -f "$tgz"
+            helm package "$tmp_dir"/*/  --destination "$dest_dir"
+            rm -rf "$tmp_dir"
+            echo "Repacked chart: $(ls "$dest_dir"/*.tgz)"
+
+            # Verify
+            echo "Verifying weekly_build_date inside repacked chart:"
+            tar -xOf "$(ls "$dest_dir"/*.tgz | tail -1)" --wildcards "*/values.yaml" \
+              | grep 'weekly_build_date'
+          }
+
+          if [[ "$PULL_TS" == "true" ]]; then
+            TS_CHART_VERSION=$(grep '^version:' \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/Chart.yaml" \
+              | awk '{print $2}')
+            echo "Time Series chart version: $TS_CHART_VERSION"
+            pull_and_patch_chart \
+              "oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app" \
+              "$TS_CHART_VERSION" \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm-packages"
+          else
+            echo "No Time Series Helm tests selected, skipping Time Series chart pull"
+          fi
+
+          if [[ "$PULL_MM" == "true" ]]; then
+            MM_CHART_VERSION=$(grep '^version:' \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/Chart.yaml" \
+              | awk '{print $2}')
+            echo "Multimodal chart version: $MM_CHART_VERSION"
+            pull_and_patch_chart \
+              "oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app" \
+              "$MM_CHART_VERSION" \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm-packages"
+          else
+            echo "No Multimodal Helm tests selected, skipping Multimodal chart pull"
           fi
 
       - name: Install nmap
@@ -445,7 +554,7 @@ jobs:
           # For weekly builds, skip KPI/chart-generation tests that are not applicable.
           WEEKLY_EXCLUDE_ARGS=()
           if [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]]; then
-            echo "weekly_build_date is set (${WEEKLY_BUILD_DATE_INPUT}); excluding test_container_sizes_kpi, test_build_time_kpi, and test_gen_chart"
+            echo "weekly_build_date is set (${WEEKLY_BUILD_DATE_INPUT}); excluding image-build and chart-generation tests (not applicable for weekly builds)"
             WEEKLY_EXCLUDE_ARGS=(
               -k "not test_container_sizes_kpi and not test_build_time_kpi and not test_gen_chart"
             )
@@ -1127,3 +1236,26 @@ jobs:
               else:
                   out.write('\u274c **Overall Status:** SOME TESTS FAILED\n')
           PYEOF
+
+      - name: Restore .env and Helm values to original state
+        if: ${{ always() && (inputs.build || 'yes') == 'no' }}
+        run: |
+          echo "Restoring WEEKLY_BUILD_DATE in .env files..."
+          for env_file in \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env" \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"; do
+            if [[ -f "$env_file" ]]; then
+              sed -i "s|^WEEKLY_BUILD_DATE=.*|WEEKLY_BUILD_DATE=|" "$env_file"
+              echo "  Restored: $env_file  →  $(grep '^WEEKLY_BUILD_DATE=' "$env_file")"
+            fi
+          done
+
+          echo "Restoring weekly_build_date in Helm values.yaml files..."
+          for values_file in \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml" \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml"; do
+            if [[ -f "$values_file" ]]; then
+              sed -i 's/weekly_build_date: .*/weekly_build_date: ""/' "$values_file"
+              echo "  Restored: $values_file  →  $(grep 'weekly_build_date' "$values_file" | xargs)"
+            fi
+          done
