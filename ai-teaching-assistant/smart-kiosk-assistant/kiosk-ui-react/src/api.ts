@@ -1,7 +1,7 @@
 import { API } from "./config";
 import type {
+  BatchIngestResponse,
   ContextStats,
-  IngestResponse,
   PlatformInfo,
   ServicePerformancePayload,
   SessionSnapshot,
@@ -102,14 +102,16 @@ export function responseAudioUrl(sessionId: string, index: number): string {
 
 // ── rag-service ingestion API ───────────────────────────────────────────────
 
-export async function ingestFile(file: File): Promise<IngestResponse> {
+export async function ingestFiles(files: File[]): Promise<BatchIngestResponse> {
   const form = new FormData();
-  form.append("file", file, file.name);
+  for (const file of files) {
+    form.append("files", file, file.name);
+  }
   const res = await fetch(`${API.rag}/api/v1/context/file`, {
     method: "POST",
     body: form,
   });
-  return asJson<IngestResponse>(res);
+  return asJson<BatchIngestResponse>(res);
 }
 
 export async function clearContext(): Promise<void> {

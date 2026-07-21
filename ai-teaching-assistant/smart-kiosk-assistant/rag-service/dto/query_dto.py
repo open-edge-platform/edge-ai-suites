@@ -34,6 +34,21 @@ class IngestResponse(BaseModel):
     source: str
 
 
+class FileIngestResult(BaseModel):
+    source: str
+    chunks_added: int = 0
+    status: str = "ok"
+    detail: str | None = None
+
+
+class BatchIngestResponse(BaseModel):
+    total_chunks_added: int
+    files_processed: int
+    files_succeeded: int
+    files_failed: int
+    results: list[FileIngestResult]
+
+
 class ChatMessage(BaseModel):
     role: str
     content: str | list[dict[str, Any]]

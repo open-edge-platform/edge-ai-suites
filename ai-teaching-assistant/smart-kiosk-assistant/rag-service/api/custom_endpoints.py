@@ -10,7 +10,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from docx import Document as DocxDocument
 from pypdf import PdfReader
 
-from dto.query_dto import ContextRequest, IngestResponse, QueryRequest
+from dto.query_dto import (
+    BatchIngestResponse,
+    ContextRequest,
+    FileIngestResult,
+    IngestResponse,
+    QueryRequest,
+)
 from pipeline import get_shared_pipeline
 from utils.config_loader import config
 from utils.latency_store import llm_latency, retrieval_latency
@@ -126,30 +132,51 @@ def ingest_context(request: ContextRequest) -> IngestResponse:
     return IngestResponse(chunks_added=added, source=request.source)
 
 
-@router.post("/api/v1/context/file", response_model=IngestResponse)
-async def ingest_context_file(file: UploadFile = File(...)) -> IngestResponse:
+async def _ingest_single_file(pipeline, file: UploadFile) -> FileIngestResult:
+    """Ingest one uploaded file, returning a per-file result (never raises)."""
     filename = file.filename or "upload"
-    suffix = Path(filename).suffix.lower()
-    if suffix not in _ALLOWED_INGEST_SUFFIXES:
-        raise HTTPException(
-            status_code=415,
-            detail="Only .txt, .md, .docx and .pdf files are supported",
-        )
+    try:
+        suffix = Path(filename).suffix.lower()
+        if suffix not in _ALLOWED_INGEST_SUFFIXES:
+            raise HTTPException(
+                status_code=415,
+                detail="Only .txt, .md, .docx and .pdf files are supported",
+            )
 
-    raw = await file.read()
-    if len(raw) > _MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large. Maximum allowed size is {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
-        )
-    text = _extract_text_from_file(filename, raw)
-    if not text.strip():
-        raise HTTPException(status_code=422, detail="No extractable text found in file")
+        raw = await file.read()
+        if len(raw) > _MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum allowed size is {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
+            )
+        text = _extract_text_from_file(filename, raw)
+        if not text.strip():
+            raise HTTPException(status_code=422, detail="No extractable text found in file")
 
+        _validate_token_budget(pipeline, text)
+        added = pipeline.ingest_text(text, source=filename)
+        return FileIngestResult(source=filename, chunks_added=added, status="ok")
+    except HTTPException as exc:
+        return FileIngestResult(source=filename, status="failed", detail=str(exc.detail))
+
+
+@router.post("/api/v1/context/file", response_model=BatchIngestResponse)
+async def ingest_context_file(
+    files: list[UploadFile] = File(...),
+) -> BatchIngestResponse:
+    """Ingest one or more documents. Each file is processed independently so a
+    single bad file does not fail the whole batch. All ingested documents share
+    one collection, so queries are answered across every context."""
     pipeline = get_shared_pipeline()
-    _validate_token_budget(pipeline, text)
-    added = pipeline.ingest_text(text, source=filename)
-    return IngestResponse(chunks_added=added, source=filename)
+    results = [await _ingest_single_file(pipeline, file) for file in files]
+    succeeded = [r for r in results if r.status == "ok"]
+    return BatchIngestResponse(
+        total_chunks_added=sum(r.chunks_added for r in results),
+        files_processed=len(results),
+        files_succeeded=len(succeeded),
+        files_failed=len(results) - len(succeeded),
+        results=results,
+    )
 
 
 @router.get("/api/v1/context/stats")

@@ -45,6 +45,7 @@ export function useVoiceSession() {
   const playerRef = useRef<ResponsePlayer | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
+  const startPromiseRef = useRef<Promise<void> | null>(null);
   const pendingChunks = useRef<ArrayBuffer[]>([]);
   const messagesRef = useRef<ChatMessage[]>([]);
   messagesRef.current = messages;
@@ -78,24 +79,29 @@ export function useVoiceSession() {
       pendingChunks.current.push(wav);
       if (!sessionIdRef.current && !startingRef.current) {
         startingRef.current = true;
-        try {
-          const history = messagesRef.current.map((m) => ({
-            role: m.role,
-            content: m.text,
-          }));
-          const snap = await startStreamSession(AUDIO.sampleRate, history, {
-            chunkSeconds: AUDIO.sessionChunkSeconds,
-            silenceTimeoutSeconds: AUDIO.silenceTimeoutSeconds,
-            maxSessionSeconds: AUDIO.maxSessionSeconds,
-            silenceThreshold: AUDIO.silenceThreshold,
-          });
-          sessionIdRef.current = snap.session_id;
-        } catch (err) {
-          setStatus(`❌ ${err instanceof Error ? err.message : "Could not start session"}`);
-        } finally {
-          startingRef.current = false;
-        }
+        // Track the in-flight start so stop() can await it before deciding
+        // whether any audio was captured.
+        startPromiseRef.current = (async () => {
+          try {
+            const history = messagesRef.current.map((m) => ({
+              role: m.role,
+              content: m.text,
+            }));
+            const snap = await startStreamSession(AUDIO.sampleRate, history, {
+              chunkSeconds: AUDIO.sessionChunkSeconds,
+              silenceTimeoutSeconds: AUDIO.silenceTimeoutSeconds,
+              maxSessionSeconds: AUDIO.maxSessionSeconds,
+              silenceThreshold: AUDIO.silenceThreshold,
+            });
+            sessionIdRef.current = snap.session_id;
+          } catch (err) {
+            setStatus(`❌ ${err instanceof Error ? err.message : "Could not start session"}`);
+          } finally {
+            startingRef.current = false;
+          }
+        })();
       }
+      if (startPromiseRef.current) await startPromiseRef.current;
       await flushPending();
     },
     [flushPending]
@@ -105,6 +111,7 @@ export function useVoiceSession() {
     setPartialUser("");
     setPartialAssistant("");
     sessionIdRef.current = null;
+    startPromiseRef.current = null;
     pendingChunks.current = [];
     ensurePlayer();
     const recorder = new MicRecorder(AUDIO.sampleRate, AUDIO.chunkSeconds, onChunk);
@@ -128,8 +135,9 @@ export function useVoiceSession() {
     const recorder = recorderRef.current;
     recorderRef.current = null;
     if (recorder) await recorder.stop();
-    setMicAnalyser(null);
-    await flushPending();
+    setMicAnalyser(null);    // The trailing flush above may have just kicked off session creation; wait
+    // for it before deciding whether audio was captured.
+    if (startPromiseRef.current) await startPromiseRef.current;    await flushPending();
 
     const sid = sessionIdRef.current;
     if (!sid) {

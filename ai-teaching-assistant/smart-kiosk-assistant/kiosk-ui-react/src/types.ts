@@ -26,6 +26,21 @@ export interface IngestResponse {
   source: string;
 }
 
+export interface FileIngestResult {
+  source: string;
+  chunks_added: number;
+  status: string;
+  detail?: string | null;
+}
+
+export interface BatchIngestResponse {
+  total_chunks_added: number;
+  files_processed: number;
+  files_succeeded: number;
+  files_failed: number;
+  results: FileIngestResult[];
+}
+
 export interface ContextStats {
   collection_name: string;
   document_count: number | null;
