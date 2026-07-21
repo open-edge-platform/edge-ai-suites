@@ -388,7 +388,9 @@ jobs:
             TS_CHART_VERSION=$(grep '^version:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/Chart.yaml" \
               | awk '{print $2}')
-            echo "Time Series chart version: $TS_CHART_VERSION"
+            echo "Time Series Helm chart pull:"
+            echo "  Chart version: $TS_CHART_VERSION"
+            [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]] && echo "  Weekly build date: $WEEKLY_BUILD_DATE_INPUT"
             pull_and_patch_chart \
               "oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app" \
               "$TS_CHART_VERSION" \
@@ -401,7 +403,9 @@ jobs:
             MM_CHART_VERSION=$(grep '^version:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/Chart.yaml" \
               | awk '{print $2}')
-            echo "Multimodal chart version: $MM_CHART_VERSION"
+            echo "Multimodal Helm chart pull:"
+            echo "  Chart version: $MM_CHART_VERSION"
+            [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]] && echo "  Weekly build date: $WEEKLY_BUILD_DATE_INPUT"
             pull_and_patch_chart \
               "oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app" \
               "$MM_CHART_VERSION" \
