@@ -285,7 +285,7 @@ class BoardOCRWorker:
 
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
-        self._ocr_model = None
+        self._ocr = None
         self._last_kept_thumb: Optional[np.ndarray] = None
         self._frame_count = 0
         self._finalized = False
@@ -294,15 +294,10 @@ class BoardOCRWorker:
     def start(self) -> bool:
         """Start the worker thread. Returns False if OCR model init fails."""
         try:
-            from components.ocr_component import OCRComponent
+            from model_manager import ModelManager
 
-            ocr = OCRComponent(
-                session_id=self.session_id,
-                provider=self.provider,
-                lang=self.lang,
-                device=self.device,
-            )
-            self._ocr_model = ocr.ocr_model
+            self._ocr = ModelManager.instance().ocr()
+            self._ocr.load()
         except Exception as e:
             logger.error(f"Failed to init OCR model, disabling board OCR: {e}")
             return False
@@ -422,7 +417,7 @@ class BoardOCRWorker:
                 logger.debug(f"Duplicate frame skipped {frame_path.name}")
                 return
 
-            text, scores = self._ocr_model.extract_text_with_scores(str(frame_path))
+            text, scores = self._ocr.extract_text_with_scores(str(frame_path))
 
             if scores:
                 mean_conf = sum(scores) / len(scores)

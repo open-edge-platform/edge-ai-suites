@@ -144,7 +144,12 @@ def _snapshot_full() -> dict[str, Any]:
     else:
         inf = {
             "running": False, "delivered_fps": 0.0,
-            "infer_mean_ms": 0.0, "infer_p99_ms": 0.0,
+            "infer_mean_ms": 0.0,
+            "infer_p50_ms": 0.0, "infer_p90_ms": 0.0, "infer_p95_ms": 0.0, "infer_p99_ms": 0.0,
+            "processing_mean_ms": 0.0,
+            "processing_p50_ms": 0.0, "processing_p90_ms": 0.0, "processing_p95_ms": 0.0, "processing_p99_ms": 0.0,
+            "e2e_mean_ms": 0.0,
+            "e2e_p50_ms": 0.0, "e2e_p90_ms": 0.0, "e2e_p95_ms": 0.0, "e2e_p99_ms": 0.0,
             "total_mean_ms": 0.0, "total_p99_ms": 0.0,
             "frame_id": 0, "uptime_s": 0.0,
             "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
@@ -162,10 +167,19 @@ def _snapshot_full() -> dict[str, Any]:
         conf = 0.0
     fps = float(inf.get("delivered_fps", 0.0))
     e2e_mean = float(inf.get("e2e_mean_ms", inf.get("total_mean_ms", 0.0)))
+    e2e_p50 = float(inf.get("e2e_p50_ms", 0.0))
+    e2e_p90 = float(inf.get("e2e_p90_ms", 0.0))
+    e2e_p95 = float(inf.get("e2e_p95_ms", 0.0))
     e2e_p99 = float(inf.get("e2e_p99_ms", inf.get("total_p99_ms", 0.0)))
     proc_mean = float(inf.get("processing_mean_ms", 0.0))
+    proc_p50 = float(inf.get("processing_p50_ms", 0.0))
+    proc_p90 = float(inf.get("processing_p90_ms", 0.0))
+    proc_p95 = float(inf.get("processing_p95_ms", 0.0))
     proc_p99 = float(inf.get("processing_p99_ms", 0.0))
     infer_ms = float(inf.get("infer_mean_ms", 0.0))
+    infer_p50 = float(inf.get("infer_p50_ms", 0.0))
+    infer_p90 = float(inf.get("infer_p90_ms", 0.0))
+    infer_p95 = float(inf.get("infer_p95_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
 
     cfg = _cfg or {}
@@ -196,10 +210,19 @@ def _snapshot_full() -> dict[str, Any]:
             "loop_count": int(inf.get("frame_id", 0)),
             "uptime_s": round(float(inf.get("uptime_s", 0.0)), 1),
             "infer_mean_ms": round(infer_ms, 2),
+            "infer_p50_ms": round(infer_p50, 2),
+            "infer_p90_ms": round(infer_p90, 2),
+            "infer_p95_ms": round(infer_p95, 2),
             "infer_p99_ms": round(infer_p99, 2),
             "processing_mean_ms": round(proc_mean, 2),
+            "processing_p50_ms": round(proc_p50, 2),
+            "processing_p90_ms": round(proc_p90, 2),
+            "processing_p95_ms": round(proc_p95, 2),
             "processing_p99_ms": round(proc_p99, 2),
             "e2e_mean_ms": round(e2e_mean, 2),
+            "e2e_p50_ms": round(e2e_p50, 2),
+            "e2e_p90_ms": round(e2e_p90, 2),
+            "e2e_p95_ms": round(e2e_p95, 2),
             "e2e_p99_ms": round(e2e_p99, 2),
             # Legacy aliases — same values as e2e_*.
             "total_mean_ms": round(e2e_mean, 2),
@@ -216,10 +239,19 @@ def _snapshot_full() -> dict[str, Any]:
                 "status": "running" if STATE.lifecycle in LIFECYCLE_RUN else "stopped",
                 "fps": round(fps, 2),
                 "infer_ms": round(infer_ms, 2),
+                "infer_p50_ms": round(infer_p50, 2),
+                "infer_p90_ms": round(infer_p90, 2),
+                "infer_p95_ms": round(infer_p95, 2),
                 "infer_p99_ms": round(infer_p99, 2),
                 "processing_mean_ms": round(proc_mean, 2),
+                "processing_p50_ms": round(proc_p50, 2),
+                "processing_p90_ms": round(proc_p90, 2),
+                "processing_p95_ms": round(proc_p95, 2),
                 "processing_p99_ms": round(proc_p99, 2),
                 "e2e_mean_ms": round(e2e_mean, 2),
+                "e2e_p50_ms": round(e2e_p50, 2),
+                "e2e_p90_ms": round(e2e_p90, 2),
+                "e2e_p95_ms": round(e2e_p95, 2),
                 "e2e_p99_ms": round(e2e_p99, 2),
                 # Legacy keys the current UI may still read.
                 "latency_ms": round(e2e_mean, 2),
