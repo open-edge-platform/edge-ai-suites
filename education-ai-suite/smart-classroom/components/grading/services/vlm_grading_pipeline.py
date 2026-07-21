@@ -1,0 +1,296 @@
+"""Pure-VLM grading pipeline.
+
+Three steps, one external service (the VLM):
+    render      PDF -> one PNG per page
+    vlm_grading each page + a static grading prompt -> per-question scores
+    merge       aggregate across pages, compare to answer key, write result
+
+Signature matches the legacy run_grading_pipeline so it drops into the existing
+job framework unchanged: the same update_progress / check_checkpoint / log_event
+callbacks drive progress, pause/resume/cancel, and task logging.
+"""
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+from typing import Any, Callable
+
+import yaml
+
+from services.layout_detection import run_layout_detection
+from services.pdf_render import render_pdf_to_pngs, image_info
+from services.prompt_slicer import slice_prompt_for_section
+from services.reporter import build_result
+from services.section_split import split_sections
+from services.result_parser import merge_page_scores, parse_scores
+from services.vlm_client import check_health, grade_page
+
+ProgressCallback = Callable[[str, int], None]
+CheckpointCallback = Callable[[str], bool]
+LogCallback = Callable[[str], None]
+
+
+def _component_root() -> Path:
+    # services/vlm_grading_pipeline.py -> components/grading
+    return Path(__file__).resolve().parents[1]
+
+
+def _load_component_config() -> dict[str, Any]:
+    """Grading component defaults (image quality, vlm gen params, prompt path)."""
+    path = _component_root() / "config.yaml"
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        return raw if isinstance(raw, dict) else {}
+    except Exception:
+        return {}
+
+
+def _load_provider_url(key: str, default: str) -> str:
+    """Read a service URL from root config: grading.provider.<key>."""
+    # components/grading -> smart-classroom/config.yaml
+    root = _component_root().parents[1] / "config.yaml"
+    try:
+        raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
+        provider = ((raw.get("grading") or {}).get("provider") or {})
+        url = provider.get(key)
+        if url:
+            return str(url)
+    except Exception:
+        pass
+    return default
+
+
+def _outputs_dir(exam_id: str | None, student_id: str | None, task_id: str) -> Path:
+    base = _component_root() / "outputs" / (exam_id or "exam") / (student_id or task_id)
+    return base
+
+
+def run_vlm_grading_pipeline(
+    task_id: str,
+    request_payload: dict[str, Any],
+    update_progress: ProgressCallback,
+    check_checkpoint: CheckpointCallback,
+    log_event: LogCallback | None = None,
+) -> dict[str, Any]:
+    def _log(message: str) -> None:
+        if log_event is not None:
+            log_event(message)
+
+    def _step_start(step: str) -> float:
+        _log(f"step {step} started")
+        return time.perf_counter()
+
+    def _step_done(step: str, started: float, extra: str = "") -> None:
+        elapsed = time.perf_counter() - started
+        suffix = f" {extra}" if extra else ""
+        _log(f"step {step} completed elapsed={elapsed:.2f}s{suffix}")
+
+    # ---- inputs -----------------------------------------------------------
+    # Resolution order for each setting: request options > component config.yaml
+    # > built-in default. The VLM URL always comes from the root config.
+    cfg = _load_component_config()
+    cfg_image = cfg.get("image", {}) if isinstance(cfg.get("image"), dict) else {}
+    cfg_vlm = cfg.get("vlm", {}) if isinstance(cfg.get("vlm"), dict) else {}
+    cfg_grading = cfg.get("grading", {}) if isinstance(cfg.get("grading"), dict) else {}
+
+    options = request_payload.get("options", {})
+    if not isinstance(options, dict):
+        options = {}
+
+    paper_path = Path(str(request_payload["paper_path"])).resolve()
+    student_id = request_payload.get("student_id")
+    exam_id = request_payload.get("exam_id")
+
+    # rubric_path: task value, else component config default_prompt_path.
+    rubric_path = request_payload.get("rubric_path")
+    if not rubric_path:
+        default_rel = cfg_grading.get("default_prompt_path", "rubrics/math_rubrics.txt")
+        rubric_path = _component_root() / default_rel
+    prompt_path = Path(str(rubric_path)).resolve()
+
+    dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
+    max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
+    temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
+    model = str(options.get("model", cfg_vlm.get("model", "Qwen3.5-9B-int8-ov")))
+    _mip = options.get("max_image_pixels", cfg_vlm.get("max_image_pixels"))
+    max_image_pixels = int(_mip) if _mip else None
+    vlm_url = str(options.get("vlm_api_url") or _load_provider_url("vlm_provider", "http://127.0.0.1:9900"))
+    layout_url = str(options.get("layout_detection_url") or _load_provider_url("layout_detection", "http://127.0.0.1:9902"))
+
+    if not paper_path.exists():
+        raise FileNotFoundError(f"paper (PDF) not found: {paper_path}")
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"grading prompt not found: {prompt_path}")
+
+    user_prompt = prompt_path.read_text(encoding="utf-8")
+
+    out_dir = _outputs_dir(exam_id, student_id, task_id)
+    pages_dir = out_dir / "pages"
+    pages_dir.mkdir(parents=True, exist_ok=True)
+    _log(f"output base_dir={out_dir}")
+
+    # health check up front so failures surface early
+    try:
+        health = check_health(vlm_url)
+        _log(f"vlm health ok model={health.get('model')} device={health.get('device')}")
+    except Exception as exc:
+        raise RuntimeError(f"VLM service unreachable at {vlm_url}: {exc}")
+
+    # ---- step: render -----------------------------------------------------
+    update_progress("render", 20)
+    _t = _step_start("render")
+    images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi)
+    _step_done("render", _t, f"pages={len(images)} dpi={dpi}")
+    if not images:
+        raise RuntimeError("PDF produced no pages")
+
+    if check_checkpoint("after_render"):
+        _log("checkpoint stop after_render")
+        return {"stopped": True}
+
+    # ---- step: layout_detection (auxiliary; saved only, not fed to VLM) ---
+    update_progress("layout_detection", 40)
+    _t = _step_start("layout_detection")
+    step1_dir = out_dir / "step1_layout_detection"
+    det_summary = run_layout_detection(
+        page_images=images,
+        step1_dir=step1_dir,
+        detection_url=layout_url,
+        config=cfg,
+    )
+    _step_done(
+        "layout_detection", _t,
+        f"pages={det_summary['total_pages']} regions={det_summary['total_regions']}",
+    )
+    if check_checkpoint("after_layout_detection"):
+        _log("checkpoint stop after_layout_detection")
+        return {"stopped": True}
+
+    # ---- step: section_split ---------------------------------------------
+    # OCR the paragraph_title regions from step1, match section-heading patterns
+    # (from config), and cut the paper into sections (choice / fill-in / essay
+    # areas), stitching cross-page sections into one tall image each.
+    update_progress("section_split", 45)
+    _t = _step_start("section_split")
+    step2_dir = out_dir / "step2_section_split"
+    from providers.ocr_service import ocr_region  # local OCR for heading text
+    section_summary = split_sections(
+        page_images=images,
+        step1_dir=step1_dir,
+        step2_dir=step2_dir,
+        ocr_region=ocr_region,
+        config=cfg,
+    )
+    _step_done("section_split", _t, f"sections={section_summary['num_sections']}")
+    for s in section_summary["sections"]:
+        _log(f"section {s['index']} pages={s['pages']} cross_page={s['is_cross_page']}")
+    if check_checkpoint("after_section_split"):
+        _log("checkpoint stop after_section_split")
+        return {"stopped": True}
+
+    # ---- step: vlm_grading (per section) ---------------------------------
+    # Grade one stitched section image at a time. If section_split produced no
+    # sections (e.g. headings not detected), fall back to grading each page.
+    sections = section_summary.get("sections", [])
+    if sections:
+        # (tag, image, section_title) — title drives per-section prompt slicing
+        units = [(f"section_{s['index']}", Path(s["image_path"]), s.get("title", "")) for s in sections]
+        unit_kind = "section"
+    else:
+        _log("no sections found; falling back to per-page grading")
+        units = [(img.stem, img, "") for img in images]
+        unit_kind = "page"
+
+    _t = _step_start("vlm_grading")
+    unit_score_dicts: list[dict[str, dict]] = []
+    total = len(units)
+    replies_dir = out_dir / "step3_vlm_grading"
+    replies_dir.mkdir(parents=True, exist_ok=True)
+
+    for idx, (tag, image, title) in enumerate(units, 1):
+        info = image_info(image)
+        _log(
+            f"vlm {unit_kind} {idx}/{total} {image.name} "
+            f"{info['width']}x{info['height']}px "
+            f"({info['megapixels']:.2f} MP, {info['file_kb']:.1f} KB)"
+        )
+
+        # For a section, use just its slice of the rubric prompt; for a page
+        # fallback, use the full prompt. Slicing config lives under section_split.
+        prompt_for_unit = (
+            slice_prompt_for_section(user_prompt, title, cfg.get("section_split", {}))
+            if title else user_prompt
+        )
+
+        # save the prompt before the call (survives a timeout/crash)
+        (replies_dir / f"{tag}_prompt.txt").write_text(prompt_for_unit, encoding="utf-8")
+
+        result = grade_page(
+            vlm_url, model, image, prompt_for_unit,
+            max_tokens=max_tokens, temperature=temperature,
+            max_image_pixels=max_image_pixels,
+        )
+        elapsed = result.get("elapsed_seconds", 0.0)
+
+        if not result.get("ok"):
+            _log(f"vlm {unit_kind} {idx} FAILED time={elapsed:.2f}s error={result.get('error')}")
+            (replies_dir / f"{tag}_reply.txt").write_text(
+                str(result.get("error", "")), encoding="utf-8"
+            )
+        else:
+            answer = result.get("answer", "")
+            (replies_dir / f"{tag}_reply.txt").write_text(
+                f"elapsed_seconds: {elapsed:.2f}\n"
+                f"finish_reason: {result.get('finish_reason')}\n"
+                f"{'=' * 70}\n{answer}",
+                encoding="utf-8",
+            )
+            unit_scores = parse_scores(answer)
+            unit_score_dicts.append(unit_scores)
+            _log(
+                f"vlm {unit_kind} {idx} done time={elapsed:.2f}s "
+                f"questions={len(unit_scores)} finish={result.get('finish_reason')}"
+            )
+
+        # progress climbs 50 -> 90 across units
+        update_progress("vlm_grading", 50 + int(40 * idx / total))
+        if check_checkpoint(f"after_{unit_kind}_{idx}"):
+            _log(f"checkpoint stop after_{unit_kind}_{idx}")
+            return {"stopped": True}
+
+    scores = merge_page_scores(unit_score_dicts)
+    _step_done("vlm_grading", _t, f"graded_questions={len(scores)}")
+
+    # ---- step: merge / report --------------------------------------------
+    update_progress("merge", 95)
+    _t = _step_start("merge")
+
+    # The grading prompt is the sole basis; scores come only from the VLM.
+    result_data = build_result(scores)
+    result_data["task_id"] = task_id
+    result_data["input"] = {
+        "paper_path": str(paper_path),
+        "prompt_path": str(prompt_path),
+        "student_id": student_id,
+        "exam_id": exam_id,
+    }
+
+    result_path = out_dir / "grading_result.json"
+    result_path.write_text(
+        json.dumps(result_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    summary = result_data["summary"]
+    _step_done(
+        "merge", _t,
+        f"total={summary['total_score']}/{summary['total_max']} "
+        f"objective={summary['objective_score']}/{summary['objective_max']} "
+        f"subjective={summary['subjective_score']}/{summary['subjective_max']}",
+    )
+
+    return {
+        "stopped": False,
+        "result_path": str(result_path),
+        "summary": summary,
+    }

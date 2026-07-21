@@ -1,0 +1,79 @@
+# Grading component config (VLM grading).
+# VLM service URL is NOT here — it comes from the root smart-classroom
+# config.yaml under grading.provider.vlm_provider.
+# Values here are defaults; a per-request `options` field overrides them.
+
+image:
+  # PDF -> page image quality sent to the VLM.
+  dpi: 300            # PDF render DPI (higher = sharper page image, slower)
+
+vlm:
+  # Generation defaults for each section grading call.
+  model: "Qwen3.5-9B-int8-ov"
+  max_tokens: 4096
+  temperature: 0.1
+  # Cap the size of the section image sent to the VLM. Whitespace compression
+  # (section_split) already shrinks images losslessly; this is an additional
+  # upper bound — a section image is downscaled (preserving aspect ratio) only
+  # if it still exceeds max_image_pixels. null = no cap.
+  max_image_pixels: 4000000
+
+grading:
+  # Default static grading prompt used when a task does not specify rubric_path.
+  # The prompt is the sole grading basis (answers + criteria live inside it).
+  # Relative to this component directory.
+  default_prompt_path: "rubrics/math_rubrics.txt"
+
+  # Re-run grading even if an active task already exists for the same paper.
+  force_regrade: true
+
+detection_service:
+  # Detection filtering and processing (consumed by _run_layout_detection)
+  target_labels: ["text", "display_formula", "table", "image",
+                  "title", "doc_title", "paragraph_title",
+                  "aside_text", "vertical_text",
+                  "formula_number"
+                 ]      # Labels to detect: text, table, image, display_formula, etc.
+  min_score: 0.5               # Minimum confidence score (0-1)
+  sort_boxes: true             # Sort boxes top-to-bottom
+  expand_margin: 10            # Expand box margins in pixels
+  merge_overlapping: false     # Merge overlapping boxes
+  iou_threshold: 0.7           # IoU threshold for merging (if enabled)
+  save_visualizations: true    # Save images with detection boxes drawn
+
+section_split:
+  # Split a paper into sections (e.g. choice / fill-in / essay areas) by OCR-ing
+  # the paragraph_title regions from step1 and matching a section-heading pattern.
+  # All heading patterns live here (no hardcoded text in code); add more as new
+  # heading styles appear. A paragraph_title whose OCR text matches any pattern
+  # marks the start of a new section.
+  title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
+  title_patterns:
+    - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
+    - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
+  stitch_direction: "vertical"                  # how to join cross-page section pieces
+  save_visualizations: true                     # save each stitched section image
+
+  # Content-aware whitespace compression (uses step1 detection boxes).
+  # Vertical gaps between content boxes larger than `gap_threshold` px are
+  # collapsed down to `keep_margin` px, shrinking tall sections (e.g. the essay
+  # area) without touching content. Set compress_whitespace: false to disable.
+  compress_whitespace: true
+  gap_threshold: 120        # only gaps larger than this are compressed
+  keep_margin: 50           # margin left between content blocks after compression
+  content_pad: 20           # padding added above/below each content block
+
+  # Per-section prompt: instead of sending the whole rubric prompt for every
+  # section, slice out just the block for that section. The rubric file is split
+  # on `separator` lines; the first block (scenario intro) and the last block
+  # (output-format) are always kept, plus the one middle block whose leading
+  # heading matches the section's leading ordinal (一 / 二 / 三 ...). Falls back
+  # to the full prompt when no middle block matches.
+  prompt_slicing:
+    enabled: true
+    separator: "^\\s*={5,}\\s*$"   # rubric block separator lines
+    keep_first_block: true         # scenario/intro block
+    keep_last_block: true          # output-format block
+    # regex to pull the leading ordinal from a heading (section title & rubric
+    # block heading share this); group 1 is the ordinal used for matching.
+    ordinal_pattern: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"

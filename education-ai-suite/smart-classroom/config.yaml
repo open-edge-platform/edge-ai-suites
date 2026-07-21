@@ -535,3 +535,12 @@ scp_sender:
                                           # leave empty to use the SSH default (~/.ssh/id_*)
   remote_base_path: "/home/intel/smart_classroom_incoming"  # landing dir on Linux
   class_name: "Class 10A - Physics"       # included in session_meta.json
+
+grading:
+  enabled: true
+  host_addr: "127.0.0.1"
+  port: 9012
+  provider:
+    layout_detection: http://127.0.0.1:9902
+    vlm_provider: http://127.0.0.1:9900
+  language: cn
