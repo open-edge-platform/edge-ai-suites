@@ -57,6 +57,10 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
     image: surgical-pipeline:dev
     container_name: surgical-pipeline
     restart: unless-stopped
@@ -105,6 +109,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
     image: surgical-backend:dev
     container_name: surgical-backend
     restart: unless-stopped

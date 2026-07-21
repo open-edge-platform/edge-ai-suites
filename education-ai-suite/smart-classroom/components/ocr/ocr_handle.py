@@ -27,6 +27,7 @@ class OcrHandler:
 
     def __init__(self) -> None:
         self._runner = None
+        self._processor = None
         self._provider: Optional[str] = None
         self._device: Optional[str] = None
         self._state = CapabilityState.UNLOADED
@@ -34,7 +35,11 @@ class OcrHandler:
         self._lock = Lock()
 
     def extract_text(self, image) -> str:
-        return self._get_runner().submit(image)
+        return self._get_runner().submit("extract_text", image)
+
+    def extract_text_with_scores(self, image):
+        """Return (text, per_line_confidence_scores) for confidence-gated callers."""
+        return self._get_runner().submit("extract_text_with_scores", image)
 
     def load(self) -> None:
         """Force the processor and runner to initialise (warmup)."""
@@ -75,6 +80,7 @@ class OcrHandler:
             if self._state == CapabilityState.READY:
                 self._state = CapabilityState.EVICTING
             self._runner = None
+            self._processor = None
             self._provider = None
             self._device = None
             self._state = CapabilityState.UNLOADED
@@ -86,7 +92,7 @@ class OcrHandler:
             if self._runner is None:
                 self._state = CapabilityState.LOADING
                 try:
-                    processor = self._build_processor()
+                    self._processor = self._build_processor()
                     max_concurrency, queue_max = self._concurrency_config()
                     self._max_concurrency = max_concurrency
                     try:
@@ -94,7 +100,7 @@ class OcrHandler:
                     except ImportError:
                         from model_manager.capability import CapabilityRunner
                     self._runner = CapabilityRunner(
-                        processor.extract_text,
+                        self._call_processor,
                         max_concurrency=max_concurrency,
                         queue_max=queue_max,
                     )
@@ -103,6 +109,11 @@ class OcrHandler:
                     self._state = CapabilityState.UNLOADED
                     raise
         return self._runner
+
+    def _call_processor(self, method: str, *args, **kwargs):
+        """Dispatch a processor call by name so multiple public methods
+        (extract_text / extract_text_with_scores) share one runner."""
+        return getattr(self._processor, method)(*args, **kwargs)
 
     def _concurrency_config(self):
         """Return (max_concurrency, queue_max) from config, with fallback to defaults."""
