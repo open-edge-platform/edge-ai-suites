@@ -10,6 +10,7 @@ import { clearContext, ingestFiles } from "./api";
 import { useAudioLevel } from "./hooks/useAudioLevel";
 import { usePerformanceMetrics } from "./hooks/usePerformanceMetrics";
 import { useVoiceSession } from "./hooks/useVoiceSession";
+import intelLogo from "./assets/Intel-logo-2022.png";
 
 export default function App() {
   const [files, setFiles] = useState<File[]>([]);
@@ -52,7 +53,7 @@ export default function App() {
   };
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1800px] flex-col gap-4 p-4 lg:px-6">
+    <div className="flex h-full w-full flex-col gap-4 p-4 lg:px-6">
       {/* Header */}
       <header className="flex items-center justify-between rounded-xl bg-intel-blue px-4 py-3 text-white shadow-sm">
         <div>
@@ -61,11 +62,7 @@ export default function App() {
             Upload a document, then ask questions with your voice.
           </p>
         </div>
-        {ingestedName && (
-          <span className="rounded-full border border-white/40 bg-white/15 px-3 py-1 text-xs text-white">
-            Knowledge base: {ingestedName}
-          </span>
-        )}
+        <img src={intelLogo} alt="Intel" className="h-9 w-auto shrink-0" />
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[320px_1fr] xl:grid-cols-[320px_minmax(0,1fr)_360px]">

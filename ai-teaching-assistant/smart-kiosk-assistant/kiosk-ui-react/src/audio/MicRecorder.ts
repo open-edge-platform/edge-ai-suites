@@ -40,7 +40,9 @@ export class MicRecorder {
     this.analyser.fftSize = 1024;
     this.source.connect(this.analyser);
 
-    this.processor = this.ctx.createScriptProcessor(4096, 1, 1);
+    // Smaller callback frame reduces the chance of very short utterances
+    // ending before the first audio-process event fires.
+    this.processor = this.ctx.createScriptProcessor(1024, 1, 1);
     this.source.connect(this.processor);
     // Route through a muted gain node so onaudioprocess fires without echo.
     const mute = this.ctx.createGain();

@@ -46,6 +46,7 @@ export function useVoiceSession() {
   const sessionIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
   const startPromiseRef = useRef<Promise<void> | null>(null);
+  const sessionStartErrorRef = useRef<string | null>(null);
   const pendingChunks = useRef<ArrayBuffer[]>([]);
   const messagesRef = useRef<ChatMessage[]>([]);
   messagesRef.current = messages;
@@ -94,8 +95,11 @@ export function useVoiceSession() {
               silenceThreshold: AUDIO.silenceThreshold,
             });
             sessionIdRef.current = snap.session_id;
+            sessionStartErrorRef.current = null;
           } catch (err) {
-            setStatus(`❌ ${err instanceof Error ? err.message : "Could not start session"}`);
+            const message = err instanceof Error ? err.message : "Could not start session";
+            sessionStartErrorRef.current = message;
+            setStatus(`❌ ${message}`);
           } finally {
             startingRef.current = false;
           }
@@ -112,6 +116,7 @@ export function useVoiceSession() {
     setPartialAssistant("");
     sessionIdRef.current = null;
     startPromiseRef.current = null;
+    sessionStartErrorRef.current = null;
     pendingChunks.current = [];
     ensurePlayer();
     const recorder = new MicRecorder(AUDIO.sampleRate, AUDIO.chunkSeconds, onChunk);
@@ -135,13 +140,19 @@ export function useVoiceSession() {
     const recorder = recorderRef.current;
     recorderRef.current = null;
     if (recorder) await recorder.stop();
-    setMicAnalyser(null);    // The trailing flush above may have just kicked off session creation; wait
+    setMicAnalyser(null);
+    // The trailing flush above may have just kicked off session creation; wait
     // for it before deciding whether audio was captured.
-    if (startPromiseRef.current) await startPromiseRef.current;    await flushPending();
+    if (startPromiseRef.current) await startPromiseRef.current;
+    await flushPending();
 
     const sid = sessionIdRef.current;
     if (!sid) {
-      setStatus("No audio captured — try again.");
+      if (sessionStartErrorRef.current) {
+        setStatus(`❌ ${sessionStartErrorRef.current}`);
+      } else {
+        setStatus("No audio captured — speak a bit longer and try again.");
+      }
       return;
     }
 

@@ -20,19 +20,17 @@ function formatRate(value: number | null): string {
 
 function sparkPath(values: number[], width: number, height: number): string {
   if (values.length === 0) return "";
+  // Fixed 0-100 domain so the line can be read against the reference grid.
+  const toY = (v: number) => height - (Math.max(0, Math.min(100, v)) / 100) * height;
   if (values.length === 1) {
-    const y = height / 2;
-    return `M 0 ${y} L ${width} ${y}`;
+    const y = toY(values[0]);
+    return `M 0 ${y.toFixed(2)} L ${width} ${y.toFixed(2)}`;
   }
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
 
   return values
     .map((v, i) => {
       const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / span) * height;
+      const y = toY(v);
       return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ");
@@ -42,10 +40,34 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   const width = 160;
   const height = 80;
   const d = sparkPath(values, width, height);
+  // Reference lines at 0, 25, 50, 75, 100 percent.
+  const ticks = [0, 25, 50, 75, 100];
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-20 w-full rounded border border-blue-200 bg-white">
-      {d ? <path d={d} fill="none" stroke={color} strokeWidth="2" /> : null}
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      className="h-20 w-full rounded border border-blue-200 bg-white"
+    >
+      {ticks.map((t) => {
+        const y = height - (t / 100) * height;
+        return (
+          <g key={t}>
+            <line
+              x1={0}
+              y1={y}
+              x2={width}
+              y2={y}
+              stroke="#e5e7eb"
+              strokeWidth={t === 0 || t === 100 ? 1 : 0.5}
+            />
+            <text x={2} y={y - 1.5} fontSize={7} fill="#9ca3af">
+              {t}
+            </text>
+          </g>
+        );
+      })}
+      {d ? <path d={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" /> : null}
     </svg>
   );
 }
