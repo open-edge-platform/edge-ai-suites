@@ -58,6 +58,14 @@ async def _oom_handler(request: Request, exc: OomError):
     )
 
 
+@app.on_event("shutdown")
+def _shutdown_model_manager():
+    """Drain in-flight capability work and release device (GPU) memory on exit."""
+    from model_manager import ModelManager
+    logger.info("Shutdown: draining capabilities and releasing devices...")
+    ModelManager.instance().shutdown()
+
+
 def system_check():
     if (not system_checker.check_system_requirements()) and (not system_checker.show_warning_and_prompt_user_to_continue()):
         sys.exit(1)

@@ -1,12 +1,12 @@
-# Guide: Testing Pallet Defect Detection (PDD) Application Using Balluff SDK
+# Integrate Balluff SDK Into The Pallet Defect Detection Application
 
-This guide explains how to create a custom Docker image based on the Intel DL Streamer Pipeline Server, with Balluff SDK and Gencamsrc support. It supports Balluff, Basler, and other GenICam-compatible cameras over USB and GigE interfaces.
+This guide explains how to create a custom Docker image based on the DL Streamer Pipeline Server, with Balluff SDK and Gencamsrc support. It supports Balluff, Basler, and other GenICam-compatible cameras over USB and GigE interfaces.
 
-Note: You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
+> **Note:** You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](../../get-started/vision-system-requirements.md)
 
 ## Cloning and building the docker image
 
@@ -77,7 +77,7 @@ docker compose up -d
 
 ### Step 5: Run a test pipeline and dump the camera output into a file in the /tmp directory
 
-Note down serial number of the balluff camera and update `<balluff-camera-serial>` in the following command:
+Note down serial number of the Balluff camera and update `<balluff-camera-serial>` in the following command:
 
 ```bash
 docker exec -it dlstreamer-pipeline-server bash
@@ -107,7 +107,6 @@ Update the `.env` file with the newly created image as below and modify any othe
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-balluff
 ```
 
-
 ### Step 3: Run the Setup Script
 
 Execute the setup script to initialize project directories and configurations.
@@ -129,7 +128,7 @@ Update the pipeline in `./apps/pallet-defect-detection/configs/pipeline-server-c
 }
 ```
 
-Replace <camera id> with balluff/balser camera id connected over the USB or GigE
+Replace `<camera id>` with Balluff/Basler camera ID connected over the USB or GigE
 
 ### Step 5: Configure docker-compose.yml (Optional, if testing with a GigE network camera)
 
@@ -165,7 +164,8 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 
 Start all required services using Docker Compose:
 
->If you're running multiple instances of app, start the services using `./run.sh up` instead.
+> **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+
 ```bash
 docker compose up -d
 ```
@@ -214,8 +214,9 @@ https://<HOST_IP>/mediamtx/pdd/
 ```
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
->Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
->If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
+> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ## Troubleshooting
 

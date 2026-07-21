@@ -1,47 +1,31 @@
-from components.asr_component import ASRComponent
-from components.summarizer_component import SummarizerComponent
 from utils.config_loader import config
 from model_manager import ModelManager
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 def preload_models():
-    """Preload models based on config.yaml enabled flags."""
+    """Preload models at startup."""
     
-    # Build list of enabled capabilities
-    enabled_capabilities = []
-    
-    # Check if OCR is enabled
-    if hasattr(config.models, 'ocr') and hasattr(config.models.ocr, 'enabled'):
-        if config.models.ocr.enabled:
-            enabled_capabilities.append('ocr')
-            logger.info("OCR enabled in config")
-        else:
-            logger.info("OCR disabled in config - skipping")
-    
-    # ASR is always enabled (check for provider presence)
-    if hasattr(config.models, 'asr') and hasattr(config.models.asr, 'provider'):
-        if config.models.asr.provider:
-            enabled_capabilities.append('asr')
-            logger.info("ASR will be loaded (provider configured)")
-    
-    # Load enabled capabilities via ModelManager
-    if enabled_capabilities:
-        logger.info(f"Loading capabilities via ModelManager: {enabled_capabilities}")
-        mgr = ModelManager.instance()
-        mgr.warmup(enabled_capabilities)
+    registry = getattr(config.models, "capability_registry", None) or []
+    to_warm = [
+        capability
+        for capability in registry
+        if getattr(config.models, capability, None) is not None
+        and getattr(getattr(config.models, capability), "enabled", True)
+    ]
+
+    if (
+        hasattr(config.models, "asr")
+        and getattr(config.models.asr, "provider", None)
+        and "asr" not in to_warm
+    ):
+        to_warm.append("asr")
+
+    if to_warm:
+        logger.info(f"Warming ModelManager capabilities: {to_warm}")
+        ModelManager.instance().warmup(to_warm)
         logger.info("ModelManager warmup complete")
     else:
         logger.warning("No capabilities enabled - skipping ModelManager warmup")
-    
-    # Load summarizer (not yet managed by ModelManager)
-    if hasattr(config.models, 'summarizer'):
-        logger.info("Loading Summarizer component")
-        SummarizerComponent(
-            session_id="startup",
-            provider=config.models.summarizer.provider,
-            model_name=config.models.summarizer.name,
-            temperature=config.models.summarizer.temperature,
-            device=config.models.summarizer.device
-        )

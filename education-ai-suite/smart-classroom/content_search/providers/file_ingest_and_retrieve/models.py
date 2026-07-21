@@ -55,7 +55,7 @@ def get_document_embedding_model():
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / doc_model_path
         if not is_model_ready(local_path):
-            from providers.vlm_openvino_serving.utils.utils import convert_model
+            from components.vlm.vlm_openvino_serving.utils.utils import convert_model
 
             logger.info(f"Converting document embedding model {doc_model_path} to OV IR (first run)")
             convert_model(doc_model_path, str(local_path), model_type="embedding")
