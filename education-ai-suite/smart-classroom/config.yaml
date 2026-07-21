@@ -12,11 +12,6 @@ monitoring:
   execution_logs: monitoring/executionlogs
 
 models:
-  # Registry of ModelManager-backed capabilities to warm up at startup.
-  # Add a capability name here (it must also have \enabled: true\ in its own
-  # block below, e.g. models.ocr.enabled) and preload_models() will call
-  # ModelManager.instance().warmup([...]) for it automatically -- no code
-  # changes needed in preload_models.py to add/remove a capability.
   capability_registry:
     - ocr
     - text_gen
@@ -268,7 +263,6 @@ models:
     max_new_tokens: 5120
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
-
 
 mindmap:
   system_prompt:

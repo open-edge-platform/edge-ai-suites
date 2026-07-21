@@ -1,23 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Re-exposed OpenAI-compatible chat endpoint backed by the warm in-process VLM.
-
-``POST /v1/chat/completions`` replaces the retired standalone :9900
-``vlm-openvino-serving`` microservice. It maps the same ``ChatRequest`` wire
-schema onto ``ModelManager.text_gen().generate(...)`` so content-search (Q&A and
-video summarization) shares the single warm VLM and its FIFO queue.
-
-The non-streaming response is byte-identical to the retired server's
-``ChatCompletionResponse`` (both content-search clients POST ``stream: false``
-and read ``choices[0].message.content``). ``stream: true`` requests receive
-OpenAI ``chat.completion.chunk`` SSE deltas.
-
-Back-pressure/OOM: ``generate`` routes through the CapabilityRunner, so a
-saturated queue raises ``QueueFullError`` and GPU/CPU memory pressure raises
-``OomError`` -- both intentionally propagate to the app-level exception handlers
-in ``main.py`` that map them to HTTP 503 + ``Retry-After``.
-"""
 
 from __future__ import annotations
 
@@ -46,15 +29,7 @@ _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
 
 def _import_vlm_serving() -> SimpleNamespace:
-    """Import the VLM serving data models + image loader.
 
-    The ``vlm_openvino_serving`` package now lives under ``components/vlm`` and is
-    imported from the main app tree. Its ``utils`` module still reuses
-    ``providers.utils.model_utils`` from content_search, so that directory is
-    *appended* (never inserted at the front) to avoid shadowing the main app's
-    own ``api``/``utils`` packages. ``load_images`` pulls OpenVINO/PIL, so the
-    import is done lazily on first request rather than at app import time.
-    """
     if str(_CONTENT_SEARCH_DIR) not in sys.path:
         sys.path.append(str(_CONTENT_SEARCH_DIR))
     from components.vlm.vlm_openvino_serving.utils.data_models import (  # noqa: E402
@@ -79,7 +54,6 @@ def _import_vlm_serving() -> SimpleNamespace:
 
 
 def _extract_prompt_and_images(messages, mods: SimpleNamespace):
-    """Mirror the retired server: pull prompt + image URLs from the last user turn."""
     last_user_message = next(
         (m for m in reversed(messages) if m.role == "user"), None
     )
@@ -102,7 +76,6 @@ def _extract_prompt_and_images(messages, mods: SimpleNamespace):
 
 
 def _model_name(requested: Optional[str]) -> str:
-    """Prefer the configured warm-VLM name (matches the retired server behaviour)."""
     try:
         from utils.config_loader import config
 
@@ -115,7 +88,6 @@ def _model_name(requested: Optional[str]) -> str:
 
 
 def _sse_stream(token_iter: Iterator[str], model_name: str) -> Iterator[str]:
-    """Serialize decoded tokens as OpenAI ``chat.completion.chunk`` SSE events."""
     created = int(time.time())
     completion_id = f"chatcmpl-{uuid.uuid4().hex}"
 
