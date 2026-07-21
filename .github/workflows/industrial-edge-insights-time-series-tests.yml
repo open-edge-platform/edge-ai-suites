@@ -154,6 +154,8 @@ jobs:
           BUILD: ${{ inputs.build || 'yes' }}
           WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
+          # Trim whitespace from BUILD
+          BUILD="$(echo "$BUILD" | xargs)"
           if [[ -n "$WEEKLY_BUILD_DATE_INPUT" && "$BUILD" != "no" ]]; then
             echo "Error: 'weekly_build_date' is only supported when build=no."
             echo "Current values: build=$BUILD, weekly_build_date=$WEEKLY_BUILD_DATE_INPUT"
