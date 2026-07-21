@@ -4,11 +4,16 @@
 image:
   registry: ""
   repository: openvino/model_server
-  tag: "2026.1-gpu"
+  tag: "2026.2.1-gpu"
 
 sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
 task: "text_generation"
 runAsUser: 5000
+
+targetDevice:
+  device: "NPU"
+  key: "npu.intel.com/i915"
+  count: 1
 
 modelStorage:
   storageClassName: ""

@@ -46,15 +46,6 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
-### E. Enable OCR Features (Optional)
-
-If you need OCR functionality for document text extraction, enable OCR in `config.yaml`:
-
-```yaml
-ocr:
-  enabled: true
-```
-
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -102,6 +93,26 @@ content_search:
     document_max_mb: 100    # maximum upload size for documents (MB)
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
+
+### D. Enable OCR Features (Optional)
+
+If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
+
+```yaml
+models:
+  ocr:
+    enabled: true
+```
+
+Board OCR is supported to extract text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report.
+
+```yaml
+board_ocr:
+  enabled: true        # requires ocr.enabled: true
+  frame_rate: "1/3"    # frames per second sampled from the board video
+```
+
+> **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 

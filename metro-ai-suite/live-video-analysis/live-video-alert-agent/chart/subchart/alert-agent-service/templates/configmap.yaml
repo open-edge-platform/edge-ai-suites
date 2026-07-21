@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{- if or .Values.subscriptions .Values.subscriptionDefault }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alert-agent-service.fullname" . }}-config
+  labels:
+    {{- include "alert-agent-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: alert-agent-service
+data:
+  config.yaml: |
+    # Managed by Helm — subscription defaults for alert-agent-service.
+    # Edit .Values.subscriptions / .Values.subscriptionDefault to change rules.
+    {{- if .Values.subscriptionDefault }}
+    default:
+      {{- toYaml .Values.subscriptionDefault | nindent 6 }}
+    {{- end }}
+    {{- if .Values.subscriptions }}
+    subscriptions:
+      {{- toYaml .Values.subscriptions | nindent 6 }}
+    {{- end }}
+{{- end }}

@@ -1,5 +1,9 @@
 # Release Notes: Smart Classroom
 
+<!--## Version 2026.2-->
+
+<!--date TBD-->
+
 ## Version 2026.1
 
 **June 17, 2026**

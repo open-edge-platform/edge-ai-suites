@@ -7,10 +7,8 @@ import unicodedata
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
-from components.asr.openai.whisper import Whisper as OA_Whisper
 from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
-from components.asr.openvino.whisper import Whisper as OV_Whisper
-from components.asr.funasr.paraformer import Paraformer
+from model_manager import ModelManager
 import logging
 logger = logging.getLogger(__name__)
 
@@ -49,40 +47,41 @@ LABEL_SPEAKER = LABELS["speaker"]
 
 class ASRComponent(PipelineComponent):
 
-    _model = None
-    _config = None
-
-    def __init__(self, session_id, provider="openai", model_name="whisper-small", device="CPU", temperature=0.0):
-
+    def __init__(self, session_id, temperature=0.0):
+        """Initialize ASRComponent.
+        
+        Args:
+            session_id: Unique session identifier
+            temperature: Temperature parameter for ASR transcription (0.0 = deterministic)
+        
+        Note:
+            ASR model (provider, device, model_name) is managed by ModelManager
+            and configured via config.yaml. No need to pass these parameters.
+        """
         self.session_id = session_id
         self.temperature = temperature
-        self.provider = provider
-        self.model_name = model_name
         self.speaker_text_len = {}
         self.threads_limit = THREADS_LIMIT
         self.max_chars_per_segment = MAX_CHARS_PER_SEGMENT
         self.enable_diarization = ENABLE_DIARIZATION
         self.all_segments = []
 
-        # ✅ REQUIRED STATE
         self.pending_segments = []
         self.last_known_speaker = None
 
-        provider, model_name = provider.lower(), model_name.lower()
-        model_config_key = (provider, model_name, device)
-
-        if ASRComponent._model is None or ASRComponent._config != model_config_key:
-            if provider == "openai" and "whisper" in model_name:
-                ASRComponent._model = OA_Whisper(model_name, device.lower(), None)
-            elif provider == "openvino" and "whisper" in model_name:
-                ASRComponent._model = OV_Whisper(model_name, device, None, self.threads_limit)
-            elif provider == "funasr" and "paraformer" in model_name:
-                ASRComponent._model = Paraformer(model_name, device.lower(), None)
-            else:
-                raise ValueError(f"Unsupported ASR provider/model: {provider}/{model_name}")
-            ASRComponent._config = model_config_key
-
-        self.asr = ASRComponent._model
+        # Get ASR from ModelManager (single source of truth)
+        self.asr_handler = ModelManager.instance().asr()
+        
+        # Ensure ASR is loaded
+        if not self.asr_handler.loaded:
+            logger.info("ASR not loaded yet, loading now...")
+            self.asr_handler.load()
+        
+        logger.info(f"ASRComponent using ModelManager ASR: provider={self.asr_handler.provider}, "
+                   f"model={self.asr_handler.model_name}, device={self.asr_handler.device}")
+        
+        # Get the underlying processor for transcription
+        self.asr = self.asr_handler._processor
 
         self.pyannote_diarizer = None
         if self.enable_diarization:
@@ -174,7 +173,8 @@ class ASRComponent(PipelineComponent):
         default_torch_threads = None
 
         try:
-            if self.provider in ["openai", "funasr"] and self.threads_limit:
+            # Get provider from handler (single source of truth)
+            if self.asr_handler.provider in ["openai", "funasr"] and self.threads_limit:
                 default_torch_threads = torch.get_num_threads()
                 torch.set_num_threads(self.threads_limit)
 
@@ -366,7 +366,7 @@ class ASRComponent(PipelineComponent):
             StorageManager.update_csv(
                 path=os.path.join(project_path, "performance_metrics.csv"),
                 new_data={
-                    "configuration.asr_model": f"{self.provider}/{self.model_name}",
+                    "configuration.asr_model": f"{self.asr_handler.provider}/{self.asr_handler.model_name}",
                     "performance.transcription_time": round(transcription_time, 4)
                 }
             )

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Predictive Maintenance — {{ use_case_id }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <noscript><meta http-equiv="refresh" content="15"></noscript>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <span class="logo">&#9632; Intel</span>
+      <h1>Agentic Predictive Maintenance</h1>
+      <span class="use-case-badge">{{ use_case_id }}</span>
+      <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
+        <span class="live-dot"></span>
+        <span id="pipeline-live-text">{{ 'Pipeline: RUNNING (' ~ active_run.phase ~ ')' if active_run else 'Pipeline: IDLE' }}</span>
+      </span>
+    </div>
+  </header>
+
+  <nav>
+    <a href="/" class="active">Dashboard</a>
+    <a href="/detections">Detections</a>
+  </nav>
+
+  <main>
+    <section class="card">
+      <h2>Run Pipeline</h2>
+
+      <div class="live-grid">
+        <div class="live-stat">
+          <span class="live-stat-value" id="stat-detections">
+            {{ summary.by_class | sum(attribute="count") if summary and summary.by_class else 0 }}
+          </span>
+          <span class="live-stat-label">Total detections stored</span>
+        </div>
+        <div class="live-stat">
+          <span class="live-stat-value" id="stat-runs-completed">
+            {{ runs | selectattr("status", "equalto", "completed") | list | length if runs else 0 }}
+          </span>
+          <span class="live-stat-label">Runs completed</span>
+        </div>
+        <div class="live-stat">
+          <span class="live-stat-value" id="stat-runs-running">
+            {{ runs | selectattr("status", "equalto", "running") | list | length if runs else 0 }}
+          </span>
+          <span class="live-stat-label">Runs in progress</span>
+        </div>
+      </div>
+
+      {% if summary and summary.by_class %}
+      <table id="detections-table">
+        <thead><tr><th>Class</th><th>Count</th><th>Avg Confidence</th><th>Max Confidence</th></tr></thead>
+        <tbody id="detections-tbody">
+          {% for cls in summary.by_class %}
+          <tr>
+            <td><span class="label-badge">{{ cls.label }}</span></td>
+            <td>{{ cls.count }}</td>
+            <td>{{ "%.3f"|format(cls.avg_confidence) }}</td>
+            <td>{{ "%.3f"|format(cls.max_confidence) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty" id="detections-empty">No detections yet. Click "Run Pipeline" to start.</p>
+      <table id="detections-table" style="display:none">
+        <thead><tr><th>Class</th><th>Count</th><th>Avg Confidence</th><th>Max Confidence</th></tr></thead>
+        <tbody id="detections-tbody"></tbody>
+      </table>
+      {% endif %}
+
+      <form method="POST" action="/run" class="run-now-form">
+        <fieldset class="pipeline-config" {{ 'disabled' if active_run else '' }}>
+          <legend>&#9881; Pipeline Configuration</legend>
+          <div class="config-grid">
+            <label class="config-field">
+              <span>Use Case</span>
+              <select name="use_case" disabled>
+                <option selected>{{ use_case_id }}</option>
+              </select>
+            </label>
+            <label class="config-field">
+              <span>Device</span>
+              <select name="device">
+                {% for d in devices %}
+                <option value="{{ d }}" {{ 'selected' if d == 'CPU' else '' }}>{{ d }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="config-field">
+              <span>Video</span>
+              <select name="video_filename">
+                {% if videos %}
+                  {% for v in videos %}
+                  <option value="{{ v }}">{{ v }}</option>
+                  {% endfor %}
+                {% else %}
+                  <option value="">sample.mp4 (default)</option>
+                {% endif %}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>
+          &#9654; {{ 'Running…' if active_run else 'Run Pipeline' }}
+        </button>
+        <span class="status-note" id="run-phase-hint">
+          {% if active_run %}
+            {% if active_run.phase == "detecting" %}Running DL Streamer inference over the video…
+            {% elif active_run.phase == "reasoning" %}Detection complete — agents are analyzing the results…
+            {% else %}Run in progress…{% endif %}
+          {% else %}Ready — click to run inference + agent analysis.{% endif %}
+        </span>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Recent Agent Runs</h2>
+      {% if runs %}
+      <table id="runs-table">
+        <thead><tr><th>Run ID</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="runs-tbody">
+          {% for run in runs[-10:]|reverse %}
+          <tr>
+            <td><code title="{{ run.run_id }}">{{ run.run_id[:8] }}…</code></td>
+            <td><span class="status-badge status-{{ run.status }}">{{ run.status }}{{ ' — ' ~ run.phase if run.status == 'running' and run.phase else '' }}</span></td>
+            <td>
+              {% if run.status == "completed" %}
+              <a href="/results/{{ run.run_id }}">View Results</a>
+              {% elif run.status == "running" %}
+              <a href="/results/{{ run.run_id }}">Waiting…</a>
+              {% else %}
+              <a href="/results/{{ run.run_id }}">View Error</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty" id="runs-empty">No runs yet.</p>
+      <table id="runs-table" style="display:none">
+        <thead><tr><th>Run ID</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="runs-tbody"></tbody>
+      </table>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer>
+    <p>&#169; Intel Corporation — Agentic Predictive Maintenance Blueprint</p>
+  </footer>
+
+  <script src="/static/js/live-status.js"></script>
+</body>
+</html>

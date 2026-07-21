@@ -13,9 +13,19 @@
 
 FROM ubuntu:24.04
 
+# Proxy support for corporate networks. Build args are optional; if not
+# supplied, defaults to empty (no proxy). Pass via docker build --build-arg
+# or docker-compose build args.
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \

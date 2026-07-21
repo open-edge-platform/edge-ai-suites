@@ -24,14 +24,16 @@ Choose **one** of the following approaches to get the Helm charts:
 
 1. Download Helm chart:
 
+   Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
+   
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.1.0
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.2.0-<date>-weekly
     ```
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.1.0.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.2.0-<date>-weekly.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
