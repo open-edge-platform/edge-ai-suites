@@ -15,8 +15,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi_utils.tasks import repeat_every
-from providers.vlm_openvino_serving.utils.common import ErrorMessages, logger, settings
-from providers.vlm_openvino_serving.utils.data_models import (
+from .utils.common import ErrorMessages, logger, settings
+from .utils.data_models import (
     ChatCompletionChoice,
     ChatCompletionDelta,
     ChatCompletionResponse,
@@ -24,7 +24,7 @@ from providers.vlm_openvino_serving.utils.data_models import (
     MessageContentImageUrl,
     MessageContentText,
 )
-from providers.vlm_openvino_serving.utils.utils import (
+from .utils.utils import (
     convert_model,
     is_model_ready,
     load_images,

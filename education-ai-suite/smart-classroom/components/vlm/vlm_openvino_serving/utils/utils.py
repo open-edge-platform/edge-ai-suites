@@ -5,6 +5,7 @@ import base64
 import multiprocessing
 import os
 import random
+import sys
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, List
@@ -15,9 +16,33 @@ import torch
 import yaml
 from PIL import Image
 from providers.utils.model_utils import is_model_ready
-from providers.vlm_openvino_serving.utils.common import ErrorMessages, logger, settings
+from .common import ErrorMessages, logger, settings
 
 __all__ = ["convert_model", "is_model_ready", "load_images", "load_model_config", "setup_seed"]
+
+
+_PRECONVERTED_OV_MODELS = {
+    ("Qwen/Qwen3-VL-8B-Instruct", "int4"): "OpenVINO/Qwen3-VL-8B-Instruct-int4-ov",
+    ("Qwen/Qwen3-VL-8B-Instruct", "int8"): "OpenVINO/Qwen3-VL-8B-Instruct-int8-ov",
+}
+
+
+def _download_preconverted_ov_model(repo_id: str, cache_dir: str):
+    from huggingface_hub import snapshot_download
+
+    logger.info(f"Downloading pre-converted OpenVINO IR '{repo_id}' -> {cache_dir}")
+    snapshot_download(
+        repo_id=repo_id,
+        local_dir=cache_dir,
+        allow_patterns=[
+            "openvino_*.xml",
+            "openvino_*.bin",
+            "*.json",
+            "*.jinja",
+            "*.txt",
+        ],
+    )
+    logger.info("Pre-converted OpenVINO IR download complete.")
 
 
 def _convert_model_worker(
@@ -102,16 +127,27 @@ def convert_model(
     try:
         logger.debug(f"cache_ddir: {cache_dir}")
         require_detokenizer = model_type in ("llm", "vlm")
+        preconverted_repo = _PRECONVERTED_OV_MODELS.get((model_id, weight_format))
         if is_model_ready(Path(cache_dir), require_detokenizer=require_detokenizer):
             logger.info(f"Optimized {model_id} exist in {cache_dir}. Skip process...")
+        elif model_type == "vlm" and preconverted_repo is not None:
+            _download_preconverted_ov_model(preconverted_repo, cache_dir)
         else:
             logger.info(f"Converting {model_id} model to OpenVINO format in subprocess...")
-            process = multiprocessing.Process(
-                target=_convert_model_worker,
-                args=(model_id, cache_dir, model_type, weight_format),
-            )
-            process.start()
-            process.join()
+            _orig_pythonpath = os.environ.get("PYTHONPATH")
+            os.environ["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
+            try:
+                process = multiprocessing.Process(
+                    target=_convert_model_worker,
+                    args=(model_id, cache_dir, model_type, weight_format),
+                )
+                process.start()
+                process.join()
+            finally:
+                if _orig_pythonpath is None:
+                    os.environ.pop("PYTHONPATH", None)
+                else:
+                    os.environ["PYTHONPATH"] = _orig_pythonpath
             if process.exitcode != 0:
                 raise RuntimeError(
                     f"Model conversion subprocess failed with exit code {process.exitcode}"

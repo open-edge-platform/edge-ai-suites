@@ -12,6 +12,10 @@ monitoring:
   execution_logs: monitoring/executionlogs
 
 models:
+  capability_registry:
+    - ocr
+    - text_gen
+
   asr:
     provider: openai # openvino, funasr and openai supported
     name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
@@ -239,15 +243,26 @@ models:
     min_score: 0.65
 
   ocr:
-    enabled: false # Set to false to disable OCR features
+    enabled: true # Set to false to disable OCR features
     provider: openvino # native or openvino
     device: CPU # CPU or GPU
+    concurrency: 2    # CapabilityRunner max_concurrency (worker pool size)
+    queue_max: 16     # CapabilityRunner queue depth before 503 backpressure
     model_dir: models/ocr # Base directory for OCR models
     ocr_version: PP-OCRv6
     det_model: PP-OCRv6_small_det
     rec_model: PP-OCRv6_small_rec
     cls_model: PP-LCNet_x1_0_doc_ori
 
+  text_gen:
+    enabled: true 
+    provider: vlm
+    vlm_name: Qwen/Qwen3-VL-8B-Instruct
+    device: GPU # GPU or CPU
+    weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
+    max_new_tokens: 5120
+    concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
+    queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
 
 mindmap:
   system_prompt:
@@ -436,12 +451,13 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
-    model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
+    model_name: "Qwen/Qwen3-VL-8B-Instruct"
     host_addr: "127.0.0.1"
-    port: 9900
+    port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
     device: "GPU"
     weight_format: "int8"
     ingest_enabled: true
+    stream: false  
 
   video_preprocess:
     host_addr: "127.0.0.1"

@@ -8,6 +8,7 @@ from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
 from components.mindmap_component import MindmapComponent
 from components.segmentation.content_segmentation import ContentSegmentationComponent
+from model_manager import ModelManager
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import markdown_to_plain
@@ -33,23 +34,25 @@ class Pipeline:
         self.summarizer_pipeline = [
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
         ]
+        
+        text_gen_handler = ModelManager.instance().text_gen()
 
         self.mindmap_component = MindmapComponent(
                 self.session_id,
-                provider=config.models.summarizer.provider,
-                model_name=config.models.summarizer.name, 
-                device=config.models.summarizer.device,
+                provider=config.models.text_gen.provider,
+                model_name=config.models.text_gen.vlm_name,
+                device=config.models.text_gen.device,
                 temperature=config.models.summarizer.temperature,
             )
-        
-        self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
+
+        self.mindmap_component.model = text_gen_handler
 
         self.content_component = ContentSegmentationComponent(
             self.session_id,
             temperature=0.2
         )
 
-        self.content_component.model = self.summarizer_pipeline[0].summarizer
+        self.content_component.model = text_gen_handler
 
 
     def run_transcription(self, input):
