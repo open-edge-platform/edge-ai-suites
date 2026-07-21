@@ -390,10 +390,12 @@ jobs:
           }
 
           if [[ "$PULL_TS" == "true" ]]; then
-            TS_CHART_VERSION=$(grep '^version:' \
-              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/Chart.yaml" \
-              | awk '{print $2}')
+            TS_IMAGE_SUFFIX=$(grep 'image_suffix:' \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml" \
+              | head -1 | awk -F'"' '{print $2}')
+            TS_CHART_VERSION="${TS_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
             echo "Time Series Helm chart pull:"
+            echo "  image_suffix: $TS_IMAGE_SUFFIX"
             echo "  Chart version: $TS_CHART_VERSION"
             [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]] && echo "  Weekly build date: $WEEKLY_BUILD_DATE_INPUT"
             pull_and_patch_chart \
@@ -405,10 +407,12 @@ jobs:
           fi
 
           if [[ "$PULL_MM" == "true" ]]; then
-            MM_CHART_VERSION=$(grep '^version:' \
-              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/Chart.yaml" \
-              | awk '{print $2}')
+            MM_IMAGE_SUFFIX=$(grep 'image_suffix:' \
+              "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml" \
+              | head -1 | awk -F'"' '{print $2}')
+            MM_CHART_VERSION="${MM_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
             echo "Multimodal Helm chart pull:"
+            echo "  image_suffix: $MM_IMAGE_SUFFIX"
             echo "  Chart version: $MM_CHART_VERSION"
             [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]] && echo "  Weekly build date: $WEEKLY_BUILD_DATE_INPUT"
             pull_and_patch_chart \
