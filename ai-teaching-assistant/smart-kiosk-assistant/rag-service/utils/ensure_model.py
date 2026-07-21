@@ -186,6 +186,7 @@ def ensure_embedding_openvino(force: bool = False) -> str:
         model_name_or_path=emb_cfg.hf_id,
         output=output_dir,
         task="feature-extraction",
+        library_name="transformers",
         trust_remote_code=True,
         weight_format=weight_format,
     )

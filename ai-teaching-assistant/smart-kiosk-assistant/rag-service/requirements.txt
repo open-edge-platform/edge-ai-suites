@@ -15,6 +15,13 @@ nncf==2.19.0
 huggingface-hub==0.34.4
 fsspec>=2023.1.0,<=2025.3.0
 
+# datasets/pyarrow are pulled in transitively via optimum-intel. Newer pyarrow
+# (25.x) ships unsigned native DLLs that Windows Smart App Control / WDAC blocks
+# at load time ("Application Control policy has blocked this file"). Pin to an
+# older, well-established build whose DLLs are recognized as reputable.
+datasets==3.6.0
+pyarrow==16.1.0
+
 numpy==1.26.4
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.8.0+cpu

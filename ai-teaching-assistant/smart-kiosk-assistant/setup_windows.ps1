@@ -46,7 +46,7 @@ function Write-Error-Custom {
 
 function Write-Step {
     param([string]$Message)
-    Write-Host "`n→ $Message" -ForegroundColor Cyan
+    Write-Host "`n-> $Message" -ForegroundColor Cyan
 }
 
 # Get script directory and root directory
@@ -57,6 +57,120 @@ $EdgeAIDir = Join-Path $RootDir "edge-ai-libraries"
 
 Write-Header "SMART KIOSK ASSISTANT - WINDOWS 11 SETUP"
 Write-Info "Setup directory: $ScriptDir"
+
+# =============================================================================
+# STEP 0: Ensure edge-ai-libraries submodule (sparse checkout)
+# =============================================================================
+
+Write-Step "Ensuring edge-ai-libraries is available (git submodule, sparse)..."
+
+# Only the microservices actually used by the kiosk are checked out to keep the
+# clone small. Update this list if more components are needed later.
+$SparsePaths = @(
+    "microservices/audio-analyzer",
+    "microservices/text-to-speech"
+)
+
+# Relative path of the submodule from the git superproject root. This matches the
+# entry in the root .gitmodules (submodule.ai-teaching-assistant/edge-ai-libraries).
+$SubmoduleRelPath = "ai-teaching-assistant/edge-ai-libraries"
+
+# Upstream URL for the submodule, used to register it if it is not yet present in
+# the superproject's .gitmodules (e.g. when running against a fresh checkout that
+# never had the submodule added).
+$SubmoduleUrl = "https://github.com/suryam789/edge-ai-libraries.git"
+
+# Locate the enclosing git repository (the edge-ai-suites fork).
+$RepoRoot = $null
+try {
+    $RepoRoot = (git -C $RootDir rev-parse --show-toplevel 2>$null)
+}
+catch {}
+
+$hasGit = $false
+try { $null = git --version 2>$null; $hasGit = $true } catch {}
+
+if (-not $hasGit) {
+    Write-Error-Custom "git not found in PATH - cannot initialize the edge-ai-libraries submodule."
+    Write-Info "Install Git for Windows from https://git-scm.com/download/win, then re-run this script."
+    if (-not (Test-Path $EdgeAIDir)) { exit 1 }
+    Write-Info "Continuing with the existing edge-ai-libraries directory at: $EdgeAIDir"
+}
+elseif ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+    Write-Info "Not inside a git checkout - skipping submodule init."
+    if (-not (Test-Path $EdgeAIDir)) {
+        Write-Error-Custom "edge-ai-libraries not found at $EdgeAIDir and no git repo to initialize it from."
+        exit 1
+    }
+    Write-Info "Using existing edge-ai-libraries directory at: $EdgeAIDir"
+}
+else {
+    $RepoRoot = $RepoRoot.Trim()
+
+    # git writes progress and (harmless) warnings to stderr. Under the script's
+    # global "Stop" ErrorActionPreference, Windows PowerShell turns ANY native
+    # stderr output into a terminating error, so relax it just for the git work
+    # here and restore it afterwards.
+    $SavedEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    $SubmoduleAbs = Join-Path $RepoRoot $SubmoduleRelPath
+    $SubmoduleGit = Join-Path $SubmoduleAbs ".git"
+
+    if (-not (Test-Path $SubmoduleGit)) {
+        # Mirror the manual workflow:
+        #   git clone --depth 1 --filter=blob:none --sparse <url> <path>
+        #   git -C <path> sparse-checkout set microservices/audio-analyzer microservices/text-to-speech
+        # This keeps the checkout small (shallow history, blobs on demand, only the
+        # required microservices in the working tree). git writes progress to stderr,
+        # so 2>&1 | Out-Null is used (instead of 2>$null) to avoid tripping the
+        # script's "Stop" ErrorActionPreference on non-error stderr output.
+        if ((Test-Path $SubmoduleAbs) -and -not (Get-ChildItem -Force $SubmoduleAbs -ErrorAction SilentlyContinue)) {
+            Remove-Item -Force $SubmoduleAbs -ErrorAction SilentlyContinue
+        }
+        Write-Info "Cloning submodule (shallow + partial + sparse)..."
+        git clone --quiet --depth 1 --filter=blob:none --sparse $SubmoduleUrl $SubmoduleAbs 2>&1 | Out-Null
+        if (Test-Path $SubmoduleGit) {
+            git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+        }
+    }
+
+    if (Test-Path $SubmoduleGit) {
+        # Ensure the sparse paths are applied (idempotent for pre-existing clones).
+        Write-Info "Applying sparse-checkout paths: $($SparsePaths -join ', ')"
+        git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+
+        # Promote the standalone sparse clone to a real submodule of the
+        # superproject. `--force` reuses the clone already on disk instead of
+        # re-downloading, and registers the .gitmodules entry + gitlink. Only do
+        # this if the submodule is not already registered (check via git config,
+        # which stays silent on a missing key so it never trips ErrorAction Stop).
+        $null = git -C $RepoRoot config --file .gitmodules --get "submodule.$SubmoduleRelPath.url" 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Info "Registering as git submodule..."
+            git -c core.autocrlf=false -C $RepoRoot submodule add --force $SubmoduleUrl $SubmoduleRelPath 2>&1 | Out-Null
+        }
+
+        $ok = $true
+        foreach ($p in $SparsePaths) {
+            if (-not (Test-Path (Join-Path $SubmoduleAbs $p))) { $ok = $false }
+        }
+        $ErrorActionPreference = $SavedEAP
+        if ($ok) {
+            Write-Success "edge-ai-libraries submodule ready (sparse) at: $SubmoduleAbs"
+        }
+        else {
+            Write-Error-Custom "Submodule checkout is missing expected microservice paths."
+            exit 1
+        }
+    }
+    else {
+        $ErrorActionPreference = $SavedEAP
+        Write-Error-Custom "Failed to clone the edge-ai-libraries submodule."
+        Write-Info "Try manually: git clone --depth 1 --filter=blob:none --sparse `"$SubmoduleUrl`" `"$SubmoduleAbs`""
+        exit 1
+    }
+}
 
 # =============================================================================
 # STEP 1: Check Python Installation
@@ -169,11 +283,27 @@ function Ensure-WindowsVenv {
     $PythonExe = Join-Path $VenvPath "Scripts\python.exe"
 
     if (Test-Path $PythonExe) {
-        Write-Info "Virtual environment ready for $($Service.Name)"
-        return
-    }
+        # A python.exe alone is not enough - a venv created without pip (or a
+        # partially-created one) will fail later. Verify pip and bootstrap it via
+        # ensurepip if missing; only recreate the venv as a last resort.
+        & $PythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Info "Virtual environment ready for $($Service.Name)"
+            return
+        }
 
-    if (Test-Path $VenvPath) {
+        Write-Info "venv for $($Service.Name) is missing pip; bootstrapping with ensurepip..."
+        & $PythonExe -m ensurepip --default-pip *> $null
+        & $PythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "pip bootstrapped for $($Service.Name)"
+            return
+        }
+
+        Write-Info "ensurepip failed for $($Service.Name); recreating the virtual environment..."
+        Remove-Item -Recurse -Force $VenvPath
+    }
+    elseif (Test-Path $VenvPath) {
         Write-Info "Existing venv for $($Service.Name) is missing Windows python executable; recreating..."
         Remove-Item -Recurse -Force $VenvPath
     }
@@ -184,6 +314,15 @@ function Ensure-WindowsVenv {
         python -m venv venv
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $PythonExe)) {
             throw "venv creation failed"
+        }
+        # Make sure pip exists inside the freshly created venv.
+        & $PythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -ne 0) {
+            & $PythonExe -m ensurepip --default-pip *> $null
+        }
+        & $PythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "venv created but pip is unavailable"
         }
         Write-Success "Virtual environment created for $($Service.Name)"
     }
@@ -231,6 +370,11 @@ foreach ($Service in $Services) {
     
     Write-Step "Installing dependencies for $($Service.Name)..."
     try {
+        # Guard against a venv that lost pip (e.g. created without ensurepip).
+        & $PythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -ne 0) {
+            & $PythonExe -m ensurepip --default-pip *> $null
+        }
         & $PythonExe -m pip install --upgrade pip setuptools wheel | Out-Null
         & $PythonExe -m pip install -r $RequirementsFile
         

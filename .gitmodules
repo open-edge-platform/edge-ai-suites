@@ -74,3 +74,6 @@
 	path = metro-ai-suite/agentic-rag
 	url = https://github.com/opea-project/GenAIExamples.git
 	shallow = true
+[submodule "ai-teaching-assistant/edge-ai-libraries"]
+	path = ai-teaching-assistant/edge-ai-libraries
+	url = https://github.com/suryam789/edge-ai-libraries.git
