@@ -20,6 +20,11 @@ on:
         required: false
         type: string
         default: 'yes'
+      weekly_build_date:
+        description: 'Weekly build date for Docker images (YYYYMMDD) eg: 20260721. Used only when build=no.'
+        required: false
+        type: string
+        default: ''
       tests:
         description: >
           Which tests to run. Use 'all-tests', 'timeseries-all', 'timeseries-functional', or 'multimodal-all' to run a group,
@@ -71,6 +76,11 @@ on:
         required: false
         type: string
         default: 'yes'
+      weekly_build_date:
+        description: 'Weekly build date for Docker images (YYYYMMDD) eg: 20260721. Used only when build=no.'
+        required: false
+        type: string
+        default: ''
       tests:
         description: >
           Which tests to run. Use 'all-tests', 'timeseries-all', 'timeseries-functional', or 'multimodal-all' to run a group,
@@ -139,6 +149,17 @@ jobs:
           echo "include_gpu_tests: $INCLUDE_GPU_TESTS"
           echo "skip_long_tests : $SKIP_LONG_TESTS"
 
+      - name: Validate weekly_build_date input usage
+        env:
+          BUILD: ${{ inputs.build || 'yes' }}
+          WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
+        run: |
+          if [[ -n "$WEEKLY_BUILD_DATE_INPUT" && "$BUILD" != "no" ]]; then
+            echo "Error: 'weekly_build_date' is only supported when build=no."
+            echo "Current values: build=$BUILD, weekly_build_date=$WEEKLY_BUILD_DATE_INPUT"
+            exit 1
+          fi
+
       - name: Checkout edge-ai-suites repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -169,6 +190,36 @@ jobs:
           ref: ${{ env.EDGE_AI_LIBRARIES_REF }}
           path: edge-ai-libraries
           persist-credentials: false
+
+      - name: Update WEEKLY_BUILD_DATE in .env files
+        if: ${{ (inputs.build || 'yes') == 'no' }}
+        env:
+          WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
+        run: |
+          if [[ -z "$WEEKLY_BUILD_DATE_INPUT" ]]; then
+            echo "weekly_build_date input is empty; keeping existing .env values"
+            exit 0
+          fi
+
+          update_weekly_build_date() {
+            local env_file="$1"
+
+            if [[ ! -f "$env_file" ]]; then
+              echo "Skipping missing file: $env_file"
+              return
+            fi
+
+            if grep -q '^WEEKLY_BUILD_DATE=' "$env_file"; then
+              sed -i "s|^WEEKLY_BUILD_DATE=.*|WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}|" "$env_file"
+            else
+              echo "WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}" >> "$env_file"
+            fi
+            echo "Updated WEEKLY_BUILD_DATE in $env_file"
+          }
+
+          update_weekly_build_date "${{ github.workspace }}/edge-ai-libraries/microservices/time-series-analytics/docker/.env"
+          update_weekly_build_date "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env"
+          update_weekly_build_date "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"
 
       - name: Building Time Series Analytics microservices
         if: ${{ (inputs.build || 'yes') == 'yes' }}
@@ -324,6 +375,7 @@ jobs:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           INCLUDE_GPU_TESTS: ${{ inputs.include_gpu_tests || 'no' }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+          WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
           # Core time-series test files excluding security.
           TIMESERIES_CORE_TESTS="test_docker_deployment_stability \
@@ -390,13 +442,22 @@ jobs:
             )
           fi
 
+          # For weekly builds, skip KPI/chart-generation tests that are not applicable.
+          WEEKLY_EXCLUDE_ARGS=()
+          if [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]]; then
+            echo "weekly_build_date is set (${WEEKLY_BUILD_DATE_INPUT}); excluding test_container_sizes_kpi, test_build_time_kpi, and test_gen_chart"
+            WEEKLY_EXCLUDE_ARGS=(
+              -k "not test_container_sizes_kpi and not test_build_time_kpi and not test_gen_chart"
+            )
+          fi
+
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
           echo "========== Collecting time-series core tests =========="
           if [[ "$RUN_ALL_TS" == "true" ]]; then
-            pytest --collect-only -q "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" 2>&1 || true
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${WEEKLY_EXCLUDE_ARGS[@]}" "${IGNORE_ARGS[@]}" 2>&1 || true
           else
-            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}" 2>&1 || true
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${WEEKLY_EXCLUDE_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}" 2>&1 || true
           fi
           echo "======================================"
           echo ""
@@ -405,11 +466,11 @@ jobs:
           set +e
           if [[ "$RUN_ALL_TS" == "true" ]]; then
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_core_report/report.html \
-              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" \
+              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${WEEKLY_EXCLUDE_ARGS[@]}" "${IGNORE_ARGS[@]}" \
               --ignore=test_docker_helm_deployment_security.py
           else
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_core_report/report.html \
-              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}"
+              --junitxml=/tmp/test_timeseries_core_report/junit.xml "${MARKER_ARGS[@]}" "${WEEKLY_EXCLUDE_ARGS[@]}" "${TS_CORE_TEST_FILES[@]}"
           fi
           PYTEST_RC=$?
           set -e
