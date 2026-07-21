@@ -99,6 +99,35 @@ def read_board_ocr(session_id: Optional[str]) -> dict:
     }
 
 
+def _normalize_board_text(raw: str) -> str:
+    """Flatten the newline-heavy per-frame OCR text into one readable line per slide/frame.
+
+    board_ocr.txt records join their recognized lines with '\\n' and frames are joined with
+    '\\n\\n'; feeding that raw shred of newlines makes downstream LLMs emit fragmented
+    keywords. Collapse intra-frame lines to spaces and keep one frame per line so consumers
+    see coherent slide-level text.
+    """
+    if not raw:
+        return ""
+    frames = [f for f in raw.split("\n\n") if f.strip()]
+    slides = []
+    for frame in frames:
+        lines = [ln.strip() for ln in frame.splitlines() if ln.strip()]
+        if lines:
+            slides.append(" ".join(lines))
+    return "\n".join(slides)
+
+
+def read_board_ocr_text_only(session_id: Optional[str]) -> str:
+    """Return the combined board OCR text for a session, normalized to one line per frame,
+    or "" if none is available. Non-raising."""
+    try:
+        board = read_board_ocr(session_id)
+    except HTTPException:
+        return ""
+    return _normalize_board_text(board.get("text") or "")
+
+
 def summarize_board_ocr(session_id: Optional[str]) -> dict:
     """Summarize the board OCR text via VLM/LLM.
 
