@@ -77,3 +77,6 @@
 [submodule "ai-teaching-assistant/edge-ai-libraries"]
 	path = ai-teaching-assistant/edge-ai-libraries
 	url = https://github.com/suryam789/edge-ai-libraries.git
+[submodule "ai-teaching-assistant/voice-enabled-interactions"]
+	path = ai-teaching-assistant/voice-enabled-interactions
+	url = https://github.com/suryam789/voice-enabled-interactions.git

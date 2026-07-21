@@ -1,0 +1,62 @@
+# =============================================================================
+# AI Teaching Assistant — rag-service dependencies (Windows / local-only)
+# =============================================================================
+# This is a curated subset of the voice-enabled-interactions submodule's
+# rag-service/requirements.txt. The agentic/ordering stack (google-adk,
+# litellm, fastmcp, ...) is intentionally omitted because:
+#   * ATA disables the ordering agent (KIOSK_CORE_ORDERING_ENABLED=false and
+#     the RAG agent endpoint is unused), and
+#   * litellm builds a Rust extension that fails to install on Windows without
+#     a full Rust/Cargo toolchain.
+# rag-service imports the agentic package lazily (only when the agent endpoint
+# is called / bootstrapped), so it starts and serves RAG queries fine without
+# these packages present.
+# Keep the versions below in sync with the submodule's requirements.txt.
+# =============================================================================
+
+# google-adk requires fastapi>=0.133 — keep <1 to stay on v0 stable track
+fastapi>=0.133,<1
+uvicorn>=0.35.0
+# google-adk requires pydantic>=2.12
+pydantic>=2.12,<3
+PyYAML==6.0.2
+python-multipart==0.0.27
+
+# Document ingestion (PDF/DOCX support for RAG context upload)
+python-docx==1.1.2
+pypdf==4.3.1
+
+openvino==2026.1.0
+openvino-tokenizers
+optimum==1.26.1
+optimum-intel==1.24.0
+nncf==2.19.0
+
+huggingface-hub==0.34.4
+fsspec>=2023.1.0,<=2025.3.0
+
+numpy==1.26.4
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.8.0+cpu
+transformers==4.52.4
+tokenizers==0.21.4
+safetensors==0.6.2
+sentence-transformers==3.0.1
+
+langchain-chroma>=0.2.5
+langchain-core>=0.3.74
+chromadb>=1.0.20
+
+# Pin pyarrow (transitive via chromadb/datasets). Newer builds (e.g. 25.x) ship a
+# _parquet DLL that some Windows Application Control policies (Smart App Control /
+# WDAC) block from loading, which breaks chromadb import at runtime. 21.0.0 loads
+# fine and still satisfies datasets>=21.0.0.
+pyarrow==21.0.0
+
+# openai + aiohttp are imported at module load by services/ (ovms_llm_service),
+# so they are required even though ATA uses the local OpenVINO backend. They are
+# pure-Python/wheels and install fine on Windows. The heavier agentic packages
+# (google-adk, litellm, fastmcp) are still omitted — those are only used by the
+# ordering agent, which ATA disables and imports lazily.
+openai>=1.30.0
+aiohttp>=3.9.0
