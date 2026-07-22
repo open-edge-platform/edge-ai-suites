@@ -244,7 +244,7 @@ check_hardware:
 	echo "Hardware check passed: Intel Core Ultra $${model_num} detected."
 
 .PHONY: up_vllm
-up_vllm: check_env_variables validate_host_ip down check_models check_hardware
+up_vllm: check_env_variables validate_host_ip down check_hardware check_models
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
 	echo "Starting Docker containers..."; \
