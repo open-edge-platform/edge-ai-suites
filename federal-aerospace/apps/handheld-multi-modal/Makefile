@@ -90,7 +90,12 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	if ! grep -q "GRAFANA_PASSWORD=" $(SELF_DIR)/.env; then \
 		GRAFANA_PASSWORD=$$(openssl rand -hex 20); \
 		echo "export GRAFANA_PASSWORD=$$GRAFANA_PASSWORD" >> $(SELF_DIR)/.env; \
-                echo "Generated Grafana password"; \
+		echo "Generated Grafana password"; \
+	fi; \
+	if [ ! -d data/nginx-certs/ ]; then \
+		sudo mkdir -p data/nginx-certs/; \
+		sudo openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout data/nginx-certs/key.pem -out data/nginx-certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'; \
+		echo "Created self-signed TLS cert for localhost"; \
 	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
 
