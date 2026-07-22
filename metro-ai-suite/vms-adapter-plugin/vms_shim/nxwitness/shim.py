@@ -67,7 +67,7 @@ def _merge_object_types_into_manifest(
     ``engineManifest.typeLibrary.objectTypes`` and
     ``deviceAgentManifest.supportedTypes``. The typeIds are contributed
     generically by the configured analytics apps (via each app config's
-    ``nx_object_type_ids()``), so this VMS-side helper stays free of any
+    ``object_types()``), so this VMS-side helper stays free of any
     app-specific concepts and works for any future app.
     """
     if not type_ids:
@@ -515,19 +515,17 @@ class NxWitnessVmsShim(IVmsShim):
             )
             return
 
-        # Let each configured analytics app contribute the Nx object typeIds it
-        # emits, so the registered manifest stays in sync with config without this
-        # VMS shim knowing anything app-specific. Apps opt in by implementing
-        # nx_object_type_ids() on their config (see analytics_app_shim/).
+        # Declare each app's object typeIds in the manifest so Nx accepts the
+        # detections that we later push. Apps opt in via object_types() on their config.
         extra_type_ids: set[str] = set()
         for ca_cfg in orchestrator.config.analytics_apps:
-            provider = getattr(ca_cfg, "nx_object_type_ids", None)
+            provider = getattr(ca_cfg, "object_types", None)
             if callable(provider):
                 extra_type_ids.update(provider())
         _merge_object_types_into_manifest(manifests, extra_type_ids)
 
-        # Build the Nx device-agent settings panel from all configured apps so the
-        # bundled manifest stays generic and any app added to config.yaml shows up.
+        # Build the per-app camera settings panel (checkboxes/dropdowns) into the
+        # manifest from each app's control_params().
         apply_settings_model(manifests, list(orchestrator.config.analytics_apps))
 
         try:
@@ -593,18 +591,44 @@ class NxWitnessVmsShim(IVmsShim):
     async def _reconcile_all_pipelines(
         self, camera: Any, device_id: str, settings: dict,
     ) -> None:
-        """Reconcile pipeline state for every analytics app that supports Nx UI control.
+        """Reconcile pipeline state for every analytics app that supports VMS UI control.
 
-        Each app shim opts in by returning a non-empty dict from
-        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.nx_extract_settings`.
+        Each app shim opts in by declaring non-empty
+        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.control_params`.
         """
         if not self._orchestrator:
             return
         for app_id, shim in self._orchestrator.analytics_app_shims.items():
-            app_settings = shim.nx_extract_settings(settings)
+            app_settings = self._extract_controls(shim, settings)
             if not app_settings:
-                continue  # app opts out of Nx UI pipeline control
+                continue  # app opts out of VMS UI pipeline control
             await self._reconcile_app_pipeline(camera, device_id, app_id, shim, app_settings)
+
+    def _extract_controls(self, shim: Any, raw_settings: dict) -> dict:
+        """Map Nx device-agent values → this app's VMS-neutral control values.
+
+        Nx flattens all apps' values into one dict, namespaced as
+        ``<app_id>.<name>`` (multi-app) or flat ``<name>`` (single-app). This
+        reads each control param the app declares, coercing by its type. Returns
+        ``{}`` when the app declares no control params (opts out). This is the Nx
+        side of the neutral contract — the app never sees Nx settings shapes.
+        """
+        params = shim.control_params()
+        if not params:
+            return {}
+        app_id = shim.app_id
+        values: dict = {}
+        for p in params:
+            name = p.get("name")
+            if not name:
+                continue
+            default = p.get("default")
+            raw = raw_settings.get(f"{app_id}.{name}", raw_settings.get(name, default))
+            if p.get("type") == "bool":
+                values[name] = bool(raw)
+            else:
+                values[name] = str(raw) if raw is not None else str(default or "")
+        return values
 
     async def _reconcile_app_pipeline(
         self,
@@ -614,11 +638,11 @@ class NxWitnessVmsShim(IVmsShim):
         shim: Any,
         app_settings: dict,
     ) -> None:
-        """Generic state machine: start or stop a pipeline from Nx UI settings.
+        """Generic state machine: start or stop a pipeline from VMS UI settings.
 
-        Compares the current settings against the previous snapshot and
-        calls :meth:`~plugin.base.interfaces.IAnalyticsAppShim.nx_start` /
-        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.nx_stop` as needed.
+        Compares the current control values against the previous snapshot and
+        calls :meth:`~plugin.base.interfaces.IAnalyticsAppShim.start_for_camera` /
+        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.stop_run` as needed.
         """
         key = (device_id, app_id)
         enabled = bool(app_settings.get("pipelineEnabled", False))
@@ -629,7 +653,7 @@ class NxWitnessVmsShim(IVmsShim):
 
         if not enabled:
             if run_id:
-                ok = await shim.nx_stop(run_id)
+                ok = await shim.stop_run(run_id)
                 self._nx_pipeline_runs.pop(key, None)
                 logger.info(
                     "nx_pipeline_stopped",
@@ -645,7 +669,7 @@ class NxWitnessVmsShim(IVmsShim):
             return
 
         if run_id:
-            await shim.nx_stop(run_id)
+            await shim.stop_run(run_id)
             self._nx_pipeline_runs.pop(key, None)
 
         rtsp_url = await self.get_live_stream_url(camera.camera_id)
@@ -653,7 +677,7 @@ class NxWitnessVmsShim(IVmsShim):
             logger.error("nx_start_pipeline_no_rtsp", app_id=app_id, device_id=device_id)
             return
 
-        new_run_id = await shim.nx_start(camera.camera_id, rtsp_url, app_settings)
+        new_run_id = await shim.start_for_camera(camera.camera_id, rtsp_url, app_settings)
         if new_run_id:
             self._nx_pipeline_runs[key] = new_run_id
             logger.info(

@@ -799,15 +799,15 @@ docker compose down
 
 ## Summary
 
-| **Step**                                     | **Where**                              |
-|----------------------------------------------|----------------------------------------|
-| Start dls_vision with MQTT exposed on port 1883      | dls_vision `docker compose up -d`            |
-| Configure Nx Witness connection in VAP `.env` | `metro-ai-suite/vms-adapter-plugin/.env`     |
-| Configure `label_type_map` in `config.yaml`   | `config/config.yaml`                  |
-| Start VAP (integration auto-registers)        | `docker compose up -d --build`        |
-| Enable integration for cameras in Nx          | Nx Witness client → Camera Settings   |
-| Discover cameras in VAP dashboard             | Dashboard → Discover Cameras          |
-| Enable cameras in VAP dashboard               | Dashboard → Camera toggle             |
-| Start a pipeline run                          | Dashboard → Analytics Engine → Start  |
-| View detection overlays                       | Nx Witness client → live camera feed  |
-| Stop the run                                  | Dashboard → Analytics Engine → Stop   |
+| **Step** | **Where** |
+|---|---|
+| Start dls_vision with MQTT broker exposed to host | `metro-vision-ai-app-recipe/loitering-detection/` → `docker compose up -d` |
+| **Nx Witness:** install Server + Client, add cameras, enable digest auth, enable API Integrations | Nx Witness Desktop Client |
+| Configure Nx Witness connection and MQTT settings in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
+| Configure `app_id`, `display_name`, `label_type_map` in `config.yaml` | `config/config.yaml` |
+| Start VAP (integration auto-registers on startup) | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
+| Discover cameras | Dashboard → Discover Cameras |
+| Enable cameras for analytics | Dashboard → Camera toggle |
+| **Nx Witness:** Start pipeline | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Enable checkbox |
+| View detection overlays | Nx Witness client → live camera feed (Objects panel) |
+| **Nx Witness:** Stop the run | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Uncheck the checkbox |

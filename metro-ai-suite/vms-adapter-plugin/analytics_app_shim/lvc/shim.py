@@ -308,34 +308,19 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
         self.unregister_run(run_id)
         return result
 
-    # ── Nx Witness UI pipeline control ─────────────────────────────────────────────
+    # ── VMS-driven pipeline control ─────────────────────────────────────────────
 
-    def nx_extract_settings(self, raw_settings: dict) -> dict:
-        """Extract LVC settings from the Nx device-agent values dict.
+    def control_params(self) -> list[dict]:
+        """Declare VMS-neutral control knobs for this app (delegates to config)."""
+        return self._config.control_params()
 
-        Tries the namespaced key ``<app_id>.<field>`` first (multi-app), then
-        the flat ``<field>`` key (single-app).
-        """
-        app_id = self._config.app_id
-        return {
-            "pipelineEnabled": bool(
-                raw_settings.get(f"{app_id}.pipelineEnabled", raw_settings.get("pipelineEnabled", False))
-            ),
-            "device": str(
-                raw_settings.get(f"{app_id}.device", raw_settings.get("device", "CPU"))
-            ),
-            "prompt": str(
-                raw_settings.get(f"{app_id}.prompt", raw_settings.get("prompt", ""))
-            ),
-        }
-
-    async def nx_start(self, camera_id: str, rtsp_url: str, settings: dict) -> str | None:
-        """Start an LVC pipeline from Nx Witness UI settings."""
+    async def start_for_camera(self, camera_id: str, stream_url: str, controls: dict) -> str | None:
+        """Start an LVC pipeline for one camera from VMS control values."""
         payload: dict = {
-            "rtspUrl": rtsp_url,
-            "device": settings.get("device", "CPU"),
+            "rtspUrl": stream_url,
+            "device": controls.get("device", "CPU"),
         }
-        prompt = settings.get("prompt", "")
+        prompt = controls.get("prompt", "")
         if prompt:
             payload["prompt"] = prompt
         pipeline_name = self._config.pipeline_name
@@ -350,7 +335,7 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
                 self.register_run(run_id, camera_id)
             return run_id or None
         except Exception as exc:
-            logger.error("nx_lvc_start_failed", error=str(exc))
+            logger.error("lvc_start_for_camera_failed", error=str(exc))
             return None
 
     async def get_run(self, run_id: str) -> dict[str, Any] | None:

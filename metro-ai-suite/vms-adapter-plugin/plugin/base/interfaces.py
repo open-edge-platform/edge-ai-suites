@@ -217,38 +217,38 @@ class IAnalyticsAppShim(ABC):
         """Stop a run by ID. Return True on success. Override in concrete shims."""
         return False
 
-    # ── Nx Witness UI pipeline control (optional) ──────────────────────────────────
+    # ── VMS-driven pipeline control (optional, VMS-agnostic) ──────────────────────────────────
 
-    def nx_extract_settings(self, raw_settings: dict) -> dict:
-        """Extract this app's relevant settings from the full Nx device-agent values dict.
+    def control_params(self) -> list[dict[str, Any]]:
+        """Declare the per-camera control knobs a VMS UI can expose for this app.
 
-        The dict keys in ``raw_settings`` may be flat (single-app deployment) or
-        namespaced as ``<app_id>.<field>`` (multi-app deployment, where the
-        ``settings_factory`` prefixes each field with the owning app's ``app_id``).
-        Implementations should handle both forms.
+        Returns a list of **VMS-neutral** parameter descriptors — no VMS
+        vocabulary. Each descriptor is a dict:
 
-        Return an **empty dict** to opt out of Nx polling-based pipeline control.
-        Default: returns empty dict (this app does not participate).
+        * ``name``        — stable field id (e.g. ``"pipelineEnabled"``, ``"device"``).
+        * ``type``        — one of ``"bool"``, ``"enum"``, ``"text"``.
+        * ``label``       — human caption.
+        * ``description`` — help text.
+        * ``default``     — default value.
+        * ``options``     — allowed values (for ``"enum"``).
+
+        By convention a ``bool`` named ``"pipelineEnabled"`` acts as the
+        start/stop toggle. A VMS shim renders these into its own settings UI and
+        maps the user's chosen values back. Return an **empty list** to opt out
+        of VMS UI pipeline control.
         """
-        return {}
+        return []
 
-    async def nx_start(self, camera_id: str, rtsp_url: str, settings: dict) -> str | None:
-        """Start a pipeline triggered by the Nx Witness UI.
+    async def start_for_camera(
+        self, camera_id: str, stream_url: str, controls: dict,
+    ) -> str | None:
+        """Start a pipeline for one camera from VMS-provided control values.
 
-        Called by the NxWitness shim polling loop when ``pipelineEnabled`` becomes
-        True or any settings field changes.  ``settings`` is the output of
-        :meth:`nx_extract_settings`.  Returns the ``run_id`` string on success,
-        or ``None`` on failure.
-        Default: no-op (returns None).
+        ``controls`` holds the values for this app's :meth:`control_params`
+        (VMS-neutral). Returns the ``run_id`` on success, or ``None`` on failure.
+        Stopping uses :meth:`stop_run`. Default: no-op (returns None).
         """
         return None
-
-    async def nx_stop(self, run_id: str) -> bool:
-        """Stop a pipeline previously started via :meth:`nx_start`.
-
-        Default: delegates to :meth:`stop_run`.
-        """
-        return await self.stop_run(run_id)
 
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Return details for a single run, or None if not found."""
