@@ -1,0 +1,166 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "alert-agent-service.fullname" . }}
+  labels:
+    {{- include "alert-agent-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: alert-agent-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "alert-agent-service.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "alert-agent-service.fullname" . }}
+        app.kubernetes.io/component: alert-agent-service
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- if or .Values.subscriptions .Values.subscriptionDefault }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "alert-agent-service.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      initContainers:
+        {{- if .Values.agentMode }}
+        - name: wait-for-ovms-llm
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-ovms-llm" .Release.Name }}:{{ .Values.global.ovmsPort }}/v2/models/{{ .Values.global.ovmsLLMModelName }}/ready; do
+                echo "waiting for OVMS LLM..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+        {{- end }}
+      containers:
+        - name: alert-agent-service
+          image: {{ include "alert-agent-service.image" (dict "registry" (coalesce .Values.image.registry .Values.global.registry) "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "alert-agent-service.proxyEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.port | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            - name: AGENT_MODE
+              value: {{ .Values.agentMode | quote }}
+            - name: LLM_URL
+              value: "http://{{ printf "%s-ovms-llm.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
+            - name: LLM_MODEL
+              value: {{ .Values.global.ovmsLLMModelName | quote }}
+            - name: LLM_TIMEOUT
+              value: {{ .Values.llmTimeout | quote }}
+            - name: SNAPSHOT_DIR
+              value: {{ .Values.snapshotDir | quote }}
+            {{- if .Values.webhookUrl }}
+            - name: WEBHOOK_URL
+              value: {{ .Values.webhookUrl | quote }}
+            {{- end }}
+            {{- if .Values.webhookSecret }}
+            - name: WEBHOOK_SECRET
+              value: {{ .Values.webhookSecret | quote }}
+            {{- end }}
+            - name: MQTT_BROKER
+              value: {{ printf "%s-mqtt" .Release.Name | quote }}
+            - name: MQTT_PORT
+              value: {{ .Values.mqttPort | quote }}
+            {{- if .Values.mqttUsername }}
+            - name: MQTT_USERNAME
+              value: {{ .Values.mqttUsername | quote }}
+            {{- end }}
+            {{- if .Values.mqttPassword }}
+            - name: MQTT_PASSWORD
+              value: {{ .Values.mqttPassword | quote }}
+            {{- end }}
+            - name: MQTT_BASE_TOPIC
+              value: {{ .Values.mqttBaseTopic | quote }}
+            - name: MCP_ENABLED
+              value: {{ .Values.mcpEnabled | quote }}
+            - name: ACTION_WORKERS
+              value: {{ .Values.actionWorkers | quote }}
+            {{- if or .Values.subscriptions .Values.subscriptionDefault }}
+            - name: SUBSCRIPTION_CONFIG_PATH
+              value: "/app/resources/config.yaml"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.startupInitialDelay }}
+            periodSeconds: {{ .Values.healthcheck.startupPeriod }}
+            timeoutSeconds: {{ .Values.healthcheck.timeout }}
+            failureThreshold: {{ .Values.healthcheck.startupFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            periodSeconds: {{ .Values.healthcheck.period }}
+            timeoutSeconds: {{ .Values.healthcheck.timeout }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            periodSeconds: {{ .Values.healthcheck.period }}
+            timeoutSeconds: {{ .Values.healthcheck.timeout }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if or .Values.subscriptions .Values.subscriptionDefault }}
+          volumeMounts:
+            - name: subscription-config
+              mountPath: /app/resources/config.yaml
+              subPath: config.yaml
+              readOnly: true
+          {{- end }}
+      {{- if or .Values.subscriptions .Values.subscriptionDefault }}
+      volumes:
+        - name: subscription-config
+          configMap:
+            name: {{ include "alert-agent-service.fullname" . }}-config
+      {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.nodeSelector | default .Values.global.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

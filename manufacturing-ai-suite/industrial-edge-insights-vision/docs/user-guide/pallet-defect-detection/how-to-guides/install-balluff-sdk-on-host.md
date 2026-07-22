@@ -7,10 +7,10 @@ The guide provides step-by-step instructions to install and configure the Balluf
 ```bash
 sudo apt update
 sudo apt-get install -y libwxbase3.2-1 \
-    			        libwxgtk3.2-dev \
-    			        libwxgtk-webview3.2-dev \
-    			        wx3.2-headers \
-    			        libexpat1-dev
+                        libwxgtk3.2-dev \
+                        libwxgtk-webview3.2-dev \
+                        wx3.2-headers \
+                        libexpat1-dev
 ```
 
 ## 2. Download and Install Impact Acquire

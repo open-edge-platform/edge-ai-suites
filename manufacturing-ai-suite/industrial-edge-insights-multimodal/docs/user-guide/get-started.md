@@ -200,9 +200,11 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
 3. Check the output in Grafana.
 
-   - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://localhost:3000` to launch Grafana from browser (preferably, chrome browser)
 
-   > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+   > **Note:** 
+   > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+   > - For remote access, set `HOST_IP` in `.env` to the host system IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.

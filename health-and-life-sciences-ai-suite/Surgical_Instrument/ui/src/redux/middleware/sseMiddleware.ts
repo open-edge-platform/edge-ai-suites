@@ -73,12 +73,39 @@ export const sseMiddleware: Middleware = (store) => {
             detectionPatch.fps = payload.metrics.fps ?? 0;
             detectionPatch.totalFrames = payload.metrics.loop_count ?? 0;
             detectionPatch.uptime = payload.metrics.uptime_s ?? 0;
+            detectionPatch.inferP50Ms = payload.metrics.infer_p50_ms ?? 0;
+            detectionPatch.inferP90Ms = payload.metrics.infer_p90_ms ?? 0;
+            detectionPatch.inferP95Ms = payload.metrics.infer_p95_ms ?? 0;
             detectionPatch.inferP99Ms = payload.metrics.infer_p99_ms ?? 0;
+            detectionPatch.totalP50Ms = payload.metrics.e2e_p50_ms ?? 0;
+            detectionPatch.totalP90Ms = payload.metrics.e2e_p90_ms ?? 0;
+            detectionPatch.totalP95Ms = payload.metrics.e2e_p95_ms ?? 0;
             detectionPatch.totalP99Ms = payload.metrics.total_p99_ms ?? 0;
           }
           if (payload.pipeline_performance !== undefined) {
+            const workloads = (payload.pipeline_performance.workloads ?? []).map((w: any) => ({
+              ...w,
+              fps: w?.fps ?? 0,
+              infer_ms: w?.infer_ms ?? 0,
+              infer_p50_ms: w?.infer_p50_ms ?? 0,
+              infer_p90_ms: w?.infer_p90_ms ?? 0,
+              infer_p95_ms: w?.infer_p95_ms ?? 0,
+              infer_p99_ms: w?.infer_p99_ms ?? 0,
+              processing_mean_ms: w?.processing_mean_ms ?? 0,
+              processing_p50_ms: w?.processing_p50_ms ?? 0,
+              processing_p90_ms: w?.processing_p90_ms ?? 0,
+              processing_p95_ms: w?.processing_p95_ms ?? 0,
+              processing_p99_ms: w?.processing_p99_ms ?? 0,
+              e2e_mean_ms: w?.e2e_mean_ms ?? 0,
+              e2e_p50_ms: w?.e2e_p50_ms ?? 0,
+              e2e_p90_ms: w?.e2e_p90_ms ?? 0,
+              e2e_p95_ms: w?.e2e_p95_ms ?? 0,
+              e2e_p99_ms: w?.e2e_p99_ms ?? 0,
+              latency_ms: w?.latency_ms ?? 0,
+              latency_p99_ms: w?.latency_p99_ms ?? 0,
+            }));
             detectionPatch.pipelinePerformance = {
-              workloads: payload.pipeline_performance.workloads ?? [],
+              workloads,
               pipeline_fps: payload.pipeline_performance.pipeline_fps ?? 0,
               decode: payload.pipeline_performance.decode ?? '',
             };

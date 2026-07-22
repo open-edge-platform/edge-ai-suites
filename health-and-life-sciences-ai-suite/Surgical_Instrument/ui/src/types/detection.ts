@@ -21,9 +21,20 @@ export interface PipelineWorkload {
   fps?: number;
   // Model-only time (GStreamer core `latency` tracer, element-latency for element=det)
   infer_ms?: number;       // mean, last 120 frames
+  infer_p50_ms?: number;
+  infer_p90_ms?: number;
+  infer_p95_ms?: number;
   infer_p99_ms?: number;   // p99,  last 120 frames
+  processing_mean_ms?: number;
+  processing_p50_ms?: number;
+  processing_p90_ms?: number;
+  processing_p95_ms?: number;
+  processing_p99_ms?: number;
   // Source→sink residence (Intel DLS `latency_tracer`, frame_latency)
   e2e_mean_ms?: number;
+  e2e_p50_ms?: number;
+  e2e_p90_ms?: number;
+  e2e_p95_ms?: number;
   e2e_p99_ms?: number;
   // Legacy aliases (same values as e2e_*) — kept for older API payloads.
   latency_ms?: number;
@@ -57,4 +68,10 @@ export interface DetectionState {
   totalFrames: number;     // running frame counter
   inferP99Ms: number;
   totalP99Ms: number;
+  inferP50Ms?: number;
+  inferP90Ms?: number;
+  inferP95Ms?: number;
+  totalP50Ms?: number;
+  totalP90Ms?: number;
+  totalP95Ms?: number;
 }

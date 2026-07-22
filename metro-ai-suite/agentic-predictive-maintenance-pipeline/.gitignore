@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.db
+*.sqlite
+services/agent_service/
+services/ui_service/
+
+# Large sample media (downloaded/generated locally, not committed)
+apps/*/resources/videos/*.mp4
+datasets/
+
+# Local Python virtual environment
+apm/
+
+# Downloaded/converted LLM models (fetched via model-download service at runtime)
+apps/*/models/llm_model*/
+
+.venv/
