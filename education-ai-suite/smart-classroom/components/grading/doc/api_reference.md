@@ -37,6 +37,7 @@ A single worker runs a task; there is never more than one worker per task.
 | POST | `/rubrics/upload` | Upload a rubric / grading-prompt file |
 | POST | `/grading/tasks` | Create a grading task (single paper or directory) |
 | GET  | `/grading/tasks` | List all tasks (optionally filtered by status) |
+| GET  | `/grading/exams/{exam_id}/summary` | Per-exam summary (`summary.json`), readable any time |
 | GET  | `/grading/tasks/{task_id}` | Task status |
 | GET  | `/grading/tasks/{task_id}/result` | Task result (only when `COMPLETED`) |
 | POST | `/grading/tasks/{task_id}/pause` | Request pause |
@@ -193,6 +194,30 @@ When `status` is supplied, `total` and `tasks` cover only the matching subset; `
 
 ---
 
+### GET `/grading/exams/{exam_id}/summary`
+
+Return the per-exam `summary.json` (`outputs/<exam_id>/summary.json`) — the aggregated per-student score table. Readable **at any time**: it does not require the task to be `COMPLETED`, so a UI can poll it while grading is still in progress and watch rows appear as each student finishes.
+
+A directory task **seeds an empty summary at creation**, so this endpoint returns `200` from the moment the task exists. Even if the file is somehow absent (e.g. a single-paper exam that never created one), the endpoint returns the same empty shell rather than `404`.
+
+**200 Response** — see the `summary.json` shape under [Output files](#summaryjson-per-exam-directory-tasks). Empty shell before any student is graded:
+```json
+{
+  "metadata": { "exam_id": "math_test_multi", "prompt_path": ".../rubrics/math_rubrics.txt" },
+  "students": {},
+  "updated_at": "2026-07-22T06:07:39+00:00",
+  "student_count": 0
+}
+```
+
+```bash
+curl -s "http://127.0.0.1:9012/api/v1/grading/exams/math_test_multi/summary"
+```
+
+**Errors:** `400` (invalid `exam_id` — must be a bare directory name; values containing `/`, `\`, or `..` are rejected); `500` (unexpected). Never `404`.
+
+---
+
 ### GET `/grading/tasks/{task_id}`
 
 Current task status. Poll this to track progress.
@@ -335,7 +360,7 @@ Written under `outputs/<exam_id>/`.
 
 ### `summary.json` (per exam, directory tasks)
 
-`outputs/<exam_id>/summary.json` — rebuilt each time a student finishes. Students are keyed by a sequential index; per-question records are collapsed to one line and use `score` (not `vlm_score`), without `student_answer`.
+`outputs/<exam_id>/summary.json` — seeded empty when a directory task is created, then rebuilt each time a student finishes. Students are keyed by a sequential index; per-question records are collapsed to one line and use `score` (not `vlm_score`), without `student_answer`.
 
 ```json
 {

@@ -334,6 +334,52 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         _append_task_log(task_id, "grading.run", f"summary update failed student={student_id} error={exc}")
 
 
+def _outputs_root() -> Path:
+    return _COMPONENT_ROOT / "outputs"
+
+
+def _validate_exam_id(exam_id: str) -> str:
+    """Reject anything that could escape the outputs/ root (path traversal)."""
+    name = str(exam_id or "").strip()
+    if not name or name in {".", ".."} or "/" in name or "\\" in name:
+        raise ValueError(f"invalid exam_id: {exam_id!r}")
+    return name
+
+
+def _empty_summary(exam_id: str, prompt_path: str | None = None) -> dict[str, Any]:
+    """The empty summary shell served before any student has been graded, and
+    seeded at directory-task creation so the summary endpoint never 404s."""
+    return {
+        "metadata": {"exam_id": exam_id, "prompt_path": prompt_path},
+        "students": {},
+        "updated_at": _now_utc_iso(),
+        "student_count": 0,
+    }
+
+
+def _seed_empty_summary(exam_id: str, prompt_path: str | None = None) -> None:
+    """Write an empty summary.json for an exam if none exists yet. Best-effort."""
+    try:
+        exam_dir = _outputs_root() / _validate_exam_id(exam_id)
+        summary_path = exam_dir / "summary.json"
+        if summary_path.exists():
+            return
+        exam_dir.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(_dump_summary(_empty_summary(exam_id, prompt_path)), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def get_exam_summary(exam_id: str) -> dict[str, Any]:
+    """Return outputs/<exam_id>/summary.json, or an empty shell if it does not
+    exist yet. Readable at any time (does not require the task to be COMPLETED)."""
+    name = _validate_exam_id(exam_id)
+    summary_path = _outputs_root() / name / "summary.json"
+    if summary_path.exists():
+        return json.loads(summary_path.read_text(encoding="utf-8"))
+    return _empty_summary(name)
+
+
 def _build_submission_key(paper_path: str, student_id: str | None) -> str:
     if student_id and str(student_id).strip():
         return str(student_id).strip()
@@ -426,6 +472,7 @@ def create_directory_grading_task(
     log_path.write_text("", encoding="utf-8")
     task = _JOB_STORE.update_job(task["job_id"], log_path=str(log_path))
     _append_task_log(task["job_id"], "grading.run", f"directory task created papers_dir={resolved}")
+    _seed_empty_summary(payload["exam_id"], rubric_path)
 
     worker = Thread(target=_run_directory_grading_task, args=(task["job_id"],), daemon=True)
     worker.start()

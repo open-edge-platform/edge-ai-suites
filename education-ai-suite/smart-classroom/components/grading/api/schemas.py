@@ -140,6 +140,13 @@ class TaskListResponse(BaseModel):
     tasks: list[TaskSummary]
 
 
+class ExamSummaryResponse(BaseModel):
+    metadata: dict
+    students: dict
+    updated_at: str | None = None
+    student_count: int = 0
+
+
 class UnifiedTaskCreateRequest(BaseModel):
     task_type: str
     payload: dict

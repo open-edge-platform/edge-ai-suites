@@ -8,6 +8,7 @@ from api.schemas import (
     GradingTaskCreateResponse,
     GradingTaskResultResponse,
     GradingTaskStatusResponse,
+    ExamSummaryResponse,
     HealthResponse,
     RubricListResponse,
     RubricUploadResponse,
@@ -15,6 +16,7 @@ from api.schemas import (
 )
 from services.grading_service_impl import (
     create_task as create_task_dispatch,
+    get_exam_summary as get_exam_summary_impl,
     get_health,
     get_task_result as get_task_result_impl,
     get_task_status as get_task_status_impl,
@@ -74,6 +76,15 @@ def create_router(language: str) -> APIRouter:
     @router.get("/grading/tasks", response_model=TaskListResponse)
     async def list_tasks(status: str | None = None) -> TaskListResponse:
         return TaskListResponse(**list_tasks_impl(status=status))
+
+    @router.get("/grading/exams/{exam_id}/summary", response_model=ExamSummaryResponse)
+    async def get_exam_summary(exam_id: str) -> ExamSummaryResponse:
+        try:
+            return ExamSummaryResponse(**get_exam_summary_impl(exam_id))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
     @router.get("/grading/tasks/{task_id}", response_model=GradingTaskStatusResponse)
     async def get_task_status(task_id: str) -> GradingTaskStatusResponse:
