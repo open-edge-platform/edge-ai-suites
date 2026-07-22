@@ -1,7 +1,19 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""FastAPI entry point for the agent-service."""
+"""FastAPI entry point for the agent-service.
+
+Detection-agnostic by design: this service never starts or polls DL Streamer
+(or any other detector) directly. It reasons over detections already present
+in the storage-service, triggered in one of two ways:
+
+  1. Event-driven (primary) — a "batch-complete" MQTT event from the
+     detection layer names an id window (``start_id``/``end_id``) that is
+     ready to reason over; see ``batch_event_subscriber.py``.
+  2. Explicit (fallback) — a direct ``POST /agents/run`` call with an
+     optional ``min_id``/``max_id`` window, useful for standalone testing
+     without a detection layer at all.
+"""
 
 import logging
 import os
@@ -10,17 +22,11 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from .meta_agent import run_pipeline
-from .mqtt_subscriber import start_subscriber
-from .utility import storage_client
-from .utility.dlstreamer_client import (
-    run_pipeline_to_completion,
-    list_available_videos,
-    PipelineRunError,
-)
+from .batch_event_subscriber import start_subscriber, set_on_batch_complete
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,46 +34,41 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# In-memory run store (keyed by run_id). Each run tracks a "phase" so the UI
-# can show real progress across the two-stage detect-then-reason cycle:
-#   "detecting" -> "reasoning" -> "completed" / "error"
+# In-memory run store (keyed by run_id). Each run tracks a "phase":
+#   "reasoning" -> "completed" / "error"
+# For event-driven runs, run_id is supplied by the detection layer (carried in
+# the batch-complete event) so the UI can correlate the detection and
+# reasoning halves of the same run.
 _runs: dict[str, dict] = {}
 
 _CONFIG_PATH  = os.environ.get("AGENTS_CONFIG_PATH", None)
 _PROMPTS_DIR  = os.environ.get("USE_CASE_PROMPTS_DIR", None)
-_DETECTION_TIMEOUT = float(os.environ.get("DLSTREAMER_RUN_TIMEOUT", "600"))
-_APM_API_KEY = os.environ.get("APM_API_KEY", "")
 
-# Only one detect-then-reason cycle may run at a time (single shared DL Streamer
-# pipeline + shared LLM/OVMS backend). New /agents/run calls are rejected with
-# 409 while a run is already in flight.
-_run_lock = threading.Lock()
+# Reasoning is serialized (single shared LLM/OVMS backend) whether triggered
+# by an MQTT event or an explicit API call. Callers must acquire this lock
+# (and set _active_run_id) before invoking `_execute_reasoning_run`, which
+# always releases both in a `finally` block.
+_reasoning_lock = threading.Lock()
 _active_run_id: str | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start MQTT subscriber (non-blocking background thread) so detection
-    # events are persisted to storage whenever the DL Streamer pipeline runs.
+    # Subscribe to "batch-complete" events from the detection layer (non-
+    # blocking background thread) so reasoning runs whenever a detection run
+    # finishes, without this service ever calling into the detection layer.
     if os.environ.get("MQTT_DISABLED", "false").lower() != "true":
+        set_on_batch_complete(_handle_batch_complete_event)
         start_subscriber()
     yield
 
 
 app = FastAPI(
     title="APM Agent Service",
-    description="Agentic Predictive Maintenance — multi-agent orchestration service",
+    description="Agentic Predictive Maintenance — multi-agent reasoning service (detection-agnostic)",
     version="1.0.0",
     lifespan=lifespan,
 )
-
-
-def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
-    """Enforce API key auth for control-plane endpoints."""
-    if not _APM_API_KEY:
-        return
-    if x_api_key != _APM_API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 # ── Request / Response models ─────────────────────────────────────────────────
@@ -75,8 +76,8 @@ def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Ke
 class RunRequest(BaseModel):
     config_path: Optional[str] = None
     prompts_dir: Optional[str] = None
-    device: Optional[str] = "CPU"
-    video_filename: Optional[str] = None
+    min_id: Optional[int] = None
+    max_id: Optional[int] = None
 
 
 class RunResponse(BaseModel):
@@ -87,47 +88,33 @@ class RunResponse(BaseModel):
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.post("/agents/run", response_model=RunResponse, status_code=202)
-async def trigger_run(
-    req: RunRequest,
-    background_tasks: BackgroundTasks,
-    _auth: None = Depends(require_api_key),
-):
-    """Trigger one full detect-then-reason cycle (async background task).
+async def trigger_run(req: RunRequest, background_tasks: BackgroundTasks):
+    """Explicitly trigger one reasoning pass over an (optional) id window.
 
-    Mirrors the reference CLI: starts the DL Streamer pipeline, waits for it to
-    finish processing the source video, then runs the 4-agent pipeline bounded
-    to exactly the detections produced by this run. Rejects a new run with 409
+    This is a fallback trigger for standalone use (no detection layer
+    involved) — the primary trigger is the "batch-complete" MQTT event
+    handled by ``_handle_batch_complete_event``. Rejects a new run with 409
     while one is already in flight.
     """
     global _active_run_id
-    if not _run_lock.acquire(blocking=False):
+    if not _reasoning_lock.acquire(blocking=False):
         raise HTTPException(
             status_code=409,
-            detail={"message": "A run is already in progress", "run_id": _active_run_id},
+            detail={"message": "A reasoning run is already in progress", "run_id": _active_run_id},
         )
-
-    device = (req.device or "CPU").upper()
-    if device not in {"CPU", "GPU", "NPU"}:
-        _run_lock.release()
-        raise HTTPException(status_code=422, detail=f"Unsupported device: {req.device!r}")
 
     run_id = str(uuid.uuid4())
     _active_run_id = run_id
-    _runs[run_id] = {"status": "running", "phase": "detecting", "result": None}
+    _runs[run_id] = {"status": "running", "phase": "reasoning", "result": None}
     background_tasks.add_task(
-        _execute_detect_and_reason_run,
-        run_id,
-        req.config_path,
-        req.prompts_dir,
-        device,
-        req.video_filename,
+        _execute_reasoning_run, run_id, req.config_path, req.prompts_dir, req.min_id, req.max_id,
     )
     return RunResponse(run_id=run_id, status="running")
 
 
 @app.get("/agents/status/{run_id}")
 def get_status(run_id: str):
-    """Return the status (and current phase) of a pipeline run."""
+    """Return the status (and current phase) of a reasoning run."""
     if run_id not in _runs:
         raise HTTPException(status_code=404, detail="Run not found")
     run = _runs[run_id]
@@ -136,7 +123,7 @@ def get_status(run_id: str):
 
 @app.get("/agents/results/{run_id}")
 def get_results(run_id: str):
-    """Return the results of a completed pipeline run."""
+    """Return the results of a completed reasoning run."""
     if run_id not in _runs:
         raise HTTPException(status_code=404, detail="Run not found")
     run = _runs[run_id]
@@ -153,12 +140,6 @@ def list_runs(id: Optional[str] = None):
             raise HTTPException(status_code=404, detail="Run not found")
         return [{"run_id": id, "status": _runs[id]["status"], "phase": _runs[id].get("phase")}]
     return [{"run_id": k, "status": v["status"], "phase": v.get("phase")} for k, v in _runs.items()]
-
-
-@app.get("/agents/videos")
-def get_available_videos():
-    """List video filenames available under the shared resources/videos directory."""
-    return {"videos": list_available_videos()}
 
 
 @app.get("/health")
@@ -192,65 +173,78 @@ def metrics():
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
-def _execute_detect_and_reason_run(
+def _handle_batch_complete_event(event: dict):
+    """React to a "batch-complete" event published by the detection layer.
+
+    On ``status: completed``, run reasoning bounded to the event's
+    (``start_id``, ``end_id``] window, under the *same* ``run_id`` the
+    detection layer used — this lets the UI correlate the detecting and
+    reasoning phases of one end-to-end run.
+
+    On ``status: error`` (the detection run itself failed), reasoning is
+    skipped entirely and the run is recorded as failed — the agent-service
+    must never reason over stale/unrelated detections just because a batch-
+    complete event arrived.
+    """
+    global _active_run_id
+    run_id = event.get("run_id")
+    if not run_id:
+        log.warning("Ignoring batch-complete event with no run_id: %s", event)
+        return
+
+    if event.get("status") != "completed":
+        log.info("Run %s: detection failed (%s) — skipping reasoning", run_id, event.get("error"))
+        _runs[run_id] = {
+            "status": "error", "phase": "error",
+            "result": {"error": event.get("error", "Detection run failed")},
+        }
+        return
+
+    # Serialize actual reasoning execution (shared LLM/OVMS backend) without
+    # blocking the MQTT event loop thread itself.
+    def _acquire_and_run():
+        global _active_run_id
+        _reasoning_lock.acquire()
+        _active_run_id = run_id
+        _runs[run_id] = {"status": "running", "phase": "reasoning", "result": None}
+        _execute_reasoning_run(
+            run_id, None, None, event.get("start_id"), event.get("end_id"),
+            pipeline_status=event.get("pipeline_status"),
+        )
+
+    threading.Thread(target=_acquire_and_run, daemon=True).start()
+
+
+def _execute_reasoning_run(
     run_id: str,
     config_path: str | None,
     prompts_dir: str | None,
-    device: str = "CPU",
-    video_filename: str | None = None,
+    min_id: int | None,
+    max_id: int | None,
+    pipeline_status: dict | None = None,
 ):
-    """Run one full detect-then-reason cycle for ``run_id``.
+    """Run the 4-agent pipeline bounded to (``min_id``, ``max_id``] and store the result.
 
-    1. Bookmark the current max detection id (start_id).
-    2. Start the DL Streamer pipeline (on ``device``, optionally overriding the
-       source video with ``video_filename``) and block until it finishes
-       (COMPLETED/ERROR).
-    3. Bookmark the max detection id again (end_id).
-    4. Run the 4-agent pipeline bounded to (start_id, end_id] — exactly the
-       detections produced by this run, regardless of any earlier history.
+    Always releases ``_reasoning_lock`` and clears ``_active_run_id`` — every
+    caller must acquire the lock and set ``_active_run_id`` before invoking
+    this function.
     """
     global _active_run_id
     try:
-        try:
-            start_id = storage_client.get_max_id().get("max_id", 0)
-        except Exception as exc:
-            log.warning("Could not resolve starting detection watermark, defaulting to 0: %s", exc)
-            start_id = 0
-
-        _runs[run_id]["phase"] = "detecting"
-        log.info(
-            "Run %s: starting DL Streamer pipeline (device=%s, video=%s, from detection id %d)...",
-            run_id, device, video_filename or "<default>", start_id,
-        )
-        pipeline_status = run_pipeline_to_completion(
-            device=device, video_filename=video_filename, timeout=_DETECTION_TIMEOUT
-        )
-        log.info("Run %s: detection finished (%s)", run_id, pipeline_status)
-
-        try:
-            end_id = storage_client.get_max_id().get("max_id", start_id)
-        except Exception as exc:
-            log.warning("Could not resolve ending detection watermark, defaulting to no upper bound: %s", exc)
-            end_id = None
-
-        _runs[run_id]["phase"] = "reasoning"
-        log.info("Run %s: reasoning over detections (id>%s, id<=%s)...", run_id, start_id, end_id)
+        log.info("Run %s: reasoning over detections (id>%s, id<=%s)...", run_id, min_id, max_id)
         result = run_pipeline(
             config_path=config_path or _CONFIG_PATH,
             prompts_dir=prompts_dir or _PROMPTS_DIR,
-            min_id=start_id,
-            max_id=end_id,
+            min_id=min_id,
+            max_id=max_id,
         )
-        result["pipeline_status"] = pipeline_status
+        if pipeline_status is not None:
+            result["pipeline_status"] = pipeline_status
         _runs[run_id] = {"status": "completed", "phase": "completed", "result": result}
         log.info("Run %s completed", run_id)
-
-    except PipelineRunError as exc:
-        log.error("Run %s failed during detection: %s", run_id, exc)
-        _runs[run_id] = {"status": "error", "phase": "error", "result": {"error": str(exc)}}
     except Exception as exc:
         log.error("Run %s failed: %s", run_id, exc)
         _runs[run_id] = {"status": "error", "phase": "error", "result": {"error": str(exc)}}
     finally:
         _active_run_id = None
-        _run_lock.release()
+        _reasoning_lock.release()
