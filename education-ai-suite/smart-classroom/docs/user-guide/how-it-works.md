@@ -96,7 +96,7 @@ Extracts text from the IFPD or whiteboard captured by the content pipeline, enab
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.
 
 <p align="center">
-  <img src="./_assets/Content_Search_Arch.svg" alt="Content Search Architecture" width="80%">
+  <img src="./_assets/Content_Search_Arch.png" alt="Content Search Architecture" width="80%">
 </p>
 <p align="center">
   <img src="./_assets/Content_Search_Software_Stack.svg" alt="Content Search Software Stack" width="80%">
