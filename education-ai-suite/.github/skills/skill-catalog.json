@@ -55,7 +55,7 @@
       ],
       "requires": [
         "curl or Invoke-WebRequest",
-        "Python venv (venv_content_search/)"
+        "Python venv (smart-classroom/content_search/venv_content_search/)"
       ]
     },
     {

@@ -55,6 +55,11 @@ EMBEDDING_API_URL = os.environ.get(
     "EMBEDDING_API_URL", f"http://live-video-captioning-rag:{LIVE_VIDEO_RAG_HOST_PORT}/api/embeddings"
 )
 
+# Pipeline Configuration
+# To set the KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+# The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+VLM_CACHE_SIZE = os.environ.get("VLM_CACHE_SIZE", "4")
+
 # Enable/Disable Embedding
 ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
 

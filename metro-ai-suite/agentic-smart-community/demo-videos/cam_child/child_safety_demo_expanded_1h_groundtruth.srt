@@ -1,0 +1,39 @@
+1
+00:00:45,000 --> 00:00:55,000
+[DANGEROUS] Child jumping energetically on the sofa
+
+2
+00:01:35,000 --> 00:01:45,000
+[SAFE] Child reading a book on the sofa
+
+3
+00:08:01,439 --> 00:08:11,439
+[SAFE] Child eating fruit with a plastic spoon at the dining table
+
+4
+00:14:27,879 --> 00:14:37,879
+[DANGEROUS] Child tripping and falling down onto the floor
+
+5
+00:20:54,319 --> 00:21:04,319
+[SAFE] Toddler sitting on the rug playing with building blocks
+
+6
+00:27:20,759 --> 00:27:30,759
+[DANGEROUS] Child handling art scissors and playing with paper cuttings
+
+7
+00:33:47,200 --> 00:33:57,200
+[SAFE] Child reading a book on the sofa
+
+8
+00:40:13,639 --> 00:40:20,639
+[DANGEROUS] Child playing with a lighter near the curtain
+
+9
+00:46:37,079 --> 00:46:47,079
+[SAFE] Child eating fruit with a plastic spoon at the dining table
+
+10
+00:53:03,519 --> 00:53:43,519
+[DANGEROUS] Child climbing onto the window sill (3 continuous clips)

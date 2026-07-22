@@ -189,7 +189,7 @@ class ContentSegmentationComponent(PipelineComponent):
                 enable_thinking=False
             )
 
-            full_output = strip_think_tokens(self.model.generate(prompt, False))
+            full_output = strip_think_tokens(self.model.generate(prompt, stream=False))
             clean_output = self._clean_topics_output(full_output)
             logger.info("Topic segmentation completed.")
             return clean_output

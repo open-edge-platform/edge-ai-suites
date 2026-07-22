@@ -6,6 +6,7 @@ This section collects guides for Time Series Analytics microservice and associat
 - [Update Configuration](./how-to-guides/how-to-update-config.md)
 - [Access S3 Stored Images](./how-to-guides/how-to-access-s3-stored-images.md)
 - [Configure RTSP Camera](./how-to-guides/how-to-configure-rtsp-camera.md)
+- [Deploy vLLM Service](./how-to-guides/how-to-deploy-vllm-service.md)
 
 <!--hide_directive
 :::{toctree}
@@ -15,6 +16,7 @@ Configure Alerts <./how-to-guides/how-to-configure-alerts.md>
 Update Configuration <./how-to-guides/how-to-update-config.md>
 Access S3 Stored Images <./how-to-guides/how-to-access-s3-stored-images.md>
 Configure RTSP Camera <./how-to-guides/how-to-configure-rtsp-camera.md>
+Deploy vLLM Service <./how-to-guides/how-to-deploy-vllm-service.md>
 
 :::
 hide_directive-->

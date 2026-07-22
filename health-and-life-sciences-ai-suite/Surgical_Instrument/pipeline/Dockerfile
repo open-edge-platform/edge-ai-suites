@@ -9,6 +9,17 @@
 
 FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1.1
 
+# Proxy support for corporate networks. Build args are optional; if not
+# supplied, defaults to empty (no proxy). Pass via docker build --build-arg
+# or docker-compose build args.
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY}
+
 USER root
 
 # Flask for the control plane; paho-mqtt for the in-pipeline gvapython

@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────
+# Monitor declarations — passed to MCP server via `--monitors <path>`
+# ─────────────────────────────────────────────────────────────
+# Each monitor here is auto-registered at MCP server startup via
+# smartbuilding_monitor_ctl register_source. videostream-analytics
+# (:8999) must be reachable at startup; if not, MCP server logs a
+# warning and continues (use the smartbuilding_monitors_compose tool
+# to retry later: action=up).
+#
+# `use_case` must reference a key in config.yaml's `use_case_dict` —
+# that's where video_summary_task / evaluate_rules_path / reports live.
+#
+# `source_url` accepts any URL scheme supported by videostream-analytics
+# (rtsp / http / onvif / file / ...). `pipeline_config` is forwarded
+# verbatim to videostream-analytics /register_source.
+# ─────────────────────────────────────────────────────────────
+
+monitors:
+  cam_child:
+    enabled: true
+    name: "Child Safety Camera"
+    source_url: rtsp://localhost:8554/live/child
+    use_case: child_safety
+    pipeline_config:
+      motion: { enabled: true, diff_threshold: 25 }
+      # Hazard prefilter: NPU YOLO11s gates summary requests on target classes.
+      prefilter:
+        enabled: true
+        model_path: ${HOME}/models/yolo11s.xml   # optional; omitted → falls back to config.yaml defaults
+        target_classes: [person, knife, scissors, bottle]
+        min_confidence: 0.4
+        detect_fps: 2
+        min_frames_hit: 2
+        long_side: 1280
+        device: NPU
+      # ROI crop — only the target region is sent to the summary service.
+      roi:
+        enabled: true
+        mode: crop
+        expand: 0.25
+        auto_split_area: 0.35
+      recording: { enabled: true, interval_seconds: 60 }
+      segment: { max_duration: 10 }

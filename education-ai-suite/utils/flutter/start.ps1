@@ -15,8 +15,9 @@ Write-Host "`n=== Starting Smart Classroom RAG ===" -ForegroundColor Cyan
 
 # Check prerequisites
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$venvPython = Join-Path $repoRoot "venv_content_search\Scripts\python.exe"
-$backendScript = Join-Path $repoRoot "smart-classroom\content_search\start_services.py"
+$contentSearchPath = Join-Path $repoRoot "smart-classroom\content_search"
+$venvPython = Join-Path $contentSearchPath "venv_content_search\Scripts\python.exe"
+$backendScript = Join-Path $contentSearchPath "start_services.py"
 
 if (-not (Test-Path $venvPython)) {
     Write-Host "[X] Python venv not found. Run .\setup.ps1 first" -ForegroundColor Red

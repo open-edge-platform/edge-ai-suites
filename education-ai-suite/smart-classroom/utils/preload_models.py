@@ -1,13 +1,31 @@
-from components.asr_component import ASRComponent
-from components.summarizer_component import SummarizerComponent
 from utils.config_loader import config
+from model_manager import ModelManager
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def preload_models():
-    # Preload default models
-    ASRComponent(session_id="startup", provider=config.models.asr.provider, model_name=config.models.asr.name,device=config.models.asr.device)
-    SummarizerComponent(session_id="startup", provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device)
+    """Preload models at startup."""
     
-    # OCR is optional — only preload if enabled in config
-    if config.models.ocr and config.models.ocr.enabled:
-        from components.ocr_component import OCRComponent
-        OCRComponent(session_id="startup", provider=config.models.ocr.provider, lang=config.app.language, device=config.models.ocr.device)
+    registry = getattr(config.models, "capability_registry", None) or []
+    to_warm = [
+        capability
+        for capability in registry
+        if getattr(config.models, capability, None) is not None
+        and getattr(getattr(config.models, capability), "enabled", True)
+    ]
+
+    if (
+        hasattr(config.models, "asr")
+        and getattr(config.models.asr, "provider", None)
+        and "asr" not in to_warm
+    ):
+        to_warm.append("asr")
+
+    if to_warm:
+        logger.info(f"Warming ModelManager capabilities: {to_warm}")
+        ModelManager.instance().warmup(to_warm)
+        logger.info("ModelManager warmup complete")
+    else:
+        logger.warning("No capabilities enabled - skipping ModelManager warmup")

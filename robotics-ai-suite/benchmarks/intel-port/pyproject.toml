@@ -1,0 +1,15 @@
+[project]
+name = "intel-port-runtime-deps"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+  "openvino==2024.6.0",
+  "numpy==1.26.4",
+  "opencv-python==4.10.0.84",
+  "catkin-pkg==1.1.0",
+  "empy==3.3.4",
+  "lark-parser==0.12.0",
+]
+
+[tool.uv]
+package = false

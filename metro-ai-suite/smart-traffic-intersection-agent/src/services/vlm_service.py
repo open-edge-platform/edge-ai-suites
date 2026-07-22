@@ -81,21 +81,12 @@ class VLMService:
 
     @staticmethod
     def _compute_ovms_model_name(hf_model: str, target_device: str, weight_format: str) -> str:
-        """Compute the OVMS storage model name from HuggingFace model name.
+        """Return the OVMS model name for the given HuggingFace model.
 
-        Mirrors the naming convention in setup.sh and chart/files/ovms-init.sh:
-        - Non-alphanumeric chars (except _ . -) replaced with _
-        - OpenVINO namespace models: {sanitized}_{device}
-        - Other models: {sanitized}_{device}_{weight_format}
+        get_model.sh registers models in OVMS using their original HuggingFace model ID
+        as the OVMS model name (e.g. "OpenVINO/Phi-3.5-vision-instruct-int8-ov").
         """
-        if not hf_model:
-            return ""
-        sanitized = re.sub(r"[^A-Za-z0-9_.\-]", "_", hf_model)
-        if not weight_format:
-            weight_format = "int4" if ("GPU" in target_device or "NPU" in target_device) else "int8"
-        if hf_model.startswith("OpenVINO/"):
-            return f"{sanitized}_{target_device}"
-        return f"{sanitized}_{target_device}_{weight_format}"
+        return hf_model
         
     def get_weather_details(self) -> Optional[WeatherData]:
         """Get the last fetched weather data."""
