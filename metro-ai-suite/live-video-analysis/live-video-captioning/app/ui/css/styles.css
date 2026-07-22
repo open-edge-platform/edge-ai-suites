@@ -54,9 +54,10 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-left: 20px;
-    padding-top: 6px;
-    padding-right: 20px;
+    padding-left: 16px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-right: 16px;
     flex-shrink: 0;
 }
 
@@ -144,12 +145,14 @@ main {
     background: var(--panel);
     border: 3px solid var(--border);
     border-radius: 10px;
-    padding: 12px;
+    padding: 8px;
     box-shadow: var(--shadow);
 }
 
 /* Left sidebar card - scrollable */
 .panels>.card:first-child {
+    position: relative;
+    z-index: 2;
     overflow-y: auto;
     max-height: 100%;
     display: flex;
@@ -509,14 +512,14 @@ iframe {
 .controls {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 8px;
+    gap: 7px;
+    margin-bottom: 6px;
     flex-shrink: 0;
 }
 
 .field-row {
     display: flex;
-    gap: 10px;
+    gap: 7px;
     align-items: stretch;
 }
 
@@ -534,7 +537,26 @@ iframe {
 .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
+}
+
+.checkbox-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+}
+
+.checkbox-field input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.checkbox-field .label {
+    font-size: 0.82rem;
+    color: var(--text);
 }
 
 /* Keep Start/Stop buttons on one row */
@@ -551,18 +573,148 @@ iframe {
 }
 
 .label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--muted);
 }
 
+.inline-help-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 6px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 999px;
+    cursor: help;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    z-index: 4000;
+}
+
+.inline-help-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    right: auto;
+    top: calc(100% + 8px);
+    transform: none;
+    width: min(340px, calc(100vw - 32px));
+    min-width: 0;
+    background: var(--panel-strong);
+    color: var(--text);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+    font-size: 0.76rem;
+    line-height: 1.35;
+    white-space: normal;
+    z-index: 5000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+@media (max-width: 640px) {
+    .inline-help-tooltip::after {
+        width: min(320px, calc(100vw - 32px));
+        min-width: 0;
+    }
+}
+
+.inline-help-tooltip:hover::after,
+.inline-help-tooltip:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.inline-warning-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 6px;
+    color: #f5b700;
+    background: rgba(245, 183, 0, 0.14);
+    border: 1px solid rgba(245, 183, 0, 0.5);
+    border-radius: 999px;
+    cursor: help;
+    z-index: 4000;
+}
+
+.inline-warning-tooltip svg {
+    width: 14px;
+    height: 14px;
+}
+
+.inline-warning-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    right: auto;
+    top: calc(100% + 8px);
+    transform: none;
+    width: min(340px, calc(100vw - 32px));
+    min-width: 0;
+    background: var(--panel-strong);
+    color: var(--text);
+    border: 1px solid rgba(245, 183, 0, 0.5);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+    font-size: 0.76rem;
+    line-height: 1.35;
+    white-space: normal;
+    z-index: 5000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+@media (max-width: 640px) {
+    .inline-warning-tooltip::after {
+        width: min(320px, calc(100vw - 32px));
+        min-width: 0;
+    }
+}
+
+.inline-warning-tooltip:hover::after,
+.inline-warning-tooltip:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.critical-warning-tooltip {
+    color: #ff1f1f;
+    background: rgba(255, 31, 31, 0.2);
+    border: 1px solid rgba(255, 31, 31, 0.75);
+    box-shadow: 0 0 0 1px rgba(255, 31, 31, 0.22), 0 0 10px rgba(255, 31, 31, 0.3);
+}
+
+.critical-warning-tooltip::after {
+    background: color-mix(in srgb, var(--panel-strong) 86%, #7a0d0d 14%);
+    border: 1px solid rgba(255, 31, 31, 0.75);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 31, 31, 0.35);
+    font-weight: 600;
+}
+
 .input {
-    padding: 6px 10px;
+    padding: 5px 8px;
     border-radius: 8px;
     border: 1px solid var(--input-border);
     background: var(--input-bg);
     color: var(--text);
     width: 100%;
-    font-size: 0.875rem;
+    font-size: 0.82rem;
 }
 
 /* Make keyboard focus visible without changing theme colors */
@@ -586,11 +738,11 @@ iframe {
 }
 
 .btn {
-    padding: 10px 15px;
+    padding: 8px 13px;
     border: none;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 0.875rem;
+    font-size: 0.82rem;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -624,8 +776,13 @@ iframe {
 
 .chart-values {
     display: flex;
-    gap: 12px;
-    font-size: 0.8rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    min-width: 0;
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
+    font-size: 0.78rem;
 }
 
 .chart-card {
@@ -641,8 +798,10 @@ iframe {
 
 .chart-header {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    gap: 6px 10px;
     font-size: 0.85rem;
     color: var(--muted);
     margin-bottom: 4px;
@@ -652,6 +811,28 @@ iframe {
 .chart-value {
     color: var(--text);
     font-weight: 700;
+    white-space: nowrap;
+}
+
+.gpu-values {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gpu-value-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Reserve a stable width for the numeric value so labels don't jump
+   as readings change (e.g. "—" -> "100.0%"). */
+.chart-value>span {
+    display: inline-block;
+    min-width: 2.6em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .chart-sub {
@@ -714,6 +895,8 @@ iframe {
 
 /* Make the right panel take remaining space */
 .live-layout {
+    position: relative;
+    z-index: 1;
     min-height: 0;
     overflow: hidden;
     display: flex;
@@ -738,6 +921,50 @@ iframe {
     width: 100%;
     height: 100%;
     min-height: 0;
+}
+
+/* Video wrapper hosts the iframe plus the "Connecting…" overlay */
+.video-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(5, 8, 20, 0.82);
+    color: var(--text);
+    z-index: 2;
+    border-radius: 8px;
+}
+
+.video-overlay-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.video-overlay-spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--accent);
+    animation: video-overlay-spin 0.9s linear infinite;
+}
+
+@keyframes video-overlay-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Alert rules sub-box */

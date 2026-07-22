@@ -1,0 +1,274 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: ${PROJECT_NAME:-live-video-alert-agent}
+services:
+  ovms-download:
+    image: openvino/model_server:2026.2.1-gpu
+    container_name: ovms-download
+    user: "0:0"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - USE_ADK=${USE_ADK:-true}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - no_proxy=${no_proxy}
+      - NO_PROXY=${no_proxy}
+      - VLM_REPO=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
+      - LLM_REPO=${LLM_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
+      - VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-GPU}}
+      - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-GPU}}
+    volumes:
+      - ovms-models:/models
+      - ../scripts/init_ovms.sh:/init_ovms.sh:ro
+    entrypoint: ["/bin/bash", "/init_ovms.sh"]
+    networks:
+      - app_network
+
+  ovms-vlm:
+    image: openvino/model_server:2026.2.1-gpu
+    container_name: ovms-vlm
+    restart: unless-stopped
+    depends_on:
+      ovms-download:
+        condition: service_completed_successfully
+    ports:
+      - "${VLM_PORT:-8000}:8000"
+    environment:
+      - no_proxy=${no_proxy},localhost
+      - NO_PROXY=${no_proxy},localhost
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - TARGET_DEVICE=${VLM_TARGET_DEVICE:-GPU}
+    volumes:
+      - ovms-models:/models
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 65536
+    command:
+      - --rest_port
+      - "8000"
+      - --config_path
+      - "/models/config_vlm.json"
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - ${RENDER_DEVICE_GID:-992}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+    networks:
+      - app_network
+
+  ovms-llm:
+    image: openvino/model_server:2026.2.1-gpu
+    container_name: ovms-llm
+    profiles:
+      - adk-llm
+    restart: unless-stopped
+    depends_on:
+      ovms-download:
+        condition: service_completed_successfully
+    ports:
+      - "${LLM_PORT:-8001}:8000"
+    environment:
+      - no_proxy=${no_proxy},localhost
+      - NO_PROXY=${no_proxy},localhost
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - TARGET_DEVICE=${LLM_TARGET_DEVICE:-GPU}
+    volumes:
+      - ovms-models:/models
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 65536
+    command:
+      - --rest_port
+      - "8000"
+      - --config_path
+      - "/models/config_llm.json"
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - ${RENDER_DEVICE_GID:-992}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+    networks:
+      - app_network
+
+  live-video-alert-agent:
+    image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: live-video-alert-agent
+    restart: unless-stopped
+    ports:
+      - "${PORT:-9000}:${PORT:-9000}"
+    environment:
+      # ---- proxy ----
+      - no_proxy=${no_proxy},ovms-vlm,alert-agent-service,metrics-manager
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RTSP_URL=${RTSP_URL}
+      # ---- VLM / OVMS ----
+      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-vision}
+      # ---- stream capture ----
+      - CAPTURE_FPS=${CAPTURE_FPS:-10}
+      # ---- Alert Agent Service ----
+      - ALERT_AGENT_SERVICE_URL=http://alert-agent-service:8000/api/v1
+      - ALERT_AGENT_SERVICE_TIMEOUT=${ALERT_AGENT_SERVICE_TIMEOUT:-30.0}
+      # ---- snapshot tool ----
+      - SNAPSHOT_DIR=/app/snapshots
+      # ---- metrics ----
+      - METRICS_SERVICE_PORT=${METRICS_PORT:-9090}
+      # ---- MCP (Model Context Protocol) servers ----
+      - MCP_ENABLED=${MCP_ENABLED:-true}
+      
+    volumes:
+      - ../resources:/app/resources
+      - ../src/config.py:/app/src/config.py:ro
+      - snapshots:/app/snapshots
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:${PORT:-9000}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Allow container to access MCP servers running on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      ovms-vlm:
+        condition: service_healthy
+      alert-agent-service:
+        condition: service_healthy
+      metrics-manager:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  alert-agent-service:
+    image: intel/alert-agent-service:latest
+    container_name: alert-agent-service
+    restart: unless-stopped
+    ports:
+      - "${ALERT_AGENT_PORT:-8002}:8000"
+    environment:
+      # ---- server ----
+      - PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # ---- proxy ----
+      - no_proxy=${no_proxy},ovms-llm,mqtt
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      # ---- ADK / LLM ----
+      - AGENT_MODE=${AGENT_MODE:-true}
+      - LLM_URL=${LLM_URL:-http://ovms-llm:8000/v3}
+      - LLM_MODEL=${LLM_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
+      - LLM_TIMEOUT=${LLM_TIMEOUT:-10.0}
+      # ---- action tools ----
+      - SNAPSHOT_DIR=/app/snapshots
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+      - MQTT_BROKER=${MQTT_BROKER:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_BASE_TOPIC=${MQTT_BASE_TOPIC:-alerts/live-video}
+      # ---- MCP ----
+      - MCP_ENABLED=${MCP_ENABLED:-true}
+      # ---- workers ----
+      - ACTION_WORKERS=${ACTION_WORKERS:-2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../resources/config.yaml:/app/resources/config.yaml:ro
+      - ../resources/mcp_servers.json:/app/resources/mcp_servers.json:ro
+      - ../resources/streams.json:/app/resources/streams.json:ro
+    depends_on:
+      mqtt:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - app_network
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: alert-mqtt
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    networks:
+      - app_network
+
+  metrics-manager:
+    image: docker.io/intel/metrics-manager:2026.1.0
+    container_name: metrics-manager
+    ports:
+      - "${METRICS_PORT:-9090}:9090"
+      - "9273:9273"
+    privileged: true
+    pid: host
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - "/dev/dri:/dev/dri"
+    volumes:
+      - "/sys:/sys:ro"
+      - "/run:/run:ro"
+    restart: on-failure:5
+    environment:
+      - no_proxy=localhost,127.0.0.1,live-video-alert-agent,metrics-manager,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,live-video-alert-agent,metrics-manager,${NO_PROXY:-}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - METRICS_PORT=9090
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - PROMETHEUS_POLLER_INTERVAL_MS=${METRICS_POLL_INTERVAL_MS:-1000}
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=8)"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  ovms-models:
+  # Named volume for alert snapshot images
+  snapshots:
+  mosquitto-data:
+  mosquitto-log:

@@ -1,7 +1,5 @@
 # Get Started
 
-## Overview
-
 Smart NVR is a GenAI-powered video analytics application that transforms traditional network
 video recorders with intelligent event detection and real-time insights at the edge. This guide
 will walk you through deploying and configuring the application to extract valuable insights

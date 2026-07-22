@@ -278,8 +278,10 @@ services:
     security_opt:
     - no-new-privileges
     healthcheck:
-      test: ["CMD-SHELL", "curl -f https://localhost/ -k ||  exit 1"]
-      interval: 5m
+      test: ["CMD-SHELL", "curl -f https://localhost:15443/ -k || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     networks:
       - timeseries_network
     depends_on:

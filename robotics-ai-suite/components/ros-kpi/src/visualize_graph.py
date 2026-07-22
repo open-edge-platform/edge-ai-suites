@@ -48,7 +48,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch
-import numpy as np
+from _accel import np  # Intel dpnp/numpy shim
 
 
 # ──────────────────────────────────────────────────────────────────────────────

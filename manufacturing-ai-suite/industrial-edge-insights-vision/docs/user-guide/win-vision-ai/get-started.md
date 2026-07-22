@@ -12,6 +12,7 @@ Install **Python 3.12 or higher** from [the official Python website](https://www
 Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
 ### Set Proxies (Optional)
+
 Go to the target directory of your choice, open PowerShell and run all the terminal commands below
 
 ```powershell
@@ -22,7 +23,7 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 ### Install Intel DL Streamer
 
-Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
+Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
 > **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 

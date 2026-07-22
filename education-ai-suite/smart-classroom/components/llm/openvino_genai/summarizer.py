@@ -17,7 +17,8 @@ class Summarizer(BaseSummarizer):
         self.tokenizer = AutoTokenizer.from_pretrained(ensure_model.get_model_path())
 
         think_tokens = ["<think>", "</think>"]
-        existing_specials = set(self.tokenizer.additional_special_tokens or [])
+        # Use getattr with default to handle tokenizers without additional_special_tokens attribute
+        existing_specials = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
         missing_specials = [t for t in think_tokens if t not in existing_specials]
         if missing_specials:
             self.tokenizer.add_special_tokens({"additional_special_tokens": missing_specials})

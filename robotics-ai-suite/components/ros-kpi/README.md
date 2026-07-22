@@ -235,7 +235,7 @@ Parses CSV logs from `ros2_graph_monitor.py` and generates message timestamp, fr
 
 ### visualize_graph.py — Interactive Pipeline Graph
 
-Renders the full ROS2 computation graph as a directed topology diagram. Nodes are color-coded by category; topics are shown as labelled edges.
+Renders the full ROS2 computation graph as a directed topology diagram. Nodes are color-coded by category; topics are shown as labeled edges.
 
 ```bash
 ./src/visualize_graph.py SESSION_DIR [OPTIONS]
@@ -279,7 +279,7 @@ uv run python src/analyze_rosbag.py path/to/bag.db3
 ### picknplace_run.sh — Pick-and-Place Benchmark Runner
 
 Thin wrapper around `benchmark_runner.sh` for the pick-and-place scenario.
-All scenario behaviour (launch command, stop condition, bag topics, cleanup)
+All scenario behavior (launch command, stop condition, bag topics, cleanup)
 is defined in [`config/picknplace_run.yaml`](config/picknplace_run.yaml).
 
 ```bash
@@ -334,7 +334,7 @@ Thin wrapper around `benchmark_runner.sh` for the fast-mapping scenario.
 Launches `ros2 launch fast_mapping fast_mapping.launch.py`, which starts
 `fast_mapping_node`, `rviz2`, and replays the bundled Intel spinning RGB-D bag
 (`/opt/ros/<distro>/share/bagfiles/spinning`, ~12 s, 175 depth frames).
-All scenario behaviour is defined in [`config/fastmapping_run.yaml`](config/fastmapping_run.yaml).
+All scenario behavior is defined in [`config/fastmapping_run.yaml`](config/fastmapping_run.yaml).
 
 ```bash
 # Single run
@@ -471,7 +471,7 @@ uv run python src/gpu_pid_analyzer.py --csv gpu.csv    # CSV logging
 | `drv_name` | DRM driver (`xe` or `i915`) |
 
 Results are written to `gpu_usage.log` (JSON-lines) in each session directory and
-visualised as `visualizations/gpu_utilization.png`.
+visualized as `visualizations/gpu_utilization.png`.
 
 ---
 
@@ -518,7 +518,7 @@ Results are written to `npu_usage.log` (JSON-lines) in each session directory:
 
 | Field | Description |
 |-------|-------------|
-| `busy_pct` | NPU compute utilisation % (delta-sampled) |
+| `busy_pct` | NPU compute utilization % (delta-sampled) |
 | `cur_freq_mhz` | Current NPU clock (MHz) |
 | `max_freq_mhz` | Maximum NPU clock (MHz) |
 | `memory_used_mb` | Memory utilization (MB) |
@@ -527,7 +527,7 @@ Results are written to `npu_usage.log` (JSON-lines) in each session directory:
 
 `uv run python src/visualize_npu.py <session>` generates `visualizations/npu_dashboard.png` with three panels:
 
-1. **NPU Busy %** — utilisation over time with fill
+1. **NPU Busy %** — utilization over time with fill
 2. **Clock Frequency** — current vs max (clickable legend)
 3. **Memory Utilization** — MB over time with fill
 
@@ -604,6 +604,114 @@ uv run python src/monitor_resources.py --check-hw
 
 ---
 
+## JSON Output Schema Reference
+
+Benchmark runs may produce the following JSON result files validated against versioned
+schemas in [`schemas/`](schemas/):
+
+| File | Schema | Written by |
+|------|--------|------------|
+| `kpi.json` | `kpi_level1_v1` | `analyze_trigger_latency.py` |
+| `kpi_level2.json` | `kpi_level2_v1` | `analyze_pipeline_latency.py` |
+| `kpi_level2_traced.json` | `kpi_level2_v1` | `analyze_bag_e2e.py` |
+
+Fields typed `number | null` are `null` when the relevant monitor (resource
+monitor, thermal, GPU) was not active during the session.
+
+---
+
+### Level 1 — `kpi.json`
+
+Top-level fields:
+
+| Field | Type | Required | Unit | Description |
+|-------|------|----------|------|-------------|
+| `schema_version` | string | ✅ | — | Always `"level1_v1"` |
+| `throughput_hz` | number\|null | ✅ | Hz | System-level throughput derived from the dominant (highest trigger-count) node pair |
+| `mean_latency_ms` | number\|null | ✅ | ms | Mean processing latency for the dominant pair |
+| `max_jitter_ms` | number\|null | ✅ | ms | Maximum jitter across all node pairs |
+| `min_jitter_ms` | number\|null | ✅ | ms | Minimum jitter across all node pairs |
+| `mean_jitter_ms` | number\|null | ✅ | ms | Mean jitter for the dominant pair |
+| `jitter_stdev_ms` | number\|null | ✅ | ms | Standard deviation of per-node mean jitter values |
+| `cpu_mean_pct` | number\|null | ✅ | % | Mean CPU utilization (`pidstat`); null when resource monitor was not run |
+| `cpu_max_pct` | number\|null | ✅ | % | Peak CPU utilization; null when resource monitor was not run |
+| `thermal` | object\|null | — | — | Session-level thermal summary (see below); null when not collected |
+| `per_node` | object | ✅ | — | Per-node summary keyed by fully-qualified node name (see below) |
+| `pairs` | array | ✅ | — | Full scalar statistics for every de-duplicated (node, input, output) pair |
+| `metadata` | object | ✅ | — | Session provenance (see below) |
+
+#### `per_node` entry fields
+
+Each key is a fully-qualified ROS 2 node name (e.g. `/controller_server`):
+
+| Field | Type | Unit | Description |
+|-------|------|------|-------------|
+| `throughput_hz` | number\|null | Hz | Output publish rate for this node |
+| `mean_latency_ms` | number | ms | Mean input→output processing latency |
+| `mean_jitter_ms` | number | ms | Mean inter-message jitter |
+| `max_jitter_ms` | number | ms | Maximum inter-message jitter |
+| `num_samples` | integer | — | Trigger sample count |
+| `primary_input` | string | — | Topic used as the latency trigger input |
+| `primary_output` | string | — | Topic used as the latency trigger output |
+| `pipeline_stage` | string | — | Classified stage: `Sensor` / `Perception` / `Planning` / `Control` / `Other` |
+
+#### `metadata` fields (Level 1 & 2 shared)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Session directory name (timestamp) |
+| `datetime` | string | UTC ISO 8601 timestamp of KPI generation |
+| `hostname` | string | Machine that ran the benchmark |
+| `arch` | string | CPU architecture (e.g. `x86_64`, `aarch64`) |
+| `os` | string | OS name and kernel release |
+| `data_path` | string | Absolute path to the session directory |
+| `framework_version` | string | Benchmark framework version (e.g. `0.2.3`) |
+| `ros_distro` | string | ROS 2 distribution (e.g. `jazzy`, `humble`) |
+| `hardware` | object | Hardware provenance: CPU model, core count, RAM |
+
+---
+
+### Level 2 — `kpi_level2.json`
+
+Top-level fields:
+
+| Field | Type | Required | Unit | Description |
+|-------|------|----------|------|-------------|
+| `schema_version` | string | ✅ | — | Always `"level2_v1"` |
+| `pipeline` | object | ✅ | — | Pipeline entry/exit points and stage sequence (see below) |
+| `e2e_latency_ms` | object | ✅ | ms | End-to-end latency statistics (see below) |
+| `throughput_hz` | number\|null | ✅ | Hz | Effective pipeline throughput — minimum throughput across all stage representatives |
+| `drop_rate_pct` | number\|null | ✅ | % | Estimated message drop rate: sensor-stage inputs that did not produce a pipeline output |
+| `bottleneck_stage` | string\|null | ✅ | — | Pipeline stage with the highest mean latency contribution |
+| `stage_latency_ms` | object | ✅ | ms | Per-stage latency breakdown; keys are stage names (`Sensor`, `Perception`, `Planning`, `Control`, `Other`) |
+| `cpu_mean_pct` | number\|null | ✅ | % | Mean CPU utilization across the session; null when not collected |
+| `cpu_max_pct` | number\|null | ✅ | % | Peak CPU utilization; null when not collected |
+| `level1_source` | string | ✅ | — | Absolute path to the Level 1 `kpi.json` used as input |
+| `bag_source` | string | — | — | Absolute path to the `.mcap` bag directory (present when traced correlation was used) |
+| `metadata` | object | ✅ | — | Session provenance — same structure as Level 1 `metadata` |
+
+#### `pipeline` fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `input_topic` | string | Primary sensor input topic entering the pipeline (e.g. `/scan`) |
+| `output_topic` | string | Final control output topic (e.g. `/cmd_vel_smoothed`) |
+| `stage_sequence` | array | Ordered list of pipeline stage names present in this session |
+
+#### `e2e_latency_ms` fields
+
+| Field | Type | Unit | Description |
+|-------|------|------|-------------|
+| `mean` | number\|null | ms | Mean end-to-end latency |
+| `p50` | number\|null | ms | Median end-to-end latency |
+| `p90` | number\|null | ms | 90th percentile end-to-end latency |
+| `p99` | number\|null | ms | 99th percentile end-to-end latency |
+| `max` | number\|null | ms | Maximum end-to-end latency |
+| `n` | integer\|null | — | Sample count used for end-to-end stats (`min(stage.n)` for `chained`, correlated message count for `traced`) |
+| `method` | string | — | `"chained"` (sum of per-stage representative pair latencies from Level 1 data) or `"traced"` (direct bag correlation) |
+
+---
+
 ## 📤 KPI Export: CSV & Excel
 
 All benchmark scripts support exporting results to **CSV** and optionally **Excel (`.xlsx`)** for analysis in spreadsheet tools.
@@ -667,8 +775,8 @@ One **e2e summary row** (`type=e2e`) followed by one row per pipeline **stage** 
 | `throughput_hz` | Pipeline throughput (Hz) | Stage throughput (Hz) |
 | `drop_rate_pct` | Message drop rate (%) | _(blank)_ |
 | `bottleneck_stage` | Slowest stage name | _(blank)_ |
-| `cpu_mean_pct` | Mean CPU utilisation (%) | _(blank)_ |
-| `cpu_max_pct` | Peak CPU utilisation (%) | _(blank)_ |
+| `cpu_mean_pct` | Mean CPU utilization (%) | _(blank)_ |
+| `cpu_max_pct` | Peak CPU utilization (%) | _(blank)_ |
 
 ### Multi-run aggregated (aggregate_kpi.py)
 
@@ -787,7 +895,7 @@ sudo usermod -aG docker $USER  # Logout/login required
 uv sync
 ```
 
-### Documentation
+### Grafana Documentation
 
 See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 - Detailed setup instructions

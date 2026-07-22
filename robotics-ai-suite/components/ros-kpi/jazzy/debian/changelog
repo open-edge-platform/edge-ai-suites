@@ -1,3 +1,24 @@
+ros-jazzy-benchmark-framework (0.2.3) UNRELEASED; urgency=low
+
+  * use_intel_python_libs: Intel-optimised Python acceleration layer.
+    - pyproject.toml: add optional [dependency-groups] intel containing mkl,
+      mkl-service, numexpr, dpnp, and pillow-simd (AVX2-accelerated drop-in for
+      pillow, valid for all Intel iGPU targets); pillow removed from direct
+      dependencies as it is already provided transitively by matplotlib.
+    - src/_accel.py: new acceleration shim; imports dpnp as np (Intel oneAPI
+      SYCL / level-zero, dispatches array ops to iGPU) with transparent
+      fallback to numpy when dpnp is absent; exposes numexpr as ne; calls
+      mkl.set_num_threads(nproc) on import when MKL is available.
+    - src/visualize_gpu.py, visualize_graph.py, visualize_kpi.py,
+      visualize_npu.py, visualize_resources.py, visualize_timing.py,
+      view_average.py: replace `import numpy as np` with
+      `from _accel import np` so all array work goes through the shim.
+    - src/visualize_timing.py, view_average.py: replace element-wise
+      normalisation expressions with numexpr.evaluate() calls for
+      VML-accelerated multi-threaded evaluation on Intel CPUs.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 24 Jun 2026 00:00:00 +0000
+
 ros-jazzy-benchmark-framework (0.2.2) UNRELEASED; urgency=low
 
   * Install Python scripts as executable (755); document cp-first workflow

@@ -15,7 +15,7 @@ def _read_non_negative_int(var_name: str, default: int) -> int:
         return default
 
 APP_PORT = int(os.environ.get("DASHBOARD_PORT", "4173"))
-PEER_ID = os.environ.get("WEBRTC_PEER_ID", "genai_pipeline")
+PEER_ID = os.environ.get("WEBRTC_PEER_ID", "video_captioning_pipeline")
 SIGNALING_URL = os.environ.get("SIGNALING_URL", "http://localhost:8889")
 WEBRTC_BITRATE = int(os.environ.get("WEBRTC_BITRATE", "2048"))
 ALERT_MODE = os.environ.get("ALERT_MODE", "false").lower() in ("true", "1", "yes")
@@ -36,7 +36,8 @@ MQTT_TOPIC_PREFIX = os.environ.get("MQTT_TOPIC_PREFIX", "live-video-captioning")
 PIPELINE_SERVER_URL = os.environ.get(
     "PIPELINE_SERVER_URL", "http://dlstreamer-pipeline-server:8080"
 )
-PIPELINE_NAME = os.environ.get("PIPELINE_NAME", "genai_pipeline")
+PIPELINE_NAME = os.environ.get("PIPELINE_NAME", "video_captioning_pipeline")
+
 # How often (in seconds) to poll the pipeline server for run health. 0 disables polling.
 # Keep this low (≤10 s) so the UI reflects a crashed pipeline server quickly.
 PIPELINE_POLL_INTERVAL = _read_non_negative_int("PIPELINE_POLL_INTERVAL", 8)
@@ -54,5 +55,13 @@ EMBEDDING_API_URL = os.environ.get(
     "EMBEDDING_API_URL", f"http://live-video-captioning-rag:{LIVE_VIDEO_RAG_HOST_PORT}/api/embeddings"
 )
 
+# Pipeline Configuration
+# To set the KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+# The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+VLM_CACHE_SIZE = os.environ.get("VLM_CACHE_SIZE", "4")
+
 # Enable/Disable Embedding
 ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
+
+# Forced NPU resolution
+NPU_FORCED_RESOLUTION = 160

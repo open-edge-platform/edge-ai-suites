@@ -18,10 +18,10 @@ spec:
     port: {{ $.Values.config.nginx.int.https_port }}
     targetPort: {{ $.Values.config.nginx.int.https_port }}
     nodePort: {{ $.Values.config.nginx.ext.https_port }}
-  - name: mqtt
-    port: {{ $.Values.config.nginx.int.mqtt_port }}
-    targetPort: {{ $.Values.config.nginx.int.mqtt_port }}
-    nodePort: {{ $.Values.config.nginx.ext.mqtt_port }}
+  # - name: mqtt
+  #   port: {{ $.Values.config.nginx.int.mqtt_port }}
+  #   targetPort: {{ $.Values.config.nginx.int.mqtt_port }}
+  #   nodePort: {{ $.Values.config.nginx.ext.mqtt_port }}
 ---
 apiVersion: apps/v1
 kind: Deployment

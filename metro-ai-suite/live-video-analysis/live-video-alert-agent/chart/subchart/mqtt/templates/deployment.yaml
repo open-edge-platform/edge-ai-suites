@@ -1,0 +1,97 @@
+{{/*
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mqtt.fullname" . }}
+  labels:
+    {{- include "mqtt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mqtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "mqtt.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "mqtt.fullname" . }}
+        app.kubernetes.io/component: mqtt
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "mqtt.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1883
+        runAsGroup: 1883
+        fsGroup: 1883
+      containers:
+        - name: eclipse-mosquitto
+          image: {{ include "mqtt.image" (dict "registry" (coalesce .Values.image.registry (.Values.global.registry | default "")) "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: mqtt
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: mqtt
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: mqtt
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1883
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: mosquitto-data
+              mountPath: /mosquitto/data
+            - name: mosquitto-log
+              mountPath: /mosquitto/log
+            - name: mosquitto-config
+              mountPath: /mosquitto/config/mosquitto.conf
+              subPath: mosquitto.conf
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: mosquitto-data
+          persistentVolumeClaim:
+            claimName: {{ include "mqtt.fullname" . }}-data
+        - name: mosquitto-log
+          persistentVolumeClaim:
+            claimName: {{ include "mqtt.fullname" . }}-log
+        - name: mosquitto-config
+          configMap:
+            name: {{ include "mqtt.fullname" . }}-config
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

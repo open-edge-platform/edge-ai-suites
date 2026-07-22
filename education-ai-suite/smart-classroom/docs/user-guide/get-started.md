@@ -38,6 +38,7 @@ The setup script will:
    - [3.1] Language & ASR Configuration (provider, model, device)
    - [3.2] Upload Size Limits
    - [3.3] OCR Configuration
+   - [3.4] Board OCR Configuration
 
 4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
@@ -47,6 +48,10 @@ Once all services are running, open your browser:
 
 - **Local:** http://localhost:5173
 - **Network:** http://YOUR_IP:5173
+
+> **Prefer a desktop app?** Start the script with `.\start-smart-classroom.ps1 -Electron`
+> to open the UI in an Electron desktop window instead of a browser tab. See
+> [Optional Parameters](#starting-smart-classroom) below.
 
 ---
 
@@ -74,12 +79,17 @@ After initial setup is complete, use the start script for subsequent runs or aft
 ```
 
 **Optional Parameters:**
+- `-Electron` - Launch the UI as an Electron desktop app instead of a browser tab (the UI dev server still runs on port 5173)
 - `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
 - `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
+- `-NoWindowsTerminal` - Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions/Ansible)
 
 ```powershell
+# Example: Launch the UI as a desktop app
+.\start-smart-classroom.ps1 -Electron
+
 # Example: Automated deployment
-.\start-smart-classroom.ps1 -Silent -NoElevate
+.\start-smart-classroom.ps1 -Silent -NoElevate -NoWindowsTerminal
 ```
 
 The startup script performs:

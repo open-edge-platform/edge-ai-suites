@@ -14,10 +14,8 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv package manager
-RUN pip install --no-cache-dir uv==0.9.22
-
+RUN pip install --no-cache-dir "uv>=0.9.22,<1.0.0"
 COPY . .
-
 # Create virtual environment and install dependencies using uv
 RUN uv sync && uv pip install -r ui/requirements.txt
 

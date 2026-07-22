@@ -82,6 +82,9 @@ class VideoAnalyticsPipelineService:
         self.pipeline_retry_counts: Dict[str, int] = {}
         self.max_retries = 10
 
+        # "eos" (normal), "failed" (gave up after max retries), or "stopped" (manual stop).
+        self.pipeline_final_status: Dict[str, str] = {}
+
         # Pipeline error events for status reporting (consumed by monitor_pipeline_status)
         self.pipeline_errors: Dict[str, List[str]] = {}
 
@@ -126,7 +129,8 @@ class VideoAnalyticsPipelineService:
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
-        os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
+        # Comment out to use d3d12 decoders as d3d11 decoder + gvawatermark + encoder causes crash
+        # os.environ["GST_PLUGIN_FEATURE_RANK"] = "d3d11h264dec:max,d3d11h265dec:max"
 
     def _get_model_path(self, model_key: str) -> str:
         """Get full path to model"""
@@ -296,6 +300,7 @@ class VideoAnalyticsPipelineService:
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
+                    self.pipeline_final_status[pipeline_name] = "eos"
                     self._fire_done_callback_if_all_finished()
                     break
                 else:
@@ -343,6 +348,7 @@ class VideoAnalyticsPipelineService:
                             f"Pipeline '{pipeline_name}' reached maximum retry limit ({self.max_retries}). "
                             f"Giving up."
                         )
+                        self.pipeline_final_status[pipeline_name] = "failed"
                         self._fire_done_callback_if_all_finished()
                         break
 
@@ -614,10 +620,10 @@ class VideoAnalyticsPipelineService:
         pipeline = [
             *self._get_source_elements(source, input_type),
             # Branch 1: ResNet18 classification
-            # "videorate",
-            # "!",
-            # "video/x-raw(memory:D3D11Memory),framerate=1/1",
-            # "!",
+            "videorate",
+            "!",
+            "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -745,6 +751,8 @@ class VideoAnalyticsPipelineService:
 
             # Initialize retry count
             self.pipeline_retry_counts[pipeline_name] = 0
+            # Clear any prior final status for a fresh launch
+            self.pipeline_final_status.pop(pipeline_name, None)
 
             # Launch pipeline
             success = self._launch_pipeline_internal(pipeline_name, options, command)
@@ -845,6 +853,7 @@ class VideoAnalyticsPipelineService:
                 self.logger.info(f"Pipeline '{pipeline_name}' killed")
 
             del self.pipelines[pipeline_name]
+            self.pipeline_final_status[pipeline_name] = "stopped"
             self._fire_done_callback_if_all_finished()
 
             # Stop monitoring thread

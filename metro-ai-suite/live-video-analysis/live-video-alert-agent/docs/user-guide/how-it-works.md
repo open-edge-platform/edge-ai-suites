@@ -1,8 +1,8 @@
 # How It Works
 
-The Live Video Alert Agent is a multi-layered agentic application that ingests RTSP
-video streams, applies VLM-based scene understanding, and dispatches configurable
-actions through an agentic tool-calling pipeline.
+The Live Video Alert Agent is a multi-layered application that ingests RTSP
+video streams, applies VLM-based scene understanding, and delegates configurable
+action dispatch to the external alert-agent-service over HTTP.
 
 ## Architecture Overview
 
@@ -27,18 +27,13 @@ AgentManager                   one asyncio.Task per stream (concurrent)
   │   ├─ consecutive counter   detects persistent conditions
   │   └─ escalation trigger    promotes alert tier after N consecutives
   │
-  ├─ AlertActionAgent          decides WHICH tools to call
-  │   ├─ ADK mode              Google ADK LlmAgent + FunctionTool (default) with OVMS-hosted text model endpoint
-  │   └─ Rule-based mode       direct tool execution — no LLM needed
+  ├─ AlertServiceClient ─────► alert-agent-service (HTTP POST)
+  │                             dispatches tools via ADK or rule-based mode
+  │                             tools: log_alert, capture_snapshot,
+  │                                    trigger_webhook, publish_mqtt, MCP tools
   │
   ├─ MCP Client (optional)     Model Context Protocol integration
-  │   └─ External MCP servers  discover and invoke remote tools
-  │
-  └─ Action Tools (async)
-      ├─ log_alert              structured logging
-      ├─ capture_snapshot       JPEG frame to disk / named volume
-      ├─ trigger_webhook        HMAC-signed HTTP POST
-      └─ publish_mqtt           paho-mqtt 2.x MQTTv5 publish
+  │   └─ External MCP servers  discover tools for status/monitoring
      │
      ▼
 EventManager (SSE pub/sub)     alerts fan-out to all connected browsers
@@ -101,39 +96,42 @@ Maintains per-stream × per-alert runtime state without any database dependency:
 `process()` returns `(should_act, is_escalation, is_transition)` so the manager
 can decide whether to invoke tools and which tier of tools to use.
 
-### AlertActionAgent
+### AlertServiceClient
 
-Decides which tools to invoke for a fired alert. Operates in one of three modes,
-selected automatically at startup:
+`AlertServiceClient` is the live-video-alert-agent's async HTTP integration point for action dispatch.
 
-#### Mode 1 — Google ADK (`USE_ADK=true`, default)
+- Reads `ALERT_AGENT_SERVICE_URL` (default:
+  `http://alert-agent-service:8000/api/v1`) and
+  `ALERT_AGENT_SERVICE_TIMEOUT` (default: 30 s).
+- Sends alert context, selected tool names, per-tool arguments, metadata, and an
+  optional JPEG-encoded frame to the alert-agent-service via HTTP POST.
+- Keeps the video analysis service decoupled from Google ADK, local tool
+  registries, webhook/MQTT implementations, and LLM endpoint management.
+- Receives normalized execution results such as `actions_taken`,
+  `duration_ms`, and `snapshot_path`, which are then published to the UI as
+  alert events.
 
-Uses Google's Agent Development Kit with a `LlmAgent` that receives
-structured alert context and calls `FunctionTool`-wrapped async tool functions.
-Best for dynamic, LLM-reasoned escalation logic that can be adjusted without code
-changes. The LLM is served locally via OVMS (`ovms-llm` service) using an
-OpenAI-compatible API endpoint.
-
-#### Mode 2 — Rule-based (`USE_ADK=false`)
-
-Directly executes the tool list from `AlertConfig.tools` in order. No external LLM
-required — works fully offline and air-gapped. Escalation tools from
-`AlertConfig.escalation.additional_tools` are appended when the consecutive
-threshold is reached.
+The alert-agent-service owns the ADK-powered and rule-based execution modes, so
+the live-video-alert-agent no longer embeds an action agent locally.
 
 ### Action Tools
 
-All four tools are async functions registered in `_TOOL_MAP`:
+Action tools are no longer implemented inside the live-video-alert-agent
+process. Instead, they are registered and executed by the external
+alert-agent-service.
 
-| Tool | Trigger condition | Configuration |
-|---|---|---|
-| `log_alert` | Always | Built-in, always active |
-| `capture_snapshot` | Alert fires | `SNAPSHOT_DIR` writable |
-| `trigger_webhook` | Alert fires | `WEBHOOK_URL` set |
-| `publish_mqtt` | Alert fires | `MQTT_BROKER` set |
+Typical tools provided by that service include:
 
-Tools are configured per-alert in `AlertConfig.tools` and are silently skipped
-if their required env var is not set.
+- `log_alert`
+- `capture_snapshot`
+- `trigger_webhook`
+- `publish_mqtt`
+- MCP-backed tools exposed by the alert-agent-service
+
+Tools are still referenced per alert through `AlertConfig.tools` and
+`AlertConfig.escalation.additional_tools`, but the `/tools`,
+`/tools/{name}/invoke`, and `/tools/reload` endpoints in the live-video-alert-agent
+now proxy requests to the alert-agent-service.
 
 ### Alert Configuration Schema
 
@@ -175,9 +173,8 @@ The SSE stream (`GET /events`) emits four event types:
 
 ## MCP Integration
 
-The agent supports connecting to external **Model Context Protocol (MCP)** servers, allowing
-alerts to invoke tools hosted on remote services (e.g., Prometheus for metrics queries,
-custom REST APIs, etc.).
+The agent still supports connecting to external **Model Context Protocol (MCP)**
+servers for status visibility and monitoring-oriented tool discovery.
 
 ### MCPClient
 
@@ -195,8 +192,5 @@ At startup, if `MCP_ENABLED=true`, the agent:
 1. Reads `resources/mcp_servers.json`
 2. Connects to each enabled server and performs the MCP `initialize` handshake
 3. Calls `tools/list` to discover available tools
-4. Registers discovered tools with the `AlertActionAgent` under prefixed names (`mcp_{server_name}_{tool_name}`)
-5. If ADK mode is active, reinitialises the agent so the new tools appear in the LLM's tool list
-
-MCP tools can be referenced in `AlertConfig.tools` and `AlertConfig.escalation.additional_tools`
-by their prefixed names, and are invocable via the `/mcp/tools/{tool_name}/invoke` API endpoint.
+4. Exposes the discovered tool inventory through local MCP status/inspection endpoints, while action-dispatch tool registration is handled by the alert-agent-service
+5. Leaves ADK tool-calling and alert-time MCP dispatch to the alert-agent-service rather than reinitialising a local action agent
