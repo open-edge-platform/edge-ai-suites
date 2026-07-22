@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import time
 import traceback
+import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Thread
@@ -94,6 +95,27 @@ def save_uploaded_rubric(filename: str, content: bytes) -> dict[str, Any]:
     }
 
 
+def get_rubric_content(filename: str) -> dict[str, Any]:
+    name = Path(str(filename or "")).name.strip()
+    if not name:
+        raise ValueError("filename is required")
+    path = _rubrics_upload_dir() / name
+    if not path.exists() or not path.is_file():
+        raise KeyError(f"rubric not found: {name}")
+    return {"filename": name, "content": path.read_text(encoding="utf-8")}
+
+
+def update_rubric_content(filename: str, content: str) -> dict[str, Any]:
+    name = Path(str(filename or "")).name.strip()
+    if not name:
+        raise ValueError("filename is required")
+    path = _rubrics_upload_dir() / name
+    if not path.exists() or not path.is_file():
+        raise KeyError(f"rubric not found: {name}")
+    path.write_text(content, encoding="utf-8")
+    return {"filename": name, "size_bytes": len(content.encode("utf-8"))}
+
+
 def list_rubrics() -> dict[str, Any]:
     """List every .txt/.json rubric under the rubrics/ directory, newest first."""
     rubrics_dir = _rubrics_upload_dir()
@@ -110,6 +132,63 @@ def list_rubrics() -> dict[str, Any]:
         })
     rubrics.sort(key=lambda r: r["modified_at"], reverse=True)
     return {"total": len(rubrics), "rubrics": rubrics}
+
+
+def _windows_drives() -> list[dict[str, Any]]:
+    """Enumerate available Windows drive roots (C:\\, D:\\, ...) as directory entries."""
+    import string
+
+    drives: list[dict[str, Any]] = []
+    for letter in string.ascii_uppercase:
+        root = Path(f"{letter}:\\")
+        if root.exists():
+            drives.append({"name": f"{letter}:\\", "path": str(root), "is_dir": True})
+    return drives
+
+
+def list_directory(path: str | None = None) -> dict[str, Any]:
+    """List sub-directories and PDF files under a server-side path, for the UI
+    directory picker. path=None returns the roots (Windows drive letters, or "/"
+    on POSIX). Only directories and *.pdf files are returned; file contents are
+    never read. Selecting one of the returned directory paths yields a real,
+    server-visible absolute path usable as a grading task's paper_path."""
+    import os
+
+    if not path:
+        if os.name == "nt":
+            return {"path": "", "parent": None, "entries": _windows_drives()}
+        root = Path("/")
+        return {"path": str(root), "parent": None, "entries": _scan_dir(root)}
+
+    target = Path(path)
+    if not target.exists():
+        raise ValueError(f"path does not exist: {path}")
+    if not target.is_dir():
+        raise ValueError(f"path is not a directory: {path}")
+
+    parent = str(target.parent) if target.parent != target else None
+    return {"path": str(target), "parent": parent, "entries": _scan_dir(target)}
+
+
+def _scan_dir(target: Path) -> list[dict[str, Any]]:
+    """Return sub-directories and *.pdf files under target, directories first,
+    each sorted by name. Unreadable entries are skipped silently."""
+    dirs: list[dict[str, Any]] = []
+    files: list[dict[str, Any]] = []
+    try:
+        for entry in target.iterdir():
+            try:
+                if entry.is_dir():
+                    dirs.append({"name": entry.name, "path": str(entry), "is_dir": True})
+                elif entry.is_file() and entry.suffix.lower() == ".pdf":
+                    files.append({"name": entry.name, "path": str(entry), "is_dir": False})
+            except (OSError, PermissionError):
+                continue
+    except (OSError, PermissionError) as exc:
+        raise ValueError(f"cannot read directory: {exc}") from exc
+    dirs.sort(key=lambda e: e["name"].lower())
+    files.sort(key=lambda e: e["name"].lower())
+    return dirs + files
 
 
 # ---------------------------------------------------------------------------
@@ -665,6 +744,115 @@ def get_task_status(task_id: str) -> dict[str, Any]:
     return _JOB_STORE.get_job(task_id)
 
 
+def _dir_info(job: dict[str, Any]) -> dict[str, Any] | None:
+    """Summarize a directory-mode task from its persisted item table, for the UI
+    task panel. Returns None for single-paper tasks (no item table). Counts are
+    derived from request.items; `current` is the item being graded now (parsed
+    from current_step "grading:<key>"), or None when not actively grading."""
+    request = job.get("request") or {}
+    if request.get("mode") != "directory":
+        return None
+
+    items = request.get("items")
+    items = items if isinstance(items, list) else []
+    total = len(items)
+    completed = sum(1 for it in items if it.get("status") == "completed")
+    failed = sum(1 for it in items if it.get("status") == "failed")
+    pending = sum(1 for it in items if it.get("status") == "pending")
+
+    current = None
+    step = str(job.get("current_step") or "")
+    if step.startswith("grading:"):
+        current = step.split(":", 1)[1] or None
+
+    papers_dir = request.get("papers_dir")
+    rubric_path = request.get("rubric_path")
+    return {
+        "papers_dir": papers_dir,
+        "dir_name": Path(papers_dir).name if papers_dir else None,
+        "rubric_path": rubric_path,
+        "rubric_name": Path(rubric_path).name if rubric_path else None,
+        "total": total,
+        "completed": completed,
+        "failed": failed,
+        "pending": pending,
+        "current": current,
+        "last_new_item_at": request.get("last_new_item_at_iso"),
+    }
+
+
+def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
+    """Return the last `tail` lines of a task's log file. Missing log -> empty."""
+    job = _JOB_STORE.get_job(task_id)  # raises KeyError if unknown
+    log_path = job.get("log_path")
+    if not log_path:
+        return {"task_id": task_id, "log_path": None, "lines": []}
+
+    path = Path(log_path)
+    if not path.exists():
+        return {"task_id": task_id, "log_path": str(path), "lines": []}
+
+    tail = max(1, min(int(tail), 5000))
+    with path.open("r", encoding="utf-8", errors="replace") as f:
+        lines = f.read().splitlines()
+    return {"task_id": task_id, "log_path": str(path), "lines": lines[-tail:]}
+
+
+def update_grading_config(
+    dpi: int | None = None,
+    vlm_temperature: float | None = None,
+    poll_interval: int | None = None,
+    stable_checks: int | None = None,
+    idle_timeout: int | None = None,
+) -> dict[str, Any]:
+    import re
+    from services.vlm_grading_pipeline import _component_root
+    path = _component_root() / "config.yaml"
+    text = path.read_text(encoding="utf-8")
+
+    def replace_scalar(t: str, key: str, value: str) -> str:
+        return re.sub(
+            rf"^(\s+{re.escape(key)}\s*:).*$",
+            rf"\g<1> {value}",
+            t,
+            flags=re.MULTILINE,
+        )
+
+    if dpi is not None:
+        text = replace_scalar(text, "dpi", str(int(dpi)))
+    if vlm_temperature is not None:
+        text = replace_scalar(text, "temperature", str(float(vlm_temperature)))
+    if poll_interval is not None:
+        text = replace_scalar(text, "poll_interval", str(int(poll_interval)))
+    if stable_checks is not None:
+        text = replace_scalar(text, "stable_checks", str(int(stable_checks)))
+    if idle_timeout is not None:
+        text = replace_scalar(text, "idle_timeout", str(int(idle_timeout)))
+
+    path.write_text(text, encoding="utf-8")
+    return get_grading_config()
+
+
+def get_grading_config() -> dict[str, Any]:
+    """Expose a small, curated slice of the grading component config for display.
+
+    Only a few user-facing fields are surfaced (image dpi, vlm model / temperature);
+    the full config.yaml is intentionally not returned."""
+    from services.vlm_grading_pipeline import _load_component_config
+
+    cfg = _load_component_config()
+    image = cfg.get("image") if isinstance(cfg.get("image"), dict) else {}
+    vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
+    watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
+    return {
+        "dpi": image.get("dpi"),
+        "vlm_temperature": vlm.get("temperature"),
+        "poll_interval": watch.get("poll_interval"),
+        "stable_checks": watch.get("stable_checks"),
+        "idle_timeout": watch.get("idle_timeout"),
+    }
+
+
 def list_tasks(status: str | None = None) -> dict[str, Any]:
     """List all tasks (newest first), optionally filtered by status, with a
     per-status count over the full set (before filtering)."""
@@ -690,6 +878,7 @@ def list_tasks(status: str | None = None) -> dict[str, Any]:
             "created_at": job.get("created_at"),
             "updated_at": job.get("updated_at"),
             "log_path": job.get("log_path"),
+            "dir_info": _dir_info(job),
         }
         for job in jobs
     ]

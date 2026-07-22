@@ -49,11 +49,10 @@ def encode_image(path: Path, max_pixels: int | None = None) -> str:
     return f"data:{mime};base64,{b64}"
 
 
-def build_payload(model: str, image: Path, user_prompt: str,
+def build_payload(image: Path, user_prompt: str,
                   max_tokens: int, temperature: float,
                   max_image_pixels: int | None = None) -> dict[str, Any]:
     return {
-        "model": model,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {
@@ -65,14 +64,13 @@ def build_payload(model: str, image: Path, user_prompt: str,
                 ],
             },
         ],
-        "max_tokens": max_tokens,
+        "max_completion_tokens": max_tokens,
         "temperature": temperature,
     }
 
 
 def grade_page(
     url: str,
-    model: str,
     image: Path,
     user_prompt: str,
     max_tokens: int = 4096,
@@ -86,7 +84,7 @@ def grade_page(
     Timing is measured client-side and does not depend on any response field.
     max_image_pixels caps the sent image size (downscale only if exceeded).
     """
-    payload = build_payload(model, image, user_prompt, max_tokens, temperature,
+    payload = build_payload(image, user_prompt, max_tokens, temperature,
                             max_image_pixels)
 
     start = time.perf_counter()
@@ -146,7 +144,6 @@ HEADER_SYSTEM_PROMPT = (
 
 def extract_header_info(
     url: str,
-    model: str,
     image: Path,
     instruction: str | None = None,
     max_tokens: int = 512,
@@ -154,20 +151,12 @@ def extract_header_info(
     timeout: int = 300,
     max_image_pixels: int | None = None,
 ) -> dict[str, Any]:
-    """Ask the VLM to read the paper header and return identifying info as JSON.
-
-    `instruction` is the per-exam extraction spec (taken from the rubric's header
-    block); it tells the model which fields this exam needs. When None, a built-in
-    default spec is used. Returns the same envelope as grade_page (ok / answer /
-    elapsed_seconds / finish_reason / error); the caller parses `answer`.
-    """
     user_text = (
         instruction.strip()
         if instruction and instruction.strip()
         else "Extract the header information as the specified JSON object."
     )
     payload = {
-        "model": model,
         "messages": [
             {"role": "system", "content": HEADER_SYSTEM_PROMPT},
             {
@@ -179,7 +168,7 @@ def extract_header_info(
                 ],
             },
         ],
-        "max_tokens": max_tokens,
+        "max_completion_tokens": max_tokens,
         "temperature": temperature,
     }
 

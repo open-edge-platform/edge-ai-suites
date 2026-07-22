@@ -79,6 +79,19 @@ class GradingTaskCreateResponse(BaseModel):
     log_path: str | None = None
 
 
+class DirInfo(BaseModel):
+    papers_dir: str | None = None
+    dir_name: str | None = None
+    rubric_path: str | None = None
+    rubric_name: str | None = None
+    total: int = 0
+    completed: int = 0
+    failed: int = 0
+    pending: int = 0
+    current: str | None = None
+    last_new_item_at: str | None = None
+
+
 class GradingTaskStatusResponse(BaseModel):
     task_id: str
     task_type: str
@@ -89,6 +102,7 @@ class GradingTaskStatusResponse(BaseModel):
     created_at: str
     updated_at: str
     log_path: str | None = None
+    dir_info: DirInfo | None = None
 
 
 class GradingTaskResultResponse(BaseModel):
@@ -132,6 +146,7 @@ class TaskSummary(BaseModel):
     created_at: str
     updated_at: str
     log_path: str | None = None
+    dir_info: DirInfo | None = None
 
 
 class TaskListResponse(BaseModel):
@@ -140,11 +155,59 @@ class TaskListResponse(BaseModel):
     tasks: list[TaskSummary]
 
 
+class TaskLogResponse(BaseModel):
+    task_id: str
+    log_path: str | None = None
+    lines: list[str]
+
+
 class TaskSummaryJsonResponse(BaseModel):
     metadata: dict
     students: dict
     updated_at: str | None = None
     student_count: int = 0
+
+
+class FsEntry(BaseModel):
+    name: str
+    path: str
+    is_dir: bool
+
+
+class FsListResponse(BaseModel):
+    path: str
+    parent: str | None = None
+    entries: list[FsEntry]
+
+
+class GradingConfigResponse(BaseModel):
+    dpi: int | None = None
+    vlm_temperature: float | None = None
+    poll_interval: int | None = None
+    stable_checks: int | None = None
+    idle_timeout: int | None = None
+
+
+class GradingConfigUpdateRequest(BaseModel):
+    dpi: int | None = None
+    vlm_temperature: float | None = None
+    poll_interval: int | None = None
+    stable_checks: int | None = None
+    idle_timeout: int | None = None
+
+
+class RubricContentResponse(BaseModel):
+    filename: str
+    content: str
+
+
+class RubricUpdateRequest(BaseModel):
+    content: str
+
+
+class RubricUpdateResponse(BaseModel):
+    filename: str
+    size_bytes: int
 
 
 class UnifiedTaskCreateRequest(BaseModel):

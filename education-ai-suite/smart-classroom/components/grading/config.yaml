@@ -3,19 +3,17 @@ image:
   dpi: 50
 
 vlm:
-  model: "Qwen3.5-9B-int8-ov"
   max_tokens: 4096
   temperature: 0.1
   max_image_pixels: 4000000
 
 grading:
-  default_prompt_path: "rubrics/math_rubrics.txt"
   force_regrade: true
 
 watch:
-  poll_interval: 5      # seconds between table refresh scans
+  poll_interval: 5
   stable_checks: 2      # consecutive unchanged polls before a PDF is graded
-  idle_timeout: 180     # seconds without a new item before the task auto-completes
+  idle_timeout: 180
 
 detection_service:
   # Detection filtering and processing (consumed by _run_layout_detection)

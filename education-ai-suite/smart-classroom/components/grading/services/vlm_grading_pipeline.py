@@ -113,14 +113,12 @@ def run_vlm_grading_pipeline(
     # rubric_path: task value, else component config default_prompt_path.
     rubric_path = request_payload.get("rubric_path")
     if not rubric_path:
-        default_rel = cfg_grading.get("default_prompt_path", "rubrics/math_rubrics.txt")
-        rubric_path = _component_root() / default_rel
+        raise ValueError("rubric_path is required")
     prompt_path = Path(str(rubric_path)).resolve()
 
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
-    model = str(options.get("model", cfg_vlm.get("model", "Qwen3.5-9B-int8-ov")))
     _mip = options.get("max_image_pixels", cfg_vlm.get("max_image_pixels"))
     max_image_pixels = int(_mip) if _mip else None
     vlm_url = str(options.get("vlm_api_url") or _load_provider_url("vlm_provider", "http://127.0.0.1:9900"))
@@ -230,7 +228,7 @@ def run_vlm_grading_pipeline(
     else:
         try:
             header_result = extract_header_info(
-                vlm_url, model, images[0], instruction=header_instruction,
+                vlm_url, images[0], instruction=header_instruction,
                 max_image_pixels=max_image_pixels,
             )
             (replies_dir / "header_prompt.txt").write_text(header_instruction, encoding="utf-8")
@@ -275,7 +273,7 @@ def run_vlm_grading_pipeline(
         (replies_dir / f"{tag}_prompt.txt").write_text(prompt_for_unit, encoding="utf-8")
 
         result = grade_page(
-            vlm_url, model, image, prompt_for_unit,
+            vlm_url, image, prompt_for_unit,
             max_tokens=max_tokens, temperature=temperature,
             max_image_pixels=max_image_pixels,
         )

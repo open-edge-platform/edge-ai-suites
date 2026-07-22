@@ -114,7 +114,7 @@ class Message(BaseModel):
 class ChatCompletionRequest(BaseModel):
     model: str = MODEL_NAME
     messages: List[Message]
-    max_tokens: int = Field(default=DEFAULT_MAX_TOKENS, ge=1, le=4096)
+    max_completion_tokens: int = Field(default=DEFAULT_MAX_TOKENS, ge=1, le=4096)
     temperature: float = Field(default=DEFAULT_TEMPERATURE, ge=0.0, le=2.0)
 
 
@@ -285,14 +285,14 @@ async def chat_completions(request: ChatCompletionRequest):
 
         prompt_text = prompt_text.strip()
 
-        logger.info(f"Request: prompt={len(prompt_text)} chars, images={len(images)}, max_tokens={request.max_tokens}")
+        logger.info(f"Request: prompt={len(prompt_text)} chars, images={len(images)}, max_completion_tokens={request.max_completion_tokens}")
 
         gen_start = time.time()
 
         from openvino_genai import GenerationConfig
 
         gen_config = GenerationConfig()
-        gen_config.max_new_tokens = request.max_tokens
+        gen_config.max_new_tokens = request.max_completion_tokens
         gen_config.do_sample = False
 
         # Disable Qwen3 thinking mode at the chat-template level (more reliable
@@ -347,8 +347,8 @@ async def chat_completions(request: ChatCompletionRequest):
 
         logger.info(f"Response: {len(response_text)} chars, gen_time={gen_time:.2f}s, total_time={total_time:.2f}s")
 
-        if len(response_text) < 50 and request.max_tokens > 100:
-            logger.warning(f"Response suspiciously short: {len(response_text)} chars with max_tokens={request.max_tokens}")
+        if len(response_text) < 50 and request.max_completion_tokens > 100:
+            logger.warning(f"Response suspiciously short: {len(response_text)} chars with max_completion_tokens={request.max_completion_tokens}")
 
         prompt_tokens = max(len(prompt_text) // 2, 1)
         completion_tokens = max(len(response_text) // 2, 1)
