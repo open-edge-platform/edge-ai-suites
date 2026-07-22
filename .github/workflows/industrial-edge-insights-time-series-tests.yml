@@ -158,8 +158,7 @@ jobs:
           WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
           # BUILD_NORMALIZED is set by the previous step (whitespace-trimmed)
-          BUILD_NORM="${BUILD_NORMALIZED:-$(echo "$BUILD" | xargs)}"
-          if [[ -n "$WEEKLY_BUILD_DATE_INPUT" && "$BUILD_NORM" != "no" ]]; then
+          if [[ -n "$WEEKLY_BUILD_DATE_INPUT" && "$BUILD_NORMALIZED" != "no" ]]; then
             echo "Error: 'weekly_build_date' is only supported when build=no."
             echo "Current values: build=$BUILD_NORM, weekly_build_date=$WEEKLY_BUILD_DATE_INPUT"
             exit 1
