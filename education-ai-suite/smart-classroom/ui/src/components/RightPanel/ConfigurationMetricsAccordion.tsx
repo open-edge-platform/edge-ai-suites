@@ -6,7 +6,7 @@ import { useAppSelector } from "../../redux/hooks";
 import { getConfigurationMetrics, getPlatformInfo, getCsSystemConfig } from "../../services/api";
 
 interface Props {
-  activeScreen: 'main' | 'content-search';
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const ConfigurationMetricsAccordion: React.FC<Props> = ({ activeScreen }) => {

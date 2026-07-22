@@ -46,6 +46,7 @@ const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 // Default to empty string (same-origin) so the Vite dev proxy routes /api/v1
 // to port 9011 without CORS. Set VITE_CONTENT_SEARCH_API_URL for remote hosts.
 const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
+const GRADING_API_URL: string = env.VITE_GRADING_API_URL || '/grading-api';
 const HEALTH_TIMEOUT_MS = 5000;
 
 /**
@@ -1250,5 +1251,202 @@ export async function csGetFilesList(): Promise<{
       throw new Error(json.message || `Files list failed (${res.status})`);
     }
     return await res.json();
+  });
+}
+
+export interface GradingRubricInfo {
+  filename: string;
+  rubric_path: string;
+  size_bytes: number;
+  modified_at: string;
+}
+
+export interface GradingDirInfo {
+  papers_dir: string | null;
+  dir_name: string | null;
+  rubric_path: string | null;
+  rubric_name: string | null;
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  current: string | null;
+  last_new_item_at: string | null;
+}
+
+export interface GradingTask {
+  task_id: string;
+  task_type: string;
+  status: string;
+  current_step: string;
+  progress: number;
+  error_message?: string | null;
+  created_at: string;
+  updated_at?: string;
+  log_path?: string | null;
+  dir_info?: GradingDirInfo | null;
+}
+
+export interface GradingQuestionScore {
+  catalog?: string;
+  type?: string;
+  score?: number | null;
+  max_score?: number | null;
+}
+
+export interface GradingStudentResult {
+  student_id?: string | null;
+  student_name?: string | null;
+  class_name?: string | null;
+  exam_number?: string | null;
+  paper_path?: string | null;
+  total_score?: number | null;
+  total_max?: number | null;
+  objective_score?: number | null;
+  objective_max?: number | null;
+  subjective_score?: number | null;
+  subjective_max?: number | null;
+  questions?: Record<string, GradingQuestionScore>;
+}
+
+export interface GradingSummary {
+  metadata: Record<string, unknown>;
+  students: Record<string, GradingStudentResult>;
+  updated_at?: string | null;
+  student_count: number;
+}
+
+async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${GRADING_API_URL}${path}`, {
+      cache: 'no-store',
+      ...init,
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.detail || `Grading request failed (${res.status})`);
+    }
+    return (await res.json()) as T;
+  });
+}
+
+export async function gradingListRubrics(): Promise<{ total: number; rubrics: GradingRubricInfo[] }> {
+  return gradingFetch('/rubrics');
+}
+
+export async function gradingUploadRubric(file: File): Promise<{
+  status: string;
+  filename: string;
+  rubric_path: string;
+  size_bytes: number;
+}> {
+  const form = new FormData();
+  form.append('file', file);
+  return gradingFetch('/rubrics/upload', { method: 'POST', body: form });
+}
+
+export async function gradingCreateTask(body: {
+  paper_path: string;
+  rubric_path?: string;
+}): Promise<GradingTask> {
+  return gradingFetch('/grading/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function gradingListTasks(status?: string): Promise<{
+  total: number;
+  status_counts: Record<string, number>;
+  tasks: GradingTask[];
+}> {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  return gradingFetch(`/grading/tasks${q}`);
+}
+
+export async function gradingGetTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`);
+}
+
+export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/summary`);
+}
+
+export async function gradingPauseTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/pause`, { method: 'POST' });
+}
+
+export async function gradingResumeTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST' });
+}
+
+export async function gradingCancelTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/cancel`, { method: 'POST' });
+}
+
+export async function gradingHealth(): Promise<{ status: string; service: string; language: string }> {
+  return gradingFetch('/health');
+}
+
+export interface GradingFsEntry {
+  name: string;
+  path: string;
+  is_dir: boolean;
+}
+
+export interface GradingFsListing {
+  path: string;
+  parent: string | null;
+  entries: GradingFsEntry[];
+}
+
+// Browse server-side directories for the target-path picker. path=undefined
+// returns the roots (Windows drive letters). Returned directory paths are real,
+// server-visible absolute paths usable as a task's paper_path.
+export async function gradingListDir(path?: string): Promise<GradingFsListing> {
+  const q = path ? `?path=${encodeURIComponent(path)}` : '';
+  return gradingFetch(`/fs/list${q}`);
+}
+
+export interface GradingTaskLog {
+  task_id: string;
+  log_path: string | null;
+  lines: string[];
+}
+
+export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<GradingTaskLog> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/log?tail=${tail}`);
+}
+
+export interface GradingConfig {
+  dpi: number | null;
+  vlm_temperature: number | null;
+  poll_interval: number | null;
+  stable_checks: number | null;
+  idle_timeout: number | null;
+}
+
+export async function gradingGetConfig(): Promise<GradingConfig> {
+  return gradingFetch('/grading/config');
+}
+
+export async function gradingUpdateConfig(updates: { dpi?: number | null; vlm_temperature?: number | null; poll_interval?: number | null; stable_checks?: number | null; idle_timeout?: number | null }): Promise<GradingConfig> {
+  return gradingFetch('/grading/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+}
+
+export async function gradingGetRubricContent(filename: string): Promise<{ filename: string; content: string }> {
+  return gradingFetch(`/rubrics/${encodeURIComponent(filename)}/content`);
+}
+
+export async function gradingUpdateRubricContent(filename: string, content: string): Promise<{ filename: string; size_bytes: number }> {
+  return gradingFetch(`/rubrics/${encodeURIComponent(filename)}/content`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
   });
 }

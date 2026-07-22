@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom'; // Add this import
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
+import GradingScreen from './components/Grading/GradingScreen';
 import Footer from './components/Footer/Footer';
 import Modal from './components/Modals/Modal'; // Import your existing Modal
 import SettingsForm from './components/Modals/SettingsForm'; // Import your existing SettingsForm
 import './App.css';
+import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
@@ -17,7 +19,7 @@ const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
-  const [activeScreen, setActiveScreen] = useState<'main' | 'content-search'>('main');
+  const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading'>('main');
   useVideoPipelineMonitor();
   const checkBackendHealth = async () => {
     try {
@@ -101,9 +103,19 @@ const App: React.FC = () => {
           <span>{t('contentSearch.subtitle')}</span>
         </div>
       )}
-      <div className="main-content">
-        <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} />
+      <div style={{ display: activeScreen === 'grading' ? 'none' : 'contents' }}>
+        <div className="main-content">
+          <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} />
+        </div>
       </div>
+      {activeScreen === 'grading' && (
+        <>
+          <div className="header-bar grading-header-bar" />
+          <div className="main-content">
+            <GradingScreen />
+          </div>
+        </>
+      )}
       <Footer />
       
       {/* Render modal as portal to document.body using your existing Modal component */}

@@ -14,6 +14,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const CONTENT_SEARCH_TARGET =
   process.env.CONTENT_SEARCH_TARGET || 'http://127.0.0.1:9011';
 
+const GRADING_TARGET =
+  process.env.GRADING_TARGET || 'http://127.0.0.1:9012';
+
 /**
  * Start the static + proxy server bound to loopback on an ephemeral port.
  * @param {string} distPath Absolute path to the built `dist/` directory.
@@ -30,6 +33,17 @@ function startServer(distPath) {
       pathFilter: '/api/v1',
       target: CONTENT_SEARCH_TARGET,
       changeOrigin: true,
+    })
+  );
+
+  // Proxy /grading-api -> grading backend (9012), rewriting the prefix to
+  // /api/v1. 1:1 with the Vite dev proxy in ui/vite.config.ts.
+  app.use(
+    createProxyMiddleware({
+      pathFilter: '/grading-api',
+      target: GRADING_TARGET,
+      changeOrigin: true,
+      pathRewrite: { '^/grading-api': '/api/v1' },
     })
   );
 

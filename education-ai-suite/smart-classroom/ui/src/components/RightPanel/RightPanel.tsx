@@ -6,7 +6,7 @@ import PreValidatedModelsAccordion from "./PreValidatedModelsAccordion";
 import "../../assets/css/RightPanel.css";
 
 interface RightPanelProps {
-  activeScreen: 'main' | 'content-search';
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({ activeScreen }) => {

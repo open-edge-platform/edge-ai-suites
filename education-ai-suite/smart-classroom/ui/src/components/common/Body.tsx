@@ -6,7 +6,7 @@ import "../../assets/css/Body.css";
 
 interface BodyProps {
   isModalOpen: boolean;
-  activeScreen: 'main' | 'content-search';
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen }) => {
