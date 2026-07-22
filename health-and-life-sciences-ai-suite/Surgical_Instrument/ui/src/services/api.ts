@@ -71,17 +71,6 @@ export async function getStatusSnapshot(): Promise<any> {
   });
 }
 
-export async function isFrameAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch(`${BASE_URL}/frame/latest?base64=1`, { cache: 'no-store' });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data?.available === true;
-  } catch {
-    return false;
-  }
-}
-
 export async function startWorkloads(_target: WorkloadType = 'all'): Promise<StartResponse> {
   return safeApiCall(async () => {
     // If the user has picked a source in the Settings modal, forward it in
@@ -146,10 +135,6 @@ export async function getResourceMetrics(): Promise<{
 
 export function getEventsUrl(_workloads: WorkloadType[]): string {
   return `${BASE_URL}/events`;
-}
-
-export function getFrameUrl(): string {
-  return `${BASE_URL}/video_feed`;
 }
 
 export interface PipelineConfig {
@@ -217,7 +202,7 @@ export async function listCameras(): Promise<CamerasResponse> {
 
 // ---- Pending source (applied on the next start) --------------------------
 
-export type PipelineSource = { kind: 'file' | 'v4l2' | 'basler'; arg: string };
+export type PipelineSource = { kind: 'file' | 'basler'; arg: string };
 
 let pendingSource: PipelineSource | null = null;
 
@@ -258,13 +243,11 @@ export const api = {
   getStreamingStatus,
   getReadiness,
   getStatusSnapshot,
-  isFrameAvailable,
   start: startWorkloads,
   stop: stopWorkloads,
   getPlatformInfo,
   getResourceMetrics,
   getEventsUrl,
-  getFrameUrl,
   getConfig,
   setDevice,
   reset: resetSession,

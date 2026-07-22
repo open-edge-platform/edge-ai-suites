@@ -1,0 +1,111 @@
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-section {
+  border: 1px solid #d7dee7;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.config-section summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 16px;
+  font-weight: 700;
+  color: #203040;
+  background: linear-gradient(180deg, #fbfdff 0%, #eef4f8 100%);
+}
+
+.config-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.config-section-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.config-field select,
+.config-actions-row button,
+.config-actions-column button {
+  font: inherit;
+}
+
+.config-field select {
+  min-height: 40px;
+  border: 1px solid #c7d2de;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fff;
+}
+
+.config-actions-row,
+.config-actions-column {
+  display: flex;
+  gap: 8px;
+}
+
+.config-actions-column {
+  flex-direction: column;
+}
+
+.config-actions-row button,
+.config-actions-column button {
+  min-height: 40px;
+  border: 1px solid #c7d2de;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1f2937;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.config-actions-row button:disabled,
+.config-actions-column button:disabled,
+.config-field select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.config-primary {
+  background: #0f6cbd;
+  border-color: #0f6cbd;
+  color: #fff;
+}
+
+.config-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5b6b7d;
+}
+
+.config-status {
+  border: 1px solid #cce6d1;
+  background: #eefaf1;
+  color: #1b5e20;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.config-status-error {
+  border-color: #f3c5c5;
+  background: #fff1f1;
+  color: #b42318;
+}

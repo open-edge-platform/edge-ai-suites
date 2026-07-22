@@ -1,19 +1,15 @@
-"""Flask control plane for the surgical DL Streamer pipeline container.
+"""Flask control plane for the finalized DL Streamer pipeline container.
 
-Exposes three routes:
+Routes:
 
-    GET  /health              → {"status": "idle"|"running", "pid": int|null}
-    POST /start {"device":X}  → spawn gst-launch-1.0 subprocess; 409 if running
-    POST /stop                → SIGTERM subprocess, escalate to SIGKILL after 5s
+    GET  /health
+    GET  /latency
+    POST /start {"device":X, "source": {"kind": ..., "arg": ...}}
+    POST /stop
 
-The subprocess is launched with GST_TRACERS=latency_tracer;latency(...) so
-canonical per-element and per-pipeline latency records land in
-$FRAME_DIR/latency.log for the backend consumer to tail.
-
-Auto-loop: a supervisor thread respawns gst-launch when it exits (typically
-from EOS at the end of the mp4). Loop stops only when /stop is called or the
-container shuts down — matches the "seek-to-0-on-EOF" loop the old OpenCV
-InferenceWorker did with cv2.CAP_PROP_POS_FRAMES.
+The launched gst process writes latency tracer output to stderr. A local
+collector parses those lines into rolling window percentiles exposed by
+`GET /latency` for the backend/UI.
 """
 from __future__ import annotations
 
@@ -21,12 +17,13 @@ import logging
 import os
 import signal
 import subprocess
+import sys
 import threading
 import time
-from pathlib import Path
 
 from flask import Flask, jsonify, request
 
+from latency_tracer_sink import RollingLatency, pump_stream
 from pipeline_string import VALID_DEVICES, VALID_SOURCE_KINDS, build
 
 log = logging.getLogger("launcher")
@@ -37,10 +34,10 @@ VIDEO       = os.environ["VIDEO"]
 IR_XML      = os.environ["IR_XML"]
 THRESHOLD   = float(os.environ.get("THRESHOLD", "0.5"))
 TARGET_FPS  = int(os.environ.get("TARGET_FPS", "60"))
-MQTT_HOST   = os.environ.get("MQTT_HOST", "surgical-mqtt")
-MQTT_TOPIC  = os.environ.get("MQTT_TOPIC", "surgical/detections")
-FRAME_DIR   = Path(os.environ.get("FRAME_DIR", "/frames"))
 HTTP_PORT   = int(os.environ.get("PIPELINE_HTTP_PORT", "8000"))
+DISPLAY_VIEW = os.environ.get("PIPELINE_DISPLAY_VIEW", "1") == "1"
+VIDEO_SINK   = os.environ.get("PIPELINE_VIDEO_SINK", "ximagesink")
+FRAME_LIMIT  = int(os.environ.get("PIPELINE_FRAME_LIMIT", "3000"))
 # Source defaults. `SOURCE_KIND` = file|v4l2|basler. `SOURCE_ARG` is the
 # path/device/serial. Both fall back to `VIDEO` (a file path) for
 # backward compat with the pre-multi-source docker-compose.yaml.
@@ -51,10 +48,6 @@ SOURCE_ARG  = os.environ.get("SOURCE_ARG", VIDEO)
 RESPAWN_MAX     = int(os.environ.get("RESPAWN_MAX", "6"))
 RESPAWN_WINDOW  = float(os.environ.get("RESPAWN_WINDOW_S", "10"))
 
-FRAME_DIR.mkdir(parents=True, exist_ok=True)
-LATENCY_LOG = FRAME_DIR / "latency.log"
-FRAME_PATH  = FRAME_DIR / "latest.jpg"
-
 # ------------------------------------------------------------ state --------
 _proc: subprocess.Popen | None = None
 _proc_device: str | None = None
@@ -62,6 +55,7 @@ _proc_source_kind: str | None = None
 _proc_source_arg: str | None = None
 _wanted_running: bool = False        # set True by /start, False by /stop
 _supervisor: threading.Thread | None = None
+_latency = RollingLatency()
 _lock = threading.Lock()
 
 
@@ -73,6 +67,7 @@ def _reap_if_dead() -> None:
 
 
 def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
+    _latency.reset()
     pipeline = build(
         source_kind=source_kind,
         source_arg=source_arg,
@@ -80,44 +75,20 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
         device=device,
         threshold=THRESHOLD,
         target_fps=TARGET_FPS,
-        mqtt_host=MQTT_HOST,
-        mqtt_topic=MQTT_TOPIC,
-        frame_path=str(FRAME_PATH),
+        frame_limit=FRAME_LIMIT,
+        display_view=DISPLAY_VIEW,
+        video_sink=VIDEO_SINK,
     )
-    # Truncate the latency log per run so stale ticks don't skew p99.
-    LATENCY_LOG.write_text("")
 
     env = os.environ.copy()
     env.update(
         {
-            "GST_TRACERS": "latency_tracer;latency(flags=pipeline+element+reported)",
+            "GST_TRACERS": "latency(flags=pipeline)",
             "GST_DEBUG": "GST_TRACER:7",
-            "GST_DEBUG_FILE": str(LATENCY_LOG),
             "GST_DEBUG_NO_COLOR": "1",
         }
     )
 
-    # gst-launch-1.0 parses its own CLI (elements + `!` separators + properties
-    # with spaces). Easiest & most robust is to hand the full pipeline string
-    # to the shell so its own tokeniser handles quoting. stdout/stderr flow to
-    # the container log so `docker logs` shows pipeline errors.
-    #
-    # For `basler`, the pipeline_string.py starts with `fdsrc fd=0`; a small
-    # Python helper (basler_reader.py) streams raw YUY2 frames from pypylon
-    # to stdout, which we pipe into gst-launch's fd=0. `exec` on the tail
-    # ensures the shell doesn't linger past the pipeline exit; PIPESTATUS/
-    # set -o pipefail isn't needed because our supervisor only cares that
-    # *any* pipe stage exiting takes the whole group down.
-    #
-    # basler_reader.py streams raw camera-native YCbCr422_8 (UYVY, 2 B/px)
-    # frames from pypylon on stdout — no `pylon.ImageFormatConverter`, no
-    # software colour convert. pipeline_string.py's basler branch consumes
-    # them via `fdsrc ! rawvideoparse format=uyvy ! vapostproc ! NV12` in VA
-    # memory, and the drawer branch is `gvawatermark` (VA-native), so the
-    # entire video path stays on the iGPU media engine — no `videoconvert`
-    # anywhere. `--pixel-format bgr` remains available as a fallback for
-    # cameras that do not advertise YCbCr422_8 (basler_reader.py fails fast
-    # in that case).
     if source_kind == "basler":
         cmd = (
             f"exec python3 /opt/basler_reader.py {source_arg} "
@@ -127,12 +98,23 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     else:
         cmd = f"exec gst-launch-1.0 {pipeline}"
 
-    return subprocess.Popen(
+    proc = subprocess.Popen(
         cmd,
         shell=True,
         env=env,
         start_new_session=True,
+        stderr=subprocess.PIPE,
+        text=True,
     )
+    if proc.stderr is not None:
+        threading.Thread(
+            target=pump_stream,
+            args=(proc.stderr, _latency),
+            kwargs={"log": log, "passthrough": sys.stderr},
+            name="latency-tracer",
+            daemon=True,
+        ).start()
+    return proc
 
 
 def _supervisor_loop(device: str, source_kind: str, source_arg: str) -> None:
@@ -191,9 +173,13 @@ def health():
             source_kind=_proc_source_kind,
             source_arg=_proc_source_arg,
             wanted_running=_wanted_running,
-            latency_log=str(LATENCY_LOG),
-            frame_path=str(FRAME_PATH),
+            latency=_latency.snapshot(),
         )
+
+
+@app.get("/latency")
+def latency():
+    return jsonify(_latency.snapshot())
 
 
 @app.post("/start")

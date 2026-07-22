@@ -1,14 +1,12 @@
 """Real Flask server for the Surgical Instrument backend.
 
-Replaces ``backend_mvp/mock_server.py``. Wire shape identical to the mock so
-the existing Redux UI works unmodified — the only differences are that the
-lifecycle drives a real :class:`Orchestrator` FSM (weights → dataset → train →
-export → ready) and frames come from a real DL Streamer pipeline running in
-the ``surgical-pipeline`` container. This backend is a *consumer* of that
-pipeline: it POSTs /start /stop to the pipeline HTTP control plane, subscribes
-to the ``surgical/detections`` MQTT topic for per-frame metadata, tails the
-GStreamer ``latency_tracer`` log for infer + total latency, and reads annotated
-JPEGs from the shared ``/frames`` volume. See :mod:`backend.consumer`.
+Replaces ``backend_mvp/mock_server.py``. Wire shape remains compatible with the
+existing Redux UI while lifecycle is driven by a real :class:`Orchestrator`
+FSM (weights → dataset → train → export → ready). Runtime inference is handled
+by the ``surgical-pipeline`` container and this backend acts as the control
+plane consumer: it POSTs /start /stop to the pipeline HTTP API and polls
+pipeline health + rolling latency snapshots for SSE emission. See
+:mod:`backend.consumer`.
 
 Emitted shapes (unchanged from mock):
   GET  /api/health           -> {status, build_sha, uptime_s}
@@ -66,7 +64,7 @@ class ServerState:
     lifecycle: str = "initializing"           # UI-facing lifecycle
     instance_id: Optional[str] = None
     device: str = "GPU"
-    # Selected pipeline input source. `source_kind` is one of file|v4l2|basler,
+    # Selected pipeline input source. `source_kind` is one of file|basler,
     # `source_arg` is the path/device/serial. Both None → pipeline uses its own
     # SOURCE_KIND/SOURCE_ARG env defaults (backward-compat with pre-slice-B UI).
     source_kind: Optional[str] = None
@@ -92,8 +90,8 @@ _orch: Optional[Orchestrator] = None
 _worker = None  # type: Optional[Any]  # InferenceWorker — lazy import
 _cfg: Optional[dict] = None
 
-# Frozen snapshot of the last session — populated on Stop, cleared on Start,
-# so the UI keeps showing the final frame + session KPIs after the user stops.
+    # Frozen snapshot of the last session — populated on Stop, cleared on Start,
+    # so the UI keeps showing the final KPI values after the user stops.
 _last_stats: Optional[dict] = None
 _last_dets: Optional[dict] = None
 _last_frame_jpeg: Optional[bytes] = None
@@ -155,22 +153,7 @@ def _snapshot_full() -> dict[str, Any]:
             "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
             "peak_confidence": 0.0, "distinct_polyps": 0,
         }
-
-    if _worker is not None:
-        dets = _worker.latest_detections()
-        detections = dets.get("detections", [])
-        n_polyp = sum(1 for d in detections if str(d.get("class_name", "")).lower() == "polyp")
-        conf = max((float(d.get("confidence", 0.0)) for d in detections), default=0.0)
-    else:
-        # Post-stop: no live detection. Session totals still come from _last_stats.
-        n_polyp = 0
-        conf = 0.0
     fps = float(inf.get("delivered_fps", 0.0))
-    e2e_mean = float(inf.get("e2e_mean_ms", inf.get("total_mean_ms", 0.0)))
-    e2e_p50 = float(inf.get("e2e_p50_ms", 0.0))
-    e2e_p90 = float(inf.get("e2e_p90_ms", 0.0))
-    e2e_p95 = float(inf.get("e2e_p95_ms", 0.0))
-    e2e_p99 = float(inf.get("e2e_p99_ms", inf.get("total_p99_ms", 0.0)))
     proc_mean = float(inf.get("processing_mean_ms", 0.0))
     proc_p50 = float(inf.get("processing_p50_ms", 0.0))
     proc_p90 = float(inf.get("processing_p90_ms", 0.0))
@@ -181,6 +164,8 @@ def _snapshot_full() -> dict[str, Any]:
     infer_p90 = float(inf.get("infer_p90_ms", 0.0))
     infer_p95 = float(inf.get("infer_p95_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
+    source_kind = str(inf.get("source_kind") or STATE.source_kind or "file")
+    input_source = "Basler live camera" if source_kind == "basler" else "Recorded file"
 
     cfg = _cfg or {}
     model_cfg = cfg.get("model", {}) or {}
@@ -192,19 +177,6 @@ def _snapshot_full() -> dict[str, Any]:
     return {
         "lifecycle": STATE.lifecycle,
         "bootstrap": boot,
-        "analytics": {
-            "polyp_detection": {
-                "detected": n_polyp > 0,
-                "count": n_polyp,
-                "confidence": round(conf, 3),
-                "distinct_polyps": int(inf.get("distinct_polyps", 0)),
-                "frames_processed": int(inf.get("frame_id", 0)),
-                "frames_with_detection": int(inf.get("frames_with_detection", 0)),
-                "detection_rate": round(float(inf.get("detection_rate", 0.0)), 4),
-                "peak_confidence": round(float(inf.get("peak_confidence", 0.0)), 3),
-                "session_seconds": round(float(inf.get("uptime_s", 0.0)), 1),
-            },
-        },
         "metrics": {
             "fps": round(fps, 2),
             "loop_count": int(inf.get("frame_id", 0)),
@@ -219,53 +191,39 @@ def _snapshot_full() -> dict[str, Any]:
             "processing_p90_ms": round(proc_p90, 2),
             "processing_p95_ms": round(proc_p95, 2),
             "processing_p99_ms": round(proc_p99, 2),
-            "e2e_mean_ms": round(e2e_mean, 2),
-            "e2e_p50_ms": round(e2e_p50, 2),
-            "e2e_p90_ms": round(e2e_p90, 2),
-            "e2e_p95_ms": round(e2e_p95, 2),
-            "e2e_p99_ms": round(e2e_p99, 2),
-            # Legacy aliases — same values as e2e_*.
-            "total_mean_ms": round(e2e_mean, 2),
-            "total_p99_ms": round(e2e_p99, 2),
+            "total_mean_ms": round(proc_mean, 2),
+            "total_p99_ms": round(proc_p99, 2),
         },
-        "frame": (
-            (_worker is not None and _worker.latest_frame_jpeg() is not None)
-            or _last_frame_jpeg is not None
-        ),
+        "pipeline_latency": {
+            "mean_ms": round(proc_mean, 2),
+            "p50_ms": round(proc_p50, 2),
+            "p90_ms": round(proc_p90, 2),
+            "p95_ms": round(proc_p95, 2),
+            "p99_ms": round(proc_p99, 2),
+        },
         "pipeline_performance": {
             "workloads": [{
                 "name": "Polyp Detection",
                 "device": STATE.device,
                 "status": "running" if STATE.lifecycle in LIFECYCLE_RUN else "stopped",
                 "fps": round(fps, 2),
-                "infer_ms": round(infer_ms, 2),
-                "infer_p50_ms": round(infer_p50, 2),
-                "infer_p90_ms": round(infer_p90, 2),
-                "infer_p95_ms": round(infer_p95, 2),
-                "infer_p99_ms": round(infer_p99, 2),
                 "processing_mean_ms": round(proc_mean, 2),
                 "processing_p50_ms": round(proc_p50, 2),
                 "processing_p90_ms": round(proc_p90, 2),
                 "processing_p95_ms": round(proc_p95, 2),
                 "processing_p99_ms": round(proc_p99, 2),
-                "e2e_mean_ms": round(e2e_mean, 2),
-                "e2e_p50_ms": round(e2e_p50, 2),
-                "e2e_p90_ms": round(e2e_p90, 2),
-                "e2e_p95_ms": round(e2e_p95, 2),
-                "e2e_p99_ms": round(e2e_p99, 2),
-                # Legacy keys the current UI may still read.
-                "latency_ms": round(e2e_mean, 2),
-                "latency_p99_ms": round(e2e_p99, 2),
+                "latency_ms": round(proc_mean, 2),
+                "latency_p99_ms": round(proc_p99, 2),
             }],
             "pipeline_fps": round(fps, 2),
-            "decode": f"{out_w}x{out_h} H.264",
+            "decode": "Basler UYVY" if source_kind == "basler" else f"{out_w}x{out_h} H.264",
         },
         "model_info": {
             "name": model_cfg.get("name", "yolo11n"),
             "precision": "FP16 OpenVINO IR",
             "task": "Polyp Detection",
             "dataset": ds_cfg.get("name", "CVC-ColonDB"),
-            "input_source": f"{out_h}p H.264 (looped)",
+            "input_source": input_source,
             "model_input": f"{infer_size}x{infer_size}",
             "device": STATE.device,
         },
@@ -461,7 +419,7 @@ def start() -> Response:
     if isinstance(src, dict):
         kind = src.get("kind")
         arg  = src.get("arg")
-        if kind in ("file", "v4l2", "basler") and isinstance(arg, str) and arg:
+        if kind in ("file", "basler") and isinstance(arg, str) and arg:
             STATE.source_kind = kind
             STATE.source_arg  = arg
 
@@ -491,12 +449,6 @@ def _do_start() -> None:
             source_arg=STATE.source_arg,
         )
         _worker.start()
-        # Wait briefly for the pipeline container to produce the first
-        # annotated frame; then mark running.
-        for _ in range(100):
-            if _worker.latest_frame_jpeg() is not None:
-                break
-            time.sleep(0.1)
         _set_lifecycle("running")
     except Exception as exc:  # noqa: BLE001
         with STATE.lock:

@@ -32,6 +32,15 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
     DEBIAN_FRONTEND=noninteractive
 
+# Backports are not required for this image and are frequently flaky behind
+# corporate proxies. Keep noble + updates + security enabled.
+RUN if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
+      sed -Ei '/^Suites:/ s/\s+noble-backports\b//g' /etc/apt/sources.list.d/ubuntu.sources; \
+    fi; \
+    if [ -f /etc/apt/sources.list ]; then \
+      sed -Ei '/\bnoble-backports\b/s/^/#/' /etc/apt/sources.list; \
+    fi
+
 # Base runtime: Python + OpenCV shared libs + curl for HEALTHCHECK.
 # The Intel graphics userspace (libze-intel-gpu, intel-opencl-icd, level-zero
 # NPU driver) is installed from Intel's compute-runtime repo below — this is
@@ -53,11 +62,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
-      | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" \
-      > /etc/apt/sources.list.d/intel-gpu-noble.list \
-    && apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
       libze1 \
       libze-intel-gpu1 \
       intel-opencl-icd \

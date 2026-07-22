@@ -26,6 +26,7 @@ const WORKLOAD_DEFS = [
 export function PipelinePerformanceAccordion() {
   const systemStatus = useAppSelector((state) => state.detection.data.systemStatus);
   const pipelinePerf = useAppSelector((state) => state.detection.data.pipelinePerformance);
+  const pipelineLatency = useAppSelector((state) => state.detection.data.pipelineLatency);
 
   const isRunning = systemStatus === 'running' || systemStatus === 'starting';
   const status = isRunning ? 'running' : 'stopped';
@@ -54,22 +55,11 @@ export function PipelinePerformanceAccordion() {
 
   const sseLookup: Record<string, {
     fps?: number;
-    infer_ms?: number;
-    infer_p50_ms?: number;
-    infer_p90_ms?: number;
-    infer_p95_ms?: number;
-    infer_p99_ms?: number;
     processing_mean_ms?: number;
     processing_p50_ms?: number;
     processing_p90_ms?: number;
     processing_p95_ms?: number;
     processing_p99_ms?: number;
-    e2e_mean_ms?: number;
-    e2e_p50_ms?: number;
-    e2e_p90_ms?: number;
-    e2e_p95_ms?: number;
-    e2e_p99_ms?: number;
-    // legacy aliases
     latency_ms?: number;
     latency_p99_ms?: number;
     device?: string;
@@ -97,10 +87,12 @@ export function PipelinePerformanceAccordion() {
               <th style={thStyle}>Workload</th>
               <th style={thStyle}>Model</th>
               <th style={thStyle}>Device</th>
-              <th style={thStyle} title="Frame arrival rate at the sink (throughput). Counted from MQTT metadata messages the backend receives.">FPS</th>
-              <th style={thStyle} title="End-to-end frame residence mean over the rolling recent-frame window.">E2E mean</th>
-              <th style={thStyle} title="Nearest-rank p90 for end-to-end frame latencies over the rolling window.">E2E P90</th>
-              <th style={thStyle} title="Nearest-rank p95 for end-to-end frame latencies over the rolling window.">E2E P95</th>
+              <th style={thStyle} title="Frame arrival rate at the sink.">FPS</th>
+              <th style={thStyle} title="Rolling pipeline latency mean.">Mean</th>
+              <th style={thStyle} title="Rolling pipeline latency p50.">P50</th>
+              <th style={thStyle} title="Rolling pipeline latency p90.">P90</th>
+              <th style={thStyle} title="Rolling pipeline latency p95.">P95</th>
+              <th style={thStyle} title="Rolling pipeline latency p99.">P99</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -154,19 +146,29 @@ export function PipelinePerformanceAccordion() {
                   <td style={numStyle}>
                     {sseRow.fps !== undefined ? sseRow.fps.toFixed(1) : '—'}
                   </td>
-                  <td style={numStyle} title="End-to-end frame residence mean from DL Streamer over the rolling window.">
-                    {(sseRow.e2e_mean_ms ?? 0) > 0
-                      ? `${(sseRow.e2e_mean_ms ?? 0).toFixed(1)} ms`
+                  <td style={numStyle}>
+                    {(pipelineLatency.mean_ms ?? 0) > 0
+                      ? `${pipelineLatency.mean_ms.toFixed(1)} ms`
                       : '—'}
                   </td>
-                  <td style={numStyle} title="Nearest-rank p90 for end-to-end frame latencies over the rolling window.">
-                    {(sseRow.e2e_p90_ms ?? 0) > 0
-                      ? `${(sseRow.e2e_p90_ms ?? 0).toFixed(1)} ms`
+                  <td style={numStyle}>
+                    {(pipelineLatency.p50_ms ?? 0) > 0
+                      ? `${pipelineLatency.p50_ms.toFixed(1)} ms`
                       : '—'}
                   </td>
-                  <td style={numStyle} title="Nearest-rank p95 for end-to-end frame latencies over the rolling window.">
-                    {(sseRow.e2e_p95_ms ?? 0) > 0
-                      ? `${(sseRow.e2e_p95_ms ?? 0).toFixed(1)} ms`
+                  <td style={numStyle}>
+                    {(pipelineLatency.p90_ms ?? 0) > 0
+                      ? `${pipelineLatency.p90_ms.toFixed(1)} ms`
+                      : '—'}
+                  </td>
+                  <td style={numStyle}>
+                    {(pipelineLatency.p95_ms ?? 0) > 0
+                      ? `${pipelineLatency.p95_ms.toFixed(1)} ms`
+                      : '—'}
+                  </td>
+                  <td style={numStyle}>
+                    {(pipelineLatency.p99_ms ?? 0) > 0
+                      ? `${pipelineLatency.p99_ms.toFixed(1)} ms`
                       : '—'}
                   </td>
                   <td style={cellStyle}>
@@ -190,7 +192,7 @@ export function PipelinePerformanceAccordion() {
           </div>
         )}
         <div style={{ marginTop: 6, fontSize: 10, color: '#6b7280' }}>
-          Percentiles use nearest-rank over the rolling recent-frame window.
+          Pipeline latency is computed from the launcher latency tracer rolling window.
         </div>
         {deviceError && (
           <div style={{ marginTop: 6, padding: '6px 10px', background: '#fee', border: '1px solid #fcc', borderRadius: 4, fontSize: 11, color: '#c62828' }}>

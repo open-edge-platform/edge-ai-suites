@@ -83,6 +83,7 @@ endef
 
 .PHONY: up
 up:  ## First-boot: build images + start stack. May take 20-35 min if no cached IR.
+	@xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
@@ -97,6 +98,7 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 		echo "[run] No cached IR at $(IR_DIR)/ — run 'make up' first for first-boot train,"; \
 		echo "[run] or 'make assets' to seed IR from POC."; \
 		exit 1)
+	@xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
@@ -175,6 +177,7 @@ logs:  ## Tail logs for all services
 .PHONY: down
 down:  ## Stop and remove containers
 	$(COMPOSE) down
+	@xhost -local:root >/dev/null 2>&1 || true
 
 .PHONY: clean
 clean: down  ## Remove containers, named volumes, and built images
