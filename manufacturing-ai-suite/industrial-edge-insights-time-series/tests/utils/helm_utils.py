@@ -1536,8 +1536,6 @@ def verify_influxdb_retention(namespace, chart_path, response):
             ],
             capture_output=True, text=True, check=True
         )
-        # The 4th line of the influx CLI table output holds the first data row;
-        # its first whitespace-separated field is the time value (replicates the previous `awk 'NR==4 {print $1}'`).
         output_lines = result.stdout.splitlines()
         response = output_lines[3].split()[0] if len(output_lines) > 3 and output_lines[3].split() else ""
 
