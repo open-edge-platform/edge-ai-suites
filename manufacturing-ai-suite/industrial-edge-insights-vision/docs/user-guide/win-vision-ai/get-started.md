@@ -267,9 +267,11 @@ input:
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
-`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` pipeline. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 > **Note:** If specified, `width` and `height` values must be greater than 60.
+
+> **Supported pixel formats:** The basic configuration supports standard formats such as `mono8`, `bgr8`, `rgb8`, and common YUV variants (e.g. `yuv422_8`, `ycbcr8_cbycry`). Bayer RAW formats (e.g. `bayer_rggb8`, `bayer_grbg8`) are **not supported** in the basic configuration — use [Raw Pipeline Mode](#advanced-raw-pipeline-mode) and insert a `bayer2rgb` element manually if you need Bayer format support.
 
 ```yaml
 input:
