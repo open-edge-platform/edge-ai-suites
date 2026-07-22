@@ -129,6 +129,96 @@ def grade_page(
     }
 
 
+HEADER_SYSTEM_PROMPT = (
+    "You extract identifying information from the header of a scanned exam paper. "
+    "You are given the first page of an exam. Read only the header area (title band "
+    "and any candidate-information line); ignore the questions. Return a single JSON "
+    "object and nothing else, with exactly these keys: "
+    "paper_title (the exam paper title, e.g. the full name printed at the top), "
+    "subject (the subject, e.g. 数学/语文/英语), "
+    "student_name (the candidate's name), "
+    "class_name (the candidate's class), "
+    "exam_number (the candidate's exam/admission number). "
+    "If a field is not present on the page, set its value to null. "
+    "Do not invent values. Output only the JSON object."
+)
+
+
+def extract_header_info(
+    url: str,
+    model: str,
+    image: Path,
+    instruction: str | None = None,
+    max_tokens: int = 512,
+    temperature: float = 0.0,
+    timeout: int = 300,
+    max_image_pixels: int | None = None,
+) -> dict[str, Any]:
+    """Ask the VLM to read the paper header and return identifying info as JSON.
+
+    `instruction` is the per-exam extraction spec (taken from the rubric's header
+    block); it tells the model which fields this exam needs. When None, a built-in
+    default spec is used. Returns the same envelope as grade_page (ok / answer /
+    elapsed_seconds / finish_reason / error); the caller parses `answer`.
+    """
+    user_text = (
+        instruction.strip()
+        if instruction and instruction.strip()
+        else "Extract the header information as the specified JSON object."
+    )
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": HEADER_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url",
+                     "image_url": {"url": encode_image(image, max_image_pixels)}},
+                    {"type": "text", "text": user_text},
+                ],
+            },
+        ],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+    }
+
+    start = time.perf_counter()
+    try:
+        resp = requests.post(
+            f"{url}/v1/chat/completions",
+            json=payload,
+            timeout=timeout,
+            proxies={"http": None, "https": None},
+        )
+    except Exception as exc:
+        return {
+            "ok": False,
+            "answer": "",
+            "elapsed_seconds": time.perf_counter() - start,
+            "error": f"request failed: {exc}",
+        }
+    elapsed = time.perf_counter() - start
+
+    if resp.status_code != 200:
+        return {
+            "ok": False,
+            "answer": "",
+            "elapsed_seconds": elapsed,
+            "error": f"HTTP {resp.status_code}: {resp.text[:500]}",
+        }
+
+    data = resp.json()
+    choice = (data.get("choices") or [{}])[0]
+    return {
+        "ok": True,
+        "answer": choice.get("message", {}).get("content", ""),
+        "elapsed_seconds": elapsed,
+        "finish_reason": choice.get("finish_reason"),
+        "error": None,
+    }
+
+
 def check_health(url: str, timeout: int = 10) -> dict[str, Any]:
     """Return the /health payload, or raise on failure."""
     resp = requests.get(

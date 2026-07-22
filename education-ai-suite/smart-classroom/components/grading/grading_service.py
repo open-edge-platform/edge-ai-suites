@@ -73,6 +73,9 @@ def create_app(cfg: GradingServiceConfig) -> FastAPI:
 
     @app.on_event("shutdown")
     async def _on_shutdown() -> None:
+        from services.grading_service_impl import pause_running_directory_tasks
+
+        pause_running_directory_tasks()
         logger.info("Grading service stopped")
 
     return app

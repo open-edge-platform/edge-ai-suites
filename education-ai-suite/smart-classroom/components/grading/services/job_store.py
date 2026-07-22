@@ -78,6 +78,14 @@ class JsonJobStore:
                 raise KeyError(job_id)
             return dict(self._jobs[job_id])
 
+    def list_jobs(self, task_type: str | None = None) -> list[dict[str, Any]]:
+        with self._lock:
+            return [
+                dict(job)
+                for job in self._jobs.values()
+                if task_type is None or str(job.get("task_type")) == task_type
+            ]
+
     def set_control_action(self, job_id: str, action: str | None) -> dict[str, Any]:
         with self._lock:
             if job_id not in self._jobs:

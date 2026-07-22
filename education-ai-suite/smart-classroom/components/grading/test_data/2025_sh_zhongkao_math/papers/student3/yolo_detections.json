@@ -1,0 +1,286 @@
+{
+  "source_pdf": "C:\\Users\\user\\jianfeng\\EDU-AI\\PR\\edge-ai-my-fork\\education-ai-suite\\smart-classroom\\content_search\\providers\\assignment_grading\\test_data\\2025_sh_zhongkao_math\\papers\\student1\\2025_sh_zhongkao_math.pdf",
+  "yolo_model": "C:\\Users\\user\\jianfeng\\EDU-AI\\PR\\edge-ai-my-fork\\education-ai-suite\\smart-classroom\\content_search\\providers\\assignment_grading\\models\\yolo_hilex\\yolo11n_hilex\\weights\\best_openvino_model",
+  "total_pages": 4,
+  "page_dimensions": {
+    "1": {
+      "width": 7830,
+      "height": 10934
+    },
+    "2": {
+      "width": 7692,
+      "height": 10767
+    },
+    "3": {
+      "width": 8050,
+      "height": 11021
+    },
+    "4": {
+      "width": 7855,
+      "height": 10717
+    }
+  },
+  "detections": {
+    "1": [
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2477,
+          1826,
+          2822,
+          2086
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          3072,
+          2736,
+          3397,
+          3016
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2572,
+          3341,
+          2912,
+          3601
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2202,
+          4216,
+          2552,
+          4491
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          3272,
+          6181,
+          3597,
+          6456
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          3772,
+          7111,
+          4082,
+          7386
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2072,
+          7876,
+          3072,
+          8166
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2387,
+          8411,
+          3132,
+          8726
+        ]
+      }
+    ],
+    "2": [
+      {
+        "class_id": 5,
+        "class_name": "Question_Paper_Area",
+        "confidence": 0.7962605357170105,
+        "bbox": [
+          512,
+          615,
+          7220,
+          10678
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          4797,
+          711,
+          5617,
+          1161
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          572,
+          1351,
+          1317,
+          1726
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2147,
+          1711,
+          2807,
+          2041
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          4567,
+          2026,
+          5397,
+          2401
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          3217,
+          2866,
+          3842,
+          3251
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          5757,
+          3426,
+          6337,
+          3786
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          5687,
+          5626,
+          6272,
+          5986
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          4457,
+          7181,
+          4962,
+          7581
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2312,
+          7761,
+          2887,
+          8206
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          2022,
+          8326,
+          2617,
+          8661
+        ]
+      }
+    ],
+    "3": [
+      {
+        "class_id": 5,
+        "class_name": "Question_Paper_Area",
+        "confidence": 0.8121567964553833,
+        "bbox": [
+          261,
+          535,
+          7565,
+          10828
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          597,
+          1301,
+          3337,
+          2881
+        ]
+      },
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          602,
+          3201,
+          5192,
+          4816
+        ]
+      }
+    ],
+    "4": [
+      {
+        "class_id": 0,
+        "class_name": "Answer_Block",
+        "confidence": 1,
+        "bbox": [
+          114,
+          5844,
+          5604,
+          8849
+        ]
+      }
+    ]
+  }
+}

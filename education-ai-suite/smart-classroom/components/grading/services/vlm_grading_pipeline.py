@@ -20,11 +20,11 @@ import yaml
 
 from services.layout_detection import run_layout_detection
 from services.pdf_render import render_pdf_to_pngs, image_info
-from services.prompt_slicer import slice_prompt_for_section
+from services.prompt_slicer import extract_header_block, slice_prompt_for_section
 from services.reporter import build_result
 from services.section_split import split_sections
-from services.result_parser import merge_page_scores, parse_scores
-from services.vlm_client import check_health, grade_page
+from services.result_parser import merge_page_scores, parse_header_info, parse_scores
+from services.vlm_client import check_health, extract_header_info, grade_page
 
 ProgressCallback = Callable[[str, int], None]
 CheckpointCallback = Callable[[str], bool]
@@ -77,14 +77,24 @@ def run_vlm_grading_pipeline(
         if log_event is not None:
             log_event(message)
 
+    timings: list[tuple[str, float]] = []
+
     def _step_start(step: str) -> float:
         _log(f"step {step} started")
         return time.perf_counter()
 
     def _step_done(step: str, started: float, extra: str = "") -> None:
         elapsed = time.perf_counter() - started
+        timings.append((step, elapsed))
         suffix = f" {extra}" if extra else ""
         _log(f"step {step} completed elapsed={elapsed:.2f}s{suffix}")
+
+    def _log_timing_summary(total: float) -> None:
+        _log("timing summary:")
+        for step, elapsed in timings:
+            pct = (elapsed / total * 100) if total > 0 else 0.0
+            _log(f"  {step:<18} {elapsed:>7.2f}s  {pct:>5.1f}%")
+        _log(f"  {'TOTAL':<18} {total:>7.2f}s  100.0%")
 
     # ---- inputs -----------------------------------------------------------
     # Resolution order for each setting: request options > component config.yaml
@@ -138,6 +148,7 @@ def run_vlm_grading_pipeline(
         raise RuntimeError(f"VLM service unreachable at {vlm_url}: {exc}")
 
     # ---- step: render -----------------------------------------------------
+    _pipeline_start = time.perf_counter()
     update_progress("render", 20)
     _t = _step_start("render")
     images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi)
@@ -208,6 +219,45 @@ def run_vlm_grading_pipeline(
     replies_dir = out_dir / "step3_vlm_grading"
     replies_dir.mkdir(parents=True, exist_ok=True)
 
+    # ---- header extraction (part of step3; a VLM call) --------------------
+    # Read the paper header (first page) once to recover paper metadata and the
+    # candidate's identity. The extraction spec comes from the rubric's header
+    # block; if the rubric has no header block, extraction is skipped. Best-effort:
+    # any failure degrades to empty fields and never blocks grading.
+    paper_meta: dict[str, Any] = {"paper_title": None, "subject": None}
+    student_meta: dict[str, Any] = {"student_name": None, "class_name": None, "exam_number": None}
+    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}))
+    if header_instruction is None:
+        _log("header_extract skipped (no header block in rubric)")
+    else:
+        try:
+            header_result = extract_header_info(
+                vlm_url, model, images[0], instruction=header_instruction,
+                max_image_pixels=max_image_pixels,
+            )
+            (replies_dir / "header_prompt.txt").write_text(header_instruction, encoding="utf-8")
+            (replies_dir / "header_reply.txt").write_text(
+                str(header_result.get("answer") or header_result.get("error") or ""),
+                encoding="utf-8",
+            )
+            if header_result.get("ok"):
+                info = parse_header_info(header_result.get("answer", ""))
+                paper_meta = {"paper_title": info.get("paper_title"), "subject": info.get("subject")}
+                student_meta = {
+                    "student_name": info.get("student_name"),
+                    "class_name": info.get("class_name"),
+                    "exam_number": info.get("exam_number"),
+                }
+                _log(
+                    f"header_extract done name={student_meta['student_name']} "
+                    f"class={student_meta['class_name']} no={student_meta['exam_number']} "
+                    f"title={paper_meta['paper_title']}"
+                )
+            else:
+                _log(f"header_extract failed (degraded): {header_result.get('error')}")
+        except Exception as exc:
+            _log(f"header_extract error (degraded): {exc}")
+
     for idx, (tag, image, title) in enumerate(units, 1):
         info = image_info(image)
         _log(
@@ -269,6 +319,8 @@ def run_vlm_grading_pipeline(
     # The grading prompt is the sole basis; scores come only from the VLM.
     result_data = build_result(scores)
     result_data["task_id"] = task_id
+    result_data["paper_meta"] = paper_meta
+    result_data["student_meta"] = student_meta
     result_data["input"] = {
         "paper_path": str(paper_path),
         "prompt_path": str(prompt_path),
@@ -288,6 +340,8 @@ def run_vlm_grading_pipeline(
         f"objective={summary['objective_score']}/{summary['objective_max']} "
         f"subjective={summary['subjective_score']}/{summary['subjective_max']}",
     )
+
+    _log_timing_summary(time.perf_counter() - _pipeline_start)
 
     return {
         "stopped": False,

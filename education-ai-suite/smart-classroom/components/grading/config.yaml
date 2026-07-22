@@ -5,7 +5,7 @@
 
 image:
   # PDF -> page image quality sent to the VLM.
-  dpi: 300            # PDF render DPI (higher = sharper page image, slower)
+  dpi: 50            # PDF render DPI (higher = sharper page image, slower)
 
 vlm:
   # Generation defaults for each section grading call.
@@ -26,6 +26,17 @@ grading:
 
   # Re-run grading even if an active task already exists for the same paper.
   force_regrade: true
+
+watch:
+  # Defaults for directory-mode grading tasks. When POST /api/v1/grading/tasks is
+  # called with a paper_path that is a directory, the task maintains a table of
+  # work items (each subfolder's PDF, or each PDF file directly under it), grades
+  # them one at a time, refreshes the table to pick up newly added items, skips
+  # already-graded ones, and completes itself once all are done and no new item
+  # has appeared for idle_timeout seconds.
+  poll_interval: 5      # seconds between table refresh scans
+  stable_checks: 2      # consecutive unchanged polls before a PDF is graded
+  idle_timeout: 180     # seconds without a new item before the task auto-completes
 
 detection_service:
   # Detection filtering and processing (consumed by _run_layout_detection)
@@ -77,3 +88,13 @@ section_split:
     # regex to pull the leading ordinal from a heading (section title & rubric
     # block heading share this); group 1 is the ordinal used for matching.
     ordinal_pattern: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"
+
+  # Header extraction (a step3 VLM call). The first page is sent to the VLM once
+  # to read paper metadata (title/subject) and candidate identity (name/class/
+  # exam number). The extraction instruction is taken from the rubric block whose
+  # first line matches marker_pattern; grading excludes that block. If the rubric
+  # has no header block, header extraction is skipped entirely.
+  header_extract:
+    enabled: true
+    marker_pattern: "^\\s*(?:\\[HEADER\\]|【卷头信息】)"   # rubric block marker
+    # separator defaults to prompt_slicing.separator when omitted

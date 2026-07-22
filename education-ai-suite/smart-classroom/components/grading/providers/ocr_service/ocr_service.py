@@ -23,9 +23,9 @@ import numpy as np
 from PIL import Image
 
 # ---- default local model locations -----------------------------------------
-_MODELS_ROOT = Path(r"C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/ocr")
-_DEFAULT_DET = _MODELS_ROOT / "det" / "PP-OCRv6_medium_det"
-_DEFAULT_REC = _MODELS_ROOT / "rec" / "PP-OCRv6_medium_rec"
+_MODELS_ROOT = Path(r"C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models")
+_DEFAULT_DET = _MODELS_ROOT / "ch_PP-OCRv4_det_infer"
+_DEFAULT_REC = _MODELS_ROOT / "ch_PP-OCRv4_rec_infer"
 
 _ocr_instance = None  # cached PaddleOCR
 

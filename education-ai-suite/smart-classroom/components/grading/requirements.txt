@@ -1,10 +1,9 @@
-# Grading component direct dependencies only.
-# OCR/VLM/layout run as separate HTTP services, so heavy ML stacks
-# (paddleocr, paddlepaddle, torch, transformers, openvino) are NOT
-# required here — install those from the top-level requirements.txt.
+# Grading component dependencies.
+# OCR runs in-process via paddleocr (see providers/ocr_service), so the
+# paddle stack IS required here. VLM/layout run as separate HTTP services
+# and their heavy stacks (torch, transformers, openvino) are NOT needed.
 #
-# numpy is intentionally left unpinned with an upper bound so it stays
-# compatible with the top-level stack (paddlex requires numpy<2.4).
+# numpy upper bound keeps it compatible with the paddle stack.
 
 # Web service
 fastapi==0.116.1
@@ -17,8 +16,13 @@ PyYAML==6.0.2
 requests>=2.31.0
 
 # Imaging / PDF
-numpy>=1.25,<2.4
+numpy>=1.25,<2.5
 pillow>=10.0.0
 opencv-python-headless>=4.8.0
 pdf2image==1.17.0
 PyMuPDF==1.26.3
+
+# OCR (in-process, PP-OCRv4 via paddleocr 2.x API)
+paddleocr==2.10.0
+paddlepaddle==3.1.0
+paddlex==3.7.1
