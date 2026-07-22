@@ -98,6 +98,13 @@ def save_uploaded_rubric(filename: str, content: bytes) -> dict[str, Any]:
 # Task control (pause / resume / cancel) via checkpoints
 # ---------------------------------------------------------------------------
 def _handle_task_control_checkpoint(task_id: str, checkpoint_step: str) -> bool:
+    """Check for a pending pause/cancel at a checkpoint. Returns True if the
+    worker must STOP here (pause or cancel), False to keep running.
+
+    Pause is exit-based, not blocking: on pause the worker records PAUSED and
+    returns True so the current thread unwinds and dies. There is never a live
+    worker while a task is PAUSED. Resume spawns a fresh, single worker; any
+    in-flight paper is re-graded whole (matches the crash re-grade policy)."""
     task = _JOB_STORE.get_job(task_id)
     task_type = str(task.get("task_type", "grading.run"))
     action = task.get("control_action")
@@ -112,31 +119,13 @@ def _handle_task_control_checkpoint(task_id: str, checkpoint_step: str) -> bool:
         return True
 
     if action == "pause":
-        _append_task_log(task_id, task_type, f"checkpoint={checkpoint_step} action=pause applied")
+        _append_task_log(task_id, task_type, f"checkpoint={checkpoint_step} action=pause applied (worker exiting)")
         _JOB_STORE.set_control_action(task_id, None)
         _JOB_STORE.update_job(
             task_id, status="PAUSED", current_step=f"paused:{checkpoint_step}",
             checkpoint_step=checkpoint_step,
         )
-        while True:
-            latest = _JOB_STORE.get_job(task_id)
-            latest_status = latest.get("status")
-            latest_action = latest.get("control_action")
-            if latest_action == "cancel":
-                _append_task_log(task_id, task_type, f"paused checkpoint={checkpoint_step} action=cancel applied")
-                _JOB_STORE.set_control_action(task_id, None)
-                _JOB_STORE.update_job(
-                    task_id, status="CANCELLED", current_step="cancelled",
-                    checkpoint_step=checkpoint_step, progress=100, error_message=None, result=None,
-                )
-                return True
-            if latest_status == "RUNNING":
-                _append_task_log(task_id, task_type, f"resumed from checkpoint={checkpoint_step}")
-                _JOB_STORE.update_job(task_id, current_step=f"resumed:{checkpoint_step}")
-                return False
-            if latest_status in _TERMINAL_TASK_STATUSES:
-                return True
-            time.sleep(0.2)
+        return True
 
     return False
 
@@ -144,19 +133,67 @@ def _handle_task_control_checkpoint(task_id: str, checkpoint_step: str) -> bool:
 # ---------------------------------------------------------------------------
 # Task worker + creation
 # ---------------------------------------------------------------------------
-def _run_grading_task(task_id: str, request_payload: dict[str, Any]) -> None:
-    _append_task_log(task_id, "grading.run", "task started")
-    try:
-        def _progress(step: str, progress: int) -> None:
-            _append_task_log(task_id, "grading.run", f"progress step={step} value={progress}")
-            _JOB_STORE.update_job(task_id, status="RUNNING", current_step=step, progress=progress)
+def _grade_one_paper(
+    task_id: str,
+    paper_path: str,
+    student_id: str | None,
+    exam_id: str | None,
+    rubric_path: str | None,
+    progress_span: tuple[int, int] | None = None,
+) -> dict[str, Any]:
+    """Grade a single paper by calling the VLM pipeline inline (no sub-job).
 
-        pipeline_result = run_vlm_grading_pipeline(
+    Runs in the caller's thread and reports progress / checkpoints against
+    `task_id` — the ONE task that owns this work, whether it grades a lone paper
+    or is a directory task iterating over students. Returns the pipeline result
+    ({stopped: bool, result_path, summary}); the caller decides how to record it.
+    progress_span maps the pipeline's internal 0-100 onto a slice of the owning
+    task's progress bar (e.g. per-student within a directory run)."""
+    payload = {
+        "paper_path": paper_path,
+        "rubric_path": rubric_path,
+        "student_id": student_id,
+        "exam_id": exam_id,
+        "options": {},
+    }
+
+    def _progress(step: str, progress: int) -> None:
+        if progress_span is not None:
+            lo, hi = progress_span
+            progress = lo + int((hi - lo) * progress / 100)
+        _append_task_log(task_id, "grading.run", f"progress step={step} value={progress}")
+        _JOB_STORE.update_job(task_id, status="RUNNING", current_step=step, progress=progress)
+
+    return run_vlm_grading_pipeline(
+        task_id=task_id,
+        request_payload=payload,
+        update_progress=_progress,
+        check_checkpoint=lambda cp: _handle_task_control_checkpoint(task_id, cp),
+        log_event=lambda message: _append_task_log(task_id, "grading.run", message),
+    )
+
+
+def _reset_ocr_for_new_worker() -> None:
+    """Rebuild the process-global OCR engine on this (new) worker thread. Safe to
+    call even if OCR was never loaded. See ocr_service.reset_ocr for why."""
+    try:
+        from providers.ocr_service import reset_ocr
+        reset_ocr()
+    except Exception:
+        pass
+
+
+def _run_grading_task(task_id: str, request_payload: dict[str, Any]) -> None:
+    """Worker for a lone single-paper task (paper_path is one PDF)."""
+    _append_task_log(task_id, "grading.run", "task started")
+    _reset_ocr_for_new_worker()
+    try:
+        pipeline_result = _grade_one_paper(
             task_id=task_id,
-            request_payload=request_payload,
-            update_progress=_progress,
-            check_checkpoint=lambda cp: _handle_task_control_checkpoint(task_id, cp),
-            log_event=lambda message: _append_task_log(task_id, "grading.run", message),
+            paper_path=str(request_payload["paper_path"]),
+            student_id=request_payload.get("student_id"),
+            exam_id=request_payload.get("exam_id"),
+            rubric_path=request_payload.get("rubric_path"),
         )
 
         if pipeline_result.get("stopped"):
@@ -197,16 +234,15 @@ def _dump_summary(summary: dict[str, Any]) -> str:
     return pattern.sub(_collapse, text)
 
 
-def _update_summary(task_id: str, student_id: str, child_job_id: str) -> None:
+def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
     """Fold a just-graded student's result into outputs/<exam_id>/summary.json.
 
-    Reads the child job's grading_result.json (result_path), then read-modify-writes
-    the exam-level summary.json living one directory above the student's folder.
-    Best-effort: any failure is logged and swallowed so it never breaks the loop.
+    Reads the student's grading_result.json (result_path, produced inline by the
+    pipeline), then read-modify-writes the exam-level summary.json living one
+    directory above the student's folder. Best-effort: any failure is logged and
+    swallowed so it never breaks the loop.
     """
     try:
-        child = _JOB_STORE.get_job(child_job_id) or {}
-        result_path = (child.get("result") or {}).get("result_path")
         if not result_path:
             return
         result_path = Path(str(result_path))
@@ -338,41 +374,6 @@ def create_grading_task(
     return task
 
 
-def submit_grading_sync(
-    paper_path: str,
-    student_id: str | None = None,
-    exam_id: str | None = None,
-    rubric_path: str | None = None,
-    options: dict[str, Any] | None = None,
-    parent_task_id: str | None = None,
-) -> dict[str, Any]:
-    """Create a job and run it synchronously in the calling thread.
-
-    Same persistence as create_grading_task but runs _run_grading_task inline
-    instead of spawning a thread, so the caller (a directory task's loop) blocks
-    until the job reaches a terminal state. No reuse/force_regrade check — dedup
-    is the caller's responsibility. parent_task_id links this per-item job back
-    to the directory task that spawned it.
-    """
-    submission_key = _build_submission_key(paper_path, student_id)
-    payload = {
-        "paper_path": paper_path,
-        "rubric_path": rubric_path,
-        "student_id": student_id,
-        "exam_id": exam_id,
-        "submission_key": submission_key,
-        "parent_task_id": parent_task_id,
-        "options": options if isinstance(options, dict) else {},
-    }
-    task = _JOB_STORE.create_job(task_type="grading.run", request_payload=payload)
-    log_path = _task_log_path(task["job_id"], "grading.run")
-    log_path.write_text("", encoding="utf-8")
-    task = _JOB_STORE.update_job(task["job_id"], log_path=str(log_path))
-    _append_task_log(task["job_id"], "grading.run", "task created (batch item)")
-    _run_grading_task(task["job_id"], payload)
-    return task
-
-
 # ---------------------------------------------------------------------------
 # Directory-mode grading task: one task maintains a table of work items under a
 # papers directory, grades them one at a time, refreshes the table to pick up new
@@ -428,9 +429,11 @@ def _save_items(task_id: str, items: list[dict[str, Any]], **extra: Any) -> None
 
 
 def _refresh_items(task_id: str, papers_dir: Path, items: list[dict[str, Any]]) -> bool:
-    """Scan papers_dir and add newly appeared items to the table. Items already
-    COMPLETED in the store are marked completed (skip re-grading). Returns True if
-    any new item was added."""
+    """Scan papers_dir and add newly appeared papers to this task's item table.
+    The table (persisted in the task's request) is the single source of truth for
+    what has been graded, so a newly seen paper is always added as pending; items
+    already in the table (incl. completed ones) are left untouched. Returns True
+    if any new item was added."""
     from services.dir_scan import discover_items
 
     known = {it["key"] for it in items}
@@ -438,22 +441,17 @@ def _refresh_items(task_id: str, papers_dir: Path, items: list[dict[str, Any]]) 
     for found in discover_items(papers_dir):
         if found["key"] in known:
             continue
-        existing = _JOB_STORE.find_latest_job(
-            task_type="grading.run", request_field="submission_key", request_value=found["key"],
-        )
-        already_done = existing is not None and existing.get("status") == "COMPLETED"
         items.append({
             "key": found["key"],
             "path": found["path"],
             "kind": found["kind"],
-            "status": "completed" if already_done else "pending",
+            "status": "pending",
         })
         known.add(found["key"])
         added = True
         _append_task_log(
             task_id, "grading.run",
-            f"item discovered key={found['key']} kind={found['kind']}"
-            + (" (already graded, skipped)" if already_done else ""),
+            f"item discovered key={found['key']} kind={found['kind']}",
         )
     return added
 
@@ -464,6 +462,7 @@ def _run_directory_grading_task(task_id: str) -> None:
     from services.dir_scan import is_pdf_ready
 
     _append_task_log(task_id, "grading.run", "directory task started")
+    _reset_ocr_for_new_worker()
     try:
         request = _JOB_STORE.get_job(task_id).get("request") or {}
         papers_dir = Path(str(request["papers_dir"]))
@@ -507,20 +506,29 @@ def _run_directory_grading_task(task_id: str) -> None:
                 _append_task_log(task_id, "grading.run", f"grading item key={key}")
                 _JOB_STORE.update_job(task_id, current_step=f"grading:{key}")
                 try:
-                    sub = submit_grading_sync(
+                    # Grade this paper inline, in THIS worker/thread — no sub-job.
+                    # Checkpoints fire against this directory task, so a pause/cancel
+                    # takes effect mid-paper and the pipeline returns stopped=True.
+                    result = _grade_one_paper(
+                        task_id=task_id,
                         paper_path=picked["path"],
                         student_id=key,
                         exam_id=exam_id,
                         rubric_path=rubric_path,
-                        parent_task_id=task_id,
                     )
-                    picked["task_id"] = sub["job_id"]
-                    final = _JOB_STORE.get_job(sub["job_id"]).get("status")
-                    picked["status"] = "completed" if final == "COMPLETED" else "failed"
-                    if picked["status"] == "completed":
-                        _update_summary(task_id, key, sub["job_id"])
+                    if result.get("stopped"):
+                        # A pause/cancel interrupted this paper mid-way. Leave the
+                        # item pending (whole-paper re-grade on resume); the pipeline
+                        # already settled this task's own PAUSED/CANCELLED state, so
+                        # the worker exits now.
+                        _append_task_log(task_id, "grading.run",
+                                         f"item interrupted key={key} (kept pending), worker exiting")
+                        _save_items(task_id, items)
+                        return
+                    picked["status"] = "completed"
+                    _update_summary(task_id, key, result["result_path"])
                     _append_task_log(task_id, "grading.run",
-                                     f"item done key={key} status={picked['status']} task={sub['job_id']}")
+                                     f"item done key={key} status=completed")
                 except Exception as exc:
                     picked["status"] = "failed"
                     _append_task_log(task_id, "grading.run", f"item failed key={key} error={exc}")
@@ -613,6 +621,28 @@ def get_task_result(task_id: str) -> dict[str, Any]:
     return {"task_id": task_id, "task_type": str(task.get("task_type", "")), "status": status, "result": result}
 
 
+# ---------------------------------------------------------------------------
+# pause / resume (process stays up). pause is exit-based: the worker thread dies
+# at its next checkpoint, leaving PAUSED persisted and no live worker. resume is
+# an API that spawns exactly one fresh worker to continue from the items table.
+# A fresh worker thread rebuilds the OCR engine (reset_ocr), because PaddleOCR's
+# process-global predictor cannot be reused across the thread that first ran it.
+# ---------------------------------------------------------------------------
+def _spawn_task_worker(task_id: str) -> None:
+    """Start the correct worker thread for a task, based on its mode. The worker
+    resets the process-global OCR engine on entry so the new thread builds its
+    own predictor (the old thread's is unusable across threads)."""
+    request = _JOB_STORE.get_job(task_id).get("request") or {}
+    if request.get("mode") == "directory":
+        # Completed items in the persisted table are skipped; any pending item
+        # (incl. one interrupted mid-paper) is re-graded whole.
+        Thread(target=_run_directory_grading_task, args=(task_id,), daemon=True).start()
+    else:
+        # Single paper: no per-section checkpoint is persisted, so the whole
+        # paper is re-graded from scratch.
+        Thread(target=_run_grading_task, args=(task_id, request), daemon=True).start()
+
+
 def request_task_pause(task_id: str) -> dict[str, Any]:
     task = get_task_status(task_id)
     status = task.get("status")
@@ -627,16 +657,12 @@ def request_task_pause(task_id: str) -> dict[str, Any]:
 def request_task_resume(task_id: str) -> dict[str, Any]:
     task = get_task_status(task_id)
     status = task.get("status")
-    request = task.get("request") or {}
-    is_directory = request.get("mode") == "directory"
     if status == "PAUSED":
+        # PAUSED is the only state with no live worker (pause is exit-based), so
+        # spawning exactly one fresh worker here can never race an existing one.
         _JOB_STORE.set_control_action(task_id, None)
         resumed = _JOB_STORE.update_job(task_id, status="RUNNING", current_step="resume_requested")
-        if is_directory:
-            # The old worker thread is gone (e.g. after restart); spawn a fresh
-            # one. Completed items in the persisted table are skipped.
-            worker = Thread(target=_run_directory_grading_task, args=(task_id,), daemon=True)
-            worker.start()
+        _spawn_task_worker(task_id)
         return resumed
     if status == "RUNNING":
         return _JOB_STORE.get_job(task_id)

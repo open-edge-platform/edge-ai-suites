@@ -30,6 +30,18 @@ _DEFAULT_REC = _MODELS_ROOT / "ch_PP-OCRv4_rec_infer"
 _ocr_instance = None  # cached PaddleOCR
 
 
+def reset_ocr() -> None:
+    """Drop the cached PaddleOCR instance so the next get_ocr() rebuilds it.
+
+    PaddleOCR's inference predictor is bound to the thread that created it and
+    cannot be reused from another thread; after a pause (which exits the worker
+    thread) a resume runs in a NEW thread, so the old predictor would raise
+    "could not execute a primitive". A worker calls this on entry to force a
+    clean, thread-local rebuild."""
+    global _ocr_instance
+    _ocr_instance = None
+
+
 def _stub_albumentations_pytorch() -> None:
     """Prevent paddleocr's import chain from importing torch via albumentations."""
     for mod in ("albumentations.pytorch", "albumentations.pytorch.transforms"):
