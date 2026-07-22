@@ -1385,6 +1385,10 @@ export async function gradingCancelTask(taskId: string): Promise<GradingTask> {
   return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/cancel`, { method: 'POST' });
 }
 
+export async function gradingDeleteTask(taskId: string): Promise<void> {
+  await gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
+}
+
 export async function gradingHealth(): Promise<{ status: string; service: string; language: string }> {
   return gradingFetch('/health');
 }

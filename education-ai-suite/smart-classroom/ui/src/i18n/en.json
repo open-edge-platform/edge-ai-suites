@@ -289,6 +289,8 @@
       "completed": "Completed",
       "failed": "Failed",
       "processing": "Processing",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this task and all its output files? This cannot be undone.",
       "pause": "Pause",
       "resume": "Resume",
       "cancel": "Cancel",

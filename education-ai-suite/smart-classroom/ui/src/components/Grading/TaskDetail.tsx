@@ -3,14 +3,16 @@ import { useTranslation } from 'react-i18next';
 import {
   gradingPauseTask,
   gradingResumeTask,
-  gradingCancelTask,
+  gradingDeleteTask,
   gradingGetTaskLog,
 } from '../../services/api';
 import type { GradingTask } from '../../services/api';
+import RemoveConfirmationModal from '../common/RemoveConfirmationModal';
 
 interface TaskDetailProps {
   task: GradingTask;
   onControlled: (task: GradingTask) => void;
+  onDeleted: (taskId: string) => void;
   onViewResults: (taskId: string) => void;
 }
 
@@ -33,20 +35,19 @@ const formatElapsed = (fromIso?: string, toIso?: string | null): string => {
   return `${s}s`;
 };
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onViewResults }) => {
+const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, onViewResults }) => {
   const { t } = useTranslation();
   const [busy, setBusy] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [logLines, setLogLines] = useState<string[]>([]);
   const [logError, setLogError] = useState<string>('');
+  const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
 
   const status = task.status;
   const isTerminal = status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
-  const isTransient = status === 'PAUSING' || status === 'CANCELLING';
 
   const canPause = status === 'RUNNING';
   const canResume = status === 'PAUSED';
-  const canCancel = !isTerminal && !isTransient;
 
   const info = task.dir_info || null;
   const dash = '—';
@@ -161,10 +162,10 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onViewResul
         </button>
         <button
           className="grading-btn grading-btn-danger"
-          disabled={!canCancel || busy}
-          onClick={() => run(() => gradingCancelTask(task.task_id))}
+          disabled={busy}
+          onClick={() => setConfirmDelete(true)}
         >
-          {t('grading.detail.cancel', 'Cancel')}
+          {t('grading.detail.delete', 'Delete')}
         </button>
         <button
           className="grading-btn grading-btn-primary grading-detail-view"
@@ -183,6 +184,26 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onViewResul
             : t('grading.detail.logEmpty', 'No log output yet.')}
         </pre>
       </div>
+
+      <RemoveConfirmationModal
+        isOpen={confirmDelete}
+        fileName={task.dir_info?.dir_name || task.task_id.slice(0, 8)}
+        isRemoving={busy}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={async () => {
+          setBusy(true);
+          setError('');
+          try {
+            await gradingDeleteTask(task.task_id);
+            onDeleted(task.task_id);
+          } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+            setConfirmDelete(false);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
     </div>
   );
 };

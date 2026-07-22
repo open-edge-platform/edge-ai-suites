@@ -93,6 +93,11 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
     );
   };
 
+  const removeTask = (taskId: string) => {
+    setTasks((prev) => prev.filter((tk) => tk.task_id !== taskId));
+    if (expandedId === taskId) setExpandedId(null);
+  };
+
   const runningCount = statusCounts.RUNNING || 0;
   const completedCount = statusCounts.COMPLETED || 0;
   const pausedCount = statusCounts.PAUSED || 0;
@@ -148,6 +153,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                 onClick={() => setExpandedId(expanded ? null : task.task_id)}
               >
                 <span className={`grading-dot status-${task.status}`} />
+                <span className="grading-row-time">{task.created_at ? formatTime(task.created_at) : '—'}</span>
                 <span className="grading-row-status">{t(statusKey, task.status)}</span>
                 <span className="grading-row-id" title={task.dir_info?.papers_dir || task.task_id}>
                   {task.dir_info?.dir_name || shortId(task.task_id)}
@@ -158,13 +164,13 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                     ? `${task.dir_info.completed}/${task.dir_info.total}`
                     : t('grading.list.progressUnknown', '—/—')}
                 </span>
-                <span className="grading-row-time">{task.created_at ? formatTime(task.created_at) : '—'}</span>
                 <span className="grading-row-arrow">{expanded ? '▾' : '▸'}</span>
               </div>
               {expanded && (
                 <TaskDetail
                   task={task}
                   onControlled={patchTask}
+                  onDeleted={removeTask}
                   onViewResults={onViewResults}
                 />
               )}
