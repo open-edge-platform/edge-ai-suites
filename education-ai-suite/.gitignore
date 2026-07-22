@@ -25,3 +25,5 @@ logs/
 
 *.exe
 *.whl
+
+.proxy-config

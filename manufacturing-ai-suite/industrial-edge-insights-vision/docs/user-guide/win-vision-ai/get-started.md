@@ -12,6 +12,7 @@ Install **Python 3.12 or higher** from [the official Python website](https://www
 Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
 ### Set Proxies (Optional)
+
 Go to the target directory of your choice, open PowerShell and run all the terminal commands below
 
 ```powershell

@@ -1,0 +1,77 @@
+# Demo RTSP push configuration.
+#
+# start-streams.sh launches a bundled mediamtx RTSP server (using the
+# `mediamtx:` block below as its inline config) and then pushes each
+# enabled stream to it via ffmpeg.
+#
+# Fields under `streams.<id>`:
+#   enabled   — true/false, gate per stream (false = skip entirely)
+#   file      — local path, relative to this file's directory or absolute
+#   rtsp_url  — destination RTSP URL
+#   loop      — true = -stream_loop -1 (replay forever), false = play once
+#
+# The `mediamtx:` block is written verbatim to a temp file and passed
+# to the mediamtx binary. Edit it to change RTSP port / log level / etc.
+#
+# ─────────────────────────────────────────────────────────────
+# Verify a stream is being served (after `./start-streams.sh`):
+# ─────────────────────────────────────────────────────────────
+#
+# 1. Probe stream readiness (no decode):
+#    ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/fridge
+#
+# 2. Play in a GUI player:
+#    ffplay -rtsp_transport tcp rtsp://localhost:8554/live/fridge
+#    vlc            rtsp://localhost:8554/live/fridge
+#    mpv  --rtsp-transport=tcp rtsp://localhost:8554/live/child
+#
+# 3. Dump a 5-second sample to a file (no decode/re-encode):
+#    ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/live/elder \
+#      -t 5 -c copy /tmp/sample.mp4
+#
+# 4. Headless health-check (returns exit 0 if the path is alive):
+#    ffprobe -v error -rtsp_transport tcp -i rtsp://localhost:8554/live/elder2 \
+#      && echo OK || echo DEAD
+#
+# Replace the path tail (fridge / child / elder / elder2) with the
+# `rtsp_url` of the stream you want to test.
+
+mediamtx:
+  binary: ~/.local/bin/mediamtx
+  config:
+    logLevel: warn
+    rtspAddress: :8554
+    rtmp: no
+    hls: no
+    webrtc: no
+    srt: no
+    api: no
+    paths:
+      all:
+
+streams:
+  cam_fridge:
+    enabled: true
+    # file: cam_fridge/demo006-2_expanded.mp4
+    file: cam_fridge/demo006-2_expanded_20min_v2.mp4
+    rtsp_url: rtsp://localhost:8554/live/fridge
+    loop: true
+
+  cam_child:
+    enabled: true
+    file: cam_child/child_safety_demo_expanded_1h.mp4
+    # file: cam_child/child_safety_demo.mp4
+    rtsp_url: rtsp://localhost:8554/live/child
+    loop: true
+
+  cam_elder_bedroom:
+    enabled: true
+    file: cam_elder_bedroom/day1_elder_wakeup_expanded_20min.mp4
+    rtsp_url: rtsp://localhost:8554/live/elder
+    loop: true
+
+  cam_elder_bedroom_2:
+    enabled: false
+    file: cam_elder_bedroom_2/day2_elder_wakeup_expanded_20min.mp4
+    rtsp_url: rtsp://localhost:8554/live/elder2
+    loop: true

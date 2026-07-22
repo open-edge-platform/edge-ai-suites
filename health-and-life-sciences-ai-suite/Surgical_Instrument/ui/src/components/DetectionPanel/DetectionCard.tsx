@@ -110,7 +110,7 @@ const DetectionCard: React.FC<DetectionCardProps> = ({
               )}
             </div>
             <div className="det-session-grid">
-              {sessionDistinctPolyps !== undefined && (
+              {sessionDistinctPolyps !== undefined && sessionDistinctPolyps > 0 && (
                 <div className="det-session-cell det-session-cell--hero">
                   <span className="det-session-value">{sessionDistinctPolyps.toLocaleString()}</span>
                   <span className="det-session-label-sm">Polyps detected</span>

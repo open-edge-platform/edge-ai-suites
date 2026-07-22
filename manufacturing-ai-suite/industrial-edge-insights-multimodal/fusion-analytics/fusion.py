@@ -191,6 +191,9 @@ def on_message(client, userdata, msg):
             json_body = [{
                 "measurement": "vision-weld-classification-results",
                 "time": pd.to_datetime(time, unit="ns").isoformat(),
+                "tags": {
+                    "search_time": int(time)
+                },
                 "fields": {
                     "frame_id": int(payload["metadata"]["frame_id"]),
                     "height": int(payload["metadata"]["height"]),
@@ -284,6 +287,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     del queues[target_queue][target_index]
 
     vision_classification = "No Label"
+    timeseries_classification = "No Label"
 
     data_dict = {}
     ts_time = None
@@ -295,6 +299,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         vision_rtp_time = source_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
         ts_time = target_entry["time"]
         timeseries_anomaly = target_entry["anomaly_status"]
+        timeseries_classification = target_entry.get("predicted_category", "No Label")
         data_dict = source_entry
     else:
         # Time-series message processed first
@@ -302,6 +307,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         vision_rtp_time = target_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
         ts_time = source_entry["time"]
         timeseries_anomaly = source_entry["anomaly_status"]
+        timeseries_classification = source_entry.get("predicted_category", "No Label")
         data_dict = target_entry
 
     if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification/Model6"]:
@@ -334,6 +340,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         "vision_anomaly": vision_anomaly,
         "timeseries_anomaly": timeseries_anomaly,
         "vision_classification": vision_classification,
+        "timeseries_classification": timeseries_classification,
         "src_time_diff_ms": time_diff['ms'] if time_diff is not None else None
     }
 
@@ -383,6 +390,13 @@ def main():
 
                 if result["fused_decision"] is not None:
                     ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]
+                    vision_time = result["from"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"] if "metadata" in result["from"] and "rtp" in result["from"]["metadata"] else None
+                    if vision_time is None and "nearest" in result and result["nearest"] and "metadata" in result["nearest"] and "rtp" in result["nearest"]["metadata"]:
+                        vision_time = result["nearest"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]
+
+                    timeseries_time = result["nearest"]["time"] if result["nearest"] and "time" in result["nearest"] else None
+                    if timeseries_time is None and "from" in result and "time" in result["from"]:
+                        timeseries_time = result["from"]["time"]
                     
                     json_body = [{
                         "measurement": "fusion_result",
@@ -391,6 +405,7 @@ def main():
                             "fused_decision": int(result["fused_decision"]),
                             "mode": str(result["mode"]),
                             "vision_classification": result["vision_classification"],
+                            "timeseries_classification": result["timeseries_classification"],
                             "ts_anomaly": (
                                 str(result["nearest"]["anomaly_status"])
                                 if "anomaly_status" in result["nearest"]
@@ -398,7 +413,10 @@ def main():
                             ),
                             "vision_anomaly": int(result["vision_anomaly"]),
                             "timeseries_anomaly": int(result["timeseries_anomaly"]),
-                            "vision_rtsp_ts_diff_ms": float(result["src_time_diff_ms"]) if result["src_time_diff_ms"] is not None else None
+                            "vision_rtsp_ts_diff_ms": float(result["src_time_diff_ms"]) if result["src_time_diff_ms"] is not None else None,
+                            "vision_timestamp": int(vision_time) if vision_time is not None else None,
+                            "timeseries_timestamp": int(timeseries_time) if timeseries_time is not None else None
+
                         }
                     }]
                     influx_client.write_points(json_body)
