@@ -1,0 +1,22 @@
+# Qwen VLM service configuration.
+# Paths are relative to this file's directory (Qwen_services/).
+vlm_service:
+  host: "127.0.0.1"
+  port: 9900
+
+  # Model
+  model_name: "Qwen3.5-9B-int8-ov"
+  model_path: "C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/Qwen3.5-9B-int8-ov"   # relative to Qwen_services/
+  device: "GPU.1"                              # falls back to CPU if device == "GPU" and load fails
+
+  # OpenVINO runtime
+  cache_dir: "ov_cache"                        # relative to Qwen_services/
+  performance_hint: "LATENCY"
+  inference_precision_hint: "f16"
+
+  # Generation defaults (per-request values in the API body override these)
+  max_tokens: 512
+  temperature: 0.3
+
+  # Preprocessing: longest image side is capped to this before inference
+  max_image_size: 1920
