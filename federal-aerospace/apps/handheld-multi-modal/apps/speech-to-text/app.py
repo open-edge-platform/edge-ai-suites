@@ -14,6 +14,8 @@ app = Flask(__name__, static_folder="static")
 CORS(app)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB — matches nginx client_max_body_size
 
+ALLOWED_EXTENSIONS = {"mp3", "wav", "ogg", "webm", "mp4", "m4a", "flac"}
+
 MODEL_SIZE = os.environ.get("WHISPER_MODEL", "base")
 print(f"Loading Whisper model: {MODEL_SIZE} ...")
 model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
@@ -137,11 +139,16 @@ def transcribe():
         return jsonify({"error": "No audio file provided"}), 400
 
     audio_file = request.files["audio"]
-    suffix = ".webm"
-    if audio_file.filename:
-        ext = os.path.splitext(audio_file.filename)[1]
-        if ext:
-            suffix = ext
+    if not audio_file.filename:
+        return jsonify({"error": "No selected file"}), 400
+
+    ext = os.path.splitext(audio_file.filename)[1].lower().lstrip(".")
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({
+            "error": f"Unsupported file format '.{ext}'. "
+                     f"Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+        }), 400
+    suffix = f".{ext}"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         audio_file.save(tmp.name)
