@@ -475,7 +475,7 @@ va_pipeline:
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
 
 board_ocr:
-  enabled: false # requires ocr.enabled=true
+  enabled: true # requires ocr.enabled=true
   frame_rate: "1/3"    # frame/seconds
   debug: false
 

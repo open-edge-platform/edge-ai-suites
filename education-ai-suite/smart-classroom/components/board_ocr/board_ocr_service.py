@@ -3,12 +3,8 @@
 Two responsibilities, both exposed under the /board-ocr/* router:
   * read_board_ocr()      - return the raw board OCR extraction for a session
                             (task 1; produced by BoardOCRWorker -> board_ocr.txt)
-  * summarize_board_ocr() - summarize that OCR text via VLM/LLM (task 2)
-
-The summarization is a PLACEHOLDER: the VLM/LLM capability is still being
-reworked, so the actual model call is not wired yet. Per the modular design
-(doc 6.2/6.4), the summary feature requires the `text_gen` capability and should
-acquire it from ModelManager.instance().text_gen() once the Hub lands.
+  * summarize_board_ocr() - summarize that OCR text via the text_gen (VLM)
+                            capability from the ModelManager hub (task 2)
 """
 import json
 import os
@@ -16,6 +12,8 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
+from utils.config_loader import config
+from utils.markdown_cleaner import strip_think_tokens
 from utils.runtime_config_loader import RuntimeConfig
 
 logger = logging.getLogger(__name__)
@@ -128,33 +126,100 @@ def read_board_ocr_text_only(session_id: Optional[str]) -> str:
     return _normalize_board_text(board.get("text") or "")
 
 
-def summarize_board_ocr(session_id: Optional[str]) -> dict:
-    """Summarize the board OCR text via VLM/LLM.
+def _board_summary_system_prompt(lang: str) -> str:
+    """Standalone system prompt for summarizing board/screen OCR text.
 
-    PLACEHOLDER — the VLM/LLM module is still being updated, so the model call is
-    not wired yet; this returns the assembled board text stats and a pending
-    status so the API/data flow can be exercised end to end.
-
-    When the Hub lands, replace the TODO below with a real summarization call:
-        tg = ModelManager.instance().text_gen()
-        prompt = _build_board_summary_prompt(board["text"])
-        summary = "".join(tg.generate(prompt, stream=True))
+    Distinct from ``config.models.summarizer.board_ocr_prompt`` (which is phrased
+    as an addendum to the audio-transcript summary); this one stands on its own
+    for the /board-ocr/summary endpoint.
     """
-    board = read_board_ocr(session_id)  # 400/404 if missing
+    if lang == "zh":
+        return (
+            "你会收到一段板书内容：通过 OCR 从教室显示屏/交互式白板逐帧捕获的文本"
+            "（幻灯片标题、要点、表格、公式等），按时间先后排列，可能含有 OCR 噪声、"
+            "水印或网站/频道名称，且同一标题可能在多帧中重复出现。\n\n"
+            "请综合这些内容，输出有效 Markdown，且仅包含一个章节:\n\n"
+            "## 板书/大屏内容\n- ...\n\n"
+            "规则:\n"
+            "- 用完整、通顺的句子说明板书/屏幕上“呈现了/讲解了/说明了/描述了/列举了”哪些内容，"
+            "而不是罗列零散的关键词或短语。\n"
+            "- 将同一主题的重复帧或相关帧归纳为一句连贯的表述。\n"
+            "- 按主题或授课顺序组织为若干条要点，每条都是一个完整句子。\n"
+            "- 忽略水印、网站/频道名称等无关噪声；在含义明确时修正明显的 OCR 错误。\n"
+            "- 如果板书内容为空或无法识别，写 \"- 无\"。"
+        )
+    return (
+        "You will receive board content: text captured frame by frame by OCR from a "
+        "classroom display / interactive flat panel (slide titles, bullet points, tables, "
+        "equations), in chronological order. It may contain OCR noise, watermarks, or "
+        "site/channel names, and the same title may repeat across many frames.\n\n"
+        "Synthesize this content and output valid Markdown with exactly one section:\n\n"
+        "## Board/IFPD Content\n- ...\n\n"
+        "Rules:\n"
+        "- Write complete, fluent sentences describing WHAT the board presented, e.g. "
+        "\"Showed ...\", \"Explained ...\", \"Described ...\", \"Listed ...\".\n"
+        "- Do NOT output isolated keywords or fragments. Merge repeated/related frames on "
+        "the same topic into one coherent statement.\n"
+        "- Organize into a few bullet points by topic or teaching sequence; each bullet is a "
+        "full sentence.\n"
+        "- Ignore watermarks, channel/site names, and other noise; fix obvious OCR errors "
+        "when the meaning is clear.\n"
+        "- If the board content is empty or unreadable, write \"- None\"."
+    )
 
-    # TODO(VLM/LLM): call the text_gen / VLM capability to produce the summary.
-    summary = None
+
+def summarize_board_ocr(session_id: Optional[str]) -> dict:
+    """Summarize the board OCR text via the text_gen (VLM) capability."""
+    from model_manager import ModelManager
+
+    board = read_board_ocr(session_id)
+    board_text = _normalize_board_text(board.get("text") or "")
+
+    if not board_text:
+        logger.info(
+            f"Board OCR summary requested for session {board['session_id']} — "
+            f"no board text available, returning empty summary"
+        )
+        return {
+            "session_id": board["session_id"],
+            "status": "no_board_text",
+            "board_ocr_status": board["status"],
+            "frames": board["count"],
+            "board_text_chars": 0,
+            "summary": None,
+        }
+
+    tg = ModelManager.instance().text_gen()
+
+    model_name = str(config.models.text_gen.vlm_name)
+    user_content = board_text
+    if "qwen3" in model_name.lower() and not user_content.lstrip().startswith("/no_think"):
+        user_content = "/no_think\n" + board_text
+
+    messages = [
+        {"role": "system", "content": _board_summary_system_prompt(config.app.language)},
+        {"role": "user", "content": user_content},
+    ]
+    prompt = tg.tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+        enable_thinking=False,
+    )
+
+    raw = tg.generate(prompt, stream=False)
+    summary = strip_think_tokens(raw if isinstance(raw, str) else "".join(raw))
+
     logger.info(
-        f"Board OCR summary requested for session {board['session_id']} "
-        f"({board['count']} frames, {len(board['text'])} chars) — "
-        f"VLM/LLM not wired yet, returning placeholder"
+        f"Board OCR summary generated for session {board['session_id']} "
+        f"({board['count']} frames, {len(board_text)} chars -> {len(summary)} chars)"
     )
 
     return {
         "session_id": board["session_id"],
-        "status": "pending_vlm_integration",
+        "status": "done",
         "board_ocr_status": board["status"],
         "frames": board["count"],
-        "board_text_chars": len(board["text"]),
+        "board_text_chars": len(board_text),
         "summary": summary,
     }
