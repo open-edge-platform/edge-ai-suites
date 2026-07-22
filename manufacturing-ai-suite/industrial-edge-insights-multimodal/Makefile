@@ -50,8 +50,12 @@ validate_host_ip:
 		echo "HOST_IP is not set in $(ENV_FILE)."; \
 		exit 1; \
 	fi; \
+	if [ "$$host_ip" = "localhost" ]; then \
+		echo "HOST_IP ($$host_ip) is valid."; \
+		exit 0; \
+	fi; \
 	if ! echo "$$host_ip" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$$'; then \
-		echo "HOST_IP ($$host_ip) is not a valid IPv4 address format."; \
+		echo "HOST_IP ($$host_ip) must be localhost or a valid IPv4 address format."; \
 		exit 1; \
 	fi; \
 	for octet in $$(echo "$$host_ip" | tr '.' ' '); do \
@@ -306,7 +310,7 @@ gen_helm_charts:
 	@echo "Generating Helm packages"
 	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
 	@cp -f configs/grafana/provisioning/* helm/
-	@cp -f configs/grafana/weld_defect_detection.json helm/
+	@cp -f configs/grafana/dashboards_jsons/weld_defect_detection.json helm/
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
 	@cp -f configs/mqtt-broker/*.conf helm/

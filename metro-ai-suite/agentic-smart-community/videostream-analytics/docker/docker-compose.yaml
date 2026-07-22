@@ -1,0 +1,44 @@
+services:
+  videostream-analytics:
+    image: videostream-analytics:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
+    ports:
+      - "8999:8999"
+    environment:
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
+      # MCP server's data root. Defaults to ~/.mcp-smartbuilding (the MCP default);
+      # override by exporting SMARTBUILDING_DATA_DIR before `docker compose up`.
+      # VSA derives its default output root as <SMARTBUILDING_DATA_DIR>/segments; the
+      # per-monitor data_dir MCP sends (<root>/segments/<id>) still takes priority.
+      - SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=localhost,127.0.0.1
+    volumes:
+      # Identity bind mount (host X -> container X): the absolute data_dir MCP sends
+      # (<root>/segments/<id>) resolves to the SAME real host directory inside the
+      # container, so recordings/motion_events land on the host where the MCP clip
+      # extractor / VLM can read them. See smarthome_arch2_dev.md §32.
+      - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - ${MODEL_DIR:-${HOME}/models}:${MODEL_DIR:-${HOME}/models}:ro
+    # NPU passthrough: expose the host's Intel NPU device node so the containerised
+    # OpenVINO NPU plugin can reach it. The host node is /dev/accel/accel0 (crw-rw----
+    # root render). group_add adds the host 'render' gid (992) so a non-root container
+    # user could still open it; the default root user can open it regardless. If the
+    # host render gid differs, run `getent group render` and update the value below.
+    devices:
+      - /dev/accel/accel0:/dev/accel/accel0
+    group_add:
+      - "992" # host 'render' gid — see `getent group render`
+    # Runs as root (default). Clip files written to the mounted data dir are therefore
+    # root-owned; the MCP clip extractor / VLM read them fine. If you need the MCP
+    # storage cleaner (running as your host user) to purge them, run the container as
+    # your user instead, e.g.:  `docker run ... --user "$(id -u):$(id -g)"`.
+    network_mode: host
+    restart: unless-stopped
