@@ -110,6 +110,36 @@ class GradingTaskControlResponse(BaseModel):
     log_path: str | None = None
 
 
+class RubricInfo(BaseModel):
+    filename: str
+    rubric_path: str
+    size_bytes: int
+    modified_at: str
+
+
+class RubricListResponse(BaseModel):
+    total: int
+    rubrics: list[RubricInfo]
+
+
+class TaskSummary(BaseModel):
+    task_id: str
+    task_type: str
+    status: str
+    current_step: str
+    progress: int
+    error_message: str | None = None
+    created_at: str
+    updated_at: str
+    log_path: str | None = None
+
+
+class TaskListResponse(BaseModel):
+    total: int
+    status_counts: dict[str, int]
+    tasks: list[TaskSummary]
+
+
 class UnifiedTaskCreateRequest(BaseModel):
     task_type: str
     payload: dict

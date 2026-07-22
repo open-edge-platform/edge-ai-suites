@@ -94,6 +94,24 @@ def save_uploaded_rubric(filename: str, content: bytes) -> dict[str, Any]:
     }
 
 
+def list_rubrics() -> dict[str, Any]:
+    """List every .txt/.json rubric under the rubrics/ directory, newest first."""
+    rubrics_dir = _rubrics_upload_dir()
+    rubrics: list[dict[str, Any]] = []
+    for path in rubrics_dir.iterdir():
+        if not path.is_file() or path.suffix.lower() not in {".txt", ".json"}:
+            continue
+        stat = path.stat()
+        rubrics.append({
+            "filename": path.name,
+            "rubric_path": str(path),
+            "size_bytes": stat.st_size,
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+        })
+    rubrics.sort(key=lambda r: r["modified_at"], reverse=True)
+    return {"total": len(rubrics), "rubrics": rubrics}
+
+
 # ---------------------------------------------------------------------------
 # Task control (pause / resume / cancel) via checkpoints
 # ---------------------------------------------------------------------------
@@ -608,6 +626,37 @@ def create_task(task_type: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 def get_task_status(task_id: str) -> dict[str, Any]:
     return _JOB_STORE.get_job(task_id)
+
+
+def list_tasks(status: str | None = None) -> dict[str, Any]:
+    """List all tasks (newest first), optionally filtered by status, with a
+    per-status count over the full set (before filtering)."""
+    jobs = _JOB_STORE.list_jobs()
+    status_counts: dict[str, int] = {}
+    for job in jobs:
+        key = str(job.get("status", ""))
+        status_counts[key] = status_counts.get(key, 0) + 1
+
+    if status is not None:
+        wanted = status.upper()
+        jobs = [job for job in jobs if str(job.get("status", "")).upper() == wanted]
+
+    jobs.sort(key=lambda j: str(j.get("created_at", "")), reverse=True)
+    tasks = [
+        {
+            "task_id": job["job_id"],
+            "task_type": str(job.get("task_type", "")),
+            "status": job.get("status"),
+            "current_step": job.get("current_step"),
+            "progress": job.get("progress"),
+            "error_message": job.get("error_message"),
+            "created_at": job.get("created_at"),
+            "updated_at": job.get("updated_at"),
+            "log_path": job.get("log_path"),
+        }
+        for job in jobs
+    ]
+    return {"total": len(tasks), "status_counts": status_counts, "tasks": tasks}
 
 
 def get_task_result(task_id: str) -> dict[str, Any]:
