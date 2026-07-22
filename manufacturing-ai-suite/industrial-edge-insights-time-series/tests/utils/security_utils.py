@@ -421,20 +421,20 @@ def _replace_in_file(file_path, old_text, new_text):
 def update_continuous_simulator_ingestion():
     try:
         # Update the line in the opcua simulator file
-        opcua_file = constants.EDGE_AI_SUITES_DIR + "./simulator/opcua-server/opcua_server.py"
+        opcua_file = os.path.join(constants.EDGE_AI_SUITES_DIR, "simulator", "opcua-server", "opcua_server.py")
         _replace_in_file(
             opcua_file,
-            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()',
-            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false")).lower()',
+            'continuous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()',
+             'continuous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false")).lower()',
         )
         logger.info(f"Updated 'CONTINUOUS_SIMULATOR_INGESTION' to 'false' in opcua file {opcua_file}.")
 
         # Update the line in the mqtt publisher file
-        mqtt_file = constants.EDGE_AI_SUITES_DIR + "./simulator/mqtt-publisher/publisher.py"
+        mqtt_file = os.path.join(constants.EDGE_AI_SUITES_DIR, "simulator", "mqtt-publisher", "publisher.py")
         _replace_in_file(
             mqtt_file,
-            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true")).lower()',
-            'continous_simulator_ingestion = (os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false")).lower()',
+            'continuous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower()',
+             'continuous_simulator_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "false").lower()',
         )
         logger.info(f"Updated 'CONTINUOUS_SIMULATOR_INGESTION' to 'false' in mqtt file {mqtt_file}.")
     except (OSError, ValueError) as e:
