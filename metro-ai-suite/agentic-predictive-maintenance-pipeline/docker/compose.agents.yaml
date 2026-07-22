@@ -8,34 +8,40 @@
 
 services:
   apm-agent:
-    image: ${REGISTRY:-intel/}apm-agent-service:${TAG:-1.0.0}
+    # Pulled from the EAL agent-quality-handler microservice — no longer
+    # built from this repo. See services/agent-service (removed) history
+    # for the prior in-repo implementation this replaced.
+    image: ${REGISTRY:-intel/}agent-quality-handler:${TAG:-1.0.0}
     container_name: apm-agent
     hostname: apm-agent
-    build:
-      context: ../services/agent-service
-      dockerfile: Dockerfile
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
       no_proxy: ${no_proxy:-},apm-storage,apm-llm,mqtt-broker,localhost
-      APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
       # Storage service
       STORAGE_SERVICE_URL: http://apm-storage:5001
       # LLM service (OVMS — OpenVINO Model Server)
       LLM_BASE_URL: http://apm-llm:8000/v3
       LLM_MODEL_NAME: ${LLM_MODEL_NAME}
       LLM_MODE: ${LLM_MODE:-server}
+      LLM_API_KEY: ${LLM_API_KEY:-UNUSED}
       # MQTT — subscribes only to the detection layer's "batch-complete"
       # event; never subscribes to raw detections directly.
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
       MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
-      # Use-case config
-      USE_CASE_ID: ${USE_CASE}
+      MQTT_QOS: ${MQTT_QOS:-1}
+      MQTT_KEEPALIVE: ${MQTT_KEEPALIVE:-60}
+      MQTT_MAX_PAYLOAD_BYTES: ${MQTT_MAX_PAYLOAD_BYTES:-1048576}
+      MQTT_BATCH_CLIENT_ID: ${MQTT_BATCH_CLIENT_ID:-apm-agent-batch}
+      # Use-case config — agents.yaml itself declares use_case_id
       AGENTS_CONFIG_PATH: /app/config/agents.yaml
       USE_CASE_PROMPTS_DIR: /app/prompts
       USE_CASE_CONFIGS_DIR: /app/config
       FALLBACK_POLICY_PATH: /app/config/policy_fallback.json
+      # Run retention (in-memory registry + persisted output pruning)
+      RUN_RETENTION_SECONDS: ${RUN_RETENTION_SECONDS:-86400}
+      MAX_RETAINED_RUNS: ${MAX_RETAINED_RUNS:-1000}
       # Outputs
       OUTPUT_DIR: /app/output
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
