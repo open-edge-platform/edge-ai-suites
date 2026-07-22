@@ -55,6 +55,8 @@ fi
 HOST_IP="$(ip route get 1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i == "src") {print $(i+1); exit}}')"
 HOST_IP="${HOST_IP:-127.0.0.1}"
 USER_GROUP_ID="$(id -g)"
+VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}')
+RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 MODEL_CACHE_PATH="${ROOT_DIR}/llm_models"
 EMBEDDING_MODEL_NAME="${EMBEDDING_MODEL_NAME:-QwenText/qwen3-embedding-0.6b}"
 
@@ -80,6 +82,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 			;;
 		USER_GROUP_ID=*)
 			printf 'USER_GROUP_ID=%s\n' "${USER_GROUP_ID}" >> "${tmp_file}"
+			;;
+		VIDEO_GROUP_ID=*)
+			printf 'VIDEO_GROUP_ID=%s\n' "${VIDEO_GROUP_ID}" >> "${tmp_file}"
+			;;
+		RENDER_GROUP_ID=*)
+			printf 'RENDER_GROUP_ID=%s\n' "${RENDER_GROUP_ID}" >> "${tmp_file}"
 			;;
 		MODEL_CACHE_PATH=*)
 			printf 'MODEL_CACHE_PATH=%s\n' "${MODEL_CACHE_PATH}" >> "${tmp_file}"
