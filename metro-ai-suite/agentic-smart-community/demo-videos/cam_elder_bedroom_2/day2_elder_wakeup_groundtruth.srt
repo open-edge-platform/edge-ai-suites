@@ -1,0 +1,11 @@
+1
+00:00:00,000 --> 00:00:30,000
+[SLEEPING] Elderly man sleeping in bed
+
+2
+00:00:30,000 --> 00:00:38,800
+[WAKEUP] Elderly man waking up and getting out of bed
+
+3
+00:00:38,800 --> 00:08:28,800
+[EMPTY] Empty bedroom background (no person)

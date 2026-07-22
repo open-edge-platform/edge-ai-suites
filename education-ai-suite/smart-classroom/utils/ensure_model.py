@@ -151,9 +151,15 @@ def _download_openvino_model(
     return success, output_dir
 
 def ensure_model():
-    if config.models.summarizer.provider == "openvino":
-        output_dir = get_model_path()
-        _download_openvino_model(config.models.summarizer.name, output_dir, config.models.summarizer.weight_format)
+    # NOTE: The summarizer, mindmap and segmentation components now share the
+    # warm ``text_gen`` VLM (config.models.text_gen), which is downloaded and
+    # converted lazily by VLMTextGen on first warmup -- not here. The old
+    # summarizer LLM (config.models.summarizer) is no longer loaded, so its
+    # download/convert flow below is dead code and is commented out to avoid
+    # exporting an unused model at startup.
+    # if config.models.summarizer.provider == "openvino":
+    #     output_dir = get_model_path()
+    #     _download_openvino_model(config.models.summarizer.name, output_dir, config.models.summarizer.weight_format)
     if config.models.asr.provider == "openvino":
         output_dir = get_asr_model_path()
         _download_openvino_model(f"openai/{config.models.asr.name}", output_dir, None)

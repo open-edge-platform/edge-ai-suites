@@ -6,7 +6,7 @@ The guide provides step-by-step instructions to install and configure the Basler
 
 Download the latest **Pylon SDK** (preferably the Debian installer) from the official Basler website:
 
-- Go to: https://www.baslerweb.com/en/downloads/software/
+- [Software Downloads](https://www.baslerweb.com/en/downloads/software/)
 
 ## 2. Extract the Installer
 
