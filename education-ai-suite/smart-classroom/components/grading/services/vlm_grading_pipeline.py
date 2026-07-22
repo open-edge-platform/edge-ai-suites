@@ -61,9 +61,8 @@ def _load_provider_url(key: str, default: str) -> str:
     return default
 
 
-def _outputs_dir(exam_id: str | None, student_id: str | None, task_id: str) -> Path:
-    base = _component_root() / "outputs" / (exam_id or "exam") / (student_id or task_id)
-    return base
+def _outputs_dir(task_id: str, student_id: str | None) -> Path:
+    return _component_root() / "outputs" / task_id / (student_id or "paper")
 
 
 def run_vlm_grading_pipeline(
@@ -110,7 +109,6 @@ def run_vlm_grading_pipeline(
 
     paper_path = Path(str(request_payload["paper_path"])).resolve()
     student_id = request_payload.get("student_id")
-    exam_id = request_payload.get("exam_id")
 
     # rubric_path: task value, else component config default_prompt_path.
     rubric_path = request_payload.get("rubric_path")
@@ -135,7 +133,7 @@ def run_vlm_grading_pipeline(
 
     user_prompt = prompt_path.read_text(encoding="utf-8")
 
-    out_dir = _outputs_dir(exam_id, student_id, task_id)
+    out_dir = _outputs_dir(task_id, student_id)
     pages_dir = out_dir / "pages"
     pages_dir.mkdir(parents=True, exist_ok=True)
     _log(f"output base_dir={out_dir}")
@@ -325,7 +323,6 @@ def run_vlm_grading_pipeline(
         "paper_path": str(paper_path),
         "prompt_path": str(prompt_path),
         "student_id": student_id,
-        "exam_id": exam_id,
     }
 
     result_path = out_dir / "grading_result.json"

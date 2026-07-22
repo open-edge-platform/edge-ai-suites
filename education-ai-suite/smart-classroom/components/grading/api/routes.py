@@ -8,7 +8,7 @@ from api.schemas import (
     GradingTaskCreateResponse,
     GradingTaskResultResponse,
     GradingTaskStatusResponse,
-    ExamSummaryResponse,
+    TaskSummaryJsonResponse,
     HealthResponse,
     RubricListResponse,
     RubricUploadResponse,
@@ -16,7 +16,7 @@ from api.schemas import (
 )
 from services.grading_service_impl import (
     create_task as create_task_dispatch,
-    get_exam_summary as get_exam_summary_impl,
+    get_task_summary as get_task_summary_impl,
     get_health,
     get_task_result as get_task_result_impl,
     get_task_status as get_task_status_impl,
@@ -56,7 +56,6 @@ def create_router(language: str) -> APIRouter:
             payload = {
                 "paper_path": req.paper_path,
                 "rubric_path": req.rubric_path,
-                "exam_id": req.exam_id,
             }
             task = create_task_dispatch(task_type="grading.run", payload=payload)
             return GradingTaskCreateResponse(
@@ -77,10 +76,10 @@ def create_router(language: str) -> APIRouter:
     async def list_tasks(status: str | None = None) -> TaskListResponse:
         return TaskListResponse(**list_tasks_impl(status=status))
 
-    @router.get("/grading/exams/{exam_id}/summary", response_model=ExamSummaryResponse)
-    async def get_exam_summary(exam_id: str) -> ExamSummaryResponse:
+    @router.get("/grading/tasks/{task_id}/summary", response_model=TaskSummaryJsonResponse)
+    async def get_task_summary(task_id: str) -> TaskSummaryJsonResponse:
         try:
-            return ExamSummaryResponse(**get_exam_summary_impl(exam_id))
+            return TaskSummaryJsonResponse(**get_task_summary_impl(task_id))
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except Exception as exc:

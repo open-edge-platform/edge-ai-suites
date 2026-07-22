@@ -37,7 +37,7 @@ A single worker runs a task; there is never more than one worker per task.
 | POST | `/rubrics/upload` | Upload a rubric / grading-prompt file |
 | POST | `/grading/tasks` | Create a grading task (single paper or directory) |
 | GET  | `/grading/tasks` | List all tasks (optionally filtered by status) |
-| GET  | `/grading/exams/{exam_id}/summary` | Per-exam summary (`summary.json`), readable any time |
+| GET  | `/grading/tasks/{task_id}/summary` | Per-task summary (`summary.json`), readable any time |
 | GET  | `/grading/tasks/{task_id}` | Task status |
 | GET  | `/grading/tasks/{task_id}/result` | Task result (only when `COMPLETED`) |
 | POST | `/grading/tasks/{task_id}/pause` | Request pause |
@@ -119,20 +119,19 @@ Create a grading task. `dpi`, generation params, and `force_regrade` come from t
 |---|---|---|---|
 | `paper_path` | string | yes | Absolute path to a PDF **or** a directory of papers |
 | `rubric_path` | string \| null | no | Grading prompt path; omitted → config `grading.default_prompt_path` |
-| `exam_id` | string \| null | no | Groups output under `outputs/<exam_id>/`; directory tasks default it to the directory name |
 
-`student_id` is not accepted — it is derived from the paper path (a subfolder name, or a single PDF's parent folder name).
+`student_id` is not accepted — it is derived from the paper path (a subfolder name, or a single PDF's parent folder name). Outputs are keyed by the returned `task_id` (`outputs/<task_id>/`); there is no user-supplied output id.
 
 ```bash
 # Single paper
 curl -X POST http://127.0.0.1:9012/api/v1/grading/tasks \
   -H "Content-Type: application/json" \
-  -d '{"paper_path":"C:/.../papers/student1/2025_sh_zhongkao_math.pdf","exam_id":"math_test"}'
+  -d '{"paper_path":"C:/.../papers/student1/2025_sh_zhongkao_math.pdf"}'
 
 # Directory of papers
 curl -X POST http://127.0.0.1:9012/api/v1/grading/tasks \
   -H "Content-Type: application/json" \
-  -d '{"paper_path":"C:/.../papers","exam_id":"math_test_multi","rubric_path":"C:/.../rubrics/math_rubrics.txt"}'
+  -d '{"paper_path":"C:/.../papers","rubric_path":"C:/.../rubrics/math_rubrics.txt"}'
 ```
 
 **200 Response**
@@ -194,16 +193,16 @@ When `status` is supplied, `total` and `tasks` cover only the matching subset; `
 
 ---
 
-### GET `/grading/exams/{exam_id}/summary`
+### GET `/grading/tasks/{task_id}/summary`
 
-Return the per-exam `summary.json` (`outputs/<exam_id>/summary.json`) — the aggregated per-student score table. Readable **at any time**: it does not require the task to be `COMPLETED`, so a UI can poll it while grading is still in progress and watch rows appear as each student finishes.
+Return the per-task `summary.json` (`outputs/<task_id>/summary.json`) — the aggregated per-student score table. Readable **at any time**: it does not require the task to be `COMPLETED`, so a UI can poll it while grading is still in progress and watch rows appear as each student finishes.
 
-A directory task **seeds an empty summary at creation**, so this endpoint returns `200` from the moment the task exists. Even if the file is somehow absent (e.g. a single-paper exam that never created one), the endpoint returns the same empty shell rather than `404`.
+A task **seeds an empty summary at creation**, so this endpoint returns `200` from the moment the task exists. Even if the file is somehow absent, the endpoint returns the same empty shell rather than `404`.
 
-**200 Response** — see the `summary.json` shape under [Output files](#summaryjson-per-exam-directory-tasks). Empty shell before any student is graded:
+**200 Response** — see the `summary.json` shape under [Output files](#summaryjson-per-task). Empty shell before any student is graded:
 ```json
 {
-  "metadata": { "exam_id": "math_test_multi", "prompt_path": ".../rubrics/math_rubrics.txt" },
+  "metadata": { "task_id": "506797cd-...", "prompt_path": ".../rubrics/math_rubrics.txt" },
   "students": {},
   "updated_at": "2026-07-22T06:07:39+00:00",
   "student_count": 0
@@ -211,10 +210,10 @@ A directory task **seeds an empty summary at creation**, so this endpoint return
 ```
 
 ```bash
-curl -s "http://127.0.0.1:9012/api/v1/grading/exams/math_test_multi/summary"
+curl -s "http://127.0.0.1:9012/api/v1/grading/tasks/506797cd-.../summary"
 ```
 
-**Errors:** `400` (invalid `exam_id` — must be a bare directory name; values containing `/`, `\`, or `..` are rejected); `500` (unexpected). Never `404`.
+**Errors:** `400` (invalid `task_id` — must be a bare directory name; values containing `/`, `\`, or `..` are rejected); `500` (unexpected). Never `404`.
 
 ---
 
@@ -255,7 +254,7 @@ The task result. Available only when `status == "COMPLETED"`; otherwise `409`.
   "task_type": "grading.run",
   "status": "COMPLETED",
   "result": {
-    "result_path": ".../outputs/math_test/student1/grading_result.json",
+    "result_path": ".../outputs/506797cd-.../student1/grading_result.json",
     "summary": {
       "objective_score": 50, "objective_max": 60,
       "subjective_score": 20, "subjective_max": 42,
@@ -269,7 +268,7 @@ The task result. Available only when `status == "COMPLETED"`; otherwise `409`.
 
 **200 Response — directory task**
 
-`result` carries item counts; the per-student breakdown lives in `outputs/<exam_id>/summary.json` (see below).
+`result` carries item counts; the per-student breakdown lives in `outputs/<task_id>/summary.json` (see below).
 
 ```json
 {
@@ -329,11 +328,11 @@ Allowed from `RUNNING` / `PAUSING` / `PAUSED` / `PENDING` (idempotent once termi
 
 ## Output files
 
-Written under `outputs/<exam_id>/`.
+Written under `outputs/<task_id>/` — the `task_id` returned by `POST /grading/tasks` is the sole key that groups a task's outputs.
 
 ### `grading_result.json` (per student)
 
-`outputs/<exam_id>/<student_id>/grading_result.json`
+`outputs/<task_id>/<student_id>/grading_result.json`
 
 ```json
 {
@@ -350,7 +349,7 @@ Written under `outputs/<exam_id>/`.
   "task_id": "506797cd-...",
   "paper_meta":   { "paper_title": "2025年上海市初中学业水平考试", "subject": "数学" },
   "student_meta": { "student_name": "张伟", "class_name": "初三(2)班", "exam_number": "2025010801" },
-  "input": { "paper_path": "...", "prompt_path": "...", "student_id": "student1", "exam_id": "math_test_multi" }
+  "input": { "paper_path": "...", "prompt_path": "...", "student_id": "student1" }
 }
 ```
 
@@ -358,14 +357,14 @@ Written under `outputs/<exam_id>/`.
 - `type`: `choice` | `blank` | `calculation`
 - `paper_meta` / `student_meta` come from **header extraction** — a VLM read of page 1 driven by the rubric's `【卷头信息】` block. Missing fields degrade to `null` and never block grading.
 
-### `summary.json` (per exam, directory tasks)
+### `summary.json` (per task)
 
-`outputs/<exam_id>/summary.json` — seeded empty when a directory task is created, then rebuilt each time a student finishes. Students are keyed by a sequential index; per-question records are collapsed to one line and use `score` (not `vlm_score`), without `student_answer`.
+`outputs/<task_id>/summary.json` — seeded empty when a task is created, then rebuilt each time a student finishes. Students are keyed by a sequential index; per-question records are collapsed to one line and use `score` (not `vlm_score`), without `student_answer`.
 
 ```json
 {
   "metadata": {
-    "exam_id": "math_test_multi",
+    "task_id": "506797cd-...",
     "prompt_path": "...",
     "paper_title": "2025年上海市初中学业水平考试",
     "subject": "数学试卷"
@@ -397,10 +396,13 @@ Written under `outputs/<exam_id>/`.
 ```bash
 TASK=$(curl -s -X POST http://127.0.0.1:9012/api/v1/grading/tasks \
   -H "Content-Type: application/json" \
-  -d '{"paper_path":"C:/.../papers","exam_id":"math_multi"}' | jq -r .task_id)
+  -d '{"paper_path":"C:/.../papers"}' | jq -r .task_id)
 
 # poll until COMPLETED
 curl -s http://127.0.0.1:9012/api/v1/grading/tasks/$TASK | jq '{status,current_step,progress}'
+
+# watch the per-student table fill in at any time
+curl -s http://127.0.0.1:9012/api/v1/grading/tasks/$TASK/summary | jq '{student_count, students}'
 
 # fetch summary counts once done
 curl -s http://127.0.0.1:9012/api/v1/grading/tasks/$TASK/result | jq .result

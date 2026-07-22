@@ -63,10 +63,10 @@ class GradingJobResultResponse(BaseModel):
 
 class GradingTaskCreateRequest(BaseModel):
     # Minimal grading request. dpi / answer_key / force_regrade all come from
-    # the component config.yaml. student_id is derived from paper_path.
+    # the component config.yaml. student_id is derived from paper_path. Outputs
+    # are keyed by the returned task_id (outputs/<task_id>/), not a user-supplied id.
     paper_path: str
     rubric_path: str | None = None   # omitted -> config default_prompt_path
-    exam_id: str | None = None
 
 
 class GradingTaskCreateResponse(BaseModel):
@@ -140,7 +140,7 @@ class TaskListResponse(BaseModel):
     tasks: list[TaskSummary]
 
 
-class ExamSummaryResponse(BaseModel):
+class TaskSummaryJsonResponse(BaseModel):
     metadata: dict
     students: dict
     updated_at: str | None = None

@@ -15,7 +15,8 @@ grading 功能作为一块**相对独立的子界面**接入 Smart Classroom 前
 |---|---|
 | 独立形态 | **同一 SPA 内 `window.open` 新浏览器窗口**（同一份 Vite 构建、同一端口、同一 `api.ts`，靠路由区分）|
 | 页面路由 | **引入 `react-router-dom`**，两页真正 URL 路由：`/grading`（main）、`/grading/results`（results）|
-| results 数据源 | **新增后端接口读 `summary.json`**：按 `exam_id` 直接返回 `outputs/<exam_id>/summary.json`，运行中也可读（不要求 COMPLETED）|
+| results 数据源 | **新增后端接口读 `summary.json`**：按 `task_id` 直接返回 `outputs/<task_id>/summary.json`，运行中也可读（不要求 COMPLETED）|
+| 输出目录键 | **彻底去掉 `exam_id`**，一律以 `task_id` 作为区分任务、归集输出的唯一键（`outputs/<task_id>/`）|
 
 ---
 
@@ -56,18 +57,18 @@ grading 功能作为一块**相对独立的子界面**接入 Smart Classroom 前
 ```
 main 页 /grading
  a. 选择已有 rubric（GET /rubrics）  或  上传新 rubric（POST /rubrics/upload）
- b. 填「目标目录」paper_path + 选定的 rubric_path (+可选 exam_id)
+ b. 填「目标目录」paper_path + 选定的 rubric_path
     → 启动评分（POST /grading/tasks）→ 得 task_id
  c. 轮询任务状态（GET /grading/tasks/{id}）看 progress / current_step，
     可 pause / resume / cancel
-    ↓ 提供入口跳到 results 页（带上 exam_id）
-results 页 /grading/results?exam_id=<...>
- d. 轮询 summary（GET /grading/exams/{exam_id}/summary）
+    ↓ 提供入口跳到 results 页（带上 task_id）
+results 页 /grading/results?task_id=<...>
+ d. 轮询 summary（GET /grading/tasks/{task_id}/summary）
     → 表格展示已判完的学生，运行中也实时增行
 ```
 
-要点：`exam_id` 是把 main 页任务与 results 页数据关联起来的键。创建目录任务时 `exam_id`
-默认取目录名（见 api_reference），main 页启动后应把实际 `exam_id` 传给 results 页。
+要点：`task_id` 是把 main 页任务与 results 页数据关联起来的唯一键。创建任务时返回 `task_id`，
+main 页启动后把它传给 results 页（URL 参数）——不再有 `exam_id` 之类的用户自定义 id。
 
 ---
 
@@ -109,9 +110,9 @@ window.open('/grading', 'grading', 'width=1280,height=860');
 |---|---|---|
 | `GradingMainPage.tsx` | main | 页面容器 + 顶部到 results 的入口链接 |
 | `RubricPicker.tsx` | main | 列 rubric（GET /rubrics）+ 上传（POST /rubrics/upload）+ 选定 |
-| `StartGradingForm.tsx` | main | 输入目标目录 paper_path + rubric_path + 可选 exam_id → 启动任务 |
+| `StartGradingForm.tsx` | main | 输入目标目录 paper_path + rubric_path → 启动任务，拿到 task_id |
 | `TaskProgress.tsx` | main | 当前任务 progress/current_step + pause/resume/cancel 按钮 |
-| `GradingResultsPage.tsx` | results | 页面容器：读 `?exam_id=`，轮询 summary |
+| `GradingResultsPage.tsx` | results | 页面容器：读 `?task_id=`，轮询 summary |
 | `ResultsTable.tsx` | results | 表格渲染 summary.json 的 students（见 §6 列定义）|
 | `StudentDetailModal.tsx` | results | （可选）点某行看该生逐题明细 |
 
@@ -122,17 +123,17 @@ window.open('/grading', 'grading', 'width=1280,height=860');
 |---|---|
 | `gradingListRubrics()` | GET `/rubrics` |
 | `gradingUploadRubric(file)` | POST `/rubrics/upload` (multipart) |
-| `gradingCreateTask({paper_path, rubric_path?, exam_id?})` | POST `/grading/tasks` |
+| `gradingCreateTask({paper_path, rubric_path?})` | POST `/grading/tasks` |
 | `gradingListTasks(status?)` | GET `/grading/tasks?status=` |
 | `gradingGetTask(taskId)` | GET `/grading/tasks/{id}` |
 | `gradingPause/Resume/Cancel(taskId)` | POST `/grading/tasks/{id}/{action}` |
-| `gradingGetExamSummary(examId)` | **GET `/grading/exams/{exam_id}/summary`（新增）** |
+| `gradingGetTaskSummary(taskId)` | **GET `/grading/tasks/{task_id}/summary`（新增）** |
 
 常量：`const GRADING_API_URL = env.VITE_GRADING_API_URL || '/grading-api';`（对标 `CONTENT_SEARCH_API_URL`）。
 
 ### 5.4 轮询 hooks
 - `useGradingTaskPoll(taskId)`：main 页轮询任务状态，终态（COMPLETED/FAILED/CANCELLED）停轮询。
-- `useExamSummaryPoll(examId)`：results 页每 3–5s 轮询 summary，展示最新表格；任务终态后可降频或停。
+- `useTaskSummaryPoll(taskId)`：results 页每 3–5s 轮询 summary，展示最新表格；任务终态后可降频或停。
 - 均对标现有 `useResourceMetricTimer` 的 `setInterval` + `useEffect` cleanup 模式。
 
 ### 5.5 连通 9012（Vite 代理，同 content-search 做法）
@@ -157,7 +158,7 @@ Electron 桌面版若要访问 9012，需在 `electron/server.cjs` 加同样反�
 
 ## 6. results 表格（summary.json → 列）
 
-数据来自 `outputs/<exam_id>/summary.json`（结构见 api_reference「输出文件」节）。表格建议列：
+数据来自 `outputs/<task_id>/summary.json`（结构见 api_reference「输出文件」节）。表格建议列：
 
 | 列 | 来源字段 |
 |---|---|
@@ -170,7 +171,7 @@ Electron 桌面版若要访问 9012，需在 `electron/server.cjs` 加同样反�
 | 总分 | `total_score / total_max` |
 | 详情 | 展开 `student.questions`（逐题 catalog/type/score/max_score）|
 
-表头元信息：`metadata.paper_title` / `metadata.subject` / `metadata.exam_id`。
+表头元信息：`metadata.paper_title` / `metadata.subject` / `metadata.task_id`。
 `student_count` 显示已判人数；缺失的 header 字段（name/class/no 可能为 null）显示占位符。
 
 ---
@@ -189,9 +190,9 @@ Electron 桌面版若要访问 9012，需在 `electron/server.cjs` 加同样反�
 4. **`paper_path` 是服务器路径，不是浏览器文件**：用户填的「目标目录」是 grading 后端可见的
    服务器路径，无法用 `<input type=file>` 传目录。表单需明确提示。rubric 可用上传接口。
 
-5. **exam_id 关联**：results 页依赖 `exam_id` 查 summary。若创建任务时未显式传 `exam_id`，
-   后端默认取目录名——main 页须把创建任务返回/查询到的实际 exam_id 传给 results 页（URL 参数），
-   否则 results 页不知道查哪个 exam。
+5. **task_id 关联**：results 页依赖 `task_id` 查 summary。`task_id` 由 `POST /grading/tasks` 返回，
+   main 页须把它传给 results 页（URL 参数），否则 results 页不知道查哪个任务。已彻底去掉用户自定义的
+   `exam_id`——不存在“未显式传就取目录名”的兜底，`task_id` 是唯一键。
 
 6. **summary.json 尚不存在时**：任务刚启动、还没有任何学生判完时 `summary.json` 可能不存在。
    新接口应返回「空 summary」而非 404，results 页显示「暂无结果，评分进行中」。
@@ -200,40 +201,41 @@ Electron 桌面版若要访问 9012，需在 `electron/server.cjs` 加同样反�
 
 ---
 
-## 8. 后端改动（grading 服务，新增 1 个接口）
+## 8. 后端改动（grading 服务，已落地）
 
-新增 **GET `/api/v1/grading/exams/{exam_id}/summary`**，读取 `outputs/<exam_id>/summary.json`：
+**GET `/api/v1/grading/tasks/{task_id}/summary`**，读取 `outputs/<task_id>/summary.json`：
 
 - 存在 → 返回其 JSON 内容（原样，含 metadata/students/updated_at/student_count）。
-- 不存在（任务刚起、无人判完）→ 返回**空壳**：`{"metadata": {"exam_id": <id>}, "students": {}, "student_count": 0}`，HTTP 200。
-- `exam_id` 校验：只允许目录名字符，防止路径穿越（拒绝含 `/`、`\`、`..` 的值）。
+- 不存在（任务刚起、无人判完）→ 返回**空壳**：`{"metadata": {"task_id": <id>}, "students": {}, "student_count": 0}`，HTTP 200。
+- `task_id` 校验：只允许目录名字符，防止路径穿越（拒绝含 `/`、`\`、`..` 及空值）。
 - 不要求任务 COMPLETED——运行中即可读，满足「随时查看最新」。
+- 任务创建时即 seed 一个空 summary（`_seed_empty_summary`），因此从任务存在起就返回 200。
 
 落点（对标已有 `list_rubrics` / `list_tasks`）：
-- `services/grading_service_impl.py`：新增 `get_exam_summary(exam_id)`，读 `_COMPONENT_ROOT/outputs/<exam_id>/summary.json`。
-- `api/schemas.py`：可直接返回 `dict`（summary 结构已在 `_update_summary` 固定），或加一个 `ExamSummaryResponse` 薄包装。
-- `api/routes.py`：挂 `GET /grading/exams/{exam_id}/summary`，`ValueError`→400（非法 exam_id）。
-- 更新 [api_reference.md](api_reference.md) 增补该端点。
+- `services/grading_service_impl.py`：`get_task_summary(task_id)`，读 `_COMPONENT_ROOT/outputs/<task_id>/summary.json`。
+- `api/schemas.py`：`TaskSummaryJsonResponse` 薄包装。
+- `api/routes.py`：`GET /grading/tasks/{task_id}/summary`，`ValueError`→400（非法 task_id）。
+- 输出目录键彻底改为 `task_id`：去掉 `GradingTaskCreateRequest.exam_id`，`outputs/<task_id>/...`。
 
 ---
 
 ## 9. 分阶段落地
 
-1. **后端接口**：新增 `GET /grading/exams/{exam_id}/summary` + 更新 api_reference（可独立先行、可 Postman 验）。
+1. **后端接口**（已完成）：`GET /grading/tasks/{task_id}/summary` + 更新 api_reference。
 2. **路由骨架**：装 react-router-dom；`main.tsx` 顶层分流，grading 两页占位路由并列于 `App` 之外；主 UI 加 `window.open('/grading')` 入口按钮；Vite `/grading-api` 代理；api.ts 的 grading 函数组。验证 9012 连通。
 3. **main 页**：RubricPicker + StartGradingForm + TaskProgress + `useGradingTaskPoll` + 状态机禁用逻辑（PAUSING 时禁 resume，见 api_reference）。
-4. **results 页**：ResultsTable + `useExamSummaryPoll`，表格随 summary 实时增行。
+4. **results 页**：ResultsTable + `useTaskSummaryPoll`，表格随 summary 实时增行。
 5. **打磨**：i18n 补全、空 summary/错误态、Electron 反代（如需桌面版）。
 
 ---
 
 ## 10. 改动文件清单（预估）
 
-**后端**
-- `components/grading/services/grading_service_impl.py`（+`get_exam_summary`）
-- `components/grading/api/routes.py`（+summary 路由）
-- `components/grading/api/schemas.py`（可选 `ExamSummaryResponse`）
-- `components/grading/doc/api_reference.md`（补端点）
+**后端**（已完成）
+- `components/grading/services/grading_service_impl.py`（`get_task_summary` + `_seed_empty_summary`；去 exam_id）
+- `components/grading/api/routes.py`（summary 路由）
+- `components/grading/api/schemas.py`（`TaskSummaryJsonResponse`；去 exam_id）
+- `components/grading/doc/api_reference.md`（端点 + 输出布局）
 
 **前端 · 改**
 - `ui/src/main.tsx`（BrowserRouter + 顶层 Routes）
@@ -246,5 +248,5 @@ Electron 桌面版若要访问 9012，需在 `electron/server.cjs` 加同样反�
 
 **前端 · 新增**
 - `ui/src/components/Grading/GradingMainPage.tsx`、`GradingResultsPage.tsx`、`RubricPicker.tsx`、`StartGradingForm.tsx`、`TaskProgress.tsx`、`ResultsTable.tsx`、（可选 `StudentDetailModal.tsx`）
-- `ui/src/hooks/useGradingTaskPoll.ts`、`useExamSummaryPoll.ts`
+- `ui/src/hooks/useGradingTaskPoll.ts`、`useTaskSummaryPoll.ts`
 - `ui/src/assets/css/Grading*.css`

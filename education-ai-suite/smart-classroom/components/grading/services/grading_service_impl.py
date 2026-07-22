@@ -155,7 +155,6 @@ def _grade_one_paper(
     task_id: str,
     paper_path: str,
     student_id: str | None,
-    exam_id: str | None,
     rubric_path: str | None,
     progress_span: tuple[int, int] | None = None,
 ) -> dict[str, Any]:
@@ -171,7 +170,6 @@ def _grade_one_paper(
         "paper_path": paper_path,
         "rubric_path": rubric_path,
         "student_id": student_id,
-        "exam_id": exam_id,
         "options": {},
     }
 
@@ -210,7 +208,6 @@ def _run_grading_task(task_id: str, request_payload: dict[str, Any]) -> None:
             task_id=task_id,
             paper_path=str(request_payload["paper_path"]),
             student_id=request_payload.get("student_id"),
-            exam_id=request_payload.get("exam_id"),
             rubric_path=request_payload.get("rubric_path"),
         )
 
@@ -253,10 +250,10 @@ def _dump_summary(summary: dict[str, Any]) -> str:
 
 
 def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
-    """Fold a just-graded student's result into outputs/<exam_id>/summary.json.
+    """Fold a just-graded student's result into outputs/<task_id>/summary.json.
 
     Reads the student's grading_result.json (result_path, produced inline by the
-    pipeline), then read-modify-writes the exam-level summary.json living one
+    pipeline), then read-modify-writes the task-level summary.json living one
     directory above the student's folder. Best-effort: any failure is logged and
     swallowed so it never breaks the loop.
     """
@@ -266,8 +263,8 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         result_path = Path(str(result_path))
         data = json.loads(result_path.read_text(encoding="utf-8"))
 
-        exam_dir = result_path.parent.parent
-        summary_path = exam_dir / "summary.json"
+        task_dir = result_path.parent.parent
+        summary_path = task_dir / "summary.json"
 
         source_summary = data.get("summary") or {}
         source_input = data.get("input") or {}
@@ -280,7 +277,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             summary = {}
 
         metadata = summary.setdefault("metadata", {
-            "exam_id": source_input.get("exam_id"),
+            "task_id": task_id,
             "prompt_path": source_input.get("prompt_path"),
         })
         # Fill paper-level fields from the header once (first non-null wins).
@@ -324,7 +321,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         summary["updated_at"] = _now_utc_iso()
         summary["student_count"] = len(students)
 
-        exam_dir.mkdir(parents=True, exist_ok=True)
+        task_dir.mkdir(parents=True, exist_ok=True)
         summary_path.write_text(_dump_summary(summary), encoding="utf-8")
         _append_task_log(
             task_id, "grading.run",
@@ -338,42 +335,42 @@ def _outputs_root() -> Path:
     return _COMPONENT_ROOT / "outputs"
 
 
-def _validate_exam_id(exam_id: str) -> str:
+def _validate_task_id(task_id: str) -> str:
     """Reject anything that could escape the outputs/ root (path traversal)."""
-    name = str(exam_id or "").strip()
+    name = str(task_id or "").strip()
     if not name or name in {".", ".."} or "/" in name or "\\" in name:
-        raise ValueError(f"invalid exam_id: {exam_id!r}")
+        raise ValueError(f"invalid task_id: {task_id!r}")
     return name
 
 
-def _empty_summary(exam_id: str, prompt_path: str | None = None) -> dict[str, Any]:
+def _empty_summary(task_id: str, prompt_path: str | None = None) -> dict[str, Any]:
     """The empty summary shell served before any student has been graded, and
-    seeded at directory-task creation so the summary endpoint never 404s."""
+    seeded at task creation so the summary endpoint never 404s."""
     return {
-        "metadata": {"exam_id": exam_id, "prompt_path": prompt_path},
+        "metadata": {"task_id": task_id, "prompt_path": prompt_path},
         "students": {},
         "updated_at": _now_utc_iso(),
         "student_count": 0,
     }
 
 
-def _seed_empty_summary(exam_id: str, prompt_path: str | None = None) -> None:
-    """Write an empty summary.json for an exam if none exists yet. Best-effort."""
+def _seed_empty_summary(task_id: str, prompt_path: str | None = None) -> None:
+    """Write an empty summary.json for a task if none exists yet. Best-effort."""
     try:
-        exam_dir = _outputs_root() / _validate_exam_id(exam_id)
-        summary_path = exam_dir / "summary.json"
+        task_dir = _outputs_root() / _validate_task_id(task_id)
+        summary_path = task_dir / "summary.json"
         if summary_path.exists():
             return
-        exam_dir.mkdir(parents=True, exist_ok=True)
-        summary_path.write_text(_dump_summary(_empty_summary(exam_id, prompt_path)), encoding="utf-8")
+        task_dir.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(_dump_summary(_empty_summary(task_id, prompt_path)), encoding="utf-8")
     except Exception:
         pass
 
 
-def get_exam_summary(exam_id: str) -> dict[str, Any]:
-    """Return outputs/<exam_id>/summary.json, or an empty shell if it does not
+def get_task_summary(task_id: str) -> dict[str, Any]:
+    """Return outputs/<task_id>/summary.json, or an empty shell if it does not
     exist yet. Readable at any time (does not require the task to be COMPLETED)."""
-    name = _validate_exam_id(exam_id)
+    name = _validate_task_id(task_id)
     summary_path = _outputs_root() / name / "summary.json"
     if summary_path.exists():
         return json.loads(summary_path.read_text(encoding="utf-8"))
@@ -407,7 +404,6 @@ def create_grading_task(
     paper_path: str,
     rubric_path: str | None = None,
     student_id: str | None = None,
-    exam_id: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     submission_key = _build_submission_key(paper_path, student_id)
@@ -423,7 +419,6 @@ def create_grading_task(
         "paper_path": paper_path,
         "rubric_path": rubric_path,
         "student_id": student_id,
-        "exam_id": exam_id,
         "submission_key": submission_key,
         "options": options_obj,
     }
@@ -432,6 +427,7 @@ def create_grading_task(
     log_path.write_text("", encoding="utf-8")
     task = _JOB_STORE.update_job(task["job_id"], log_path=str(log_path))
     _append_task_log(task["job_id"], "grading.run", "task created")
+    _seed_empty_summary(task["job_id"], rubric_path)
 
     worker = Thread(target=_run_grading_task, args=(task["job_id"], payload), daemon=True)
     worker.start()
@@ -446,7 +442,6 @@ def create_grading_task(
 def create_directory_grading_task(
     papers_dir: str,
     rubric_path: str | None = None,
-    exam_id: str | None = None,
 ) -> dict[str, Any]:
     from services.dir_scan import load_dir_defaults
 
@@ -459,7 +454,6 @@ def create_directory_grading_task(
         "paper_path": str(resolved),
         "papers_dir": str(resolved),
         "rubric_path": rubric_path,
-        "exam_id": exam_id or resolved.name,
         "mode": "directory",
         "items": [],
         "poll_interval": defaults.poll_interval,
@@ -472,7 +466,7 @@ def create_directory_grading_task(
     log_path.write_text("", encoding="utf-8")
     task = _JOB_STORE.update_job(task["job_id"], log_path=str(log_path))
     _append_task_log(task["job_id"], "grading.run", f"directory task created papers_dir={resolved}")
-    _seed_empty_summary(payload["exam_id"], rubric_path)
+    _seed_empty_summary(task["job_id"], rubric_path)
 
     worker = Thread(target=_run_directory_grading_task, args=(task["job_id"],), daemon=True)
     worker.start()
@@ -532,7 +526,6 @@ def _run_directory_grading_task(task_id: str) -> None:
         request = _JOB_STORE.get_job(task_id).get("request") or {}
         papers_dir = Path(str(request["papers_dir"]))
         rubric_path = request.get("rubric_path")
-        exam_id = request.get("exam_id")
         poll_interval = float(request.get("poll_interval", 5))
         stable_checks = int(request.get("stable_checks", 2))
         idle_timeout = float(request.get("idle_timeout", 180))
@@ -578,7 +571,6 @@ def _run_directory_grading_task(task_id: str) -> None:
                         task_id=task_id,
                         paper_path=picked["path"],
                         student_id=key,
-                        exam_id=exam_id,
                         rubric_path=rubric_path,
                     )
                     if result.get("stopped"):
@@ -660,13 +652,11 @@ def create_task(task_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         return create_directory_grading_task(
             papers_dir=paper_path,
             rubric_path=payload.get("rubric_path"),
-            exam_id=payload.get("exam_id"),
         )
     return create_grading_task(
         paper_path=paper_path,
         rubric_path=payload.get("rubric_path"),
         student_id=_build_submission_key(paper_path, None),
-        exam_id=payload.get("exam_id"),
         options={},
     )
 
