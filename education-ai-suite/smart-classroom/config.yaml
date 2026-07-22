@@ -241,7 +241,7 @@ models:
         Synthesize this content and, in ADDITION to the sections above, append exactly one
         more section at the end:
 
-        ## Board / IFPD Content
+        ## Board/IFPD Content
         - ...
 
         Rules for this section only:
@@ -263,7 +263,7 @@ models:
 
         请综合这些内容，在上述章节之外，在最后额外追加且仅追加一个章节:
 
-        ## 板书 / IFPD 内容
+        ## 板书/大屏内容
         - ...
 
         本章节规则:
