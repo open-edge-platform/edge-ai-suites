@@ -4,7 +4,7 @@
 [project]
 name = "live-video-alert-agent"
 version = "0.1.0"
-description = "Live Video Alert Agent — AI-powered video stream monitoring with agentic dispatch"
+description = "Live Video Alert Agent — AI-powered video stream monitoring with external alert-agent-service dispatch"
 requires-python = ">=3.12"
 dependencies = [
     # Core framework
@@ -20,13 +20,8 @@ dependencies = [
     # Schemas & validation
     "pydantic==2.12.5",
 
-    # Agentic framework
-    "google-adk>=1.28.1",
-    "litellm>=1.83.14",         # LiteLlm bridge for ADK → local OVMS inference
-
-    # Action tools
-    "aiohttp>=3.13.4",       # webhook tool
-    "paho-mqtt>=2.0.0",     # MQTT tool
+    # HTTP client for alert-agent-service
+    "aiohttp>=3.13.4",
 
     # System metrics
     "psutil>=5.9.0",

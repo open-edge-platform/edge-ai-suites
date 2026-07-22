@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Ensure you meet the [System Requirements](./system-requirements.md) for this application.
+- Ensure you meet the [System Requirements](./vision-system-requirements.md) for this application.
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
 - **Tools Installed**: Install the required tools:
@@ -61,9 +61,11 @@ configured Kubernetes cluster.
   ```
 
   Verify the GPU and NPU resources are advertised on nodes:
+
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
+
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Set up the application
@@ -106,7 +108,7 @@ configured Kubernetes cluster.
 
     > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances (two pallet-defect-detection instances and one pcb-anomaly-detection instance) with the identifiers `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-3. Edit the below mentioned environment variables in all the `helm/values_<SAMPLE_APP>.yaml` files:
+3. Edit the environment variables mentioned below in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
    ```yaml
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -120,20 +122,20 @@ configured Kubernetes cluster.
 
    > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
 
-4. Install prerequisites for all instances
+4. Install prerequisites for all instances:
 
    ```sh
    ./setup.sh helm
    ```
 
-   This does the following:
+   This:
    - Parses through the `config.yml`
    - Downloads resources for each instance
-   - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and values.yaml.
-   - Updates and adds the ports mentioned in `config.yml` to the respective values.yaml file
+   - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and `values.yaml`.
+   - Updates and adds the ports mentioned in `config.yml` to the respective `values.yaml` file
    - Sets executable permissions for scripts
 
-## Deploy the application
+## Deploy the Application
 
 ### Install Helm charts
 
@@ -157,25 +159,34 @@ configured Kubernetes cluster.
 
 2. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
+
    ```sh
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
-   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   
-   | Application   | <VIDEOS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
-   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
-   | Application   | <MODELS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection |
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```sh
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+   kubectl cp resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 ### Start AI pipelines
 
@@ -330,14 +341,14 @@ configured Kubernetes cluster.
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & pcb1 set to 30445.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance `pdd1` has nginx port set to 30443, `pdd2` set to 30444, and `pcb1` set to 30445.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
    ```
 
-#### Start pipeline for a particular instance only
+#### Start a pipeline for a particular instance only
 
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
@@ -434,7 +445,7 @@ configured Kubernetes cluster.
    ]
    ```
 
-2. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
+2. Start the pipeline for `<INSTANCE_NAME>` where pipeline is loaded from `<PAYLOAD_FILE>`:
 
    ```bash
    ./sample_start.sh helm -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
@@ -473,13 +484,13 @@ configured Kubernetes cluster.
 
 ### Check Pipeline Status
 
-1. Get status of pipeline instance(s) of all instances.
+1. Get the status of pipeline instance(s) of all instances.
 
    ```bash
    ./sample_status.sh helm
    ```
 
-   This command lists status of pipeline instances launched during the lifetime of sample application of all instances in the config file
+   This command lists the status of pipeline instances launched during the lifetime of sample application of all instances in the config file
 
    Output example of two pallet-defect-detection instances and one pcb-anomaly-detection instance:
 
@@ -718,30 +729,38 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
+
    ```sh
-
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
-   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-  
-   | Application   | <VIDEOS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
-   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
-   | Application   | <MODELS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection |
 
-4. Install the package `boto3` in your python environment if not installed.
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
-   Intel recommends creating a virtual environment and installing it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
+   ```sh
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+   kubectl cp resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
+4. Install the package `boto3` in your Python environment if not installed.
+
+   This guide recommends creating a virtual environment and installing it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
 
    ```sh
    sudo apt update && \
@@ -792,51 +811,60 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the `config.yml` for each instance. Ensure to give the correct path to the model as seen below.
 
-   Pallet Defect Detection:
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
 
    ```sh
    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
-       "source": {
-           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-           "type": "uri"
-       },
-       "destination": {
-           "frame": {
-               "type": "webrtc",
-               "peer-id": "pdds3"
-           }
-       },
-       "parameters": {
-           "detection-properties": {
-               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-               "device": "CPU"
-           }
-       }
-   }'
-   ```
-
-   PCB Anomaly Detection:
-   
-   ```sh
-   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
       "source": {
-         "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+         "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
          "type": "uri"
       },
       "destination": {
          "frame": {
-               "type": "webrtc",
-               "peer-id": "anomaly_s3"
+            "type": "webrtc",
+            "peer-id": "pdds3"
          }
       },
       "parameters": {
-         "classification-properties": {
-               "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
-               "device": "CPU"
+         "detection-properties": {
+            "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+            "device": "CPU"
          }
       }
    }'
    ```
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```sh
+   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+     "source": {
+       "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+       "type": "uri"
+     },
+     "destination": {
+       "frame": {
+            "type": "webrtc",
+            "peer-id": "anomaly_s3"
+       }
+     },
+     "parameters": {
+       "classification-properties": {
+            "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+            "device": "CPU"
+       }
+     }
+   }'
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
@@ -860,119 +888,163 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ./run.sh helm_install
    ```
 
-3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+3. Copy the resources such as video and model from the local directory to the `dlstreamer-pipeline-server` pod to make them available for the application while launching pipelines.
+
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
 
    ```sh
-
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
-   
-   # Replace "<VIDEOS_PATH>" and "<MODELS_PATH>" with the values for your sample application from the table that follows:
 
-   kubectl cp resources/<VIDEOS_PATH>.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/<MODELS_PATH>/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   
-   | Application   | <VIDEOS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection/videos/warehouse |
-   | PCB Anomaly Detection   | pcb-anomaly-detection/videos/anomalib_pcb_test |
-   
-   | Application   | <MODELS_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet-defect-detection |
-   | PCB Anomaly Detection   | pcb-anomaly-detection |
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```sh
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+   kubectl cp resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
-   Pallet Defect Detection:
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
 
    ```json
    [
-       {
-           "pipeline": "pallet_defect_detection_mlops",
-           "payload":{
-               "source": {
-                   "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-                   "type": "uri"
-               },
-               "destination": {
-               "frame": {
-                   "type": "webrtc",
-                   "peer-id": "pdd"
-               }
-               },
-               "parameters": {
-                   "detection-properties": {
-                       "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-                       "device": "CPU"
-                   }
-               }
-           }
-       }
-   ]
-   ```
-   
-   PCB Anomaly Detection:
-   
-   ```json
-   [
       {
-         "pipeline": "pcb_anomaly_detection_mlops",
+         "pipeline": "pallet_defect_detection_mlops",
          "payload":{
-               "source": {
-                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
-                  "type": "uri"
-               },
-               "destination": {
-               "frame": {
-                  "type": "webrtc",
-                  "peer-id": "anomaly"
+            "source": {
+               "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+               "type": "uri"
+            },
+            "destination": {
+            "frame": {
+               "type": "webrtc",
+               "peer-id": "pdd"
+            }
+            },
+            "parameters": {
+               "detection-properties": {
+                  "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+                  "device": "CPU"
                }
-               },
-               "parameters": {
-                  "classification-properties": {
-                     "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
-                     "device": "CPU"
-                  }
-               }
+            }
          }
       }
    ]
    ```
 
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```json
+   [
+     {
+       "pipeline": "pcb_anomaly_detection_mlops",
+       "payload":{
+            "source": {
+              "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+              "type": "uri"
+            },
+            "destination": {
+            "frame": {
+              "type": "webrtc",
+              "peer-id": "anomaly"
+            }
+            },
+            "parameters": {
+              "classification-properties": {
+                "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+                "device": "CPU"
+              }
+            }
+       }
+     }
+   ]
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
 5. Start the pipeline with the above payload.
 
-   Replace "<APP>" with your sample application from the table that follows:
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
 
    ```sh
-   ./sample_start.sh helm -i <INSTANCE_NAME> -p <APP>_mlops
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p pallet_defect_detection_mlops
    ```
-   Note the instance-id.
-   
-   | Application   | <APP> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | pallet_defect_detection |
-   | PCB Anomaly Detection   | pcb_anomaly_detection |
 
-6. Download and prepare the model. Replace <MODEL_PATH> with the desired value from the table that follows: 
-
-   > **Note:** For sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/<MODEL_PATH>.zip'
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p pcb_anomaly_detection_mlops
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
+   Note the instance-id.
+
+6. Download and prepare the model.
+
+   > **Note:** For the sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
+
+   ```sh
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 
    unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
    ```
 
-   | Application   | <MODEL_PATH> Value                    |
-   | :----- | :--------------------------------------- |
-   | Pallet Defect Detection  | 06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection |
-   | PCB Anomaly Detection   | 6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection |
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
-7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
+   ```sh
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection.zip'
+
+   curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
+
+   unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
+
+7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for the application while launching the pipeline.
 
    ```sh
 
@@ -983,69 +1055,78 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
    > **Note:** If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample application and instance.
 
-8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated in step 5.
 
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
    ```
 
-9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
+9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline with this new model.
 
-   Pallet Defect Detection:
+   <!--hide_directive::::{tab-set} hide_directive-->
+   <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
+   <!--hide_directive:sync: pallet-detect hide_directive-->
 
-   ```json
-   [
-       {
-           "pipeline": "pallet_defect_detection_mlops",
-           "payload":{
-               "source": {
-                   "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-                   "type": "uri"
-               },
-               "destination": {
-               "frame": {
-                   "type": "webrtc",
-                   "peer-id": "pdd"
-               }
-               },
-               "parameters": {
-                   "detection-properties": {
-                       "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
-                       "device": "CPU"
-                   }
-               }
-           }
-       }
-   ]
-   ```
-   
-   PCB Anomaly Detection:
-   
    ```json
    [
       {
-         "pipeline": "pcb_anomaly_detection_mlops",
+         "pipeline": "pallet_defect_detection_mlops",
          "payload":{
-               "source": {
-                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
-                  "type": "uri"
-               },
-               "destination": {
-               "frame": {
-                  "type": "webrtc",
-                  "peer-id": "anomaly"
+            "source": {
+               "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+               "type": "uri"
+            },
+            "destination": {
+            "frame": {
+               "type": "webrtc",
+               "peer-id": "pdd"
+            }
+            },
+            "parameters": {
+               "detection-properties": {
+                  "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
+                  "device": "CPU"
                }
-               },
-               "parameters": {
-                  "classification-properties": {
-                     "model": "/home/pipeline-server/resources/models/new-model/deployment/Anomaly classification/model/model.xml",
-                     "device": "CPU"
-                  }
-               }
+            }
          }
       }
    ]
    ```
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
+
+   ```json
+   [
+     {
+       "pipeline": "pcb_anomaly_detection_mlops",
+       "payload":{
+            "source": {
+              "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+              "type": "uri"
+            },
+            "destination": {
+            "frame": {
+              "type": "webrtc",
+              "peer-id": "anomaly"
+            }
+            },
+            "parameters": {
+              "classification-properties": {
+                "model": "/home/pipeline-server/resources/models/new-model/deployment/Anomaly classification/model/model.xml",
+                "device": "CPU"
+              }
+            }
+       }
+     }
+   ]
+   ```
+
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 

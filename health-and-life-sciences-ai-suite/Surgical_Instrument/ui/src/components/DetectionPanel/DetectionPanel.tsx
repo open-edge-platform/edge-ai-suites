@@ -21,7 +21,7 @@ const DetectionPanel: React.FC<DetectionPanelProps> = ({ expanded = false }) => 
   const isVideoExpanded = expandedSection === 'video';
 
   const detail = detection.polyp.detected
-    ? (detection.polyp.count > 0 ? `${detection.polyp.count} polyp${detection.polyp.count > 1 ? 's' : ''}` : 'Present')
+    ? (detection.polyp.count > 0 ? `${detection.polyp.count} polyp${detection.polyp.count > 1 ? 's' : ''}` : 'Detected')
     : undefined;
 
   return (

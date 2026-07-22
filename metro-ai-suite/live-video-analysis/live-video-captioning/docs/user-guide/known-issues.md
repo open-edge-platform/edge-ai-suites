@@ -24,6 +24,28 @@ Hardware:
 
 - Issue observed on BMG-580 discrete GPU.
 
+## Video resolution and stream characteristics reduce concurrent stream capacity
+
+Symptoms:
+
+- Starting additional streams may fail, stall, or cause unstable behavior when resolution/FPS/bitrate is high.
+- The practical number of concurrent streams is lower than expected, especially on larger VLMs or when using higher input resolutions.
+- Under heavy workloads, the pipeline server may hit out-of-memory (OOM) conditions and terminate with a segmentation fault.
+
+Details:
+
+- Concurrent stream capacity depends on combined workload, not stream count alone.
+- Higher frame resolution, higher frame rate, larger chunk size, and more complex scenes increase per-stream compute and memory pressure.
+- Upscaling source frames before VLM inference may increase latency and reduce the number of stable concurrent streams.
+- WebRTC re-streaming of 2K/4K video to the dashboard also consumes significant compute resources, which can further reduce stable concurrent stream capacity.
+
+Guidance:
+
+- Start with `Frame Resolution=Default` so the source stream resolution is used as-is.
+- If stability or throughput degrades, downscale resolution first (for example, 640×480), then reduce frame rate/chunk size.
+- Scale streams gradually and validate latency/throughput at each step.
+- If `dlstreamer-pipeline-server` exits unexpectedly, stop and restart the deployment.
+
 ## RTSP Stream not reachable from Live Video Captioning Application
 
 Symptoms:

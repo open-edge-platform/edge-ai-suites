@@ -12,8 +12,9 @@ For full develop guide and API Reference, please see the [API Reference](../Cont
 ### Install Python Dependencies
 
 ```powershell
-cd content_search
+cd smart-classroom\content_search
 python -m venv venv_content_search
+.\venv_content_search\Scripts\activate
 pip install -r requirements.txt
 ```
 

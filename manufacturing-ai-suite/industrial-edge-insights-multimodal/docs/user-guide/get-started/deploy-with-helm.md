@@ -23,15 +23,17 @@ You can either generate or download the Helm charts.
   Follow this procedure on the target system to install the package.
 
   1. Download Helm chart with the following command:
+    Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.2.0-<date>-weekly
      ```
+    
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.1.0.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.2.0-<date>-weekly.tgz
      ```
 
 - Get into the Helm directory:
@@ -63,7 +65,7 @@ You can either generate or download the Helm charts.
    HTTPS_PROXY:  # example: http_proxy: http://proxy.example.com:891
    MTX_WEBRTCICESERVERS2_0_USERNAME:
    MTX_WEBRTCICESERVERS2_0_PASSWORD:
-   HOST_IP:  # IP address of server where DL Streamer Pipeline Server is running
+   HOST_IP:  # defaults to localhost; set it to the host system IP address if you want to access the UI remotely
    S3_STORAGE_USERNAME:
    S3_STORAGE_PASSWORD:
    ```
