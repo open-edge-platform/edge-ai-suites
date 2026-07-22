@@ -101,7 +101,6 @@ services:
       - WHISPER_MODEL=base
       - WHISPER_COMPUTE_TYPE=float32
       - WEBUI_AUTH=False
-      - WEBUI_SECRET_KEY=dummy
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
