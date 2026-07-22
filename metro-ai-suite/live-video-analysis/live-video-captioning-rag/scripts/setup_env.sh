@@ -55,8 +55,8 @@ fi
 HOST_IP="$(ip route get 1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i == "src") {print $(i+1); exit}}')"
 HOST_IP="${HOST_IP:-127.0.0.1}"
 USER_GROUP_ID="$(id -g)"
-VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}')
-RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
+VIDEO_GROUP_ID="$(getent group video | awk -F: '{print $3; exit}' || true)"
+RENDER_GROUP_ID="$(getent group render | awk -F: '{print $3; exit}' || true)"
 MODEL_CACHE_PATH="${ROOT_DIR}/llm_models"
 EMBEDDING_MODEL_NAME="${EMBEDDING_MODEL_NAME:-QwenText/qwen3-embedding-0.6b}"
 
