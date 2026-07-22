@@ -1,0 +1,110 @@
+{
+  "question_id": "Q4_1",
+  "section": "几何综合题",
+  "type": "calculation",
+  "total_score": 12,
+  "question_text": "小明在进行探究活动，分割梯形并将其拼成等腰三角形，分析他们的关系。(1)如图(1)所示，在梯形ABCD中，AD//BC，AB=BC。设E为边AB中点，求∠ADE绕点E旋转180°，点D旋转至点F的位置。得到等腰△DFC是等腰三角形，其中DF=DC。设AD=a，求BC的长(用a表示)；(2)如图(2)所示，△ABC等腰直角三角形，MN//QP，且MN//PQ，MQ=NP。请设计一种方案，用一条或两条线将梯形MQPN分割，并使得分割后的几块形状可以拼成某个三角形的证据。请证明所得的是一个三角形。(假如(1)中的述语正确，E为边AB中点，D旋转绕ABCD的性质）",
+  "context": {
+    "part1": {
+      "figure": "梯形ABCD，AD//BC，AB=BC，E为AB中点",
+      "condition": "∠ADE绕E点旋转180°，D→F，∠ADE≌∠FBE，得等腰三角形DFC",
+      "given": "AD = a",
+      "求": "BC的长"
+    },
+    "part2": {
+      "figure": "梯形MQPN，MN//QP，MN//PQ，MQ=NP",
+      "要求": "设计分割方案，拼成三角形并证明"
+    }
+  },
+  "standard_answers": {
+    "part1": "BC = 2a + AD = 3a",
+    "part2": "多种方案，如：连接对角线分割，证明拼成等腰三角形"
+  },
+  "scoring_points": [
+    {
+      "id": "p1",
+      "score": 2,
+      "description": "第(1)问：理解旋转性质",
+      "criteria": "理解E为AB中点，旋转180°后AE=BE，DE=FE",
+      "hit_signals": ["旋转", "180°", "中点", "对称", "AE=BE", "DE=FE"]
+    },
+    {
+      "id": "p2",
+      "score": 3,
+      "description": "第(1)问：证明或说明△DFC是等腰三角形",
+      "criteria": "通过旋转性质和梯形性质，说明DF=DC",
+      "hit_signals": ["等腰三角形", "DF=DC", "AD=BF", "全等"]
+    },
+    {
+      "id": "p3",
+      "score": 2,
+      "description": "第(1)问：正确计算BC",
+      "criteria": "BC = BF + FC = AD + AD + AD = 3a 或 BC = 2AD + a = 3a",
+      "hit_signals": ["BC=3a", "3a", "BC=2a", "答案"]
+    },
+    {
+      "id": "p4",
+      "score": 3,
+      "description": "第(2)问：设计合理的分割方案",
+      "criteria": "给出明确的分割线方案（如连接对角线MQ或NP）",
+      "hit_signals": ["对角线", "连接", "分割", "方案", "画图"]
+    },
+    {
+      "id": "p5",
+      "score": 2,
+      "description": "第(2)问：证明拼接后形成三角形",
+      "criteria": "利用(1)的结论或其他几何性质证明",
+      "hit_signals": ["证明", "三角形", "拼接", "等腰", "类似"]
+    }
+  ],
+  "scoring_rules": [
+    "完全正确 → 10分",
+    "第(1)问完全正确，第(2)问错误 → 7分",
+    "第(1)问部分正确 → 3-5分",
+    "第(2)问仅有方案无证明 → 2分",
+    "仅有初步分析 → 1-2分",
+    "完全错误或空白 → 0分"
+  ],
+  "few_shot_examples": [
+    {
+      "answer": "(1) E为中点，旋转180°后DE=FE，AE=BE，因为AD//BC且AB=BC，所以AD=BF=a，由等腰三角形性质DF=DC，BC=BF+FC=3a  (2) 连接MQ作为分割线，将梯形分为△MQN和△MQP，通过旋转平移可拼成等腰三角形，证明：...",
+      "score": 10,
+      "hits": ["p1", "p2", "p3", "p4", "p5"],
+      "reason": "完整解答，有图有证明"
+    },
+    {
+      "answer": "(1) BC=3a  (2) 连接对角线分割",
+      "score": 5,
+      "hits": ["p3", "p4"],
+      "reason": "答案正确但缺少推导和证明"
+    },
+    {
+      "answer": "(1) 旋转后AD=BF，BC=2a+a=3a  (2)未答",
+      "score": 7,
+      "hits": ["p1", "p2", "p3"],
+      "reason": "第(1)问正确"
+    }
+  ],
+  "common_errors": [
+    {
+      "error": "BC = 2a",
+      "reason": "未考虑完整的线段关系",
+      "deduction": 2
+    },
+    {
+      "error": "第(2)问只画图不证明",
+      "reason": "缺少证明过程",
+      "deduction": 1
+    },
+    {
+      "error": "旋转性质理解错误",
+      "reason": "不理解旋转180°的对称性",
+      "deduction": 2
+    }
+  ],
+  "notes": [
+    "题目图像难以从文字完全理解，建议结合实际图形评分",
+    "第(2)问答案不唯一，只要方案合理且证明正确即可给满分",
+    "注意区分设计方案(画图)和证明过程，两者都需要"
+  ]
+}

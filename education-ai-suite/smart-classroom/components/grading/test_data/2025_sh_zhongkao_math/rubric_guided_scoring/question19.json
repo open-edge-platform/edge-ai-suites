@@ -1,0 +1,78 @@
+{
+  "question_id": "Q3_1",
+  "section": "计算题",
+  "type": "calculation",
+  "total_score": 10,
+  "question_text": "计算: (4/(√5+1)) - √20 + √5 - 2 - (-1/2)^(-3)",
+  "context": {
+    "formula": "\\frac{4}{\\sqrt{5}+1} - \\sqrt{20} + \\sqrt{5} - 2 - \\left(-\\frac{1}{2}\\right)^{-3}"
+  },
+  "standard_answers": [
+    "5",
+    "答案: 5"
+  ],
+  "scoring_points": [
+    {
+      "id": "answer",
+      "score": 5,
+      "description": "最终答案正确：5"
+    },
+    {
+      "id": "process",
+      "score": 5,
+      "description": "解题过程合理（分母有理化、化简根式、负指数幂计算、合并同类项等关键步骤清晰）"
+    }
+  ],
+  "scoring_rules": [
+    "答案正确(5分) + 过程完整清晰(5分) → 10分",
+    "答案正确 + 过程简略或跳步但思路正确 → 7-9分",
+    "答案正确 + 无过程 → 0分",
+    "答案错误但思路和大部分步骤正确 → 3-5分",
+    "仅有少数正确步骤 → 1-3分",
+    "完全错误或空白 → 0分"
+  ],
+  "few_shot_examples": [
+    {
+      "answer": "原式 = √5-1 - 2√5 + √5 - 2 + 8 = (√5 - 2√5 + √5) + (-1 - 2 + 8) = 5",
+      "score": 10,
+      "reason": "答案正确，过程完整清晰"
+    },
+    {
+      "answer": "= √5-1 - 2√5 + √5 - 2 + 8 = 5",
+      "score": 9,
+      "reason": "答案正确，关键步骤都有，但合并过程略简"
+    },
+    {
+      "answer": "= 5",
+      "score": 0,
+      "reason": "答案正确，但无任何过程"
+    },
+    {
+      "answer": "= √5-1 - 2√5 + √5 - 2 - 8 = -10",
+      "score": 3,
+      "reason": "负指数幂符号错误导致答案错，但有理化和化简思路正确"
+    },
+    {
+      "answer": "完全空白",
+      "score": 0,
+      "reason": "未作答"
+    }
+  ],
+  "common_errors": [
+    {
+      "error": "(-1/2)^(-3) = 8",
+      "reason": "忽略负号",
+      "deduction": 2
+    },
+    {
+      "error": "20^0 = 0 或 20",
+      "reason": "零次幂概念错误",
+      "deduction": 2
+    },
+    {
+      "error": "未进行分母有理化",
+      "reason": "直接计算无理数",
+      "deduction": 2
+    }
+  ]
+}

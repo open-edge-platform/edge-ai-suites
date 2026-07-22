@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "description": "Answer key and grading configuration",
+    "version": "2.0",
+    "structure": {
+      "objective_questions": "Automatically graded questions (choice, blank)",
+      "subjective_questions": "Manually or VLM graded questions with detailed rubrics"
+    },
+    "objective_fields": {
+      "alias": "Question ID alias (e.g., Q1_1)",
+      "type": "choice | blank | true_false",
+      "score": "Total points",
+      "format": "string | number | latex",
+      "match_mode": "any | all | set",
+      "answer": "Array of acceptable answers"
+    },
+    "subjective_fields": {
+      "alias": "Question ID alias",
+      "type": "calculation | proof | essay | application | comprehensive | analysis",
+      "score": "Total points",
+      "rubric": "Path to detailed grading rubric JSON file"
+    }
+  },
+
+  "objective_questions": {
+    "1": {"alias": "Q1_1", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["A"]},
+    "2": {"alias": "Q1_2", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["B"]},
+    "3": {"alias": "Q1_3", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["D"]},
+    "4": {"alias": "Q1_4", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["D"]},
+    "5": {"alias": "Q1_5", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["C"]},
+    "6": {"alias": "Q1_6", "type": "choice", "score": 4, "format": "string", "match_mode": "any", "answer": ["B"]},
+    "7": {"alias": "Q2_1", "type": "blank", "score": 3, "format": "string", "match_mode": "any", "answer": ["ab(a+b)"]},
+    "8": {"alias": "Q2_2", "type": "blank", "score": 3, "format": "string", "match_mode": "any", "answer": ["x>2"]},
+    "9": {"alias": "Q2_3", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["m < -\\frac{1}{8}"]},
+    "10": {"alias": "Q2_4", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["y = \\frac{1}{x}"]},
+    "11": {"alias": "Q2_5", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["x=10", "\\alpha=10"]},
+    "12": {"alias": "Q2_6", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["y = 3x^{2} - 2", "\\gamma = 3x^{2} - 2"]},
+    "13": {"alias": "Q2_7", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["\\frac{1}{2}"]},
+    "14": {"alias": "Q2_8", "type": "blank", "score": 3, "format": "number", "match_mode": "any", "answer": ["1.2"]},
+    "15": {"alias": "Q2_9", "type": "blank", "score": 3, "format": "number", "match_mode": "any", "answer": ["1800", "1800人"]},
+    "16": {"alias": "Q2_10", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["2.5 \\times 10^{9}"]},
+    "17": {"alias": "Q2_11", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["\\frac{2\\sqrt{3}}{3}"]},
+    "18": {"alias": "Q2_12", "type": "blank", "score": 3, "format": "latex", "match_mode": "any", "answer": ["36^{\\circ}", "108^{\\circ}"]}
+  },
+
+  "subjective_questions": {
+    "19": {"alias": "Q3_1", "type": "calculation", "score": 10, "rubric": "question19.json"},
+    "20": {"alias": "Q3_2", "type": "proof", "score": 10, "rubric": "question20.json"},
+    "21": {"alias": "Q3_3", "type": "application", "score": 10, "rubric": "question21.json"},
+    "22": {"alias": "Q4_1", "type": "comprehensive", "score": 12, "rubric": "question22.json"}
+  }
+}

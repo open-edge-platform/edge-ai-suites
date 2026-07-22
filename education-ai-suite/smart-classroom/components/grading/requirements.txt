@@ -1,0 +1,24 @@
+# Grading component direct dependencies only.
+# OCR/VLM/layout run as separate HTTP services, so heavy ML stacks
+# (paddleocr, paddlepaddle, torch, transformers, openvino) are NOT
+# required here — install those from the top-level requirements.txt.
+#
+# numpy is intentionally left unpinned with an upper bound so it stays
+# compatible with the top-level stack (paddlex requires numpy<2.4).
+
+# Web service
+fastapi==0.116.1
+uvicorn==0.35.0
+pydantic==2.11.7
+python-multipart>=0.0.27
+
+# Config / HTTP
+PyYAML==6.0.2
+requests>=2.31.0
+
+# Imaging / PDF
+numpy>=1.25,<2.4
+pillow>=10.0.0
+opencv-python-headless>=4.8.0
+pdf2image==1.17.0
+PyMuPDF==1.26.3
