@@ -87,6 +87,11 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	else \
 		echo "RENDER_GID=$$RENDER_GID" >> $(SELF_DIR)/.env; \
 	fi; \
+	if ! grep -q "GRAFANA_PASSWORD=" $(SELF_DIR)/.env; then \
+		GRAFANA_PASSWORD=$$(openssl rand -hex 20); \
+		echo "export GRAFANA_PASSWORD=$$GRAFANA_PASSWORD" >> $(SELF_DIR)/.env; \
+                echo "Generated Grafana password"; \
+	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
 
 # vippet prerequisite
