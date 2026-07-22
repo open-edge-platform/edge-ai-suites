@@ -38,9 +38,6 @@ The application is designed to be extended to new industrial inspection scenario
 - **API Reference**
   - [API Reference](./api-reference.md): REST API endpoints for the storage and agent services.
 
-- **Integration**
-  - [Agent Service Integration Guide](./agent-service-integration-guide.md): How to plug the agent microservice into another application or detection pipeline.
-
 - **Release Notes**
   - [Release Notes](./release-notes.md): Latest updates and changes.
 
@@ -52,7 +49,6 @@ get-started
 how-it-works
 build-from-source
 api-reference
-agent-service-integration-guide
 troubleshooting
 release-notes
 :::
