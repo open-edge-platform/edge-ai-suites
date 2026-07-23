@@ -475,7 +475,7 @@ va_pipeline:
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
 
 board_ocr:
-  enabled: false # requires ocr.enabled=true
+  enabled: true # requires ocr.enabled=true
   frame_rate: "1/3"    # frame/seconds
   debug: false
 
@@ -582,7 +582,7 @@ scp_sender:
   class_name: "Class 10A - Physics"       # included in session_meta.json
 
 grading:
-  enabled: true
+  enabled: false
   host_addr: "127.0.0.1"
   port: 9012
   provider:

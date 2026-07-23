@@ -185,7 +185,45 @@ Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
   -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
   ```
 
-## Step 5: Bring Up the Frontend
+## Step 5: Set Up Grading (Optional)
+
+> **Note:** Skip this step if `grading.enabled: false` in `config.yaml`.
+
+Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO IR. This step creates a dedicated conversion environment.
+
+### A. Create the Model Conversion Environment
+
+```PowerShell
+cd smart-classroom\components\grading\providers\layout_detection_service
+python -m venv venv_convert
+.\venv_convert\Scripts\pip install -r requirements_convert.txt
+```
+
+### B. Convert and Download the Layout Detection Model
+
+```PowerShell
+.\venv_convert\Scripts\python ensure_layout_model.py
+```
+
+> **Note:** This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO IR. Subsequent runs detect the existing model and skip this step automatically.
+
+### C. Launch Grading Services
+
+Open two new terminal windows (the Backend terminal must remain running):
+
+**Terminal — Layout Detection (port 9902):**
+```PowerShell
+cd smart-classroom\components\grading\providers
+python .\layout_detection_service\layout_detection_server.py
+```
+
+**Terminal — Grading Service (port 9012):**
+```PowerShell
+cd smart-classroom\components\grading
+python grading_service.py
+```
+
+## Step 6: Bring Up the Frontend
 
 > **Note:** Open a new Command Prompt / terminal window for the frontend.
 > The backend and Content Search terminals stay busy serving requests.
@@ -364,7 +402,8 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove \
   For base environment : *education-ai-suite/smartclassroom*. \
   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
-  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*.
+  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*. \
+  For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.
 3. **Remove the content search database:**
