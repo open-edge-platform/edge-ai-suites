@@ -78,6 +78,25 @@ make up_vllm
    docker logs -f vllm-server
    ```
 
+4. Check the output in Grafana.
+
+   - Use the link `https://localhost :3000` to open Grafana in a browser (preferably Chrome).
+
+   > **Note:** Use the link `https://localhost :30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
+   - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
+
+     ![Grafana login](../_assets/login_wt.png)
+
+   - After logging in, click **Dashboard**.
+     ![Menu view](../_assets/dashboard.png)
+
+   - Select **Multimodal Weld Defect Detection Explainability Dashboard**.
+     ![Multimodal Weld Defect Detection Explainability Dashboard](../_assets/grafana_dashboard_selection_vllm.png)
+
+   - You should see the following output:
+
+     ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
 ## Stop the Deployment
 
 To bring down the full stack:
