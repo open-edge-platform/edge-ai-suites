@@ -3,7 +3,7 @@ from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import Header, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi import APIRouter, FastAPI, File, HTTPException, status
+from fastapi import APIRouter, FastAPI, File, HTTPException, Request, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
@@ -46,116 +46,32 @@ def health():
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
-@router.post("/upload-audio")
-def upload_audio(file: UploadFile = File(...)):
-    status_code = status.HTTP_201_CREATED
-    
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
-    try:
-        filename, filepath = save_audio_file(file)
+
+@router.get("/features")
+def get_features(request: Request):
+    from model_manager.features import in_dependency_order
+
+    eff = getattr(request.app.state, "features", None)
+    if eff is None:
         return JSONResponse(
-            status_code=status_code,
-            content={
-                "filename": filename,
-                "message": "File uploaded successfully",
-                "path": filepath
-            }
+            content={"features": []},
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
-    except HTTPException as he:
-        logger.error(f"HTTPException occurred: {he.detail}")
-        return JSONResponse(
-            status_code=he.status_code,
-            content={"status": "error", "message": he.detail}
-        )
-    except Exception as e:
-        logger.error(f"General exception occurred: {str(e)}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"status": "error", "message": "Failed to upload audio file"}
+
+    features = []
+    for feature in in_dependency_order():
+        if not eff.is_enabled(feature.id):
+            continue
+        features.append({
+            "id": feature.id,
+            "dependency": list(feature.depends_on),
+        })
+
+    return JSONResponse(
+        content={"features": features},
+        status_code=status.HTTP_200_OK,
     )
 
-
-@router.post("/transcribe")
-def transcribe_audio(
-    request: TranscriptionRequest,
-    x_session_id: Optional[str] = Header(None)
-):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-   
-    pipeline = Pipeline(x_session_id)
-   
-    def stream_transcription():
-        for chunk_data in pipeline.run_transcription(request):
-            yield json.dumps(chunk_data) + "\n"
-               
- 
-    response = StreamingResponse(stream_transcription(), media_type="application/json")
-    response.headers["X-Session-ID"] = pipeline.session_id
-    return response
-
-
-@router.post("/summarize")
-async def summarize_audio(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
-    pipeline = Pipeline(request.session_id)
-    
-    async def event_stream():
-        for token in pipeline.run_summarizer():
-            if token.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {token}")
-                yield json.dumps({"token": "", "error": token}) + "\n"
-                break
-            else:
-                yield json.dumps({"token": token, "error": ""}) + "\n"
-            await asyncio.sleep(0)
-
-    return StreamingResponse(event_stream(), media_type="application/json")
-
-@router.post("/mindmap")
-async def generate_mindmap(request: SummaryRequest):
-    pipeline = Pipeline(request.session_id)
-    try:
-        mindmap_text = pipeline.run_mindmap()
-        logger.info("Mindmap generated successfully.")
-        return {"mindmap": mindmap_text, "error": ""} 
-    except HTTPException as http_exc:
-        raise http_exc      
-    except Exception as e:
-        logger.exception(f"Error during mindmap generation: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Mindmap generation failed: {e}"
-        )
-
-@router.get("/devices")
-def list_audio_devices():
-    result = subprocess.run(
-        ["ffmpeg", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace"
-    )
-    audio_devices = re.findall(r'"(.*?)"\s*\(audio\)', result.stderr)
-    formatted_devices = [f"audio={d}" for d in audio_devices]
-    return {"devices": formatted_devices}
- 
- 
-@router.post("/stop-mic")
-def stop_microphone(session_id: str):
-    process = audio_preprocessing.FFMPEG_PROCESSES.pop(session_id, None)
-    if process:
-        logger.info(f"Stopping microphone recording for session {session_id}...")
-        process.terminate()
-        process.wait(timeout=5)
-        return {"status": "stopped", "message": f"Microphone for session {session_id} stopped successfully."}
-    else:
-        return {"status": "idle", "message": f"No active microphone session found for {session_id}."}
 
 @router.get("/performance-metrics")
 def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_id")):
@@ -267,15 +183,11 @@ def start_video_analytics_pipeline(
 
     results = []
 
-    # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
         try:
-            # Ensure the MediaMTX RTSP server is up before any pipeline pushes to
-            # it. Started on demand. Failures are surfaced as a 500 by the outer
-            # handler below.
+            
             ensure_media_service_running()
 
-            # Create or get service for this session
             if x_session_id not in va_services:
                 project_config = RuntimeConfig.get_section("Project")
                 location = project_config.get("location", "outputs")
@@ -767,56 +679,6 @@ def store_audio_duration(
         raise HTTPException(
             status_code=500,
             detail=f"Error storing audio duration: {e}"
-        )
-
-@router.post("/content-segmentation")
-def content_segmentation(request: SummaryRequest):
-    """
-    Generate content-wise segmentation from teacher transcription.
-    Expects transcription.txt to exist for the session.
-    """
-
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
-    pipeline = Pipeline(request.session_id)
-    
-    # Log session state before validation
-    session_state = SessionState.get_session_state(request.session_id)
-    logger.info(f"📋 Content-segmentation request for session: {request.session_id}")
-    logger.info(f"   Session state: {session_state}")
-
-    try:
-        contents_json = pipeline.run_content_segmentation()
-        logger.info("✅ content segmentation generated successfully.")
-
-        # ── Telegram: Package A (Q1 topics + Q3 absentee data) ──────────────
-        # All audio outputs are ready: transcription, summary, mindmap, topics.
-        # Send is fire-and-forget — does not block the API response.
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location", "outputs"),
-            project_config.get("name", "default"),
-            request.session_id,
-        )
-        sender = get_sender()
-        if sender:
-            sender.send_content_package_async(request.session_id, session_dir)
-        scp = get_scp_sender()
-        if scp:
-            scp.send_content_package_async(request.session_id, session_dir)
-        # ────────────────────────────────────────────────────────────────────
-
-        return JSONResponse(content={"session_id": request.session_id})
-
-    except HTTPException as http_exc:
-        raise http_exc
-
-    except Exception as e:
-        logger.exception(f"❌ Error during content segmentation: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"content segmentation failed: {e}"
         )
 
 @router.post("/search-content")

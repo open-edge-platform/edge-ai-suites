@@ -1,6 +1,6 @@
 # How It Works
 
-The Agentic Predictive Maintenance (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff — this page describes each stage so you can understand, verify, and debug the pipeline independently.
+The Agentic Predictive Maintenance (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that the run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff. This section describes each stage so you can understand, verify, and debug the pipeline independently.
 
 ## System Overview
 
@@ -51,9 +51,9 @@ Run the setup script with a use case:
 source setup.sh --use-case pipeline-defect-detection
 ```
 
-- Validates the environment and resolves `USE_CASE_*` paths from `apps/<use-case>/`
-- Sources `.env_<use-case>` for model/device/mode settings
-- Runs `docker compose up -d` for all services
+- Validates the environment and resolves `USE_CASE_*` paths from `apps/<use-case>/`.
+- Sources `.env_<use-case>` for model, device, and mode settings.
+- Runs `docker compose up -d` for all services.
 
 Services started:
 
@@ -67,7 +67,7 @@ Services started:
 | `apm-agent` | Multi-agent reasoning orchestrator (external EAL image, reacts to batch-complete) |
 | `apm-ui` | Web dashboard (Run Pipeline form, results, detections) |
 | `apm-nginx` | Reverse proxy (`localhost:8080`) |
-| `apm-llm` *(LLM mode only)* | LLM service (OVMS) for agent reasoning |
+| `apm-llm` *(LLM mode only)* | LLM service (OpenVINO model server) for agent reasoning |
 
 **Verify all containers are running:**
 
@@ -75,27 +75,27 @@ Services started:
 docker ps --format "table {{.Names}}\t{{.Status}}"
 ```
 
-## Stage 2 — Triggering a Detect-Then-Reason Run
+## Stage 2 — Trigger a Detect-Then-Reason Run
 
 Clicking **Run Pipeline** in the UI (or `POST`ing to the detection-service
 directly) starts one full detect-then-reason cycle:
 
 1. **Detect** — the detection-service starts the DL Streamer pipeline matching
-   the selected **Device** (CPU/GPU/NPU — each maps to its own pipeline
+   the selected **Device** (CPU, GPU, or NPU — each maps to its own pipeline
    definition in `configs/pipeline-server-config.json`), optionally overriding
    the source **Video** with the file selected in the UI, and blocks until the
    pipeline reaches a terminal state.
 2. **Handoff** — once the pipeline reaches a terminal state (success or
    failure), the detection-service publishes a single `apm/batch-complete`
-   MQTT event carrying the outcome and the exact `start_id`/`end_id`
+   MQTT event carrying the outcome and the exact `start_id` or `end_id`
    detection window this run produced.
 3. **Reason** — the agent-service, subscribed to that topic independently,
-   picks up the event under its own `run_id` correlation and runs the 4-agent
-   pipeline bounded to exactly that id window — never any earlier history.
-   If the event's `status` is `error` (for example, an NPU device selected
-   but not physically available), the agent-service records the run as
+   picks up the event under its own `run_id` correlation and runs the four-agent
+   pipeline bounded to exactly that ID window, never any earlier history.
+   If the event's `status` is `error` (for example, an NPU device is selected
+   but is not physically available), the agent-service records the run as
    **failed** immediately and skips reasoning entirely — it never reasons
-   over stale/previously-stored detections.
+   over stale or previously-stored detections.
 
 Because detection and reasoning are separate services, only the
 detection-service enforces "one run at a time": a concurrent
@@ -103,15 +103,15 @@ detection-service enforces "one run at a time": a concurrent
 currently running run. The agent-service reacts to events as they arrive
 and has no concept of "a run in progress" beyond that.
 
-### Run Pipeline inputs (UI)
+### Run Pipeline Inputs (UI)
 
 | Field | Description |
 |-------|--------------|
 | Use Case | Read-only; identifies the deployed use case (`pipeline-defect-detection`) |
-| Device | `CPU` / `GPU` / `NPU` — selects which DL Streamer pipeline definition to run |
-| Video | Source video file, populated from the shared `resources/videos/` directory |
+| Device | `CPU`, `GPU`, or `NPU` — selects which DL Streamer pipeline definition to run |
+| Video | Source video file populated from the shared `resources/videos/` directory |
 
-### Manual trigger
+### Manual Trigger
 
 ```bash
 curl -X POST http://localhost:8080/run \
@@ -147,8 +147,8 @@ curl http://localhost:8080/api/detection/videos
 ```
 
 > Note: this release runs one bounded detect-then-reason cycle per click over
-> a finite source video. True live/continuous background detection
-> (independent of the "Run Pipeline" click) is a possible future direction —
+> a finite source video. True live and continuous background detection
+> (independent of the "Run Pipeline" click) is a possible future direction;
 > see the scalable architecture diagram (`docs/apm-scalable-arch.drawio`) for
 > a proposed decoupled design. Detection and reasoning are already decoupled
 > services today; extending to live streams would mean periodic "checkpoint"
@@ -156,7 +156,7 @@ curl http://localhost:8080/api/detection/videos
 
 ## Stage 3 — Video Inference (DL Streamer → MQTT)
 
-DL Streamer runs the configured pipeline (CPU/GPU/NPU) against the selected
+DL Streamer runs the configured pipeline (CPU, GPU, or NPU) against the selected
 video and publishes each detection to MQTT.
 
 **Verify inference is running:**
@@ -212,8 +212,8 @@ docker exec apm-mqtt-broker mosquitto_sub -t 'apm/batch-complete'
 ```
 
 See the [agent-service integration guide](agent-service-integration-guide.md)
-for the full contract any application needs to satisfy to plug its own
-detection layer into the agent-service (or vice versa).
+for the full contract any application needs to satisfy for plugging its own
+detection layer into the agent-service, or vice versa.
 
 ## Stage 5 — Multi-Agent Reasoning (LangGraph)
 
@@ -225,8 +225,8 @@ event. All agents read from the storage service.
 
 Reads `agents.yaml` thresholds and the run's detections. Determines which defect classes triggered policy violations.
 
-- `Rupture` or `Disconnect` above threshold → **HIGH** priority alert
-- Uses `policy_fallback.json` rules in fallback mode (no LLM call)
+- `Rupture` or `Disconnect` above threshold: **HIGH** priority alert.
+- Uses `policy_fallback.json` rules in fallback mode; no LLM calls.
 
 ### Agent 2 — Analysis Agent
 
@@ -239,10 +239,10 @@ Filters detections by `min_confidence` (default `0.5`). Produces:
 ### Agent 3 — Evidence Agent
 
 Builds a formal audit trail:
-- Total frames inspected vs. frames with detections
-- Per-class counts and confidence statistics
-- Top-5 highest-confidence detections per class
-- Compliance status: **PASS** / **FAIL**
+- Total frames inspected versus frames with detections.
+- Per-class counts and confidence statistics.
+- Top five highest-confidence detections per class.
+- Compliance status: **PASS** or **FAIL**.
 
 ### Agent 4 — Ticketing Agent
 
@@ -260,9 +260,9 @@ Synthesises outputs from Policy and Analysis agents. Produces a structured JSON 
 }
 ```
 
-### LLM vs. Fallback Mode
+### LLM versus Fallback Mode
 
-| Mode | How agents reason |
+| Mode | How Agents Reason |
 |------|-------------------|
 | `LLM_MODE=llm` | Agents send prompts to the LLM service (served via OVMS); responses are LLM-generated |
 | `LLM_MODE=fallback` | Agents apply rule-based logic from `policy_fallback.json`; no LLM service needed |
@@ -270,16 +270,16 @@ Synthesises outputs from Policy and Analysis agents. Produces a structured JSON 
 Set the mode when starting:
 
 ```bash
-# Fallback (rule-based, no GPU/LLM required)
+# Fallback (rule-based, no GPU or LLM required)
 LLM_MODE=fallback source setup.sh --use-case pipeline-defect-detection
 
 # LLM mode (requires the apm-llm/OVMS service)
 source setup.sh --use-case pipeline-defect-detection
 ```
 
-## Stage 6 — Viewing Results
+## Stage 6 — View Results
 
-### Check a specific run
+### Check a Specific Run
 
 ```bash
 # List all runs known to the detection layer
@@ -299,13 +299,13 @@ curl http://localhost:8080/api/agents/results/<run_id>
 ### Web UI
 
 Open `http://localhost:8080` in a browser. The dashboard shows:
-- Run Pipeline form (Use Case / Device / Video)
-- Detection summary and browsing (`/detections`)
-- Run history with status, and generated maintenance tickets (`/results/<run_id>`)
+- Run pipeline form (Use Case, Device, or Video).
+- Detection summary and browsing (`/detections`).
+- Run history with status, and generated maintenance tickets (`/results/<run_id>`).
 
 ## Quick Verification Checklist
 
-Run these commands in order after startup to verify each stage:
+Run these commands in order, after the startup to verify each stage:
 
 ```bash
 # 1. All containers healthy?
@@ -340,10 +340,10 @@ curl http://localhost:8080/api/agents/results/$RUN_ID | python3 -m json.tool
 |---------|-------|
 | No detections in storage | `docker logs apm-dlstreamer` and `docker logs apm-detection` — is the pipeline running? Is the source video present under `resources/videos/`? |
 | Run stays in `detecting` phase | `docker logs apm-dlstreamer` and `docker logs apm-detection` — is the selected device (e.g. NPU) actually available? |
-| Run stuck in `reasoning` phase / never appears in agent runs | `docker logs apm-agent` — did it receive the `apm/batch-complete` event? `docker exec apm-mqtt-broker mosquitto_sub -t apm/batch-complete` to check the broker is delivering it |
+| Run is stuck in `reasoning` phase or never appears in agent runs | `docker logs apm-agent` — did it receive the `apm/batch-complete` event? `docker exec apm-mqtt-broker mosquitto_sub -t apm/batch-complete` to check the broker is delivering it |
 | Run reports `status: error` | `curl http://localhost:8080/api/agents/results/<run_id>` — the detection run failed (`ERROR`/`ABORTED`) or timed out; reasoning is correctly skipped in this case |
-| UI shows no runs | `curl http://localhost:8080/api/detection/runs` and `curl http://localhost:8080/api/agents/runs` — is the nginx proxy / detection-service / agent-service reachable? |
-| LLM/OVMS service unhealthy | Use `LLM_MODE=fallback` to bypass the LLM service for testing |
+| UI shows no runs | `curl http://localhost:8080/api/detection/runs` and `curl http://localhost:8080/api/agents/runs` — is the NGINX proxy, detection-service, or agent-service reachable? |
+| LLM/OpenVINO model server service is unhealthy | Use `LLM_MODE=fallback` to bypass the LLM service for testing |
 | `apm-storage` unhealthy | `docker logs apm-storage` — check port 5001 |
 | `apm-agent` unhealthy or unreachable | `docker logs apm-agent` — it is an externally pulled image (not built from this repo); confirm `REGISTRY`/`TAG` resolve to a real published image |
 

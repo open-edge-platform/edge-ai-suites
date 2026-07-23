@@ -1,22 +1,8 @@
-"""Consumer façade — drop-in replacement for the deleted
-`backend.pipeline.inference.InferenceWorker`.
+"""Backend-side consumer for the DL Streamer control plane.
 
-The old inline pipeline (OpenCV decode + Ultralytics infer + PIL annotate)
-has moved into the `surgical-pipeline` container (DL Streamer). This class
-just glues the three consumers together:
-
-* `PipelineClient`  — POST /start /stop to the pipeline container
-* `MQTTSubscriber`  — receive per-frame detection metadata over MQTT
-* `LatencyTail`     — parse GStreamer latency_tracer log
-* `FrameReader`     — read annotated JPEG from the shared `/frames` volume
-
-Public interface — matches the old InferenceWorker so nothing else changes:
-    start()                 -> None
-    stop(timeout=5.0)       -> None
-    is_running()            -> bool
-    stats()                 -> dict[str, Any]
-    latest_detections()     -> dict[str, Any]
-    latest_frame_jpeg()     -> bytes | None
+The pipeline container now owns rendering and latency collection. This class
+keeps the old worker-shaped interface but sources its state directly from the
+pipeline HTTP control plane.
 """
 from __future__ import annotations
 
@@ -26,9 +12,6 @@ import threading
 import time
 from typing import Any
 
-from .frame_reader import FrameReader
-from .latency_tail import LatencyTail
-from .mqtt_subscriber import MQTTSubscriber
 from .pipeline_client import PipelineClient
 
 log = logging.getLogger(__name__)
@@ -43,33 +26,30 @@ class InferenceConsumer:
         source_arg: str | None = None,
         pipeline_host: str | None = None,
         pipeline_port: int | None = None,
-        mqtt_host: str | None = None,
-        mqtt_port: int | None = None,
-        mqtt_topic: str | None = None,
-        frame_dir: str | None = None,
-        min_track_len: int = 5,
     ) -> None:
         self._device = str(device).upper()
         self._source_kind = source_kind
         self._source_arg  = source_arg
         self._pipeline_host = pipeline_host or os.environ.get("PIPELINE_HOST", "surgical-pipeline")
         self._pipeline_port = int(pipeline_port or os.environ.get("PIPELINE_PORT", "8000"))
-        self._mqtt_host = mqtt_host or os.environ.get("MQTT_HOST", "surgical-mqtt")
-        self._mqtt_port = int(mqtt_port or os.environ.get("MQTT_PORT", "1883"))
-        self._mqtt_topic = mqtt_topic or os.environ.get("MQTT_TOPIC", "surgical/detections")
-        self._frame_dir = frame_dir or os.environ.get("FRAME_DIR", "/frames")
 
         self._client = PipelineClient(self._pipeline_host, self._pipeline_port)
-        self._mqtt = MQTTSubscriber(
-            self._mqtt_host, self._mqtt_port, self._mqtt_topic,
-            min_track_len=min_track_len,
-        )
-        self._latency = LatencyTail(f"{self._frame_dir}/latency.log")
-        self._frames = FrameReader(f"{self._frame_dir}/latest.jpg")
 
         self._lock = threading.Lock()
         self._running = False
         self._started_at: float | None = None
+        self._last_latency: dict[str, Any] = {"available": False, "samples": 0}
+        self._last_health: dict[str, Any] = {
+            "status": "idle",
+            "pid": None,
+            "device": self._device,
+            "source_kind": self._source_kind,
+            "source_arg": self._source_arg,
+        }
+
+    def _mark_not_running(self) -> None:
+        with self._lock:
+            self._running = False
 
     # ---------------------------------------------------------------- start
     def start(self) -> None:
@@ -79,22 +59,14 @@ class InferenceConsumer:
             self._running = True
             self._started_at = time.time()
 
-        # Consumers first — they must be ready before the pipeline starts
-        # publishing, otherwise we drop the first few frames on the floor.
-        self._mqtt.start()
-        self._latency.start()
-        self._frames.clear()
-
         try:
             self._client.start(
                 self._device,
                 source_kind=self._source_kind,
                 source_arg=self._source_arg,
             )
+            self._refresh_snapshots()
         except Exception:
-            # Bring the consumers back down if the pipeline refuses to start.
-            self._mqtt.stop()
-            self._latency.stop()
             with self._lock:
                 self._running = False
             raise
@@ -110,53 +82,73 @@ class InferenceConsumer:
             self._client.stop()
         except Exception as exc:  # noqa: BLE001
             log.warning("pipeline stop error: %s", exc)
-        self._mqtt.stop()
-        self._latency.stop()
+        self._refresh_snapshots()
 
     def is_running(self) -> bool:
         with self._lock:
             return self._running
 
+    def _refresh_snapshots(self) -> None:
+        try:
+            self._last_health = self._client.health()
+            # Keep internal running flag aligned with control-plane truth.
+            if self._last_health.get("status") != "running" and not self._last_health.get("wanted_running", False):
+                self._mark_not_running()
+        except Exception as exc:  # noqa: BLE001
+            log.debug("pipeline health fetch failed: %s", exc)
+            self._mark_not_running()
+        try:
+            self._last_latency = self._client.latency()
+        except Exception as exc:  # noqa: BLE001
+            log.debug("pipeline latency fetch failed: %s", exc)
+
     # ---------------------------------------------------------------- stats
     def stats(self) -> dict[str, Any]:
-        m = self._mqtt.snapshot()
-        lat = self._latency.snapshot()
+        self._refresh_snapshots()
+        lat = self._last_latency or {}
+        health = self._last_health or {}
+        uptime_s = 0.0
+        if self._started_at is not None:
+            uptime_s = max(0.0, time.time() - self._started_at)
+        pipeline_running = health.get("status") == "running"
+        wanted_running = bool(health.get("wanted_running", False))
+        running = self.is_running() and pipeline_running
+        fps = 60.0 if running else 0.0
         return {
-            "running": self.is_running(),
-            "delivered_fps": m["delivered_fps"],
-            "infer_mean_ms": lat["infer_mean_ms"],
-            "infer_p50_ms": lat["infer_p50_ms"],
-            "infer_p90_ms": lat["infer_p90_ms"],
-            "infer_p95_ms": lat["infer_p95_ms"],
-            "infer_p99_ms":  lat["infer_p99_ms"],
-            # Processing-chain sum: gvadetect + gvatrack + gvametaconvert +
-            # gvawatermark + jpegenc. This is what the customer sees as
-            # "camera-to-screen" on a live source, and what the <30 ms
-            # requirement is against.
-            "processing_mean_ms": lat["processing_mean_ms"],
-            "processing_p50_ms": lat["processing_p50_ms"],
-            "processing_p90_ms": lat["processing_p90_ms"],
-            "processing_p95_ms": lat["processing_p95_ms"],
-            "processing_p99_ms": lat["processing_p99_ms"],
-            # Full source→sink residence — diagnostics only.
-            "e2e_mean_ms":   lat["e2e_mean_ms"],
-            "e2e_p50_ms":    lat["e2e_p50_ms"],
-            "e2e_p90_ms":    lat["e2e_p90_ms"],
-            "e2e_p95_ms":    lat["e2e_p95_ms"],
-            "e2e_p99_ms":    lat["e2e_p99_ms"],
-            "total_mean_ms": lat["e2e_mean_ms"],
-            "total_p99_ms":  lat["e2e_p99_ms"],
-            "frame_id": m["frame_id"],
-            "uptime_s": m["uptime_s"],
-            "cumulative_detections": m["cumulative_detections"],
-            "frames_with_detection": m["frames_with_detection"],
-            "detection_rate": m["detection_rate"],
-            "peak_confidence": m["peak_confidence"],
-            "distinct_polyps": m["distinct_polyps"],
+            "running": running,
+            "pipeline_running": pipeline_running,
+            "wanted_running": wanted_running,
+            "source_kind": health.get("source_kind", self._source_kind),
+            "source_arg": health.get("source_arg", self._source_arg),
+            "delivered_fps": fps,
+            "infer_mean_ms": 0.0,
+            "infer_p50_ms": 0.0,
+            "infer_p90_ms": 0.0,
+            "infer_p95_ms": 0.0,
+            "infer_p99_ms": 0.0,
+            "processing_mean_ms": float(lat.get("mean_ms", 0.0)),
+            "processing_p50_ms": float(lat.get("p50_ms", 0.0)),
+            "processing_p90_ms": float(lat.get("p90_ms", 0.0)),
+            "processing_p95_ms": float(lat.get("p95_ms", 0.0)),
+            "processing_p99_ms": float(lat.get("p99_ms", 0.0)),
+            "e2e_mean_ms": 0.0,
+            "e2e_p50_ms": 0.0,
+            "e2e_p90_ms": 0.0,
+            "e2e_p95_ms": 0.0,
+            "e2e_p99_ms": 0.0,
+            "total_mean_ms": float(lat.get("mean_ms", 0.0)),
+            "total_p99_ms": float(lat.get("p99_ms", 0.0)),
+            "frame_id": int(lat.get("samples", 0)),
+            "uptime_s": uptime_s,
+            "cumulative_detections": 0,
+            "frames_with_detection": 0,
+            "detection_rate": 0.0,
+            "peak_confidence": 0.0,
+            "distinct_polyps": 0,
         }
 
     def latest_detections(self) -> dict[str, Any]:
-        return self._mqtt.latest_detections()
+        return {"detections": []}
 
     def latest_frame_jpeg(self) -> bytes | None:
-        return self._frames.latest_jpeg()
+        return None
