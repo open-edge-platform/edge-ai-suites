@@ -50,10 +50,7 @@ pip install --upgrade -r requirements.txt
 
 ### A. Enable Feature Configuration
 
-The application is composed of modular **features** where user can enable or disable in the
-`features:` block of `smart-classroom/config.yaml`. Only enabled features load their
-models, mount their API routes, and start their services — so disabling unused
-features reduces startup time and memory footprint.
+The application is built using a modular feature architecture, allowing users to enable or disable individual features through the `features:` block in `smart-classroom/config.yaml`. Only enabled features are initialized at startup—they load their required models, register their API routes, and start their associated services.
 
 ```yaml
 features:
@@ -163,8 +160,6 @@ This means your pipeline server has started successfully and is ready to accept 
 
 Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
 
-> **Note:** You do not need to start Content Search manually. When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup, or if you want to run Content Search on its own for development or debugging.
-
 ### A. Create Content Search Virtual Environment
 
 ```PowerShell
@@ -175,8 +170,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-
-> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup.
 
 When all services are ready:
 
@@ -191,7 +185,9 @@ Verify the service status:
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
 
-### C. Network Requirements for Content Search
+> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+
+### B. Network Requirements for Content Search
 
 - **Proxy**: If behind a proxy, ensure `HTTP_PROXY` and `HTTPS_PROXY` environment variables are configured.
 - **Model Downloads**: Stable access to `huggingface.co` is required for downloading pre-trained models.
