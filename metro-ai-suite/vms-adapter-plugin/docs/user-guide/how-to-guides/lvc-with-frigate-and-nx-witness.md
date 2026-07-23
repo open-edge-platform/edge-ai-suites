@@ -445,7 +445,7 @@ Expected output:
 3. Click **Apply** then **OK**.
 
 ```
-[info] nx_pipeline_stopped  app_id=live_captioning  device_id=<device-uuid>  run_id=<run-id>  success=True
+[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
 
 ---
