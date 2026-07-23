@@ -217,6 +217,39 @@ class IAnalyticsAppShim(ABC):
         """Stop a run by ID. Return True on success. Override in concrete shims."""
         return False
 
+    # ── VMS-driven pipeline control (optional, VMS-agnostic) ──────────────────────────────────
+
+    def control_params(self) -> list[dict[str, Any]]:
+        """Declare the per-camera control knobs a VMS UI can expose for this app.
+
+        Returns a list of **VMS-neutral** parameter descriptors — no VMS
+        vocabulary. Each descriptor is a dict:
+
+        * ``name``        — stable field id (e.g. ``"pipelineEnabled"``, ``"device"``).
+        * ``type``        — one of ``"bool"``, ``"enum"``, ``"text"``.
+        * ``label``       — human caption.
+        * ``description`` — help text.
+        * ``default``     — default value.
+        * ``options``     — allowed values (for ``"enum"``).
+
+        By convention a ``bool`` named ``"pipelineEnabled"`` acts as the
+        start/stop toggle. A VMS shim renders these into its own settings UI and
+        maps the user's chosen values back. Return an **empty list** to opt out
+        of VMS UI pipeline control.
+        """
+        return []
+
+    async def start_for_camera(
+        self, camera_id: str, stream_url: str, controls: dict,
+    ) -> str | None:
+        """Start a pipeline for one camera from VMS-provided control values.
+
+        ``controls`` holds the values for this app's :meth:`control_params`
+        (VMS-neutral). Returns the ``run_id`` on success, or ``None`` on failure.
+        Stopping uses :meth:`stop_run`. Default: no-op (returns None).
+        """
+        return None
+
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Return details for a single run, or None if not found."""
         return None

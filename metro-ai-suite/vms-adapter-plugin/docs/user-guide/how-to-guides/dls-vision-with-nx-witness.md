@@ -71,7 +71,7 @@ Edit the config.json and add the following pipeline.
             {
                 "name": "loitering_detection_vms_mqtt",
                 "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU model-instance-id=inst0 inference-interval=1 threshold=0.7 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -248,6 +248,7 @@ NX_CA_BUNDLE=
 DLS_VISION_HOST=host.docker.internal
 DLS_VISION_PORT=8080
 DLS_VISION_TLS_VERIFY=false
+DLS_PIPELINE_NAME=loitering_detection_vms_mqtt 
 DLS_VISION_CA_BUNDLE=
 
 # MQTT Broker — address as seen by VAP (subscribing from outside the dls_vision Docker network)
@@ -330,7 +331,7 @@ analytics_apps:
     mqtt_port: ${MQTT_PORT:-1883}
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
-    pipeline_name: "${DLS_PIPELINE_NAME:-loitering_detection_vms_mqtt}"
+    pipeline_name: "${DLS_PIPELINE_NAME:-}"
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
@@ -547,9 +548,8 @@ Expected log output:
         'destination': {'metadata': {'type': 'mqtt', 'host': '<PIPELINE_SERVER_MQTT_HOST>:1883',
         'topic': 'nx/dls_vision/<device-uuid>'}},
         'parameters': {'detection-properties': {'device': 'GPU'}}}
-[info] nx_dls_pipeline_started  device=GPU  device_id=<device-uuid>
-        pipeline_name=loitering_detection_vms_mqtt
-        run_id=<hex-instance-id>
+[info]  od_run_started  pipeline=user_defined_pipelines/loitering_detection_vms_mqtt run_id=<hex-instance-id>
+[info]  nx_pipeline_started app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id>
 ```
 
 #### 6.2.4 Stop the Pipeline
@@ -563,8 +563,10 @@ VAP stops the run on the next poll.
 Expected log output:
 
 ```
-[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+[info] nx_pipeline_stopped     app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id> success=True
 ```
+
+> To run Loitering Detection and Live Video Captioning simultaneously, see [Running Both Apps Simultaneously](#running-both-apps-simultaneously) at the end of this guide.
 
 ---
 
@@ -797,17 +799,72 @@ docker compose down
 
 ---
 
+## Additional Steps
+
+### Running Both Apps Simultaneously
+
+Both Loitering Detection and Live Video Captioning can run in parallel on the same camera from the same Nx Witness integration.
+
+**Prerequisite — avoid container name and port conflicts:**
+
+The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and host ports by default. The Loitering Detection `docker-compose.yml` needs to be updated with the following changes to avoid clashes:
+
+| Service | Change |
+|---|---|
+| `broker` | Host port changed from `1883` to `1884` (`"1884:1883"`) |
+| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld` |
+| `coturn` | Container name changed to `coturn-ld`; host port changed to `3479` |
+| `metrics-manager` | Container name changed to `metrics-manager-ld` |
+
+**Steps to run both simultaneously:**
+
+1. Start the LVC stack (its broker occupies host port `1883`):
+   ```bash
+   cd metro-ai-suite/live-video-analysis/live-video-captioning
+   docker compose up -d
+   ```
+2. Start the LD stack (its broker now occupies host port `1884`):
+   ```bash
+   cd metro-ai-suite/metro-vision-ai-app-recipe
+   docker compose up -d
+   ```
+3. Update `.env` in the VAP directory so the LD MQTT subscriber and the DLStreamer Pipeline Server both use the LD broker on port `1884`:
+   ```bash
+   # metro-ai-suite/vms-adapter-plugin/.env
+   MQTT_PORT=1884
+   PIPELINE_SERVER_MQTT_PORT=1884
+   ```
+4. Start VAP (already configured with both apps in `config.yaml`):
+   ```bash
+   cd metro-ai-suite/vms-adapter-plugin
+   docker compose up -d
+   ```
+5. In the Nx Witness client, open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
+
+VAP starts both pipelines independently within 5 seconds.
+
+**Viewing results in Nx Witness — one output at a time:**
+
+Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a time:
+
+- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`, `vap.vehicle`, …) overlaid on the live feed.
+- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
+
+This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks simultaneously in the same camera panel, even though both pipelines are producing results concurrently.
+
+---
+
 ## Summary
 
-| **Step**                                     | **Where**                              |
-|----------------------------------------------|----------------------------------------|
-| Start dls_vision with MQTT exposed on port 1883      | dls_vision `docker compose up -d`            |
-| Configure Nx Witness connection in VAP `.env` | `metro-ai-suite/vms-adapter-plugin/.env`     |
-| Configure `label_type_map` in `config.yaml`   | `config/config.yaml`                  |
-| Start VAP (integration auto-registers)        | `docker compose up -d --build`        |
-| Enable integration for cameras in Nx          | Nx Witness client → Camera Settings   |
-| Discover cameras in VAP dashboard             | Dashboard → Discover Cameras          |
-| Enable cameras in VAP dashboard               | Dashboard → Camera toggle             |
-| Start a pipeline run                          | Dashboard → Analytics Engine → Start  |
-| View detection overlays                       | Nx Witness client → live camera feed  |
-| Stop the run                                  | Dashboard → Analytics Engine → Stop   |
+| **Step** | **Where** |
+|---|---|
+| Start dls_vision with MQTT broker exposed to host | `metro-vision-ai-app-recipe/loitering-detection/` → `docker compose up -d` |
+| **Nx Witness:** install Server + Client, add cameras, enable digest auth, enable API Integrations | Nx Witness Desktop Client |
+| Configure Nx Witness connection and MQTT settings in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
+| Configure `app_id`, `display_name`, `label_type_map` in `config.yaml` | `config/config.yaml` |
+| Start VAP (integration auto-registers on startup) | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
+| Discover cameras | Dashboard → Discover Cameras |
+| Enable cameras for analytics | Dashboard → Camera toggle |
+| **Nx Witness:** Start pipeline | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Enable checkbox |
+| View detection overlays | Nx Witness client → live camera feed (Objects panel) |
+| **Nx Witness:** Stop the run | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Uncheck the checkbox |
