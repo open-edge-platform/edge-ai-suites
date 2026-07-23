@@ -1,10 +1,3 @@
-"""Aggregate parsed VLM scores into a grading result.
-
-The grading prompt is the sole basis for scoring, so results come only from
-what the VLM reported per question. Objective vs subjective totals are split by
-the VLM-reported question type (calculation -> subjective, else objective).
-The `summary` shape stays compatible with the legacy pipeline.
-"""
 from __future__ import annotations
 
 from typing import Any

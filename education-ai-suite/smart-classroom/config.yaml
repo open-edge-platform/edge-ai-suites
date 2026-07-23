@@ -2,7 +2,7 @@
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: True # True or False, applicable for provider: openvino
-  language: zh # en or zh
+  language: en # en or zh
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -303,7 +303,7 @@ models:
     enabled: true 
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
-    device: GPU.1 # GPU or CPU
+    device: GPU # GPU or CPU
     weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)

@@ -1,14 +1,3 @@
-"""Pure-VLM grading pipeline.
-
-Three steps, one external service (the VLM):
-    render      PDF -> one PNG per page
-    vlm_grading each page + a static grading prompt -> per-question scores
-    merge       aggregate across pages, compare to answer key, write result
-
-Signature matches the legacy run_grading_pipeline so it drops into the existing
-job framework unchanged: the same update_progress / check_checkpoint / log_event
-callbacks drive progress, pause/resume/cancel, and task logging.
-"""
 from __future__ import annotations
 
 import json
@@ -361,10 +350,16 @@ def run_vlm_grading_pipeline(
         f"subjective={summary['subjective_score']}/{summary['subjective_max']}",
     )
 
-    _log_timing_summary(time.perf_counter() - _pipeline_start)
+    total_seconds = time.perf_counter() - _pipeline_start
+    _log_timing_summary(total_seconds)
+    result_data["processing_seconds"] = round(total_seconds, 2)
+    result_path.write_text(
+        json.dumps(result_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     return {
         "stopped": False,
         "result_path": str(result_path),
         "summary": summary,
+        "processing_seconds": round(total_seconds, 2),
     }

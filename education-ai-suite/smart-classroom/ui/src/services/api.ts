@@ -1306,6 +1306,7 @@ export interface GradingStudentResult {
   objective_max?: number | null;
   subjective_score?: number | null;
   subjective_max?: number | null;
+  processing_seconds?: number | null;
   questions?: Record<string, GradingQuestionScore>;
 }
 
@@ -1314,6 +1315,7 @@ export interface GradingSummary {
   students: Record<string, GradingStudentResult>;
   updated_at?: string | null;
   student_count: number;
+  total_processing_seconds?: number | null;
 }
 
 async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -1429,6 +1431,9 @@ export interface GradingConfig {
   poll_interval: number | null;
   stable_checks: number | null;
   idle_timeout: number | null;
+  vlm_model: string | null;
+  ocr_model: string | null;
+  layout_model: string | null;
 }
 
 export async function gradingGetConfig(): Promise<GradingConfig> {

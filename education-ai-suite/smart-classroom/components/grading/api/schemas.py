@@ -186,6 +186,9 @@ class GradingConfigResponse(BaseModel):
     poll_interval: int | None = None
     stable_checks: int | None = None
     idle_timeout: int | None = None
+    vlm_model: str | None = None
+    ocr_model: str | None = None
+    layout_model: str | None = None
 
 
 class GradingConfigUpdateRequest(BaseModel):

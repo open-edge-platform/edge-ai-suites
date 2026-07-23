@@ -281,14 +281,20 @@
 }
 
 .grading-row-id {
-  font-family: monospace;
   font-size: 12px;
   color: #666;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grading-row-taskid {
   color: #aaa;
   font-size: 11px;
+  font-family: monospace;
+  flex-shrink: 0;
 }
 
 .grading-row-counts {
@@ -301,6 +307,13 @@
   font-size: 12px;
   color: #999;
   flex-shrink: 0;
+}
+
+.grading-row-elapsed {
+  font-size: 12px;
+  color: #888;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .grading-row-arrow {
@@ -348,6 +361,52 @@
 
 .grading-detail-view {
   margin-left: auto;
+}
+
+.grading-log-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.grading-log-row .grading-log {
+  flex: 1;
+  min-width: 0;
+}
+
+.grading-timing {
+  flex-shrink: 0;
+  width: 200px;
+}
+
+.grading-timing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.grading-timing-table th,
+.grading-timing-table td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.grading-timing-table th:first-child,
+.grading-timing-table td:first-child {
+  width: 24px;
+  color: #aaa;
+  text-align: center;
+}
+
+.grading-timing-table th {
+  color: #777;
+  font-weight: 600;
+}
+
+.grading-timing-total td {
+  border-top: 1px solid #ccc;
+  padding-top: 6px;
 }
 
 .grading-log-title {

@@ -1,9 +1,3 @@
-"""Grading service (pure-VLM). Job framework + task lifecycle.
-
-Only task_type "grading.run" is supported. The actual grading is delegated to
-run_vlm_grading_pipeline; everything else here (job store, state machine,
-pause/resume/cancel via checkpoints, task logging) is grading-method agnostic.
-"""
 from __future__ import annotations
 
 import json
@@ -389,10 +383,14 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "objective_max": source_summary.get("objective_max"),
             "subjective_score": source_summary.get("subjective_score"),
             "subjective_max": source_summary.get("subjective_max"),
+            "processing_seconds": data.get("processing_seconds"),
             "questions": questions,
         }
         summary["updated_at"] = _now_utc_iso()
         summary["student_count"] = len(students)
+        summary["total_processing_seconds"] = round(
+            sum(r.get("processing_seconds") or 0 for r in students.values()), 2
+        )
 
         task_dir.mkdir(parents=True, exist_ok=True)
         summary_path.write_text(_dump_summary(summary), encoding="utf-8")
@@ -855,16 +853,38 @@ def get_grading_config() -> dict[str, Any]:
     the full config.yaml is intentionally not returned."""
     from services.vlm_grading_pipeline import _load_component_config
 
+    from services.vlm_grading_pipeline import _component_root
     cfg = _load_component_config()
     image = cfg.get("image") if isinstance(cfg.get("image"), dict) else {}
     vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
     watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
+
+    sc_config_path = _component_root().parents[1] / "config.yaml"
+    try:
+        sc_raw = yaml.safe_load(sc_config_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        sc_raw = {}
+    sc_models = sc_raw.get("models") if isinstance(sc_raw.get("models"), dict) else {}
+    sc_text_gen = sc_models.get("text_gen") if isinstance(sc_models.get("text_gen"), dict) else {}
+    sc_ocr = sc_models.get("ocr") if isinstance(sc_models.get("ocr"), dict) else {}
+
+    layout_model = None
+    try:
+        layout_cfg_path = _component_root() / "providers" / "layout_detection_service" / "config.yaml"
+        layout_raw = yaml.safe_load(layout_cfg_path.read_text(encoding="utf-8")) or {}
+        layout_model = (layout_raw.get("layout_detection") or {}).get("repo_id")
+    except Exception:
+        pass
+
     return {
         "dpi": image.get("dpi"),
         "vlm_temperature": vlm.get("temperature"),
         "poll_interval": watch.get("poll_interval"),
         "stable_checks": watch.get("stable_checks"),
         "idle_timeout": watch.get("idle_timeout"),
+        "vlm_model": sc_text_gen.get("vlm_name"),
+        "ocr_model": sc_ocr.get("rec_model"),
+        "layout_model": layout_model,
     }
 
 

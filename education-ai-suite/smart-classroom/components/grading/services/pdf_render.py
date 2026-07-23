@@ -1,8 +1,3 @@
-"""PDF rendering for VLM grading: render each page to a PNG on disk.
-
-Pure functions, no logging side effects — the caller (pipeline) decides how to
-report progress. Uses PyMuPDF (fitz), the same engine as the legacy pipeline.
-"""
 from __future__ import annotations
 
 from pathlib import Path

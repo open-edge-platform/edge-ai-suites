@@ -24,6 +24,24 @@ const STATUS_LABELS: Record<string, string> = {
 
 const shortId = (id: string): string => (id ? id.slice(0, 8) : '');
 
+const TERMINAL = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
+
+const formatElapsed = (createdAt: string, endedAt: string | null | undefined, now: number): string => {
+  try {
+    const start = Date.parse(createdAt);
+    const end = endedAt ? Date.parse(endedAt) : now;
+    if (isNaN(start) || isNaN(end) || end < start) return '—';
+    let s = Math.floor((end - start) / 1000);
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    const m = Math.floor(s / 60); s -= m * 60;
+    if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+    if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
+    return `${s}s`;
+  } catch {
+    return '—';
+  }
+};
+
 const formatTime = (iso: string): string => {
   try {
     const d = new Date(iso);
@@ -43,6 +61,12 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [now, setNow] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // null = show all; otherwise filter by this status (server-side).
   const [filter, setFilter] = useState<string | null>(null);
@@ -155,14 +179,19 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                 <span className={`grading-dot status-${task.status}`} />
                 <span className="grading-row-time">{task.created_at ? formatTime(task.created_at) : '—'}</span>
                 <span className="grading-row-status">{t(statusKey, task.status)}</span>
-                <span className="grading-row-id" title={task.dir_info?.papers_dir || task.task_id}>
-                  {task.dir_info?.dir_name || shortId(task.task_id)}
-                  <span className="grading-row-taskid"> #{shortId(task.task_id)}</span>
-                </span>
                 <span className="grading-row-counts">
                   {task.dir_info
                     ? `${task.dir_info.completed}/${task.dir_info.total}`
                     : t('grading.list.progressUnknown', '—/—')}
+                </span>
+                <span className="grading-row-taskid" title={task.task_id}>#{shortId(task.task_id)}</span>
+                <span className="grading-row-id" title={task.dir_info?.papers_dir || task.task_id}>
+                  {task.dir_info?.dir_name || shortId(task.task_id)}
+                </span>
+                <span className="grading-row-elapsed">
+                  {task.created_at
+                    ? formatElapsed(task.created_at, TERMINAL.has(task.status) ? task.updated_at : null, now)
+                    : '—'}
                 </span>
                 <span className="grading-row-arrow">{expanded ? '▾' : '▸'}</span>
               </div>

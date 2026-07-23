@@ -5,8 +5,9 @@ import {
   gradingResumeTask,
   gradingDeleteTask,
   gradingGetTaskLog,
+  gradingGetTaskSummary,
 } from '../../services/api';
-import type { GradingTask } from '../../services/api';
+import type { GradingTask, GradingSummary } from '../../services/api';
 import RemoveConfirmationModal from '../common/RemoveConfirmationModal';
 
 interface TaskDetailProps {
@@ -42,6 +43,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
   const [logLines, setLogLines] = useState<string[]>([]);
   const [logError, setLogError] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
+  const [summary, setSummary] = useState<GradingSummary | null>(null);
 
   const status = task.status;
   const isTerminal = status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
@@ -60,10 +62,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
     logCancelledRef.current = false;
     const fetchLog = async () => {
       try {
-        const res = await gradingGetTaskLog(task.task_id, LOG_TAIL);
+        const [logRes, summaryRes] = await Promise.all([
+          gradingGetTaskLog(task.task_id, LOG_TAIL),
+          gradingGetTaskSummary(task.task_id),
+        ]);
         if (logCancelledRef.current) return;
-        setLogLines(res.lines || []);
+        setLogLines(logRes.lines || []);
         setLogError('');
+        setSummary(summaryRes);
       } catch (e) {
         if (logCancelledRef.current) return;
         setLogError(e instanceof Error ? e.message : String(e));
@@ -175,14 +181,47 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
         </button>
       </div>
 
-      <div className="grading-log">
-        <div className="grading-log-title">{t('grading.detail.log', 'Live log')}</div>
-        {logError && <div className="grading-error">{logError}</div>}
-        <pre className="grading-log-box" ref={logBoxRef}>
-          {logLines.length > 0
-            ? logLines.join('\n')
-            : t('grading.detail.logEmpty', 'No log output yet.')}
-        </pre>
+      <div className="grading-log-row">
+        {task.dir_info && (
+          <div className="grading-timing">
+            <div className="grading-log-title">{t('grading.detail.timing', 'Processing time')}</div>
+            <table className="grading-timing-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{t('grading.detail.timingStudent', 'Student')}</th>
+                  <th>{t('grading.detail.timingSeconds', 'Time (s)')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(summary?.students || {}).map(([key, s], idx) => (
+                  <tr key={key}>
+                    <td>{idx + 1}</td>
+                    <td>{s.student_name || s.student_id || key}</td>
+                    <td>{s.processing_seconds != null ? s.processing_seconds.toFixed(1) : '—'}</td>
+                  </tr>
+                ))}
+                {summary?.total_processing_seconds != null && (
+                  <tr className="grading-timing-total">
+                    <td></td>
+                    <td><strong>{t('grading.detail.timingTotal', 'Total')}</strong></td>
+                    <td><strong>{summary.total_processing_seconds.toFixed(1)}</strong></td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="grading-log">
+          <div className="grading-log-title">{t('grading.detail.log', 'Live log')}</div>
+          {logError && <div className="grading-error">{logError}</div>}
+          <pre className="grading-log-box" ref={logBoxRef}>
+            {logLines.length > 0
+              ? logLines.join('\n')
+              : t('grading.detail.logEmpty', 'No log output yet.')}
+          </pre>
+        </div>
       </div>
 
       <RemoveConfirmationModal

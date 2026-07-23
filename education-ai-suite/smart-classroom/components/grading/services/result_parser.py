@@ -1,11 +1,3 @@
-"""Parse VLM free-text grading output into structured per-question results.
-
-Expected primary format (one question per two lines):
-    Question 1 | choice | student: A | 4/4 points
-    Reason: ...
-Falls back to the simpler "Question 1: 4/10 points" if the model omits the
-type / student fields.
-"""
 from __future__ import annotations
 
 import json

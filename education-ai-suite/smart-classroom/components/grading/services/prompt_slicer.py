@@ -1,12 +1,3 @@
-"""Slice a full rubric prompt down to the block for one section.
-
-The rubric file is split on separator lines (config: separator). The first
-block (scenario/intro) and the last block (output-format) are always kept; the
-one middle block whose leading ordinal matches the section title's leading
-ordinal is inserted between them. If nothing matches, the full prompt is used.
-
-All patterns live in config — no section-type text is hardcoded here.
-"""
 from __future__ import annotations
 
 import re

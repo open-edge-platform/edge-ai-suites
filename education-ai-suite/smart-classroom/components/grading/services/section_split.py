@@ -1,13 +1,3 @@
-"""Split a paper into sections using step1 layout detection + OCR of headings.
-
-A "section" is a contiguous region between two section headings (e.g. the whole
-choice-question area, the fill-in area, the essay area). Headings are found by
-OCR-ing the paragraph_title regions and matching configurable patterns (all
-patterns live in config.yaml — no hardcoded text here). A section may span
-multiple pages; its per-page vertical strips are stitched into one tall image.
-
-Pure logic + image IO; the OCR function is injected so this stays testable.
-"""
 from __future__ import annotations
 
 import json

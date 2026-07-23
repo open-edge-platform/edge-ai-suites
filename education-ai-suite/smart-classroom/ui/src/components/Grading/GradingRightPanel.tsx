@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Accordion from '../common/Accordion';
+import ResourceUtilizationAccordion from '../RightPanel/ResourceUtilizationAccordion';
 import { getPlatformInfo, gradingGetConfig, gradingUpdateConfig } from '../../services/api';
 import type { GradingConfig } from '../../services/api';
 import '../../assets/css/RightPanel.css';
+import { useAppDispatch } from '../../redux/hooks';
+import { setSessionId } from '../../redux/slices/uiSlice';
+
+const GRADING_MONITOR_SESSION_ID = 'grading-monitor';
 
 const dash = '-';
 
 const GradingRightPanel: React.FC = () => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const [platformData, setPlatformData] = useState<any>(null);
   const [config, setConfig] = useState<GradingConfig | null>(null);
+
+  useEffect(() => {
+    dispatch(setSessionId(GRADING_MONITOR_SESSION_ID));
+  }, [dispatch]);
 
   const [dpiInput, setDpiInput] = useState<string>('');
   const [tempInput, setTempInput] = useState<string>('');
@@ -79,8 +89,16 @@ const GradingRightPanel: React.FC = () => {
             <p><strong>{t('accordion.memory', 'Memory')}:</strong> {platformData?.Memory || dash}</p>
             <p><strong>{t('accordion.storage', 'Storage')}:</strong> {platformData?.Storage || dash}</p>
           </div>
+          <div className="software-performance">
+            <h3>{t('accordion.softwareConfiguration', 'Software Configuration')}</h3>
+            <p><strong>{t('grading.config.vlmModel', 'VLM Model')}:</strong> {config?.vlm_model || dash}</p>
+            <p><strong>{t('grading.config.ocrModel', 'OCR Model')}:</strong> {config?.ocr_model || dash}</p>
+            <p><strong>{t('grading.config.layoutModel', 'Layout Model')}:</strong> {config?.layout_model || dash}</p>
+          </div>
         </div>
       </Accordion>
+
+      <ResourceUtilizationAccordion activeScreen="grading" />
 
       <Accordion title={t('grading.config.title', 'Grading Configuration')}>
         <div className="grading-config-form">
@@ -154,6 +172,7 @@ const GradingRightPanel: React.FC = () => {
           </button>
         </div>
       </Accordion>
+
     </div>
   );
 };

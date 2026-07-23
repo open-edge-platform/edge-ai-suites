@@ -1,10 +1,3 @@
-"""Layout detection step (auxiliary): run PP-DocLayout on each rendered page
-and save the results under step1_layout_detection/.
-
-This does NOT feed the VLM grading — it is a standalone artifact for inspection.
-The detection service is a hard requirement here: if it is unreachable, the
-caller treats it as a fatal error.
-"""
 from __future__ import annotations
 
 from pathlib import Path

@@ -14,6 +14,46 @@ from api.routes import create_router
 
 logger = logging.getLogger("grading.service")
 
+GRADING_MONITOR_SESSION_ID = "grading-monitor"
+
+
+def _backend_url(cfg: "GradingServiceConfig") -> str:
+    vlm = (cfg.provider or {}).get("vlm_provider")
+    if not vlm:
+        raise ValueError("grading.provider.vlm_provider is not configured in config.yaml")
+    from urllib.parse import urlparse
+    p = urlparse(str(vlm))
+    return f"{p.scheme}://{p.netloc}"
+
+
+def _start_monitoring(cfg: "GradingServiceConfig") -> None:
+    import requests
+    try:
+        url = _backend_url(cfg)
+        requests.post(
+            f"{url}/start-monitoring",
+            headers={"x-session-id": GRADING_MONITOR_SESSION_ID},
+            timeout=5,
+            proxies={"http": None, "https": None},
+        )
+        logger.info("Resource monitoring started (session=%s)", GRADING_MONITOR_SESSION_ID)
+    except Exception as exc:
+        logger.warning("Failed to start resource monitoring: %s", exc)
+
+
+def _stop_monitoring(cfg: "GradingServiceConfig") -> None:
+    import requests
+    try:
+        url = _backend_url(cfg)
+        requests.post(
+            f"{url}/stop-monitoring",
+            timeout=5,
+            proxies={"http": None, "https": None},
+        )
+        logger.info("Resource monitoring stopped")
+    except Exception as exc:
+        logger.warning("Failed to stop resource monitoring: %s", exc)
+
 
 @dataclass
 class GradingServiceConfig:
@@ -70,12 +110,14 @@ def create_app(cfg: GradingServiceConfig) -> FastAPI:
     async def _on_startup() -> None:
         logger.info("Grading service (VLM) started; language=%s providers=%s",
                     cfg.language, cfg.provider)
+        _start_monitoring(cfg)
 
     @app.on_event("shutdown")
     async def _on_shutdown() -> None:
         from services.grading_service_impl import pause_running_directory_tasks
 
         pause_running_directory_tasks()
+        _stop_monitoring(cfg)
         logger.info("Grading service stopped")
 
     return app
