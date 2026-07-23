@@ -271,7 +271,7 @@ Requires the camera environment variables from [Set Environment Variables](#set-
 
 > **Note:** If specified, `width` and `height` values must be greater than 60.
 
-> **Supported pixel formats:** The basic configuration supports standard formats such as `mono8`, `bgr8`, `rgb8`, and `ycbcr422_8`. For other pixel formats — use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
+> **Supported pixel formats:** The basic configuration supports standard formats - `mono8`, `bgr8`, `rgb8`, and `ycbcr422_8`. For other pixel formats — use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
 
 ```yaml
 input:
