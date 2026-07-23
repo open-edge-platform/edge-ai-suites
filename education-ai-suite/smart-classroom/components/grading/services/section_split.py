@@ -34,13 +34,23 @@ def _find_section_starts(
     ocr_region: OcrRegionFn,
     title_labels: list[str],
     patterns: list[re.Pattern],
+    ocr_records: list[dict] | None = None,
+    debug_dir: Path | None = None,
 ) -> list[dict]:
     """Return section starts [{page_index, page_num, y, title, bbox}] in order.
 
     page_index is the 0-based index into page_images; page_num is parsed from
     the detection filename (1-based).
+    If ocr_records is a list, every title-candidate box and its OCR result are
+    appended to it (for debug output).
+    If debug_dir is set, each candidate crop is saved there as a PNG alongside
+    a sidecar .txt with the OCR result and match status.
     """
+    if debug_dir is not None:
+        debug_dir.mkdir(parents=True, exist_ok=True)
+
     starts: list[dict] = []
+    crop_index = 0
     for idx, png in enumerate(page_images):
         try:
             page_num = int(png.stem.split("_")[-1])
@@ -53,7 +63,32 @@ def _find_section_starts(
             if not bbox:
                 continue
             text = (ocr_region(png, bbox) or "").strip()
-            if any(p.match(text) for p in patterns):
+            matched = any(p.match(text) for p in patterns)
+
+            if debug_dir is not None:
+                crop_index += 1
+                try:
+                    x0, y0, x1, y1 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+                    crop = Image.open(png).convert("RGB").crop((x0, y0, x1, y1))
+                    slug = f"p{page_num}_{crop_index:02d}_{'match' if matched else 'nomatch'}"
+                    crop.save(debug_dir / f"{slug}.png")
+                    (debug_dir / f"{slug}.txt").write_text(
+                        f"page: {page_num}\nlabel: {box.get('label')}\nbbox: {bbox}\n"
+                        f"matched: {matched}\nocr_text:\n{text}\n",
+                        encoding="utf-8",
+                    )
+                except Exception:
+                    pass
+
+            if ocr_records is not None:
+                ocr_records.append({
+                    "page_num": page_num,
+                    "label": box.get("label"),
+                    "bbox": bbox,
+                    "ocr_text": text,
+                    "matched": matched,
+                })
+            if matched:
                 starts.append({
                     "page_index": idx,
                     "page_num": page_num,
@@ -262,10 +297,20 @@ def split_sections(
     gap_threshold = int(cfg.get("gap_threshold", 120))
     keep_margin = int(cfg.get("keep_margin", 50))
     content_pad = int(cfg.get("content_pad", 20))
+    save_ocr_debug = bool(cfg.get("save_ocr_debug", False))
 
     step2_dir.mkdir(parents=True, exist_ok=True)
 
-    starts = _find_section_starts(page_images, step1_dir, ocr_region, title_labels, patterns)
+    ocr_records: list[dict] | None = [] if save_ocr_debug else None
+    debug_dir = step2_dir / "ocr_debug" if save_ocr_debug else None
+    starts = _find_section_starts(
+        page_images, step1_dir, ocr_region, title_labels, patterns, ocr_records, debug_dir,
+    )
+
+    if save_ocr_debug and ocr_records is not None:
+        (step2_dir / "ocr_debug.json").write_text(
+            json.dumps(ocr_records, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
     sections: list[dict] = []
     for i, start in enumerate(starts):

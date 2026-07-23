@@ -117,6 +117,8 @@ def run_vlm_grading_pipeline(
     prompt_path = Path(str(rubric_path)).resolve()
 
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
+    contrast_enhance = bool(cfg_image.get("contrast_enhance", False))
+    contrast_factor = float(cfg_image.get("contrast_factor", 1.5))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
     _mip = options.get("max_image_pixels", cfg_vlm.get("max_image_pixels"))
@@ -147,7 +149,9 @@ def run_vlm_grading_pipeline(
     _pipeline_start = time.perf_counter()
     update_progress("render", 20)
     _t = _step_start("render")
-    images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi)
+    images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
+                                contrast_enhance=contrast_enhance,
+                                contrast_factor=contrast_factor)
     _step_done("render", _t, f"pages={len(images)} dpi={dpi}")
     if not images:
         raise RuntimeError("PDF produced no pages")

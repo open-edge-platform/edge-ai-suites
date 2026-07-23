@@ -11,7 +11,13 @@ from typing import Any
 import fitz  # PyMuPDF
 
 
-def render_pdf_to_pngs(pdf_path: Path, out_dir: Path, dpi: int = 300) -> list[Path]:
+def render_pdf_to_pngs(
+    pdf_path: Path,
+    out_dir: Path,
+    dpi: int = 300,
+    contrast_enhance: bool = False,
+    contrast_factor: float = 1.5,
+) -> list[Path]:
     """Render each page of ``pdf_path`` to ``out_dir/page_N.png``.
 
     Returns the list of written PNG paths in page order.
@@ -26,7 +32,14 @@ def render_pdf_to_pngs(pdf_path: Path, out_dir: Path, dpi: int = 300) -> list[Pa
         for i in range(len(doc)):
             pix = doc[i].get_pixmap(matrix=matrix)
             page_path = out_dir / f"page_{i + 1}.png"
-            pix.save(str(page_path))
+            if contrast_enhance:
+                from PIL import Image, ImageEnhance
+                import io
+                img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+                img = ImageEnhance.Contrast(img).enhance(contrast_factor)
+                img.save(str(page_path))
+            else:
+                pix.save(str(page_path))
             paths.append(page_path)
     finally:
         doc.close()

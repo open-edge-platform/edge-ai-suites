@@ -1,6 +1,7 @@
 image:
-  # PDF -> page image quality sent to the VLM.
   dpi: 50
+  contrast_enhance: true
+  contrast_factor: 1.5
 
 vlm:
   max_tokens: 4096
@@ -30,6 +31,7 @@ detection_service:
   save_visualizations: true    # Save images with detection boxes drawn
 
 section_split:
+  save_ocr_debug: true                         # save OCR text results to step2/ocr_debug.json
   title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
   title_patterns:
     - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
