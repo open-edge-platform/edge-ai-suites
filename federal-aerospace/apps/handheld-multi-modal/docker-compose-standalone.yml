@@ -145,10 +145,10 @@ services:
   # HTTPS reverse proxy for Open WebUI and Whisper STT
   # Enables microphone access in the browser (requires secure context)
   nginx-https:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     container_name: nginx-https
     restart: unless-stopped
-    user: "nginx"
+    user: "101"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}

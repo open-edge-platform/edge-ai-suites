@@ -16,10 +16,11 @@ services:
       - ./data:/data
     command: >
       sh -c "
-        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs &&
+        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache &&
         chown 472:472 /data/grafana &&
         chown 5000:5000 /data/ovms-models &&
-        chmod 750 /data/ovms-models
+        chmod 750 /data/ovms-models &&
+        chown 101:101 /data/nginx-certs/key.pem /data/nginx-certs/cert.pem 
       "
 
   # Grafana - Dashboard with provisioned dashboards
@@ -143,10 +144,10 @@ services:
   # HTTPS reverse proxy for Open WebUI and Whisper STT
   # Enables microphone access in the browser (requires secure context)
   nginx-https:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     container_name: nginx-https
     restart: unless-stopped
-    user: "nginx"
+    user: "101"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
