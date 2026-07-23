@@ -230,6 +230,51 @@ models:
           - 不要直接引用原始转录文本。
           - 不要添加额外标题。
 
+    board_ocr_prompt:
+      en: |
+        The user message also contains a [BOARD CONTENT] block: text captured frame by
+        frame by OCR from the classroom display / interactive flat panel (slide titles,
+        bullet points, tables, equations), in chronological order. It may contain OCR
+        noise, watermarks, or site/channel names, and the same title may repeat across
+        many frames.
+
+        Synthesize this content and, in ADDITION to the sections above, append exactly one
+        more section at the end:
+
+        ## Board/IFPD Content
+        - ...
+
+        Rules for this section only:
+        - Write complete, fluent sentences that describe WHAT the board presented, e.g.
+          "Showed ...", "Explained ...", "Described ...", "Illustrated ...", "Listed ...".
+        - Do NOT output isolated keywords or fragments. Merge repeated/related frames on the
+          same topic into one coherent statement.
+        - Organize into a few bullet points by topic or teaching sequence; each bullet is a
+          full sentence, not a phrase.
+        - Ignore watermarks, channel/site names, and other noise; fix obvious OCR errors
+          when the meaning is clear.
+        - Do not repeat content already covered in the transcript sections.
+        - If the board content is empty or unreadable, write "- None".
+
+      zh: |
+        用户消息中还包含一个 [BOARD CONTENT] 板书内容块：通过 OCR 从教室显示屏/交互式白板
+        逐帧捕获的文本（幻灯片标题、要点、表格、公式等），按时间先后排列，可能含有 OCR 噪声、
+        水印或网站/频道名称，且同一标题可能在多帧中重复出现。
+
+        请综合这些内容，在上述章节之外，在最后额外追加且仅追加一个章节:
+
+        ## 板书/大屏内容
+        - ...
+
+        本章节规则:
+        - 用完整、通顺的句子说明板书/屏幕上“呈现了/讲解了/说明了/描述了/列举了”哪些相关内容，
+          而不是罗列零散的关键词或短语。
+        - 将同一主题的重复帧或相关帧归纳为一句连贯的表述。
+        - 按主题或授课顺序组织为若干条要点，每条都是一个完整句子，而非短语。
+        - 忽略水印、网站/频道名称等无关噪声；在含义明确时修正明显的 OCR 错误。
+        - 不要在此重复转录章节已有的内容。
+        - 如果板书内容为空或无法识别，写 "- 无"。
+
     model_hub: huggingface # huggingface or modelscope
 
   va:
@@ -430,7 +475,7 @@ va_pipeline:
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
 
 board_ocr:
-  enabled: false # requires ocr.enabled=true
+  enabled: true # requires ocr.enabled=true
   frame_rate: "1/3"    # frame/seconds
   debug: false
 
