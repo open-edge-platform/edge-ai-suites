@@ -11,7 +11,7 @@ Design
 ──────
 * **Field providers, keyed by app type.** Each analytics app contributes its own
   Nx settings items. The default provider reads them from the app config's
-  ``nx_settings_fields()`` method, so app-specific fields live with the app and
+  ``control_params()`` method, so app-specific fields live with the app and
   require no edits to the Nx manifest.
 * **Registry for overrides.** Register a custom provider via
   :func:`register_settings_provider` when an app needs bespoke field-building
@@ -40,7 +40,7 @@ class _AppSettingsConfig(Protocol):
     app_id: str
     display_name: str
 
-    def nx_settings_fields(self) -> list[dict]: ...
+    def control_params(self) -> list[dict]: ...
 
 
 # A provider turns one analytics-app config into a flat list of Nx settings items.
@@ -55,10 +55,28 @@ def register_settings_provider(app_type: str, provider: SettingsProvider) -> Non
     _PROVIDER_REGISTRY[app_type] = provider
 
 
+_NEUTRAL_TYPE_TO_NX = {"bool": "CheckBox", "enum": "ComboBox", "text": "TextField"}
+
+
+def _neutral_to_nx_item(param: dict) -> dict:
+    """Translate one VMS-neutral control param into an Nx device-agent settings item."""
+    item: dict = {
+        "type": _NEUTRAL_TYPE_TO_NX.get(param.get("type", "text"), "TextField"),
+        "name": param.get("name", ""),
+        "caption": param.get("label", param.get("name", "")),
+        "description": param.get("description", ""),
+        "defaultValue": param.get("default"),
+    }
+    if param.get("type") == "enum":
+        item["range"] = list(param.get("options", []))
+    return item
+
+
 def _default_provider(cfg: Any) -> list[dict]:
-    """Default provider: ask the config for its fields, or contribute nothing."""
-    fields = getattr(cfg, "nx_settings_fields", None)
-    return list(fields()) if callable(fields) else []
+    """Default provider: translate the app's neutral control params into Nx items."""
+    fn = getattr(cfg, "control_params", None)
+    params = fn() if callable(fn) else []
+    return [_neutral_to_nx_item(p) for p in params]
 
 
 def _fields_for(cfg: Any) -> list[dict]:

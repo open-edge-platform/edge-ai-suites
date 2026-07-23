@@ -24,7 +24,7 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-ui,apm-agent,apm-storage,localhost
+      no_proxy: ${no_proxy:-},apm-ui,apm-agent,apm-detection,apm-storage,localhost
     volumes:
       - ../config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
