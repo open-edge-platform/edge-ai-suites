@@ -18,26 +18,10 @@ pipeline:
   start_timeout_s: 30
   stop_timeout_s: 10
 
-mqtt:
-  host: surgical-mqtt
-  port: 1883
-  username: surgical
-  password: ${MQTT_PASSWORD}   # filled from env at startup
-  topic: surgical/detections
-  client_id: surgical-backend
-  qos: 1
-  keepalive: 30
-
 metrics:
   host: surgical-metrics
   port: 9000
   poll_interval_s: 1.0
-
-frame:
-  # Where the pipeline drops JPEGs that backend serves over /video/stream and /frame/latest.
-  input_dir: /frames
-  freshness_threshold_s: 1.0
-  jpeg_quality: 80
 
 model:
   name: yolo11n_polyp
@@ -51,7 +35,7 @@ model:
   # Phase 5.0.5 smoke).
 
 source:
-  # `file` for v1; `basler` enabled in Phase 6 follow-up
+  # Runtime source selection: file and basler only.
   type: file
   file_path: /videos/polyp_test.mp4
   basler:

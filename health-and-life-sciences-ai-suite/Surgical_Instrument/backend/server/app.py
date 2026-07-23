@@ -15,8 +15,6 @@ Emitted shapes (unchanged from mock):
   POST /api/start            -> {status, message}
   POST /api/stop             -> {status, message}
   GET  /api/events           -> SSE named events 'full' and 'delta'
-  GET  /api/frame/latest     -> ?base64=1 -> {available, data}; else JPEG
-  GET  /api/video_feed       -> multipart/x-mixed-replace MJPEG
   GET  /api/hardware-metrics -> {cpu_utilization, gpu_utilization, memory,
                                  power, npu_utilization}
   GET  /api/platform-info    -> {Processor, NPU, iGPU, Memory, Storage, OS}
@@ -30,8 +28,6 @@ Lifecycle mapping (FSM state -> UI lifecycle):
 """
 from __future__ import annotations
 
-import base64
-import io
 import json
 import math
 import os
@@ -43,10 +39,9 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from flask import Flask, Response, jsonify, request
-from PIL import Image, ImageDraw, ImageFont
 
 from ..bootstrap.orchestrator import Orchestrator
 
@@ -56,7 +51,6 @@ from ..bootstrap.orchestrator import Orchestrator
 # ---------------------------------------------------------------------------
 
 LIFECYCLE_RUN = {"starting", "running"}
-BOUNDARY = "frame"
 
 
 @dataclass
@@ -94,7 +88,6 @@ _cfg: Optional[dict] = None
     # so the UI keeps showing the final KPI values after the user stops.
 _last_stats: Optional[dict] = None
 _last_dets: Optional[dict] = None
-_last_frame_jpeg: Optional[bytes] = None
 
 
 VALID_DEVICES = {"CPU", "GPU", "NPU"}
@@ -296,57 +289,6 @@ def _delta_loop(stop_event: threading.Event) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Frame delivery — real InferenceWorker JPEG, with placeholder fallback
-# ---------------------------------------------------------------------------
-
-_PLACEHOLDER_W, _PLACEHOLDER_H = 960, 540
-
-
-def _placeholder_jpeg(message: str) -> bytes:
-    img = Image.new("RGB", (_PLACEHOLDER_W, _PLACEHOLDER_H), color=(12, 16, 22))
-    d = ImageDraw.Draw(img)
-    font = ImageFont.load_default()
-    d.text((16, 16), "Surgical Instrument backend", fill=(180, 200, 220), font=font)
-    d.text((16, 40), f"lifecycle: {STATE.lifecycle}", fill=(180, 200, 220), font=font)
-    d.text((16, 64), message, fill=(255, 217, 168), font=font)
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=70)
-    return buf.getvalue()
-
-
-def _current_jpeg() -> bytes:
-    if _worker is not None:
-        jpeg = _worker.latest_frame_jpeg()
-        if jpeg:
-            return jpeg
-    # Post-stop: keep showing the last real frame so the video panel doesn't blank.
-    if _last_frame_jpeg is not None and STATE.lifecycle in ("ready", "stopping"):
-        return _last_frame_jpeg
-    if STATE.lifecycle == "initializing":
-        boot_msg = ""
-        if _orch is not None:
-            snap = _orch.state_snapshot()
-            boot_msg = f"{snap.get('state','')} — {snap.get('message','')}"
-        return _placeholder_jpeg(boot_msg or "bootstrap in progress...")
-    if STATE.lifecycle == "error":
-        return _placeholder_jpeg(STATE.error or "error")
-    return _placeholder_jpeg("press Start to begin inference")
-
-
-def _mjpeg_stream() -> Generator[bytes, None, None]:
-    while True:
-        jpeg = _current_jpeg()
-        yield (
-            b"--" + BOUNDARY.encode() + b"\r\n"
-            b"Content-Type: image/jpeg\r\n"
-            b"Content-Length: " + str(len(jpeg)).encode() + b"\r\n\r\n"
-            + jpeg + b"\r\n"
-        )
-        # Deliver at ~30 fps when running, slower otherwise to save CPU.
-        time.sleep(0.033 if STATE.lifecycle == "running" else 0.25)
-
-
-# ---------------------------------------------------------------------------
 # Flask app
 # ---------------------------------------------------------------------------
 
@@ -430,7 +372,7 @@ def start() -> Response:
 
 
 def _do_start() -> None:
-    global _worker, _last_stats, _last_dets, _last_frame_jpeg
+    global _worker, _last_stats, _last_dets
     assert _cfg is not None
     try:
         from ..consumer import InferenceConsumer
@@ -438,7 +380,6 @@ def _do_start() -> None:
         # Fresh session — clear any frozen snapshot from the previous run.
         _last_stats = None
         _last_dets = None
-        _last_frame_jpeg = None
 
         # STATE.device is the authoritative runtime choice (POST /api/device);
         # falls back to the config value at first boot via create_app().
@@ -462,13 +403,12 @@ def stop() -> Response:
     _set_lifecycle("stopping")
 
     def _do_stop() -> None:
-        global _worker, _last_stats, _last_dets, _last_frame_jpeg
+        global _worker, _last_stats, _last_dets
         if _worker is not None:
-            # Freeze the last session so the UI keeps showing final KPIs + frame.
+            # Freeze the last session so the UI keeps showing final KPIs.
             try:
                 _last_stats = _worker.stats()
                 _last_dets = _worker.latest_detections()
-                _last_frame_jpeg = _worker.latest_frame_jpeg()
             except Exception:  # noqa: BLE001
                 pass
             _worker.stop(timeout=5.0)
@@ -487,7 +427,7 @@ def reset() -> Response:
     changing the inference device and pressing Start again. Rejected while
     inference is running (Stop first).
     """
-    global _last_stats, _last_dets, _last_frame_jpeg
+    global _last_stats, _last_dets
     if STATE.lifecycle in LIFECYCLE_RUN:
         return jsonify({
             "error": "cannot reset while running — stop inference first",
@@ -495,7 +435,6 @@ def reset() -> Response:
         }), 409
     _last_stats = None
     _last_dets = None
-    _last_frame_jpeg = None
     with STATE.lock:
         STATE.error = None
         if STATE.lifecycle == "error":
@@ -553,29 +492,6 @@ def events() -> Response:
         "Cache-Control": "no-cache",
         "X-Accel-Buffering": "no",
     })
-
-
-@app.get(f"{API}/frame/latest")
-def frame_latest() -> Response:
-    jpeg = _current_jpeg()
-    if request.args.get("base64"):
-        # "available" mirrors _current_jpeg's real output: live worker frame OR
-        # the frozen last-session frame. Without this the UI treats every
-        # post-Stop poll as a miss and shows a stale-overlay spinner.
-        available = (
-            (_worker is not None and _worker.latest_frame_jpeg() is not None)
-            or _last_frame_jpeg is not None
-        )
-        return jsonify({
-            "available": available,
-            "data": base64.b64encode(jpeg).decode("ascii"),
-        })
-    return Response(jpeg, mimetype="image/jpeg")
-
-
-@app.get(f"{API}/video_feed")
-def video_feed() -> Response:
-    return Response(_mjpeg_stream(), mimetype=f"multipart/x-mixed-replace; boundary={BOUNDARY}")
 
 
 @app.get(f"{API}/hardware-metrics")

@@ -2,8 +2,7 @@
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
 # bootstrap that fetches CVC-ColonDB (manual-drop), trains YOLO11n on the
-# host's Intel Arc / Xe iGPU via torch+xpu, exports to OpenVINO IR, then
-# streams annotated frames over /api/video_feed.
+# host's Intel Arc / Xe iGPU via torch+xpu, and exports to OpenVINO IR.
 #
 # The host mounts /dev/dri (and /dev/accel for NPU, optional). The container
 # needs the Intel graphics compute runtime (Level Zero GPU/NPU drivers +
@@ -13,33 +12,14 @@
 
 FROM ubuntu:24.04
 
-# Proxy support for corporate networks. Build args are optional; if not
-# supplied, defaults to empty (no proxy). Pass via docker build --build-arg
-# or docker-compose build args.
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-
 WORKDIR /app
 
-ENV HTTP_PROXY=${HTTP_PROXY} \
-    HTTPS_PROXY=${HTTPS_PROXY} \
-    NO_PROXY=${NO_PROXY} \
-    PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
     DEBIAN_FRONTEND=noninteractive
-
-# Backports are not required for this image and are frequently flaky behind
-# corporate proxies. Keep noble + updates + security enabled.
-RUN if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
-      sed -Ei '/^Suites:/ s/\s+noble-backports\b//g' /etc/apt/sources.list.d/ubuntu.sources; \
-    fi; \
-    if [ -f /etc/apt/sources.list ]; then \
-      sed -Ei '/\bnoble-backports\b/s/^/#/' /etc/apt/sources.list; \
-    fi
 
 # Base runtime: Python + OpenCV shared libs + curl for HEALTHCHECK.
 # The Intel graphics userspace (libze-intel-gpu, intel-opencl-icd, level-zero
@@ -62,7 +42,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
+      | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" \
+      > /etc/apt/sources.list.d/intel-gpu-noble.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
       libze1 \
       libze-intel-gpu1 \
       intel-opencl-icd \

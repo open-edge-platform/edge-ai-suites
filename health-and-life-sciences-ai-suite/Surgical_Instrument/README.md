@@ -306,7 +306,7 @@ Surgical_Instrument/
 │   └── server/app.py          # Flask REST + SSE snapshot builder
 ├── ui/
 │   └── src/
-│       ├── components/DetectionPanel/   # video + hero detection card
+│       ├── components/ConfigPanel/      # source/device/session accordion (left)
 │       ├── components/RightPanel/       # Pipeline Performance + Model & Input + Platform accordions
 │       ├── redux/slices/detectionSlice.ts
 │       ├── redux/middleware/sseMiddleware.ts
