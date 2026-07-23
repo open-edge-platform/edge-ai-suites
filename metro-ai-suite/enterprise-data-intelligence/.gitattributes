@@ -1,0 +1,12 @@
+# Normalize line endings to LF for text files
+* text=auto eol=lf
+
+# Shell scripts must stay LF
+*.sh text eol=lf
+
+# Treat these as binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.gguf binary
+*.safetensors binary
