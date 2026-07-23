@@ -5,12 +5,12 @@
   language: en # en or zh
 
 features:
-  asr:                { enabled: false }
+  asr:                { enabled: true }
   summary:            { enabled: true }
-  mindmap:            { enabled: false }
-  topic_segmentation: { enabled: false }
-  video_analytics:    { enabled: false }
-  content_search:     { enabled: false }
+  mindmap:            { enabled: true }
+  topic_segmentation: { enabled: true }
+  video_analytics:    { enabled: true }
+  content_search:     { enabled: true }
   qa:                 { enabled: true }
 
 monitoring:

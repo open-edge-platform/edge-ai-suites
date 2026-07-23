@@ -46,7 +46,6 @@ def content_segmentation(request: SummaryRequest):
         scp = get_scp_sender()
         if scp:
             scp.send_content_package_async(request.session_id, session_dir)
-        # ────────────────────────────────────────────────────────────────────
 
         return JSONResponse(content={"session_id": request.session_id})
 
@@ -62,11 +61,6 @@ def content_segmentation(request: SummaryRequest):
 
 
 class SegmentationFeature:
-    """F5 topic segmentation exposed as a FeatureModule.
-
-    Embedding is delegated to ``ContentSearchClient`` (used unchanged inside
-    the segmentation pipeline).
-    """
 
     id: str = "topic_segmentation"
     requires: List[str] = ["text_gen"]
@@ -82,9 +76,6 @@ class SegmentationFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "topic_segmentation",
-            "title": "Topic Segmentation",
             "endpoints": {
                 "content_segmentation": "/content-segmentation",
             },

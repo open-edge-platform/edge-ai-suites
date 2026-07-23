@@ -14,7 +14,5 @@ __all__ = [
 
 
 def register_builtin_features() -> None:
-    # Imported lazily: the feature modules pull in FastAPI/pipeline deps that
-    # should not be required merely to import the features package.
     from .builtins import register_builtin_features as _register
     _register()

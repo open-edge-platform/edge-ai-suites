@@ -3,7 +3,7 @@ from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import Header, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi import APIRouter, FastAPI, File, HTTPException, status
+from fastapi import APIRouter, FastAPI, File, HTTPException, Request, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
@@ -45,6 +45,32 @@ def health():
     from model_manager import ModelManager
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
+
+
+@router.get("/features")
+def get_features(request: Request):
+    from model_manager.features import in_dependency_order
+
+    eff = getattr(request.app.state, "features", None)
+    if eff is None:
+        return JSONResponse(
+            content={"features": []},
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    features = []
+    for feature in in_dependency_order():
+        if not eff.is_enabled(feature.id):
+            continue
+        features.append({
+            "id": feature.id,
+            "dependency": list(feature.depends_on),
+        })
+
+    return JSONResponse(
+        content={"features": features},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @router.get("/performance-metrics")
@@ -157,15 +183,11 @@ def start_video_analytics_pipeline(
 
     results = []
 
-    # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
         try:
-            # Ensure the MediaMTX RTSP server is up before any pipeline pushes to
-            # it. Started on demand. Failures are surfaced as a 500 by the outer
-            # handler below.
+            
             ensure_media_service_running()
 
-            # Create or get service for this session
             if x_session_id not in va_services:
                 project_config = RuntimeConfig.get_section("Project")
                 location = project_config.get("location", "outputs")

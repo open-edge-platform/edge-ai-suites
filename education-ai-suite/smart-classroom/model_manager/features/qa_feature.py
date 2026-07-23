@@ -33,7 +33,4 @@ class QAFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "qa",
-            "title": "Q&A",
         }

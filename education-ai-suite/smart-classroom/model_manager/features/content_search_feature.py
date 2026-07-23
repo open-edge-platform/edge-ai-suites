@@ -36,7 +36,6 @@ class ContentSearchFeature:
             self.requires = ["ocr", "text_gen"]
 
     def build(self) -> None:
-        """Launch the content-search process group without blocking startup."""
         if self._process is not None and self._process.poll() is None:
             logger.info("ContentSearchFeature already running; skipping launch.")
             return
@@ -75,9 +74,6 @@ class ContentSearchFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "content_search",
-            "title": "Content Search",
         }
 
     def _health_gate(self, timeout: int = 300, interval: float = 3.0) -> None:
@@ -114,13 +110,6 @@ class ContentSearchFeature:
 
 
 def _resolve_python_executable() -> str:
-    """Interpreter used to launch the content-search process group.
-
-    Prefers ``content_search.python_executable`` from config so content-search
-    can run in its own virtual environment (its dependency pins conflict with
-    the main app). Falls back to the main app interpreter when unset or when the
-    configured path does not exist.
-    """
     configured = getattr(config.content_search, "python_executable", None)
     if configured:
         candidate = Path(configured)

@@ -119,9 +119,6 @@ class ASRFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "transcription",
-            "title": "Live Transcription",
             "endpoints": {
                 "upload_audio": "/upload-audio",
                 "transcribe": "/transcribe",

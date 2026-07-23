@@ -50,9 +50,6 @@ class MindmapFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "mindmap",
-            "title": "Mindmap",
             "endpoints": {
                 "mindmap": "/mindmap",
             },

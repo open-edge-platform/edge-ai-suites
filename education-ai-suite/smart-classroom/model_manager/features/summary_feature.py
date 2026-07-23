@@ -63,9 +63,6 @@ class SummaryFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "type": "panel",
-            "panel": "summary",
-            "title": "Summary",
             "mode": self.mode,
             "endpoints": {
                 "summarize": "/summarize",
