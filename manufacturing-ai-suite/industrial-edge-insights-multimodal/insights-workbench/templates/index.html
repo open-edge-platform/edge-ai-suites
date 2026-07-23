@@ -48,6 +48,31 @@
     .header {
       padding: 18px 20px;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .header-actions label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .header-actions select {
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 0.95rem;
     }
 
     h1 {
@@ -367,6 +392,15 @@
     }
 
     @media (max-width: 700px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-actions {
+        justify-content: space-between;
+      }
+
       .footer {
         flex-direction: column;
         align-items: stretch;
@@ -390,6 +424,17 @@
     <div class="card">
       <div class="header">
         <h1>Fusion Analytics Results</h1>
+        <div class="header-actions">
+          <label for="refreshIntervalSelect">Refresh (sec)</label>
+          <select id="refreshIntervalSelect" aria-label="Auto refresh interval in seconds">
+            <option value="2">2</option>
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="30">30</option>
+          </select>
+          <button id="refreshTopBtn" type="button">Refresh</button>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -422,6 +467,8 @@
   <script>
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
+    const refreshTopBtn = document.getElementById("refreshTopBtn");
+    const refreshIntervalSelect = document.getElementById("refreshIntervalSelect");
     const explainBtn = document.getElementById("explainBtn");
     const statusEl = document.getElementById("status");
     const pageInfoEl = document.getElementById("pageInfo");
@@ -431,7 +478,7 @@
     const explainOutput = document.getElementById("explainOutput");
     const explainHeader = document.getElementById("explainHeader");
     const explainBody = document.getElementById("explainBody");
-    const AUTO_REFRESH_INTERVAL_MS = 10000;
+    const DEFAULT_AUTO_REFRESH_INTERVAL_MS = 10000;
     const APP_BASE_PATH = window.location.pathname.startsWith("/insights-ui") ? "/insights-ui" : "";
 
     function buildApiUrl(path, params) {
@@ -449,16 +496,38 @@
 
     let state = {
       page: 1,
-      pageSize: 10,
       hasMore: false,
       loading: false,
       explainLoading: false,
+      autoRefreshIntervalMs: DEFAULT_AUTO_REFRESH_INTERVAL_MS,
+      autoRefreshTimerId: null,
     };
+
+    function updateRefreshControlsState() {
+      const disableRefreshControls = state.loading || hasSelectedRows();
+      refreshTopBtn.disabled = disableRefreshControls;
+      refreshIntervalSelect.disabled = disableRefreshControls;
+    }
 
     function setLoading(loading) {
       state.loading = loading;
       prevBtn.disabled = loading || state.page <= 1;
       nextBtn.disabled = loading || !state.hasMore;
+      updateRefreshControlsState();
+    }
+
+    function startAutoRefreshTimer() {
+      if (state.autoRefreshTimerId) {
+        clearInterval(state.autoRefreshTimerId);
+      }
+
+      state.autoRefreshTimerId = setInterval(async () => {
+        if (state.loading || hasSelectedRows()) {
+          return;
+        }
+
+        await loadPage();
+      }, state.autoRefreshIntervalMs);
     }
 
     function setStatus(text) {
@@ -473,6 +542,7 @@
       const enabled = hasSelectedRows() && !state.loading && !state.explainLoading;
       explainBtn.disabled = !enabled;
       explainBtn.classList.toggle("enabled", enabled);
+      updateRefreshControlsState();
     }
 
     function getSelectedTimes() {
@@ -562,7 +632,6 @@
       try {
         const response = await fetch(buildApiUrl("/api/data", {
           page: String(state.page),
-          page_size: String(state.pageSize),
         }));
         const payload = await response.json();
 
@@ -591,6 +660,17 @@
     nextBtn.addEventListener("click", async () => {
       if (!state.hasMore) return;
       state.page += 1;
+      await loadPage();
+    });
+
+    refreshTopBtn.addEventListener("click", async () => {
+      await loadPage();
+    });
+
+    refreshIntervalSelect.addEventListener("change", async (event) => {
+      const nextIntervalSeconds = Number(event.target.value) || 10;
+      state.autoRefreshIntervalMs = nextIntervalSeconds * 1000;
+      startAutoRefreshTimer();
       await loadPage();
     });
 
@@ -698,13 +778,7 @@
       }
     });
 
-    setInterval(async () => {
-      if (state.loading || hasSelectedRows()) {
-        return;
-      }
-
-      await loadPage();
-    }, AUTO_REFRESH_INTERVAL_MS);
+    startAutoRefreshTimer();
 
     // ── vLLM readiness gate ──────────────────────────────────────────────────
     const vllmOverlay  = document.getElementById("vllmOverlay");

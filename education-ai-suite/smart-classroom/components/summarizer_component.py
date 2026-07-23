@@ -1,4 +1,5 @@
 from components.base_component import PipelineComponent
+from components.board_ocr.board_ocr_service import read_board_ocr_text_only
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
@@ -28,16 +29,22 @@ class SummarizerComponent(PipelineComponent):
 
     # ---------------- SYSTEM PROMPT SELECTOR ----------------
 
-    def _get_system_prompt(self):
+    def _get_system_prompt(self, has_board=False):
         lang = config.app.language
         prompts = vars(config.models.summarizer.system_prompt)[lang]
 
         if self.mode == "teacher":
-            return prompts.Teacher
+            prompt = prompts.Teacher
         elif self.mode == "hybrid":
-            return prompts.Hybrid
+            prompt = prompts.Hybrid
         else:
-            return prompts.Dialog
+            prompt = prompts.Dialog
+
+        if has_board:
+            addendum = vars(config.models.summarizer.board_ocr_prompt)[lang]
+            prompt = f"{prompt}\n\n{addendum}"
+
+        return prompt
 
     # ---------------- INPUT SELECTOR ----------------
 
@@ -56,16 +63,33 @@ class SummarizerComponent(PipelineComponent):
 
         return StorageManager.read_text_file(path)
 
+    def _load_board_ocr_text(self):
+        try:
+            return read_board_ocr_text_only(self.session_id)
+        except Exception as e:
+            logger.warning(f"Could not load board OCR text: {e}")
+            return ""
+
     # ---------------- MESSAGE BUILDER ----------------
 
-    def _get_message(self, input_text):
-        system_prompt = self._get_system_prompt()
+    def _get_message(self, input_text, board_text=""):
+        system_prompt = self._get_system_prompt(has_board=bool(board_text))
         logger.debug(f"Summarizer mode: {self.mode}")
         logger.debug(f"System Prompt Loaded")
 
-        user_content = input_text
-        if "qwen3" in str(self.model_name).lower() and not input_text.lstrip().startswith("/no_think"):
-            user_content = "/no_think\n" + input_text
+        if board_text:
+            body = (
+                "[TRANSCRIPT]\n"
+                f"{input_text}\n\n"
+                "[BOARD CONTENT]\n"
+                f"{board_text}"
+            )
+        else:
+            body = input_text
+
+        user_content = body
+        if "qwen3" in str(self.model_name).lower() and not body.lstrip().startswith("/no_think"):
+            user_content = "/no_think\n" + body
 
         return [
             {"role": "system", "content": system_prompt},
@@ -77,6 +101,9 @@ class SummarizerComponent(PipelineComponent):
     def process(self, _):
 
         input_text = self._load_input_text()
+        board_text = self._load_board_ocr_text()
+        if board_text:
+            logger.info(f"Board OCR content found for session {self.session_id} ({len(board_text)} chars); including in summary.")
 
         project_config = RuntimeConfig.get_section("Project")
         project_path = os.path.join(
@@ -89,7 +116,7 @@ class SummarizerComponent(PipelineComponent):
         StorageManager.save(summary_path, "", append=False)
 
         prompt = self.summarizer.tokenizer.apply_chat_template(
-            self._get_message(input_text),
+            self._get_message(input_text, board_text),
             tokenize=False,
             add_generation_prompt=True,
             enable_thinking=False
