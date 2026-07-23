@@ -41,12 +41,17 @@ make build
 **Build individual services:**
 
 ```bash
-make build-storage   # storage-service only
-make build-agents    # agent-service only
-make build-ui        # ui-service only
+make build-storage-service     # storage-service only
+make build-detection-service   # detection-service only
+make build-ui-service          # ui-service only
 ```
 
 The build targets use the Dockerfiles located in `services/<service-name>/Dockerfile`.
+
+The reasoning agent (`apm-agent`) is no longer built from this repo — it is
+an external image (Intel EAL's `agent-quality-handler` microservice) pulled
+via `docker/compose.agents.yaml`. See the [agent-service integration
+guide](agent-service-integration-guide.md) for its contract.
 
 ### 4. Verify the Build
 
@@ -56,7 +61,7 @@ After the build completes, confirm the images are present:
 docker images | grep apm
 ```
 
-You should see entries for `apm-storage-service`, `apm-agent-service`, and `apm-ui-service`.
+You should see entries for `apm-storage-service`, `apm-detection-service`, and `apm-ui-service`.
 
 ### 5. Deploy with Local Images
 

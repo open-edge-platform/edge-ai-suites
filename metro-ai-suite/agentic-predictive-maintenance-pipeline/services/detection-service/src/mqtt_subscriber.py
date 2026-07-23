@@ -1,7 +1,14 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""MQTT subscriber — listens to DL Streamer detection events and writes to storage-service."""
+"""MQTT subscriber — listens to DL Streamer raw detection events and writes to storage-service.
+
+Owned by the detection layer: this is the only component that writes
+detections into the shared database. The agent-service never subscribes to
+raw detections directly (see ``mqtt_publisher.py`` for the separate
+"batch-complete" event that notifies the agent-service when a detection run
+finishes).
+"""
 
 import json
 import logging
@@ -16,15 +23,7 @@ log = logging.getLogger(__name__)
 
 _MQTT_HOST  = os.environ.get("MQTT_HOST", "mqtt-broker")
 _MQTT_PORT  = int(os.environ.get("MQTT_PORT", "1883"))
-_MQTT_TOPIC = os.environ.get("MQTT_TOPIC", "dlstreamer/detections")
-
-# Optional callback invoked after each batch write (used by main.py to trigger pipeline run)
-_on_detection_callback = None
-
-
-def set_on_detection_callback(fn):
-    global _on_detection_callback
-    _on_detection_callback = fn
+_MQTT_TOPIC = os.environ.get("MQTT_TOPIC", "apm/detections")
 
 
 def _on_connect(client, userdata, flags, rc, properties=None):
@@ -77,9 +76,6 @@ def _on_message(client, userdata, msg):
                 "height":     int(det.get("height", 0)),
                 "metadata":   det.get("metadata", json.dumps({})),
             })
-
-        if _on_detection_callback:
-            _on_detection_callback(len(detections))
 
     except Exception as exc:
         log.error("Error processing MQTT message: %s", exc)

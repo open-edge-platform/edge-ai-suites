@@ -39,7 +39,7 @@ stop_containers() {
     echo -e "${YELLOW}Bringing down all containers...${NC}"
     # Stop by fixed container names — no USE_CASE env vars required
     local containers=(
-        apm-nginx apm-ui apm-agent apm-llm
+        apm-nginx apm-ui apm-agent apm-detection apm-llm
         apm-storage apm-dlstreamer apm-mqtt-broker apm-model-download
     )
     local found=0
@@ -229,6 +229,7 @@ case "${ACTION}" in
 
         COMPOSE_CMD="docker compose \
             -f docker/compose.base.yaml \
+            -f docker/compose.detection.yaml \
             -f docker/compose.agents.yaml \
             -f docker/compose.ui.yaml"
 
