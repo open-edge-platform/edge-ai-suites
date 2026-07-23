@@ -171,6 +171,55 @@ jobs:
           ref: ${{ inputs.suites_ref || inputs.tag || github.ref }}
           persist-credentials: false
 
+      - name: Determine required Helm chart artifacts
+        env:
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+        run: |
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+
+          HAS_WIND_APP=false
+          if [[ -d "apps/wind-turbine-anomaly-detection" ]]; then
+            HAS_WIND_APP=true
+          fi
+
+          # Test files/groups that require the Time Series (wind-turbine) or Multimodal Helm chart
+          TS_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security test_GPU_helm"
+          MM_HELM_TESTS="test_helm_deployment_multimodal test_GPU_helm_multimodal test_NPU_helm_multimodal"
+
+          NEED_TS_HELM=false
+          NEED_MM_HELM=false
+
+          # Parse comma-separated test input once, shared by both the
+          # generate (build=yes) and pull (build=no) Helm chart steps.
+          IFS=',' read -ra SELECTED <<< "$TESTS"
+          for t in "${SELECTED[@]}"; do
+            t="$(echo "$t" | xargs)"  # trim whitespace
+            [[ -z "$t" ]] && continue
+            # Extract base test file name (strip .py suffix and anything after ::)
+            test_file="${t%%::*}"
+            test_file="${test_file%.py}"
+
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
+              if [[ "$HAS_WIND_APP" == "true" ]]; then
+                NEED_TS_HELM=true
+              fi
+            fi
+
+            if [[ "$t" == "all-tests" || "$t" == "multimodal-all" ]]; then
+              NEED_MM_HELM=true
+            fi
+
+            if echo "$TS_HELM_TESTS" | grep -qw "$test_file"; then NEED_TS_HELM=true; fi
+            if echo "$MM_HELM_TESTS" | grep -qw "$test_file"; then NEED_MM_HELM=true; fi
+          done
+
+          echo "NEED_TS_HELM=$NEED_TS_HELM" >> "$GITHUB_ENV"
+          echo "NEED_MM_HELM=$NEED_MM_HELM" >> "$GITHUB_ENV"
+
+          echo "Helm chart requirements based on selected tests ($TESTS):"
+          echo "  Time Series (wind-turbine) chart needed: $NEED_TS_HELM"
+          echo "  Multimodal chart needed: $NEED_MM_HELM"
+
       - name: Resolve edge-ai-libraries ref
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
         env:
@@ -269,82 +318,21 @@ jobs:
 
       - name: Generate Helm charts for Time Series Sample Apps
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
-        env:
-          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
         run: |
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
 
-          HAS_WIND_APP=false
-          if [[ -d "apps/wind-turbine-anomaly-detection" ]]; then
-            HAS_WIND_APP=true
-          fi
-
-          # Determine which sample apps need helm charts based on selected tests
-          # Only generate for Helm tests, not Docker tests
-          WIND_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security test_GPU_helm"
-
-          GENERATE_WIND=false
-
-          # Parse comma-separated test input
-          IFS=',' read -ra SELECTED <<< "$TESTS"
-          for t in "${SELECTED[@]}"; do
-            t="$(echo "$t" | xargs)"  # trim whitespace
-            # Extract base test file name (strip .py suffix and anything after ::)
-            # Handles: test_helm_deployment_wind_turbine, test_helm_deployment_wind_turbine.py,
-            # and test_helm_deployment_wind_turbine::test_gen_chart
-            test_file="${t%%::*}"
-            test_file="${test_file%.py}"
-
-            # Check if it's a wildcard selector (generate all helm charts)
-            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
-              if [[ "$HAS_WIND_APP" == "true" ]]; then
-                GENERATE_WIND=true
-              fi
-              break
-            fi
-
-            # Check if test is wind helm-related
-            if echo "$WIND_HELM_TESTS" | grep -qw "$test_file"; then
-              GENERATE_WIND=true
-            fi
-          done
-
-          # Generate helm charts only for the helm tests being run
-          if [[ "$GENERATE_WIND" == "true" ]]; then
+          if [[ "${{ env.NEED_TS_HELM }}" == "true" ]]; then
             echo "Generating Helm chart package for wind-turbine-anomaly-detection..."
             make gen_helm_charts_targz app=wind-turbine-anomaly-detection
-          fi
-
-          if [[ "$GENERATE_WIND" == "false" ]]; then
+          else
             echo "No helm tests selected, skipping helm chart generation"
           fi
 
       - name: Pull Helm charts from OCI registry
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'no' }}
         env:
-          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
-          TS_HELM_TESTS="test_helm_deployment_wind_turbine test_helm_influxdb_retention test_docker_helm_deployment_security test_GPU_helm"
-          MM_HELM_TESTS="test_helm_deployment_multimodal test_GPU_helm_multimodal test_NPU_helm_multimodal"
-
-          PULL_TS=false
-          PULL_MM=false
-
-          IFS=',' read -ra SELECTED <<< "$TESTS"
-          for t in "${SELECTED[@]}"; do
-            t="$(echo "$t" | xargs)"
-            test_file="${t%%::*}"; test_file="${test_file%.py}"
-            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" || "$t" == "timeseries-functional" ]]; then
-              PULL_TS=true
-            fi
-            if [[ "$t" == "all-tests" || "$t" == "multimodal-all" ]]; then
-              PULL_MM=true
-            fi
-            if echo "$TS_HELM_TESTS" | grep -qw "$test_file"; then PULL_TS=true; fi
-            if echo "$MM_HELM_TESTS" | grep -qw "$test_file"; then PULL_MM=true; fi
-          done
-
           # Pull a chart .tgz, then patch weekly_build_date inside it and repack.
           # The published chart has weekly_build_date: "" so we must inject the
           # value before tests run, since helm install reads values from the .tgz.
@@ -370,11 +358,11 @@ jobs:
             tmp_dir=$(mktemp -d)
             tar -xzf "$tgz" -C "$tmp_dir"
 
-            # Patch values.yaml inside the extracted chart directory
-            find "$tmp_dir" -maxdepth 2 -name values.yaml | while read vf; do
-              sed -i "s/weekly_build_date: .*/weekly_build_date: \"${WEEKLY_BUILD_DATE_INPUT}\"/" "$vf"
-              echo "  Patched weekly_build_date in $vf"
-            done
+            # # Patch values.yaml inside the extracted chart directory
+            # find "$tmp_dir" -maxdepth 2 -name values.yaml | while read vf; do
+            #   sed -i "s/weekly_build_date: .*/weekly_build_date: \"${WEEKLY_BUILD_DATE_INPUT}\"/" "$vf"
+            #   echo "  Patched weekly_build_date in $vf"
+            # done
 
             # Repackage into the same helm-packages directory
             rm -f "$tgz"
@@ -388,7 +376,7 @@ jobs:
               | grep 'weekly_build_date'
           }
 
-          if [[ "$PULL_TS" == "true" ]]; then
+          if [[ "${{ env.NEED_TS_HELM }}" == "true" ]]; then
             TS_IMAGE_SUFFIX=$(grep 'image_suffix:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml" \
               | head -1 | awk -F'"' '{print $2}')
@@ -405,7 +393,7 @@ jobs:
             echo "No Time Series Helm tests selected, skipping Time Series chart pull"
           fi
 
-          if [[ "$PULL_MM" == "true" ]]; then
+          if [[ "${{ env.NEED_MM_HELM }}" == "true" ]]; then
             MM_IMAGE_SUFFIX=$(grep 'image_suffix:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml" \
               | head -1 | awk -F'"' '{print $2}')
