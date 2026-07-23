@@ -1,17 +1,13 @@
 from components.base_component import PipelineComponent
-from components.llm.ipex.summarizer import Summarizer as IpexSummarizer
+from components.board_ocr.board_ocr_service import read_board_ocr_text_only
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import StreamThinkFilter
+from model_manager import ModelManager
 import logging, os
 import time
 
-if config.app.use_ov_genai:
-    from components.llm.openvino_genai.summarizer import Summarizer as OvSummarizer
-else:
-    from components.llm.openvino.summarizer import Summarizer as OvSummarizer
-    
 logger = logging.getLogger(__name__)
 
 class SummarizerComponent(PipelineComponent):
@@ -21,44 +17,34 @@ class SummarizerComponent(PipelineComponent):
     def __init__(self, session_id, provider, model_name, device, temperature=0.7, mode="dialog"):
         self.session_id = session_id
         self.mode = mode.lower()
-        provider = provider.lower()
-        cfg = (provider, model_name, device)
-
-
-        if provider == "openvino":
-            SummarizerComponent._model = OvSummarizer(
-                model_name=model_name,
-                device=device,
-                temperature=temperature,
-                revision=None
-            )
-        elif provider == "ipex":
-            SummarizerComponent._model = IpexSummarizer(
-                model_name=model_name,
-                device=device.lower(),
-                temperature=temperature
-            )
-        else:
-            raise ValueError(f"Unsupported summarizer provider: {provider}")
-
-        SummarizerComponent._config = cfg
+        self.temperature = temperature
+        
+        text_gen = config.models.text_gen
+        SummarizerComponent._model = ModelManager.instance().text_gen()
+        SummarizerComponent._config = ("vlm", text_gen.vlm_name, text_gen.device)
 
         self.summarizer = SummarizerComponent._model
-        self.model_name = model_name
-        self.provider = provider
+        self.model_name = text_gen.vlm_name
+        self.provider = text_gen.provider
 
     # ---------------- SYSTEM PROMPT SELECTOR ----------------
 
-    def _get_system_prompt(self):
+    def _get_system_prompt(self, has_board=False):
         lang = config.app.language
         prompts = vars(config.models.summarizer.system_prompt)[lang]
 
         if self.mode == "teacher":
-            return prompts.Teacher
+            prompt = prompts.Teacher
         elif self.mode == "hybrid":
-            return prompts.Hybrid
+            prompt = prompts.Hybrid
         else:
-            return prompts.Dialog
+            prompt = prompts.Dialog
+
+        if has_board:
+            addendum = vars(config.models.summarizer.board_ocr_prompt)[lang]
+            prompt = f"{prompt}\n\n{addendum}"
+
+        return prompt
 
     # ---------------- INPUT SELECTOR ----------------
 
@@ -77,16 +63,33 @@ class SummarizerComponent(PipelineComponent):
 
         return StorageManager.read_text_file(path)
 
+    def _load_board_ocr_text(self):
+        try:
+            return read_board_ocr_text_only(self.session_id)
+        except Exception as e:
+            logger.warning(f"Could not load board OCR text: {e}")
+            return ""
+
     # ---------------- MESSAGE BUILDER ----------------
 
-    def _get_message(self, input_text):
-        system_prompt = self._get_system_prompt()
+    def _get_message(self, input_text, board_text=""):
+        system_prompt = self._get_system_prompt(has_board=bool(board_text))
         logger.debug(f"Summarizer mode: {self.mode}")
         logger.debug(f"System Prompt Loaded")
 
-        user_content = input_text
-        if "qwen3" in str(self.model_name).lower() and not input_text.lstrip().startswith("/no_think"):
-            user_content = "/no_think\n" + input_text
+        if board_text:
+            body = (
+                "[TRANSCRIPT]\n"
+                f"{input_text}\n\n"
+                "[BOARD CONTENT]\n"
+                f"{board_text}"
+            )
+        else:
+            body = input_text
+
+        user_content = body
+        if "qwen3" in str(self.model_name).lower() and not body.lstrip().startswith("/no_think"):
+            user_content = "/no_think\n" + body
 
         return [
             {"role": "system", "content": system_prompt},
@@ -98,6 +101,9 @@ class SummarizerComponent(PipelineComponent):
     def process(self, _):
 
         input_text = self._load_input_text()
+        board_text = self._load_board_ocr_text()
+        if board_text:
+            logger.info(f"Board OCR content found for session {self.session_id} ({len(board_text)} chars); including in summary.")
 
         project_config = RuntimeConfig.get_section("Project")
         project_path = os.path.join(
@@ -110,7 +116,7 @@ class SummarizerComponent(PipelineComponent):
         StorageManager.save(summary_path, "", append=False)
 
         prompt = self.summarizer.tokenizer.apply_chat_template(
-            self._get_message(input_text),
+            self._get_message(input_text, board_text),
             tokenize=False,
             add_generation_prompt=True,
             enable_thinking=False
@@ -118,7 +124,7 @@ class SummarizerComponent(PipelineComponent):
 
         start = time.perf_counter()
         first_token_time = None
-        streamer = None
+        raw_tokens = []
         think_filter = StreamThinkFilter()
 
         try:
@@ -126,6 +132,8 @@ class SummarizerComponent(PipelineComponent):
             for token in streamer:
                 if first_token_time is None:
                     first_token_time = time.perf_counter()
+
+                raw_tokens.append(token)
 
                 clean_token = think_filter.filter(token)
                 if not clean_token:
@@ -136,15 +144,15 @@ class SummarizerComponent(PipelineComponent):
 
         finally:
             end = time.perf_counter()
-            total_tokens = streamer.total_tokens if streamer else -1
             summarization_time = end - start
 
-            ttft_baseline = (
-                streamer.generation_start_time
-                if streamer and getattr(streamer, 'generation_start_time', None)
-                else start
-            )
-            ttft = (first_token_time - ttft_baseline) if first_token_time else -1
+            raw_text = "".join(raw_tokens)
+            try:
+                total_tokens = len(self.summarizer.tokenizer.encode(raw_text)) if raw_text else 0
+            except Exception:
+                total_tokens = -1
+
+            ttft = (first_token_time - start) if first_token_time else -1
 
             decode_time = (end - first_token_time) if first_token_time else summarization_time
             tps = ((total_tokens - 1) / decode_time) if decode_time > 0 and total_tokens > 1 else -1

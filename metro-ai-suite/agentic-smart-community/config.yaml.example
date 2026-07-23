@@ -1,0 +1,157 @@
+# ─────────────────────────────────────────────────────────────
+# Prerequisites
+# ─────────────────────────────────────────────────────────────
+# ffmpeg    — required by scene_query for frame resize
+#             Ubuntu/Debian: sudo apt install ffmpeg
+#             macOS:         brew install ffmpeg
+#
+# ─────────────────────────────────────────────────────────────
+# Data directory
+# ─────────────────────────────────────────────────────────────
+# All runtime data (DB, segments, logs) is stored under a single root directory.
+# Set via environment variable — NOT configurable here:
+#
+#   export SMARTBUILDING_DATA_DIR=/path/to/data   # default: ~/.mcp-smartbuilding
+#
+# Layout under that directory:
+#   smartbuilding.db          — SQLite database
+#   segments/<monitor_id>/    — video segments + latest.jpg (written by videostream-analytics)
+#     latest.jpg              — latest frame (read by scene_query)
+#     queries/                — archived frames from scene_query calls
+#   logs/reports/             — SRT debug artifacts from generate_report
+# ─────────────────────────────────────────────────────────────
+
+# multilevel-video-understanding service (video segment analysis).
+# Optional path_remap: when multilevel runs in a container that mounts the host's data
+# dir at a different path, the client rewrites the host prefix to the container prefix
+# before POSTing /v1/summary. Drop the block entirely when both sides see the same paths.
+summary_service:
+  url: http://localhost:8192
+  path_remap:
+    host_prefix: ${HOME}/.mcp-smartbuilding # host's SMARTBUILDING_DATA_DIR
+    container_prefix: /data # container mount point
+
+# vllm-serving-ipex (VLM for scene_query — single-frame queries)
+vlm_service:
+  url: http://localhost:41091/v1
+  model: Qwen/Qwen3.5-35B-A3B
+  max_edge_px: 720 # resize longest edge to this before sending to VLM (uses ffmpeg)
+
+# videostream-analytics microservice (motion detection, RTSP processing)
+videostream_analytics:
+  url: http://localhost:8999
+
+# Keepalive protocol with videostream-analytics
+keepalive:
+  enabled: true
+  interval_ms: 30000 # MCP → VSA heartbeat cadence
+  timeout_seconds: 90 # VSA auto-pause threshold (register payload)
+  check_interval_seconds: 10 # VSA watchdog poll interval (register payload)
+
+poll_interval_ms: 5000
+video_summary_max_concurrent: 2
+
+# Per-monitor log rotation (write target: logs/monitors/<monitor_id>/<YYYY-MM-DD>.log)
+logging:
+  retention_days: 14 # keep this many calendar days of .log files (today + 13 previous); older deleted
+  max_file_mb: 50 # stop appending to a single day's file past this size
+
+# Segment data retention. videostream-analytics writes recordings/motion_events/queries
+# under $SMARTBUILDING_DATA_DIR/segments/<monitor_id>/<subdir>/<YYYY-MM-DD>/;
+# MCP server keeps this many calendar days (today + N-1 previous) and purges older day-dirs.
+# Cleanup runs at server startup and hourly thereafter.
+storage:
+  retention_days: 2
+  cleanup_subdirs: [ motion_events, recordings, queries ]
+
+# MCP Server HTTP port (for OpenClaw / Claude Desktop connections)
+mcp:
+  port: 3100
+
+# Events Webhook port (receives events from videostream-analytics microservice)
+events_webhook:
+  port: 3101
+
+# Use case library. Each entry is referenced by monitors via `use_case`.
+# A single use case may be referenced by multiple monitors.
+#
+# Schema is owned PER USE CASE — there is no global shared schema block. Each use
+# case declares, under its own `schema:`, the extension columns its pipeline
+# parses on the shared `video_summary_tasks` table (+ optional custom_tables).
+# MCP applies these via idempotent ALTER TABLE at startup (columns declared by
+# multiple use cases, e.g. event/desc, are added once). The `alerts` table is
+# intentionally kept use-case-agnostic — no extensions.
+# (Note: alerts also has a built-in core column `notified` — delivery status,
+# 1=pushed to users, 0=cooled down but still stored for audit. It is NOT a
+# use-case extension; you never configure it here.)
+#
+# Alert decisions use the built-in defaultRuleEvaluator unless a use case sets
+# evaluate_rules_path to an adapter under `use-cases/<name>/evaluate_rules.py`.
+use_case_dict:
+  fridge:
+    description: "Fridge content tracking"
+    video_summary_task: fridge_monitor
+    # report-only: fridge_monitor emits no SEVERITY/EVENT lines, so no extension
+    # columns are parsed. Empty schema → nothing checked, nothing extracted.
+    schema:
+      video_summary_tasks: { extensions: [] }
+      custom_tables: []
+    summarize:
+      method: SIMPLE
+      processor_kwargs:
+        levels: 1
+        level_sizes: [ -1 ]
+        process_fps: 2
+    reports:
+      data_source: events
+      default_type: daily
+      filter: { motion_type: motion }
+
+  child_safety:
+    description: "Child safety monitoring"
+    video_summary_task: child_safety_monitor
+    # No evaluate_rules_path — defaultRuleEvaluator alerts on severity warn/critical.
+    # This use case parses severity/event/desc; severity drives the threshold rule.
+    schema:
+      video_summary_tasks:
+        extensions:
+          - { name: "severity", type: "text", required: false } # critical / warn / info
+          - { name: "event", type: "text", required: true }
+          - { name: "desc", type: "text", required: true }
+      custom_tables: []
+    # Per-clip summarize tuning. Defaults (single LOCAL_PROMPT pass) suit most use cases;
+    # override only when you need multi-level roll-up or T-1 temporal context.
+    summarize:
+      method: SIMPLE # SIMPLE | USE_VLM_T-1 | USE_LLM_T-1 | USE_ALL_T-1
+      processor_kwargs:
+        levels: 1 # 1 = LOCAL_PROMPT only, no MACRO/GLOBAL roll-up
+        level_sizes: [ -1 ] # -1 = single group at the level
+        process_fps: 2 # frames per second sampled from the clip
+    reports:
+      data_source: alerts
+      default_type: daily
+      filter: {}
+
+  elder_wakeup:
+    description: "Elder wakeup monitoring"
+    video_summary_task: elder_wakeup_monitor
+    evaluate_rules_path: ./use-cases/elder_wakeup/evaluate_rules.py
+    # Time-based UC: evaluate_rules.py judges by event + wakeup_time (no severity).
+    schema:
+      video_summary_tasks:
+        extensions:
+          - { name: "event", type: "text", required: true }
+          - { name: "wakeup_time", type: "text", required: false } # HH:MM or minutes-since-midnight
+          - { name: "desc", type: "text", required: true }
+      custom_tables: []
+    summarize:
+      method: SIMPLE
+      processor_kwargs:
+        levels: 1
+        level_sizes: [ -1 ]
+        process_fps: 2
+    reports:
+      data_source: video_summary_tasks
+      default_type: weekly
+      filter:
+        event: wakeup # filter on video_summary_tasks.event extension column

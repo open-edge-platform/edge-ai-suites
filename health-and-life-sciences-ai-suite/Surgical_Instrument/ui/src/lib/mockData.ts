@@ -1,7 +1,7 @@
 // src/lib/mockData.ts
 //
 // Mock data shaped to EXACTLY match the current MVP backend SSE/status payload
-// (/events + /status + /health + /frame/latest).
+// (/events + /status + /health).
 //
 // Field names, types, and nesting match the real backend so that
 // when the SSE hook is wired in, the adapter is trivial.
@@ -47,135 +47,89 @@ function generateWaveform(length: number): number[] {
 //   fps (top-level)                  → derive from model_stats averages on integration
 
 export const mockDetectionState: DetectionState = {
-  // Derived from /health on integration
   systemStatus: 'running',
-
-  // From snap.status.patient_present (bool)
-  // confidence: NO backend field — UI will show signal dots as '--' when real
-  patient: {
-    detected: true,
-    confidence: null, // explicitly null = not provided by backend
+  pipelinePerformance: {
+    workloads: [{
+      name: 'Polyp Detection',
+      device: 'GPU',
+      status: 'running',
+      fps: 28.5,
+      processing_mean_ms: 12.3,
+      processing_p50_ms: 11.8,
+      processing_p90_ms: 13.6,
+      processing_p95_ms: 14.1,
+      processing_p99_ms: 15.0,
+    }],
+    pipeline_fps: 28.5,
+    decode: '1920x1080 H.264',
   },
-
-  // From snap.status.people_present (bool)
-  // count: NO backend field — backend only gives bool
-  // confidence: NO backend field
-  caretaker: {
-    detected: true,
-    count: null,       // not provided by backend
-    confidence: null,  // not provided by backend
+  pipelineLatency: {
+    mean_ms: 12.3,
+    p50_ms: 11.8,
+    p90_ms: 13.6,
+    p95_ms: 14.1,
+    p99_ms: 15.0,
   },
-
-  // From snap.status.doors_latched (bool → 'closed'|'open')
-  // confidence: NO backend field
-  latch: {
-    state: 'closed',
-    confidence: null, // not provided by backend
+  modelInfo: {
+    name: 'yolo11n-polyp',
+    precision: 'FP16 OpenVINO IR',
+    task: 'Polyp Detection',
+    dataset: 'CVC-ColonDB',
+    input_source: 'Recorded file',
+    model_input: '640x640',
+    device: 'GPU',
   },
-
-  // From snap.rppg_metrics + snap.rppg_active + snap.rppg_elapsed
-  // waveform from snap.waveform.samples (completed) or snap.waveform_append.append (active)
-  rppg: {
-    // snap.rppg_metrics.heart_rate_avg
-    heartRate: 142,
-    // snap.rppg_metrics.heart_rate_min
-    heartRateMin: 136,
-    // snap.rppg_metrics.heart_rate_max
-    heartRateMax: 148,
-    // snap.rppg_metrics.confidence_score
-    confidence: 0.82,
-    // snap.rppg_elapsed (seconds, 0..30)
-    sessionDuration: 18,
-    // snap.rppg_active
-    sessionActive: true,
-    // snap.waveform.samples or accumulated snap.waveform_append.append[]
-    waveform: generateWaveform(200),
-  },
-
-  // From snap.model_stats — backend returns dict keyed by model name
-  // Each entry has: fps, latency_ms, status ('running'|'waiting'|'error'), frames_processed
-  models: [
-    { name: 'person',  fps: 28.4, latency: 12.3, status: 'running', framesProcessed: 8452 },
-    { name: 'patient', fps: 27.9, latency: 13.1, status: 'running', framesProcessed: 8450 },
-    { name: 'latch',   fps: 29.1, latency: 11.8, status: 'running', framesProcessed: 8455 },
-  ],
-
-  // Polled from /frame/latest?t=<timestamp> as JPEG binary
-  frameUrl: null,
-
-  // Derived from model_stats average fps on integration
   fps: 28.5,
-
-  // snap.video_loop_count on integration
   uptime: 342,
+  totalFrames: 8452,
+  inferP50Ms: 0,
+  inferP90Ms: 0,
+  inferP95Ms: 0,
+  inferP99Ms: 0,
+  totalP50Ms: 11.8,
+  totalP90Ms: 13.6,
+  totalP95Ms: 14.1,
+  totalP99Ms: 15.0,
 };
 
 // ─── Live mock updater ────────────────────────────────────────────────────────
 export function generateLiveMockState(prev: DetectionState): DetectionState {
   const jitter = (val: number, range: number) =>
     Math.round((val + (Math.random() - 0.5) * range) * 100) / 100;
-
-  // Simulate waveform scroll (matches waveform_append.append behavior)
-  const newWaveform = [...prev.rppg.waveform.slice(1)];
-  newWaveform.push(
-    Math.sin((Date.now() / 1000) * Math.PI * 2 * 1.2) * 0.6 +
-    (Math.random() - 0.5) * 0.15
-  );
-
-  // Simulate sessionDuration counting to 30 then resetting (matches rppg_elapsed 0..30)
-  const nextDuration = prev.rppg.sessionDuration >= 30
-    ? 0
-    : prev.rppg.sessionDuration + 1;
-  const sessionActive = nextDuration > 0 && nextDuration < 30;
+  const mean = Math.max(1, jitter(prev.pipelineLatency.mean_ms, 1.5));
+  const p50 = Math.max(1, jitter(prev.pipelineLatency.p50_ms, 1.2));
+  const p90 = Math.max(p50, jitter(prev.pipelineLatency.p90_ms, 1.5));
+  const p95 = Math.max(p90, jitter(prev.pipelineLatency.p95_ms, 1.2));
+  const p99 = Math.max(p95, jitter(prev.pipelineLatency.p99_ms, 1.0));
 
   return {
     ...prev,
-
-    // Derived from model_stats on real integration
     fps: Math.round(jitter(28.5, 3) * 10) / 10,
-
-    // snap.video_loop_count proxy
     uptime: prev.uptime + 1,
-
-    // snap.status.patient_present
-    // confidence: null — backend never sends this
-    patient: {
-      detected: Math.random() > 0.03,
-      confidence: null,
+    totalFrames: prev.totalFrames + Math.floor(Math.random() * 3 + 1),
+    pipelineLatency: {
+      mean_ms: mean,
+      p50_ms: p50,
+      p90_ms: p90,
+      p95_ms: p95,
+      p99_ms: p99,
     },
-
-    // snap.status.people_present
-    // count/confidence: null — backend never sends these
-    caretaker: {
-      detected: Math.random() > 0.08,
-      count: null,
-      confidence: null,
+    pipelinePerformance: {
+      ...prev.pipelinePerformance,
+      pipeline_fps: Math.round(jitter(28.5, 3) * 10) / 10,
+      workloads: prev.pipelinePerformance.workloads.map((w) => ({
+        ...w,
+        fps: Math.round(jitter(w.fps ?? 28.5, 2) * 10) / 10,
+        processing_mean_ms: mean,
+        processing_p50_ms: p50,
+        processing_p90_ms: p90,
+        processing_p95_ms: p95,
+        processing_p99_ms: p99,
+      })),
     },
-
-    // snap.status.doors_latched → 'closed'|'open'
-    // confidence: null — backend never sends this
-    latch: {
-      state: prev.uptime % 40 < 30 ? 'closed' : 'open',
-      confidence: null,
-    },
-
-    // snap.rppg_metrics + snap.rppg_active + snap.rppg_elapsed + waveform
-    rppg: {
-      heartRate: Math.round(jitter(142, 6)),
-      heartRateMin: Math.round(jitter(136, 2)),
-      heartRateMax: Math.round(jitter(148, 2)),
-      confidence: Math.min(1, Math.max(0, jitter(0.82, 0.1))),
-      sessionDuration: nextDuration,
-      sessionActive,
-      waveform: newWaveform,
-    },
-
-    // snap.model_stats
-    models: prev.models.map((m) => ({
-      ...m,
-      fps: Math.round(jitter(m.fps, 2) * 10) / 10,
-      latency: Math.max(1, Math.round(jitter(m.latency, 1.5) * 10) / 10),
-      framesProcessed: m.framesProcessed + Math.floor(Math.random() * 3),
-    })),
+    totalP50Ms: p50,
+    totalP90Ms: p90,
+    totalP95Ms: p95,
+    totalP99Ms: p99,
   };
 }

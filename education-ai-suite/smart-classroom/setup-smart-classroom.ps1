@@ -1832,6 +1832,12 @@ $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] 
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
 $finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
+
+$csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
+$segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+$qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
+$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+
 Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
@@ -1840,6 +1846,7 @@ Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
@@ -1855,15 +1862,23 @@ $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 
 $recreateVenvs = $false
+$upgradeVenvs = $false
 if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
     } else {
-        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        Write-Host "  [Y] Yes - Recreate venvs (delete and reinstall from scratch)" -ForegroundColor White
+        Write-Host "  [U] Upgrade - Keep venvs, upgrade packages via pip (no full reinstall)" -ForegroundColor White
+        Write-Host "  [N] No  - Use existing venvs (faster startup)" -ForegroundColor White
+        Write-Host ""
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/U/N, default: N)"
         $recreateVenvs = $response.ToUpper() -eq "Y"
+        $upgradeVenvs = $response.ToUpper() -eq "U"
         if ($recreateVenvs) {
             Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } elseif ($upgradeVenvs) {
+            Write-Host "Virtual environment packages will be upgraded (venvs kept)" -ForegroundColor Yellow
         } else {
             Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
         }
@@ -1885,27 +1900,41 @@ if (-not (Test-Path $venvBackend)) {
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
     & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} elseif ($upgradeVenvs) {
+    Write-Host "Upgrading Backend dependencies (keeping existing venv)..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
 }
 Write-Host ""
 
 Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-    Remove-Item $venvContentSearch -Recurse -Force
-}
-if (-not (Test-Path $venvContentSearch)) {
-    python -m venv $venvContentSearch
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+if (-not $contentSearchEnabled) {
+    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
 } else {
-    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+        Remove-Item $venvContentSearch -Recurse -Force
+    }
+    if (-not (Test-Path $venvContentSearch)) {
+        python -m venv $venvContentSearch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    }
 }
 Write-Host ""
 

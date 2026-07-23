@@ -2,8 +2,7 @@
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
 # bootstrap that fetches CVC-ColonDB (manual-drop), trains YOLO11n on the
-# host's Intel Arc / Xe iGPU via torch+xpu, exports to OpenVINO IR, then
-# streams annotated frames over /api/video_feed.
+# host's Intel Arc / Xe iGPU via torch+xpu, and exports to OpenVINO IR.
 #
 # The host mounts /dev/dri (and /dev/accel for NPU, optional). The container
 # needs the Intel graphics compute runtime (Level Zero GPU/NPU drivers +

@@ -251,6 +251,17 @@ if (-not $ScriptDir) {
 Write-Host "Working Directory: $ScriptDir" -ForegroundColor Gray
 Set-Location $ScriptDir
 
+
+$configPath = Join-Path $ScriptDir "config.yaml"
+$contentSearchEnabled = $true
+if (Test-Path $configPath) {
+    $configContent = Get-Content $configPath -Raw
+    $csFlag  = $configContent -match "content_search:\s*\{\s*enabled:\s*true"
+    $segFlag = $configContent -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+    $qaFlag  = $configContent -match "qa:\s*\{\s*enabled:\s*true"
+    $contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+}
+
 # ============================================================================
 # CHECK FOR RUNNING SERVICES
 # ============================================================================
@@ -329,7 +340,9 @@ function Remove-VirtualEnvironments {
         Write-Host "    Backend venv not found (will be created fresh)" -ForegroundColor Gray
     }
     
-    if (Test-Path $contentSearchVenv) {
+    if (-not $contentSearchEnabled) {
+        Write-Host "    Content Search disabled - skipping Content Search venv cleanup." -ForegroundColor Gray
+    } elseif (Test-Path $contentSearchVenv) {
         Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
         for ($i = 1; $i -le 3; $i++) {
             Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
@@ -389,6 +402,8 @@ if ($backendRunning) {
 }
 if ($contentSearchRunning) { 
     Write-Host "    [RUNNING] Content Search (port 9011)" -ForegroundColor Green 
+} elseif (-not $contentSearchEnabled) {
+    Write-Host "    [DISABLED] Content Search (disabled in config)" -ForegroundColor DarkGray
 } else { 
     Write-Host "    [STOPPED] Content Search (port 9011)" -ForegroundColor Red 
 }
@@ -536,7 +551,8 @@ Write-Host ""
 Write-Host "  Action Summary:" -ForegroundColor Cyan
 if ($script:skipBackend) { Write-Host "    Backend:        SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Backend:        START" -ForegroundColor Green }
-if ($script:skipContentSearch) { Write-Host "    Content Search: SKIP (already running)" -ForegroundColor Gray }
+if (-not $contentSearchEnabled) { Write-Host "    Content Search: SKIP (disabled in config)" -ForegroundColor Gray }
+elseif ($script:skipContentSearch) { Write-Host "    Content Search: SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Content Search: START" -ForegroundColor Green }
 if ($script:skipFrontend) { Write-Host "    Frontend:       SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Frontend:       START" -ForegroundColor Green }
@@ -833,16 +849,22 @@ Write-Host ""
 Write-Host "[3/4] CHECKING CONFIGURATION" -ForegroundColor Green
 Write-Host "----------------------------" -ForegroundColor Green
 
-$configPath = Join-Path $ScriptDir "config.yaml"
+# $configPath and $contentSearchEnabled were computed earlier (near script start).
 if (Test-Path $configPath) {
-    $configContent = Get-Content $configPath -Raw
     if ($configContent -match "ocr:\s*\n\s*enabled:\s*true") {
         Write-Host "  OCR: Enabled" -ForegroundColor Yellow
     } else {
         Write-Host "  OCR: Disabled" -ForegroundColor Gray
     }
+
+    if ($contentSearchEnabled) {
+        Write-Host "  Content Search: Enabled (content_search/topic_segmentation/qa)" -ForegroundColor Yellow
+    } else {
+        Write-Host "  Content Search: Disabled" -ForegroundColor Gray
+    }
 } else {
     Write-Host "  config.yaml not found, assuming OCR disabled" -ForegroundColor Gray
+    Write-Host "  config.yaml not found, assuming Content Search enabled" -ForegroundColor Gray
 }
 
 # Check Node.js
@@ -1120,79 +1142,20 @@ python main.py
         exit 1
     }
     
-    # ========================================================================
-    # TERMINAL 2: CONTENT SEARCH
-    # ========================================================================
-    if ($script:skipContentSearch) {
+  
+    if ($contentSearchEnabled) {
         Write-Host ""
-        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
+        Write-Host "Content Search is started by the backend (main.py); waiting for it to become healthy..." -ForegroundColor Yellow
+
+        # Wait for Content Search to be healthy before starting Frontend
+        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+        if (-not $csHealthy) {
+            Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
+            exit 1
+        }
     } else {
         Write-Host ""
-        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-        
-        $contentSearchScript = @"
-`$ErrorActionPreference = 'Continue'
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-# Set proxy
-$proxyCommands
-
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  CONTENT SEARCH SERVICE' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
-Set-Location '$ScriptDir\content_search'
-Write-Host "Working directory: `$PWD" -ForegroundColor Gray
-Write-Host ''
-
-# Check if venv exists and is valid
-`$venvPath = '.\venv_content_search'
-`$venvValid = (Test-Path "`$venvPath\Scripts\Activate.ps1") -and (Test-Path "`$venvPath\Scripts\python.exe")
-
-if (-not `$venvValid) {
-    # Remove broken/partial venv if exists
-    if (Test-Path `$venvPath) {
-        Write-Host 'Removing incomplete venv_content_search...' -ForegroundColor Yellow
-        Remove-Item -Path `$venvPath -Recurse -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
-    }
-    
-    Write-Host 'Creating venv_content_search virtual environment...' -ForegroundColor Yellow
-    python -m venv `$venvPath
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host 'Failed to create virtual environment!' -ForegroundColor Red
-        Write-Host 'Try running: Remove-Item -Path venv_content_search -Recurse -Force' -ForegroundColor Yellow
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
-
-Write-Host 'Activating virtual environment...' -ForegroundColor Gray
-& "`$venvPath\Scripts\Activate.ps1"
-
-Write-Host ''
-Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green
-Write-Host ''
-python .\start_services.py
-"@
-    $contentSearchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($contentSearchScript))
-
-    if ($wtExists) {
-        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title ContentSearch powershell -NoExit -EncodedCommand $contentSearchEncoded"
-    } else {
-        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $contentSearchEncoded" | Out-Null
-    }
-
-    Write-Host "  Content Search terminal launched" -ForegroundColor Green
-    Write-Host ""
-    }  # End of skipContentSearch check
-    
-    # Wait for Content Search to be healthy before starting Frontend
-    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
-    if (-not $csHealthy) {
-        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
-        exit 1
+        Write-Host "Content Search is disabled in config (content_search/topic_segmentation/qa all off); skipping." -ForegroundColor Gray
     }
     
     # ========================================================================

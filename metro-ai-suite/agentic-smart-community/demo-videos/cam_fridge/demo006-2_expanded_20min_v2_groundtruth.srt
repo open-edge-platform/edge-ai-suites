@@ -1,0 +1,15 @@
+1
+00:00:35,000 --> 00:00:37,500
+[TAKE] Hand reaching in and taking beef steak from the refrigerator shelf
+
+2
+00:05:25,375 --> 00:05:29,375
+[TAKE] Hand reaching in and taking eggs from the refrigerator shelf
+
+3
+00:10:17,250 --> 00:10:20,750
+[TAKE] Hand reaching in and taking a milk bottle from the refrigerator shelf
+
+4
+00:15:08,625 --> 00:15:12,125
+[TAKE] Hand reaching in and taking a cake slice from the lower shelf

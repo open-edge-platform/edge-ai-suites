@@ -33,7 +33,7 @@ browser client and helps in cases where firewall is enabled. DL Streamer Pipelin
 also sends the images to S3 compliant storage. The Open Telemetry Data exported by
 DL Streamer Pipeline Server to Open Telemetry Collector is scraped by Prometheus and can
 be seen on Prometheus UI. Any desired AI model from supported
-OpenVINO public models and Geti trained models can be downloaded with the help of Model Download
+OpenVINO™ public models and Geti™ trained models can be downloaded with the help of Model Download
 Microservice and can be made available to DL Streamer Pipeline Server for inference in the
 sample application.
 
@@ -76,10 +76,7 @@ This sample application offers the following features:
 :hidden:
 
 how-it-works
-how-to-guides
-api-reference
-troubleshooting
-Release Notes <release-notes>
+
 
 :::
 hide_directive-->

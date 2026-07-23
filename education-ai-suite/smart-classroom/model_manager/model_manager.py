@@ -24,6 +24,8 @@ class ModelManager:
             self._ocr_lock = Lock()
             self._asr_handler = None
             self._asr_lock = Lock()
+            self._text_gen_handler = None
+            self._text_gen_lock = Lock()
             self._initialized = True
 
     @classmethod
@@ -31,7 +33,8 @@ class ModelManager:
         return cls()
 
     def text_gen(self):
-        raise NotImplementedError
+        """Return the TextGenHandler backed by the warm VLM."""
+        return self._get_text_gen_handler()
 
     def ocr(self):
         """Return the OcrHandler backed by the configured processor."""
@@ -50,6 +53,8 @@ class ModelManager:
                 self._get_ocr_handler().load()
             elif capability == "asr":
                 self._get_asr_handler().load()
+            elif capability == "text_gen":
+                self._get_text_gen_handler().load()
 
     def health(self) -> dict:
         h = self._ocr_handler
@@ -62,7 +67,7 @@ class ModelManager:
         }
         if h and h.loaded:
             ocr_health["memory"] = h.memory_stats()
-        
+
         a = self._asr_handler
         asr_health = {
             "state": a.state.value if a else "unloaded",
@@ -73,19 +78,35 @@ class ModelManager:
         }
         if a and a.loaded:
             asr_health["memory"] = a.memory_stats()
-        
-        return {"ocr": ocr_health, "asr": asr_health}
+
+        t = self._text_gen_handler
+        text_gen_health = {
+            "state": t.state.value if t else "unloaded",
+            "loaded": t.loaded if t else False,
+            "provider": t.provider if t else None,
+            "device": t.device if t else None,
+            "max_concurrency": t.max_concurrency if t else 1,
+        }
+        if t and t.loaded:
+            text_gen_health["memory"] = t.memory_stats()
+
+        return {"ocr": ocr_health, "asr": asr_health, "text_gen": text_gen_health}
 
     def shutdown(self) -> None:
         with self._ocr_lock:
             if self._ocr_handler is not None:
                 self._ocr_handler.shutdown()
             self._ocr_handler = None
-        
+
         with self._asr_lock:
             if self._asr_handler is not None:
                 self._asr_handler.shutdown()
             self._asr_handler = None
+
+        with self._text_gen_lock:
+            if self._text_gen_handler is not None:
+                self._text_gen_handler.shutdown()
+            self._text_gen_handler = None
 
     def _get_ocr_handler(self):
         if self._ocr_handler is not None:
@@ -104,3 +125,12 @@ class ModelManager:
                 from components.asr.asr_handle import AsrHandler
                 self._asr_handler = AsrHandler()
         return self._asr_handler
+
+    def _get_text_gen_handler(self):
+        if self._text_gen_handler is not None:
+            return self._text_gen_handler
+        with self._text_gen_lock:
+            if self._text_gen_handler is None:
+                from components.vlm.text_gen_handle import TextGenHandler
+                self._text_gen_handler = TextGenHandler()
+        return self._text_gen_handler

@@ -113,6 +113,8 @@ board_ocr:
 ```
 
 > **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
+>
+> **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
