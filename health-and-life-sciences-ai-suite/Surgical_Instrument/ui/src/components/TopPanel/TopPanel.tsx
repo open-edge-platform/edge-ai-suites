@@ -216,7 +216,7 @@ const TopPanel = () => {
 
       <div className="top-panel-right">
         {showInfo && (
-          <span className="settings-button-label">Live preview opens in a separate window on the host display. If it does not appear</span>
+          <span className="settings-button-label">Live preview opens in a separate window on the host display.</span>
         )}
       </div>
     </div>
