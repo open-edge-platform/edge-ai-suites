@@ -116,11 +116,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
     }
   }, [dispatch]);
 
-  // Check if files exist on the server whenever the Content Search panel
-  // becomes visible. The panel stays mounted (visibility is toggled via CSS),
-  // so keying this to `active` ensures it runs on navigation rather than only
-  // once at app startup — otherwise a check that raced ahead of the
-  // content-search backend would leave "View Files" hidden with no retry.
+
   useEffect(() => {
     if (!active) return;
     const checkServerFiles = async () => {
