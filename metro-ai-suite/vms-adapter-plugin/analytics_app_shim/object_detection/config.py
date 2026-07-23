@@ -51,37 +51,36 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     metadata_timestamp_offset_ms: int = 0
     # DLS pipeline name to be run. This is populated from config/config.yaml
     pipeline_name: str = ""
-    # Fields to display in the Nx Witness device-agent settings panel.
-    # Each entry is a raw Nx settings item dict (type, name, caption, defaultValue, range, ...).
-    # If non-empty these replace any items already defined in nx_integration.json.
-    display_fields: list[dict] = Field(default_factory=list)
+    def object_types(self) -> list[str]:
+        """Return the object type ids this app emits (VMS-neutral).
 
-    def nx_settings_fields(self) -> list[dict]:
-        """Return the Nx device-agent settings items for this app.
-
-        Builds the per-app fields shown in the Nx Witness camera settings panel.
-        Captions are derived from ``display_name`` so the bundled manifest stays
-        generic. If ``display_fields`` is set in config.yaml it fully overrides
-        these defaults, allowing app-specific fields to be added without code
-        changes. App-specific defaults can be customised by subclassing.
+        Derived from ``label_type_map`` values so a VMS shim can register them
+        generically, without knowing this app exists. Apps that do not push
+        object detections simply omit this method.
         """
-        if self.display_fields:
-            return self.display_fields
+        return sorted(set(self.label_type_map.values()))
+
+    def control_params(self) -> list[dict]:
+        """Declare this app's per-camera control knobs (VMS-neutral).
+
+        A ``bool`` named ``pipelineEnabled`` is the start/stop toggle; ``device``
+        selects the inference device. A VMS shim renders these into its own UI.
+        """
         return [
             {
-                "type": "CheckBox",
                 "name": "pipelineEnabled",
-                "caption": f"Enable {self.display_name} pipeline",
+                "type": "bool",
+                "default": False,
+                "label": f"Enable {self.display_name} pipeline",
                 "description": f"Start or stop the {self.display_name} pipeline for this camera",
-                "defaultValue": False,
             },
             {
-                "type": "ComboBox",
                 "name": "device",
-                "caption": "Device",
+                "type": "enum",
+                "default": "CPU",
+                "options": ["CPU", "GPU", "NPU"],
+                "label": "Device",
                 "description": "Inference device for the pipeline",
-                "defaultValue": "CPU",
-                "range": ["CPU", "GPU", "NPU"],
             },
         ]
 

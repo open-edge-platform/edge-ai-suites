@@ -1,7 +1,22 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""UI service — FastAPI web application for the agentic predictive maintenance blueprint."""
+"""UI service — FastAPI web application for the agentic predictive maintenance blueprint.
+
+Talks to the detection layer and the agent (reasoning) layer as two
+independent backends, correlated only by a shared ``run_id``:
+
+  * ``detection-service`` — owns starting/polling the detection run
+    (device/video selection) and reports a "detecting"/"completed"/"error"
+    phase for that half of the run.
+  * ``agent-service`` — reacts to the detection layer's "batch-complete"
+    MQTT event on its own and reports a "reasoning"/"completed"/"error"
+    phase once it picks up the corresponding run_id.
+
+This module merges the two into the single ``status``/``phase``/``result``
+shape the templates and ``live-status.js`` already expect, so no detection-
+vs-reasoning plumbing needs to leak into the UI layer itself.
+"""
 
 import logging
 import os
@@ -16,12 +31,11 @@ from fastapi.templating import Jinja2Templates
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-_AGENT_URL   = os.environ.get("AGENT_SERVICE_URL",   "http://apm-agent:5002")
-_STORAGE_URL = os.environ.get("STORAGE_SERVICE_URL", "http://apm-storage:5001")
-_USE_CASE_ID = os.environ.get("USE_CASE_ID",         "unknown")
-_TIMEOUT     = 15.0
-_API_KEY     = os.environ.get("APM_API_KEY", "")
-_SERVICE_HEADERS = {"X-API-Key": _API_KEY} if _API_KEY else {}
+_AGENT_URL     = os.environ.get("AGENT_SERVICE_URL",     "http://apm-agent:5002")
+_DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5004")
+_STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:5001")
+_USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
+_TIMEOUT       = 15.0
 
 app = FastAPI(title="APM UI", docs_url=None, redoc_url=None)
 
@@ -30,31 +44,105 @@ app.mount("/static", StaticFiles(directory=os.path.join(_src_dir, "static")), na
 templates = Jinja2Templates(directory=os.path.join(_src_dir, "templates"))
 
 
-# ── Pages ─────────────────────────────────────────────────────────────────────
+# ── Run merging helpers ────────────────────────────────────────────────────────
+
+def _merge_runs(det_runs: list[dict], agent_runs: list[dict]) -> list[dict]:
+    """Merge the detection layer's run list with the agent layer's run list.
+
+    The detection-service is the canonical source of run existence/order
+    (every run starts there); the agent-service only knows about runs whose
+    detection phase already completed and whose batch-complete event it has
+    processed. Returns a list shaped like ``{"run_id", "status", "phase"}``,
+    matching what the templates and live-status.js already expect.
+    """
+    agent_by_id = {r["run_id"]: r for r in agent_runs}
+    merged = []
+    for det in det_runs:
+        run_id = det["run_id"]
+        det_phase = det.get("phase")
+        if det_phase == "detecting":
+            merged.append({"run_id": run_id, "status": "running", "phase": "detecting"})
+        elif det_phase == "error":
+            merged.append({"run_id": run_id, "status": "error", "phase": "error"})
+        else:  # detection completed -> reasoning phase owned by agent-service
+            agent = agent_by_id.get(run_id)
+            if agent is None:
+                merged.append({"run_id": run_id, "status": "running", "phase": "reasoning"})
+            else:
+                merged.append({"run_id": run_id, "status": agent["status"], "phase": agent.get("phase")})
+    return merged
+
 
 async def _fetch_summary_and_runs(client: httpx.AsyncClient):
     try:
-        summary_r = await client.get(f"{_STORAGE_URL}/detections/summary", headers=_SERVICE_HEADERS)
+        summary_r = await client.get(f"{_STORAGE_URL}/detections/summary")
         summary = summary_r.json() if summary_r.status_code == 200 else {}
     except Exception:
         summary = {}
 
     try:
-        runs_r = await client.get(f"{_AGENT_URL}/agents/runs", headers=_SERVICE_HEADERS)
-        runs = runs_r.json() if runs_r.status_code == 200 else []
+        det_r = await client.get(f"{_DETECTION_URL}/detection/runs")
+        det_runs = det_r.json() if det_r.status_code == 200 else []
     except Exception:
-        runs = []
+        det_runs = []
 
+    try:
+        agent_r = await client.get(f"{_AGENT_URL}/agents/runs")
+        agent_runs = agent_r.json() if agent_r.status_code == 200 else []
+    except Exception:
+        agent_runs = []
+
+    runs = _merge_runs(det_runs, agent_runs)
     return summary, runs
 
 
 async def _fetch_videos(client: httpx.AsyncClient):
     try:
-        r = await client.get(f"{_AGENT_URL}/agents/videos", headers=_SERVICE_HEADERS)
+        r = await client.get(f"{_DETECTION_URL}/detection/videos")
         return r.json().get("videos", []) if r.status_code == 200 else []
     except Exception:
         return []
 
+
+async def _fetch_run_view(client: httpx.AsyncClient, run_id: str) -> dict:
+    """Return the merged ``{"phase", "result"}`` view of one run for the results page."""
+    det_r = await client.get(f"{_DETECTION_URL}/detection/status/{run_id}")
+    if det_r.status_code == 404:
+        raise HTTPException(status_code=404, detail="Run not found")
+    det = det_r.json() if det_r.status_code == 200 else {}
+    det_phase = det.get("phase")
+
+    if det_phase == "detecting":
+        return {"phase": "detecting", "result": {"status": "running"}}
+
+    if det_phase == "error":
+        error = (det.get("result") or {}).get("error", "Detection run failed")
+        return {"phase": "error", "result": {"status": "error", "error": error}}
+
+    # Detection completed — reasoning is owned by the agent-service from here.
+    try:
+        status_r = await client.get(f"{_AGENT_URL}/agents/status/{run_id}")
+    except Exception:
+        status_r = None
+
+    if status_r is None or status_r.status_code == 404:
+        # batch-complete event not yet processed by the agent-service
+        return {"phase": "reasoning", "result": {"status": "running"}}
+
+    agent_status = status_r.json()
+    if agent_status.get("status") == "running":
+        return {"phase": agent_status.get("phase", "reasoning"), "result": {"status": "running"}}
+
+    try:
+        results_r = await client.get(f"{_AGENT_URL}/agents/results/{run_id}")
+        result = results_r.json() if results_r.status_code == 200 else {"error": "Result unavailable"}
+    except Exception as exc:
+        result = {"error": str(exc)}
+
+    return {"phase": agent_status.get("phase"), "result": result}
+
+
+# ── Pages ─────────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -126,13 +214,13 @@ async def detections_page(
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         try:
-            r = await client.get(f"{_STORAGE_URL}/detections", params=params, headers=_SERVICE_HEADERS)
+            r = await client.get(f"{_STORAGE_URL}/detections", params=params)
             detections = r.json() if r.status_code == 200 else []
         except Exception:
             detections = []
 
         try:
-            summary_r = await client.get(f"{_STORAGE_URL}/detections/summary", headers=_SERVICE_HEADERS)
+            summary_r = await client.get(f"{_STORAGE_URL}/detections/summary")
             summary = summary_r.json() if summary_r.status_code == 200 else {}
             total_count = sum(c.get("count", 0) for c in summary.get("by_class", []))
         except Exception:
@@ -154,25 +242,14 @@ async def detections_page(
 @app.get("/results/{run_id}", response_class=HTMLResponse)
 async def results_page(request: Request, run_id: str):
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        try:
-            status_r = await client.get(f"{_AGENT_URL}/agents/status/{run_id}", headers=_SERVICE_HEADERS)
-            phase = status_r.json().get("phase") if status_r.status_code == 200 else None
-        except Exception:
-            phase = None
-
-        try:
-            r = await client.get(f"{_AGENT_URL}/agents/results/{run_id}", headers=_SERVICE_HEADERS)
-            if r.status_code == 404:
-                raise HTTPException(status_code=404, detail="Run not found")
-            result = r.json() if r.status_code == 200 else {"status": "running"}
-        except HTTPException:
-            raise
-        except Exception as exc:
-            result = {"error": str(exc)}
+        view = await _fetch_run_view(client, run_id)
 
     return templates.TemplateResponse(
         request=request, name="results.html",
-        context={"use_case_id": _USE_CASE_ID, "run_id": run_id, "result": result, "phase": phase},
+        context={
+            "use_case_id": _USE_CASE_ID, "run_id": run_id,
+            "result": view["result"], "phase": view["phase"],
+        },
     )
 
 
@@ -183,17 +260,19 @@ async def trigger_run(
     device: str = Form("CPU"),
     video_filename: str = Form(""),
 ):
-    """Trigger a new detect-then-reason pipeline run via the agent-service.
+    """Trigger a new detect-then-reason run by starting the detection layer.
 
-    If a run is already in progress, redirect to its results page instead of
-    erroring — only one detect-then-reason cycle can run at a time.
+    The agent-service reasons on its own once it observes the resulting
+    "batch-complete" MQTT event — this endpoint never calls the agent-service.
+    If a detection run is already in progress, redirect to its results page
+    instead of erroring — only one run can be in flight at a time.
     """
     payload: dict = {"device": device}
     if video_filename:
         payload["video_filename"] = video_filename
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        r = await client.post(f"{_AGENT_URL}/agents/run", json=payload, headers=_SERVICE_HEADERS)
+        r = await client.post(f"{_DETECTION_URL}/detection/run", json=payload)
         if r.status_code == 409:
             active_run_id = (r.json().get("detail") or {}).get("run_id")
             if active_run_id:
@@ -208,7 +287,7 @@ async def trigger_run(
 async def clear_detections():
     """Clear all detections from storage."""
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        await client.delete(f"{_STORAGE_URL}/detections", headers=_SERVICE_HEADERS)
+        await client.delete(f"{_STORAGE_URL}/detections")
     return RedirectResponse(url="/", status_code=303)
 
 

@@ -23,6 +23,7 @@ vms_instances:
 
 analytics_apps:
   - type: live_captioning
+    display_name: "Live Video Captioning"
     base_url: "http://${LVC_HOST:-host.docker.internal}:${LVC_PORT:-4173}"
     mediamtx_url: "http://${MEDIAMTX_HOST:-host.docker.internal}:${MEDIAMTX_PORT:-8889}"
 

@@ -32,14 +32,17 @@ agentic-predictive-maintenance/
 │       └── .env_pipeline-defect-detection  # Environment configuration for this use case
 ├── docker/                            # Docker Compose files
 │   ├── compose.base.yaml              # Core services (nginx, storage, DL Streamer, MQTT)
-│   ├── compose.agents.yaml            # Agent service
+│   ├── compose.detection.yaml         # Detection service (DL Streamer orchestration)
+│   ├── compose.agents.yaml            # Agent service (pulled EAL image — reasoning only)
 │   ├── compose.llm.yaml               # VLM/LLM inference service
 │   ├── compose.ui.yaml                # Web dashboard
 │   └── compose.telemetry.yaml         # Prometheus metrics collection
-├── services/                          # Source code for the three new microservices
+├── services/                          # Source code for this repo's microservices
 │   ├── storage-service/
-│   ├── agent-service/
+│   ├── detection-service/
 │   └── ui-service/
+│                                       # (the reasoning agent is a separate, external
+│                                       #  EAL image — see docker/compose.agents.yaml)
 ├── scripts/                           # Helper scripts
 ├── config/                            # Nginx and MQTT broker configuration
 ├── docs/                              # Documentation
