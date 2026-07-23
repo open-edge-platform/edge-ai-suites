@@ -69,7 +69,8 @@ Note: On Windows, the script automatically requests Administrator privileges.
 Services Launched (in order):
     1. Backend (port 8000)     - Main Python pipeline service (with paddleocr if OCR enabled)
     2. Content Search (9011)   - RAG, video summarization, semantic search
-    3. Frontend (port 5173)    - React UI (opens as an Electron desktop window when -Electron is set;
+    3. Grading (9902 + 9012)   - Layout detection + VLM grading service (if grading.enabled)
+    4. Frontend (port 5173)    - React UI (opens as an Electron desktop window when -Electron is set;
                                  the dev server still runs on port 5173)
 
 "@ -ForegroundColor Cyan
@@ -88,8 +89,8 @@ function Stop-AllServices {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     
-    $ports = @(8000, 9011, 5173)
-    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 5173 = "Frontend" }
+    $ports = @(8000, 9011, 9902, 9012, 5173)
+    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 9902 = "Layout Detection"; 9012 = "Grading"; 5173 = "Frontend" }
     
     foreach ($port in $ports) {
         Write-Host "  Stopping $($portNames[$port]) (port $port)..." -ForegroundColor Yellow
@@ -371,31 +372,54 @@ function Test-ServiceListening {
 
 $backendRunning = Test-ServiceListening -Port 8000
 $contentSearchRunning = Test-ServiceListening -Port 9011
+$layoutDetectionRunning = Test-ServiceListening -Port 9902
+$gradingRunning = Test-ServiceListening -Port 9012
 $frontendRunning = Test-ServiceListening -Port 5173
 
-$anyRunning = $backendRunning -or $contentSearchRunning -or $frontendRunning
+$anyRunning = $backendRunning -or $contentSearchRunning -or $layoutDetectionRunning -or $gradingRunning -or $frontendRunning
 
-# Initialize skip flags based on running state
 $script:skipBackend = $backendRunning
 $script:skipContentSearch = $contentSearchRunning
+$script:skipGrading = $layoutDetectionRunning -and $gradingRunning
 $script:skipFrontend = $frontendRunning
+
+$gradingEnabled = $false
+$configPath = Join-Path $ScriptDir "config.yaml"
+if (Test-Path $configPath) {
+    $configContent = Get-Content $configPath -Raw
+    if ($configContent -match "grading:\s*\n\s*enabled:\s*(true|false)") {
+        $gradingEnabled = $Matches[1] -eq "true"
+    }
+}
 
 Write-Host ""
 Write-Host "  Service Status:" -ForegroundColor Yellow
-if ($backendRunning) { 
-    Write-Host "    [RUNNING] Backend (port 8000)" -ForegroundColor Green 
-} else { 
-    Write-Host "    [STOPPED] Backend (port 8000)" -ForegroundColor Red 
+if ($backendRunning) {
+    Write-Host "    [RUNNING] Backend (port 8000)" -ForegroundColor Green
+} else {
+    Write-Host "    [STOPPED] Backend (port 8000)" -ForegroundColor Red
 }
-if ($contentSearchRunning) { 
-    Write-Host "    [RUNNING] Content Search (port 9011)" -ForegroundColor Green 
-} else { 
-    Write-Host "    [STOPPED] Content Search (port 9011)" -ForegroundColor Red 
+if ($contentSearchRunning) {
+    Write-Host "    [RUNNING] Content Search (port 9011)" -ForegroundColor Green
+} else {
+    Write-Host "    [STOPPED] Content Search (port 9011)" -ForegroundColor Red
 }
-if ($frontendRunning) { 
-    Write-Host "    [RUNNING] Frontend (port 5173)" -ForegroundColor Green 
-} else { 
-    Write-Host "    [STOPPED] Frontend (port 5173)" -ForegroundColor Red 
+if ($gradingEnabled) {
+    if ($layoutDetectionRunning) {
+        Write-Host "    [RUNNING] Layout Detection (port 9902)" -ForegroundColor Green
+    } else {
+        Write-Host "    [STOPPED] Layout Detection (port 9902)" -ForegroundColor Red
+    }
+    if ($gradingRunning) {
+        Write-Host "    [RUNNING] Grading (port 9012)" -ForegroundColor Green
+    } else {
+        Write-Host "    [STOPPED] Grading (port 9012)" -ForegroundColor Red
+    }
+}
+if ($frontendRunning) {
+    Write-Host "    [RUNNING] Frontend (port 5173)" -ForegroundColor Green
+} else {
+    Write-Host "    [STOPPED] Frontend (port 5173)" -ForegroundColor Red
 }
 Write-Host ""
 
@@ -406,6 +430,8 @@ if ($Restart) {
     if ($contentSearchRunning) {
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
+    if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+    if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -425,9 +451,10 @@ if ($Restart) {
     } else {
         Write-Host "  Keeping existing virtual environments. Restarting services." -ForegroundColor Green
     }
-    
+
     $script:skipBackend = $false
     $script:skipContentSearch = $false
+    $script:skipGrading = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
     if ($Silent) {
@@ -443,7 +470,7 @@ if ($Restart) {
 
         $choice = Read-Host "  Enter choice (R/S/A/E)"
     }
-    
+
     switch ($choice.ToUpper()) {
         "R" {
             Write-Host ""
@@ -452,6 +479,8 @@ if ($Restart) {
             if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
+            if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+            if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -473,6 +502,7 @@ if ($Restart) {
             
             $script:skipBackend = $false
             $script:skipContentSearch = $false
+            $script:skipGrading = $false
             $script:skipFrontend = $false
             Write-Host "  Existing services stopped." -ForegroundColor Green
         }
@@ -481,15 +511,18 @@ if ($Restart) {
             Write-Host "  Smart Start: Keeping running services, starting stopped ones." -ForegroundColor Yellow
             $script:skipBackend = $backendRunning
             $script:skipContentSearch = $contentSearchRunning
+            $script:skipGrading = $layoutDetectionRunning -and $gradingRunning
             $script:skipFrontend = $frontendRunning
         }
         "A" {
             Write-Host ""
             Write-Host "  Stopping all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
+            if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+            if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -1196,7 +1229,101 @@ python .\start_services.py
     }
     
     # ========================================================================
-    # TERMINAL 3: FRONTEND
+    # TERMINAL 3: GRADING
+    # ========================================================================
+    if ($gradingEnabled) {
+        if ($script:skipGrading) {
+            Write-Host ""
+            Write-Host "Skipping Grading (already running on ports 9902 and 9012)" -ForegroundColor Yellow
+        } else {
+            Write-Host ""
+            Write-Host "Launching Terminal 3: Grading..." -ForegroundColor Yellow
+
+            $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+
+            $layoutScript = @"
+`$ErrorActionPreference = 'Continue'
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+$proxyCommands
+
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host '  LAYOUT DETECTION SERVICE' -ForegroundColor Cyan
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host ''
+
+Set-Location '$ScriptDir\components\grading\providers'
+Write-Host "Working directory: `$PWD" -ForegroundColor Gray
+Write-Host ''
+
+Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
+& '$venvBackendPath\Scripts\Activate.ps1'
+
+Write-Host ''
+Write-Host 'Starting Layout Detection Service (port 9902)...' -ForegroundColor Green
+Write-Host ''
+python .\layout_detection_service\layout_detection_server.py
+"@
+            $layoutEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($layoutScript))
+
+            $gradingScript = @"
+`$ErrorActionPreference = 'Continue'
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+$proxyCommands
+
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host '  GRADING SERVICE' -ForegroundColor Cyan
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host ''
+
+Set-Location '$ScriptDir\components\grading'
+Write-Host "Working directory: `$PWD" -ForegroundColor Gray
+Write-Host ''
+
+Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
+& '$venvBackendPath\Scripts\Activate.ps1'
+
+Write-Host ''
+Write-Host 'Starting Grading Service (port 9012)...' -ForegroundColor Green
+Write-Host ''
+python grading_service.py
+"@
+            $gradingEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($gradingScript))
+
+            if ($wtExists) {
+                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title LayoutDetection powershell -NoExit -EncodedCommand $layoutEncoded"
+            } else {
+                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $layoutEncoded" | Out-Null
+            }
+            Write-Host "  Layout Detection terminal launched" -ForegroundColor Green
+        }
+
+        $layoutHealthy = Wait-ForService -ServiceName "Layout Detection" -Url "http://localhost:9902/health" -Port 9902 -DependentPorts @(8000) -CommandLinePattern "layout_detection_server.py"
+        if (-not $layoutHealthy) {
+            Write-Host "Exiting script due to Layout Detection startup failure." -ForegroundColor Red
+            exit 1
+        }
+
+        if (-not $script:skipGrading) {
+            if ($wtExists) {
+                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Grading powershell -NoExit -EncodedCommand $gradingEncoded"
+            } else {
+                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $gradingEncoded" | Out-Null
+            }
+            Write-Host "  Grading terminal launched" -ForegroundColor Green
+            Write-Host ""
+        }
+
+        $gradingHealthy = Wait-ForService -ServiceName "Grading" -Url "http://localhost:9012/api/v1/health" -Port 9012 -DependentPorts @(8000) -CommandLinePattern "grading_service.py"
+        if (-not $gradingHealthy) {
+            Write-Host "Exiting script due to Grading startup failure." -ForegroundColor Red
+            exit 1
+        }
+    }
+
+    # ========================================================================
+    # TERMINAL 4: FRONTEND
     # ========================================================================
     if ($script:skipFrontend) {
         Write-Host ""
@@ -1241,7 +1368,8 @@ $frontendStartCommand
     }  # End of skipFrontend check
     
     # Wait for Frontend to be healthy
-    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
+    $frontendDeps = if ($gradingEnabled) { @(8000, 9011, 9012) } else { @(8000, 9011) }
+    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts $frontendDeps -CommandLinePattern "npm"
     if (-not $frontendHealthy) {
         Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
         exit 1

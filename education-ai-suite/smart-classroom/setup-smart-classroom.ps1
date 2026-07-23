@@ -1853,10 +1853,13 @@ Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
+$venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
+
+$gradingEnabled = if ($configContent -match "grading:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
@@ -1926,6 +1929,35 @@ if (-not (Test-Path $venvContentSearch)) {
     Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
 }
 Write-Host ""
+
+if ($gradingEnabled -eq "true") {
+    Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow
+    if ($recreateVenvs -and (Test-Path $venvConvert)) {
+        Remove-Item $venvConvert -Recurse -Force
+    }
+    if (-not (Test-Path $venvConvert)) {
+        python -m venv $venvConvert
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create Grading conversion venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing Grading model conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading Grading conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] Grading conversion venv already exists" -ForegroundColor Green
+    }
+    Write-Host ""
+} else {
+    Write-Host "[SKIP] Grading is disabled (grading.enabled: false)" -ForegroundColor Gray
+    Write-Host ""
+}
 
 # ============================================================================
 # SETUP COMPLETE
