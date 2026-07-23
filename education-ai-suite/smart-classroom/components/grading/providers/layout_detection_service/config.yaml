@@ -1,40 +1,16 @@
-# PP-DocLayout download & convert
-layout_model_setup:
-  source: "modelscope"                              # 下载来源: modelscope 或 hf
-  repo_id: "PaddlePaddle/PP-DocLayoutV3"            # 模型下载地址(仓库 ID)
-  download_dir: "C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/PP-DocLayoutV3"          # 下载模型的存储目录
-  output_dir: "C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/PP-DocLayoutV3-ov"         # 转换后 OpenVINO IR 输出目录
-  precision: "fp16"                                 # 转换精度: fp32 / fp16 / int8
-  calibration_dir: "./input"                        # int8 量化的校准图目录
-  calibration_samples: 100                          # int8 量化使用的最大校准样本数
-  npu_compatible: true                              # 降级 ScatterNDUpdate opset15->4 兼容老 NPU; 新 NPU/仅 GPU 可设 false
+layout_detection:
+  # source：smart-classroom/config.yaml → models.model_hub (huggingface / modelscope)
+  repo_id: "PaddlePaddle/PP-DocLayoutV2"
+  download_dir: "models/detection_model/PP-DocLayoutV2"
+  model_dir: "models/detection_model/PP-DocLayoutV2-ov"
 
-# PP-DocLayout detection service
-detection_service:
+  precision: "fp16"
+  npu_compatible: true
+
+  # detection service
   host: "0.0.0.0"
   port: 9902
-  base_url: "http://127.0.0.1:9902"
-  timeout: 300
-  max_retries: 2
-  model_path: "C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/PP-DocLayoutV2-ov"
   device: "NPU"
-  precision: "fp16"
-
-# PaddleOCR-VL service
-ocr_vl_service:
-  host: "0.0.0.0"
-  port: 9901
-  base_url: "http://127.0.0.1:9901"
+  threshold: 0.5
   timeout: 300
   max_retries: 2
-  path: "C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models/ov_paddleocr-vl-1_6_int4"
-  device: "GPU.1"
-  llm_int4_compress: true
-  llm_int8_compress: false
-  vision_int8_quant: false
-  llm_int8_quant: true
-  # Penalize repeated tokens to break greedy-decoding repetition loops on
-  # low-quality regions (repeats one token until max_new_tokens -> 44-50s).
-  # 1.0 = off; ~1.2-1.3 = mild. Raise cautiously (too high hurts legit repeats
-  # like decimals / consecutive digits).
-  repetition_penalty: 1.3

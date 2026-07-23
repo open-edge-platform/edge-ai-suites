@@ -473,6 +473,17 @@ def _config_force_regrade() -> bool:
         return False
 
 
+def _config_debug_mode() -> bool:
+    """Read grading.debug_mode from the component config.yaml (default False)."""
+    try:
+        import yaml
+
+        raw = yaml.safe_load((_COMPONENT_ROOT / "config.yaml").read_text(encoding="utf-8")) or {}
+        return bool((raw.get("grading") or {}).get("debug_mode", False))
+    except Exception:
+        return False
+
+
 def _should_reuse_existing_task(existing: dict[str, Any]) -> bool:
     if _config_force_regrade():
         return False
@@ -676,6 +687,9 @@ def _run_directory_grading_task(task_id: str, lock_path: Path | None = None) -> 
                 except Exception as exc:
                     picked["status"] = "failed"
                     _append_task_log(task_id, "grading.run", f"item failed key={key} error={exc}")
+                    if _config_debug_mode():
+                        for _line in traceback.format_exc().strip().splitlines():
+                            _append_task_log(task_id, "grading.run", f"  {_line}")
                 _save_items(task_id, items)
                 continue  # immediately look for the next pending item
 

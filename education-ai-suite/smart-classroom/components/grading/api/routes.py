@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-
 from fastapi import Query
+from fastapi.responses import Response
 
 from api.schemas import (
     FsListResponse,
@@ -215,10 +215,11 @@ def create_router(language: str) -> APIRouter:
         except RuntimeError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    @router.delete("/grading/tasks/{task_id}", status_code=204)
-    async def delete_task(task_id: str) -> None:
+    @router.delete("/grading/tasks/{task_id}", status_code=204, response_model=None, response_class=Response)
+    async def delete_task(task_id: str) -> Response:
         try:
             delete_task_impl(task_id)
+            return Response(status_code=204)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=f"task not found: {task_id}") from exc
         except Exception as exc:

@@ -22,7 +22,7 @@ from services.layout_detection import run_layout_detection
 from services.pdf_render import render_pdf_to_pngs, image_info
 from services.prompt_slicer import extract_header_block, slice_prompt_for_section
 from services.reporter import build_result
-from services.section_split import split_sections
+from services.section_split import split_sections, _stitch, _stitch_compressed
 from services.result_parser import merge_page_scores, parse_header_info, parse_scores
 from services.vlm_client import check_health, extract_header_info, grade_page
 
@@ -119,6 +119,7 @@ def run_vlm_grading_pipeline(
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
     contrast_enhance = bool(cfg_image.get("contrast_enhance", False))
     contrast_factor = float(cfg_image.get("contrast_factor", 1.5))
+    debug_mode = bool(cfg_grading.get("debug_mode", False))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
     _mip = options.get("max_image_pixels", cfg_vlm.get("max_image_pixels"))
@@ -169,6 +170,7 @@ def run_vlm_grading_pipeline(
         step1_dir=step1_dir,
         detection_url=layout_url,
         config=cfg,
+        save_visualizations=debug_mode,
     )
     _step_done(
         "layout_detection", _t,
@@ -192,6 +194,7 @@ def run_vlm_grading_pipeline(
         step2_dir=step2_dir,
         ocr_region=ocr_region,
         config=cfg,
+        debug_mode=debug_mode,
     )
     _step_done("section_split", _t, f"sections={section_summary['num_sections']}")
     for s in section_summary["sections"]:
@@ -204,13 +207,16 @@ def run_vlm_grading_pipeline(
     # Grade one stitched section image at a time. If section_split produced no
     # sections (e.g. headings not detected), fall back to grading each page.
     sections = section_summary.get("sections", [])
+    stitch_cfg = section_summary.get("stitch_config", {})
     if sections:
-        # (tag, image, section_title) — title drives per-section prompt slicing
-        units = [(f"section_{s['index']}", Path(s["image_path"]), s.get("title", "")) for s in sections]
+        units = [
+            (f"section_{s['index']}", s["strips"], s.get("title", ""))
+            for s in sections
+        ]
         unit_kind = "section"
     else:
         _log("no sections found; falling back to per-page grading")
-        units = [(img.stem, img, "") for img in images]
+        units = [(img.stem, None, "") for img in images]
         unit_kind = "page"
 
     _t = _step_start("vlm_grading")
@@ -258,13 +264,30 @@ def run_vlm_grading_pipeline(
         except Exception as exc:
             _log(f"header_extract error (degraded): {exc}")
 
-    for idx, (tag, image, title) in enumerate(units, 1):
-        info = image_info(image)
-        _log(
-            f"vlm {unit_kind} {idx}/{total} {image.name} "
-            f"{info['width']}x{info['height']}px "
-            f"({info['megapixels']:.2f} MP, {info['file_kb']:.1f} KB)"
-        )
+    for idx, (tag, strips_or_none, title) in enumerate(units, 1):
+        if strips_or_none is not None:
+            raw_strips = [(int(pi), float(yt), float(yb)) for pi, yt, yb in strips_or_none]
+            compress = stitch_cfg.get("compress", False)
+            image_pil = None
+            if compress:
+                image_pil = _stitch_compressed(
+                    raw_strips, step1_dir, images,
+                    int(stitch_cfg.get("gap_threshold", 120)),
+                    int(stitch_cfg.get("keep_margin", 50)),
+                    int(stitch_cfg.get("content_pad", 20)),
+                )
+            if image_pil is None:
+                image_pil = _stitch(raw_strips, images, stitch_cfg.get("direction", "vertical"))
+            if debug_mode:
+                dbg_path = step2_dir / f"{tag}.png"
+                image_pil.save(dbg_path)
+        else:
+            image_pil = images[idx - 1]
+
+        w = image_pil.width if hasattr(image_pil, "width") else 0
+        h = image_pil.height if hasattr(image_pil, "height") else 0
+        mp = (w * h) / 1_000_000
+        _log(f"vlm {unit_kind} {idx}/{total} {tag} {w}x{h}px ({mp:.2f} MP)")
 
         # For a section, use just its slice of the rubric prompt; for a page
         # fallback, use the full prompt. Slicing config lives under section_split.
@@ -277,7 +300,7 @@ def run_vlm_grading_pipeline(
         (replies_dir / f"{tag}_prompt.txt").write_text(prompt_for_unit, encoding="utf-8")
 
         result = grade_page(
-            vlm_url, image, prompt_for_unit,
+            vlm_url, image_pil, prompt_for_unit,
             max_tokens=max_tokens, temperature=temperature,
             max_image_pixels=max_image_pixels,
         )

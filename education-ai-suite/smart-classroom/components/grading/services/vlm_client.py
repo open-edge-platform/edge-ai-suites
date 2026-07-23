@@ -25,31 +25,32 @@ SYSTEM_PROMPT = (
 )
 
 
-def encode_image(path: Path, max_pixels: int | None = None) -> str:
-    """Base64 data-URL for an image. If max_pixels is set and the image exceeds
-    it, downscale (preserving aspect ratio) before encoding — an upper bound on
-    top of section_split's lossless whitespace compression."""
-    if max_pixels:
-        from io import BytesIO
-        from PIL import Image
+def encode_image(path: "Path | PIL.Image.Image", max_pixels: int | None = None) -> str:
+    """Base64 data-URL for an image (Path or in-memory PIL Image).
 
-        with Image.open(path) as im:
-            im = im.convert("RGB")
-            w, h = im.size
-            if w * h > max_pixels:
-                scale = (max_pixels / (w * h)) ** 0.5
-                im = im.resize((max(1, int(w * scale)), max(1, int(h * scale))),
-                               Image.Resampling.LANCZOS)
-                buf = BytesIO()
-                im.save(buf, format="JPEG", quality=90)
-                b64 = base64.b64encode(buf.getvalue()).decode()
-                return f"data:image/jpeg;base64,{b64}"
-    mime = mimetypes.guess_type(str(path))[0] or "image/png"
-    b64 = base64.b64encode(path.read_bytes()).decode()
-    return f"data:{mime};base64,{b64}"
+    If max_pixels is set and the image exceeds it, downscale before encoding.
+    """
+    from io import BytesIO
+    from PIL import Image as _PILImage
+
+    if isinstance(path, _PILImage.Image):
+        im = path.convert("RGB")
+    else:
+        im = _PILImage.open(path).convert("RGB")
+
+    w, h = im.size
+    if max_pixels and w * h > max_pixels:
+        scale = (max_pixels / (w * h)) ** 0.5
+        im = im.resize((max(1, int(w * scale)), max(1, int(h * scale))),
+                       _PILImage.Resampling.LANCZOS)
+
+    buf = BytesIO()
+    im.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"
 
 
-def build_payload(image: Path, user_prompt: str,
+def build_payload(image: "Path | PIL.Image.Image", user_prompt: str,
                   max_tokens: int, temperature: float,
                   max_image_pixels: int | None = None) -> dict[str, Any]:
     return {
@@ -71,7 +72,7 @@ def build_payload(image: Path, user_prompt: str,
 
 def grade_page(
     url: str,
-    image: Path,
+    image: "Path | PIL.Image.Image",
     user_prompt: str,
     max_tokens: int = 4096,
     temperature: float = 0.1,
@@ -115,7 +116,7 @@ def grade_page(
     data = resp.json()
     choice = (data.get("choices") or [{}])[0]
     answer = choice.get("message", {}).get("content", "")
-    usage = data.get("usage", {})
+    usage = data.get("usage") or {}
     return {
         "ok": True,
         "answer": answer,
@@ -144,7 +145,7 @@ HEADER_SYSTEM_PROMPT = (
 
 def extract_header_info(
     url: str,
-    image: Path,
+    image: "Path | PIL.Image.Image",
     instruction: str | None = None,
     max_tokens: int = 512,
     temperature: float = 0.0,

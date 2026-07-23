@@ -1,15 +1,13 @@
 from pathlib import Path
 import time
 import os
-import json
-import yaml
 import cv2
 import numpy as np
 import openvino as ov
 from PIL import Image, ImageDraw, ImageFont
 
 
-class LayoutDetectorV3:
+class LayoutDetector:
     """PP-DocLayoutV3 document layout detection using an OpenVINO IR
     converted via paddle2onnx.
 
@@ -195,100 +193,3 @@ class LayoutDetectorV3:
             draw.text((xmin + 2, ymin - th - 2), text, fill=(255, 255, 255), font=font)
 
         img_pil.save(output_path)
-
-
-def main():
-    config_path = Path(__file__).parent / "config.yaml"
-    if not config_path.exists():
-        print(f"Config file not found: {config_path}")
-        return
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-    cfg = config.get("layout_detection", {})
-
-    def resolve(p):
-        p = Path(p)
-        return p if p.is_absolute() else config_path.parent / p
-
-    model_path = resolve(cfg.get("model_path", "../models/PP-DocLayoutV3-ov"))
-    precision = cfg.get("precision")
-    if precision:
-        model_path = model_path / precision
-    input_path = resolve(cfg.get("input_path", "./input"))
-    output_path = resolve(cfg.get("output_dir", "./output"))
-    device = cfg.get("device", "GPU")
-    threshold = cfg.get("threshold", 0.5)
-    do_visualize = cfg.get("visualize", False)
-
-    print("=" * 80)
-    print("PP-DocLayoutV3 Layout Detection")
-    print("=" * 80)
-    print(f"  Model: {model_path}")
-    print(f"  Device: {device}")
-    print(f"  Precision: {precision}")
-    print(f"  Threshold: {threshold}")
-    print(f"  Input: {input_path}")
-    print(f"  Output: {output_path}")
-    print()
-
-    detector = LayoutDetectorV3(model_path=model_path, device=device, threshold=threshold)
-
-    if not input_path.exists():
-        print(f"Input path does not exist: {input_path}")
-        return
-
-    exts = {".jpg", ".jpeg", ".png", ".bmp", ".tiff"}
-    if input_path.is_file():
-        image_files = [input_path] if input_path.suffix.lower() in exts else []
-    else:
-        image_files = sorted({p for e in exts for p in input_path.glob(f"*{e}")})
-
-    if not image_files:
-        print("No image files found")
-        return
-
-    output_path.mkdir(parents=True, exist_ok=True)
-    print(f"Processing {len(image_files)} image(s)...")
-    print("=" * 80)
-
-    total_boxes = 0
-    for i, img_file in enumerate(image_files, 1):
-        print(f"\n[{i}/{len(image_files)}] {img_file.name}")
-        try:
-            result = detector.detect(img_file)
-            boxes = result["boxes"]
-            total_boxes += len(boxes)
-            print(f"  Inference time: {result['inference_time']:.3f}s")
-            print(f"  Detected {len(boxes)} regions:")
-
-            counts = {}
-            for b in boxes:
-                counts[b["label"]] = counts.get(b["label"], 0) + 1
-            for label, c in sorted(counts.items()):
-                print(f"    - {label}: {c}")
-
-            json_file = output_path / f"{img_file.stem}_layout.json"
-            with open(json_file, "w", encoding="utf-8") as f:
-                json.dump({
-                    "input_path": str(img_file.absolute()),
-                    "image_size": result["image_size"],
-                    "boxes": boxes,
-                    "inference_time": result["inference_time"],
-                }, f, indent=2, ensure_ascii=False)
-
-            if do_visualize:
-                detector.visualize(img_file, boxes, output_path / f"{img_file.stem}_layout.jpg")
-        except Exception as e:
-            print(f"  Error: {e}")
-
-    print("\n" + "=" * 80)
-    print(f"Processed {len(image_files)} image(s), {total_boxes} regions total")
-    if detector.inference_times:
-        avg = sum(detector.inference_times) / len(detector.inference_times)
-        print(f"Avg inference time: {avg:.3f}s")
-    print(f"Results saved to: {output_path.absolute()}")
-
-
-if __name__ == "__main__":
-    main()

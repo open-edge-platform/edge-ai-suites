@@ -1,84 +1,86 @@
-"""Traditional PP-OCRv4 text recognition (det + rec), callable as a function.
-
-Loads the local PaddleOCR-v4 det/rec inference models and exposes helpers to
-OCR a whole image or a single bounding box cropped from a page — the latter is
-what you want for reading text inside a specific doc-layout bbox.
-
-Notes
------
-- paddleocr 2.10 pulls in albumentations at import time, which does
-  `import torch` and crashes on this env's torch DLLs (WinError 127). OCR
-  inference never uses albumentations/torch, so we stub albumentations.pytorch
-  BEFORE importing paddleocr to skip that import cleanly.
-- The PaddleOCR object is built once and cached (models are heavy to load).
-"""
 from __future__ import annotations
 
 import sys
 import types
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image
 
-# ---- default local model locations -----------------------------------------
-_MODELS_ROOT = Path(r"C:/Users/user/jianfeng/EDU-AI/PR/temp/models_hub/models")
-_DEFAULT_DET = _MODELS_ROOT / "ch_PP-OCRv4_det_infer"
-_DEFAULT_REC = _MODELS_ROOT / "ch_PP-OCRv4_rec_infer"
+_COMPONENT_ROOT = Path(__file__).resolve().parents[2]  # components/grading/
+_SC_ROOT = _COMPONENT_ROOT.parents[1]                   # smart-classroom/
 
-_ocr_instance = None  # cached PaddleOCR
+_ocr_instance = None
+
+
+def _load_ocr_config() -> dict:
+    import yaml
+    cfg_path = _SC_ROOT / "config.yaml"
+    raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    return (raw.get("models") or {}).get("ocr") or {}
+
+
+def _inject_config_loader(ocr_cfg: dict) -> None:
+    """Inject a lightweight mock of utils.config_loader so that
+    OpenVINOOCRProcessor can resolve model sub-directory names without
+    importing the full main-app config stack."""
+    if "utils.config_loader" in sys.modules:
+        return
+
+    model_dir = str((_SC_ROOT / ocr_cfg.get("model_dir", "models/ocr")).resolve())
+
+    ocr_ns = types.SimpleNamespace(
+        det_model=ocr_cfg.get("det_model", "PP-OCRv6_small_det"),
+        rec_model=ocr_cfg.get("rec_model", "PP-OCRv6_small_rec"),
+        cls_model=ocr_cfg.get("cls_model", "PP-LCNet_x1_0_doc_ori"),
+        model_dir=model_dir,
+        device=ocr_cfg.get("device", "CPU"),
+    )
+    models_ns = types.SimpleNamespace(ocr=ocr_ns)
+    config_ns = types.SimpleNamespace(models=models_ns)
+
+    mock = types.ModuleType("utils.config_loader")
+    mock.config = config_ns
+
+    utils_mock = sys.modules.get("utils") or types.ModuleType("utils")
+    utils_mock.config_loader = mock
+    sys.modules.setdefault("utils", utils_mock)
+    sys.modules["utils.config_loader"] = mock
 
 
 def reset_ocr() -> None:
-    """Drop the cached PaddleOCR instance so the next get_ocr() rebuilds it.
-
-    PaddleOCR's inference predictor is bound to the thread that created it and
-    cannot be reused from another thread; after a pause (which exits the worker
-    thread) a resume runs in a NEW thread, so the old predictor would raise
-    "could not execute a primitive". A worker calls this on entry to force a
-    clean, thread-local rebuild."""
+    """Drop the cached processor so the next ocr_region() call rebuilds it
+    in the current thread (OpenVINO compiled models are not thread-safe)."""
     global _ocr_instance
     _ocr_instance = None
 
 
-def _stub_albumentations_pytorch() -> None:
-    """Prevent paddleocr's import chain from importing torch via albumentations."""
-    for mod in ("albumentations.pytorch", "albumentations.pytorch.transforms"):
-        if mod not in sys.modules:
-            sys.modules[mod] = types.ModuleType(mod)
-
-
-def get_ocr(det_model_dir: Optional[str] = None,
-            rec_model_dir: Optional[str] = None,
-            lang: str = "ch"):
-    """Return a cached PaddleOCR instance using the local PP-OCRv4 models."""
+def _get_processor():
     global _ocr_instance
     if _ocr_instance is not None:
         return _ocr_instance
 
-    _stub_albumentations_pytorch()
-    from paddleocr import PaddleOCR
+    ocr_cfg = _load_ocr_config()
+    model_dir = str((_SC_ROOT / ocr_cfg.get("model_dir", "models/ocr")).resolve())
 
-    det = str(det_model_dir or _DEFAULT_DET)
-    rec = str(rec_model_dir or _DEFAULT_REC)
-    if not Path(det).exists():
-        raise FileNotFoundError(f"det model dir not found: {det}")
-    if not Path(rec).exists():
-        raise FileNotFoundError(f"rec model dir not found: {rec}")
+    if str(_SC_ROOT) not in sys.path:
+        sys.path.insert(0, str(_SC_ROOT))
 
-    _ocr_instance = PaddleOCR(
-        det_model_dir=det,
-        rec_model_dir=rec,
-        use_angle_cls=False,
-        lang=lang,
-        show_log=False,
+    _inject_config_loader(ocr_cfg)
+
+    from components.ocr.openvino.openvino_ocr_processor import OpenVINOOCRProcessor
+
+    _ocr_instance = OpenVINOOCRProcessor(
+        lang=ocr_cfg.get("lang", "zh"),
+        use_angle_cls=True,
+        device=ocr_cfg.get("device", "CPU"),
+        ir_models_dir=model_dir,
     )
     return _ocr_instance
 
 
 def _to_ndarray(image: Any) -> np.ndarray:
-    """Accept a file path, PIL Image, or ndarray; return an RGB ndarray."""
     if isinstance(image, (str, Path)):
         return np.array(Image.open(image).convert("RGB"))
     if isinstance(image, Image.Image):
@@ -88,29 +90,7 @@ def _to_ndarray(image: Any) -> np.ndarray:
     raise TypeError(f"unsupported image type: {type(image)}")
 
 
-def _parse_result(result: list) -> list[dict]:
-    """Flatten paddleocr .ocr() output into [{text, confidence, bbox}, ...]."""
-    lines: list[dict] = []
-    if not result:
-        return lines
-    # paddleocr 2.10 returns [page][line] where line = [bbox, (text, conf)]
-    for page in result:
-        if not page:
-            continue
-        for entry in page:
-            try:
-                bbox, (text, conf) = entry
-            except (ValueError, TypeError):
-                continue
-            lines.append({"text": text, "confidence": float(conf), "bbox": bbox})
-    return lines
-
-
-def ocr_image(image: Any) -> list[dict]:
-    """OCR a whole image. Returns [{text, confidence, bbox}, ...] (reading order)."""
-    ocr = get_ocr()
-    arr = _to_ndarray(image)
-    return _parse_result(ocr.ocr(arr, cls=False))
+_OCR_MIN_HEIGHT = 80
 
 
 def ocr_region(image: Any, bbox: list[float]) -> str:
@@ -128,11 +108,26 @@ def ocr_region(image: Any, bbox: list[float]) -> str:
     if x2 <= x1 or y2 <= y1:
         return ""
     crop = arr[y1:y2, x1:x2]
-    lines = _parse_result(get_ocr().ocr(crop, cls=False))
-    return "\n".join(l["text"] for l in lines)
+    ch, cw = crop.shape[:2]
+    if ch < _OCR_MIN_HEIGHT:
+        scale = _OCR_MIN_HEIGHT / ch
+        new_size = (max(1, int(cw * scale)), _OCR_MIN_HEIGHT)
+        crop = np.array(Image.fromarray(crop).resize(new_size, Image.LANCZOS))
+    result = _get_processor().extract_text(crop)
+    return result
+
+
+def ocr_image(image: Any) -> str:
+    """OCR a whole image, returns all recognized text joined by newlines."""
+    arr = _to_ndarray(image)
+    return _get_processor().extract_text(arr)
 
 
 def ocr_regions(image: Any, bboxes: list[list[float]]) -> list[str]:
     """OCR multiple bboxes on the same page; returns text per bbox (same order)."""
-    arr = _to_ndarray(image)  # decode once
+    arr = _to_ndarray(image)
     return [ocr_region(arr, bbox) for bbox in bboxes]
+
+
+def get_ocr():
+    return _get_processor()

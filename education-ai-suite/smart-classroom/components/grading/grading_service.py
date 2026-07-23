@@ -52,7 +52,7 @@ def load_grading_config(config_path: Path) -> GradingServiceConfig:
         host_addr=str(grading.get("host_addr", "127.0.0.1")),
         port=int(grading.get("port", 9012)),
         provider=provider,
-        language=str(grading.get("language", "en")),
+        language=str((raw.get("app") or {}).get("language", "en")),
     )
 
 

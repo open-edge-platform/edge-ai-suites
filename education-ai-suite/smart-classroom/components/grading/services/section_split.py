@@ -280,6 +280,7 @@ def split_sections(
     step2_dir: Path,
     ocr_region: OcrRegionFn,
     config: dict[str, Any],
+    debug_mode: bool = False,
 ) -> dict[str, Any]:
     """Split the paper into sections and write step2 artifacts.
 
@@ -297,7 +298,7 @@ def split_sections(
     gap_threshold = int(cfg.get("gap_threshold", 120))
     keep_margin = int(cfg.get("keep_margin", 50))
     content_pad = int(cfg.get("content_pad", 20))
-    save_ocr_debug = bool(cfg.get("save_ocr_debug", False))
+    save_ocr_debug = debug_mode
 
     step2_dir.mkdir(parents=True, exist_ok=True)
 
@@ -318,27 +319,43 @@ def split_sections(
         strips = _section_page_strips(start, nxt, page_images)
         if not strips:
             continue
-        img = None
-        if compress:
-            img = _stitch_compressed(
-                strips, step1_dir, page_images,
-                gap_threshold, keep_margin, content_pad,
-            )
-        if img is None:  # compression off, or no content boxes found
-            img = _stitch(strips, page_images, direction)
-        img_path = step2_dir / f"section_{i + 1}.png"
-        img.save(img_path)
 
-        sections.append({
+        section_entry = {
             "index": i + 1,
             "title": start["title"],
             "pages": sorted({page_images[pi].stem for pi, _, _ in strips}),
             "page_indices": [pi for pi, _, _ in strips],
-            "image_path": str(img_path),
+            "strips": [[pi, y_top, y_bottom] for pi, y_top, y_bottom in strips],
+            "compress": compress,
             "is_cross_page": len({pi for pi, _, _ in strips}) > 1,
-        })
+        }
 
-    summary = {"num_sections": len(sections), "sections": sections}
+        if debug_mode:
+            img = None
+            if compress:
+                img = _stitch_compressed(
+                    strips, step1_dir, page_images,
+                    gap_threshold, keep_margin, content_pad,
+                )
+            if img is None:
+                img = _stitch(strips, page_images, direction)
+            img_path = step2_dir / f"section_{i + 1}.png"
+            img.save(img_path)
+            section_entry["image_path"] = str(img_path)
+
+        sections.append(section_entry)
+
+    summary = {
+        "num_sections": len(sections),
+        "sections": sections,
+        "stitch_config": {
+            "direction": direction,
+            "compress": compress,
+            "gap_threshold": gap_threshold,
+            "keep_margin": keep_margin,
+            "content_pad": content_pad,
+        },
+    }
     (step2_dir / "sections.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )

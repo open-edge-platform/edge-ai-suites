@@ -10,9 +10,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from PIL import Image
 import uvicorn
-from layout_detection_v3 import LayoutDetectorV3
+from layout_detection import LayoutDetector
 
-detection_service: Optional[LayoutDetectorV3] = None
+detection_service: Optional[LayoutDetector] = None
 server_config = {
     'model_path': None,
     'device': None,
@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     print(f"{'='*80}\n")
 
     try:
-        detection_service = LayoutDetectorV3(
+        detection_service = LayoutDetector(
             model_path=model_path,
             device=device,
             threshold=threshold
@@ -192,9 +192,7 @@ async def get_stats():
 
 
 def main():
-    # Load configuration from config.yaml
     config_path = Path(__file__).parent / "config.yaml"
-
     if not config_path.exists():
         print(f"Error: Config file not found: {config_path}")
         return
@@ -202,36 +200,23 @@ def main():
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
-    svc_config = config.get('detection_service', {})
-    layout_config = config.get('layout_detection', {})
+    cfg = config.get('layout_detection', {})
+    precision = cfg.get('precision', 'fp16')
+    device = cfg.get('device', 'GPU')
+    threshold = cfg.get('threshold', 0.5)
+    host = cfg.get('host', '0.0.0.0')
+    port = int(cfg.get('port', 9902))
 
-    # Model config comes from detection_service, falling back to layout_detection
-    model_path = svc_config.get('model_path') or layout_config.get('model_path', '../models/PP-DocLayoutV3-ov')
-    precision = svc_config.get('precision') or layout_config.get('precision')
-    device = svc_config.get('device') or layout_config.get('device', 'GPU')
-    threshold = svc_config.get('threshold', layout_config.get('threshold', 0.5))
+    from ensure_layout_model import ensure_layout_model
+    model_path = ensure_layout_model()
 
-    # Resolve path (relative to config file) and append precision subdir
-    model_path = Path(model_path)
-    if not model_path.is_absolute():
-        model_path = config_path.parent / model_path
-    if precision:
-        model_path = model_path / precision
-
-    # Update server config
     server_config['model_path'] = str(model_path)
     server_config['device'] = device
     server_config['precision'] = precision
     server_config['threshold'] = threshold
-    server_config['port'] = svc_config.get('port', 9902)
+    server_config['port'] = port
 
-    # Start server
-    uvicorn.run(
-        app,
-        host=config.get('detection_service', {}).get('host', '0.0.0.0'),
-        port=server_config['port'],
-        log_level="info"
-    )
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 
 if __name__ == "__main__":

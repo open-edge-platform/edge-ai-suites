@@ -10,11 +10,12 @@ vlm:
 
 grading:
   force_regrade: true
+  debug_mode: true
 
 watch:
   poll_interval: 5
   stable_checks: 2      # consecutive unchanged polls before a PDF is graded
-  idle_timeout: 180
+  idle_timeout: 10
 
 detection_service:
   # Detection filtering and processing (consumed by _run_layout_detection)
@@ -28,16 +29,12 @@ detection_service:
   expand_margin: 10            # Expand box margins in pixels
   merge_overlapping: false     # Merge overlapping boxes
   iou_threshold: 0.7           # IoU threshold for merging (if enabled)
-  save_visualizations: true    # Save images with detection boxes drawn
-
 section_split:
-  save_ocr_debug: true                         # save OCR text results to step2/ocr_debug.json
   title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
   title_patterns:
     - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
     - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
   stitch_direction: "vertical"                  # how to join cross-page section pieces
-  save_visualizations: true                     # save each stitched section image
 
   compress_whitespace: true
   gap_threshold: 120        # only gaps larger than this are compressed
