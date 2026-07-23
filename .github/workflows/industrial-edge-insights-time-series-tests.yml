@@ -154,7 +154,6 @@ jobs:
 
       - name: Validate weekly_build_date input usage
         env:
-          BUILD: ${{ inputs.build || 'yes' }}
           WEEKLY_BUILD_DATE_INPUT: ${{ inputs.weekly_build_date || '' }}
         run: |
           # BUILD_NORMALIZED is set by the previous step (whitespace-trimmed)
@@ -1236,26 +1235,3 @@ jobs:
               else:
                   out.write('\u274c **Overall Status:** SOME TESTS FAILED\n')
           PYEOF
-
-      - name: Restore .env and Helm values to original state
-        if: ${{ always() && (env.BUILD_NORMALIZED || 'yes') == 'no' }}
-        run: |
-          echo "Restoring WEEKLY_BUILD_DATE in .env files..."
-          for env_file in \
-            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env" \
-            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"; do
-            if [[ -f "$env_file" ]]; then
-              sed -i "s|^WEEKLY_BUILD_DATE=.*|WEEKLY_BUILD_DATE=|" "$env_file"
-              echo "  Restored: $env_file  →  $(grep '^WEEKLY_BUILD_DATE=' "$env_file")"
-            fi
-          done
-
-          echo "Restoring weekly_build_date in Helm values.yaml files..."
-          for values_file in \
-            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml" \
-            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml"; do
-            if [[ -f "$values_file" ]]; then
-              sed -i 's/weekly_build_date: .*/weekly_build_date: ""/' "$values_file"
-              echo "  Restored: $values_file  →  $(grep 'weekly_build_date' "$values_file" | xargs)"
-            fi
-          done

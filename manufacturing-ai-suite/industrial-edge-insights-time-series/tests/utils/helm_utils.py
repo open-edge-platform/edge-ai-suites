@@ -13,6 +13,8 @@ import shutil
 import tempfile
 import copy
 import random
+import glob
+import tarfile
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
 import yaml
@@ -160,6 +162,69 @@ def _build_udf_payload(sample_app, device_value, alert_mode):
     }
     return payload
 
+def _find_chart_tgz(chart_dir):
+    """Return the most recently modified .tgz package directly inside chart_dir, if any."""
+    if not chart_dir or not os.path.isdir(chart_dir):
+        return None
+    tgz_files = glob.glob(os.path.join(chart_dir, "*.tgz"))
+    if not tgz_files:
+        return None
+    return max(tgz_files, key=os.path.getmtime)
+
+
+def _ensure_chart_extracted(chart_dir):
+    """Materialize a helm-packages/ directory so downstream helpers keep working.
+
+    `chart_dir` is expected to be the directory that the workflow's "Generate
+    Helm charts" (build=yes) or "Pull Helm charts from OCI registry" (build=no)
+    step populates with a single packaged `.tgz` chart. Many test helpers read
+    `values.yaml`/config folders directly from `chart_path`, so this extracts
+    the `.tgz` contents in place (alongside the `.tgz` itself) the first time
+    it is seen. It is idempotent: re-extraction is skipped unless the `.tgz`
+    file changes.
+    """
+    if not chart_dir or not os.path.isdir(chart_dir):
+        return chart_dir
+
+    if os.path.isfile(os.path.join(chart_dir, "Chart.yaml")):
+        return chart_dir  # already a plain chart source directory
+
+    tgz_path = _find_chart_tgz(chart_dir)
+    if not tgz_path:
+        return chart_dir  # nothing generated/pulled yet
+
+    marker_path = os.path.join(chart_dir, ".extracted_from")
+    signature = f"{os.path.basename(tgz_path)}:{os.path.getmtime(tgz_path)}"
+    try:
+        if os.path.isfile(marker_path) and open(marker_path).read().strip() == signature:
+            return chart_dir  # already extracted for this exact package
+    except OSError:
+        pass
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with tarfile.open(tgz_path) as tf:
+                tf.extractall(tmp_dir)
+            extracted_roots = [d for d in glob.glob(os.path.join(tmp_dir, "*")) if os.path.isdir(d)]
+            if len(extracted_roots) != 1:
+                logger.warning("Unexpected chart archive layout in '%s'", tgz_path)
+                return chart_dir
+            for item in os.listdir(extracted_roots[0]):
+                src = os.path.join(extracted_roots[0], item)
+                dst = os.path.join(chart_dir, item)
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src, dst)
+        with open(marker_path, "w") as f:
+            f.write(signature)
+        logger.info("Extracted Helm chart package '%s' into '%s'", tgz_path, chart_dir)
+    except (tarfile.TarError, OSError) as e:
+        logger.warning("Failed to extract chart package '%s': %s", tgz_path, e)
+
+    return chart_dir
+
+
 def _resolve_chart_path(raw_path):
     """Return an absolute chart path regardless of current working directory."""
     if not raw_path:
@@ -167,11 +232,11 @@ def _resolve_chart_path(raw_path):
 
     expanded_path = os.path.expandvars(raw_path)
     if os.path.isabs(expanded_path):
-        return os.path.normpath(expanded_path)
+        return _ensure_chart_extracted(os.path.normpath(expanded_path))
 
     # pytest.ini paths are authored relative to tests/functional
     normalized_path = os.path.abspath(os.path.join(FUNCTIONAL_TESTS_DIR, expanded_path))
-    return os.path.normpath(normalized_path)
+    return _ensure_chart_extracted(os.path.normpath(normalized_path))
 
 def get_env_values():
     """Load configuration and extract Helm-related values."""
@@ -194,12 +259,12 @@ def _resolve_chart_path_from_cwd(raw_path):
         return raw_path
     expanded = os.path.expandvars(raw_path)
     if os.path.isabs(expanded) and os.path.exists(expanded):
-        return expanded
+        return _ensure_chart_extracted(expanded)
     resolved = os.path.normpath(os.path.join(os.getcwd(), expanded))
     if os.path.exists(resolved):
-        return resolved
+        return _ensure_chart_extracted(resolved)
     # Fall back to the repo-root strategy as a last resort
-    return _resolve_path_under_repo(raw_path)
+    return _ensure_chart_extracted(_resolve_path_under_repo(raw_path))
 
 
 def get_multimodal_env_values():
@@ -1561,9 +1626,28 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     
     For multimodal, uses `make gen_helm_charts` + manual packaging since
     multimodal Makefile doesn't have gen_helm_charts_targz target.
+
+    If a `.tgz` package already exists in `chart_path` (already generated or
+    pulled by the CI workflow's Helm chart step before tests started),
+    regeneration is skipped so tests install from that pulled/generated
+    package only, instead of silently overwriting it with a locally
+    regenerated chart.
     """
+    existing_tgz = _find_chart_tgz(chart_path)
+    if existing_tgz:
+        logger.info(
+            "Found existing Helm chart package '%s' in '%s' (already generated/pulled "
+            "by the workflow); skipping regeneration so tests install from that package only.",
+            existing_tgz, chart_path,
+        )
+        list_directory_contents()
+        return True
+
     original_dir = os.getcwd()
     try:
+        # chart_path (helm-packages/) may not exist yet if the workflow's
+        # generate/pull step was skipped, e.g. for a local/manual test run.
+        os.makedirs(chart_path, exist_ok=True)
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
@@ -1598,6 +1682,7 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         
         logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
+        _ensure_chart_extracted(chart_path)
 
         return True
     except subprocess.CalledProcessError as e:
@@ -1611,9 +1696,16 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
     try:
+        # Always install from the pulled/generated .tgz package when one is
+        # present in chart_path, instead of the extracted directory, so the
+        # deployment matches exactly what the workflow produced/pulled.
+        install_target = _find_chart_tgz(chart_path) or chart_path
+        if install_target != chart_path:
+            logger.info(f"Installing from packaged chart archive: {install_target}")
+
         # Construct the Helm install command
         helm_command = [
-            "helm", "install", release_name, chart_path,
+            "helm", "install", release_name, install_target,
             "--set", f"env.privileged_access_required={val}",
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin}",
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",
@@ -1663,9 +1755,12 @@ def helm_uninstall(release_name, namespace):
 def helm_upgrade(release_name, chart_path, namespace, telegraf_input_plugin1):
     """Upgrade a Helm release with specified parameters."""
     try:
+        # Prefer the pulled/generated .tgz package, matching helm_install().
+        install_target = _find_chart_tgz(chart_path) or chart_path
+
         # Construct the Helm upgrade command
         helm_command = [
-            "helm", "upgrade", release_name, chart_path,
+            "helm", "upgrade", release_name, install_target,
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin1}",
             "-n", namespace
         ]
