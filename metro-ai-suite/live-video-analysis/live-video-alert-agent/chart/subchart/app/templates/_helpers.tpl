@@ -56,7 +56,7 @@ sets both lowercase and uppercase variants for maximum compatibility.
 - name: HTTPS_PROXY
   value: {{ .Values.global.proxy.httpsProxy | default "" | quote }}
 - name: no_proxy
-  value: {{ .Values.global.proxy.noProxy | default "" | quote }}
+  value: "{{ .Values.global.proxy.noProxy | default "" }},{{ printf "%s-ovms" .Release.Name }},{{ printf "%s-alert-agent-service" .Release.Name }},{{ printf "%s-metrics-manager" .Release.Name }}"
 - name: NO_PROXY
-  value: {{ .Values.global.proxy.noProxy | default "" | quote }}
+  value: "{{ .Values.global.proxy.noProxy | default "" }},{{ printf "%s-ovms" .Release.Name }},{{ printf "%s-alert-agent-service" .Release.Name }},{{ printf "%s-metrics-manager" .Release.Name }}"
 {{- end }}

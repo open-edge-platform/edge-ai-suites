@@ -1,5 +1,9 @@
 # Release Notes: Industrial Edge Insights Multimodal
 
+<!--## Version 2026.2-->
+
+<!--date TBD-->
+
 ## Version 2026.1
 
 **June 2026**
@@ -62,7 +66,6 @@ This release introduces **S3-based frame storage**, **deployment hardening**, an
 - Documentation has been extended and improved for ease of navigation, covering updates to
   setup guides, Helm deployment, and more.
 
-
 For information on older versions, check [release notes 2025](./release-notes/release-notes-2025.md)
 
 <!--hide_directive
@@ -70,6 +73,7 @@ For information on older versions, check [release notes 2025](./release-notes/re
 :maxdepth: 5
 :hidden:
 
-release-notes/release-notes-2025.md
+Release Notes 2025 <./release-notes/release-notes-2025.md>
+
 ```
 hide_directive-->

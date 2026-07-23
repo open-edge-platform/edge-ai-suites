@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import signal
 import socket
@@ -24,6 +25,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 os.chdir(CONTENT_SEARCH_DIR)
+
+from utils.config import DEFAULT_VLM_MODEL  
 
 def _load_config_to_env(config_path: str = "config.yaml") -> None:
     path = REPO_ROOT / config_path
@@ -55,12 +58,16 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("DOCUMENT_MAX_MB", storage.get("document_max_mb", 100))
         _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
-        # VLM
         vlm = cs.get("vlm", {})
         _set("VLM_HOST", vlm.get("host_addr", "127.0.0.1"))
-        _set("VLM_PORT", vlm.get("port", "9900"))
-        _set("VLM_MODEL_NAME", vlm.get("model_name", "Qwen/Qwen2.5-VL-3B-Instruct"))
+        _set("VLM_PORT", vlm.get("port", "8000"))
+        _set("VLM_MODEL_NAME", vlm.get("model_name", DEFAULT_VLM_MODEL))
         _set("VLM_DEVICE", vlm.get("device", "CPU"))
+
+        main_app = cs.get("main_app", {})
+        _set("MAIN_APP_HOST", main_app.get("host_addr", "127.0.0.1"))
+        _set("MAIN_APP_PORT", main_app.get("port", "8000"))
+        _set("MAIN_APP_HEALTH_PATH", main_app.get("health_path", "/health"))
 
         # Video Preprocess
         pre = cs.get("video_preprocess", {})
@@ -199,11 +206,71 @@ def _check_health(host: str, port: int, path: str = "") -> bool:
 def _env(key: str, default: str) -> str:
     return os.environ.get(key, default)
 
+def _get_health_json(host: str, port: int, path: str) -> Optional[dict]:
+    """GET a JSON health endpoint and return the parsed body, or None on failure."""
+    try:
+        s = socket.create_connection((host, port), timeout=5)
+        s.sendall(
+            f"GET {path} HTTP/1.1\r\nHost: {host}:{port}\r\nConnection: close\r\n\r\n".encode()
+        )
+        data = b""
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+        s.close()
+        text = data.decode("utf-8", errors="replace")
+        header, _, body = text.partition("\r\n\r\n")
+        status_line = header.split("\r\n", 1)[0]
+        if not (status_line.startswith("HTTP/") and int(status_line.split()[1]) < 400):
+            return None
+        start, end = body.find("{"), body.rfind("}")
+        if start == -1 or end == -1:
+            return None
+        return json.loads(body[start:end + 1])
+    except Exception:
+        return None
+
+def _wait_for_main_app() -> bool:
+    """Block until the main app (:8000) warm VLM is ready.
+
+    The :9900 microservice is retired, so content-search now depends on the
+    main-app VLM. Gating here prevents ingest/Q&A from calling a cold or absent
+    VLM. Readiness is confirmed when the main-app ``/health`` hub reports
+    ``text_gen`` loaded. Returns True when ready, False on timeout (in which
+    case startup continues so the launcher never hard-blocks).
+    """
+    host = _env("MAIN_APP_HOST", "127.0.0.1")
+    port = int(_env("MAIN_APP_PORT", "8000"))
+    path = _env("MAIN_APP_HEALTH_PATH", "/health")
+    timeout = int(_env("MAIN_APP_HEALTH_TIMEOUT", "600"))
+    print(
+        f"[launcher] Health-gate: waiting for main-app VLM at "
+        f"{host}:{port}{path} (timeout {timeout}s)..."
+    )
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        health = _get_health_json(host, port, path)
+        if isinstance(health, dict):
+            hub = health.get("hub") or {}
+            text_gen = hub.get("text_gen") or {} if isinstance(hub, dict) else {}
+            state = str(text_gen.get("state", "")).lower()
+            if text_gen.get("loaded") is True or state == "ready":
+                print("[launcher] Main-app VLM is ready.")
+                return True
+        time.sleep(3)
+    print(
+        f"[launcher] WARNING: main-app VLM not ready after {timeout}s; "
+        "continuing without it (content-search VLM calls may fail)."
+    )
+    return False
+
 def main() -> None:
     _load_config_to_env()
 
     parser = argparse.ArgumentParser(description="Start services via Environment Variables.")
-    parser.add_argument("--services", nargs="+", default=["chromadb", "vlm", "preprocess", "ingest", "main_app"])
+    parser.add_argument("--services", nargs="+", default=["chromadb", "preprocess", "ingest", "main_app"])
     args = parser.parse_args()
 
     requested = []
@@ -211,45 +278,38 @@ def main() -> None:
         requested.extend(p.strip().lower() for p in v.split(",") if p.strip())
     requested = list(dict.fromkeys(requested))
 
-    # Skip VLM and video preprocess services when video summarization is globally disabled
+    # Skip video preprocess service when video summarization is globally disabled
     vs_enabled = _env("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
     if not vs_enabled:
-        skipped = [s for s in ("vlm", "preprocess") if s in requested]
+        skipped = [s for s in ("preprocess",) if s in requested]
         if skipped:
             print(f"[launcher] VIDEO_SUMMARIZATION_ENABLED=false, skipping: {', '.join(skipped)}")
-            requested = [s for s in requested if s not in ("vlm", "preprocess")]
+            requested = [s for s in requested if s not in ("preprocess",)]
 
     logs_dir = CONTENT_SEARCH_DIR / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     chroma_exe = _env("CHROMA_EXE", "")
-    if not chroma_exe:
-        venv_exe = CONTENT_SEARCH_DIR / "venv_content_search" / "Scripts" / "chroma.exe"
-        chroma_exe = str(venv_exe) if venv_exe.exists() else "chroma"
+    if chroma_exe:
+        chroma_cmd = [chroma_exe, "run",
+                      "--host", _env("CHROMA_HOST", "127.0.0.1"),
+                      "--port", _env("CHROMA_PORT", "9090"),
+                      "--path", _env("CHROMA_DATA_DIR", "./data/chroma_data")]
+    else:
+        chroma_cmd = [sys.executable, "-c", "from chromadb.cli.cli import app; app()",
+                      "run",
+                      "--host", _env("CHROMA_HOST", "127.0.0.1"),
+                      "--port", _env("CHROMA_PORT", "9090"),
+                      "--path", _env("CHROMA_DATA_DIR", "./data/chroma_data")]
 
     # Each service: cmd, cwd, extra_env, health check (host, port, path), timeout
     # health path="" means TCP-only check
     services_meta = {
         "chromadb": {
-            "cmd": [chroma_exe, "run",
-                    "--host", _env("CHROMA_HOST", "127.0.0.1"),
-                    "--port", _env("CHROMA_PORT", "9090"),
-                    "--path", _env("CHROMA_DATA_DIR", "./data/chroma_data")],
+            "cmd": chroma_cmd,
             "cwd": CONTENT_SEARCH_DIR,
             "health": (_env("CHROMA_HOST", "127.0.0.1"), int(_env("CHROMA_PORT", "9090")), ""),
             "health_timeout": 60,
-        },
-        "vlm": {
-            "cmd": [sys.executable, "-m", "uvicorn", "providers.vlm_openvino_serving.app:app",
-                    "--host", _env("VLM_HOST", "127.0.0.1"),
-                    "--port", _env("VLM_PORT", "9900")],
-            "cwd": CONTENT_SEARCH_DIR,
-            "extra_env": {
-                "VLM_MODEL_NAME": _env("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct"),
-                "VLM_DEVICE": _env("VLM_DEVICE", "CPU"),
-            },
-            "health": (_env("VLM_HOST", "127.0.0.1"), int(_env("VLM_PORT", "9900")), "/health"),
-            "health_timeout": 600,
         },
         "preprocess": {
             "cmd": [sys.executable, "-m", "uvicorn", "providers.video_preprocess.server:app",
@@ -282,8 +342,15 @@ def main() -> None:
     procs: Dict = {}
     log_files: Dict = {}
 
+    # Services that call the main-app warm VLM (:8000). They are gated behind a
+    # health check so content-search never issues VLM requests before it is ready.
+    _VLM_DEPENDENT = ("preprocess", "ingest", "main_app")
+    _gated = False
     for sname in requested:
         if sname in services_meta:
+            if sname in _VLM_DEPENDENT and not _gated:
+                _wait_for_main_app()
+                _gated = True
             meta = services_meta[sname]
             _spawn(sname, meta["cmd"], meta["cwd"], logs_dir, procs, log_files, meta.get("extra_env"))
             time.sleep(0.5)

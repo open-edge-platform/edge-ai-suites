@@ -242,7 +242,7 @@ Replace the full alert configuration.
 | `escalation.threshold_consecutive` | int (≥ 2)          | no                                               | Consecutive YES count before escalation                                    |
 | `escalation.additional_tools`      | list of tool names | no                                               | Extra tools added on escalation                                            |
 
-- **Valid built-in tool names**: `log_alert`, `capture_snapshot`, `trigger_webhook`, `publish_mqtt`
+- **Valid built-in tool names** (provided by the `alert-agent-service` sidecar): `log_alert`, `capture_snapshot`, `trigger_webhook`, `publish_mqtt`
 - **MCP tool names** (when `MCP_ENABLED=true`): prefixed with `mcp_{server_name}_` (see [MCP section](#mcp))
 - **Response**: `{"status": "saved", "count": 2}`
 - **Status Codes**: `200` saved | `422` schema validation failed
@@ -251,10 +251,12 @@ Replace the full alert configuration.
 
 ## Action Tools
 
+These endpoints proxy tool discovery and invocation to the external
+`alert-agent-service`.
+
 ### `GET /tools`
 
-List all registered action tools and whether they are currently enabled (based
-on environment variable configuration).
+List all registered action tools (proxied from `alert-agent-service`).
 
 - **Response**:
 
@@ -273,7 +275,8 @@ on environment variable configuration).
 
 ### `POST /tools/{tool_name}/invoke`
 
-Manually invoke a registered tool for testing.
+Invoke a registered tool via the `alert-agent-service` (for
+testing/debugging).
 
 - **Path Parameters**: `tool_name` — one of `log_alert`,
   `trigger_webhook`, `capture_snapshot`, `publish_mqtt`
@@ -298,7 +301,7 @@ Manually invoke a registered tool for testing.
 
 ### `POST /tools/reload`
 
-Reload tool definitions from `resources/tools.json` without restarting the application.
+Reload tool definitions in the `alert-agent-service` without restarting.
 
 - **Response**: `{"status": "ok", "tools_loaded": 4}`
 - **Status Codes**: `200` ok
@@ -362,7 +365,7 @@ List all tools available from connected MCP servers.
 
 ### `POST /mcp/reload`
 
-Reload MCP server configuration from `resources/mcp_servers.json` and reconnect to all servers.
+Reload MCP server configuration from `resources/mcp_servers.json` and reconnect local MCP servers.
 
 - **Response**: `{"status": "ok", "tools_loaded": 6}`
 - When `MCP_ENABLED=false`: `{"status": "skipped", "reason": "MCP is disabled", "tools_loaded": 0}`

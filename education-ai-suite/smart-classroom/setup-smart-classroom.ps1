@@ -1855,15 +1855,23 @@ $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 
 $recreateVenvs = $false
+$upgradeVenvs = $false
 if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
     } else {
-        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        Write-Host "  [Y] Yes - Recreate venvs (delete and reinstall from scratch)" -ForegroundColor White
+        Write-Host "  [U] Upgrade - Keep venvs, upgrade packages via pip (no full reinstall)" -ForegroundColor White
+        Write-Host "  [N] No  - Use existing venvs (faster startup)" -ForegroundColor White
+        Write-Host ""
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/U/N, default: N)"
         $recreateVenvs = $response.ToUpper() -eq "Y"
+        $upgradeVenvs = $response.ToUpper() -eq "U"
         if ($recreateVenvs) {
             Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } elseif ($upgradeVenvs) {
+            Write-Host "Virtual environment packages will be upgraded (venvs kept)" -ForegroundColor Yellow
         } else {
             Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
         }
@@ -1885,6 +1893,11 @@ if (-not (Test-Path $venvBackend)) {
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
     & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} elseif ($upgradeVenvs) {
+    Write-Host "Upgrading Backend dependencies (keeping existing venv)..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
 }
@@ -1904,6 +1917,11 @@ if (-not (Test-Path $venvContentSearch)) {
     & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
     & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
     Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+} elseif ($upgradeVenvs) {
+    Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+    Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
 }

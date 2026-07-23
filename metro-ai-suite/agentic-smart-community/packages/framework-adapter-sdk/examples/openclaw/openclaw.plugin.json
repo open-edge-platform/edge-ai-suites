@@ -1,0 +1,75 @@
+{
+  "id": "smartbuilding-alerts",
+  "name": "SmartBuilding Alerts",
+  "description": "Subscribes to SmartBuilding MCP alert resources and delivers alerts into OpenClaw sessions (reference framework adapter).",
+  "activation": {
+    "onStartup": true
+  },
+  "skills": ["./skills"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": true,
+    "required": ["mcpServer", "monitors"],
+    "properties": {
+      "mcpServer": {
+        "type": "object",
+        "description": "SmartBuilding MCP server (Streamable HTTP) to subscribe to.",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "MCP endpoint, e.g. http://localhost:3100/mcp",
+            "default": "http://localhost:3100/mcp"
+          },
+          "headers": {
+            "type": "object",
+            "description": "Optional extra HTTP headers (e.g. Authorization) sent on every request.",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "cursorFile": {
+        "type": "string",
+        "description": "Path to the persistent delivery cursor. Defaults to <OPENCLAW_HOME>/smartbuilding-alerts-cursor.json."
+      },
+      "pollFallbackMs": {
+        "type": "number",
+        "description": "Safety-net poll interval (ms) guarding against a lost notification. 0 = disabled.",
+        "default": 0
+      },
+      "monitors": {
+        "type": "object",
+        "description": "Per-monitor routing. Key = monitor id (maps to smartbuilding://monitor/<id>/alerts).",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "alerts": {
+              "type": "array",
+              "description": "Where this monitor's alerts are delivered.",
+              "items": {
+                "type": "object",
+                "required": ["agentId", "sessionKey"],
+                "properties": {
+                  "agentId": {
+                    "type": "string",
+                    "description": "Agent that owns the target session (resolves the JSONL path for FS-append)."
+                  },
+                  "sessionKey": {
+                    "type": "string",
+                    "description": "OpenClaw session key, e.g. agent:child-safety-agent:main"
+                  },
+                  "deliver": {
+                    "type": "boolean",
+                    "description": "true = channel delivery via subagent.run; false = raw FS-append into the session.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

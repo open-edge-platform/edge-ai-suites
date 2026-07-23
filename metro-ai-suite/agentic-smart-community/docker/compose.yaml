@@ -1,0 +1,55 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Smart-Community stack assembled from upstream with MINIMAL local deltas — the
+# heavy service definitions are deliberately NOT copied here:
+#   * vllm-ipex-serving + multilevel-video-understanding are `extends`-ed from the
+#     upstream edge-ai-libraries compose, which setup_docker.sh fetches into the
+#     fixed path ../.external/edge-ai-libraries. `extends` resolves THAT file's own
+#     relative paths (build context, ./vllm-serving) against its own directory, so
+#     nothing is re-copied and upstream changes flow through automatically.
+#   * videostream-analytics is pulled in verbatim via `include` (host network,
+#     NPU, POSTs events to the SmartBuilding MCP webhook on :3101).
+# The only smart-community additions are the two blocks below: the /data bind
+# mount on multilevel, and the videostream-analytics service.
+#
+# The MCP server itself is NOT in this stack — it runs as a host process (see
+# scripts/mcp-server/). A containerized variant is archived under
+# docker/try-all-containerized/ (see its dev_status.md).
+#
+# Prereq: `source docker/set_env.sh` (model/service env) and `setup_docker.sh`
+# having fetched edge-ai-libraries into ../.external/edge-ai-libraries.
+
+include:
+  - path: ../videostream-analytics/docker/docker-compose.yaml
+
+services:
+  # Inherit upstream's on-device model serving unchanged.
+  vllm-ipex-serving:
+    extends:
+      file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
+      service: vllm-ipex-serving
+
+  # Inherit upstream's video-summary microservice, then add ONLY the SmartBuilding
+  # deltas: the /data mount and the vllm health dependency (`extends` does not copy
+  # depends_on, so it is restated here).
+  multilevel-video-understanding:
+    extends:
+      file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
+      service: multilevel-video-understanding
+    depends_on:
+      vllm-ipex-serving:
+        condition: service_healthy
+    volumes:
+      # MCP server's summary_service.path_remap rewrites host paths under this
+      # prefix to /data, so multilevel can read the clips the MCP worker sends it.
+      - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:/data:ro
+
+# Top-level networks/volumes are NOT inherited by `extends`, so declare the ones
+# the upstream service definitions reference.
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  tmp_volume:

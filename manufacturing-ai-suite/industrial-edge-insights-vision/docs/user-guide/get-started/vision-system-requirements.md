@@ -28,9 +28,9 @@ Other required software or tools: Git, jq, and unzip.
 |----------------------|-----------|------------|-----------|
 | Intel® Core™ Ultra Processors (Series 3, 2, 1) | ✓         | ✓          | ✓         |
 | Intel® Core™ Processors Series 3 | ✓         | ✓          | ✓         |
-| Intel® Core™ Processors Series 2 | ✓         | ✓          |    NA      |
-| Intel® Core™ Processors (14th/13th/12th Gen) | ✓         | ✓          | NA         |
-| 4th Gen Intel® Xeon® Scalable Processors | ✓         |      NA      |      NA     |
+| Intel® Core™ Processors Series 2 | ✓         | ✓          |    N/A      |
+| Intel® Core™ Processors (14th/13th/12th Gen) | ✓         | ✓          | N/A         |
+| 4th Gen Intel® Xeon® Scalable Processors | ✓         |      N/A      |      N/A     |
 
 **Validated on Intel® Arc™ dGPU models:** A770, B580, B60, and B50.
 
@@ -44,8 +44,3 @@ See the list of certified edge AI systems as enabled through the  Intel® Edge S
 ## Validation
 
 Ensure all required software are installed and configured before proceeding to [Get Started](../get-started.md).
-
-## Supporting Resources
-
-- [Get Started Guide](../get-started.md)
-

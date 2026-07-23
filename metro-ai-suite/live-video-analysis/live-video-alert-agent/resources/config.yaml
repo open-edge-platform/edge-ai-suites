@@ -1,0 +1,57 @@
+# Subscription config for alert-agent-service (live-video-alert-agent deployment).
+
+default:
+  tools:
+    - log_alert
+  dedup:
+    enabled: true
+    strategy: field_hash
+    fields:
+      - source_id
+    window_seconds: 30
+    on_missing: skip
+
+subscriptions:
+  # Repeated vehicle detections from the same camera are suppressed for 30s.
+  - alert_name: vehicle
+    tools:
+      - log_alert
+      - capture_snapshot
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 30
+      on_missing: skip
+
+  # Person detections deduped over a longer window to reduce MQTT noise.
+  - alert_name: Person Detection
+    tools:
+      - log_alert
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 60
+      on_missing: skip
+
+  # Altercations are high priority: light dedup, and escalate to MQTT + webhook
+  # after 3 consecutive detections from the same source.
+  - alert_name: Altercation
+    tools:
+      - log_alert
+      - capture_snapshot
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 15
+      on_missing: skip
+    escalation:
+      threshold_consecutive: 3
+      additional_tools:
+        - publish_mqtt
+        - trigger_webhook

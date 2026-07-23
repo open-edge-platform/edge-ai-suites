@@ -125,15 +125,24 @@ class InferenceConsumer:
             "running": self.is_running(),
             "delivered_fps": m["delivered_fps"],
             "infer_mean_ms": lat["infer_mean_ms"],
+            "infer_p50_ms": lat["infer_p50_ms"],
+            "infer_p90_ms": lat["infer_p90_ms"],
+            "infer_p95_ms": lat["infer_p95_ms"],
             "infer_p99_ms":  lat["infer_p99_ms"],
             # Processing-chain sum: gvadetect + gvatrack + gvametaconvert +
             # gvawatermark + jpegenc. This is what the customer sees as
             # "camera-to-screen" on a live source, and what the <30 ms
             # requirement is against.
             "processing_mean_ms": lat["processing_mean_ms"],
+            "processing_p50_ms": lat["processing_p50_ms"],
+            "processing_p90_ms": lat["processing_p90_ms"],
+            "processing_p95_ms": lat["processing_p95_ms"],
             "processing_p99_ms": lat["processing_p99_ms"],
             # Full source→sink residence — diagnostics only.
             "e2e_mean_ms":   lat["e2e_mean_ms"],
+            "e2e_p50_ms":    lat["e2e_p50_ms"],
+            "e2e_p90_ms":    lat["e2e_p90_ms"],
+            "e2e_p95_ms":    lat["e2e_p95_ms"],
             "e2e_p99_ms":    lat["e2e_p99_ms"],
             "total_mean_ms": lat["e2e_mean_ms"],
             "total_p99_ms":  lat["e2e_p99_ms"],

@@ -21,6 +21,14 @@ from utils.storage_manager import StorageManager
 logger = logging.getLogger(__name__)
 
 
+def _get_ocr_capability():
+    """Resolve the OCR capability from the ModelManager hub.
+    """
+    from model_manager import ModelManager
+
+    return ModelManager.instance().ocr()
+
+
 def create_ocr_response(
     ocr_status: OCRStatus,
     input_file: str,
@@ -120,15 +128,9 @@ def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
 
         content = file.file.read()
         temp_path = save_temp_file(content, f"ocr_extract_{session_id}", file.filename)
-        
-        from components.ocr_component import OCRComponent
+
         from utils.config_loader import config as app_config
-        ocr = OCRComponent(
-            session_id=session_id,
-            provider=app_config.models.ocr.provider,
-            lang=app_config.app.language,
-            device=app_config.models.ocr.device,
-        )
+        ocr = _get_ocr_capability()
         logger.info(f"Using {app_config.models.ocr.provider.upper()} model on {app_config.models.ocr.device} (lang={app_config.app.language})")
 
         input_file = file.filename
@@ -138,10 +140,9 @@ def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
             logger.info("Detected PDF. Converting to images...")
             images = pdf_to_images(temp_path, dpi=300)
             for img in images:
-                text = ocr.ocr_model.extract_text(img)
-                full_text.append(text)
+                full_text.append(ocr.extract_text(img))
         else:
-            full_text.append(ocr.ocr_model.extract_text(temp_path))
+            full_text.append(ocr.extract_text(temp_path))
 
         combined_text = "\n".join(full_text)
 
