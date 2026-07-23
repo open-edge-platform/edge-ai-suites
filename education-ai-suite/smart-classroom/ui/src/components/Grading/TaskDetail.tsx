@@ -151,36 +151,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
       {task.error_message && <div className="grading-error">{task.error_message}</div>}
       {error && <div className="grading-error">{error}</div>}
 
-      <div className="grading-detail-actions">
-        <button
-          className="grading-btn grading-btn-secondary"
-          disabled={!canPause || busy}
-          onClick={() => run(() => gradingPauseTask(task.task_id))}
-        >
-          {t('grading.detail.pause', 'Pause')}
-        </button>
-        <button
-          className="grading-btn grading-btn-secondary"
-          disabled={!canResume || busy}
-          onClick={() => run(() => gradingResumeTask(task.task_id))}
-        >
-          {t('grading.detail.resume', 'Resume')}
-        </button>
-        <button
-          className="grading-btn grading-btn-danger"
-          disabled={busy}
-          onClick={() => setConfirmDelete(true)}
-        >
-          {t('grading.detail.delete', 'Delete')}
-        </button>
-        <button
-          className="grading-btn grading-btn-primary grading-detail-view"
-          onClick={() => onViewResults(task.task_id)}
-        >
-          {t('grading.detail.viewResults', 'View results →')}
-        </button>
-      </div>
-
       <div className="grading-log-row">
         {task.dir_info && (
           <div className="grading-timing">
@@ -221,6 +191,36 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
               ? logLines.join('\n')
               : t('grading.detail.logEmpty', 'No log output yet.')}
           </pre>
+        </div>
+
+        <div className="grading-detail-actions">
+          <button
+            className="grading-btn grading-btn-secondary"
+            disabled={!canPause || busy}
+            onClick={() => run(() => gradingPauseTask(task.task_id))}
+          >
+            {t('grading.detail.pause', 'Pause')}
+          </button>
+          <button
+            className="grading-btn grading-btn-secondary"
+            disabled={!canResume || busy}
+            onClick={() => run(() => gradingResumeTask(task.task_id))}
+          >
+            {t('grading.detail.resume', 'Resume')}
+          </button>
+          <button
+            className="grading-btn grading-btn-danger"
+            disabled={busy}
+            onClick={() => setConfirmDelete(true)}
+          >
+            {t('grading.detail.delete', 'Delete')}
+          </button>
+          <button
+            className="grading-btn grading-btn-primary"
+            onClick={() => onViewResults(task.task_id)}
+          >
+            {t('grading.detail.viewResults', 'View results →')}
+          </button>
         </div>
       </div>
 
