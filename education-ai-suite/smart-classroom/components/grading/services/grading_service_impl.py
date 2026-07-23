@@ -960,6 +960,41 @@ def request_task_resume(task_id: str) -> dict[str, Any]:
     raise RuntimeError(f"resume not allowed in current status: {status}")
 
 
+def delete_task(task_id: str) -> None:
+    import shutil
+
+    _validate_task_id(task_id)
+    job = _JOB_STORE.get_job(task_id)
+    status = str(job.get("status", ""))
+
+    if status in _ACTIVE_TASK_STATUSES:
+        try:
+            _JOB_STORE.update_job(task_id, status="CANCELLED", current_step="deleted")
+            _JOB_STORE.set_control_action(task_id, "cancel")
+        except Exception:
+            pass
+
+    papers_dir_str = (job.get("request") or {}).get("papers_dir") or (job.get("request") or {}).get("paper_path")
+    if papers_dir_str:
+        lock = Path(str(papers_dir_str)) / ".grading.lock"
+        try:
+            lock.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    outputs_dir = _outputs_root() / task_id
+    if outputs_dir.exists():
+        shutil.rmtree(outputs_dir, ignore_errors=True)
+
+    log = _task_log_path(task_id, "grading.run")
+    try:
+        log.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+    _JOB_STORE.delete_job(task_id)
+
+
 def request_task_cancel(task_id: str) -> dict[str, Any]:
     task = get_task_status(task_id)
     status = task.get("status")

@@ -86,6 +86,14 @@ class JsonJobStore:
                 if task_type is None or str(job.get("task_type")) == task_type
             ]
 
+    def delete_job(self, job_id: str) -> dict[str, Any]:
+        with self._lock:
+            if job_id not in self._jobs:
+                raise KeyError(job_id)
+            job = dict(self._jobs.pop(job_id))
+            self._persist()
+            return job
+
     def set_control_action(self, job_id: str, action: str | None) -> dict[str, Any]:
         with self._lock:
             if job_id not in self._jobs:

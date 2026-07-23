@@ -14,7 +14,6 @@ from api.schemas import (
     RubricUpdateResponse,
     GradingTaskCreateRequest,
     GradingTaskCreateResponse,
-    GradingTaskResultResponse,
     GradingTaskStatusResponse,
     TaskLogResponse,
     TaskSummaryJsonResponse,
@@ -26,13 +25,13 @@ from api.schemas import (
 from services.grading_service_impl import (
     _dir_info as dir_info_impl,
     create_task as create_task_dispatch,
+    delete_task as delete_task_impl,
     get_grading_config as get_grading_config_impl,
     update_grading_config as update_grading_config_impl,
     get_rubric_content as get_rubric_content_impl,
     update_rubric_content as update_rubric_content_impl,
     get_task_summary as get_task_summary_impl,
     get_health,
-    get_task_result as get_task_result_impl,
     get_task_status as get_task_status_impl,
     list_directory as list_directory_impl,
     list_rubrics as list_rubrics_impl,
@@ -177,24 +176,6 @@ def create_router(language: str) -> APIRouter:
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
-    @router.get("/grading/tasks/{task_id}/result", response_model=GradingTaskResultResponse)
-    async def get_task_result(task_id: str) -> GradingTaskResultResponse:
-        try:
-            result = get_task_result_impl(task_id)
-            return GradingTaskResultResponse(
-                task_id=result["task_id"],
-                task_type=result["task_type"],
-                status=result["status"],
-                result=result["result"],
-                log_path=result.get("result", {}).get("log_path"),
-            )
-        except KeyError as exc:
-            raise HTTPException(status_code=404, detail=f"task not found: {task_id}") from exc
-        except RuntimeError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
-
     def _control_response(task: dict) -> GradingTaskControlResponse:
         return GradingTaskControlResponse(
             task_id=task["job_id"],
@@ -233,5 +214,14 @@ def create_router(language: str) -> APIRouter:
             raise HTTPException(status_code=404, detail=f"task not found: {task_id}") from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @router.delete("/grading/tasks/{task_id}", status_code=204)
+    async def delete_task(task_id: str) -> None:
+        try:
+            delete_task_impl(task_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=f"task not found: {task_id}") from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 
     return router
