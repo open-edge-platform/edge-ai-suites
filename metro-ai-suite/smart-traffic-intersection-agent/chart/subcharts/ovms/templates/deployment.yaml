@@ -38,6 +38,7 @@ spec:
         {{- if .Values.trustedCompute.tc_gpu_enabled }}
         io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
         io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        io.katacontainers.config.hypervisor.kernel_params: "push_host={{ .Values.trustedCompute.tc_push_host }} push_port={{ .Values.trustedCompute.tc_relay_listen_port }} push_path={{ .Values.trustedCompute.tc_push_path }}"
         cdi-devices.noderesource.dev/container.ovms: |
           {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
           - {{ . }}
@@ -188,6 +189,19 @@ spec:
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
+        {{- if $tcGpu }}
+        - name: tc-matrix-relay
+          image: "{{ .Values.trustedCompute.tc_matrix_relay_image }}:{{ .Values.trustedCompute.tc_matrix_relay_tag }}"
+          args:
+            - "TCP-LISTEN:{{ .Values.trustedCompute.tc_relay_listen_port }},reuseaddr,fork"
+            - "TCP:{{ .Release.Name }}-metrics-manager:{{ .Values.trustedCompute.tc_metrics_manager_port }}"
+          ports:
+            - name: relay
+              containerPort: {{ .Values.trustedCompute.tc_relay_listen_port | int }}
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+        {{- end }}
       volumes:
         - name: ov-models
           {{- if .Values.persistence.enabled }}

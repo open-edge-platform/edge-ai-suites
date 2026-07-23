@@ -29,11 +29,11 @@ Before You Begin, ensure the following:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. GPU telemetry will not be available when GPU is passed through to Trusted Compute.
+> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 ## 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.2 or later on your k3s nodes. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.3 or later. Complete the following sections:
 
 1. Prerequisites
 2. Download the Trusted Compute Package
@@ -159,7 +159,12 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
   --set global.storageClassName="" \
   --set trustedCompute.enabled=true \
   -n smart-intersection
+
+# Wait for all pods to be ready
+kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
+
+> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
 ---
 
@@ -192,16 +197,21 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
   --set trustedCompute.enabled=true \
   --set trustedCompute.tc_gpu_enabled=true \
   -n smart-intersection
+
+# Wait for all pods to be ready
+kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
+
+> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
 ---
 
 ## 4. Verify Deployment
 
-Verify that the pods are running with the Trusted Compute runtime:
+Verify that the pods are running with the Trusted Compute:
 
 ```bash
-# Check that DL Streamer pods are using the trusted compute runtime class
+# Check that DL Streamer pods are using the trusted compute
 kubectl get pods -n smart-intersection -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.runtimeClassName}{"\n"}{end}' | grep dlstreamer
 
 # Verify the pods are running
@@ -211,7 +221,7 @@ kubectl get pods -n smart-intersection
 kubectl logs -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server --tail=30
 ```
 
-You should see the DL Streamer Pipeline Server pods running with the Trusted Compute runtime class.
+You should see the DL Streamer Pipeline Server pods running with the Trusted Compute.
 
 ## 5. Access the Application
 

@@ -23,11 +23,11 @@ Before you begin, ensure that you have the following prerequisites:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. GPU telemetry will not be available when GPU is passed through to Trusted Compute.
+> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 ## 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.2 or later on your k3s nodes. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.3 or later. Complete the following sections:
 
 1. Prerequisites
 2. Download the Trusted Compute Package
@@ -100,6 +100,14 @@ The chart uses Helm subcharts for the OVMS model server and the metrics manager.
 helm dependency build .
 ```
 
+This downloads/packages the `ovms` and `metrics-manager` subcharts into `chart/charts/*.tgz`,
+which Helm requires at render/install time. Re-run this command whenever the subchart sources
+under `subcharts/` change.
+
+```bash
+helm lint .
+```
+
 #### Step 4: Configure the `values.yaml` File
 
 Edit the `values.yaml` file to set the necessary environment variables. Refer to the [values reference table](./deploy-with-helm.md#valuesyaml-reference).
@@ -167,7 +175,8 @@ The output should show `Kernel driver in use: vfio-pci` for your Intel GPU.
 helm install stia . -n <your-namespace> --create-namespace \
   --set ovms.trustedCompute.enabled=true \
   --set ovms.trustedCompute.tc_gpu_enabled=true \
-  --set ovms.gpu.enabled=false
+  --set ovms.gpu.enabled=false \
+  --set metricsManager.hardware.gpu.enabled=false
 ```
 
 ---
@@ -238,8 +247,16 @@ Follow the steps below in order to cleanly remove the deployment.
 
 ```bash
 helm uninstall stia -n <your-namespace>
-kubectl delete namespace <your-namespace>
 ```
+
+> **Note:** When `ovms.persistence.keepOnUninstall` is `true` (the default), the VLM model cache PVC is **retained** after uninstall to avoid re-downloading the model. This is recommended during development and testing. To fully clean up all PVCs:
+>
+> ```bash
+> kubectl get pvc -n <your-namespace>
+> kubectl delete pvc <pvc-name> -n <your-namespace>
+> ```
+>
+> To have Helm delete the PVC automatically on uninstall, set `ovms.persistence.keepOnUninstall=false` before deploying.
 
 **Step 2. Revert GPU Binding** (if deployed with GPU):
 
