@@ -555,6 +555,8 @@ To view captions in the Nx Witness client:
 
 Each caption appears as a bookmark entry timestamped to when it was generated. The caption text is the bookmark name.
 
+<img src="../_assets/view_lvc_captions.png" alt="Nx Witness Bookmarks tab showing LVC captions as timestamped bookmark entries" style="width: 600px; max-width: 100%;" />
+
 > **How it works:** VAP's LVC MQTT subscriber receives captions from the LVC backend and calls `POST /rest/v4/devices/{deviceId}/bookmarks` on the Nx REST API for each one — up to the first 500 characters of the caption text.
 
 ### 6.2 Stop the Captioning Run

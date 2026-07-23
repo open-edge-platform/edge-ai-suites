@@ -71,7 +71,7 @@ Edit the config.json and add the following pipeline.
             {
                 "name": "loitering_detection_vms_mqtt",
                 "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU model-instance-id=inst0 inference-interval=1 threshold=0.7 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -248,6 +248,7 @@ NX_CA_BUNDLE=
 DLS_VISION_HOST=host.docker.internal
 DLS_VISION_PORT=8080
 DLS_VISION_TLS_VERIFY=false
+DLS_PIPELINE_NAME=loitering_detection_vms_mqtt 
 DLS_VISION_CA_BUNDLE=
 
 # MQTT Broker — address as seen by VAP (subscribing from outside the dls_vision Docker network)
@@ -330,7 +331,7 @@ analytics_apps:
     mqtt_port: ${MQTT_PORT:-1883}
     pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
     pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
-    pipeline_name: "${DLS_PIPELINE_NAME:-loitering_detection_vms_mqtt}"
+    pipeline_name: "${DLS_PIPELINE_NAME:-}"
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
