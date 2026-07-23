@@ -488,12 +488,6 @@ content_search:
   host_addr: "127.0.0.1"
   port: 9011
   video_summarization_enabled: true
-  # Python interpreter used to launch the content-search process group.
-  # Content-search has its own dependency set (transformers 5.x, torch 2.9+,
-  # chromadb, llama-index, ...) that conflicts with the main app, so it runs in
-  # a dedicated virtual environment. setup-smart-classroom.ps1 provisions this
-  # venv. Path may be relative to the smart-classroom root. Set to null to reuse
-  # the main app interpreter (sys.executable).
   python_executable: "content_search/venv_content_search/Scripts/python.exe"
 
   chromadb:
