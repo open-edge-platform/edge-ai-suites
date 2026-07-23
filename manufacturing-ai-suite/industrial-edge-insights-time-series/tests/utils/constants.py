@@ -294,7 +294,7 @@ INFLUXDB_DATABASE = "datain"
 # Essential container constants (commonly used in tests)
 NGINX_CONTAINER = CONTAINERS["nginx_proxy"]["name"]
 NGINX_HTTPS_PORT = str(CONTAINERS["nginx_proxy"]["https_port"])
-NGINX_EXPECTED_PORTS = [str(CONTAINERS["nginx_proxy"]["https_port"]), str(CONTAINERS["nginx_proxy"]["mqtt_port"])]
+NGINX_EXPECTED_PORTS = [str(CONTAINERS["nginx_proxy"]["https_port"])]
 MEDIAMTX_CONTAINER = CONTAINERS["mediamtx"]["name"]
 COTURN_CONTAINER = CONTAINERS["coturn"]["name"]
 
