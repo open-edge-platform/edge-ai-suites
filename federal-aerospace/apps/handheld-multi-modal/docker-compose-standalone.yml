@@ -38,7 +38,7 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
-      GF_LIVE_ALLOWED_ORIGINS: "*"
+      GF_LIVE_ALLOWED_ORIGINS: "localhost"
       GF_LIVE_MAX_MESSAGE_SIZE: "128000"
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
