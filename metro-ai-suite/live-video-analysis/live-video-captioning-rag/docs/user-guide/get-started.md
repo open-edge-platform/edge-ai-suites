@@ -122,6 +122,7 @@ Download a LLM model for RAG.
   --device CPU \
   --weight-format int8
 ```
+> Note: LLM model support for NPU is not yet enabled in Live-Video-Captioning-RAG application.
 
 This stores the model under `llm_models/`.
 
