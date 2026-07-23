@@ -93,6 +93,16 @@ _last_dets: Optional[dict] = None
 VALID_DEVICES = {"CPU", "GPU", "NPU"}
 
 
+def _stopped_snapshot(inf: dict[str, Any] | None) -> dict[str, Any]:
+    """Return a lifecycle-consistent frozen snapshot for post-stop UI state."""
+    base = dict(inf or {})
+    base["running"] = False
+    base["pipeline_running"] = False
+    base["wanted_running"] = False
+    base["delivered_fps"] = 0.0
+    return base
+
+
 # ---------------------------------------------------------------------------
 # Publish helpers
 # ---------------------------------------------------------------------------
@@ -126,12 +136,20 @@ def _map_fsm_to_lifecycle(fsm_state: str, worker_running: bool) -> str:
 
 
 def _snapshot_full() -> dict[str, Any]:
+    global _worker, _last_stats
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
     # Live worker wins; frozen last-session stats used when worker is None.
     if _worker is not None:
         inf = _worker.stats()
+        # Auto-heal stale running sessions: if control-plane health says the
+        # pipeline is not running, release the worker and transition to ready.
+        if STATE.lifecycle == "running" and not bool(inf.get("pipeline_running")) and not bool(inf.get("wanted_running")):
+            inf = _stopped_snapshot(inf)
+            _last_stats = inf
+            _worker = None
+            _set_lifecycle("ready", publish=False)
     elif _last_stats is not None:
-        inf = _last_stats
+        inf = _stopped_snapshot(_last_stats)
     else:
         inf = {
             "running": False, "delivered_fps": 0.0,
@@ -324,12 +342,21 @@ def readiness() -> Response:
 
 @app.get(f"{API}/status")
 def status() -> Response:
+    global _worker, _last_stats
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
     # Live worker wins; when stopped, fall through to the last-session
     # snapshot frozen by /stop so the UI keeps rendering the final KPIs
     # (fps, latency, detection totals) instead of blanking to zero.
     # `_last_stats` is cleared on /start (fresh session) and /reset.
-    inf = _worker.stats() if _worker else _last_stats
+    if _worker:
+        inf = _worker.stats()
+        if STATE.lifecycle == "running" and not bool(inf.get("pipeline_running")) and not bool(inf.get("wanted_running")):
+            inf = _stopped_snapshot(inf)
+            _last_stats = inf
+            _worker = None
+            _set_lifecycle("ready", publish=False)
+    else:
+        inf = _stopped_snapshot(_last_stats) if _last_stats else None
     return jsonify({
         "lifecycle": STATE.lifecycle,
         "device": STATE.device,
@@ -362,6 +389,14 @@ def start() -> Response:
         kind = src.get("kind")
         arg  = src.get("arg")
         if kind in ("file", "basler") and isinstance(arg, str) and arg:
+            if kind == "basler":
+                basler, basler_note = _enumerate_basler_cameras()
+                if not basler:
+                    return jsonify({
+                        "status": "not_ready",
+                        "error": basler_note or "no Basler camera detected",
+                        "source": {"kind": "basler", "arg": arg},
+                    }), 409
             STATE.source_kind = kind
             STATE.source_arg  = arg
 
@@ -407,7 +442,7 @@ def stop() -> Response:
         if _worker is not None:
             # Freeze the last session so the UI keeps showing final KPIs.
             try:
-                _last_stats = _worker.stats()
+                _last_stats = _stopped_snapshot(_worker.stats())
                 _last_dets = _worker.latest_detections()
             except Exception:  # noqa: BLE001
                 pass
@@ -630,6 +665,24 @@ def platform_info() -> Response:
     })
 
 
+def _enumerate_basler_cameras() -> tuple[list[dict], str | None]:
+    basler: list[dict] = []
+    basler_note: str | None = None
+    try:
+        from pypylon import pylon  # type: ignore
+        for d in pylon.TlFactory.GetInstance().EnumerateDevices():
+            basler.append({
+                "serial": d.GetSerialNumber(),
+                "model": d.GetModelName(),
+                "vendor": d.GetVendorName(),
+            })
+    except ImportError:
+        basler_note = "pypylon not installed in backend image (ships in slice E)"
+    except Exception as e:
+        basler_note = f"pylon enumerate failed: {e}"
+    return basler, basler_note
+
+
 @app.get(f"{API}/devices/cameras")
 def devices_cameras() -> Response:
     v4l2: list[dict] = []
@@ -645,20 +698,7 @@ def devices_cameras() -> Response:
     except FileNotFoundError:
         pass
 
-    basler: list[dict] = []
-    basler_note: str | None = None
-    try:
-        from pypylon import pylon  # type: ignore
-        for d in pylon.TlFactory.GetInstance().EnumerateDevices():
-            basler.append({
-                "serial": d.GetSerialNumber(),
-                "model":  d.GetModelName(),
-                "vendor": d.GetVendorName(),
-            })
-    except ImportError:
-        basler_note = "pypylon not installed in backend image (ships in slice E)"
-    except Exception as e:
-        basler_note = f"pylon enumerate failed: {e}"
+    basler, basler_note = _enumerate_basler_cameras()
 
     resp: dict = {"v4l2": v4l2, "basler": basler}
     if basler_note:

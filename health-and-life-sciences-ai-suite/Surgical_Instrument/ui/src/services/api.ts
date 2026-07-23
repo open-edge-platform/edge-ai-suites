@@ -205,6 +205,7 @@ export async function listCameras(): Promise<CamerasResponse> {
 export type PipelineSource = { kind: 'file' | 'basler'; arg: string };
 
 let pendingSource: PipelineSource | null = null;
+let pendingDevice: Device | null = null;
 
 export function setPendingSource(src: PipelineSource | null): void {
   pendingSource = src;
@@ -215,6 +216,14 @@ export function getPendingSource(): PipelineSource | null {
 }
 
 export type Device = 'CPU' | 'GPU' | 'NPU';
+
+export function setPendingDevice(device: Device | null): void {
+  pendingDevice = device;
+}
+
+export function getPendingDevice(): Device | null {
+  return pendingDevice;
+}
 
 export async function setDevice(device: Device): Promise<{ status: string; device: string; error?: string }> {
   const res = await fetch(`${BASE_URL}/device`, {
@@ -256,6 +265,8 @@ export const api = {
   listCameras,
   setPendingSource,
   getPendingSource,
+  setPendingDevice,
+  getPendingDevice,
 };
 
 export default api;

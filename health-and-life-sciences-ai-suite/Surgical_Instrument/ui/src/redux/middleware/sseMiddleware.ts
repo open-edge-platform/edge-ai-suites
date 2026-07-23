@@ -15,6 +15,15 @@ import { patchDetectionState } from '../slices/detectionSlice';
  */
 export const sseMiddleware: Middleware = (store) => {
   let eventSource: EventSource | null = null;
+  let reconnectTimer: number | null = null;
+  let connectionToken = 0;
+
+  const clearReconnectTimer = () => {
+    if (reconnectTimer !== null) {
+      window.clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
 
   return (next) => (action: any) => {
     if (typeof action !== 'object' || action === null || !('type' in action)) {
@@ -24,6 +33,9 @@ export const sseMiddleware: Middleware = (store) => {
     if (action.type === 'sse/connect') {
       const url = action.payload?.url;
       if (!url) return next(action);
+      connectionToken += 1;
+      const activeToken = connectionToken;
+      clearReconnectTimer();
 
       if (eventSource) {
         eventSource.close();
@@ -109,12 +121,18 @@ export const sseMiddleware: Middleware = (store) => {
       eventSource.onmessage = handleSSEData;
 
       eventSource.onerror = () => {
+        if (activeToken !== connectionToken) {
+          return;
+        }
         store.dispatch(setAggregatorStatus('error'));
         if (eventSource) {
           eventSource.close();
           eventSource = null;
         }
-        setTimeout(() => {
+        reconnectTimer = window.setTimeout(() => {
+          if (activeToken !== connectionToken) {
+            return;
+          }
           const state: any = store.getState();
           if (state.app?.isProcessing) {
             store.dispatch({ type: 'sse/connect', payload: { url } });
@@ -124,6 +142,8 @@ export const sseMiddleware: Middleware = (store) => {
     }
 
     if (action.type === 'sse/disconnect') {
+      connectionToken += 1;
+      clearReconnectTimer();
       if (eventSource) {
         eventSource.close();
         eventSource = null;

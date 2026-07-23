@@ -47,6 +47,10 @@ class InferenceConsumer:
             "source_arg": self._source_arg,
         }
 
+    def _mark_not_running(self) -> None:
+        with self._lock:
+            self._running = False
+
     # ---------------------------------------------------------------- start
     def start(self) -> None:
         with self._lock:
@@ -87,8 +91,12 @@ class InferenceConsumer:
     def _refresh_snapshots(self) -> None:
         try:
             self._last_health = self._client.health()
+            # Keep internal running flag aligned with control-plane truth.
+            if self._last_health.get("status") != "running" and not self._last_health.get("wanted_running", False):
+                self._mark_not_running()
         except Exception as exc:  # noqa: BLE001
             log.debug("pipeline health fetch failed: %s", exc)
+            self._mark_not_running()
         try:
             self._last_latency = self._client.latency()
         except Exception as exc:  # noqa: BLE001
@@ -102,10 +110,14 @@ class InferenceConsumer:
         uptime_s = 0.0
         if self._started_at is not None:
             uptime_s = max(0.0, time.time() - self._started_at)
-        fps = 60.0 if self.is_running() else 0.0
+        pipeline_running = health.get("status") == "running"
+        wanted_running = bool(health.get("wanted_running", False))
+        running = self.is_running() and pipeline_running
+        fps = 60.0 if running else 0.0
         return {
-            "running": self.is_running(),
-            "pipeline_running": health.get("status") == "running",
+            "running": running,
+            "pipeline_running": pipeline_running,
+            "wanted_running": wanted_running,
             "source_kind": health.get("source_kind", self._source_kind),
             "source_arg": health.get("source_arg", self._source_arg),
             "delivered_fps": fps,

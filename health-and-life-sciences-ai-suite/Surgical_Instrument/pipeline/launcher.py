@@ -53,6 +53,7 @@ _proc: subprocess.Popen | None = None
 _proc_device: str | None = None
 _proc_source_kind: str | None = None
 _proc_source_arg: str | None = None
+_proc_display_view: bool | None = None
 _wanted_running: bool = False        # set True by /start, False by /stop
 _supervisor: threading.Thread | None = None
 _latency = RollingLatency()
@@ -66,8 +67,14 @@ def _reap_if_dead() -> None:
         _proc = None
 
 
-def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
+def _spawn(
+    device: str,
+    source_kind: str,
+    source_arg: str,
+    display_view: bool | None = None,
+) -> subprocess.Popen:
     _latency.reset()
+    use_display = DISPLAY_VIEW if display_view is None else display_view
     pipeline = build(
         source_kind=source_kind,
         source_arg=source_arg,
@@ -76,7 +83,7 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
         threshold=THRESHOLD,
         target_fps=TARGET_FPS,
         frame_limit=FRAME_LIMIT,
-        display_view=DISPLAY_VIEW,
+        display_view=use_display,
         video_sink=VIDEO_SINK,
     )
 
@@ -117,7 +124,7 @@ def _spawn(device: str, source_kind: str, source_arg: str) -> subprocess.Popen:
     return proc
 
 
-def _supervisor_loop(device: str, source_kind: str, source_arg: str) -> None:
+def _supervisor_loop(device: str, source_kind: str, source_arg: str, display_view: bool) -> None:
     """Respawn gst-launch on EOS/exit while /start was the last user intent.
 
     filesrc reads polyp_test.mp4 once and emits EOS. To match the old
@@ -150,7 +157,7 @@ def _supervisor_loop(device: str, source_kind: str, source_arg: str) -> None:
 
             log.info("supervisor: pipeline exited rc=%s — respawning (loop)", rc)
             try:
-                _proc = _spawn(device, source_kind, source_arg)
+                _proc = _spawn(device, source_kind, source_arg, display_view)
             except Exception as exc:  # noqa: BLE001
                 log.exception("supervisor: respawn failed: %s", exc)
                 _proc = None
@@ -172,6 +179,7 @@ def health():
             device=_proc_device,
             source_kind=_proc_source_kind,
             source_arg=_proc_source_arg,
+            display_view=_proc_display_view,
             wanted_running=_wanted_running,
             latency=_latency.snapshot(),
         )
@@ -184,7 +192,7 @@ def latency():
 
 @app.post("/start")
 def start():
-    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _wanted_running, _supervisor
+    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _proc_display_view, _wanted_running, _supervisor
     body = request.get_json(silent=True) or {}
     device = str(body.get("device", "GPU")).upper()
     if device not in VALID_DEVICES:
@@ -203,7 +211,8 @@ def start():
         if _proc is not None:
             return jsonify(error="pipeline already running", pid=_proc.pid), 409
         try:
-            _proc = _spawn(device, source_kind, source_arg)
+            _proc = _spawn(device, source_kind, source_arg, DISPLAY_VIEW)
+            _proc_display_view = DISPLAY_VIEW
         except Exception as exc:  # noqa: BLE001
             return jsonify(error=f"spawn failed: {exc}"), 500
         _proc_device = device
@@ -214,29 +223,53 @@ def start():
         time.sleep(0.3)
         if _proc.poll() is not None:
             rc = _proc.returncode
-            _proc = None
-            _proc_device = None
-            _proc_source_kind = None
-            _proc_source_arg = None
-            _wanted_running = False
-            return jsonify(error=f"pipeline exited immediately (rc={rc})"), 500
+            # If display initialization fails (common in headless/RDP envs),
+            # fall back to non-display mode so inference and metrics still run.
+            if DISPLAY_VIEW:
+                log.warning(
+                    "pipeline exited immediately in display mode (rc=%s); retrying headless sink",
+                    rc,
+                )
+                try:
+                    _proc = _spawn(device, source_kind, source_arg, False)
+                    _proc_display_view = False
+                    time.sleep(0.3)
+                except Exception as exc:  # noqa: BLE001
+                    _proc = None
+                    _proc_device = None
+                    _proc_source_kind = None
+                    _proc_source_arg = None
+                    _proc_display_view = None
+                    _wanted_running = False
+                    return jsonify(error=f"headless fallback failed: {exc}"), 500
+
+            if _proc is None or _proc.poll() is not None:
+                rc2 = _proc.returncode if _proc is not None else rc
+                _proc = None
+                _proc_device = None
+                _proc_source_kind = None
+                _proc_source_arg = None
+                _proc_display_view = None
+                _wanted_running = False
+                return jsonify(error=f"pipeline exited immediately (rc={rc2})"), 500
 
         # Supervisor lives across the /start /stop cycle and respawns
         # gst-launch on EOS so the demo loops indefinitely.
         _supervisor = threading.Thread(
-            target=_supervisor_loop, args=(device, source_kind, source_arg),
+            target=_supervisor_loop,
+            args=(device, source_kind, source_arg, bool(_proc_display_view)),
             name="pipeline-supervisor", daemon=True,
         )
         _supervisor.start()
         return jsonify(
             status="running", pid=_proc.pid, device=device,
-            source_kind=source_kind, source_arg=source_arg,
+            source_kind=source_kind, source_arg=source_arg, display_view=_proc_display_view,
         ), 200
 
 
 @app.post("/stop")
 def stop():
-    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _wanted_running
+    global _proc, _proc_device, _proc_source_kind, _proc_source_arg, _proc_display_view, _wanted_running
     with _lock:
         _wanted_running = False   # tell supervisor not to respawn
         _reap_if_dead()
@@ -261,6 +294,7 @@ def stop():
         _proc_device = None
         _proc_source_kind = None
         _proc_source_arg = None
+        _proc_display_view = None
         return jsonify(status="stopped", pid=pid), 200
 
 
