@@ -290,11 +290,8 @@
       "completed": "已完成",
       "failed": "失败",
       "processing": "正在处理",
-<<<<<<< HEAD
-=======
       "delete": "删除",
       "deleteConfirm": "确认删除该任务及其所有输出文件？此操作不可撤销。",
->>>>>>> 07678dfb (ui draft)
       "pause": "暂停",
       "resume": "恢复",
       "cancel": "取消",
