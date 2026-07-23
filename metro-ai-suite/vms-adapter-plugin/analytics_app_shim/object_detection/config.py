@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+_DEVICE_ORDER = ("CPU", "GPU", "NPU")
 
 
 class ObjectDetectionAnalyticsAppConfig(BaseModel):
@@ -26,12 +29,6 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     mqtt_ca_bundle: str = ""
     mqtt_client_cert: str = ""
     mqtt_client_key: str = ""
-    # Broker address as seen by the Pipeline Server (used in the destination payload
-    # so gvametapublish can connect). Defaults to the Pipeline Server's MQTT_HOST env var
-    # value (container name on the DLStreamer Vision network). Set to "host.docker.internal" if the
-    # broker is only reachable via the host's published port.
-    pipeline_server_mqtt_host: str = "mqtt-broker"
-    pipeline_server_mqtt_port: int = 1883
     # Maps detection labels (case-insensitive) to Nx Witness object typeIds.
     # Any label not present here falls back to "python.detected.object".
     # These typeIds are also merged into the Nx analytics manifest at startup
@@ -49,8 +46,40 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
     # in Nx. For example, -300 corrects for ~300 ms of inference latency.
     # Has no effect when sender_ntp_unix_timestamp_ns is present in the payload.
     metadata_timestamp_offset_ms: int = 0
-    # DLS pipeline name to be run. This is populated from config/config.yaml
-    pipeline_name: str = ""
+    # Per-device pipeline mapping used by Nx UI controls and run startup.
+    # At least one of CPU/GPU/NPU must be configured with a non-empty value.
+    pipeline: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _normalize_and_validate_pipeline_map(self):
+        normalized: dict[str, str] = {}
+        for key, value in (self.pipeline or {}).items():
+            device = str(key or "").strip().upper()
+            name = str(value or "").strip()
+            if not device or not name:
+                continue
+            if device not in _DEVICE_ORDER:
+                raise ValueError(
+                    f"Unsupported pipeline device '{device}'. Supported devices: {list(_DEVICE_ORDER)}"
+                )
+            normalized[device] = name
+
+        if not normalized:
+            raise ValueError(
+                "Object Detection requires at least one configured pipeline: "
+                "set one of pipeline.cpu, pipeline.gpu, or pipeline.npu"
+            )
+
+        self.pipeline = normalized
+        return self
+
+    def configured_pipeline_devices(self) -> list[str]:
+        """Return configured devices in stable UI order."""
+        return [device for device in _DEVICE_ORDER if self.pipeline.get(device)]
+
+    def pipeline_for_device(self, device: str) -> str:
+        """Return configured pipeline name for a given device (case-insensitive)."""
+        return self.pipeline.get(str(device or "").strip().upper(), "")
     def object_types(self) -> list[str]:
         """Return the object type ids this app emits (VMS-neutral).
 
@@ -64,8 +93,10 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
         """Declare this app's per-camera control knobs (VMS-neutral).
 
         A ``bool`` named ``pipelineEnabled`` is the start/stop toggle; ``device``
-        selects the inference device. A VMS shim renders these into its own UI.
+        selects the inference device. Only configured devices are exposed.
+        A VMS shim renders these into its own UI.
         """
+        device_options = self.configured_pipeline_devices()
         return [
             {
                 "name": "pipelineEnabled",
@@ -77,10 +108,10 @@ class ObjectDetectionAnalyticsAppConfig(BaseModel):
             {
                 "name": "device",
                 "type": "enum",
-                "default": "CPU",
-                "options": ["CPU", "GPU", "NPU"],
+                "default": device_options[0],
+                "options": device_options,
                 "label": "Device",
-                "description": "Inference device for the pipeline",
+                "description": "Inference device mapped to a configured pipeline",
             },
         ]
 

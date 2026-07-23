@@ -1,13 +1,15 @@
-# How to Build from Source
+# Build from Source
 
-This guide explains how to build the APM blueprint's application images from source code.
+This section shows how to build the APM blueprint's application
+images from source code.
 
-> **Note**: Building from source is only needed if you want to customize the application code. For standard deployments, the prebuilt images referenced in the Docker Compose files are sufficient.
+> **Note**: You only need to build from source if you want to customize the application code. For
+> standard deployments, the prebuilt images referenced in the Docker Compose files are sufficient.
 
 ## Prerequisites
 
-1. Complete the steps in the [Get Started](./get-started.md) guide.
-2. Ensure Docker and Docker Compose are installed and the Docker daemon is running.
+1. Complete the steps in the [Get Started](./get-started.md) section.
+2. Ensure Docker Engine and Docker Compose tool are installed, and the Docker daemon is running.
 3. If building behind a proxy, set `http_proxy`, `https_proxy`, and `no_proxy` in your shell before running any build commands.
 
 ## Steps to Build from Source
@@ -21,7 +23,7 @@ cd edge-ai-libraries/sample-applications/agentic-predictive-maintenance
 
 ### 2. Configure the Build
 
-Set the registry URL and tag for the images you want to build. If you leave `REGISTRY` empty, images will be built and tagged locally.
+Set the registry URL and tag for the images you want to build. If you leave `REGISTRY` empty, the images will be built and tagged locally.
 
 ```bash
 export REGISTRY=            # e.g. "docker.io/myusername/" — leave empty for local builds
@@ -55,13 +57,13 @@ guide](agent-service-integration-guide.md) for its contract.
 
 ### 4. Verify the Build
 
-After the build completes, confirm the images are present:
+After the build completes, confirm that the images are present:
 
 ```bash
 docker images | grep apm
 ```
 
-You should see entries for `apm-storage-service`, `apm-detection-service`, and `apm-ui-service`.
+You will see entries for `apm-storage-service`, `apm-detection-service`, and `apm-ui-service`.
 
 ### 5. Deploy with Local Images
 
