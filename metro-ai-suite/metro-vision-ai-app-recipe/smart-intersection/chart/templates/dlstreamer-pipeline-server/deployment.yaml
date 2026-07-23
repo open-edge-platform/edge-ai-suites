@@ -120,12 +120,23 @@ spec:
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
         {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
         resources:
+          {{- if not .Values.trustedCompute.enabled }}
+          {{- with .Values.resources.requests }}
           requests:
-             memory: {{ (.Values.resources.requests).memory | default "4Gi" | quote }}
-             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.resources.limits }}
           limits:
-             memory: {{ (.Values.resources.limits).memory | default "6Gi" | quote }}
-             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- else }}
+          requests:
+             memory: {{ .Values.trustedCompute.resources.requests.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.requests.cpu | quote }}
+          limits:
+             memory: {{ .Values.trustedCompute.resources.limits.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.limits.cpu | quote }}
+          {{- end }}
         {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
