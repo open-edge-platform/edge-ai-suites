@@ -1526,7 +1526,7 @@ def verify_influxdb_retention(namespace, chart_path, response):
         logger.info(f"InfluxDB pod found: {pod_name}")
 
         # Step 2: Execute InfluxDB commands inside the pod
-        logger.info(f"Executing InfluxDB query inside pod '{pod_name}': 'SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1;' with redacted credentials.")
+        logger.info(f"Executing InfluxDB query inside pod '{pod_name}': 'SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1' with redacted credentials.")
         result = subprocess.run(
             [
                 "kubectl", "exec", "-n", namespace, pod_name, "--",
