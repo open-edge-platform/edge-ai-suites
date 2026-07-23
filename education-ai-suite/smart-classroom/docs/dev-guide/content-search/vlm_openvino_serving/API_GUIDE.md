@@ -145,7 +145,7 @@ curl -X POST http://localhost:9900/v1/chat/completions \
   "id": "9bd80537-4fa8-4f6d-b5f4-cc991e415335",
   "object": "chat.completion",
   "created": 1770000000,
-  "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+  "model": "Qwen/Qwen3-VL-8B-Instruct",
   "choices": [
     {
       "index": 0,

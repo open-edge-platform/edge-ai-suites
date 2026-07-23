@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Data & artifacts
+*.db
+*.sqlite3
+segments/
+data/
+*debug*
+
+# Test video corpus (heavy MP4s; SRT ground-truth files stay tracked)
+videos/**/*.mp4
+videos/**/*.mkv
+videos/**/*.mov
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+
+# Node.js & TypeScript
+node_modules/
+package-lock.json
+*.tsbuildinfo
+dist/
+*.js.map
+*.d.ts.map
+
+# Test videos (large binary; store elsewhere / regenerate on demand)
+tests/videos/
+
+# Ad-hoc test videos at repo root
+*.mp4
+
+# dev docs
+docs/*
+!docs/user-guide/**
+
+# External source cloned on demand by setup_docker.sh (edge-ai-libraries, etc.)
+.external/
