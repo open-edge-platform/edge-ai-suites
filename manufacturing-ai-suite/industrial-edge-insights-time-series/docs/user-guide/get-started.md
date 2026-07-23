@@ -3,6 +3,10 @@
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
+## Prerequisites
+
+- [System Requirements](./get-started/system-requirements.md)
+
 ## Configure Docker
 
 To configure Docker:
