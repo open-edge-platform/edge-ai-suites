@@ -528,6 +528,13 @@ def create_directory_grading_task(
     if not resolved.is_dir():
         raise ValueError(f"papers_dir is not a directory: {resolved}")
 
+    lock_path = resolved / ".grading.lock"
+    if lock_path.exists():
+        raise ValueError(
+            f"目录 {resolved.name} 正在被评分（存在 .grading.lock），"
+            f"请等待任务完成或取消后再提交。"
+        )
+
     defaults = load_dir_defaults(_COMPONENT_ROOT)
     payload = {
         "paper_path": str(resolved),
@@ -546,8 +553,9 @@ def create_directory_grading_task(
     task = _JOB_STORE.update_job(task["job_id"], log_path=str(log_path))
     _append_task_log(task["job_id"], "grading.run", f"directory task created papers_dir={resolved}")
     _seed_empty_summary(task["job_id"], rubric_path)
+    lock_path.write_text(task["job_id"], encoding="utf-8")
 
-    worker = Thread(target=_run_directory_grading_task, args=(task["job_id"],), daemon=True)
+    worker = Thread(target=_run_directory_grading_task, args=(task["job_id"], lock_path), daemon=True)
     worker.start()
     return task
 
@@ -594,7 +602,7 @@ def _refresh_items(task_id: str, papers_dir: Path, items: list[dict[str, Any]]) 
     return added
 
 
-def _run_directory_grading_task(task_id: str) -> None:
+def _run_directory_grading_task(task_id: str, lock_path: Path | None = None) -> None:
     import time as _time
 
     from services.dir_scan import is_pdf_ready
@@ -700,6 +708,12 @@ def _run_directory_grading_task(task_id: str) -> None:
         _JOB_STORE.update_job(
             task_id, status="FAILED", current_step="failed", error_message=str(exc),
         )
+    finally:
+        if lock_path is not None:
+            try:
+                lock_path.unlink(missing_ok=True)
+            except Exception:
+                pass
 
 
 def pause_running_directory_tasks() -> None:
