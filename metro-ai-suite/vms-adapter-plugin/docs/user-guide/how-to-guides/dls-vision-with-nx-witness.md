@@ -547,9 +547,8 @@ Expected log output:
         'destination': {'metadata': {'type': 'mqtt', 'host': '<PIPELINE_SERVER_MQTT_HOST>:1883',
         'topic': 'nx/dls_vision/<device-uuid>'}},
         'parameters': {'detection-properties': {'device': 'GPU'}}}
-[info] nx_dls_pipeline_started  device=GPU  device_id=<device-uuid>
-        pipeline_name=loitering_detection_vms_mqtt
-        run_id=<hex-instance-id>
+[info]  od_run_started  pipeline=user_defined_pipelines/loitering_detection_vms_mqtt run_id=<hex-instance-id>
+[info]  nx_pipeline_started app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id>
 ```
 
 #### 6.2.4 Stop the Pipeline
@@ -563,8 +562,10 @@ VAP stops the run on the next poll.
 Expected log output:
 
 ```
-[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+[info] nx_pipeline_stopped     app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id> success=True
 ```
+
+> To run Loitering Detection and Live Video Captioning simultaneously, see [Running Both Apps Simultaneously](#running-both-apps-simultaneously) at the end of this guide.
 
 ---
 
@@ -794,6 +795,61 @@ docker compose down
 - The Nx RTSP URL includes credentials and is formed as `rtsp://admin:<password>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`. Confirm this URL is reachable from the dls_vision Docker network.
 - If DLStreamer logs show `401 Unauthorized`, digest authentication is not enabled in Nx Witness. Enable it in **System Administration** → **Security** → **Allow digest authentication for cameras** and retry. See [Part 2.2](#22-enable-digest-authentication-for-rtsp) for details.
 - Add `<NX_HOST>` to `no_proxy` in the dls_vision environment if a proxy is configured.
+
+---
+
+## Additional Steps
+
+### Running Both Apps Simultaneously
+
+Both Loitering Detection and Live Video Captioning can run in parallel on the same camera from the same Nx Witness integration.
+
+**Prerequisite — avoid container name and port conflicts:**
+
+The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and host ports by default. The Loitering Detection `docker-compose.yml` needs to be updated with the following changes to avoid clashes:
+
+| Service | Change |
+|---|---|
+| `broker` | Host port changed from `1883` to `1884` (`"1884:1883"`) |
+| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld` |
+| `coturn` | Container name changed to `coturn-ld`; host port changed to `3479` |
+| `metrics-manager` | Container name changed to `metrics-manager-ld` |
+
+**Steps to run both simultaneously:**
+
+1. Start the LVC stack (its broker occupies host port `1883`):
+   ```bash
+   cd metro-ai-suite/live-video-analysis/live-video-captioning
+   docker compose up -d
+   ```
+2. Start the LD stack (its broker now occupies host port `1884`):
+   ```bash
+   cd metro-ai-suite/metro-vision-ai-app-recipe
+   docker compose up -d
+   ```
+3. Update `.env` in the VAP directory so the LD MQTT subscriber and the DLStreamer Pipeline Server both use the LD broker on port `1884`:
+   ```bash
+   # metro-ai-suite/vms-adapter-plugin/.env
+   MQTT_PORT=1884
+   PIPELINE_SERVER_MQTT_PORT=1884
+   ```
+4. Start VAP (already configured with both apps in `config.yaml`):
+   ```bash
+   cd metro-ai-suite/vms-adapter-plugin
+   docker compose up -d
+   ```
+5. In the Nx Witness client, open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
+
+VAP starts both pipelines independently within 5 seconds.
+
+**Viewing results in Nx Witness — one output at a time:**
+
+Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a time:
+
+- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`, `vap.vehicle`, …) overlaid on the live feed.
+- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
+
+This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks simultaneously in the same camera panel, even though both pipelines are producing results concurrently.
 
 ---
 

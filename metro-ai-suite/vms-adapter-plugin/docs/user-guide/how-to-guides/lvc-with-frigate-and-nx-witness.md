@@ -448,15 +448,20 @@ Expected output:
 [info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
 
+> To run Live Video Captioning and Loitering Detection simultaneously, see [Running Both Apps Simultaneously](#running-both-apps-simultaneously) at the end of this guide.
+
 ---
 
-### 5.2 Open the Provider Dashboard (Alternative)
+### 5.2 Start a Captioning Run from the VAP Dashboard (Optional)
 
-```
-https://localhost:3443
-```
+<details>
+<summary>Click to expand — starting a captioning run from the provider dashboard</summary>
 
-### 5.3 Discover Cameras
+#### Open the Dashboard
+
+Open a browser and navigate to `https://localhost:3443`.
+
+#### Discover Cameras
 
 1. In the **Camera Discovery** panel, click **Discover Cameras**.
 2. VAP queries all configured VMS sources and stores results in PostgreSQL.
@@ -464,19 +469,17 @@ https://localhost:3443
    - Nx Witness cameras appear as: `nx:e3e9a385-7fe0-3ba5-5482-a86cde7faf48`
    - Frigate cameras appear as: `frigate:front-door`, `frigate:warehouse-cam`
 
-Alternatively, via the API:
-
 ```bash
+# Or via API:
 curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
-### 5.4 Enable a Camera
+#### Enable a Camera
 
 In the **Camera Discovery** panel, click the toggle next to the camera you want to use. Only enabled cameras appear in the analytics form.
 
-Via the API:
-
 ```bash
+# Or via API:
 # Nx Witness camera
 curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
@@ -488,7 +491,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -d '{"camera_id": "frigate:front-door", "enabled": true}'
 ```
 
-### 5.5 Configure and Start a Captioning Run
+#### Configure and Start a Captioning Run
 
 1. In the **Analytics Engine** panel, click **Discover Apps**. Select **Live Video Captioning**.
 
@@ -513,7 +516,9 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 4. Click **Start Run**.
 
-### 5.6 What Happens When You Click Start
+</details>
+
+### 5.3 What Happens When You Click Start
 
 1. VAP resolves the selected `camera_id` to an RTSP URL:
    - **Nx Witness camera**: calls `GET /rest/v4/devices` on Nx; RTSP URL is `rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`.
@@ -524,7 +529,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 5. The VLM generates captions and publishes them to an MQTT broker → LVC SSE stream.
 6. VAP proxies the SSE stream at `/v1/analytics-apps/live_captioning/results/stream`.
 
-### 5.7 Verify the Run Is Active
+### 5.4 Verify the Run Is Active
 
 In the **Analytics Engine** panel, the active run appears in the runs list.
 
@@ -536,26 +541,49 @@ curl -k https://localhost:3443/v1/analytics-apps/live_captioning/runs | python3 
 
 ---
 
-## Part 6 — View Live Captions in the Dashboard
+## Part 6 — View Live Captions in Nx Witness
 
-### 6.1 Open the Live Stream Tab
+### 6.1 Captions as Nx Bookmarks
 
-After starting a run, open the **Live Stream** tab. It shows:
+When a captioning pipeline is running against an Nx Witness camera, VAP pushes each AI-generated caption as a **bookmark** on the camera's timeline. No dashboard interaction is needed.
+
+To view captions in the Nx Witness client:
+
+1. Open the **Nx Witness Desktop Client** and connect to your server.
+2. Double-click the camera that the pipeline is running on.
+3. In the camera panel, open the **Bookmarks** tab (or press **Ctrl+B**).
+
+Each caption appears as a bookmark entry timestamped to when it was generated. The caption text is the bookmark name.
+
+> **How it works:** VAP's LVC MQTT subscriber receives captions from the LVC backend and calls `POST /rest/v4/devices/{deviceId}/bookmarks` on the Nx REST API for each one — up to the first 500 characters of the caption text.
+
+### 6.2 Stop the Captioning Run
+
+**Nx Witness (recommended):**
+1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+2. Uncheck **Enable Live Video Captioning Pipeline**.
+3. Click **Apply** then **OK**.
+
+or via the API:
+
+**LVC api (alternative):**
+```bash
+curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/<run_id>
+```
+
+### 6.3 View Live Captions in the VAP Dashboard (Optional)
+
+<details>
+<summary>Click to expand — viewing captions in the provider dashboard</summary>
+
+Open a browser and navigate to `https://localhost:3443`, then open the **Live Stream** tab. It shows:
 
 - **WebRTC video player** — live video from the camera relayed through MediaMTX.
 - **Caption overlay** — the most recent AI caption displayed in real time.
 
 Captions appear within a few seconds of the pipeline starting.
 
-### 6.2 Stop the Captioning Run
-
-Click **Stop** next to the active run in the **Analytics Engine** panel.
-
-Or via the API:
-
-```bash
-curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/<run_id>
-```
+</details>
 
 ---
 
@@ -636,6 +664,61 @@ curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/
 
 ---
 
+## Additional Steps
+
+### Running Both Apps Simultaneously
+
+Both Live Video Captioning and Loitering Detection can run in parallel on the same camera from the same Nx Witness integration.
+
+**Prerequisite — avoid container name and port conflicts:**
+
+The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and host ports by default. The Loitering Detection `docker-compose.yml` needs to be updated with the following changes to avoid clashes:
+
+| Service | Change |
+|---|---|
+| `broker` | Host port changed from `1883` to `1884` (`"1884:1883"`) |
+| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld` |
+| `coturn` | Container name changed to `coturn-ld`; host port changed to `3479` |
+| `metrics-manager` | Container name changed to `metrics-manager-ld` |
+
+**Steps to run both simultaneously:**
+
+1. Start the LVC stack (its broker occupies host port `1883`):
+   ```bash
+   cd metro-ai-suite/live-video-analysis/live-video-captioning
+   docker compose up -d
+   ```
+2. Start the LD stack (its broker now occupies host port `1884`):
+   ```bash
+   cd metro-ai-suite/metro-vision-ai-app-recipe
+   docker compose up -d
+   ```
+3. Update `.env` in the VAP directory so the LD MQTT subscriber and the DLStreamer Pipeline Server both use the LD broker on port `1884`:
+   ```bash
+   # metro-ai-suite/vms-adapter-plugin/.env
+   MQTT_PORT=1884
+   PIPELINE_SERVER_MQTT_PORT=1884
+   ```
+4. Start VAP (already configured with both apps in `config.yaml`):
+   ```bash
+   cd metro-ai-suite/vms-adapter-plugin
+   docker compose up -d
+   ```
+5. In the Nx Witness client, open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**. You will see two GroupBoxes: **Live Video Captioning** and **Loitering Detection**. Enable the checkboxes for both.
+
+VAP starts both pipelines independently within 5 seconds.
+
+**Viewing results in Nx Witness — one output at a time:**
+
+Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a time:
+
+- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
+- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`, `vap.vehicle`, …) overlaid on the live feed.
+
+This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks simultaneously in the same camera panel, even though both pipelines are producing results concurrently.
+
+---
+
 ## Summary
 
 | **Step** | **Where** |
@@ -649,5 +732,5 @@ curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/
 | Discover cameras | Dashboard → Discover Cameras |
 | Enable cameras for analytics | Dashboard → Camera toggle |
 | **Nx Witness:** Start pipeline | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Enable checkbox |
-| View live captions on video feed | Dashboard → Live Stream tab |
+| View live captions | Nx Witness client → camera Bookmarks tab (each caption is a bookmark) |
 | **Nx Witness:** Stop the run | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Uncheck the checkbox |
