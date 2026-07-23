@@ -42,13 +42,13 @@ Before you begin, ensure the following:
 
 2. **Install Trusted Compute**
 
-   Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.2 or later on your host system. Complete the following sections:
+   Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.3 or later on your host system. Complete the following sections:
 
    - Prerequisites
    - Download the Trusted Compute Package
    - Docker Option
 
-   > **Note:** Trusted Compute version 1.5.2 or later is recommended for this deployment. However, Trusted Compute 1.5.2 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
+   > **Note:** Trusted Compute version 1.5.3 or later is recommended for this deployment. However, Trusted Compute 1.5.3 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
 
 3. **Configure Network Settings (Optional)**
 

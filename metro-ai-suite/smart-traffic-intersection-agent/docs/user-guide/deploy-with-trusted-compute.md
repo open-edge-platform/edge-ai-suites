@@ -31,15 +31,11 @@ Before you begin, ensure the following:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads. GPU telemetry will not be available when GPU is passed through to TC.
-
-## Using Edge Microvisor Toolkit
-
-If you are running STIA on an OS image built with Edge Microvisor Toolkit (EMT), refer to the [Using Edge Microvisor Toolkit](./get-started.md#using-edge-microvisor-toolkit) section in the Get Started guide for deployment considerations for EMT-D (Mutable) and EMT-S (Immutable) images.
+> **Note**: When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 ## 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.2 or later on your host system. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute version 1.5.3 or later on your host system. Complete the following sections:
 
 1. Prerequisites
 2. Download the Trusted Compute Package
@@ -68,7 +64,19 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
 ```
 
-> **IMPORTANT:** See this [disclaimer](./get-started.md#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+The application has been validated with following models:
+
+| Model | `VLM_MODEL_NAME` |
+|-------|-----------------|
+| Microsoft Phi-3.5 Vision (pre-converted) | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` |
+| Microsoft Phi-3.5 Vision (raw, auto-converted) | `microsoft/Phi-3.5-vision-instruct` |
+| Qwen2-VL 2B (pre-converted) | `OpenVINO/Qwen2-VL-2B-Instruct-int4-ov` |
+| Qwen2-VL 7B (pre-converted) | `OpenVINO/Qwen2-VL-7B-Instruct-int4-ov` |
+| InternVL2 1B (pre-converted) | `OpenVINO/InternVL2-1B-int4-ov` |
+
+> **Note:** Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
+
+> **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Configure Network Settings (Optional)
 
@@ -91,8 +99,6 @@ export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
 
 Choose one of the following paths based on whether you need GPU acceleration.
 
----
-
 ### Option A: CPU Deployment
 
 Deploy the Smart Traffic Intersection Agent with Trusted Compute enabled on CPU:
@@ -111,32 +117,6 @@ This single command will:
 - Download demo video files for testing
 - Build Docker images
 - Start services in the Smart Traffic Intersection Agent's application stack with Trusted Compute enabled
-
-#### Run Alternative Setup Options
-
-For a more granular control, run these commands:
-
-```bash
-#  Set environment variables without building image or starting any containers
-source setup.sh --setenv
-
-# Build service images only (without starting containers)
-source setup.sh --build
-
-# Start services without building the image
-source setup.sh --run
-
-# Stop services
-source setup.sh --stop
-
-# Restart services. The variable `service_type` can be set to `agent`, `deps`, and `all`. Run with --help to get details of each type.
-source setup.sh --restart [service_type]
-
-# Clean up containers. Run with --help to get details of the option.
-source setup.sh --clean [option]
-```
-
----
 
 ### Option B: GPU Deployment
 
@@ -167,7 +147,29 @@ export VLM_TARGET_DEVICE=GPU
 source ./setup.sh --setup
 ```
 
----
+#### Run Alternative Setup Options
+
+For a more granular control, run these commands:
+
+```bash
+#  Set environment variables without building image or starting any containers
+source setup.sh --setenv
+
+# Build service images only (without starting containers)
+source setup.sh --build
+
+# Start services without building the image
+source setup.sh --run
+
+# Stop services
+source setup.sh --stop
+
+# Restart services. The variable `service_type` can be set to `agent`, `deps`, and `all`. Run with --help to get details of each type.
+source setup.sh --restart [service_type]
+
+# Clean up containers. Run with --help to get details of the option.
+source setup.sh --clean [option]
+```
 
 ## 4. Accessing the Services
 

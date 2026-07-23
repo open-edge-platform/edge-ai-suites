@@ -11,6 +11,7 @@ services:
     annotations:
       io.katacontainers.config.hypervisor.hot_plug_vfio: "root-port"
       io.katacontainers.config.hypervisor.pcie_root_port: "1"
+      io.katacontainers.config.hypervisor.kernel_params: "push_host=metrics-manager push_port=8186 push_path=/write"
 
   # GPU is bound to vfio-pci for passthrough, so /dev/dri no longer exists on
   # the host. Drop it from metrics-manager to avoid "no such file or directory".
