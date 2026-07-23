@@ -36,8 +36,10 @@ THRESHOLD   = float(os.environ.get("THRESHOLD", "0.5"))
 TARGET_FPS  = int(os.environ.get("TARGET_FPS", "60"))
 HTTP_PORT   = int(os.environ.get("PIPELINE_HTTP_PORT", "8000"))
 DISPLAY_VIEW = os.environ.get("PIPELINE_DISPLAY_VIEW", "1") == "1"
-VIDEO_SINK   = os.environ.get("PIPELINE_VIDEO_SINK", "ximagesink")
-FRAME_LIMIT  = int(os.environ.get("PIPELINE_FRAME_LIMIT", "3000"))
+VIDEO_SINK   = os.environ.get("PIPELINE_VIDEO_SINK", "autovideosink")
+# 0 = unlimited (default for live demo). Set PIPELINE_FRAME_LIMIT=N to cap
+# at N frames — useful for benchmarking runs that should auto-terminate.
+FRAME_LIMIT  = int(os.environ.get("PIPELINE_FRAME_LIMIT", "0"))
 # Source defaults. `SOURCE_KIND` = file|v4l2|basler. `SOURCE_ARG` is the
 # path/device/serial. Both fall back to `VIDEO` (a file path) for
 # backward compat with the pre-multi-source docker-compose.yaml.
@@ -75,6 +77,9 @@ def _spawn(
 ) -> subprocess.Popen:
     _latency.reset()
     use_display = DISPLAY_VIEW if display_view is None else display_view
+    # FRAME_LIMIT defaults to 0 (unlimited). A file source plays to its own
+    # natural EOS; a live Basler source runs until /stop or a genuine failure.
+    # Set PIPELINE_FRAME_LIMIT env var to cap frames for benchmarking only.
     pipeline = build(
         source_kind=source_kind,
         source_arg=source_arg,
@@ -97,6 +102,19 @@ def _spawn(
     )
 
     if source_kind == "basler":
+        # Enumerate Basler cameras visible inside the container before spawning
+        # so connectivity problems appear immediately in the logs.
+        try:
+            from pypylon import pylon as _pylon  # type: ignore
+            _tl = _pylon.TlFactory.GetInstance()
+            _devs = _tl.EnumerateDevices()
+            _cam_list = [(d.GetSerialNumber(), d.GetModelName()) for d in _devs]
+            log.info(
+                "[basler] cameras visible in container: %s",
+                _cam_list if _cam_list else "NONE",
+            )
+        except Exception as _exc:  # noqa: BLE001
+            log.warning("[basler] pypylon enumeration failed: %s", _exc)
         cmd = (
             f"exec python3 /opt/basler_reader.py {source_arg} "
             f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy "
@@ -104,6 +122,8 @@ def _spawn(
         )
     else:
         cmd = f"exec gst-launch-1.0 {pipeline}"
+
+    log.info("[pipeline] generated cmd: %s", cmd)
 
     proc = subprocess.Popen(
         cmd,
@@ -127,10 +147,13 @@ def _spawn(
 def _supervisor_loop(device: str, source_kind: str, source_arg: str, display_view: bool) -> None:
     """Respawn gst-launch on EOS/exit while /start was the last user intent.
 
-    filesrc reads polyp_test.mp4 once and emits EOS. To match the old
-    OpenCV loop-on-EOF behaviour we simply relaunch the pipeline.
+    A live Basler source can drop out transiently, so we relaunch it to keep
+    the demo running. A file source is one-shot: once the clip reaches EOS the
+    demo is complete and we deliberately do NOT respawn — respawning tore down
+    the popup and launched a fresh gst-launch/ximagesink window every loop.
     """
-    global _proc
+    global _proc, _proc_device, _proc_source_kind, _proc_source_arg
+    global _proc_display_view, _wanted_running
     restarts: list[float] = []
     while True:
         # Wait unlocked so /stop can grab the lock and kill us.
@@ -143,6 +166,18 @@ def _supervisor_loop(device: str, source_kind: str, source_arg: str, display_vie
             if not _wanted_running:
                 _proc = None
                 log.info("supervisor: /stop honoured, exiting")
+                return
+
+            if source_kind == "file":
+                # One-shot playback: the clip finished, so stop cleanly and
+                # leave the pipeline idle instead of relaunching.
+                log.info("supervisor: file source completed (rc=%s) — not respawning", rc)
+                _proc = None
+                _proc_device = None
+                _proc_source_kind = None
+                _proc_source_arg = None
+                _proc_display_view = None
+                _wanted_running = False
                 return
 
             now = time.time()

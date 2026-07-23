@@ -13,8 +13,13 @@ from __future__ import annotations
 VALID_DEVICES = {"CPU", "GPU", "NPU"}
 VALID_SOURCE_KINDS = {"file", "basler"}
 
-PRE_DETECT_QUEUE = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000"
-POST_DETECT_QUEUE = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=0"
+# File source: no leaky — every frame of the recorded clip must be inferred.
+# Basler live source: leaky=downstream so the queue sheds old frames instead
+# of building up unbounded latency when inference is slower than capture.
+PRE_DETECT_QUEUE_FILE   = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000"
+POST_DETECT_QUEUE_FILE  = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=0"
+PRE_DETECT_QUEUE_LIVE   = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream"
+POST_DETECT_QUEUE_LIVE  = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream"
 
 
 def _build_source(kind: str, arg: str, target_fps: int) -> tuple[list[str], str]:
@@ -67,24 +72,56 @@ def build(
         source_arg = video
 
     src_elems, pre_proc = _build_source(source_kind, source_arg, target_fps)
-    sink = f"{video_sink} sync=false" if display_view else "fakesink sync=false async=false"
     eos = f"identity eos-after={frame_limit}" if frame_limit > 0 else "identity"
     gvadetect = (
         f"gvadetect model={ir_xml} device={dev} threshold={threshold} "
         f"pre-process-backend={pre_proc} nireq=1 "
         "ie-config=PERFORMANCE_HINT=LATENCY"
     )
+    is_live = (source_kind == "basler")
+    pre_q  = PRE_DETECT_QUEUE_LIVE  if is_live else PRE_DETECT_QUEUE_FILE
+    post_q = POST_DETECT_QUEUE_LIVE if is_live else POST_DETECT_QUEUE_FILE
+    if display_view:
+        # The VA pipeline keeps frames in VAMemory (NV12) all the way to the
+        # sink. A software X sink such as `ximagesink` cannot negotiate those
+        # caps ("not-negotiated") and the pipeline aborts before a window ever
+        # opens — which the launcher then masks by falling back to a headless
+        # fakesink, so no popup appears (notably on the Basler path, which
+        # forces `video/x-raw(memory:VAMemory),format=NV12`). Download to
+        # system memory with `vapostproc ! video/x-raw` and colour-convert
+        # before the sink. Matches the known-good DISPLAY sink tail in
+        # scripts/run_basler_pipeline.sh.
+        #
+        # sync=true on the sink for file sources: without it the pipeline
+        # decodes/renders as fast as the GPU allows (e.g. 105 fps for a 25 fps
+        # file), so a 69 s clip finishes in ~16 s wall time. sync=true lets
+        # the GStreamer clock throttle each buffer to the file's native PTS so
+        # playback runs at the encoded speed. Live sources (basler) keep
+        # sync=false — they have no file clock and must render as frames arrive.
+        sink_sync = "false" if source_kind == "basler" else "true"
+        sink_tail = [
+            "gvawatermark",
+            "gvafpscounter interval=1",
+            "vapostproc",
+            '"video/x-raw"',
+            "videoconvert",
+            f"{video_sink} sync={sink_sync}",
+        ]
+    else:
+        sink_tail = [
+            "gvawatermark",
+            "gvafpscounter interval=1",
+            "fakesink sync=false async=false",
+        ]
     return " ! ".join(
         src_elems
         + [
             eos,
-            PRE_DETECT_QUEUE,
+            pre_q,
             gvadetect,
-            POST_DETECT_QUEUE,
-            "gvawatermark",
-            "gvafpscounter interval=1",
-            sink,
+            post_q,
         ]
+        + sink_tail
     )
 
 

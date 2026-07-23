@@ -81,7 +81,7 @@ services:
       DISPLAY:     ${DISPLAY:-}
       XAUTHORITY:  /root/.Xauthority
       PIPELINE_DISPLAY_VIEW: "1"
-      PIPELINE_VIDEO_SINK: ximagesink
+      PIPELINE_VIDEO_SINK: autovideosink
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
