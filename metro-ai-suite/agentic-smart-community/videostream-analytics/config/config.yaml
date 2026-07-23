@@ -1,0 +1,71 @@
+server:
+  host: "0.0.0.0"
+  port: 8999
+
+webhook:
+  url: "http://localhost:3101/events"
+  timeout: 10
+  retry_attempts: 3
+  retry_delay: 2
+
+# `data_dir` is the *root* directory for all per-source output.
+# Each registered source gets its own subdirectory `<data_dir>/<source_id>/`
+# (or whatever absolute path the register_source body specifies in its
+# `data_dir` field; MCP sends an absolute per-source path).
+data_dir: "~/.mcp-smartbuilding/segments"
+
+defaults:
+  motion:
+    enabled: true
+    diff_threshold: 15
+    area_ratio: 0.005
+    stable_frames: 45
+  segment:
+    max_duration: 10
+    min_duration: 1.0
+  # Static "close-out" emission: when a motion segment ends and a new motion
+  # begins, the intervening quiet span is emitted as a `type=static` event so
+  # MCP's state_query sees the alternating motion → static → motion sequence.
+  # `min_duration` suppresses sub-threshold gaps. Default ON.
+  static:
+    enabled: true
+    min_duration: 3.0
+  recording:
+    enabled: true
+    interval_seconds: 60
+    fps: 15
+    retention_days: 5
+  prefilter:
+    enabled: true
+    model_path: "/home/jie/models/yolo11s.xml"
+    target_classes: ["person"]
+    min_confidence: 0.4
+    min_frames_hit: 1
+    detect_fps: 2.0
+    device: "NPU"
+    long_side: 0             # 0 disables pre-inference resize
+  # Phase 9: ROI crop for child_safety / elder_wakeup. Top-level block, at the
+  # same nesting depth as prefilter. Default OFF so other use cases (which want
+  # full-frame VLM input) aren't disturbed. MCP sends this block per-use-case
+  # in the register payload.
+  roi:
+    enabled: false
+    mode: "crop"           # crop | highlight | crop_and_concat
+    expand: 0.25
+    auto_split_area: 0.0   # 0 disables early-split; child_safety: 0.35
+  health:
+    max_failures: 30
+    recovery_strategy: "retry"
+    backoff_base: 2.0
+    backoff_max: 120.0
+  # Phase 8: keepalive protocol — MCP server pings POST /sources/{id}/keepalive
+  # while monitor is online. If no keepalive arrives within timeout_seconds,
+  # the watchdog auto-pauses the source. Default OFF to keep existing scripts
+  # (and the V1-V10 integration drills) unaffected; MCP enables it per-source.
+  keepalive:
+    enabled: false
+    timeout_seconds: 90.0
+    check_interval_seconds: 10.0
+
+logging:
+  level: "INFO"

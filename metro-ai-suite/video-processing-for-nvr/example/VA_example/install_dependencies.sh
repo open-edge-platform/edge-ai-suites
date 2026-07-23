@@ -30,9 +30,9 @@ then
 	echo "************************************************************************"
 
 	cd $WORKING_DIR;
-	sudo rm -f openvino_2025.4.0.tgz
-	sudo curl -L https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.4/linux/openvino_toolkit_ubuntu24_2025.4.0.20398.8fdad55727d_x86_64.tgz --output openvino_2025.4.0.tgz
-	sudo tar zxf openvino_2025.4.0.tgz --one-top-level=openvino --strip-components 1
+	sudo rm -f openvino_2026.2.0.tgz
+	sudo curl -L https://storage.openvinotoolkit.org/repositories/openvino/packages/2026.2/linux/openvino_toolkit_ubuntu24_2026.2.0.21903.52ddc073857_x86_64.tgz --output openvino_2026.2.0.tgz
+	sudo tar zxf openvino_2026.2.0.tgz --one-top-level=openvino --strip-components 1
 fi
 
 if [ ! -d ${WORKING_DIR}"/neo" ]
@@ -62,8 +62,8 @@ echo "Install openvino dependency"
 echo "************************************************************************"
 
 cd ${WORKING_DIR}
-sudo cp -r openvino  /opt/intel/openvino_2025
-cd /opt/intel/openvino_2025
+sudo cp -r openvino  /opt/intel/openvino_2026
+cd /opt/intel/openvino_2026
 sudo -E ./install_dependencies/install_openvino_dependencies.sh
 
 
@@ -97,27 +97,38 @@ else
 
     # Remove old packages if exist
     echo "Removing old NPU packages if any..."
-    sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu 2>/dev/null || true
+    sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu intel-level-zero-npu-dbgsym>/dev/null || true
 
     # Download NPU packages for Ubuntu 24.04
     echo "Downloading NPU packages for Ubuntu 24.04..."
-    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.26.0/linux-npu-driver-v1.26.0.20251125-19665715237-ubuntu2404.tar.gz
-    sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb
+    sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.33.0/linux-npu-driver-v1.33.0.20260529-26625960453-ubuntu2404.tar.gz
 
+    sudo tar -xf linux-npu-driver-v1.33.0.20260529-26625960453-ubuntu2404.tar.gz
+    
+    #sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.26.0/linux-npu-driver-v1.26.0.20251125-19665715237-ubuntu2404.tar.gz
+    #sudo tar -xf linux-npu-driver-v1.32.1.20260422-24767473183-ubuntu2404.tar.gz
+    #sudo wget https://snapshot.ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu/20260324T100000Z/pool/main/l/level-zero-loader/libze1_1.27.0-1~24.04~ppa2_amd64.deb
+    #sudo wget https://github.com/intel/linux-npu-driver/releases/download/v1.17.0/intel-level-zero-npu_1.17.0.20250508-14912879441_ubuntu24.04_amd64.deb
     # Install dependency
     echo "Installing libtbb12 dependency..."
     sudo apt update
     sudo apt install -y libtbb12
+    
+    echo "Installing libze1_1 dependency..."
+    sudo dpkg --purge --force-remove-reinstreq level-zero level-zero-devel
+    sudo wget https://snapshot.ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu/20260324T100000Z/pool/main/l/level-zero-loader/libze1_1.27.0-1~24.04~ppa2_amd64.deb
 
     # Check if Level Zero is installed
-    if ! dpkg -l level-zero >/dev/null 2>&1; then
-        echo "Level Zero not found, installing..."
-        sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.18.5/level-zero_1.18.5+u24.04_amd64.deb
-        sudo dpkg -i level-zero*.deb
-    fi
+    #if ! dpkg -l level-zero >/dev/null 2>&1; then
+        #echo "Level Zero not found, installing..."        
+        #sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.24.2/level-zero_1.24.2+u24.04_amd64.deb
+        #sudo wget https://github.com/oneapi-src/level-zero/releases/download/v1.18.5/level-zero_1.18.5+u24.04_amd64.deb
+        #sudo dpkg -i level-zero*.deb
+    #fi
 
     # Install NPU packages
     echo "Installing NPU packages..."
+    sudo dpkg -i libze1_*.deb
     sudo dpkg -i *.deb
 fi
 

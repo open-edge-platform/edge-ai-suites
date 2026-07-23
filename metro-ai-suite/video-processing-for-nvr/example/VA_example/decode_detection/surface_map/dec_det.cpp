@@ -2,6 +2,9 @@
 #include "vpp_system.h"
 #include "vpp_common.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -29,7 +32,8 @@ const size_t duration = 30;
 const size_t NUM_STREAMS = 16;
 const size_t NUM_STREAMS_INFER = 16;
 
-const std::string DEV_DET= "GPU.0";
+const char* npu_env = std::getenv("NPU_ON");
+const std::string DEV_DET = (npu_env && std::strcmp(npu_env, "true") == 0) ? "NPU" : "GPU.0";
 
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
@@ -55,8 +59,8 @@ std::pair<std::vector<cv::Rect>, std::vector<int>> postprocess(const ov::Tensor 
     auto output_shape = output.get_shape();
     int rows = output_shape[2];
     int dimensions = output_shape[1];
-    float* data = output.data<float>();
-    Mat output_buffer(output_shape[1], output_shape[2], CV_32F, data);
+    const float* data = output.data<float>();
+    Mat output_buffer(output_shape[1], output_shape[2], CV_32F, const_cast<float*>(data));
     transpose(output_buffer, output_buffer);
     float score_threshold = 0.4;
     float nms_threshold = 0.7;
