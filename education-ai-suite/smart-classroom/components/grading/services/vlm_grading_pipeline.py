@@ -146,7 +146,6 @@ def run_vlm_grading_pipeline(
     except Exception as exc:
         raise RuntimeError(f"VLM service unreachable at {vlm_url}: {exc}")
 
-    # ---- step: render -----------------------------------------------------
     _pipeline_start = time.perf_counter()
     update_progress("render", 20)
     _t = _step_start("render")
@@ -335,7 +334,6 @@ def run_vlm_grading_pipeline(
     scores = merge_page_scores(unit_score_dicts)
     _step_done("vlm_grading", _t, f"graded_questions={len(scores)}")
 
-    # ---- step: merge / report --------------------------------------------
     update_progress("merge", 95)
     _t = _step_start("merge")
 

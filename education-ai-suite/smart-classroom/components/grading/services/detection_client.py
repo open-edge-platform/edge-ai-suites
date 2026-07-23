@@ -1,4 +1,3 @@
-"""Detection Service Client - Interface to call PP-DocLayoutV2 detection service"""
 import requests
 import base64
 import io
@@ -27,7 +26,6 @@ def detect_layout(
     elif isinstance(image, Image.Image):
         pil_image = image
     elif isinstance(image, np.ndarray):
-        # Convert numpy array to PIL Image
         pil_image = Image.fromarray(image).convert('RGB')
     else:
         raise TypeError(f"Unsupported image type: {type(image)}")
@@ -188,7 +186,6 @@ def merge_overlapping_boxes(
         return []
 
     def compute_iou(box1, box2):
-        """Compute IoU between two boxes"""
         x1_1, y1_1, x2_1, y2_1 = box1['coordinate']
         x1_2, y1_2, x2_2, y2_2 = box2['coordinate']
 
@@ -206,7 +203,6 @@ def merge_overlapping_boxes(
         return inter_area / union_area if union_area > 0 else 0
 
     def merge_two_boxes(box1, box2):
-        """Merge two boxes by taking the union"""
         x1_1, y1_1, x2_1, y2_1 = box1['coordinate']
         x1_2, y1_2, x2_2, y2_2 = box2['coordinate']
 

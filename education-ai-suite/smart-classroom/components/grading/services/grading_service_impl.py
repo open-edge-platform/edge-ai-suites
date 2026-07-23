@@ -57,9 +57,6 @@ def _append_task_exception(task_id: str, task_type: str, exc: Exception) -> None
         _append_task_log(task_id, task_type, line)
 
 
-# ---------------------------------------------------------------------------
-# Rubric / prompt upload
-# ---------------------------------------------------------------------------
 def _rubrics_upload_dir() -> Path:
     upload_dir = _COMPONENT_ROOT / "rubrics"
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -227,9 +224,6 @@ def _handle_task_control_checkpoint(task_id: str, checkpoint_step: str) -> bool:
     return False
 
 
-# ---------------------------------------------------------------------------
-# Task worker + creation
-# ---------------------------------------------------------------------------
 def _grade_one_paper(
     task_id: str,
     paper_path: str,
@@ -542,8 +536,8 @@ def create_directory_grading_task(
     lock_path = resolved / ".grading.lock"
     if lock_path.exists():
         raise ValueError(
-            f"目录 {resolved.name} 正在被评分（存在 .grading.lock），"
-            f"请等待任务完成或取消后再提交。"
+            f"Directory {resolved.name} is already being graded (.grading.lock exists). "
+            f"Wait for the task to finish or cancel it before submitting again."
         )
 
     defaults = load_dir_defaults(_COMPONENT_ROOT)
@@ -635,19 +629,16 @@ def _run_directory_grading_task(task_id: str, lock_path: Path | None = None) -> 
         _JOB_STORE.update_job(task_id, status="RUNNING", current_step="scanning")
 
         while True:
-            # -- control: cancel / pause (reuse the checkpoint handler) --------
             if _handle_task_control_checkpoint(task_id, "directory_loop"):
                 _append_task_log(task_id, "grading.run", "directory task stopped at checkpoint")
                 return
 
-            # -- refresh the table --------------------------------------------
             if _refresh_items(task_id, papers_dir, items):
                 last_new_item_monotonic = _time.monotonic()
                 _save_items(task_id, items, last_new_item_at_iso=_now_utc_iso())
             else:
                 _save_items(task_id, items)
 
-            # -- pick one pending item and grade it ---------------------------
             picked = None
             for it in items:
                 if it["status"] != "pending":
@@ -693,7 +684,6 @@ def _run_directory_grading_task(task_id: str, lock_path: Path | None = None) -> 
                 _save_items(task_id, items)
                 continue  # immediately look for the next pending item
 
-            # -- nothing to do this round: check idle-completion --------------
             pending = any(it["status"] == "pending" for it in items)
             idle = _time.monotonic() - last_new_item_monotonic
             if not pending and idle > idle_timeout:
@@ -740,9 +730,6 @@ def pause_running_directory_tasks() -> None:
             _JOB_STORE.update_job(job["job_id"], status="PAUSED", current_step="paused")
 
 
-# ---------------------------------------------------------------------------
-# Generic dispatch used by the API routes
-# ---------------------------------------------------------------------------
 def create_task(task_type: str, payload: dict[str, Any]) -> dict[str, Any]:
     if task_type not in _SUPPORTED_TASK_TYPES:
         raise ValueError(f"unsupported task_type: {task_type}")

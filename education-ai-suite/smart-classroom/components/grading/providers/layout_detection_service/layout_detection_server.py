@@ -116,11 +116,9 @@ async def detect_base64(request: DetectionRequest):
         raise HTTPException(status_code=503, detail="Detection service not initialized")
 
     try:
-        # Decode base64 image
         image_bytes = base64.b64decode(request.image_base64)
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
 
-        # Run detection
         result = detection_service.detect(image)
 
         return DetectionResponse(
@@ -153,11 +151,9 @@ async def detect_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=503, detail="Detection service not initialized")
 
     try:
-        # Read uploaded file
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert('RGB')
 
-        # Run detection
         start_time = time.time()
         result = detection_service.detect(image)
         inference_time = time.time() - start_time

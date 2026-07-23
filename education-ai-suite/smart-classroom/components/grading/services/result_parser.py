@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 # "Question 1 | choice | student: A | 4/4 points"
 _LINE_FULL = re.compile(
@@ -47,15 +50,25 @@ def parse_scores(text: str) -> dict[str, dict]:
 
 _HEADER_KEYS = ("paper_title", "subject", "student_name", "class_name", "exam_number")
 
-# Each canonical field maps to the aliases a VLM may emit (case-insensitive).
-_HEADER_ALIASES = {
-    "paper_title": ("paper_title", "title", "paper", "exam_title", "试卷标题", "标题"),
-    "subject": ("subject", "科目", "学科"),
-    "student_name": ("student_name", "name", "姓名"),
-    "class_name": ("class_name", "class", "班级"),
-    "exam_number": ("exam_number", "exam_id", "exam_no", "admission_number",
-                    "student_id", "准考证号", "考号"),
+_HEADER_ALIASES_DEFAULT = {
+    "paper_title": ("paper_title", "title", "paper", "exam_title"),
+    "subject": ("subject",),
+    "student_name": ("student_name", "name"),
+    "class_name": ("class_name", "class"),
+    "exam_number": ("exam_number", "exam_id", "exam_no", "admission_number", "student_id"),
 }
+
+
+def _load_header_aliases() -> dict[str, tuple[str, ...]]:
+    try:
+        cfg_path = Path(__file__).resolve().parents[1] / "config.yaml"
+        raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        aliases = (raw.get("section_split") or {}).get("header_aliases") or {}
+        if isinstance(aliases, dict):
+            return {k: tuple(v) for k, v in aliases.items() if isinstance(v, list)}
+    except Exception:
+        pass
+    return _HEADER_ALIASES_DEFAULT
 
 
 _WRAPPER_KEYS = ("header", "data", "result", "info")
@@ -108,7 +121,7 @@ def parse_header_info(text: str) -> dict[str, Any]:
     lower = {str(k).lower(): v for k, v in flat.items()}
 
     out = dict(empty)
-    for canonical, aliases in _HEADER_ALIASES.items():
+    for canonical, aliases in _load_header_aliases().items():
         for alias in aliases:
             v = lower.get(alias.lower())
             if isinstance(v, str):

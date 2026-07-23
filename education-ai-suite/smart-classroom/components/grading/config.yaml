@@ -15,7 +15,7 @@ grading:
 watch:
   poll_interval: 5
   stable_checks: 2      # consecutive unchanged polls before a PDF is graded
-  idle_timeout: 10
+  idle_timeout: 100
 
 detection_service:
   # Detection filtering and processing (consumed by _run_layout_detection)
@@ -54,3 +54,10 @@ section_split:
     enabled: true
     marker_pattern: "^\\s*(?:\\[HEADER\\]|【卷头信息】)"   # rubric block marker
     # separator defaults to prompt_slicing.separator when omitted
+
+  header_aliases:
+    paper_title: ["paper_title", "title", "paper", "exam_title", "试卷标题", "标题"]
+    subject: ["subject", "科目", "学科"]
+    student_name: ["student_name", "name", "姓名"]
+    class_name: ["class_name", "class", "班级"]
+    exam_number: ["exam_number", "exam_id", "exam_no", "admission_number", "student_id", "准考证号", "考号"]

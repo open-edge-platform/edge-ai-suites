@@ -134,7 +134,7 @@ HEADER_SYSTEM_PROMPT = (
     "and any candidate-information line); ignore the questions. Return a single JSON "
     "object and nothing else, with exactly these keys: "
     "paper_title (the exam paper title, e.g. the full name printed at the top), "
-    "subject (the subject, e.g. 数学/语文/英语), "
+    "subject (the subject, e.g. Math/Chinese/English), "
     "student_name (the candidate's name), "
     "class_name (the candidate's class), "
     "exam_number (the candidate's exam/admission number). "

@@ -39,8 +39,8 @@ def _ir_exists(model_dir: Path, precision: str) -> bool:
 
 
 def _download(source: str, repo_id: str, download_dir: Path) -> None:
-    print(f"[1/2] 下载模型  source={source}  repo_id={repo_id}")
-    print(f"      目标目录: {download_dir}")
+    print(f"[1/2] Downloading model  source={source}  repo_id={repo_id}")
+    print(f"      Target directory: {download_dir}")
     download_dir.mkdir(parents=True, exist_ok=True)
 
     if source == "huggingface":
@@ -56,8 +56,8 @@ def _download(source: str, repo_id: str, download_dir: Path) -> None:
         from modelscope import snapshot_download
         snapshot_download(model_id=repo_id, local_dir=str(download_dir), max_workers=4)
     else:
-        raise ValueError(f"不支持的下载源: {source}，应为 huggingface 或 modelscope")
-    print("      下载完成")
+        raise ValueError(f"Unsupported download source: {source}, must be huggingface or modelscope")
+    print("      Download complete")
 
 
 def _find_paddle2onnx() -> str:
@@ -126,9 +126,9 @@ def _quantize_int8(ov_model, calib_dir: str, calib_samples: int):
     input_names = [i.get_any_name() for i in ov_model.inputs]
     files = _collect_calib_images(calib_dir, calib_samples)
     if not files:
-        print(f"      在 {calib_dir} 未找到校准图，退回 weight-only int8")
+        print(f"      No calibration images found in {calib_dir}, falling back to weight-only int8")
         return nncf.compress_weights(ov_model)
-    print(f"      int8 PTQ 全量化，校准样本 {len(files)} 张")
+    print(f"      int8 PTQ quantization, {len(files)} calibration samples")
     return nncf.quantize(ov_model, _build_calib_dataset(files, input_names))
 
 
@@ -144,7 +144,7 @@ def _downgrade_ops_for_npu(ov_model):
             replace_node(op, new)
             replaced += 1
     if replaced:
-        print(f"      NPU 兼容: 降级 {replaced} 个 ScatterNDUpdate opset15 -> opset4")
+        print(f"      NPU compatible: downgraded {replaced} ScatterNDUpdate op(s) opset15 -> opset4")
     return ov_model
 
 
@@ -161,7 +161,7 @@ def _onnx_to_ir(onnx_path: Path, ir_path: Path, precision: str,
     else:
         compress_fp16 = (precision == "fp16")
     ov.save_model(ov_model, str(ir_path), compress_to_fp16=compress_fp16)
-    print(f"      保存: {ir_path}")
+    print(f"      Saved: {ir_path}")
 
 
 def _convert(download_dir: Path, model_dir: Path, precision: str,
@@ -169,19 +169,19 @@ def _convert(download_dir: Path, model_dir: Path, precision: str,
     out = model_dir / precision
     model_file = download_dir / "inference.json"
     if not model_file.exists():
-        raise FileNotFoundError(f"找不到 Paddle 模型: {model_file}")
+        raise FileNotFoundError(f"Paddle model not found: {model_file}")
 
     out.mkdir(parents=True, exist_ok=True)
     onnx_path = out / (download_dir.name + ".onnx")
     ir_path = out / "model.xml"
 
-    print(f"[2/2] 转换模型 -> {ir_path}")
+    print(f"[2/2] Converting model -> {ir_path}")
     _paddle_to_onnx(download_dir, onnx_path)
     _onnx_to_ir(onnx_path, ir_path, precision, calib_dir, calib_samples, npu_compat)
 
     if onnx_path.exists():
         onnx_path.unlink()
-    print("      转换完成")
+    print("      Conversion complete")
 
 
 def ensure_layout_model() -> Path:
@@ -201,25 +201,25 @@ def ensure_layout_model() -> Path:
     npu_compat = bool(cfg.get("npu_compatible", True))
 
     if _ir_exists(model_dir, precision):
-        print(f"[layout] IR 已存在，跳过下载和转换: {model_dir / precision}")
+        print(f"[layout] IR already exists, skipping download and conversion: {model_dir / precision}")
         return model_dir / precision
 
     print("=" * 70)
-    print("PP-DocLayout 模型准备")
+    print("PP-DocLayout model setup")
     print("=" * 70)
     _download(source, repo_id, download_dir)
     _convert(download_dir, model_dir, precision, calib_dir, calib_samples, npu_compat)
 
     if download_dir.exists():
         shutil.rmtree(download_dir)
-        print(f"      已删除原始下载目录: {download_dir}")
+        print(f"      Removed raw download directory: {download_dir}")
 
     return model_dir / precision
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="确保 PP-DocLayout OpenVINO IR 模型就绪")
+    parser = argparse.ArgumentParser(description="Ensure PP-DocLayout OpenVINO IR model is ready")
     parser.add_argument("--skip-download", action="store_true")
     parser.add_argument("--skip-convert", action="store_true")
     args = parser.parse_args()
@@ -241,6 +241,6 @@ if __name__ == "__main__":
         )
         if download_dir.exists():
             shutil.rmtree(download_dir)
-            print(f"已删除原始下载目录: {download_dir}")
+            print(f"Removed raw download directory: {download_dir}")
 
-    print(f"\n完成。模型目录: {model_dir / precision}")
+    print(f"\nDone. Model directory: {model_dir / precision}")

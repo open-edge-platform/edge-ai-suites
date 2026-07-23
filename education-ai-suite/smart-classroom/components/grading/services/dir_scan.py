@@ -1,10 +1,3 @@
-"""Directory scanning helpers for directory-mode grading tasks.
-
-A directory-mode grading task treats each entry under its papers directory as a
-work item: either a subfolder (student1/) whose first PDF is the paper, or a PDF
-file directly in the directory. These pure helpers do discovery and readiness
-checks; the task loop in grading_service_impl drives them.
-"""
 from __future__ import annotations
 
 import logging
