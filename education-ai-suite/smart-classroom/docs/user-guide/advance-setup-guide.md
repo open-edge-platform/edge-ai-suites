@@ -48,7 +48,28 @@ pip install --upgrade -r requirements.txt
 
 ## Step 2: Configuration
 
-### A. Default Configuration
+### A. Enable Feature Configuration
+
+The application is composed of modular **features** where user can enable or disable in the
+`features:` block of `smart-classroom/config.yaml`. Only enabled features load their
+models, mount their API routes, and start their services — so disabling unused
+features reduces startup time and memory footprint.
+
+```yaml
+features:
+  asr:                { enabled: true }   # Speech-to-text transcription
+  summary:            { enabled: true }   # AI class summary / report
+  mindmap:            { enabled: true }   # Mind map generation
+  topic_segmentation: { enabled: true }   
+  video_analytics:    { enabled: true }   # Video ingestion / analytics
+  content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
+  qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
+```
+
+
+**Important: After updating the configuration, reload the application for changes to take effect.**
+
+### B. Default Configuration
 
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
@@ -67,7 +88,7 @@ summarizer:
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
 
-### B. Chinese Audio Transcription
+### C. Chinese Audio Transcription
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 
@@ -83,7 +104,7 @@ app:
   language: zh
 ```
 
-### C. Content Search Configuration
+### D. Content Search Configuration
 
 **Upload Size Limits** can be adjusted under the `content_search` section:
 
@@ -94,7 +115,7 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
 
-### D. Enable OCR Features (Optional)
+### E. Enable OCR Features (Optional)
 
 If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
 
@@ -142,6 +163,8 @@ This means your pipeline server has started successfully and is ready to accept 
 
 Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
 
+> **Note:** You do not need to start Content Search manually. When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup, or if you want to run Content Search on its own for development or debugging.
+
 ### A. Create Content Search Virtual Environment
 
 ```PowerShell
@@ -152,12 +175,6 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### B. Launch Content Search Services
-
-```PowerShell
-.\venv_content_search\Scripts\activate
-python .\start_services.py
-```
 
 > **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
 
