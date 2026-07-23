@@ -13,18 +13,32 @@ from api.endpoints import register_routes
 from model_manager.capability.runner import QueueFullError, OomError
 from utils.runtime_config_loader import RuntimeConfig
 from utils.ensure_model import ensure_model
-from utils.preload_models import preload_models
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: startup orchestration, then graceful shutdown."""
+    # Startup: resolve enabled features, warm capabilities, build/mount features.
+    from model_manager.feature_bootstrap import startup
+    startup(app)
+    yield
+    # Shutdown: drain in-flight capability work and release device (GPU) memory.
+    from model_manager import ModelManager
+    logger.info("Shutdown: draining capabilities and releasing devices...")
+    ModelManager.instance().shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,14 +72,6 @@ async def _oom_handler(request: Request, exc: OomError):
     )
 
 
-@app.on_event("shutdown")
-def _shutdown_model_manager():
-    """Drain in-flight capability work and release device (GPU) memory on exit."""
-    from model_manager import ModelManager
-    logger.info("Shutdown: draining capabilities and releasing devices...")
-    ModelManager.instance().shutdown()
-
-
 def system_check():
     if (not system_checker.check_system_requirements()) and (not system_checker.show_warning_and_prompt_user_to_continue()):
         sys.exit(1)
@@ -76,7 +82,6 @@ if __name__ == "__main__":
     RuntimeConfig.ensure_config_exists()
 
     ensure_model()
-    preload_models()
 
     import uvicorn
     logger.info("App started, Starting Server...")

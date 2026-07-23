@@ -41,7 +41,7 @@ Set at minimum the following variables before building:
 | `LVC_BASE_URL`                                | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`           |
 | `MEDIAMTX_URL`                                | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`        |
 | `FRIGATE_HOST`                                | Hostname/IP of the Frigate instance reachable from the backend container|
-| `NX_BASE_URL` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness credentials (only if using Nx Witness)                       |
+| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx Witness)                       |
 | `NX_TLS_VERIFY` / `NX_CA_BUNDLE`              | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
 | `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
