@@ -146,6 +146,7 @@ services:
     image: nginx:alpine
     container_name: nginx-https
     restart: unless-stopped
+    user: "nginx"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
