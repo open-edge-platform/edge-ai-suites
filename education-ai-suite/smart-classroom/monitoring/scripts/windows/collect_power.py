@@ -38,8 +38,30 @@ def check_admin():
     except:
         return False
 
+_FATAL_SOCWATCH_MARKERS = (
+    "socwatchdrv",
+    "soc watch driver",
+    "problem initiating",
+    "does not exist was specified",
+    "system cannot find the file",
+)
+
+
+def _is_fatal_socwatch_error(message):
+    msg = (message or "").lower()
+    return any(marker in msg for marker in _FATAL_SOCWATCH_MARKERS)
+
 
 def run_socwatch_quick(collection_duration, interval_ms):
+    """Run a single SoCWatch power capture.
+
+    Returns one of:
+        "ok"          - capture succeeded
+        "retry"       - transient failure, safe to retry next interval
+        "unavailable" - SoCWatch cannot run on this system (driver not
+                        installed, unsupported device, or binary missing);
+                        the caller should stop retrying
+    """
     os.makedirs(OUTPUT_DIR, exist_ok=True)  
 
     cmd = [
@@ -54,13 +76,18 @@ def run_socwatch_quick(collection_duration, interval_ms):
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         logging.debug(result.stdout.strip())
-        if result.stderr.strip():
-            logging.warning(result.stderr.strip())
-            return False
-        return True
+        stderr = result.stderr.strip()
+        if stderr:
+            logging.warning(stderr)
+            return "unavailable" if _is_fatal_socwatch_error(stderr) else "retry"
+        return "ok"
+    except FileNotFoundError as e:
+        logging.error(f"❌ SoCWatch binary not found at '{SOCWATCH_PATH}': {e}")
+        return "unavailable"
     except subprocess.CalledProcessError as e:
-        logging.error(f"❌ SoCWatch execution error: {e.stderr or e}")
-        return False
+        message = e.stderr or str(e)
+        logging.error(f"❌ SoCWatch execution error: {message}")
+        return "unavailable" if _is_fatal_socwatch_error(message) else "retry"
 
 def gmt_to_local_timestamp(gmt_string):
     try:
@@ -135,7 +162,15 @@ def start_power_monitoring(interval_seconds, stop_event, output_dir=None):
                 try:
                     timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
                     power_w = 0.0  
-                    if run_socwatch_quick(collection_duration=interval_seconds, interval_ms=500) and os.path.exists(AUTOMATIC_SUMMARY_CSV):
+                    status = run_socwatch_quick(collection_duration=interval_seconds, interval_ms=500)
+                    if status == "unavailable":
+                        logger.warning(
+                            "Power monitoring disabled for this session: Intel SoC Watch "
+                            "is unavailable on this system (driver not installed or "
+                            "unsupported device). No power metrics will be collected."
+                        )
+                        break
+                    if status == "ok" and os.path.exists(AUTOMATIC_SUMMARY_CSV):
                         local_timestamp, avg_power_mw = extract_average_power_from_automatic_summary(AUTOMATIC_SUMMARY_CSV)
                         if local_timestamp and avg_power_mw:
                             timestamp = local_timestamp

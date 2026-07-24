@@ -17,6 +17,7 @@ TESTS = [
     # by tests/mock/videostream-analytics/mock_server.py against a real
     # multilevel-video-understanding container (WW27 e2e work).
     "test_tools_mcp.py",
+    "test_use_case_register.py",
 ]
 
 

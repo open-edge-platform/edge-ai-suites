@@ -3,7 +3,8 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { 
   startContentSegmentation, 
   contentSegmentationSuccess, 
-  contentSegmentationFailed 
+  contentSegmentationFailed,
+  startReport,
 } from '../redux/slices/uiSlice';
 import { setVideoMetadataProcessed, resetMediaValidation } from '../redux/slices/mediaValidationSlice';
 import { generateContentSegmentation, markVideoUsage, uploadVideoMetadata } from '../services/api';
@@ -163,6 +164,9 @@ export const useContentSegmentation = () => {
         .then(() => {
           console.log('✅ Content segmentation completed');
           dispatch(contentSegmentationSuccess());
+          // Keep report triggering in the same UI orchestration chain as
+          // summary -> mindmap -> content segmentation.
+          dispatch(startReport());
         })
         .catch((error) => {
           const errorMsg = error.message || '';

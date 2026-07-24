@@ -1,4 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { parseDocument, isMap, Scalar } from "yaml";
 import type { SmartBuildingDB } from "@smartbuilding-video/db";
+
+/** Wrap a string so yaml emits it double-quoted (matches the hand-written monitors.yaml style). */
+function quoted(value: string): Scalar {
+  const s = new Scalar(value);
+  s.type = Scalar.QUOTE_DOUBLE;
+  return s;
+}
 
 export interface IWorkerService {
   workers: Map<string, unknown>;
@@ -31,6 +40,70 @@ export interface MonitorCtlParams {
    * POST /sources/{id}/keepalive heartbeat loop. See VSA API §3.8.
    */
   keepalive?: { enabled: boolean; timeout_seconds: number; check_interval_seconds: number };
+  /**
+   * When true, mirror the mutation to `monitors_path` on disk (comment-preserving
+   * via yaml.Document): register_source → write the monitor's declaration block,
+   * unregister → delete it. Requires `monitors_path` to be set. Failure writing
+   * does NOT fail the whole call — it is surfaced as `monitors_yaml: "skipped"`
+   * plus a warning, so the in-memory + DB registration still stands. Mirrors the
+   * `persist` semantics of use_case_register writing back to config.yaml.
+   */
+  persist?: boolean;
+  /**
+   * Absolute path to the monitors.yaml the server was booted from (--monitors).
+   * Injected by the tool layer from `config.monitorsPath`. Only consulted when
+   * `persist` is true.
+   */
+  monitors_path?: string;
+}
+
+/** Fields mirrored back to monitors.yaml — matches MonitorDeclaration in monitors-compose.ts. */
+interface PersistOutcome {
+  monitors_yaml?: "written" | "removed" | "skipped";
+  persist_warnings?: string[];
+}
+
+/**
+ * Mirror a monitor mutation to `monitorsPath` on disk. Uses yaml.Document API so
+ * comments and field ordering are preserved. `decl === null` → deleteIn (unregister).
+ * Non-throwing: on any error, records a warning and returns "skipped". Only the
+ * fields consumed by applyMonitorConfig on restart are written — video_summary_task
+ * / data_dir / webhook_url / keepalive are all derived from config at bootstrap and
+ * must NOT be persisted here or they would drift.
+ */
+function persistMonitorEntry(
+  monitorsPath: string | undefined,
+  monitorId: string,
+  decl: Record<string, unknown> | null,
+): PersistOutcome {
+  if (!monitorsPath) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: ["persist requested but monitors_path is unset (server booted without --monitors?); skipped"],
+    };
+  }
+  try {
+    const raw = readFileSync(monitorsPath, "utf-8");
+    const doc = parseDocument(raw);
+    const existing = doc.get("monitors");
+    if (!existing || !isMap(existing)) {
+      doc.set("monitors", doc.createNode({}));
+    }
+    if (decl === null) {
+      doc.deleteIn(["monitors", monitorId]);
+    } else {
+      // Emit `name` double-quoted to match the built-in monitors.yaml entries.
+      const node = typeof decl.name === "string" ? { ...decl, name: quoted(decl.name) } : decl;
+      doc.setIn(["monitors", monitorId], node);
+    }
+    writeFileSync(monitorsPath, doc.toString(), "utf-8");
+    return { monitors_yaml: decl === null ? "removed" : "written" };
+  } catch (err: any) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: [`persist to ${monitorsPath} failed: ${err.message}`],
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -147,6 +220,15 @@ export async function monitorCtl(
         throw new Error("data_dir is required for register_source (where analytics should write latest.jpg / recordings/ / motion_events/)");
 
       const monitorId = params.monitor_id;
+      // Guard against conflating the monitor id with the VLM task name — a common
+      // agent mistake. Monitor ids follow the cam_<use_case> convention;
+      // <use_case>_monitor is the video_summary_task name, not a monitor id.
+      if (monitorId === params.video_summary_task) {
+        throw new Error(
+          `monitor_id "${monitorId}" must not equal the video_summary_task name ("${params.video_summary_task}"). ` +
+          `Use the cam_<use_case> convention (e.g. cam_${params.use_case ?? "<use_case>"}).`,
+        );
+      }
       if (!params.webhook_url) throw new Error("webhook_url is required for register_source");
       const webhookUrl = params.webhook_url;
       const dataDir = params.data_dir;
@@ -207,7 +289,21 @@ export async function monitorCtl(
       // Start video-worker task poller
       workerService.start(monitorId);
 
-      return { success: true, monitor_id: monitorId };
+      // Optionally mirror the declaration back to monitors.yaml so a restart's
+      // autoRegisterMonitors re-runs the full pipeline (and pipeline_config —
+      // which is NOT stored in the monitors table — survives).
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, {
+          enabled: true,
+          name: params.name ?? monitorId,
+          source_url: params.source_url,
+          use_case: params.use_case ?? "default",
+          ...(params.pipeline_config ? { pipeline_config: params.pipeline_config } : {}),
+        });
+      }
+
+      return { success: true, monitor_id: monitorId, ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -221,7 +317,13 @@ export async function monitorCtl(
         signal: AbortSignal.timeout(10_000),
       }).catch(() => { /* non-fatal: DB deletion proceeds regardless */ });
       db.deleteMonitor(monitorId);
-      return { success: true, monitor_id: monitorId };
+
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, null);
+      }
+
+      return { success: true, monitor_id: monitorId, ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -268,4 +370,36 @@ export async function monitorCtl(
     default:
       throw new Error(`Unknown action: ${(params as any).action}`);
   }
+}
+
+/**
+ * Detach a single monitor WITHOUT deleting its DB history — the "stop stream +
+ * strip from monitors.yaml, keep history" primitive used by the
+ * use_case_register unregister cascade. Steps: stop worker → delete VSA source
+ * (non-fatal) → mark the DB row offline (row + alerts/tasks/events/recordings
+ * kept) → strip the monitor from monitors.yaml when `persist`. Unlike
+ * `monitorCtl action=unregister`, it never calls db.deleteMonitor, so it won't
+ * trip FK constraints or destroy history.
+ */
+export async function detachMonitor(
+  db: SmartBuildingDB,
+  analyticsBaseUrl: string,
+  workerService: IWorkerService,
+  params: { monitor_id: string; monitors_path?: string; persist?: boolean },
+): Promise<{ monitor_id: string; detached: boolean } & PersistOutcome> {
+  const monitorId = params.monitor_id;
+  if (workerService.workers.has(monitorId)) {
+    await workerService.stop(monitorId);
+  }
+  await analyticsDelete(analyticsBaseUrl, monitorId).catch(() => {
+    /* non-fatal: VSA unreachable / already gone — cleanup still proceeds */
+  });
+  if (db.getMonitor(monitorId)) {
+    db.updateMonitorStatus(monitorId, "offline");
+  }
+  let persistOutcome: PersistOutcome = {};
+  if (params.persist) {
+    persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, null);
+  }
+  return { monitor_id: monitorId, detached: true, ...persistOutcome };
 }

@@ -27,6 +27,14 @@ The main features are as follows:
 - RAG-based Question & Answer over uploaded educational materials
 - Vector-based retrieval using ChromaDB with CLIP and mE5 embeddings
 
+#### Report Generator
+
+- Report generation triggered via report API after session outputs are ready
+- Session-based inputs from summary, mindmap, and topic segmentation outputs
+- Field-selectable template report generation with streaming output
+- Report retrieval and export in Markdown, DOCX, and PDF formats
+- Fast reselect flow to update included fields without rerunning full LLM generation
+
 #### Architecture
 
 - Plug-and-play architecture for integrating new ASR, LLM, and video analytics models
