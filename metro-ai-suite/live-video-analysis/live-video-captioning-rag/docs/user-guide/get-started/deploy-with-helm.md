@@ -144,6 +144,8 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 | `global.nodeName` | Node name used to pin host-coupled services | `worker4` |
 | `global.models` | VLM model entries for captioning (`modelId`, `modelType`, `weightFormat`, `device`) | `OpenGVLab/InternVL2-1B` |
 | `global.huggingface.apiToken` | Hugging Face token for gated models (if needed) | `<your_huggingfacehub_token>` |
+| `global.llmModel.modelId` | LLM model for RAG chatbot | `microsoft/Phi-3.5-mini-instruct` |
+| `gloval.llmModel.weightFormat` | Precision of model weights for conversion | `int8` |
 | `global.llmModel.useGPU.enabled` | Enable GPU scheduling for LLM model runtime | `true` |
 | `global.llmModel.useGPU.key` | GPU resource key used to schedule the LLM workload | `gpu.intel.com/i915` |
 | `global.embeddingModel.useGPU.enabled` | Enable GPU scheduling for embedding model runtime | `true` |
@@ -153,7 +155,9 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 
 > **Note:** You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
 >
-> **Note:** If `NPU` is selected in `global.models[].device`, `weightFormat` is automatically forced to `int4`.
+> **Note:** If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
+>
+> **Note:** LLM models in the Live-Video-Captioning-RAG application currently do not support NPU inference.
 
 #### Optional: Proxy configuration
 

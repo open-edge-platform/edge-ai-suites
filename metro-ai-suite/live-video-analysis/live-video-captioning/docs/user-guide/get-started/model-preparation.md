@@ -99,7 +99,7 @@ Each VLM output directory is placed under its target device path so the UI can a
 | `GPU` | `ov_models/gpu/InternVL2-1B` | `GPU` |
 | `NPU` | `ov_models/npu/InternVL2-1B` | `NPU` |
 
-### VLM Models Supported/Validated
+### VLM Models Validated
 
 The following VLM models are validated:
 
@@ -110,7 +110,10 @@ The following VLM models are validated:
 | openbmb/MiniCPM-V-2_6  | CPU, GPU, NPU | v2026.1 |
 | Qwen/Qwen2-VL-2B-Instruct | CPU, GPU, NPU | v2025.4.1 |
 
-> Note: Set `.env` `OVMS_RELEASE_TAG` to the version listed above. Some models require an older OVMS `transformers` version, and using a different tag can cause OpenVINO conversion to fail.
+> **Note:** Set `.env` `OVMS_RELEASE_TAG` to the version listed above. Some models require an older OVMS `transformers` version, and using a different tag can cause OpenVINO conversion to fail.
+>
+> **Note:** Newer/latest Hugging Face model support may depend on the supported OpenVINO version. For those looking to use newer models that are only supported in newer OpenVINO versions, you may try the weekly build images available on [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating the [compose.yaml](../../../compose.yaml) or Helm chart [values.yaml](../../../charts/subcharts/dlstreamer-pipeline-server/values.yaml) based on deployments. However, please be aware that these builds may contain unknown bugs or stability issues.
+As of the time of writing, `2026.1.0` is the latest stable release of `DL Streamer`, which is built on top of `OpenVINO v2026.1`.
 
 ## Optional: Download an Object-Detection Model
 
