@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/db" },
+    { "path": "packages/tools" },
+    { "path": "packages/framework-adapter-sdk" },
+    { "path": "packages/mcp-server" }
+  ]
+}

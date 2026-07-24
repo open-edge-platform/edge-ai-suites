@@ -3,6 +3,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
+
+export type ReportStatus = 'idle' | 'generating' | 'done' | 'error';
 export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
 
 export interface SearchResult {
@@ -21,6 +23,13 @@ export interface UIState {
   summaryComplete: boolean;
   mindmapEnabled: boolean;
   mindmapLoading: boolean;
+  // True once the mind-map image step has finished — i.e. the browser captured
+  // the jsMind view and (attempted to) upload it as the report's mind-map image.
+  // Set even when the capture/upload fails, so report auto-generation is never
+  // blocked forever; a failure just means the report renders without the image.
+  // Report auto-generation waits on this so the PNG is on disk before the
+  // backend reads it (see ReportPanel auto-trigger).
+  mindmapImageReady: boolean;
   activeTab: Tab;
   autoSwitched: boolean;
   autoSwitchedToMindmap: boolean;
@@ -29,6 +38,9 @@ export interface UIState {
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
   shouldStartMindmap: boolean;
+  reportStatus: ReportStatus;
+  reportError: string | null;
+  shouldStartReport: boolean;
   projectLocation: string;
   frontCamera: string;
   backCamera: string;
@@ -86,6 +98,7 @@ const initialState: UIState = {
   summaryComplete: false,
   mindmapEnabled: false,
   mindmapLoading: false,
+  mindmapImageReady: false,
   activeTab: 'transcripts',
   autoSwitched: false,
   autoSwitchedToMindmap: false,
@@ -93,6 +106,9 @@ const initialState: UIState = {
   videoSessionId: null,
   uploadedAudioPath: null,
   shouldStartSummary: false,
+  reportStatus: 'idle',
+  reportError: null,
+  shouldStartReport: false,
   shouldStartMindmap: false,
   transcriptionDone: false,
   projectLocation: 'storage/',
@@ -151,6 +167,7 @@ const uiSlice = createSlice({
       state.summaryComplete = false;
       state.mindmapEnabled = false;
       state.mindmapLoading = false;
+      state.mindmapImageReady = false;
       state.activeTab = 'transcripts';
       state.autoSwitched = false;
       state.autoSwitchedToMindmap = false;
@@ -158,6 +175,9 @@ const uiSlice = createSlice({
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
+      state.reportStatus = 'idle';
+      state.reportError = null;
+      state.shouldStartReport = false;
       state.transcriptionDone = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
@@ -207,6 +227,25 @@ const uiSlice = createSlice({
  
     clearSummaryStartRequest(state) {
       state.shouldStartSummary = false;
+    },
+
+    // ===== Report generation =====
+    startReport(state) {
+      state.shouldStartReport = true;
+      state.reportStatus = 'generating';
+      state.reportError = null;
+    },
+    clearReportStartRequest(state) {
+      state.shouldStartReport = false;
+    },
+    reportDone(state) {
+      state.reportStatus = 'done';
+      state.shouldStartReport = false;
+    },
+    reportFailed(state, action: PayloadAction<string>) {
+      state.reportStatus = 'error';
+      state.reportError = action.payload;
+      state.shouldStartReport = false;
     },
 
     summaryStreamComplete(state) {
@@ -275,6 +314,13 @@ const uiSlice = createSlice({
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
       state.audioStatus = 'error';
+    },
+
+    // Emitted by MindMapTab after the screenshot capture+upload attempt finishes
+    // (success OR failure). Gates report auto-generation so the mind-map PNG is
+    // saved before the backend reads it.
+    mindmapImageDone(state) {
+      state.mindmapImageReady = true;
     },
  
     clearMindmapStartRequest(state) {
@@ -566,7 +612,11 @@ export const {
   processingFailed,
   transcriptionComplete,
   clearSummaryStartRequest,
-  summaryStreamComplete, 
+  startReport,
+  clearReportStartRequest,
+  reportDone,
+  reportFailed,
+  summaryStreamComplete,
   setUploadedAudioPath,
   setSessionId,
   setVideoSessionId,
@@ -579,6 +629,7 @@ export const {
   mindmapStart,
   mindmapSuccess,
   mindmapFailed,
+  mindmapImageDone,
   clearMindmapStartRequest,
   setActiveTab,
   setProjectLocation,

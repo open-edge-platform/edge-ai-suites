@@ -1,0 +1,26 @@
+{
+  "name": "smart-community-ai-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Agent-native video analysis platform with MCP integration",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "dev": "npm run dev --workspace=packages/mcp-server",
+    "test:sdk": "node --import tsx --test tests/framework-adapter-sdk/*.test.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6"
+  },
+  "allowScripts": {
+    "better-sqlite3": true,
+    "esbuild": true
+  }
+}

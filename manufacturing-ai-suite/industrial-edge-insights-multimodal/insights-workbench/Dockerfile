@@ -18,4 +18,12 @@ COPY . .
 
 EXPOSE 8080
 
+ARG TIMESERIES_UID
+ARG TIMESERIES_USER_NAME
+
+RUN groupadd $TIMESERIES_USER_NAME -g $TIMESERIES_UID && \
+    useradd -r -u $TIMESERIES_UID -g $TIMESERIES_USER_NAME $TIMESERIES_USER_NAME
+
+USER $TIMESERIES_USER_NAME
+
 CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8080", "--timeout", "300", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "app:app"]

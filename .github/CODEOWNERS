@@ -62,6 +62,10 @@ README.md          @xwu2intel
 /metro-ai-suite/                                                 @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard
 /metro-ai-suite/README.md                                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/agentic-predictive-maintenance-pipeline                @14pankaj @bharagha @yogeshmpandey @madhuri-rai07 @krish918 @hteeyeoh @bhardwaj-nakul @Supriya-Krishnamurthi @rrajore
+/metro-ai-suite/agentic-predictive-maintenance-pipeline/README.md      @14pankaj @bharagha @yogeshmpandey @madhuri-rai07 @krish918 @hteeyeoh @bhardwaj-nakul @Supriya-Krishnamurthi @rrajore @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/agentic-predictive-maintenance-pipeline/docs           @14pankaj @bharagha @yogeshmpandey @madhuri-rai07 @krish918 @hteeyeoh @bhardwaj-nakul @Supriya-Krishnamurthi @rrajore @open-edge-platform/open-edge-platform-docs-write
+
 /metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol
 /metro-ai-suite/image-based-video-search/docs/                   @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/image-based-video-search/README.md               @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
@@ -123,6 +127,10 @@ README.md          @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/            @zhangcong2019 @llin60 @Johere @xwu2intel
 /metro-ai-suite/visual-search-question-and-answering/docs/       @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/visual-search-question-and-answering/README.md   @zhangcong2019 @llin60 @Johere @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/agentic-smart-community/            @Johere @lijiunderstand @llin60 @xwu2intel
+/metro-ai-suite/agentic-smart-community/docs/       @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/agentic-smart-community/README.md   @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
 /metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write

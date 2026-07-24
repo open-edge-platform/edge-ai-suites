@@ -1,93 +1,73 @@
-import { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { useEffect, useState } from 'react';
+import { useAppSelector } from '../../redux/hooks';
+import { useAppDispatch } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
-import { patchDetectionState } from '../../redux/slices/detectionSlice';
+import { patchDetectionState, resetDetectionState, setActiveDevice } from '../../redux/slices/detectionSlice';
 import { api } from '../../services/api';
-import SettingsModal from '../Settings/SettingsModal';
 import '../../assets/css/TopPanel.css';
+
+type UiLifecycle = 'initializing' | 'preparing' | 'ready' | 'starting' | 'running' | 'error' | 'stopping';
+
+const normalizeLifecycle = (value: string): UiLifecycle => {
+  const v = value.toLowerCase();
+  if (v === 'initializing' || v === 'preparing' || v === 'ready' || v === 'starting' || v === 'running' || v === 'error' || v === 'stopping') {
+    return v;
+  }
+  return 'ready';
+};
 
 const TopPanel = () => {
   const dispatch = useAppDispatch();
-  const { isProcessing } = useAppSelector((state) => state.app);
+  const systemStatus = useAppSelector((state) => state.detection.data.systemStatus);
   const [notification, setNotification] = useState<string>('');
   const [isBackendReady, setIsBackendReady] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
-  const [isStopping, setIsStopping] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
-  const handleStart = async () => {
-    if (!isBackendReady) {
-      setNotification('Backend is not ready');
-      setTimeout(() => setNotification(''), 5000);
-      return;
-    }
-    if (isStarting || isProcessing) return;
+  const isProcessing = systemStatus === 'running' || systemStatus === 'starting';
 
-    try {
-      setIsStarting(true);
-      setNotification('Starting...');
-      dispatch(startProcessing());
-      dispatch(startAllWorkloads());
-      // Keep detection.systemStatus in sync so SettingsModal etc. reflect
-      // the running state even before the first SSE event arrives.
-      dispatch(patchDetectionState({ systemStatus: 'starting' }));
-
-      const response = await api.start('all');
-
-      if (response.status === 'starting' || response.status === 'running' || response.status === 'ok') {
-        const eventsUrl = api.getEventsUrl(['all']);
-        dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
-        setNotification('Running');
-        setTimeout(() => setNotification(''), 3000);
-      } else {
-        throw new Error('Start failed');
-      }
-    } catch (err) {
-      console.error('[TopPanel] Start failed:', err);
-      setNotification('Error starting pipeline');
-      dispatch(stopProcessing());
-      dispatch(stopAllWorkloads());
-      dispatch(patchDetectionState({ systemStatus: 'ready' }));
-      setTimeout(() => setNotification(''), 5000);
-    } finally {
-      setIsStarting(false);
-    }
-  };
-
-  const handleStop = async () => {
-    if (isStopping || !isProcessing) return;
-
-    try {
-      setIsStopping(true);
-      setNotification('⏹️ Stopping...');
-      dispatch({ type: 'sse/disconnect' });
-      dispatch(stopProcessing());
-      dispatch(stopAllWorkloads());
-      // Mirror the backend lifecycle so SettingsModal, PipelinePerformance,
-      // VideoFeed etc. immediately reflect the stopped state. Without this
-      // the SSE-driven `systemStatus` stays stuck on the last-seen value
-      // ('running') because we just closed the SSE stream above.
-      dispatch(patchDetectionState({ systemStatus: 'stopping' }));
-
-      await api.stop('all');
-      dispatch(patchDetectionState({ systemStatus: 'ready' }));
-      setNotification('✅ Stopped successfully');
-      setTimeout(() => setNotification(''), 3000);
-    } catch (err) {
-      console.error('[TopPanel] Stop failed:', err);
-      setNotification('Failed to stop');
-      // Best-effort: assume backend reached ready even if the HTTP round-trip
-      // errored, so the user can still change settings.
-      dispatch(patchDetectionState({ systemStatus: 'ready' }));
-      setTimeout(() => setNotification(''), 3000);
-    } finally {
-      setIsStopping(false);
-    }
+  const attachRunningSession = (lifecycle: UiLifecycle) => {
+    dispatch(startProcessing());
+    dispatch(startAllWorkloads());
+    dispatch(patchDetectionState({ systemStatus: lifecycle }));
+    dispatch({ type: 'sse/connect', payload: { url: api.getEventsUrl(['all']) } });
+    setShowInfo(true);
   };
 
   useEffect(() => {
     let cancelled = false;
+    const hydrateRuntimeState = async () => {
+      try {
+        let snap = await api.getStatusSnapshot();
+        let lifecycle = normalizeLifecycle(String(snap?.lifecycle || 'ready'));
+        const inf = snap?.inference;
+
+        // Recover a stale backend state where lifecycle says running but
+        // the pipeline process is no longer active.
+        if ((lifecycle === 'running' || lifecycle === 'starting') && inf && inf.pipeline_running === false) {
+          try {
+            await api.stop('all');
+          } catch {
+            // Ignore stop race/errors and re-read status below.
+          }
+          snap = await api.getStatusSnapshot();
+          lifecycle = normalizeLifecycle(String(snap?.lifecycle || 'ready'));
+        }
+
+        if (cancelled) return;
+        if (lifecycle === 'running' || lifecycle === 'starting') {
+          attachRunningSession(lifecycle);
+        } else {
+          dispatch(stopProcessing());
+          dispatch(stopAllWorkloads());
+          dispatch(patchDetectionState({ systemStatus: lifecycle }));
+        }
+      } catch {
+        // Best-effort hydration only.
+      }
+    };
+
     const check = async () => {
       try {
         const ok = await api.pingBackend();
@@ -96,69 +76,150 @@ const TopPanel = () => {
         if (!cancelled) setIsBackendReady(false);
       }
     };
+    hydrateRuntimeState();
     check();
     const id = setInterval(check, 10000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  useEffect(() => {
+    if (!isBackendReady) {
+      setNotification('Backend offline');
+      return;
+    }
+    setNotification(`Status: ${systemStatus}`);
+  }, [isBackendReady, systemStatus]);
+
+  const handleStart = async () => {
+    if (busy || isProcessing || !isBackendReady) return;
+    setShowInfo(true);
+    setBusy(true);
+    setNotification('Starting pipeline...');
+    try {
+      const snap = await api.getStatusSnapshot();
+      const lifecycle = normalizeLifecycle(String(snap?.lifecycle || 'ready'));
+      const inf = snap?.inference;
+
+      // If backend is already running, just reconnect UI stream.
+      if ((lifecycle === 'running' || lifecycle === 'starting') && inf?.pipeline_running !== false) {
+        attachRunningSession(lifecycle);
+        setNotification('Pipeline already running. Reconnected to live stream.');
+        return;
+      }
+
+      // If lifecycle is stale-running with dead pipeline, clear it first.
+      if ((lifecycle === 'running' || lifecycle === 'starting') && inf?.pipeline_running === false) {
+        try {
+          await api.stop('all');
+        } catch {
+          // continue and let start try; backend may already be transitioning.
+        }
+      }
+
+      const pendingDevice = api.getPendingDevice();
+      if (pendingDevice) {
+        await api.setDevice(pendingDevice);
+        dispatch(setActiveDevice(pendingDevice));
+      }
+      dispatch(startProcessing());
+      dispatch(startAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'starting' }));
+      const response = await api.start('all');
+      if (response.status !== 'starting' && response.status !== 'running' && response.status !== 'ok') {
+        throw new Error(`Start failed: ${JSON.stringify(response)}`);
+      }
+      dispatch({ type: 'sse/connect', payload: { url: api.getEventsUrl(['all']) } });
+      setNotification('Pipeline started.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+
+      // Common stale-UI case: backend is already running and rejects /device.
+      if (msg.toLowerCase().includes('cannot change device while running')) {
+        attachRunningSession('running');
+        setNotification('Pipeline already running. Reconnected to live stream.');
+        return;
+      }
+
+      dispatch(stopProcessing());
+      dispatch(stopAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
+      setNotification(`Error: ${msg}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (busy || !isProcessing || !isBackendReady) return;
+    setBusy(true);
+    setNotification('Stopping pipeline...');
+    try {
+      dispatch({ type: 'sse/disconnect' });
+      dispatch(stopProcessing());
+      dispatch(stopAllWorkloads());
+      dispatch(patchDetectionState({ systemStatus: 'stopping' }));
+      await api.stop('all');
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
+      setNotification('Pipeline stopped.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      dispatch(patchDetectionState({ systemStatus: 'ready' }));
+      setNotification(`Error: ${msg}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (busy || isProcessing || !isBackendReady) return;
+    setBusy(true);
+    setNotification('Resetting session...');
+    try {
+      await api.reset();
+      dispatch(resetDetectionState());
+      setNotification('Session reset.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setNotification(`Error: ${msg}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <>
-      <div className="top-panel">
-        <div className="action-buttons">
-          <button
-            onClick={handleStart}
-            disabled={isStarting || isProcessing || !isBackendReady}
-            className="start-button"
-            style={{
-              opacity: isBackendReady && !isProcessing && !isStarting ? 1 : 0.5,
-              cursor: isBackendReady && !isProcessing && !isStarting ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {!isBackendReady ? 'Offline'
-              : isStarting ? 'Starting...'
-              : isProcessing ? 'Running'
-              : 'Start'}
-          </button>
-
-          <button
-            onClick={handleStop}
-            disabled={isStopping || !isProcessing}
-            className="stop-button"
-          >
-            {isStopping ? 'Stopping...' : 'Stop'}
-          </button>
-        </div>
-
-        <div className="notification-center">
-          {notification && (
-            <span style={{
-              padding: '8px 16px',
-              background: notification.includes('❌') ? '#fee' : notification.includes('⚠️') ? '#ffc' : '#efe',
-              borderRadius: '4px',
-              fontSize: '13px',
-              border: `1px solid ${notification.includes('❌') ? '#fcc' : notification.includes('⚠️') ? '#fc6' : '#cfc'}`,
-            }}>
-              {notification}
-            </span>
-          )}
-        </div>
-
-        <div className="top-panel-right">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="settings-button"
-            aria-label="Open Settings to select camera/upload video/reset hardware device"
-            data-tooltip="Open Settings to select camera/upload video/reset hardware device"
-            data-tooltip-pos="left"
-          >
-            <span className="settings-button-icon" aria-hidden="true">⚙</span>
-            <span className="settings-button-label">Settings</span>
-          </button>
-        </div>
+    <div className="top-panel">
+      <div className="action-buttons">
+        <button type="button" className="start-button" onClick={handleStart} disabled={busy || isProcessing || !isBackendReady}>
+          {busy && !isProcessing ? 'Starting...' : 'Start'}
+        </button>
+        <button type="button" className="stop-button" onClick={handleStop} disabled={busy || !isProcessing || !isBackendReady}>
+          {busy && isProcessing ? 'Stopping...' : 'Stop'}
+        </button>
+        <button type="button" className="reset-button" onClick={handleReset} disabled={busy || isProcessing || !isBackendReady}>
+          Reset session
+        </button>
       </div>
 
-      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
-    </>
+      <div className="notification-center">
+        {notification && (
+          <span style={{
+            padding: '8px 16px',
+            background: isBackendReady ? '#efe' : '#fee',
+            borderRadius: '4px',
+            fontSize: '13px',
+            border: `1px solid ${isBackendReady ? '#cfc' : '#fcc'}`,
+          }}>
+            {notification}
+          </span>
+        )}
+      </div>
+
+      <div className="top-panel-right">
+        {showInfo && (
+          <span className="settings-button-label">Live preview opens in a separate window on the host display.</span>
+        )}
+      </div>
+    </div>
   );
 };
 

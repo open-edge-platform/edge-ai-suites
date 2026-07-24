@@ -16,6 +16,18 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
+      {{- if .Values.trustedCompute.enabled }}
+      annotations:
+        io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        {{- if .Values.trustedCompute.tc_gpu_enabled }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        cdi-devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
+          {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
       runtimeClassName: kata-qemu
@@ -108,12 +120,23 @@ spec:
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
         {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
         resources:
+          {{- if not .Values.trustedCompute.enabled }}
+          {{- with .Values.resources.requests }}
           requests:
-             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
-             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.resources.limits }}
           limits:
-             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
-             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- else }}
+          requests:
+             memory: {{ .Values.trustedCompute.resources.requests.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.requests.cpu | quote }}
+          limits:
+             memory: {{ .Values.trustedCompute.resources.limits.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.limits.cpu | quote }}
+          {{- end }}
         {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:

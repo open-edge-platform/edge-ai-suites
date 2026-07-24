@@ -54,6 +54,9 @@
 [submodule "retail-ai-suite/voice-enabled-interactions"]
 	path = retail-ai-suite/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "retail-ai-suite/digital-signage"]
+	path = retail-ai-suite/digital-signage
+	url = https://github.com/intel-retail/digital-signage.git
 [submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros"]
 	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
 	url = https://github.com/agenticros/agenticros.git

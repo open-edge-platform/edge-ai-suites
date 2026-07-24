@@ -5,6 +5,8 @@
 
 from pydantic_settings import BaseSettings
 
+DEFAULT_VLM_MODEL = "Qwen/Qwen3-VL-8B-Instruct"
+
 class Settings(BaseSettings):
     # Default points to localhost (default for native Windows install)
     DATABASE_URL: str = "postgresql+psycopg2://postgres:password@localhost:5432/edu_ai"

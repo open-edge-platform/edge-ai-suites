@@ -1,0 +1,27 @@
+# MediaMTX RTSP Server configuration for SmartHome demo
+# Receives ffmpeg push stream and serves as RTSP source for stream_monitor + dashboard
+
+# Disable API and metrics (not needed for demo)
+api: false
+metrics: false
+
+# RTSP server on default port
+rtsp: true
+rtspAddress: :8554
+
+# Disable other protocols (only need RTSP)
+rtmp: false
+hls: false
+webrtc: false
+srt: false
+
+paths:
+  # 4 RTSP paths (one per monitor), all published by ffmpeg loop services.
+  live/fridge:
+    source: publisher
+  live/child:
+    source: publisher
+  live/elder:
+    source: publisher
+  live/elder2:
+    source: publisher

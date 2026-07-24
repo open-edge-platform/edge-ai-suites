@@ -24,6 +24,11 @@ class PipelineClient:
         r.raise_for_status()
         return r.json()
 
+    def latency(self) -> dict[str, Any]:
+        r = self._session.get(f"{self._base}/latency", timeout=self._timeout)
+        r.raise_for_status()
+        return r.json()
+
     def start(
         self,
         device: str,

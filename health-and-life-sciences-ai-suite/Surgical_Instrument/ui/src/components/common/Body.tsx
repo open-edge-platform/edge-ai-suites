@@ -1,32 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import RightPanel from "../RightPanel/RightPanel";
-import DetectionPanel from "../DetectionPanel/DetectionPanel";
+import ConfigPanel from "../ConfigPanel/ConfigPanel";
 import "../../assets/css/Body.css";
 
 const Body: React.FC = () => {
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
-
   return (
     <div className="container">
-      {/* Left Panel — DetectionPanel, expands to full width when right panel is hidden */}
-      <div className={`left-panel${isRightPanelCollapsed ? ' left-panel--full' : ''}`}>
-        <DetectionPanel expanded={isRightPanelCollapsed} />
+      <div className="left-panel">
+        <ConfigPanel />
       </div>
-
-      {/* Right Panel */}
-      {!isRightPanelCollapsed && (
-        <div className="right-panel">
-          <RightPanel />
-        </div>
-      )}
-
-      {/* Toggle arrow */}
-      <div
-        className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
-        onClick={() => setIsRightPanelCollapsed(prev => !prev)}
-        title={isRightPanelCollapsed ? 'Show right panel' : 'Hide right panel'}
-      >
-        {isRightPanelCollapsed ? '◀' : '▶'}
+      <div className="right-panel-shell">
+        <RightPanel />
       </div>
     </div>
   );

@@ -243,7 +243,7 @@ services:
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
-      - "1883:1883" # MQTT TCP Proxy
+      # - "1883:1883" # MQTT TCP Proxy
     volumes:
       - ${NGINX_CONFIG_PATH}:/tmp/default.conf.template:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro

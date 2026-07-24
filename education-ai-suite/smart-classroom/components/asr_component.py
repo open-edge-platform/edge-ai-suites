@@ -317,7 +317,9 @@ class ASRComponent(PipelineComponent):
 
                     if spk == teacher_speaker:
                         speaker_label = LABEL_TEACHER
-                        teacher_lines.append(text)
+                        # Keep the [start-end] timestamp: the report's speaking-rate
+                        # and lecture-duration metrics parse it from this file.
+                        teacher_lines.append(f"[{start}-{end}] {text}")
                     else:
                         if spk.startswith(f"{LABEL_SPEAKER}_"):
                             speaker_label = spk.replace(

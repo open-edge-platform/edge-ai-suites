@@ -57,19 +57,20 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 
-def _merge_label_types_into_manifest(
+def _merge_object_types_into_manifest(
     manifests: dict,
-    label_type_map: dict[str, str],
+    type_ids: set[str],
 ) -> None:
-    """Merge typeIds from ``label_type_map`` into the Nx manifest dicts in-place.
+    """Merge Nx object ``typeIds`` into the manifest dicts in-place.
 
-    Adds any typeId that appears as a value in ``label_type_map`` (and is not
-    already declared) to both ``engineManifest.typeLibrary.objectTypes`` and
-    ``deviceAgentManifest.supportedTypes``.  This keeps the registered manifest
-    in sync with whatever labels are configured without requiring manual JSON edits.
+    Adds any typeId not already declared to both
+    ``engineManifest.typeLibrary.objectTypes`` and
+    ``deviceAgentManifest.supportedTypes``. The typeIds are contributed
+    generically by the configured analytics apps (via each app config's
+    ``object_types()``), so this VMS-side helper stays free of any
+    app-specific concepts and works for any future app.
     """
-    extra_type_ids = set(label_type_map.values())
-    if not extra_type_ids:
+    if not type_ids:
         return
 
     # -- engineManifest.typeLibrary.objectTypes --
@@ -77,7 +78,7 @@ def _merge_label_types_into_manifest(
     type_library = engine.setdefault("typeLibrary", {})
     object_types: list[dict] = type_library.setdefault("objectTypes", [])
     existing_ids = {t.get("id") for t in object_types}
-    for type_id in sorted(extra_type_ids):
+    for type_id in sorted(type_ids):
         if type_id not in existing_ids:
             object_types.append({"id": type_id, "name": type_id})
             existing_ids.add(type_id)
@@ -86,7 +87,7 @@ def _merge_label_types_into_manifest(
     da_manifest = manifests.setdefault("deviceAgentManifest", {})
     supported: list[dict] = da_manifest.setdefault("supportedTypes", [])
     existing_supported = {t.get("objectTypeId") for t in supported}
-    for type_id in sorted(extra_type_ids):
+    for type_id in sorted(type_ids):
         if type_id not in existing_supported:
             supported.append({
                 "objectTypeId": type_id,
@@ -113,10 +114,10 @@ class NxWitnessVmsShim(IVmsShim):
         self._enabled_device_agents: set[str] = set()
         # Orchestrator reference (set in on_startup)
         self._orchestrator: Any = None
-        # Per-device pipeline run tracking: device_id → instance_id
-        self._device_pipeline_runs: dict[str, str] = {}
-        # Previous settings per device for change detection
-        self._device_prev_settings: dict[str, dict] = {}
+        # Nx UI pipeline tracking keyed by (device_id, app_id)
+        self._nx_pipeline_runs: dict[tuple[str, str], str] = {}
+        # Previous settings per (device_id, app_id) for change detection
+        self._nx_prev_settings: dict[tuple[str, str], dict] = {}
 
     @property
     def camera_id_prefix(self) -> str:
@@ -514,14 +515,17 @@ class NxWitnessVmsShim(IVmsShim):
             )
             return
 
-        # Merge any label_type_map typeIds from object_detection analytics apps into the manifest.
-        from analytics_app_shim.object_detection.config import ObjectDetectionAnalyticsAppConfig
+        # Declare each app's object typeIds in the manifest so Nx accepts the
+        # detections that we later push. Apps opt in via object_types() on their config.
+        extra_type_ids: set[str] = set()
         for ca_cfg in orchestrator.config.analytics_apps:
-            if isinstance(ca_cfg, ObjectDetectionAnalyticsAppConfig) and ca_cfg.label_type_map:
-                _merge_label_types_into_manifest(manifests, ca_cfg.label_type_map)
+            provider = getattr(ca_cfg, "object_types", None)
+            if callable(provider):
+                extra_type_ids.update(provider())
+        _merge_object_types_into_manifest(manifests, extra_type_ids)
 
-        # Build the Nx device-agent settings panel from all configured apps so the
-        # bundled manifest stays generic and any app added to config.yaml shows up.
+        # Build the per-app camera settings panel (checkboxes/dropdowns) into the
+        # manifest from each app's control_params().
         apply_settings_model(manifests, list(orchestrator.config.analytics_apps))
 
         try:
@@ -578,110 +582,112 @@ class NxWitnessVmsShim(IVmsShim):
                     device_id = camera.camera_id.removeprefix("nx:")
                     settings = await self.get_device_agent_settings(device_id)
                     if settings:
-                        logger.debug(
-                            "nx_device_agent_settings_poll",
-                            device_id=device_id,
-                            camera_name=camera.name,
-                            pipeline_enabled=settings["pipelineEnabled"],
-                            device=settings["device"],
-                        )
-                        await self._reconcile_pipeline(camera, device_id, settings)
+                        await self._reconcile_all_pipelines(camera, device_id, settings)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
                 logger.error("nx_settings_poll_error", error=str(exc))
 
-    async def _reconcile_pipeline(self, camera: Any, device_id: str, settings: dict) -> None:
-        """Start or stop a DLStreamer pipeline based on current Nx client settings."""
-        prev = self._device_prev_settings.get(device_id, {})
-        self._device_prev_settings[device_id] = settings
+    async def _reconcile_all_pipelines(
+        self, camera: Any, device_id: str, settings: dict,
+    ) -> None:
+        """Reconcile pipeline state for every analytics app that supports VMS UI control.
 
-        enabled = settings["pipelineEnabled"]
-        device = settings["device"]
+        Each app shim opts in by declaring non-empty
+        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.control_params`.
+        """
+        if not self._orchestrator:
+            return
+        for app_id, shim in self._orchestrator.analytics_app_shims.items():
+            app_settings = self._extract_controls(shim, settings)
+            if not app_settings:
+                continue  # app opts out of VMS UI pipeline control
+            await self._reconcile_app_pipeline(camera, device_id, app_id, shim, app_settings)
 
-        settings_changed = (
-            prev.get("pipelineEnabled") != enabled
-            or prev.get("device") != device
-        )
+    def _extract_controls(self, shim: Any, raw_settings: dict) -> dict:
+        """Map Nx device-agent values → this app's VMS-neutral control values.
 
-        run_id = self._device_pipeline_runs.get(device_id)
+        Nx flattens all apps' values into one dict, namespaced as
+        ``<app_id>.<name>`` (multi-app) or flat ``<name>`` (single-app). This
+        reads each control param the app declares, coercing by its type. Returns
+        ``{}`` when the app declares no control params (opts out). This is the Nx
+        side of the neutral contract — the app never sees Nx settings shapes.
+        """
+        params = shim.control_params()
+        if not params:
+            return {}
+        app_id = shim.app_id
+        values: dict = {}
+        for p in params:
+            name = p.get("name")
+            if not name:
+                continue
+            default = p.get("default")
+            raw = raw_settings.get(f"{app_id}.{name}", raw_settings.get(name, default))
+            if p.get("type") == "bool":
+                values[name] = bool(raw)
+            else:
+                values[name] = str(raw) if raw is not None else str(default or "")
+        return values
+
+    async def _reconcile_app_pipeline(
+        self,
+        camera: Any,
+        device_id: str,
+        app_id: str,
+        shim: Any,
+        app_settings: dict,
+    ) -> None:
+        """Generic state machine: start or stop a pipeline from VMS UI settings.
+
+        Compares the current control values against the previous snapshot and
+        calls :meth:`~plugin.base.interfaces.IAnalyticsAppShim.start_for_camera` /
+        :meth:`~plugin.base.interfaces.IAnalyticsAppShim.stop_run` as needed.
+        """
+        key = (device_id, app_id)
+        enabled = bool(app_settings.get("pipelineEnabled", False))
+        prev = self._nx_prev_settings.get(key, {})
+        self._nx_prev_settings[key] = app_settings
+        settings_changed = app_settings != prev
+        run_id = self._nx_pipeline_runs.get(key)
 
         if not enabled:
             if run_id:
-                await self._stop_pipeline_for_device(device_id)
+                ok = await shim.stop_run(run_id)
+                self._nx_pipeline_runs.pop(key, None)
+                logger.info(
+                    "nx_pipeline_stopped",
+                    app_id=app_id,
+                    device_id=device_id,
+                    run_id=run_id,
+                    success=ok,
+                )
             return
 
-        # enabled=True: start if not running or device changed
+        # enabled=True: start if not running or any settings field changed
         if run_id and not settings_changed:
             return
 
         if run_id:
-            await self._stop_pipeline_for_device(device_id)
-
-        await self._start_pipeline_for_device(camera, device_id, device)
-
-    async def _start_pipeline_for_device(
-        self, camera: Any, device_id: str, device: str,
-    ) -> None:
-        """Start a DLStreamer pipeline using values from config."""
-        if not self._orchestrator:
-            logger.error("nx_start_pipeline_no_orchestrator", device_id=device_id)
-            return
-
-        od_shim = self._orchestrator.analytics_app_shims.get("dls_vision")
-        if od_shim is None:
-            logger.error("nx_start_pipeline_no_od_shim", device_id=device_id)
-            return
-
-        pipeline_name = od_shim._config.pipeline_name
-
-        if not pipeline_name:
-            logger.error("nx_poll_pipeline_name_not_configured", device_id=device_id)
-            return
+            await shim.stop_run(run_id)
+            self._nx_pipeline_runs.pop(key, None)
 
         rtsp_url = await self.get_live_stream_url(camera.camera_id)
         if not rtsp_url:
-            logger.error("nx_start_pipeline_no_rtsp", device_id=device_id)
+            logger.error("nx_start_pipeline_no_rtsp", app_id=app_id, device_id=device_id)
             return
 
-        parameters: dict = {"detection-properties": {"device": device}}
-
-        params = od_shim.param_model.model_validate({
-            "pipeline_name": pipeline_name,
-            "camera_id": rtsp_url,
-            "camera_id_ref": camera.camera_id,
-            "parameters": parameters,
-        })
-
-        try:
-            result = await od_shim.start(params)
-            run_id = result.get("run_id", "")
-            self._device_pipeline_runs[device_id] = run_id
+        new_run_id = await shim.start_for_camera(camera.camera_id, rtsp_url, app_settings)
+        if new_run_id:
+            self._nx_pipeline_runs[key] = new_run_id
             logger.info(
-                "nx_dls_pipeline_started",
+                "nx_pipeline_started",
+                app_id=app_id,
                 device_id=device_id,
-                pipeline_name=pipeline_name,
-                device=device,
-                run_id=run_id,
+                run_id=new_run_id,
             )
-        except Exception as exc:
-            logger.error("nx_dls_pipeline_start_failed", device_id=device_id, error=str(exc))
-
-    async def _stop_pipeline_for_device(self, device_id: str) -> None:
-        """Stop the running DLStreamer pipeline for the given device."""
-        run_id = self._device_pipeline_runs.pop(device_id, None)
-        if not run_id:
-            return
-
-        if not self._orchestrator:
-            return
-
-        od_shim = self._orchestrator.analytics_app_shims.get("dls_vision")
-        if od_shim is None:
-            return
-
-        ok = await od_shim.stop_run(run_id)
-        logger.info("nx_dls_pipeline_stopped", device_id=device_id, run_id=run_id, success=ok)
+        else:
+            logger.error("nx_start_pipeline_failed", app_id=app_id, device_id=device_id)
 
     async def handle_register(self, body: dict[str, Any], db: Any, vms_name: str) -> Any:
         """Handle POST /vms/{name}/register for Nx Witness.
@@ -987,7 +993,9 @@ class NxWitnessVmsShim(IVmsShim):
     async def get_device_agent_settings(self, device_id: str) -> dict:
         """Read device agent settings set by the user in the Nx Witness client.
 
-        Returns a dict with ``pipelineEnabled`` (bool) and ``pipelineName`` (str).
+        Returns the full ``values`` dict from Nx (keys depend on the registered
+        settings model — may be flat when only one analytics app is configured, or
+        namespaced as ``<app_id>.<field>`` when multiple apps contribute fields).
         """
         ready = await self._ensure_integration_session()
         if not ready:
@@ -1006,15 +1014,11 @@ class NxWitnessVmsShim(IVmsShim):
             data = resp.json()
             # Nx v4 wraps user-set values under "values"
             values = data.get("values", data)
-            settings = {
-                "pipelineEnabled": bool(values.get("pipelineEnabled", False)),
-                "device": str(values.get("device", "CPU")),
-            }
+            settings = dict(values) if isinstance(values, dict) else {}
             logger.debug(
                 "nx_device_agent_settings_read",
                 device_id=device_id,
-                pipeline_enabled=settings["pipelineEnabled"],
-                device=settings["device"],
+                settings=settings,
             )
             return settings
         except httpx.HTTPError as exc:

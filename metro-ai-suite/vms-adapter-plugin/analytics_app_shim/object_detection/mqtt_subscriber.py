@@ -142,11 +142,13 @@ class MqttSubscriber:
             return
 
         try:
-            metadata = json.loads(payload)
+            data = json.loads(payload)
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning("mqtt_payload_parse_failed", topic=topic, error=str(exc))
             return
-
+        # accommodate DLS envelope {"metadata": {...}, "blob": ""} as well as just {}, 
+        # as seen in DLS pipelines with appsink based destination vs gvametapublish based destination
+        metadata = data.get("metadata", data)
         objects, timestamp_ms = translate_dls_metadata(metadata, label_type_map, timestamp_offset_ms)
         if not objects:
             logger.debug("mqtt_no_objects_in_frame", topic=topic)

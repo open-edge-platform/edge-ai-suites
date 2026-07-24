@@ -978,7 +978,7 @@ curl --location 'http://127.0.0.1:9011/api/v1/system/config'
 Response (200 OK):
 ```json
 {
-    "vlm_model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "vlm_model": "Qwen/Qwen3-VL-8B-Instruct",
     "visual_embedding_model": "CLIP/clip-vit-b-16",
     "doc_embedding_model": "BAAI/bge-small-en-v1.5",
     "reranker_model": "BAAI/bge-reranker-large",
