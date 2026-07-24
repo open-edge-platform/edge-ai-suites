@@ -145,11 +145,11 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 | `global.models` | VLM model entries for captioning (`modelId`, `modelType`, `weightFormat`, `device`) | `OpenGVLab/InternVL2-1B` |
 | `global.huggingface.apiToken` | Hugging Face token for gated models (if needed) | `<your_huggingfacehub_token>` |
 | `global.llmModel.modelId` | LLM model for RAG chatbot | `microsoft/Phi-3.5-mini-instruct` |
-| `gloval.llmModel.weightFormat` | Precision of model weights for conversion | `int8` |
-| `global.llmModel.useGPU.enabled` | Enable GPU scheduling for LLM model runtime | `true` |
+| `gloval.llmModel.weightFormat` | Precision of model weights for conversion | `int8 / int4 / fp16` |
+| `global.llmModel.useGPU.enabled` | Enable GPU scheduling for LLM model runtime | `true / false` |
 | `global.llmModel.useGPU.key` | GPU resource key used to schedule the LLM workload | `gpu.intel.com/i915` |
-| `global.embeddingModel.useGPU.enabled` | Enable GPU scheduling for embedding model runtime | `true` |
-| `global.embeddingModel.useGPU.key` | GPU resource key used to schedule embedding workload | `gpu.intel.com/i915` |
+| `global.embeddingModel.useGPU.enabled` | Enable GPU scheduling for embedding model runtime | `true / false` |
+| `global.embeddingModel.useGPU.key` | GPU resource key used to schedule embedding workload | `gpu.intel.com/i915 / gpu.intel.com/xe` |
 | `live-video-captioning-rag.env.maxTokens` | Max generated tokens for RAG response | `1024` |
 | `live-video-captioning-rag.env.topK` | Number of retrieved context candidates | `1` |
 
