@@ -89,13 +89,14 @@ Extracts text from the IFPD or whiteboard captured by the content pipeline, enab
 - **OCR & Confidence Gating** — PaddleOCR extracts text; frames with mean confidence below threshold are dropped.
 - **Post-processing** — Near-duplicate consecutive records are merged to reduce downstream LLM token usage.
 - **Output** — Results are written as JSON-lines to `board_ocr.txt` (`{frame, source_frame, timestamp, text}`).
+- **Summary integration** — When Board OCR has captured text for a session, the audio summarization step folds it into the AI-generated class summary as an extra **"Board / IFPD Content"** section, alongside the sections derived from the transcript. If no board text is available, the summary is unchanged.
 
 ## Content Search Pipeline
 
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.
 
 <p align="center">
-  <img src="./_assets/Content_Search_Arch.svg" alt="Content Search Architecture" width="80%">
+  <img src="./_assets/Content_Search_Arch.png" alt="Content Search Architecture" width="80%">
 </p>
 <p align="center">
   <img src="./_assets/Content_Search_Software_Stack.svg" alt="Content Search Software Stack" width="80%">

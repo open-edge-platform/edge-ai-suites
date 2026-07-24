@@ -1,0 +1,35 @@
+server:
+  host: "127.0.0.1"
+  port: 8999
+
+webhook:
+  url: "http://localhost:9999/events"
+  timeout: 5
+  retry_attempts: 2
+  retry_delay: 0.1
+
+data_dir: "/tmp/videostream-test-data"
+
+defaults:
+  motion:
+    diff_threshold: 25
+    area_ratio: 0.015
+    stable_frames: 30
+  segment:
+    max_duration: 10
+    min_duration: 1.0
+  recording:
+    interval: 60
+    fps: 15
+    retention_days: 5
+  prefilter:
+    enabled: true
+    model_path: ""
+    target_classes: ["person"]
+    min_confidence: 0.4
+    min_frames_hit: 2
+    detect_fps: 2.0
+    device: "CPU"
+
+logging:
+  level: "DEBUG"

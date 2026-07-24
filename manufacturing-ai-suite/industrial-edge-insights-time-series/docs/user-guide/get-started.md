@@ -3,6 +3,10 @@
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
+## Prerequisites
+
+- [System Requirements](./get-started/system-requirements.md)
+
 ## Configure Docker
 
 To configure Docker:
@@ -156,9 +160,11 @@ curl -k -X 'POST' \
 
 3. To check the output in Grafana:
 
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
+   - Use link `https://localhost:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note:**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+     > **Note:**: 
+     > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+     > - If you are accessing the UI remotely, replace `localhost` with the host system IP address.
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file.

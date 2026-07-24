@@ -91,7 +91,7 @@ config:
     name: nginx
     int:
       https_port: "15443"
-      mqtt_port: "1883"
+      # mqtt_port: "1883"
     ext:
       https_port: "30001"
-      mqtt_port: "30002"
+      # mqtt_port: "30002"

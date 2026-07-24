@@ -30,6 +30,19 @@ externalUrls:
 # Trusted Compute configuration for secure workload execution
 trustedCompute:
   enabled: false
+  tc_gpu_enabled: false
+  tc_gpu_cdiAnnotations:
+    - gpu.intel.com/igpu=tc
+  tcvm_default_memory: "6144"
+  tcvm_pcie_root_port: "1"
+  tcvm_hot_plug_vfio: "root-port"
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "4"
+    limits:
+      memory: "6Gi"
+      cpu: "6"
 
 # Container images for utilities and init containers
 images:
