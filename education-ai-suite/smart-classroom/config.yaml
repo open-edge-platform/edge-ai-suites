@@ -10,6 +10,7 @@ features:
   mindmap:            { enabled: true }
   topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }
+  board_ocr:          { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
   report:             { enabled: false }
