@@ -71,6 +71,7 @@ live-video-captioning:
       alertMode: "false"
       enableDetectionPipeline: "false"
       captionHistory: "3"
+      liveVideoRagHostPort: "4172"
 
   dlstreamer-pipeline-server:
     modelsPvcName: "models-pvc"

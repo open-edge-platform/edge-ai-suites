@@ -165,9 +165,9 @@ If your cluster is behind a proxy, configure:
 
 ```yaml
 global:
-	httpProxy: "http://<your-proxy-host>:<port>"
-	httpsProxy: "http://<your-proxy-host>:<port>"
-	noProxy: "<your-rtsp-camera-host-or-ip>"
+    httpProxy: "http://<your-proxy-host>:<port>"
+    httpsProxy: "http://<your-proxy-host>:<port>"
+    noProxy: "<your-rtsp-camera-host-or-ip>"
 ```
 
 > **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.

@@ -77,6 +77,9 @@ users only need to supply their RTSP camera hosts/IPs.
 */}}
 {{- define "lvc.proxyEnv" -}}
 {{- $internalNoProxy := "localhost,127.0.0.1,mqtt-broker,dlstreamer-pipeline-server,mediamtx,coturn,video-caption-service,metrics-manager" -}}
+{{- if hasKey .Values.global "enableRAG" -}}
+  {{- $internalNoProxy = printf "%s,vdms-vector-db,multimodal-embedding,live-video-captioning-rag" $internalNoProxy -}}
+{{- end -}}
 {{- if .Values.global.httpProxy }}
 - name: http_proxy
   value: {{ .Values.global.httpProxy | quote }}
