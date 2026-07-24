@@ -67,9 +67,9 @@ Options:
 Note: On Windows, the script automatically requests Administrator privileges.
 
 Services Launched (in order):
-    1. Backend (port 8000)     - Main Python pipeline service (with paddleocr if OCR enabled)
+    1. Backend (port 8000)     - Main Python pipeline service, runs in THIS terminal (with paddleocr if OCR enabled)
     2. Content Search (9011)   - RAG, video summarization, semantic search
-    3. Frontend (port 5173)    - React UI (opens as an Electron desktop window when -Electron is set;
+    3. Frontend (port 5173)    - React UI, launches in a NEW terminal (opens as an Electron desktop window when -Electron is set;
                                  the dev server still runs on port 5173)
 
 "@ -ForegroundColor Cyan
@@ -212,9 +212,7 @@ trap {
     Write-Host "  Script interrupted at line $($_.InvocationInfo.ScriptLineNumber) with $($_.Exception.Message)" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
-    }
-    for ($i = 30; $i -gt 0; $i--) {
-        Start-Sleep -Seconds 1
+        $script:servicesStarted = $false
     }
     exit 1
 }
@@ -882,10 +880,10 @@ Write-Host ""
 Write-Host "[4/4] LAUNCHING SERVICES" -ForegroundColor Green
 Write-Host "------------------------" -ForegroundColor Green
 Write-Host ""
-Write-Host "Terminals will launch sequentially with health checks:" -ForegroundColor Yellow
-Write-Host "  1. Backend (port 8000) - wait until healthy" -ForegroundColor White
+Write-Host "Services will start with health checks:" -ForegroundColor Yellow
+Write-Host "  1. Backend (port 8000) - runs in THIS terminal, wait until healthy" -ForegroundColor White
 Write-Host "  2. Content Search (port 9011) - wait until healthy" -ForegroundColor White
-Write-Host "  3. Frontend (port 5173)" -ForegroundColor White
+Write-Host "  3. Frontend (port 5173) - launches in a NEW terminal" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services and exit." -ForegroundColor DarkGray
 Write-Host ""
@@ -901,6 +899,7 @@ function Wait-ForService {
         [int]$Port,
         [int[]]$DependentPorts = @(),
         [string]$CommandLinePattern = "",  # Pattern to match in process command line (e.g., "main.py", "start_services.py")
+        [System.Diagnostics.Process]$Process = $null,  # Launched process to watch for early exit
         [int]$IntervalSeconds = 5
     )
     
@@ -908,9 +907,26 @@ function Wait-ForService {
     $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
-    Write-Host "  (No timeout - will wait until service is ready or crashes)" -ForegroundColor DarkGray
     
     while ($true) {
+        # If we have a handle to the launched process, detect an early exit
+        # immediately (e.g. a config error) instead of waiting out the grace period.
+        if ($Process -and $Process.HasExited) {
+            $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+            if (-not $listening) {
+                Write-Host ""
+                Write-Host ""
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host "  ERROR: $ServiceName EXITED" -ForegroundColor Red
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "  The $ServiceName process exited (code $($Process.ExitCode)) before becoming healthy." -ForegroundColor Red
+                Write-Host "  Check the output above for error messages." -ForegroundColor Yellow
+                Write-Host ""
+                return $false
+            }
+        }
+
         # After initial grace period, check if dependent services are still running
         if ($elapsed -ge $initialGracePeriod) {
             foreach ($depPort in $DependentPorts) {
@@ -1065,12 +1081,12 @@ if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
     # ========================================================================
-    # TERMINAL 1: BACKEND (with paddleocr check)
+    # BACKEND (runs in THIS terminal, with paddleocr check)
     # ========================================================================
     if ($script:skipBackend) {
         Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
     } else {
-        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
+        Write-Host "Starting Backend in this terminal..." -ForegroundColor Yellow
         
         
         $backendScript = @"
@@ -1125,18 +1141,13 @@ python main.py
 "@
     $backendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($backendScript))
 
-    if ($wtExists) {
-        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Backend powershell -NoExit -EncodedCommand $backendEncoded"
-    } else {
-        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $backendEncoded" | Out-Null
-    }
+    $script:backendProcess = Start-Process powershell -NoNewWindow -PassThru -ArgumentList "-ExecutionPolicy Bypass -EncodedCommand $backendEncoded"
 
-    Write-Host "  Backend terminal launched" -ForegroundColor Green
+    Write-Host "  Backend started in this terminal" -ForegroundColor Green
     Write-Host ""
-    }  # End of skipBackend check
+    } 
     
-    # Wait for Backend to be healthy before starting Content Search
-    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
+    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py" -Process $script:backendProcess
     if (-not $backendHealthy) {
         Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
         exit 1
@@ -1147,7 +1158,6 @@ python main.py
         Write-Host ""
         Write-Host "Content Search is started by the backend (main.py); waiting for it to become healthy..." -ForegroundColor Yellow
 
-        # Wait for Content Search to be healthy before starting Frontend
         $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
         if (-not $csHealthy) {
             Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
@@ -1159,14 +1169,14 @@ python main.py
     }
     
     # ========================================================================
-    # TERMINAL 3: FRONTEND
+    #  FRONTEND TERMINAL
     # ========================================================================
     if ($script:skipFrontend) {
         Write-Host ""
         Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
     } else {
         Write-Host ""
-        Write-Host "Launching Terminal 3: $frontendTitle..." -ForegroundColor Yellow
+        Write-Host "Launching Terminal: $frontendTitle..." -ForegroundColor Yellow
 
         $frontendScript = @"
 `$ErrorActionPreference = 'Continue'
@@ -1237,34 +1247,27 @@ Write-Host ""
 if ($Silent) {
     Write-Host "Silent mode: services started successfully. Exiting..." -ForegroundColor Green
     Write-Host ""
-    $script:servicesStarted = $false  # Prevent trap from stopping services
+    $script:servicesStarted = $false  
     exit 0
 } else {
     Write-Host "========================================" -ForegroundColor Yellow
-    Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
-    Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
+    Write-Host "  Press Ctrl+C to stop all services and exit." -ForegroundColor Yellow
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
 
-    # Wait for user input to stop services or exit
     while ($true) {
-        $key = Read-Host "Enter choice (Q/E)"
-        switch ($key.ToUpper()) {
-            "Q" {
+        # If the backend exited on its own (crash or graceful shutdown),
+        # clean up the remaining services and return to the prompt instead
+        # of spinning here forever.
+        if ($script:backendProcess -and $script:backendProcess.HasExited) {
+            Write-Host ""
+            Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
+            if ($script:servicesStarted) {
                 Stop-AllServices
-                for ($i = 30; $i -gt 0; $i--) {
-                    Start-Sleep -Seconds 1
-                }
-                exit 0
+                $script:servicesStarted = $false
             }
-            "E" {
-                Write-Host ""
-                Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
-                Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
-                Write-Host ""
-                $script:servicesStarted = $false  # Prevent trap from stopping services
-                exit 0
-            }
+            break
         }
+        Start-Sleep -Seconds 1
     }
 }

@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -62,6 +63,7 @@ async function main() {
   if (monitorsPath) {
     try {
       config.monitors = loadMonitorsConfig(monitorsPath);
+      config.monitorsPath = resolve(monitorsPath);
       logger.info(`[config] loaded ${Object.keys(config.monitors).length} monitor(s) from ${monitorsPath}`);
 
       // Reference integrity: every monitor.use_case must exist in config.useCaseDict

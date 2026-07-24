@@ -7,9 +7,10 @@
 #   3. register the plugin entry in openclaw.json          (openclaw config patch)
 #   4. merge the demo agents into agents.list[]            (merge-by-id, non-destructive)
 #   5. symlink the plugin into ~/.openclaw/extensions/     (AFTER config — see note below)
-#   6. copy the bundled agent personas into ~/.openclaw/agents/  (cp -n: never clobbers)
-#   7. restart the OpenClaw gateway                        (openclaw gateway restart)
-#   8. wake up the demo agents so their sessions exist     (openclaw agent -m hi)
+#   6. install the repo's skills into ~/.openclaw/skills/  (OpenClaw discovers them natively)
+#   7. copy the bundled agent personas into ~/.openclaw/agents/  (cp -n: never clobbers)
+#   8. restart the OpenClaw gateway                        (openclaw gateway restart)
+#   9. wake up the demo agents so their sessions exist     (openclaw agent -m hi)
 #
 # Config is written BEFORE the symlink on purpose: OpenClaw enforces the plugin's
 # required-field schema the instant it's discovered (symlinked), so a symlink without
@@ -21,19 +22,20 @@
 # Env overrides:
 #   OPENCLAW_HOME   target home                       (default: ~/.openclaw)
 #   MCP_URL         SmartBuilding MCP endpoint         (default: http://localhost:3100/mcp)
-#   AGENT_MODEL     model alias for the demo agents    (default: Qwen3.5)
+#   AGENT_MODEL     model alias for the demo agents    (default: Qwen3.6-35B-A3B)
 #   SKIP_RESTART=1  skip the gateway restart (step 7)
 #   SKIP_WAKEUP=1   skip the agent wakeup   (step 8)
 set -euo pipefail
 
 SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
-HERE="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
-SDK_DIR="$(cd "$HERE/../.." && pwd)"                 # packages/framework-adapter-sdk
+HERE="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"      # examples/openclaw/scripts
+PLUGIN_DIR="$(cd "$HERE/.." && pwd)"                 # examples/openclaw (the adapter plugin)
+SDK_DIR="$(cd "$PLUGIN_DIR/../.." && pwd)"           # packages/framework-adapter-sdk
 REPO_ROOT="$(cd "$SDK_DIR/../.." && pwd)"            # repo root
 OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
 PLUGIN_ID="smartbuilding-alerts"
 MCP_URL="${MCP_URL:-http://localhost:3100/mcp}"
-AGENT_MODEL="${AGENT_MODEL:-Qwen3.5}"
+AGENT_MODEL="${AGENT_MODEL:-Qwen3.6-35B-A3B}"
 
 # Demo agents (id order matters: `main` first — it is OpenClaw's default agent).
 # The 3 persona agents below are the ones with bundled workspaces under agents/.
@@ -46,7 +48,7 @@ echo "==> Building framework-adapter-sdk"
 npm --prefix "$REPO_ROOT" -w @smartbuilding-video/framework-adapter-sdk run build
 
 echo "==> Installing plugin dependencies"
-npm --prefix "$HERE" install
+npm --prefix "$PLUGIN_DIR" install
 
 # ---------------------------------------------------------------------------
 # CONFIG MUST BE WRITTEN BEFORE THE SYMLINK.
@@ -147,30 +149,33 @@ fi
 # ---------------------------------------------------------------------------
 echo "==> Symlinking plugin into $OPENCLAW_HOME/extensions/$PLUGIN_ID"
 mkdir -p "$OPENCLAW_HOME/extensions"
-ln -sfn "$HERE" "$OPENCLAW_HOME/extensions/$PLUGIN_ID"
+ln -sfn "$PLUGIN_DIR" "$OPENCLAW_HOME/extensions/$PLUGIN_ID"
 
+# ---------------------------------------------------------------------------
+# Install skills straight into OpenClaw's own skills dir.
+# OpenClaw natively discovers everything under ~/.openclaw/skills/, so we copy
+# the repo's skills there directly — no staging into the plugin's skills/
+# subdir and no reliance on the plugin symlink exposing it as plugin-skills.
+# ---------------------------------------------------------------------------
 SOURCE_SKILLS_DIR="$REPO_ROOT/skills"
-PLUGIN_SKILLS_SOURCE_DIR="$HERE/skills"
+DEST_SKILLS_DIR="$OPENCLAW_HOME/skills"
 
-echo "==> Staging plugin skills from $SOURCE_SKILLS_DIR into $PLUGIN_SKILLS_SOURCE_DIR"
+echo "==> Installing skills from $SOURCE_SKILLS_DIR into $DEST_SKILLS_DIR"
 
 if [[ ! -d "$SOURCE_SKILLS_DIR" ]]; then
   echo "WARNING: source skills directory does not exist: $SOURCE_SKILLS_DIR" >&2
 else
-  mkdir -p "$PLUGIN_SKILLS_SOURCE_DIR"
+  mkdir -p "$DEST_SKILLS_DIR"
   shopt -s nullglob
   for skill_dir in "$SOURCE_SKILLS_DIR"/*/; do
-    skill_dir="${skill_dir%/}"
-    skill_id="$(basename "$skill_dir")"
-    echo "    - $skill_id"
-    rm -rf "$PLUGIN_SKILLS_SOURCE_DIR/$skill_id"
-    cp -a "$skill_dir" "$PLUGIN_SKILLS_SOURCE_DIR/$skill_id"
+    echo "    - $(basename "${skill_dir%/}")"
   done
+  cp -rf "$SOURCE_SKILLS_DIR"/* "$DEST_SKILLS_DIR"/
   shopt -u nullglob
 fi
 
 echo "==> Seeding agent personas into $OPENCLAW_HOME/agents (cp -n, non-destructive)"
-for agent_dir in "$HERE"/agents/*/; do
+for agent_dir in "$PLUGIN_DIR"/agents/*/; do
   agent_id="$(basename "$agent_dir")"
   dst="$OPENCLAW_HOME/agents/$agent_id/workspace"
   mkdir -p "$dst" "$OPENCLAW_HOME/agents/$agent_id/agent"
