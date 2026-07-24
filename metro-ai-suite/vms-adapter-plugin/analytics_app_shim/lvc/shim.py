@@ -308,6 +308,36 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
         self.unregister_run(run_id)
         return result
 
+    # ── VMS-driven pipeline control ─────────────────────────────────────────────
+
+    def control_params(self) -> list[dict]:
+        """Declare VMS-neutral control knobs for this app (delegates to config)."""
+        return self._config.control_params()
+
+    async def start_for_camera(self, camera_id: str, stream_url: str, controls: dict) -> str | None:
+        """Start an LVC pipeline for one camera from VMS control values."""
+        payload: dict = {
+            "rtspUrl": stream_url,
+            "device": controls.get("device", "CPU"),
+        }
+        prompt = controls.get("prompt", "")
+        if prompt:
+            payload["prompt"] = prompt
+        pipeline_name = self._config.pipeline_name
+        if pipeline_name:
+            payload["pipelineName"] = pipeline_name
+        try:
+            run = await self._api.start_run(payload)
+            if run is None:
+                return None
+            run_id = run.get("runId") or ""
+            if run_id:
+                self.register_run(run_id, camera_id)
+            return run_id or None
+        except Exception as exc:
+            logger.error("lvc_start_for_camera_failed", error=str(exc))
+            return None
+
     async def get_run(self, run_id: str) -> dict[str, Any] | None:
         run = await self._api.get_run(run_id)
         return self._enrich_run(run) if run else None

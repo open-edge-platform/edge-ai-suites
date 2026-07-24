@@ -1,15 +1,14 @@
 # Surgical Instrument — single-host deployment.
 #
-# Four services, one published host port (UI :8080):
-#   surgical-mqtt      — Eclipse Mosquitto broker on the internal network
-#   surgical-pipeline  — DL Streamer container, publishes detections+JPEG
-#   surgical-backend   — Flask API, consumes MQTT + JPEG + latency tracer
+# Three services, one published host port (UI :8080):
+#   surgical-pipeline  — DL Streamer container, renders popup + exposes latency
+#   surgical-backend   — Flask API, consumes pipeline /health + /latency
 #   surgical-ui        — Nginx reverse-proxy, only host-published service
 #
 # The backend runs the bootstrap → train → export → ready orchestrator on
 # the host's Intel Arc iGPU, then serves the UI. Runtime polyp inference
 # runs in the DL Streamer pipeline container and reaches the UI via the
-# shared `surgical-frames` volume + MQTT topic `surgical/detections`.
+# backend SSE stream sourced from the pipeline control plane.
 #
 # The UI does NOT come online until the backend HEALTHCHECK passes. First
 # boot may take 20-35 min while YOLO11n trains on CVC-ColonDB — see
@@ -32,42 +31,18 @@ networks:
 volumes:
   # Cache dir survives across restarts (Ultralytics weights, HF datasets, etc.)
   surgical-cache:
-  # Shared JPEG + latency tracer between pipeline (rw) and backend (ro).
-  surgical-frames:
   # Persistent SYCL / NEO kernel cache for the XPU trainer.
   surgical-sycl-cache:
 
 services:
-
-  surgical-mqtt:
-    image: eclipse-mosquitto:2.0
-    container_name: surgical-mqtt
-    restart: unless-stopped
-    networks: [surgical-internal]
-    volumes:
-      - ./configs/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-    healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/#' -C 1 -W 3 >/dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
   surgical-pipeline:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
-      args:
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        NO_PROXY: ${NO_PROXY:-}
     image: surgical-pipeline:dev
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
-    depends_on:
-      surgical-mqtt:
-        condition: service_healthy
 
     # Intel Arc iGPU passthrough for DL Streamer (VAAPI + OpenCL / Level Zero).
     # /dev/accel is the Meteor Lake NPU (accel0) — required when
@@ -78,6 +53,7 @@ services:
     devices:
       - /dev/dri:/dev/dri
       - /dev/accel:/dev/accel
+      - /dev/bus/usb:/dev/bus/usb
 
     # Grant the container permission to open v4l2 (video4linux2) character
     # devices — kernel major 81. This is a permission-only grant: without a
@@ -88,37 +64,41 @@ services:
     # runtime selector.
     device_cgroup_rules:
       - 'c 81:* rmw'
+      - 'c 189:* rmw'
 
     volumes:
       - ./models:/models:ro
       - ./videos:/videos:ro
-      - surgical-frames:/frames
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-/dev/null}:/root/.Xauthority:ro
 
     environment:
-      MQTT_HOST:   surgical-mqtt
-      MQTT_PORT:   "1883"
-      MQTT_TOPIC:  surgical/detections
-      FRAME_DIR:   /frames
       VIDEO:       /videos/polyp_test.mp4
       IR_XML:      /models/yolo11n_polyp/best_openvino_model/best.xml
       # Customer requirement: 1080p @ 60 fps camera-to-screen.
       TARGET_FPS:  "60"
       THRESHOLD:   "0.5"
+      DISPLAY:     ${DISPLAY:-}
+      XAUTHORITY:  /root/.Xauthority
+      PIPELINE_DISPLAY_VIEW: "1"
+      PIPELINE_VIDEO_SINK: autovideosink
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   surgical-backend:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        NO_PROXY: ${NO_PROXY:-}
     image: surgical-backend:dev
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
     depends_on:
-      surgical-mqtt:
+      surgical-pipeline:
         condition: service_healthy
 
     # torch DataLoader worker processes share tensors via /dev/shm; the
@@ -151,13 +131,6 @@ services:
       # Persistent SYCL / OpenCL kernel cache. Without this, every fresh
       # container recreate triggers 10-15 min of JIT compilation on Xe3.
       - surgical-sycl-cache:/root/.cache
-      # Shared frames volume — pipeline writes JPEG + latency log; backend
-      # reads them and must be able to unlink `latest.jpg` on Start so a
-      # stale frame from a previous session (e.g. a Basler frame left over
-      # after switching to a file source) is not served during the first
-      # start-up second. Read-only would silently drop the unlink and leak
-      # the old frame to the UI.
-      - surgical-frames:/frames
       # Host OS release info — surfaced by /api/platform-info so the UI
       # reports the actual host distro (e.g. Ubuntu 25.10 on PTL) rather
       # than the backend container's baked-in image OS.
@@ -178,13 +151,8 @@ services:
       # GPU | CPU | NPU — initial device for /api/device (can be changed
       # from the UI when inference is stopped).
       DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
-      # Consumer wiring — matches the surgical-pipeline container.
-      MQTT_HOST:      surgical-mqtt
-      MQTT_PORT:      "1883"
-      MQTT_TOPIC:     surgical/detections
       PIPELINE_HOST:  surgical-pipeline
       PIPELINE_PORT:  "8000"
-      FRAME_DIR:      /frames
 
     # start_period covers first-boot training (20-35 min on Arc iGPU).
     healthcheck:
