@@ -159,10 +159,10 @@ def transcribe():
 
         # Check if streaming is requested
         if request.args.get("stream") == "true":
+            source = get_request_source()
             def generate():
                 audio_duration = 0.0
                 for chunk_data in transcribe_audio_chunks(tmp_path):
-                    # Track total audio duration from the last chunk/complete event
                     try:
                         parsed = json.loads(chunk_data)
                         if "duration" in parsed:
@@ -170,9 +170,14 @@ def transcribe():
                     except Exception:
                         pass
                     yield chunk_data
-                # Record metrics after streaming completes
                 processing_time = time.time() - start_time
                 record_metrics(audio_duration, processing_time)
+                print(
+                    f"audio processed: source={source} "
+                    f"duration={audio_duration:.3f}s "
+                    f"timestamp={time.time()}",
+                    flush=True,
+                )
             # File cleanup is handled inside transcribe_audio_chunks
             return Response(generate(), mimetype="application/x-ndjson")
         else:
@@ -187,6 +192,13 @@ def transcribe():
                 ]
                 audio_duration = round(segments[-1]["end"], 3) if segments else 0.0
                 record_metrics(audio_duration, processing_time)
+
+                print(
+                    f"audio processed: source={get_request_source()} "
+                    f"duration={audio_duration:.3f}s "
+                    f"timestamp={time.time()}",
+                    flush=True,
+                )
 
                 return jsonify({
                     "text": " ".join(s["text"] for s in segments).strip(),
@@ -212,6 +224,14 @@ def health():
 @app.route("/metrics")
 def metrics():
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+def get_request_source() -> str:
+    """Return the client IP / service name, honoring the nginx proxy header."""
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        # First entry is the original client
+        return forwarded.split(",")[0].strip()
+    return request.remote_addr or "unknown"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
