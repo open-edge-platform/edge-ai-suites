@@ -1,13 +1,6 @@
 # videostream-analytics HTTP API Reference
 
-The videostream-analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server). This document is the **service-side contract**: any orchestrator that follows it can register sources, control their lifecycle, and receive events regardless of how the service is deployed.
-
-Implementation entry point: [videostream-analytics/service.py](../../videostream-analytics/service.py).
-Related documents:
-
-- System design: [smartbuilding-video-design-2026.2.md](../smartbuilding-video-design-2026.2.md) §7 Video Stream Analytics Microservice.
-- Getting-started guide and end-to-end verification recipes: [vsa-gsg.md](../vsa-gsg.md).
-- The MCP-side view of VSA webhook events: [mcp_webhook_event_api.md](./mcp_webhook_event_api.md).
+The videostream-analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server). 
 
 ---
 

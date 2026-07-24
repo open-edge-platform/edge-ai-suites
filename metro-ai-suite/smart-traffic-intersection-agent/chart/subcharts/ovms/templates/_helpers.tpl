@@ -54,11 +54,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Compute the OVMS image reference, selecting GPU or CPU tag based on gpu.enabled.
+Compute the OVMS image reference, selecting GPU or CPU tag based on gpu.enabled or tc_gpu_enabled.
 */}}
 {{- define "ovms.image" -}}
+{{- $tcGpu := and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled -}}
 {{- $targetDevice := ternary "GPU" .Values.env.targetDevice .Values.gpu.enabled -}}
-{{- if contains "GPU" $targetDevice -}}
+{{- $useGpu := or (contains "GPU" $targetDevice) $tcGpu -}}
+{{- if $useGpu -}}
 {{- printf "%s:%s" .Values.image.repository .Values.image.gpuTag -}}
 {{- else -}}
 {{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}

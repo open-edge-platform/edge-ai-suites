@@ -11,7 +11,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 **Hardware**
 
 - Intel® Core™ Ultra processor with integrated GPU (validated on Panther Lake, PTL 358H), sharing system RAM
-- At least **64 GB RAM** — default deployment target for `Qwen3.5-35B-A3B` (FP8, 60k context)
+- At least **64 GB RAM** — default deployment target for `Qwen3.6-35B-A3B` (FP8, 60k context)
 - At least **32 GB swap** — so the model load and KV cache can spill under peak memory pressure
 - At least 128 GB disk space (model weights + Hugging Face cache)
 

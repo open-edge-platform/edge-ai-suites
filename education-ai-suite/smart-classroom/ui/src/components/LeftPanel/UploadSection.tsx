@@ -58,9 +58,10 @@ const ACTIVE: TaskStatus[] = ["PROCESSING", "PENDING"];
 
 interface UploadSectionProps {
   disabled?: boolean;
+  active?: boolean;
 }
 
-const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
+const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((s) => s.ui.sessionId);
@@ -115,8 +116,9 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
     }
   }, [dispatch]);
 
-  // Check if files exist on the server on initial mount
+
   useEffect(() => {
+    if (!active) return;
     const checkServerFiles = async () => {
       try {
         const [filesResponse, tags] = await Promise.all([
@@ -139,7 +141,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
       }
     };
     checkServerFiles();
-  }, [dispatch, ensureSessionAndMonitoring]);
+  }, [active, dispatch, ensureSessionAndMonitoring]);
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);

@@ -13,6 +13,13 @@ chown -R intelmicroserviceuser:intelmicroserviceuser /home/pipeline-server/video
 echo "$SMART_INTERSECTION_BROKER_SERVICE_HOST    $MQTT_HOST" >> /etc/hosts &&
 {{- if or .Values.dlstreamerPipelineServer.gpu.enabled .Values.dlstreamerPipelineServer.npu.enabled }}
 ./run.sh
+{{- else if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
+i=0
+until vainfo 2>/dev/null | grep -q "VA-API version"; do
+  i=$((i+1)); [ $i -ge 15 ] && echo "Timed out waiting for GPU VA-API" && exit 1
+  echo "Waiting for GPU VA-API..."; sleep 1
+done &&
+./run.sh
 {{- else }}
 runuser -u intelmicroserviceuser ./run.sh
 {{- end }}

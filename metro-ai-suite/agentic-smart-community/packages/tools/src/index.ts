@@ -29,7 +29,7 @@ export type {
   RuleEvaluator,
   ParsedSummary,
 } from "./rule-engine/index.js";
-export { monitorCtl } from "./monitor-ctl.js";
+export { monitorCtl, detachMonitor } from "./monitor-ctl.js";
 export type { MonitorCtlParams } from "./monitor-ctl.js";
 export { loadMonitorsFromYaml, validateMonitors } from "./monitors-compose.js";
 export type {
@@ -52,11 +52,5 @@ export type {
   UseCaseRegisterDeps,
   UseCaseRegisterResult,
 } from "./use-case-register.js";
-export { videoSummaryTask } from "./video-summary-task.js";
-export type {
-  VideoSummaryTaskParams,
-  VideoSummaryTaskDeps,
-  VideoSummaryTaskResult,
-} from "./video-summary-task.js";
 export { ruleEval } from "./rule-eval.js";
 export type { RuleEvalParams, RuleEvalDeps, RuleEvalResult } from "./rule-eval.js";

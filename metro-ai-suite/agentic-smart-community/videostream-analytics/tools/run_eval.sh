@@ -25,7 +25,7 @@
 #
 # Env overrides
 #   VIDEOS_DIR  — root of the phase-2 video corpus.
-#                 Default: <repo>/demo-videos (the MP4 binaries are .gitignore'd;
+#                 Default: <repo>/demo/videos (the MP4 binaries are .gitignore'd;
 #                 GT SRT files live alongside and stay tracked).
 #   MEDIAMTX_CONFIG — defaults to tools/mediamtx.yml in this repo.
 #   MEDIAMTX_BIN, RTSP_PORT, WEBHOOK_PORT, ANALYTICS_PORT — see code below.
@@ -37,7 +37,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_DIR="$(dirname "$PROJECT_DIR")"
 PYTHON="${PROJECT_DIR}/.venv/bin/python"
 
-VIDEOS_DIR="${VIDEOS_DIR:-$REPO_DIR/demo-videos}"
+VIDEOS_DIR="${VIDEOS_DIR:-$REPO_DIR/demo/videos}"
 
 MEDIAMTX_BIN="${MEDIAMTX_BIN:-$HOME/.local/bin/mediamtx}"
 MEDIAMTX_CONFIG="${MEDIAMTX_CONFIG:-$SCRIPT_DIR/mediamtx.yml}"

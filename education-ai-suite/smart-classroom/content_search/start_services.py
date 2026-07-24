@@ -234,13 +234,8 @@ def _get_health_json(host: str, port: int, path: str) -> Optional[dict]:
 
 def _wait_for_main_app() -> bool:
     """Block until the main app (:8000) warm VLM is ready.
-
-    The :9900 microservice is retired, so content-search now depends on the
-    main-app VLM. Gating here prevents ingest/Q&A from calling a cold or absent
-    VLM. Readiness is confirmed when the main-app ``/health`` hub reports
-    ``text_gen`` loaded. Returns True when ready, False on timeout (in which
-    case startup continues so the launcher never hard-blocks).
     """
+    
     host = _env("MAIN_APP_HOST", "127.0.0.1")
     port = int(_env("MAIN_APP_PORT", "8000"))
     path = _env("MAIN_APP_HEALTH_PATH", "/health")

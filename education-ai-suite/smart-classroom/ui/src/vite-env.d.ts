@@ -9,6 +9,8 @@ interface ElectronAPI {
   platform: string;
   /** Open the native application menu as a popup at the given viewport point. */
   popupMenu: (position?: { x: number; y: number }) => void;
+  /** Set the language for the native menus (application + context menu). */
+  setLanguage: (lang: string) => void;
   /** Absolute filesystem path for a File chosen in Electron; '' if unavailable. */
   getPathForFile: (file: File) => string;
 }
