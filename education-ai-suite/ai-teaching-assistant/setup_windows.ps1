@@ -73,8 +73,8 @@ $SparsePaths = @(
 )
 
 # Relative path of the submodule from the git superproject root. This matches the
-# entry in the root .gitmodules (submodule.ai-teaching-assistant/edge-ai-libraries).
-$SubmoduleRelPath = "ai-teaching-assistant/edge-ai-libraries"
+# entry in the root .gitmodules (submodule.education-ai-suite/ai-teaching-assistant/edge-ai-libraries).
+$SubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"
 
 # Upstream URL for the submodule, used to register it if it is not yet present in
 # the superproject's .gitmodules (e.g. when running against a fresh checkout that
@@ -188,7 +188,7 @@ $VeiSparsePaths = @(
     "smart-kiosk-assistant/main.py",
     "smart-kiosk-assistant/requirements.txt"
 )
-$VeiSubmoduleRelPath = "ai-teaching-assistant/voice-enabled-interactions"
+$VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"
 $VeiSubmoduleUrl = "https://github.com/suryam789/voice-enabled-interactions.git"
 
 $VeiRepoRoot = $null

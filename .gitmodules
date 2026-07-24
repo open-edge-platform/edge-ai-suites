@@ -77,9 +77,9 @@
 	path = metro-ai-suite/agentic-rag
 	url = https://github.com/opea-project/GenAIExamples.git
 	shallow = true
-[submodule "ai-teaching-assistant/edge-ai-libraries"]
-	path = ai-teaching-assistant/edge-ai-libraries
+[submodule "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"]
+	path = education-ai-suite/ai-teaching-assistant/edge-ai-libraries
 	url = https://github.com/suryam789/edge-ai-libraries.git
-[submodule "ai-teaching-assistant/voice-enabled-interactions"]
-	path = ai-teaching-assistant/voice-enabled-interactions
+[submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
+	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/suryam789/voice-enabled-interactions.git
