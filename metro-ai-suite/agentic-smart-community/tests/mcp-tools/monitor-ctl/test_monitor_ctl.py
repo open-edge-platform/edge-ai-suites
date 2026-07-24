@@ -2,7 +2,7 @@
 """Tests for smartbuilding_monitor_ctl — register_source state matrix.
 
 Requires:
-  - MCP server running: node packages/mcp-server/dist/index.js --config config.yaml.example --http
+  - MCP server running: node packages/mcp-server/dist/index.js --config demo/config.demo.yaml --http
   - Mock analytics server: python tests/mock/videostream-analytics/mock_server.py --port 8999
 
 Run:
@@ -257,7 +257,7 @@ def main():
 
     if not check_mcp_reachable(t):
         print(f"\nERROR: MCP server not reachable at {MCP_URL}")
-        print("Start with: node packages/mcp-server/dist/index.js --config config.yaml.example --http")
+        print("Start with: node packages/mcp-server/dist/index.js --config demo/config.demo.yaml --http")
         sys.exit(1)
 
     if not check_analytics_reachable(t):

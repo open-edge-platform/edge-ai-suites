@@ -30,12 +30,25 @@ def _feature_flags(cfg) -> Optional[Dict[str, bool]]:
     return flags
 
 
-def startup(app: FastAPI) -> None:
-    register_builtin_features()
+NO_FEATURES_MESSAGE = (
+    "No features are enabled. Enable at least one feature in the "
+    "'features:' block of config.yaml"
+)
 
-    eff = resolve(_feature_flags(config))
+
+def resolve_effective_features():
+    """Register built-ins and resolve the effective feature set from config."""
+    register_builtin_features()
+    return resolve(_feature_flags(config))
+
+
+def startup(app: FastAPI) -> None:
+    eff = resolve_effective_features()
     logger.info("Enabled features: %s", sorted(eff.features))
     logger.info("Required capabilities: %s", sorted(eff.capabilities))
+
+    if not eff.features:
+        raise RuntimeError(NO_FEATURES_MESSAGE)
 
     app.state.features = eff
 

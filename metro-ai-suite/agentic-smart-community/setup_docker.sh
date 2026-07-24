@@ -139,6 +139,72 @@ export REGISTRY="${REGISTRY_URL}${PROJECT_NAME}"
 
 MULTILEVEL_IMAGE="${REGISTRY:-}multilevel-video-understanding:${TAG:-latest}"
 VSA_IMAGE="videostream-analytics:latest"
+DEFAULT_PREFILTER_MODEL="${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml"
+MODEL_DIR="${MODEL_DIR:-${HOME}/models}"
+export MODEL_DIR
+
+prepare_videostream_config() {
+  local prefilter_bin prefilter_model runtime_config source_config helper_script model_dir
+
+  prefilter_model="${PREFILTER_MODEL:-$DEFAULT_PREFILTER_MODEL}"
+  case "$prefilter_model" in
+    '~') prefilter_model="$HOME" ;;
+    '~/'*) prefilter_model="$HOME/${prefilter_model#~/}" ;;
+  esac
+
+  if [[ "$prefilter_model" != *.xml ]]; then
+    echo "PREFILTER_MODEL must reference a .xml OpenVINO IR; using ${DEFAULT_PREFILTER_MODEL}."
+    prefilter_model="$DEFAULT_PREFILTER_MODEL"
+  fi
+
+  prefilter_model="$(realpath -m "$prefilter_model")"
+  prefilter_bin="${prefilter_model%.xml}.bin"
+  if [[ ! -s "$prefilter_model" || ! -s "$prefilter_bin" ]]; then
+    echo "Prefilter model is missing or incomplete: ${prefilter_model}"
+    echo "Preparing the YOLO11s OpenVINO IR automatically..."
+    helper_script="${SCRIPT_DIR}/scripts/helpers/prepare_yolo11s.sh"
+    PREFILTER_MODEL="$prefilter_model" bash "$helper_script"
+  fi
+
+  if [[ ! -s "$prefilter_model" || ! -s "$prefilter_bin" ]]; then
+    echo -e "${RED}Error: prefilter preparation did not create a complete IR pair: ${prefilter_model}${NC}"
+    exit 1
+  fi
+  prefilter_model="$(realpath -e "$prefilter_model")"
+
+  model_dir="$(realpath -m "$MODEL_DIR")"
+  if [[ "$prefilter_model" != "$model_dir/"* ]]; then
+    echo -e "${RED}Error: PREFILTER_MODEL must be under MODEL_DIR (${model_dir}) so the container can read it.${NC}"
+    exit 1
+  fi
+
+  source_config="${SCRIPT_DIR}/videostream-analytics/config/config.yaml"
+  runtime_config="${SCRIPT_DIR}/.docker/videostream-analytics.config.yaml"
+  mkdir -p "$(dirname "$runtime_config")"
+  PREFILTER_MODEL="$prefilter_model" python3 - "$source_config" "$runtime_config" <<'PY'
+import os
+import sys
+import tempfile
+
+import yaml
+
+source_path, output_path = sys.argv[1:]
+with open(source_path, encoding="utf-8") as source_file:
+    config = yaml.safe_load(source_file) or {}
+
+config.setdefault("defaults", {}).setdefault("prefilter", {})["model_path"] = os.environ["PREFILTER_MODEL"]
+output_dir = os.path.dirname(output_path)
+with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=output_dir, delete=False) as output_file:
+    yaml.safe_dump(config, output_file, default_flow_style=False, sort_keys=False)
+    temporary_path = output_file.name
+os.replace(temporary_path, output_path)
+PY
+
+  export PREFILTER_MODEL="$prefilter_model"
+  export VIDEOSTREAM_CONFIG_FILE="$runtime_config"
+  echo "Using prefilter model: ${PREFILTER_MODEL}"
+  echo "Using runtime videostream configuration: ${VIDEOSTREAM_CONFIG_FILE}"
+}
 
 cd "$DOCKER_DIR" || { echo -e "${RED}Error: cannot cd to $DOCKER_DIR${NC}"; exit 1; }
 DOCKER_CMD="docker compose -f compose.yaml"
@@ -161,6 +227,8 @@ fi
 
 # --- up -----------------------------------------------------------------------
 if [ "$UP_CONTAINERS" = true ]; then
+  prepare_videostream_config
+
   # Both locally-built images must exist before we start.
   missing=false
   for img in "$MULTILEVEL_IMAGE" "$VSA_IMAGE"; do

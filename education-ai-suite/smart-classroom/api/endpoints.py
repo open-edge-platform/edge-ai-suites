@@ -213,6 +213,16 @@ def start_video_analytics_pipeline(
                         # Use the same engine as the /class-statistics UI endpoint
                         va_stats, _ = _svc.get_pose_stats(_front_posture)
                         logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
+
+                        try:
+                            _stats_path = os.path.join(_session_dir, "va", "class_statistics.json")
+                            os.makedirs(os.path.dirname(_stats_path), exist_ok=True)
+                            with open(_stats_path, "w", encoding="utf-8") as _fh:
+                                json.dump(va_stats, _fh, indent=2, ensure_ascii=False)
+                            logger.info(f"[VA done] Saved class_statistics.json to {_stats_path}")
+                        except Exception as _e:
+                            logger.error(f"[VA done] Failed to save class_statistics.json: {_e}")
+
                         # Always write the files regardless of sender config
                         write_engagement_reports(session_id, _session_dir, va_stats)
                         _scp = get_scp_sender()
@@ -849,9 +859,6 @@ def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Option
 
 def register_routes(app: FastAPI):
     app.include_router(router)
-
-    from api.board_ocr import board_ocr_router
-    app.include_router(board_ocr_router)
 
     from api.vlm_chat import router as vlm_chat_router
     app.include_router(vlm_chat_router)
