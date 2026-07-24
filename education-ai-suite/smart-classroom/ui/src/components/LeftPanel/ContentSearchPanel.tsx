@@ -5,7 +5,7 @@ import UploadSection from "./UploadSection";
 import SearchSection from "./SearchSection";
 import { getCsHealth, type CsHealthStatus } from "../../services/api";
 
-const ContentSearchPanel: React.FC = () => {
+const ContentSearchPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const { t } = useTranslation();
   const [healthError, setHealthError] = useState<{
     unreachable: boolean;
@@ -13,6 +13,7 @@ const ContentSearchPanel: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
+    if (!active) return;
     getCsHealth()
       .then((data: CsHealthStatus) => {
         const unhealthy = Object.entries(data.services)
@@ -27,7 +28,7 @@ const ContentSearchPanel: React.FC = () => {
       .catch(() => {
         setHealthError({ unreachable: true, unhealthyServices: [] });
       });
-  }, []);
+  }, [active]);
 
   return (
     <div className="cs-panel">
@@ -42,7 +43,7 @@ const ContentSearchPanel: React.FC = () => {
           </span>
         </div>
       )}
-      <UploadSection disabled={!!healthError} />
+      <UploadSection disabled={!!healthError} active={active} />
       <SearchSection disabled={!!healthError} />
     </div>
   );

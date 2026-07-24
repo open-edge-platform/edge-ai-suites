@@ -15,6 +15,7 @@ KNOWN_FEATURE_IDS = frozenset({
     "content_search",
     "qa",
     "grading",
+    "report",
 })
 
 def _dict_to_namespace(d):

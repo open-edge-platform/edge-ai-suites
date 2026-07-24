@@ -4,6 +4,7 @@ from .asr_feature import ASRFeature
 from .content_search_feature import ContentSearchFeature
 from .mindmap_feature import MindmapFeature
 from .qa_feature import QAFeature
+from .report_feature import ReportFeature
 from .registry import REGISTRY, register
 from .segmentation_feature import SegmentationFeature
 from .summary_feature import SummaryFeature
@@ -19,6 +20,7 @@ _BUILTIN_FEATURES = [
     VideoAnalyticsFeature,
     ContentSearchFeature,
     QAFeature,
+    ReportFeature,
 ]
 
 

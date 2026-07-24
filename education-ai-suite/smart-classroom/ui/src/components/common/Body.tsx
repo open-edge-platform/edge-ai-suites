@@ -20,7 +20,7 @@ const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen }) => {
           <LeftPanel />
         </div>
         <div style={{ display: activeScreen === 'content-search' ? 'contents' : 'none' }}>
-          <ContentSearchPanel />
+          <ContentSearchPanel active={activeScreen === 'content-search'} />
         </div>
       </div>
       <div className="right-panel" style={{ flex: isRightPanelCollapsed ? 0 : 1 }}>

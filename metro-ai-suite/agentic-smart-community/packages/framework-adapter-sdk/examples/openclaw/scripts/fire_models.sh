@@ -38,9 +38,9 @@ cat > "$patch_file" <<'JSON5'
     defaults: {
       models: {
         "minimax/MiniMax-M3": { alias: "Minimax" },
-        "vllm-local/Qwen/Qwen3.5-35B-A3B": { alias: "Qwen3.5" }
+        "vllm-local/Qwen/Qwen3.6-35B-A3B": { alias: "Qwen3.6-35B-A3B" }
       },
-      model: { primary: "Qwen3.5" }
+      model: { primary: "Qwen3.6-35B-A3B" }
     }
   },
   models: {
@@ -69,8 +69,8 @@ cat > "$patch_file" <<'JSON5'
         api: "openai-completions",
         models: [
           {
-            id: "Qwen/Qwen3.5-35B-A3B",
-            name: "Qwen/Qwen3.5-35B-A3B",
+            id: "Qwen/Qwen3.6-35B-A3B",
+            name: "Qwen/Qwen3.6-35B-A3B",
             reasoning: true,
             input: ["text", "image"],
             cost: { input: 0.01, output: 0.01, cacheRead: 0, cacheWrite: 0 },
@@ -100,7 +100,7 @@ echo "==> Writing MINIMAX_API_KEY placeholder to $OPENCLAW_HOME/.env"
 echo "MINIMAX_API_KEY=your-api-key" >> "$OPENCLAW_HOME/.env"
 cat <<EOF
 
-==> Done. Providers applied: minimax (Minimax), vllm-local (Qwen3.5); default = Qwen3.5.
+==> Done. Providers applied: minimax (Minimax), vllm-local (Qwen3.6-35B-A3B); default = Qwen3.6-35B-A3B.
 
 Make sure the referenced secret is available (referenced as \${MINIMAX_API_KEY}, not baked in) at $OPENCLAW_HOME/.env
 EOF

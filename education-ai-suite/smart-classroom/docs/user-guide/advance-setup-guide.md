@@ -48,7 +48,25 @@ pip install --upgrade -r requirements.txt
 
 ## Step 2: Configuration
 
-### A. Default Configuration
+### A. Enable Feature Configuration
+
+The application is built using a modular feature architecture, allowing users to enable or disable individual features through the `features:` block in `smart-classroom/config.yaml`. Only enabled features are initialized at startup—they load their required models, register their API routes, and start their associated services.
+
+```yaml
+features:
+  asr:                { enabled: true }   # Speech-to-text transcription
+  summary:            { enabled: true }   # AI class summary / report
+  mindmap:            { enabled: true }   # Mind map generation
+  topic_segmentation: { enabled: true }   
+  video_analytics:    { enabled: true }   # Video ingestion / analytics
+  content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
+  qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
+```
+
+
+**Important: After updating the configuration, reload the application for changes to take effect.**
+
+### B. Default Configuration
 
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
@@ -67,7 +85,7 @@ summarizer:
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
 
-### B. Chinese Audio Transcription
+### C. Chinese Audio Transcription
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 
@@ -83,7 +101,7 @@ app:
   language: zh
 ```
 
-### C. Content Search Configuration
+### D. Content Search Configuration
 
 **Upload Size Limits** can be adjusted under the `content_search` section:
 
@@ -94,7 +112,7 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
 
-### D. Enable OCR Features (Optional)
+### E. Enable OCR Features (Optional)
 
 If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
 
@@ -152,14 +170,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### B. Launch Content Search Services
-
-```PowerShell
-.\venv_content_search\Scripts\activate
-python .\start_services.py
-```
-
-> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup.
 
 When all services are ready:
 
@@ -174,7 +185,9 @@ Verify the service status:
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
 
-### C. Network Requirements for Content Search
+> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+
+### B. Network Requirements for Content Search
 
 - **Proxy**: If behind a proxy, ensure `HTTP_PROXY` and `HTTPS_PROXY` environment variables are configured.
 - **Model Downloads**: Stable access to `huggingface.co` is required for downloading pre-trained models.

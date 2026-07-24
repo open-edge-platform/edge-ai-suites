@@ -35,11 +35,12 @@ The setup script will:
    - DL Streamer (auto-download and run installer [`dlstreamer-2026.1.0-win64.exe`](advance-setup-guide.md#b-install-dl-streamer))
 
 3. **[3] Configure Settings**
-   - [3.1] Language & ASR Configuration (provider, model, device)
-   - [3.2] Upload Size Limits
-   - [3.3] OCR Configuration
-   - [3.4] Board OCR Configuration
-   - [3.5] Grading Configuration (enable/disable Smart Grading)
+   - [3.1] Feature Configuration (enable/disable individual application features)
+   - [3.2] Language & ASR Configuration (provider, model, device)
+   - [3.3] Upload Size Limits
+   - [3.4] OCR Configuration
+   - [3.5] Board OCR Configuration
+   - [3.6] Grading Configuration (enable/disable Smart Grading)
 
 4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 

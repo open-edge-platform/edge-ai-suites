@@ -3,6 +3,11 @@ import warnings
 warnings.filterwarnings("ignore", message=r"[\s\S]*torchcodec is not installed correctly")
 
 from utils import system_checker
+from model_manager.feature_bootstrap import (
+    startup,
+    resolve_effective_features,
+    NO_FEATURES_MESSAGE,
+)
 
 from utils.logger_config import setup_logger
 setup_logger()
@@ -27,9 +32,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: startup orchestration, then graceful shutdown."""
-    # Startup: resolve enabled features, warm capabilities, build/mount features.
-    from model_manager.feature_bootstrap import startup
     startup(app)
     yield
     # Shutdown: drain in-flight capability work and release device (GPU) memory.
@@ -78,8 +80,11 @@ def system_check():
 
 if __name__ == "__main__":
     
-    #system_check()
     RuntimeConfig.ensure_config_exists()
+
+    if not resolve_effective_features().features:
+        logger.error("%s. Exiting.", NO_FEATURES_MESSAGE)
+        sys.exit(1)
 
     ensure_model()
 

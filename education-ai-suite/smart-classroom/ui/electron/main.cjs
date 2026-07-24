@@ -15,44 +15,114 @@ const { startServer } = require('./server.cjs');
 // native Window Controls Overlay buttons align with the app header.
 const TITLE_BAR_HEIGHT = 63;
 
-// Build an explicit application menu (File / Edit / View / Window) using
-// standard roles.
-function buildAppMenu() {
+// ---------------------------------------------------------------------------
+// Native-menu localization
+// ---------------------------------------------------------------------------
+// The native application menu and right-click context menu are rendered by the
+// OS shell, not React, so react-i18next cannot reach them. We keep a small label
+// table here (mirroring src/i18n) and rebuild the menus when the renderer reports
+// a language change. Roles are preserved for native behavior/accelerators; only
+// the `label` is translated. Unknown languages fall back to English.
+const MENU_LABELS = {
+  en: {
+    file: 'File', edit: 'Edit', view: 'View', window: 'Window',
+    quit: 'Quit', close: 'Close',
+    undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy', paste: 'Paste', selectAll: 'Select All',
+    reload: 'Reload', forceReload: 'Force Reload', toggleDevTools: 'Toggle Developer Tools',
+    resetZoom: 'Actual Size', zoomIn: 'Zoom In', zoomOut: 'Zoom Out', togglefullscreen: 'Toggle Full Screen',
+    minimize: 'Minimize', zoom: 'Zoom',
+  },
+  zh: {
+    file: '文件', edit: '编辑', view: '视图', window: '窗口',
+    quit: '退出', close: '关闭',
+    undo: '撤销', redo: '重做', cut: '剪切', copy: '复制', paste: '粘贴', selectAll: '全选',
+    reload: '重新加载', forceReload: '强制重新加载', toggleDevTools: '切换开发者工具',
+    resetZoom: '实际大小', zoomIn: '放大', zoomOut: '缩小', togglefullscreen: '切换全屏',
+    minimize: '最小化', zoom: '缩放',
+  },
+};
+
+// Current native-menu language; updated via the 'menu:setLanguage' IPC channel.
+let currentLanguage = 'en';
+
+function menuLabels(lang) {
+  return MENU_LABELS[lang] || MENU_LABELS.en;
+}
+
+// Build an explicit application menu (File / Edit / View / Window) with
+// translated labels. Standard roles preserve native behavior and accelerators.
+function buildAppMenu(lang = currentLanguage) {
+  const L = menuLabels(lang);
   const isMac = process.platform === 'darwin';
   const template = [
     ...(isMac ? [{ role: 'appMenu' }] : []),
-    { role: 'fileMenu' },
-    { role: 'editMenu' },
-    { role: 'viewMenu' },
-    { role: 'windowMenu' },
+    {
+      label: L.file,
+      submenu: [{ role: isMac ? 'close' : 'quit', label: isMac ? L.close : L.quit }],
+    },
+    {
+      label: L.edit,
+      submenu: [
+        { role: 'undo', label: L.undo },
+        { role: 'redo', label: L.redo },
+        { type: 'separator' },
+        { role: 'cut', label: L.cut },
+        { role: 'copy', label: L.copy },
+        { role: 'paste', label: L.paste },
+        { role: 'selectAll', label: L.selectAll },
+      ],
+    },
+    {
+      label: L.view,
+      submenu: [
+        { role: 'reload', label: L.reload },
+        { role: 'forceReload', label: L.forceReload },
+        { role: 'toggleDevTools', label: L.toggleDevTools },
+        { type: 'separator' },
+        { role: 'resetZoom', label: L.resetZoom },
+        { role: 'zoomIn', label: L.zoomIn },
+        { role: 'zoomOut', label: L.zoomOut },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: L.togglefullscreen },
+      ],
+    },
+    {
+      label: L.window,
+      submenu: [
+        { role: 'minimize', label: L.minimize },
+        { role: 'zoom', label: L.zoom },
+        ...(isMac ? [] : [{ role: 'close', label: L.close }]),
+      ],
+    },
   ];
   return Menu.buildFromTemplate(template);
 }
 
 // Build a right-click context menu with basic text operations, tailored to the
-// clicked element. Returns null when there is nothing useful to show. `params`
-// is the object from the webContents 'context-menu' event.
-function buildContextMenu(params) {
+// clicked element and translated to `lang`. Returns null when there is nothing
+// useful to show. `params` is the object from the webContents 'context-menu' event.
+function buildContextMenu(params, lang = currentLanguage) {
+  const L = menuLabels(lang);
   const { editFlags, isEditable, selectionText } = params;
   const hasSelection = selectionText.trim().length > 0;
   const template = [];
 
   if (isEditable) {
     template.push(
-      { role: 'undo', enabled: editFlags.canUndo },
-      { role: 'redo', enabled: editFlags.canRedo },
+      { role: 'undo', label: L.undo, enabled: editFlags.canUndo },
+      { role: 'redo', label: L.redo, enabled: editFlags.canRedo },
       { type: 'separator' },
-      { role: 'cut', enabled: editFlags.canCut },
-      { role: 'copy', enabled: editFlags.canCopy },
-      { role: 'paste', enabled: editFlags.canPaste },
+      { role: 'cut', label: L.cut, enabled: editFlags.canCut },
+      { role: 'copy', label: L.copy, enabled: editFlags.canCopy },
+      { role: 'paste', label: L.paste, enabled: editFlags.canPaste },
       { type: 'separator' },
-      { role: 'selectAll', enabled: editFlags.canSelectAll }
+      { role: 'selectAll', label: L.selectAll, enabled: editFlags.canSelectAll }
     );
   } else if (hasSelection) {
     template.push(
-      { role: 'copy', enabled: editFlags.canCopy },
+      { role: 'copy', label: L.copy, enabled: editFlags.canCopy },
       { type: 'separator' },
-      { role: 'selectAll', enabled: editFlags.canSelectAll }
+      { role: 'selectAll', label: L.selectAll, enabled: editFlags.canSelectAll }
     );
   }
 
@@ -135,6 +205,15 @@ if (!app.requestSingleInstanceLock()) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
+  });
+
+  // Renderer reports its active language; rebuild the native application menu
+  // in that language. The context menu reads `currentLanguage` at popup time,
+  // so it needs no rebuild here.
+  ipcMain.on('menu:setLanguage', (_event, lang) => {
+    if (typeof lang !== 'string' || !lang) return;
+    currentLanguage = lang;
+    Menu.setApplicationMenu(buildAppMenu(currentLanguage));
   });
 
   app.whenReady().then(() => {
