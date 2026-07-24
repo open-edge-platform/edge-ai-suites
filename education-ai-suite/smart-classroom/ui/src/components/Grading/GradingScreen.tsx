@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../../assets/css/Grading.css';
 import { useTranslation } from 'react-i18next';
 import NewTaskForm from './NewTaskForm';
 import TaskList from './TaskList';
 import ResultsView from './ResultsView';
 import GradingRightPanel from './GradingRightPanel';
-import type { GradingTask } from '../../services/api';
+import { gradingHealth } from '../../services/api';
+import type { GradingTask, GradingHealth } from '../../services/api';
 
 type GradingView = 'main' | 'results';
 
@@ -15,6 +16,16 @@ const GradingScreen: React.FC = () => {
   const [refreshSignal, setRefreshSignal] = useState<number>(0);
   const [resultTaskId, setResultTaskId] = useState<string | null>(null);
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
+  const [health, setHealth] = useState<GradingHealth | null>(null);
+
+  useEffect(() => {
+    const poll = async () => {
+      try { setHealth(await gradingHealth()); } catch { setHealth(null); }
+    };
+    poll();
+    const id = window.setInterval(poll, 15000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleTaskCreated = (_task: GradingTask) => {
     setRefreshSignal((n) => n + 1);
@@ -41,6 +52,18 @@ const GradingScreen: React.FC = () => {
           >
             {t('grading.tabResults', 'Results')}
           </button>
+          <div className="grading-service-status">
+            {[
+              { key: 'grading', label: 'Grading', ok: health?.status === 'ok' },
+              { key: 'vlm', label: 'VLM', ok: health?.dependencies?.vlm === 'healthy' },
+              { key: 'layout', label: 'Layout', ok: health?.dependencies?.layout_detection === 'healthy' },
+            ].map(({ key, label, ok }) => (
+              <span key={key} className="grading-service-chip" title={ok ? 'Healthy' : 'Unavailable'}>
+                <span className={`grading-service-dot ${ok ? 'ok' : 'fail'}`} />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="grading-view">

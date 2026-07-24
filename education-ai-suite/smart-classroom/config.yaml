@@ -12,6 +12,7 @@ features:
   video_analytics:    { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
+  grading:            { enabled: false }
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -588,7 +589,6 @@ scp_sender:
   class_name: "Class 10A - Physics"       # included in session_meta.json
 
 grading:
-  enabled: false
   host_addr: "127.0.0.1"
   port: 9012
   provider:

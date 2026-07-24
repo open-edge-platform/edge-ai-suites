@@ -112,6 +112,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   const metadata = (summary?.metadata || {}) as Record<string, unknown>;
   const paperTitle = (metadata.paper_title as string) || '';
   const subject = (metadata.subject as string) || '';
+  const papersDir = (metadata.papers_dir as string) || '';
 
   const studentName = (s: GradingStudentResult): string =>
     s.student_name || s.student_id || dash;
@@ -157,32 +158,33 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   return (
     <div className="grading-results">
       <div className="grading-results-header">
-        <button className="grading-btn grading-btn-secondary" onClick={onBack}>
-          {t('grading.results.back', '← Back to tasks')}
-        </button>
+        <button className="grading-results-back" onClick={onBack} title={t('grading.results.back', 'Back')}>←</button>
         <div className="grading-results-title">
           {paperTitle || t('grading.resultsTitle', 'Results')}
           {subject && <span className="grading-results-subject"> · {subject}</span>}
         </div>
-        <div className="grading-results-actions">
-          <button className="grading-btn grading-btn-secondary" onClick={load} disabled={loading}>
-            {loading ? t('grading.results.refreshing', 'Refreshing...') : t('grading.results.refresh', 'Refresh')}
-          </button>
-          <button
-            className="grading-btn grading-btn-primary"
-            onClick={exportCsv}
-            disabled={rows.length === 0}
-          >
-            {t('grading.results.export', 'Export CSV')}
-          </button>
-        </div>
       </div>
 
-      <div className="grading-results-meta">
-        <span>{t('grading.results.taskId', 'Task')}: {taskId}</span>
-        <span>{t('grading.results.count', 'Students')}: {summary?.student_count ?? rows.length}</span>
+      <div className="grading-results-meta-panel">
+        <div className="grading-results-meta-item">
+          <span className="grading-results-meta-label">{t('grading.results.taskId', 'Task')}</span>
+          <span className="grading-results-meta-value">{taskId}</span>
+        </div>
+        <div className="grading-results-meta-item">
+          <span className="grading-results-meta-label">{t('grading.results.count', 'Students')}</span>
+          <span className="grading-results-meta-value">{summary?.student_count ?? rows.length}</span>
+        </div>
+        {papersDir && (
+          <div className="grading-results-meta-item">
+            <span className="grading-results-meta-label">{t('grading.results.papersDir', 'Directory')}</span>
+            <span className="grading-results-meta-value grading-results-meta-path">{papersDir}</span>
+          </div>
+        )}
         {summary?.updated_at && (
-          <span>{t('grading.results.updated', 'Updated')}: {summary.updated_at}</span>
+          <div className="grading-results-meta-item">
+            <span className="grading-results-meta-label">{t('grading.results.updated', 'Updated')}</span>
+            <span className="grading-results-meta-value">{summary.updated_at}</span>
+          </div>
         )}
       </div>
 
@@ -191,6 +193,16 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
       {rows.length === 0 && !error ? (
         <div className="grading-empty">{t('grading.results.empty', 'No graded papers yet.')}</div>
       ) : (
+        <>
+          <div className="grading-results-table-actions">
+            <span className="grading-results-table-title">{t('grading.results.tableTitle', 'Grading Results')}</span>
+            <button className="grading-btn grading-btn-secondary grading-export-btn" onClick={load} disabled={loading} title={t('grading.results.refresh', 'Refresh')}>
+              <span className={loading ? 'spinning' : ''}>↻</span>
+            </button>
+            <button className="grading-btn grading-btn-secondary grading-export-btn" onClick={exportCsv} disabled={rows.length === 0} title={t('grading.results.export', 'Export CSV')}>
+              ⬇ CSV
+            </button>
+          </div>
         <div className="grading-results-tablewrap">
           <table className="grading-results-table">
             <thead>
@@ -237,6 +249,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

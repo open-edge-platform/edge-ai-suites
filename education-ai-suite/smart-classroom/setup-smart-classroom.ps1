@@ -1862,7 +1862,7 @@ $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 $venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
 
-$gradingEnabled = if ($configContent -match "grading:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
+$gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false

@@ -33,7 +33,11 @@ def _feature_flags(cfg) -> Optional[Dict[str, bool]]:
 def startup(app: FastAPI) -> None:
     register_builtin_features()
 
-    eff = resolve(_feature_flags(config))
+    raw_flags = _feature_flags(config)
+    if raw_flags is not None:
+        from model_manager.features.registry import REGISTRY
+        raw_flags = {k: v for k, v in raw_flags.items() if k in REGISTRY}
+    eff = resolve(raw_flags)
     logger.info("Enabled features: %s", sorted(eff.features))
     logger.info("Required capabilities: %s", sorted(eff.capabilities))
 

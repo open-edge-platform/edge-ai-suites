@@ -44,6 +44,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
   const [logError, setLogError] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
   const [summary, setSummary] = useState<GradingSummary | null>(null);
+  const [logModalOpen, setLogModalOpen] = useState<boolean>(false);
+  const [fullLogLines, setFullLogLines] = useState<string[]>([]);
+  const [fullLogLoading, setFullLogLoading] = useState<boolean>(false);
 
   const status = task.status;
   const isTerminal = status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
@@ -138,9 +141,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
 
       <div className="grading-detail-meta">
         <span>
-          {t('grading.detail.dir', 'Directory')}: {info?.papers_dir || dash}
-        </span>
-        <span>
           {t('grading.detail.rubric', 'Rubric')}: {info?.rubric_name || dash}
         </span>
         <span>
@@ -184,7 +184,21 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
         )}
 
         <div className="grading-log">
-          <div className="grading-log-title">{t('grading.detail.log', 'Live log')}</div>
+          <div className="grading-log-title-row">
+            <span className="grading-log-title">{t('grading.detail.log', 'Live log')}</span>
+            <button className="grading-log-expand" onClick={async () => {
+              setLogModalOpen(true);
+              setFullLogLoading(true);
+              try {
+                const res = await gradingGetTaskLog(task.task_id, 5000);
+                setFullLogLines(res.lines || []);
+              } catch {
+                setFullLogLines(logLines);
+              } finally {
+                setFullLogLoading(false);
+              }
+            }} title={t('grading.detail.logExpand', 'Expand')}>⤢</button>
+          </div>
           {logError && <div className="grading-error">{logError}</div>}
           <pre className="grading-log-box" ref={logBoxRef}>
             {logLines.length > 0
@@ -223,6 +237,24 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
           </button>
         </div>
       </div>
+
+      {logModalOpen && (
+        <div className="grading-picker-overlay" onClick={() => setLogModalOpen(false)}>
+          <div className="grading-log-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="grading-picker-header">
+              <span className="grading-picker-title">{t('grading.detail.log', 'Live log')} — {task.task_id.slice(0, 8)}</span>
+              <button className="grading-picker-close" onClick={() => setLogModalOpen(false)}>×</button>
+            </div>
+            <pre className="grading-log-modal-box">
+              {fullLogLoading
+                ? t('grading.detail.logLoading', 'Loading...')
+                : fullLogLines.length > 0
+                  ? fullLogLines.join('\n')
+                  : t('grading.detail.logEmpty', 'No log output yet.')}
+            </pre>
+          </div>
+        </div>
+      )}
 
       <RemoveConfirmationModal
         isOpen={confirmDelete}

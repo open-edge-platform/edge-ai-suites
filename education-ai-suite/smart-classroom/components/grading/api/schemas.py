@@ -5,6 +5,7 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     language: str
+    dependencies: dict | None = None
 
 
 class RubricGenerateRequest(BaseModel):

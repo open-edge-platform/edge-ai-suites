@@ -270,7 +270,7 @@
       "edit": "Edit",
       "editDisabledHint": "Select a rubric first",
       "pathHint": "A path visible to the server, not a browser upload.",
-      "start": "Start grading",
+      "start": "Start",
       "starting": "Starting...",
       "needPaperPath": "Please enter the target directory or file path."
     },
@@ -305,6 +305,8 @@
       "rubric": "Rubric",
       "elapsed": "Elapsed",
       "log": "Live log",
+      "logExpand": "Expand full log",
+      "logLoading": "Loading...",
       "logEmpty": "No log output yet.",
       "logPlaceholder": "Log streaming will be added later."
     },
@@ -332,7 +334,9 @@
       "refresh": "Refresh",
       "refreshing": "Refreshing...",
       "export": "Export CSV",
+      "tableTitle": "Grading Results",
       "taskId": "Task",
+      "papersDir": "Directory",
       "count": "Students",
       "updated": "Updated",
       "name": "Student",

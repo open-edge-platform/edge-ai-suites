@@ -140,13 +140,6 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
     <div className="grading-tasklist">
       <div className="grading-tasklist-header">
         <h3 className="grading-section-title">{t('grading.list.title', 'Tasks')}</h3>
-        <button
-          className="grading-btn grading-btn-secondary grading-refresh"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          {loading ? t('grading.list.refreshing', 'Refreshing...') : t('grading.list.refresh', 'Refresh')}
-        </button>
       </div>
 
       <div className="grading-count-line">
@@ -154,6 +147,12 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
         {filterChip('RUNNING', t('grading.list.running', 'Running'), runningCount)}
         {filterChip('COMPLETED', t('grading.list.completed', 'Completed'), completedCount)}
         {filterChip('PAUSED', t('grading.list.paused', 'Paused'), pausedCount)}
+        <button
+          className={`grading-refresh-icon${loading ? ' spinning' : ''}`}
+          onClick={handleRefresh}
+          disabled={loading}
+          title={t('grading.list.refresh', 'Refresh')}
+        >↻</button>
       </div>
 
       {error && <div className="grading-error">{error}</div>}

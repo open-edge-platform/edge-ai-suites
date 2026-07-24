@@ -400,7 +400,7 @@ $gradingEnabled = $false
 $configPath = Join-Path $ScriptDir "config.yaml"
 if (Test-Path $configPath) {
     $configContent = Get-Content $configPath -Raw
-    if ($configContent -match "grading:\s*\n\s*enabled:\s*(true|false)") {
+    if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") {
         $gradingEnabled = $Matches[1] -eq "true"
     }
 }

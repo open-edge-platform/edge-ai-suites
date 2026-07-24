@@ -271,7 +271,7 @@
       "edit": "编辑",
       "editDisabledHint": "请先选择一个评分标准",
       "pathHint": "填写服务器可见的路径，不是浏览器上传。",
-      "start": "开始评分",
+      "start": "开始",
       "starting": "提交中…",
       "needPaperPath": "请填写目标目录或文件路径。"
     },
@@ -306,6 +306,8 @@
       "rubric": "评分标准",
       "elapsed": "已运行",
       "log": "实时日志",
+      "logExpand": "展开查看完整日志",
+      "logLoading": "加载中…",
       "logEmpty": "暂无日志输出。",
       "logPlaceholder": "日志流式输出稍后接入。"
     },
@@ -333,7 +335,9 @@
       "refresh": "刷新",
       "refreshing": "刷新中…",
       "export": "导出 CSV",
+      "tableTitle": "评分结果",
       "taskId": "任务",
+      "papersDir": "目标目录",
       "count": "学生数",
       "updated": "更新于",
       "name": "学生姓名",

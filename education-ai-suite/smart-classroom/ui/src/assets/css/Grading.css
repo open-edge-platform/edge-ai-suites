@@ -51,6 +51,32 @@
   border-bottom: 2px solid transparent;
 }
 
+.grading-service-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  padding-right: 4px;
+}
+
+.grading-service-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #666;
+}
+
+.grading-service-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.grading-service-dot.ok   { background: #4caf50; }
+.grading-service-dot.fail { background: #d9534f; }
+
 .grading-tab.active {
   color: #0071c5;
   border-bottom-color: #0071c5;
@@ -177,6 +203,24 @@
   color: #d9534f;
 }
 
+.grading-btn-start {
+  background: #28a745;
+  border-color: #28a745;
+  color: #fff;
+}
+
+.grading-btn-start:hover:not(:disabled) {
+  background: #218838;
+  border-color: #218838;
+}
+
+.grading-btn-start:disabled {
+  background: #a8d5b0;
+  border-color: #a8d5b0;
+  color: #fff;
+  cursor: not-allowed;
+}
+
 .grading-error {
   color: #d9534f;
   font-size: 13px;
@@ -197,10 +241,43 @@
 
 .grading-count-line {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 13px;
   color: #555;
   margin-bottom: 10px;
+}
+
+.grading-refresh-icon {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  color: #aaa;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.grading-refresh-icon:hover:not(:disabled) {
+  color: #0071c5;
+}
+
+.grading-refresh-icon:disabled {
+  cursor: not-allowed;
+}
+
+.grading-refresh-icon.spinning,
+.spinning {
+  display: inline-block;
+  animation: grading-spin 0.8s linear infinite;
+}
+
+@keyframes grading-spin {
+  to { transform: rotate(360deg); }
 }
 
 .grading-filter-chip {
@@ -424,6 +501,64 @@
   padding-top: 6px;
 }
 
+.grading-log-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.grading-log-expand {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #aaa;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.grading-log-expand:hover {
+  color: #0071c5;
+}
+
+.grading-log-modal {
+  width: 80vw;
+  height: 80vh;
+  background: #1e1e1e;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.grading-log-modal .grading-picker-header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
+}
+
+.grading-log-modal .grading-picker-title {
+  color: #d4d4d4;
+}
+
+.grading-log-modal .grading-picker-close {
+  color: #aaa;
+}
+
+.grading-log-modal-box {
+  flex: 1;
+  margin: 0;
+  padding: 14px 16px;
+  color: #d4d4d4;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .grading-log-title {
   font-size: 12px;
   color: #777;
@@ -438,8 +573,7 @@
   font-family: monospace;
   font-size: 12px;
   border-radius: 4px;
-  min-height: 80px;
-  max-height: 200px;
+  height: 200px;
   overflow: auto;
   white-space: pre-wrap;
 }
@@ -673,16 +807,74 @@
   gap: 8px;
 }
 
-.grading-results-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-  font-size: 12px;
-  color: #888;
+.grading-results-back {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  color: #555;
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
-.grading-results-meta span {
+.grading-results-back:hover {
+  color: #0071c5;
+}
+
+.grading-results-meta-panel {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 12px;
+  align-items: baseline;
+}
+
+.grading-results-meta-item {
+  display: contents;
+}
+
+.grading-results-meta-label {
+  color: #999;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.grading-results-meta-value {
+  color: #333;
+  font-size: 12px;
+}
+
+.grading-results-meta-path {
   word-break: break-all;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.grading-results-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.grading-results-table-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.grading-export-btn {
+  font-size: 13px;
+  padding: 4px 0;
+  width: 72px;
+  text-align: center;
 }
 
 .grading-results-tablewrap {

@@ -156,6 +156,13 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
           >
             {t('grading.form.browse', 'Browse')}
           </button>
+          <button
+            className="grading-btn grading-btn-start"
+            onClick={handleStart}
+            disabled={submitting || !rubricPath || !paperPath.trim()}
+          >
+            {submitting ? t('grading.form.starting', 'Starting...') : t('grading.form.start', 'Start')}
+          </button>
         </div>
       </div>
       <div className="grading-form-hint">
@@ -163,18 +170,6 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       </div>
 
       {error && <div className="grading-error">{error}</div>}
-
-      <div className="grading-form-actions">
-        <span />
-        <span />
-        <button
-          className="grading-btn grading-btn-primary"
-          onClick={handleStart}
-          disabled={submitting}
-        >
-          {submitting ? t('grading.form.starting', 'Starting...') : t('grading.form.start', 'Start grading')}
-        </button>
-      </div>
 
       {pickerOpen && (
         <DirectoryPicker

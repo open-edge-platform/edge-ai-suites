@@ -1391,7 +1391,17 @@ export async function gradingDeleteTask(taskId: string): Promise<void> {
   await gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
 }
 
-export async function gradingHealth(): Promise<{ status: string; service: string; language: string }> {
+export interface GradingHealth {
+  status: string;
+  service: string;
+  language: string;
+  dependencies?: {
+    vlm: 'healthy' | 'unavailable';
+    layout_detection: 'healthy' | 'unavailable';
+  };
+}
+
+export async function gradingHealth(): Promise<GradingHealth> {
   return gradingFetch('/health');
 }
 

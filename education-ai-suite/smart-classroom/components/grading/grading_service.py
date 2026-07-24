@@ -88,7 +88,7 @@ def load_grading_config(config_path: Path) -> GradingServiceConfig:
     if not isinstance(provider, dict):
         provider = {}
     return GradingServiceConfig(
-        enabled=bool(grading.get("enabled", False)),
+        enabled=bool(((raw.get("features") or {}).get("grading") or {}).get("enabled", False)),
         host_addr=str(grading.get("host_addr", "127.0.0.1")),
         port=int(grading.get("port", 9012)),
         provider=provider,
