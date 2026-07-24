@@ -90,7 +90,7 @@ Open `.env` and update the variables for your environment:
 | `LVC_BASE_URL`                       | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`            |
 | `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         |
 | `FRIGATE_HOST`                       | Hostname/IP of the Frigate instance reachable from the backend container |
-| `NX_BASE_URL` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness credentials (only if using Nx)                       |
+| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx)                       |
 | `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
 | `LOITERING_DET_HOST` / `LOITERING_DET_PORT`              | DLStreamer Pipeline Server host and port for Loitering Detection app (default: `8080`)       |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |

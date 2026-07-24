@@ -25,8 +25,7 @@ def _make_config(**kwargs) -> ObjectDetectionAnalyticsAppConfig:
         "base_url": "https://localhost:443/api",
         "mqtt_host": "localhost",
         "mqtt_port": 1883,
-        "pipeline_server_mqtt_host": "mqtt-broker",
-        "pipeline_server_mqtt_port": 1883,
+        "pipeline": {"cpu": "dls_vision_pipeline"},
     }
     defaults.update(kwargs)
     return ObjectDetectionAnalyticsAppConfig(**defaults)
@@ -107,6 +106,25 @@ async def test_fetch_schema_handles_empty_pipeline_list():
     assert schema["properties"]["pipeline_name"]["enum"] == []
 
 
+def test_config_requires_at_least_one_pipeline():
+    with pytest.raises(ValueError, match="at least one configured pipeline"):
+        ObjectDetectionAnalyticsAppConfig(
+            type="object_detection",
+            app_id="dls_vision",
+            display_name="DLStreamer Vision",
+            base_url="https://localhost:443/api",
+            pipeline={},
+        )
+
+
+def test_control_params_include_only_configured_devices():
+    cfg = _make_config(pipeline={"cpu": "p-cpu", "gpu": "p-gpu", "npu": ""})
+    controls = cfg.control_params()
+    device = next(c for c in controls if c["name"] == "device")
+    assert device["options"] == ["CPU", "GPU"]
+    assert device["default"] == "CPU"
+
+
 # ── is_reachable ──────────────────────────────────────────────────────────────
 
 async def test_is_reachable_delegates_to_api_client():
@@ -143,7 +161,7 @@ async def test_start_creates_run():
         "dls_vision_pipeline",
         {
             "source": {"uri": "rtsp://cam:554/stream", "type": "uri", "properties": {"protocols": "tcp", "add-reference-timestamp-meta": True, "latency": 100}},
-            "destination": {"metadata": {"type": "mqtt", "host": "mqtt-broker:1883", "topic": "nx/dls_vision/e3e9a385-7fe0-3ba5-5482-a86cde7faf48"}},
+            "destination": {"metadata": {"type": "mqtt", "topic": "nx/dls_vision/e3e9a385-7fe0-3ba5-5482-a86cde7faf48"}},
             "parameters": {},
         },
     )
@@ -169,7 +187,7 @@ async def test_start_uses_default_root_when_not_in_map():
         "some_pipeline",
         {
             "source": {"uri": "rtsp://cam/s", "type": "uri", "properties": {"protocols": "tcp", "add-reference-timestamp-meta": True, "latency": 100}},
-            "destination": {"metadata": {"type": "mqtt", "host": "mqtt-broker:1883", "topic": "vap/dls_vision/unknown"}},
+            "destination": {"metadata": {"type": "mqtt", "topic": "vap/dls_vision/unknown"}},
             "parameters": {},
         },
     )
@@ -234,6 +252,67 @@ async def test_stop_run_not_in_cache_still_calls_api():
     ok = await shim.stop_run("unknown-id")
     shim._api.stop_run.assert_called_once_with("unknown-id")
     assert ok is False
+
+
+async def test_start_for_camera_uses_pipeline_for_selected_device():
+    shim = _make_shim(pipeline={"cpu": "pipeline_cpu", "gpu": "pipeline_gpu"})
+    shim._api.list_pipelines = AsyncMock(return_value=[
+        {"name": "user_defined_pipelines", "version": "pipeline_cpu"},
+        {"name": "user_defined_pipelines", "version": "pipeline_gpu"},
+    ])
+    await shim.fetch_schema()
+    shim._api.start_run = AsyncMock(return_value={"instance_id": "abc123"})
+
+    run_id = await shim.start_for_camera(
+        camera_id="nx:cam-1",
+        stream_url="rtsp://cam/s",
+        controls={"pipelineEnabled": True, "device": "GPU"},
+    )
+
+    assert run_id == "abc123"
+    shim._api.start_run.assert_called_once_with(
+        "user_defined_pipelines",
+        "pipeline_gpu",
+        {
+            "source": {
+                "uri": "rtsp://cam/s",
+                "type": "uri",
+                "properties": {
+                    "protocols": "tcp",
+                    "add-reference-timestamp-meta": True,
+                    "latency": 100,
+                },
+            },
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": "nx/dls_vision/cam-1",
+                },
+            },
+            "parameters": {"detection-properties": {"device": "GPU"}},
+        },
+    )
+
+
+async def test_start_for_camera_invalid_device_falls_back_to_first_configured():
+    shim = _make_shim(pipeline={"cpu": "pipeline_cpu", "npu": "pipeline_npu"})
+    shim._api.list_pipelines = AsyncMock(return_value=[
+        {"name": "user_defined_pipelines", "version": "pipeline_cpu"},
+        {"name": "user_defined_pipelines", "version": "pipeline_npu"},
+    ])
+    await shim.fetch_schema()
+    shim._api.start_run = AsyncMock(return_value={"instance_id": "run-cpu"})
+
+    run_id = await shim.start_for_camera(
+        camera_id="nx:cam-2",
+        stream_url="rtsp://cam2/s",
+        controls={"pipelineEnabled": True, "device": "TPU"},
+    )
+
+    assert run_id == "run-cpu"
+    called_payload = shim._api.start_run.call_args[0][2]
+    assert shim._api.start_run.call_args[0][1] == "pipeline_cpu"
+    assert called_payload["parameters"]["detection-properties"]["device"] == "CPU"
 
 
 # ── deliver (no-op) ──────────────────────────────────────────────────────────

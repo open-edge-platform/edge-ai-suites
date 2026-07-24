@@ -71,4 +71,35 @@ fi
 
 echo "nameserver ${TC_DNS_IP}" > "../tc-resolv.conf"
 echo "Configuring TC network settings - Subnet: ${TC_SUBNET}, DNS Relay IP: ${TC_DNS_IP}"
+
+# VFIO GPU Detection for TC + GPU mode
+if [ "${TC_SI_TARGET_DEVICE}" = "GPU" ]; then
+    # Detect Intel iGPU PCI address using lspci -Dnn (includes domain prefix)
+    GPU_PCI_FULL=$(lspci -Dnn | grep -E '(VGA compatible controller|Display controller).*Intel' | head -1 | awk '{print $1}')
+    if [ -z "$GPU_PCI_FULL" ]; then
+        echo "Error: No Intel iGPU found." >&2
+        exit 1
+    fi
+
+    # Read IOMMU group from sysfs
+    IOMMU_LINK="/sys/bus/pci/devices/${GPU_PCI_FULL}/iommu_group"
+    if [ ! -L "$IOMMU_LINK" ]; then
+        echo "Error: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled." >&2
+        exit 1
+    fi
+    export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+
+    # Verify GPU is bound to vfio-pci and /dev/vfio/<n> exists
+    if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
+        echo "Error: /dev/vfio/${TC_GPU_VFIO_GROUP} not found. Ensure GPU is bound to vfio-pci." >&2
+        exit 1
+    fi
+    # Write TC_GPU_VFIO_GROUP to root .env so docker compose can resolve ${TC_GPU_VFIO_GROUP}
+    if grep -q "^TC_GPU_VFIO_GROUP=" "$ENV_FILE"; then
+        sed -i "s|^TC_GPU_VFIO_GROUP=.*|TC_GPU_VFIO_GROUP=${TC_GPU_VFIO_GROUP}|" "$ENV_FILE"
+    else
+        echo "TC_GPU_VFIO_GROUP=${TC_GPU_VFIO_GROUP}" >> "$ENV_FILE"
+    fi
+fi
+
 echo "Trusted Compute security enabled"
