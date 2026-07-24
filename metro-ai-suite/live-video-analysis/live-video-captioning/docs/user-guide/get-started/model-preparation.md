@@ -110,10 +110,12 @@ The following VLM models are validated:
 | openbmb/MiniCPM-V-2_6  | CPU, GPU, NPU | v2026.1 |
 | Qwen/Qwen2-VL-2B-Instruct | CPU, GPU, NPU | v2025.4.1 |
 
-> **Note:** Set `.env` `OVMS_RELEASE_TAG` to the version listed above. Some models require an older OVMS `transformers` version, and using a different tag can cause OpenVINO conversion to fail.
+> **Note:** `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the model download/conversion flow. Refer to the validated-model table above, or consult the official OpenVINO documentation for supported models and their corresponding OVMS versions. Using a different tag can change the bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
 >
-> **Note:** Newer/latest Hugging Face model support may depend on the supported OpenVINO version. For those looking to use newer models that are only supported in newer OpenVINO versions, you may try the weekly build images available on [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating the [compose.yaml](../../../compose.yaml) or Helm chart [values.yaml](../../../charts/subcharts/dlstreamer-pipeline-server/values.yaml) based on deployments. However, please be aware that these builds may contain unknown bugs or stability issues.
-As of the time of writing, `2026.1.0` is the latest stable release of `DL Streamer`, which is built on top of `OpenVINO v2026.1`.
+> **Note:** If you want to use newer Hugging Face models, you may need a newer OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
+>
+> **Note:** Runtime compatibility also matters. Live Video Captioning runs models with DL Streamer, so DL Streamer/OpenVINO must also support the converted model at runtime. If you test newer stacks, you can try weekly images from [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating [compose.yaml](../../../compose.yaml) or Helm chart [values.yaml](../../../charts/subcharts/dlstreamer-pipeline-server/values.yaml). Weekly images may include stability issues.
+As of the time of writing, the latest stable DL Streamer release is `2026.1.0`, built on top of `OpenVINO v2026.1`.
 
 ## Optional: Download an Object-Detection Model
 
