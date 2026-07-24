@@ -16,7 +16,6 @@ export interface UseCaseRegisterParams {
   reports?: Record<string, unknown>;
   summarize?: Record<string, unknown>;
   prompt_text?: string;
-  evaluate_rules_text?: string;
   schema_extensions?: SchemaExtension[];
   overwrite?: boolean;
   /**
@@ -470,21 +469,21 @@ export async function useCaseRegister(
   // consistency gate below can static-scan the rule's field access (G4), and so the
   // wiring step later reuses the same resolved path instead of re-deriving it.
   let evaluateRulesPath = params.evaluate_rules_path;
-  if (!evaluateRulesPath && params.evaluate_rules_text !== undefined) {
-    evaluateRulesPath = evaluateRulesTextPath;
-  }
   if (!evaluateRulesPath && existsSync(evaluateRulesTextPath)) {
     evaluateRulesPath = evaluateRulesTextPath;
   }
-  let evaluateRulesText = params.evaluate_rules_text;
-  if (evaluateRulesText === undefined && evaluateRulesPath && existsSync(evaluateRulesPath)) {
+  let evaluateRulesText: string | undefined;
+  if (evaluateRulesPath) {
+    if (!existsSync(evaluateRulesPath)) {
+      result.errors.push(`evaluate_rules_path "${evaluateRulesPath}" does not exist`);
+      return result;
+    }
     evaluateRulesText = readFileSync(evaluateRulesPath, "utf-8");
   }
 
   if (params.persist) {
     const artifactErrors = [
       validateTextArtifactWritable(promptPath, params.prompt_text, params.overwrite),
-      validateTextArtifactWritable(evaluateRulesTextPath, params.evaluate_rules_text, params.overwrite),
     ].filter((err): err is string => Boolean(err));
     if (artifactErrors.length > 0) {
       result.errors.push(`artifact persist failed: ${artifactErrors.join("; ")}`);
@@ -554,18 +553,12 @@ export async function useCaseRegister(
     return result;
   }
 
-  if (params.persist && (params.prompt_text !== undefined || params.evaluate_rules_text !== undefined)) {
+  if (params.persist && params.prompt_text !== undefined) {
     try {
       const artifacts = ensureArtifactsStep(result);
       artifacts.prompt_md = writeTextArtifact(
         promptPath,
         params.prompt_text,
-        params.overwrite,
-        result.warnings,
-      );
-      artifacts.evaluate_rules_py = writeTextArtifact(
-        evaluateRulesTextPath,
-        params.evaluate_rules_text,
         params.overwrite,
         result.warnings,
       );
@@ -690,7 +683,18 @@ async function registerTaskOnly(
   const baseDir = deps.baseDir ?? process.cwd();
   const useCaseDir = join(baseDir, "use-cases", params.use_case);
   const promptPath = join(useCaseDir, "prompt.md");
-  const evaluateRulesTextPath = join(useCaseDir, "evaluate_rules.py");
+  const conventionalEvaluateRulesPath = join(useCaseDir, "evaluate_rules.py");
+  const evaluateRulesPath = params.evaluate_rules_path ?? (
+    existsSync(conventionalEvaluateRulesPath) ? conventionalEvaluateRulesPath : undefined
+  );
+  let evaluateRulesText: string | undefined;
+  if (evaluateRulesPath) {
+    if (!existsSync(evaluateRulesPath)) {
+      result.errors.push(`evaluate_rules_path "${evaluateRulesPath}" does not exist`);
+      return result;
+    }
+    evaluateRulesText = readFileSync(evaluateRulesPath, "utf-8");
+  }
 
   // Normalize the final schema (base severity/event/desc + caller extras) and run the
   // same schema↔prompt↔rules consistency gate register uses — BEFORE the VLM POST — so
@@ -717,7 +721,7 @@ async function registerTaskOnly(
   const consistency = checkUseCaseConsistency({
     promptText,
     schemaExtensions,
-    evaluateRulesText: params.evaluate_rules_text,
+    evaluateRulesText,
   });
   result.steps.consistency = consistency;
   if (!consistency.consistent) {
@@ -745,22 +749,15 @@ async function registerTaskOnly(
   try {
     const artifacts = ensureArtifactsStep(result);
     artifacts.prompt_md = writeTextArtifact(promptPath, params.prompt_text, params.overwrite, result.warnings);
-    artifacts.evaluate_rules_py = writeTextArtifact(
-      evaluateRulesTextPath,
-      params.evaluate_rules_text,
-      params.overwrite,
-      result.warnings,
-    );
   } catch (err: any) {
     result.errors.push(`artifact persist failed: ${err.message}`);
     return result;
   }
 
-  // Smoke-test the just-written evaluate_rules.py so a broken override is caught here
-  // rather than silently failing at runtime. Runs whenever rules text was supplied
-  // (covers both freshly "written" and identical "unchanged" files on disk).
-  if (params.evaluate_rules_text !== undefined) {
-    const error = await validateEvaluateRulesOverride(params.use_case, evaluateRulesTextPath, schemaExtensions);
+  // Smoke-test the provided evaluate_rules.py so a broken override is caught here
+  // rather than silently failing at runtime.
+  if (evaluateRulesPath !== undefined) {
+    const error = await validateEvaluateRulesOverride(params.use_case, evaluateRulesPath, schemaExtensions);
     if (error) {
       result.errors.push(error);
       return result;

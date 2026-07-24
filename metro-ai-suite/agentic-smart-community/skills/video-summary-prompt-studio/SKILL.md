@@ -109,14 +109,14 @@ from bouncing on schema↔prompt mismatches.
    else (event names, severity mapping, `daily` reports) is defaulted and shown
    in a summary the user can correct. Skip a question whose answer the initial
    request already gave.
-2. **Phase 2 — Generate artifacts in memory.** Draft the full `prompt_text` and —
-  **only on the extended-schema path** — `evaluate_rules_text` built from the
-  final schema. Do **not** create `use-cases/<use_case>/` or write business files
-  from the agent workspace. Run the lint checklist on the text before registering.
+2. **Phase 2 — Generate artifacts.** Draft the full `prompt_text` and —
+  **only on the extended-schema path** — create an `evaluate_rules.py` file built
+  from the final schema. Pass its path as `evaluate_rules_path`. Run the lint
+  checklist before registering.
 3. **Phase 3 — Register (two steps).** First call `smartbuilding_use_case_register`
-   with **`action=register_task`**, passing `prompt_text` (+ `evaluate_rules_text`
-   on the custom path) — it runs the consistency HARD GATE, POSTs the VLM task, and
-   on success writes `use-cases/<uc>/prompt.md` (+ `evaluate_rules.py`). Then call it
+  with **`action=register_task`**, passing `prompt_text` (+ `evaluate_rules_path`
+  on the custom path) — it runs the consistency HARD GATE, POSTs the VLM task, and
+  on success writes `use-cases/<uc>/prompt.md`. Then call it
    again with **`action=register`** (`persist=true`), **omitting `prompt_text`** (it
    is auto-read from the file step 1 wrote) — this applies the schema, injects
    `use_case_dict`, and writes `config.yaml`. **`schema_extensions` is optional in
@@ -223,9 +223,8 @@ does the customer want extra persisted fields (e.g. `zone_id`, `risk_area`,
 - **Yes** → **Custom rule path**: the final schema is the base **plus** the
   customer's extension fields — `severity, event, desc + <extensions>` (the
   extension is *incremental*, never replaces the base). Because the customer
-  extended the schema, you **must** generate `evaluate_rules_text` that reads that
-  final schema to decide alerts; the MCP server writes it to the repo during
-  registration.
+  extended the schema, you **must** generate an `evaluate_rules.py` file that reads
+  that final schema to decide alerts, then pass its path as `evaluate_rules_path`.
 
 Everything not covered by Q1/Q2 is **defaulted, not asked**, then shown in the
 Phase 2 pre-draft summary for the user to correct:
@@ -433,27 +432,22 @@ After step 9, go to **Phase 4 — Final Configuration Report** below.
        - 不要加 markdown 符号或方括号
        - 不要写分析过程或逐条排查
        - 只输出 schema 要求的字段行,无其他内容
-4. **Prepare the artifacts and let the server write them — do NOT hand-place
-   files.** In the MCP / OpenClaw flow, pass the artifacts to **step 1
-   (`action=register_task`)** and let the server write them to the correct location:
+4. **Prepare the artifacts.** In the MCP / OpenClaw flow, pass the artifacts to
+   **step 1 (`action=register_task`)**:
    - `prompt_text` = the full Markdown prompt — **required in step 1**.
-   - `evaluate_rules_text` = the Python source — **only on the custom rule path**
-     (Q2 = yes / schema extended), built from the final schema. **Omit it on the
-     default path.**
+   - `evaluate_rules_path` = path to the Python `evaluate_rules.py` file — **only
+     on the custom rule path** (Q2 = yes / schema extended), built from the final
+     schema. **Omit it on the default path.**
 
-   `register_task` writes these to
-   `<repo-root>/use-cases/<use_case>/{prompt.md,evaluate_rules.py}`, where repo
-   root = the directory of the server's config (`baseDir = dirname(config…yaml)`),
-   **not your agent working directory**. So your CWD, relative paths, and
-   `~/.openclaw/workspace` are irrelevant — never create business files there.
+   `register_task` writes `prompt_text` to `<repo-root>/use-cases/<use_case>/prompt.md`,
+   where repo root = the directory of the server's config (`baseDir = dirname(config…yaml)`).
+   The rule file is not sent inline; create it first and pass its `evaluate_rules_path`.
    Run the lint checklist below before registering.
 
    The resulting directory layout is the repo convention: `elder_wakeup/` carries
    `prompt.md` + `evaluate_rules.py` (custom path); `child_safety/` and
    `parking_safety/` carry `prompt.md` only (default path). On the default path do
-   **not** pass `evaluate_rules_text`; a leftover `evaluate_rules.py` in your own
-   workspace is ignored (the server only reads the repo-root path), so it will not
-   pollute the registration.
+  **not** pass `evaluate_rules_path`; the built-in default evaluator is used.
 
   Because `register_task` writes `prompt.md` to the repo root, **step 2
   (`action=register`) may then OMIT `prompt_text`** — the server auto-reads it from
@@ -461,20 +455,21 @@ After step 9, go to **Phase 4 — Final Configuration Report** below.
   step 1, keep step 2 small. (Passing `prompt_text` inline to `register` still works
   as a one-shot fallback.)
 5. Register in two steps with `smartbuilding_use_case_register`:
-  - **Step 1 — `action=register_task`**: pass `prompt_text` (and `evaluate_rules_text`
+  - **Step 1 — `action=register_task`**: pass `prompt_text` (and `evaluate_rules_path`
     on the custom path). This runs the consistency gate, POSTs the VLM task, and writes
-    the artifacts. `prompt_text` must not contain Markdown code fences.
+    `prompt.md`. `prompt_text` must not contain Markdown code fences.
   - **Step 2 — `action=register` (`persist=true`)**: pass `description` etc.,
-    **omit `prompt_text`** (auto-read from disk). This applies the schema, injects
-    `use_case_dict`, and writes `config.yaml`. Retry per the gate diff until `ok:true`.
+    **omit `prompt_text`** (auto-read from disk). On the custom path, pass the same
+    `evaluate_rules_path` again unless the file is already at
+    `<repo-root>/use-cases/<use_case>/evaluate_rules.py`. This applies the schema,
+    injects `use_case_dict`, and writes `config.yaml`. Retry per the gate diff until `ok:true`.
   - **`schema_extensions` is optional in both steps** — the Final Schema is inferred
     from the prompt's `## 输出格式` `KEY:` lines (the prompt is the source of truth).
     Pass it only to force a non-text column type (integer/real). Authoring the correct
     `KEY:` lines (P2/P3) is what decides the schema, not a separate argument.
 6. On the **custom rule path** (schema extended in Q2, or custom alert behavior
-  beyond warn/critical), pass the Python source as
-  `evaluate_rules_text`; the tool writes it to
-  `use-cases/<use_case>/evaluate_rules.py` and registers that path. The script
+  beyond warn/critical), create the Python rule file and pass its path as
+  `evaluate_rules_path`; the tool reads, smoke-tests, and registers that path. The script
   must accept parsed fields on argv[1] and print an AlertOutcome object or
   `null`. The script must be generated from the LOCAL_PROMPT output fields and
   the Final Schema (base + extensions). For severity/event prompts
@@ -556,9 +551,9 @@ After step 9, go to **Phase 4 — Final Configuration Report** below.
    `<repo-root>` is `dirname(--config)` from the running MCP server; step 2
    (`register`) then auto-reads it. Do not pre-create the file in
    `~/.openclaw/workspace`.
-   - `evaluate_rules_text` is passed to `register_task` only on the custom/extended-schema
-     path; the server persists it to `<repo-root>/use-cases/<use_case>/evaluate_rules.py`.
-   - On the default path, omit `evaluate_rules_text`; the built-in
+   - `evaluate_rules_path` is passed to `register_task` only on the custom/extended-schema
+     path; it must point to the Python rule file that should be validated and persisted in config.
+   - On the default path, omit `evaluate_rules_path`; the built-in
      `defaultRuleEvaluator` is used.
     Therefore, if no `evaluate_rules.py` is generated, LOCAL_PROMPT must output
     `severity`, `event`, and `desc` so the default evaluator can fire.
@@ -1091,7 +1086,7 @@ Retry budget: ≤ 2 attempts on 4xx. On the third failure, surface the server's
 
 | User utterance (sample) | Action |
 |---|---|
-| "Create/register a use case named `<use_case>` that detects `<events>`" | Phase 1: ask Q1 (alerting?) then Q2 (extend schema?) → Phase 2: draft `prompt_text` (4 Markdown sections) and `evaluate_rules_text` **only on the custom/extended-schema path**, without writing files locally → Phase 3: `smartbuilding_use_case_register` twice — `action=register_task` (pass `prompt_text` + `evaluate_rules_text` → server POSTs the VLM task and writes repo artifacts), then `action=register` (`persist=true`, omit `prompt_text` → auto-read from disk, schema + `use_case_dict` + config) → Phase 4: final report incl. all monitors & registered use cases |
+| "Create/register a use case named `<use_case>` that detects `<events>`" | Phase 1: ask Q1 (alerting?) then Q2 (extend schema?) → Phase 2: draft `prompt_text` (4 Markdown sections) and, **only on the custom/extended-schema path**, prepare `evaluate_rules.py` and pass its path as `evaluate_rules_path` → Phase 3: `smartbuilding_use_case_register` twice — `action=register_task` (pass `prompt_text` + `evaluate_rules_path` → server POSTs the VLM task and validates the rule file), then `action=register` (`persist=true`, omit `prompt_text` → auto-read from disk, schema + `use_case_dict` + config) → Phase 4: final report incl. all monitors & registered use cases |
 | "Preview the prompt for `<use_case>`; do not register yet" | Run Phase 1 (Q1/Q2) → draft the prompt → show events/schema/path summary → do not call registration until confirmed |
 | "Overwrite and re-register the `<use_case>` prompt" | Read existing prompt if present → rewrite/refine → save with overwrite intent → call `smartbuilding_use_case_register` with `overwrite=true` |
 | "Add a video monitoring task for `<description>`" | If Smart Building MCP is available, use the generate + register workflow; otherwise draft 4 sections in the user's language → POST `/v1/tasks` mode=full |

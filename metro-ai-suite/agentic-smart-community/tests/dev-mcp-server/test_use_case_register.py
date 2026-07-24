@@ -160,6 +160,8 @@ video_summary_max_concurrent: 1
         sys.exit(1)
 
     client = MCPClient(proc)
+    rules_path = tmp / "evaluate_rules.py"
+    rules_path.write_text(GOOD_PET_RULES)
 
     try:
         client.send("initialize", {
@@ -174,7 +176,7 @@ video_summary_max_concurrent: 1
             "action": "register", "use_case": "pet_broken",
             "prompt_text": BROKEN_JSON_PROMPT,
             "schema_extensions": ext(("motion_direction", False), ("pet_confined", False), ("aggressive_behavior", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c1 = r1.get("steps", {}).get("consistency", {})
         t.check(r1.get("ok") is False, "T1 broken(JSON+mismatch): ok == false")
@@ -200,7 +202,7 @@ video_summary_max_concurrent: 1
             "action": "register", "use_case": "pet_ok",
             "prompt_text": GOOD_PET_PROMPT,
             "schema_extensions": ext(("pet_zone", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c3 = r3.get("steps", {}).get("consistency", {})
         t.check(c3.get("consistent") is True, "T3 custom-rule normalized extras: consistency.consistent == true (gate passed)")
@@ -230,7 +232,7 @@ video_summary_max_concurrent: 1
             "action": "register_task", "use_case": "pet_task_ok",
             "prompt_text": GOOD_PET_PROMPT,
             "schema_extensions": ext(("pet_zone", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c6 = r6.get("steps", {}).get("consistency", {})
         t.check(c6.get("consistent") is True, "T6 register_task: consistency gate passed")
@@ -245,7 +247,7 @@ video_summary_max_concurrent: 1
             "action": "register_task", "use_case": "pet_task_broken",
             "prompt_text": BROKEN_JSON_PROMPT,
             "schema_extensions": ext(("motion_direction", False), ("pet_confined", False), ("aggressive_behavior", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c7 = r7.get("steps", {}).get("consistency", {})
         t.check(r7.get("ok") is False, "T7 register_task broken(JSON+mismatch): ok == false")
@@ -267,7 +269,7 @@ video_summary_max_concurrent: 1
         r9 = client.register({
             "action": "register", "use_case": "pet_infer",
             "prompt_text": GOOD_PET_PROMPT,
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
             # no schema_extensions
         })
         c9 = r9.get("steps", {}).get("consistency", {})
@@ -280,7 +282,7 @@ video_summary_max_concurrent: 1
         r10 = client.register({
             "action": "register", "use_case": "child_infer",
             "prompt_text": DEFAULT_PASS_PROMPT,
-            # no schema_extensions, no evaluate_rules_text
+            # no schema_extensions, no evaluate_rules_path
         })
         c10 = r10.get("steps", {}).get("consistency", {})
         t.check(c10.get("consistent") is True, "T10 default-path no schema_extensions: gate passed (inferred)")
