@@ -14,7 +14,7 @@ HELM_NAMESPACE_ARGS :=
 HELM_INSTALL_NAMESPACE_ARGS :=
 ifneq ($(strip $(NAMESPACE)),)
 HELM_NAMESPACE_ARGS += --namespace $(NAMESPACE)
-HELM_INSTALL_NAMESPACE_ARGS += --namespace $(NAMESPACE) --create-namespace
+HELM_INSTALL_NAMESPACE_ARGS += --namespace $(NAMESPACE)
 endif
 
 .PHONY: help deps deps-child deps-parent deploy uninstall template lint
