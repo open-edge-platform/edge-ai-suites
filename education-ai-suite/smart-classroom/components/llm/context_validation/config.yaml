@@ -1,0 +1,44 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Standalone config for the long-context capacity validator
+# (components/llm/context_validation/validate_long_context.py).
+#
+# This file is independent of smart-classroom/config.yaml: the validator never
+# reads or writes the main config, and the main app never reads this file.
+# Editing one has no effect on the other. If you change the production
+# summarizer's device/weight_format in smart-classroom/config.yaml, update the
+# matching values below to keep this sweep representative of what's deployed.
+#
+# See docs/dev-guide/validate_long_context.md for the full schema reference.
+
+summarizer:
+  provider: openvino
+  device: GPU # GPU or CPU
+  weight_format: int8 # supports fp16, int4, int8
+  models_base_path: "models" # relative to the smart-classroom/ working directory
+
+  long_context_validation:
+    candidate_models:
+#      - Qwen/Qwen3-8B
+      - Qwen/Qwen3.6-35B-A3B
+#      - Qwen/Qwen3.5-9B
+    target_context_tokens: 160000
+    context_steps_tokens: [8000, 16000, 32000, 48000, 64000, 96000, 128000, 144000, 160000, 176000, 192000, 224000, 256000]
+    accuracy_threshold: 0.8        # fraction of needle probes that must be answered correctly
+    needle_probe_depths: [0.1, 0.5, 0.9]
+    # Answers are grammar-constrained (see trial_runner.py): up to answer_preamble_chars of
+    # free-text reasoning, then the answer must end in the digit code -- never unbounded
+    # rambling, never truncated with no answer at all. max_new_tokens_probe must comfortably
+    # cover answer_preamble_chars in tokens (~2-2.5 chars/token for this reasoning style) plus
+    # the digits plus margin. Real-hardware testing found these models need real room to work
+    # through a multi-step "analyze / scan / locate / extract" reasoning chain before landing
+    # on a correct answer -- a smaller budget (200-400 chars) reliably got cut off mid-chain and
+    # produced generic wrong guesses instead; 1500 chars reliably reached a correct, verifiably
+    # transcript-grounded answer in testing. This costs real time per probe (roughly 1-2 minutes
+    # observed), which is the accuracy tool being honest about what these models actually need,
+    # not overhead to optimize away.
+    answer_preamble_chars: 1500
+    max_new_tokens_probe: 700
+    trial_timeout_sec: 1200
+    output_dir: monitoring/executionlogs/long_context_validation
