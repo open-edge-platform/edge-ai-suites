@@ -1832,6 +1832,12 @@ $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] 
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
 $finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
+
+$csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
+$segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+$qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
+$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+
 Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
@@ -1840,6 +1846,7 @@ Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
@@ -1904,26 +1911,30 @@ if (-not (Test-Path $venvBackend)) {
 Write-Host ""
 
 Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-    Remove-Item $venvContentSearch -Recurse -Force
-}
-if (-not (Test-Path $venvContentSearch)) {
-    python -m venv $venvContentSearch
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
-} elseif ($upgradeVenvs) {
-    Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+if (-not $contentSearchEnabled) {
+    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
 } else {
-    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+        Remove-Item $venvContentSearch -Recurse -Force
+    }
+    if (-not (Test-Path $venvContentSearch)) {
+        python -m venv $venvContentSearch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    }
 }
 Write-Host ""
 

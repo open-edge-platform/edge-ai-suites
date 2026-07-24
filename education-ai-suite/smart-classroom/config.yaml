@@ -4,6 +4,15 @@
   use_ov_genai: True # True or False, applicable for provider: openvino
   language: en # en or zh
 
+features:
+  asr:                { enabled: true }
+  summary:            { enabled: true }
+  mindmap:            { enabled: true }
+  topic_segmentation: { enabled: true }
+  video_analytics:    { enabled: true }
+  content_search:     { enabled: true }
+  qa:                 { enabled: true }
+
 monitoring:
   logs_dir: ./monitoring/logs
   interval: 2
@@ -12,10 +21,6 @@ monitoring:
   execution_logs: monitoring/executionlogs
 
 models:
-  capability_registry:
-    - ocr
-    - text_gen
-
   asr:
     provider: openai # openvino, funasr and openai supported
     name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
@@ -483,6 +488,7 @@ content_search:
   host_addr: "127.0.0.1"
   port: 9011
   video_summarization_enabled: true
+  python_executable: "content_search/venv_content_search/Scripts/python.exe"
 
   chromadb:
     host: "127.0.0.1"
