@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import { gradingGetRubricContent, gradingUpdateRubricContent } from '../../services/api';
 
@@ -20,7 +21,7 @@ const RubricEditor: React.FC<RubricEditorProps> = ({ filename, onClose }) => {
     setError('');
     gradingGetRubricContent(filename)
       .then((res) => setContent(res.content))
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(toErrorMessage(e)))
       .finally(() => setLoading(false));
   }, [filename]);
 
@@ -32,7 +33,7 @@ const RubricEditor: React.FC<RubricEditorProps> = ({ filename, onClose }) => {
       await gradingUpdateRubricContent(filename, content);
       setSaved(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setSaving(false);
     }

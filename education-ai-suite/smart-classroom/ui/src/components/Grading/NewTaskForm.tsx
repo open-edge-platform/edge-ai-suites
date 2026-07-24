@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import {
   gradingListRubrics,
@@ -42,7 +43,7 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
         setRubricPath(list[0].rubric_path);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setLoadingRubrics(false);
     }

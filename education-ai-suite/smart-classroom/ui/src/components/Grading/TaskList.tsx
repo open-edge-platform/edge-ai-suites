@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { gradingListTasks } from '../../services/api';
 import type { GradingTask } from '../../services/api';
 import TaskDetail from './TaskDetail';
+import { shortId, formatElapsed } from './gradingUtils';
 
 interface TaskListProps {
   refreshSignal: number;
@@ -22,25 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
   FAILED: 'grading.status.failed',
 };
 
-const shortId = (id: string): string => (id ? id.slice(0, 8) : '');
-
 const TERMINAL = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-
-const formatElapsed = (createdAt: string, endedAt: string | null | undefined, now: number): string => {
-  try {
-    const start = Date.parse(createdAt);
-    const end = endedAt ? Date.parse(endedAt) : now;
-    if (isNaN(start) || isNaN(end) || end < start) return '—';
-    let s = Math.floor((end - start) / 1000);
-    const h = Math.floor(s / 3600); s -= h * 3600;
-    const m = Math.floor(s / 60); s -= m * 60;
-    if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
-    if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
-    return `${s}s`;
-  } catch {
-    return '—';
-  }
-};
 
 const formatTime = (iso: string): string => {
   try {
@@ -87,7 +70,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
       try {
         await fetchOnce();
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(toErrorMessage(e));
       }
       if (!cancelled) {
         timeout = window.setTimeout(poll, POLL_MS);
@@ -105,7 +88,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
     try {
       await fetchOnce();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -148,7 +131,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
         {filterChip('COMPLETED', t('grading.list.completed', 'Completed'), completedCount)}
         {filterChip('PAUSED', t('grading.list.paused', 'Paused'), pausedCount)}
         <button
-          className={`grading-refresh-icon${loading ? ' spinning' : ''}`}
+          className={`grading-refresh-icon${loading ? ' grading-spinning' : ''}`}
           onClick={handleRefresh}
           disabled={loading}
           title={t('grading.list.refresh', 'Refresh')}

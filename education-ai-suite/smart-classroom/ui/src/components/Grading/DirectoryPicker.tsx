@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import { gradingListDir } from '../../services/api';
 import type { GradingFsEntry } from '../../services/api';
@@ -27,7 +28,7 @@ const DirectoryPicker: React.FC<DirectoryPickerProps> = ({ initialPath, onSelect
       setParent(res.parent);
       setEntries(res.entries || []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }

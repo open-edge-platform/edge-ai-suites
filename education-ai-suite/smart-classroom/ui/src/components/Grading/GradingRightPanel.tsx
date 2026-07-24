@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import Accordion from '../common/Accordion';
 import ResourceUtilizationAccordion from '../RightPanel/ResourceUtilizationAccordion';
@@ -71,7 +72,7 @@ const GradingRightPanel: React.FC = () => {
       setTimeoutInput(updated.idle_timeout != null ? String(updated.idle_timeout) : '');
       setSaveMsg(t('grading.config.saved', 'Saved. Takes effect on next task.'));
     } catch (e) {
-      setSaveMsg(e instanceof Error ? e.message : String(e));
+      setSaveMsg(toErrorMessage(e));
     } finally {
       setSaving(false);
     }

@@ -121,7 +121,8 @@
   grid-template-columns: 96px 1fr 152px;
   align-items: center;
   gap: 12px 8px;
-  margin-bottom: 10px;
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .grading-form-label {
@@ -151,10 +152,6 @@
   border-radius: 4px;
   font-size: 13px;
   background: #fff;
-}
-
-.grading-select,
-.grading-input {
   width: 100%;
   box-sizing: border-box;
 }
@@ -163,11 +160,6 @@
   margin: 0 0 10px 108px;
   font-size: 12px;
   color: #999;
-}
-
-.grading-form-actions {
-  margin-top: 8px;
-  margin-bottom: 0;
 }
 
 /* Buttons */
@@ -270,8 +262,8 @@
   cursor: not-allowed;
 }
 
-.grading-refresh-icon.spinning,
-.spinning {
+.grading-refresh-icon.grading-spinning,
+.grading-spinning {
   display: inline-block;
   animation: grading-spin 0.8s linear infinite;
 }

@@ -1,4 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { toErrorMessage } from './gradingUtils';
+
+const formatDateTime = (iso: string): string => {
+  try {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  } catch { return iso; }
+};
 import { useTranslation } from 'react-i18next';
 import { gradingGetTaskSummary } from '../../services/api';
 import type { GradingSummary, GradingStudentResult } from '../../services/api';
@@ -39,7 +48,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
     try {
       setSummary(await gradingGetTaskSummary(taskId));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -183,7 +192,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
         {summary?.updated_at && (
           <div className="grading-results-meta-item">
             <span className="grading-results-meta-label">{t('grading.results.updated', 'Updated')}</span>
-            <span className="grading-results-meta-value">{summary.updated_at}</span>
+            <span className="grading-results-meta-value">{formatDateTime(summary.updated_at)}</span>
           </div>
         )}
       </div>
@@ -197,7 +206,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
           <div className="grading-results-table-actions">
             <span className="grading-results-table-title">{t('grading.results.tableTitle', 'Grading Results')}</span>
             <button className="grading-btn grading-btn-secondary grading-export-btn" onClick={load} disabled={loading} title={t('grading.results.refresh', 'Refresh')}>
-              <span className={loading ? 'spinning' : ''}>↻</span>
+              <span className={loading ? 'grading-spinning' : ''}>↻</span>
             </button>
             <button className="grading-btn grading-btn-secondary grading-export-btn" onClick={exportCsv} disabled={rows.length === 0} title={t('grading.results.export', 'Export CSV')}>
               ⬇ CSV

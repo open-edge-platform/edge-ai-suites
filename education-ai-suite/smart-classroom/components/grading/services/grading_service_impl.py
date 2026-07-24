@@ -363,7 +363,9 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         else:
             summary = {}
 
-        papers_dir = str(Path(str(source_input.get("paper_path", ""))).parent) if source_input.get("paper_path") else None
+        job = _JOB_STORE.get_job(task_id)
+        req = job.get("request") or {}
+        papers_dir = req.get("papers_dir") or req.get("paper_path") or None
         metadata = summary.setdefault("metadata", {
             "task_id": task_id,
             "prompt_path": source_input.get("prompt_path"),

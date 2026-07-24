@@ -168,13 +168,13 @@ h3 {
   transform: scale(0.95);
 }
 
-.configuration-metrics {
+.configuration-metrics,
+.configuration-metrics.two-column {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-top: 1rem;
   margin-left: 2rem;
-  margin-top: 1rem;
   padding: 0.5rem 1;
 }
 

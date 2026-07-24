@@ -9,6 +9,7 @@ import {
 } from '../../services/api';
 import type { GradingTask, GradingSummary } from '../../services/api';
 import RemoveConfirmationModal from '../common/RemoveConfirmationModal';
+import { shortId, formatElapsed, toErrorMessage } from './gradingUtils';
 
 interface TaskDetailProps {
   task: GradingTask;
@@ -20,21 +21,6 @@ interface TaskDetailProps {
 const LOG_POLL_MS = 3000;
 const LOG_TAIL = 50;
 
-// Format elapsed time between two ISO timestamps as "1h 03m 05s" / "45s".
-const formatElapsed = (fromIso?: string, toIso?: string | null): string => {
-  if (!fromIso) return '—';
-  const start = Date.parse(fromIso);
-  const end = toIso ? Date.parse(toIso) : Date.now();
-  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return '—';
-  let s = Math.floor((end - start) / 1000);
-  const h = Math.floor(s / 3600);
-  s -= h * 3600;
-  const m = Math.floor(s / 60);
-  s -= m * 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
-  if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
-  return `${s}s`;
-};
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, onViewResults }) => {
   const { t } = useTranslation();
@@ -75,7 +61,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
         setSummary(summaryRes);
       } catch (e) {
         if (logCancelledRef.current) return;
-        setLogError(e instanceof Error ? e.message : String(e));
+        setLogError(toErrorMessage(e));
       }
     };
     const poll = async () => {
@@ -108,7 +94,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
     try {
       onControlled(await fn());
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(toErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -242,7 +228,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
         <div className="grading-picker-overlay" onClick={() => setLogModalOpen(false)}>
           <div className="grading-log-modal" onClick={(e) => e.stopPropagation()}>
             <div className="grading-picker-header">
-              <span className="grading-picker-title">{t('grading.detail.log', 'Live log')} — {task.task_id.slice(0, 8)}</span>
+              <span className="grading-picker-title">{t('grading.detail.log', 'Live log')} — {shortId(task.task_id)}</span>
               <button className="grading-picker-close" onClick={() => setLogModalOpen(false)}>×</button>
             </div>
             <pre className="grading-log-modal-box">
@@ -258,7 +244,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
 
       <RemoveConfirmationModal
         isOpen={confirmDelete}
-        fileName={task.dir_info?.dir_name || task.task_id.slice(0, 8)}
+        fileName={task.dir_info?.dir_name || shortId(task.task_id)}
         isRemoving={busy}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={async () => {
@@ -268,7 +254,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
             await gradingDeleteTask(task.task_id);
             onDeleted(task.task_id);
           } catch (e) {
-            setError(e instanceof Error ? e.message : String(e));
+            setError(toErrorMessage(e));
             setConfirmDelete(false);
           } finally {
             setBusy(false);

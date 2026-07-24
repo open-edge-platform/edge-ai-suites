@@ -277,7 +277,6 @@
     "list": {
       "title": "Tasks",
       "refresh": "Refresh",
-      "refreshing": "Refreshing...",
       "running": "Running",
       "completed": "Completed",
       "paused": "Paused",
@@ -299,7 +298,6 @@
       "deleteConfirm": "Delete this task and all its output files? This cannot be undone.",
       "pause": "Pause",
       "resume": "Resume",
-      "cancel": "Cancel",
       "viewResults": "View results →",
       "dir": "Directory",
       "rubric": "Rubric",
@@ -307,8 +305,7 @@
       "log": "Live log",
       "logExpand": "Expand full log",
       "logLoading": "Loading...",
-      "logEmpty": "No log output yet.",
-      "logPlaceholder": "Log streaming will be added later."
+      "logEmpty": "No log output yet."
     },
     "status": {
       "pending": "Pending",
@@ -332,7 +329,6 @@
     "results": {
       "back": "← Back to tasks",
       "refresh": "Refresh",
-      "refreshing": "Refreshing...",
       "export": "Export CSV",
       "tableTitle": "Grading Results",
       "taskId": "Task",

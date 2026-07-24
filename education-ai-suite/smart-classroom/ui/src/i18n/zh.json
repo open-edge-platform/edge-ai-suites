@@ -278,7 +278,6 @@
     "list": {
       "title": "任务列表",
       "refresh": "刷新",
-      "refreshing": "刷新中…",
       "running": "运行中",
       "completed": "已完成",
       "paused": "已暂停",
@@ -300,7 +299,6 @@
       "deleteConfirm": "确认删除该任务及其所有输出文件？此操作不可撤销。",
       "pause": "暂停",
       "resume": "恢复",
-      "cancel": "取消",
       "viewResults": "查看结果 →",
       "dir": "目录",
       "rubric": "评分标准",
@@ -308,8 +306,7 @@
       "log": "实时日志",
       "logExpand": "展开查看完整日志",
       "logLoading": "加载中…",
-      "logEmpty": "暂无日志输出。",
-      "logPlaceholder": "日志流式输出稍后接入。"
+      "logEmpty": "暂无日志输出。"
     },
     "status": {
       "pending": "等待中",
@@ -333,7 +330,6 @@
     "results": {
       "back": "← 返回任务",
       "refresh": "刷新",
-      "refreshing": "刷新中…",
       "export": "导出 CSV",
       "tableTitle": "评分结果",
       "taskId": "任务",
