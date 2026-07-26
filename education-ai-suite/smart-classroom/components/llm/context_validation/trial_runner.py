@@ -1,12 +1,26 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Runs ONE (model, context length) trial for the long-context validator.
+"""Runs ONE (model, context length) capacity trial for the long-context validator.
+
+The question a trial answers is deliberately narrow, mirroring
+refer/long_context/validate_long_context.py: *can this hardware load the model,
+prefill a prompt of the requested token size, and decode a few tokens without
+running out of memory (or hanging)?* It does NOT judge answer quality -- content
+is irrelevant, only whether the box survives the token volume.
 
 Executed as a fresh subprocess per trial (see validate_long_context.py) so that
 GPU/host memory from a crashed or OOM'd attempt can never bleed into the next
 trial -- the same "convert in a subprocess so memory is fully reclaimed on exit"
 rationale already used for model conversion in
 components/vlm/vlm_openvino_serving/utils/utils.py::_convert_model_worker.
+
+Memory is sampled by the *orchestrator* (parent), not here: system RAM / GPU
+counters are process-wide, so the parent sees this child's footprint just as
+well, and -- crucially -- its readings survive even when this child is killed on
+a timeout. This child only signals two milestones over the queue so the parent
+can time its snapshots: an "loaded" event once the weights are resident (so the
+parent can separate weight memory from KV-cache memory), then a "done" event
+with the trial outcome.
 
 OpenVINO / transformers are imported lazily inside run_trial() rather than at
 module scope, so this module -- and therefore validate_long_context.py, which
@@ -18,14 +32,22 @@ from __future__ import annotations
 
 import gc
 import os
-import random
 import sys
 import time
 import traceback
+import unicodedata
 
-from components.llm.context_validation.haystack_builder import build_probe
+from components.llm.context_validation.context_builder import build_context_prompt
 
-_OOM_MARKERS = ("out of gpu resources", "out of memory", "allocation failed", "bad_alloc")
+_OOM_MARKERS = (
+    "out of gpu resources",
+    "out of memory",
+    "allocation failed",
+    "bad_alloc",
+    "cannot allocate",
+    "insufficient memory",
+    "memoryerror",
+)
 
 
 def _classify_error(exc: Exception) -> str:
@@ -35,15 +57,29 @@ def _classify_error(exc: Exception) -> str:
     return "exception"
 
 
-def _apply_qwen3_no_think(model_name: str, messages: list) -> list:
-    """Mirrors components/summarizer_component.py::_get_message's /no_think prefix."""
-    if "qwen3" not in model_name.lower():
-        return messages
-    user_msg = messages[-1]
-    if user_msg.get("role") == "user" and not user_msg["content"].lstrip().startswith("/no_think"):
-        user_msg = dict(user_msg, content="/no_think\n" + user_msg["content"])
-        return messages[:-1] + [user_msg]
-    return messages
+def _validate_generated_output(output: str, tokenizer) -> tuple[bool, int, str | None]:
+    """Reject empty, undecodable, control-only, and low-information output."""
+    if not output or not output.strip():
+        return False, 0, "no_output"
+
+    token_ids = tokenizer.encode(output, add_special_tokens=False)
+    if not token_ids:
+        return False, 0, "no_output_tokens"
+
+    decoded = tokenizer.decode(token_ids, skip_special_tokens=True).strip()
+    if not decoded:
+        return False, len(token_ids), "special_tokens_only"
+    if "\ufffd" in decoded or any(
+        unicodedata.category(char) == "Cc" and char not in "\n\r\t" for char in decoded
+    ):
+        return False, len(token_ids), "invalid_characters"
+
+    semantic_chars = [char.casefold() for char in decoded if char.isalnum()]
+    if len(semantic_chars) < 3:
+        return False, len(token_ids), "no_semantic_output"
+    if len(set(semantic_chars)) == 1:
+        return False, len(token_ids), "repetitive_output"
+    return True, len(token_ids), None
 
 
 def _load_tokenizer(model_dir: str, trust_remote_code: bool = True):
@@ -59,8 +95,18 @@ def _load_tokenizer(model_dir: str, trust_remote_code: bool = True):
        though `tokenizer.json` is a perfectly valid fast-tokenizer file --
        load it directly via PreTrainedTokenizerFast, which doesn't need to
        resolve a class name.
+
+    The tokenizer is used only to size the prompt and count tokens; the model's
+    own openvino_tokenizer.xml handles real inference. transformers' "tokenizer
+    class you load ... is not the same type as the class this function is called
+    from" warning during the PreTrainedTokenizerFast fallback is therefore
+    expected and harmless, so it's silenced here to keep the sweep log readable
+    (it would otherwise repeat for every trial's fresh subprocess).
     """
     from transformers import AutoTokenizer, PreTrainedTokenizerFast
+    from transformers.utils import logging as hf_logging
+
+    hf_logging.set_verbosity_error()
 
     attempts = [
         (AutoTokenizer, {}),
@@ -106,25 +152,27 @@ def run_trial(
     model_name: str,
     device: str,
     tokens: int,
-    probe_depths: list,
-    max_new_tokens_probe: int,
+    probe_tokens: int,
     result_queue,
-    answer_preamble_chars: int = 200,
 ) -> None:
-    """Load the model once, run one needle probe per depth, report a result dict.
+    """Load the model, prefill a ~`tokens`-token prompt, decode up to
+    `probe_tokens` tokens, and report the outcome over `result_queue`.
 
-    Always puts exactly one dict on result_queue before returning, even on
-    failure, so the orchestrator never blocks indefinitely on a trial that
-    errors out cleanly (a hard crash/segfault is instead caught by the
-    orchestrator's process-liveness check).
+    Posts up to two messages: `{"event": "loaded", ...}` once the weights are
+    resident (skipped if loading fails), then `{"event": "done", ...}` with the
+    result. Finding the memory ceiling only needs a few decode steps, not a full
+    summary, so `probe_tokens` is small on purpose -- generating thousands of
+    tokens at 128K+ context would add many minutes per step for no extra signal.
     """
-    result = {
+    done = {
+        "event": "done",
         "tokens_requested": tokens,
         "load_ok": False,
         "load_time_s": None,
         "generate_ok": False,
-        "accuracy": 0.0,
-        "probes": [],
+        "prompt_tokens": 0,
+        "generated_tokens": 0,
+        "generate_time_s": None,
         "error": None,
     }
 
@@ -135,92 +183,44 @@ def run_trial(
             {"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"} if device.upper().startswith("GPU") else {}
         )
         pipe = _load_pipeline(model_dir, device, ov_config)
-        result["load_ok"] = True
-        result["load_time_s"] = round(time.perf_counter() - t0, 3)
+        done["load_ok"] = True
+        done["load_time_s"] = round(time.perf_counter() - t0, 3)
+        # Tell the parent the weights are resident so it can snapshot post-load
+        # memory (weight footprint) before prefill grows it (KV-cache footprint).
+        result_queue.put({"event": "loaded", "load_time_s": done["load_time_s"]})
     except Exception as exc:  # noqa: BLE001 - reported to orchestrator, not re-raised
         print(f"[trial_runner] load failed: {traceback.format_exc()}", file=sys.stderr)
-        result["error"] = f"load:{_classify_error(exc)}:{exc}"
-        result_queue.put(result)
+        done["error"] = f"load:{_classify_error(exc)}:{exc}"
+        result_queue.put(done)
         return
 
     import openvino_genai as ov_genai
 
-    # Fresh entropy per trial so the planted fact can't be answered from memorized
-    # training data instead of from the context actually supplied, and so repeated
-    # sweeps don't keep re-testing the exact same code.
-    seed_base = random.SystemRandom().randrange(1, 2**31 - 1)
-    correct = 0
-    attempted = 0
-
     try:
-        for i, depth in enumerate(probe_depths):
-            probe = build_probe(tokenizer, tokens, depth, seed=seed_base + i)
-            messages = _apply_qwen3_no_think(model_name, probe.messages)
-            prompt = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-            )
-            # Constrain the answer via structured output (grammar-constrained
-            # decoding) rather than trusting free-form generation + a "please
-            # answer briefly" instruction to behave. Real-hardware testing
-            # showed two failure modes with plain free-form generation on this
-            # synthetic transcript: (a) some models narrate "Let me analyze
-            # this jumbled request..." for hundreds of tokens regardless of
-            # /no_think, enable_thinking=False, and explicit "no preamble"
-            # instructions -- max_new_tokens_probe alone can't fix a model
-            # that won't stop explaining itself; (b) constraining the FIRST
-            # token to a digit (regex=r"\d{N}", no preamble allowed at all)
-            # reliably got a clean answer fast, but a noticeably *wrong* one
-            # (generic-looking guesses like "100000"/"123456") -- with zero
-            # room to engage with the transcript before committing, the model
-            # had nothing to condition the answer on. Allowing a bounded
-            # free-text lead-in before requiring the digits is the middle
-            # ground: real reasoning room, but the generation is still
-            # guaranteed to end in a clean, parseable answer instead of
-            # rambling indefinitely or being truncated mid-thought with no
-            # answer at all.
-            structured_output_config = ov_genai.StructuredOutputConfig(
-                regex=rf"[\s\S]{{0,{answer_preamble_chars}}}\d{{{len(probe.expected_code)}}}"
-            )
-            gen_config = ov_genai.GenerationConfig(
-                max_new_tokens=max_new_tokens_probe,
-                do_sample=False,
-                structured_output_config=structured_output_config,
-            )
-            t1 = time.perf_counter()
-            output = str(pipe.generate(prompt, generation_config=gen_config))
-            elapsed = time.perf_counter() - t1
-            attempted += 1
-            is_correct = probe.expected_code.lower() in output.lower()
-            correct += int(is_correct)
-            result["probes"].append(
-                {
-                    "depth": depth,
-                    "tokens_actual": probe.tokens_actual,
-                    "correct": is_correct,
-                    "generate_time_s": round(elapsed, 3),
-                    "expected_code": probe.expected_code,
-                    # Sized to answer_preamble_chars + margin so this captures
-                    # the FULL answer (reasoning scaffold and concluding
-                    # digits), not just the opening -- with a large preamble
-                    # budget, a small fixed cap here would only ever show the
-                    # boilerplate "1. Analyze the Request..." opening and cut
-                    # off exactly the part (the conclusion) needed to tell a
-                    # genuine wrong answer apart from truncated reasoning. See
-                    # docs/dev-guide/validate_long_context.md §3.7.
-                    "answer": output[: answer_preamble_chars + 100],
-                }
-            )
-        result["generate_ok"] = True
+        prompt, prompt_tokens = build_context_prompt(tokenizer, tokens)
+        done["prompt_tokens"] = prompt_tokens
+
+        # Plain greedy decoding, no structured output: proving the hardware can
+        # prefill + decode this context is the only goal, and grammar-constrained
+        # decoding was observed to collapse into garbage output ("!!!!") on some
+        # models, which would score a false FAIL for a context the box handled.
+        gen_config = ov_genai.GenerationConfig(max_new_tokens=probe_tokens, do_sample=False)
+        t1 = time.perf_counter()
+        output = str(pipe.generate(prompt, generation_config=gen_config))
+        done["generate_time_s"] = round(time.perf_counter() - t1, 3)
+        output_ok, generated_tokens, output_error = _validate_generated_output(output, tokenizer)
+        done["generated_tokens"] = generated_tokens
+        done["generate_ok"] = output_ok
+        done["error"] = output_error
     except Exception as exc:  # noqa: BLE001
         print(f"[trial_runner] generate failed: {traceback.format_exc()}", file=sys.stderr)
-        result["error"] = f"generate:{_classify_error(exc)}:{exc}"
-        result["generate_ok"] = False
+        done["error"] = f"generate:{_classify_error(exc)}:{exc}"
+        done["generate_ok"] = False
     finally:
-        result["accuracy"] = (correct / attempted) if attempted else 0.0
         try:
             del pipe
             gc.collect()
         except Exception:
             pass
 
-    result_queue.put(result)
+    result_queue.put(done)

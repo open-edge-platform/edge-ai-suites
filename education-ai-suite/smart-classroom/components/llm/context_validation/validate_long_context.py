@@ -1,8 +1,17 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Sweep candidate summarizer models across context lengths to find the maximum
-context each one can reliably handle on this hardware, versus the customer's
-target (default 160K tokens).
+context each one can reliably prefill and decode on this hardware, versus the
+customer's target (default 160K tokens).
+
+What it measures is deliberately narrow (mirroring refer/long_context): whether
+*this machine* can load the model and prefill + decode a prompt of a given token
+size without running out of GPU/host memory (or hanging). It does NOT judge
+answer quality -- content is irrelevant to a capacity check, only whether the
+box survives the token volume. Each trial reports where its memory went: the
+weight footprint (measured just after load) versus the KV-cache footprint (the
+extra memory prefill+decode adds on top). See
+docs/dev-guide/validate_long_context.md.
 
 This is a standalone diagnostic tool: it reads its own bundled config.yaml
 (next to this script), never smart-classroom/config.yaml. It is independent of
@@ -28,12 +37,15 @@ See docs/dev-guide/validate_long_context.md for the full design and usage guide.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import gc
 import importlib.util
 import json
 import multiprocessing
 import os
 import re
 import sys
+import threading
 import time
 from datetime import datetime
 from queue import Empty
@@ -72,17 +84,135 @@ TRIAL_CSV_FIELDS = [
     "load_ok",
     "load_time_s",
     "generate_ok",
-    "accuracy",
+    "prompt_tokens",
+    "generated_tokens",
+    "generate_time_s",
+    "tokens_per_second",
+    "max_generate_time_sec",
+    "latency_limit_exceeded",
+    "gpu_memory_pressure_pct",
+    "peak_gpu_pct",
+    "gpu_memory_at_limit",
+    "weight_disk_gb",
+    "weight_ram_gb",
+    "kv_ram_gb",
+    "peak_ram_gb",
+    "peak_ram_pct",
+    "weight_gpu_gb",
+    "kv_gpu_gb",
+    "peak_gpu_gb",
+    "status",
     "error",
-    "probes_json",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Memory sampling (parent side)
+#
+# System RAM / GPU counters are process-wide, so sampling from the orchestrator
+# captures the trial subprocess's footprint -- and, unlike sampling inside the
+# child, these readings survive even when the child is killed on a timeout
+# (exactly the case where memory matters most: the box was thrashing, not idle).
+# ---------------------------------------------------------------------------
+def _read_mem() -> dict:
+    ram_used = ram_total = ram_pct = 0.0
+    try:
+        import psutil
+
+        vm = psutil.virtual_memory()
+        ram_used, ram_total, ram_pct = vm.used / (1024 ** 3), vm.total / (1024 ** 3), vm.percent
+    except Exception:
+        pass
+    gpu_gb = 0.0
+    try:
+        from monitoring.scripts.windows.collect_gpu import get_gpu_memory_total
+
+        used_mb, _dedicated, _shared = get_gpu_memory_total()
+        if used_mb is not None:
+            gpu_gb = used_mb / 1024
+    except Exception:
+        pass
+    return {"ram_gb": ram_used, "ram_total_gb": ram_total, "ram_pct": ram_pct, "gpu_gb": gpu_gb}
+
+
+class _MemorySampler(threading.Thread):
+    """Tracks peak (and latest) system RAM / GPU usage while a trial runs."""
+
+    def __init__(self, interval: float = 0.5):
+        super().__init__(daemon=True)
+        self._stop_event = threading.Event()
+        self.interval = interval
+        self.peak_ram = 0.0
+        self.peak_ram_pct = 0.0
+        self.peak_gpu = 0.0
+        self.latest = _read_mem()
+
+    def run(self):
+        while not self._stop_event.is_set():
+            m = _read_mem()
+            self.latest = m
+            self.peak_ram = max(self.peak_ram, m["ram_gb"])
+            self.peak_ram_pct = max(self.peak_ram_pct, m["ram_pct"])
+            self.peak_gpu = max(self.peak_gpu, m["gpu_gb"])
+            self._stop_event.wait(self.interval)
+
+    def stop(self):
+        self._stop_event.set()
+
+
+def _delta(higher: float, lower: float) -> float:
+    return round(max(0.0, higher - lower), 2)
+
+
+def _weight_disk_gb(model_dir: str) -> float:
+    """Approximate weight footprint from the on-disk IR weights (.bin). For an
+    int8/int4 export this closely tracks the resident weight memory, and it's a
+    deterministic reference that's available even if a trial OOMs before we can
+    measure the loaded footprint."""
+    total = 0
+    for root, _dirs, files in os.walk(model_dir):
+        for f in files:
+            if f.endswith(".bin"):
+                try:
+                    total += os.path.getsize(os.path.join(root, f))
+                except OSError:
+                    pass
+    return round(total / (1024 ** 3), 2)
+
+
+@contextlib.contextmanager
+def _suppress_native_stderr():
+    """Silence C-level stderr for the duration of the block.
+
+    The WMI/COM hardware probe in utils/platform_info.py emits benign
+    "Win32 exception occurred releasing IUnknown" teardown noise from the native
+    COM layer (not via Python's logging/warnings), so only an fd-level redirect
+    can hide it. Used solely around the best-effort platform-info call, which
+    already falls back to defaults on any failure.
+    """
+    try:
+        stderr_fd = sys.stderr.fileno()
+    except (AttributeError, OSError, ValueError):
+        yield
+        return
+    saved = os.dup(stderr_fd)
+    devnull = os.open(os.devnull, os.O_WRONLY)
+    try:
+        sys.stderr.flush()
+        os.dup2(devnull, stderr_fd)
+        yield
+    finally:
+        sys.stderr.flush()
+        os.dup2(saved, stderr_fd)
+        os.close(saved)
+        os.close(devnull)
 
 
 def _parse_args():
     parser = argparse.ArgumentParser(
         description=(
             "Find the max context length each candidate summarizer model can "
-            "handle on this hardware, against the configured target (default 160K)."
+            "prefill and decode on this hardware, against the configured target (default 160K)."
         ),
     )
     parser.add_argument(
@@ -96,6 +226,17 @@ def _parse_args():
     parser.add_argument("--steps", type=int, nargs="+", help="Override context_steps_tokens")
     parser.add_argument("--device", help="Override models.summarizer.device (e.g. GPU, CPU)")
     parser.add_argument("--weight-format", help="Override models.summarizer.weight_format")
+    parser.add_argument("--probe-tokens", type=int, help="Override probe_tokens (decode length per trial)")
+    parser.add_argument(
+        "--max-generate-time-sec",
+        type=float,
+        help="Override the maximum acceptable prefill + probe generation time",
+    )
+    parser.add_argument(
+        "--gpu-memory-pressure-pct",
+        type=float,
+        help="Override the GPU-used/system-RAM percentage treated as the practical iGPU limit",
+    )
     parser.add_argument(
         "--refine",
         action="store_true",
@@ -125,12 +266,23 @@ def _load_settings(args) -> dict:
         "device": args.device or summarizer.device,
         "weight_format": args.weight_format or summarizer.weight_format,
         "candidate_models": args.models or lcv.candidate_models,
-        "target_context_tokens": args.target_tokens or lcv.target_context_tokens,
+        "target_context_tokens": (
+            args.target_tokens if args.target_tokens is not None else lcv.target_context_tokens
+        ),
         "context_steps_tokens": sorted(args.steps or lcv.context_steps_tokens),
-        "accuracy_threshold": lcv.accuracy_threshold,
-        "needle_probe_depths": lcv.needle_probe_depths,
-        "max_new_tokens_probe": lcv.max_new_tokens_probe,
-        "answer_preamble_chars": getattr(lcv, "answer_preamble_chars", 400),
+        "probe_tokens": (
+            args.probe_tokens if args.probe_tokens is not None else getattr(lcv, "probe_tokens", 64)
+        ),
+        "max_generate_time_sec": (
+            args.max_generate_time_sec
+            if args.max_generate_time_sec is not None
+            else getattr(lcv, "max_generate_time_sec", 600)
+        ),
+        "gpu_memory_pressure_pct": (
+            args.gpu_memory_pressure_pct
+            if args.gpu_memory_pressure_pct is not None
+            else getattr(lcv, "gpu_memory_pressure_pct", 90)
+        ),
         "trial_timeout_sec": lcv.trial_timeout_sec,
         "output_dir": args.output_dir or lcv.output_dir,
         "refine": args.refine,
@@ -166,26 +318,118 @@ def _safe_platform_info() -> dict:
     try:
         from utils.platform_info import get_platform_and_model_info
 
-        return get_platform_and_model_info()
+        with _suppress_native_stderr():
+            info = get_platform_and_model_info()
+            gc.collect()  # force COM release inside the suppressed window
+        return info
     except Exception:
         return {}
 
 
+def _passed(result: dict) -> bool:
+    return (
+        bool(result.get("load_ok"))
+        and bool(result.get("generate_ok"))
+        and result.get("generated_tokens", 0) > 0
+        and not _resource_limit_reached(result)
+    )
+
+
+def _resource_limit_reached(result: dict) -> bool:
+    """A soft latency breach is a capacity failure only with GPU memory pressure."""
+    generate_time = result.get("generate_time_s")
+    max_generate_time = result.get("max_generate_time_sec")
+    return bool(
+        max_generate_time is not None
+        and generate_time is not None
+        and generate_time > max_generate_time
+        and result.get("gpu_memory_at_limit") is True
+    )
+
+
+def _error_classification(error: str) -> str:
+    """Middle field of a run_trial "stage:classification:detail" error string (e.g.
+    "oom" or "exception"), or "" if the error isn't in that format -- an output-
+    validation reason like "no_output" has no colons at all, and the raw exception
+    text in the detail field can itself contain arbitrary colons, so this must read
+    only the classification field rather than search the whole string."""
+    parts = error.split(":", 2)
+    return parts[1] if len(parts) >= 2 else ""
+
+
+def _classify_failure(result: dict) -> str:
+    error = str(result.get("error") or "")
+    if error == "timeout" or error.startswith("crashed"):
+        return error.split(":")[0]
+    is_oom = _error_classification(error) == "oom"
+    if not result.get("load_ok"):
+        return "oom" if is_oom else "load_error"
+    if not result.get("generate_ok"):
+        if is_oom:
+            return "oom"
+        if error == "no_output":
+            return "no_output"
+        return "generate_error"
+    if not result.get("generated_tokens", 0):
+        return "no_output"
+    if _resource_limit_reached(result):
+        return "too_slow"
+    return "unknown"
+
+
+def _status_label(result: dict) -> str:
+    return "PASS" if _passed(result) else _classify_failure(result)
+
+
 def _append_trial_row(output_dir: str, row: dict) -> None:
     path = os.path.join(output_dir, "trials.csv")
-    flat = {
-        "model": row["model"],
-        "tokens_requested": row.get("tokens_requested"),
-        "device": row["device"],
-        "weight_format": row["weight_format"],
-        "load_ok": row.get("load_ok"),
-        "load_time_s": row.get("load_time_s"),
-        "generate_ok": row.get("generate_ok"),
-        "accuracy": row.get("accuracy"),
-        "error": row.get("error"),
-        "probes_json": json.dumps(row.get("probes", []), ensure_ascii=False),
-    }
+    flat = {field: row.get(field) for field in TRIAL_CSV_FIELDS}
+    flat["model"] = row["model"]
+    flat["device"] = row["device"]
+    flat["weight_format"] = row["weight_format"]
+    flat["status"] = _status_label(row)
     StorageManager.save_csv(path, flat, headers=TRIAL_CSV_FIELDS, append=True)
+
+
+def _fmt_gb(value) -> str:
+    return f"{value:.1f} GB" if isinstance(value, (int, float)) else "--"
+
+
+def _format_trial_line(model_name: str, tokens: int, result: dict) -> str:
+    passed = _passed(result)
+    status = "PASS" if passed else f"FAIL ({_classify_failure(result)})"
+    parts = [f"[{model_name}] {tokens:>9,} tok -> {status}"]
+
+    timing = []
+    if result.get("load_time_s") is not None:
+        timing.append(f"load {result['load_time_s']:.1f}s")
+    if result.get("generate_time_s") is not None:
+        timing.append(
+            f"gen {result['generate_time_s']:.1f}s ({result.get('generated_tokens', 0)} tok, "
+            f"{result.get('tokens_per_second', 0):.2f} tok/s)"
+        )
+    if timing:
+        parts.append(", ".join(timing))
+
+    if result.get("peak_ram_gb") is not None:
+        seg = f"peak RAM {_fmt_gb(result.get('peak_ram_gb'))}"
+        if result.get("weight_ram_gb") is not None and result.get("kv_ram_gb") is not None:
+            seg += f" (weights +{result['weight_ram_gb']:.1f}, kv +{result['kv_ram_gb']:.1f})"
+        parts.append(seg)
+    if result.get("peak_gpu_gb") is not None:
+        seg = f"peak GPU {_fmt_gb(result.get('peak_gpu_gb'))}"
+        if result.get("peak_gpu_pct") is not None:
+            seg += f" ({result['peak_gpu_pct']:.1f}% of system RAM)"
+        if result.get("weight_gpu_gb") is not None and result.get("kv_gpu_gb") is not None:
+            seg += f" (weights +{result['weight_gpu_gb']:.1f}, kv +{result['kv_gpu_gb']:.1f})"
+        parts.append(seg)
+
+    if result.get("latency_limit_exceeded") and not result.get("gpu_memory_at_limit"):
+        parts.append("latency budget exceeded without GPU memory saturation")
+
+    if not passed and result.get("error"):
+        parts.append(f"error={result.get('error')}")
+    return "  |  ".join(parts)
 
 
 def _fake_ceiling_tokens(model_name: str, steps: list) -> int:
@@ -195,113 +439,146 @@ def _fake_ceiling_tokens(model_name: str, steps: list) -> int:
     return steps[digest % len(steps)]
 
 
-def _run_trial_dry_run(model_name: str, tokens: int, probe_depths: list, fake_ceiling: int) -> dict:
+def _run_trial_dry_run(model_name: str, tokens: int, probe_tokens: int, fake_ceiling: int) -> dict:
     ok = tokens <= fake_ceiling
+    weight_ram = 4.0  # pretend a small fixed weight footprint
+    weight_gpu = 3.5
+    kv_ram = round(tokens / 8000.0, 2)  # KV grows with context
+    kv_gpu = round(tokens / 10000.0, 2)
+    peak_gpu = round(1.0 + weight_gpu + kv_gpu, 2)
     return {
         "tokens_requested": tokens,
         "load_ok": True,
         "load_time_s": 0.01,
-        "generate_ok": True,
-        "accuracy": 0.95 if ok else 0.3,
-        "probes": [
-            {"depth": d, "tokens_actual": tokens, "correct": ok, "generate_time_s": 0.01}
-            for d in probe_depths
-        ],
-        "error": None if ok else "accuracy_below_threshold(dry-run)",
+        "generate_ok": ok,
+        "prompt_tokens": tokens,
+        "generated_tokens": probe_tokens if ok else 0,
+        "generate_time_s": 0.01,
+        "weight_ram_gb": weight_ram,
+        "weight_gpu_gb": weight_gpu,
+        "kv_ram_gb": kv_ram,
+        "kv_gpu_gb": kv_gpu,
+        "peak_ram_gb": round(2.0 + weight_ram + kv_ram, 2),
+        "peak_ram_pct": 50.0,
+        "peak_gpu_gb": peak_gpu,
+        "ram_total_gb": 64.0,
+        "error": None if ok else "generate:oom:allocation failed (dry-run)",
     }
 
 
 def _run_trial_subprocess(
-    model_dir: str,
     model_name: str,
+    model_dir: str,
     device: str,
     tokens: int,
-    probe_depths: list,
-    max_new_tokens_probe: int,
-    answer_preamble_chars: int,
+    probe_tokens: int,
     timeout_sec: int,
+    sample_interval: float = 0.5,
     poll_interval: float = 2.0,
 ) -> dict:
+    baseline = _read_mem()
+    sampler = _MemorySampler(interval=sample_interval)
+    sampler.start()
+
     ctx = multiprocessing.get_context("spawn")
     result_queue = ctx.Queue()
     process = ctx.Process(
         target=trial_runner.run_trial,
-        args=(
-            model_dir,
-            model_name,
-            device,
-            tokens,
-            probe_depths,
-            max_new_tokens_probe,
-            result_queue,
-            answer_preamble_chars,
-        ),
+        args=(model_dir, model_name, device, tokens, probe_tokens, result_queue),
     )
     process.start()
 
-    deadline = time.monotonic() + timeout_sec
+    loaded_mem = None
     result = None
+    deadline = time.monotonic() + timeout_sec
     while time.monotonic() < deadline:
         try:
-            result = result_queue.get(timeout=poll_interval)
-            break
+            msg = result_queue.get(timeout=poll_interval)
         except Empty:
             if not process.is_alive():
-                break  # child exited without publishing a result -> crash
+                break  # child exited without a "done" message -> crash
+            continue
+        if msg.get("event") == "loaded":
+            loaded_mem = _read_mem()  # snapshot the weight footprint before prefill grows it
+        elif msg.get("event") == "done":
+            result = msg
+            break
 
+    timed_out = result is None and time.monotonic() >= deadline
     if process.is_alive():
         process.terminate()
     process.join(10)
+    sampler.stop()
+    sampler.join(2 * sample_interval + 1)
 
-    if result is not None:
-        return result
-
-    reason = "timeout" if time.monotonic() >= deadline else f"crashed:exitcode={process.exitcode}"
-    return {
-        "tokens_requested": tokens,
-        "load_ok": False,
-        "generate_ok": False,
-        "accuracy": 0.0,
-        "probes": [],
-        "error": reason,
+    mem = {
+        "peak_ram_gb": round(sampler.peak_ram, 2),
+        "peak_ram_pct": round(sampler.peak_ram_pct, 1),
+        "peak_gpu_gb": round(sampler.peak_gpu, 2),
+        "weight_ram_gb": _delta(loaded_mem["ram_gb"], baseline["ram_gb"]) if loaded_mem else None,
+        "weight_gpu_gb": _delta(loaded_mem["gpu_gb"], baseline["gpu_gb"]) if loaded_mem else None,
+        "kv_ram_gb": _delta(sampler.peak_ram, loaded_mem["ram_gb"]) if loaded_mem else None,
+        "kv_gpu_gb": _delta(sampler.peak_gpu, loaded_mem["gpu_gb"]) if loaded_mem else None,
+        "ram_total_gb": round(baseline["ram_total_gb"], 2),
     }
 
+    if result is not None:
+        result.pop("event", None)
+        result.update(mem)
+        return result
 
-def _classify_failure(result: dict, threshold: float) -> str:
-    error = str(result.get("error") or "")
-    if error == "timeout" or error.startswith("crashed"):
-        return error.split(":")[0]
-    if not result.get("load_ok"):
-        return "oom" if "oom" in error else "load_error"
-    if not result.get("generate_ok"):
-        return "oom" if "oom" in error else "generate_error"
-    if result.get("accuracy", 0.0) < threshold:
-        return "accuracy_below_threshold"
-    return "unknown"
-
-
-def _passed(result: dict, threshold: float) -> bool:
-    return bool(result.get("load_ok")) and bool(result.get("generate_ok")) and result.get("accuracy", 0.0) >= threshold
+    reason = "timeout" if timed_out else f"crashed:exitcode={process.exitcode}"
+    return {
+        "tokens_requested": tokens,
+        "load_ok": loaded_mem is not None,  # crashed/hung during generate, not load
+        "load_time_s": None,
+        "generate_ok": False,
+        "prompt_tokens": 0,
+        "generated_tokens": 0,
+        "generate_time_s": None,
+        "error": reason,
+        **mem,
+    }
 
 
 def _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling):
     if dry_run:
-        return _run_trial_dry_run(model_name, tokens, settings["needle_probe_depths"], fake_ceiling)
-    return _run_trial_subprocess(
-        model_dir,
-        model_name,
-        device,
-        tokens,
-        settings["needle_probe_depths"],
-        settings["max_new_tokens_probe"],
-        settings["answer_preamble_chars"],
-        settings["trial_timeout_sec"],
+        result = _run_trial_dry_run(model_name, tokens, settings["probe_tokens"], fake_ceiling)
+    else:
+        result = _run_trial_subprocess(
+            model_name,
+            model_dir,
+            device,
+            tokens,
+            settings["probe_tokens"],
+            settings["trial_timeout_sec"],
+        )
+    generate_time = result.get("generate_time_s")
+    generated_tokens = result.get("generated_tokens", 0)
+    result["tokens_per_second"] = (
+        round(generated_tokens / generate_time, 3) if generate_time and generated_tokens else 0.0
     )
+    result["max_generate_time_sec"] = settings["max_generate_time_sec"]
+    result["latency_limit_exceeded"] = bool(
+        generate_time is not None and generate_time > settings["max_generate_time_sec"]
+    )
+    ram_total_gb = result.pop("ram_total_gb", 0.0)
+    peak_gpu_gb = result.get("peak_gpu_gb", 0.0)
+    result["gpu_memory_pressure_pct"] = settings["gpu_memory_pressure_pct"]
+    result["peak_gpu_pct"] = (
+        round(peak_gpu_gb / ram_total_gb * 100, 1) if peak_gpu_gb and ram_total_gb else None
+    )
+    result["gpu_memory_at_limit"] = bool(
+        result["peak_gpu_pct"] is not None
+        and result["peak_gpu_pct"] >= settings["gpu_memory_pressure_pct"]
+    )
+    return result
 
 
-def _refine_boundary(model_name, model_dir, device, settings, low, high, dry_run, fake_ceiling, max_extra=3) -> int:
+def _refine_boundary(model_name, model_dir, device, settings, low, high, dry_run, fake_ceiling, weight_disk, max_extra=3):
     lo, hi = low, high
     smallest_step = settings["context_steps_tokens"][0]
+    best_result = None
     for _ in range(max_extra):
         if hi - lo <= max(1, smallest_step // 8):
             break
@@ -309,12 +586,20 @@ def _refine_boundary(model_name, model_dir, device, settings, low, high, dry_run
         result = _run_one(model_name, model_dir, device, mid, settings, dry_run, fake_ceiling)
         _append_trial_row(
             settings["output_dir"],
-            {"model": model_name, "device": device, "weight_format": settings["weight_format"], **result},
+            {
+                "model": model_name,
+                "device": device,
+                "weight_format": settings["weight_format"],
+                "weight_disk_gb": weight_disk,
+                **result,
+            },
         )
-        passed = _passed(result, settings["accuracy_threshold"])
-        print(f"[{model_name}] refine @ {mid:>9,} tokens -> {'PASS' if passed else 'FAIL'}")
+        passed = _passed(result)
+        print("  " + _format_trial_line(model_name, mid, result))
+        if passed:
+            best_result = result
         lo, hi = (mid, hi) if passed else (lo, mid)
-    return lo
+    return lo, best_result
 
 
 def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
@@ -335,9 +620,13 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
             "prep_command": prep_command,
         }
 
+    weight_disk = 0.0 if dry_run else _weight_disk_gb(model_dir)
+    print(f"\n=== {model_name} ===  weights on disk: {_fmt_gb(weight_disk)} ({weight_format})")
+
     fake_ceiling = _fake_ceiling_tokens(model_name, settings["context_steps_tokens"]) if dry_run else None
 
     max_stable = 0
+    max_stable_result = None
     fail_reason = None
     completed_all_steps = True
     last_tokens = settings["context_steps_tokens"][0]
@@ -347,27 +636,34 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
         result = _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling)
         _append_trial_row(
             settings["output_dir"],
-            {"model": model_name, "device": device, "weight_format": weight_format, **result},
+            {
+                "model": model_name,
+                "device": device,
+                "weight_format": weight_format,
+                "weight_disk_gb": weight_disk,
+                **result,
+            },
         )
 
-        passed = _passed(result, settings["accuracy_threshold"])
-        print(
-            f"[{model_name}] {tokens:>9,} tokens -> {'PASS' if passed else 'FAIL'} "
-            f"(accuracy={result.get('accuracy', 0.0):.2f}, error={result.get('error')})"
-        )
+        passed = _passed(result)
+        print(_format_trial_line(model_name, tokens, result))
         if not passed:
-            fail_reason = _classify_failure(result, settings["accuracy_threshold"])
+            fail_reason = _classify_failure(result)
             completed_all_steps = False
             break
         max_stable = tokens
+        max_stable_result = result
 
     if completed_all_steps:
         fail_reason = None
     elif settings["refine"] and max_stable:
-        max_stable = _refine_boundary(
-            model_name, model_dir, device, settings, max_stable, last_tokens, dry_run, fake_ceiling
+        max_stable, refined_result = _refine_boundary(
+            model_name, model_dir, device, settings, max_stable, last_tokens, dry_run, fake_ceiling, weight_disk
         )
+        if refined_result is not None:
+            max_stable_result = refined_result
 
+    peak = max_stable_result or {}
     return {
         "model": model_name,
         "status": "ok",
@@ -375,6 +671,13 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
         "meets_target": max_stable >= settings["target_context_tokens"],
         "device": device,
         "weight_format": weight_format,
+        "weight_disk_gb": weight_disk,
+        "weight_ram_gb": peak.get("weight_ram_gb"),
+        "weight_gpu_gb": peak.get("weight_gpu_gb"),
+        "kv_ram_gb": peak.get("kv_ram_gb"),
+        "kv_gpu_gb": peak.get("kv_gpu_gb"),
+        "peak_ram_gb": peak.get("peak_ram_gb"),
+        "peak_gpu_gb": peak.get("peak_gpu_gb"),
         "failure_reason": fail_reason,
     }
 
@@ -383,7 +686,8 @@ def _write_summary(output_dir: str, settings: dict, model_reports: list, platfor
     summary = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "target_context_tokens": settings["target_context_tokens"],
-        "accuracy_threshold": settings["accuracy_threshold"],
+        "probe_tokens": settings["probe_tokens"],
+        "max_generate_time_sec": settings["max_generate_time_sec"],
         "hardware": platform_info,
         "models": model_reports,
     }
@@ -391,22 +695,28 @@ def _write_summary(output_dir: str, settings: dict, model_reports: list, platfor
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
     lines = [
-        "# Long-Context Validation Summary",
+        "# Long-Context Capacity Validation Summary",
         "",
         f"Generated: {summary['generated_at']}",
         f"Target context: {settings['target_context_tokens']:,} tokens | "
-        f"Accuracy threshold: {settings['accuracy_threshold']:.0%}",
+        f"Probe decode: {settings['probe_tokens']} tokens/trial | "
+        f"Max prefill + generation: {settings['max_generate_time_sec']:g}s | "
+        f"GPU memory pressure: {settings['gpu_memory_pressure_pct']:g}% of system RAM",
         "",
         f"Hardware: {platform_info.get('Processor', '--')}, {platform_info.get('Memory', '--')} RAM, "
         f"{platform_info.get('iGPU', '--')}",
         "",
-        "| Model | Device | Weight | Max stable context | Meets target | Notes |",
-        "|---|---|---|---|---|---|",
+        "Memory columns are measured at the max stable context: weights = footprint just after "
+        "load; KV = additional memory prefill+decode added on top; peak = total high-water mark.",
+        "",
+        "| Model | Device | Weight | Max stable context | Meets target | Weights (disk) | "
+        "Peak RAM | KV RAM | Peak GPU | KV GPU | Notes |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in model_reports:
         if r["status"] == "missing_ir":
             lines.append(
-                f"| {r['model']} | {r['device']} | {r['weight_format']} | - | - | "
+                f"| {r['model']} | {r['device']} | {r['weight_format']} | - | - | - | - | - | - | - | "
                 f"IR not found; run: `{r['prep_command']}` |"
             )
             continue
@@ -417,7 +727,12 @@ def _write_summary(output_dir: str, settings: dict, model_reports: list, platfor
             if r.get("failure_reason")
             else "reached top configured step without failing"
         )
-        lines.append(f"| {r['model']} | {r['device']} | {r['weight_format']} | {max_ctx} | {meets} | {note} |")
+        lines.append(
+            f"| {r['model']} | {r['device']} | {r['weight_format']} | {max_ctx} | {meets} | "
+            f"{_fmt_gb(r.get('weight_disk_gb'))} | {_fmt_gb(r.get('peak_ram_gb'))} | "
+            f"{_fmt_gb(r.get('kv_ram_gb'))} | {_fmt_gb(r.get('peak_gpu_gb'))} | "
+            f"{_fmt_gb(r.get('kv_gpu_gb'))} | {note} |"
+        )
 
     with open(os.path.join(output_dir, "summary.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -466,14 +781,17 @@ def main() -> None:
     os.makedirs(settings["output_dir"], exist_ok=True)
     platform_info = _safe_platform_info()
 
-    print(f"Long-context validation sweep starting (dry_run={args.dry_run})")
+    print(f"Long-context capacity validation sweep starting (dry_run={args.dry_run})")
     print(f"Candidates: {settings['candidate_models']}")
     print(f"Steps: {settings['context_steps_tokens']}")
-    print(f"Target: {settings['target_context_tokens']:,} tokens | Output: {settings['output_dir']}")
+    print(
+        f"Target: {settings['target_context_tokens']:,} tokens | "
+        f"Probe decode: {settings['probe_tokens']} tok | "
+        f"Max generation: {settings['max_generate_time_sec']:g}s | Output: {settings['output_dir']}"
+    )
 
     model_reports = []
     for model_name in settings["candidate_models"]:
-        print(f"\n=== {model_name} ===")
         model_reports.append(_sweep_model(model_name, settings, args.dry_run))
 
     _write_summary(settings["output_dir"], settings, model_reports, platform_info)
