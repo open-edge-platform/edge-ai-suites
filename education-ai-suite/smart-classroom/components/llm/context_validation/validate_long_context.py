@@ -76,6 +76,12 @@ _MODEL_IR_RE = re.compile(r"(.*)?openvino(.*)?_model(.*)?\.xml$")
 _TOKENIZER_IR_NAME = "openvino_tokenizer.xml"
 _DETOKENIZER_IR_NAME = "openvino_detokenizer.xml"
 
+# Measured kv_gpu_gb / expected_kv_gpu_gb at or above this is called out in the summary notes as a
+# scope mismatch between the two numbers (persistent-cache-only estimate vs. all post-load growth)
+# rather than a plain capacity limit -- see _theoretical_kv_bytes_per_token()'s docstring and the
+# note built in _write_summary() for what this can and cannot be blamed on.
+_KV_OVERHEAD_RATIO_NOTE_THRESHOLD = 3.0
+
 TRIAL_CSV_FIELDS = [
     "model",
     "tokens_requested",
@@ -100,6 +106,8 @@ TRIAL_CSV_FIELDS = [
     "peak_ram_pct",
     "weight_gpu_gb",
     "kv_gpu_gb",
+    "expected_kv_gpu_gb",
+    "kv_overhead_ratio",
     "peak_gpu_gb",
     "status",
     "error",
@@ -178,6 +186,82 @@ def _weight_disk_gb(model_dir: str) -> float:
                 except OSError:
                     pass
     return round(total / (1024 ** 3), 2)
+
+
+def _load_model_config(model_dir: str) -> dict | None:
+    """Best-effort read of the exported IR's config.json (present for every
+    optimum-cli export). Returns None if missing/unreadable so callers can
+    degrade to "no theoretical estimate" instead of failing the trial."""
+    path = os.path.join(model_dir, "config.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _theoretical_kv_bytes_per_token(config: dict, kv_cache_dtype_bytes: int = 2) -> float | None:
+    """Expected KV-cache growth per token from the model's own declared
+    architecture, treating hybrid linear-attention layers correctly.
+
+    VLM exports nest the causal-LM config under `text_config` (confirmed on
+    the Qwen3.5-9B / Qwen3.6-35B-A3B IR exports this tool targets); plain LLM
+    configs have these keys top-level, so this reads from
+    ``config.get("text_config", config)`` to handle both.
+
+    Only layers whose `layer_types` entry is "full_attention" hold a KV cache
+    that grows with sequence length; entries like "linear_attention" are
+    Mamba/GatedDeltaNet-style recurrent-state layers with an O(1) state that
+    does NOT grow with context length. This split is not just a config.json
+    label -- it is confirmed directly against the exported IR
+    (openvino_language_model.xml / openvino_model.xml): only the
+    full_attention layers' `cache_params.past.{key,value}.N` state variables
+    carry a dynamic sequence-length axis; the linear_attention layers'
+    `cache_params.past.{conv,ssm}.N` variables have a fixed shape regardless
+    of context length.
+
+    This function returns a *persistent-cache-only* estimate, which is
+    deliberately narrower than what trial_runner's kv_gpu_gb/kv_ram_gb
+    measure (see the `kv_overhead_ratio` note in `_write_summary()`): those
+    also include prefill/decode working memory (Q/K/V projections, MLP
+    activations, ...) for *every* layer, including the linear-attention ones
+    -- a hybrid model still runs all its layers on every prompt token during
+    prefill even though only the full_attention layers keep a cache
+    afterwards. A large kv_overhead_ratio for a hybrid model is therefore
+    expected from this scope mismatch alone; it is not, by itself, evidence
+    of a specific OpenVINO defect (an earlier version of this comment cited
+    a known OpenVINO Model Server issue where continuous-batching prefix
+    caching over-allocates memory for linear-attention models -- that issue
+    is real, but its precondition isn't met here: trial_runner's
+    `_load_pipeline()` never sets `scheduler_config`/`ATTENTION_BACKEND=PA`,
+    so OpenVINO GenAI's own backend-selection logic keeps this tool on the
+    plain stateful single-sequence backend, not continuous batching, so that
+    specific issue cannot be what's being observed in this tool's trials).
+    If `layer_types` is absent, every layer is assumed to be a standard
+    growing-KV-cache attention layer (ordinary dense transformer).
+
+    Returns None if the config doesn't expose enough info to compute this
+    (num_hidden_layers / num_key_value_heads / head_dim), so callers can
+    degrade gracefully for architectures/exports this doesn't understand yet.
+
+    kv_cache_dtype_bytes defaults to 2 (fp16), OpenVINO GenAI's default KV
+    cache precision when not otherwise configured -- this is a stated
+    assumption, not something measured, since the tool has no way to read
+    back the runtime's actual KV precision.
+    """
+    text_cfg = config.get("text_config", config)
+    num_layers = text_cfg.get("num_hidden_layers")
+    num_kv_heads = text_cfg.get("num_key_value_heads")
+    head_dim = text_cfg.get("head_dim")
+    if not num_layers or not num_kv_heads or not head_dim:
+        return None
+    layer_types = text_cfg.get("layer_types")
+    growing_layers = (
+        sum(1 for t in layer_types if t == "full_attention") if layer_types else num_layers
+    )
+    if not growing_layers:
+        return None
+    return 2 * growing_layers * num_kv_heads * head_dim * kv_cache_dtype_bytes
 
 
 @contextlib.contextmanager
@@ -421,7 +505,10 @@ def _format_trial_line(model_name: str, tokens: int, result: dict) -> str:
         if result.get("peak_gpu_pct") is not None:
             seg += f" ({result['peak_gpu_pct']:.1f}% of system RAM)"
         if result.get("weight_gpu_gb") is not None and result.get("kv_gpu_gb") is not None:
-            seg += f" (weights +{result['weight_gpu_gb']:.1f}, kv +{result['kv_gpu_gb']:.1f})"
+            seg += f" (weights +{result['weight_gpu_gb']:.1f}, kv +{result['kv_gpu_gb']:.1f}"
+            if result.get("kv_overhead_ratio") is not None:
+                seg += f", expected {result['expected_kv_gpu_gb']:.2f}, {result['kv_overhead_ratio']:.1f}x"
+            seg += ")"
         parts.append(seg)
 
     if result.get("latency_limit_exceeded") and not result.get("gpu_memory_at_limit"):
@@ -541,7 +628,7 @@ def _run_trial_subprocess(
     }
 
 
-def _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling):
+def _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling, kv_bytes_per_token=None):
     if dry_run:
         result = _run_trial_dry_run(model_name, tokens, settings["probe_tokens"], fake_ceiling)
     else:
@@ -572,10 +659,21 @@ def _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceil
         result["peak_gpu_pct"] is not None
         and result["peak_gpu_pct"] >= settings["gpu_memory_pressure_pct"]
     )
+    if kv_bytes_per_token and result.get("prompt_tokens"):
+        expected_kv_gb = kv_bytes_per_token * result["prompt_tokens"] / (1024 ** 3)
+        result["expected_kv_gpu_gb"] = round(expected_kv_gb, 2)
+        kv_gpu = result.get("kv_gpu_gb")
+        result["kv_overhead_ratio"] = round(kv_gpu / expected_kv_gb, 2) if kv_gpu else None
+    else:
+        result["expected_kv_gpu_gb"] = None
+        result["kv_overhead_ratio"] = None
     return result
 
 
-def _refine_boundary(model_name, model_dir, device, settings, low, high, dry_run, fake_ceiling, weight_disk, max_extra=3):
+def _refine_boundary(
+    model_name, model_dir, device, settings, low, high, dry_run, fake_ceiling, weight_disk,
+    kv_bytes_per_token=None, max_extra=3,
+):
     lo, hi = low, high
     smallest_step = settings["context_steps_tokens"][0]
     best_result = None
@@ -583,7 +681,7 @@ def _refine_boundary(model_name, model_dir, device, settings, low, high, dry_run
         if hi - lo <= max(1, smallest_step // 8):
             break
         mid = (lo + hi) // 2
-        result = _run_one(model_name, model_dir, device, mid, settings, dry_run, fake_ceiling)
+        result = _run_one(model_name, model_dir, device, mid, settings, dry_run, fake_ceiling, kv_bytes_per_token)
         _append_trial_row(
             settings["output_dir"],
             {
@@ -623,6 +721,9 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
     weight_disk = 0.0 if dry_run else _weight_disk_gb(model_dir)
     print(f"\n=== {model_name} ===  weights on disk: {_fmt_gb(weight_disk)} ({weight_format})")
 
+    model_config = None if dry_run else _load_model_config(model_dir)
+    kv_bytes_per_token = _theoretical_kv_bytes_per_token(model_config) if model_config else None
+
     fake_ceiling = _fake_ceiling_tokens(model_name, settings["context_steps_tokens"]) if dry_run else None
 
     max_stable = 0
@@ -633,7 +734,7 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
 
     for tokens in settings["context_steps_tokens"]:
         last_tokens = tokens
-        result = _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling)
+        result = _run_one(model_name, model_dir, device, tokens, settings, dry_run, fake_ceiling, kv_bytes_per_token)
         _append_trial_row(
             settings["output_dir"],
             {
@@ -658,7 +759,8 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
         fail_reason = None
     elif settings["refine"] and max_stable:
         max_stable, refined_result = _refine_boundary(
-            model_name, model_dir, device, settings, max_stable, last_tokens, dry_run, fake_ceiling, weight_disk
+            model_name, model_dir, device, settings, max_stable, last_tokens, dry_run, fake_ceiling, weight_disk,
+            kv_bytes_per_token=kv_bytes_per_token,
         )
         if refined_result is not None:
             max_stable_result = refined_result
@@ -676,6 +778,8 @@ def _sweep_model(model_name: str, settings: dict, dry_run: bool) -> dict:
         "weight_gpu_gb": peak.get("weight_gpu_gb"),
         "kv_ram_gb": peak.get("kv_ram_gb"),
         "kv_gpu_gb": peak.get("kv_gpu_gb"),
+        "expected_kv_gpu_gb": peak.get("expected_kv_gpu_gb"),
+        "kv_overhead_ratio": peak.get("kv_overhead_ratio"),
         "peak_ram_gb": peak.get("peak_ram_gb"),
         "peak_gpu_gb": peak.get("peak_gpu_gb"),
         "failure_reason": fail_reason,
@@ -710,28 +814,36 @@ def _write_summary(output_dir: str, settings: dict, model_reports: list, platfor
         "load; KV = additional memory prefill+decode added on top; peak = total high-water mark.",
         "",
         "| Model | Device | Weight | Max stable context | Meets target | Weights (disk) | "
-        "Peak RAM | KV RAM | Peak GPU | KV GPU | Notes |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "Peak RAM | KV RAM | Peak GPU | KV GPU | Expected KV | KV Ratio | Notes |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in model_reports:
         if r["status"] == "missing_ir":
             lines.append(
-                f"| {r['model']} | {r['device']} | {r['weight_format']} | - | - | - | - | - | - | - | "
+                f"| {r['model']} | {r['device']} | {r['weight_format']} | - | - | - | - | - | - | - | - | - | "
                 f"IR not found; run: `{r['prep_command']}` |"
             )
             continue
         max_ctx = f"{r['max_stable_context']:,}" if r["max_stable_context"] else "0"
         meets = "PASS" if r["meets_target"] else "FAIL"
-        note = (
-            f"capped by {r['failure_reason']}"
-            if r.get("failure_reason")
-            else "reached top configured step without failing"
-        )
+        ratio = r.get("kv_overhead_ratio")
+        if ratio is not None and ratio >= _KV_OVERHEAD_RATIO_NOTE_THRESHOLD:
+            note = (
+                f"kv {ratio:g}x the persistent-cache-only estimate -- expected_kv_gpu_gb counts "
+                "only growing-KV-cache layers, kv_gpu_gb also includes prefill/decode working "
+                "memory across all layers, so a large ratio here is not a capacity problem with "
+                "this box by itself, and not proof of a specific OpenVINO defect either"
+            )
+        elif r.get("failure_reason"):
+            note = f"capped by {r['failure_reason']}"
+        else:
+            note = "reached top configured step without failing"
         lines.append(
             f"| {r['model']} | {r['device']} | {r['weight_format']} | {max_ctx} | {meets} | "
             f"{_fmt_gb(r.get('weight_disk_gb'))} | {_fmt_gb(r.get('peak_ram_gb'))} | "
             f"{_fmt_gb(r.get('kv_ram_gb'))} | {_fmt_gb(r.get('peak_gpu_gb'))} | "
-            f"{_fmt_gb(r.get('kv_gpu_gb'))} | {note} |"
+            f"{_fmt_gb(r.get('kv_gpu_gb'))} | {_fmt_gb(r.get('expected_kv_gpu_gb'))} | "
+            f"{f'{ratio:g}x' if ratio is not None else '--'} | {note} |"
         )
 
     with open(os.path.join(output_dir, "summary.md"), "w", encoding="utf-8") as f:

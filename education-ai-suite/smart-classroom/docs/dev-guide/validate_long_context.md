@@ -111,6 +111,37 @@ when the child is killed on a timeout**, which is exactly the case where memory 
 box was thrashing on a context it couldn't hold, not sitting idle). RAM comes from `psutil`; GPU
 is best-effort and Windows-only via the repo's perf-counter collector (reads `0.0` elsewhere).
 
+**Is a measured KV-cache number too big?** The measured `kv_ram_gb`/`kv_gpu_gb` is a system-level
+delta, not a pure KV-cache tensor size — it also picks up prefill scratch memory and any other
+post-load growth (see §9 caveats below). To make it possible to tell "this looks architecturally
+expected" apart from "this looks inflated" without manually reading the model's `config.json`
+every time, each trial also reports `expected_kv_gpu_gb` and `kv_overhead_ratio` when the model's
+own `config.json` (already present next to every `optimum-cli`-exported IR) has enough
+information: `2 × num_full_attention_layers × num_key_value_heads × head_dim × 2 bytes/token`
+(fp16 KV-cache assumed — the tool has no way to read back the runtime's actual KV precision, this
+is a stated assumption). Plain dense transformers count every layer. **Hybrid linear-attention
+models** — `Qwen/Qwen3.5-9B` and `Qwen/Qwen3.6-35B-A3B`'s exported `config.json` (`text_config.
+layer_types`) declare a repeating 3:1 `linear_attention`:`full_attention` pattern, i.e. only 1-in-4
+layers is a genuine growing-KV-cache attention layer; the rest are Mamba/GatedDeltaNet-style
+recurrent-state layers that should only need a small, constant-size state — so
+`_theoretical_kv_bytes_per_token()` counts only the `full_attention` layers (confirmed against the
+exported IR itself: only the `full_attention` layers' `cache_params.past.{key,value}.N` state
+variables have a sequence-length axis; the `linear_attention` layers' `cache_params.past.{conv,ssm}.N`
+variables are fixed-shape). A `kv_overhead_ratio` well above 1 for these two candidates is
+**expected by construction, not evidence of one specific upstream bug**: `expected_kv_gpu_gb` only
+counts the persistent, growing-KV-cache layers, while `kv_gpu_gb` is (per §3.1's definition above)
+*all* post-load memory growth — which for a hybrid model also includes prefill/decode working
+memory (Q/K/V projections, MLP activations) for the other 3-in-4 layers too, since every layer still
+runs on every prompt token during prefill even though only `full_attention` layers keep a cache
+afterwards. (An earlier version of this note instead blamed a specific known OpenVINO Model Server
+issue — continuous-batching prefix caching over-allocating memory for linear-attention models. That
+issue is real, but doesn't apply here: this tool's `_load_pipeline()` never sets `scheduler_config`
+or `ATTENTION_BACKEND=PA`, and OpenVINO GenAI only enables continuous batching/prefix caching when
+one of those is set — otherwise it uses the plain stateful single-sequence backend, which is what
+this tool exercises, so that issue's precondition isn't met and it isn't a valid explanation for the
+ratio observed here.) This is diagnostic only; it never changes PASS/FAIL (§3.1's policy is
+unchanged).
+
 ### 3.2 One subprocess per trial
 
 Each (model, context length) trial loads the model fresh in its own `multiprocessing` child
@@ -358,20 +389,26 @@ Three files land in `output_dir`:
   load/generate success, prompt/generated tokens, load & generate time, effective
   `tokens_per_second`, the configured `max_generate_time_sec`, and the memory breakdown
   (`weight_disk_gb`, `weight_ram_gb`/`weight_gpu_gb`, `kv_ram_gb`/`kv_gpu_gb`,
-  `peak_ram_gb`/`peak_ram_pct`/`peak_gpu_gb`), a `status` (`PASS` or the failure reason), and the
-  raw `error` string.
+  `expected_kv_gpu_gb`/`kv_overhead_ratio` (§3.1.1, `None` when the model's `config.json` doesn't
+  expose enough architecture info), `peak_ram_gb`/`peak_ram_pct`/`peak_gpu_gb`), a `status` (`PASS`
+  or the failure reason), and the raw `error` string.
 - **`summary.json`** — machine-readable rollup per model: `max_stable_context`,
   `meets_target` (bool, compared against `target_context_tokens`), the memory breakdown at that
   max stable size (`weight_disk_gb`, `weight_ram_gb`/`weight_gpu_gb`, `kv_ram_gb`/`kv_gpu_gb`,
-  `peak_ram_gb`/`peak_gpu_gb`), `failure_reason`, and the hardware fingerprint the sweep ran on
-  (from `utils/platform_info.py`).
+  `expected_kv_gpu_gb`/`kv_overhead_ratio`, `peak_ram_gb`/`peak_gpu_gb`), `failure_reason`, and the
+  hardware fingerprint the sweep ran on (from `utils/platform_info.py`).
 - **`summary.md`** — the same rollup as a table (memory measured at the max stable context;
-  weights = footprint just after load, KV = extra memory prefill+decode added on top), e.g.:
+  weights = footprint just after load, KV = extra memory prefill+decode added on top, Expected
+  KV/KV Ratio = architecture-derived reference and measured/expected ratio, §3.1.1), e.g.:
 
-  | Model | Device | Weight | Max stable context | Meets target | Weights (disk) | Peak RAM | KV RAM | Peak GPU | KV GPU | Notes |
-  |---|---|---|---|---|---|---|---|---|---|---|
-  | Qwen/Qwen3-8B | GPU | int4 | 160,000 | PASS | 4.6 GB | 58.1 GB | 47.5 GB | 21.4 GB | 12.9 GB | reached top configured step without failing |
-  | Qwen/Qwen3.6-35B-A3B | GPU | int4 | 64,000 | FAIL | 18.2 GB | 63.6 GB | 20.1 GB | 58.4 GB | 21.4 GB | capped by timeout |
+  | Model | Device | Weight | Max stable context | Meets target | Weights (disk) | Peak RAM | KV RAM | Peak GPU | KV GPU | Expected KV | KV Ratio | Notes |
+  |---|---|---|---|---|---|---|---|---|---|---|---|---|
+  | Qwen/Qwen3-8B | GPU | int4 | 160,000 | PASS | 4.6 GB | 58.1 GB | 47.5 GB | 21.4 GB | 12.9 GB | 11.0 GB | 1.2x | reached top configured step without failing |
+  | Qwen/Qwen3.6-35B-A3B | GPU | int4 | 64,000 | FAIL | 18.2 GB | 63.6 GB | 20.1 GB | 58.4 GB | 21.4 GB | 1.7 GB | 12.6x | kv 12.6x theoretical -- known OpenVINO linear-attention cache issue (see release notes), not a capacity problem with this box |
+
+  A `KV Ratio` at or above `_KV_OVERHEAD_RATIO_NOTE_THRESHOLD` (default 3x) replaces the generic
+  `failure_reason` note with a call-out that the gap looks like a known cache-efficiency issue
+  rather than a plain capacity limit — see §3.1.1.
 
 `failure_reason` values: `oom`, `timeout`, `crashed`, `load_error`, `generate_error`,
 `no_output`, `too_slow`. A model whose max stable context still meets the target can show a failure reason
@@ -410,6 +447,16 @@ weight format, device, driver, system memory, time budget, and pressure threshol
 - **`weight_format` trades memory for capacity.** `int4` leaves the most headroom for a large
   KV-cache (longer max context) than `int8` or `fp16` at the same context length. If a model OOMs
   below the target, re-run with a lower-precision `weight_format` before ruling it out.
+- **`Qwen/Qwen3.5-9B` and `Qwen/Qwen3.6-35B-A3B` are hybrid linear-attention models, and a large
+  `kv_overhead_ratio` for them is currently expected, not a sign this box is under-provisioned.**
+  Their exported `config.json` declares only 1-in-4 layers as `full_attention` (the rest are
+  Mamba/GatedDeltaNet-style `linear_attention` layers, which should hold an O(1) state rather than
+  one that grows with context length). The ratio being large is a scope mismatch, not a single
+  identifiable upstream bug: `kv_gpu_gb` measures *all* post-load memory growth, which for a hybrid
+  model includes prefill/decode working memory across all layers (not just the ones that keep a
+  growing cache). See §3.1.1 for the full theoretical-vs-measured comparison, including why an
+  earlier version of this doc's more specific "known OpenVINO prefix-caching bug" explanation
+  doesn't actually apply to how this tool invokes the pipeline.
 - **Large candidates cost real disk/RAM even to attempt.** `Qwen/Qwen3.6-35B-A3B`-class models
   need substantial disk space for the IR and host RAM just to load, independent of how far the
   context sweep gets.

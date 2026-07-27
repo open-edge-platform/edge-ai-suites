@@ -407,6 +407,32 @@ $$
 
 磁盘权重 `weight_disk_gb` 则递归累加模型目录下所有 `.bin` 文件大小，它是稳定参考值，不依赖试验是否成功加载。
 
+### 9.2.1 理论 KV 大小与倍数诊断（`expected_kv_gpu_gb` / `kv_overhead_ratio`）
+
+`M_kv` 是系统级实测增量，包含真实 KV-cache 之外的一切 loaded-后增长（见 §9.4）。为了不必每次靠人工翻 `config.json` 才能判断“这个数字是否合理”，`_theoretical_kv_bytes_per_token()`（`validate_long_context.py`）从模型自身导出的 `config.json` 计算一个架构层面的理论参考值：
+
+$$
+B_{token} = 2 \times L_{full} \times H_{kv} \times D_{head} \times b_{dtype}
+$$
+
+其中 $L_{full}$ 是真正需要随 token 数增长 KV-cache 的层数，$H_{kv}$、$D_{head}$ 来自模型配置的 `num_key_value_heads` / `head_dim`，$b_{dtype}$ 默认取 2（假设 fp16 KV-cache，因为工具本身无法读取运行时实际精度，这是一个声明的假设而非实测值）。
+
+**混合线性注意力架构的处理**：`Qwen/Qwen3.5-9B` 与 `Qwen/Qwen3.6-35B-A3B` 的 `config.json`（`text_config.layer_types`）声明的不是均匀的 transformer，而是 3:1 交替的 `linear_attention` / `full_attention` 混合架构（类似 Qwen3-Next 的 Gated-DeltaNet 设计）：只有 `full_attention` 层需要随 token 数增长的传统 KV-cache，`linear_attention` 层理论上只维持一个不随长度增长的固定大小（O(1)）递归/SSM 状态。因此：
+
+- 若 `layer_types` 存在，$L_{full}$ 只统计其中标记为 `full_attention` 的层数；
+- 若 `layer_types` 不存在（普通稠密 transformer），$L_{full}$ 等于全部层数（与旧的隐含假设一致）；
+- 若配置缺少 `num_hidden_layers` / `num_key_value_heads` / `head_dim` 等必要字段（导出格式不认识的架构），函数返回 `None`，调用方据此跳过该诊断而不是抛异常。
+
+VLM 导出（本工具所有默认候选模型都是）把上述字段嵌套在顶层 `config.json` 的 `text_config` 下而非顶层本身，因此实现读取 `config.get("text_config", config)`，同时兼容纯 LLM 导出（字段在顶层）。
+
+每次试验若 `kv_bytes_per_token` 可计算，则按 `prompt_tokens` 换算出 `expected_kv_gpu_gb`，并计算 `kv_overhead_ratio = kv_gpu_gb / expected_kv_gpu_gb`，一并写入 `trials.csv`、`summary.json` 与 `summary.md`；`summary.md` 在比值达到 `_KV_OVERHEAD_RATIO_NOTE_THRESHOLD`（默认 3x）时，会在 Notes 列直接标注为已知的上游缓存效率问题而不是笼统的容量说明。
+
+这个比值**只是诊断信息**，不会改变 `_passed()` / `_classify_failure()` 的判定——该工具的定位始终是”装不装得下”，不是”效率是否合理”，倍数异常本身不构成容量失败。经验参考：对 `Qwen/Qwen3.5-9B` 用本地已转换的 IR 计算，实测 `kv_gpu_gb` 相对理论值稳定在约 **12.9 倍**（8K 到 120K token 全程一致）。
+
+**一个已被证伪的解释，记录在此避免重蹈覆辙**：早期版本在这里引用过”OpenVINO 2026.2 发行说明中一个已知问题——Linear Attention 模型（如 Qwen3.5/Qwen3.6）配合 prefix caching 会消耗过量内存”来解释这个 12.9 倍。这个已知问题确实存在（可查 OpenVINO Model Server 关于 `cache_interval_multiplier` 参数的发行说明），但它的前提是**启用了 continuous batching 的 prefix caching**，而本工具的触发路径并不满足这个前提：`trial_runner.py::_load_pipeline()` 调用 `LLMPipeline`/`VLMPipeline` 时没有传入 `scheduler_config`、`ATTENTION_BACKEND=PA`，也没有请求 speculative decoding 或 prompt lookup；核对 OpenVINO GenAI 自身的后端选择逻辑（`utils.cpp::explicitly_requires_paged_attention()`）后确认，缺少这些属性时它必然回退到默认的**有状态单序列后端**，而不是 continuous batching/分页注意力/prefix caching 那条路径——导出的 IR 里 `cache_params.past.*` 用 `ReadValue`/`Assign` 的有状态变量表示（而不是 PagedAttention 专用算子）也印证了这一点。也就是说，被引用的那个已知问题的触发条件在这里根本不成立，不能作为这 12.9 倍的解释。
+
+站得住脚的原因是**统计口径不对齐**，不是某个具体的上游 bug：`expected_kv_gpu_gb` 只按会随 token 数增长的持久态缓存层（`full_attention`，8 层）计算；而 `kv_gpu_gb`（即 §9.4 的 $M_{kv}$）按设计统计 loaded 之后的**全部**显存增长，这自然包含 prefill 阶段全部 32 层（含 24 个 `linear_attention` 层）对每个 prompt token 的 Q/K/V 投影、MLP 激活等工作显存——这些层虽然不持久保留随 token 数增长的 KV-cache，但 prefill 时仍要对每个 token 完整计算一遍，其工作显存与「全部层数 × token 数」成正比，而不是「持久态层数 × token 数」。两个数字统计的对象不同，比值偏大是结构性的，不足以单凭这个比值把差距归因于某个具体的上游缺陷；真要进一步拆解，需要在 prefill 刚完成、decode 结束这两个时间点分别打点采样（本工具目前没有做这一级拆分）。
+
 ### 9.3 为什么在父进程采样
 
 父进程采样是故障容忍设计：即使子进程因 native 崩溃、OOM 或超时被杀，采样线程仍能保留此前峰值。若把采样放在子进程内，最值得诊断的失败路径反而可能没有结果。
@@ -547,6 +573,7 @@ $$
 - SLA 与 GPU 压力阈值；
 - `latency_limit_exceeded`；
 - `peak_gpu_pct` 与 `gpu_memory_at_limit`；
+- `expected_kv_gpu_gb` 与 `kv_overhead_ratio`（§9.2.1，模型 `config.json` 可解析时才有值，否则为 `None`）；
 - CSV 中的模型、设备、权重格式、磁盘权重和最终状态。
 
 ### 12.2 `trials.csv`
@@ -628,6 +655,7 @@ main()
 | `test_context_validation_context_builder.py` | 0 token、固定长度构造、160K 大输入、模板开销排除 user content、完整 prompt 命中目标。 |
 | `test_context_validation_output.py` | 接受自然语言；拒绝标点、特殊 token 和单字符重复输出。 |
 | `test_context_validation_policy.py` | 正常通过、慢但无 GPU 压力仍通过、慢且内存饱和失败、SLA 等号边界通过。 |
+| `test_context_validation_kv_estimate.py` | 无 `layer_types` 的稠密模型全层计数、Qwen3.5-9B 形态的混合线性注意力只统计 `full_attention` 层、VLM 的 `text_config` 嵌套读取、缺字段返回 `None`、自定义 KV 精度字节数。 |
 
 测试使用轻量 `FakeTokenizer`，因此不会下载模型或引入 OpenVINO 环境依赖。
 
@@ -635,7 +663,7 @@ main()
 
 ```powershell
 Set-Location smart-classroom
-python -m unittest components.tests.test_context_validation_context_builder components.tests.test_context_validation_output components.tests.test_context_validation_policy
+python -m unittest components.tests.test_context_validation_context_builder components.tests.test_context_validation_output components.tests.test_context_validation_policy components.tests.test_context_validation_kv_estimate
 ```
 
 还可以执行以下 dry-run 作为编排层集成检查：
@@ -705,6 +733,7 @@ OpenVINO、GPU 驱动和大内存分配的失败不一定能被 Python 安全恢
 | 模型扫描 | `_sweep_model`, `_run_one`, `_refine_boundary` |
 | 子进程控制 | `_run_trial_subprocess` |
 | 内存采样 | `_read_mem`, `_MemorySampler`, `_delta` |
+| 理论 KV 估算 | `_load_model_config`, `_theoretical_kv_bytes_per_token` |
 | 策略判断 | `_passed`, `_resource_limit_reached`, `_classify_failure` |
 | 单次推理 | `trial_runner.run_trial` |
 | Pipeline 选择 | `trial_runner._load_pipeline` |

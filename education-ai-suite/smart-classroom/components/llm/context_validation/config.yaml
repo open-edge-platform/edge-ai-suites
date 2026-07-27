@@ -21,8 +21,8 @@ summarizer:
   long_context_validation:
     candidate_models:
 #      - Qwen/Qwen3-8B
-#      - Qwen/Qwen3.6-35B-A3B
-      - Qwen/Qwen3.5-9B
+      - Qwen/Qwen3.6-35B-A3B
+#      - Qwen/Qwen3.5-9B
     target_context_tokens: 160000
     context_steps_tokens: [8000, 16000, 32000, 48000, 56000, 60000, 64000, 80000, 96000, 112000, 120000, 128000, 144000, 160000, 176000, 192000, 224000, 256000]
     # Decode length per trial. Proving the hardware can prefill + decode a context
