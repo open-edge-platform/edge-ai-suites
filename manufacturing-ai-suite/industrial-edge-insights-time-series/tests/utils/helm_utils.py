@@ -204,6 +204,11 @@ def _ensure_chart_extracted(chart_dir):
     try:
         with tempfile.TemporaryDirectory() as tmp_dir:
             with tarfile.open(tgz_path) as tf:
+                abs_tmp = os.path.abspath(tmp_dir)
+                for member in tf.getmembers():
+                    member_path = os.path.abspath(os.path.join(tmp_dir, member.name))
+                    if member_path != abs_tmp and not member_path.startswith(abs_tmp + os.sep):
+                        raise tarfile.TarError(f"Unsafe path in tar archive: {member.name}")
                 tf.extractall(tmp_dir)
             extracted_roots = [d for d in glob.glob(os.path.join(tmp_dir, "*")) if os.path.isdir(d)]
             if len(extracted_roots) != 1:
