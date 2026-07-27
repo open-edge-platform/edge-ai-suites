@@ -15,6 +15,7 @@ KNOWN_FEATURE_IDS = frozenset({
     "board_ocr",
     "content_search",
     "qa",
+    "grading",
     "report",
 })
 

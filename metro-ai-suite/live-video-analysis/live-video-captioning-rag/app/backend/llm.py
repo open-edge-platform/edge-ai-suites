@@ -12,8 +12,10 @@ import os
 
 
 def initialize_llm():
+    model_dir = os.path.join(CACHE_DIR, LLM_DEVICE.lower(), LLM_MODEL_ID)
+
     llm = HuggingFacePipeline.from_model_id(
-        model_id=os.path.join(CACHE_DIR, LLM_MODEL_ID),
+        model_id=model_dir,
         task="text-generation",
         backend="openvino",
         model_kwargs={
@@ -21,7 +23,7 @@ def initialize_llm():
             "ov_config": {
                 "PERFORMANCE_HINT": "LATENCY",
                 "NUM_STREAMS": "1",
-                "CACHE_DIR": os.path.join(CACHE_DIR, LLM_MODEL_ID, "model_cache"),
+                "CACHE_DIR": os.path.join(model_dir, "model_cache"),
             },
             "trust_remote_code": True,
         },
