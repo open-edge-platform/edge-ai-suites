@@ -23,7 +23,7 @@ The three demo monitors are only examples — the platform is use-case-agnostic,
    Rule Path:    defaultRuleEvaluator        (or evaluate_rules.py on the custom path)
    ```
 
-4. **The agent registers it.** It drafts the four-section VLM prompt (plus `evaluate_rules.py` on the custom path), then calls `smartbuilding_use_case_register` in two steps — `action=register_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema and rejects the registration with a diff if they mismatch, so the agent fixes and retries instead of leaving a half-wired use case.
+4. **The agent registers it.** It drafts the four-section VLM prompt (plus `evaluate_rules.py` on the custom path), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema and rejects the registration with a diff if they mismatch, so the agent fixes and retries instead of leaving a half-wired use case.
 
 5. **Bind a camera (optional).** If you supplied a stream URL, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the flow; otherwise add one later — see step 2 in [Run a clean, use-case-free server](../get-started.md#run-a-clean-use-case-free-server).
 

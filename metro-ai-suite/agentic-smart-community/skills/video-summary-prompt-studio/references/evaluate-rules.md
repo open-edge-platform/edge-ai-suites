@@ -12,7 +12,7 @@ Contract:
   extensions). The register consistency gate rejects rule files that read
   undeclared fields (`rule_fields_not_in_schema`).
 - Generate it from the LOCAL_PROMPT output fields and the Final Schema.
-- Pass its path as `evaluate_rules_path` to step 1 (`action=register_task`).
+- Pass its path as `evaluate_rules_path` to step 1 (`action=generate_task`).
   The file may live anywhere — the server stages it to
   `use-cases/<use_case>/evaluate_rules.py` in its repo, smoke-tests the staged
   copy, and persists that path into config.

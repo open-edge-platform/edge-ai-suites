@@ -8,7 +8,7 @@ import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
 export interface UseCaseRegisterParams {
-  action: "register" | "register_task" | "unregister";
+  action: "register" | "generate_task" | "unregister";
   use_case: string;
   video_summary_task?: string;
   description?: string;
@@ -47,7 +47,7 @@ export interface UseCaseRegisterDeps {
 }
 
 export interface UseCaseRegisterResult {
-  action: "register" | "register_task" | "unregister";
+  action: "register" | "generate_task" | "unregister";
   use_case: string;
   ok: boolean;
   /**
@@ -436,7 +436,7 @@ export async function useCaseRegister(
     return await unregister(params, deps, result);
   }
 
-  if (params.action === "register_task") {
+  if (params.action === "generate_task") {
     return await registerTaskOnly(params, deps, result);
   }
 
@@ -487,7 +487,7 @@ export async function useCaseRegister(
     // persisting a half-baked entry.
     result.errors.push(
       `prompt_text not provided and no use-cases/${params.use_case}/prompt.md found — ` +
-      `do NOT retry register with the same empty args. Call action="register_task" first ` +
+      `do NOT retry register with the same empty args. Call action="generate_task" first ` +
       `(it registers the VLM task and writes use-cases/${params.use_case}/prompt.md to disk), ` +
       `then retry action="register" (prompt_text may then be omitted; it is auto-read from disk). ` +
       `Alternatively pass prompt_text directly.`,
@@ -725,13 +725,13 @@ async function registerTaskOnly(
     return result;
   }
 
-  // prompt_text is mandatory here — register_task is the one place the full prompt is
+  // prompt_text is mandatory here — generate_task is the one place the full prompt is
   // supplied. It deliberately does NOT auto-read use-cases/<uc>/prompt.md (that is
   // phase 2's job); a missing prompt is a terminal error, not a silent bounce.
   const promptText = params.prompt_text;
   if (!promptText) {
     result.errors.push(
-      `action="register_task" requires prompt_text (the full 4-section prompt) — it does ` +
+      `action="generate_task" requires prompt_text (the full 4-section prompt) — it does ` +
       `not auto-read from disk. Pass prompt_text; on success it is POSTed to the VLM ` +
       `service and written to use-cases/${params.use_case}/prompt.md.`,
     );

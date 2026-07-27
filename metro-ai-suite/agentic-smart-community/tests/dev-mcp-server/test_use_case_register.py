@@ -13,7 +13,7 @@ and passing registers get past the gate (steps.consistency.consistent == true)
 before the (expected) VLM POST failure to the unreachable stub URL.
 
 T11+ start a local stub VLM service (POST/GET/PATCH /v1/tasks) and verify the
-evaluate_rules staging: register_task copies the caller's rules file into
+evaluate_rules staging: generate_task copies the caller's rules file into
 use-cases/<uc>/evaluate_rules.py, register auto-discovers it and persists the
 conventional ABSOLUTE path into config.yaml, conflicting content without
 overwrite is rejected pre-flight, and same-content re-runs report "unchanged".
@@ -299,42 +299,41 @@ video_summary_max_concurrent: 1
         c5 = r5.get("steps", {}).get("consistency", {})
         t.check(c5.get("consistent") is True, "T5 report-only empty schema: consistency.consistent == true (gate passed)")
 
-        # ── T6: register_task passes the gate, then fails at the (unreachable) VLM POST ──
-        # 落盘 must NOT happen when the VLM task registration fails ("注册成功后落盘").
+        # ── T6: generate_task passes the gate, then fails at the (unreachable) VLM POST ──
         r6 = client.register({
-            "action": "register_task", "use_case": "pet_task_ok",
+            "action": "generate_task", "use_case": "pet_task_ok",
             "prompt_text": GOOD_PET_PROMPT,
             "schema_extensions": ext(("pet_zone", False)),
             "evaluate_rules_path": str(rules_path),
         })
         c6 = r6.get("steps", {}).get("consistency", {})
-        t.check(c6.get("consistent") is True, "T6 register_task: consistency gate passed")
+        t.check(c6.get("consistent") is True, "T6 generate_task: consistency gate passed")
         t.check(c6.get("schema_fields") == ["severity", "event", "desc", "pet_zone"], "T6: final schema is base + pet_zone")
         t.check(r6.get("ok") is False, "T6: ok == false (stub VLM unreachable)")
         t.check("vlm_task" not in r6.get("steps", {}), "T6: VLM POST failed — steps.vlm_task absent")
         t.check("artifacts" not in r6.get("steps", {}), "T6: no 落盘 before VLM success — steps.artifacts absent")
         t.check(any("VLM task registration failed" in e for e in r6.get("errors", [])), "T6: error names VLM POST failure")
 
-        # ── T7: register_task with a JSON prompt → gate REJECTS, zero side effects ──
+        # ── T7: generate_task with a JSON prompt → gate REJECTS, zero side effects ──
         r7 = client.register({
-            "action": "register_task", "use_case": "pet_task_broken",
+            "action": "generate_task", "use_case": "pet_task_broken",
             "prompt_text": BROKEN_JSON_PROMPT,
             "schema_extensions": ext(("motion_direction", False), ("pet_confined", False), ("aggressive_behavior", False)),
             "evaluate_rules_path": str(rules_path),
         })
         c7 = r7.get("steps", {}).get("consistency", {})
-        t.check(r7.get("ok") is False, "T7 register_task broken(JSON+mismatch): ok == false")
+        t.check(r7.get("ok") is False, "T7 generate_task broken(JSON+mismatch): ok == false")
         t.check(c7.get("consistent") is False, "T7: consistency.consistent == false")
         t.check(len(c7.get("format_violations", [])) > 0, "T7: JSON-output format violation reported")
         t.check("vlm_task" not in r7.get("steps", {}), "T7: ZERO side effect — no VLM POST (steps.vlm_task absent)")
         t.check("artifacts" not in r7.get("steps", {}), "T7: ZERO side effect — no 落盘 (steps.artifacts absent)")
 
-        # ── T8: register_task requires prompt_text — terminal error, never auto-reads ──
+        # ── T8: generate_task requires prompt_text — terminal error, never auto-reads ──
         r8 = client.register({
-            "action": "register_task", "use_case": "pet_task_noprompt",
+            "action": "generate_task", "use_case": "pet_task_noprompt",
             "schema_extensions": ext(("pet_zone", False)),
         })
-        t.check(r8.get("ok") is False, "T8 register_task missing prompt_text: ok == false")
+        t.check(r8.get("ok") is False, "T8 generate_task missing prompt_text: ok == false")
         t.check(any("requires prompt_text" in e for e in r8.get("errors", [])), "T8: error tells caller to pass prompt_text")
 
         # ── T9: register WITHOUT schema_extensions → schema inferred from prompt KEY: lines ──
@@ -368,14 +367,14 @@ video_summary_max_concurrent: 1
         vlm.start()
         staged_rules = tmp / "use-cases" / "pet_staged" / "evaluate_rules.py"
         try:
-            # ── T11: register_task stages evaluate_rules.py into use-cases/<uc>/ ──
+            # ── T11: generate_task stages evaluate_rules.py into use-cases/<uc>/ ──
             r11 = client.register({
-                "action": "register_task", "use_case": "pet_staged",
+                "action": "generate_task", "use_case": "pet_staged",
                 "prompt_text": GOOD_PET_PROMPT,
                 "evaluate_rules_path": str(rules_path),
             })
             a11 = r11.get("steps", {}).get("artifacts", {})
-            t.check(r11.get("ok") is True, f"T11 register_task with stub VLM up: ok == true (errors: {r11.get('errors')})")
+            t.check(r11.get("ok") is True, f"T11 generate_task with stub VLM up: ok == true (errors: {r11.get('errors')})")
             t.check(r11.get("steps", {}).get("vlm_task") == "registered", "T11: VLM task registered via stub")
             t.check(a11.get("evaluate_rules_py") == "written", "T11: rules file staged (artifacts.evaluate_rules_py == 'written')")
             t.check(staged_rules.exists(), "T11: staged file exists at use-cases/pet_staged/evaluate_rules.py")
@@ -401,7 +400,7 @@ video_summary_max_concurrent: 1
             other_rules = tmp / "other_rules.py"
             other_rules.write_text(GOOD_PET_RULES.replace("pet_normal", "pet_calm"))
             r13 = client.register({
-                "action": "register_task", "use_case": "pet_staged",
+                "action": "generate_task", "use_case": "pet_staged",
                 "prompt_text": GOOD_PET_PROMPT,
                 "evaluate_rules_path": str(other_rules),
             })
@@ -412,7 +411,7 @@ video_summary_max_concurrent: 1
 
             # ── T14: same-content re-run → artifacts report "unchanged" ──
             r14 = client.register({
-                "action": "register_task", "use_case": "pet_staged",
+                "action": "generate_task", "use_case": "pet_staged",
                 "prompt_text": GOOD_PET_PROMPT,
                 "evaluate_rules_path": str(rules_path),
             })

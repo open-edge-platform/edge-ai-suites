@@ -200,7 +200,7 @@ to help locate the fix.
 
 Manage a use case's lifecycle at runtime, **without restarting the server**.
 
-- `action: register_task` — step 1 of the recommended two-step flow: run the schema↔prompt
+- `action: generate_task` — step 1 of the recommended two-step flow: run the schema↔prompt
   consistency check, `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
   and on success write `use-cases/<use_case>/prompt.md` to disk. On the custom rule path,
   pass `evaluate_rules_path`; the tool reads that file for the consistency check, stages it to
@@ -211,7 +211,7 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   (3) inject the entry into the in-memory `use_case_dict` so the task-poller and other tools see
   it, (4) re-run `use_case_validate`. With `persist: true`, also writes the entry back to
   `config.yaml` (comment-preserving). As step 2 of the two-step flow, omit `prompt_text` — it is
-  auto-read from the file `register_task` wrote. If `evaluate_rules_path` is supplied it is staged
+  auto-read from the file `generate_task` wrote. If `evaluate_rules_path` is supplied it is staged
   to `use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
   e.g. staged by step 1), and that conventional absolute path is stored in `config.yaml` for
   runtime rule execution.
@@ -228,14 +228,14 @@ Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with t
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `action` | enum | ✅ | `register` \| `register_task` \| `unregister` |
+| `action` | enum | ✅ | `register` \| `generate_task` \| `unregister` |
 | `use_case` | string | ✅ | Key matching `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | — | VLM task name (default `<use_case>_monitor`; must not collide with builtins) |
 | `description` | string | — | Human description shown by `/v1/tasks` |
 | `evaluate_rules_path` | string | — | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
 | `reports` | object | — | `{ data_source, default_type, filter }` |
 | `summarize` | object | — | Per-clip summarize config `{ method, processor_kwargs }` |
-| `prompt_text` | string | ✅ for `register_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `use-cases/<use_case>/prompt.md` |
+| `prompt_text` | string | ✅ for `generate_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `use-cases/<use_case>/prompt.md` |
 | `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from the prompt's `KEY:` output lines |
 | `overwrite` | boolean | — | Replace an existing entry (default false) |
 | `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default false) |

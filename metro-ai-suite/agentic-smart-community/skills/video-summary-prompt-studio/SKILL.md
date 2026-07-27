@@ -55,7 +55,7 @@ The pipeline, end to end:
     user gives name + description
       → Q1/Q2 dialogue fixes the Final Schema   (skill layer — the code never sees it)
       → you draft the prompt (LOCAL's KEY lines = the Final Schema, expressed)
-      → register_task: gate checks prompt KEYs ↔ schema → POST VLM task → write prompt.md
+      → generate_task: gate checks prompt KEYs ↔ schema → POST VLM task → write prompt.md
       → register:      gate re-checks → ALTER schema → use_case_dict → config.yaml
 
 Unsure where something belongs? Ask: is it something to *detect* (→ an EVENT
@@ -358,7 +358,7 @@ Tool: `smartbuilding_use_case_register`. Common arguments: `use_case`,
 `description` (one-line **English** summary), `persist: true`,
 `overwrite: false` unless updating.
 
-- **Step 1 — `action=register_task`**: pass `prompt_text` (the full Markdown,
+- **Step 1 — `action=generate_task`**: pass `prompt_text` (the full Markdown,
   no code fences) and — **only on the custom rule path** —
   `evaluate_rules_path` pointing at the Python rule file (any location; the
   server stages it into its repo). Runs the consistency gate, registers the

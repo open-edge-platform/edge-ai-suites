@@ -337,7 +337,7 @@ export function registerTools(
       "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
-      "(step 1) action=register_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
+      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
       "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
       "evaluate_rules.py is staged to use-cases/<use_case>/evaluate_rules.py). " +
@@ -355,9 +355,9 @@ export function registerTools(
       "(2) POST /v1/tasks to multilevel-video-understanding (auto-PATCH on 409), " +
       "(3) inject the entry into in-memory use_case_dict so task-poller / other tools see it, " +
       "(4) re-run use_case_validate. prompt_text may be omitted; it is then auto-read from " +
-      "use-cases/<use_case>/prompt.md (e.g. the file register_task wrote). When persist=true, also " +
+      "use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote). When persist=true, also " +
       "writes the entry back to config.yaml (comment-preserving via yaml.Document). " +
-      "action=register_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
+      "action=generate_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
       "(step 1 above); prompt_text is REQUIRED and is never auto-read. " +
       "action=unregister: DELETE /v1/tasks/<name> and remove " +
       "from use_case_dict; also deletes the yaml entry if persist=true. Skipped (with a warning) " +
@@ -374,7 +374,7 @@ export function registerTools(
       "use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
       "conventional absolute path is stored in config.yaml for runtime rule execution.",
     inputSchema: {
-      action: z.enum(["register", "register_task", "unregister"]).describe("register | register_task | unregister"),
+      action: z.enum(["register", "generate_task", "unregister"]).describe("register | generate_task | unregister"),
       use_case: z.string().describe("Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/)"),
       video_summary_task: z.string().optional().describe(
         "VLM task name (default: <use_case>_monitor). Must not collide with VLM builtins."
@@ -389,9 +389,9 @@ export function registerTools(
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
       prompt_text: z.string().optional().describe(
         "Full prompt text (Markdown with ## LOCAL_PROMPT sections, OR a raw 4-const Python source). " +
-        "REQUIRED for action=register_task (it is POSTed to the VLM task and written to " +
+        "REQUIRED for action=generate_task (it is POSTed to the VLM task and written to " +
         "use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
-        "auto-read from use-cases/<use_case>/prompt.md (e.g. the file register_task wrote); when " +
+        "auto-read from use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote); when " +
         "provided with persist=true it is (re)saved there. " +
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
