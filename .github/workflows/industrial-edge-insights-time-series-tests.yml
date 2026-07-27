@@ -261,10 +261,11 @@ jobs:
 
       - name: Generate Helm charts for Time Series Sample Apps
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
+        env:
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
         run: |
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
 
-          TESTS="${{ inputs.tests || env.DEFAULT_TESTS }}"
           if echo "$TESTS" | grep -qwE "all-tests|timeseries-all|timeseries-functional|test_helm_deployment_wind_turbine|test_helm_influxdb_retention|test_docker_helm_deployment_security|test_GPU_helm"; then
             echo "Generating Helm chart package for wind-turbine-anomaly-detection..."
             make gen_helm_charts_targz app=wind-turbine-anomaly-detection
@@ -274,9 +275,9 @@ jobs:
 
       - name: Pull Helm charts from OCI registry
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'no' }}
+        env:
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
         run: |
-          TESTS="${{ inputs.tests || env.DEFAULT_TESTS }}"
-
           # Pull the chart .tgz straight into the helm-packages directory used by tests.
           pull_chart() {
             local oci_ref="$1"
