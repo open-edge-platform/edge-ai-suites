@@ -1,0 +1,17 @@
+# Extend Functionality
+
+This is just a dummy index used to enable building the documentation as part of the CI/CD
+pipeline and allow for sections in the main How-to Guides page.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Publish Frames to S3 Storage <./store-frames-in-s3.md>
+Publish Frames to OPC UA Server <./use-opcua-publisher.md>
+Enable MLOps <./enable-mlops.md>
+Start MQTT Publisher <./start-mqtt-publisher.md>
+View Telemetry Data <./view-telemetry-data.md>
+
+:::
+hide_directive-->

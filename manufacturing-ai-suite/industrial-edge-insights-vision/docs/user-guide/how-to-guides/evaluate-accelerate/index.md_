@@ -1,0 +1,15 @@
+# Evaluate and Accelerate
+
+This is just a dummy index used to enable building the documentation as part of the CI/CD
+pipeline and allow for sections in the main How-to Guides page.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Use GPU For Inference <./use-gpu-for-inference.md>
+Use NPU For Inference <./use-npu-for-inference.md>
+Run Benchmarks <./benchmark.md>
+
+:::
+hide_directive-->

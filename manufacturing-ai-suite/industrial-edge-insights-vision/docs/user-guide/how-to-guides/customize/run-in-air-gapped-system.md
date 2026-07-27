@@ -4,7 +4,7 @@ This guide explains how to run Vision AI Detection Apps in an environment withou
 
 ## Prerequisites
 
-- Complete all steps in the **Set up the application** section of [Get Started](../get-started.md) while connected to the internet. This ensures all required models and videos are pre-downloaded before running in an air-gapped system.
+- Complete all steps in the **Set up the application** section of [Get Started](../../get-started.md) while connected to the internet. This ensures all required models and videos are pre-downloaded before running in an air-gapped system.
 - Ensure all required Docker images are pre-pulled while connected to the internet, as they cannot be downloaded in an air-gapped system.
 
 ## Configure for Air-Gapped System

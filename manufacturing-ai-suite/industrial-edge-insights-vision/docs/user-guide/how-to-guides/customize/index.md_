@@ -1,0 +1,19 @@
+# Customize
+
+This is just a dummy index used to enable building the documentation as part of the CI/CD
+pipeline and allow for sections in the main How-to Guides page.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Run Multiple Apps <./run-multiple-apps.md>
+Manage Pipelines <./manage-pipelines.md>
+Run Multiple AI Pipelines <./run-multiple-ai-pipelines.md>
+Run in an Air-Gapped System <./run-in-air-gapped-system.md>
+Use Your Own Model and Video <./use-your-ai-model-and-video.md>
+Change Video Source <./change-input-video-source.md>
+Scale Video Resolution <./scale-video-resolution.md>
+
+:::
+hide_directive-->

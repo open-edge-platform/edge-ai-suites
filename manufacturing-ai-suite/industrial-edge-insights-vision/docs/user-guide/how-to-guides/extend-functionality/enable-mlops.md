@@ -193,13 +193,13 @@ hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
    <!--hide_directive :sync: pallet-detect hide_directive-->
 
-   ![WebRTC streaming](../_assets/pdd-webrtc-streaming.png)
+   ![WebRTC streaming](../../_assets/pdd-webrtc-streaming.png)
 
    <!--hide_directive ::: hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
-   ![WebRTC streaming](../_assets/pcb-webrtc-streaming.png)
+   ![WebRTC streaming](../../_assets/pcb-webrtc-streaming.png)
 
    <!--hide_directive
    :::
@@ -310,6 +310,6 @@ hide_directive-->
 
 ### Downloading models from Geti™ Server
 
-To learn how to download models from a running Geti™ server, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
+To learn how to download models from a running Geti™ server, see the [Model Download service documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 
 > **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.

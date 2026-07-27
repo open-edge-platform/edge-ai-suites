@@ -7,7 +7,7 @@ optimal stream density and performance characteristics.
 
 ### Prerequisites
 
-> **Note:** Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
+> **Note:** Ensure the application is set up and running. Refer to the [Get Started Guide](../../get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
 - `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed

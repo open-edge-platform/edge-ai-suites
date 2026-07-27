@@ -6,7 +6,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 > **Note:** For the purpose of this demonstration, we will be using MinIO as the S3 storage. The necessary compose configuration for MinIO microservice is already part of the Docker Compose file.
 
-1. Setup the application to use the docker based deployment following this [document](../get-started.md#set-up-the-application).
+1. Setup the application to use the docker based deployment following this [document](../../get-started.md#set-up-the-application).
 
 2. Bring up the containers.
 
@@ -132,4 +132,4 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
     > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
-   ![S3 minio image storage](../_assets/s3-minio-storage.png)
+   ![S3 minio image storage](../../_assets/s3-minio-storage.png)
