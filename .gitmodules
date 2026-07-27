@@ -79,7 +79,7 @@
 	shallow = true
 [submodule "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"]
 	path = education-ai-suite/ai-teaching-assistant/edge-ai-libraries
-	url = https://github.com/suryam789/edge-ai-libraries.git
+	url = https://github.com/open-edge-platform/edge-ai-libraries.git
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
-	url = https://github.com/suryam789/voice-enabled-interactions.git
+	url = https://github.com/intel-retail/voice-enabled-interactions.git
