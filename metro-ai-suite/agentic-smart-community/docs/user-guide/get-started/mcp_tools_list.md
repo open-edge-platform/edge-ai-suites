@@ -215,8 +215,12 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   to `use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
   e.g. staged by step 1), and that conventional absolute path is stored in `config.yaml` for
   runtime rule execution.
-- `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict` (also deletes
-  the yaml entry when `persist: true`).
+- `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict`. The VLM
+  delete is skipped when another use case shares the task. Every referencing monitor is detached
+  (worker stopped, analytics source removed, DB row left offline with history retained). With
+  `persist: true`, the entries are also removed from `config.yaml` and `monitors.yaml`, then
+  `use-cases/<use_case>/` is moved to `use-cases/.backup/`. Incomplete cleanup keeps `ok: true`
+  for the removed in-memory entry but sets `degraded: true` and explains the failure in `warnings`.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
 `video-summary-prompt-studio` skill, then pass it via `prompt_text` (or let register auto-read

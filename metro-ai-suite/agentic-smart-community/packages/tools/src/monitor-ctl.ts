@@ -386,13 +386,19 @@ export async function detachMonitor(
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: { monitor_id: string; monitors_path?: string; persist?: boolean },
-): Promise<{ monitor_id: string; detached: boolean } & PersistOutcome> {
+): Promise<{
+  monitor_id: string;
+  detached: boolean;
+  analytics_source: "deleted_or_absent" | "failed";
+  analytics_error?: string;
+} & PersistOutcome> {
   const monitorId = params.monitor_id;
   if (workerService.workers.has(monitorId)) {
     await workerService.stop(monitorId);
   }
-  await analyticsDelete(analyticsBaseUrl, monitorId).catch(() => {
-    /* non-fatal: VSA unreachable / already gone — cleanup still proceeds */
+  let analyticsError: string | undefined;
+  await analyticsDelete(analyticsBaseUrl, monitorId).catch((err: unknown) => {
+    analyticsError = err instanceof Error ? err.message : String(err);
   });
   if (db.getMonitor(monitorId)) {
     db.updateMonitorStatus(monitorId, "offline");
@@ -401,5 +407,11 @@ export async function detachMonitor(
   if (params.persist) {
     persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, null);
   }
-  return { monitor_id: monitorId, detached: true, ...persistOutcome };
+  return {
+    monitor_id: monitorId,
+    detached: true,
+    analytics_source: analyticsError ? "failed" : "deleted_or_absent",
+    ...(analyticsError ? { analytics_error: analyticsError } : {}),
+    ...persistOutcome,
+  };
 }

@@ -360,10 +360,15 @@ export function registerTools(
       "action=register_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
       "(step 1 above); prompt_text is REQUIRED and is never auto-read. " +
       "action=unregister: DELETE /v1/tasks/<name> and remove " +
-      "from use_case_dict; also deletes the yaml entry if persist=true. When persist=true, " +
-      "unregister additionally CASCADES to every monitor referencing this use case: stops its " +
-      "worker, deletes its videostream-analytics source, and strips it from monitors.yaml — DB " +
-      "history (alerts/tasks/events/recordings) is kept and the monitor row is left offline. " +
+      "from use_case_dict; also deletes the yaml entry if persist=true. Skipped (with a warning) " +
+      "when another use case still references the same VLM task. Any incomplete cleanup (VLM " +
+      "delete, config update, artifact archive, or monitor detach) sets degraded=true with " +
+      "details in warnings. Unregister always CASCADES to every monitor referencing " +
+      "this use case: stops its worker, deletes its videostream-analytics source, and marks the " +
+      "DB row offline (DB history — alerts/tasks/events/recordings — is kept); with persist=true " +
+      "the monitor is additionally stripped from monitors.yaml, and the use case's on-disk " +
+      "artifacts (use-cases/<uc>/prompt.md, evaluate_rules.py) are archived by moving them to " +
+      "use-cases/.backup/<uc>/ so a later re-register does not auto-read stale files. " +
       "For action=register, if prompt_text is provided with persist=true it is saved to " +
       "use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
       "use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
@@ -426,25 +431,34 @@ export function registerTools(
         baseDir: config.configPath ? dirname(resolve(config.configPath)) : process.cwd(),
       });
 
-      // Cascade on unregister+persist: detach every monitor referencing this use
-      // case (stop worker + delete VSA source + strip from monitors.yaml), keeping
-      // DB history. Mirrors register_source persist which writes monitors.yaml —
-      // without this, unregistering a use case would leave orphan monitors whose
-      // use_case no longer exists (task-poller then errors on the next poll).
-      if (params.action === "unregister" && params.persist && result.ok) {
+      // Cascade on unregister: detach every monitor referencing this use case
+      // (stop worker + delete VSA source + mark the DB row offline, history kept).
+      // This is independent of persist — without it, an in-memory unregister would
+      // leave orphan monitors whose use_case no longer exists (task-poller then
+      // errors on the next poll). persist only controls whether the monitor is
+      // also stripped from monitors.yaml.
+      if (params.action === "unregister" && result.ok) {
         const affected = db.listMonitors().filter((m) => m.useCase === params.use_case);
         const cascaded: unknown[] = [];
         for (const m of affected) {
           try {
-            cascaded.push(
-              await detachMonitor(db, config.videostreamAnalytics.url, workerService, {
-                monitor_id: m.id,
-                monitors_path: config.monitorsPath,
-                persist: true,
-              }),
-            );
+            const detached = await detachMonitor(db, config.videostreamAnalytics.url, workerService, {
+              monitor_id: m.id,
+              monitors_path: config.monitorsPath,
+              persist: params.persist === true,
+            });
+            cascaded.push(detached);
+            if (detached.analytics_source === "failed") {
+              result.degraded = true;
+              result.warnings.push(
+                `monitor "${m.id}" analytics source cleanup failed: ${detached.analytics_error}`,
+              );
+            }
           } catch (e: any) {
-            cascaded.push({ monitor_id: m.id, detached: false, error: e?.message ?? String(e) });
+            const error = e?.message ?? String(e);
+            cascaded.push({ monitor_id: m.id, detached: false, error });
+            result.degraded = true;
+            result.warnings.push(`monitor "${m.id}" cascade detach failed: ${error}`);
           }
         }
         (result as any).cascaded_monitors = cascaded;

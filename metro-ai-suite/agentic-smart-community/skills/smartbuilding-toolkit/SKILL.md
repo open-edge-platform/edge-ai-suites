@@ -175,6 +175,11 @@ say it's unclear rather than guessing.
 
 **Two-phase confirmation for destructive actions.** These change or tear down state —
 first explain what will happen and get explicit user confirmation, then execute:
+- `smartbuilding_use_case_register action=unregister` — the heaviest teardown: deletes the
+  VLM task, removes the `use_case_dict` entry, cascades to every monitor on the use case
+  (stop worker + delete analytics source + DB row offline), and with `persist=true` strips
+  config.yaml/monitors.yaml and archives `use-cases/<uc>/` to `use-cases/.backup/`;
+  inspect `degraded` and `warnings` for any cleanup that did not complete
 - `smartbuilding_monitor_ctl action=stop | unregister`
 - `smartbuilding_monitors_compose action=down | restart`
 - `smartbuilding_plan_ctl action=delete`

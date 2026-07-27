@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
@@ -50,6 +50,12 @@ export interface UseCaseRegisterResult {
   action: "register" | "register_task" | "unregister";
   use_case: string;
   ok: boolean;
+  /**
+   * unregister only: true when the use_case_dict entry was removed but some
+   * best-effort cleanup failed (e.g. the VLM task DELETE errored), so the
+   * caller should surface the warnings instead of reporting a clean removal.
+   */
+  degraded?: boolean;
   steps: {
     use_case_dict?: "added" | "updated" | "removed" | "skipped";
     vlm_task?: "registered" | "updated" | "unchanged" | "deleted" | "skipped";
@@ -63,6 +69,8 @@ export interface UseCaseRegisterResult {
     artifacts?: {
       prompt_md?: "written" | "unchanged" | "skipped";
       evaluate_rules_py?: "written" | "unchanged" | "skipped";
+      /** unregister+persist only: where use-cases/<uc>/ was moved to. */
+      archived_to?: string;
     };
   };
   warnings: string[];
@@ -903,30 +911,52 @@ async function unregister(
     return result;
   }
 
-  const taskName: string = cfg.video_summary_task;
+  const taskName: string | undefined = cfg.video_summary_task;
 
-  try {
-    const resp = await fetch(`${deps.summaryServiceUrl}/v1/tasks/${taskName}`, {
-      method: "DELETE",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (resp.status === 403) {
-      result.warnings.push(
-        `VLM task "${taskName}" is a builtin (immutable) — not deleted; use_case_dict entry still removed`,
-      );
-      result.steps.vlm_task = "skipped";
-    } else if (resp.status === 404) {
-      result.warnings.push(`VLM task "${taskName}" already absent`);
-      result.steps.vlm_task = "skipped";
-    } else if (!resp.ok) {
-      result.warnings.push(`VLM task "${taskName}" delete returned HTTP ${resp.status}`);
-      result.steps.vlm_task = "skipped";
-    } else {
-      result.steps.vlm_task = "deleted";
-    }
-  } catch (err: any) {
-    result.warnings.push(`VLM task delete error: ${err.message}`);
+  // Shared-task guard: if another use case references the SAME video_summary_task,
+  // the task must outlive this entry — skip the DELETE instead of pulling the task
+  // out from under the sibling use case.
+  const sharedBy = Object.entries(deps.useCaseDict)
+    .filter(([key, entry]: [string, any]) => key !== params.use_case && entry?.video_summary_task === taskName)
+    .map(([key]) => key);
+
+  if (!taskName) {
+    result.warnings.push(
+      `use case "${params.use_case}" has no video_summary_task; no VLM task could be deleted`,
+    );
     result.steps.vlm_task = "skipped";
+    result.degraded = true;
+  } else if (sharedBy.length > 0) {
+    result.warnings.push(
+      `VLM task "${taskName}" is still referenced by use case(s) [${sharedBy.join(", ")}] — not deleted; use_case_dict entry still removed`,
+    );
+    result.steps.vlm_task = "skipped";
+  } else {
+    try {
+      const resp = await fetch(`${deps.summaryServiceUrl}/v1/tasks/${encodeURIComponent(taskName)}`, {
+        method: "DELETE",
+        signal: AbortSignal.timeout(5000),
+      });
+      if (resp.status === 403) {
+        result.warnings.push(
+          `VLM task "${taskName}" is a builtin (immutable) — not deleted; use_case_dict entry still removed`,
+        );
+        result.steps.vlm_task = "skipped";
+      } else if (resp.status === 404) {
+        result.warnings.push(`VLM task "${taskName}" already absent`);
+        result.steps.vlm_task = "skipped";
+      } else if (!resp.ok) {
+        result.warnings.push(`VLM task "${taskName}" delete returned HTTP ${resp.status} — the task may still exist on the VLM service`);
+        result.steps.vlm_task = "skipped";
+        result.degraded = true;
+      } else {
+        result.steps.vlm_task = "deleted";
+      }
+    } catch (err: any) {
+      result.warnings.push(`VLM task "${taskName}" delete error: ${err.message} — the task may still exist on the VLM service`);
+      result.steps.vlm_task = "skipped";
+      result.degraded = true;
+    }
   }
 
   delete deps.useCaseDict[params.use_case];
@@ -939,10 +969,56 @@ async function unregister(
       null,
       result.warnings,
     );
+    if (result.steps.config_yaml === "removed") {
+      // Archive only after the persistent entry is gone. Otherwise a restart
+      // would restore a use case whose prompt/rules were moved out from under it.
+      const archive = archiveUseCaseArtifacts(deps.baseDir ?? process.cwd(), params.use_case);
+      if (archive.archivedTo) {
+        ensureArtifactsStep(result).archived_to = archive.archivedTo;
+        result.warnings.push(`artifacts archived: ${archive.archivedTo}`);
+      } else if (archive.error) {
+        result.warnings.push(`artifact archive failed: ${archive.error}`);
+        result.degraded = true;
+      }
+    } else {
+      result.warnings.push(
+        "artifact archive skipped because the config.yaml entry was not removed",
+      );
+      result.degraded = true;
+    }
   }
 
   result.ok = true;
   return result;
+}
+
+/**
+ * Archive a use case's on-disk artifacts by moving `use-cases/<uc>/` into
+ * `use-cases/.backup/<uc>/` (timestamped on collision) rather than deleting it —
+ * the tree stays recoverable, but a later register of the same use case no longer
+ * auto-reads stale prompt.md / auto-discovers stale evaluate_rules.py. The move is
+ * within the same parent tree, so renameSync never crosses filesystems.
+ * Non-throwing: returns the archive path or an error for the caller to report.
+ */
+function archiveUseCaseArtifacts(
+  baseDir: string,
+  useCase: string,
+): { archivedTo?: string; error?: string } {
+  const src = join(baseDir, "use-cases", useCase);
+  if (!existsSync(src)) return {};
+  const backupDir = join(baseDir, "use-cases", ".backup");
+  let dst = join(backupDir, useCase);
+  if (existsSync(dst)) {
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    dst = join(backupDir, `${useCase}.${stamp}`);
+  }
+  try {
+    mkdirSync(backupDir, { recursive: true });
+    renameSync(src, dst);
+    return { archivedTo: dst };
+  } catch (err: any) {
+    return { error: `${src} -> ${dst}: ${err?.message ?? String(err)}` };
+  }
 }
 
 /**
