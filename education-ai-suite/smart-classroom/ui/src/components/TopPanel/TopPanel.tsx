@@ -11,8 +11,8 @@ interface TopPanelProps {
   setProjectName: (name: string) => void;
   isSettingsOpen: boolean;
   setIsSettingsOpen: (isOpen: boolean) => void;
-  activeScreen: 'main' | 'content-search';
-  setActiveScreen: (screen: 'main' | 'content-search') => void;
+  activeScreen: 'main' | 'content-search' | 'grading';
+  setActiveScreen: (screen: 'main' | 'content-search' | 'grading') => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSettingsOpen, setIsSettingsOpen, activeScreen, setActiveScreen }) => {
@@ -33,6 +33,36 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
   const closeSettings = () => {
     setIsSettingsOpen(false);
   };
+
+  if (activeScreen === 'grading') {
+    return (
+      <header className="top-panel">
+        <div className="brand-slot">
+          {isElectron && (
+            <button
+              className="app-menu-btn"
+              onClick={openAppMenu}
+              aria-label={t('menu.appMenu', 'Application menu')}
+              title={t('menu.appMenu', 'Application menu')}
+            >
+              &#9776;
+            </button>
+          )}
+          <img src={BrandSlot} alt="Intel Logo" className="logo" />
+          <span className="app-title">{t('grading.title', 'Grading')}</span>
+        </div>
+        <div className="action-slot">
+          <button
+            className="content-search-back-btn"
+            onClick={() => setActiveScreen('main')}
+          >
+            {t('grading.back', '← Back')}
+          </button>
+          <LanguageSwitcher />
+        </div>
+      </header>
+    );
+  }
 
   if (activeScreen === 'content-search') {
     return (
@@ -86,6 +116,12 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
           onClick={() => setActiveScreen('content-search')}
         >
           {t('contentSearch.title', 'Content Search')}
+        </button>
+        <button
+          className="content-search-btn"
+          onClick={() => setActiveScreen('grading')}
+        >
+          {t('grading.open', 'Grading')}
         </button>
         <LanguageSwitcher />
         <img
