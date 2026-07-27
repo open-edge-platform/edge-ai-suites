@@ -3,7 +3,7 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1000;
+  z-index: 10050;
 }
 
 .sidebar-menu-toggle {
@@ -53,6 +53,7 @@
   min-width: 220px;
   overflow: hidden;
   animation: slideIn 0.2s ease;
+  z-index: 10051;
 }
 
 @keyframes slideIn {

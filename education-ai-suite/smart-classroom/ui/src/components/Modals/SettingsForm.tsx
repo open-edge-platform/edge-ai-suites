@@ -38,10 +38,16 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [settings, devices] = await Promise.all([
-          getSettings(),
-          getAudioDevices()
-        ]);
+        // Only fetch audio devices if audio features are enabled
+        const settingsPromises: [Promise<any>, Promise<string[]>?] = [getSettings()];
+        if (hasAudioFeatures) {
+          settingsPromises.push(getAudioDevices());
+        }
+        
+        const results = await Promise.all(settingsPromises);
+        const settings = results[0];
+        const devices = hasAudioFeatures ? (results[1] || []) : [];
+        
         setAvailableDevices(devices);
         
         if (settings) {
@@ -51,24 +57,28 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           setBackCameraLocal(settings.backCamera || '');
           setBoardCameraLocal(settings.boardCamera || '');
         
-          if (settings.microphone && devices.includes(settings.microphone)) {
-            setSelectedMicrophone(settings.microphone);
-          } else if (devices.length > 0) {
-            setSelectedMicrophone(devices[0]);
-          } else {
-            setSelectedMicrophone('');
+          if (hasAudioFeatures) {
+            if (settings.microphone && devices.includes(settings.microphone)) {
+              setSelectedMicrophone(settings.microphone);
+            } else if (devices.length > 0) {
+              setSelectedMicrophone(devices[0]);
+            } else {
+              setSelectedMicrophone('');
+            }
           }
         } else {
           setFrontCameraLocal('');
           setBackCameraLocal('');
           setBoardCameraLocal('');
           
-          if (devices.length > 0) {
-            console.log('No saved settings, using first device:', devices[0]);
-            setSelectedMicrophone(devices[0]);
-          } else {
-            console.log('No saved settings and no devices available');
-            setSelectedMicrophone('');
+          if (hasAudioFeatures) {
+            if (devices.length > 0) {
+              console.log('No saved settings, using first device:', devices[0]);
+              setSelectedMicrophone(devices[0]);
+            } else {
+              console.log('No saved settings and no devices available');
+              setSelectedMicrophone('');
+            }
           }
         }
       } catch (error) {
@@ -82,7 +92,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     };
 
     loadSettings();
-  }, [setProjectName, t]);
+  }, [setProjectName, t, hasAudioFeatures]);
 
   const validateProjectName = () => {
     if (!projectName.trim()) {

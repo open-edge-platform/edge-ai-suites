@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "../../redux/hooks";
 import "../../assets/css/Timeline.css";
 
@@ -20,6 +21,7 @@ const SPEAKER_LABELS: Record<
 };
 
 const Timeline: React.FC = () => {
+  const { t } = useTranslation();
   const { segments, teacherSpeaker, totalDuration, detectedLanguage } =
     useAppSelector(s => s.transcript);
 
@@ -140,10 +142,10 @@ const Timeline: React.FC = () => {
     <div className="timeline-container">
       <div className="timeline-header">
         <h4 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '14px' }}>
-          {lang === "zh" ? "发言时间轴" : "Speaking Timeline"}
+          {t('accordion.speakingTimeline')}
         </h4>
         <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-          {lang === "zh" ? "总时长" : "Total Duration"}: {formatTime(maxDuration)}
+          {t('accordion.totalDuration')}: {formatTime(maxDuration)}
         </div>
       </div>
 

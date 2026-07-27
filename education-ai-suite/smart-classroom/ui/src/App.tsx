@@ -33,20 +33,30 @@ const App: React.FC = () => {
     ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'].some(f => guard.hasFeature(f)) : 
     true; // Default to true during loading
 
-  // Auto-switch to content-search screen if only content-search features are enabled
+  // Auto-switch to content-search or grading screen if only those features are enabled
   useEffect(() => {
     if (!featuresLoaded || !guard) return;
 
     const mainFeatures = ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'];
     const contentSearchFeatures = ['content_search', 'qa'];
+    const gradingFeatures = ['grading'];
 
     const hasMainFeature = mainFeatures.some(f => guard.hasFeature(f));
     const hasContentSearchFeature = contentSearchFeatures.some(f => guard.hasFeature(f));
+    const hasGradingFeature = gradingFeatures.some(f => guard.hasFeature(f));
 
-    // If only content-search features are enabled (no main features), auto-switch
-    if (!hasMainFeature && hasContentSearchFeature) {
-      console.log('📋 Only content-search features enabled - auto-switching to content-search screen');
-      setActiveScreen('content-search');
+    // If main features are disabled, auto-switch based on what's available
+    if (!hasMainFeature) {
+      // Prefer content-search if available (grading can coexist)
+      if (hasContentSearchFeature) {
+        console.log('📋 Main features disabled, content-search enabled - auto-switching to content-search screen');
+        setActiveScreen('content-search');
+      }
+      // Only switch to grading if content-search is not available
+      else if (hasGradingFeature) {
+        console.log('📝 Only grading feature enabled - auto-switching to grading screen');
+        setActiveScreen('grading');
+      }
     }
   }, [featuresLoaded, guard]);
   const checkBackendHealth = async () => {
@@ -91,8 +101,8 @@ const App: React.FC = () => {
       <div className="app-loading">
         <div className="loading-content">
           <div className="spinner" />
-          <h2>Checking backend status</h2>
-          <p>Please wait while we connect to the backend…</p>
+          <h2>{t('app.checkingBackendTitle')}</h2>
+          <p>{t('app.checkingBackendMessage')}</p>
         </div>
       </div>
     );
@@ -102,10 +112,9 @@ const App: React.FC = () => {
     return (
       <div className="app-error">
         <div className="error-content">
-          <h1>Backend Not Available</h1>
+          <h1>{t('app.backendUnavailableTitle')}</h1>
           <p>
-            The backend server is currently unreachable.
-            Please ensure it is running.
+            {t('app.backendUnavailableMessage')}
           </p>
         </div>
       </div>
@@ -118,8 +127,8 @@ const App: React.FC = () => {
       <div className="app-loading">
         <div className="loading-content">
           <div className="spinner" />
-          <h2>Loading configuration</h2>
-          <p>Detecting enabled features from backend…</p>
+          <h2>{t('app.loadingConfigTitle')}</h2>
+          <p>{t('app.loadingConfigMessage')}</p>
         </div>
       </div>
     );
@@ -129,9 +138,9 @@ const App: React.FC = () => {
     return (
       <div className="app-error">
         <div className="error-content">
-          <h1>Configuration Error</h1>
+          <h1>{t('app.configErrorTitle')}</h1>
           <p>{featuresError}</p>
-          <p>Please check your backend configuration.</p>
+          <p>{t('app.configErrorMessage')}</p>
         </div>
       </div>
     );
@@ -196,6 +205,7 @@ const App: React.FC = () => {
       <ReportPanel
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
+        featureGuard={guard}
       />
     </div>
   );

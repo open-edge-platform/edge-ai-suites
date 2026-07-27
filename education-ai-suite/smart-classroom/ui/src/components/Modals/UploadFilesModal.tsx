@@ -447,7 +447,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                 type="text"
                 value={baseDirectory}
                 onChange={(e) => setBaseDirectory(e.target.value)}
-                placeholder="Enter the base directory"
+                placeholder={t('uploadFiles.enterBaseDirectory')}
               />
             </div>
           )}
@@ -461,11 +461,11 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                   type="text"
                   value={audioFile?.name || ''}
                   readOnly
-                  placeholder="Select an audio file"
+                  placeholder={t('uploadFiles.selectAudioFile')}
                 />
                 <img
                   src={folderIcon}
-                  alt="Choose File"
+                  alt={t('uploadFiles.chooseFile')}
                   className="folder-icon"
                   onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
                 />
@@ -487,12 +487,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                     type="text"
                     value={frontVideoFullPath || frontCameraPath?.name || ''}
                     readOnly
-                    placeholder="Select a front camera file"
+                    placeholder={t('uploadFiles.selectFrontCameraFile')}
                     title={frontVideoFullPath || frontCameraPath?.name || ''}
                   />
                   <img
                     src={folderIcon}
-                    alt="Choose File"
+                    alt={t('uploadFiles.chooseFile')}
                     className="folder-icon"
                     onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
                   />
@@ -506,12 +506,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                     type="text"
                     value={rearVideoFullPath || rearCameraPath?.name || ''}
                     readOnly
-                    placeholder="Select a back camera file"
+                    placeholder={t('uploadFiles.selectBackCameraFile')}
                     title={rearVideoFullPath || rearCameraPath?.name || ''}
                   />
                   <img
                     src={folderIcon}
-                    alt="Choose File"
+                    alt={t('uploadFiles.chooseFile')}
                     className="folder-icon"
                     onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
                   />
@@ -525,12 +525,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                     type="text"
                     value={boardVideoFullPath || boardCameraPath?.name || ''}
                     readOnly
-                    placeholder="Select a board camera file"
+                    placeholder={t('uploadFiles.selectBoardCameraFile')}
                     title={boardVideoFullPath || boardCameraPath?.name || ''}
                   />
                   <img
                     src={folderIcon}
-                    alt="Choose File"
+                    alt={t('uploadFiles.chooseFile')}
                     className="folder-icon"
                     onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
                   />
