@@ -1,0 +1,104 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# values.yaml - Parent values for live-video-captioning-rag.
+#
+# This chart has two dependencies:
+# 1) live-video-captioning (LVC)
+# 2) live-video-captioning-rag (LVC-RAG)
+#
+# Use global.* for shared values used by both dependencies.
+# Use live-video-captioning.* to override live-video-captioning chart values.
+# Use live-video-captioning-rag.* to override live-video-captioning-rag service values.
+
+# Shared global values consumed by both dependency charts.
+global:
+  # Ensure RAG-related components in captioning-app are enabled.
+  enableRAG: true
+
+  nodeName: ""
+  hostIP: ""
+
+  httpProxy: ""
+  httpsProxy: ""
+  noProxy: ""
+
+  partOf: "live-video-captioning"
+  imagePullSecrets: []
+
+  modelDownload:
+    serviceName: "model-download"
+    port: 8000
+
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      modelType: "vlm"
+      weightFormat: ""
+      device: "CPU"
+
+  detectionModels:
+    - "yolov8s"
+
+  huggingface:
+    apiToken: ""
+
+  llmModel:
+    modelId: "microsoft/Phi-3.5-mini-instruct"
+    modelType: "llm"
+    weightFormat: "int8"
+    useGPU:
+      enabled: false
+      key: ""
+
+  embeddingModel:
+    modelId: "QwenText/qwen3-embedding-0.6b"
+    useGPU:
+      enabled: false
+      key: ""
+
+# Overrides for the live-video-captioning dependency chart.
+# Key names mirror live-video-captioning/charts/values.yaml, nested under live-video-captioning-rag.
+mqtt-broker:
+  fullnameOverride: "mqtt-broker"
+
+dlstreamer-pipeline-server:
+  fullnameOverride: "dlstreamer-pipeline-server"
+  modelsPvcName: ""
+
+mediamtx:
+  fullnameOverride: "mediamtx"
+  webrtcIceUsername: "lvcuser"
+  webrtcIcePassword: "lvcpass"
+
+coturn:
+  fullnameOverride: "coturn"
+
+video-caption-service:
+  fullnameOverride: "video-caption-service"
+  modelsPvcName: ""
+
+metrics-manager:
+  fullnameOverride: "metrics-manager"
+  service:
+    type: ClusterIP
+    metricsPort: 9090
+    telegrafPort: 9273
+    hostPorts:
+      metrics: 9090
+      telegraf: 9273
+      telegrafHttp: ""
+  pod:
+    hostPID: true
+  securityContext:
+    privileged: true
+
+multimodal-embedding:
+  fullnameOverride: "multimodal-embedding"
+
+vdmsvectordb:
+  fullnameOverride: "vdms-vectordb"
+
+# Overrides for the local RAG dependency chart.
+live-video-captioning-rag:
+  fullnameOverride: "live-video-captioning-rag"
+  modelsPvcName: ""

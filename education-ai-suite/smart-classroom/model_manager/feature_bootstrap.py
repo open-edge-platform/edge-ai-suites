@@ -39,7 +39,11 @@ NO_FEATURES_MESSAGE = (
 def resolve_effective_features():
     """Register built-ins and resolve the effective feature set from config."""
     register_builtin_features()
-    return resolve(_feature_flags(config))
+    raw_flags = _feature_flags(config)
+    if raw_flags is not None:
+        from model_manager.features.registry import REGISTRY
+        raw_flags = {k: v for k, v in raw_flags.items() if k in REGISTRY}
+    return resolve(raw_flags)
 
 
 def startup(app: FastAPI) -> None:
