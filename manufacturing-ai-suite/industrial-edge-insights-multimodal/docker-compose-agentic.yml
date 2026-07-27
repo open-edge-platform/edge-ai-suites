@@ -4,7 +4,7 @@
 # Agent service: LangGraph meta-agent + 4 worker agents.
 # Detection-agnostic — reacts to the detection layer's "batch-complete" MQTT
 # event (see compose.detection.yaml) and never talks to DL Streamer directly.
-# Depends on: storage-service, mqtt-broker (compose.base.yaml)
+# Depends on: storage-service, ia-mqtt-broker (compose.base.yaml)
 
 services:
   apm-agent:
@@ -17,9 +17,9 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-storage,apm-llm,mqtt-broker,localhost
+      no_proxy: ${no_proxy:-},ia-fusion-analytics,apm-llm,ia-mqtt-broker,localhost
       # Storage service
-      STORAGE_SERVICE_URL: http://apm-storage:5001
+      STORAGE_SERVICE_URL: http://ia-fusion-analytics:5001
       # LLM service (OVMS — OpenVINO Model Server)
       LLM_BASE_URL: http://apm-llm:8000/v3
       LLM_MODEL_NAME: ${LLM_MODEL_NAME}
@@ -27,7 +27,7 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-UNUSED}
       # MQTT — subscribes only to the detection layer's "batch-complete"
       # event; never subscribes to raw detections directly.
-      MQTT_HOST: mqtt-broker
+      MQTT_HOST: ia-mqtt-broker
       MQTT_PORT: 1883
       MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
       MQTT_QOS: ${MQTT_QOS:-1}
@@ -53,12 +53,12 @@ services:
     ports:
       - "${AGENT_PORT:-5002}:5002"
     depends_on:
-      apm-storage:
+      ia-fusion-analytics:
         condition: service_healthy
-      mqtt-broker:
+      ia-mqtt-broker:
         condition: service_healthy
     networks:
-      - apm_network
+      - timeseries_network
     restart: unless-stopped
     security_opt:
       - no-new-privileges
@@ -88,7 +88,7 @@ services:
     ports:
       - "${MODEL_DOWNLOAD_PORT:-8200}:8000"
     networks:
-      - apm_network
+      - timeseries_network
     restart: unless-stopped
     security_opt:
       - no-new-privileges
@@ -98,95 +98,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 180s
-
-  apm-detection:
-    image: ${REGISTRY:-intel/}apm-detection-service:${TAG:-1.0.0}
-    container_name: apm-detection
-    hostname: apm-detection
-    build:
-      context: ../services/detection-service
-      dockerfile: Dockerfile
-    environment:
-      http_proxy: ${http_proxy:-}
-      https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-storage,mqtt-broker,dlstreamer-pipeline-server,localhost
-      APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
-      # DL Streamer Pipeline Server
-      DLSTREAMER_URL: http://dlstreamer-pipeline-server:8554
-      DLSTREAMER_PIPELINE_NAME: ${DLSTREAMER_PIPELINE_NAME:-pipeline_defect_detection}
-      # Storage service
-      STORAGE_SERVICE_URL: http://apm-storage:5001
-      # MQTT — raw detections (from dlstreamer-pipeline-server) and the
-      # generic "batch-complete" event this service publishes when a run ends
-      MQTT_HOST: mqtt-broker
-      MQTT_PORT: 1883
-      MQTT_TOPIC: ${MQTT_DETECTION_TOPIC:-apm/detections}
-      MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
-      # Available source videos (shared with dlstreamer-pipeline-server's own mount)
-      VIDEOS_DIR: /app/videos
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    volumes:
-      - ${USE_CASE_RESOURCES_DIR:-/tmp/resources}/videos:/app/videos:ro
-    ports:
-      - "${DETECTION_PORT:-5004}:5004"
-    depends_on:
-      apm-storage:
-        condition: service_healthy
-      mqtt-broker:
-        condition: service_healthy
-    networks:
-      - apm_network
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5004/health')"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  apm-llm:
-    image: openvino/model_server:${OVMS_TAG:-2026.2.1-gpu}
-    container_name: apm-llm
-    hostname: apm-llm
-    # The mounted /model directory contains a pre-converted mediapipe graph
-    # (graph.pbtxt) produced by scripts/download_llm_model.sh via the
-    # model-download service — device/pipeline_type are already baked into it,
-    # so only model_path/model_name/rest_port are valid here (anything else
-    # is rejected with "unsupported model settings" by OVMS for graph-based
-    # models).
-    command: >
-      --model_path /model
-      --model_name ${LLM_MODEL_NAME:?LLM_MODEL_NAME must be set}
-      --rest_port 8000
-    environment:
-      http_proxy: ${http_proxy:-}
-      https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},localhost
-      HUGGINGFACE_TOKEN: ${HUGGINGFACEHUB_API_TOKEN:-}
-    restart: unless-stopped
-    devices:
-      - /dev/dri:/dev/dri
-    group_add:
-      - ${USER_GROUP_ID:-1000}
-      - ${VIDEO_GROUP_ID:-44}
-      - ${RENDER_GROUP_ID:-1002}
-    volumes:
-      - ${LLM_MODEL_PATH}:/model:ro
-    ports:
-      - "${LLM_PORT:-8010}:8000"
-    networks:
-      - apm_network
-    security_opt:
-      - no-new-privileges
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/config || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 40
-      start_period: 30s
-
+      # ui
   apm-metrics:
     image: ${REGISTRY:-intel/}metrics-manager:${METRICS_TAG:-2026.1.0}
     container_name: apm-metrics
@@ -199,7 +111,7 @@ services:
     ports:
       - "${METRICS_PORT:-9091}:8080"
     networks:
-      - apm_network
+      - timeseries_network
     restart: unless-stopped
     security_opt:
       - no-new-privileges
@@ -213,7 +125,7 @@ services:
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
-      - apm_network
+      - timeseries_network
     restart: unless-stopped
     security_opt:
       - no-new-privileges
@@ -222,43 +134,43 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
   
-  apm-ui:
-    image: ${REGISTRY:-intel/}apm-ui-service:${TAG:-1.0.0}
-    container_name: apm-ui
-    hostname: apm-ui
-    build:
-      context: ../services/ui-service
-      dockerfile: Dockerfile
-    environment:
-      http_proxy: ${http_proxy:-}
-      https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-agent,apm-detection,apm-storage,localhost
-      APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
-      AGENT_SERVICE_URL: http://apm-agent:5002
-      DETECTION_SERVICE_URL: http://apm-detection:5004
-      STORAGE_SERVICE_URL: http://apm-storage:5001
-      USE_CASE_ID: ${USE_CASE}
-      HOST: 0.0.0.0
-      PORT: 5003
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${UI_PORT:-5003}:5003"
-    depends_on:
-      apm-agent:
-        condition: service_healthy
-      apm-detection:
-        condition: service_healthy
-    networks:
-      - apm_network
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+  # apm-ui:
+  #   image: ${REGISTRY:-intel/}apm-ui-service:${TAG:-1.0.0}
+  #   container_name: apm-ui
+  #   hostname: apm-ui
+  #   build:
+  #     context: ../services/ui-service
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     http_proxy: ${http_proxy:-}
+  #     https_proxy: ${https_proxy:-}
+  #     no_proxy: ${no_proxy:-},apm-agent,apm-detection,ia-fusion-analytics,localhost
+  #     APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
+  #     AGENT_SERVICE_URL: http://apm-agent:5002
+  #     DETECTION_SERVICE_URL: http://apm-detection:5004
+  #     STORAGE_SERVICE_URL: http://ia-fusion-analytics:5001
+  #     USE_CASE_ID: ${USE_CASE}
+  #     HOST: 0.0.0.0
+  #     PORT: 5003
+  #     LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  #   ports:
+  #     - "${UI_PORT:-5003}:5003"
+  #   depends_on:
+  #     apm-agent:
+  #       condition: service_healthy
+  #     apm-detection:
+  #       condition: service_healthy
+  #   networks:
+  #     - timeseries_network
+  #   restart: unless-stopped
+  #   security_opt:
+  #     - no-new-privileges
+  #   healthcheck:
+  #     test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 20s
 
 volumes:
   apm_agent_output:

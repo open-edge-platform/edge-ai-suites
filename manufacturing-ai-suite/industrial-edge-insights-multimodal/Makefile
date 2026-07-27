@@ -9,6 +9,7 @@ MAKEFLAGS += --no-print-directory
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_FILE_VLLM = ./docker-compose-vllm.yml
+DOCKER_COMPOSE_FILE_AGENTIC = ./docker-compose-agentic.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
 
@@ -35,7 +36,7 @@ SHA_ALGO="sha384"
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) build --pull;
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
@@ -252,6 +253,17 @@ up_vllm: check_env_variables validate_host_ip down check_hardware check_models
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
 	$(MAKE) upload_tar_file
+
+.PHONY: up_agentic
+up_agentic: check_env_variables validate_host_ip down check_hardware check_models
+	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
+	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
+	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) up -d; \
+	$(MAKE) upload_tar_file
+
 
 
 # Status of the deployed containers
