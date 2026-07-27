@@ -65,6 +65,12 @@ env:
   # The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
   VLM_CACHE_SIZE: 4
 
+  # NPU static-shape token length controls.
+  # NPU_MAX_PROMPT_LENGTH: maximum input prompt tokens (default: 4096).
+  # NPU_MIN_RESPONSE_LENGTH: minimum generated response tokens (default: 128).
+  NPU_MAX_PROMPT_LENGTH: 4096
+  NPU_MIN_RESPONSE_LENGTH: 128
+
   # DL Streamer pipeline server REST URL.
   # Must match dlstreamer-pipeline-server fullnameOverride.
   # Type: string
