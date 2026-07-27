@@ -76,10 +76,12 @@ $SparsePaths = @(
 # entry in the root .gitmodules (submodule.education-ai-suite/ai-teaching-assistant/edge-ai-libraries).
 $SubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"
 
-# Upstream URL for the submodule, used to register it if it is not yet present in
-# the superproject's .gitmodules (e.g. when running against a fresh checkout that
-# never had the submodule added).
-$SubmoduleUrl = "https://github.com/suryam789/edge-ai-libraries.git"
+# Upstream URL for the submodule. This is only a fallback used to register the
+# submodule when the superproject's .gitmodules has no entry yet (e.g. a fresh
+# checkout that never had the submodule added). When a .gitmodules entry exists,
+# its URL takes precedence (see below) so new users always clone the source
+# declared in .gitmodules rather than any hardcoded fork.
+$SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null
@@ -107,6 +109,14 @@ elseif ([string]::IsNullOrWhiteSpace($RepoRoot)) {
 }
 else {
     $RepoRoot = $RepoRoot.Trim()
+
+    # Prefer the URL declared in the superproject's .gitmodules so a fresh clone
+    # always pulls the source of truth instead of the hardcoded fallback above.
+    $GitmodulesUrl = git -C $RepoRoot config --file .gitmodules --get "submodule.$SubmoduleRelPath.url" 2>$null
+    if (-not [string]::IsNullOrWhiteSpace($GitmodulesUrl)) {
+        $SubmoduleUrl = $GitmodulesUrl.Trim()
+        Write-Info "Using submodule URL from .gitmodules: $SubmoduleUrl"
+    }
 
     # git writes progress and (harmless) warnings to stderr. Under the script's
     # global "Stop" ErrorActionPreference, Windows PowerShell turns ANY native
