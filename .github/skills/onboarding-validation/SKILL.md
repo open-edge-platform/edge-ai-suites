@@ -1,7 +1,6 @@
-<!-- SPDX-FileCopyrightText: (C) 2026 Intel Corporation -->
-<!-- SPDX-License-Identifier: Apache-2.0 -->
-
 ---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 name: onboarding-validation
 description: >-
   Validate the get-started experience of a containerized application from the
@@ -42,7 +41,7 @@ Validate the get-started experience of a containerized application from the pers
 | Skill ID | onboarding-validation |
 | Version | 1.11.0 |
 | Date | 2026-07-24 |
-| Trigger | Validation prompt (see `example-prompts/01-validate-onboarding.md`) |
+| Trigger | Validation prompt (see `assets/example-prompts/01-validate-onboarding.md`) |
 | Input | GitHub URL of application + deployment method |
 | Output | Markdown report in `./validation-reports/` + process log in `./validation-logs/` |
 | Rules | `references/onboarding-validation-rules.md` |
