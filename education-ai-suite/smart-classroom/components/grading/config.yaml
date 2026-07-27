@@ -10,7 +10,7 @@ vlm:
 
 grading:
   force_regrade: true
-  debug_mode: true
+  debug_mode: false
 
 watch:
   poll_interval: 5
