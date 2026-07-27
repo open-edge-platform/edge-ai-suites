@@ -24,9 +24,9 @@ $WarningPreference = "SilentlyContinue"
 function Write-Header {
     param([string]$Message)
     Write-Host "`n" -ForegroundColor White
-    Write-Host "=" * 70 -ForegroundColor Cyan
+    Write-Host ("=" * 70) -ForegroundColor Cyan
     Write-Host "  $Message" -ForegroundColor Cyan
-    Write-Host "=" * 70 -ForegroundColor Cyan
+    Write-Host ("=" * 70) -ForegroundColor Cyan
 }
 
 function Write-Success {

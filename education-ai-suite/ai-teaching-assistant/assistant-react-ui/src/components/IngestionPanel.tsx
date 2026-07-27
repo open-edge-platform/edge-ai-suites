@@ -65,9 +65,9 @@ export default function IngestionPanel({
         );
       }
       onIngested();
-    } catch {
+    } catch (err) {
       setState("error");
-      setMessage("Ingestion failed");
+      setMessage(`Ingestion failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 

@@ -105,7 +105,7 @@ export function responseAudioUrl(sessionId: string, index: number): string {
 export async function ingestFiles(files: File[]): Promise<BatchIngestResponse> {
   const form = new FormData();
   for (const file of files) {
-    form.append("files", file, file.name);
+    form.append("file", file, file.name);
   }
   const res = await fetch(`${API.rag}/api/v1/context/file`, {
     method: "POST",
