@@ -100,36 +100,6 @@ global:
   huggingface:
     apiToken: ""
 
-  # Set to true to deploy Retrieval-Augmented Generation components
-  enableRAG: false
-
-  # Configure for llmModel and embeddingModel when RAG is enabled.
-  # These values are used by the live-video-captioning-rag subchart.
-  # LLM Model for RAG
-  # Parameters:
-  # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
-  # modelType: "llm",
-  # weightFormat: "int8", or "int4" or "fp16"
-  # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-  #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
-  llmModel:
-    modelId: "microsoft/Phi-3.5-mini-instruct"
-    modelType: "llm"
-    weightFormat: "int8"
-    useGPU:
-      enabled: false
-      key: "" # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
-    # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
-    # Parameters:
-    # modelId: HuggingFace repo ID for the embedding model, e.g. "QwenText/qwen3-embedding-0.6b"
-    # useGPU: set to true to enable GPU usage for the embedding model; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
-  embeddingModel:
-    # Multimodal embedding model for RAG.
-    modelId: "QwenText/qwen3-embedding-0.6b"
-    useGPU:
-      enabled: false
-      key: "" # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. SUBCHART OVERRIDES
 # Keys MUST match the chart name of each source subchart directory under ./subcharts/.
@@ -199,18 +169,3 @@ metrics-manager:
     hostPID: true
   securityContext:
     privileged: true
-
-# ── multimodal-embedding ───────────────────────────────────────────────────
-multimodal-embedding:
-  fullnameOverride: "multimodal-embedding"
-
-# ── vdmsvectordb ─────────────────────────────────────────────────────────────
-vdmsvectordb:
-  fullnameOverride: "vdms-vectordb"
-
-# ── live-video-captioning-rag ───────────────────────────────────────────────
-live-video-captioning-rag:
-  fullnameOverride: "live-video-captioning-rag"
-
-  # Shared models PVC name. Leave empty to auto-derive from release name.
-  modelsPvcName: ""

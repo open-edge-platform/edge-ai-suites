@@ -7,8 +7,7 @@ import type { FeatureGuard } from "../../utils/featureGuards";
 
 interface BodyProps {
   isModalOpen: boolean;
-  activeScreen: 'main' | 'content-search';
-  featureGuard: FeatureGuard;
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen, featureGuard }) => {

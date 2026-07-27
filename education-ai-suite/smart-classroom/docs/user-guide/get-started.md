@@ -40,6 +40,7 @@ The setup script will:
    - [3.3] Upload Size Limits
    - [3.4] OCR Configuration
    - [3.5] Board OCR Configuration
+   - [3.6] Grading Configuration (enable/disable Smart Grading)
 
 4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
@@ -98,7 +99,7 @@ The startup script performs:
 - **Service Detection** - Checks running services
 - **Restart Options** - Restart, skip, or abort choices (auto in `-Silent` mode)
 - **Proxy Configuration** - Loads from `.proxy-config`
-- **Sequential Launch** - Backend -> Content Search -> Frontend
+- **Sequential Launch** - Backend -> Content Search -> Grading (if enabled) -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
 ---
@@ -125,7 +126,11 @@ Advanced Setup guide covers:
 |---------|------|--------------|
 | Backend | 8000 | http://localhost:8000/health |
 | Content Search | 9011 | http://localhost:9011/api/v1/system/health |
+| Layout Detection | 9902 | http://localhost:9902/health |
+| Grading | 9012 | http://localhost:9012/api/v1/health |
 | Frontend | 5173 | http://localhost:5173 |
+
+> **Note:** Layout Detection and Grading services only start when `grading.enabled: true` in `config.yaml`.
 
 ## Learn More
 
