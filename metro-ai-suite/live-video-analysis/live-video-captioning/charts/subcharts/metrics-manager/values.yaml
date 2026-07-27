@@ -15,7 +15,7 @@ image:
   repository: intel/metrics-manager
   # Pinned release tag. Leave empty to fall back to .Chart.AppVersion
   # (kept in sync with ./VERSION). Override when running a custom build.
-  tag: "2026.1.0-rc2"
+  tag: "2026.2.0-20260715-weekly"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
