@@ -118,7 +118,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ featureGuard }) => {
   return (
     <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
       {hasVideoAnalytics && (
-        <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
+        <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} featureGuard={featureGuard} />
       )}
     
       <div className="search-container">

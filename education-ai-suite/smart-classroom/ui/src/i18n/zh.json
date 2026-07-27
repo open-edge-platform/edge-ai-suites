@@ -89,7 +89,11 @@
   "menu": {
     "settings": "设置",
     "help": "帮助",
-    "about": "关于"
+    "about": "关于",
+    "toggle": "切换菜单",
+    "navigation": "导航",
+    "home": "主页",
+    "appMenu": "应用程序菜单"
   },
   "tabs": {
     "transcripts": "转录",

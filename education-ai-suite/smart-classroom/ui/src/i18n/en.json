@@ -89,7 +89,11 @@
     "menu": {
       "settings": "Settings",
       "help": "Help",
-      "about": "About"
+      "about": "About",
+      "toggle": "Toggle menu",
+      "navigation": "Navigation",
+      "home": "Home",
+      "appMenu": "Application menu"
     },
     "tabs": {
       "transcripts": "Transcripts",

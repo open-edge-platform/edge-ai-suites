@@ -3,6 +3,7 @@ import logging
 from .asr_feature import ASRFeature
 from .board_ocr_feature import BoardOCRFeature
 from .content_search_feature import ContentSearchFeature
+from .grading_feature import GradingFeature
 from .mindmap_feature import MindmapFeature
 from .qa_feature import QAFeature
 from .report_feature import ReportFeature
@@ -22,6 +23,7 @@ _BUILTIN_FEATURES = [
     BoardOCRFeature,
     ContentSearchFeature,
     QAFeature,
+    GradingFeature,
     ReportFeature,
 ]
 

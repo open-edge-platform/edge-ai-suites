@@ -49,11 +49,9 @@ import {
   stopMonitoring,
   startPipelineMonitoring,
   checkRecordedVideos,
-  getTemplateFields,
 } from '../../services/api';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
-import ReportPanel from '../ReportPanel';
 import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface HeaderBarProps {
@@ -71,8 +69,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportFeatureEnabled, setReportFeatureEnabled] = useState(false);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
   const dispatch = useAppDispatch();
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
@@ -138,25 +134,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
 
     checkAudioDevices();
   }, [dispatch]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const detectReportFeature = async () => {
-      try {
-        await getTemplateFields();
-        if (!cancelled) setReportFeatureEnabled(true);
-      } catch {
-        if (!cancelled) {
-          setReportFeatureEnabled(false);
-          setIsReportOpen(false);
-        }
-      }
-    };
-    detectReportFeature();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (justStoppedRecording) {
@@ -756,18 +733,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
           {t('header.uploadFile')}
         </button>
 
-        {reportFeatureEnabled && (
-          <button
-            className="report-button"
-            onClick={() => setIsReportOpen(true)}
-            title={t('header.viewReport', 'View Report')}
-          >
-            {t('header.viewReport', 'View Report')}
-            {reportStatus === 'generating' && ' …'}
-            {reportStatus === 'done' && ' ✓'}
-          </button>
-        )}
-
       </div>
 
       <div className="navbar-center">
@@ -791,9 +756,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
       )}
       {isUploadModalOpen && (
         <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} featureGuard={featureGuard} />
-      )}
-      {reportFeatureEnabled && (
-        <ReportPanel isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />
       )}
     </div>
   );

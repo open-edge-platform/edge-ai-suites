@@ -7,6 +7,7 @@ import GradingScreen from './components/Grading/GradingScreen';
 import Footer from './components/Footer/Footer';
 import Modal from './components/Modals/Modal'; // Import your existing Modal
 import SettingsForm from './components/Modals/SettingsForm'; // Import your existing SettingsForm
+import ReportPanel from './components/ReportPanel';
 import './App.css';
 import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading'>('main');
+  const [isReportOpen, setIsReportOpen] = useState(false);
   useVideoPipelineMonitor();
 
   // Load feature configuration
@@ -148,6 +150,7 @@ const App: React.FC = () => {
         setActiveScreen={setActiveScreen}
         featureGuard={guard}
         hasMainFeatures={hasMainFeatures}
+        onViewReport={() => setIsReportOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
         <HeaderBar projectName={projectName} setProjectName={setProjectName} featureGuard={guard} />
@@ -188,6 +191,12 @@ const App: React.FC = () => {
         </Modal>,
         document.body
       )}
+      
+      {/* Report Panel */}
+      <ReportPanel
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
     </div>
   );
 };
