@@ -13,8 +13,8 @@ features:
   board_ocr:          { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
-  grading:            { enabled: false }
-  report:             { enabled: false }
+  grading:            { enabled: true }
+  report:             { enabled: true }
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -331,7 +331,7 @@ models:
         - 不要在此重复转录章节已有的内容。
         - 如果板书内容为空或无法识别，写 "- 无"。
 
-    model_hub: huggingface # huggingface or modelscope
+  model_hub: huggingface # huggingface or modelscope
 
   va:
     models_base_path: "models"
