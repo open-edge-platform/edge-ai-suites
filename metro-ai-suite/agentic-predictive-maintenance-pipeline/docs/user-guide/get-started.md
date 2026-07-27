@@ -1,18 +1,22 @@
 # Get Started
 
-The Agentic Predictive Maintenance (APM) blueprint lets you deploy an end-to-end industrial defect detection pipeline with AI-driven analysis on Intel edge hardware. This guide walks you through setting up, configuring, and running the application.
+The Agentic Predictive Maintenance (APM) blueprint lets you deploy an end-to-end industrial defect
+detection pipeline with AI-driven analysis on Intel® edge hardware. This section shows how to set up, configure, and run the application.
 
 ## Prerequisites
 
-Before you start, make sure the following are in place:
+Before you start, ensure the following:
 
-- Docker ≥ 24.0 and Docker Compose ≥ 2.20
-- Intel CPU with at least 16 GB RAM (32 GB recommended for LLM mode)
-- Python 3.10 or later (only needed to prepare sample data)
-- `opencv-python` Python package (only needed for the data preparation script)
-- A Hugging Face account and API token if you plan to use a gated model such as `microsoft/Phi-4-mini-instruct`
+- Docker Engine version 24.0 or higher, and Docker Compose tool version 2.20 or higher.
+- Intel® processor with at least 16 GB of RAM; Intel recommends 32 GB for Large Language
+  Models (LLMs).
+- Python programming language version 3.10 or later: only needed to prepare sample data.
+- `opencv-python` Python package: only needed for the data preparation script.
+- A Hugging Face account and API token if you use a gated model such as
+  `microsoft/Phi-4-mini-instruct`.
 
-Verify your system meets all [hardware and software requirements](./get-started/system-requirements.md) before continuing.
+Verify that your system meets the
+[hardware and software requirements](./get-started/system-requirements.md) before continuing.
 
 ## Project Structure
 
@@ -34,7 +38,7 @@ agentic-predictive-maintenance/
 │   ├── compose.base.yaml              # Core services (nginx, storage, DL Streamer, MQTT)
 │   ├── compose.detection.yaml         # Detection service (DL Streamer orchestration)
 │   ├── compose.agents.yaml            # Agent service (pulled EAL image — reasoning only)
-│   ├── compose.llm.yaml               # VLM/LLM inference service
+│   ├── compose.llm.yaml               # VLM or LLM inference service
 │   ├── compose.ui.yaml                # Web dashboard
 │   └── compose.telemetry.yaml         # Prometheus metrics collection
 ├── services/                          # Source code for this repo's microservices
@@ -51,8 +55,8 @@ agentic-predictive-maintenance/
 ```
 
 > **Note**: Each use case ships with its own `.env_<use-case>` file already populated
-> with working defaults at `apps/<use-case>/.env_<use-case>` — you don't need to create
-> it yourself. `setup.sh` reads it from that location automatically.
+> with working defaults at `apps/<use-case>/.env_<use-case>` — you do not need to create
+> it yourself; `setup.sh` reads it from that location automatically.
 
 ## Step 1 — Clone the Repository
 
@@ -78,18 +82,21 @@ The most important variables are:
 | `LLM_DEVICE` | `CPU` | Inference device: `CPU`, `GPU`, or `NPU` |
 | `LLM_WEIGHT_FORMAT` | `int4` | Model quantization format: `fp32`, `fp16`, `int8`, or `int4` |
 
-If you are using a gated Hugging Face model, you must set your API token:
+If you are using a gated Hugging Face model, set your API token:
 
 ```bash
 # In .env_pipeline-defect-detection, uncomment and set:
 HUGGINGFACEHUB_API_TOKEN=hf_your_token_here
 ```
 
-> **Note**: Accept the model license agreement on the [Hugging Face model page](https://huggingface.co/microsoft/Phi-4-mini-instruct) before using gated models.
+> **Note**: Accept the model license agreement on the
+> [Hugging Face model page](https://huggingface.co/microsoft/Phi-4-mini-instruct) before using
+> the gated models.
 
 ## Step 3 — Prepare Sample Data
 
-The DL Streamer pipeline needs a video file to run. Use the included script to download the Kaggle pipeline-defect dataset and build a sample video automatically:
+The Deep Learning Streamer (DL Streamer) pipeline needs a video file to run. Use the included script to download the Kaggle
+pipeline-defect dataset and build a sample video automatically:
 
 ```bash
 pip install opencv-python ffmpeg
@@ -102,18 +109,20 @@ python scripts/download_and_prep_data.py \
 ```
 
 This script:
-- Downloads and extracts the dataset (~300 MB)
-- Splits it into training and validation sets
-- Builds `apps/pipeline-defect-detection/resources/videos/sample.mp4` for use by DL Streamer
+- Downloads and extracts the dataset, which is around 300 MB.
+- Splits it into training and validation sets.
+- Builds `apps/pipeline-defect-detection/resources/videos/sample.mp4` for use by DL Streamer.
 
-> **Note**: Skip this step if you have your own video, or if you plan to run in `LLM_MODE=fallback` where no video or DL Streamer inference is required.
+> **Note**: Skip this step if you have your own video, or if you plan to run in
+> `LLM_MODE=fallback` where no video or DL Streamer inference is required.
 
-> **Disclaimer**: By running this script you acknowledge that you are solely responsible for the rights, permissions, and licenses associated with the dataset at the provided URL.
+> **Disclaimer**: By running this script you acknowledge that you are solely responsible for the
+> rights, permissions, and licenses associated with the dataset at the provided URL.
 
 ## Step 4 — Download the LLM Model (LLM mode only)
 
-`setup.sh` mounts a local, OVMS-formatted copy of the LLM into the `apm-llm` service — it does
-not download or convert the model for you. Use the
+`setup.sh` mounts a local, OpenVINO™ model server-formatted copy of the LLM into the
+`apm-llm` service — it does not download or convert the model for you. Use the
 [model-download microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)
 (already defined as `apm-model-download` in `docker/compose.base.yaml`) to fetch and convert the
 model configured via `LLM_MODEL_NAME`/`LLM_DEVICE`/`LLM_WEIGHT_FORMAT`:
@@ -122,9 +131,10 @@ model configured via `LLM_MODEL_NAME`/`LLM_DEVICE`/`LLM_WEIGHT_FORMAT`:
 source ./scripts/download_llm_model.sh --use-case pipeline-defect-detection
 ```
 
-This script starts `apm-model-download`, submits a download+conversion request for the
-Hugging Face model to OpenVINO IR/OVMS format, waits for the job to complete, and writes the
-resulting local path back into `apps/pipeline-defect-detection/.env_pipeline-defect-detection`
+This script starts `apm-model-download`, submits a download and conversion request for the Hugging Face
+model to OpenVINO model server's Intermediate Representation (IR) format, waits for the job to complete, and
+writes the resulting local path back into
+`apps/pipeline-defect-detection/.env_pipeline-defect-detection`
 as `LLM_MODEL_PATH`. `setup.sh` mounts this path read-only into the `apm-llm` container.
 
 > **Note**: Skip this step entirely if `LLM_MODE=fallback` — the script detects this and exits
@@ -132,7 +142,7 @@ as `LLM_MODEL_PATH`. `setup.sh` mounts this path read-only into the `apm-llm` co
 
 ## Step 5 — Launch the Application
 
-**LLM mode** (requires the LLM/OVMS service; uses AI-generated analysis):
+**LLM mode** (requires the LLM and OpenVINO model server service; uses AI-generated analysis):
 
 ```bash
 source ./setup.sh --use-case pipeline-defect-detection
@@ -144,17 +154,18 @@ source ./setup.sh --use-case pipeline-defect-detection
 LLM_MODE=fallback source ./setup.sh --use-case pipeline-defect-detection
 ```
 
-The setup script validates your environment, sources the use-case `.env` file, and starts all required services via Docker Compose.
+The setup script validates your environment, sources the use-case `.env` file, and starts all
+required services via the Docker Compose tool.
 
 ### Verify the Deployment
 
-Check that all containers started successfully:
+Check that all containers have started successfully:
 
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}"
 ```
 
-You should see the following containers running:
+If successful, you will see the following containers running:
 
 | Container | Role |
 |-----------|------|
@@ -163,20 +174,22 @@ You should see the following containers running:
 | `apm-agent` | Multi-agent orchestrator |
 | `apm-storage` | Detection data store |
 | `apm-dlstreamer` | Video inference |
-| `apm-mqtt-broker` | MQTT broker |
+| `apm-mqtt-broker` | Message Queuing Telemetry Transport (MQTT) broker |
 | `apm-model-download` | Model download utility |
-| `apm-llm` | LLM service (OVMS) *(LLM mode only)* |
+| `apm-llm` | LLM service (OpenVINO model server) *(LLM mode only)* |
 
 ## Step 6 — Open the Dashboard
 
 Navigate to `http://localhost:8080` in your browser. The dashboard displays:
 
-- A "Run Pipeline" button that runs one full detect-then-reason cycle: the DL Streamer pipeline processes the source video once, then the agent pipeline (policy → analysis → evidence → ticketing) reasons over exactly the detections it produced
-- Live phase status ("Detecting…" / "Analyzing…") while a run is in progress
-- A log of all agent runs with status indicators
-- Generated maintenance tickets with priority, description, and recommended action
+- A "Run Pipeline" button that runs one full detect-then-reason cycle: the DL Streamer pipeline
+  processes the source video once, then the agent pipeline (policy → analysis → evidence →
+  ticketing) reasons over exactly the detections it produced.
+- Live phase status ("Detecting…" / "Analyzing…") while a run is in progress.
+- A log of all agent runs with status indicators.
+- Generated maintenance tickets with priority, description, and recommended action.
 
-## Stopping and Cleaning Up
+## Stop and Clean Up
 
 Stop all running containers:
 
@@ -192,18 +205,19 @@ source ./setup.sh --clean-data
 
 ## Configuration Reference
 
-All use-case behavior is controlled by four files in `apps/<use-case>/`:
+Four files in `apps/<use-case>/` control all use-case behaviors:
 
 | File | Purpose |
 |------|---------|
-| `configs/agents.yaml` | Agent pipeline settings, defect classes, confidence thresholds |
+| `configs/agents.yaml` | Agent pipeline settings, defect classes, and confidence thresholds |
 | `configs/pipeline-server-config.json` | DL Streamer pipeline definition and model paths |
 | `configs/policy_fallback.json` | Rule-based fallback thresholds and escalation actions |
 | `prompts/<use-case>.txt` | LLM prompt sections for each agent |
 
 ### agents.yaml
 
-The `agents.yaml` file controls which defect classes are monitored and what confidence levels trigger alerts:
+The `agents.yaml` file controls which defect classes are monitored and what confidence levels
+trigger alerts:
 
 ```yaml
 use_case_id: pipeline-defect-detection   # must match the prompt file name
@@ -217,7 +231,7 @@ policy:
 
 ### Prompt File Sections
 
-LLM behavior is defined through prompt sections delimited by `[SECTION_NAME]` headers:
+Prompt sections that are delimited by `[SECTION_NAME]` headers, define the LLM behavior:
 
 ```
 [SYSTEM]    — shared system role for all agents
@@ -227,9 +241,9 @@ LLM behavior is defined through prompt sections delimited by `[SECTION_NAME]` he
 [TICKETING] — instructions for the Ticketing Agent
 ```
 
-## Creating a New Use Case
+## Create a New Use Case
 
-To adapt the blueprint to a different inspection scenario — for example, weld defect detection:
+To adapt the blueprint to a different inspection scenario, for example, Weld Defect Detection:
 
 ```bash
 # Copy the existing use-case directory
@@ -244,7 +258,8 @@ vi apps/weld-defect-detection/prompts/weld-defect-detection.txt
 source ./setup.sh --use-case weld-defect-detection
 ```
 
-No code changes are needed — the blueprint reads all behavior from the configuration files at startup.
+The blueprint needs no code changes; it reads all behaviors from the configuration
+files at startup.
 
 <!--hide_directive
 :::{toctree}

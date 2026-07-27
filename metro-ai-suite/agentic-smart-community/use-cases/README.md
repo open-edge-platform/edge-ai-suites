@@ -37,31 +37,27 @@ Missing files are legal:
 Invoked by `packages/rule-engine/src/index.ts` (`evaluateWithOverride`) via
 `execFile("python3", [<script>, <json>])`.
 
-**Input** — `sys.argv[1]` is a JSON-encoded `RuleContext` object:
+**Input** — `sys.argv[1]` is the parsed **fields dict** (flat JSON) that the
+built-in summary parser extracted from the VLM output — NOT the full `RuleContext`.
+Read the schema fields directly with `fields.get(...)`:
 
 ```jsonc
 {
-  "monitorId": "cam_child_01",
-  "useCase":   "child_safety",
-  "taskId":    42,
-  "summaryText": "SEVERITY: critical\nEVENT: child_fall\nDESC: ...",
-  "payload": {
-    "fields": {                                // parsed by built-in summary parser
-      "severity":    "critical",
-      "event":       "child_fall",
-      "desc":        "child fell from sofa",
-      "description": "child fell from sofa"    // legacy alias
-    }
-  }
+  "severity":    "critical",
+  "event":       "child_fall",
+  "desc":        "child fell from sofa",
+  "description": "child fell from sofa"    // legacy alias of desc
 }
 ```
 
-**Output** — a single JSON object on `stdout`:
+**Output** — a single `AlertOutcome` JSON object on `stdout` to fire an alert, or
+`null` (an empty print also counts as null) to suppress it:
 
 ```jsonc
 {
-  "should_alert": true,
-  "alert_message": "[child_safety] child_fall: critical — child fell from sofa"
+  "alertType":   "child_fall",
+  "severity":    "critical",
+  "description": "child fell from sofa"
 }
 ```
 
@@ -69,12 +65,13 @@ Contract:
 
 | Field | Required | Type | Meaning |
 |-------|----------|------|---------|
-| `should_alert` | ✅ | `bool` | Whether an alert row should be inserted for this task. |
-| `alert_message` | conditional | `string` | Populated when `should_alert` is `true`. Stored verbatim in `alerts.description`. |
+| `alertType` | ✅ on alert | `string` | Event / alert type. Defaults to `"alert"` when omitted. |
+| `severity` | ✅ on alert | `string` | `info` / `warn` / `critical`. Defaults to `"warn"` when omitted. |
+| `description` | optional | `string` | Human-readable detail; stored in `alerts.description`. |
+| *(print `null`)* | — | — | Emit `null` (or nothing) to suppress the alert for this task. |
 
-If the script exits non-zero, prints invalid JSON, or throws, the caller falls
-back to `defaultRuleEvaluator`; the failure is logged at `warn` and does not
-abort the task-poller loop.
+If the script exits non-zero, prints invalid JSON, or throws, the failure is
+logged and the task-poller loop is not aborted.
 
 ## 2. `prompt.md` protocol
 
@@ -147,7 +144,7 @@ video-worker. The only per-use-case Python override that remains is
 
 `high_altitude_safety` and `parking_safety` are **not** part of the default demo
 set (fridge / child_safety / elder_wakeup), so they are intentionally kept out of
-`config.yaml.example`, `monitors.yaml.example`, and `demo-videos/streams.yaml`.
+`demo/config.demo.yaml`, `demo/monitors.demo.yaml`, and `demo/videos/streams.yaml`.
 Their definitions are preserved here — copy the blocks you need into your own
 `config.yaml` / `monitors.yaml` / `streams.yaml` to enable them. The built-in
 `defaultRuleEvaluator` only handles `severity=warn|critical`; generate an
@@ -210,7 +207,7 @@ cam_parking:
     segment: { max_duration: 10 }
 ```
 
-**`demo-videos/streams.yaml` → `streams`** (bring your own clips — `*.mp4` is gitignored, so `cam_ha_test/building-throwing-2.mp4` / `cam_parking/false-parking.mp4` are not shipped in the repo):
+**`demo/videos/streams.yaml` → `streams`** (bring your own clips — `*.mp4` is gitignored, so `cam_ha_test/building-throwing-2.mp4` / `cam_parking/false-parking.mp4` are not shipped in the repo):
 
 ```yaml
 cam_high_altitude:

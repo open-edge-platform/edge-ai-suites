@@ -695,11 +695,10 @@ The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some s
    cd metro-ai-suite/metro-vision-ai-app-recipe
    docker compose up -d
    ```
-3. Update `.env` in the VAP directory so the LD MQTT subscriber and the DLStreamer Pipeline Server both use the LD broker on port `1884`:
+3. Update `.env` in the VAP directory so the LD MQTT subscriber uses the LD broker on port `1884`:
    ```bash
    # metro-ai-suite/vms-adapter-plugin/.env
    MQTT_PORT=1884
-   PIPELINE_SERVER_MQTT_PORT=1884
    ```
 4. Start VAP (already configured with both apps in `config.yaml`):
    ```bash

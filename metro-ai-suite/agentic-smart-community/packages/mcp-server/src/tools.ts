@@ -137,6 +137,12 @@ export function registerTools(
       use_case: z.string().optional().describe("Use case key from config.yaml use_case_dict (required for register_source)"),
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
       webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
+      persist: z.boolean().optional().describe(
+        "register_source/unregister only: mirror the change back to the monitors.yaml the server " +
+        "was booted from (--monitors), comment-preserving. Lets a restart auto-recover this monitor " +
+        "(incl. pipeline_config, which is not stored in the DB). Skipped with a warning if the server " +
+        "was started without --monitors.",
+      ),
     },
   }, async (params) => {
     try {
@@ -168,8 +174,15 @@ export function registerTools(
       // - webhook_url: this server's /events endpoint (caller may override)
       // - video_summary_task: derived from use_case_dict[use_case]
       const enriched: any = { ...params };
-      if (params.action === "register_source" && params.monitor_id) {
-        enriched.data_dir ??= join(config.segmentsDir, params.monitor_id);
+      // Path used by persist:true to mirror register_source/unregister back to disk.
+      enriched.monitors_path = config.monitorsPath;
+      if (params.action === "register_source") {
+        // monitor_id follows the cam_<use_case> convention. Default it when the
+        // caller omits it (symmetric to video_summary_task = <use_case>_monitor) so
+        // agents can't accidentally pass the VLM task name as the monitor id.
+        const monitorId = params.monitor_id ?? `cam_${params.use_case}`;
+        enriched.monitor_id = monitorId;
+        enriched.data_dir ??= join(config.segmentsDir, monitorId);
         enriched.webhook_url ??= `http://localhost:${config.eventsWebhook!.port}/events`;
         enriched.video_summary_task = videoSummaryTask;
         // Arm the analytics keepalive watchdog; the server drives the heartbeat loop.
@@ -319,17 +332,42 @@ export function registerTools(
   // --- smartbuilding_use_case_register ---
   server.registerTool("smartbuilding_use_case_register", {
     description:
-      "Manage use_case lifecycle at runtime without restarting the MCP server. Two actions: " +
-      "action=register: (1) apply schema_extensions via ALTER TABLE (idempotent), " +
+      "Manage use_case lifecycle at runtime without restarting the MCP server. Three actions. " +
+      "For NEW use cases, do not call this tool until the user has answered the " +
+      "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
+      "detection goals are event values, not schema fields. " +
+      "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
+      "(step 1) action=register_task with prompt_text (+ evaluate_rules_text on the custom path) — " +
+      "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
+      "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md (+ evaluate_rules.py) to disk. " +
+      "It does NOT touch the DB schema, use_case_dict, or config.yaml. " +
+      "(step 2) action=register WITHOUT prompt_text — auto-reads the files step 1 wrote, applies " +
+      "the schema via ALTER TABLE, injects use_case_dict, and (persist=true) writes config.yaml. " +
+      "schema_extensions is OPTIONAL in both steps: when omitted, the final schema is inferred from " +
+      "the prompt's LOCAL_PROMPT `KEY:` output lines (all text columns); pass it only to declare a " +
+      "non-text column type or override the inferred required flags. " +
+      "action=register: treats schema_extensions as caller-confirmed extra fields and normalizes " +
+      "the final schema to severity/event/desc + extras before validation. HARD GATE first — if any final schema field is absent from " +
+      "the prompt's LOCAL_PROMPT output contract, the call is REJECTED with zero side effects " +
+      "(the normalized final schema and the prompt output fields must be the same set; the prompt is the " +
+      "source of truth). On pass: (1) apply schema_extensions via ALTER TABLE (idempotent), " +
       "(2) POST /v1/tasks to multilevel-video-understanding (auto-PATCH on 409), " +
       "(3) inject the entry into in-memory use_case_dict so task-poller / other tools see it, " +
-      "(4) re-run use_case_validate. When persist=true, also writes the entry back to config.yaml " +
-      "(comment-preserving via yaml.Document). action=unregister: DELETE /v1/tasks/<name> and remove " +
-      "from use_case_dict; also deletes the yaml entry if persist=true. " +
-      "Prompt authoring is out of scope here — draft the `## LOCAL_PROMPT` with the " +
-      "video-summary-prompt-studio skill (agent + router), then pass it via prompt_text.",
+      "(4) re-run use_case_validate. prompt_text may be omitted; it is then auto-read from " +
+      "use-cases/<use_case>/prompt.md (e.g. the file register_task wrote). When persist=true, also " +
+      "writes the entry back to config.yaml (comment-preserving via yaml.Document). " +
+      "action=register_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
+      "(step 1 above); prompt_text is REQUIRED and is never auto-read. " +
+      "action=unregister: DELETE /v1/tasks/<name> and remove " +
+      "from use_case_dict; also deletes the yaml entry if persist=true. When persist=true, " +
+      "unregister additionally CASCADES to every monitor referencing this use case: stops its " +
+      "worker, deletes its videostream-analytics source, and strips it from monitors.yaml — DB " +
+      "history (alerts/tasks/events/recordings) is kept and the monitor row is left offline. " +
+      "For action=register, if prompt_text is provided with persist=true it is saved to " +
+      "use-cases/<use_case>/prompt.md; if evaluate_rules_text is provided with persist=true it is " +
+      "saved to use-cases/<use_case>/evaluate_rules.py.",
     inputSchema: {
-      action: z.enum(["register", "unregister"]).describe("register | unregister"),
+      action: z.enum(["register", "register_task", "unregister"]).describe("register | register_task | unregister"),
       use_case: z.string().describe("Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/)"),
       video_summary_task: z.string().optional().describe(
         "VLM task name (default: <use_case>_monitor). Must not collide with VLM builtins."
@@ -342,14 +380,28 @@ export function registerTools(
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
       prompt_text: z.string().optional().describe(
         "Full prompt text (Markdown with ## LOCAL_PROMPT sections, OR a raw 4-const Python source). " +
-        "Omit to skip VLM task registration (you'll register it out-of-band)."
+        "REQUIRED for action=register_task (it is POSTed to the VLM task and written to " +
+        "use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
+        "auto-read from use-cases/<use_case>/prompt.md (e.g. the file register_task wrote); when " +
+        "provided with persist=true it is (re)saved there. " +
+        "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
+      ),
+      evaluate_rules_text: z.string().optional().describe(
+        "Optional Python evaluate_rules.py source. When persist=true, this is saved to " +
+        "use-cases/<use_case>/evaluate_rules.py and used as evaluate_rules_path unless an explicit path is provided."
       ),
       schema_extensions: z.array(z.object({
         name: z.string(),
         type: z.enum(["text", "integer", "real"]),
         required: z.boolean(),
       })).optional().describe(
-        "Additional video_summary_tasks columns this use_case needs (e.g. motion_direction, parking_zone). " +
+        "OPTIONAL. When omitted, the final schema is inferred from the prompt's LOCAL_PROMPT `KEY:` output " +
+        "lines (every field becomes a text column; the prompt is the source of truth). Pass this only to " +
+        "declare a non-text column type (integer/real) or override an inferred required flag, and then only " +
+        "extra persisted output columns explicitly confirmed by the user beyond severity/event/desc " +
+        "(e.g. motion_direction, parking_zone). Do not put detection goals/events such as escape, trapped, " +
+        "aggressive_behavior, risk_level, *_detected, or *_count here. The tool automatically adds " +
+        "severity/event/desc to form the final schema when any structured fields are present. " +
         "Applied via ALTER TABLE ADD COLUMN if missing (idempotent). Stored under this use_case's own " +
         "schema (use_case_dict.<uc>.schema) — never a global shared schema."
       ),
@@ -365,7 +417,7 @@ export function registerTools(
     },
   }, async (params) => {
     try {
-      const { useCaseRegister } = await import("@smartbuilding-video/tools");
+      const { useCaseRegister, detachMonitor } = await import("@smartbuilding-video/tools");
       const result = await useCaseRegister(params as any, {
         useCaseDict: config.useCaseDict,
         summaryServiceUrl: config.summaryService.url,
@@ -373,33 +425,31 @@ export function registerTools(
         configPath: config.configPath,
         baseDir: config.configPath ? dirname(resolve(config.configPath)) : process.cwd(),
       });
-      return {
-        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-        isError: !result.ok,
-      };
-    } catch (err: any) {
-      return { content: [{ type: "text" as const, text: `Error: ${err.message}` }], isError: true };
-    }
-  });
 
-  // --- smartbuilding_video_summary_task ---
-  server.registerTool("smartbuilding_video_summary_task", {
-    description:
-      "Manage VLM tasks registered in multilevel-video-understanding via /v1/tasks. " +
-      "action=list: return all tasks with source (builtin|dynamic) + description. " +
-      "action=get: fetch full body of one task (4-const prompt content, description, source). " +
-      "action=delete: remove a dynamic task (builtins are immutable — request is acknowledged with a warning). " +
-      "Registration + prompt updates live in smartbuilding_use_case_register; this tool covers the remaining read / drop actions.",
-    inputSchema: {
-      action: z.enum(["list", "get", "delete"]).describe("list | get | delete"),
-      task_name: z.string().optional().describe("VLM task name (required for get / delete; ignored for list)"),
-    },
-  }, async (params) => {
-    try {
-      const { videoSummaryTask } = await import("@smartbuilding-video/tools");
-      const result = await videoSummaryTask(params as any, {
-        summaryServiceUrl: config.summaryService.url,
-      });
+      // Cascade on unregister+persist: detach every monitor referencing this use
+      // case (stop worker + delete VSA source + strip from monitors.yaml), keeping
+      // DB history. Mirrors register_source persist which writes monitors.yaml —
+      // without this, unregistering a use case would leave orphan monitors whose
+      // use_case no longer exists (task-poller then errors on the next poll).
+      if (params.action === "unregister" && params.persist && result.ok) {
+        const affected = db.listMonitors().filter((m) => m.useCase === params.use_case);
+        const cascaded: unknown[] = [];
+        for (const m of affected) {
+          try {
+            cascaded.push(
+              await detachMonitor(db, config.videostreamAnalytics.url, workerService, {
+                monitor_id: m.id,
+                monitors_path: config.monitorsPath,
+                persist: true,
+              }),
+            );
+          } catch (e: any) {
+            cascaded.push({ monitor_id: m.id, detached: false, error: e?.message ?? String(e) });
+          }
+        }
+        (result as any).cascaded_monitors = cascaded;
+      }
+
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         isError: !result.ok,

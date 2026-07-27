@@ -39,10 +39,13 @@ analytics_apps:
     mqtt_ca_bundle: "${MQTT_CA_BUNDLE:-}"
     mqtt_client_cert: "${MQTT_CLIENT_CERT:-}"
     mqtt_client_key: "${MQTT_CLIENT_KEY:-}"
-    pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST:-172.18.0.1}"
-    pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
-    # DLS pipeline to be run for Nx Witness client
-    pipeline_name: "${DLS_PIPELINE_NAME:-}"
+    # DLS pipelines to run per selected Nx UI device option (CPU/GPU/NPU). 
+    # At least one of these must be specified for the plugin to start successfully.
+    pipeline:
+      cpu: ${DLS_PIPELINE_CPU:-}
+      gpu: ${DLS_PIPELINE_GPU:-}
+      npu: ${DLS_PIPELINE_NPU:-}
+
     # Map detection labels (case-insensitive) to Nx Witness object typeIds.
     # Labels not listed here fall back to "python.detected.object".
     # These types are also registered in the Nx manifest automatically at startup.

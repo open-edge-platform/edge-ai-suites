@@ -7,6 +7,9 @@
 services:
   ovms-service:
     runtime: io.containerd.kata.v2
+    devices: !override []
+    annotations:
+      io.katacontainers.config.hypervisor.default_memory: "16384"
     healthcheck:
       start_period: 120s
     volumes:
@@ -15,10 +18,8 @@ services:
       resources:
         limits:
           cpus: '16'
-          memory: 20G
         reservations:
           cpus: '12'
-          memory: 16G
 
 networks:
   scenescape:

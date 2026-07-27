@@ -6,7 +6,7 @@ import "../../assets/css/Body.css";
 
 interface BodyProps {
   isModalOpen: boolean;
-  activeScreen: 'main' | 'content-search';
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen }) => {
@@ -20,7 +20,7 @@ const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen }) => {
           <LeftPanel />
         </div>
         <div style={{ display: activeScreen === 'content-search' ? 'contents' : 'none' }}>
-          <ContentSearchPanel />
+          <ContentSearchPanel active={activeScreen === 'content-search'} />
         </div>
       </div>
       <div className="right-panel" style={{ flex: isRightPanelCollapsed ? 0 : 1 }}>

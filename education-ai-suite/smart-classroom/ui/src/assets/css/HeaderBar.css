@@ -90,6 +90,29 @@ button.text-button:hover {
   border-color: #6da5e0;
 }
 
+.report-button {
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0071c5;
+  background: none;
+  border: 2px solid #82b6df;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-right: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.report-button:hover {
+  background: #0071c5;
+  color: #fff;
+  border-color: #6da5e0;
+}
+
 .upload-button:disabled,
 .upload-button[disabled] {
   color: #bbbaba;

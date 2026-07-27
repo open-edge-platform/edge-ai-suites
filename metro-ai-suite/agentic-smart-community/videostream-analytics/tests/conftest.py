@@ -10,7 +10,7 @@ FIXTURES_DIR = TESTS_DIR / "fixtures"
 PROJECT_DIR = TESTS_DIR.parent
 REPO_DIR = PROJECT_DIR.parent
 
-TEST_VIDEO_PATH = REPO_DIR / "demo-videos" / "cam_child" / "child_safety_demo.mp4"
+TEST_VIDEO_PATH = REPO_DIR / "demo/videos" / "cam_child" / "child_safety_demo.mp4"
 
 
 @pytest.fixture
