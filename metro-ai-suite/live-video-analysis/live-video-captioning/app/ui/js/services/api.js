@@ -70,17 +70,45 @@ const ApiService = (function () {
         }
     }
 
-    async function fetchSystemCapabilities() {
+    async function fetchSystemCapabilities(metricsServicePort) {
+        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        const host = window.location.hostname;
+        const capabilitiesUrl = `${protocol}//${host}:${metricsServicePort}/api/v1/capabilities?profile=minimal`;
+
         try {
-            const resp = await fetch('/api/capabilities', { method: 'GET' });
+            const resp = await fetch(capabilitiesUrl, { method: 'GET' });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
+            const devices = Array.isArray(data?.devices) ? data.devices : null;
+            if (!devices) throw new Error('Invalid capability response');
+
             return {
-                has_gpu: data?.has_gpu === true,
-                has_npu: data?.has_npu === true,
+                ...data,
+                has_gpu: devices.some(
+                    (device) => device?.present === true
+                        && ['igpu', 'dgpu'].includes(device?.category)
+                ),
+                has_npu: devices.some(
+                    (device) => device?.present === true && device?.category === 'npu'
+                ),
             };
         } catch (_err) {
-            return { has_gpu: null, has_npu: null };
+            try {
+                const resp = await fetch('/api/capabilities', { method: 'GET' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                return {
+                    has_gpu: data?.has_gpu === true,
+                    has_npu: data?.has_npu === true,
+                    devices: [],
+                };
+            } catch (_fallbackErr) {
+                return {
+                    has_gpu: null,
+                    has_npu: null,
+                    devices: [],
+                };
+            }
         }
     }
 

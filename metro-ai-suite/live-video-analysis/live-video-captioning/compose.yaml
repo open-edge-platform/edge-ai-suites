@@ -205,7 +205,7 @@ services:
       - app_network
 
   metrics-manager:
-    image: docker.io/intel/metrics-manager:2026.1.0-rc2
+    image: docker.io/intel/metrics-manager:2026.2.0-20260715-weekly
     container_name: metrics-manager
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,metrics-manager,${no_proxy}
