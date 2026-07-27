@@ -34,6 +34,7 @@ section_split:
   title_patterns:
     - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
     - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
+    - "^\\s*SECTION\\s+[IVXLCDM]+"                  # SECTION I / SECTION II / SECTION IV
   stitch_direction: "vertical"                  # how to join cross-page section pieces
 
   compress_whitespace: true
