@@ -26,9 +26,16 @@ import os
 from collections import deque
 from typing import Dict, Optional, Any, Literal
 import json
+import ast
+import re
+import threading
 import time
 from influxdb import InfluxDBClient as Influx1Client
 import logging
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.responses import PlainTextResponse
+import uvicorn
 
 # Configure logging
 
@@ -68,6 +75,18 @@ logger.debug(type(FUSION_MODE), FUSION_MODE)
 
 if FUSION_MODE not in ["AND", "OR"]:
     raise ValueError(f"FUSION_MODE must be 'AND' or 'OR' given value is {FUSION_MODE}")
+
+# ── API Configuration ─────────────────────────────────────────────────────────
+API_PORT = int(os.getenv("API_PORT", "8080"))
+APM_API_KEY = os.getenv("APM_API_KEY", "")
+
+VISION_MEASUREMENT = "vision-weld-classification-results"
+
+_api_start_time = time.time()
+_api_request_count = 0
+
+# Label allow-list: only alphanumeric, underscore, hyphen, dot, and space
+_SAFE_LABEL_RE = re.compile(r"^[A-Za-z0-9_\-\. ]+$")
 
 influx_client = None
 # ===================== UTILITY FUNCTIONS =====================
@@ -187,12 +206,27 @@ def on_message(client, userdata, msg):
             # Debug: uncomment to see incoming messages
             # logger.info(f"Received from Vision: {payload}")
 
+            vision_confidence = 0
+            vision_classification = "No Label"
+
+            if "metadata" in payload and "objects" in payload["metadata"] and "classification/Model6" in payload["metadata"]["objects"][0]:
+                if "label" in payload["metadata"]["objects"][0]["classification/Model6"]:
+                    vision_classification = str(payload["metadata"]["objects"][0]["classification/Model6"]["label"])
+                else:
+                    vision_classification = "No Label"
+                if "confidence" in payload["metadata"]["objects"][0]["classification/Model6"]:
+                    vision_confidence = float(payload["metadata"]["objects"][0]["classification/Model6"]["confidence"])
+                else:
+                    vision_confidence = 0.0
+
             # Write vision weld classification results to InfluxDB
             json_body = [{
-                "measurement": "vision-weld-classification-results",
+                "measurement": VISION_MEASUREMENT,
                 "time": pd.to_datetime(time, unit="ns").isoformat(),
                 "tags": {
-                    "search_time": int(time)
+                    "search_time": int(time),
+                    "label": vision_classification,
+                    "confidence": vision_confidence
                 },
                 "fields": {
                     "frame_id": int(payload["metadata"]["frame_id"]),
@@ -345,6 +379,173 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     }
 
 
+# ===================== REST API =====================
+
+api_app = FastAPI(
+    title="Fusion Analytics API",
+    description="REST API for querying fusion analytics results stored in InfluxDB",
+    version="1.0.0",
+)
+
+
+def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
+    """Enforce API key auth for mutating endpoints."""
+    if not APM_API_KEY:
+        return
+    if x_api_key != APM_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+
+def _influx_points(query: str) -> list:
+    """Execute an InfluxQL query and return results as a list of dicts."""
+    if influx_client is None:
+        raise HTTPException(status_code=503, detail="InfluxDB client not initialized")
+    try:
+        result = influx_client.query(query)
+        return list(result.get_points())
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@api_app.get("/health")
+def health():
+    """Health check: verify InfluxDB connectivity and report stored detection count."""
+    if influx_client is None:
+        raise HTTPException(status_code=503, detail="InfluxDB client not initialized")
+    try:
+        influx_client.ping()
+        points = _influx_points(f"SELECT count(frame_id) FROM \"{VISION_MEASUREMENT}\"")
+        count = points[0].get("count", 0) if points else 0
+        return {"status": "ok", "detections_count": count}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+
+@api_app.get("/detections")
+def get_detections(
+    label: str | None = Query(None, description="Filter by label"),
+    min_confidence: float | None = Query(None, ge=0.0, le=1.0, description="Minimum confidence threshold (0-1)"),
+    min_id: int | None = Query(None, ge=0, description="Row offset — skip the first min_id results (ordered by time)"),
+    max_id: int | None = Query(None, ge=0, description="Upper row bound — combined with min_id to derive LIMIT"),
+    limit: int | None = Query(None, ge=1),
+):
+    """Query vision weld classification results with optional filters for frame_id, confidence, and row window."""
+    global _api_request_count
+    _api_request_count += 1
+
+    conditions = []
+    if label is not None:
+        conditions.append(f"\"label\" = '{label}'")
+    if min_confidence is not None:
+        conditions.append(f"confidence >= {min_confidence}")
+    if min_id is not None:
+        conditions.append(f"search_time > {min_id}")
+    if max_id is not None:
+        conditions.append(f"search_time <= {max_id}")
+
+    where_clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    limit_clause = f" LIMIT {limit}" if limit else ""
+
+    query = f"SELECT * FROM \"{VISION_MEASUREMENT}\"{where_clause} ORDER BY time ASC{limit_clause}"
+
+    return _influx_points(query)
+
+
+@api_app.get("/detections/summary")
+def get_summary(
+    min_id: int | None = Query(None, ge=0, description="Row offset for scoping the summary window"),
+    max_id: int | None = Query(None, ge=0, description="Upper row bound for the summary window"),
+):
+    """Return per-class statistics aggregated from stored vision weld classification results."""
+    # Derive limit/offset from id window if provided
+    effective_limit = None
+
+    conditions = []
+    if min_id is not None:
+        conditions.append(f"search_time > {min_id}")
+    if max_id is not None:
+        conditions.append(f"search_time <= {max_id}")
+
+    where_clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    query = f"SELECT * FROM \"{VISION_MEASUREMENT}\"{where_clause} ORDER BY time ASC"
+
+    points = _influx_points(query)
+
+    summary: dict[str, dict] = {}
+    for p in points:
+        # Extract classification label from objects metadata (stored as Python literal string)
+        label = "unknown"
+        try:
+            label = p.get("label", "unknown")
+        except (ValueError, KeyError, IndexError, TypeError) as e:
+            pass
+        
+        if label not in summary:
+            summary[label] = {
+                "count": 0,
+                "height": 0,
+                "width": 0,
+                "channels": 0,
+                "confidence": 0.0,
+                "label": "unknown"
+            }
+        summary[label]["count"] += 1
+        summary[label]["height"] = int(p.get("height") or 0)
+        summary[label]["width"] = int(p.get("width") or 0)
+        summary[label]["channels"] = int(p.get("channels") or 0)
+        summary[label]["confidence"] = float(p.get("confidence") or 0.0)
+        summary[label]["label"] = label
+    return summary
+
+
+@api_app.get("/detections/max_id")
+def get_max_id():
+    """Return total stored vision weld classification count used as a watermark by consumers."""
+    points = _influx_points(f"SELECT count(frame_id) FROM \"{VISION_MEASUREMENT}\"")
+    total_count = points[0].get("count", 0) if points else 0
+    return {"max_id": total_count, "total_count": total_count}
+
+
+@api_app.delete("/detections", status_code=204)
+def clear_detections(_auth: None = Depends(require_api_key)):
+    """Drop all stored vision weld classification results from InfluxDB."""
+    if influx_client is None:
+        raise HTTPException(status_code=503, detail="InfluxDB client not initialized")
+    try:
+        influx_client.query(f"DROP MEASUREMENT \"{VISION_MEASUREMENT}\"")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@api_app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    """Expose Prometheus-style metrics for vision weld classification results and API activity."""
+    global _api_start_time, _api_request_count
+    uptime = time.time() - _api_start_time
+    count = 0
+    if influx_client is not None:
+        try:
+            points = list(influx_client.query(f"SELECT count(frame_id) FROM \"{VISION_MEASUREMENT}\"").get_points())
+            count = points[0].get("count", 0) if points else 0
+        except Exception:
+            pass
+    return (
+        f"# HELP fusion_detections_total Total fusion results stored\n"
+        f"# TYPE fusion_detections_total gauge\n"
+        f"fusion_detections_total {count}\n"
+        f"# HELP fusion_requests_total Total HTTP requests handled\n"
+        f"# TYPE fusion_requests_total counter\n"
+        f"fusion_requests_total {_api_request_count}\n"
+        f"# HELP fusion_uptime_seconds Service uptime in seconds\n"
+        f"# TYPE fusion_uptime_seconds gauge\n"
+        f"fusion_uptime_seconds {uptime:.1f}\n"
+    )
+
+
 # ===================== MAIN EXECUTION =====================
 
 def main():
@@ -370,6 +571,14 @@ def main():
     except Exception as e:
         logger.info(f"Failed to connect to MQTT broker: {e}")
         exit(1)
+
+    # Start REST API in a background daemon thread
+    api_thread = threading.Thread(
+        target=lambda: uvicorn.run(api_app, host="0.0.0.0", port=API_PORT, log_level="warning"),
+        daemon=True,
+    )
+    api_thread.start()
+    logger.info("REST API listening on port %d", API_PORT)
 
     # Start MQTT message processing in background
     client.loop_start()
