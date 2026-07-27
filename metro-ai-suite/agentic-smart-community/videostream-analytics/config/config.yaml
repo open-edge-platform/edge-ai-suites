@@ -37,7 +37,7 @@ defaults:
     retention_days: 5
   prefilter:
     enabled: true
-    model_path: "/home/jie/models/yolo11s.xml"
+    model_path: /path/to/prefilter-ov-model.xml
     target_classes: ["person"]
     min_confidence: 0.4
     min_frames_hit: 1
