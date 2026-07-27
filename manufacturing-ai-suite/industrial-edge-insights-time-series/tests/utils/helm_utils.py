@@ -251,7 +251,15 @@ def get_env_values():
     wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "90"))  # Default sleep time if not set
     target = os.getenv("target", None)
     if not all([FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, chart_path, namespace, grafana_url, wait_time, target]):
-        raise EnvironmentError("One or more environment variables are not set.")
+        # Don't hard-fail here: this module is shared by both the Time Series and
+        # Multimodal test suites, and the Multimodal suite's pytest.ini only defines
+        # the _multi-suffixed variables (see get_multimodal_env_values()), not these
+        # plain ones. Raising would break collection for Multimodal-only test runs
+        # even though they never use these values.
+        logger.warning(
+            "Time Series Helm env vars (release_name/chart_path/namespace/grafana_url/target) "
+            "are not fully set; this is expected when running only Multimodal tests."
+        )
     return FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL
 
 def _resolve_chart_path_from_cwd(raw_path):
