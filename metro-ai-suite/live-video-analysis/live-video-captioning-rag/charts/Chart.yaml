@@ -7,7 +7,7 @@ description: >
   Parent chart for Live Video Captioning RAG deployment.
   This chart composes the Live Video Captioning stack and enables RAG components.
 type: application
-version: 0.1.0
+version: 2026.2.0-ww31-helm
 appVersion: "2026.0.0"
 
 keywords:
