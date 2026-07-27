@@ -54,13 +54,15 @@ import {
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import ReportPanel from '../ReportPanel';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface HeaderBarProps {
   projectName: string;
   setProjectName: (name: string) => void;
+  featureGuard: FeatureGuard;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const [showToast, setShowToast] = useState(false);
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
@@ -95,6 +97,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Check if video_analytics feature is enabled in backend
+  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -204,6 +209,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [processingMode]);
 
   const hasVideoCapability = useMemo(() => {
+    // Video capability requires BOTH backend feature AND config/uploads
+    if (!hasVideoAnalyticsFeature) {
+      return false;
+    }
+    
     const hasCameraSettings = Boolean(
       frontCamera?.trim() || 
       backCamera?.trim() || 
@@ -211,7 +221,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     );
 
     return hasCameraSettings || hasUploadedVideoFiles === true;
-  }, [frontCamera, backCamera, boardCamera, hasUploadedVideoFiles]);
+  }, [frontCamera, backCamera, boardCamera, hasUploadedVideoFiles, hasVideoAnalyticsFeature]);
 
 
     useEffect(() => {
@@ -274,6 +284,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, t]);
 
   useEffect(() => {
+    // If feature is disabled, show no-config status
+    if (!hasVideoAnalyticsFeature) {
+      setVideoNotification(t('notifications.noVideoConfigured'));
+      return;
+    }
+    
     if (justStoppedRecording && hasVideoCapability) {
       setVideoNotification(t('notifications.videoStreamingStopped'));
       return;
@@ -306,7 +322,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       default:
         setVideoNotification(hasVideoCapability ? t('notifications.videoReady') : t('notifications.noVideoConfigured'));
     }
-  }, [videoStatus, justStoppedRecording, hasVideoCapability, isPlaybackMode, t]);
+  }, [videoStatus, justStoppedRecording, hasVideoCapability, isPlaybackMode, hasVideoAnalyticsFeature, t]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -774,7 +790,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         />
       )}
       {isUploadModalOpen && (
-        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} />
+        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} featureGuard={featureGuard} />
       )}
       {reportFeatureEnabled && (
         <ReportPanel isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />

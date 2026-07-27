@@ -5,6 +5,7 @@ import menu from '../../assets/images/settings.svg';
 import LanguageSwitcher from '../LanguageSwitcher';
 import SettingsModal from '../Menu/SettingsButton';
 import { useTranslation } from 'react-i18next';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface TopPanelProps {
   projectName: string;
@@ -13,13 +14,26 @@ interface TopPanelProps {
   setIsSettingsOpen: (isOpen: boolean) => void;
   activeScreen: 'main' | 'content-search';
   setActiveScreen: (screen: 'main' | 'content-search') => void;
+  featureGuard: FeatureGuard;
+  hasMainFeatures: boolean;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSettingsOpen, setIsSettingsOpen, activeScreen, setActiveScreen }) => {
+const TopPanel: React.FC<TopPanelProps> = ({ 
+  projectName, 
+  setProjectName, 
+  isSettingsOpen, 
+  setIsSettingsOpen, 
+  activeScreen, 
+  setActiveScreen,
+  featureGuard,
+  hasMainFeatures
+}) => {
   const menuIconRef = useRef<HTMLImageElement>(null);
   const { t } = useTranslation();
 
   const isElectron = !!window.electronAPI?.isElectron;
+  // Show Content Search UI if either content_search OR qa feature is enabled
+  const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
 
   const openAppMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -52,12 +66,15 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
           <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
         </div>
         <div className="action-slot">
-          <button
-            className="content-search-back-btn"
-            onClick={() => setActiveScreen('main')}
-          >
-            {t('contentSearch.back', '← Back')}
-          </button>
+          {/* Only show back button if there are main features to go back to */}
+          {hasMainFeatures && (
+            <button
+              className="content-search-back-btn"
+              onClick={() => setActiveScreen('main')}
+            >
+              {t('contentSearch.back', '← Back')}
+            </button>
+          )}
           <LanguageSwitcher />
         </div>
       </header>
@@ -81,12 +98,15 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
         <span className="app-title">{t('header.title')}</span>
       </div>
       <div className="action-slot">
-        <button
-          className="content-search-btn"
-          onClick={() => setActiveScreen('content-search')}
-        >
-          {t('contentSearch.title', 'Content Search')}
-        </button>
+        {/* Only show Content Search button if content_search or qa feature is enabled */}
+        {hasContentSearchFeatures && (
+          <button
+            className="content-search-btn"
+            onClick={() => setActiveScreen('content-search')}
+          >
+            {t('contentSearch.title', 'Content Search')}
+          </button>
+        )}
         <LanguageSwitcher />
         <img
           src={menu}
@@ -101,6 +121,7 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
         onClose={closeSettings}
         projectName={projectName}
         setProjectName={setProjectName}
+        featureGuard={featureGuard}
       />
     </header>
   );

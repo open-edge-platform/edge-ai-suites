@@ -11,6 +11,7 @@ import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useTranslation } from 'react-i18next';
+import { useFeatureConfig } from './hooks/useFeatureConfig';
   
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -18,7 +19,33 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search'>('main');
+  
+  // Load feature configuration dynamically from backend
+  const { features, guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();
+  
   useVideoPipelineMonitor();
+
+  // Check if any main features are enabled
+  const hasMainFeatures = featuresLoaded && guard ? 
+    ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'].some(f => guard.hasFeature(f)) : 
+    true; // Default to true during loading
+
+  // Auto-switch to content-search screen if only content-search features are enabled
+  useEffect(() => {
+    if (!featuresLoaded || !guard) return;
+
+    const mainFeatures = ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'];
+    const contentSearchFeatures = ['content_search', 'qa'];
+
+    const hasMainFeature = mainFeatures.some(f => guard.hasFeature(f));
+    const hasContentSearchFeature = contentSearchFeatures.some(f => guard.hasFeature(f));
+
+    // If only content-search features are enabled (no main features), auto-switch
+    if (!hasMainFeature && hasContentSearchFeature) {
+      console.log('📋 Only content-search features enabled - auto-switching to content-search screen');
+      setActiveScreen('content-search');
+    }
+  }, [featuresLoaded, guard]);
   const checkBackendHealth = async () => {
     try {
       const isHealthy = await pingBackend();
@@ -82,6 +109,32 @@ const App: React.FC = () => {
     );
   }
 
+  // Wait for features to load before rendering main UI
+  if (featuresLoading || !featuresLoaded) {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <div className="spinner" />
+          <h2>Loading configuration</h2>
+          <p>Detecting enabled features from backend…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (featuresError) {
+    return (
+      <div className="app-error">
+        <div className="error-content">
+          <h1>Configuration Error</h1>
+          <p>{featuresError}</p>
+          <p>Please check your backend configuration.</p>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div className="app">
       <MetricsPoller />
@@ -92,9 +145,11 @@ const App: React.FC = () => {
         setIsSettingsOpen={setIsSettingsOpen}
         activeScreen={activeScreen}
         setActiveScreen={setActiveScreen}
+        featureGuard={guard}
+        hasMainFeatures={hasMainFeatures}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
-        <HeaderBar projectName={projectName} setProjectName={setProjectName} />
+        <HeaderBar projectName={projectName} setProjectName={setProjectName} featureGuard={guard} />
       </div>
       {activeScreen === 'content-search' && (
         <div className="content-search-subheader">
@@ -102,7 +157,7 @@ const App: React.FC = () => {
         </div>
       )}
       <div className="main-content">
-        <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} />
+        <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} featureGuard={guard} />
       </div>
       <Footer />
       
@@ -117,6 +172,7 @@ const App: React.FC = () => {
             onClose={() => setIsSettingsOpen(false)}
             projectName={projectName}
             setProjectName={setProjectName}
+            featureGuard={guard}
           />
         </Modal>,
         document.body
