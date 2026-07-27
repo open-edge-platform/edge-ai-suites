@@ -21,14 +21,7 @@ compatibility: >-
 metadata:
   author: open-edge-platform
   version: "1.11.0"
-  tags:
-    - validation
-    - onboarding
-    - qa
-    - docker-compose
-    - helm
-    - kubernetes
-    - edge-ai
+  tags: validation, onboarding, qa, docker-compose, helm, kubernetes, edge-ai
 allowed-tools: bash git
 ---
 
