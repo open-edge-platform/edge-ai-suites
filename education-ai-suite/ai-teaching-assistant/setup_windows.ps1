@@ -199,7 +199,9 @@ $VeiSparsePaths = @(
     "smart-kiosk-assistant/requirements.txt"
 )
 $VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"
-$VeiSubmoduleUrl = "https://github.com/suryam789/voice-enabled-interactions.git"
+# Fallback URL only; when a .gitmodules entry exists its URL takes precedence
+# (see below) so new users always clone the source declared in .gitmodules.
+$VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.git"
 
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
@@ -214,6 +216,15 @@ elseif ([string]::IsNullOrWhiteSpace($VeiRepoRoot)) {
 }
 else {
     $VeiRepoRoot = $VeiRepoRoot.Trim()
+
+    # Prefer the URL declared in the superproject's .gitmodules so a fresh clone
+    # always pulls the source of truth instead of the hardcoded fallback above.
+    $VeiGitmodulesUrl = git -C $VeiRepoRoot config --file .gitmodules --get "submodule.$VeiSubmoduleRelPath.url" 2>$null
+    if (-not [string]::IsNullOrWhiteSpace($VeiGitmodulesUrl)) {
+        $VeiSubmoduleUrl = $VeiGitmodulesUrl.Trim()
+        Write-Info "Using submodule URL from .gitmodules: $VeiSubmoduleUrl"
+    }
+
     $SavedEAP = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
 
