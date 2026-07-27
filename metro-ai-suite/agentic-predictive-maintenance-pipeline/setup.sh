@@ -41,6 +41,7 @@ stop_containers() {
     local containers=(
         apm-nginx apm-ui apm-agent apm-detection apm-llm
         apm-storage apm-dlstreamer apm-mqtt-broker apm-model-download
+        apm-metrics
     )
     local found=0
     for c in "${containers[@]}"; do
@@ -229,6 +230,7 @@ case "${ACTION}" in
 
         COMPOSE_CMD="docker compose \
             -f docker/compose.base.yaml \
+            -f docker/compose.telemetry.yaml \
             -f docker/compose.detection.yaml \
             -f docker/compose.agents.yaml \
             -f docker/compose.ui.yaml"

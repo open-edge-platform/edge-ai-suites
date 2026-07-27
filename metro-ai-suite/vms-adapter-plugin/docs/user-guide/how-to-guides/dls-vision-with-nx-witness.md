@@ -59,53 +59,30 @@ VMS Adapter Plugin (VAP)                                                │
 ## Part 1 — Set Up Loitering Detection application
 
 ### 1.1 Configure the Lotiering Detection Environment
-Clone the edge-ai-suites repo as instructed in the setup document
+Clone the edge-ai-suites repo as instructed in the setup document and install loitering detection as mentioned [here](../../../../metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/get-started.md#set-up-and-first-use).
+Do not bring up the application yet.
 
-Navigate to the Loitering Detection application directory and add this convenient pipeline for streaming metadata to an MQTT broker.
+> The above setup generates a docker-compose.yml file
 
-```sh
-cd [WORK_DIR]/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/src/dlstreamer-pipeline-server/config.json
-```
-Edit the config.json and add the following pipeline.
-```json
-            {
-                "name": "loitering_detection_vms_mqtt",
-                "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaattachroi roi=0,200,300,400 ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU model-instance-id=inst0 inference-interval=1 threshold=0.7 name=detection ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "detection-properties": {
-                            "element": {
-                                "name": "detection",
-                                "format": "element-properties"
-                            }
-                        }
-                    }
-                },
-                "auto_start": false
-            }
-```
-This pipeline:
-- Accepts an RTSP source via `{auto_source}`.
-- Runs `gvadetect` for object detection.
-- Uses `gvametapublish` (the `destination` element) to publish inference results to the configured MQTT topic.
+### 1.2 Verify MQTT Port Exposure and set MQTT host for DLStreamer Pipeline Server to publish
 
-### 1.2 Verify MQTT Port Exposure
-
-The dls_vision Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`:
+The Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`. Also set the `MQTT_HOST` for dlstreamer pipeline server to publish
 
 ```yaml
 broker:
   image: docker.io/library/eclipse-mosquitto:2.0.21
   ports:
     - "1883:1883"
+
+dlstreamer-pipeline-server:
+  environment:
+    - MQTT_HOST=${HOST_IP}  # we set to HOST_IP as broker is running in the same host
+    - MQTT_PORT=1883
 ```
 
 This is the default configuration. The Mosquitto broker uses an anonymous-access configuration (`allow_anonymous true`), which is required for VMS Analytics plugin and the DLStreamer Pipeline Server to publish and subscribe without credentials.
 
 > **Important:** The plugin connects to this MQTT broker from outside the dls_vision Docker network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP runs on the same host, `host.docker.internal` resolves to the host from inside the plugin container.
-
 
 ### 1.3 Start Loitering Detection Application
 
@@ -248,28 +225,15 @@ NX_CA_BUNDLE=
 DLS_VISION_HOST=host.docker.internal
 DLS_VISION_PORT=8080
 DLS_VISION_TLS_VERIFY=false
-DLS_PIPELINE_NAME=loitering_detection_vms_mqtt 
+DLS_PIPELINE_CPU=object_tracking_cpu
+DLS_PIPELINE_GPU=object_tracking_gpu
+DLS_PIPELINE_NPU=
 DLS_VISION_CA_BUNDLE=
 
 # MQTT Broker — address as seen by VAP (subscribing from outside the dls_vision Docker network)
 # If dls_vision runs on the same host: use host.docker.internal
 MQTT_HOST=host.docker.internal
 MQTT_PORT=1883
-
-# PIPELINE_SERVER_MQTT_HOST — address as seen by the DLStreamer Pipeline Server
-# container inside the dls_vision Docker network.
-# The GStreamer Paho C MQTT client cannot resolve Docker service names across networks.
-# Use the host machine's LAN IP — this is the most reliable choice because port 1883
-# is published from the mqtt-broker container to the host, making it reachable from
-# any container regardless of which Docker network it belongs to.
-#
-# Find your host LAN IP:
-#   hostname -I | awk '{print $1}'
-#
-# DO NOT use 172.18.0.1 (the default Docker bridge gateway) unless you have confirmed
-# that the dls_vision containers are on that exact subnet.
-PIPELINE_SERVER_MQTT_HOST=<HOST_LAN_IP>
-PIPELINE_SERVER_MQTT_PORT=1883
 
 # DLS Vision App MQTT — broker address as seen by VAP (for subscribing)
 MQTT_HOST=
@@ -286,15 +250,6 @@ MQTT_BROKER_PORT=1883
 `NX_TLS_VERIFY` and `DLS_VISION_TLS_VERIFY` are `false` by default for compatibility with self-signed certificates.
 Set either value to `true` to enforce certificate verification. When enabled, set the matching `*_CA_BUNDLE`
 to a CA certificate path that exists inside the `vms-backend` container.
-
-> **Finding your host LAN IP:**
-> ```bash
-> hostname -I | awk '{print $1}'
-> ```
-> Use this value for `PIPELINE_SERVER_MQTT_HOST`. It is reachable from any Docker container
-> because port `1883` is published from the `mqtt-broker` container to the host.
-> Avoid using `172.18.0.1` (the default Docker bridge gateway) — it only works if the
-> dls_vision containers are on that exact subnet, and this is not guaranteed.
 
 ### 3.2 Configure VAP `config.yaml`
 
@@ -329,14 +284,19 @@ analytics_apps:
     tls_ca_bundle: "${DLS_VISION_CA_BUNDLE:-}"
     mqtt_host: "${MQTT_HOST:-host.docker.internal}"
     mqtt_port: ${MQTT_PORT:-1883}
-    pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
-    pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
-    pipeline_name: "${DLS_PIPELINE_NAME:-}"
+    pipeline:
+      cpu: ${DLS_PIPELINE_CPU:-}
+      gpu: ${DLS_PIPELINE_GPU:-}
+      npu: ${DLS_PIPELINE_NPU:-}
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
       background: vap.background
 ```
+
+At least one of `DLS_PIPELINE_CPU`, `DLS_PIPELINE_GPU`, or `DLS_PIPELINE_NPU` must be set.
+In Nx UI, the **Device** dropdown only shows configured devices, and selecting one starts
+the corresponding configured pipeline with the same device in `detection-properties.device`.
 
 ### 3.3 Configure the `label_type_map`
 
@@ -545,8 +505,7 @@ Expected log output:
 ```
 [info] {'source': {'uri': '<rtsp_url>', 'type': 'uri', 'properties': {'protocols': 'tcp',
         'add-reference-timestamp-meta': True, 'latency': 100}},
-        'destination': {'metadata': {'type': 'mqtt', 'host': '<PIPELINE_SERVER_MQTT_HOST>:1883',
-        'topic': 'nx/dls_vision/<device-uuid>'}},
+  'destination': {'metadata': {'type': 'mqtt', 'topic': 'nx/dls_vision/<device-uuid>'}},
         'parameters': {'detection-properties': {'device': 'GPU'}}}
 [info]  od_run_started  pipeline=user_defined_pipelines/loitering_detection_vms_mqtt run_id=<hex-instance-id>
 [info]  nx_pipeline_started app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id>
@@ -656,7 +615,6 @@ When VAP starts a pipeline run, it executes the following:
      "destination": {
        "metadata": {
          "type": "mqtt",
-         "host": "<PIPELINE_SERVER_MQTT_HOST>:1883",
          "topic": "nx/dls_vision/<device-uuid>"
        }
      },
@@ -744,21 +702,7 @@ docker compose down
 
 2. Confirm the MQTT topic matches. VAP subscribes to `+/dls_vision/+`. dls_vision publishes to the topic VAP sends in the pipeline start payload (`nx/dls_vision/<device-uuid>`). Both must match.
 
-3. Check `PIPELINE_SERVER_MQTT_HOST` in `.env`. This must be the **host machine's LAN IP**, not a Docker container name or `host.docker.internal`. The GStreamer Paho C MQTT client inside the Pipeline Server container cannot resolve Docker service names, and `172.18.0.1` (the default Docker bridge gateway) is only valid if the dls_vision containers happen to be on that exact subnet.
-
-   Find the correct value:
-   ```bash
-   hostname -I | awk '{print $1}'
-   ```
-
-   Update `.env` and restart VAP:
-   ```bash
-  # In metro-ai-suite/vms-adapter-plugin/.env
-   PIPELINE_SERVER_MQTT_HOST=<output of hostname -I | awk '{print $1}'>
-   docker compose restart vms-backend
-   ```
-
-4. Verify MQTT connectivity from the VAP side:
+3. Verify MQTT connectivity from the VAP side:
 
    ```bash
    # Install mosquitto-clients if not present
@@ -767,9 +711,9 @@ docker compose down
    ```
    Start a pipeline run and check if messages appear.
 
-5. Confirm the analytics integration is enabled for the camera in Nx Witness (see [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
+4. Confirm the analytics integration is enabled for the camera in Nx Witness (see [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
 
-6. Check the Nx push in VAP logs:
+5. Check the Nx push in VAP logs:
 
    ```bash
    docker compose logs vms-backend | grep "nx_push\|push_analytics\|device_agent"
@@ -828,11 +772,10 @@ The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some s
    cd metro-ai-suite/metro-vision-ai-app-recipe
    docker compose up -d
    ```
-3. Update `.env` in the VAP directory so the LD MQTT subscriber and the DLStreamer Pipeline Server both use the LD broker on port `1884`:
+3. Update `.env` in the VAP directory so the LD MQTT subscriber uses the LD broker on port `1884`:
    ```bash
    # metro-ai-suite/vms-adapter-plugin/.env
    MQTT_PORT=1884
-   PIPELINE_SERVER_MQTT_PORT=1884
    ```
 4. Start VAP (already configured with both apps in `config.yaml`):
    ```bash

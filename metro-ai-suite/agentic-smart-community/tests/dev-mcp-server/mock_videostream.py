@@ -149,7 +149,7 @@ def main():
     else:
         print("✗ not reachable")
         print(f"  Make sure MCP Server is running with events endpoint on the expected port.")
-        print(f"  Start with: node packages/mcp-server/dist/index.js --config config.yaml.example")
+        print(f"  Start with: node packages/mcp-server/dist/index.js --config demo/config.demo.yaml")
         sys.exit(1)
 
     print()
