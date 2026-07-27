@@ -23,6 +23,9 @@ const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading'>('main');
   useVideoPipelineMonitor();
 
+  // Load feature configuration
+  const { features, guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();
+
   // Check if any main features are enabled
   const hasMainFeatures = featuresLoaded && guard ? 
     ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'].some(f => guard.hasFeature(f)) : 
@@ -154,15 +157,10 @@ const App: React.FC = () => {
           <span>{t('contentSearch.subtitle')}</span>
         </div>
       )}
-<<<<<<< HEAD
-      <div className="main-content">
-        <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} featureGuard={guard} />
-=======
       <div style={{ display: activeScreen === 'grading' ? 'none' : 'contents' }}>
         <div className="main-content">
-          <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} />
+          <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} featureGuard={guard} hasMainFeatures={hasMainFeatures} />
         </div>
->>>>>>> 5b6e87f38e8d831888df270fd622316f875094dd
       </div>
       {activeScreen === 'grading' && (
         <>

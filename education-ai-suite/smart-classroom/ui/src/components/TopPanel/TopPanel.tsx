@@ -14,6 +14,8 @@ interface TopPanelProps {
   setIsSettingsOpen: (isOpen: boolean) => void;
   activeScreen: 'main' | 'content-search' | 'grading';
   setActiveScreen: (screen: 'main' | 'content-search' | 'grading') => void;
+  featureGuard: FeatureGuard;
+  hasMainFeatures: boolean;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({ 
@@ -126,7 +128,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
         <span className="app-title">{t('header.title')}</span>
       </div>
       <div className="action-slot">
-<<<<<<< HEAD
         {/* Only show Content Search button if content_search or qa feature is enabled */}
         {hasContentSearchFeatures && (
           <button
@@ -136,20 +137,15 @@ const TopPanel: React.FC<TopPanelProps> = ({
             {t('contentSearch.title', 'Content Search')}
           </button>
         )}
-=======
-        <button
-          className="content-search-btn"
-          onClick={() => setActiveScreen('content-search')}
-        >
-          {t('contentSearch.title', 'Content Search')}
-        </button>
-        <button
-          className="content-search-btn"
-          onClick={() => setActiveScreen('grading')}
-        >
-          {t('grading.open', 'Grading')}
-        </button>
->>>>>>> 5b6e87f38e8d831888df270fd622316f875094dd
+        {/* Only show Grading button if grading feature is enabled */}
+        {featureGuard.hasFeature('grading') && (
+          <button
+            className="content-search-btn"
+            onClick={() => setActiveScreen('grading')}
+          >
+            {t('grading.open', 'Grading')}
+          </button>
+        )}
         <LanguageSwitcher />
         <img
           src={menu}

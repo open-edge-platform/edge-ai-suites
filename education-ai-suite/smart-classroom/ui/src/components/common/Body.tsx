@@ -8,9 +8,11 @@ import type { FeatureGuard } from "../../utils/featureGuards";
 interface BodyProps {
   isModalOpen: boolean;
   activeScreen: 'main' | 'content-search' | 'grading';
+  featureGuard: FeatureGuard;
+  hasMainFeatures: boolean;
 }
 
-const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen, featureGuard }) => {
+const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen, featureGuard, hasMainFeatures }) => {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const toggleRightPanel = () => setIsRightPanelCollapsed(!isRightPanelCollapsed);
   

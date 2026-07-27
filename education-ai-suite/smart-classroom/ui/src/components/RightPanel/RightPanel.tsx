@@ -8,6 +8,7 @@ import type { FeatureGuard } from "../../utils/featureGuards";
 
 interface RightPanelProps {
   activeScreen: 'main' | 'content-search' | 'grading';
+  featureGuard: FeatureGuard;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({ activeScreen, featureGuard }) => {
