@@ -173,15 +173,11 @@ def _find_chart_tgz(chart_dir):
 
 
 def _ensure_chart_extracted(chart_dir):
-    """Materialize a helm-packages/ directory so downstream helpers keep working.
+    """Extract the .tgz chart package in `chart_dir` in place, if not already done.
 
-    `chart_dir` is expected to be the directory that the workflow's "Generate
-    Helm charts" (build=yes) or "Pull Helm charts from OCI registry" (build=no)
-    step populates with a single packaged `.tgz` chart. Many test helpers read
-    `values.yaml`/config folders directly from `chart_path`, so this extracts
-    the `.tgz` contents in place (alongside the `.tgz` itself) the first time
-    it is seen. It is idempotent: re-extraction is skipped unless the `.tgz`
-    file changes.
+    Test helpers read values.yaml/config folders directly from chart_path, so
+    this extracts the .tgz contents alongside the .tgz itself. Idempotent:
+    re-extraction is skipped unless the .tgz file changes.
     """
     if not chart_dir or not os.path.isdir(chart_dir):
         return chart_dir
@@ -1625,33 +1621,27 @@ def verify_influxdb_retention(namespace, chart_path, response):
 
 def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
-    
-    This generates the helm chart AND packages it into a .tgz file in helm-packages/.
-    This matches the workflow behavior which uses gen_helm_charts_targz.
-    
-    For multimodal, uses `make gen_helm_charts` + manual packaging since
-    multimodal Makefile doesn't have gen_helm_charts_targz target.
 
-    If a `.tgz` package already exists in `chart_path` (already generated or
-    pulled by the CI workflow's Helm chart step before tests started),
-    regeneration is skipped so tests install from that pulled/generated
-    package only, instead of silently overwriting it with a locally
-    regenerated chart.
+    Generates the helm chart AND packages it into a .tgz file in helm-packages/.
+    For multimodal, uses `make gen_helm_charts` + manual packaging since
+    multimodal Makefile doesn't have a gen_helm_charts_targz target.
+
+    If a `.tgz` already exists in `chart_path` (already generated/pulled by the
+    CI workflow before tests started), regeneration is skipped so tests
+    install from that package only.
     """
     existing_tgz = _find_chart_tgz(chart_path)
     if existing_tgz:
         logger.info(
-            "Found existing Helm chart package '%s' in '%s' (already generated/pulled "
-            "by the workflow); skipping regeneration so tests install from that package only.",
+            "Found existing Helm chart package '%s' in '%s'; skipping regeneration.",
             existing_tgz, chart_path,
         )
+        _ensure_chart_extracted(chart_path)
         list_directory_contents()
         return True
 
     original_dir = os.getcwd()
     try:
-        # chart_path (helm-packages/) may not exist yet if the workflow's
-        # generate/pull step was skipped, e.g. for a local/manual test run.
         os.makedirs(chart_path, exist_ok=True)
         os.chdir(chart_path)
         os.chdir("../")
@@ -1701,14 +1691,16 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
     try:
-        # Always install from the pulled/generated .tgz package when one is
-        # present in chart_path, instead of the extracted directory, so the
-        # deployment matches exactly what the workflow produced/pulled.
-        install_target = _find_chart_tgz(chart_path) or chart_path
+        # Install from the extracted chart dir, not the raw .tgz, so values.yaml
+        # edits made by test fixtures (e.g. update_values_yaml) are picked up.
+        _ensure_chart_extracted(chart_path)
+        if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
+            install_target = chart_path
+        else:
+            install_target = _find_chart_tgz(chart_path) or chart_path
         if install_target != chart_path:
             logger.info(f"Installing from packaged chart archive: {install_target}")
 
-        # Construct the Helm install command
         helm_command = [
             "helm", "install", release_name, install_target,
             "--set", f"env.privileged_access_required={val}",
@@ -1716,21 +1708,15 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",
             "-n", namespace, "--create-namespace"
         ]
-        
-        # Add SAMPLE_APP if provided (critical for matching UDF package name)
+
+        # SAMPLE_APP must match the UDF package name
         if sample_app:
             helm_command.extend(["--set", f"env.SAMPLE_APP={sample_app}"])
 
-        # Execute the Helm install command and capture output
         logger.info(f"Installing Helm chart with {telegraf_input_plugin}...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
-
-        # Print the output for debugging purposes
         logger.info(result.stdout)
-        
-        # Configuration will be handled by setup_sample_app_udf_deployment_package() using TS API
-        # as recommended in the documentation instead of directly updating ConfigMaps
-        
+
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to install Helm chart: Error: INSTALLATION FAILED: values don't meet the specifications of the schema(s) in the following chart(s): {e.stderr}")
@@ -1739,19 +1725,15 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
 def helm_uninstall(release_name, namespace):
     """Uninstall a Helm release with specified parameters."""
     try:
-        # Construct the Helm uninstall command
         helm_command = [
             "helm", "uninstall", release_name,
             "-n", namespace
         ]
 
-        # Execute the Helm uninstall command and capture output
         logger.info(f"Uninstalling Helm release '{release_name}' from namespace '{namespace}'...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
-
-        # Print the output for debugging purposes
         logger.info(result.stdout)
-        
+
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to uninstall Helm release: Error: uninstall: Release not loaded: ts-wind-turbine-anomaly: release: not found: {e.stderr}")
@@ -1760,17 +1742,19 @@ def helm_uninstall(release_name, namespace):
 def helm_upgrade(release_name, chart_path, namespace, telegraf_input_plugin1):
     """Upgrade a Helm release with specified parameters."""
     try:
-        # Prefer the pulled/generated .tgz package, matching helm_install().
-        install_target = _find_chart_tgz(chart_path) or chart_path
+        # Same extracted-chart-dir preference as helm_install().
+        _ensure_chart_extracted(chart_path)
+        if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
+            install_target = chart_path
+        else:
+            install_target = _find_chart_tgz(chart_path) or chart_path
 
-        # Construct the Helm upgrade command
         helm_command = [
             "helm", "upgrade", release_name, install_target,
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin1}",
             "-n", namespace
         ]
 
-        # Execute the Helm upgrade command and capture output
         logger.info(f"Upgrading Helm release '{release_name}'...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
 
