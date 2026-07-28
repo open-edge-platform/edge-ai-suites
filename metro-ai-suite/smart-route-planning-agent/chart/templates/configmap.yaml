@@ -13,8 +13,10 @@ data:
   HTTP_PROXY: {{ .Values.httpProxy | quote }}
   https_proxy: {{ .Values.httpsProxy | quote }}
   HTTPS_PROXY: {{ .Values.httpsProxy | quote }}
-  no_proxy: {{ .Values.noProxy | quote }}
-  NO_PROXY: {{ .Values.noProxy | quote }}
+  no_proxy: {{ printf "%s,ovms" .Values.noProxy | trimPrefix "," | quote }}
+  NO_PROXY: {{ printf "%s,ovms" .Values.noProxy | trimPrefix "," | quote }}
+  # Empty means rule based route planning and no OVMS workload.
+  REASONING_MODEL_NAME: {{ .Values.reasoning.modelName | quote }}
   config.json: |
     {
       "api_endpoint": {{ .Values.trafficIntersections.apiEndpoint | quote }},

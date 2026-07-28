@@ -1,0 +1,157 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Rendered only when reasoning.modelName is set. When it is empty no OVMS workload is
+created and the agent falls back to rule based route planning.
+*/}}
+
+{{- if .Values.reasoning.modelName }}
+{{- if .Values.reasoning.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "smart-route-planning-agent.fullname" . }}-ovms-models
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "smart-route-planning-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.reasoning.persistence.size }}
+  {{- with .Values.reasoning.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ovms
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "smart-route-planning-agent.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: ovms-rest
+      protocol: TCP
+      name: ovms-rest
+  selector:
+    {{- include "smart-route-planning-agent.ovmsSelectorLabels" . | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "smart-route-planning-agent.fullname" . }}-ovms
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "smart-route-planning-agent.ovmsLabels" . | nindent 4 }}
+spec:
+  # Single replica on purpose. Each replica would download its own copy of the model.
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "smart-route-planning-agent.ovmsSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "smart-route-planning-agent.ovmsLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.reasoning.podSecurityContext | nindent 8 }}
+      containers:
+        - name: ovms
+          image: {{ printf "%s:%s" .Values.reasoning.image.repository .Values.reasoning.image.tag | quote }}
+          imagePullPolicy: {{ .Values.reasoning.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          args:
+            - --source_model
+            - {{ .Values.reasoning.modelName | quote }}
+            - --model_repository_path
+            - /home/ovms/models
+            - --task
+            - text_generation
+            - --target_device
+            - CPU
+            - --rest_port
+            - "8000"
+            - --rest_bind_address
+            - 0.0.0.0
+          ports:
+            - name: ovms-rest
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: http_proxy
+              value: {{ .Values.httpProxy | quote }}
+            - name: HTTP_PROXY
+              value: {{ .Values.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.httpsProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpsProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.noProxy | quote }}
+            - name: NO_PROXY
+              value: {{ .Values.noProxy | quote }}
+            {{- if .Values.reasoning.hfTokenSecret.name }}
+            # Only required for gated HuggingFace repositories.
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reasoning.hfTokenSecret.name }}
+                  key: {{ .Values.reasoning.hfTokenSecret.key }}
+            {{- end }}
+          volumeMounts:
+            - name: ovms-models
+              mountPath: /home/ovms
+          readinessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: ovms-rest
+            periodSeconds: 15
+            timeoutSeconds: 5
+            # Generous, as the first start downloads and converts the model before serving.
+            failureThreshold: {{ .Values.reasoning.startupFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /v2/health/live
+              port: ovms-rest
+            initialDelaySeconds: 600
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.reasoning.resources | nindent 12 }}
+      volumes:
+        - name: ovms-models
+        {{- if .Values.reasoning.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "smart-route-planning-agent.fullname" . }}-ovms-models
+        {{- else }}
+          # The model is re-downloaded whenever the pod is recreated. Enable persistence
+          # to avoid that.
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

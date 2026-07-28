@@ -24,6 +24,33 @@ service:
 containerPort: 7860
 containerPortName: agent-uiport
 
+# AI reasoning based route planning.
+# Leave modelName empty to use rule based planning. No OVMS workload is then created.
+reasoning:
+  modelName: ""
+  image:
+    repository: "openvino/model_server"
+    tag: "2026.2.1"
+    pullPolicy: IfNotPresent
+  # OVMS runs as uid/gid 5000 in its image. fsGroup makes the model volume writable.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 5000
+    runAsGroup: 5000
+    fsGroup: 5000
+  # Number of failed readiness probes tolerated before the pod is marked unready.
+  # At 15s per probe this allows roughly 15 minutes for the first model download.
+  startupFailureThreshold: 60
+  persistence:
+    enabled: false
+    size: 20Gi
+    storageClass: ""
+  # Set to reference an existing Secret holding a HuggingFace token, for gated models.
+  hfTokenSecret:
+    name: ""
+    key: "HF_TOKEN"
+  resources:
+
 
 # Following values are used to generate config.json in configmap which is mounted into the container.
 trafficIntersections:
