@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { dirname, resolve } from "node:path";
+import { logger } from "./logger.js";
 import type { ServerConfig } from "./config.js";
 import type { SmartBuildingDB } from "@smartbuilding-video/db";
 import type { VideoSummaryClient } from "@smartbuilding-video/tools";
@@ -366,8 +367,11 @@ export function registerTools(
       "when another use case still references the same VLM task. Any incomplete cleanup (VLM " +
       "delete, config update, artifact archive, or monitor detach) sets degraded=true with " +
       "details in warnings. Unregister always CASCADES to every monitor referencing " +
-      "this use case: stops its worker, deletes its videostream-analytics source, and marks the " +
-      "DB row offline (DB history — alerts/tasks/events/recordings — is kept); with persist=true " +
+      "this use case via monitor_ctl action=unregister: stops its worker, deletes its " +
+      "videostream-analytics source, and deletes the monitors row. If the row delete " +
+      "fails (e.g. FK constraint from existing alerts history), it falls back to stop " +
+      "semantics — the row is kept, marked offline — with a warning in the MCP log and " +
+      "in warnings (degraded=true); with persist=true " +
       "the monitor is additionally stripped from monitors.yaml, and the use case's on-disk " +
       "artifacts (use-cases/<uc>/prompt.md, evaluate_rules.py) are archived by moving them to " +
       "use-cases/.backup/<uc>/ so a later re-register does not auto-read stale files. " +
@@ -426,7 +430,7 @@ export function registerTools(
     },
   }, async (params) => {
     try {
-      const { useCaseRegister, detachMonitor } = await import("@smartbuilding-video/tools");
+      const { useCaseRegister, monitorCtl } = await import("@smartbuilding-video/tools");
       const result = await useCaseRegister(params as any, {
         useCaseDict: config.useCaseDict,
         summaryServiceUrl: config.summaryService.url,
@@ -435,8 +439,11 @@ export function registerTools(
         baseDir: config.configPath ? dirname(resolve(config.configPath)) : process.cwd(),
       });
 
-      // Cascade on unregister: detach every monitor referencing this use case
-      // (stop worker + delete VSA source + mark the DB row offline, history kept).
+      // Cascade on unregister: for every monitor referencing this use case, run
+      // monitorCtl action=unregister (stop worker + delete VSA source + delete
+      // the monitors row). If the row delete fails (e.g. FK constraint from
+      // existing alerts history), fall back to monitorCtl action=stop — the row
+      // is kept, marked offline — and log a warning to the MCP log.
       // This is independent of persist — without it, an in-memory unregister would
       // leave orphan monitors whose use_case no longer exists (task-poller then
       // errors on the next poll). persist only controls whether the monitor is
@@ -446,23 +453,44 @@ export function registerTools(
         const cascaded: unknown[] = [];
         for (const m of affected) {
           try {
-            const detached = await detachMonitor(db, config.videostreamAnalytics.url, workerService, {
+            const unreg = (await monitorCtl(db, config.videostreamAnalytics.url, workerService, {
+              action: "unregister",
               monitor_id: m.id,
               monitors_path: config.monitorsPath,
               persist: params.persist === true,
-            });
-            cascaded.push(detached);
-            if (detached.analytics_source === "failed") {
-              result.degraded = true;
-              result.warnings.push(
-                `monitor "${m.id}" analytics source cleanup failed: ${detached.analytics_error}`,
-              );
-            }
+            })) as Record<string, unknown>;
+            cascaded.push({ ...unreg, db_row: "deleted" });
           } catch (e: any) {
             const error = e?.message ?? String(e);
-            cascaded.push({ monitor_id: m.id, detached: false, error });
-            result.degraded = true;
-            result.warnings.push(`monitor "${m.id}" cascade detach failed: ${error}`);
+            logger.warn(
+              `use_case_register cascade: failed to delete monitor "${m.id}" row ` +
+              `(${error}); falling back to stop — monitors row kept offline`,
+            );
+            try {
+              const stopped = (await monitorCtl(db, config.videostreamAnalytics.url, workerService, {
+                action: "stop",
+                monitor_id: m.id,
+              })) as Record<string, unknown>;
+              cascaded.push({
+                ...stopped,
+                db_row: "kept_offline",
+                fallback: "stop",
+                unregister_error: error,
+              });
+              result.degraded = true;
+              result.warnings.push(
+                `monitor "${m.id}": unregister failed (${error}); fell back to stop, ` +
+                `monitors row kept offline` +
+                (params.persist === true
+                  ? ` (monitors.yaml entry kept — remove it manually or it will be re-registered on restart)`
+                  : ``),
+              );
+            } catch (e2: any) {
+              const stopError = e2?.message ?? String(e2);
+              cascaded.push({ monitor_id: m.id, stopped: false, error: stopError, unregister_error: error });
+              result.degraded = true;
+              result.warnings.push(`monitor "${m.id}" cascade stop fallback failed: ${stopError}`);
+            }
           }
         }
         (result as any).cascaded_monitors = cascaded;

@@ -374,12 +374,11 @@ export async function monitorCtl(
 
 /**
  * Detach a single monitor WITHOUT deleting its DB history — the "stop stream +
- * strip from monitors.yaml, keep history" primitive used by the
- * use_case_register unregister cascade. Steps: stop worker → delete VSA source
- * (non-fatal) → mark the DB row offline (row + alerts/tasks/events/recordings
- * kept) → strip the monitor from monitors.yaml when `persist`. Unlike
- * `monitorCtl action=unregister`, it never calls db.deleteMonitor, so it won't
- * trip FK constraints or destroy history.
+ * strip from monitors.yaml, keep history" primitive. Steps: stop worker →
+ * delete VSA source (non-fatal) → mark the DB row offline (row +
+ * alerts/tasks/events/recordings kept) → strip the monitor from monitors.yaml
+ * when `persist`. Unlike `monitorCtl action=unregister`, it never calls
+ * db.deleteMonitor, so it won't trip FK constraints or destroy history.
  */
 export async function detachMonitor(
   db: SmartBuildingDB,

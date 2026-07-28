@@ -276,5 +276,5 @@ Then report system inventory:
 | Create/register use case | Capability check → Q1/Q2 → confirm → author → register → monitor → report |
 | Preview only | Capability check → Q1/Q2 → author/lint → show preview; no registration |
 | Refine/overwrite existing | Read `inspect-existing.md` → confirm changes → register with overwrite |
-| Delete use case | Confirm destructive action → `action=unregister`, `persist=true` |
+| Delete use case | Confirm destructive action → `action=unregister`, `persist=true` → verify `cascaded_monitors`: `db_row="deleted"` means the monitor was fully unregistered; `db_row="kept_offline"` means the row delete failed (e.g. existing alerts history) and it fell back to stop — tell the user the monitor row remains |
 | MCP unavailable task CRUD | Read `curl-fallback.md` |
