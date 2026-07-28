@@ -65,7 +65,7 @@ This table is authoritative. Later steps must not mix invariants across rows.
 |---|---|---|---|---|
 | Report-only | none | factual narrative; multiple findings allowed | none | completed `video_summary_tasks` |
 | Base alerting | `severity, event, desc` | one primary EVENT | `defaultRuleEvaluator` | `alerts` |
-| Extended alerting | base + Q2-requested extensions | one primary EVENT + extension fields | `evaluate_rules.py` | `alerts` |
+| Extended alerting | base + user-confirmed extensions | one primary EVENT + extension fields | `evaluate_rules.py` | `alerts` |
 
 Product invariants:
 
@@ -100,8 +100,9 @@ Does this use case need to raise alerts?
 Persist fields beyond `severity/event/desc`?
 
 - **No:** Base alerting; no `evaluate_rules.py`.
-- **Yes:** Extended alerting; Final Schema = base + only explicitly requested
-  fields; generate `evaluate_rules.py` from that complete schema.
+- **Yes:** Extended alerting; Q2 confirms the extension schema with the user.
+  Final Schema = base + only user-confirmed fields; generate `evaluate_rules.py`
+  from that complete schema.
 
 Outside Q1/Q2, resolve ordinary business ambiguity with conservative defaults:
 

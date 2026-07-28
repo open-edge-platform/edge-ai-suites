@@ -202,9 +202,10 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
 
 - `action: generate_task` — step 1 of the recommended two-step flow: run the schema↔prompt
   consistency check, `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
-  and on success write `use-cases/<use_case>/prompt.md` to disk. On the custom rule path,
+  and on success write `$SMARTBUILDING_DATA_DIR/use-cases/<use_case>/prompt.md` to disk
+  (`~/.mcp-smartbuilding` is the default data directory). On the custom rule path,
   pass `evaluate_rules_path`; the tool reads that file for the consistency check, stages it to
-  `use-cases/<use_case>/evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
+  the same use-case directory as `evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
   schema, `use_case_dict`, or `config.yaml`. `prompt_text` is **required** here.
 - Any Final Schema field beyond `severity/event/desc` requires `evaluate_rules.py`. Both
   `generate_task` and `register` reject an extended schema without a rule before DB, VLM, config,

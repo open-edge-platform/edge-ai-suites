@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { dirname, resolve } from "node:path";
 import { logger } from "./logger.js";
 import type { ServerConfig } from "./config.js";
 import type { SmartBuildingDB } from "@smartbuilding-video/db";
@@ -340,8 +339,8 @@ export function registerTools(
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
       "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
-      "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
-      "evaluate_rules.py is staged to use-cases/<use_case>/evaluate_rules.py). " +
+      "on 409), and ON SUCCESS writes <data_dir>/use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
+      "evaluate_rules.py is staged to <data_dir>/use-cases/<use_case>/evaluate_rules.py). " +
       "It does NOT touch the DB schema, use_case_dict, or config.yaml. " +
       "(step 2) action=register WITHOUT prompt_text — auto-reads the files step 1 wrote, applies " +
       "the schema via ALTER TABLE, injects use_case_dict, and (persist=true) writes config.yaml. " +
@@ -358,7 +357,7 @@ export function registerTools(
       "(2) POST /v1/tasks to multilevel-video-understanding (auto-PATCH on 409), " +
       "(3) inject the entry into in-memory use_case_dict so task-poller / other tools see it, " +
       "(4) re-run use_case_validate. prompt_text may be omitted; it is then auto-read from " +
-      "use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote). When persist=true, also " +
+      "<data_dir>/use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote). When persist=true, also " +
       "writes the entry back to config.yaml (comment-preserving via yaml.Document). " +
       "action=generate_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
       "(step 1 above); prompt_text is REQUIRED and is never auto-read. " +
@@ -373,11 +372,11 @@ export function registerTools(
       "semantics — the row is kept, marked offline — with a warning in the MCP log and " +
       "in warnings (degraded=true); with persist=true " +
       "the monitor is additionally stripped from monitors.yaml, and the use case's on-disk " +
-      "artifacts (use-cases/<uc>/prompt.md, evaluate_rules.py) are archived by moving them to " +
-      "use-cases/.backup/<uc>/ so a later re-register does not auto-read stale files. " +
+      "artifacts (<data_dir>/use-cases/<uc>/prompt.md, evaluate_rules.py) are archived by moving them to " +
+      "<data_dir>/use-cases/.backup/<uc>/ so a later re-register does not auto-read stale files. " +
       "For action=register, if prompt_text is provided with persist=true it is saved to " +
-      "use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
-      "use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
+      "<data_dir>/use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
+      "<data_dir>/use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
       "conventional absolute path is stored in config.yaml for runtime rule execution.",
     inputSchema: {
       action: z.enum(["register", "generate_task", "unregister"]).describe("register | generate_task | unregister"),
@@ -388,7 +387,7 @@ export function registerTools(
       description: z.string().optional().describe("Human description shown by /v1/tasks"),
       evaluate_rules_path: z.string().optional().describe(
         "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
-        "stages it to use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
+        "stages it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
         "persists the conventional absolute path into config.yaml. Required whenever the Final Schema " +
         "contains fields beyond severity/event/desc, and for custom alert behavior."
       ),
@@ -397,8 +396,8 @@ export function registerTools(
       prompt_text: z.string().optional().describe(
         "Full prompt text (Markdown with ## LOCAL_PROMPT sections, OR a raw 4-const Python source). " +
         "REQUIRED for action=generate_task (it is POSTed to the VLM task and written to " +
-        "use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
-        "auto-read from use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote); when " +
+        "<data_dir>/use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
+        "auto-read from <data_dir>/use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote); when " +
         "provided with persist=true it is (re)saved there. " +
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
@@ -436,7 +435,7 @@ export function registerTools(
         summaryServiceUrl: config.summaryService.url,
         db: (db as any).db,
         configPath: config.configPath,
-        baseDir: config.configPath ? dirname(resolve(config.configPath)) : process.cwd(),
+        baseDir: config.dataDir,
       });
 
       // Cascade on unregister: for every monitor referencing this use case, run
