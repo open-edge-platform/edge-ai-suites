@@ -1,4 +1,4 @@
-# Multi-Broker SceneScape Deployment
+# Multiple SceneScape Deployment
 
 Smart NVR with SceneScape running on separate machines: Smart Intersection (SI) on
 System 1, NVR stack on System 2. For single-node deployment, see

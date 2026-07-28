@@ -295,10 +295,7 @@ validate_environment() {
         fi
         export NVR_GENAI=false
     else
-        if [ -z "${NVR_GENAI}" ]; then
-            print_error "NVR_GENAI environment variable is required (true/false)"
-            return 1
-        fi
+        export NVR_GENAI="${NVR_GENAI:-false}"
     fi
 
     # Check for VSS endpoint — one nginx proxy serves both summary and search

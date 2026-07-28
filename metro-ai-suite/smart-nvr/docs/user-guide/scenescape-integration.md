@@ -67,7 +67,7 @@ The UI is available at `http://<host_ip>:7860`.
 
 For distributed deployments where Smart Intersection runs on a dedicated machine
 (System 1) and the NVR stack runs on a separate machine (System 2), see
-[Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md).
+[Multiple SceneScape Deployment](./multi-broker-scenescape.md).
 
 ## Stop Services
 
@@ -76,7 +76,7 @@ source setup.sh stop     # stop all services
 source setup.sh restart  # restart all services
 ```
 
-For distributed node stop commands, see [Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md#stop).
+For distributed node stop commands, see [Multiple SceneScape Deployment](./multi-broker-scenescape.md#stop).
 
 ## Verify Integration
 
@@ -169,7 +169,7 @@ When reporting issues, verify the following:
 1. **Environment variables** — Confirm all required variables are exported: `env | grep -E "NVR_|SCENESCAPE|MQTT|VSS"`
 2. **MQTT connectivity** — Check logs for: `[si1] subscribed to scenescape/data/camera/#`
 3. **Smart Intersection** — Confirm SI containers are running: `docker ps | grep metro`
-4. **Distributed node** — See [Multi-Broker SceneScape Deployment](./multi-broker-scenescape.md) for connectivity and broker troubleshooting.
+4. **Distributed node** — See [Multiple SceneScape Deployment](./multi-broker-scenescape.md) for connectivity and broker troubleshooting.
 5. **Resource utilization** — Run `docker stats --no-stream` to identify resource-constrained containers
 
 For general Smart NVR issues, refer to the [Troubleshooting Guide](./troubleshooting.md).
