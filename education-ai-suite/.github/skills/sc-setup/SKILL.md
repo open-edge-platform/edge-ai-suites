@@ -10,9 +10,20 @@ description: >
 
 # SC Setup
 
-Set up Flutter + Content Search backend integration.
+Set up Flutter + Content Search backend integration with VLM service.
 **Agent: execute every command below directly using your terminal tool and relay
 the output.**
+
+---
+
+## What Gets Set Up
+
+1. **Flutter dependencies** (via `flutter pub get`)
+2. **Main backend venv** (`smartclassroom/`) — includes VLM service dependencies
+3. **Content Search venv** (`venv_content_search/`) — RAG pipeline dependencies
+4. **Configuration validation** — checks `content_search.enabled` in config.yaml
+
+**VLM Model:** Qwen3-VL-8B-Instruct (auto-downloaded on first run)
 
 ---
 
@@ -38,4 +49,4 @@ the output.**
 ## Output
 
 Report: **Flutter detected** -> **pub dependencies installed** ->
-**backend venv ready** -> **setup script finished**.
+**main backend venv ready (includes VLM)** -> **content search venv ready** -> **setup script finished**.
