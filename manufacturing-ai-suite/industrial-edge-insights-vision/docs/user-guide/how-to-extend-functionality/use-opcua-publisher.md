@@ -7,7 +7,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    If you already have a functioning OPC UA server, you can skip this step. Otherwise, this section provides instructions for using the OPC UA server provided by [Unified Automation](https://www.unified-automation.com).
 
    1. **Download and Install the OPC UA Server**
-      Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Please note that this server is available only for Windows.
+      Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Note that this server is available only for Windows.
    2. **Starting the OPC UA Server**
 
       - Open the Start menu on your Windows machine and search for **UaCPPServer**.

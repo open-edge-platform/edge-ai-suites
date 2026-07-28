@@ -1,5 +1,13 @@
 # Get Started
 
+This guide provides step-by-step instructions to set up and deploy the two sample applications
+in the Industrial Edge Insights Vision suite: Pallet Defect Detection and PCB Anomaly Detection.
+
+For more information on each application, see the respective application guides:
+
+- [Pallet Defect Detection](./pallet-defect-detection/index.md)
+- [PCB Anomaly Detection](./pcb-anomaly-detection/index.md)
+
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
