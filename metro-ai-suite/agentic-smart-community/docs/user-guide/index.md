@@ -8,7 +8,7 @@ Concretely, an agent can remind you when the fridge is running low on groceries,
 
 ## Example Use Cases
 
-These demos are validated end-to-end. They are only a starting point — describe a new scenario in chat and trigger a new use case monitoring by following [Register a new use case](./get-started.md#register-a-new-use-case).
+These demos are validated end-to-end. They are only a starting point — describe a new scenario in chat and trigger a new use case monitoring by following [Register a New Use Case](./get-started/register-new-use-case.md).
 
 | Use Case | Description | Proactive Alerts |
 |----|-------------|-----|
