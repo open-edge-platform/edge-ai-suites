@@ -1,0 +1,64 @@
+image:
+  dpi: 50
+  contrast_enhance: true
+  contrast_factor: 1.5
+
+vlm:
+  max_tokens: 4096
+  temperature: 0.1
+  max_image_pixels: 4000000
+
+grading:
+  force_regrade: true
+  debug_mode: false
+
+watch:
+  poll_interval: 5
+  stable_checks: 2      # consecutive unchanged polls before a PDF is graded
+  idle_timeout: 100
+
+detection_service:
+  # Detection filtering and processing (consumed by _run_layout_detection)
+  target_labels: ["text", "display_formula", "table", "image",
+                  "title", "doc_title", "paragraph_title",
+                  "aside_text", "vertical_text",
+                  "formula_number"
+                 ]
+  min_score: 0.5               # Minimum confidence score (0-1)
+  sort_boxes: true             # Sort boxes top-to-bottom
+  expand_margin: 10            # Expand box margins in pixels
+  merge_overlapping: false     # Merge overlapping boxes
+  iou_threshold: 0.7           # IoU threshold for merging (if enabled)
+section_split:
+  title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
+  title_patterns:
+    - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
+    - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
+    - "^\\s*SECTION\\s+[IVXLCDM]+"                  # SECTION I / SECTION II / SECTION IV
+  stitch_direction: "vertical"                  # how to join cross-page section pieces
+
+  compress_whitespace: true
+  gap_threshold: 120        # only gaps larger than this are compressed
+  keep_margin: 50           # margin left between content blocks after compression
+  content_pad: 20           # padding added above/below each content block
+
+  prompt_slicing:
+    enabled: true
+    separator: "^\\s*={5,}\\s*$"   # rubric block separator lines
+    keep_first_block: true         # scenario/intro block
+    keep_last_block: true          # output-format block
+    # regex to pull the leading ordinal from a heading (section title & rubric
+    # block heading share this); group 1 is the ordinal used for matching.
+    ordinal_pattern: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"
+
+  header_extract:
+    enabled: true
+    marker_pattern: "^\\s*(?:\\[HEADER\\]|【卷头信息】)"   # rubric block marker
+    # separator defaults to prompt_slicing.separator when omitted
+
+  header_aliases:
+    paper_title: ["paper_title", "title", "paper", "exam_title", "试卷标题", "标题"]
+    subject: ["subject", "科目", "学科"]
+    student_name: ["student_name", "name", "姓名"]
+    class_name: ["class_name", "class", "班级"]
+    exam_number: ["exam_number", "exam_id", "exam_no", "admission_number", "student_id", "准考证号", "考号"]

@@ -8,6 +8,8 @@ from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
 from components.mindmap_component import MindmapComponent
 from components.segmentation.content_segmentation import ContentSegmentationComponent
+from model_manager import ModelManager
+from components.report_generator.report_generator import ReportGenerator
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import markdown_to_plain
@@ -33,23 +35,25 @@ class Pipeline:
         self.summarizer_pipeline = [
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
         ]
+        
+        text_gen_handler = ModelManager.instance().text_gen()
 
         self.mindmap_component = MindmapComponent(
                 self.session_id,
-                provider=config.models.summarizer.provider,
-                model_name=config.models.summarizer.name, 
-                device=config.models.summarizer.device,
+                provider=config.models.text_gen.provider,
+                model_name=config.models.text_gen.vlm_name,
+                device=config.models.text_gen.device,
                 temperature=config.models.summarizer.temperature,
             )
-        
-        self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
+
+        self.mindmap_component.model = text_gen_handler
 
         self.content_component = ContentSegmentationComponent(
             self.session_id,
             temperature=0.2
         )
 
-        self.content_component.model = self.summarizer_pipeline[0].summarizer
+        self.content_component.model = text_gen_handler
 
 
     def run_transcription(self, input):
@@ -277,3 +281,81 @@ class Pipeline:
             results = []
         logger.info("Search returned %d result(s) from content-search service.", len(results))
         return results
+
+    def run_report_generator(self, selected_fields=None, manual_fields=None):
+        """Generate a class evaluation report deterministically (non-agent).
+
+        Uses the ReportGenerator pipeline: collect all session data → fill the
+        default template with the teacher-selected fields → stream the result.
+        ``selected_fields`` is the list of catalog field codes to include (None =
+        the whole catalog); ``manual_fields`` are teacher-typed basic-info values.
+        Template filling lives entirely inside ReportGenerator.
+        """
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id,
+        )
+
+        if not os.path.exists(session_dir):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, session directory not found.",
+            )
+
+        text_gen_handler = ModelManager.instance().text_gen()
+
+        generator = ReportGenerator(
+            session_id=self.session_id,
+            model=text_gen_handler,
+            selected_fields=selected_fields,
+            manual_fields=manual_fields,
+        )
+
+        try:
+            for event in generator.generate_report():
+                yield event
+        except Exception as e:
+            logger.error(f"Error during report generation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Report generation failed: {e}",
+            )
+
+    def reapply_report_selection(self, selected_fields=None, manual_fields=None) -> dict:
+        """Re-render an existing report for a new field selection — no LLM re-run.
+
+        Re-projects the cached full-catalog field values (from a prior
+        run_report_generator) onto the template, dropping the deselected fields and
+        applying any updated ``manual_fields`` (basic info). See
+        ReportGenerator.reapply_selection. Returns {session_id, report}.
+        """
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id,
+        )
+        if not os.path.exists(session_dir):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, session directory not found.",
+            )
+
+        text_gen_handler = ModelManager.instance().text_gen()
+
+        generator = ReportGenerator(
+            session_id=self.session_id,
+            model=text_gen_handler,
+            selected_fields=selected_fields,
+            manual_fields=manual_fields,
+        )
+        try:
+            return generator.reapply_selection(selected_fields)
+        except Exception as e:
+            logger.error(f"Error during report re-selection: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Report re-selection failed: {e}",
+            )

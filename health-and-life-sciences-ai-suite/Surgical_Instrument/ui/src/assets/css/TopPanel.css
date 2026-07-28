@@ -18,7 +18,7 @@
 .action-buttons {
   display: flex;
   gap: 12px;
-  min-width: 200px;
+  min-width: 340px;
 }
 
 .start-button,
@@ -77,7 +77,7 @@
 /* Right-hand slot: settings icon-button. Mirrors .action-buttons' min-width so
  * the centred .notification-center stays optically centred. */
 .top-panel-right {
-  min-width: 200px;
+  min-width: 340px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -119,8 +119,12 @@
 }
 
 .settings-button-label {
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  font-size: 11px;
+  color: #5b6b7d;
+  line-height: 1.4;
+  max-width: 340px;
+  text-align: right;
 }
 
 /* Legacy: kept so any leftover `<div class="spacer">` still balances layout;
@@ -160,6 +164,7 @@
 
   .action-buttons {
     min-width: auto;
+    gap: 8px;
   }
 
   .spacer {
@@ -176,7 +181,7 @@
   }
 
   .settings-button-label {
-    /* Icon-only on narrow screens. */
+    /* Hide long helper text on narrow screens to preserve button space. */
     display: none;
   }
 

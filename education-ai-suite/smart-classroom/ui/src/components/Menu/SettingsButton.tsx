@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import Modal from '../Modals/Modal';
 import SettingsForm from '../Modals/SettingsForm';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
   setProjectName: (name: string) => void;
+  featureGuard: FeatureGuard;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, projectName, setProjectName }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, projectName, setProjectName, featureGuard }) => {
   const [canClose, setCanClose] = useState<() => boolean>(() => () => true); // Default to always allow closing
 
   return (
@@ -18,6 +20,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, projectN
         onClose={onClose}
         projectName={projectName}
         setProjectName={setProjectName}
+        featureGuard={featureGuard}
       />
     </Modal>
   );

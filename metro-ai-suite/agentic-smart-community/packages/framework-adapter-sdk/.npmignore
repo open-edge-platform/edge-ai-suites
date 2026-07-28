@@ -1,0 +1,11 @@
+# Source & build config — the published package ships only dist/.
+src/
+tsconfig.json
+tsconfig.tsbuildinfo
+
+# Reference consumers are not part of the published SDK.
+examples/
+
+# Tests live at the repo root (tests/framework-adapter-sdk/), not in the package.
+*.test.ts
+*.test.js

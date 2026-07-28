@@ -5,12 +5,10 @@ requests==2.32.3
 tqdm==4.66.5
 psutil==6.0.0
 
-# --- Pipeline consumer (Phase 5) ---
+# --- Runtime architecture note ---
 # The heavy inference stack (Ultralytics + torch + OpenCV) is still needed
-# for the first-boot bootstrap (weights fetch → CVC-ColonDB train → OpenVINO
-# export). Runtime inference now happens inside the `surgical-pipeline`
-# container (DL Streamer); this backend just subscribes to its MQTT topic.
-paho-mqtt==1.6.1
+# for first-boot bootstrap (weights fetch → CVC-ColonDB train → OpenVINO
+# export). Runtime inference itself happens inside `surgical-pipeline`.
 
 # --- Bootstrap-only: training + export (Ultralytics + OpenVINO) ---
 # Install order (see backend/README paths):

@@ -73,7 +73,7 @@ class PostProcessor:
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / reranker_model
         if not is_model_ready(local_path):
-            from providers.vlm_openvino_serving.utils.utils import convert_model
+            from components.vlm.vlm_openvino_serving.utils.utils import convert_model
 
             logger.info(f"Converting reranker model {reranker_model} to OV IR and saving to {local_path}")
             convert_model(reranker_model, str(local_path), model_type="reranker")

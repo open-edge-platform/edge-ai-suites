@@ -15,4 +15,12 @@ i18n
     interpolation: { escapeValue: false }
   });
 
+// Keep the Electron native menus (application + context menu) in sync with the
+// app language. No-op on the plain web app, where `electronAPI` is undefined.
+const syncElectronMenuLanguage = (lang: string) => {
+  window.electronAPI?.setLanguage?.(lang);
+};
+syncElectronMenuLanguage(i18n.language);
+i18n.on('languageChanged', syncElectronMenuLanguage);
+
 export default i18n;

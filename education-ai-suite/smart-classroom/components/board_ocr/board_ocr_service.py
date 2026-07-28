@@ -1,14 +1,11 @@
 """Board (content-screen) OCR service helpers.
 
-Two responsibilities, both exposed under the /board-ocr/* router:
-  * read_board_ocr()      - return the raw board OCR extraction for a session
-                            (task 1; produced by BoardOCRWorker -> board_ocr.txt)
-  * summarize_board_ocr() - summarize that OCR text via VLM/LLM (task 2)
-
-The summarization is a PLACEHOLDER: the VLM/LLM capability is still being
-reworked, so the actual model call is not wired yet. Per the modular design
-(doc 6.2/6.4), the summary feature requires the `text_gen` capability and should
-acquire it from ModelManager.instance().text_gen() once the Hub lands.
+Low-level readers for the board OCR extraction, shared by the HTTP API
+(``api.board_ocr``) and the audio-summary pipeline (``summarizer_component``):
+  * read_board_ocr()           - raw board OCR extraction + status for a session
+                                 (produced by BoardOCRWorker -> board_ocr.txt)
+  * read_board_ocr_text_only() - the combined board text, normalized to one line
+                                 per frame (used by the summarizer pipeline)
 """
 import json
 import os
@@ -99,33 +96,30 @@ def read_board_ocr(session_id: Optional[str]) -> dict:
     }
 
 
-def summarize_board_ocr(session_id: Optional[str]) -> dict:
-    """Summarize the board OCR text via VLM/LLM.
+def _normalize_board_text(raw: str) -> str:
+    """Flatten the newline-heavy per-frame OCR text into one readable line per slide/frame.
 
-    PLACEHOLDER — the VLM/LLM module is still being updated, so the model call is
-    not wired yet; this returns the assembled board text stats and a pending
-    status so the API/data flow can be exercised end to end.
-
-    When the Hub lands, replace the TODO below with a real summarization call:
-        tg = ModelManager.instance().text_gen()
-        prompt = _build_board_summary_prompt(board["text"])
-        summary = "".join(tg.generate(prompt, stream=True))
+    board_ocr.txt records join their recognized lines with '\\n' and frames are joined with
+    '\\n\\n'; feeding that raw shred of newlines makes downstream LLMs emit fragmented
+    keywords. Collapse intra-frame lines to spaces and keep one frame per line so consumers
+    see coherent slide-level text.
     """
-    board = read_board_ocr(session_id)  # 400/404 if missing
+    if not raw:
+        return ""
+    frames = [f for f in raw.split("\n\n") if f.strip()]
+    slides = []
+    for frame in frames:
+        lines = [ln.strip() for ln in frame.splitlines() if ln.strip()]
+        if lines:
+            slides.append(" ".join(lines))
+    return "\n".join(slides)
 
-    # TODO(VLM/LLM): call the text_gen / VLM capability to produce the summary.
-    summary = None
-    logger.info(
-        f"Board OCR summary requested for session {board['session_id']} "
-        f"({board['count']} frames, {len(board['text'])} chars) — "
-        f"VLM/LLM not wired yet, returning placeholder"
-    )
 
-    return {
-        "session_id": board["session_id"],
-        "status": "pending_vlm_integration",
-        "board_ocr_status": board["status"],
-        "frames": board["count"],
-        "board_text_chars": len(board["text"]),
-        "summary": summary,
-    }
+def read_board_ocr_text_only(session_id: Optional[str]) -> str:
+    """Return the combined board OCR text for a session, normalized to one line per frame,
+    or "" if none is available. Non-raising."""
+    try:
+        board = read_board_ocr(session_id)
+    except HTTPException:
+        return ""
+    return _normalize_board_text(board.get("text") or "")

@@ -1,8 +1,8 @@
-# Export and Optimize Geti Model
+# Export and Optimize a Geti™ Model
 
 ## Overview
 
-This guide starts by downloading the trained YOLOX PyTorch weights from Intel Geti and the COCO dataset used during training. A workspace is then set up and the [Training Extensions](https://github.com/open-edge-platform/training_extensions) repository is cloned, which provides the conversion script. After installing the required Python and Rust dependencies, the `export_and_optimize.py` script is run to convert the model to OpenVINO IR format — producing a full-precision FP32 model and an INT8 post-training quantized model optimized for Intel hardware.
+This guide starts by downloading the trained YOLOX PyTorch weights from Geti™ and the COCO dataset used during training. A workspace is then set up and the [Training Extensions](https://github.com/open-edge-platform/training_extensions) repository is cloned, which provides the conversion script. After installing the required Python and Rust dependencies, the `export_and_optimize.py` script is run to convert the model to OpenVINO™ IR format — producing a full-precision FP32 model and an INT8 post-training quantized model optimized for Intel hardware.
 
 ---
 
@@ -10,11 +10,11 @@ This guide starts by downloading the trained YOLOX PyTorch weights from Intel Ge
 
 Before you begin, ensure you have the following:
 
-- A trained model exported from Intel Geti as a **PyTorch weights file** (`.pth`)
+- A trained model exported from Geti™ as a **PyTorch weights file** (`.pth`)
 
-  ![Download PyTorch Weights from Intel Geti](../_assets/download_model_pytorch_weights.png)
+  ![Download PyTorch Weights from Geti™](../_assets/download_model_pytorch_weights.png)
 
-  *Note: Image is for illustration purposes only.*
+  _Note: Image is for illustration purposes only._
 
 - A **COCO-format dataset** (`.zip`) used during training (required for post-training optimization)
 
@@ -22,7 +22,7 @@ Before you begin, ensure you have the following:
 
   ![Download COCO Dataset - Step 2](../_assets/download_coco_datasets2.png)
 
-  *Note: Images are for illustration purposes only.*
+  _Note: Images are for illustration purposes only._
 
 - [Git](https://git-scm.com/) installed
 - Internet access to download dependencies
@@ -42,11 +42,11 @@ mkdir coco_dataset
 mkdir output
 ```
 
-| Directory      | Purpose                                      |
-|----------------|----------------------------------------------|
-| `model/`       | Stores the downloaded PyTorch weights file   |
-| `coco_dataset/`| Stores the COCO dataset used for optimization|
-| `output/`      | Stores the exported and optimized model files|
+| Directory       | Purpose                                       |
+| --------------- | --------------------------------------------- |
+| `model/`        | Stores the downloaded PyTorch weights file    |
+| `coco_dataset/` | Stores the COCO dataset used for optimization |
+| `output/`       | Stores the exported and optimized model files |
 
 ---
 
@@ -80,7 +80,7 @@ cd ..
 
 After extraction, the `coco_dataset/` directory should follow the standard COCO layout:
 
-```
+```text
 coco_dataset/
 ├── annotations/
 └── images/
@@ -147,11 +147,11 @@ python export_and_optimize.py \
 
 ### Arguments
 
-| Argument           | Required | Description                                                    |
-|--------------------|----------|----------------------------------------------------------------|
-| `--weights`        | Yes      | Path to the PyTorch weights file (`.pth`)                      |
-| `--source_dataset` | Yes      | Path to the COCO dataset directory                             |
-| `--output_dir`     | Yes      | Directory where exported and optimized model files are saved   |
+| Argument           | Required | Description                                                                                                   |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `--weights`        | Yes      | Path to the PyTorch weights file (`.pth`)                                                                     |
+| `--source_dataset` | Yes      | Path to the COCO dataset directory                                                                            |
+| `--output_dir`     | Yes      | Directory where exported and optimized model files are saved                                                  |
 | `--model_name`     | Yes      | Model variant to use. Supported values: `yolox_tiny`, `yolox_s`, `yolox_l`, `yolox_x` (default: `yolox_tiny`) |
 
 ### Example with Absolute Paths
@@ -172,31 +172,31 @@ python export_and_optimize.py \
 
 After the script completes, the `output/` directory will contain the exported and optimized model files ready for deployment in the Pallet Defect Detection pipeline:
 
-```
+```text
 output/
 ├── otx-workspace/
 │   ├── exported_model.xml    # FP32 – full-precision exported model
 │   └── optimized_model.xml   # INT8 – post-training quantized model
 ```
 
-| File                  | Precision | Description                                                              |
-|-----------------------|-----------|--------------------------------------------------------------------------|
-| `exported_model.xml`  | FP32      | Full-precision model exported directly from the PyTorch weights          |
-| `optimized_model.xml` | INT8      | Post-training quantized model optimized using the COCO dataset           |
+| File                  | Precision | Description                                                     |
+| --------------------- | --------- | --------------------------------------------------------------- |
+| `exported_model.xml`  | FP32      | Full-precision model exported directly from the PyTorch weights |
+| `optimized_model.xml` | INT8      | Post-training quantized model optimized using the COCO dataset  |
 
-Both files can be used directly with the OpenVINO inference engine. The INT8 model (`optimized_model.xml`) offers faster inference with reduced memory footprint, while the FP32 model (`exported_model.xml`) retains full numerical precision.
+Both files can be used directly with the OpenVINO™ inference engine. The INT8 model (`optimized_model.xml`) offers faster inference with reduced memory footprint, while the FP32 model (`exported_model.xml`) retains full numerical precision.
 
 ![Generated Model Output](../_assets/generated_model.png)
 
-*Note: Image is for illustration purposes only.*
+_Note: Image is for illustration purposes only._
 
 ---
 
 ## Troubleshooting
 
-| Issue                              | Resolution                                                                 |
-|------------------------------------|----------------------------------------------------------------------------|
-| `uv: command not found`            | Re-run `source $HOME/.local/bin/env` or open a new terminal session        |
-| Rust compilation errors            | Ensure `source "$HOME/.cargo/env"` was run after the Rust installation     |
-| Dataset not found                  | Verify the COCO dataset was extracted and the `annotations/` folder exists |
-| Incorrect model output             | Confirm `--model_name` matches the architecture used during Geti training  |
+| Issue                   | Resolution                                                                 |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `uv: command not found` | Re-run `source $HOME/.local/bin/env` or open a new terminal session        |
+| Rust compilation errors | Ensure `source "$HOME/.cargo/env"` was run after the Rust installation     |
+| Dataset not found       | Verify the COCO dataset was extracted and the `annotations/` folder exists |
+| Incorrect model output  | Confirm `--model_name` matches the architecture used during Geti™ training |

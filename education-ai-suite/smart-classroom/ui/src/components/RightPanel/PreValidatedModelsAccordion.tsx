@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { getPlatformInfo, getCsSystemConfig } from "../../services/api";
 
 interface Props {
-  activeScreen: 'main' | 'content-search';
+  activeScreen: 'main' | 'content-search' | 'grading';
 }
 
 const PreValidatedModelsAccordion: React.FC<Props> = ({ activeScreen }) => {

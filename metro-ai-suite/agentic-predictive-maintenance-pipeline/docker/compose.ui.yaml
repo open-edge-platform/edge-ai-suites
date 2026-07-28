@@ -14,9 +14,10 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-agent,apm-storage,localhost
+      no_proxy: ${no_proxy:-},apm-agent,apm-detection,apm-storage,localhost
       APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
       AGENT_SERVICE_URL: http://apm-agent:5002
+      DETECTION_SERVICE_URL: http://apm-detection:5004
       STORAGE_SERVICE_URL: http://apm-storage:5001
       USE_CASE_ID: ${USE_CASE}
       HOST: 0.0.0.0
@@ -26,6 +27,8 @@ services:
       - "${UI_PORT:-5003}:5003"
     depends_on:
       apm-agent:
+        condition: service_healthy
+      apm-detection:
         condition: service_healthy
     networks:
       - apm_network

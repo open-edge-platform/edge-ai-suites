@@ -1,10 +1,10 @@
-# Guide: Testing Pallet Defect Detection (PDD) Application Using pylon SDK
+# Integrate pylon SDK into the Pallet Defect Detection Application
 
-This guide explains how to create a custom Docker image based on the Intel DL Streamer Pipeline Server, with pylon SDK and Gencamsrc support. It supports Basler camera that are connected over the USB and GigE.
+This guide explains how to create a custom Docker image based on the DL Streamer Pipeline Server, with pylon SDK and Gencamsrc support. It supports Basler cameras that are connected over USB and GigE interfaces.
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](../../get-started/vision-system-requirements.md)
 
 ## Cloning and building the docker image
 
@@ -13,7 +13,7 @@ This guide explains how to create a custom Docker image based on the Intel DL St
 Download the edge-ai-libraries source and go to `dlstreamer-pipeline-server` folder
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git-b main
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b main
 cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 ```
 
@@ -64,7 +64,7 @@ docker compose up -d
 
 ### Step 5: Run a test pipeline and dump the camera output into a file in the /tmp directory
 
-Note down serial number of the basler camera and update `<basler-camera-serial>` in the following command:
+Note down serial number of the Basler camera and update `<basler-camera-serial>` in the following command:
 
 ```bash
 docker exec -it dlstreamer-pipeline-server bash
@@ -115,7 +115,7 @@ Update the pipeline in `./apps/pallet-defect-detection/configs/pipeline-server-c
 }
 ```
 
-Replace <camera id> with balser camera id connected over the USB or GigE
+Replace `<camera id>` with Basler camera ID connected over the USB or GigE
 
 ### Step 5: Configure docker-compose.yml (Optional, if testing with a GigE network camera)
 
@@ -151,7 +151,7 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 
 Start all required services using Docker Compose:
 
->If you're running multiple instances of app, start the services using `./run.sh up` instead.
+> **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
 ```bash
 docker compose up -d
@@ -201,8 +201,9 @@ https://<HOST_IP>/mediamtx/pdd/
 ```
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
->Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
->If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
+> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ## Troubleshooting
 

@@ -423,7 +423,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Multimodal Weld Defect Detection with vLLM Dashboard",
+    "title": "Multimodal Weld Defect Detection Explainability Dashboard",
     "variables": []
   }
 }
