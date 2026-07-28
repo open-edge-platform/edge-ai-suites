@@ -1,6 +1,6 @@
 # Surgical Instrument — Quickstart
 
-Deployment guide for the two-service Docker stack: `surgical-backend` (Flask 3 + Ultralytics + OpenVINO) and `surgical-ui` (nginx + React SPA).
+Deployment guide for the three-service Docker stack: `surgical-backend` (Flask 3 + Ultralytics + OpenVINO bootstrap), `surgical-pipeline` (GStreamer + DL Streamer runtime), and `surgical-ui` (nginx + React SPA).
 
 The UI is **health-gated on the backend**: the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`. On first boot this window is 20–35 minutes while YOLO11n trains on CVC-ColonDB on the Intel Arc iGPU. Subsequent boots take seconds because the trained IR is cached in `./models/`.
 
@@ -83,20 +83,21 @@ Expect to see the FSM walk through:
 
 Once the backend is healthy the UI starts and answers on `http://localhost:8080` (override with `make up UI_HOST_PORT=9090`). `make up` and `make run` also print the LAN URL (e.g. `http://10.223.23.206:8080`) so you can open it from another machine on the same network.
 
-Click **Start** in the top toolbar to kick off inference. The video panel begins streaming annotated frames and the KPI blocks on the right start populating within ~1 second.
+Use the left **Config** accordion to pick source (`file` or `basler`), source argument, and device, then click **Start** to kick off inference. The right-side KPI blocks begin populating within ~1 second.
 
 ---
 
 ## 4. What the UI shows
 
-Everything on-screen is driven by the backend's `/api/events` SSE stream (~1 Hz snapshot) plus the `/api/video_feed` MJPEG. There is no client-side state polling.
+Everything on-screen is driven by the backend's `/api/events` SSE stream (~1 Hz snapshot). There is no client-side state polling.
 
 **Left column**
 
 | Block | Source | Notes |
 |---|---|---|
-| Video feed | `/api/video_feed` (MJPEG) | 1080p H.264 source, model-annotated |
-| **Detection Status** (hero card, under the video) | `analytics.polyp_detection` | Live pill (`DETECTED` / `NOT DETECTED`) + confidence, plus a `SESSION` sub-bar with **cumulative polyp detections**, **% of frames with a detection**, and **positive-frame count** — reset on `POST /api/reset`. |
+| Source section | local form state → `POST /api/start` payload | Select `file` or `basler` and source argument (path / serial). |
+| Device section | local form state → `POST /api/start` payload | Select runtime target (`GPU` / `CPU` / `NPU`). |
+| Session controls | `POST /api/start`, `POST /api/stop`, `POST /api/reset` | Start/Stop/Reset from the accordion instead of toolbar/modal flow. |
 
 **Right column — Pipeline Performance accordion**
 
@@ -106,13 +107,16 @@ Everything on-screen is driven by the backend's `/api/events` SSE stream (~1 Hz 
 | Model | static | `yolo11n` |
 | Device | `pipeline_performance.workloads[0].device` | Colored pill: `GPU` / `CPU` / `NPU` |
 | FPS | `pipeline_performance.workloads[0].fps` | Rolling mean over the last ~5 s |
-| **Infer** | `pipeline_performance.workloads[0].infer_ms` | Mean OpenVINO inference latency (excludes pre/post) |
-| **P99** | `pipeline_performance.workloads[0].latency_p99_ms` | True p99 of end-to-end frame latency (rolling deque of 120, `numpy.percentile`) |
+| **Mean** | `pipeline_latency.mean_ms` | Rolling mean pipeline latency from GST tracer samples |
+| **P50** | `pipeline_latency.p50_ms` | Median pipeline latency |
+| **P90** | `pipeline_latency.p90_ms` | 90th percentile pipeline latency |
+| **P95** | `pipeline_latency.p95_ms` | 95th percentile pipeline latency |
+| **P99** | `pipeline_latency.p99_ms` | 99th percentile pipeline latency |
 | Status | lifecycle FSM | `running` / `paused` / `stopped` |
 
 Below the table:
 
-- **End-to-end summary bar** — pipeline FPS · decode resolution · uptime · total frames processed.
+- **End-to-end summary bar** — pipeline FPS · sample count · uptime · source kind.
 - **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset (`Polyp Detection` on `CVC-ColonDB`), **video source** resolution (e.g. `1080p H.264 (looped)`), **model input** tensor size (`640x640`), and the runtime **device**.
 
 **Right column — Platform accordion**

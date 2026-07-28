@@ -60,7 +60,10 @@ tests/videos/
 
 # dev docs
 docs/*
+!docs/user-guide/
 !docs/user-guide/**
+!docs/user-guide/get-started/
+!docs/user-guide/get-started/**
 
 # External source cloned on demand by setup_docker.sh (edge-ai-libraries, etc.)
 .external/

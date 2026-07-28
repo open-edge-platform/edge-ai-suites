@@ -2,6 +2,13 @@
 
 This guide explains how to deploy the multimodal sample app with the vLLM service enabled using the Makefile targets.
 
+## System Requirements
+
+| Component | Minimum Requirement |
+|-----------|---------------------|
+| Operating System | Ubuntu 24.04 LTS or later |
+| Hardware | Intel® Core™ Ultra Platform (PTL) or newer |
+
 ## Prerequisites
 
 1. Ensure `.env` is configured and includes valid values for:
@@ -37,6 +44,8 @@ cd ../..
 ```
 
 ## Deploy the vLLM Service
+
+> **Note:** vLLM preallocates GPU-addressable memory up to the limit specified by `VLLM_GPU_MEMORY_UTILIZATION` (VRAM on dGPU, shared system memory on iGPU). Since the optimal value varies between platforms, update `VLLM_GPU_MEMORY_UTILIZATION` in the `.env` file to match your target hardware.
 
 Run:
 
@@ -78,6 +87,25 @@ make up_vllm
    docker logs -f vllm-server
    ```
 
+4. Check the output in Grafana.
+
+   - Use the link `https://localhost :3000` to open Grafana in a browser (preferably Chrome).
+
+   > **Note:** Use the link `https://localhost :30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
+   - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
+
+     ![Grafana login](../_assets/login_wt.png)
+
+   - After logging in, click **Dashboard**.
+     ![Menu view](../_assets/dashboard.png)
+
+   - Select **Multimodal Weld Defect Detection Explainability Dashboard**.
+     ![Multimodal Weld Defect Detection Explainability Dashboard](../_assets/grafana_dashboard_selection_vllm.png)
+
+   - You should see the following output:
+
+     ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
 ## Stop the Deployment
 
 To bring down the full stack:

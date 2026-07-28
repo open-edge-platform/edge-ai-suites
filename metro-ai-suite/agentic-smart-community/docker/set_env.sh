@@ -22,10 +22,11 @@ export RENDER_GROUP_ID=$(getent group render | awk -F: '{print $3}')
 HF_HOME=${HF_HOME:=~/models/huggingface}
 export HF_HOME
 
-# Model + context window. Qwen3.5-35B-A3B is a Mixture-of-Experts model
-# (35B total / 3B active) that serves both the VLM (captioning) and LLM
-# (aggregation) roles from a single endpoint.
-export LLM_MODEL=Qwen/Qwen3.5-35B-A3B
+# llm-scaler image
+export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
+
+# Model + context window.
+export LLM_MODEL=Qwen/Qwen3.6-35B-A3B
 export MAX_MODEL_LEN=61440            # 60k context; lower (e.g. 32768) to reduce RAM.
 
 # Precision + share of system RAM the serving may reserve.
@@ -39,6 +40,7 @@ else
 fi
 export TENSOR_PARALLEL_SIZE=1        # single integrated GPU on PTL
 export VLLM_SERVICE_PORT=41091
+
 
 # =========================================================================
 # multilevel-video-understanding microservice
@@ -92,7 +94,6 @@ export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuildi
 # server listens elsewhere.
 export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 
-# Host directory holding the YOLO prefilter model(s); bind-mounted read-only at
-# the same path inside the container (identity mount). SMARTBUILDING_DATA_DIR
-# (above) is reused as VSA's recordings/segments root.
-export MODEL_DIR=${MODEL_DIR:-${HOME}/models}
+# OpenVINO prefilter model, e.g., yolo11s. Preserve an explicitly supplied
+# path so setup_docker.sh can validate or prepare that model at runtime.
+export PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}

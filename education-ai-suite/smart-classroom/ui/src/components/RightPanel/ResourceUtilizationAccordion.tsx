@@ -24,7 +24,7 @@ interface GPUMetricConfig {
 type GPUMetricsConfig = Record<GPUMetricKey, GPUMetricConfig>;
 
 interface ResourceUtilizationAccordionProps {
-  activeScreen?: 'main' | 'content-search';
+  activeScreen?: 'main' | 'content-search' | 'grading';
 }
 
 const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> = ({ activeScreen = 'main' }) => {
