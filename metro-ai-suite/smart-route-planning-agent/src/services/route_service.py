@@ -9,6 +9,8 @@ from config import (
     LOCATION_PAIRS,
     GPX_DIR,
     MAP_COLORS,
+    MAX_REASONING_SUMMARY_LENGTH,
+    REASONING_ENABLED,
     StaticOptimizerName,
 )
 from utils.gpx_parser import MapDataParser
@@ -175,6 +177,11 @@ class RouteService:
             logger.error("No route details found. route_state is not defined.")
             return route_issue
 
+        # When the reasoning model made the decision, show its own justification.
+        reasoning_summary = self.route_state.get("reasoning_summary", "")
+        if reasoning_summary:
+            return reasoning_summary[:MAX_REASONING_SUMMARY_LENGTH]
+
         optimal_route_data = self.route_state.get("optimal_route", {})
         if not optimal_route_data and not self.route_state.get(
             "is_unique_route", False
@@ -210,6 +217,11 @@ class RouteService:
                     traffic_description = live_traffic.get("traffic_description")
                     if traffic_description:
                         route_issue += f" - {traffic_description[:900]} ..."
+
+        # Be explicit about which engine produced the answer.
+        # if self.route_state.get("reasoning_fallback", False):
+        #     route_issue += "\n\n ##### Note: AI reasoning is unavailable. Using rule based route planning."
+
         return route_issue
 
     def _get_next_data_source(self) -> str:
@@ -225,6 +237,8 @@ class RouteService:
             )[-1]
             # Get description respective to the StaticOptimizerName
             return optimizer.get_description()
+        elif REASONING_ENABLED:
+            return "AI Reasoning over Live Conditions"
         else:
             return "Real-Time Traffic Scenarios"
 
