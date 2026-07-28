@@ -1,6 +1,6 @@
 ---
 name: video-summary-prompt-studio
-description: "MANDATORY for creating, previewing, refining, or registering any Smart Building video analytics use case. Enforces primary-event capability checks, Q1 alerting, Q2 schema extension, Final Schema + Rule Path confirmation, prompt authoring, two-step registration, and monitor binding."
+description: "MANDATORY for creating, previewing, refining, or registering any Smart Building video analytics use case. Enforces primary-event capability checks, Q1 alerting, Q2 schema extension, Final Schema + Rule Path selection, prompt authoring, two-step registration, and monitor binding."
 homepage: https://github.com/open-edge-platform/edge-ai-libraries
 metadata:
   {
@@ -53,8 +53,9 @@ coordinates, exact counts, persistent trajectories, multilabel output,
 calibrated confidence, structured time intervals, event graphs, or cross-camera
 identity. Prompt wording cannot add these runtime capabilities.
 
-Do not ask this as a fixed Q0. Infer primary-event mode when the request is
-clear; ask one compact boundary question only when the requirement is ambiguous.
+Do not ask this as a Q0. Use primary-event mode unless the request explicitly
+requires an unsupported capability above. For an explicit unsupported
+requirement, stop and explain the limitation without adding a boundary question.
 
 ## Mode matrix
 
@@ -64,7 +65,7 @@ This table is authoritative. Later steps must not mix invariants across rows.
 |---|---|---|---|---|
 | Report-only | none | factual narrative; multiple findings allowed | none | completed `video_summary_tasks` |
 | Base alerting | `severity, event, desc` | one primary EVENT | `defaultRuleEvaluator` | `alerts` |
-| Extended alerting | base + user-confirmed extensions | one primary EVENT + extension fields | `evaluate_rules.py` | `alerts` |
+| Extended alerting | base + Q2-requested extensions | one primary EVENT + extension fields | `evaluate_rules.py` | `alerts` |
 
 Product invariants:
 
@@ -81,6 +82,12 @@ Product invariants:
 
 Skip questions already answered by the initial request.
 
+Q1 and Q2 are the only user-facing confirmation questions in this workflow.
+After they are answered, do not ask for separate confirmation of event names,
+evidence, severity, priority, uncertainty, report behavior, the Detection
+Contract, or generated artifacts. State any inferred defaults briefly and
+continue directly to authoring and registration.
+
 ### Q1 — Alerting?
 
 Does this use case need to raise alerts?
@@ -96,10 +103,21 @@ Persist fields beyond `severity/event/desc`?
 - **Yes:** Extended alerting; Final Schema = base + only explicitly requested
   fields; generate `evaluate_rules.py` from that complete schema.
 
-Outside Q1/Q2, ask one compact business-boundary question by default when event
-evidence, severity, priority, uncertainty, primary-event selection, report
-behavior, or custom alert behavior is ambiguous. A follow-up is allowed only
-when the answer still leaves registration unsafe or internally inconsistent.
+Outside Q1/Q2, resolve ordinary business ambiguity with conservative defaults:
+
+- Use the behavior named by the user as the single primary detection event.
+- Use `warn` for a detected policy/safety violation unless the user explicitly
+  requested another severity or described visible immediate severe harm.
+- Use `info` for non-alerting baseline, absence, and uncertainty events.
+- Use severity-first primary-event priority: `critical > warn > info`.
+- Derive minimum visible evidence and common look-alike exclusions narrowly
+  from the named behavior.
+- Do not invent critical escalation scenarios, special policies for adjacent
+  behaviors such as vaping, extra business events, custom alert behavior, or
+  persisted fields.
+
+The capability stops in **Data-model boundary** still apply. Stop and explain
+an unsupported requirement rather than turning it into a third question.
 Never ask the user to write the prompt.
 
 If the agent cannot ask:
@@ -109,11 +127,12 @@ If the agent cannot ask:
 - When alerting intent is not explicit, generate a preview only. Do not
   register an alerting use case by assumption.
 
-## Confirmation gate
+## Q1/Q2 decision block
 
-Before drafting files or calling registration, show the applicable block and
-the compact Detection Contract from `prompt-authoring.md`. Obtain confirmation
-unless the user already said proceed and every boundary is unambiguous.
+After Q1/Q2, show the applicable block and a compact Detection Contract from
+`prompt-authoring.md` for transparency, then continue in the same turn. This is
+not another confirmation gate: do not ask the user to approve the block or wait
+for a reply.
 
 ```text
 Report-only
@@ -131,9 +150,6 @@ Extended alerting
   Rule Path: evaluate_rules.py
   Report Source: alerts
 ```
-
-“Proceed” may waive a confirmation turn; it never authorizes inventing missing
-visual boundaries, severity, priority, uncertainty, schema fields, or rules.
 
 ## Defaults
 
@@ -158,7 +174,7 @@ T_MINUS affects only explicitly configured history modes. See
 ## Draft and lint
 
 1. Read `references/prompt-authoring.md`.
-2. Build the confirmed Detection Contract.
+2. Build the resolved Detection Contract from the request, Q1/Q2, and defaults.
 3. Draft all four Skill-required sections:
    `GLOBAL_PROMPT`, `MACRO_CHUNK_PROMPT`, `LOCAL_PROMPT`, `T_MINUS_1_PROMPT`.
 4. Run the reference's semantic lint and contract round-trip.
@@ -201,7 +217,7 @@ Call `action=register`, `persist=true`, and omit `prompt_text` and
 
 Normally omit it: Final Schema is inferred from LOCAL's UPPER_SNAKE output
 lines. Pass it only to declare a non-text type or override a required flag, and
-then list only user-confirmed extension fields. Detection events, risk labels,
+then list only extension fields explicitly requested through Q2. Detection events, risk labels,
 derived counts, and booleans not explicitly requested for persistence do not
 belong here.
 
@@ -273,7 +289,7 @@ Then report system inventory:
 
 | User request | Action |
 |---|---|
-| Create/register use case | Capability check → Q1/Q2 → confirm → author → register → monitor → report |
+| Create/register use case | Capability check → Q1/Q2 → resolve defaults → author → register → monitor → report |
 | Preview only | Capability check → Q1/Q2 → author/lint → show preview; no registration |
 | Refine/overwrite existing | Read `inspect-existing.md` → confirm changes → register with overwrite |
 | Delete use case | Confirm destructive action → `action=unregister`, `persist=true` → verify `cascaded_monitors`: `db_row="deleted"` means the monitor was fully unregistered; `db_row="kept_offline"` means the row delete failed (e.g. existing alerts history) and it fell back to stop — tell the user the monitor row remains |

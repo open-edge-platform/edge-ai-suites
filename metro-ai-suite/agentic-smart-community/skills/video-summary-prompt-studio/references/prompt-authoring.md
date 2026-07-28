@@ -27,7 +27,8 @@ default `SIMPLE`, `levels=1` path.
 
 ### Structured alerting
 
-- Final Schema is `severity, event, desc` plus only user-confirmed extensions.
+- Final Schema is `severity, event, desc` plus only extensions requested through
+  Q2.
 - LOCAL emits exactly one `KEY: value` line per Final Schema field.
 - Every clip emits exactly one primary `EVENT`; secondary observations may be
   included in `DESC` but are not independently queryable or alertable.
@@ -47,7 +48,13 @@ default `SIMPLE`, `levels=1` path.
 
 ## Detection Contract
 
-Create and confirm the contract before writing prompt prose. A contract contains:
+Create the contract after Q1/Q2 and before writing prompt prose. Do not request
+a separate user confirmation; derive unspecified details using the conservative
+defaults in `SKILL.md`. A contract contains:
+
+In this reference, a “resolved” or “confirmed” contract detail means it came
+from the initial request, Q1/Q2, or those defaults. It never requires another
+approval turn.
 
 1. A closed vocabulary of alerting, non-alerting baseline, absence, and—when
    operationally useful—uncertainty events.
@@ -99,8 +106,8 @@ Use only `critical`, `warn`, and `info`.
 
 Do not assign severity from an event name alone. For structured safety use
 cases, default to severity-first priority (`critical > warn > info`) and then
-the confirmed tie-break order. For occupancy, workflow, asset state, or other
-objectives, use the user-confirmed business priority.
+the resolved tie-break order. For occupancy, workflow, asset state, or other
+objectives, use the resolved business priority.
 
 ### Baseline, absence, and uncertainty
 
@@ -155,7 +162,7 @@ not deterministic tracking metrics. Exact counts require identity/episode data.
 
 ### GLOBAL_PROMPT
 
-Use the confirmed opening convention and summarize only MACRO evidence. Any
+Use the resolved opening convention and summarize only MACRO evidence. Any
 count `N` means deduplicated semantic event episodes, not LOCAL clip count or
 repeated mentions. Safety use cases may use critical/warn/overall-safe wording;
 state or workflow use cases should report the current business state.
@@ -173,7 +180,7 @@ History is continuity context only:
 
 The fence below delimits this reference template only. Never copy the fence into
 `prompt_text`. Replace every angle-bracket placeholder and expand the event
-block once per allowed event. Add extension output lines only for confirmed
+block once per allowed event. Add extension output lines only for Q2-requested
 Final Schema extensions.
 
 ```text
@@ -215,9 +222,9 @@ End time: {end_tm}s
   - 固定严重程度: <critical、warn、info 中的一个值>。
 - 对其余所有允许事件重复上述完整条目。
 ## 不确定性策略:
-- <confirmed uncertainty policy>。
+- <resolved uncertainty policy>。
 ## 事件优先级:
-- <confirmed primary-event business order>。
+- <resolved primary-event business order>。
 - 同时满足多个事件时只输出一个 EVENT，次要发现只写入 DESC。
 ## 输出规则:
 - 只输出 Final Schema 字段行，不要在字段前后输出正文。
