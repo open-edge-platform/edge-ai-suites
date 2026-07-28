@@ -36,15 +36,39 @@ and manages the Smart Route Planning Agent.
    source setup.sh --setup
    ```
 
-3. Run alternative setup options
+   > **Note**: By default the agent uses rule based route planning. To enable AI reasoning
+   > based route planning, export `REASONING_MODEL_NAME` **before** running the command
+   > above. See [AI Reasoning for Route Planning](#enable-ai-reasoning-for-route-planning).
 
-   For a more granular control, run these commands:
+## Enable AI reasoning for Route Planning
+
+Export the variable, then deploy as usual:
+
+```bash
+export REASONING_MODEL_NAME=<model_name>    # Recommended model: OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov
+source setup.sh --setup
+```
+
+To go back to rule based planning, unset the variable and redeploy:
+
+```bash
+unset REASONING_MODEL_NAME
+source setup.sh --restart
+```
+
+> **Note**: The first deployment in AI reasoning mode, downloads and converts the model, which can take several minutes
+> depending on your network. The model is cached in a Docker volume, so later restarts are
+> fast. Set `HF_TOKEN` as well if the model repository is gated.
+
+### Alternative setup options
+
+   For a more granular control, use the following commands.
 
    ```bash
    # Build service images only (without starting containers)
    source setup.sh --build
 
-   # Start services only (after build)
+   # Start services only (no builds)
    source setup.sh --run
 
    # Stop services
@@ -56,6 +80,31 @@ and manages the Smart Route Planning Agent.
    # Clean up containers, volumes, images, networks, and all related resources
    source setup.sh --clean
    ```
+
+
+### Supported models
+
+The following models were measured on a general purpose x86 CPU:
+
+| Model | Precision | Suitability |
+| --- | --- | --- | --- |
+| `OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov` | INT4 | **Recommended and verified.** Comfortably within budget, and it supports schema constrained output. |
+| `OpenVINO/Qwen2.5-1.5B-Instruct-int8-ov` | INT8 | It supports schema constrained output. Requires comparatively more storage and inference time. |
+
+
+On slower hardware prefer a smaller INT4 model.
+
+> **Note**: Before adopting a model that is not listed above (which is strictly not recommended), deploy it and confirm that the
+> map updates without the fallback notice. If the OVMS container restarts repeatedly, the model
+> is most likely not compatible and another model needs to be chosen.
+
+### Fallback behaviour
+
+The agent automatically falls back to rule based planning for that update, whenever:
+
+- the model server is unreachable, still loading, or times out,
+- the model could not make a decision
+- the model hullucinates (For example, names a route that does not exist or has no live traffic data.)
 
 ## Manual Setup for Advanced Users
 
