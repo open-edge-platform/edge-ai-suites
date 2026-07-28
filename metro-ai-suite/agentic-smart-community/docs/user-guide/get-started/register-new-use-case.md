@@ -12,18 +12,19 @@ The three demo monitors are only examples — the platform is use-case-agnostic,
 
    > *[smart-community] Create a use case `pet_safety`: monitor the pet camera for escape, trapped, or aggressive behavior. Stream: `rtsp://localhost:8554/live/pet`.*
 
-2. **Answer two questions.** Before generating anything, the skill asks exactly two questions (skipping any your description already answers):
+2. **Answer the gating questions.** The skill first checks that one primary event per clip can represent the request, then asks Q1/Q2 (skipping anything your description already answers). It may ask one compact boundary question when visual evidence, event priority, or uncertainty remains ambiguous:
    - **Q1 — Alerting?** *No* → a report-only use case (no alert schema, no rules). *Yes* → alerting via the built-in rule evaluator on the base schema `severity, event, desc` (alerts fire on `severity = warn | critical`).
    - **Q2 — Extend the schema?** *(only if Q1 = yes)* *No* → **default rule path**: the schema stays `severity, event, desc`, no custom code. *Yes* → **custom rule path**: the extra fields you name (e.g. `zone_id`, `risk_area`) are added on top of the base schema, and a per-use-case `evaluate_rules.py` is generated to decide alerts from them.
 
-3. **Confirm the final schema.** The agent echoes the decision for your approval before registering:
+3. **Confirm the mode, final schema, and rule path.** The agent echoes the applicable decision before registering:
 
    ```
-   Final Schema: severity, event, desc      (+ <extensions> only if you asked in Q2)
-   Rule Path:    defaultRuleEvaluator        (or evaluate_rules.py on the custom path)
+  Report-only:      schema none; rule none
+  Base alerting:    severity, event, desc; defaultRuleEvaluator
+  Extended alerting: severity, event, desc + extensions; evaluate_rules.py
    ```
 
-4. **The agent registers it.** It drafts the four-section VLM prompt (plus `evaluate_rules.py` on the custom path), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema and rejects the registration with a diff if they mismatch, so the agent fixes and retries instead of leaving a half-wired use case.
+4. **The agent registers it.** It drafts the four-section VLM prompt (plus `evaluate_rules.py` for every extended schema or custom alert policy), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema ↔ rules and rejects mismatches before side effects.
 
 5. **Bind a camera (optional).** If you supplied a stream URL, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the flow; otherwise add one later — see step 2 in [Run a clean, use-case-free server](../get-started.md#run-a-clean-use-case-free-server).
 

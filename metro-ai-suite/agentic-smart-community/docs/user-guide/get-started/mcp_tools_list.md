@@ -206,6 +206,9 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   pass `evaluate_rules_path`; the tool reads that file for the consistency check, stages it to
   `use-cases/<use_case>/evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
   schema, `use_case_dict`, or `config.yaml`. `prompt_text` is **required** here.
+- Any Final Schema field beyond `severity/event/desc` requires `evaluate_rules.py`. Both
+  `generate_task` and `register` reject an extended schema without a rule before DB, VLM, config,
+  or artifact side effects.
 - `action: register` — (1) apply `schema_extensions` via `ALTER TABLE` (idempotent),
   (2) `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
   (3) inject the entry into the in-memory `use_case_dict` so the task-poller and other tools see
@@ -232,11 +235,11 @@ Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with t
 | `use_case` | string | ✅ | Key matching `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | — | VLM task name (default `<use_case>_monitor`; must not collide with builtins) |
 | `description` | string | — | Human description shown by `/v1/tasks` |
-| `evaluate_rules_path` | string | — | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
+| `evaluate_rules_path` | string | required for extended schema/custom alerts | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
 | `reports` | object | — | `{ data_source, default_type, filter }` |
 | `summarize` | object | — | Per-clip summarize config `{ method, processor_kwargs }` |
 | `prompt_text` | string | ✅ for `generate_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `use-cases/<use_case>/prompt.md` |
-| `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from the prompt's `KEY:` output lines |
+| `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from prompt `KEY:` lines. Any extension selects the custom-rule path |
 | `overwrite` | boolean | — | Replace an existing entry (default false) |
 | `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default false) |
 
