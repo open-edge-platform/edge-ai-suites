@@ -10,36 +10,35 @@ Real-time polyp detection on endoscopic video using Intel hardware acceleration 
 |---|---|
 | **Model** | YOLO11n (FP16 OpenVINO IR) — trained in-container on CVC-ColonDB (mAP@50 ≈ 0.98 on val) |
 | **Inference** | Ultralytics (train/export) + OpenVINO 2026.2 (serve) on Intel Arc iGPU via torch+xpu |
-| **Backend** | Flask 3.0 — bootstrap orchestrator + REST + SSE + MJPEG streaming (`backend/main_server.py`) |
+| **Backend** | Flask 3.0 — bootstrap orchestrator + REST + SSE control plane (`backend/main_server.py`) |
 | **UI** | React + Vite + nginx |
 | **Target latency** | < 30 ms end-to-end at 1080p (validated: ~23 ms mean, ~28 ms p99 on Arc iGPU) |
 | **First-boot time** | 20–35 min while YOLO11n trains on the iGPU (subsequent boots: seconds — IR is cached) |
 
 ## What the UI shows
 
-Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`). After clicking **Start** the left panel begins streaming inference frames and the right column exposes the KPIs a reviewer typically asks for:
+Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`). After clicking **Start** in the left configuration panel, the right column exposes the KPIs a reviewer typically asks for:
 
-- **Video feed** — 1080p H.264 loop with per-frame polyp bounding boxes.
-- **Detection Status card** (hero, under the video)
-  - Live pill: `DETECTED` / `NOT DETECTED` + confidence
-  - `SESSION` sub-bar: cumulative polyp instances, % of frames with a detection, positive-frame count
-- **Pipeline Performance table** — `Workload | Model | Device | FPS | E2E mean | E2E P90 | E2E P95 | Status`. `E2E mean` is the end-to-end frame residence mean over the rolling recent-frame window; `E2E P90` and `E2E P95` are nearest-rank percentiles over the same window.
+- **Config panel (left accordion)** — source selection (`file` or `basler`), source argument (video path / camera serial), device choice, and Start/Stop/Reset controls.
+- **Pipeline Performance table** — `Workload | Model | Device | FPS | Mean | P50 | P90 | P95 | P99 | Status`. Percentiles are computed from the pipeline latency tracer rolling window.
 - **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset, video source resolution, model input tensor size, target device (`GPU` / `CPU` / `NPU`).
 - **Platform accordion** — CPU / GPU / NPU utilization from `intel-npu-info` + `nvidia-smi`-style samplers.
 
-All of the above is driven by a single Server-Sent Events stream at `/api/events` (~1 Hz snapshot) and an MJPEG stream at `/api/video_feed`, both proxied through nginx with `proxy_buffering off`.
+All of the above is driven by a single Server-Sent Events stream at `/api/events` (~1 Hz snapshot). The rendered video appears in a native popup sink launched by the pipeline container when display mode is enabled.
 
 ## Topology
 
-Two services on a private Docker bridge. Only the UI (:8080) is published to the host — the backend is reachable only through the UI's nginx reverse-proxy.
+Three services on a private Docker bridge. Only the UI (:8080) is published to the host — backend and pipeline are internal.
 
 ```
 HOST :8080 ─→ surgical-ui        (nginx + React SPA + /api reverse-proxy)
-            INTERNAL surgical-internal bridge
-                └─ surgical-backend   Flask 3.0
-                                      · bootstrap: fetch → train → export IR
-                                      · serve:     REST + SSE + MJPEG on :5001
-                                      · devices:   /dev/dri (Intel Arc iGPU)
+      INTERNAL surgical-internal bridge
+        ├─ surgical-backend   Flask 3.0 control plane + SSE on :5001
+        │                     · bootstrap: fetch → train → export IR
+        │                     · runtime:   start/stop + health/latency fanout
+        └─ surgical-pipeline  GStreamer + DL Streamer on :8091
+                    · sources:   file | basler
+                    · latency:   GST latency tracer (/latency)
 ```
 
 The UI does **not** unblock until `surgical-backend` reports `/api/readiness → ready`. On first boot this includes the full train pipeline; the browser tab simply won't answer until the model is trained and served. This is the "gate UI on BE ready" contract — no user-visible bootstrap UX.
@@ -66,13 +65,13 @@ cp .env.example .env
 ```bash
 export HTTP_PROXY=http://proxy.your-corp.com:912
 export HTTPS_PROXY=http://proxy.your-corp.com:912
-export NO_PROXY=localhost,127.0.0.1,.your-corp.com,surgical-mqtt,surgical-pipeline,surgical-backend,surgical-ui
+export NO_PROXY=localhost,127.0.0.1,.your-corp.com,surgical-pipeline,surgical-backend,surgical-ui
 ```
 
 Either way `docker-compose.yaml` forwards the values to `docker build` (as build args) and to the running containers (as env vars), so `apt`, `pip`, `wget`, `curl`, and Ultralytics all honour them. `make up` runs a preflight check and warns if you appear to be on an Intel corp network but neither `.env` nor exported vars provide a proxy.
 
 Notes:
-- Include the internal service names in `NO_PROXY` so container-to-container traffic (backend → pipeline, backend → mqtt) is not routed through the proxy.
+- Include the internal service names in `NO_PROXY` so container-to-container traffic (backend → pipeline) is not routed through the proxy.
 - Docker daemon also needs a proxy config to `pull` the base image. If `docker pull ubuntu:24.04` works, you're fine. Otherwise configure `~/.docker/config.json` or `/etc/systemd/system/docker.service.d/http-proxy.conf` per your IT policy.
 - Verify from the shell before building:
 
@@ -307,7 +306,7 @@ Surgical_Instrument/
 │   └── server/app.py          # Flask REST + SSE snapshot builder
 ├── ui/
 │   └── src/
-│       ├── components/DetectionPanel/   # video + hero detection card
+│       ├── components/ConfigPanel/      # source/device/session accordion (left)
 │       ├── components/RightPanel/       # Pipeline Performance + Model & Input + Platform accordions
 │       ├── redux/slices/detectionSlice.ts
 │       ├── redux/middleware/sseMiddleware.ts

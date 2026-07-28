@@ -113,6 +113,7 @@ export APP_HOST_PORT="${APP_HOST_PORT:-8080}"
 # for Compose to resolve the project — even though we only start model-download.
 COMPOSE_CMD="docker compose \
     -f ${ROOT_DIR}/docker/compose.base.yaml \
+    -f ${ROOT_DIR}/docker/compose.detection.yaml \
     -f ${ROOT_DIR}/docker/compose.agents.yaml \
     -f ${ROOT_DIR}/docker/compose.ui.yaml"
 ${COMPOSE_CMD} up -d model-download

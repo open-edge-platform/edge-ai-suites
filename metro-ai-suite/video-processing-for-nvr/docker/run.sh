@@ -40,19 +40,22 @@ if [[ "$NPU_ON" == "true" ]]; then
         -e http_proxy=${http_proxy} \
         -e https_proxy=${https_proxy} \
         -e LD_LIBRARY_PATH=/usr/local/lib \
-        -e DISPLAY_NEW_PLATFORM=1 \
+	    -e DISPLAY_NEW_PLATFORM=1 \
+		-e NPU_ON=${NPU_ON} \
         --cap-add=SYS_ADMIN \
         --device /dev/dri \
-        --group-add $VIDEO_GROUP_ID --group-add $RENDER_GROUP_ID \
         --device /dev/accel \
-        --group-add $(stat -c "%g" /dev/accel/accel* | sort -u | head -n 1) \
-        --env ZE_ENABLE_ALT_DRIVERS=libze_intel_vpu.so \
+        --group-add $(stat -c "%g" /dev/dri/renderD128 2>/dev/null) \
+        --group-add $(stat -c "%g" /dev/accel/accel0 2>/dev/null) \
         --user root \
         -e DISPLAY=$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $HOME/.Xauthority:/root/.Xauthority:rw \
+	    -e LD_LIBRARY_PATH=/opt/intel/openvino_2025/runtime/lib/intel64:/usr/lib/x86_64-linux-gnu:/usr/local/lib:${LD_LIBRARY_PATH} \
         -w /home/vpp \
-        $DOCKER_IMAGE
+	    --entrypoint /home/vpp/vppsample/docker/run_dec_det.sh \
+        -v "$MODEL_DIR:/models:ro" \
+        $DOCKER_IMAGE \
+        "/models/$MODEL_FILE"
+
 else
     docker run -it --net=host \
         -e no_proxy=localhost,127.0.0.1 \

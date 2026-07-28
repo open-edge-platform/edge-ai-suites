@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Help: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="help-content">
-      <h2>Help</h2>
-      <p>Here you can find help and support resources.</p>
+      <h2>{t('menu.help')}</h2>
+      <p>{t('menu.helpDescription')}</p>
     </div>
   );
 };

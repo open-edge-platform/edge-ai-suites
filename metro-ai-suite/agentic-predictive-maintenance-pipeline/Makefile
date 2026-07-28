@@ -35,12 +35,14 @@ TAG ?= $(DEFAULT_TAG)
 # Component Configuration
 # ==============================================================================
 
-COMPONENTS := agent-service storage-service ui-service
-TEST_COMPONENTS := agent-service storage-service ui-service
+# agent-service was decoupled out to the EAL agent-quality-handler
+# microservice (a pulled image, not built here) — see docker/compose.agents.yaml.
+COMPONENTS := detection-service storage-service ui-service
+TEST_COMPONENTS := detection-service storage-service ui-service
 
-agent-service_CONTEXT_DIR  := ./services/agent-service
-agent-service_DOCKERFILE   := ./services/agent-service/Dockerfile
-agent-service_LANG         := python
+detection-service_CONTEXT_DIR := ./services/detection-service
+detection-service_DOCKERFILE  := ./services/detection-service/Dockerfile
+detection-service_LANG        := python
 
 storage-service_CONTEXT_DIR := ./services/storage-service
 storage-service_DOCKERFILE  := ./services/storage-service/Dockerfile

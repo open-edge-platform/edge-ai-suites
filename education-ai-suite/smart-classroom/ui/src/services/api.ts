@@ -46,7 +46,54 @@ const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 // Default to empty string (same-origin) so the Vite dev proxy routes /api/v1
 // to port 9011 without CORS. Set VITE_CONTENT_SEARCH_API_URL for remote hosts.
 const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
+const GRADING_API_URL: string = env.VITE_GRADING_API_URL || '/grading-api';
 const HEALTH_TIMEOUT_MS = 5000;
+
+// ============================================================================
+// FEATURE CONFIGURATION API
+// ============================================================================
+
+export interface FeatureDescriptor {
+  id: string;
+  dependency: string[];
+  requires: string[];
+  type?: string;
+  panel?: string;
+  title?: string;
+  endpoints?: Record<string, string>;
+  mode?: string;
+  cameras?: {
+    front?: boolean;
+    back?: boolean;
+    board?: boolean;
+  };
+}
+
+/**
+ * Fetch enabled features with full UI descriptors from backend
+ * This is the foundation for dynamic UI rendering
+ */
+export async function fetchFeatures(): Promise<FeatureDescriptor[]> {
+  const res = await fetch(`${BASE_URL}/features`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch features: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.features || [];
+}
+
+/**
+ * Get endpoint URL for a specific feature action
+ */
+export function getFeatureEndpoint(
+  features: FeatureDescriptor[],
+  featureId: string,
+  endpointKey: string
+): string | null {
+  const feature = features.find(f => f.id === featureId);
+  return feature?.endpoints?.[endpointKey] || null;
+}
+
 
 /**
  * Convert a local:// storage path from search results into a browser-loadable URL
@@ -434,6 +481,25 @@ export async function fetchMindmap(sessionId: string): Promise<string> {
   }
 
   return data.mindmap;
+}
+
+/**
+ * Upload a mind-map screenshot (PNG blob, captured in-browser via html2canvas)
+ * for the given session. The backend saves it as the report's mind-map image;
+ * it never re-renders the mind map itself. Best-effort: callers should not block
+ * report generation on this succeeding.
+ */
+export async function uploadMindmapImage(sessionId: string, png: Blob): Promise<void> {
+  const form = new FormData();
+  form.append("file", png, "mindmap.png");
+  const res = await fetch(`${BASE_URL}/report/${encodeURIComponent(sessionId)}/mindmap-image`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(errText || `HTTP ${res.status}`);
+  }
 }
 
 export async function getResourceMetrics(sessionId: string): Promise<any> {
@@ -1251,4 +1317,410 @@ export async function csGetFilesList(): Promise<{
     }
     return await res.json();
   });
+}
+
+export interface GradingRubricInfo {
+  filename: string;
+  rubric_path: string;
+  size_bytes: number;
+  modified_at: string;
+}
+
+export interface GradingDirInfo {
+  papers_dir: string | null;
+  dir_name: string | null;
+  rubric_path: string | null;
+  rubric_name: string | null;
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  current: string | null;
+  last_new_item_at: string | null;
+}
+
+export interface GradingTask {
+  task_id: string;
+  task_type: string;
+  status: string;
+  current_step: string;
+  progress: number;
+  error_message?: string | null;
+  created_at: string;
+  updated_at?: string;
+  log_path?: string | null;
+  dir_info?: GradingDirInfo | null;
+}
+
+export interface GradingQuestionScore {
+  catalog?: string;
+  type?: string;
+  score?: number | null;
+  max_score?: number | null;
+}
+
+export interface GradingStudentResult {
+  student_id?: string | null;
+  student_name?: string | null;
+  class_name?: string | null;
+  exam_number?: string | null;
+  paper_path?: string | null;
+  total_score?: number | null;
+  total_max?: number | null;
+  objective_score?: number | null;
+  objective_max?: number | null;
+  subjective_score?: number | null;
+  subjective_max?: number | null;
+  processing_seconds?: number | null;
+  questions?: Record<string, GradingQuestionScore>;
+}
+
+export interface GradingSummary {
+  metadata: Record<string, unknown>;
+  students: Record<string, GradingStudentResult>;
+  updated_at?: string | null;
+  student_count: number;
+  total_processing_seconds?: number | null;
+}
+
+async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${GRADING_API_URL}${path}`, {
+      cache: 'no-store',
+      ...init,
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.detail || `Grading request failed (${res.status})`);
+    }
+    return (await res.json()) as T;
+  });
+}
+
+export async function gradingListRubrics(): Promise<{ total: number; rubrics: GradingRubricInfo[] }> {
+  return gradingFetch('/rubrics');
+}
+
+export async function gradingUploadRubric(file: File): Promise<{
+  status: string;
+  filename: string;
+  rubric_path: string;
+  size_bytes: number;
+}> {
+  const form = new FormData();
+  form.append('file', file);
+  return gradingFetch('/rubrics/upload', { method: 'POST', body: form });
+}
+
+export async function gradingCreateTask(body: {
+  paper_path: string;
+  rubric_path?: string;
+}): Promise<GradingTask> {
+  return gradingFetch('/grading/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function gradingListTasks(status?: string): Promise<{
+  total: number;
+  status_counts: Record<string, number>;
+  tasks: GradingTask[];
+}> {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  return gradingFetch(`/grading/tasks${q}`);
+}
+
+export async function gradingGetTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`);
+}
+
+export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/summary`);
+}
+
+export async function gradingPauseTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/pause`, { method: 'POST' });
+}
+
+export async function gradingResumeTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/resume`, { method: 'POST' });
+}
+
+export async function gradingCancelTask(taskId: string): Promise<GradingTask> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/cancel`, { method: 'POST' });
+}
+
+export async function gradingDeleteTask(taskId: string): Promise<void> {
+  await gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
+}
+
+export interface GradingHealth {
+  status: string;
+  service: string;
+  language: string;
+  dependencies?: {
+    vlm: 'healthy' | 'unavailable';
+    layout_detection: 'healthy' | 'unavailable';
+  };
+}
+
+export async function gradingHealth(): Promise<GradingHealth> {
+  return gradingFetch('/health');
+}
+
+export interface GradingFsEntry {
+  name: string;
+  path: string;
+  is_dir: boolean;
+}
+
+export interface GradingFsListing {
+  path: string;
+  parent: string | null;
+  entries: GradingFsEntry[];
+}
+
+// Browse server-side directories for the target-path picker. path=undefined
+// returns the roots (Windows drive letters). Returned directory paths are real,
+// server-visible absolute paths usable as a task's paper_path.
+export async function gradingListDir(path?: string): Promise<GradingFsListing> {
+  const q = path ? `?path=${encodeURIComponent(path)}` : '';
+  return gradingFetch(`/fs/list${q}`);
+}
+
+export interface GradingTaskLog {
+  task_id: string;
+  log_path: string | null;
+  lines: string[];
+}
+
+export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<GradingTaskLog> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/log?tail=${tail}`);
+}
+
+export interface GradingConfig {
+  dpi: number | null;
+  vlm_temperature: number | null;
+  poll_interval: number | null;
+  stable_checks: number | null;
+  idle_timeout: number | null;
+  vlm_model: string | null;
+  ocr_model: string | null;
+  layout_model: string | null;
+}
+
+export async function gradingGetConfig(): Promise<GradingConfig> {
+  return gradingFetch('/grading/config');
+}
+
+export async function gradingUpdateConfig(updates: { dpi?: number | null; vlm_temperature?: number | null; poll_interval?: number | null; stable_checks?: number | null; idle_timeout?: number | null }): Promise<GradingConfig> {
+  return gradingFetch('/grading/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+}
+
+export async function gradingGetRubricContent(filename: string): Promise<{ filename: string; content: string }> {
+  return gradingFetch(`/rubrics/${encodeURIComponent(filename)}/content`);
+}
+
+export async function gradingUpdateRubricContent(filename: string, content: string): Promise<{ filename: string; size_bytes: number }> {
+  return gradingFetch(`/rubrics/${encodeURIComponent(filename)}/content`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+}
+
+// ===== Report Generation =====
+
+export type ReportStreamEvent =
+  | { type: 'report_ready' }
+  | { type: 'error'; message: string }
+  | { type: 'token'; token: string }
+  | { type: 'partial_report'; content: string }  // raw-filled skeleton, before the LLM
+  | { type: 'report'; content: string }           // final report (template path)
+  | { type: 'done' };
+
+// Stream a class report from the backend (POST /report/generate).
+// The backend emits NDJSON lines of two shapes:
+//   {type: 'partial_report'|'report'|'report_ready', ...}
+//   {token: '...', error: '...'}
+// which are normalized here into ReportStreamEvent.
+export async function* streamGenerateReport(
+  sessionId: string,
+  selectedFields?: string[],
+  manualFields?: Record<string, string>,
+  opts: { signal?: AbortSignal } = {}
+): AsyncGenerator<ReportStreamEvent> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}/report/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        selected_fields: selectedFields ?? null,
+        manual_fields: manualFields ?? null,
+      }),
+      signal: opts.signal,
+      cache: 'no-store',
+      keepalive: true,
+    });
+  } catch (err) {
+    yield { type: 'error', message: 'Network error while generating report.' };
+    yield { type: 'done' };
+    return;
+  }
+
+  if (!res.ok) {
+    let detail = `Report generation failed (${res.status})`;
+    try {
+      const e = await res.json();
+      if (e?.detail) detail = e.detail;
+    } catch {
+      // ignore non-JSON error bodies
+    }
+    yield { type: 'error', message: detail };
+    yield { type: 'done' };
+    return;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    yield { type: 'error', message: 'Streaming not supported' };
+    yield { type: 'done' };
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      let json: any;
+      try { json = JSON.parse(trimmed); } catch { continue; }
+      if (json.type === 'report_ready') { yield { type: 'report_ready' }; continue; }
+      if (json.type === 'partial_report') { yield { type: 'partial_report', content: json.content || '' }; continue; }
+      if (json.type === 'report') { yield { type: 'report', content: json.content || '' }; continue; }
+      if (json.error) { yield { type: 'error', message: json.error }; continue; }
+      if (typeof json.token === 'string' && json.token) { yield { type: 'token', token: json.token }; }
+    }
+  }
+  yield { type: 'done' };
+}
+
+// Direct link to download the generated report in the requested format
+// (GET /report/{id}/download?format=docx|pdf).
+export function getReportDownloadUrl(sessionId: string, format: 'docx' | 'pdf' = 'docx'): string {
+  return `${BASE_URL}/report/${sessionId}/download?format=${format}`;
+}
+
+// Download the generated report as .docx via fetch->blob, so a missing report
+// (404 JSON) surfaces as an error instead of navigating the page to raw JSON.
+export async function downloadReport(sessionId: string): Promise<void> {
+  const res = await fetch(getReportDownloadUrl(sessionId, 'docx'), { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `Download failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `class_report_${sessionId}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Download the generated report as .pdf via fetch->blob. The backend handles
+// server-side conversion from .docx to .pdf.
+export async function downloadReportPdf(sessionId: string): Promise<void> {
+  const res = await fetch(getReportDownloadUrl(sessionId, 'pdf'), { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `PDF download failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `class_report_${sessionId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Fetch a previously generated report's markdown (GET /report/{id}).
+// Returns '' when no report exists yet (404), so callers can render an empty state.
+export async function getReport(sessionId: string): Promise<string> {
+  const res = await fetch(`${BASE_URL}/report/${sessionId}`, { cache: 'no-store' });
+  if (res.status === 404) return '';
+  if (!res.ok) throw new Error(`Failed to load report (${res.status})`);
+  const data = await res.json();
+  return data.report || '';
+}
+
+// ===== Report Field Catalog (checkbox list) =====
+
+export interface TemplateFieldMeta {
+  code: string;
+  kind: 'raw' | 'generated';
+  input?: 'manual';        // teacher types this in (basic info)
+  always_on?: boolean;     // auto metadata, not a toggleable checkbox (e.g. report_time)
+  label_key?: string;      // preferred i18n key for UI labels
+  label?: { en: string; zh: string }; // legacy inline labels (backward compatibility)
+}
+export interface TemplateFieldGroup {
+  group_key?: string;      // preferred i18n key for UI group titles
+  group?: { en: string; zh: string }; // legacy inline names (backward compatibility)
+  fields: TemplateFieldMeta[];
+}
+
+// The report field catalog exposed as checkboxes (GET /report/template-fields).
+export async function getTemplateFields(): Promise<{ groups: TemplateFieldGroup[] }> {
+  const res = await fetch(`${BASE_URL}/report/template-fields`, { cache: 'no-store' });
+  if (!res.ok) {
+    let detail = `Failed to load fields (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+// Re-project an existing report onto a new checkbox selection — no LLM re-run
+// (POST /report/{id}/reselect). Reuses the session's cached fields; only which
+// fields appear changes. Used when the teacher toggles fields after generating.
+export async function reselectReport(
+  sessionId: string,
+  selectedFields: string[],
+  manualFields?: Record<string, string>,
+): Promise<{ report: string }> {
+  const res = await fetch(`${BASE_URL}/report/${sessionId}/reselect`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selected_fields: selectedFields, manual_fields: manualFields ?? null }),
+  });
+  if (!res.ok) {
+    let detail = `Re-selection failed (${res.status})`;
+    try { const e = await res.json(); if (e.detail) detail = e.detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
+  const data = await res.json();
+  return { report: data.report || '' };
 }

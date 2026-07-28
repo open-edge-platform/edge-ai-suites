@@ -3,6 +3,9 @@ name: smartbuilding-toolkit
 description: >-
   Generic, use-case-agnostic guide to the smart-community MCP server and its
   smartbuilding_* video tool set. Read this before touching any smartbuilding_* tool.
+  IMPORTANT: this toolkit must not create/register new use cases directly; for any new
+  use case request, first load video-summary-prompt-studio and follow its Q1/Q2 schema
+  confirmation gate before any smartbuilding_use_case_register call.
   Teaches the full tool catalog, the SQLite data model, how to discover which monitor to
   act on, how to generate reports, and how pushed alerts reach a session.
   Framework-agnostic — works for any MCP client (OpenClaw, Hermes, Claude Desktop,
@@ -13,6 +16,14 @@ description: >-
 
 Every tool is keyed on **`monitor_id`** (the camera id, e.g. `cam_child`). There is no
 global `source_id`; ids are per-monitor and never assume they are unique across use cases.
+
+## Mandatory handoff for new use cases
+
+If the user asks to create/register a new use case, do not draft a prompt and do not call
+`smartbuilding_use_case_register` from this toolkit. First load the
+`video-summary-prompt-studio` skill. That skill owns the Q1/Q2 customer interaction,
+final schema confirmation, prompt authoring, use-case registration, and monitor registration.
+This toolkit resumes only after the use case exists, or for ordinary monitor/report/query work.
 
 ---
 
@@ -65,7 +76,15 @@ user-defined (the tool doesn't interpret it).
 - `action` (req): `list | status | start | stop | register_source | unregister`,
   `monitor_id` (req except `list`); for `register_source`: `source_url` (req),
   `use_case` (req, must be a `config.yaml` `use_case_dict` key), `name`,
-  `pipeline_config`, `webhook_url`.
+  `pipeline_config`, `webhook_url`, `persist`.
+- **Naming conventions for `register_source`** (keep new monitors consistent with the
+  built-ins `cam_fridge` / `cam_child` / `cam_elder_bedroom`):
+  - `monitor_id`: use `cam_<use_case>` (e.g. `cam_pet_safety`). Do NOT invent ad-hoc
+    ids like `pet_monitor_001`.
+  - `name`: a short **English** display name (e.g. `"Pet Safety Camera"`), even when
+    the user's request is in Chinese.
+  - `persist: true`: mirror the monitor (incl. `pipeline_config`, which is not stored
+    in the DB) back to `monitors.yaml` so it survives an MCP restart.
 - `list` → all monitors + live analytics reachability. `status` → one monitor.
 - `start`/`stop` resume/pause streaming. `register_source` validates the use case
   first (see `smartbuilding_use_case_validate`) then coordinates DB + analytics + worker
@@ -83,8 +102,10 @@ user-defined (the tool doesn't interpret it).
   and every `required` schema field appears in the task's LOCAL_PROMPT. Returns
   `{ valid, checks, required_fields, missing_required_in_prompt, suggestion, … }`.
 
-> Creating/authoring new use cases (drafting prompts, registering video summary service tasks) is handled by
-> a separate prompt-authoring skill, not this toolkit.
+> Creating/authoring new use cases (drafting prompts, choosing schema, registering video summary service tasks)
+> is handled by `video-summary-prompt-studio`, not this toolkit. Do not call
+> `smartbuilding_use_case_register` until that skill has asked Q1/Q2 and the user has confirmed
+> Final Schema + Rule Path.
 
 ---
 
