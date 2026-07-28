@@ -174,6 +174,10 @@ Once connected, you drive the whole platform in natural language — the agent p
 > **Tip:** Prefix your message with `[smart-community]` so the agent knows to reach for the `smartbuilding_*` tools. Alternatively, tell it once at the start of the conversation, or save the guideline to its memory.
 
 
+## Register a new use case
+
+The three demo monitors are only examples — the platform is use-case-agnostic, so you add a new use case **by conversation**: no code, no restart. You describe it to a connected agent, and the `video-summary-prompt-studio` skill turns your description into a registered, running use case. See [Register a New Use Case](./get-started/register-new-use-case.md) for the full flow.
+
 ## Run a clean, use-case-free server
 
 The demo above is one packaging of a platform that ships **zero** use cases by default. To start the pristine core instead:
@@ -183,9 +187,8 @@ bash scripts/mcp-server/start.sh
 ```
 
 This boots from the tracked [config.yaml.example](../../config.yaml.example) (an empty `use_case_dict`) with **no** monitors — a clean, use-case-agnostic server. From there, add everything by chatting with a connected agent:
-(TODO: update)
 
-1. **Create a use case** — describe it in chat; the `video-summary-prompt-studio` skill infers the events/schema, drafts the prompt, and calls `smartbuilding_use_case_register`.
+1. **Create a use case** — describe it in chat; the `video-summary-prompt-studio` skill infers the events/schema, drafts the prompt, and calls `smartbuilding_use_case_register`. See [Register a New Use Case](./get-started/register-new-use-case.md) for the full flow.
 2. **Add a camera** — `smartbuilding_monitor_ctl register_source` (single monitor) or `smartbuilding_monitors_compose up` (a batch from a `monitors.yaml`).
 
 No core-component changes, no restart — the server picks up the new use case and monitor at runtime. This is the intended production shape; the demo bundle simply pre-fills it with three validated examples.
