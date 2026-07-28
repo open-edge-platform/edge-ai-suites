@@ -193,44 +193,6 @@ jobs:
           path: edge-ai-libraries
           persist-credentials: false
 
-      - name: Update WEEKLY_BUILD_DATE in .env and Helm values files
-        if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'no' }}
-        run: |
-          if [[ -z "$WEEKLY_BUILD_DATE_INPUT" ]]; then
-            echo "weekly_build_date input is empty; skipping .env and Helm values update"
-            exit 0
-          fi
-
-          # Update WEEKLY_BUILD_DATE in a docker .env file
-          update_env_file() {
-            local env_file="$1"
-            if [[ ! -f "$env_file" ]]; then
-              echo "Skipping missing .env file: $env_file"
-              return
-            fi
-            if grep -q '^WEEKLY_BUILD_DATE=' "$env_file"; then
-              sed -i "s|^WEEKLY_BUILD_DATE=.*|WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}|" "$env_file"
-            else
-              echo "WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}" >> "$env_file"
-            fi
-            echo "Updated WEEKLY_BUILD_DATE in $env_file"
-          }
-
-          # Update weekly_build_date in a Helm values.yaml file
-          update_helm_values() {
-            local values_file="$1"
-            if [[ ! -f "$values_file" ]]; then
-              echo "Skipping missing Helm values file: $values_file"
-              return
-            fi
-            sed -i "s/weekly_build_date: .*/weekly_build_date: \"${WEEKLY_BUILD_DATE_INPUT}\"/" "$values_file"
-            echo "Updated weekly_build_date in $values_file"
-          }
-
-          # Docker .env files
-          update_env_file "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env"
-          update_env_file "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env"
-
       - name: Building Time Series Analytics microservices
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
         run: |

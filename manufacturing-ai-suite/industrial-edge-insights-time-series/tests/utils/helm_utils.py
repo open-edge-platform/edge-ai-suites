@@ -1706,23 +1706,34 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
     try:
-        # Install from the extracted chart dir, not the raw .tgz, so values.yaml
-        # edits made by test fixtures (e.g. update_values_yaml) are picked up.
-        _ensure_chart_extracted(chart_path)
-        if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
-            install_target = chart_path
-        else:
-            install_target = _find_chart_tgz(chart_path) or chart_path
-        if install_target != chart_path:
-            logger.info(f"Installing from packaged chart archive: {install_target}")
+        # Install straight from the packaged .tgz (chart_path/*.tgz) instead of
+        # an extracted directory.
+        #
+        # Why we still need values_override / -f:
+        #   The .tgz is a sealed package -- its internal values.yaml is the
+        #   chart's original defaults and is never modified. Meanwhile, several
+        #   test fixtures (e.g. update_values_yaml) extract the chart into
+        #   chart_path and then edit chart_path/values.yaml on disk *before*
+        #   calling this function, injecting test-specific values (passwords,
+        #   proxy settings, log levels, etc. -- see password_test_cases).
+        #   `helm install` normally only looks inside the .tgz, so those edits
+        #   would silently be ignored and the chart would deploy with its
+        #   original defaults instead. Passing the edited file via `-f`
+        #   layers/merges it on top of the .tgz's defaults, so the values the
+        #   tests set are the ones that actually reach the running pods.
+        tgz_path = _find_chart_tgz(chart_path)
+        install_target = tgz_path or chart_path
+        values_override = os.path.join(chart_path, "values.yaml")
 
-        helm_command = [
-            "helm", "install", release_name, install_target,
+        helm_command = ["helm", "install", release_name, install_target]
+        if tgz_path and os.path.isfile(values_override):
+            helm_command.extend(["-f", values_override])
+        helm_command.extend([
             "--set", f"env.privileged_access_required={val}",
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin}",
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",
             "-n", namespace, "--create-namespace"
-        ]
+        ])
 
         # SAMPLE_APP must match the UDF package name
         if sample_app:
@@ -1757,18 +1768,21 @@ def helm_uninstall(release_name, namespace):
 def helm_upgrade(release_name, chart_path, namespace, telegraf_input_plugin1):
     """Upgrade a Helm release with specified parameters."""
     try:
-        # Same extracted-chart-dir preference as helm_install().
-        _ensure_chart_extracted(chart_path)
-        if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
-            install_target = chart_path
-        else:
-            install_target = _find_chart_tgz(chart_path) or chart_path
+        # Same packaged-.tgz install target and values.yaml override as
+        # helm_install() -- see the comment there for why -f/values_override
+        # is required (it re-applies test-edited values on top of the .tgz's
+        # sealed-in defaults, since the .tgz itself is never modified).
+        tgz_path = _find_chart_tgz(chart_path)
+        install_target = tgz_path or chart_path
+        values_override = os.path.join(chart_path, "values.yaml")
 
-        helm_command = [
-            "helm", "upgrade", release_name, install_target,
+        helm_command = ["helm", "upgrade", release_name, install_target]
+        if tgz_path and os.path.isfile(values_override):
+            helm_command.extend(["-f", values_override])
+        helm_command.extend([
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin1}",
             "-n", namespace
-        ]
+        ])
 
         logger.info(f"Upgrading Helm release '{release_name}'...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
