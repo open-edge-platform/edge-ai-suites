@@ -256,6 +256,10 @@ if [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--build" ] && [ 
             echo -e "${RED}ERROR: MQTT_HOST must be set when USE_EXISTING_SI=true.${NC}"
             return 1
         fi
+        if [ "$MQTT_HOST" = "127.0.0.1" ] || [ "$MQTT_HOST" = "localhost" ]; then
+            echo -e "${RED}ERROR: MQTT_HOST must point to the Smart Intersection node when USE_EXISTING_SI=true, not ${MQTT_HOST}.${NC}"
+            return 1
+        fi
         if [ ! -f "$SCENESCAPE_CA_CERT_PATH" ]; then
             echo -e "${RED}ERROR: SCENESCAPE_CA_CERT_PATH not found: $SCENESCAPE_CA_CERT_PATH${NC}"
             echo -e "${YELLOW}Copy scenescape-ca.pem from the running Smart Intersection node and set SCENESCAPE_CA_CERT_PATH to that local file.${NC}"
