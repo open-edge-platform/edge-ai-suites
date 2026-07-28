@@ -115,7 +115,17 @@ export async function ingestFiles(files: File[]): Promise<BatchIngestResponse> {
 }
 
 export async function clearContext(): Promise<void> {
-  await fetch(`${API.rag}/api/v1/context`, { method: "DELETE" });
+  const res = await fetch(`${API.rag}/api/v1/context`, { method: "DELETE" });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? body.error?.message ?? JSON.stringify(body);
+    } catch {
+      detail = (await res.text()) || detail;
+    }
+    throw new Error(`Failed to clear context: ${detail}`);
+  }
 }
 
 export async function getContextStats(): Promise<ContextStats> {
