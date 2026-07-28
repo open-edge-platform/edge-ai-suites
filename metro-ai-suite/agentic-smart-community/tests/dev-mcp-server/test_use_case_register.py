@@ -11,18 +11,91 @@ consistency gate:
 No VLM/VSA service is needed: rejected registers return before any network call,
 and passing registers get past the gate (steps.consistency.consistent == true)
 before the (expected) VLM POST failure to the unreachable stub URL.
+
+T11+ start a local stub VLM service (POST/GET/PATCH /v1/tasks) and verify the
+evaluate_rules staging: register_task copies the caller's rules file into
+use-cases/<uc>/evaluate_rules.py, register auto-discovers it and persists the
+conventional ABSOLUTE path into config.yaml, conflicting content without
+overwrite is rejected pre-flight, and same-content re-runs report "unchanged".
 """
 
 import json
 import sys
 import subprocess
+import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent))
 from conftest import get_temp_dir, cleanup_dir, init_test_db, TestResult, REPO_ROOT
 
 MCP_SERVER_ENTRY = REPO_ROOT / "packages" / "mcp-server" / "dist" / "index.js"
+
+VLM_STUB_PORT = 19999
+
+
+class VlmStub:
+    """Minimal multilevel-video-understanding stub: POST/GET/PATCH /v1/tasks.
+
+    Started only before the staging tests (T11+): earlier tests rely on the port
+    being CLOSED so the VLM POST fails as "unreachable".
+    """
+
+    def __init__(self, port: int):
+        self.tasks: dict = {}
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+            def _json(self, code: int, obj):
+                body = json.dumps(obj).encode()
+                self.send_response(code)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def _read_body(self):
+                length = int(self.headers.get("Content-Length", 0))
+                return json.loads(self.rfile.read(length) or b"{}")
+
+            def do_POST(self):
+                if self.path == "/v1/tasks":
+                    body = self._read_body()
+                    outer.tasks[body.get("task_name")] = body
+                    self._json(201, {"ok": True})
+                else:
+                    self._json(404, {})
+
+            def do_PATCH(self):
+                name = self.path.rsplit("/", 1)[-1]
+                if self.path.startswith("/v1/tasks/") and name in outer.tasks:
+                    outer.tasks[name].update(self._read_body())
+                    self._json(200, {"ok": True})
+                else:
+                    self._json(404, {})
+
+            def do_GET(self):
+                name = self.path.rsplit("/", 1)[-1]
+                if self.path.startswith("/v1/tasks/") and name in outer.tasks:
+                    self._json(200, outer.tasks[name])
+                else:
+                    self._json(404, {})
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.server.shutdown()
+        self.server.server_close()
 
 
 class MCPClient:
@@ -160,6 +233,8 @@ video_summary_max_concurrent: 1
         sys.exit(1)
 
     client = MCPClient(proc)
+    rules_path = tmp / "evaluate_rules.py"
+    rules_path.write_text(GOOD_PET_RULES)
 
     try:
         client.send("initialize", {
@@ -174,7 +249,7 @@ video_summary_max_concurrent: 1
             "action": "register", "use_case": "pet_broken",
             "prompt_text": BROKEN_JSON_PROMPT,
             "schema_extensions": ext(("motion_direction", False), ("pet_confined", False), ("aggressive_behavior", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c1 = r1.get("steps", {}).get("consistency", {})
         t.check(r1.get("ok") is False, "T1 broken(JSON+mismatch): ok == false")
@@ -200,7 +275,7 @@ video_summary_max_concurrent: 1
             "action": "register", "use_case": "pet_ok",
             "prompt_text": GOOD_PET_PROMPT,
             "schema_extensions": ext(("pet_zone", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c3 = r3.get("steps", {}).get("consistency", {})
         t.check(c3.get("consistent") is True, "T3 custom-rule normalized extras: consistency.consistent == true (gate passed)")
@@ -230,7 +305,7 @@ video_summary_max_concurrent: 1
             "action": "register_task", "use_case": "pet_task_ok",
             "prompt_text": GOOD_PET_PROMPT,
             "schema_extensions": ext(("pet_zone", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c6 = r6.get("steps", {}).get("consistency", {})
         t.check(c6.get("consistent") is True, "T6 register_task: consistency gate passed")
@@ -245,7 +320,7 @@ video_summary_max_concurrent: 1
             "action": "register_task", "use_case": "pet_task_broken",
             "prompt_text": BROKEN_JSON_PROMPT,
             "schema_extensions": ext(("motion_direction", False), ("pet_confined", False), ("aggressive_behavior", False)),
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
         })
         c7 = r7.get("steps", {}).get("consistency", {})
         t.check(r7.get("ok") is False, "T7 register_task broken(JSON+mismatch): ok == false")
@@ -267,7 +342,7 @@ video_summary_max_concurrent: 1
         r9 = client.register({
             "action": "register", "use_case": "pet_infer",
             "prompt_text": GOOD_PET_PROMPT,
-            "evaluate_rules_text": GOOD_PET_RULES,
+            "evaluate_rules_path": str(rules_path),
             # no schema_extensions
         })
         c9 = r9.get("steps", {}).get("consistency", {})
@@ -280,12 +355,72 @@ video_summary_max_concurrent: 1
         r10 = client.register({
             "action": "register", "use_case": "child_infer",
             "prompt_text": DEFAULT_PASS_PROMPT,
-            # no schema_extensions, no evaluate_rules_text
+            # no schema_extensions, no evaluate_rules_path
         })
         c10 = r10.get("steps", {}).get("consistency", {})
         t.check(c10.get("consistent") is True, "T10 default-path no schema_extensions: gate passed (inferred)")
         t.check(c10.get("schema_fields") == ["severity", "event", "desc"],
                 "T10: inferred default schema == severity/event/desc")
+
+        # ── T11+: rules-file staging. Bring the stub VLM service UP now — all tests
+        # above needed it unreachable; staging happens only after VLM POST success. ──
+        vlm = VlmStub(VLM_STUB_PORT)
+        vlm.start()
+        staged_rules = tmp / "use-cases" / "pet_staged" / "evaluate_rules.py"
+        try:
+            # ── T11: register_task stages evaluate_rules.py into use-cases/<uc>/ ──
+            r11 = client.register({
+                "action": "register_task", "use_case": "pet_staged",
+                "prompt_text": GOOD_PET_PROMPT,
+                "evaluate_rules_path": str(rules_path),
+            })
+            a11 = r11.get("steps", {}).get("artifacts", {})
+            t.check(r11.get("ok") is True, f"T11 register_task with stub VLM up: ok == true (errors: {r11.get('errors')})")
+            t.check(r11.get("steps", {}).get("vlm_task") == "registered", "T11: VLM task registered via stub")
+            t.check(a11.get("evaluate_rules_py") == "written", "T11: rules file staged (artifacts.evaluate_rules_py == 'written')")
+            t.check(staged_rules.exists(), "T11: staged file exists at use-cases/pet_staged/evaluate_rules.py")
+            t.check(staged_rules.exists() and staged_rules.read_text() == GOOD_PET_RULES,
+                    "T11: staged content == caller's evaluate_rules.py")
+
+            # ── T12: register auto-discovers the staged file; config.yaml gets the
+            # conventional ABSOLUTE path (not the caller's tmp path) ──
+            r12 = client.register({
+                "action": "register", "use_case": "pet_staged", "persist": True,
+                # no prompt_text (auto-read), no evaluate_rules_path (auto-discovered)
+            })
+            t.check(r12.get("ok") is True, f"T12 register step-2 auto-discovery: ok == true (errors: {r12.get('errors')})")
+            t.check(any("auto-read" in w for w in r12.get("warnings", [])), "T12: prompt_text auto-read from disk")
+            cfg = yaml.safe_load(config_path.read_text())
+            entry = (cfg.get("use_case_dict") or {}).get("pet_staged") or {}
+            t.check(entry.get("evaluate_rules_path") == str(staged_rules),
+                    "T12: config.yaml stores conventional absolute evaluate_rules_path")
+            t.check(entry.get("evaluate_rules_path") != str(rules_path),
+                    "T12: caller's tmp path is NOT persisted")
+
+            # ── T13: conflicting rules content without overwrite → pre-flight REJECT ──
+            other_rules = tmp / "other_rules.py"
+            other_rules.write_text(GOOD_PET_RULES.replace("pet_normal", "pet_calm"))
+            r13 = client.register({
+                "action": "register_task", "use_case": "pet_staged",
+                "prompt_text": GOOD_PET_PROMPT,
+                "evaluate_rules_path": str(other_rules),
+            })
+            t.check(r13.get("ok") is False, "T13 conflicting staged rules, no overwrite: ok == false")
+            t.check(any("overwrite=true" in e for e in r13.get("errors", [])),
+                    "T13: error names overwrite=true escape hatch")
+            t.check(staged_rules.read_text() == GOOD_PET_RULES, "T13: staged file left untouched")
+
+            # ── T14: same-content re-run → artifacts report "unchanged" ──
+            r14 = client.register({
+                "action": "register_task", "use_case": "pet_staged",
+                "prompt_text": GOOD_PET_PROMPT,
+                "evaluate_rules_path": str(rules_path),
+            })
+            a14 = r14.get("steps", {}).get("artifacts", {})
+            t.check(r14.get("ok") is True, "T14 same-content re-run: ok == true")
+            t.check(a14.get("evaluate_rules_py") == "unchanged", "T14: artifacts.evaluate_rules_py == 'unchanged'")
+        finally:
+            vlm.stop()
 
     finally:
         proc.terminate()
