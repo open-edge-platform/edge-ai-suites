@@ -103,21 +103,6 @@
               },
               {
                 "kind": "Transformation",
-                "group": "sortBy",
-                "spec": {
-                  "options": {
-                    "fields": {},
-                    "sort": [
-                      {
-                        "field": "time",
-                        "desc": true
-                      }
-                    ]
-                  }
-                }
-              },
-              {
-                "kind": "Transformation",
                 "group": "filterByValue",
                 "spec": {
                   "options": {
@@ -134,15 +119,6 @@
                     ],
                     "type": "include",
                     "match": "any"
-                  }
-                }
-              },
-              {
-                "kind": "Transformation",
-                "group": "limit",
-                "spec": {
-                  "options": {
-                    "limitField": "1"
                   }
                 }
               },
@@ -178,7 +154,7 @@
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
                   "calcs": [
-                    "mean"
+                    "lastNotNull"
                   ],
                   "fields": "",
                   "values": false
