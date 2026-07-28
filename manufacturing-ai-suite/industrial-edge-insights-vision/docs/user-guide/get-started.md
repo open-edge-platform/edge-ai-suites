@@ -305,9 +305,10 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 - [Publish frames to S3 storage pipelines](./how-to-extend-functionality/store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](./how-to-extend-functionality/view-telemetry-data.md)
 - [Publish metadata to OPCUA](./how-to-extend-functionality/use-opcua-publisher.md)
-- For the Pallet Defect Detection application, see [Generate a model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md)
-- For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-balluff-sdk.md)
-- For the Pallet Defect Detection application, see [Integrate pylon SDK for Basler camera support](./pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md)
+- For the Pallet Defect Detection application, see:
+  - [Generate a model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md)
+  - [Export and optimize a Geti™ model](./pallet-defect-detection/how-to-guides/export-and-optimize-geti-model.md)
+  - [Integrate Camera SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-camera-sdks.md)
 
 ## Troubleshooting
 
