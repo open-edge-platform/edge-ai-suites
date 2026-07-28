@@ -457,7 +457,9 @@ transcribeBtn.addEventListener('click', async () => {
       try {
         const err = await res.json();
         if (err && err.error) message = err.error;
-      } catch (e) { /* response was not JSON */ }
+      } catch (e) { 
+        console.error('Error parsing error response:', e);
+       }
       throw new Error(message);
     }
 

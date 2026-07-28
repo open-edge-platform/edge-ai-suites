@@ -14,7 +14,7 @@ app = Flask(__name__, static_folder="static")
 CORS(app)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB — matches nginx client_max_body_size
 
-ALLOWED_EXTENSIONS = {"mp3", "wav", "ogg", "webm", "mp4", "m4a", "flac"}
+ALLOWED_EXTENSIONS = {"flac", "m4a", "mp3", "mp4", "ogg", "wav", "webm"}
 
 MODEL_SIZE = os.environ.get("WHISPER_MODEL", "base")
 print(f"Loading Whisper model: {MODEL_SIZE} ...")
@@ -146,7 +146,7 @@ def transcribe():
     if ext not in ALLOWED_EXTENSIONS:
         return jsonify({
             "error": f"Unsupported file format '.{ext}'. "
-                     f"Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+                     f"Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         }), 400
     suffix = f".{ext}"
 
