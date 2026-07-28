@@ -3,10 +3,16 @@
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing_extensions import Annotated
 
-from config import CongestionLevel, IncidentStatus, WeatherStatus
+from config import (
+    CongestionLevel,
+    HAZARDOUS_WEATHER,
+    IncidentStatus,
+    SEVERE_INCIDENTS,
+    WeatherStatus,
+)
 
 
 class QueueItem(BaseModel):
@@ -109,3 +115,80 @@ class RoutePoints(BaseModel):
         if self.alternative_route:
             all_points.extend(self.alternative_route)
         return all_points
+
+
+class IntersectionCondition(BaseModel):
+    """A single live observation on a candidate route, as presented to the reasoning model."""
+
+    intersection_name: Annotated[
+        str, Field(description="Name of the monitored intersection")
+    ]
+    traffic_density: Annotated[
+        int, Field(description="Number of vehicles observed at the intersection")
+    ]
+    weather_status: Annotated[
+        str, Field(description="Weather condition observed at the intersection")
+    ]
+    incident_status: Annotated[
+        str, Field(description="Incident reported at the intersection")
+    ]
+
+
+class RouteCandidate(BaseModel):
+    """A selectable GPX route along with every live condition observed on it."""
+
+    route_name: Annotated[str, Field(description="GPX file name identifying the route")]
+    distance_km: Annotated[float, Field(description="Total route distance in km")]
+    # Routes without live data must never be recommended, as we have no observation to justify them.
+    has_live_data: Annotated[
+        bool,
+        Field(
+            description="True when at least one monitored intersection lies on this route"
+        ),
+    ]
+    conditions: Annotated[
+        List[IntersectionCondition],
+        Field(description="Live conditions observed along this route"),
+    ] = []
+
+    @property
+    @computed_field
+    def has_severe_incident(self) -> bool:
+        severe = {incident.value for incident in SEVERE_INCIDENTS}
+        return any(condition.incident_status in severe for condition in self.conditions)
+
+    @property
+    @computed_field
+    def has_hazardous_weather(self) -> bool:
+        hazardous = {weather.value for weather in HAZARDOUS_WEATHER}
+        return any(
+            condition.weather_status in hazardous for condition in self.conditions
+        )
+
+    @property
+    @computed_field
+    def max_traffic_density(self) -> int:
+        return max(
+            (condition.traffic_density for condition in self.conditions), default=0
+        )
+
+
+class ReasoningDecision(BaseModel):
+    """Route selection returned by the reasoning model, before validation against candidates."""
+
+    selected_route: Annotated[
+        str, Field(description="GPX file name of the route chosen by the model")
+    ]
+    is_sub_optimal: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "True when the selected route still breaches a priority rule. Derived in code "
+                "from the selected route's own conditions, not taken from the model."
+            ),
+        ),
+    ]
+    reason: Annotated[
+        str, Field(description="Short justification naming the deciding condition")
+    ]
