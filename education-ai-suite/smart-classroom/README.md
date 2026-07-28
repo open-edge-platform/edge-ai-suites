@@ -1,6 +1,6 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models for the Windows OS. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
 
 The main features are as follows:
 
