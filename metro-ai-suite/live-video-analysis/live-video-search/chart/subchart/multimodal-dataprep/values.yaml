@@ -1,4 +1,5 @@
 global:
+  vectordbBackend: vdms
   volumeHostPath: ''
   usePvc: true
   keepPvc: false
@@ -6,7 +7,20 @@ global:
     defaultBucketName: vdms-bucket
     detectionConfidence: '0.85'
     embeddingModelName: ''
-    embeddingProcessingMode: sdk
+    embeddingBatchSize: '32'
+    maxParallelWorkers: ''
+    sdkVideoShmMaxBlocks: '512'
+    sdkVideoShmBlockSize: '6220800'
+    sdkVideoExtractionBatchSize: '256'
+    sdkPipelineQueueMaxsize: '16'
+    sdkPipelineCompletionQueueMaxsize: '1'
+    sdkDetectionWorkerThreads: '2'
+    sdkEmbedWorkerThreads: '2'
+    sdkPipelineQueueGetTimeoutS: '1.0'
+    saveRuntimePipelineStats: 'false'
+    sdkEnableTracing: 'false'
+    videoFrameDecoderWorkers: '2'
+    videoFrameLogLevel: INFO
     enableObjectDetection: 'true'
     frameInterval: '15'
     framesTempDir: /tmp/dataprep
@@ -18,10 +32,13 @@ global:
     roiConsolidationIouThreshold: '0.2'
     sdkUseOpenvino: 'true'
     vsIndexName: video_frame_embeddings
+    vdbMetricType: IP
+    vdbIndexType: FLAT
+    allowDuplicateUploads: 'true'
   accelGroupIds:
     - 992
   devices:
-    vdmsDataprep:
+    multimodalDataprep:
       embedding:
         device: CPU
         key: ''
@@ -35,9 +52,10 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
+  pullPolicy: ''
 images:
-  vdmsDataprep:
-    repository: vdms-dataprep
+  multimodalDataprep:
+    repository: multimodal-dataprep
 
 imageOverride:
   registry: ''
@@ -78,7 +96,7 @@ modelPvc:
 
 livenessProbe:
   httpGet:
-    path: /health
+    path: /v1/dataprep/health
     port: http
   initialDelaySeconds: 20
   periodSeconds: 30
@@ -87,7 +105,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /health
+    path: /v1/dataprep/health
     port: http
   initialDelaySeconds: 10
   periodSeconds: 15
@@ -96,7 +114,7 @@ readinessProbe:
 
 startupProbe:
   httpGet:
-    path: /health
+    path: /v1/dataprep/health
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10

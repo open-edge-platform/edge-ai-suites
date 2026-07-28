@@ -3,6 +3,8 @@ global:
   tag: "latest"
   vssStackTag: ""
   smartNvrStackTag: ""
+  pullPolicy: ""
+  vectordbBackend: "vdms" # vdms | milvus
 
   videos:
     source: "download"
@@ -34,7 +36,7 @@ global:
     multimodalEmbedding:
       device: "CPU" # CPU | GPU | NPU
       key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
-    vdmsDataprep:
+    multimodalDataprep:
       embedding:
         device: "CPU" # CPU | GPU | NPU
         key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
@@ -71,8 +73,19 @@ global:
     roiConsolidationClassAware: "false"
     roiConsolidationContextScale: "0.2"
     framesTempDir: "/tmp/dataprep"
-    embeddingProcessingMode: "sdk"
     sdkUseOpenvino: "true"
+    embeddingBatchSize: "32"
+    maxParallelWorkers: ""
+    sdkVideoShmMaxBlocks: "512"
+    sdkVideoShmBlockSize: "6220800"
+    sdkVideoExtractionBatchSize: "256"
+    sdkPipelineQueueMaxsize: "16"
+    sdkPipelineCompletionQueueMaxsize: "1"
+    sdkDetectionWorkerThreads: "2"
+    sdkEmbedWorkerThreads: "2"
+    sdkPipelineQueueGetTimeoutS: "1.0"
+    saveRuntimePipelineStats: "false"
+    sdkEnableTracing: "false"
     ovModelsDir: "/app/ov_models"
     ovPerformanceMode: "THROUGHPUT"
     embeddingUseOv: "true"
@@ -86,8 +99,17 @@ global:
     aggregationMaxResults: "20"
     aggregationInitialK: "1000"
     aggregationContextSeekOffsetSeconds: "0"
+    aggregationPreferFullFrameSeek: "true"
+    aggregationFullFrameSeekBand: "0.06"
+    watchBatchSize: "10"
+    batchJobPollIntervalSeconds: "0.5"
+    batchJobTimeoutSeconds: "3600"
 
-    dataprepTelemetryUrl: "http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1"
+    vdbMetricType: "IP"
+    vdbIndexType: "FLAT"
+    allowDuplicateUploads: "true"
+
+    dataprepTelemetryUrl: "http://multimodal-dataprep:8000/v1/dataprep/telemetry?limit=1"
     searchDataprepTimeoutMs: "600000"
 
     inferBatchSize: "32"
@@ -132,8 +154,8 @@ images:
     repository: "vss-ui"
   videoSearch:
     repository: "video-search"
-  vdmsDataprep:
-    repository: "vdms-dataprep"
+  multimodalDataprep:
+    repository: "multimodal-dataprep"
   multimodalEmbeddingServing:
     repository: "multimodal-embedding-serving"
   nvrEventRouter:
@@ -159,6 +181,8 @@ persistence:
   ovModels:
     size: 30Gi
   dataPrep:
+    size: 20Gi
+  milvusData:
     size: 20Gi
   collectorSignals:
     size: 1Gi
@@ -494,3 +518,15 @@ smartNvr:
 
 rtspTest:
   enabled: true
+
+vdms-vector-db:
+  enabled: true
+
+multimodal-dataprep:
+  enabled: true
+
+vector-retriever:
+  enabled: true
+
+milvus-standalone:
+  enabled: false

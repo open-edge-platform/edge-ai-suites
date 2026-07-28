@@ -1,6 +1,31 @@
 # Release Notes: Live Video Search
 
-## Current Version (2026.2.0-ww28)
+## Current Version (2026.2.0-ww31)
+
+**July 28, 2026**
+
+**Improved**
+
+- Replaced the legacy `vdms-dataprep` orchestration with backend-neutral `multimodal-dataprep` in Docker Compose and Helm.
+- Added an always-on Vector Retriever layer so Video Search no longer accesses a vector database directly.
+- Added selectable VDMS (default) and Milvus backends through `VECTORDB_BACKEND` for Compose and `global.vectordbBackend` plus `milvus_override.yaml` for Helm.
+- Added pinned standalone Milvus/etcd orchestration and updated build, architecture, device, and deployment guidance for both retriever flavors.
+- Removed the ambiguous `ENABLE_EMBEDDING_GPU` shortcut; indexing and query embedding devices are configured independently with `DATAPREP_EMBEDDING_DEVICE` and `MME_EMBEDDING_DEVICE`.
+- Renamed the Compose/setup model input from `EMBEDDING_MODEL_NAME` to `MULTIMODAL_EMBEDDING_MODEL`.
+- Exposed asynchronous watcher-batch size, polling interval, and timeout
+  settings for Search MS and Smart NVR continuous ingestion through Compose,
+  Helm, and `setup.sh`.
+- Fixed Docker Compose backend selection so Milvus deployments do not start or
+  depend on the VDMS service, and stale backend containers are removed when
+  switching backends.
+- Corrected the Helm multimodal DataPrep completion-queue default to satisfy
+  the service's minimum queue size and prevent pod startup validation failures.
+- Added a single, case-insensitive Helm `global.pullPolicy` override for all
+  application images selected through the LVS, VSS, and Smart NVR stack tags.
+- Aligned the Helm Multimodal Embedding Serving probe timeout with its Compose
+  healthcheck to avoid one-second startup probe timeouts during model loading.
+
+## Version 2026.2.0-ww28
 
 **July 09, 2026**
 

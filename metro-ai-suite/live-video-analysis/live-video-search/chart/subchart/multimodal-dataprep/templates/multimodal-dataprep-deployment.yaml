@@ -1,7 +1,7 @@
 {{- $globalDevices := default (dict) .Values.global.devices -}}
-{{- $vdmsDevices := default (dict) (index $globalDevices "vdmsDataprep") -}}
-{{- $embeddingCfg := default (dict) (index $vdmsDevices "embedding") -}}
-{{- $detectionCfg := default (dict) (index $vdmsDevices "detection") -}}
+{{- $dataprepDevices := default (dict) (index $globalDevices "multimodalDataprep") -}}
+{{- $embeddingCfg := default (dict) (index $dataprepDevices "embedding") -}}
+{{- $detectionCfg := default (dict) (index $dataprepDevices "detection") -}}
 {{- $embeddingDevice := upper (default "CPU" (index $embeddingCfg "device")) -}}
 {{- $detectionDevice := upper (default "CPU" (index $detectionCfg "device")) -}}
 {{- $embeddingUsesGpu := eq $embeddingDevice "GPU" -}}
@@ -16,26 +16,28 @@
 {{- $embeddingKey := default "" (index $embeddingCfg "key") -}}
 {{- $detectionKey := default "" (index $detectionCfg "key") -}}
 {{- if and $embeddingUsesAccelerator (eq (trim $embeddingKey) "") -}}
-{{- fail "global.devices.vdmsDataprep.embedding.key is required when embedding.device is GPU or NPU" -}}
+{{- fail "global.devices.multimodalDataprep.embedding.key is required when embedding.device is GPU or NPU" -}}
 {{- end -}}
 {{- if and $detectionUsesAccelerator (eq (trim $detectionKey) "") -}}
-{{- fail "global.devices.vdmsDataprep.detection.key is required when detection.device is GPU or NPU" -}}
+{{- fail "global.devices.multimodalDataprep.detection.key is required when detection.device is GPU or NPU" -}}
 {{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vdms-dataprep
+  name: multimodal-dataprep
   labels:
     {{- include "lvs.dataprep.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: vdms-dataprep
+      app: multimodal-dataprep
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/multimodal-dataprep-configmap.yaml") . | sha256sum }}
       labels:
-        app: vdms-dataprep
+        app: multimodal-dataprep
         {{- include "lvs.dataprep.selectorLabels" . | nindent 8 }}
     spec:
       {{- if .Values.hostIPC }}
@@ -60,36 +62,39 @@ spec:
             - sh
             - -c
             - |
+              {{- if eq (lower .Values.global.vectordbBackend) "milvus" }}
+              until nc -z milvus-standalone 19530; do
+                echo "waiting for milvus-standalone:19530";
+                sleep 3;
+              done
+              {{- else }}
               until nc -z vdms-vector-db 55555; do
                 echo "waiting for vdms-vector-db:55555";
                 sleep 3;
               done
-              until wget -q -O /dev/null http://multimodal-embedding-serving:8000/health; do
-                echo "waiting for multimodal-embedding-serving";
-                sleep 3;
-              done
+              {{- end }}
               until wget -q -O /dev/null http://minio-service/minio/health/live; do
                 echo "waiting for minio-service";
                 sleep 3;
               done
       containers:
-        - name: vdms-dataprep
-          image: {{ include "lvs.dataprep.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.vdmsDataprep.repository .Values.imageOverride.repository) "tag" (default (include "lvs.dataprep.vssTag" .) .Values.imageOverride.tag)) }}
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
+        - name: multimodal-dataprep
+          image: {{ include "lvs.dataprep.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.multimodalDataprep.repository .Values.imageOverride.repository) "tag" (default (include "lvs.dataprep.vssTag" .) .Values.imageOverride.tag)) }}
+          imagePullPolicy: {{ include "lvs.imagePullPolicy" (.Values.global.pullPolicy | default .Values.imagePullPolicy) }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           envFrom:
             - configMapRef:
-                name: vdms-dataprep-config
+                name: multimodal-dataprep-config
           env:
-            - name: MINIO_ACCESS_KEY
+            - name: MM_DATAPREP_MINIO_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "lvs.dataprep.fullname" . }}-credentials
                   key: MINIO_ROOT_USER
-            - name: MINIO_SECRET_KEY
+            - name: MM_DATAPREP_MINIO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "lvs.dataprep.fullname" . }}-credentials

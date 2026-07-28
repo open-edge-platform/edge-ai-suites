@@ -29,12 +29,22 @@ dependencies:
   - name: vdms-vector-db
     version: 1.0.0
     repository: "file://subchart/vdms-vector-db"
+    condition: vdms-vector-db.enabled
   - name: multimodal-embedding-serving
     version: 1.0.0
     repository: "file://subchart/multimodal-embedding-serving"
-  - name: vdms-dataprep
+  - name: multimodal-dataprep
     version: 1.0.0
-    repository: "file://subchart/vdms-dataprep"
+    repository: "file://subchart/multimodal-dataprep"
+    condition: multimodal-dataprep.enabled
+  - name: vector-retriever
+    version: 1.0.0
+    repository: "file://subchart/vector-retriever"
+    condition: vector-retriever.enabled
+  - name: milvus-standalone
+    version: 1.0.0
+    repository: "file://subchart/milvus-standalone"
+    condition: milvus-standalone.enabled
   - name: video-search
     version: 1.0.0
     repository: "file://subchart/video-search"

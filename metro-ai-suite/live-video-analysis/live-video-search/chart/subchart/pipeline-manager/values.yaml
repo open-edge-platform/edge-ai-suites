@@ -1,6 +1,6 @@
 global:
   env:
-    dataprepTelemetryUrl: http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1
+    dataprepTelemetryUrl: http://multimodal-dataprep:8000/v1/dataprep/telemetry?limit=1
     searchDataprepTimeoutMs: '600000'
     minioBucket: video-summary
     postgresDb: video_summary_db
@@ -13,6 +13,7 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
+  pullPolicy: ''
 images:
   pipelineManager:
     repository: pipeline-manager

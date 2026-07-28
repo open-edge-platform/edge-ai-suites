@@ -20,6 +20,7 @@ live-video-search/
 ├── data/                           # Runtime data (recordings, caches)
 ├── docker/                         # Compose files
 │   ├── compose.search.yaml        # VSS Search stack
+│   ├── compose.search.milvus.yaml # Optional Milvus backend
 │   ├── compose.smart-nvr.yaml      # Smart NVR stack
 │   └── compose.telemetry.yaml      # Telemetry collector
 ├── docs/                           # Documentation
@@ -51,18 +52,14 @@ Before running the application, you need to set several environment variables:
     Use stack-specific tag overrides when you need different image versions for each stack:
 
      ```bash
-     export TAG=1.0.0
-     export VSS_STACK_TAG=1.3.2
-     export SMART_NVR_STACK_TAG=1.2.4
+     export TAG=latest
+     export VSS_STACK_TAG=latest
+     export SMART_NVR_STACK_TAG=latest
      ```
 
     Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
 
-    Note: `setup.sh` includes a release mapping for `TAG=1.0.0` and automatically sets:
-    - `VSS_STACK_TAG=1.3.2`
-    - `SMART_NVR_STACK_TAG=1.2.4`
-
-    You can still explicitly export `VSS_STACK_TAG` and `SMART_NVR_STACK_TAG` to override those defaults.
+    Explicitly export `VSS_STACK_TAG` and `SMART_NVR_STACK_TAG` only when the two upstream stacks need different tags.
 
 2. **Set required credentials for some services**:
    Following variables **MUST** be set on your current shell before running the setup script:
@@ -77,7 +74,7 @@ Before running the application, you need to set several environment variables:
     export POSTGRES_PASSWORD=<postgres-pass>
 
     # Embedding model for search
-    export EMBEDDING_MODEL_NAME="CLIP/clip-vit-b-32"
+    export MULTIMODAL_EMBEDDING_MODEL="CLIP/clip-vit-b-32"
 
     # MQTT credentials (Smart NVR)
     export MQTT_USER=<mqtt-user>
@@ -122,27 +119,44 @@ You can customize the application behavior by setting the following optional env
     IoU(A, B) = \frac{|A \cap B|}{|A \cup B|}
     $$
 
-3. To use accelerator offload for embedding generation, you can use either the GPU shortcut or explicit device selection:
-
-    ```bash
-    # Mode-aware GPU shortcut for embedding:
-    #   EMBEDDING_PROCESSING_MODE=sdk → DataPrep embedding on GPU
-    #   EMBEDDING_PROCESSING_MODE=api → MME embedding on GPU
-    export ENABLE_EMBEDDING_GPU=true
-    ```
-
-4. To explicitly select devices for each component, set any of the following (each defaults to `CPU`):
+3. Select devices independently for indexing, object detection, and query embedding (each defaults to `CPU`):
 
     ```bash
     # CPU / GPU / NPU
-    export DATAPREP_EMBEDDING_DEVICE=NPU   # embedding in vdms-dataprep (sdk mode)
-    export DATAPREP_DETECTION_DEVICE=NPU   # YOLOX object detection in vdms-dataprep
-    export MME_EMBEDDING_DEVICE=NPU        # embedding in multimodal-embedding-serving (api mode)
+    export DATAPREP_EMBEDDING_DEVICE=GPU   # indexing embedding in multimodal-dataprep
+    export DATAPREP_DETECTION_DEVICE=GPU   # YOLOX detection in multimodal-dataprep
+    export MME_EMBEDDING_DEVICE=GPU        # query embedding used by vector-retriever
     ```
 
-    Each component is configured independently — there is no "baseline" device. Any component left unset defaults to `CPU`.
+    Set only the components that need accelerator offload. For example, set `DATAPREP_EMBEDDING_DEVICE=GPU` for GPU indexing while leaving `MME_EMBEDDING_DEVICE=CPU`, or configure them the other way around.
 
     > **NPU note:** Not all embedding backends and model combinations support NPU. Check supported model/device combinations at the [OpenVINO Supported Models](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html) page before selecting `NPU`.
+
+4. **Select the vector database backend**:
+
+    `video-search` always delegates similarity search to `vector-retriever`. The default VDMS mode uses the `vector-retriever-vdms` image. Milvus mode adds the standalone Milvus services and uses `vector-retriever-milvus`. Object storage remains on MinIO in both modes.
+
+    ```bash
+    # Default
+    export VECTORDB_BACKEND=vdms
+
+    # Optional Milvus backend
+    export VECTORDB_BACKEND=milvus
+    ```
+
+    `VDB_METRIC_TYPE` and `VDB_INDEX_TYPE` configure the shared write/read contract between Multimodal DataPrep and Vector Retriever. Their defaults are `IP` and `FLAT`.
+
+5. **Optional: tune continuous-ingestion watcher batches**:
+
+    ```bash
+    export VS_WATCH_BATCH_SIZE=10
+    export VS_BATCH_JOB_POLL_INTERVAL_SECONDS=0.5
+    export VS_BATCH_JOB_TIMEOUT_SECONDS=3600
+    ```
+
+    These settings control asynchronous DataPrep jobs for both the NVR Event
+    Router continuous camera watcher and the Search MS directory watcher. They
+    do not affect single event-rule clips or video summarization.
 
 ## Configure Cameras
 
@@ -154,6 +168,12 @@ For reference, see the default template in `config/frigate-config/config-default
 
 ```bash
 source setup.sh --start
+```
+
+For Milvus, select the backend before starting any camera mode:
+
+```bash
+VECTORDB_BACKEND=milvus source setup.sh --start
 ```
 
 ## RTSP Test Stream (Out-of-Box)
@@ -234,6 +254,7 @@ Search results include clip timestamps, confidence scores, and metadata. Use the
 ### Tips
 
 - If results are empty, confirm cameras are enabled in **Configure Cameras** and clips have been ingested.
+- Confirm `vector-retriever` is healthy and that its backend matches `VECTORDB_BACKEND`.
 - Narrow time ranges improve query latency and relevance.
 - If telemetry is not visible, check that `vss-collector` is running.
 
@@ -260,7 +281,7 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
 
 ### Search results empty after changing model
 
-- If you changed `EMBEDDING_MODEL_NAME`, clean data and re‑ingest:
+- If you changed `MULTIMODAL_EMBEDDING_MODEL`, clean data and re‑ingest:
   - `source setup.sh --clean-data`
   - `source setup.sh --start`
 

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vdms-dataprep
+  name: multimodal-dataprep
   labels:
     {{- include "lvs.dataprep.labels" . | nindent 4 }}
 spec:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: vdms-dataprep
+    app: multimodal-dataprep

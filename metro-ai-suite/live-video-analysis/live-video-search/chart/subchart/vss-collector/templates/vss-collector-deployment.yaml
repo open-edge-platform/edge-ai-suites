@@ -28,7 +28,7 @@ spec:
                   - key: app
                     operator: In
                     values:
-                      - vdms-dataprep
+                      - multimodal-dataprep
               topologyKey: kubernetes.io/hostname
       {{- end }}
       {{- with .Values.podSecurityContext }}

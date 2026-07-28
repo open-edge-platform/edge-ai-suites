@@ -15,7 +15,7 @@ app.kubernetes.io/name: {{ include "lvs.dataprep.name" . }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/component: vdms-dataprep
+app.kubernetes.io/component: multimodal-dataprep
 {{- end -}}
 
 {{- define "lvs.dataprep.selectorLabels" -}}

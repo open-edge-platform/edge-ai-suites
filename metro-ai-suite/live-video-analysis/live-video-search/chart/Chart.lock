@@ -26,8 +26,14 @@ dependencies:
 - name: multimodal-embedding-serving
   repository: file://subchart/multimodal-embedding-serving
   version: 1.0.0
-- name: vdms-dataprep
-  repository: file://subchart/vdms-dataprep
+- name: multimodal-dataprep
+  repository: file://subchart/multimodal-dataprep
+  version: 1.0.0
+- name: vector-retriever
+  repository: file://subchart/vector-retriever
+  version: 1.0.0
+- name: milvus-standalone
+  repository: file://subchart/milvus-standalone
   version: 1.0.0
 - name: video-search
   repository: file://subchart/video-search
@@ -50,5 +56,5 @@ dependencies:
 - name: vss-collector
   repository: file://subchart/vss-collector
   version: 1.0.0
-digest: sha256:098dd823196440a2ea35a9e3f9a35835724ae2374054bd02c3687dbd5a6281fa
-generated: "2026-03-19T19:23:41.236818291-07:00"
+digest: sha256:d375417527252456f013641c37e055adeafa0e9c3c779dca3b80ecc3d081ddec
+generated: "2026-07-28T09:44:10.68026409+05:30"
