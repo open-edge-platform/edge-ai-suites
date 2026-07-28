@@ -148,6 +148,10 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
                 rm -rf "${OVMS_CONFIG_DIR}"
             fi
         fi
+        if [ -d "${APP_DIR}/.model_download_logs" ]; then
+            echo -e "${YELLOW}Removing model download logs (${APP_DIR}/.model_download_logs) ... ${NC}"
+            rm -rf "${APP_DIR}/.model_download_logs"
+        fi
         echo -e "${YELLOW}Removing networks for Smart-Traffic-Intersection-Agent ... ${NC}"
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
         if [ "$2" = "--all" ]; then
