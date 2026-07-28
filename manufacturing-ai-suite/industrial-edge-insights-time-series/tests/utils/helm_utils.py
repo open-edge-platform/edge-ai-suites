@@ -263,17 +263,24 @@ def get_env_values():
     return FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL
 
 def _resolve_chart_path_from_cwd(raw_path):
-    """Resolve a chart path relative to the current working directory (pytest invocation dir)."""
+    """Resolve a chart path relative to the current working directory (pytest invocation dir).
+
+    Note: this deliberately does NOT fall back to _resolve_path_under_repo(), which is
+    rooted at helm_utils.py's own location (the Time Series repo). That fallback used to
+    kick in whenever the cwd-relative multimodal helm-packages dir didn't exist yet
+    (e.g. before test_gen_chart() has run), and it would silently resolve to the Time
+    Series repo's own helm-packages directory instead, causing the wrong chart to be
+    installed under the multimodal release name. The cwd-relative path is authoritative
+    here since the workflow always cd's into the correct suite's directory before
+    invoking pytest, even if that directory doesn't exist yet.
+    """
     if not raw_path:
         return raw_path
     expanded = os.path.expandvars(raw_path)
-    if os.path.isabs(expanded) and os.path.exists(expanded):
+    if os.path.isabs(expanded):
         return _ensure_chart_extracted(expanded)
     resolved = os.path.normpath(os.path.join(os.getcwd(), expanded))
-    if os.path.exists(resolved):
-        return _ensure_chart_extracted(resolved)
-    # Fall back to the repo-root strategy as a last resort
-    return _ensure_chart_extracted(_resolve_path_under_repo(raw_path))
+    return _ensure_chart_extracted(resolved)
 
 
 def get_multimodal_env_values():
