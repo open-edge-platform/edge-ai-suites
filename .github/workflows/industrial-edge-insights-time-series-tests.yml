@@ -231,6 +231,9 @@ jobs:
           if echo "$TESTS" | grep -qwE "all-tests|timeseries-all|timeseries-functional|test_helm_deployment_wind_turbine|test_helm_influxdb_retention|test_docker_helm_deployment_security|test_GPU_helm"; then
             echo "Generating Helm chart package for wind-turbine-anomaly-detection..."
             make gen_helm_charts_targz app=wind-turbine-anomaly-detection
+            TS_TGZ=$(ls -t helm-packages/*.tgz | head -1)
+            echo "Extracting $TS_TGZ into helm-packages/ for direct use by tests..."
+            tar -xzf "$TS_TGZ" -C helm-packages/ --strip-components=1
           else
             echo "No helm tests selected, skipping helm chart generation"
           fi
@@ -240,7 +243,9 @@ jobs:
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
         run: |
-          # Pull the chart .tgz straight into the helm-packages directory used by tests.
+          # Pull the chart .tgz straight into the helm-packages directory used by tests,
+          # then extract it in place so tests can read/edit values.yaml and install
+          # directly from the directory without any extraction logic of their own.
           pull_chart() {
             local oci_ref="$1"
             local chart_version="$2"
@@ -248,7 +253,11 @@ jobs:
             mkdir -p "$dest_dir"
             echo "Pulling $oci_ref:$chart_version ..."
             helm pull "$oci_ref" --version "$chart_version" --destination "$dest_dir"
-            echo "Pulled chart: $(ls "$dest_dir"/*.tgz | tail -1)"
+            local pulled_tgz
+            pulled_tgz=$(ls -t "$dest_dir"/*.tgz | head -1)
+            echo "Pulled chart: $pulled_tgz"
+            echo "Extracting $pulled_tgz into $dest_dir for direct use by tests..."
+            tar -xzf "$pulled_tgz" -C "$dest_dir" --strip-components=1
           }
 
           if echo "$TESTS" | grep -qwE "all-tests|timeseries-all|timeseries-functional|test_helm_deployment_wind_turbine|test_helm_influxdb_retention|test_docker_helm_deployment_security|test_GPU_helm"; then
