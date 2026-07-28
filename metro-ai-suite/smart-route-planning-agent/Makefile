@@ -65,6 +65,9 @@ LOG_LEVEL ?= INFO
 TRAFFIC_BUFFER_DURATION ?= 60
 DATA_RETENTION_HOURS ?= 24
 
+# Optional. When empty the agent uses rule based route planning and OVMS is never started.
+REASONING_MODEL_NAME ?=
+
 # Docker Compose
 COMPOSE_FILE := src/compose.yaml
 PROJECT_NAME := routeplanner
@@ -132,6 +135,7 @@ deploy:
 	@echo "  LOG_LEVEL:                 $${LOG_LEVEL:-$(LOG_LEVEL)}"
 	@echo "  TRAFFIC_BUFFER_DURATION:   $${TRAFFIC_BUFFER_DURATION:-$(TRAFFIC_BUFFER_DURATION)}"
 	@echo "  DATA_RETENTION_HOURS:      $${DATA_RETENTION_HOURS:-$(DATA_RETENTION_HOURS)}"
+	@echo "  REASONING_MODEL_NAME:      $${REASONING_MODEL_NAME:-<unset, rule based planning>}"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@read -p "Proceed with deployment? [y/N]: " confirm; \
@@ -148,6 +152,7 @@ deploy:
 		export LOG_LEVEL="$${LOG_LEVEL:-$(LOG_LEVEL)}" && \
 		export TRAFFIC_BUFFER_DURATION="$${TRAFFIC_BUFFER_DURATION:-$(TRAFFIC_BUFFER_DURATION)}" && \
 		export DATA_RETENTION_HOURS="$${DATA_RETENTION_HOURS:-$(DATA_RETENTION_HOURS)}" && \
+		export REASONING_MODEL_NAME="$${REASONING_MODEL_NAME:-$(REASONING_MODEL_NAME)}" && \
 		bash -c "source setup.sh --run"; \
 		echo ""; \
 		echo "✅ Deployment complete! Access the UI at http://<host-ip>:$${AI_ROUTE_PLANNER_PORT:-$(AI_ROUTE_PLANNER_PORT)}"; \
@@ -166,6 +171,7 @@ deploy-build:
 	@echo "  TAG:                       $${TAG:-$(DEFAULT_TAG)}"
 	@echo "  AI_ROUTE_PLANNER_PORT:     $${AI_ROUTE_PLANNER_PORT:-$(AI_ROUTE_PLANNER_PORT)}"
 	@echo "  LOG_LEVEL:                 $${LOG_LEVEL:-$(LOG_LEVEL)}"
+	@echo "  REASONING_MODEL_NAME:      $${REASONING_MODEL_NAME:-<unset, rule based planning>}"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@read -p "Proceed with build and deployment? [y/N]: " confirm; \
@@ -182,6 +188,7 @@ deploy-build:
 		export LOG_LEVEL="$${LOG_LEVEL:-$(LOG_LEVEL)}" && \
 		export TRAFFIC_BUFFER_DURATION="$${TRAFFIC_BUFFER_DURATION:-$(TRAFFIC_BUFFER_DURATION)}" && \
 		export DATA_RETENTION_HOURS="$${DATA_RETENTION_HOURS:-$(DATA_RETENTION_HOURS)}" && \
+		export REASONING_MODEL_NAME="$${REASONING_MODEL_NAME:-$(REASONING_MODEL_NAME)}" && \
 		bash -c "source setup.sh --setup"; \
 		echo ""; \
 		echo "✅ Build and deployment complete! Access the UI at http://<host-ip>:$${AI_ROUTE_PLANNER_PORT:-$(AI_ROUTE_PLANNER_PORT)}"; \
@@ -204,6 +211,7 @@ restart:
 	export LOG_LEVEL="$${LOG_LEVEL:-$(LOG_LEVEL)}" && \
 	export TRAFFIC_BUFFER_DURATION="$${TRAFFIC_BUFFER_DURATION:-$(TRAFFIC_BUFFER_DURATION)}" && \
 	export DATA_RETENTION_HOURS="$${DATA_RETENTION_HOURS:-$(DATA_RETENTION_HOURS)}" && \
+	export REASONING_MODEL_NAME="$${REASONING_MODEL_NAME:-$(REASONING_MODEL_NAME)}" && \
 	bash -c "source setup.sh --restart"
 	@echo "✅ Application restarted."
 
@@ -491,6 +499,8 @@ help:
 	@echo "    REGISTRY                     Image registry (default: empty)"
 	@echo "    AI_ROUTE_PLANNER_PORT        UI port (default: 7864)"
 	@echo "    LOG_LEVEL                    DEBUG, INFO, WARNING, ERROR (default: INFO)"
+	@echo "    REASONING_MODEL_NAME         OpenVINO/HuggingFace model for AI route planning."
+	@echo "                                 Optional. Unset means rule based planning and no OVMS."
 	@echo "    TRAFFIC_BUFFER_DURATION      Traffic buffer in seconds (default: 60)"
 	@echo "    DATA_RETENTION_HOURS         Data retention in hours (default: 24)"
 	@echo ""
