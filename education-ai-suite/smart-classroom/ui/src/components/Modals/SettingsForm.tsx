@@ -7,14 +7,16 @@ import { saveSettings, getSettings, getAudioDevices } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '../../redux/hooks';
 import { setFrontCamera, setBackCamera, setBoardCamera } from '../../redux/slices/uiSlice';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface SettingsFormProps {
   onClose: () => void;
   projectName: string;
   setProjectName: (name: string) => void;
+  featureGuard: FeatureGuard;
 }
 
-const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setProjectName}) => {
+const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setProjectName, featureGuard }) => {
   const [selectedMicrophone, setSelectedMicrophone] = useState('');
   const [projectLocation, setProjectLocation] = useState('storage/');
   const [frontCamera, setFrontCameraLocal] = useState('');
@@ -24,14 +26,28 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
   const [availableDevices, setAvailableDevices] = useState<string[]>([]);
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  
+  // Check feature flags
+  const hasAudioFeatures = featureGuard.hasFeature('asr') || 
+                           featureGuard.hasFeature('summary') || 
+                           featureGuard.hasFeature('mindmap') || 
+                           featureGuard.hasFeature('topic_segmentation') || 
+                           featureGuard.hasFeature('report');
+  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [settings, devices] = await Promise.all([
-          getSettings(),
-          getAudioDevices()
-        ]);
+        // Only fetch audio devices if audio features are enabled
+        const settingsPromises: [Promise<any>, Promise<string[]>?] = [getSettings()];
+        if (hasAudioFeatures) {
+          settingsPromises.push(getAudioDevices());
+        }
+        
+        const results = await Promise.all(settingsPromises);
+        const settings = results[0];
+        const devices = hasAudioFeatures ? (results[1] || []) : [];
+        
         setAvailableDevices(devices);
         
         if (settings) {
@@ -41,24 +57,28 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           setBackCameraLocal(settings.backCamera || '');
           setBoardCameraLocal(settings.boardCamera || '');
         
-          if (settings.microphone && devices.includes(settings.microphone)) {
-            setSelectedMicrophone(settings.microphone);
-          } else if (devices.length > 0) {
-            setSelectedMicrophone(devices[0]);
-          } else {
-            setSelectedMicrophone('');
+          if (hasAudioFeatures) {
+            if (settings.microphone && devices.includes(settings.microphone)) {
+              setSelectedMicrophone(settings.microphone);
+            } else if (devices.length > 0) {
+              setSelectedMicrophone(devices[0]);
+            } else {
+              setSelectedMicrophone('');
+            }
           }
         } else {
           setFrontCameraLocal('');
           setBackCameraLocal('');
           setBoardCameraLocal('');
           
-          if (devices.length > 0) {
-            console.log('No saved settings, using first device:', devices[0]);
-            setSelectedMicrophone(devices[0]);
-          } else {
-            console.log('No saved settings and no devices available');
-            setSelectedMicrophone('');
+          if (hasAudioFeatures) {
+            if (devices.length > 0) {
+              console.log('No saved settings, using first device:', devices[0]);
+              setSelectedMicrophone(devices[0]);
+            } else {
+              console.log('No saved settings and no devices available');
+              setSelectedMicrophone('');
+            }
           }
         }
       } catch (error) {
@@ -72,7 +92,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     };
 
     loadSettings();
-  }, [setProjectName, t]);
+  }, [setProjectName, t, hasAudioFeatures]);
 
   const validateProjectName = () => {
     if (!projectName.trim()) {
@@ -175,58 +195,74 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           />
         </div>
         
-        <div>
-          <label htmlFor="microphone">{t('settings.microphone')}</label>
-          {availableDevices.length > 0 ? (
-            <MicrophoneSelect
-              selectedMicrophone={selectedMicrophone}
-              onChange={handleMicrophoneChange}
-            />
-          ) : (
-            <div className="no-devices-message">
-              No devices available
+        {/* Microphone settings - only show if audio features are enabled */}
+        {hasAudioFeatures ? (
+          <div>
+            <label htmlFor="microphone">{t('settings.microphone')}</label>
+            {availableDevices.length > 0 ? (
+              <MicrophoneSelect
+                selectedMicrophone={selectedMicrophone}
+                onChange={handleMicrophoneChange}
+              />
+            ) : (
+              <div className="no-devices-message">
+                No devices available
+              </div>
+            )}
+            <div className="debug-info">
+              Selected: {selectedMicrophone || 'None'} | Available: {availableDevices.length}
             </div>
-          )}
-          <div className="debug-info">
-            Selected: {selectedMicrophone || 'None'} | Available: {availableDevices.length}
           </div>
-        </div>
+        ) : (
+          <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+            {t('settings.audioFeaturesDisabled', 'Audio processing features are disabled. Microphone settings are not required.')}
+          </div>
+        )}
         
-        <div>
-          <label htmlFor="frontCamera">{t('settings.frontCamera')}</label>
-          <input
-            type="text"
-            id="frontCamera"
-            value={frontCamera}
-            onChange={handleFrontCameraChange}
-            placeholder="rtsp://127.0.0.1:9554/front"
-            className="camera-input"
-          />
-        </div>
+        {/* Camera settings - only show if video_analytics is enabled */}
+        {hasVideoAnalyticsFeature ? (
+          <>
+            <div>
+              <label htmlFor="frontCamera">{t('settings.frontCamera')}</label>
+              <input
+                type="text"
+                id="frontCamera"
+                value={frontCamera}
+                onChange={handleFrontCameraChange}
+                placeholder="rtsp://127.0.0.1:9554/front"
+                className="camera-input"
+              />
+            </div>
 
-        <div>
-          <label htmlFor="backCamera">{t('settings.backCamera')}</label>
-          <input
-            type="text"
-            id="backCamera"
-            value={backCamera}
-            onChange={handleBackCameraChange}
-            placeholder="rtsp://127.0.0.1:9554/back"
-            className="camera-input"
-          />
-        </div>
+            <div>
+              <label htmlFor="backCamera">{t('settings.backCamera')}</label>
+              <input
+                type="text"
+                id="backCamera"
+                value={backCamera}
+                onChange={handleBackCameraChange}
+                placeholder="rtsp://127.0.0.1:9554/back"
+                className="camera-input"
+              />
+            </div>
 
-        <div>
-          <label htmlFor="boardCamera">{t('settings.boardCamera')}</label>
-          <input
-            type="text"
-            id="boardCamera"
-            value={boardCamera}
-            onChange={handleBoardCameraChange}
-            placeholder="rtsp://127.0.0.1:9554/content"
-            className="camera-input"
-          />
-        </div>
+            <div>
+              <label htmlFor="boardCamera">{t('settings.boardCamera')}</label>
+              <input
+                type="text"
+                id="boardCamera"
+                value={boardCamera}
+                onChange={handleBoardCameraChange}
+                placeholder="rtsp://127.0.0.1:9554/content"
+                className="camera-input"
+              />
+            </div>
+          </>
+        ) : (
+          <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+            {t('settings.videoAnalyticsDisabled', 'Video analytics feature is disabled. Camera settings are not required.')}
+          </div>
+        )}
       </div>
       <div className="button-container">
         <button onClick={handleSave} className="submit-button">{t('settings.ok')}</button>

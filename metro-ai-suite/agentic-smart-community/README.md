@@ -2,52 +2,19 @@
 
 An AI Agent-native video analysis platform designed for MCP (Model Context Protocol) integration. Provides a universal, framework-agnostic toolkit for video surveillance and analysis — agents can autonomously create, manage, and respond to custom use cases without modifying core components.
 
-## Use Cases
+Below, you'll find links to detailed documentation to help you get started, configure, and deploy the sample application.
 
-| ID | Description | Status |
-|----|-------------|--------|
-| Fridge_monitor | Refrigerator monitoring — regular reports (food shortage alerts, diet adjustment suggestions, lifestyle/fitness recommendations) + interactive chat for personalized Q&A | Adapter shipped (prompt only; no alert rules) |
-| Child_safety | Child danger alert notification — real-time detection of risky behaviors (jumping from heights, playing with knives/fire, etc.), immediate alerts to parents, daily summaries, and follow-up conversations | Adapter shipped (`evaluate_rules.py` + prompt) |
-| Elder_wakeup | Elder care (wake-up tracking) — monitor daily wake-up times, alert caregivers on significant deviations, weekly summary reports, and follow-up reminders | Adapter shipped (`evaluate_rules.py` + prompt) |
+## Documentation
 
-See [docs/use-case-adapter.md](docs/use-case-adapter.md) for how to add a new use case.
+- **Overview**
+  - [Overview](./docs/user-guide/index.md): A high-level introduction to the sample application.
 
-## Architecture
+- **Getting Started**
+  - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to getting started with the sample application.
+  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the sample application.
 
-The platform is built around MCP, enabling AI agents (OpenClaw, Hermes, etc.) to orchestrate video analysis pipelines through standardized tool interfaces.
+- **API Reference**
+  - [API Reference](./docs/user-guide/api-reference.md): Comprehensive reference for the available API endpoints.
 
-## MCP Server Workflow
-
-The MCP server (`packages/mcp-server`) sits between AI agents and three external services:
-
-```
-   agents (OpenClaw / Claude Desktop / Hermes)
-                │  MCP tools
-                ▼
-        ┌──────────────┐  ← config.yaml + monitors.yaml
-        │  MCP Server  │  :3100
-        └──┬───────┬──┬┘
-   /events │       │  │ chat/completions (single frame)
-    :3101  │       │  │
-           ▼       ▼  ▼
-   videostream-  multilevel-      vllm-serving-ipex
-   analytics     video-under-     :41091
-   :8999         standing :8192   (scene_query)
-   (RTSP +       (caption-only
-   motion         SRT report)
-   detect)
-```
-
-### Lifecycle
-
-- **Startup** (`mcp-server --config config.yaml --monitors monitors.yaml`): load config → init DB → reconcile crash residue → auto-register each `enabled: true` monitor → start storage cleaner (24h period; purges expired logs and segments)
-- **Runtime** (per monitor): analytics `:8999` pulls RTSP → POSTs events to `:3101` → MCP worker polls pending tasks → calls `:8192` for summary → rule-engine decides alert → agents query via MCP tools
-- **Shutdown** (SIGINT/SIGTERM): stop cleaner → graceful-stop all workers → pause analytics sources → close DB
-
-## Status
-
-Early development — see [docs/implements/](docs/implements/) for per-component status and [docs/dev/](docs/dev/) for migration plans.
-
-## License
-
-See [LICENSE](LICENSE).
+- **Release Notes**
+  - [Release Notes](./docs/user-guide/release-notes.md): Information on the latest release, improvements, and bug fixes.

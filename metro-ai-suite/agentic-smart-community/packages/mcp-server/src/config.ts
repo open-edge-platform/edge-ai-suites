@@ -120,6 +120,13 @@ export interface ServerConfig {
   useCaseDict: Record<string, UseCaseConfig>;
   // Loaded separately via loadMonitorsConfig(--monitors <path>); not from config.yaml
   monitors?: Record<string, MonitorConfig>;
+  /**
+   * Absolute path to the monitors.yaml the server was booted from (--monitors).
+   * Required for `monitor_ctl register_source/unregister persist:true` to mirror
+   * the mutation back to disk. Undefined when the server was started without
+   * --monitors → persist requests degrade to a "skipped" warning.
+   */
+  monitorsPath?: string;
   logging: {
     retentionDays: number;  // default 14
     maxFileMb: number;      // default 50

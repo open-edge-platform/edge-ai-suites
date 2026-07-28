@@ -134,7 +134,7 @@ services:
       - no-new-privileges
 
   model-download:
-    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.1.0}
+    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-latest}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the

@@ -1,0 +1,16 @@
+layout_detection:
+  # source：smart-classroom/config.yaml → models.model_hub (huggingface / modelscope)
+  repo_id: "PaddlePaddle/PP-DocLayoutV2"
+  download_dir: "models/detection_model/PP-DocLayoutV2"
+  model_dir: "models/detection_model/PP-DocLayoutV2-ov"
+
+  precision: "fp16"
+  npu_compatible: true
+
+  # detection service
+  host: "0.0.0.0"
+  port: 9902
+  device: "NPU"
+  threshold: 0.5
+  timeout: 300
+  max_retries: 2

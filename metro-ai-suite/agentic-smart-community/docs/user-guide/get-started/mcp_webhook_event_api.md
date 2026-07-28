@@ -92,12 +92,12 @@ A motion segment event. The clip has already been cut into a standalone MP4 file
 | `event_file_path`      | `string` | ✅ | Absolute path to the original (uncropped) clip. Written to `events.event_file_path`. |
 | `summary_clip_input`   | `string` | ✅ | Path to the clip fed into the video-summary service. If the client performed ROI crop, this points to `<name>_input.mp4`; otherwise identical to `event_file_path`. Written to `video_summary_tasks.summary_clip_input`. |
 | `start_time`           | `string` (ISO 8601) | ✅ | Clip start time. Written to `events.start_time`. |
-| `end_time`             | `string` (ISO 8601) | ⚠️ Optional | Clip end time. Written to `events.end_time`. |
+| `end_time`             | `string` (ISO 8601) |  Optional | Clip end time. Written to `events.end_time`. |
 | `duration_seconds`     | `number` | ✅ | Clip duration in seconds (may be fractional). Written to `events.duration_seconds`. |
-| `prefilter_passed`     | `0 \| 1` | ⚠️ Optional | Whether the client-side prefilter (e.g. NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
-| `prefilter_classes`    | `string` (JSON-encoded array) | ⚠️ Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g. `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
-| `prefilter_confidence` | `number` (0 – 1) | ⚠️ Optional | Maximum confidence among hit classes. Written to `events.prefilter_confidence`. |
-| `trajectory_region`    | `string` (`"x1,y1,x2,y2"`) | ⚠️ Optional | Bounding-box trajectory region for downstream ROI re-crop. Written to `events.trajectory_region`. The production client does not currently emit this — reserved for extension. |
+| `prefilter_passed`     | `0 \| 1` |  Optional | Whether the client-side prefilter (e.g. NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
+| `prefilter_classes`    | `string` (JSON-encoded array) |  Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g. `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
+| `prefilter_confidence` | `number` (0 – 1) |  Optional | Maximum confidence among hit classes. Written to `events.prefilter_confidence`. |
+| `trajectory_region`    | `string` (`"x1,y1,x2,y2"`) |  Optional | Bounding-box trajectory region for downstream ROI re-crop. Written to `events.trajectory_region`. The production client does not currently emit this — reserved for extension. |
 
 **Required fields** (any missing → `logger.warn`, **no** DB write, server responds `422 Unprocessable Entity` with `code="missing_required_fields"`):
 `event_file_path`, `summary_clip_input`, `start_time`, `duration_seconds`
@@ -119,7 +119,7 @@ Two tables are written in this order:
 
 ### 3.3 Downstream chain
 
-Tasks with `status=pending` are picked up by the [task-poller](../../packages/mcp-server/src/video-worker/task-poller.ts), which calls `multilevel-video-understanding` to obtain a `summary_text`, then runs rule-engine to decide whether to insert into `alerts` and push to subscribers.
+Tasks with `status=pending` are picked up by the `task-poller`, which calls `multilevel-video-understanding` to obtain a `summary_text`, then runs rule-engine to decide whether to insert into `alerts` and push to subscribers.
 
 ---
 
@@ -132,7 +132,7 @@ A stable segment with no motion. Clients typically emit a `static` event to "clo
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `start_time`       | `string` (ISO 8601) | ✅ | Static-period start. Written to `events.start_time`. |
-| `end_time`         | `string` (ISO 8601) | ⚠️ Optional | Static-period end. Written to `events.end_time`. |
+| `end_time`         | `string` (ISO 8601) |  Optional | Static-period end. Written to `events.end_time`. |
 | `duration_seconds` | `number` | ✅ | Static duration in seconds. Written to `events.duration_seconds`. |
 
 **Required fields**: `start_time`, `duration_seconds`
@@ -156,8 +156,8 @@ A continuous recording segment (distinct from motion: not tied to motion detecti
 | `recording_path`   | `string` | ✅ | Absolute path of the recorded MP4. Written to `recordings.file_path`. |
 | `recording_start`  | `string` (ISO 8601) | ✅ | Recording start. Written to `recordings.start_time`. |
 | `recording_end`    | `string` (ISO 8601) | ✅ | Recording end. Written to `recordings.end_time`. |
-| `duration_seconds` | `number` | ⚠️ Optional | Recording duration. Written to `recordings.duration_seconds`. |
-| `file_size_bytes`  | `integer` | ⚠️ Optional | Recording file size in bytes. Written to `recordings.file_size_bytes`. |
+| `duration_seconds` | `number` |  Optional | Recording duration. Written to `recordings.duration_seconds`. |
+| `file_size_bytes`  | `integer` |  Optional | Recording file size in bytes. Written to `recordings.file_size_bytes`. |
 
 **Required fields**: `recording_path`, `recording_start`, `recording_end`
 
@@ -172,33 +172,13 @@ A continuous recording segment (distinct from motion: not tied to motion detecti
 
 ---
 
-## 6. Validation summary
-
-Validation runs in this order; the first check that fails determines the response.
-
-| # | Check | Failure response | Retry? |
-|---|-------|------------------|--------|
-| 1 | HTTP method matches path (`POST /events` / `GET /health`) | `405 Method Not Allowed` (`Allow: …`) | ❌ fix client |
-| 2 | `Content-Type: application/json` | `415 Unsupported Media Type` | ❌ fix client |
-| 3 | Body size ≤ `events.max_body_bytes` (default 1 MiB) | `413 Payload Too Large` | ❌ shrink payload |
-| 4 | Body parses as JSON | `400 Bad Request` (`{"error":"invalid JSON"}`) | ❌ fix client |
-| 5 | Envelope shape: `sourceId:string`, `type:string`, `payload:object` all present and correctly typed | `400 Bad Request` (`{"error":"envelope.<field> …"}`) | ❌ fix client |
-| 6 | `type ∈ {motion, static, recording}` | `422 Unprocessable Entity` + `{"code":"unknown_event_type","type":"…"}`, `logger.warn` | ❌ fix client |
-| 7 | Required payload fields for the given `type` (see §3 / §4 / §5) | `422 Unprocessable Entity` + `{"code":"missing_required_fields","missing":[…]}`, `logger.warn` | ❌ fix client |
-| 8 | DB INSERT succeeds | `500 Internal Server Error`, `logger.error` | ✅ may retry after backoff |
-| 9 | All passed | `200 OK` with inserted row id(s) | — |
-
-> Type-coercion caveat: once a payload reaches the DB layer, numeric fields are coerced via `Number(...)`. If the client sends `"duration_seconds": "abc"`, the server stores `NaN` rather than rejecting — **clients must send correctly-typed values**. (Strict schema enforcement is intentionally not used; the policy is to favor forward compatibility over rigid validation.)
-
----
-
-## 7. Five canonical examples
+## 6. Five canonical examples
 
 The five examples below are paired as "what the client sends → what the MCP server does". All use `sourceId=cam_child` for illustration. The production sender is `videostream-analytics`, but identical requests from any HTTP client produce identical server-side behavior.
 
 ---
 
-### 7.1 motion **w/o prefilter** (this monitor has no NPU prefilter configured)
+### 6.1 motion **w/o prefilter** (this monitor has no NPU prefilter configured)
 
 **Request** `POST /events`:
 
@@ -242,7 +222,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 ---
 
-### 7.2 motion **with prefilter pass** (NPU detected a target class)
+### 6.2 motion **with prefilter pass** (NPU detected a target class)
 
 **Request** `POST /events`:
 
@@ -274,7 +254,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 ---
 
-### 7.3 motion **with prefilter NOT passed** (NPU saw no target class)
+### 6.3 motion **with prefilter NOT passed** (NPU saw no target class)
 
 **Request** `POST /events`:
 
@@ -314,7 +294,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 ---
 
-### 7.4 static
+### 6.4 static
 
 **Request** `POST /events`:
 
@@ -350,7 +330,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 ---
 
-### 7.5 recording
+### 6.5 recording
 
 **Request** `POST /events`:
 
@@ -390,7 +370,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 ---
 
-### 7.6 Error-path examples
+### 6.6 Error-path examples
 
 These illustrate the 4xx / 5xx responses a client should be prepared to handle. Same `POST /events` URL.
 
@@ -488,7 +468,7 @@ Content-Type: application/json
 
 ---
 
-## 8. DB-write quick reference
+## 7. DB-write quick reference
 
 | Event type | `events` | `video_summary_tasks` | `recordings` | Triggers rule-engine |
 |------------|----------|------------------------|--------------|----------------------|
@@ -499,12 +479,3 @@ Content-Type: application/json
 | `recording`                      | — | — | ✅ | ❌ |
 
 ---
-
-## 9. Related documents
-
-- Monitor lifecycle / register flow / graceful shutdown: [docs/implements/monitor-ctl-analytics-integration.md](../implements/monitor-ctl-analytics-integration.md)
-- Overall design (webhook's place in the architecture): [docs/smartbuilding-video-design-2026.2.md](../smartbuilding-video-design-2026.2.md)
-- Analytics-side REST API: [docs/apis/videostream_analytics_api.md](./videostream_analytics_api.md)
-- MCP server entry point: [packages/mcp-server/src/events-endpoint.ts](../../packages/mcp-server/src/events-endpoint.ts)
-- Reference implementation (production upstream) — motion emit: [videostream-analytics/stream_monitor/rtsp_monitor.py](../../videostream-analytics/stream_monitor/rtsp_monitor.py)
-- Reference implementation (production upstream) — recording emit: [videostream-analytics/stream_monitor/continuous_recorder.py](../../videostream-analytics/stream_monitor/continuous_recorder.py)
