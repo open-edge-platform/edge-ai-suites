@@ -11,6 +11,13 @@ export default defineConfig({
         target: 'http://127.0.0.1:9011',
         changeOrigin: true,
       },
+      // Proxy /grading-api requests to the grading backend (9012). Distinct
+      // prefix because /api/v1 is already claimed by content-search.
+      '/grading-api': {
+        target: 'http://127.0.0.1:9012',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/grading-api/, '/api/v1'),
+      },
     },
   },
 })

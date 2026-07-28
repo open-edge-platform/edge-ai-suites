@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const About: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="about-content">
-      <h2>About</h2>
-      <p>Learn more about the Smart Classroom application.</p>
+      <h2>{t('menu.about')}</h2>
+      <p>{t('menu.aboutDescription')}</p>
     </div>
   );
 };

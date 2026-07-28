@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { firstSummaryToken, summaryDone, clearSummaryStartRequest, summaryStreamComplete } from "../../redux/slices/uiSlice";
 import { appendSummary, finishSummary, startSummary } from "../../redux/slices/summarySlice";
 import { streamSummary } from "../../services/api";
+import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 
 const activeSummarySessions = new Set<string>();
 
@@ -15,6 +16,10 @@ const AISummaryTab: React.FC = () => {
   const { streamingText, finalText } = useAppSelector(s => s.summary);
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const shouldStartSummary = useAppSelector(s => s.ui.shouldStartSummary);
+  
+  // Check if mindmap feature is enabled in backend
+  const { guard, loaded: featuresLoaded } = useFeatureConfig();
+  const hasMindmapFeature = featuresLoaded && guard.hasFeature('mindmap');
 
   const startedRef = useRef(false);
   const sessionRef = useRef<string | null>(null);
@@ -50,12 +55,12 @@ const AISummaryTab: React.FC = () => {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
-            dispatch(summaryDone()); // Dispatch immediately
+            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
             break;
           } else if (ev.type === "done") {
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
-            dispatch(summaryDone()); // Dispatch immediately
+            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
             break;
           }
         }
@@ -63,12 +68,12 @@ const AISummaryTab: React.FC = () => {
         if (e?.name !== 'AbortError') console.error('[AISummaryTab] stream error', e);
         dispatch(finishSummary());
         dispatch(summaryStreamComplete());
-        dispatch(summaryDone()); // Dispatch immediately
+        dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
       } finally {
         console.log('[AISummaryTab] stream finished', sessionId);
       }
     })();
-  }, [summaryEnabled, shouldStartSummary, sessionId, dispatch]);
+  }, [summaryEnabled, shouldStartSummary, sessionId, dispatch, hasMindmapFeature]);
 
   const typed = finalText ?? streamingText;
 

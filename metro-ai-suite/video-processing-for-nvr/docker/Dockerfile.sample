@@ -51,6 +51,7 @@ WORKDIR /home/vpp/vppsample/docker
 RUN chmod +x ./run_dec_det.sh
 
 WORKDIR /home/vpp/vppsample/example/VA_example/decode_detection/surface_map
+RUN source /opt/intel/openvino_2026/setupvars.sh
 RUN bash ./build.sh
 RUN chmod +x ./dec_det
 

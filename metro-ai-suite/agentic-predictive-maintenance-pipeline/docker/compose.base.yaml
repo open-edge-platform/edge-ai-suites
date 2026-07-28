@@ -24,7 +24,7 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-ui,apm-agent,apm-storage,localhost
+      no_proxy: ${no_proxy:-},apm-ui,apm-agent,apm-detection,apm-storage,localhost
     volumes:
       - ../config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
@@ -134,7 +134,7 @@ services:
       - no-new-privileges
 
   model-download:
-    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.1.0}
+    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-latest}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the

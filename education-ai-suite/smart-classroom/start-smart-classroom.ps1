@@ -67,9 +67,10 @@ Options:
 Note: On Windows, the script automatically requests Administrator privileges.
 
 Services Launched (in order):
-    1. Backend (port 8000)     - Main Python pipeline service (with paddleocr if OCR enabled)
+    1. Backend (port 8000)     - Main Python pipeline service, runs in THIS terminal (with paddleocr if OCR enabled)
     2. Content Search (9011)   - RAG, video summarization, semantic search
-    3. Frontend (port 5173)    - React UI (opens as an Electron desktop window when -Electron is set;
+    3. Grading (9902 + 9012)   - Layout detection + VLM grading service (if grading.enabled)
+    4. Frontend (port 5173)    - React UI, launches in a NEW terminal (opens as an Electron desktop window when -Electron is set;
                                  the dev server still runs on port 5173)
 
 "@ -ForegroundColor Cyan
@@ -88,8 +89,8 @@ function Stop-AllServices {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     
-    $ports = @(8000, 9011, 5173)
-    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 5173 = "Frontend" }
+    $ports = @(8000, 9011, 9902, 9012, 5173)
+    $portNames = @{ 8000 = "Backend"; 9011 = "Content Search"; 9902 = "Layout Detection"; 9012 = "Grading"; 5173 = "Frontend" }
     
     foreach ($port in $ports) {
         Write-Host "  Stopping $($portNames[$port]) (port $port)..." -ForegroundColor Yellow
@@ -212,9 +213,7 @@ trap {
     Write-Host "  Script interrupted at line $($_.InvocationInfo.ScriptLineNumber) with $($_.Exception.Message)" -ForegroundColor Red
     if ($script:servicesStarted) {
         Stop-AllServices
-    }
-    for ($i = 30; $i -gt 0; $i--) {
-        Start-Sleep -Seconds 1
+        $script:servicesStarted = $false
     }
     exit 1
 }
@@ -250,6 +249,17 @@ if (-not $ScriptDir) {
 
 Write-Host "Working Directory: $ScriptDir" -ForegroundColor Gray
 Set-Location $ScriptDir
+
+
+$configPath = Join-Path $ScriptDir "config.yaml"
+$contentSearchEnabled = $true
+if (Test-Path $configPath) {
+    $configContent = Get-Content $configPath -Raw
+    $csFlag  = $configContent -match "content_search:\s*\{\s*enabled:\s*true"
+    $segFlag = $configContent -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+    $qaFlag  = $configContent -match "qa:\s*\{\s*enabled:\s*true"
+    $contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+}
 
 # ============================================================================
 # CHECK FOR RUNNING SERVICES
@@ -329,7 +339,9 @@ function Remove-VirtualEnvironments {
         Write-Host "    Backend venv not found (will be created fresh)" -ForegroundColor Gray
     }
     
-    if (Test-Path $contentSearchVenv) {
+    if (-not $contentSearchEnabled) {
+        Write-Host "    Content Search disabled - skipping Content Search venv cleanup." -ForegroundColor Gray
+    } elseif (Test-Path $contentSearchVenv) {
         Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
         for ($i = 1; $i -le 3; $i++) {
             Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
@@ -371,31 +383,56 @@ function Test-ServiceListening {
 
 $backendRunning = Test-ServiceListening -Port 8000
 $contentSearchRunning = Test-ServiceListening -Port 9011
+$layoutDetectionRunning = Test-ServiceListening -Port 9902
+$gradingRunning = Test-ServiceListening -Port 9012
 $frontendRunning = Test-ServiceListening -Port 5173
 
-$anyRunning = $backendRunning -or $contentSearchRunning -or $frontendRunning
+$anyRunning = $backendRunning -or $contentSearchRunning -or $layoutDetectionRunning -or $gradingRunning -or $frontendRunning
 
-# Initialize skip flags based on running state
 $script:skipBackend = $backendRunning
 $script:skipContentSearch = $contentSearchRunning
+$script:skipGrading = $layoutDetectionRunning -and $gradingRunning
 $script:skipFrontend = $frontendRunning
+
+$gradingEnabled = $false
+$configPath = Join-Path $ScriptDir "config.yaml"
+if (Test-Path $configPath) {
+    $configContent = Get-Content $configPath -Raw
+    if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") {
+        $gradingEnabled = $Matches[1] -eq "true"
+    }
+}
 
 Write-Host ""
 Write-Host "  Service Status:" -ForegroundColor Yellow
-if ($backendRunning) { 
-    Write-Host "    [RUNNING] Backend (port 8000)" -ForegroundColor Green 
-} else { 
-    Write-Host "    [STOPPED] Backend (port 8000)" -ForegroundColor Red 
+if ($backendRunning) {
+    Write-Host "    [RUNNING] Backend (port 8000)" -ForegroundColor Green
+} else {
+    Write-Host "    [STOPPED] Backend (port 8000)" -ForegroundColor Red
 }
 if ($contentSearchRunning) { 
     Write-Host "    [RUNNING] Content Search (port 9011)" -ForegroundColor Green 
+} elseif (-not $contentSearchEnabled) {
+    Write-Host "    [DISABLED] Content Search (disabled in config)" -ForegroundColor DarkGray
 } else { 
     Write-Host "    [STOPPED] Content Search (port 9011)" -ForegroundColor Red 
 }
-if ($frontendRunning) { 
-    Write-Host "    [RUNNING] Frontend (port 5173)" -ForegroundColor Green 
-} else { 
-    Write-Host "    [STOPPED] Frontend (port 5173)" -ForegroundColor Red 
+if ($gradingEnabled) {
+    if ($layoutDetectionRunning) {
+        Write-Host "    [RUNNING] Layout Detection (port 9902)" -ForegroundColor Green
+    } else {
+        Write-Host "    [STOPPED] Layout Detection (port 9902)" -ForegroundColor Red
+    }
+    if ($gradingRunning) {
+        Write-Host "    [RUNNING] Grading (port 9012)" -ForegroundColor Green
+    } else {
+        Write-Host "    [STOPPED] Grading (port 9012)" -ForegroundColor Red
+    }
+}
+if ($frontendRunning) {
+    Write-Host "    [RUNNING] Frontend (port 5173)" -ForegroundColor Green
+} else {
+    Write-Host "    [STOPPED] Frontend (port 5173)" -ForegroundColor Red
 }
 Write-Host ""
 
@@ -406,6 +443,8 @@ if ($Restart) {
     if ($contentSearchRunning) {
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
+    if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+    if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
     Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -425,9 +464,10 @@ if ($Restart) {
     } else {
         Write-Host "  Keeping existing virtual environments. Restarting services." -ForegroundColor Green
     }
-    
+
     $script:skipBackend = $false
     $script:skipContentSearch = $false
+    $script:skipGrading = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
     if ($Silent) {
@@ -443,7 +483,7 @@ if ($Restart) {
 
         $choice = Read-Host "  Enter choice (R/S/A/E)"
     }
-    
+
     switch ($choice.ToUpper()) {
         "R" {
             Write-Host ""
@@ -452,6 +492,8 @@ if ($Restart) {
             if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
+            if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+            if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -473,6 +515,7 @@ if ($Restart) {
             
             $script:skipBackend = $false
             $script:skipContentSearch = $false
+            $script:skipGrading = $false
             $script:skipFrontend = $false
             Write-Host "  Existing services stopped." -ForegroundColor Green
         }
@@ -481,15 +524,18 @@ if ($Restart) {
             Write-Host "  Smart Start: Keeping running services, starting stopped ones." -ForegroundColor Yellow
             $script:skipBackend = $backendRunning
             $script:skipContentSearch = $contentSearchRunning
+            $script:skipGrading = $layoutDetectionRunning -and $gradingRunning
             $script:skipFrontend = $frontendRunning
         }
         "A" {
             Write-Host ""
             Write-Host "  Stopping all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
+            if ($layoutDetectionRunning) { Stop-ServiceOnPort -Port 9902 -ServiceName "Layout Detection" }
+            if ($gradingRunning) { Stop-ServiceOnPort -Port 9012 -ServiceName "Grading" }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
             Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
@@ -536,7 +582,8 @@ Write-Host ""
 Write-Host "  Action Summary:" -ForegroundColor Cyan
 if ($script:skipBackend) { Write-Host "    Backend:        SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Backend:        START" -ForegroundColor Green }
-if ($script:skipContentSearch) { Write-Host "    Content Search: SKIP (already running)" -ForegroundColor Gray }
+if (-not $contentSearchEnabled) { Write-Host "    Content Search: SKIP (disabled in config)" -ForegroundColor Gray }
+elseif ($script:skipContentSearch) { Write-Host "    Content Search: SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Content Search: START" -ForegroundColor Green }
 if ($script:skipFrontend) { Write-Host "    Frontend:       SKIP (already running)" -ForegroundColor Gray }
 else { Write-Host "    Frontend:       START" -ForegroundColor Green }
@@ -833,16 +880,22 @@ Write-Host ""
 Write-Host "[3/4] CHECKING CONFIGURATION" -ForegroundColor Green
 Write-Host "----------------------------" -ForegroundColor Green
 
-$configPath = Join-Path $ScriptDir "config.yaml"
+# $configPath and $contentSearchEnabled were computed earlier (near script start).
 if (Test-Path $configPath) {
-    $configContent = Get-Content $configPath -Raw
     if ($configContent -match "ocr:\s*\n\s*enabled:\s*true") {
         Write-Host "  OCR: Enabled" -ForegroundColor Yellow
     } else {
         Write-Host "  OCR: Disabled" -ForegroundColor Gray
     }
+
+    if ($contentSearchEnabled) {
+        Write-Host "  Content Search: Enabled (content_search/topic_segmentation/qa)" -ForegroundColor Yellow
+    } else {
+        Write-Host "  Content Search: Disabled" -ForegroundColor Gray
+    }
 } else {
     Write-Host "  config.yaml not found, assuming OCR disabled" -ForegroundColor Gray
+    Write-Host "  config.yaml not found, assuming Content Search enabled" -ForegroundColor Gray
 }
 
 # Check Node.js
@@ -860,10 +913,10 @@ Write-Host ""
 Write-Host "[4/4] LAUNCHING SERVICES" -ForegroundColor Green
 Write-Host "------------------------" -ForegroundColor Green
 Write-Host ""
-Write-Host "Terminals will launch sequentially with health checks:" -ForegroundColor Yellow
-Write-Host "  1. Backend (port 8000) - wait until healthy" -ForegroundColor White
+Write-Host "Services will start with health checks:" -ForegroundColor Yellow
+Write-Host "  1. Backend (port 8000) - runs in THIS terminal, wait until healthy" -ForegroundColor White
 Write-Host "  2. Content Search (port 9011) - wait until healthy" -ForegroundColor White
-Write-Host "  3. Frontend (port 5173)" -ForegroundColor White
+Write-Host "  3. Frontend (port 5173) - launches in a NEW terminal" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services and exit." -ForegroundColor DarkGray
 Write-Host ""
@@ -879,6 +932,7 @@ function Wait-ForService {
         [int]$Port,
         [int[]]$DependentPorts = @(),
         [string]$CommandLinePattern = "",  # Pattern to match in process command line (e.g., "main.py", "start_services.py")
+        [System.Diagnostics.Process]$Process = $null,  # Launched process to watch for early exit
         [int]$IntervalSeconds = 5
     )
     
@@ -886,9 +940,26 @@ function Wait-ForService {
     $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
-    Write-Host "  (No timeout - will wait until service is ready or crashes)" -ForegroundColor DarkGray
     
     while ($true) {
+        # If we have a handle to the launched process, detect an early exit
+        # immediately (e.g. a config error) instead of waiting out the grace period.
+        if ($Process -and $Process.HasExited) {
+            $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+            if (-not $listening) {
+                Write-Host ""
+                Write-Host ""
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host "  ERROR: $ServiceName EXITED" -ForegroundColor Red
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "  The $ServiceName process exited (code $($Process.ExitCode)) before becoming healthy." -ForegroundColor Red
+                Write-Host "  Check the output above for error messages." -ForegroundColor Yellow
+                Write-Host ""
+                return $false
+            }
+        }
+
         # After initial grace period, check if dependent services are still running
         if ($elapsed -ge $initialGracePeriod) {
             foreach ($depPort in $DependentPorts) {
@@ -1043,12 +1114,12 @@ if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
     # ========================================================================
-    # TERMINAL 1: BACKEND (with paddleocr check)
+    # BACKEND (runs in THIS terminal, with paddleocr check)
     # ========================================================================
     if ($script:skipBackend) {
         Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
     } else {
-        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
+        Write-Host "Starting Backend in this terminal..." -ForegroundColor Yellow
         
         
         $backendScript = @"
@@ -1103,107 +1174,136 @@ python main.py
 "@
     $backendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($backendScript))
 
-    if ($wtExists) {
-        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Backend powershell -NoExit -EncodedCommand $backendEncoded"
-    } else {
-        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $backendEncoded" | Out-Null
-    }
+    $script:backendProcess = Start-Process powershell -NoNewWindow -PassThru -ArgumentList "-ExecutionPolicy Bypass -EncodedCommand $backendEncoded"
 
-    Write-Host "  Backend terminal launched" -ForegroundColor Green
+    Write-Host "  Backend started in this terminal" -ForegroundColor Green
     Write-Host ""
-    }  # End of skipBackend check
+    } 
     
-    # Wait for Backend to be healthy before starting Content Search
-    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
+    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py" -Process $script:backendProcess
     if (-not $backendHealthy) {
         Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
         exit 1
     }
     
-    # ========================================================================
-    # TERMINAL 2: CONTENT SEARCH
-    # ========================================================================
-    if ($script:skipContentSearch) {
+  
+    if ($contentSearchEnabled) {
         Write-Host ""
-        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
+        Write-Host "Content Search is started by the backend (main.py); waiting for it to become healthy..." -ForegroundColor Yellow
+
+        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+        if (-not $csHealthy) {
+            Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
+            exit 1
+        }
     } else {
         Write-Host ""
-        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-        
-        $contentSearchScript = @"
+        Write-Host "Content Search is disabled in config (content_search/topic_segmentation/qa all off); skipping." -ForegroundColor Gray
+    }
+    
+    # ========================================================================
+    # TERMINAL 3: GRADING
+    # ========================================================================
+    if ($gradingEnabled) {
+        if ($script:skipGrading) {
+            Write-Host ""
+            Write-Host "Skipping Grading (already running on ports 9902 and 9012)" -ForegroundColor Yellow
+        } else {
+            Write-Host ""
+            Write-Host "Launching Terminal 3: Grading..." -ForegroundColor Yellow
+
+            $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+
+            $layoutScript = @"
 `$ErrorActionPreference = 'Continue'
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
-# Set proxy
 $proxyCommands
 
 Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  CONTENT SEARCH SERVICE' -ForegroundColor Cyan
+Write-Host '  LAYOUT DETECTION SERVICE' -ForegroundColor Cyan
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
 
-Set-Location '$ScriptDir\content_search'
+Set-Location '$ScriptDir\components\grading\providers'
 Write-Host "Working directory: `$PWD" -ForegroundColor Gray
 Write-Host ''
 
-# Check if venv exists and is valid
-`$venvPath = '.\venv_content_search'
-`$venvValid = (Test-Path "`$venvPath\Scripts\Activate.ps1") -and (Test-Path "`$venvPath\Scripts\python.exe")
-
-if (-not `$venvValid) {
-    # Remove broken/partial venv if exists
-    if (Test-Path `$venvPath) {
-        Write-Host 'Removing incomplete venv_content_search...' -ForegroundColor Yellow
-        Remove-Item -Path `$venvPath -Recurse -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
-    }
-    
-    Write-Host 'Creating venv_content_search virtual environment...' -ForegroundColor Yellow
-    python -m venv `$venvPath
-    if (`$LASTEXITCODE -ne 0) {
-        Write-Host 'Failed to create virtual environment!' -ForegroundColor Red
-        Write-Host 'Try running: Remove-Item -Path venv_content_search -Recurse -Force' -ForegroundColor Yellow
-        Read-Host 'Press Enter to close'
-        exit 1
-    }
-}
-
-Write-Host 'Activating virtual environment...' -ForegroundColor Gray
-& "`$venvPath\Scripts\Activate.ps1"
+Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
+& '$venvBackendPath\Scripts\Activate.ps1'
 
 Write-Host ''
-Write-Host 'Starting Content Search Service (port 9011)...' -ForegroundColor Green
+Write-Host 'Starting Layout Detection Service (port 9902)...' -ForegroundColor Green
 Write-Host ''
-python .\start_services.py
+python .\layout_detection_service\layout_detection_server.py
 "@
-    $contentSearchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($contentSearchScript))
+            $layoutEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($layoutScript))
 
-    if ($wtExists) {
-        Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title ContentSearch powershell -NoExit -EncodedCommand $contentSearchEncoded"
-    } else {
-        Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $contentSearchEncoded" | Out-Null
+            $gradingScript = @"
+`$ErrorActionPreference = 'Continue'
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+$proxyCommands
+
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host '  GRADING SERVICE' -ForegroundColor Cyan
+Write-Host '========================================' -ForegroundColor Cyan
+Write-Host ''
+
+Set-Location '$ScriptDir\components\grading'
+Write-Host "Working directory: `$PWD" -ForegroundColor Gray
+Write-Host ''
+
+Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
+& '$venvBackendPath\Scripts\Activate.ps1'
+
+Write-Host ''
+Write-Host 'Starting Grading Service (port 9012)...' -ForegroundColor Green
+Write-Host ''
+python grading_service.py
+"@
+            $gradingEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($gradingScript))
+
+            if ($wtExists) {
+                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title LayoutDetection powershell -NoExit -EncodedCommand $layoutEncoded"
+            } else {
+                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $layoutEncoded" | Out-Null
+            }
+            Write-Host "  Layout Detection terminal launched" -ForegroundColor Green
+        }
+
+        $layoutHealthy = Wait-ForService -ServiceName "Layout Detection" -Url "http://localhost:9902/health" -Port 9902 -DependentPorts @(8000) -CommandLinePattern "layout_detection_server.py"
+        if (-not $layoutHealthy) {
+            Write-Host "Exiting script due to Layout Detection startup failure." -ForegroundColor Red
+            exit 1
+        }
+
+        if (-not $script:skipGrading) {
+            if ($wtExists) {
+                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Grading powershell -NoExit -EncodedCommand $gradingEncoded"
+            } else {
+                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $gradingEncoded" | Out-Null
+            }
+            Write-Host "  Grading terminal launched" -ForegroundColor Green
+            Write-Host ""
+        }
+
+        $gradingHealthy = Wait-ForService -ServiceName "Grading" -Url "http://localhost:9012/api/v1/health" -Port 9012 -DependentPorts @(8000) -CommandLinePattern "grading_service.py"
+        if (-not $gradingHealthy) {
+            Write-Host "Exiting script due to Grading startup failure." -ForegroundColor Red
+            exit 1
+        }
     }
 
-    Write-Host "  Content Search terminal launched" -ForegroundColor Green
-    Write-Host ""
-    }  # End of skipContentSearch check
-    
-    # Wait for Content Search to be healthy before starting Frontend
-    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
-    if (-not $csHealthy) {
-        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
-        exit 1
-    }
-    
     # ========================================================================
-    # TERMINAL 3: FRONTEND
+    # TERMINAL 4: FRONTEND
     # ========================================================================
     if ($script:skipFrontend) {
         Write-Host ""
         Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
     } else {
         Write-Host ""
-        Write-Host "Launching Terminal 3: $frontendTitle..." -ForegroundColor Yellow
+        Write-Host "Launching Terminal: $frontendTitle..." -ForegroundColor Yellow
 
         $frontendScript = @"
 `$ErrorActionPreference = 'Continue'
@@ -1241,7 +1341,8 @@ $frontendStartCommand
     }  # End of skipFrontend check
     
     # Wait for Frontend to be healthy
-    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
+    $frontendDeps = if ($gradingEnabled) { @(8000, 9011, 9012) } else { @(8000, 9011) }
+    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts $frontendDeps -CommandLinePattern "npm"
     if (-not $frontendHealthy) {
         Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
         exit 1
@@ -1274,34 +1375,27 @@ Write-Host ""
 if ($Silent) {
     Write-Host "Silent mode: services started successfully. Exiting..." -ForegroundColor Green
     Write-Host ""
-    $script:servicesStarted = $false  # Prevent trap from stopping services
+    $script:servicesStarted = $false  
     exit 0
 } else {
     Write-Host "========================================" -ForegroundColor Yellow
-    Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
-    Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
+    Write-Host "  Press Ctrl+C to stop all services and exit." -ForegroundColor Yellow
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
 
-    # Wait for user input to stop services or exit
     while ($true) {
-        $key = Read-Host "Enter choice (Q/E)"
-        switch ($key.ToUpper()) {
-            "Q" {
+        # If the backend exited on its own (crash or graceful shutdown),
+        # clean up the remaining services and return to the prompt instead
+        # of spinning here forever.
+        if ($script:backendProcess -and $script:backendProcess.HasExited) {
+            Write-Host ""
+            Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
+            if ($script:servicesStarted) {
                 Stop-AllServices
-                for ($i = 30; $i -gt 0; $i--) {
-                    Start-Sleep -Seconds 1
-                }
-                exit 0
+                $script:servicesStarted = $false
             }
-            "E" {
-                Write-Host ""
-                Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
-                Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
-                Write-Host ""
-                $script:servicesStarted = $false  # Prevent trap from stopping services
-                exit 0
-            }
+            break
         }
+        Start-Sleep -Seconds 1
     }
 }

@@ -2,8 +2,7 @@
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
 # bootstrap that fetches CVC-ColonDB (manual-drop), trains YOLO11n on the
-# host's Intel Arc / Xe iGPU via torch+xpu, exports to OpenVINO IR, then
-# streams annotated frames over /api/video_feed.
+# host's Intel Arc / Xe iGPU via torch+xpu, and exports to OpenVINO IR.
 #
 # The host mounts /dev/dri (and /dev/accel for NPU, optional). The container
 # needs the Intel graphics compute runtime (Level Zero GPU/NPU drivers +
@@ -13,19 +12,9 @@
 
 FROM ubuntu:24.04
 
-# Proxy support for corporate networks. Build args are optional; if not
-# supplied, defaults to empty (no proxy). Pass via docker build --build-arg
-# or docker-compose build args.
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-
 WORKDIR /app
 
-ENV HTTP_PROXY=${HTTP_PROXY} \
-    HTTPS_PROXY=${HTTPS_PROXY} \
-    NO_PROXY=${NO_PROXY} \
-    PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \

@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "videostream-analytics"
+version = "0.1.0"
+description = "Independent video stream analytics microservice for Smart Building"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "httpx>=0.25.0",
+    "opencv-python-headless>=4.8.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+npu = [
+    "openvino>=2023.2",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-timeout>=2.1.0",
+    "httpx>=0.25.0",
+    "uvicorn[standard]>=0.24.0",
+]
+
+[project.scripts]
+videostream-analytics = "cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "unit: Unit tests (no Docker, no network)",
+    "integration: Integration tests (require Docker + RTSP + webhook)",
+]
+addopts = "-m 'not integration'"
+timeout = 60
+
+[tool.setuptools]
+py-modules = ["cli", "service", "source_worker", "__main__"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shared*", "sinks*", "stream_monitor*"]
