@@ -87,7 +87,79 @@
                   }
                 }
               ],
-              "transformations": [],
+              "transformations": [
+              {
+                "kind": "Transformation",
+                "group": "calculateField",
+                "spec": {
+                  "options": {
+                    "mode": "reduceRow",
+                    "reduce": {
+                      "reducer": "lastNotNull"
+                    },
+                    "alias": "Latest Pipeline"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "sortBy",
+                "spec": {
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "field": "time",
+                        "desc": true
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterByValue",
+                "spec": {
+                  "options": {
+                    "filters": [
+                      {
+                        "fieldName": "Latest Pipeline",
+                        "config": {
+                          "id": "notEqual",
+                          "options": {
+                            "value": "0"
+                          }
+                        }
+                      }
+                    ],
+                    "type": "include",
+                    "match": "any"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "limit",
+                "spec": {
+                  "options": {
+                    "limitField": "1"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterFieldsByName",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "Latest Pipeline"
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
               "queryOptions": {
                 "maxDataPoints": 100
               }
@@ -229,8 +301,7 @@
                     ]
                   },
                   "color": {
-                    "mode": "fixed",
-                    "fixedColor": "blue"
+                    "mode": "palette-classic"
                   },
                   "custom": {
                     "axisBorderShow": false,
@@ -276,7 +347,7 @@
                     "properties": [
                       {
                         "id": "displayName",
-                        "value": "Frame Rate"
+                        "value": "Pipeline ID: ${__field.labels.job_id}"
                       }
                     ]
                   }
