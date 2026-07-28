@@ -72,7 +72,12 @@
       "boardCamera2": "Board Camera 2",
       "frontCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/front",
       "backCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/back",
-      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content"
+      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content",
+      "enterAudioPath": "Enter audio path",
+      "enterFrontCameraPath": "Enter front camera path",
+      "enterBackCameraPath": "Enter rear camera path",
+      "enterBoardCameraPath": "Enter board camera path",
+      "selectFolder": "Select Folder"
     },
     "uploadFiles": {
     "title": "Upload Files",
@@ -84,12 +89,24 @@
     "audioFileLabel": "Audio File",
     "frontCameraFile": "Front Camera File",
     "backCameraFile": "Back Camera File",
-    "boardCameraFile": "Board Camera File"
+    "boardCameraFile": "Board Camera File",
+    "enterBaseDirectory": "Enter the base directory",
+    "selectAudioFile": "Select an audio file",
+    "selectFrontCameraFile": "Select a front camera file",
+    "selectBackCameraFile": "Select a back camera file",
+    "selectBoardCameraFile": "Select a board camera file",
+    "chooseFile": "Choose File"
   },
     "menu": {
       "settings": "Settings",
       "help": "Help",
-      "about": "About"
+      "about": "About",
+      "toggle": "Toggle menu",
+      "navigation": "Navigation",
+      "home": "Home",
+      "appMenu": "Application menu",
+      "aboutDescription": "Learn more about the Smart Classroom application.",
+      "helpDescription": "Here you can find help and support resources."
     },
     "tabs": {
       "transcripts": "Transcripts",
@@ -154,7 +171,9 @@
       "backCamera": "Back",
       "boardCamera": "Board",
       "allCameras": "All",
-      "noSessionActiveContentSearch": "No active session. Upload content to begin searching."
+      "noSessionActiveContentSearch": "No active session. Upload content to begin searching.",
+      "speakingTimeline": "Speaking Timeline",
+      "totalDuration": "Total Duration"
     },
     "monitoring": {
     "pausedTitle": "Resource Monitoring Paused",
@@ -168,6 +187,16 @@
       "failedToStopRecording": "Failed to stop recording",
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
+    },
+    "app": {
+      "checkingBackendTitle": "Checking backend status",
+      "checkingBackendMessage": "Please wait while we connect to the backend…",
+      "backendUnavailableTitle": "Backend Not Available",
+      "backendUnavailableMessage": "The backend server is currently unreachable. Please ensure it is running.",
+      "loadingConfigTitle": "Loading configuration",
+      "loadingConfigMessage": "Detecting enabled features from backend…",
+      "configErrorTitle": "Configuration Error",
+      "configErrorMessage": "Please check your backend configuration."
     },
     "videoStream": {
     "configureCameras": "Configure cameras in settings to enable video analytics",

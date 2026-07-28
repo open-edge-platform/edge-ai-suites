@@ -49,6 +49,52 @@ const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
 const GRADING_API_URL: string = env.VITE_GRADING_API_URL || '/grading-api';
 const HEALTH_TIMEOUT_MS = 5000;
 
+// ============================================================================
+// FEATURE CONFIGURATION API
+// ============================================================================
+
+export interface FeatureDescriptor {
+  id: string;
+  dependency: string[];
+  requires: string[];
+  type?: string;
+  panel?: string;
+  title?: string;
+  endpoints?: Record<string, string>;
+  mode?: string;
+  cameras?: {
+    front?: boolean;
+    back?: boolean;
+    board?: boolean;
+  };
+}
+
+/**
+ * Fetch enabled features with full UI descriptors from backend
+ * This is the foundation for dynamic UI rendering
+ */
+export async function fetchFeatures(): Promise<FeatureDescriptor[]> {
+  const res = await fetch(`${BASE_URL}/features`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch features: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.features || [];
+}
+
+/**
+ * Get endpoint URL for a specific feature action
+ */
+export function getFeatureEndpoint(
+  features: FeatureDescriptor[],
+  featureId: string,
+  endpointKey: string
+): string | null {
+  const feature = features.find(f => f.id === featureId);
+  return feature?.endpoints?.[endpointKey] || null;
+}
+
+
 /**
  * Convert a local:// storage path from search results into a browser-loadable URL
  * using the backend /download?inline=true endpoint.

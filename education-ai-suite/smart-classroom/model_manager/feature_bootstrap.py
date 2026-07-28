@@ -71,7 +71,10 @@ def startup(app: FastAPI) -> None:
             continue
         logger.info("Building feature '%s'...", feature.id)
         feature.build()
-        app.include_router(feature.router)
-        logger.info("Feature '%s' built and router mounted.", feature.id)
+        if feature.router is not None:
+            app.include_router(feature.router)
+            logger.info("Feature '%s' built and router mounted.", feature.id)
+        else:
+            logger.info("Feature '%s' built (no router to mount).", feature.id)
 
     logger.info("Startup orchestration complete.")
