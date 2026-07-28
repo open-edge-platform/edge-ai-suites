@@ -53,6 +53,9 @@ nvr-event-router:
     REDIS_HOST: "redis"
     MQTT_BROKER: "mqtt-broker"
     MQTT_PORT: "1883"
+    WATCH_BATCH_SIZE: 10
+    BATCH_JOB_POLL_INTERVAL_SECONDS: 0.5
+    BATCH_JOB_TIMEOUT_SECONDS: 3600
 
 
   volumes:
@@ -94,4 +97,3 @@ ingress:
     port: 80
     targetPort: 80
     nodePort: 30860
-

@@ -1,13 +1,21 @@
 # Release Notes: Smart NVR
 
+- [Version 2026.2.0](#version-202620)
 - [Version 2026.1.0](#version-202610)
 - [Version 1.2.4](#version-124)
 
 ## Current Release
 
-<!--### Version 2026.2.0-->
+### Version 2026.2.0
 
-<!--date TBD-->
+**July 28, 2026**
+
+**Improved**
+
+- Continuous camera ingestion now uploads videos through Pipeline Manager and
+  submits their search embeddings through asynchronous DataPrep batch jobs.
+- Added configurable watcher batch size, job polling interval, and job timeout
+  settings for Docker Compose and Helm deployments.
 
 ### Version 2026.1.0
 
@@ -50,4 +58,3 @@ Release Notes 2025 <./release-notes/release-notes-2025.md>
 
 :::
 hide_directive-->
-

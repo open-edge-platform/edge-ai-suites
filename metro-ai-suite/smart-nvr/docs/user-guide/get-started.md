@@ -85,6 +85,11 @@ export VSS_SUMMARY_PORT=<vss-summary-port>        # Default: 12345
 export VSS_SEARCH_IP=<vss-search-device-ip>
 export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
 
+# Optional continuous-ingestion batch tuning
+export WATCH_BATCH_SIZE=10
+export BATCH_JOB_POLL_INTERVAL_SECONDS=0.5
+export BATCH_JOB_TIMEOUT_SECONDS=3600
+
 # MQTT Configuration
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
@@ -100,6 +105,11 @@ export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape int
 # Start all services
 source setup.sh start
 ```
+
+The batch settings control how the NVR Event Router groups videos detected by
+the continuous-ingestion watcher, and how often it polls Pipeline Manager for
+asynchronous embedding-job completion. They do not affect single event-rule
+clips or video summarization.
 
 This launches all required containers:
 
