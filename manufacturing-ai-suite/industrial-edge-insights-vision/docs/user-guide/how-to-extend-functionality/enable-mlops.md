@@ -193,13 +193,13 @@ hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
    <!--hide_directive :sync: pallet-detect hide_directive-->
 
-   ![WebRTC streaming](../../_assets/pdd-webrtc-streaming.png)
+   ![WebRTC streaming](../_assets/pdd-webrtc-streaming.png)
 
    <!--hide_directive ::: hide_directive-->
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
-   ![WebRTC streaming](../../_assets/pcb-webrtc-streaming.png)
+   ![WebRTC streaming](../_assets/pcb-webrtc-streaming.png)
 
    <!--hide_directive
    :::

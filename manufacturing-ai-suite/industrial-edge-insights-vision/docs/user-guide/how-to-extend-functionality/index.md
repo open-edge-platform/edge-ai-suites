@@ -1,7 +1,6 @@
-# Extend Functionality
+# How ToExtend Functionality
 
-This is just a dummy index used to enable building the documentation as part of the CI/CD
-pipeline and allow for sections in the main How-to Guides page.
+Placeholder text.
 
 <!--hide_directive
 :::{toctree}

@@ -153,7 +153,7 @@ Follow this procedure to start the pipeline.
    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
    <!--hide_directive :sync: pallet-detect hide_directive-->
 
-   ![Example of an instance ID for a pipeline](../../_assets/pdd-instance-id.png "pallet defect detection instance id")
+   ![Example of an instance ID for a pipeline](../_assets/pdd-instance-id.png "pallet defect detection instance id")
 
    *Example of a Pallet Defect Detection pipeline instance ID*
 
@@ -161,7 +161,7 @@ Follow this procedure to start the pipeline.
    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
-   ![Example of an instance ID for a pipeline](../../_assets/pcb-instance-id.png "pcb anomaly detection instance id")
+   ![Example of an instance ID for a pipeline](../_assets/pcb-instance-id.png "pcb anomaly detection instance id")
 
    *Example of a PCB Anomaly Detection pipeline instance ID*
 

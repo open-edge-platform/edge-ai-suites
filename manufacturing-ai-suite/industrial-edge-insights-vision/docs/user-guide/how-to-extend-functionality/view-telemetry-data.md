@@ -17,7 +17,7 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
 
     - If you are starting multiple pipelines, then it can also be queried per pipeline ID. Example: `fps_per_pipeline{pipeline_id="658a5260f37d11ef94fc0242ac160005"}`
 
-    ![Open telemetry fps_per_pipeline example in prometheus](../../_assets/prometheus_fps_per_pipeline.png)
+    ![Open telemetry fps_per_pipeline example in prometheus](../_assets/prometheus_fps_per_pipeline.png)
 
 ## End the demonstration
 
@@ -25,7 +25,7 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 1. Stop the sample application with the following command.
 
-   > If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
+   > **Note:** If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
 
    ```sh
    docker compose down -v

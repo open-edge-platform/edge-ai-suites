@@ -75,7 +75,7 @@ Follow the steps below to run the pipeline.
 
 ### Steps
 
-1. Ensure that the sample application is up and running. If not, follow the steps [here](../../get-started.md#set-up-the-application) to setup the application and then bring the services up
+1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
     > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 

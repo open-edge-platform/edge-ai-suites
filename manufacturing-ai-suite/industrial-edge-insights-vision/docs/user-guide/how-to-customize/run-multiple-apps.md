@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-- [System Requirements](../../get-started/vision-system-requirements.md)
+- [System Requirements](../get-started/vision-system-requirements.md)
 
 ## Overview
 
@@ -189,7 +189,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ./sample_start.sh
    ```
 
-   > **Important:** Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
+   > **Important:** Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
 
    Example output:
 
@@ -362,7 +362,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Start the pipeline for <INSTANCE_NAME> where the pipeline is loaded from <file>:
+2. Start the pipeline for `<INSTANCE_NAME>`, where the pipeline is loaded from `<file>`:
 
    ```bash
    ./sample_start.sh -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
