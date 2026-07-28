@@ -104,3 +104,15 @@ pipeline:
   device: gpu
   annotate: true
   jpeg_quality: 80
+
+metrics_collector:
+  # Host-metrics sidecar (CPU / iGPU / NPU / memory / power). The backend
+  # proxies GET /api/hardware-metrics through to `${base_url}/metrics`.
+  # Docker-compose service name is surgical-metrics-collector; when
+  # running the backend on the host during dev, override with
+  # METRICS_COLLECTOR_URL=http://localhost:9100.
+  base_url: ${METRICS_COLLECTOR_URL:-http://surgical-metrics-collector:9000}
+  poll_interval_s: 1.0
+  # Cap the number of samples returned to the UI so chart.js doesn't
+  # choke on hours of 1-Hz data from a long-running collector.
+  max_points: 120
