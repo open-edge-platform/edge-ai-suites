@@ -162,82 +162,24 @@ def _build_udf_payload(sample_app, device_value, alert_mode):
     }
     return payload
 
-def _find_chart_tgz(chart_dir):
-    """Return the most recently modified .tgz package directly inside chart_dir, if any."""
-    if not chart_dir or not os.path.isdir(chart_dir):
-        return None
-    tgz_files = glob.glob(os.path.join(chart_dir, "*.tgz"))
-    if not tgz_files:
-        return None
-    return max(tgz_files, key=os.path.getmtime)
-
-
-def _ensure_chart_extracted(chart_dir):
-    """Extract the .tgz chart package in `chart_dir` in place, if not already done.
-
-    Test helpers read values.yaml/config folders directly from chart_path, so
-    this extracts the .tgz contents alongside the .tgz itself. Idempotent:
-    re-extraction is skipped unless the .tgz file changes.
-    """
-    if not chart_dir or not os.path.isdir(chart_dir):
-        return chart_dir
-
-    if os.path.isfile(os.path.join(chart_dir, "Chart.yaml")):
-        return chart_dir  # already a plain chart source directory
-
-    tgz_path = _find_chart_tgz(chart_dir)
-    if not tgz_path:
-        return chart_dir  # nothing generated/pulled yet
-
-    marker_path = os.path.join(chart_dir, ".extracted_from")
-    signature = f"{os.path.basename(tgz_path)}:{os.path.getmtime(tgz_path)}"
-    try:
-        if os.path.isfile(marker_path) and open(marker_path).read().strip() == signature:
-            return chart_dir  # already extracted for this exact package
-    except OSError:
-        pass
-
-    try:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with tarfile.open(tgz_path) as tf:
-                abs_tmp = os.path.abspath(tmp_dir)
-                for member in tf.getmembers():
-                    member_path = os.path.abspath(os.path.join(tmp_dir, member.name))
-                    if member_path != abs_tmp and not member_path.startswith(abs_tmp + os.sep):
-                        raise tarfile.TarError(f"Unsafe path in tar archive: {member.name}")
-                tf.extractall(tmp_dir)
-            extracted_roots = [d for d in glob.glob(os.path.join(tmp_dir, "*")) if os.path.isdir(d)]
-            if len(extracted_roots) != 1:
-                logger.warning("Unexpected chart archive layout in '%s'", tgz_path)
-                return chart_dir
-            for item in os.listdir(extracted_roots[0]):
-                src = os.path.join(extracted_roots[0], item)
-                dst = os.path.join(chart_dir, item)
-                if os.path.isdir(src):
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(src, dst)
-        with open(marker_path, "w") as f:
-            f.write(signature)
-        logger.info("Extracted Helm chart package '%s' into '%s'", tgz_path, chart_dir)
-    except (tarfile.TarError, OSError) as e:
-        logger.warning("Failed to extract chart package '%s': %s", tgz_path, e)
-
-    return chart_dir
-
-
 def _resolve_chart_path(raw_path):
-    """Return an absolute chart path regardless of current working directory."""
+    """Return an absolute chart path regardless of current working directory.
+
+    chart_path is expected to already be an extracted chart directory (Chart.yaml,
+    values.yaml, templates/) by the time tests run: the CI workflow extracts the
+    .tgz right after generating/pulling it, and generate_helm_chart_targz() does
+    the same for local/direct test runs. No extraction happens here.
+    """
     if not raw_path:
         return raw_path
 
     expanded_path = os.path.expandvars(raw_path)
     if os.path.isabs(expanded_path):
-        return _ensure_chart_extracted(os.path.normpath(expanded_path))
+        return os.path.normpath(expanded_path)
 
     # pytest.ini paths are authored relative to tests/functional
     normalized_path = os.path.abspath(os.path.join(FUNCTIONAL_TESTS_DIR, expanded_path))
-    return _ensure_chart_extracted(os.path.normpath(normalized_path))
+    return os.path.normpath(normalized_path)
 
 def get_env_values():
     """Load configuration and extract Helm-related values."""
@@ -278,9 +220,8 @@ def _resolve_chart_path_from_cwd(raw_path):
         return raw_path
     expanded = os.path.expandvars(raw_path)
     if os.path.isabs(expanded):
-        return _ensure_chart_extracted(expanded)
-    resolved = os.path.normpath(os.path.join(os.getcwd(), expanded))
-    return _ensure_chart_extracted(resolved)
+        return expanded
+    return os.path.normpath(os.path.join(os.getcwd(), expanded))
 
 
 def get_multimodal_env_values():
@@ -1636,21 +1577,19 @@ def verify_influxdb_retention(namespace, chart_path, response):
 def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
 
-    Generates the helm chart AND packages it into a .tgz file in helm-packages/.
-    For multimodal, uses `make gen_helm_charts` + manual packaging since
-    multimodal Makefile doesn't have a gen_helm_charts_targz target.
+    Generates the helm chart AND packages it into a .tgz file in helm-packages/,
+    then extracts that .tgz directly into chart_path so tests can read/edit
+    chart_path/values.yaml etc. without any further indirection.
 
-    If a `.tgz` already exists in `chart_path` (already generated/pulled by the
-    CI workflow before tests started), regeneration is skipped so tests
-    install from that package only.
+    If chart_path already contains an extracted chart (Chart.yaml present --
+    e.g. generated/pulled and extracted by the CI workflow before tests
+    started), generation is skipped entirely.
     """
-    existing_tgz = _find_chart_tgz(chart_path)
-    if existing_tgz:
+    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
         logger.info(
-            "Found existing Helm chart package '%s' in '%s'; skipping regeneration.",
-            existing_tgz, chart_path,
+            "Chart already extracted in '%s' (generated/pulled by CI workflow); skipping regeneration.",
+            chart_path,
         )
-        _ensure_chart_extracted(chart_path)
         list_directory_contents()
         return True
 
@@ -1691,7 +1630,18 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         
         logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
-        _ensure_chart_extracted(chart_path)
+
+        # Extract the freshly packaged .tgz directly into chart_path so tests
+        # can read/edit chart_path/values.yaml etc. with no further indirection
+        # (mirrors the extraction the CI workflow does right after generate/pull).
+        tgz_files = glob.glob(os.path.join(chart_path, "*.tgz"))
+        if tgz_files:
+            latest_tgz = max(tgz_files, key=os.path.getmtime)
+            logger.info("Extracting '%s' into '%s' for direct use by tests...", latest_tgz, chart_path)
+            subprocess.run(
+                ["tar", "-xzf", latest_tgz, "-C", chart_path, "--strip-components=1"],
+                check=True,
+            )
 
         return True
     except subprocess.CalledProcessError as e:
@@ -1707,12 +1657,11 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
     try:
         # Install from chart_path, the already-extracted chart directory.
         # The CI workflow extracts the .tgz (generated or pulled) into
-        # chart_path before tests run, and _ensure_chart_extracted() (called
-        # at module import time via get_env_values()/get_multimodal_env_values())
-        # covers any case where that hasn't happened yet (e.g. local runs). Test
-        # fixtures (e.g. update_values_yaml) edit chart_path/values.yaml directly,
-        # so installing from this same directory picks up those edits with no
-        # extra -f override needed.
+        # chart_path right after generating/pulling it, and
+        # generate_helm_chart_targz() does the same for local/direct test runs.
+        # Test fixtures (e.g. update_values_yaml) edit chart_path/values.yaml
+        # directly, so installing from this same directory picks up those
+        # edits with no extra -f override needed.
         helm_command = [
             "helm", "install", release_name, chart_path,
             "--set", f"env.privileged_access_required={val}",
