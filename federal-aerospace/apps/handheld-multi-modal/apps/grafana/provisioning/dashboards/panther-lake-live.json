@@ -55,7 +55,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Frame Rate Average",
+          "title": "Latest Pipeline Frame Rate Average",
           "description": "",
           "links": [],
           "data": {
