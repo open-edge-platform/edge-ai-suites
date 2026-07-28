@@ -177,6 +177,8 @@ export interface ConsistencyReport {
   format_violations: string[];
   /** default-rule path: severity/event/desc missing from schema. */
   default_path_missing_fields: string[];
+  /** Extended schema fields that require evaluate_rules.py when no custom rule was supplied. */
+  extended_schema_missing_rule: string[];
   /** custom-rule path: fields evaluate_rules.py reads that aren't in schema. */
   rule_fields_not_in_schema: string[];
 }
@@ -287,6 +289,7 @@ export function checkUseCaseConsistency(input: {
       extra_in_prompt: prompt_fields,
       format_violations,
       default_path_missing_fields: [],
+      extended_schema_missing_rule: [],
       rule_fields_not_in_schema: [],
     };
   }
@@ -297,9 +300,11 @@ export function checkUseCaseConsistency(input: {
 
   // G4 — alert-rule path.
   let default_path_missing_fields: string[] = [];
+  let extended_schema_missing_rule: string[] = [];
   let rule_fields_not_in_schema: string[] = [];
   if (evaluateRulesText === undefined) {
     default_path_missing_fields = DEFAULT_ALERT_FIELDS.filter((f) => !schemaSet.has(f));
+    extended_schema_missing_rule = schema_fields.filter((f) => !DEFAULT_ALERT_FIELDS.includes(f));
   } else {
     rule_fields_not_in_schema = scanRuleFieldKeys(evaluateRulesText).filter((k) => {
       const canonical = RULE_FIELD_ALIASES[k] ?? k;
@@ -312,6 +317,7 @@ export function checkUseCaseConsistency(input: {
     extra_in_prompt.length === 0 &&
     format_violations.length === 0 &&
     default_path_missing_fields.length === 0 &&
+    extended_schema_missing_rule.length === 0 &&
     rule_fields_not_in_schema.length === 0;
 
   return {
@@ -322,6 +328,7 @@ export function checkUseCaseConsistency(input: {
     extra_in_prompt,
     format_violations,
     default_path_missing_fields,
+    extended_schema_missing_rule,
     rule_fields_not_in_schema,
   };
 }
@@ -344,6 +351,12 @@ function consistencyErrors(r: ConsistencyReport): string[] {
     errs.push(
       `default rule path needs schema field(s) [${r.default_path_missing_fields.join(", ")}] ` +
       `— with no evaluate_rules.py, defaultRuleEvaluator requires severity/event/desc.`,
+    );
+  }
+  if (r.extended_schema_missing_rule.length > 0) {
+    errs.push(
+      `extended schema field(s) [${r.extended_schema_missing_rule.join(", ")}] require evaluate_rules.py ` +
+      `— defaultRuleEvaluator is allowed only for severity/event/desc.`,
     );
   }
   if (r.rule_fields_not_in_schema.length > 0) {

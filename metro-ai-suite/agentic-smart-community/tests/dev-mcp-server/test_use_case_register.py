@@ -290,6 +290,20 @@ video_summary_max_concurrent: 1
         c4 = r4.get("steps", {}).get("consistency", {})
         t.check(c4.get("consistent") is True, "T4 default-rule aligned: consistency.consistent == true (gate passed)")
 
+        # ── T4b: extended schema without evaluate_rules.py → REJECT, zero side effects ──
+        r4b = client.register({
+            "action": "register", "use_case": "extended_without_rules",
+            "prompt_text": GOOD_PET_PROMPT,
+            "schema_extensions": ext(("pet_zone", False)),
+        })
+        c4b = r4b.get("steps", {}).get("consistency", {})
+        t.check(r4b.get("ok") is False, "T4b extended schema without rules: ok == false")
+        t.check(c4b.get("consistent") is False, "T4b: consistency.consistent == false")
+        t.check(c4b.get("extended_schema_missing_rule") == ["pet_zone"],
+            "T4b: extension is reported as requiring evaluate_rules.py")
+        t.check("schema" not in r4b.get("steps", {}), "T4b: ZERO side effect — no ALTER")
+        t.check("vlm_task" not in r4b.get("steps", {}), "T4b: ZERO side effect — no VLM POST")
+
         # ── T5: report-only (empty schema, free-form prompt) → gate PASSES ──
         r5 = client.register({
             "action": "register", "use_case": "report_only",
@@ -313,6 +327,19 @@ video_summary_max_concurrent: 1
         t.check("vlm_task" not in r6.get("steps", {}), "T6: VLM POST failed — steps.vlm_task absent")
         t.check("artifacts" not in r6.get("steps", {}), "T6: no 落盘 before VLM success — steps.artifacts absent")
         t.check(any("VLM task registration failed" in e for e in r6.get("errors", [])), "T6: error names VLM POST failure")
+
+        # ── T6b: generate_task with extended schema but no rules → gate REJECTS ──
+        r6b = client.register({
+            "action": "generate_task", "use_case": "extended_task_without_rules",
+            "prompt_text": GOOD_PET_PROMPT,
+            "schema_extensions": ext(("pet_zone", False)),
+        })
+        c6b = r6b.get("steps", {}).get("consistency", {})
+        t.check(r6b.get("ok") is False, "T6b extended generate_task without rules: ok == false")
+        t.check(c6b.get("extended_schema_missing_rule") == ["pet_zone"],
+            "T6b: extension is reported as requiring evaluate_rules.py")
+        t.check("vlm_task" not in r6b.get("steps", {}), "T6b: ZERO side effect — no VLM POST")
+        t.check("artifacts" not in r6b.get("steps", {}), "T6b: ZERO side effect — no artifact write")
 
         # ── T7: generate_task with a JSON prompt → gate REJECTS, zero side effects ──
         r7 = client.register({

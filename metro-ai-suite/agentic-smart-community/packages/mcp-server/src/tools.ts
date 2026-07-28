@@ -347,6 +347,8 @@ export function registerTools(
       "schema_extensions is OPTIONAL in both steps: when omitted, the final schema is inferred from " +
       "the prompt's LOCAL_PROMPT `KEY:` output lines (all text columns); pass it only to declare a " +
       "non-text column type or override the inferred required flags. " +
+      "Any final schema field beyond severity/event/desc REQUIRES evaluate_rules.py; the consistency " +
+      "gate rejects an extended schema without one before DB, VLM, config, or artifact side effects. " +
       "action=register: treats schema_extensions as caller-confirmed extra fields and normalizes " +
       "the final schema to severity/event/desc + extras before validation. HARD GATE first — if any final schema field is absent from " +
       "the prompt's LOCAL_PROMPT output contract, the call is REJECTED with zero side effects " +
@@ -383,7 +385,8 @@ export function registerTools(
       evaluate_rules_path: z.string().optional().describe(
         "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
         "stages it to use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
-        "persists the conventional absolute path into config.yaml."
+        "persists the conventional absolute path into config.yaml. Required whenever the Final Schema " +
+        "contains fields beyond severity/event/desc, and for custom alert behavior."
       ),
       reports: z.record(z.unknown()).optional().describe("Report config: {data_source, default_type, filter}"),
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
@@ -407,6 +410,7 @@ export function registerTools(
         "(e.g. motion_direction, parking_zone). Do not put detection goals/events such as escape, trapped, " +
         "aggressive_behavior, risk_level, *_detected, or *_count here. The tool automatically adds " +
         "severity/event/desc to form the final schema when any structured fields are present. " +
+        "Any resulting extension requires evaluate_rules_path (or a staged conventional rule file). " +
         "Applied via ALTER TABLE ADD COLUMN if missing (idempotent). Stored under this use_case's own " +
         "schema (use_case_dict.<uc>.schema) — never a global shared schema."
       ),
