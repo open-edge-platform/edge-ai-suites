@@ -34,7 +34,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   config.json: |
-{{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
+{{- if or .Values.dlstreamerPipelineServer.gpu.enabled (and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled) }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_gpu.json") | indent 4 }}
 {{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_npu.json") | indent 4 }}

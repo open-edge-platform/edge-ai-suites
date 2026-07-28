@@ -1,5 +1,9 @@
 # Release Notes: Industrial Edge Insights - Time Series
 
+<!--## Version 2026.2-->
+
+<!--date TBD-->
+
 ## Version 2026.1
 
 **June 2026**

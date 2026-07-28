@@ -1,5 +1,9 @@
 # Release Notes: Live Video Captioning
 
+<!--## Version 2026.2.0-->
+
+<!--date TBD-->
+
 ## Version 2026.1.0
 
 **June 17, 2026**

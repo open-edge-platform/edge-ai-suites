@@ -7,9 +7,9 @@
 #
 # Build, deploy, and manage the Live Video Alert Agent Docker stack.
 # This application includes:
-#   - live-video-alert-agent  (first-party; built from local Dockerfile)
+#   - live-video-alert-agent 
 #   - OVMS VLM / LLM inference servers (OpenVINO pre-built images)
-#   - live-metrics-service and vippet-collector (Intel pre-built images)
+#   - metrics-manager (Intel pre-built image)
 #
 # Quick Start:
 #   make help           - Show all available commands
@@ -22,7 +22,7 @@
 # Configuration:
 #   REGISTRY_URL        - Image registry prefix (default: intel)
 #   TAG                 - App image tag (default: latest)
-#   DEVICE              - GPU (default) or CPU for VLM/LLM inference
+#   DEVICE              - GPU (default), CPU, or NPU for VLM/LLM inference
 #   PORT                - App port (default: 9000)
 #
 # Required (must be set before deploy):
@@ -60,11 +60,11 @@ REGISTRY := $(if $(REGISTRY_URL),$(REGISTRY_URL)/)$(if $(PROJECT_NAME),$(PROJECT
 
 # First-party app component (built from local Dockerfile)
 COMPONENTS := live-video-alert-agent
+DOCKER_DIR := docker
 
 # Intel platform images (pre-built, fixed release tags)
-LIVE_METRICS_IMAGE    := intel/live-metrics-service:1.0.0
-VIPPET_COLLECTOR_IMAGE := intel/vippet-collector:2026.0.0
-PLATFORM_IMAGES       := $(LIVE_METRICS_IMAGE) $(VIPPET_COLLECTOR_IMAGE)
+METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.1.0
+PLATFORM_IMAGES       := $(METRICS_MANAGER_IMAGE)
 
 # ==============================================================================
 # Deployment Configuration
@@ -72,6 +72,7 @@ PLATFORM_IMAGES       := $(LIVE_METRICS_IMAGE) $(VIPPET_COLLECTOR_IMAGE)
 
 # Target device for VLM / LLM inference (GPU is the recommended default)
 DEVICE ?= GPU
+NPU_DEVICE_PATH ?= /dev/accel/accel0
 
 # Agentic dispatch (true = ADK + local OVMS LLM, false = rule-based)
 USE_ADK ?= true
@@ -125,6 +126,12 @@ else
   COMPOSE_PROFILE_FLAGS :=
 endif
 
+COMPOSE_PROJECT_FLAGS :=
+COMPOSE_FILE_FLAGS := -f $(DOCKER_DIR)/docker-compose.yml
+ifeq ($(DEVICE_UPPER),NPU)
+  COMPOSE_FILE_FLAGS += -f $(DOCKER_DIR)/docker-compose.npu.yml
+endif
+
 # ==============================================================================
 # Environment Export Block
 # ==============================================================================
@@ -137,6 +144,7 @@ define EXPORT_RUNTIME_ENV
 	export VLM_TARGET_DEVICE="$${VLM_TARGET_DEVICE:-$(DEVICE_UPPER)}"
 	export LLM_TARGET_DEVICE="$${LLM_TARGET_DEVICE:-$(DEVICE_UPPER)}"
 	export OVMS_TARGET_DEVICE="$${OVMS_TARGET_DEVICE:-$(DEVICE_UPPER)}"
+	export NPU_DEVICE_PATH="$${NPU_DEVICE_PATH:-$(NPU_DEVICE_PATH)}"
 	export RENDER_DEVICE_GID="$${RENDER_DEVICE_GID:-$(RENDER_DEVICE_GID)}"
 	export USE_ADK="$${USE_ADK:-$(USE_ADK)}"
 	export RTSP_URL="$${RTSP_URL:-$(RTSP_URL)}"
@@ -250,13 +258,19 @@ validate-env:
 	fi
 
 validate-device:
-	@if [ "$(DEVICE_UPPER)" != "CPU" ] && [ "$(DEVICE_UPPER)" != "GPU" ]; then \
-		echo "❌ Invalid DEVICE '$(DEVICE_UPPER)'. Use CPU or GPU."; \
+	@if [ "$(DEVICE_UPPER)" != "CPU" ] && [ "$(DEVICE_UPPER)" != "GPU" ] && [ "$(DEVICE_UPPER)" != "NPU" ]; then \
+		echo "❌ Invalid DEVICE '$(DEVICE_UPPER)'. Use CPU, GPU, or NPU."; \
 		exit 1; \
 	fi; \
 	if [ "$(DEVICE_UPPER)" = "GPU" ]; then \
 		if [ ! -d /dev/dri ] || [ -z "$$(ls -A /dev/dri 2>/dev/null)" ]; then \
 			echo "❌ GPU mode requires /dev/dri but it is not available."; \
+			exit 1; \
+		fi; \
+	fi; \
+	if [ "$(DEVICE_UPPER)" = "NPU" ]; then \
+		if [ ! -c "$(NPU_DEVICE_PATH)" ]; then \
+			echo "❌ NPU mode requires device node $(NPU_DEVICE_PATH), but it is not available."; \
 			exit 1; \
 		fi; \
 	fi
@@ -274,7 +288,7 @@ build:
 	@echo "  Image:            $(REGISTRY)$(SERVICE_NAME):$(TAG)"
 	@echo "  COPYLEFT_SOURCES: $(COPYLEFT_SOURCES)"
 	@echo ""
-	docker compose build --build-arg COPYLEFT_SOURCES=$(COPYLEFT_SOURCES)
+	docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) build --build-arg COPYLEFT_SOURCES=$(COPYLEFT_SOURCES)
 	@echo ""
 	@echo "✅ Build complete: $(REGISTRY)$(SERVICE_NAME):$(TAG)"
 
@@ -302,7 +316,7 @@ deploy: validate
 	@echo "→ Starting stack (ADK profile: $(if $(filter true,$(USE_ADK)),active,inactive))..."
 	@bash -c '\
 		$(EXPORT_RUNTIME_ENV)
-		docker compose $(COMPOSE_PROFILE_FLAGS) up --detach --remove-orphans
+		docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) $(COMPOSE_PROFILE_FLAGS) up --detach --remove-orphans
 	'
 	@echo ""
 	@echo "✅ Stack is up. Dashboard: http://localhost:$(PORT)"
@@ -319,7 +333,7 @@ deploy-build-from-source: build
 ps:
 	@bash -c '\
 		$(EXPORT_RUNTIME_ENV)
-		docker compose $(COMPOSE_PROFILE_FLAGS) ps
+		docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) $(COMPOSE_PROFILE_FLAGS) ps
 	'
 
 status: ps
@@ -327,7 +341,7 @@ status: ps
 logs:
 	@bash -c '\
 		$(EXPORT_RUNTIME_ENV)
-		docker compose $(COMPOSE_PROFILE_FLAGS) logs -f $(SERVICE)
+		docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) $(COMPOSE_PROFILE_FLAGS) logs -f $(SERVICE)
 	'
 
 SERVICE ?=
@@ -341,17 +355,17 @@ clean:
 	@echo "Stopping all containers for the Live Video Alert Agent stack (volumes are preserved)"
 	@bash -c '\
 		$(EXPORT_RUNTIME_ENV)
-		docker compose $(COMPOSE_PROFILE_FLAGS) down --remove-orphans
+		docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) $(COMPOSE_PROFILE_FLAGS) down --remove-orphans
 	'
 
 clean-data:
 	@echo "Stopping all containers and deleting volumes for the Live Video Alert Agent stack"
 	@bash -c '\
 		$(EXPORT_RUNTIME_ENV)
-		docker compose $(COMPOSE_PROFILE_FLAGS) down --volumes --remove-orphans
+		docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) $(COMPOSE_PROFILE_FLAGS) down --volumes --remove-orphans
 	'
 	docker system prune -a --volumes -f
-	docker compose down -v
+	docker compose $(COMPOSE_PROJECT_FLAGS) $(COMPOSE_FILE_FLAGS) down -v
 
 
 # ==============================================================================

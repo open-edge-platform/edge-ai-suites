@@ -133,6 +133,7 @@ ovms:
 
   trustedCompute:
     enabled: false
+    tc_gpu_enabled: false
 
 # =============================================================================
 # Metrics Manager subchart overrides

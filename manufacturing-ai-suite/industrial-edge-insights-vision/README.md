@@ -5,7 +5,7 @@ Users can refer to one of many samples built from the template as a reference.
 
 By adding minimal application specific prerequisites, this template can help you successfully deploy your application on the edge.
 
-Both compose based as well as helm based deployments are supported by this application template.
+Both Docker Compose based as well as Helm based deployments are supported by this application template.
 
 ## Description
 
@@ -29,7 +29,7 @@ It consists of the following microservices:
 
 ### Directory structure
 
-Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.
+The following directory structure, consisting of generic deployment code as well as pre-baked sample applications, is provided.
 
 <br>
 
@@ -64,7 +64,7 @@ Following directory structure consisting of generic deployment code as well as p
     sample_stop.sh
     benchmark_start.sh
 
- - **apps**: containing application specific prerequisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
+ - **apps**: containing application specific prerequisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for Docker based deployments.
 
     - `configs/`:
             associated container configurations such as DL Streamer Pipeline Server configuration, etc.
@@ -111,11 +111,8 @@ General instructions for docker based deployment is as follows.
 6. Run `sample_stop.sh` to abort any running pipeline(s).
 7. Bring the services down by `docker compose down`.
 
-Using the template above, several industrial recipes have been provided for users to deploy using Docker Compose.
-Click on the applications below to get started.
-
-- [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
-- [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
+Using the template above, two industrial recipes, Pallet Defect Detection and PCB Anomaly Detection, have been provided for users to deploy using Docker Compose.
+Follow the selected path in [Get Started](./docs/user-guide/get-started.md) guide to deploy the sample applications.
 
 ---
 

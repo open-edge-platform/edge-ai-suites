@@ -33,7 +33,16 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export OVMS_TARGET_DEVICE=GPU
+   export RENDER_DEVICE_GID=$(stat -c "%g" /dev/dri/render*) #run this when deploying for GPU or NPU
    export HF_TOKEN=<your-huggingface-token>
+   ```
+
+   You can also use a mixed configuration (for example, GPU for VLM and NPU for LLM):
+
+   ```bash
+   export VLM_TARGET_DEVICE=GPU
+   export LLM_TARGET_DEVICE=NPU
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -53,24 +62,31 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export LOG_LEVEL=DEBUG
    ```
 
-   **Agentic dispatch — choose one mode:**
+   > **Model Selection:** Use pre-converted OpenVINO IR models from the
+   > [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
+   > for best compatibility. These models are optimized for OVMS and require no
+   > additional conversion. Use models optimized for NPU while deploying on NPU.
+   
+   **Agentic dispatch**
 
-   *Option A — Google ADK with local OVMS (default, fully offline):*
+   The `alert-agent-service` microservice handles agentic dispatch automatically.
+
+   If you want ADK (LLM-reasoned) mode, enable the LLM service:
 
    ```bash
-   export USE_ADK=true
    export COMPOSE_PROFILES=adk-llm
-   export LLM_MODEL=<llm-model-name>   #Example: Openvino/Phi-4-mini-instruct-int4-ov
+   export LLM_MODEL=OpenVINO/Phi-4-mini-instruct-int4-ov
+   export AGENT_MODE=true
    ```
 
-   *Option B — Rule-based (no LLM needed):*
+   If you want rule-based mode
 
    ```bash
-   export USE_ADK=false
+   export AGENT_MODE=false
    export COMPOSE_PROFILES=[]
    ```
 
-   **Action tools** (configure the ones you want active):
+   **Action tools**
 
    ```bash
    # Webhook (receives HMAC-signed POST)
@@ -78,7 +94,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export WEBHOOK_SECRET=<hmac-secret>          # optional
 
    # MQTT
-   export MQTT_BROKER=192.168.1.20
+   export MQTT_BROKER=<MQTT_Broker_url>
    export MQTT_PORT=1883
    export MQTT_USERNAME=<username>              # optional
    export MQTT_PASSWORD=<password>              # optional
@@ -99,7 +115,13 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    Run the following command from the project root:
 
    ```bash
-   docker compose up -d
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+
+   For NPU deployments:
+
+   ```bash
+   docker compose -f docker/docker-compose.yml -f docker/docker-compose.npu.yml up -d
    ```
 
    **Note:**
@@ -114,6 +136,9 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    docker ps
    ```
+
+   Confirm that `live-video-alert-agent` and `alert-agent-service` are both
+   running. If you enabled MQTT support, you may also see `alert-mqtt`.
 
    View application logs:
 
@@ -194,27 +219,27 @@ curl http://localhost:9000/tools
 To stop all services:
 
 ```bash
-docker compose down
+docker compose -f docker/docker-compose.yml down
 ```
 
 ### Restarting After Changes
 
 ```bash
 # Restart both services
-docker compose restart
+docker compose -f docker/docker-compose.yml restart
 
 # Restart only the application (VLM service keeps running)
-docker compose restart live-video-alert-agent
+docker compose -f docker/docker-compose.yml restart live-video-alert-agent
 ```
 
 ### Viewing Logs
 
 ```bash
-# Follow all logs
-docker compose logs -f
-
 # VLM service logs
 docker logs -f ovms-vlm
+
+# Alert agent service logs
+docker logs -f alert-agent-service
 
 # Application logs
 docker logs -f live-video-alert-agent
@@ -226,11 +251,11 @@ If you need to re-download the model or switch models:
 
 ```bash
 # Remove everything including model cache
-docker compose down -v
+docker compose -f docker/docker-compose.yml down -v
 
 # Set environment and start fresh
 export RTSP_URL=rtsp://<camera-ip>:<port>/stream
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ## Troubleshooting
@@ -252,15 +277,15 @@ docker exec ovms-vlm ls -lah /models    # Should be owned by ovms
 
 ```bash
 # Check status
-docker compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # View logs
-docker compose logs -f
+docker compose -f docker/docker-compose.yml logs -f
 
 # Clean restart
-docker compose down -v
+docker compose -f docker/docker-compose.yml down -v
 export RTSP_URL=<your-url>
-docker compose up -d
+docker compose -f docker/docker-compose.yml logs -f up -d
 ```
 
 ## Learn More

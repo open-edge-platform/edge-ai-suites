@@ -5,7 +5,7 @@ apiVersion: v2
 name: live-video-alert-agent
 description: A Helm chart for deploying the Live Video Alert Agent with OpenVINO VLM inference
 type: application
-version: 2026.1.0-rc1-helm
+version: 2026.1.0-helm
 appVersion: "2.0.0"
 
 dependencies:
@@ -19,9 +19,12 @@ dependencies:
   - name: app
     version: 1.0.1
     repository: "file://subchart/app"
-  - name: metrics-service
-    version: 1.0.1
-    repository: "file://subchart/metrics-service"
-  - name: collector
-    version: 1.0.1
-    repository: "file://subchart/collector"
+  - name: mqtt
+    version: 1.0.0
+    repository: "file://subchart/mqtt"
+  - name: alert-agent-service
+    version: 1.0.0
+    repository: "file://subchart/alert-agent-service"
+  - name: metrics-manager
+    version: "2026.1.0-helm"
+    repository: "file://subchart/metrics-manager"

@@ -11,6 +11,8 @@ services:
     hostname: vllm-server
     restart: unless-stopped
     shm_size: ${VLLM_SHM_SIZE}
+    read_only: true
+    user: "1000:1000"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
@@ -26,8 +28,16 @@ services:
     volumes:
       - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
       - "/run/udev:/run/udev:ro"
-      - ./configs/vllm/models:/lora-adapters
-      - ./configs/vllm/huggingface:/root/.cache/huggingface
+      # Lora Adapter files
+      - ./configs/vllm/models:${VLLM_HOME_DIR}/lora-adapters
+      # HuggingFace cache
+      - ./configs/vllm/huggingface:${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/huggingface
+      # Writable caches
+      - vol_vllm_server_tmpfs:/tmp:rw
+      - vol_vllm_server_tmpfs:${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}:rw
+      - vol_vllm_server_tmpfs:${VLLM_HOME_DIR}/.config:rw
+      - vol_vllm_server_tmpfs:${VLLM_HOME_DIR}/.triton:rw
+
     environment:
       VLLM_WORKER_MULTIPROC_METHOD: ${VLLM_WORKER_MULTIPROC_METHOD}
       no_proxy: "${no_proxy},${HOST_IP},seaweedfs-filer"
@@ -38,10 +48,15 @@ services:
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
       VLLM_LOGGING_LEVEL: ${LOG_LEVEL}
+      HOME: /home/ubuntu
+      XDG_CACHE_HOME: ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}
+      HF_HOME: ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/huggingface
+      HUGGINGFACE_HUB_CACHE: ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/huggingface
+      TRANSFORMERS_CACHE: ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/huggingface
     command:
       - vllm
       - serve
-      - ${VLLM_MODEL_NAME}
+      - ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/${VLLM_MODEL_DIR}
       - --dtype=${VLLM_DTYPE}
       - --enforce-eager
       - --port
@@ -59,7 +74,7 @@ services:
       - ${VLLM_SERVED_MODEL_NAME}
       - --enable-lora
       - --lora-modules
-      - ${VLLM_ADAPTER_NAME}=/lora-adapters/qwen3.5-2b-vlm-weld-explainability-lora/
+      - ${VLLM_ADAPTER_NAME}=${VLLM_HOME_DIR}/${VLLM_ADAPTER_DIR}
       - -tp=${VLLM_TENSOR_PARALLEL_SIZE}
       - --quantization
       - ${VLLM_QUANTIZATION}
@@ -75,12 +90,17 @@ services:
     build:
       context: $PWD/insights-workbench
       dockerfile: $PWD/insights-workbench/Dockerfile
+      args:
+        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
+        TIMESERIES_UID: ${TIMESERIES_UID}
     restart: unless-stopped
     depends_on:
       - ia-influxdb
     security_opt:
     - no-new-privileges
-    read_only: false
+    read_only: true
+    volumes:
+      - vol_insights_workbench_tmpfs:/tmp:rw
     environment:
       no_proxy: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
       NO_PROXY: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
@@ -100,3 +120,15 @@ services:
       VLLM_ADAPTER_NAME: ${VLLM_ADAPTER_NAME}
     networks:
       - timeseries_network
+
+volumes:
+  vol_insights_workbench_tmpfs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  vol_vllm_server_tmpfs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

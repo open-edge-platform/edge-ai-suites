@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
 
 from src.core.agent_manager import AgentManager
+from src.core.alert_service_client import AlertServiceClient
 from src.config import settings, setup_logging
 from src.schemas.api import (
     HealthResponse,
@@ -45,40 +46,32 @@ _startup_time: float = time.monotonic()
 
 manager: Optional[AgentManager] = None
 _manager_task: Optional[asyncio.Task] = None
+_alert_service: Optional[AlertServiceClient] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global manager, _manager_task
+    global manager, _manager_task, _alert_service
 
     logger.info(
         f"Starting Live Video Alert Agent | VLM={settings.VLM_URL} "
-        f"model={settings.MODEL_NAME} ADK={'on' if settings.USE_ADK else 'off'}"
+        f"model={settings.MODEL_NAME} "
+        f"alert_service={settings.ALERT_AGENT_SERVICE_URL}"
     )
 
-    # Initialize MCP servers if enabled
-    mcp_tools = []
-    mcp_schemas = []
+    # Initialize MCP servers if enabled (for status/tools endpoints)
     if settings.MCP_ENABLED:
         logger.info("Initializing MCP servers...")
         mcp_tools, mcp_schemas = await initialize_mcp_servers()
-        if mcp_tools:
-            # Register MCP tools with the alert agent
-            from src.agentic import register_mcp_tools
-            register_mcp_tools(mcp_tools, mcp_schemas)
         logger.info(f"MCP initialization complete: {len(mcp_tools)} tool(s) available")
+
+    # Create alert service client for proxying tool endpoints
+    _alert_service = AlertServiceClient()
 
     manager = AgentManager(
         vlm_url=settings.VLM_URL,
         model_name=settings.MODEL_NAME,
     )
-
-    # If MCP tools were registered, augment alert configs and reinit ADK
-    # so the agent prompt and tool list include MCP server details and tools.
-    if settings.MCP_ENABLED and mcp_tools:
-        manager.augment_alerts_with_mcp_tools()
-        if settings.USE_ADK:
-            manager.action_agent.reinit_adk()
 
     if settings.RTSP_URL:
         manager.add_stream("default", settings.RTSP_URL)
@@ -98,13 +91,15 @@ async def lifespan(app: FastAPI):
     # Graceful shutdown
     logger.info("Shutting down ...")
     
-    # Shutdown MCP servers and clear tools from alert agent
+    # Shutdown MCP servers
     if settings.MCP_ENABLED:
         logger.info("Shutting down MCP servers...")
-        from src.agentic import clear_mcp_tools
-        clear_mcp_tools()
         await shutdown_mcp_servers()
     
+    # Close alert service client
+    if _alert_service:
+        await _alert_service.close()
+
     if manager:
         manager.stop()
     if _manager_task and not _manager_task.done():
@@ -412,10 +407,11 @@ async def update_alerts_config(
 
 @app.get("/tools", tags=["Tools"])
 async def list_tools():
-    """List all registered action tools and their configuration status."""
-    from src.agentic import get_available_tools
-    tools = get_available_tools()
-    return JSONResponse(content={"tools": tools})
+    """List all registered action tools (proxied from alert-agent-service)."""
+    if _alert_service is None:
+        raise HTTPException(status_code=503, detail="Alert service client not ready")
+    result = await _alert_service.list_tools()
+    return JSONResponse(content=result)
 
 
 @app.post("/tools/{tool_name}/invoke", tags=["Tools"])
@@ -423,42 +419,21 @@ async def invoke_tool(
     tool_name: str,
     request: ToolInvokeRequest = Body(default=None),
 ):
-    """Manually invoke a registered tool for testing."""
-    from src.agentic.alert_agent import _TOOL_MAP
-
-    fn = _TOOL_MAP.get(tool_name)
-    if fn is None:
-        raise HTTPException(status_code=404, detail=f"Tool '{tool_name}' not found")
-
+    """Manually invoke a registered tool (proxied to alert-agent-service)."""
+    if _alert_service is None:
+        raise HTTPException(status_code=503, detail="Alert service client not ready")
     params = request.parameters if request else {}
-    t0 = time.monotonic()
-    try:
-        result = await fn(**params)
-        duration_ms = (time.monotonic() - t0) * 1000
-        return ToolInvokeResponse(
-            tool=tool_name,
-            status="success",
-            result=result,
-            duration_ms=round(duration_ms, 1),
-        )
-    except Exception as exc:
-        duration_ms = (time.monotonic() - t0) * 1000
-        return ToolInvokeResponse(
-            tool=tool_name,
-            status="error",
-            result={"error": str(exc)},
-            duration_ms=round(duration_ms, 1),
-        )
+    result = await _alert_service.invoke_tool(tool_name, params)
+    return JSONResponse(content=result)
 
 
 @app.post("/tools/reload", tags=["Tools"])
 async def reload_tools_endpoint():
-    """Reload tools from resources/tools.json without restarting the app."""
-    from src.agentic import reload_tools
-    count = reload_tools()
-    if manager is not None:
-        manager.reload_action_agent()
-    return JSONResponse(content={"status": "ok", "tools_loaded": count})
+    """Reload tools in the alert-agent-service without restarting."""
+    if _alert_service is None:
+        raise HTTPException(status_code=503, detail="Alert service client not ready")
+    result = await _alert_service.reload_tools()
+    return JSONResponse(content=result)
 
 
 @app.get("/mcp/status", tags=["MCP"])
@@ -520,20 +495,10 @@ async def mcp_reload():
         })
     
     try:
-        # Clear existing MCP tools from alert agent
-        from src.agentic import clear_mcp_tools, register_mcp_tools
-        clear_mcp_tools()
-        
-        # Reload MCP servers and get new tools
+        # Reload MCP servers
         from src.agentic.mcp_client import initialize_mcp_servers, shutdown_mcp_servers
         await shutdown_mcp_servers()
         mcp_tools, mcp_schemas = await initialize_mcp_servers()
-        
-        # Register new tools with alert agent
-        if mcp_tools:
-            register_mcp_tools(mcp_tools, mcp_schemas)
-        if manager is not None:
-            manager.reload_action_agent()
         
         return JSONResponse(content={
             "status": "ok",
@@ -576,20 +541,20 @@ async def invoke_mcp_tool(
     try:
         result = await server.call_tool(tool_name, params)
         duration_ms = (time.monotonic() - t0) * 1000
-        return ToolInvokeResponse(
-            tool=tool_name,
-            status="success" if result.get("status") != "error" else "error",
-            result=result,
-            duration_ms=round(duration_ms, 1),
-        )
+        return JSONResponse(content={
+            "tool": tool_name,
+            "status": "success" if result.get("status") != "error" else "error",
+            "result": result,
+            "duration_ms": round(duration_ms, 1),
+        })
     except Exception as exc:
         duration_ms = (time.monotonic() - t0) * 1000
-        return ToolInvokeResponse(
-            tool=tool_name,
-            status="error",
-            result={"error": str(exc)},
-            duration_ms=round(duration_ms, 1),
-        )
+        return JSONResponse(content={
+            "tool": tool_name,
+            "status": "error",
+            "result": {"error": str(exc)},
+            "duration_ms": round(duration_ms, 1),
+        })
 
 @app.get("/runtime-config.js")
 async def runtime_config():

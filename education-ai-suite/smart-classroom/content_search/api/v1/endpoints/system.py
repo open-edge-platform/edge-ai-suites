@@ -6,7 +6,7 @@
 import os
 import json
 import socket
-
+from utils.config import DEFAULT_VLM_MODEL
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -24,7 +24,7 @@ async def get_config():
     """Return Content Search model and database configuration."""
     vs_enabled = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
     return {
-        "vlm_model": os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct"),
+        "vlm_model": os.getenv("VLM_MODEL_NAME", DEFAULT_VLM_MODEL),
         "visual_embedding_model": os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-xlm-roberta-base-vit-b-32"),
         "doc_embedding_model": os.getenv("DOC_EMBEDDING_MODEL", "intfloat/multilingual-e5-small"),
         "reranker_model": os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-base"),
@@ -83,7 +83,7 @@ async def health_check(db: Session = Depends(get_db)):
     # VLM and video_preprocess only required when video summarization is enabled
     if vs_enabled:
         vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
-        vlm_port = os.getenv("VLM_PORT", "9900")
+        vlm_port = os.getenv("VLM_PORT", "8000")
         vlm_status = await _check_http_health(f"http://{vlm_host}:{vlm_port}/health")
 
         preprocess_host = os.getenv("PREPROCESS_HOST", "127.0.0.1")

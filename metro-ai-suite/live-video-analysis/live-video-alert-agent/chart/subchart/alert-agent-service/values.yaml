@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  registry: intel
+  repository: alert-agent-service
+  tag: latest
+
+port: 8000
+
+service:
+  type: ClusterIP
+  port: 8000
+
+agentMode: true
+llmTimeout: "10.0"
+snapshotDir: "/app/snapshots"
+webhookUrl: ""
+webhookSecret: ""
+mqttPort: 1883
+mqttUsername: ""
+mqttPassword: ""
+mqttBaseTopic: "alerts/live-video"
+mcpEnabled: true
+actionWorkers: 2
+logLevel: "INFO"
+
+healthcheck:
+  path: /api/v1/health
+  startupInitialDelay: 10
+  startupPeriod: 5
+  startupFailureThreshold: 12
+  period: 30
+  timeout: 10
+  failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
+subscriptionDefault:
+  tools:
+    - log_alert
+  dedup:
+    enabled: true
+    strategy: field_hash
+    fields:
+      - source_id
+    window_seconds: 30
+    on_missing: skip
+
+subscriptions:
+  - alert_name: vehicle
+    tools:
+      - log_alert
+      - capture_snapshot
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 30
+      on_missing: skip
+
+  - alert_name: Person Detection
+    tools:
+      - log_alert
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 60
+      on_missing: skip
+
+  - alert_name: Altercation
+    tools:
+      - log_alert
+      - capture_snapshot
+    dedup:
+      enabled: true
+      strategy: field_hash
+      fields:
+        - source_id
+      window_seconds: 15
+      on_missing: skip
+    escalation:
+      threshold_consecutive: 3
+      additional_tools:
+        - publish_mqtt
+        - trigger_webhook

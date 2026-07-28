@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  repository: eclipse-mosquitto
+  tag: "2"
+
+port: 1883
+
+service:
+  type: ClusterIP
+  port: 1883
+
+storage:
+  data:
+    size: "1Gi"
+    storageClassName: ""
+  log:
+    size: "256Mi"
+    storageClassName: ""
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "128Mi"
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

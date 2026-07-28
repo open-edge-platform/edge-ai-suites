@@ -13,9 +13,6 @@ The provided helper uses the ephemeral model-download container flow from the [M
 
   ```bash
   export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-
-  # Optional: To download the model to a different path (for example, ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag for live-video-captioning-rag standalone deployment), export:
-  export MODEL_PATH=~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
   ```
 
 ## Usage
@@ -25,16 +22,16 @@ Use the helper script with the following arguments:
 ```bash
 ./model_download_scripts/download_models.sh \
   --model <huggingface-model-id> \
-  --type <vlm|vision|llm> \
+  --type <vlm|vision> \
   --weight-format <int4|int8|fp16> \
-  --device <CPU|GPU>
+  --device <CPU|GPU|NPU>
 ```
 
 **Parameters:**
 - `--model`: Hugging Face model identifier (for example, `OpenGVLab/InternVL2-1B`).
-- `--type`: Model category. Use `vlm` for Vision Language Models, `vision` for object-detection models, or `llm` for text-only LLMs.
+- `--type`: Model category. Use `vlm` for Vision Language Models, `vision` for object-detection models.
 - `--weight-format`: Precision/quantization format. Supported values are `int4`, `int8`, and `fp16`.
-- `--device`: Target conversion device (for example, `CPU` or `GPU`, depending on host support).
+- `--device`: Target conversion device (for example, `CPU`, `GPU` or `NPU`, depending on host support).
 
 **Weight format options:**
 
@@ -80,7 +77,7 @@ You can use the following commands to run conversion for the desired target devi
       --device NPU
     ```
 
-    > Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
+    > Note: NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 You can also download and convert for multiple target devices in a single command by passing a comma-separated `--device` list:
 
@@ -102,7 +99,7 @@ Each VLM output directory is placed under its target device path so the UI can a
 | `GPU` | `ov_models/gpu/InternVL2-1B` | `GPU` |
 | `NPU` | `ov_models/npu/InternVL2-1B` | `NPU` |
 
-### VLM Models Supported/Validated
+### VLM Models Validated
 
 The following VLM models are validated:
 
@@ -113,7 +110,12 @@ The following VLM models are validated:
 | openbmb/MiniCPM-V-2_6  | CPU, GPU, NPU | v2026.1 |
 | Qwen/Qwen2-VL-2B-Instruct | CPU, GPU, NPU | v2025.4.1 |
 
-> Note: Set `.env` `OVMS_RELEASE_TAG` to the version listed above. Some models require an older OVMS `transformers` version, and using a different tag can cause OpenVINO conversion to fail.
+> **Note:** `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the model download/conversion flow. Refer to the validated-model table above, or consult the official OpenVINO documentation for supported models and their corresponding OVMS versions. Using a different tag can change the bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
+>
+> **Note:** If you want to use newer Hugging Face models, you may need a newer OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
+>
+> **Note:** Runtime compatibility also matters. Live Video Captioning runs models with DL Streamer, so DL Streamer/OpenVINO must also support the converted model at runtime. If you test newer stacks, you can try weekly images from [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating [compose.yaml](../../../compose.yaml) or Helm chart [values.yaml](../../../charts/subcharts/dlstreamer-pipeline-server/values.yaml). Weekly images may include stability issues.
+As of the time of writing, the latest stable DL Streamer release is `2026.1.0`, built on top of `OpenVINO v2026.1`.
 
 ## Optional: Download an Object-Detection Model
 
@@ -131,26 +133,8 @@ Then enable detection in `.env`:
 ENABLE_DETECTION_PIPELINE=true
 ```
 
-## Optional: Change the Conversion Device Configuration
-
-For VLM conversion, set the target device:
-
-```bash
-./model_download_scripts/download_models.sh \
-  --model OpenGVLab/InternVL2-1B \
-  --type vlm \
-  --weight-format int8 \
-  --device CPU
-```
-
-Valid device values depend on the model-download container and host hardware. CPU is the safest default.
-
-## RAG and LLM models
-
-RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download.md).
-
 ## Troubleshooting
 
 - If Docker cannot pull `intel/model-download:<tag>`, check the `MODEL_DOWNLOAD_IMAGE_TAG` value in `.env` (defaults to `latest`; this is independent of the application image `TAG`).
 - If a gated model fails with an authentication error, set `HUGGINGFACEHUB_API_TOKEN` and rerun the command.
-- If a download process is interrupted or fails due to network issues, remove the `ovms_model` folder and the model-specific folder from the failed run (typically named after the model you specified in command depends on the model type: `ov_models/` for VLMs, `ov_detection_models/` for vision models, or `llm_models/` for LLM models). Then rerun the command. The ephemeral model-download container is automatically cleaned up when the helper exits.
+- If a download process is interrupted or fails due to network issues, remove the `ovms_model` folder and the model-specific folder from the failed run (typically named after the model you specified in command depends on the model type: `ov_models/` for VLMs, `ov_detection_models/` for vision models). Then rerun the command. The ephemeral model-download container is automatically cleaned up when the helper exits.

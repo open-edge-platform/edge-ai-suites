@@ -23,10 +23,9 @@ The application ingests RTSP streams, performs VLM inference, and delivers real-
 RTSP Source → StreamManager (OpenCV/Circular Buffer)
             ↓
        AgentManager (Orchestrator) ↔ VLM Service (OpenAI-compatible API)
-            ↓
+            ↓                     ↔ Alert Agent Service (action dispatch)
        EventManager (SSE Pub/Sub) → Dashboard UI
 ```
-
 ## Learn More
 
 - [Get Started](./docs/user-guide/get-started.md) - Quick deployment guide

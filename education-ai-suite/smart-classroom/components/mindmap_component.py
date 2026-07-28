@@ -41,7 +41,7 @@ class MindmapComponent(PipelineComponent):
                 enable_thinking=False
             )
 
-            full_mindmap = self.model.generate(mindmap_prompt, False)
+            full_mindmap = self.model.generate(mindmap_prompt, stream=False)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

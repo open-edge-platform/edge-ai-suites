@@ -40,7 +40,7 @@ from providers.video_preprocess.frame_sampler import FrameSampler
 from providers.local_storage.store import LocalStore
 
 _vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
-_vlm_port = os.getenv("VLM_PORT", "9900")
+_vlm_port = os.getenv("VLM_PORT", "8000")
 VLM_ENDPOINT: str = f"http://{_vlm_host}:{_vlm_port}/v1/chat/completions"
 
 VLM_TIMEOUT_SECONDS: int = int(os.getenv("VLM_TIMEOUT_SECONDS", 300))

@@ -48,6 +48,7 @@ per-frame delay signal.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import threading
 import time
@@ -206,18 +207,32 @@ class LatencyTail:
         k = max(0, int(round(len(s) * 0.99)) - 1)
         return s[k]
 
+    @staticmethod
+    def _nearest_rank(values: list[float], q: float) -> float:
+        if not values:
+            return 0.0
+        s = sorted(values)
+        k = max(1, min(len(s), int(math.ceil(q * len(s)))))
+        return s[k - 1]
+
     def snapshot(self) -> dict[str, float]:
         with self._lock:
             infer = list(self._recent_infer_ms)
             elem_snap = {name: list(dq) for name, dq in self._recent_elem_ms.items()}
             e2e = list(self._recent_e2e_ms)
         infer_mean = self._mean(infer)
-        infer_p99 = self._p99(infer)
+        infer_p50 = self._nearest_rank(infer, 0.50)
+        infer_p90 = self._nearest_rank(infer, 0.90)
+        infer_p95 = self._nearest_rank(infer, 0.95)
+        infer_p99 = self._nearest_rank(infer, 0.99)
         # Sum-of-per-element for the processing chain. Skip elements with
         # no data yet so we don't publish a low-ball number during the
         # first frame or two.
         elem_means = [self._mean(v) for v in elem_snap.values() if v]
-        elem_p99s = [self._p99(v) for v in elem_snap.values() if v]
+        elem_p50s = [self._nearest_rank(v, 0.50) for v in elem_snap.values() if v]
+        elem_p90s = [self._nearest_rank(v, 0.90) for v in elem_snap.values() if v]
+        elem_p95s = [self._nearest_rank(v, 0.95) for v in elem_snap.values() if v]
+        elem_p99s = [self._nearest_rank(v, 0.99) for v in elem_snap.values() if v]
         # Report processing once we have at least an inference element and
         # at least one render/encode element observed. Requiring every
         # historical element name to be present can pin this to zero when
@@ -231,21 +246,39 @@ class LatencyTail:
         )
         if has_infer and has_render and elem_means:
             proc_mean = sum(elem_means)
+            proc_p50 = sum(elem_p50s)
+            proc_p90 = sum(elem_p90s)
+            proc_p95 = sum(elem_p95s)
             proc_p99 = sum(elem_p99s)
         else:
             proc_mean = 0.0
+            proc_p50 = 0.0
+            proc_p90 = 0.0
+            proc_p95 = 0.0
             proc_p99 = 0.0
         e2e_mean = self._mean(e2e)
-        e2e_p99 = self._p99(e2e)
+        e2e_p50 = self._nearest_rank(e2e, 0.50)
+        e2e_p90 = self._nearest_rank(e2e, 0.90)
+        e2e_p95 = self._nearest_rank(e2e, 0.95)
+        e2e_p99 = self._nearest_rank(e2e, 0.99)
         return {
             "infer_mean_ms": infer_mean,
+            "infer_p50_ms": infer_p50,
+            "infer_p90_ms": infer_p90,
+            "infer_p95_ms": infer_p95,
             "infer_p99_ms": infer_p99,
             # Processing-chain sum — "camera-to-screen" for a live source.
             "processing_mean_ms": proc_mean,
+            "processing_p50_ms": proc_p50,
+            "processing_p90_ms": proc_p90,
+            "processing_p95_ms": proc_p95,
             "processing_p99_ms": proc_p99,
             # Full source→sink residence — includes decode + any pacing.
             # Kept for diagnostics, hidden from the primary UI.
             "e2e_mean_ms": e2e_mean,
+            "e2e_p50_ms": e2e_p50,
+            "e2e_p90_ms": e2e_p90,
+            "e2e_p95_ms": e2e_p95,
             "e2e_p99_ms": e2e_p99,
             # Back-compat aliases used by older UI/consumers.
             "total_mean_ms": e2e_mean,

@@ -15,10 +15,11 @@ from fastapi.responses import StreamingResponse
 from ..config import (
     ENABLE_EMBEDDING,
     MQTT_TOPIC_PREFIX,
-    NPU_FORCED_RESOLUTION,
     PIPELINE_SERVER_URL,
     WEBRTC_BITRATE,
     VLM_CACHE_SIZE,
+    NPU_MAX_PROMPT_LENGTH,
+    NPU_MIN_RESPONSE_LENGTH,
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
@@ -123,20 +124,6 @@ class PipelineServer:
             },
         )
 
-    # TODO: This is a temporary workaround to force lower resolution for NPU runs that don't support higher resolutions.
-    # This requires changes to the dlstreamer pipeline server API and will remove once the fix is available.
-    def _normalize_pipeline_name_for_vlm_device(self, pipeline_name: str, vlm_device: str) -> str:
-        """Normalize pipeline aliases based on VLM device constraints.
-
-        NPU runs must avoid internal *_Default_Resolution aliases because NPU
-        resolution is enforced internally by backend parameters.
-        """
-        if (vlm_device or "").strip().lower() != "npu":
-            return pipeline_name
-        if not (pipeline_name or "").endswith(self.DEFAULT_RESOLUTION_SUFFIX):
-            return pipeline_name
-        return pipeline_name[: -len(self.DEFAULT_RESOLUTION_SUFFIX)]
-
     def _public_pipeline_name(self, pipeline_name: str) -> str:
         """Return a UI/API-safe pipeline name without internal alias suffixes."""
         if not (pipeline_name or "").endswith(self.DEFAULT_RESOLUTION_SUFFIX):
@@ -193,25 +180,10 @@ class PipelineServer:
             },
         }
 
-        # TODO: This is a temporary workaround to force lower resolution for NPU runs that don't support higher resolutions.
-        # Currently, forced 160x160 for NPU inference to ensure stable frame encoding and MQTT image publishing.
-        # This requires changes to the dlstreamer pipeline server API and will remove once the fix is available.
-        is_npu_pipeline = selected_vlm_device == "npu"
-
-        if is_npu_pipeline:
-            frame_width = NPU_FORCED_RESOLUTION
-            frame_height = NPU_FORCED_RESOLUTION
-            logger.debug(
-                f"NPU device selected: forcing resolution to {NPU_FORCED_RESOLUTION}x{NPU_FORCED_RESOLUTION}"
-            )
-        else:
-            frame_width = req.frameWidth
-            frame_height = req.frameHeight
-
         optional_parameters = {
             "frame_rate": req.frameRate,
-            "frame_width": frame_width,
-            "frame_height": frame_height,
+            "frame_width": req.frameWidth,
+            "frame_height": req.frameHeight,
         }
         parameters.update(
             {key: value for key, value in optional_parameters.items() if value is not None}
@@ -299,7 +271,10 @@ class PipelineServer:
             if selected_vlm_device == "npu":
                 captioner_properties["generation-config"] = (
                     f"max_new_tokens={req.maxNewTokens},num_beams=1,do_sample=false,"
-                    "temperature=0.1,repetition_penalty=1.1,MAX_PROMPT_LEN=4096"
+                    "temperature=0.1,repetition_penalty=1.1,"
+                )
+                captioner_properties["pipeline-config"] = (
+                    f"NPU.MAX_PROMPT_LEN={NPU_MAX_PROMPT_LENGTH},NPU.MIN_RESPONSE_LEN={NPU_MIN_RESPONSE_LENGTH}"
                 )
                 # NPU/VLM must not receive scheduler configuration.
                 captioner_properties.pop("scheduler-config", None)
@@ -367,10 +342,6 @@ class PipelineServer:
         using_camera_source = self._is_linux_video_device(requested_source)
 
         pipeline_name = self._resolve_pipeline_name_from_ui(req, requested_source)
-        pipeline_name = self._normalize_pipeline_name_for_vlm_device(
-            pipeline_name,
-            (req.vlmDevice or ""),
-        )
         if using_camera_source and not self._is_camera_pipeline_name(pipeline_name):
             detail_message = (
                 "Selected stream source requires a camera-compatible pipeline, "
