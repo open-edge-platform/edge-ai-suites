@@ -1,8 +1,10 @@
 # `evaluate_rules.py` Templates (custom rule path only)
 
 Needed **only** on the custom rule path (Q2 = yes / schema extended, or custom
-alert behavior beyond warn/critical). On the default path no rule file exists
-— the built-in `defaultRuleEvaluator` fires on parsed `severity=warn|critical`.
+alert behavior beyond warn/critical). Every extended schema requires this file;
+the consistency gate rejects an extension with no rule before any side effect.
+On the base path no rule file exists — the built-in `defaultRuleEvaluator`
+fires on parsed `severity=warn|critical`.
 
 Contract:
 
@@ -12,6 +14,9 @@ Contract:
   extensions). The register consistency gate rejects rule files that read
   undeclared fields (`rule_fields_not_in_schema`).
 - Generate it from the LOCAL_PROMPT output fields and the Final Schema.
+- Define how every extension is handled by the alert policy, alert description,
+  or a documented non-alerting/default branch. The static gate verifies field
+  ownership but cannot prove that every extension changes the decision.
 - Pass its path as `evaluate_rules_path` to step 1 (`action=generate_task`).
   The file may live anywhere — the server stages it to
   `use-cases/<use_case>/evaluate_rules.py` in its repo, smoke-tests the staged
@@ -46,11 +51,12 @@ if __name__ == "__main__":
 Adjust `excluded` to the use case's safe/no-incident events, and the extension
 field reads (`zone_id` above) to the declared extensions.
 
-## Boolean template (only when boolean extensions were explicitly requested)
+## Boolean-valued template (only when explicitly requested)
 
-Use a boolean parser ONLY when the user explicitly requested boolean schema
-extensions and LOCAL_PROMPT declares exactly those boolean fields. Never
-choose this shape from behavior names alone.
+The schema supports `text`, `integer`, and `real`, not a native boolean type.
+Use this parser only when the user explicitly requested a boolean-valued
+text/integer extension and LOCAL_PROMPT declares it. Never choose this shape
+from behavior names alone.
 
 ```python
 import json, sys
