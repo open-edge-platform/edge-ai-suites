@@ -1,224 +1,183 @@
 # Get Started
 
-**Agentic Smart Community** is an AI Agent-native video analysis platform built around the Model Context Protocol (MCP). Follow this guide step by step and you will bring up the three **validated example** monitors — Fridge, Child Safety, and Elder Wakeup — end to end: on-device model serving, the core services, demo RTSP streams, and the MCP server.
+**Agentic Smart Community** is an AI Agent-native video analysis platform built around the Model Context Protocol (MCP). This guide installs the MCP server and its dependent services, then connects an agent host. You can then register a custom use case to tailor the video-analysis workflow to your camera-monitoring requirements.
 
-The platform itself is **use-case-agnostic** — the examples are just a starting point. Once the demo is running you will learn how to connect your own agent framework with zero code, how to drive the platform by chatting with an agent, and how to run a clean server with no use cases at all and add your own by conversation (see [Run a clean, use-case-free server](#run-a-clean-use-case-free-server)).
+For the validated use cases, e.g., Fridge Monitor, Child Safety, and Elder Wakeup reference demo, including user-provided video setup, see [Ready-to-Run Demo](./get-started/ready-to-run-demo.md).
 
 ## Prerequisites
 
 Before you begin, ensure the following:
 
-- **System Requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
-- **GPU Driver Installed**: This guide assumes the GPU driver on the target machine is already installed. If it is not, install the Intel GPU driver packages by following the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide first.
-- **Docker Installed**: Install Docker. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-- **ffmpeg / ffprobe**: needed to push and verify the demo RTSP streams (`sudo apt install ffmpeg`).
+- **System Requirements:** Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
+- **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
+- **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
+- **Node.js and npm:** Required to install and build the MCP server workspace.
+- **curl and jq:** Required by the MCP server launcher to check services and register bundled use cases. On Ubuntu or Debian, run `sudo apt install curl jq`.
+- **ffmpeg / ffprobe:** Required for video-frame processing and stream diagnostics. On Ubuntu or Debian, run `sudo apt install ffmpeg`.
 
-This guide assumes basic familiarity with Docker commands and terminal usage. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
+This guide assumes basic familiarity with Docker commands and terminal usage. For an introduction, see the [Docker Documentation](https://docs.docker.com/).
 
-### Memory & swap requirements
+### Memory and swap requirements
 
-`Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-hungry on a shared-RAM host. The default configuration targets a **64 GB system**:
+`Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-intensive on a shared-RAM host. The default configuration targets a **64 GB system**:
 
-- Provide at least **32 GB of swap** so the weight load and KV cache can spill under peak pressure without the OOM killer stepping in. If your host lacks enough swap, see guidelines in: [Adding Swap Space](./get-started/add-swap.md).
-- To lower the footprint, reduce `MAX_MODEL_LEN` (e.g. `32768`) or switch `LOAD_QUANTIZATION` to `awq` / `sym_int4` in [set_env.sh](../../docker/set_env.sh).
-- The **first startup takes 3–20 minutes** while the weights are downloaded and compiled. The serving becomes healthy once it answers on `http://<host>:41091/v1/models`.
+- Provide at least **32 GB of swap** so weight loading and the KV cache can spill under peak pressure without triggering the OOM killer. See [Adding Swap Space](./get-started/add-swap.md).
+- The **first startup takes 3-20 minutes** while weights download and compile. The serving is ready when `http://<host>:41091/v1/models` responds.
 
-## Step-by-step Installation
+## Step-by-step installation
 
-Clone the repository and change directory to `agentic-smart-community`:
+Clone the repository and change to `agentic-smart-community`:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b main
 cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 ```
 
-### Step 1 — Start the dependent external services
+### Step 1 - Start dependent services
 
-The full on-device stack is defined in [docker/compose.yaml](../../docker/compose.yaml) and orchestrated by [setup_docker.sh](../../setup_docker.sh):
+The on-device stack is defined in [docker/compose.yaml](../../docker/compose.yaml) and managed by [setup_docker.sh](../../setup_docker.sh):
 
 | Service | Port | Role |
 |---|---|---|
-| `vllm-ipex-serving` | `:41091` | on-device model serving (one Qwen3.6-35B-A3B fills both the VLM and LLM roles) |
-| `multilevel-video-understanding` | `:8192` | video summary microservice |
-| `videostream-analytics` | host net | RTSP capture + NPU YOLO prefilter; POSTs events to the MCP webhook `:3101` |
+| `vllm-ipex-serving` | `:41091` | On-device model serving for VLM and LLM requests |
+| `multilevel-video-understanding` | `:8192` | Video-summary microservice |
+| `videostream-analytics` | host network | Video capture and optional detector-as-prefilter; posts events to the MCP webhook |
 
 ```bash
-cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
-source docker/set_env.sh   # deployment env (model, ports, group ids, data dir); the script also sources it itself
+source docker/set_env.sh
 
-# First time only — build the two local images (multilevel + videostream-analytics):
+# First time only: build the two local images.
 bash setup_docker.sh --build
 
-# Start all three services:
+# Start the on-device services.
 bash setup_docker.sh
 ```
 
-> - Use `bash setup_docker.sh --light` to reuse an already-warm serving and start only `multilevel-video-understanding` + `videostream-analytics`.
-> - Use `bash setup_docker.sh --down` to tear down.
+> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding` and `videostream-analytics`.
+> - Use `bash setup_docker.sh --down` to stop all three services.
 
-The first run pulls and compiles the model in `vllm-ipex-serving` (3–20+ min). Confirm the serving is healthy before continuing:
-
-```bash
-curl -s http://localhost:41091/v1/models   # returns the model "id" once ready
-```
-
-### Step 2 — Start the demo (streams + MCP server)
-
-A single command pushes the bundled demo clips as RTSP streams and then starts the MCP server against the demo bundle — [demo/config.demo.yaml](../../demo/config.demo.yaml) (the three use cases) and [demo/monitors.demo.yaml](../../demo/monitors.demo.yaml) (the demo cameras):
+Confirm the model serving is ready before continuing:
 
 ```bash
-cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
-bash demo/scripts/start-demo.sh
-# → MCP:    http://localhost:3100/mcp     (Streamable-HTTP, for OpenClaw / Hermes / Claude Desktop …)
-# → events: http://localhost:3101/events  (videostream-analytics posts pipeline events here)
-# → logs:   /tmp/smartbuilding-<uid>/mcp-server.log
+curl -fsS http://localhost:41091/v1/models
+curl -fsS http://localhost:8192/v1/health
+curl -fsS http://localhost:8999/health
 ```
 
-This pushes each demo clip to a local mediamtx RTSP server (one path per camera: `live/fridge`, `live/child`, `live/elder`), then starts the MCP server as a **host** process (like OpenClaw) which auto-registers every `enabled: true` monitor. To stop everything (server + streams) in one shot:
+### Step 2 - Start the MCP server
+
+Start the MCP server:
 
 ```bash
-cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
-bash demo/scripts/stop-demo.sh
+cp config.yaml.example config.yaml
 ```
 
-> - Each demo stream loops forever, so the demo keeps running. Edit [demo/videos/streams.yaml](../../demo/videos/streams.yaml) to change the input source: toggle `enabled` per camera, swap the `file`, or adjust the `rtsp_url` / mediamtx port.
-> - Verify a stream is live with `ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child`.
-> - All runtime data (SQLite DB, video segments, logs) is stored under a single root directory, `~/.mcp-smartbuilding` by default. Override it with `export SMARTBUILDING_DATA_DIR=/path/to/data`.
-
-### Step 3 — Verify the monitors are running
-
-At startup the MCP server auto-registers every `enabled: true` monitor and starts pulling its RTSP stream through `videostream-analytics`. Confirm it end to end:
-
-- The **database** is created at `~/.mcp-smartbuilding/smartbuilding.db`; video segments and per-monitor logs appear under `~/.mcp-smartbuilding/segments/<monitor_id>/`.
-- Three demo monitors — `cam_fridge`, `cam_child`, `cam_elder_bedroom` — are online and processing video.
-
-At this point the core is fully live: three services + MCP server + three demo monitors.
-
-## Connect an agent host (zero-code)
-
-The MCP server is host-agnostic. Any MCP client speaks **Streamable-HTTP** at `http://localhost:3100/mcp` — no adapter, no glue code. Point your framework at that endpoint and its agent immediately gains the `smartbuilding_*` tools.
-
-### OpenClaw
-
-**Step 1 — Install OpenClaw.**
-Install a stock OpenClaw by following the official guide ([OpenClaw — Personal AI Assistant](https://openclaw.ai/)), or follow [our guide](../../scripts/openclaw/README.md) to install it on our validated platform (Ubuntu 24.04).
-
-**Step 2 — Register the MCP server.**
-Add this server to `openclaw.json`. The transport **must** be `streamable-http`, and the URL **must** include the `/mcp` path:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "smart-community": {
-        "transport": "streamable-http",
-        "url": "http://localhost:3100/mcp"
-      }
-    }
-  }
-}
-```
-
-**Step 3 — Import skills.**
+Customize `config.yaml` as needed for your deployment, then start the server:
 
 ```bash
-mkdir -p ~/.openclaw/skills
-cp -rf ~/edge-ai-suites/metro-ai-suite/agentic-smart-community/skills/* ~/.openclaw/skills/
+bash scripts/mcp-server/start.sh config.yaml
+```
+The server runs as a host process and exposes:
 
-# Then restart the openclaw gateway to make skills effective
-openclaw gateway restart
+```text
+MCP:    http://localhost:3100/mcp
+Events: http://localhost:3101/events
+Logs:   /tmp/smartbuilding-<uid>/mcp-server.log
 ```
 
-**Step 4 — Try the demo.**
-Chat with the agents about your smart-community use cases. This covers **reactive** use — the agent calls a tool only when you ask. Some typical questions for the current demo can be found in [Talk to the agent](#talk-to-the-agent).
-
-To experience the **full** OpenClaw-based demo, you'll add a lightweight framework-adapter that enables:
-
-- **Proactive alerts** — each monitor's alerts are routed to its corresponding agent session (no need to ask first).
-- **Multi-agent setup** — every monitor gets its own house-keeper-style agent.
-
-Install the ready-to-use adapter plugin by following [Adapter Example: Smart Community MCP × OpenClaw](../../packages/framework-adapter-sdk/examples/openclaw/README.md).
-
-### Hermes (TODO)
-
-Add the server to `~/.hermes/config.yaml` using its Streamable-HTTP transport pointing at the same endpoint:
-
-```yaml
-mcp_servers:
-  smart-community:
-    transport: streamable-http
-    url: http://localhost:3100/mcp
-```
-
-> Field names follow your Hermes version's MCP-server config schema; use the Streamable-HTTP transport (older builds may expose it as stdio / SSE). The server URL is always `http://localhost:3100/mcp`.
-
-### Other MCP clients
-
-Any other MCP client (Claude Desktop, Cursor, VS Code, …) connects to the same `http://localhost:3100/mcp` endpoint through its own MCP-server config file. The server is identical across hosts — only the config file location and field names differ. This gives you **reactive** use out of the box: the agent calls a `smartbuilding_*` tool whenever you ask.
-
-For **proactive** push, each monitor's alerts are a subscribable resource (`smartbuilding://monitor/<monitor_id>/alerts`). Implement the standard [MCP resource-subscription](https://modelcontextprotocol.io/specification/2025-06-18/server/resources) flow, then deliver each alert into an agent session:
-
-1. `resources/subscribe` to the monitor's alert URI.
-2. On each `notifications/resources/updated`, `resources/read` with `?since=<lastId>` to pull the delta and advance the cursor.
-3. Inject the new alert into the target agent session.
-
-## Talk to the agent
-
-Once connected, you drive the whole platform in natural language — the agent picks the right `smartbuilding_*` tool for you:
-
-- *[smart-community] I'm working out lately — based on what's currently in my fridge, what should I buy?*
-- *[smart-community] Any child-safety alerts today? Generate a daily report and send it to me.*
-- *[smart-community] What about the elder's bedroom today?*
-- *[smart-community] Generate daily reports for all online monitors and send them to me.*
-
-> **Tip:** Prefix your message with `[smart-community]` so the agent knows to reach for the `smartbuilding_*` tools. Alternatively, tell it once at the start of the conversation, or save the guideline to its memory.
-
-
-## Register a new use case
-
-The three demo monitors are only examples — the platform is use-case-agnostic, so you add a new use case **by conversation**: no code, no restart. You describe it to a connected agent, and the `video-summary-prompt-studio` skill turns your description into a registered, running use case. See [Register a New Use Case](./get-started/register-new-use-case.md) for the full flow.
-
-## Run a clean, use-case-free server
-
-The demo above is one packaging of a platform that ships **zero** use cases by default. To start the pristine core instead:
+Verify that the MCP endpoint, events webhook, and data root are available:
 
 ```bash
-bash scripts/mcp-server/start.sh
+curl -fsS -X POST http://localhost:3100/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"startup-check","version":"1.0"}}}'
+curl -fsS http://localhost:3101/health
+ls ~/.mcp-smartbuilding/smartbuilding.db
 ```
 
-This boots from the tracked [config.yaml.example](../../config.yaml.example) (an empty `use_case_dict`) with **no** monitors — a clean, use-case-agnostic server. From there, add everything by chatting with a connected agent:
+> Use `bash scripts/mcp-server/stop.sh` to stop the MCP server.
 
-1. **Create a use case** — describe it in chat; the `video-summary-prompt-studio` skill infers the events/schema, drafts the prompt, and calls `smartbuilding_use_case_register`. See [Register a New Use Case](./get-started/register-new-use-case.md) for the full flow.
-2. **Add a camera** — `smartbuilding_monitor_ctl register_source` (single monitor) or `smartbuilding_monitors_compose up` (a batch from a `monitors.yaml`).
+### Step 3 - Connect an agent host
 
-No core-component changes, no restart — the server picks up the new use case and monitor at runtime. This is the intended production shape; the demo bundle simply pre-fills it with three validated examples.
+The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smartbuilding_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
+
+#### OpenClaw
+
+1. Install OpenClaw using the official [OpenClaw documentation](https://openclaw.ai/), or use [the validated platform guide](../../scripts/openclaw/README.md).
+
+2. Add the MCP server to `openclaw.json`. The transport must be `streamable-http`, and the URL must include `/mcp`:
+
+   ```json
+   {
+     "mcp": {
+       "servers": {
+         "smart-building": {
+           "transport": "streamable-http",
+           "url": "http://localhost:3100/mcp"
+         }
+       }
+     }
+   }
+   ```
+
+3. Import the skills and restart the gateway:
+
+   ```bash
+   mkdir -p ~/.openclaw/skills
+   cp -rf ~/edge-ai-suites/metro-ai-suite/agentic-smart-community/skills/* ~/.openclaw/skills/
+   openclaw gateway restart
+   ```
+
+OpenClaw can now use the MCP tools when you ask it to create a use case, analyze a monitor, or generate a report.
+
+**MCP resource subscriptions** deliver alert-update notifications directly to the connected client; see [MCP Subscription Reference](./get-started/mcp-subscription-reference.md). To proactively route those updates into an OpenClaw agent session or its external user channel, configure the optional [Smart Community MCP x OpenClaw adapter](../../packages/framework-adapter-sdk/examples/openclaw/README.md).
+
+#### Other MCP clients
+
+Hermes, Claude Desktop, Cursor, and other compatible clients use the same `http://localhost:3100/mcp` endpoint through their own MCP-server configuration. The client can use the server reactively without an adapter, or subscribe to monitor alert updates as described in [MCP Subscription Reference](./get-started/mcp-subscription-reference.md).
+
+### Step 4 - Register a new use case
+
+The MCP server includes these bundled use cases:
+
+| Use case | Capability |
+|---|---|
+| Fridge Monitor | Tracks fridge activity and supports inventory-oriented daily reports. |
+| Child Safety | Detects potentially dangerous child behavior and creates safety alerts and reports. |
+| Elder Wakeup | Tracks wakeup activity and supports weekly wakeup reports. |
+
+To use a bundled use case, ask the connected agent to register a monitor with its monitor ID, RTSP URL, and use-case key: `fridge`, `child_safety`, or `elder_wakeup`.
+
+Now, you can simply describe your requirements to an agent to create a customized use case without restarting the core services. See [Register a New Use Case](./get-started/register-new-use-case.md) for the complete registration workflow.
 
 ## Data directory
 
-All runtime data lives under one root, controlled by an env var:
+All runtime data lives under one root controlled by an environment variable:
 
-```
+```bash
 export SMARTBUILDING_DATA_DIR=/path/to/data   # default: ~/.mcp-smartbuilding
 ```
 
-```
+```text
 $SMARTBUILDING_DATA_DIR/
-├── smartbuilding.db                       — SQLite database
-├── segments/
-│   └── <monitor_id>/
-│       ├── latest.jpg                     — latest frame (read by scene_query, overwritten each frame)
-│       ├── recordings/<YYYY-MM-DD>/       — recorded clips (daily rotate; purged after storage.retention_days)
-│       ├── motion_events/<YYYY-MM-DD>/    — motion-event frames (daily rotate; purged)
-│       └── queries/<YYYY-MM-DD>/          — scene_query frame archive (daily rotate; purged)
-└── logs/
-    ├── reports/                           — generate_report SRT debug files
-    └── monitors/<monitor_id>/<YYYY-MM-DD>.log
+|- smartbuilding.db
+|- segments/
+|  `- <monitor_id>/
+|     |- latest.jpg
+|     |- recordings/<YYYY-MM-DD>/
+|     |- motion_events/<YYYY-MM-DD>/
+|     `- queries/<YYYY-MM-DD>/
+`- logs/
+   |- reports/
+   `- monitors/<monitor_id>/<YYYY-MM-DD>.log
 ```
 
-**Automatic cleanup** runs on server start and every 24h: `.log` files older than `logging.retention_days` (default 14) and `segments/<id>/{recordings,motion_events,queries}/` date dirs older than `storage.retention_days` (default 7) are removed. `latest.jpg`, `smartbuilding.db`, and non-date directory names are skipped.
+Automatic cleanup runs on server start and every 24 hours. It removes `.log` files older than `logging.retention_days` (default 14) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default 7). It leaves `latest.jpg`, `smartbuilding.db`, and non-date directory names untouched.
 
-## Supporting Resources
+## Supporting resources
 
 - [Overview](./index.md)
 - [API Reference](./api-reference.md)
 - [System Requirements](./get-started/system-requirements.md)
+- [Ready-to-Run Demo](./get-started/ready-to-run-demo.md)

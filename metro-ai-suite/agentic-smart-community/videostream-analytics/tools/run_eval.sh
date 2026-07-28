@@ -6,15 +6,15 @@
 #   Design doc lists 3 use cases: child_safety, elder_wakeup, refrigerator_monitor
 #   (smartbuilding-video-design-2026.2.md §1).
 #   In test-videostream-analytics.sh these expand to 4 scenarios because
-#   elder_wakeup has 2 input videos (day1 punctual + day2 late). fridge has no
-#   ground-truth SRT for the demo video and runs prefilter=disabled, so its
+#   elder_wakeup has two independent input videos. Fridge runs with
+#   prefilter=disabled, so its
 #   "evaluation" is a smoke test only (motion events arrive → PASS).
 #
 # Scenarios (matching scripts/test-videostream-analytics.sh)
-#   child       cam_child            child_safety_demo.mp4              ss=40 prefilter=on  GT yes
-#   fridge      cam_fridge           demo006-2_expanded_20min_v2.mp4    ss=0  prefilter=off GT yes (1200s, 4 [TAKE] cues)
-#   elder_day1  cam_elder_bedroom    day1_elder_wakeup.mp4              ss=0  prefilter=on  GT yes (excl [EMPTY])
-#   elder_day2  cam_elder_bedroom_2  day2_elder_wakeup.mp4              ss=0  prefilter=on  GT yes (excl [EMPTY])
+#   child       cam_child            VSA_EVAL_CHILD_VIDEO              ss=40 prefilter=on  GT yes
+#   fridge      cam_fridge           VSA_EVAL_FRIDGE_VIDEO             ss=0  prefilter=off GT yes (4 [TAKE] cues)
+#   elder_day1  cam_elder_bedroom    VSA_EVAL_ELDER_VIDEO              ss=0  prefilter=on  GT yes (excl [EMPTY])
+#   elder_day2  cam_elder_bedroom_2  VSA_EVAL_ELDER_2_VIDEO            ss=0  prefilter=on  GT yes (excl [EMPTY])
 #
 # Usage
 #   bash tools/run_eval.sh                       # all 4 scenarios sequentially
@@ -24,9 +24,11 @@
 #   bash tools/run_eval.sh --keep                # leave services running
 #
 # Env overrides
-#   VIDEOS_DIR  — root of the phase-2 video corpus.
-#                 Default: <repo>/demo/videos (the MP4 binaries are .gitignore'd;
-#                 GT SRT files live alongside and stay tracked).
+#   VSA_EVAL_CHILD_VIDEO    — child scenario MP4
+#   VSA_EVAL_FRIDGE_VIDEO   — fridge scenario MP4
+#   VSA_EVAL_ELDER_VIDEO    — elder day-one scenario MP4
+#   VSA_EVAL_ELDER_2_VIDEO  — elder day-two scenario MP4
+#   VIDEOS_DIR              — optional root for tracked ground-truth SRT files
 #   MEDIAMTX_CONFIG — defaults to tools/mediamtx.yml in this repo.
 #   MEDIAMTX_BIN, RTSP_PORT, WEBHOOK_PORT, ANALYTICS_PORT — see code below.
 # =============================================================================
@@ -45,16 +47,16 @@ RTSP_PORT="${RTSP_PORT:-8554}"
 WEBHOOK_PORT="${WEBHOOK_PORT:-9999}"
 ANALYTICS_PORT="${ANALYTICS_PORT:-8999}"
 
-VIDEO_CHILD="$VIDEOS_DIR/cam_child/child_safety_demo.mp4"
+VIDEO_CHILD="${VSA_EVAL_CHILD_VIDEO:-}"
 GT_CHILD="$VIDEOS_DIR/cam_child/child_safety_demo_groundtruth.srt"
 
-VIDEO_FRIDGE="$VIDEOS_DIR/cam_fridge/demo006-2_expanded_20min_v2.mp4"
+VIDEO_FRIDGE="${VSA_EVAL_FRIDGE_VIDEO:-}"
 GT_FRIDGE="$VIDEOS_DIR/cam_fridge/demo006-2_expanded_20min_v2_groundtruth.srt"
 
-VIDEO_ELDER_DAY1="$VIDEOS_DIR/cam_elder_bedroom/day1_elder_wakeup.mp4"
+VIDEO_ELDER_DAY1="${VSA_EVAL_ELDER_VIDEO:-}"
 GT_ELDER_DAY1="$VIDEOS_DIR/cam_elder_bedroom/day1_elder_wakeup_groundtruth.srt"
 
-VIDEO_ELDER_DAY2="$VIDEOS_DIR/cam_elder_bedroom_2/day2_elder_wakeup.mp4"
+VIDEO_ELDER_DAY2="${VSA_EVAL_ELDER_2_VIDEO:-}"
 GT_ELDER_DAY2="$VIDEOS_DIR/cam_elder_bedroom_2/day2_elder_wakeup_groundtruth.srt"
 
 SCENARIOS=("child" "fridge" "elder_day1" "elder_day2")

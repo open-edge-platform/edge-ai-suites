@@ -1,7 +1,6 @@
 # Demo Overview — Three Validated Use Cases
 
-This bundle ships three ready-to-run demos on top of the Agentic Smart Community platform: **Fridge Manager**, **Child Safety**, and **Elder Get-Up**.
-Each demo pairs a looped sample video with a monitor definition, so you can see the full pipeline — motion detection, NPU pre-filtering, VLM video understanding, rule evaluation, and agent-facing alerts/reports — running end to end on a single Intel Core Ultra machine with no cloud dependency.
+This bundle provides reference configurations for three Agentic Smart Community demos: **Fridge Manager**, **Child Safety**, and **Elder Get-Up**. Supply your own loopable video inputs to exercise the full pipeline — motion detection, NPU pre-filtering, VLM video understanding, rule evaluation, and agent-facing alerts/reports — on a single Intel Core Ultra machine with no cloud dependency.
 
 ## At a glance
 
@@ -11,7 +10,7 @@ Each demo pairs a looped sample video with a monitor definition, so you can see 
 | Compute platform | Intel Core Ultra (XPU runs the VLM, NPU runs YOLO pre-filtering) |
 | Inference path | Fully local — no cloud dependency |
 | Implemented use cases | Fridge Manager / Child Safety / Elder Get-Up |
-| Demo channels | 3 enabled RTSP streams (`fridge` / `child` / `elder`), plus an optional 4th (`elder2`) |
+| Demo channels | Up to four RTSP streams (`fridge` / `child` / `elder` / `elder2`) when their video paths are supplied |
 | Integration | MCP (Model Context Protocol) — any MCP-capable agent can drive the demo |
 
 ## How the demo runs
@@ -27,6 +26,8 @@ Start and stop everything with the bundled scripts:
 demo/scripts/start-demo.sh   # push RTSP streams + start MCP server with the demo bundle
 demo/scripts/stop-demo.sh    # stop both
 ```
+
+For video-path variables, automatic stream skipping, and the full installation sequence, see [Ready-to-Run Demo](../docs/user-guide/get-started/ready-to-run-demo.md).
 
 ---
 
@@ -90,13 +91,13 @@ It is meant to run continuously as a persistent alert-demo channel, while the pr
 
 ---
 
-## Sample videos
+## Video inputs
 
-Each use case ships a looped clip (and a ground-truth `.srt`) under [videos/](videos/); [videos/streams.yaml](videos/streams.yaml) maps each clip to its RTSP path.
+Videos are user-provided and excluded from release artifacts. [videos/streams.yaml](videos/streams.yaml) maps each environment variable to its RTSP path; an unavailable input is warned about and skipped.
 
-| Use case | Stream path | Clip |
+| Use case | Stream path | Environment variable |
 |---|---|---|
-| Fridge Manager | `live/fridge` | `cam_fridge/demo006-2_expanded_20min_v2.mp4` |
-| Child Safety | `live/child` | `cam_child/child_safety_demo_expanded_1h.mp4` |
-| Elder Get-Up | `live/elder` | `cam_elder_bedroom/day1_elder_wakeup_expanded_20min.mp4` |
-| Elder Get-Up (2nd, optional) | `live/elder2` | `cam_elder_bedroom_2/day2_elder_wakeup_expanded_20min.mp4` |
+| Fridge Manager | `live/fridge` | `SMARTBUILDING_DEMO_FRIDGE_VIDEO` |
+| Child Safety | `live/child` | `SMARTBUILDING_DEMO_CHILD_VIDEO` |
+| Elder Get-Up | `live/elder` | `SMARTBUILDING_DEMO_ELDER_VIDEO` |
+| Elder Get-Up (second input) | `live/elder2` | `SMARTBUILDING_DEMO_ELDER_2_VIDEO` |
