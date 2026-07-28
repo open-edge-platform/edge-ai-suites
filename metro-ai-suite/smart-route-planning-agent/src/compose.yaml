@@ -19,14 +19,19 @@ services:
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP}
-      - NO_PROXY=${no_proxy},${HOST_IP}
+      - no_proxy=${no_proxy},${HOST_IP},ovms
+      - NO_PROXY=${no_proxy},${HOST_IP},ovms
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
+      - REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}  # Optional. When empty, rule based planning is used.
     volumes:
       - ./data/config.json:/app/data/config.json:ro
     networks:
       - routeplanner
+    depends_on:
+      ovms:
+        condition: service_healthy
+        required: false
     healthcheck:
       test: ["CMD", "uv", "run", "health_check.py", "7860"]
       interval: 30s
@@ -34,3 +39,44 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+
+  ovms:
+    image: openvino/model_server:2026.2.1
+    profiles:
+      - reasoning
+    command:
+      - --source_model
+      - ${REASONING_MODEL_NAME:-}
+      - --model_repository_path
+      - /home/ovms/models
+      - --task
+      - text_generation
+      - --target_device
+      - CPU
+      - --rest_port
+      - "8000"
+      - --rest_bind_address
+      - 0.0.0.0
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+      # Only needed for gated repositories on HuggingFace.
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ovms-models:/home/ovms
+    networks:
+      - routeplanner
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/v2/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 600s    # 10min initial start period to accomodate model download
+    restart: unless-stopped
+
+volumes:
+  ovms-models:

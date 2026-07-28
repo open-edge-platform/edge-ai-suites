@@ -103,10 +103,27 @@ export DATA_RETENTION_HOURS=${DATA_RETENTION_HOURS:-24}
 # AI Route Planner Configuration
 export AI_ROUTE_PLANNER_PORT=${AI_ROUTE_PLANNER_PORT:-7864}
 
+# Reasoning Model Configuration (optional)
+export REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}
+if [[ -n "$REASONING_MODEL_NAME" ]]; then
+    export COMPOSE_PROFILES="reasoning"
+else
+    unset COMPOSE_PROFILES
+fi
+
 echo -e "${GREEN}Environment variables set:${NC}"
 echo -e "  HOST_IP: ${YELLOW}$HOST_IP${NC}"
 echo -e "  TAG: ${YELLOW}$TAG${NC}"
 echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
+
+if [[ -n "$REASONING_MODEL_NAME" ]]; then
+    echo -e "  Route planning mode: ${YELLOW}AI reasoning${NC}"
+    echo -e "  REASONING_MODEL_NAME: ${YELLOW}$REASONING_MODEL_NAME${NC}"
+    echo -e "${YELLOW}Note: the first start downloads the model and can take several minutes.${NC}"
+else
+    echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
+    echo -e "${BLUE}Tip: export REASONING_MODEL_NAME=<hf-org/model> before sourcing this script to enable AI reasoning.${NC}"
+fi
 
 # Function to build Docker images
 build_images() {
@@ -159,7 +176,7 @@ case "$1" in
         ;;
     "--stop")
         echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
-        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
+        if COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
             echo -e "${RED}Failed to stop container${NC}"
@@ -168,7 +185,7 @@ case "$1" in
         ;;
     "--restart")
         echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
-        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
+        if COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Container stopped successfully${NC}"
             start_service
         else
@@ -179,9 +196,9 @@ case "$1" in
     "--clean")
         echo -e "${YELLOW}Cleaning up Smart-Route-Planning-Agent resources...${NC}"
 
-        # Stop and remove containers
+        # Stop and remove containers.
         echo -e "${YELLOW}Stopping and removing containers...${NC}"
-        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down 2>/dev/null || true
+        COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down 2>/dev/null || true
         echo -e "${GREEN}Containers stopped and removed.${NC}"
 
         # Remove project volumes
