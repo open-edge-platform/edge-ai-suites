@@ -44,6 +44,8 @@ CLONE_PATH="$APP_DIR/$CLONE_DIR"
 export DEPS_DIR="$CLONE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
 export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
+export USE_EXISTING_SI=${USE_EXISTING_SI:-false}
+export SCENESCAPE_CA_CERT_PATH="${SCENESCAPE_CA_CERT_PATH:-$RI_DIR/src/secrets/certs/scenescape-ca.pem}"
 
 if [ "$ENABLE_TC" = "true" ]; then
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
@@ -121,7 +123,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
     
     # check if ri-compose.yaml exists and run docker compose down accordingly
-    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
+    if [ "$USE_EXISTING_SI" != "true" ] && [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
         docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down
     else
         docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down 2> /dev/null
@@ -248,11 +250,24 @@ check_and_setup_dependencies() {
 
 # Verify dependencies and setup (skip if stopping/cleaning services or only showing help or setting env vars)
 if [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--build" ] && [ "$1" != "--clean" ] && [ "$1" != "--stop" ]; then
-    check_and_setup_dependencies
+    if [ "$USE_EXISTING_SI" = "true" ]; then
+        echo -e "${BLUE}==> Reusing existing Smart Intersection. Skipping dependency setup.${NC}"
+        if [ -z "${MQTT_HOST:-}" ]; then
+            echo -e "${RED}ERROR: MQTT_HOST must be set when USE_EXISTING_SI=true.${NC}"
+            return 1
+        fi
+        if [ ! -f "$SCENESCAPE_CA_CERT_PATH" ]; then
+            echo -e "${RED}ERROR: SCENESCAPE_CA_CERT_PATH not found: $SCENESCAPE_CA_CERT_PATH${NC}"
+            echo -e "${YELLOW}Copy scenescape-ca.pem from the running Smart Intersection node and set SCENESCAPE_CA_CERT_PATH to that local file.${NC}"
+            return 1
+        fi
+    else
+        check_and_setup_dependencies
     
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to setup dependencies. Please check the errors above.${NC}"
-        return 1
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to setup dependencies. Please check the errors above.${NC}"
+            return 1
+        fi
     fi
 fi
 
@@ -559,7 +574,7 @@ build_service() {
     echo -e "${BLUE}==> Building Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
 
     # Build the service images
-    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
+    if [ "$USE_EXISTING_SI" != "true" ] && [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
         docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
     else
         docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
@@ -581,7 +596,11 @@ build_and_start_service() {
     prepare_ovms_model || return 1
 
     # Build and start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --build
+    if [ "$USE_EXISTING_SI" = "true" ]; then
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --build
+    else
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --build
+    fi
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -600,7 +619,11 @@ start_service() {
     prepare_ovms_model || return 1
 
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
+    if [ "$USE_EXISTING_SI" = "true" ]; then
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
+    else
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
+    fi
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
