@@ -127,28 +127,6 @@ body.electron .top-panel select {
   -webkit-app-region: no-drag;
 }
 
-/* Title-bar menu button that opens the native application menu. */
-.app-menu-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 1.15rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.app-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
 /* Navigation Menu beside Intel Logo */
 .nav-menu-container {
   position: relative;
@@ -271,6 +249,14 @@ body.electron .top-panel select {
 .nav-menu-list li.no-click {
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Electron only: native application menu entry, separated from the
+   navigation items above since it opens an OS menu rather than a screen. */
+.nav-menu-list li.nav-menu-app-menu {
+  margin-top: 0.5rem;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 0.875rem;
 }
 
 body.electron .nav-menu-toggle {
