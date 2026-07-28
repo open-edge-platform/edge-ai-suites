@@ -11,7 +11,7 @@ services:
     # Pulled from the EAL agent-quality-handler microservice — no longer
     # built from this repo. See services/agent-service (removed) history
     # for the prior in-repo implementation this replaced.
-    image: ${REGISTRY:-intel/}agent-quality-handler:${TAG:-1.0.0}
+    image: ${DOCKER_REGISTRY}${AGENTIC_QUALITY_HANDLER_IMAGE}
     container_name: apm-agent
     hostname: apm-agent
     environment:
@@ -46,17 +46,17 @@ services:
       OUTPUT_DIR: /app/output
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
-      - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}/agents.yaml:/app/config/agents.yaml:ro
-      - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}/policy_fallback.json:/app/config/policy_fallback.json:ro
-      - ${USE_CASE_PROMPTS_DIR:-/tmp/apm-placeholder}:/app/prompts:ro
+      - ./configs/agentic/agents.yaml:/app/config/agents.yaml:ro
+      - ./configs/agentic/policy_fallback.json:/app/config/policy_fallback.json:ro
+      - ./configs/agentic/prompts:/app/prompts:ro
       - apm_agent_output:/app/output
     ports:
       - "${AGENT_PORT:-5002}:5002"
-    depends_on:
-      ia-fusion-analytics:
-        condition: service_healthy
-      ia-mqtt-broker:
-        condition: service_healthy
+    # depends_on:
+    #   ia-fusion-analytics:
+    #     condition: service_healthy
+    #   ia-mqtt-broker:
+    #     condition: service_healthy
     networks:
       - timeseries_network
     restart: unless-stopped
@@ -70,7 +70,7 @@ services:
       start_period: 30s
 
   model-download:
-    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.1.0}
+    image: ${DOCKER_REGISTRY}${MODEL_DOWLOADER_IMAGE}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the
@@ -84,7 +84,7 @@ services:
       HF_HUB_ENABLE_HF_TRANSFER: 1
       MODEL_PATH: /opt/models
     volumes:
-      - ${USE_CASE_MODELS_DIR:-/tmp/models}:/opt/models
+      - apm_llm_model:/opt/models
     ports:
       - "${MODEL_DOWNLOAD_PORT:-8200}:8000"
     networks:
@@ -100,7 +100,7 @@ services:
       start_period: 180s
       # ui
   apm-metrics:
-    image: ${REGISTRY:-intel/}metrics-manager:${METRICS_TAG:-2026.1.0}
+    image: ${DOCKER_REGISTRY}${METRICS_MANAGER_IMAGE}
     container_name: apm-metrics
     hostname: apm-metrics
     environment:
@@ -117,11 +117,11 @@ services:
       - no-new-privileges
 
   prometheus:
-    image: prom/prometheus:v2.53.4
+    image: ${PROMETHEUS_IMAGE}
     container_name: apm-prometheus
     hostname: apm-prometheus
     volumes:
-      - ../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/agentic/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
@@ -133,45 +133,16 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
-  
-  # apm-ui:
-  #   image: ${REGISTRY:-intel/}apm-ui-service:${TAG:-1.0.0}
-  #   container_name: apm-ui
-  #   hostname: apm-ui
-  #   build:
-  #     context: ../services/ui-service
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     http_proxy: ${http_proxy:-}
-  #     https_proxy: ${https_proxy:-}
-  #     no_proxy: ${no_proxy:-},apm-agent,apm-detection,ia-fusion-analytics,localhost
-  #     APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
-  #     AGENT_SERVICE_URL: http://apm-agent:5002
-  #     DETECTION_SERVICE_URL: http://apm-detection:5004
-  #     STORAGE_SERVICE_URL: http://ia-fusion-analytics:5001
-  #     USE_CASE_ID: ${USE_CASE}
-  #     HOST: 0.0.0.0
-  #     PORT: 5003
-  #     LOG_LEVEL: ${LOG_LEVEL:-INFO}
-  #   ports:
-  #     - "${UI_PORT:-5003}:5003"
-  #   depends_on:
-  #     apm-agent:
-  #       condition: service_healthy
-  #     apm-detection:
-  #       condition: service_healthy
-  #   networks:
-  #     - timeseries_network
-  #   restart: unless-stopped
-  #   security_opt:
-  #     - no-new-privileges
-  #   healthcheck:
-  #     test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
-  #     interval: 15s
-  #     timeout: 10s
-  #     retries: 5
-  #     start_period: 20s
 
 volumes:
   apm_agent_output:
     driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
+  apm_llm_model:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

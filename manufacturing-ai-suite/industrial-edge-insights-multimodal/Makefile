@@ -255,7 +255,7 @@ up_vllm: check_env_variables validate_host_ip down check_hardware check_models
 	$(MAKE) upload_tar_file
 
 .PHONY: up_agentic
-up_agentic: check_env_variables validate_host_ip down check_hardware check_models
+up_agentic: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
 	echo "Starting Docker containers..."; \
@@ -304,7 +304,7 @@ status:
 .PHONY: down
 down:
 	@echo "Stopping Docker containers...";
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) down -v --remove-orphans
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) down -v --remove-orphans
 
 # Push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
 # and have logged into that. Applies mainly when one is dealing with internal docker registry.
@@ -313,7 +313,7 @@ down:
 .PHONY: push_images
 push_images: build
 	@echo "Pushing the images to docker registry"
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) push
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) push
 
 
 # Generate helm packages
