@@ -48,6 +48,64 @@ header h1 { font-size: 1.15rem; font-weight: 500; flex: 1; }
   letter-spacing: 0.5px;
 }
 
+/* System capability cards (header) */
+.system-capability-cards {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.system-device-card {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 200px;
+  padding: 0.15rem 0.5rem;
+  overflow: hidden;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 6px;
+}
+.system-device-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1;
+}
+.system-device-card__status {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76,175,80,0.2);
+}
+.system-device-card__label {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.system-device-card__name,
+.system-device-card__details {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.system-device-card__name {
+  margin-top: 0.1rem;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+.system-device-card__details {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.6rem;
+  line-height: 1.2;
+}
+@media (max-width: 900px) {
+  .system-capability-cards { display: none; }
+}
+
 /* Nav */
 nav {
   background: var(--intel-dark);

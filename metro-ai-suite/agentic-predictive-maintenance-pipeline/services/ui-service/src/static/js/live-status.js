@@ -103,14 +103,14 @@ async function pollStatus() {
       banner.classList.toggle("live-on", isActive);
       banner.classList.toggle("live-off", !isActive);
       bannerText.textContent = isActive
-        ? `Pipeline: RUNNING (${data.active_run.phase})`
-        : "Pipeline: IDLE";
+        ? `Inspection: RUNNING (${data.active_run.phase})`
+        : "Inspection: IDLE";
     }
 
     const runBtn = document.getElementById("run-pipeline-btn");
     if (runBtn) {
       runBtn.disabled = !!data.active_run;
-      runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Pipeline";
+      runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Inspection";
     }
 
     const phaseHint = document.getElementById("run-phase-hint");
