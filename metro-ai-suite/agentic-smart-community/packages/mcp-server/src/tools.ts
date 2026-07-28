@@ -337,9 +337,10 @@ export function registerTools(
       "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
-      "(step 1) action=register_task with prompt_text (+ evaluate_rules_text on the custom path) — " +
+      "(step 1) action=register_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
-      "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md (+ evaluate_rules.py) to disk. " +
+      "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
+      "evaluate_rules.py is staged to use-cases/<use_case>/evaluate_rules.py). " +
       "It does NOT touch the DB schema, use_case_dict, or config.yaml. " +
       "(step 2) action=register WITHOUT prompt_text — auto-reads the files step 1 wrote, applies " +
       "the schema via ALTER TABLE, injects use_case_dict, and (persist=true) writes config.yaml. " +
@@ -364,8 +365,9 @@ export function registerTools(
       "worker, deletes its videostream-analytics source, and strips it from monitors.yaml — DB " +
       "history (alerts/tasks/events/recordings) is kept and the monitor row is left offline. " +
       "For action=register, if prompt_text is provided with persist=true it is saved to " +
-      "use-cases/<use_case>/prompt.md; if evaluate_rules_text is provided with persist=true it is " +
-      "saved to use-cases/<use_case>/evaluate_rules.py.",
+      "use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
+      "use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
+      "conventional absolute path is stored in config.yaml for runtime rule execution.",
     inputSchema: {
       action: z.enum(["register", "register_task", "unregister"]).describe("register | register_task | unregister"),
       use_case: z.string().describe("Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/)"),
@@ -374,7 +376,9 @@ export function registerTools(
       ),
       description: z.string().optional().describe("Human description shown by /v1/tasks"),
       evaluate_rules_path: z.string().optional().describe(
-        "Path to Python evaluate_rules.py override (absolute or relative to cwd of MCP server)"
+        "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
+        "stages it to use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
+        "persists the conventional absolute path into config.yaml."
       ),
       reports: z.record(z.unknown()).optional().describe("Report config: {data_source, default_type, filter}"),
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
@@ -385,10 +389,6 @@ export function registerTools(
         "auto-read from use-cases/<use_case>/prompt.md (e.g. the file register_task wrote); when " +
         "provided with persist=true it is (re)saved there. " +
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
-      ),
-      evaluate_rules_text: z.string().optional().describe(
-        "Optional Python evaluate_rules.py source. When persist=true, this is saved to " +
-        "use-cases/<use_case>/evaluate_rules.py and used as evaluate_rules_path unless an explicit path is provided."
       ),
       schema_extensions: z.array(z.object({
         name: z.string(),
