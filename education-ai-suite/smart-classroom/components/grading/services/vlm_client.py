@@ -67,6 +67,7 @@ def build_payload(image: "Path | PIL.Image.Image", user_prompt: str,
         ],
         "max_completion_tokens": max_tokens,
         "temperature": temperature,
+        "enable_thinking": False,
     }
 
 
@@ -171,6 +172,7 @@ def extract_header_info(
         ],
         "max_completion_tokens": max_tokens,
         "temperature": temperature,
+        "enable_thinking": False,
     }
 
     start = time.perf_counter()
