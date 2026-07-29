@@ -3,7 +3,7 @@
 # videostream-analytics 完整测试脚本
 #
 # 支持三种测试模式:
-#   1. Unit Tests       — 纯 Python, 无需外部依赖 (除了测试视频文件)
+#   1. Unit Tests       — 纯 Python, 使用测试时生成的视频 fixture
 #   2. Integration Tests — Docker 容器 + MediaMTX + RTSP 推流 + mock webhook
 #   3. Multi-Video Tests — 逐个测试 4 个视频场景, 验证各 use case clip 产出
 #
@@ -19,7 +19,10 @@
 #   HTTP_PROXY / HTTPS_PROXY  — Docker build 代理
 #   MODEL_DIR                 — YOLO 模型目录 (默认 ~/models)
 #   DATA_DIR                  — clip 输出目录 (默认 /tmp/smartbuilding-clips)
-#   VIDEOS_DIR                — 测试视频根目录 (默认 <repo>/demo/videos)
+#   VSA_TEST_CHILD_VIDEO      — child 场景集成测试视频
+#   VSA_TEST_FRIDGE_VIDEO     — fridge 多视频测试视频
+#   VSA_TEST_ELDER_VIDEO      — elder 多视频测试视频
+#   VSA_TEST_ELDER_2_VIDEO    — second elder 多视频测试视频
 #   MEDIAMTX_BIN              — MediaMTX 可执行文件 (默认 ~/.local/bin/mediamtx)
 #   MEDIAMTX_CONFIG           — MediaMTX 配置 (默认 tools/mediamtx.yml)
 #   DOCKER_IMAGE              — VSA 容器镜像名 (默认 videostream-analytics:latest)
@@ -47,12 +50,11 @@ ANALYTICS_PORT=8999
 DATA_DIR="${DATA_DIR:-/tmp/smartbuilding-clips}"
 MODEL_DIR="${MODEL_DIR:-$HOME/models}"
 
-# --- Test Videos ---
-VIDEOS_DIR="${VIDEOS_DIR:-${REPO_DIR}/demo/videos}"
-VIDEO_CHILD="${VIDEOS_DIR}/cam_child/child_safety_demo.mp4"
-VIDEO_FRIDGE="${VIDEOS_DIR}/cam_fridge/demo006-2_expanded_20min_v2.mp4"
-VIDEO_ELDER_DAY1="${VIDEOS_DIR}/cam_elder_bedroom/day1_elder_wakeup.mp4"
-VIDEO_ELDER_DAY2="${VIDEOS_DIR}/cam_elder_bedroom_2/day2_elder_wakeup.mp4"
+# --- User-provided integration and evaluation videos ---
+VIDEO_CHILD="${VSA_TEST_CHILD_VIDEO:-}"
+VIDEO_FRIDGE="${VSA_TEST_FRIDGE_VIDEO:-}"
+VIDEO_ELDER_DAY1="${VSA_TEST_ELDER_VIDEO:-}"
+VIDEO_ELDER_DAY2="${VSA_TEST_ELDER_2_VIDEO:-}"
 
 # --- Parse Arguments ---
 RUN_UNIT=true
@@ -86,6 +88,18 @@ ok()    { echo -e "${GREEN}[PASS]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 fail()  { echo -e "${RED}[FAIL]${NC} $*"; }
 header(){ echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"; echo -e "  ${CYAN}$*${NC}"; echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"; }
+
+require_video() {
+    local variable_name="$1" video_path="$2"
+    if [[ -z "$video_path" ]]; then
+        fail "Set $variable_name to an absolute path for this video workflow"
+        return 1
+    fi
+    if [[ ! -f "$video_path" ]]; then
+        fail "Video from $variable_name does not exist: $video_path"
+        return 1
+    fi
+}
 
 # --- Cleanup function ---
 PIDS_TO_KILL=()
@@ -308,12 +322,6 @@ if $RUN_UNIT; then
     header "UNIT TESTS"
     cd "$PROJECT_DIR"
 
-    if [[ ! -f "$VIDEO_CHILD" ]]; then
-        fail "Test video not found: $VIDEO_CHILD"
-        exit 1
-    fi
-    info "Test video: $VIDEO_CHILD"
-
     if ! $PYTHON -c "import pytest" 2>/dev/null; then
         info "Installing dev dependencies..."
         "${PROJECT_DIR}/.venv/bin/pip" install -e ".[dev]" --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>/dev/null
@@ -339,10 +347,7 @@ if $RUN_INTEGRATION && ! $RUN_MULTIVIDEO; then
     cd "$PROJECT_DIR"
 
     # Check prerequisites
-    if [[ ! -f "$VIDEO_CHILD" ]]; then
-        fail "Test video not found: $VIDEO_CHILD"
-        exit 1
-    fi
+    require_video VSA_TEST_CHILD_VIDEO "$VIDEO_CHILD" || exit 1
 
     if $USE_LOCAL; then
         info "Mode: LOCAL (no Docker)"
@@ -391,15 +396,10 @@ if $RUN_MULTIVIDEO; then
     header "MULTI-VIDEO SCENARIO TESTS"
     cd "$PROJECT_DIR"
 
-    # Check videos exist
-    MISSING=false
-    for v in "$VIDEO_CHILD" "$VIDEO_FRIDGE" "$VIDEO_ELDER_DAY1" "$VIDEO_ELDER_DAY2"; do
-        if [[ ! -f "$v" ]]; then
-            fail "Video not found: $v"
-            MISSING=true
-        fi
-    done
-    if $MISSING; then exit 1; fi
+    require_video VSA_TEST_CHILD_VIDEO "$VIDEO_CHILD" || exit 1
+    require_video VSA_TEST_FRIDGE_VIDEO "$VIDEO_FRIDGE" || exit 1
+    require_video VSA_TEST_ELDER_VIDEO "$VIDEO_ELDER_DAY1" || exit 1
+    require_video VSA_TEST_ELDER_2_VIDEO "$VIDEO_ELDER_DAY2" || exit 1
 
     # Start infrastructure
     ensure_mediamtx

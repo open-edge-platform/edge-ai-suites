@@ -32,6 +32,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
 }) => {
   const menuIconRef = useRef<HTMLImageElement>(null);
   const navMenuRef = useRef<HTMLDivElement>(null);
+  const navToggleRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
 
@@ -67,9 +68,14 @@ const TopPanel: React.FC<TopPanelProps> = ({
     setIsNavMenuOpen(false);
   };
 
-  const openAppMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    window.electronAPI?.popupMenu({ x: rect.left, y: rect.bottom });
+  // Electron only: open the native application menu (File/Edit/View/Window).
+  // Anchored under the hamburger toggle. Using the still-visible toggle 
+  // makes the native menu appear where the dropdown was.
+  const openAppMenu = () => {
+    const rect = navToggleRef.current?.getBoundingClientRect();
+    window.electronAPI?.popupMenu(
+      rect ? { x: rect.left, y: rect.bottom + 8 } : undefined
+    );
   };
 
   const openSettings = () => {
@@ -84,6 +90,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const renderNavMenu = () => (
     <div className="nav-menu-container" ref={navMenuRef}>
       <button
+        ref={navToggleRef}
         className="nav-menu-toggle"
         onClick={toggleNavMenu}
         aria-label={t('menu.toggle', 'Toggle menu')}
@@ -122,13 +129,26 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <span className="menu-icon">📝</span>
               <span className={!hasGradingFeature ? 'disabled' : ''}>{t('grading.title', 'Grading')}</span>
             </li>
-            <li 
+            <li
               className={!hasReportFeature ? 'no-click' : ''}
               onClick={() => hasReportFeature && handleNavItemClick(onViewReport)}
             >
               <span className="menu-icon">📊</span>
               <span className={!hasReportFeature ? 'disabled' : ''}>{t('reportPanel.title', 'View Report')}</span>
             </li>
+            {/* Electron only: the native application menu (File/Edit/View/Window) */}
+            {isElectron && (
+              <li
+                className="nav-menu-app-menu"
+                onClick={() => {
+                  setIsNavMenuOpen(false);
+                  openAppMenu();
+                }}
+              >
+                <span className="menu-icon">⚙️</span>
+                <span>{t('menu.appMenu', 'Application menu')}</span>
+              </li>
+            )}
           </ul>
         </div>
       )}
@@ -139,16 +159,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
     return (
       <header className="top-panel">
         <div className="brand-slot">
-          {isElectron && (
-            <button
-              className="app-menu-btn"
-              onClick={openAppMenu}
-              aria-label={t('menu.appMenu', 'Application menu')}
-              title={t('menu.appMenu', 'Application menu')}
-            >
-              &#9776;
-            </button>
-          )}
           {renderNavMenu()}
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('grading.title', 'Grading')}</span>
@@ -164,16 +174,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
     return (
       <header className="top-panel">
         <div className="brand-slot">
-          {isElectron && (
-            <button
-              className="app-menu-btn"
-              onClick={openAppMenu}
-              aria-label={t('menu.appMenu', 'Application menu')}
-              title={t('menu.appMenu', 'Application menu')}
-            >
-              &#9776;
-            </button>
-          )}
           {renderNavMenu()}
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
@@ -188,16 +188,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   return (
     <header className="top-panel">
       <div className="brand-slot">
-        {isElectron && (
-          <button
-            className="app-menu-btn"
-            onClick={openAppMenu}
-            aria-label={t('menu.appMenu', 'Application menu')}
-            title={t('menu.appMenu', 'Application menu')}
-          >
-            &#9776;
-          </button>
-        )}
         {renderNavMenu()}
         <img src={BrandSlot} alt="Intel Logo" className="logo" />
         <span className="app-title">{t('header.title')}</span>

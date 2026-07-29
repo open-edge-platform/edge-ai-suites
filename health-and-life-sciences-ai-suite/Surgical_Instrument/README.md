@@ -187,12 +187,12 @@ The bootstrap looks for `${CACHE_DIR}/weights/<model_name>.pt` (default: `/cache
 
   ```bash
   .venv-backend/bin/python scripts/create_endoscopy_video.py \
-    --images-dir datasets/CVC-ColonDB/raw/images \
+    --images-dir datasets/CVC-ColonDB/raw/CVC-ColonDB/images \
     --output videos/polyp_test.mp4 \
     --seconds 60 --fps 60 --width 1920 --height 1080
   ```
 
-  This creates/overwrites `videos/polyp_test.mp4` using an H.264-compatible codec for the default app file-source pipeline.
+  This creates/overwrites `videos/polyp_test.mp4` using an H.264-compatible codec for the default app file-source pipeline. By default the script tries OpenCV first, then automatically falls back to system `ffmpeg` (`libx264`) when OpenCV H.264 is unavailable.
 
 ### 4. Validate and start
 

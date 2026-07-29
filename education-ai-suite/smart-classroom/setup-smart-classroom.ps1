@@ -1508,7 +1508,17 @@ function Update-YamlValue {
     }
 }
 
-$featureIds = @("asr", "summary", "mindmap", "topic_segmentation", "video_analytics", "content_search", "qa")
+# Derive the feature list from the features: block in config.yaml (preserves order).
+$featureIds = @()
+$featuresBlockMatch = [regex]::Match($configContent, "(?ms)^features:[ \t]*\r?\n(.*?)(?=^\S|\z)")
+if ($featuresBlockMatch.Success) {
+    foreach ($m in [regex]::Matches($featuresBlockMatch.Groups[1].Value, "(?m)^\s+([A-Za-z0-9_]+)\s*:\s*\{\s*enabled\s*:\s*(?:true|false)\s*\}")) {
+        $featureIds += $m.Groups[1].Value
+    }
+}
+if ($featureIds.Count -eq 0) {
+    $featureIds = @("asr", "summary", "mindmap", "topic_segmentation", "video_analytics", "board_ocr", "content_search", "qa", "grading", "report")
+}
 
 function Get-FeatureState {
     param(

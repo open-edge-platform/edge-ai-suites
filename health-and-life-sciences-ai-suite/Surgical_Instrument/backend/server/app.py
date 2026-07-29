@@ -29,21 +29,18 @@ Lifecycle mapping (FSM state -> UI lifecycle):
 from __future__ import annotations
 
 import json
-import math
 import os
 import queue
-import random
 import threading
 import time
-from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from flask import Flask, Response, jsonify, request
 
 from ..bootstrap.orchestrator import Orchestrator
+from ..consumer import MetricsClient
 
 
 # ---------------------------------------------------------------------------
@@ -71,18 +68,12 @@ class ServerState:
 
     lock: threading.Lock = field(default_factory=threading.Lock)
 
-    # Rolling hardware-metrics buffers (last ~60 samples = ~4 min at 4 Hz)
-    cpu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    gpu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    npu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    mem_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    pwr_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-
 
 STATE = ServerState()
 _orch: Optional[Orchestrator] = None
 _worker = None  # type: Optional[Any]  # InferenceWorker — lazy import
 _cfg: Optional[dict] = None
+_metrics: Optional[MetricsClient] = None
 
     # Frozen snapshot of the last session — populated on Stop, cleared on Start,
     # so the UI keeps showing the final KPI values after the user stops.
@@ -267,42 +258,21 @@ def _start_bootstrap(config_path: Path) -> Orchestrator:
 
 
 # ---------------------------------------------------------------------------
-# Delta broadcaster + hardware metrics sampler
+# Delta broadcaster
 # ---------------------------------------------------------------------------
 
-def _sample_hardware(t: float) -> tuple[float, float, float, float, float]:
-    """Return (cpu%, gpu%, npu%, mem%, power W) — synthetic for now."""
-    running = STATE.lifecycle == "running"
-    if running:
-        cpu = max(0.0, min(100.0, 32.0 + 24.0 * math.sin(t * 0.4) + random.uniform(-3, 3)))
-        gpu = max(0.0, min(100.0, 68.0 + 20.0 * math.sin(t * 0.45) + random.uniform(-4, 4)))
-        npu = max(0.0, min(100.0, 6.0 + 4.0 * abs(math.sin(t * 0.6))))
-        mem_pct = max(0.0, min(100.0, 25.0 + 6.0 * abs(math.sin(t * 0.15))))
-        pwr = 30.0 + 8.0 * math.sin(t * 0.3)
-    else:
-        cpu = 8.0 + 4.0 * abs(math.sin(t * 0.25))
-        gpu = 4.0 + 3.0 * abs(math.sin(t * 0.6))
-        npu = 0.0
-        mem_pct = 20.0
-        pwr = 18.0
-    return cpu, gpu, npu, mem_pct, pwr
-
-
 def _delta_loop(stop_event: threading.Event) -> None:
-    t = 0.0
-    while not stop_event.is_set():
-        ts_iso = datetime.now().isoformat(timespec="seconds")
-        cpu, gpu, npu, mem_pct, pwr = _sample_hardware(t)
-        STATE.cpu_hist.append([ts_iso, round(cpu, 1)])
-        STATE.gpu_hist.append([ts_iso, round(gpu, 1)])
-        STATE.npu_hist.append([ts_iso, round(npu, 1)])
-        STATE.mem_hist.append([ts_iso, round(32 * mem_pct / 100, 2), 32.0, 0.0, round(mem_pct, 1)])
-        STATE.pwr_hist.append([ts_iso, round(pwr, 1)])
+    """Push pipeline snapshot deltas to SSE subscribers on a fixed cadence.
 
+    Hardware metrics (CPU / iGPU / NPU / memory / power) are *not* sampled
+    here — the UI pulls those on-demand from /api/hardware-metrics, which
+    proxies the surgical-metrics-collector sidecar. This loop only exists
+    so the UI's pipeline KPIs (fps, latency, uptime) refresh smoothly
+    while inference is running.
+    """
+    while not stop_event.is_set():
         if STATE.lifecycle == "running":
             _publish("delta", _snapshot_full())
-
-        t += 0.25
         stop_event.wait(0.25)
 
 
@@ -531,13 +501,26 @@ def events() -> Response:
 
 @app.get(f"{API}/hardware-metrics")
 def hardware_metrics() -> Response:
-    return jsonify({
-        "cpu_utilization": list(STATE.cpu_hist),
-        "gpu_utilization": list(STATE.gpu_hist),
-        "npu_utilization": list(STATE.npu_hist),
-        "memory":          list(STATE.mem_hist),
-        "power":           list(STATE.pwr_hist),
-    })
+    """Proxy to the surgical-metrics-collector sidecar.
+
+    The collector container (image ``intel/hl-ai-metrics-collector``)
+    scrapes host CPU (sar), iGPU (qmassa), NPU (sysfs CSV), memory
+    (``free``), and Intel PCM power counters and exposes the aggregate at
+    ``GET /metrics``. This route forwards that payload unchanged so the
+    UI's Resource Utilisation panel renders real values instead of a
+    synthetic sine wave. Returns an empty canonical payload with
+    ``available: False`` when the collector is unreachable.
+    """
+    if _metrics is None:
+        return jsonify({
+            "cpu_utilization": [],
+            "gpu_utilization": [],
+            "npu_utilization": [],
+            "memory":          [],
+            "power":           [],
+            "available":       False,
+        })
+    return jsonify(_metrics.fetch_metrics())
 
 
 # ---------------------------------------------------------------------------
@@ -847,7 +830,7 @@ def health_alias() -> Response:
 
 def create_app(config_path: str | Path) -> Flask:
     """Wire orchestrator + background threads; return the Flask app."""
-    global _cfg
+    global _cfg, _metrics
     from ..bootstrap.config import load_config
 
     _cfg = load_config(config_path)
@@ -855,6 +838,19 @@ def create_app(config_path: str | Path) -> Flask:
     cfg_device = str((_cfg.get("pipeline", {}) or {}).get("device", "GPU")).upper()
     if cfg_device in VALID_DEVICES:
         STATE.device = cfg_device
+
+    # Metrics-collector proxy. Env var wins so `docker compose` can point
+    # the backend at a host-mode collector during dev without editing the
+    # yaml. Falls back to the yaml, then to the compose-network DNS name.
+    mc_cfg = (_cfg.get("metrics_collector", {}) or {})
+    mc_base = os.environ.get(
+        "METRICS_COLLECTOR_URL",
+        mc_cfg.get("base_url", "http://surgical-metrics-collector:9000"),
+    )
+    _metrics = MetricsClient(
+        mc_base,
+        max_points=int(mc_cfg.get("max_points", 120)),
+    )
 
     _start_bootstrap(Path(config_path))
 

@@ -237,21 +237,13 @@ jobs:
       # assets for components not built this run are left untouched on the
       # existing release.
       - name: Publish to rolling release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
-        with:
-          token: ${{ secrets.SIV_USER_TOKEN_GH }}
-          tag_name: fedaero-latest
-          name: "Federal and Aerospace | Edge AI Suites (latest)"
-          body: |
-            Rolling dev build from `main` @ ${{ github.sha }}.
-            For the stable pinned release see the "Latest release" badge.
-          # Auto-generate notes from PRs / commits since the previous run.
-          generate_release_notes: false
-          # Marked as prerelease so it doesn't compete with versioned releases
-          # for customer attention.
-          prerelease: true
-          # Force-move the tag to this commit on each publish.
-          files: assets/*.zip
+        env:
+          GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          notes=$'Rolling dev build from `${{ github.sha }}`.\n\nFor the stable pinned release see the "Latest release" badge.'
+          gh release create --prerelease --title "Federal and Aerospace | Edge AI Suites (latest)" \
+            --notes "$notes" fedaero-latest assets/*.zip
 
   release-versioned:
     name: Publish immutable versioned release (v$VERSION)
@@ -304,30 +296,16 @@ jobs:
           name: deterministic-threat-detection
           path: assets
 
-      - name: Download federal-aerospace artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: federal-aerospace
-          path: assets
-
       - name: List downloaded assets
         run: ls -la assets/
 
       # Create the immutable versioned release. No tag move, no asset
       # replacement — if the tag exists we'd have failed in the guard step.
       - name: Publish versioned release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
-        with:
-          token: ${{ secrets.SIV_USER_TOKEN_GH }}
-          tag_name: "v${{ env.VERSION }}"
-          name: "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}"
-          body: |
-            Immutable versioned release built from `${{ github.sha }}`.
-
-            Contains:
-            - `handheld-multi-modal.zip` — handheld multi-modal app
-            - `deterministic-threat-detection.zip` — deterministic threat detection app
-          # Auto-generate changelog from PRs / commits since the previous tag.
-          generate_release_notes: false
-          prerelease: false
-          files: assets/*.zip
+        env:
+          GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app'
+          gh release create --title "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}" \
+            --notes "$notes" v${{ env.VERSION }} assets/*.zip
