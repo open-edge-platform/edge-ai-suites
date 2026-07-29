@@ -85,6 +85,7 @@ endef
 up:  ## First-boot: build images + start stack. May take 20-35 min if no cached IR.
 	@xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
+	@$(MAKE) --no-print-directory port-audit
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
@@ -100,6 +101,7 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 		exit 1)
 	@xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
+	@$(MAKE) --no-print-directory port-audit
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d

@@ -2,9 +2,8 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# One-shot demo launcher: push the bundled clips as RTSP streams, then start the
-# MCP server with the demo bundle (demo/config.demo.yaml + demo/monitors.demo.yaml)
-# so the three validated example monitors (fridge / child / elder) come up.
+# One-shot demo launcher: push user-provided clips as RTSP streams, then start
+# the MCP server with the matching subset of the demo monitor bundle.
 #
 #   demo/scripts/start-demo.sh          # start streams + demo MCP server
 #   demo/scripts/stop-demo.sh           # stop both
@@ -15,7 +14,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROMPTS_DIR="$REPO_DIR/demo/prompts"
 
-# Service endpoints (must match demo/config.demo.yaml).
+# Service endpoints (must match config.yaml.example).
 SUMMARY_URL="${SUMMARY_URL:-http://localhost:8192}"      # multilevel-video-understanding
 ANALYTICS_URL="${ANALYTICS_URL:-http://localhost:8999}"  # videostream-analytics
 
@@ -36,20 +35,19 @@ curl -fsS --max-time 5 "$ANALYTICS_URL/health" >/dev/null 2>&1 \
   || { echo "prerequisite not healthy: videostream-analytics — expected GET $ANALYTICS_URL/health to succeed (override with ANALYTICS_URL)." >&2; exit 1; }
 echo "  ok: videostream-analytics ($ANALYTICS_URL)"
 
-# 1. Register demo tasks to multilevel-video-understanding (see ../prompts/curl_register_task.md).
-#    Fetch the current task list once, then POST only the tasks that aren't registered yet.
-echo "registering demo tasks…"
+# 1. Restore any bundled task that was removed while the MCP server is already
+#    running. The main launcher performs the same registration for new servers.
+echo "checking bundled use cases…"
 existing="$(curl -fsS "$SUMMARY_URL/v1/tasks" | jq -r '.tasks[].name')" \
   || { echo "failed to list tasks at $SUMMARY_URL/v1/tasks" >&2; exit 1; }
-
 for task in fridge_monitor child_safety_monitor elder_wakeup_monitor; do
   prompt_file="$PROMPTS_DIR/$task.txt"
   [[ -f "$prompt_file" ]] || { echo "missing prompt file: $prompt_file" >&2; exit 1; }
   if grep -qxF "$task" <<<"$existing"; then
-    echo "  = $task (already registered — skipping)"
+    echo "  = $task (already registered)"
     continue
   fi
-  echo "  → $task"
+  echo "  → restoring $task"
   jq -Rs --arg name "$task" '{task_name: $name, mode: "full", content: {text: .}}' "$prompt_file" \
     | curl -fsS "$SUMMARY_URL/v1/tasks" -H "Content-Type: application/json" --data-binary @- >/dev/null \
     || { echo "failed to register $task" >&2; exit 1; }
@@ -59,7 +57,39 @@ done
 echo "starting demo RTSP streams…"
 bash "$REPO_DIR/demo/videos/start-streams.sh"
 
-# 3. Start the MCP server pointed at the demo bundle.
-export MCP_CONFIG="$REPO_DIR/demo/config.demo.yaml"
-export MCP_MONITORS="$REPO_DIR/demo/monitors.demo.yaml"
-exec "$REPO_DIR/scripts/mcp-server/start.sh" "$@"
+# 3. Generate a monitor bundle matching only the streams that started.
+ACTIVE_STREAMS_FILE="$REPO_DIR/demo/videos/.run/active-streams.txt"
+FILTERED_MONITORS="$(mktemp)"
+trap 'rm -f "$FILTERED_MONITORS"' EXIT
+
+"$REPO_DIR/demo/videos/.venv/bin/python" - \
+  "$REPO_DIR/demo/monitors.demo.yaml" \
+  "$ACTIVE_STREAMS_FILE" \
+  "$FILTERED_MONITORS" <<'PY'
+import sys
+
+import yaml
+
+monitors_path, active_path, output_path = sys.argv[1:]
+with open(active_path, encoding="utf-8") as active_file:
+  active_streams = {line.strip() for line in active_file if line.strip()}
+with open(monitors_path, encoding="utf-8") as monitors_file:
+  monitors_config = yaml.safe_load(monitors_file) or {}
+
+monitors = monitors_config.get("monitors") or {}
+monitors_config["monitors"] = {}
+for monitor_id, monitor in monitors.items():
+  if monitor_id not in active_streams:
+    continue
+  monitor = dict(monitor)
+  monitor["enabled"] = True
+  monitors_config["monitors"][monitor_id] = monitor
+with open(output_path, "w", encoding="utf-8") as output_file:
+  yaml.safe_dump(monitors_config, output_file, sort_keys=False)
+
+print(f"  registering {len(monitors_config['monitors'])} monitor(s) for active streams")
+PY
+
+# 4. Start the MCP server with the bundled use cases and demo monitors.
+export MCP_MONITORS="$FILTERED_MONITORS"
+exec "$REPO_DIR/scripts/mcp-server/start.sh"

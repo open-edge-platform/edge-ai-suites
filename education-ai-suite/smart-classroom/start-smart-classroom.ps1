@@ -1383,19 +1383,20 @@ if ($Silent) {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
 
-    while ($true) {
-        # If the backend exited on its own (crash or graceful shutdown),
-        # clean up the remaining services and return to the prompt instead
-        # of spinning here forever.
-        if ($script:backendProcess -and $script:backendProcess.HasExited) {
-            Write-Host ""
-            Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
-            if ($script:servicesStarted) {
-                Stop-AllServices
-                $script:servicesStarted = $false
+    try {
+        while ($true) {
+            if ($script:backendProcess -and $script:backendProcess.HasExited) {
+                Write-Host ""
+                Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
+                break
             }
-            break
+            Start-Sleep -Seconds 1
         }
-        Start-Sleep -Seconds 1
+    }
+    finally {
+        if ($script:servicesStarted) {
+            Stop-AllServices
+            $script:servicesStarted = $false
+        }
     }
 }
