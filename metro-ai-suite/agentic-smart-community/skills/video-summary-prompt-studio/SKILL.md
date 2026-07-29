@@ -1,6 +1,6 @@
 ---
 name: video-summary-prompt-studio
-description: "MANDATORY for creating, previewing, refining, or registering any Smart Building video analytics use case. Enforces primary-event capability checks, Q1 alerting, Q2 schema extension, Final Schema + Rule Path selection, prompt authoring, two-step registration, and monitor binding."
+description: "MANDATORY for creating, previewing, refining, or registering any Smart Building video analytics use case. Requires two cross-turn gates before drafting or registration: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract."
 homepage: https://github.com/open-edge-platform/edge-ai-libraries
 metadata:
   {
@@ -22,7 +22,7 @@ into each use-case prompt from the user's business requirements.
 
 Read references only at their stated trigger:
 
-- **Always before drafting/refining a prompt:**
+- **After final approval, immediately before drafting/refining a prompt:**
   `references/prompt-authoring.md` — Detection Contract, runtime execution
   matrix, four-section template, semantic lint, and behavior validation.
 - **Extended schema or custom alert behavior:**
@@ -80,13 +80,43 @@ Product invariants:
 
 ## Question flow
 
-Skip questions already answered by the initial request.
+Q1/Q2 are a mandatory cross-turn gate for every new use case, including preview
+requests. First collect only the use-case name and a simple business
+description. A stream URL may be recorded at intake, but it does not change the
+gate.
 
-Q1 and Q2 are the only user-facing confirmation questions in this workflow.
-After they are answered, do not ask for separate confirmation of event names,
-evidence, severity, priority, uncertainty, report behavior, the Detection
-Contract, or generated artifacts. State any inferred defaults briefly and
-continue directly to authoring and registration.
+The initial request never answers Q1 or Q2, even when words such as "alert",
+"warning", "notify", "persist", "field", or an apparent schema occur in the
+business description. Never infer either answer from the use-case name,
+detection targets, safety implications, recommended defaults, prior use cases,
+or canonical examples.
+
+After the name and description are available:
+
+1. Before the explicit Q1/Q2 reply, the only permitted tool call is reading this
+  main `SKILL.md` file itself when it has not already been loaded. Do not read
+  any reference, other skill, config, existing artifact, workspace file, or
+  memory. Do not call memory, search, shell, MCP, `smartbuilding_*`, or any
+  other tool. Once this main file is loaded and the name and description are
+  available, ask the questions without another tool call.
+2. Ask Q1 and Q2 together using the wording below. Explain that Q2 applies only
+  when Q1 is Yes.
+3. End the assistant turn immediately after the questions. Do not draft a
+  prompt, create or modify files, call any tool, write memory, or claim the
+  answers are confirmed in that turn.
+4. Unlock the remaining workflow only from a later user message that explicitly
+  answers Q1 and, when Q1 is Yes, Q2. Examples of valid replies are
+  `Q1=yes, Q2=no` and `Q1=yes, Q2=yes: zone_id (text)`. For Q1=No, record Q2 as
+  not applicable.
+5. If an answer is missing or ambiguous, ask only for the missing answer and end
+  the turn again. Silence, a recommendation, or the agent's own proposed answer
+  is never confirmation.
+
+Q1 and Q2 are the only user-facing design questions in this workflow. After the
+explicit reply is received, resolve event names, evidence, severity, priority,
+uncertainty, and report behavior with the conservative defaults below. Do not
+ask separate design questions for those details. Present the resolved design at
+the mandatory final approval gate below before authoring or registration.
 
 ### Q1 — Alerting?
 
@@ -123,17 +153,24 @@ Never ask the user to write the prompt.
 
 If the agent cannot ask:
 
-- When the user explicitly requested alerts, use base alerting and invent no
-  extensions unless the request explicitly named persisted fields.
-- When alerting intent is not explicit, generate a preview only. Do not
-  register an alerting use case by assumption.
+- Stop after intake and state that explicit Q1/Q2 confirmation is required.
+- Do not infer answers, generate a preview, draft artifacts, or register a use
+  case. There is no fallback that bypasses this gate.
 
 ## Q1/Q2 decision block
 
-After Q1/Q2, show the applicable block and a compact Detection Contract from
-`prompt-authoring.md` for transparency, then continue in the same turn. This is
-not another confirmation gate: do not ask the user to approve the block or wait
-for a reply.
+In the assistant turn after the user's explicit Q1/Q2 reply:
+
+1. Show the applicable block and a compact resolved Detection Contract.
+2. Ask the user to confirm this proposed design and continue.
+3. End the assistant turn immediately. Do not read authoring references, draft
+  prompts, create or modify files, or call any `smartbuilding_*` tool.
+
+This is a mandatory second cross-turn gate. Continue only after a later user
+message explicitly approves the displayed Final Schema, Rule Path, and Detection
+Contract, for example `confirm`, `approved`, or `确认，继续`. The Q1/Q2 reply
+itself cannot approve a design that had not yet been displayed. Silence or the
+agent's own statement that the design is resolved is never approval.
 
 ```text
 Report-only
@@ -174,12 +211,17 @@ T_MINUS affects only explicitly configured history modes. See
 
 ## Draft and lint
 
-1. Read `references/prompt-authoring.md`.
-2. Build the resolved Detection Contract from the request, Q1/Q2, and defaults.
-3. Draft all four Skill-required sections:
+1. Verify that a later user message explicitly answered Q1 and, if applicable,
+  Q2. If not, return to **Question flow** without drafting or calling tools.
+2. Verify that the proposed decision block and Detection Contract were then
+  displayed and explicitly approved in another later user message. If not,
+  return to **Q1/Q2 decision block** and end the turn.
+3. Read `references/prompt-authoring.md`.
+4. Build the approved Detection Contract from the request, Q1/Q2, and defaults.
+5. Draft all four Skill-required sections:
    `GLOBAL_PROMPT`, `MACRO_CHUNK_PROMPT`, `LOCAL_PROMPT`, `T_MINUS_1_PROMPT`.
-4. Run the reference's semantic lint and contract round-trip.
-5. On Extended alerting/custom behavior, read `references/evaluate-rules.md`
+6. Run the reference's semantic lint and contract round-trip.
+7. On Extended alerting/custom behavior, read `references/evaluate-rules.md`
    and create `evaluate_rules.py` from the complete Final Schema.
 
 The Skill requires all four authored sections for predictable realtime/report
@@ -190,6 +232,12 @@ MACRO/T_MINUS; do not rely on those generic defaults for registered use cases.
 
 Use only `smartbuilding_use_case_register`. Never manually POST `/v1/tasks`
 while MCP is available.
+
+Before either registration step, verify both user messages are present in order:
+the explicit Q1/Q2 reply after the question turn, and the explicit final approval
+after the proposed design was displayed. Initial-request wording, agent
+inference, defaults, or a plan item marked complete do not satisfy either
+precondition. If either message is absent, do not call the tool.
 
 Common arguments: `use_case`, one-line English `description`, `persist: true`,
 and `overwrite: false` unless updating.
@@ -290,8 +338,8 @@ Then report system inventory:
 
 | User request | Action |
 |---|---|
-| Create/register use case | Capability check → Q1/Q2 → resolve defaults → author → register → monitor → report |
-| Preview only | Capability check → Q1/Q2 → author/lint → show preview; no registration |
+| Create/register use case | Collect name + description → capability check → ask Q1/Q2 and end turn → receive answers → show resolved design, ask final approval, and end turn → receive explicit approval → author → register → monitor → report |
+| Preview only | Collect name + description → capability check → ask Q1/Q2 and end turn → receive answers → show resolved design, ask final approval, and end turn → receive explicit approval → author/lint → show preview; no registration |
 | Refine/overwrite existing | Read `inspect-existing.md` → confirm changes → register with overwrite |
-| Delete use case | Confirm destructive action → `action=unregister`, `persist=true` → verify `cascaded_monitors`: `db_row="deleted"` means the monitor was fully unregistered; `db_row="kept_offline"` means the row delete failed (e.g. existing alerts history) and it fell back to stop — tell the user the monitor row remains |
+| Delete use case | Confirm destructive action → `action=unregister`, `persist=true` → verify `cascaded_monitors`: `db_row="deleted"` means the monitor was fully unregistered; `db_row="kept_offline"` means the row delete failed (e.g. existing alerts history) and it fell back to stop — tell the user the monitor row remains offline, and that its monitors.yaml entry was kept with `enabled: false` (flip back to `true` to re-enable) |
 | MCP unavailable task CRUD | Read `curl-fallback.md` |

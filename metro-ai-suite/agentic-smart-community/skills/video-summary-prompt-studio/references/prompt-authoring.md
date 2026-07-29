@@ -48,13 +48,18 @@ default `SIMPLE`, `levels=1` path.
 
 ## Detection Contract
 
-Create the contract after Q1/Q2 and before writing prompt prose. Do not request
-a separate user confirmation; derive unspecified details using the conservative
-defaults in `SKILL.md`. A contract contains:
+After the explicit Q1/Q2 reply, resolve the proposed contract from the initial
+request, those answers, and the conservative defaults in `SKILL.md`. Display the
+proposed Final Schema, Rule Path, and compact Detection Contract, then stop and
+wait for the mandatory final approval described in `SKILL.md`. Do not write
+prompt prose until a later user message explicitly approves that displayed
+design.
 
-In this reference, a “resolved” or “confirmed” contract detail means it came
-from the initial request, Q1/Q2, or those defaults. It never requires another
-approval turn.
+In this reference, `resolved` means derived for the proposal; `approved` means
+the user explicitly accepted the displayed proposal in a later turn. Defaults
+may resolve a detail, but neither defaults nor the Q1/Q2 reply can approve a
+design that had not yet been displayed. All authoring rules below operate on the
+approved contract. A contract contains:
 
 1. A closed vocabulary of alerting, non-alerting baseline, absence, and—when
    operationally useful—uncertainty events.
