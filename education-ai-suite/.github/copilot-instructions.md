@@ -16,9 +16,12 @@ The system has multiple tiers:
 
 - **Backend Services** — `smart-classroom/` — Python-based services for video
   processing, OCR, ASR, and content management (port 8000)
+  - Includes **VLM service** (Qwen3-VL-8B-Instruct via OpenVINO) for vision-language tasks
 - **Content Search backend** — `smart-classroom/content_search/` — a Python
-  FastAPI service that handles file storage, vector indexing, and LLM-powered Q&A
+  FastAPI service that handles file storage, vector indexing, and RAG Q&A
   (runs on port `9011` by default)
+  - Uses VLM from main backend for answer generation
+  - Auto-started by main backend when `content_search.enabled: true` in config.yaml
 - **Frontend UI** — `smart-classroom/ui/` — React-based web interface (port 5173)
 - **Flutter UI** — `utils/flutter/` — a cross-platform app (Windows, Web) built
   with Flutter + Riverpod for content search interactions
@@ -26,6 +29,30 @@ The system has multiple tiers:
 ---
 
 ## Architecture 
+
+### VLM Integration
+
+The Content Search RAG pipeline uses a Vision-Language Model for answer generation:
+
+```
+Clients:
+  - PowerShell scripts (sc-qa skill)
+    ↓ HTTP requests (port 9011)
+Content Search Backend (smart-classroom/content_search/)
+    ↓ calls /v1/chat/completions (port 8000)
+Main Backend VLM Service (smart-classroom/)
+    ↓ inference
+Qwen3-VL-8B-Instruct (OpenVINO)
+```
+
+**Key Points:**
+- VLM service runs on main backend (port 8000) at `/v1/chat/completions`
+- Content Search retrieves relevant chunks, then calls VLM to generate grounded answers
+- VLM model loads on first startup (takes 2-3 minutes)
+- Configuration in `smart-classroom/config.yaml` under `content_search.vlm`
+- **Multiple client types**: Flutter app (GUI), PowerShell scripts (automation/testing), React web UI
+
+### Content Search API
 
 The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 
@@ -60,9 +87,11 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 ## Tech Stack
 
 - **Backend**: Python 3.12, FastAPI, OpenVINO
+- **VLM**: Qwen3-VL-8B-Instruct 
 - **Frontend**: React, Vite, Node.js v18+
 - **Flutter**: Flutter 3.22+ / Dart 3.3+, Dio (HTTP), Riverpod (state management)
 - **Infrastructure**: FFmpeg, DL Streamer
+- **Vector Store**: ChromaDB 1.5.5
 
 ---
 
