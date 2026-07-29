@@ -1,6 +1,6 @@
 ---
 name: video-summary-prompt-studio
-description: "MANDATORY for creating, previewing, refining, or registering any Smart Building video analytics use case. Requires two cross-turn gates before drafting or registration: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract."
+description: "MANDATORY for creating, previewing, refining, registering, or deleting any Smart Building video analytics use case. Requires two cross-turn gates before drafting or registration: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract. Requires an explicit cross-turn confirmation before any use-case deletion."
 homepage: https://github.com/open-edge-platform/edge-ai-libraries
 metadata:
   {
@@ -31,8 +31,9 @@ Read references only at their stated trigger:
   `references/inspect-existing.md` — read its active schema and artifacts.
 - **MCP server unavailable:**
   `references/curl-fallback.md` — direct `/v1/tasks` task management only.
-- **Final inventory:**
-  `scripts/list_use_cases.sh` — list use cases from the server's booted config.
+- **Final inventory (MCP unavailable only):**
+  `scripts/list_use_cases.sh` — fallback that lists use cases from the server's
+  booted config. Normal flow uses `smartbuilding_use_case_register action=list`.
 
 ## Data-model boundary
 
@@ -292,6 +293,35 @@ registration with `smartbuilding_monitor_ctl action=register_source`:
 Pass a custom `monitor_id` only for additional cameras; it must start with
 `cam_`. Never use `<use_case>_monitor` as the monitor ID.
 
+## Delete a use case (confirmation gate)
+
+Deletion is destructive: it removes the use-case entry, stops and unregisters
+every bound monitor, and archives artifacts. It requires a mandatory cross-turn
+confirmation gate, just like registration.
+
+1. On a delete request, first fetch the real impact with
+   `smartbuilding_use_case_register action=list` and
+   `smartbuilding_monitor_ctl action=list`, then display what deletion will do:
+   - remove `<use_case>` from the in-memory `use_case_dict` and the booted
+     config (`persist: true`);
+   - move its artifacts to `use-cases/.backup/<use_case>/` (recoverable);
+   - stop and unregister every monitor bound to it (list them by ID).
+2. Ask the user to explicitly confirm the deletion, for example
+   `confirm delete <use_case>`.
+3. End the assistant turn immediately. Do not call `action=unregister` in the
+   same turn that displays the impact.
+4. Call `action=unregister` with `persist: true` only after a later user
+   message explicitly confirms. The initial delete request itself is never
+   confirmation — even when it says "delete", "remove", or "drop" — because the
+   user has not yet seen the cascade impact. Silence, a recommendation, or the
+   agent's own summary is never confirmation. If the reply is ambiguous, ask
+   again and end the turn; if the user declines, do not delete.
+5. After unregister returns, verify `cascaded_monitors`: `db_row="deleted"`
+   means the monitor was fully unregistered; `db_row="kept_offline"` means the
+   row delete failed (e.g. existing alerts history) and it fell back to stop —
+   tell the user the monitor row remains offline, and that its monitors.yaml
+   entry was kept with `enabled: false` (flip back to `true` to re-enable).
+
 ## Validation and final report
 
 Registration success proves structural validity, not detection quality. Apply
@@ -314,12 +344,32 @@ New Use Case
   Validation: behaviorally validated | registered but behaviorally unvalidated
 ```
 
-Then report system inventory:
+Then report system inventory as ONE grouped view — use cases as headers,
+their monitors nested underneath — not two flat lists:
 
-- Monitors: use `smartbuilding_monitor_ctl action=list`; list ID + use case.
-- Use cases: run `scripts/list_use_cases.sh <server-config-path>` against the
-  config the MCP server actually booted with.
+- Fetch both sources: `smartbuilding_use_case_register action=list` (no other
+  arguments; reads the server's live in-memory `use_case_dict`, one entry per
+  use case with `video_summary_task`, `schema_fields`, `rule_path`,
+  `report_source`) and `smartbuilding_monitor_ctl action=list`.
+- Render every use case on one line with its VLM task and rule path; nest each
+  monitor bound to it (ID, source URL, online/offline) below. A use case with
+  no monitor gets `(no camera bound yet)` — that is expected right after a
+  registration without a stream URL, not an error.
+
+```text
+System Inventory
+  pet_safety     task: pet_safety_monitor   rules: evaluate_rules.py
+    cam_pet_safety -> rtsp://...   (online)
+  child_safety   task: child_safety_monitor rules: defaultRuleEvaluator
+    cam_child_01 -> rtsp://...     (offline)
+  fridge         task: fridge_monitor       rules: none
+    (no camera bound yet)
+```
+
 - If one inventory source is unavailable, report the other and state the gap.
+  Only when the MCP server itself is unavailable, fall back to
+  `scripts/list_use_cases.sh <server-config-path>` against the config the server
+  booted with.
 
 ## Failure handling
 
@@ -341,5 +391,5 @@ Then report system inventory:
 | Create/register use case | Collect name + description → capability check → ask Q1/Q2 and end turn → receive answers → show resolved design, ask final approval, and end turn → receive explicit approval → author → register → monitor → report |
 | Preview only | Collect name + description → capability check → ask Q1/Q2 and end turn → receive answers → show resolved design, ask final approval, and end turn → receive explicit approval → author/lint → show preview; no registration |
 | Refine/overwrite existing | Read `inspect-existing.md` → confirm changes → register with overwrite |
-| Delete use case | Confirm destructive action → `action=unregister`, `persist=true` → verify `cascaded_monitors`: `db_row="deleted"` means the monitor was fully unregistered; `db_row="kept_offline"` means the row delete failed (e.g. existing alerts history) and it fell back to stop — tell the user the monitor row remains offline, and that its monitors.yaml entry was kept with `enabled: false` (flip back to `true` to re-enable) |
+| Delete use case | Fetch inventory → display cascade impact, ask confirmation, and end turn → receive explicit confirmation in a later message → `action=unregister`, `persist=true` → verify `cascaded_monitors` (see **Delete a use case (confirmation gate)**) |
 | MCP unavailable task CRUD | Read `curl-fallback.md` |
