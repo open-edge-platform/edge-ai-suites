@@ -64,11 +64,11 @@ text-to-speech are served on the same machine.
 ### `rag-service` (Knowledge Base + LLM, Port 8020)
 The core intelligence. It:
 - **Ingests** course materials (`.txt`, `.md`, `.docx`, `.pdf`)
-- **Embeds** documents using BGE embedding model
-- **Stores** embeddings in Chroma vector database
+- **Embeds** documents using the `BAAI/bge-large-en-v1.5` embedding model
+- **Stores** embeddings in a Chroma vector database
 - **Retrieves** relevant context chunks for each question
-- **Ranks** candidates with optional BGE reranker
-- **Generates** answers using Qwen LLM with retrieved context
+- **Ranks** candidates with the `BAAI/bge-reranker-base` reranker
+- **Generates** answers using the `Qwen/Qwen3-4B-Instruct-2507` LLM (OpenVINO backend)
 - **Streams** answer tokens back to `kiosk-core` over SSE
 
 ### `text-to-speech` (Voice Synthesis, Port 8011)
@@ -164,6 +164,22 @@ Times vary by: CPU speed, answer length, chunk count, model precision.
 - Windows-native launcher flow (`setup_windows.ps1`, `start_kiosk.ps1`)
 - No container runtime required
 - Submodule-based dependency layout (`edge-ai-libraries`, `voice-enabled-interactions`)
+
+## Shared Infrastructure and Disabled Features
+
+`kiosk-core` and `rag-service` are provided by the `voice-enabled-interactions`
+submodule, which also ships retail-oriented capabilities. The AI Teaching
+Assistant runs a lean, local-only educational configuration and disables those
+features via `.env`:
+
+| Feature | Flag | State |
+|---------|------|-------|
+| Ordering / commerce agent | `KIOSK_CORE_ORDERING_ENABLED` | Disabled |
+| Identity / face recognition | `KIOSK_CORE_IDENTITY_ENABLED` | Disabled |
+| Queue service | `KIOSK_CORE_QUEUE_SERVICE_ENABLED` | Disabled |
+| Speaker diarization | `KIOSK_CORE_DIARIZATION_ENABLED` | Disabled |
+
+Only the voice Q&A path (ASR → RAG → LLM → TTS) and system metrics are active.
 
 ## Configuration
 

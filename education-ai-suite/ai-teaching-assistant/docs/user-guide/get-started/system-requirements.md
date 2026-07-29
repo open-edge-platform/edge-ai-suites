@@ -22,9 +22,11 @@ PowerShell 5.1+ (included with Windows 10/11).
 ### Memory
 - **Minimum** — 16 GB RAM
 - **Recommended** — 32 GB RAM
-- **Optimal** — 64 GB RAM (for large models without swap)
+- **Optimal** — 64 GB RAM (headroom for models plus browser and OS)
 
-With less than 16 GB, smaller LLM models (0.5B, 1.8B) run; larger models (7B+) will be slow.
+The default LLM is `Qwen/Qwen3-4B-Instruct-2507` (int8) configured in
+`rag-service/config.yaml`. With less than 16 GB RAM, switch to a smaller
+Qwen instruct model in that config for smoother performance.
 
 ### Storage
 - **Minimum** — 50 GB free SSD space
@@ -87,16 +89,16 @@ Must have:
 ## Performance Tips
 
 ### For Faster Inference
-1. **Use a smaller LLM model** (0.5B or 1.8B instead of 7B)
+1. **Use a smaller Qwen instruct model** than the default `Qwen3-4B-Instruct`
 2. **Enable GPU acceleration** if you have an Intel GPU (Iris Xe or newer)
 3. **Increase system RAM** to avoid disk swapping
 4. **Use NVMe SSD** for model storage
 
 ### For Better Answers
-1. **Use a larger LLM model** (7B or larger)
+1. **Use a larger Qwen instruct model** than the default `Qwen3-4B-Instruct`
 2. **Upload more course materials** to the knowledge base
 3. **Enable reranking** in configuration (improves answer relevance)
-4. **Adjust top-K** — Retrieve more chunks (10-20) for complex topics
+4. **Adjust top-K** — Retrieve more chunks for complex topics
 
 ### For Multi-User Deployment
 - Ensure machine has 64+ GB RAM

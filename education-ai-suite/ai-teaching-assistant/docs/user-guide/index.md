@@ -17,7 +17,7 @@ All inference runs locally on Intel CPU/GPU via OpenVINO — **no cloud dependen
 | Service          | Port | Role                                           |
 | ---------------- | ---- | ---------------------------------------------- |
 | `audio-analyzer` | 8010 | Speech-to-text (Whisper)                       |
-| `text-to-speech` | 8011 | Speech synthesis (SpeechT5)                    |
+| `text-to-speech` | 8011 | Speech synthesis (SpeechT5 / Qwen-TTS)          |
 | `rag-service`    | 8020 | Knowledge ingestion & retrieval-augmented generation |
 | `kiosk-core`     | 8012 | Session management & service orchestration     |
 | `ai-teaching-assistant ui` | 7860 | React browser interface              |

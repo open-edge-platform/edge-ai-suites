@@ -29,11 +29,11 @@ Typical variables:
 | `KIOSK_CORE_SILENCE_TIMEOUT_SECONDS` | Silence timeout |
 | `KIOSK_CORE_MAX_SESSION_SECONDS` | Max session length |
 | `KIOSK_CORE_SILENCE_THRESHOLD` | Speech detection threshold |
-| `SMART_KIOSK_RAG__MODELS__LLM__BACKEND` | RAG LLM backend (`openvino`) |
-| `KIOSK_CORE_ORDERING_ENABLED` | Ordering feature flag |
-| `KIOSK_CORE_IDENTITY_ENABLED` | Identity feature flag |
-| `KIOSK_CORE_QUEUE_SERVICE_ENABLED` | Queue feature flag |
-| `KIOSK_CORE_DIARIZATION_ENABLED` | Diarization feature flag |
+| `SMART_KIOSK_RAG__MODELS__LLM__BACKEND` | RAG LLM backend (`openvino`, local-only) |
+| `KIOSK_CORE_ORDERING_ENABLED` | Ordering agent (disabled for teaching) |
+| `KIOSK_CORE_IDENTITY_ENABLED` | Face/voice identity (disabled for teaching) |
+| `KIOSK_CORE_QUEUE_SERVICE_ENABLED` | Queue service (disabled for teaching) |
+| `KIOSK_CORE_DIARIZATION_ENABLED` | Speaker diarization (disabled for teaching) |
 
 After `.env` changes, restart services.
 
