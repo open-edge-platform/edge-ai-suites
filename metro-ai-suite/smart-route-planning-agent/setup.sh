@@ -73,7 +73,6 @@ if [ "$#" -eq 2 ]; then
 fi
 
 
-
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
 
@@ -128,9 +127,6 @@ start_service() {
     if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
         echo -e "${BLUE}AI Route Planner UI: ${YELLOW}http://${HOST_IP}:${AI_ROUTE_PLANNER_PORT}${NC}"
-        echo ""
-        echo -e "${BLUE}To follow logs in real-time, run:${NC}"
-        echo -e "${YELLOW}docker compose -f docker/compose.yaml logs -f${NC}"
     else
         echo -e "${RED}Failed to start Smart-Route-Planning-Agent container!${NC}"
         return 1

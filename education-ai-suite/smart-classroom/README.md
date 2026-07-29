@@ -1,16 +1,44 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation and future capabilities like video understanding and real-time analysis.
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models for the Windows OS. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
 
 The main features are as follows:
 
-- Audio transcription with ASR models (e.g., Whisper, Paraformer)\
-- Speaker diarization is supported using Pyannote Audio models.\
-- Summarization using powerful LLMs (e.g., Qwen, LLaMA)\
-- MindMap Generation using Mermaid.js for visual diagram rendering of the summary\
-- Plug-and-play architecture for integrating new ASR and LLM models\
-- API-first design ready for frontend integration\
-- Video analysis
+#### Audio Pipeline
+
+- Audio transcription with ASR models (e.g., Whisper, Paraformer)
+- Speaker diarization using Pyannote Audio models (optional)
+- Summarization using powerful LLMs (e.g., Qwen, LLaMA)
+- MindMap generation using Mermaid.js for visual diagram rendering of the summary
+- Content segmentation for automatic topic extraction from transcripts
+
+#### Video Analytics Pipeline
+
+- Real-time video analysis across three concurrent camera streams (front, back, content)
+- Person detection and pose estimation using YOLO models with keypoint skeleton tracking
+- Person re-identification for tracking individual students across frames
+- Classroom statistics including student count, stand-up events, and hand-raise events
+
+#### Content Search
+
+- Multimodal semantic search across videos, images, and documents
+- AI-driven video summarization using Vision Language Models (VLM)
+- Document text extraction with OCR support (PaddleOCR)
+- RAG-based Question & Answer over uploaded educational materials
+- Vector-based retrieval using ChromaDB with CLIP and mE5 embeddings
+
+#### Report Generator
+
+- Report generation triggered via report API after session outputs are ready
+- Session-based inputs from summary, mindmap, and topic segmentation outputs
+- Field-selectable template report generation with streaming output
+- Report retrieval and export in Markdown, DOCX, and PDF formats
+- Fast reselect flow to update included fields without rerunning full LLM generation
+
+#### Architecture
+
+- Plug-and-play architecture for integrating new ASR, LLM, and video analytics models
+- API-first design ready for frontend integration
 
 ## Get Started
 
@@ -22,9 +50,23 @@ To see the system requirements and other installations, see the following guides
 
 ## How It Works
 
-The basic architecture follows a modular pipeline designed for efficient audio summarisation. It begins with **audio preprocessing**, where FFMPEG chunks input audio into smaller segments for optimal handling. These segments are processed by an **ASR transcriber** (e.g., Whisper or Paraformer) to convert speech into text. Finally, an **LLM summariser** (such as Qwen or Llama), optimised through frameworks like OpenVINO IR, Llama.cpp, or IPEX, generates concise summaries, which are delivered via the **output handler** for downstream use.
+The architecture follows a modular, dual-pipeline design for comprehensive classroom analysis.
 
-![High-Level System Diagram](./docs/user-guide/_assets/architecture.svg)
+The **audio pipeline** begins with audio preprocessing, where FFmpeg chunks input audio into smaller segments for optimal handling. These segments are processed by an **ASR transcriber** (e.g., Whisper or Paraformer) to convert speech into text. An **LLM summariser** (such as Qwen or Llama), optimised through frameworks like OpenVINO, or IPEX, generates concise summaries delivered via the output handler.
+
+The **video analytics pipeline** processes up to three concurrent camera streams (front, back, content) through DL Streamer-based processing graphs. Each stream passes through **YOLO-based person detection and pose estimation**, followed by **posture classification** (sit/stand, hand-raise) and **multi-model classification** (ResNet-18, MobileNet-V2, Person-ReID). All models run on OpenVINO with NPU by default. Processed video is streamed via a **MediaMTX RTSP server**, and per-frame metadata is aggregated into classroom engagement statistics.
+
+The **content search pipeline** handles multimodal content ingestion and retrieval. Uploaded files (videos, documents, images) are processed through format-specific extractors: videos are split into time-based chunks and summarized by a **VLM** (Qwen3-VL); documents undergo text extraction with optional OCR (PaddleOCR) and semantic chunking; images are embedded directly via **CLIP**. All content is indexed into **ChromaDB** with dual embeddings (CLIP for visual, mE5 for text). At query time, a **cross-encoder reranker** (BGE-reranker) scores document results, and **Reciprocal Rank Fusion (RRF)** merges results across modalities for balanced retrieval. A RAG-based Q&A layer generates grounded answers from the retrieved context.
+
+<p align="center">
+  <img src="./docs/user-guide/_assets/architecture.svg" alt="High-Level Audio Pipeline Diagram" width="80%">
+</p>
+<p align="center">
+  <img src="./docs/user-guide/_assets/video-pipeline.svg" alt="High-Level Video Pipeline Diagram" width="80%">
+</p>
+<p align="center">
+  <img src="./docs/user-guide/_assets/Content_Search_Arch.svg" alt="Content Search Architecture" width="80%">
+</p>
 
 For more information see [How it works](./docs/user-guide/how-it-works.md)
 

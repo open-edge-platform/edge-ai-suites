@@ -18,10 +18,11 @@
 # Desc:  Waits for specific interface (e.g topic, service and action) to be up and running.
 #        Used to achieve synchronization  and serialization in launch.py
 
-import rclpy
-import subprocess
+import subprocess  # nosec B404
 import sys
 import time
+
+import rclpy
 
 
 def check_interface(interface_mode, interface_name):
@@ -31,7 +32,11 @@ def check_interface(interface_mode, interface_name):
 
     while True:
         command = ['ros2', interface_mode, 'list']
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(  # nosec B603
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         stdout, _ = process.communicate()
 
         action_services = stdout.decode().splitlines()

@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## General description of Fast Mapping module
 
-Using the RGB-D data from the camera and the current pose resulting from the tracking module, the Fast Mapping module generates and maintains both a volumetric map (3D) and a occupancy grid (2D) that can be used for robot navigation.
+Using the RGB-D data from the camera and the current pose resulting from the tracking module, the Fast Mapping module generates and maintains both a volumetric map (3D) and an occupancy grid (2D) that can be used for robot navigation.
 
 ### Expected Behavior
 

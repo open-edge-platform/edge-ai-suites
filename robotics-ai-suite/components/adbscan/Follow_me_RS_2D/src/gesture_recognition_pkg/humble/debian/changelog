@@ -1,3 +1,10 @@
+ros-humble-gesture-recognition-pkg (2.3-2) UNRELEASED; urgency=low
+
+  * Add and refine trajectory/image publisher variants for updated demos.
+  * Update gesture recognition configs and build setup for OpenVINO 2024 testing.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 10 Mar 2026 00:00:00 +0000
+
 ros-humble-gesture-recognition-pkg (2.3-1) UNRELEASED; urgency=low
 
   * Refactoring of the code and general optimizations

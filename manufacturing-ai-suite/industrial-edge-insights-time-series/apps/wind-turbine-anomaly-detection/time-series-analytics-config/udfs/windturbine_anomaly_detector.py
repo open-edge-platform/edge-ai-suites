@@ -13,19 +13,23 @@ import pickle
 import time
 import math
 import warnings
-from collections import deque
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
 import numpy as np
-import requests
 from sklearnex import patch_sklearn, config_context
 patch_sklearn()
-from sklearn.linear_model import LinearRegression
 
 warnings.filterwarnings(
     "ignore",
     message=".*Threading.*parallel backend is not supported by Extension for Scikit-learn.*"
 )
+
+warnings.filterwarnings(
+    "ignore",
+    message=".*X does not have valid feature names, but RandomForestRegressor was fitted with feature names*"
+)
+
+
 
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
@@ -40,6 +44,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger()
+
+logging.getLogger("sklearnex").setLevel(logging.INFO)
 
 # Anomaly detection on the windturbine speed and generated power data
 class AnomalyDetectorHandler(Handler):
@@ -64,10 +70,7 @@ class AnomalyDetectorHandler(Handler):
         self.y_name = "grid_active_power"
 
         # hyper-params for anomaly classification
-        self.n_steps = 3
-        self.last_states = deque(self.n_steps*[0], self.n_steps)
-        self.last_anomalies = deque(self.n_steps*[0], self.n_steps)
-        self.error_threshold = 0.15
+        self.error_threshold = 0.1
         self.anomalies = []
         self.cut_in_speed = 3
         self.cut_out_speed = 14
@@ -115,6 +118,7 @@ class AnomalyDetectorHandler(Handler):
     def point(self, point):
         """ A point has arrived.
         """
+        logger.debug("Processing point %s", point.time)
         start_time = time.time_ns()
         check_for_anomalies = 1
         x = None
@@ -134,64 +138,47 @@ class AnomalyDetectorHandler(Handler):
             if self.points_received[stream_src] >= self.max_points:
                 return
             self.points_received[stream_src] += 1
-        logger.info("Processing point %s %s for source %s", point.time, time.time(), stream_src)
+        logger.debug("Processing point %s %s for source %s", point.time, time.time(), stream_src)
 
         def process_the_point(x,y):
+            """Check if point is within valid operating range for anomaly detection."""
             if (math.isnan(x) or math.isnan(y)):
-                self.last_states.append(0)
                 return 0
 
             if ((x<=self.cut_in_speed) or (x>self.cut_in_speed and y<self.min_power_th)
                  or (x>self.cut_out_speed)):
-                self.last_states.append(0)
                 return 0
 
             return 1
 
         if self.x_name in point.fieldsDouble:
-            x = point.fieldsDouble[self.x_name]
-
+            x = np.float32(point.fieldsDouble[self.x_name])
+ 
         if self.y_name in point.fieldsDouble:
-            y = point.fieldsDouble[self.y_name]
-
+            y = np.float32(point.fieldsDouble[self.y_name])
+ 
         if x is not None and y is not None:
             # check if the current point is an anomalous point
             check_for_anomalies = process_the_point(x,y)
             point.fieldsDouble["analytic"] = True
-
+ 
             if check_for_anomalies:
-                y_pred = self.rf.predict(np.reshape(x,(-1,1)))
-                error = (y_pred[0]-y)/(y)
-                if error>self.error_threshold:
-                    self.last_states.append(1)
-                    self.last_anomalies.append((x,y))
-                else:
-                    self.last_states.append(0)
+                with config_context(target_offload=self.device,
+                                            allow_fallback_to_host=True):
+                    y_pred = self.rf.predict(np.array([x], dtype=np.float32).reshape(-1, 1))
 
-                # check if there are consecutive 3 anomalies, and then filter out
-                # any false positives
-                if sum(self.last_states) == self.n_steps:
-                    x_feat = list(zip(*self.last_anomalies))[0]
-                    x_feat = np.reshape(x_feat, (-1,1))
-                    y_feat = list(zip(*self.last_anomalies))[1]
-
-                    with config_context(target_offload=self.device, allow_fallback_to_host=True):
-                        lm = LinearRegression()
-                        lm.fit(x_feat, y_feat)
-
-                    if abs(lm.coef_)<200:
-                        self.anomalies.append((x,y))
-                        if error<0.3:
-                            point.fieldsDouble["anomaly_status"] = 0.3
-                            # anomaly_type="LOW"
-                        elif error<0.6:
-                            # anomaly_type = "MEDIUM"
-                            point.fieldsDouble["anomaly_status"] = 0.6
-                        else:
-                            # anomaly_type = "HIGH"
-                            point.fieldsDouble["anomaly_status"] = 1.0
-                    else:
-                        self.last_states.append(0)
+                    # Relative error vs predicted (stable when actual power is near zero)
+                    pred = np.float32(y_pred[0])
+                    if pred > np.float32(0.0):
+                        error = np.float32((pred - y) / pred)
+                        if error > np.float32(self.error_threshold):
+                            self.anomalies.append((x, y))
+                            if error < np.float32(0.3):
+                                point.fieldsDouble["anomaly_status"] = 0.3  # LOW
+                            elif error < np.float32(0.6):
+                                point.fieldsDouble["anomaly_status"] = 0.6  # MEDIUM
+                            else:
+                                point.fieldsDouble["anomaly_status"] = 1.0  # HIGH
         else:
             logger.error("No input received for %s %s, %s %s. Skipping anomaly detection."
                          , self.x_name, x, self.y_name, y)

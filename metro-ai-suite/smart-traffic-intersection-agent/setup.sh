@@ -37,6 +37,40 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CO
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
 [ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT
 
+# Path variables needed by all commands (including --stop/--clean)
+export SAMPLE_APP="smart-intersection"
+CLONE_DIR="deps/metro-vision"
+CLONE_PATH="$APP_DIR/$CLONE_DIR"
+export DEPS_DIR="$CLONE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
+export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
+export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
+
+if [ "$ENABLE_TC" = "true" ]; then
+    TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
+    if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
+        # Run GPU validation only for runtime commands (--setup, --run, --restart)
+        if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
+            GPU_PCI_FULL=$(lspci -Dnn | grep -E '(VGA compatible controller|Display controller).*Intel' | head -1 | awk '{print $1}')
+            if [ -z "$GPU_PCI_FULL" ]; then
+                echo -e "${RED}ERROR: No Intel iGPU found for VFIO passthrough.${NC}"
+                return 1
+            fi
+            IOMMU_LINK="/sys/bus/pci/devices/${GPU_PCI_FULL}/iommu_group"
+            if [ ! -L "$IOMMU_LINK" ]; then
+                echo -e "${RED}ERROR: No IOMMU group found for ${GPU_PCI_FULL}. Ensure IOMMU is enabled.${NC}"
+                return 1
+            fi
+            export TC_GPU_VFIO_GROUP=$(basename "$(readlink -f "$IOMMU_LINK")")
+            if [ ! -e "/dev/vfio/${TC_GPU_VFIO_GROUP}" ]; then
+                echo -e "${RED}ERROR: GPU (${GPU_PCI_FULL}) is not bound to vfio-pci driver.${NC}"
+                return 1
+            fi
+        fi
+        TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-gpu-overlay-agent.yaml"
+    fi
+else
+    TC_OVERLAY_AGENT="";
+fi
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
@@ -88,9 +122,9 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     
     # check if ri-compose.yaml exists and run docker compose down accordingly
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
+        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down
     else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down 2> /dev/null
     fi
 
     if [ $? -ne 0 ]; then
@@ -102,10 +136,17 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     if [ "$1" = "--clean" ]; then
         echo -e "${YELLOW}Removing volumes for Smart-Traffic-Intersection-Agent ... ${NC}"
         if [ "$2" = "--keep-models" ]; then
-            echo -e "${CYAN}Keeping VLM model cache volume (ov-models)...${NC}"
-            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | grep -v "ov-models" | xargs -r docker volume rm 2>/dev/null || true
+            echo -e "${CYAN}Keeping OVMS model cache (${OVMS_CONFIG_DIR}/models)...${NC}"
+            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
         else
             docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+            if [ -d "${OVMS_CONFIG_DIR}" ]; then
+                echo -e "${YELLOW}Removing OVMS model cache (${OVMS_CONFIG_DIR})...${NC}"
+                # Model files may be root-owned (created inside Docker container).
+                # Fix ownership first so rm -rf can delete them.
+                docker run --rm -v "${OVMS_CONFIG_DIR}:/ovms_dir" busybox chown -R "$(id -u):$(id -g)" /ovms_dir 2>/dev/null || true
+                rm -rf "${OVMS_CONFIG_DIR}"
+            fi
         fi
         echo -e "${YELLOW}Removing networks for Smart-Traffic-Intersection-Agent ... ${NC}"
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
@@ -117,6 +158,10 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         if [ -d "$RI_DIR" ]; then
             rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
         fi
+
+        rm -f "${APP_DIR}/docker/tc-resolv.conf" 2>/dev/null || true
+        rm -f "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf" 2>/dev/null || true
+
         echo -e "${GREEN}Cleanup completed successfully. ${NC}"
     fi
 
@@ -133,26 +178,22 @@ if [ -z "$VLM_MODEL_NAME" ]; then
     return 1
 fi
 
-export SAMPLE_APP="smart-intersection"
-SUBMODULE="deps/metro-vision"
-SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
-export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
-export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
-
-# Verify if dependencies are setup; if not setup the required submodules and run install script
+# Verify if dependencies are setup; if not, clone the required dependency and run install script
 check_and_setup_dependencies() {
-    echo -e "${BLUE}==> Setting up required submodules ...${NC}"
+    echo -e "${BLUE}==> Setting up required dependencies ...${NC}"
 
     if [ ! -d "$DEPS_DIR" ]; then
-        # Run git submodule init and update to fetch the dependencies
-        echo -e "${YELLOW}Dependencies not found. Initializing and updating git submodules...${NC}"
-        git -C $APP_DIR submodule update --init --depth 1 $SUBMODULE
-        git -C $SUBMODULE_PATH sparse-checkout init --cone
-        git -C $SUBMODULE_PATH sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe
+        # Run git clone to fetch the dependencies (sparse, shallow)
+        echo -e "${YELLOW}Dependencies not found. Cloning repository...${NC}"
+        git clone --filter=blob:none --sparse --depth 1 \
+            --branch release-2026.0.0 \
+            https://github.com/open-edge-platform/edge-ai-suites.git \
+            "$CLONE_PATH"
+        git -C "$CLONE_PATH" sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe
 
         # Verify if the git commands were successful
         if [ $? -ne 0 ]; then
-            echo -e "${RED}Failed to initialize and update dependencies${NC}"
+            echo -e "${RED}Failed to clone and set up dependencies${NC}"
             return 1
         fi
     fi
@@ -163,9 +204,16 @@ check_and_setup_dependencies() {
         return 1
     fi
     
+    # Ensure all required secrets are generated
+    if [ -f "$RI_DIR/src/secrets/browser.auth" ] && [ ! -f "$RI_DIR/src/secrets/pgserver/pgserver.env" ]; then
+        echo -e "${YELLOW}Required secrets not found. Regenerating secrets...${NC}"
+        rm -f "$RI_DIR/src/secrets/browser.auth"
+    fi
+
     # Run the installation script
     echo -e "${BLUE}==> Running installation script for smart-intersection...${NC}"
-    cd $RI_DIR && ./install.sh && cd - > /dev/null
+    #cd $RI_DIR && ./install.sh && cd - > /dev/null
+    cd $RI_DIR && ./install.sh && cd -
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to run install.sh for smart-intersection${NC}"
         cd - > /dev/null
@@ -177,6 +225,24 @@ check_and_setup_dependencies() {
     rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
     ln -sf "$DEPS_DIR/compose-scenescape.yml" "$APP_DIR/docker/ri-compose.yaml"
 
+    if [ "$ENABLE_TC" = "true" ]; then
+        export TC_SUBNET=$(grep -oP 'TC_SUBNET\s*=\s*\K[^\s]+' "$DEPS_DIR/.env" 2>/dev/null || echo "")
+        if [ -z "$TC_SUBNET" ]; then
+            echo -e "${RED}ERROR: TC_SUBNET not found in $DEPS_DIR/.env. ${NC}"
+            return 1
+        fi
+
+        export TC_DNS_IP=$(grep -oP 'TC_DNS_IP\s*=\s*\K[^\s]+' "$DEPS_DIR/.env" 2>/dev/null || echo "")
+        if [ -z "$TC_DNS_IP" ]; then
+            echo -e "${RED}ERROR: TC_DNS_IP not found in $DEPS_DIR/.env. ${NC}"
+            return 1
+        fi
+        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/docker/tc-resolv.conf"
+
+        #Create symbolic link to docker-compose.yml in docker dir of agent application
+        rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
+        ln -sf "$DEPS_DIR/docker-compose.yml" "$APP_DIR/docker/ri-compose.yaml"
+    fi
     return 0
 }
 
@@ -211,28 +277,198 @@ export USER_GROUP_ID=$(id -g)
 export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "44")
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
 
-# VLM Service Configuration
+# VLM / OVMS Configuration
 export VLM_MODEL_NAME=${VLM_MODEL_NAME}
+export VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
+export VLM_WEIGHT_FORMAT=${VLM_WEIGHT_FORMAT:-}
 
-# VLM OpenVINO Configuration
-export VLM_DEVICE=${VLM_DEVICE:-CPU}
-export VLM_COMPRESSION_WEIGHT_FORMAT=${VLM_COMPRESSION_WEIGHT_FORMAT:-int8}
-export VLM_SEED=${VLM_SEED:-42}
-export VLM_WORKERS=${VLM_WORKERS:-1}
-export VLM_LOG_LEVEL=${VLM_LOG_LEVEL:-info}
-export VLM_ACCESS_LOG_FILE=${VLM_ACCESS_LOG_FILE:-/dev/null}
-
-# Automatically adjust VLM settings for GPU
-if [[ "$VLM_DEVICE" == "GPU" ]]; then
-    export VLM_COMPRESSION_WEIGHT_FORMAT=int4
-    export VLM_WORKERS=1  # GPU works best with single worker
+# When VLM_TARGET_DEVICE=GPU, force SI to CPU so GPU is reserved for OVMS/VLM.
+export TC_SI_TARGET_DEVICE=${TC_SI_TARGET_DEVICE:-CPU}
+if [ "$VLM_TARGET_DEVICE" = "GPU" ] && [ "$TC_SI_TARGET_DEVICE" != "CPU" ]; then
+    echo -e "${YELLOW}VLM_TARGET_DEVICE=GPU: overriding TC_SI_TARGET_DEVICE to CPU (GPU reserved for OVMS).${NC}"
+    export TC_SI_TARGET_DEVICE=CPU
 fi
 
+# Select OVMS image tag based on target device:
+# GPU requires the GPU-enabled image (includes OpenCL/Level Zero runtime).
+# Mirrors the Helm chart logic: vlmServing.image.gpuTag vs vlmServing.image.tag.
+case "$VLM_TARGET_DEVICE" in
+    *GPU*) export OVMS_TAG="${OVMS_TAG:-2026.1-gpu}" ;;
+    *)     export OVMS_TAG="${OVMS_TAG:-2026.1}" ;;
+esac
+
+# OVMS model repository directory (host-side, mounted into OVMS container)
 # Health Check Configuration
 export HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30s}
 export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
 export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
 export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
+
+# ============================================================================
+# OVMS Model Export Functions (host-side, using model-download ephemeral container)
+# ============================================================================
+
+sanitize_ovms_metadata_name() {
+    printf '%s' "$1" | sed 's#[^A-Za-z0-9_.-]#_#g'
+}
+
+is_openvino_namespace_model() {
+    [[ "$1" == OpenVINO/* ]]
+}
+
+# Get weight format based on target device (GPU/NPU → int4, CPU → int8)
+get_ovms_weight_format() {
+    local target_device="$1"
+    case "$target_device" in
+        *NPU*|*GPU*) echo "int4" ;;
+        *) echo "int8" ;;
+    esac
+}
+
+get_ovms_cache_size() {
+    local target_device="$1"
+    case "$target_device" in
+        *GPU*|*NPU*) echo "2" ;;
+        *) echo "10" ;;
+    esac
+}
+
+# Generate storage-aware model name: {model}_{device}_{format}
+get_ovms_storage_model_name() {
+    local source_model="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local sanitized
+    sanitized=$(sanitize_ovms_metadata_name "$source_model")
+
+    if is_openvino_namespace_model "$source_model"; then
+        printf '%s_%s' "$sanitized" "$target_device"
+    else
+        printf '%s_%s_%s' "$sanitized" "$target_device" "$weight_format"
+    fi
+}
+
+ovms_config_has_model() {
+    local config_path="$1"
+    local model_name="$2"
+    grep -q "\"name\": \"${model_name}\"" "$config_path" 2>/dev/null
+}
+
+# Export and convert a model for OVMS using the model-download ephemeral container.
+# Replaces the previous host-side python venv + export_model.py approach.
+export_model_for_ovms() {
+    local source_model="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local storage_model_name
+
+    if [ -z "$source_model" ]; then
+        echo -e "${RED}ERROR: Missing source model for OVMS export.${NC}"
+        return 1
+    fi
+
+    storage_model_name=$(get_ovms_storage_model_name "$source_model" "$target_device" "$weight_format")
+    echo -e "[ovms-service] ${BLUE}Storage model name: ${YELLOW}${storage_model_name}${NC}" >&2
+    export storage_model_name
+
+    local get_model_script="${OVMS_CONFIG_DIR}/get_model.sh"
+
+    echo -e "${BLUE}==> Fetching get_model.sh from edge-ai-libraries...${NC}"
+    curl -fsSL "https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh" \
+        -o "$get_model_script" || { echo -e "${RED}ERROR: Failed to download get_model.sh${NC}"; return 1; }
+    chmod +x "$get_model_script"
+
+    echo -e "${BLUE}==> Downloading/converting model via model-download ephemeral container...${NC}"
+
+    # Pass HuggingFace token via env var if set
+    if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
+        export HF_TOKEN="${HUGGINGFACE_TOKEN}"
+    fi
+
+    bash "$get_model_script" \
+        --model-name "$source_model" \
+        --hub openvino \
+        --type vlm \
+	--is-ovms \
+        --precision "$weight_format" \
+        --device "$target_device" \
+        --model-path "${OVMS_CONFIG_DIR}/models" \
+        --plugins openvino
+
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${RED}ERROR: Model download/conversion failed for '${source_model}' (exit code: ${exit_code}).${NC}"
+        local log_dir="${PWD}/.model_download_logs"
+        local latest_log
+        latest_log=$(ls -t "${log_dir}"/model_download_*.log 2>/dev/null | head -1)
+        if [ -n "$latest_log" ]; then
+            echo -e "${YELLOW}==> Last 30 lines from log: ${latest_log}${NC}"
+            tail -30 "$latest_log"
+        else
+            echo -e "${YELLOW}No model download log found in: ${log_dir}${NC}"
+        fi
+        return 1
+    fi
+
+    # get_model.sh places config_all.json under openvino_models/{device}/{precision}/.
+    # The base_paths inside it are relative to that directory.
+    # Copy it to models/config.json, prefixing each base_path so it is relative to the models root.
+    local models_root="${OVMS_CONFIG_DIR}/models"
+    local generated_config
+    generated_config=$(find "${models_root}/openvino_models" -name "config_all.json" 2>/dev/null | head -1)
+
+    if [ -n "$generated_config" ]; then
+        local config_rel_dir
+        config_rel_dir=$(dirname "${generated_config#${models_root}/}")
+
+        # Prefix every base_path value with the directory that config_all.json lives in
+        python3 - "${generated_config}" "${config_rel_dir}" "${models_root}/config.json" << 'PYEOF'
+import json, sys
+
+src, prefix, dst = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(src) as f:
+    cfg = json.load(f)
+for entry in cfg.get("model_config_list", []):
+    c = entry.get("config", {})
+    if "base_path" in c:
+        c["base_path"] = prefix + "/" + c["base_path"]
+    c.pop("target_device", None)
+with open(dst, "w") as f:
+    json.dump(cfg, f, indent=4)
+print(f"Created {dst} with {len(cfg['model_config_list'])} model(s)")
+PYEOF
+        echo -e "${GREEN}==> Created config.json from ${generated_config}${NC}"
+    else
+        echo -e "${YELLOW}WARNING: Could not find generated config_all.json under ${models_root}/openvino_models. OVMS may not start.${NC}"
+    fi
+
+    echo "$source_model"
+}
+
+ensure_ovms_model() {
+    local model_name="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local ovms_model_config="${OVMS_CONFIG_DIR}/models/config.json"
+
+    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${model_name}${NC}"
+
+    if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${model_name}"; then
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${model_name}${GREEN} already registered in OVMS config. Skipping export.${NC}"
+        echo "$model_name"
+    else
+        echo -e "[ovms-service] ${YELLOW}Model ${RED}${model_name}${YELLOW} not found. Exporting...${NC}"
+
+        export_model_for_ovms \
+            "$model_name" \
+            "$target_device" \
+            "$weight_format" || return 1
+    fi
+}
+
+# ============================================================================
+# END OVMS Model Export Functions
+# ============================================================================
 
 # Get and print the ports of all running services
 print_all_service_host_endpoints() {
@@ -242,52 +478,81 @@ print_all_service_host_endpoints() {
     echo -e "SERVICE ENDPOINTS"
     echo -e "=======================================================${NC}"
     
-    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep $PROJECT_NAME);
+    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}");
     do
         # Set/print service name and the host port based on corresponding container name
         case "$CONTAINER_NAME" in
-            *dlstreamer-pipeline-server*)
-                SERVICE_NAME="DLStreamer Pipeline Server"
-                PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}/pipelines"
-                ;;
-            *grafana*)
-                SERVICE_NAME="Grafana Dashboard"
-                PORT=$(docker port "$CONTAINER_NAME" 3000 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
-                ;;
-            *node-red*)
-                SERVICE_NAME="Node-RED"
-                PORT=$(docker port "$CONTAINER_NAME" 1880 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
-                ;;
-            *web*)
-                SERVICE_NAME="Scenescape Web UI"
-                PORT=$(docker port "$CONTAINER_NAME" 443 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> https://$HOST_IP:$PORT${NC}"
+            *nginx-reverse-proxy*)
+                SERVICE_NAME="Nginx Reverse Proxy"
+                HTTPS_PORT=$(docker port "$CONTAINER_NAME" 443 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$HTTPS_PORT" ]; then
+                    echo -e "${BLUE}Access Grafana Dashboard -> https://$HOST_IP:$HTTPS_PORT/grafana/${NC}"
+                    echo -e "${BLUE}Access Node-RED -> https://$HOST_IP:$HTTPS_PORT/nodered/${NC}"
+                    echo -e "${BLUE}Access DLStreamer Pipeline Server -> https://$HOST_IP:$HTTPS_PORT/api/pipelines${NC}"
+                    echo -e "${BLUE}Access Scenescape Web UI -> https://$HOST_IP:$HTTPS_PORT/${NC}"
+                fi
                 ;;
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
-                PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 8081 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${CYAN}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
-                PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 7860 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
-            *vlm*)
-                SERVICE_NAME="VLM OpenVINO Serving API"
-                PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+            *vlm*|*ovms*)
+                SERVICE_NAME="OVMS API"
+                PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/v2${NC}"
                 ;;
-            *)
-                SERVICE_NAME="Unknown Service"
+            *metrics-manager*)
+                SERVICE_NAME="Metrics Manager API"
+                PORT=$(docker port "$CONTAINER_NAME" 9090 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                    echo -e "${BLUE}Access Metrics Manager Stream -> http://$HOST_IP:$PORT/metrics/stream${NC}"
+                fi
+
+                PORT=$(docker port "$CONTAINER_NAME" 9273 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access Metrics Manager Telegraf/Prometheus -> http://$HOST_IP:$PORT/metrics${NC}"
+                fi
+
+                PORT=$(docker port "$CONTAINER_NAME" 8186 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+                if [ -n "$PORT" ]; then
+                    echo -e "${BLUE}Access Metrics Manager Telegraf HTTP -> http://$HOST_IP:$PORT/write${NC}"
+                fi
                 ;;
         esac
     done
     echo -e "${MAGENTA}=======================================================${NC}"
     echo -e
-}   
+}
+
+# Prepare OVMS model on the host (export if not already present)
+prepare_ovms_model() {
+    # Determine weight format (auto-detect based on device if not user-specified)
+    local weight_format="${VLM_WEIGHT_FORMAT:-$(get_ovms_weight_format "$VLM_TARGET_DEVICE")}"
+    export VLM_WEIGHT_FORMAT="$weight_format"
+
+    echo -e "${BLUE}==> Preparing OVMS model on host...${NC}"
+    echo -e "[ovms-service] ${BLUE}VLM Model:          ${YELLOW}${VLM_MODEL_NAME}${NC}"
+    echo -e "[ovms-service] ${BLUE}Target Device:      ${YELLOW}${VLM_TARGET_DEVICE}${NC}"
+    echo -e "[ovms-service] ${BLUE}Weight Format:      ${YELLOW}${weight_format}${NC}"
+    echo -e "[ovms-service] ${BLUE}OVMS Config Dir:    ${YELLOW}${OVMS_CONFIG_DIR}${NC}"
+
+    mkdir -p "${OVMS_CONFIG_DIR}/models"
+
+    local storage_name
+    storage_name=$(ensure_ovms_model \
+        "$VLM_MODEL_NAME" \
+        "$VLM_TARGET_DEVICE" \
+        "$weight_format") || return 1
+
+    export VLM_STORAGE_MODEL_NAME="$storage_name"
+    echo -e "[ovms-service] ${GREEN}VLM Storage Model: ${YELLOW}${VLM_STORAGE_MODEL_NAME}${NC}"
+}
 
 # Build service images without starting containers
 build_service() {
@@ -295,9 +560,9 @@ build_service() {
 
     # Build the service images
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
     else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
     fi
 
     if [ $? -eq 0 ]; then
@@ -312,8 +577,11 @@ build_service() {
 build_and_start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
 
+    # Ensure OVMS model is exported on the host before starting containers
+    prepare_ovms_model || return 1
+
     # Build and start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --build
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -328,8 +596,11 @@ build_and_start_service() {
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
     
+    # Ensure OVMS model is exported on the host before starting containers
+    prepare_ovms_model || return 1
+
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
@@ -348,15 +619,19 @@ restart_service() {
         agent)
             echo -e "${BLUE}==> Restarting Traffic Intersection Agent Backend/UI ...${NC}"
             
+            # Restart only the agent-specific services (exclude nginx override which requires RI compose)
+            local AGENT_SERVICES="traffic-agent ovms-service metrics-manager"
+            
             # Stop the Traffic Intersection Agent Backend/UI Service
-            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME stop $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME rm -f $AGENT_SERVICES
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             
-            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --force-recreate $AGENT_SERVICES
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Traffic Intersection Agent Backend/UI restarted successfully!${NC}"
@@ -371,14 +646,14 @@ restart_service() {
             echo -e "${BLUE}==> Restarting Dependencies for Traffic Intersection Agent (Smart Intersection RI) ...${NC}"
             
             if [ ! -d "$DEPS_DIR" ] || [ ! -f "${APP_DIR}/docker/ri-compose.yaml" ]; then
-                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
-                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
+                echo -e "${RED}Required dependencies for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up dependencies${NC}"
                 return 1
             fi
             
             # Stop the dependency - Smart Intersection RI services
             echo -e "${BLUE}==> Stopping dependencies ...${NC}"
-            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml"  -p $PROJECT_NAME down
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop dependencies!${NC}"
@@ -387,7 +662,7 @@ restart_service() {
             
             # Start with force-recreate to ensure env vars are picked up
             echo -e "${BLUE}==> Restarting dependencies (Smart Intersection RI) ...${NC}"
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -p $PROJECT_NAME up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -p $PROJECT_NAME up -d --force-recreate
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Dependencies restarted successfully!${NC}"
@@ -402,20 +677,20 @@ restart_service() {
             echo -e "${BLUE}==> Restarting all component services for Smart Traffic Intersection Agent ${RED}${PROJECT_NAME} ${BLUE} ...${NC}"
             
             if [ ! -d "$DEPS_DIR" ] || [ ! -f "$APP_DIR/docker/ri-compose.yaml" ]; then
-                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
-                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
+                echo -e "${RED}Required dependencies for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up dependencies${NC}"
                 return 1
             fi
             
             # Stop all services
-            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME down
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop services for Traffic Intersection Agent!${NC}"
                 return 1
             fi
 
             # Restart all services
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate  
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"

@@ -1,0 +1,60 @@
+# NICU Warmer — Model & Asset Configuration
+# Config-driven model downloader reads this file to fetch all required assets.
+# Pattern follows multi_modal_patient_monitoring/configs/model-config.yaml.
+
+
+# --- rPPG model conversion (used by the nicu-rppg-converter container) ---
+# Place your mtts_can.hdf5 in models_rppg/ then run: make convert-rppg
+# The converter container reads source_model_path, converts to OpenVINO IR,
+# and writes mtts_can.xml + mtts_can.bin into target_dir.
+rppg:
+  models:
+    - name: mtts_can
+      source_model_path: /models/rppg/mtts_can.hdf5
+      target_dir: /models/rppg
+
+# --- Backend preparation section (used by backend_mvp/asset_preparation.py) ---
+preparation:
+  model_paths:
+    - ./person-detect-fp32.xml
+    - ./patient-detect-fp32.xml
+    - ./latch-detect-fp32.xml
+  rppg_model_path: /models/rppg/mtts_can.xml
+  video_path: ./Warmer_Testbed_YTHD.mp4
+  pipeline_template: ./pipelines/nicu_shared_pipeline.template.json
+  resolved_pipeline: ./pipelines/nicu_shared_pipeline.resolved.json
+
+# --- Offline asset manifest ---
+# All models and videos are delivered as offline assets (zip).
+# No external download URLs are required at runtime.
+# See README.md for offline asset setup instructions.
+#
+# Asset inventory (provided in the offline package):
+#   /models/person-detect-fp32.{xml,bin}       — person detection (custom, FP32)
+#   /models/patient-detect-fp32.{xml,bin}       — patient detection (custom, FP32)
+#   /models/latch-detect-fp32.{xml,bin}         — latch detection (custom, FP32)
+#   /models/action/FP32/action-recognition-0001-encoder.{xml,bin}  — action recognition encoder (OMZ)
+#   /models/action/FP32/action-recognition-0001-decoder.{xml,bin}  — action recognition decoder (OMZ)
+#   /models/rppg/mtts_can.{xml,bin}             — rPPG MTTS-CAN (converted from HDF5)
+#   /data/Warmer_Testbed_YTHD.mp4               — test video
+
+metrics_collector:
+  base_url: http://nicu-metrics-collector:9000   # docker-compose service DNS
+
+dlsps:
+  base_url: http://nicu-dlsps:8080
+  timeout_seconds: 2.0
+  assume_reachable: true   # set false when DLSPS is actually running
+  pipeline_name: user_defined_pipelines
+  pipeline_version: nicu_tee
+  status_endpoint: /pipelines/status
+  status_poll_interval_seconds: 1.0
+  device: GPU
+  loop:
+    enabled: true
+    max_loops: -1
+  thresholds:
+    patient_presence: 0.5
+    caretaker_presence: 0.5
+    latch_detection: 0.5
+

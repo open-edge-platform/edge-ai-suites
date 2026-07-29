@@ -1,0 +1,1220 @@
+From 40c8a7a060afba602adb83e4444d8f2680dcb109 Mon Sep 17 00:00:00 2001
+From: "Liu, Baihe" <baihe.liu@intel.com>
+Date: Thu, 15 Jan 2026 16:13:28 +0800
+Subject: [PATCH 2/6] [Feat] Add script for openvino conversion
+
+---
+ examples/pi05_with_openvino/README.md         |  97 +++
+ .../pi05_with_openvino/scripts/convert_ov.py  | 370 +++++++++++
+ .../scripts/convert_ov_rtc.py                 | 602 ++++++++++++++++++
+ src/lerobot/policies/pi05/modeling_pi05.py    |  56 +-
+ 4 files changed, 1107 insertions(+), 18 deletions(-)
+ create mode 100644 examples/pi05_with_openvino/README.md
+ create mode 100644 examples/pi05_with_openvino/scripts/convert_ov.py
+ create mode 100644 examples/pi05_with_openvino/scripts/convert_ov_rtc.py
+
+diff --git a/examples/pi05_with_openvino/README.md b/examples/pi05_with_openvino/README.md
+new file mode 100644
+index 0000000..59de7ec
+--- /dev/null
++++ b/examples/pi05_with_openvino/README.md
+@@ -0,0 +1,97 @@
++# Pi05 With OpenVINO
++
++## Environment Setup
++
++### By UV
++
++Ensure you have `uv` installed. You can set up the environment and install dependencies by running:
++
++```bash
++uv sync --extra pi-ov
++```
++Note: Running inference on GPU requires `openvino>=2026.0`.
++
++Then run python file by:
++
++```bash
++uv run --extra pi-ov <your_python_file>
++```
++Using `--extra pi-ov` will force the use of the CPU version of PyTorch.
++
++## Convert Pi05 model to OpenVINO
++
++### Convert Model without RTC (Original)
++
++Use the `convert_ov.py` script to convert the standard Pi05 model to OpenVINO IR. This process typically goes through ONNX export.
++
++
++Example:
++```bash
++uv run --extra pi-ov scripts/convert_ov.py \
++    --torch_dir <path_to_pytorch_checkpoint> \
++    --ov_output_dir pi05_lerobot_ov_ir \
++    --onnx_output_dir pi05_onnx \
++    --override
++```
++If `--compress_int8`, `nncf` is required.
++```bash
++uv run --extra pi-ov --with nncf scripts/convert_ov.py \
++    --torch_dir <path_to_pytorch_checkpoint> \
++    --ov_output_dir pi05_lerobot_ov_ir \
++    --onnx_output_dir pi05_onnx \
++    --compress_int8 \
++    --override
++```
++Use a sample from a local LeRobotDataset to generate representative inputs during the export/conversion process:
++```bash
++uv run --extra pi-ov --with nncf scripts/convert_ov.py \
++    --torch_dir <path_to_pytorch_checkpoint> \
++    --dataset_path <path_to_local_dataset> \
++    --ov_output_dir pi05_lerobot_ov_ir \
++    --onnx_output_dir pi05_onnx \
++    --compress_int8 \
++    --override
++```
++
++**Arguments:**
++- `--torch_dir`: Path to the pretrained PyTorch model checkpoint or huggingface repo. Default: "lerobot/pi05_base"
++- `--ov_output_dir`: Directory where the OpenVINO IR model will be saved.
++- `--onnx_output_dir`: Directory where the intermediate ONNX model will be saved.
++- `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs) for ONNX export.
++- `--compress_int8`: (Optional) Compress weights to INT8. `nncf` is required.
++- `--save_fp32`: (Optional) Save OpenVINO model in FP32 format (FP16 by default).
++- `--override`: (Optional) Overwrite existing files.
++- `--camera_num`, `-c`: (Optional) Number of cameras (batch size for image input). Default: 4.
++
++
++### Convert Model with RTC
++
++Use the `convert_ov_rtc.py` script to convert the Pi05 model with Real-Time Chunking (RTC) logic embedded. 
++
++Example:
++```bash
++uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
++    --torch_dir <path_to_pytorch_checkpoint> \
++    --dataset_path <path_to_local_dataset> \
++    --onnx_output_dir pi05_rtc_onnx \
++    --ov_output_dir pi05_rtc_lerobot_ov_ir \
++    --compress_int8 \
++    --override
++```
++Arguments are the same as above.
++
++## Test Pi05 Policy
++Run script to test policy (In the project directory):
++```bash
++uv run --extra pi-ov tests/policies/pi0_pi05/test_pi05_ov.py \
++    --model_dir <ov_model_dir> \
++    --device CPU \
++    -n 10
++```
++
++**Arguments:**
++- `--model_dir`: Directory containing the OpenVINO model (xml and bin files).
++- `--device`: Target device for inference (e.g., "CPU", "GPU"). Default: "CPU".
++- `-n`, `--num_runs`: Number of inference runs to average for benchmarking. Default: 10.
++- `--run_torch`: (Optional) Run the original PyTorch model instead of OpenVINO for comparison.
++
+diff --git a/examples/pi05_with_openvino/scripts/convert_ov.py b/examples/pi05_with_openvino/scripts/convert_ov.py
+new file mode 100644
+index 0000000..5fa936a
+--- /dev/null
++++ b/examples/pi05_with_openvino/scripts/convert_ov.py
+@@ -0,0 +1,370 @@
++import torch
++from lerobot.policies.pi05.modeling_pi05 import PI05Policy
++from lerobot.policies.pi05.configuration_pi05 import PI05Config
++from lerobot.configs.policies import PreTrainedConfig
++from lerobot.datasets.lerobot_dataset import LeRobotDataset
++from lerobot.policies.factory import make_pre_post_processors
++from lerobot.utils.constants import OBS_LANGUAGE_TOKENS, OBS_LANGUAGE_ATTENTION_MASK
++
++import os
++import json
++import tempfile
++import numpy as np
++import openvino as ov
++import argparse
++from pathlib import Path
++
++
++parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to ONNX and OpenVINO IR")
++parser.add_argument("--camera_num", "-c", type=int, default=4, help="Batch size for image input/number of cameras")
++parser.add_argument("--torch_dir", type=str, default="lerobot/pi05_base", help="Path to the pretrained PyTorch model")
++parser.add_argument("--dataset_path", type=str, default=None, help="Path to local LeRobot dataset for real inputs")
++parser.add_argument("--onnx_output_dir", type=str, default="pi05_onnx", help="Path to save the ONNX model")
++parser.add_argument("--ov_output_dir", type=str, default="pi05_lerobot_ov_ir", help="Path to save the OpenVINO IR model")
++parser.add_argument("--compress_int8", action="store_true", help="Whether to compress models to INT8")
++parser.add_argument("--save_fp32", action="store_true", help="Whether to save OpenVINO model in FP32 format (FP16 by default)")
++parser.add_argument("--override", action="store_true", help="Whether to override existing files")
++
++args = parser.parse_args()
++
++# -----------------------------
++# Load PyTorch policy
++# -----------------------------
++print(f"LOADING MODEL from {args.torch_dir}")
++
++# Handle extra keys in config that might cause issues (similar to eval_aloha.py)
++config_path = Path(args.torch_dir) / "config.json"
++policy_cfg = None
++
++if config_path.exists():
++    with open(config_path, "r") as f:
++        cfg_dict = json.load(f)
++    
++    # "type" is a property in PreTrainedConfig, not a field, so draccus fails if it's in the json
++    # when loading the subclass directly. However, PreTrainedConfig.from_pretrained REQUIRES "type".
++    # so we must leave it if we use PreTrainedConfig.from_pretrained.
++    invalid_keys = ["use_peft", "freeze_vision_encoder", "train_expert_only"]
++    dirty = False
++    for k in invalid_keys:
++        if k in cfg_dict:
++            del cfg_dict[k]
++            dirty = True
++            
++    if dirty:
++        print(f"Sanitizing config: removed deprecated keys {invalid_keys}")
++        with tempfile.TemporaryDirectory() as temp_dir:
++            temp_config_path = Path(temp_dir) / "config.json"
++            with open(temp_config_path, "w") as f:
++                json.dump(cfg_dict, f)
++            policy_cfg = PreTrainedConfig.from_pretrained(str(Path(temp_dir)))
++    else:
++        policy_cfg = PreTrainedConfig.from_pretrained(args.torch_dir)
++else:
++    policy_cfg = PreTrainedConfig.from_pretrained(args.torch_dir)
++
++# Disable compilation for tracing/export
++if hasattr(policy_cfg, "compile_model"):
++    print("Disabling model compilation for export...")
++    policy_cfg.compile_model = False
++
++policy = PI05Policy.from_pretrained(args.torch_dir, config=policy_cfg)
++device = torch.device("cpu")  # force CPU to avoid mixed precision issues
++policy.to(device)
++policy.eval()
++print("Done loading policy.")
++
++# -----------------------------
++# Define inference wrapper
++# -----------------------------
++class Pi05InferenceWrapper(torch.nn.Module):
++    def __init__(self, pi05_policy):
++        super().__init__()
++        self.model = pi05_policy.model
++
++    def forward(self, images, img_masks, lang_tokens, lang_masks, noise):
++        # Ensure all internal constants are float32
++        images = images.float()
++        
++        # Convert masks to int because ONNX doesn't support CumSum on booleans
++        img_masks = img_masks.long()
++        lang_masks = lang_masks.long()
++        
++        # out = self.model(images, img_masks, lang_tokens, lang_masks, state, actions)
++        out = self.model.sample_actions(images, img_masks, lang_tokens, lang_masks, noise)
++       
++        if torch.is_complex(out):
++            out = out.real
++    
++        return out
++
++
++inference_model = Pi05InferenceWrapper(policy)
++inference_model.to(device)
++inference_model.eval()
++
++# -----------------------------
++# Cast parameters and buffers to float32
++# -----------------------------
++for name, buf in inference_model.named_buffers():
++    if buf.dtype == torch.bfloat16:
++        # print("Casting buffer:", name)
++        buf.data = buf.data.float()
++    elif buf.dtype in [torch.int32, torch.int64]:
++        # leave these alone (needed for Gather, indexing, etc.)
++        pass
++
++for name, param in inference_model.named_parameters():
++    if param.dtype == torch.bfloat16:
++        # print("Casting param:", name)
++        param.data = param.data.float()
++
++# -----------------------------
++# Create Inputs (Real or Dummy)
++# -----------------------------
++vocab_size = 30522
++T = policy.config.n_obs_steps
++B = args.camera_num
++C, H, W = 3, 224, 224
++B_lang = 1
++T_lang = policy.config.tokenizer_max_length
++
++if hasattr(policy.config, "image_resolution"):
++     H, W = policy.config.image_resolution
++
++images = None
++img_masks = None
++lang_tokens = None
++lang_masks = None
++noise = None
++
++if args.dataset_path:
++    print(f"Using REAL DATASET from {args.dataset_path}")
++    ds = LeRobotDataset(repo_id="local", root=args.dataset_path)
++    # stats are in ds.meta.stats
++    stats = ds.meta.stats
++    
++    # Create preprocessor
++    # make_pre_post_processors uses policy.config to determine keys and normalization
++    preprocessor, _ = make_pre_post_processors(policy.config, dataset_stats=stats)
++    
++    # Get sample (first item)
++    item = ds[0]
++    
++    # Preprocess
++    # We need to add batch dim to all tensors in item, making B=1
++    observation = {}
++    for k, v in item.items():
++         if isinstance(v, torch.Tensor):
++             observation[k] = v.unsqueeze(0).to(device)
++         else:
++             observation[k] = [v] # keep list for strings/text
++             
++    batch = preprocessor(observation)
++    
++    # Move batch keys to device just in case
++    for k in batch:
++        if isinstance(batch[k], torch.Tensor):
++             batch[k] = batch[k].to(device)
++
++    # Get tensors ready for model
++    # _preprocess_images returns lists of tensors (one per camera)
++    images_list, img_masks_list = policy._preprocess_images(batch)
++    
++    # Stack images list -> [N_cams, B, C, H, W]
++    # This matches the structure expected by sample_actions (iterating over cameras)
++    # assuming B=1 from our unsqueeze logic.
++    images = torch.stack(images_list)
++    img_masks = torch.stack(img_masks_list)
++    
++    lang_tokens = batch[OBS_LANGUAGE_TOKENS]
++    lang_masks = batch[OBS_LANGUAGE_ATTENTION_MASK]
++    
++    # Noise still needs to be random
++    noise = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
++    
++    print(f"Real inputs prepared.")
++    print(f"  Images shape: {images.shape}")
++    print(f"  Lang tokens shape: {lang_tokens.shape}")
++
++else:
++    print("Using DUMMY inputs")
++    # Original dummy logic
++    images = torch.randn(B, T, C, H, W, device=device).float()
++    img_masks = torch.ones(B, T, dtype=torch.bool, device=device)
++    lang_tokens = torch.randint(0, vocab_size, (B_lang, T_lang), device=device).long()
++    lang_masks = torch.ones(B_lang, T_lang, dtype=torch.bool, device=device)
++    noise = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
++
++# -----------------------------
++# Export to ONNX
++# -----------------------------
++onnx_dir = args.onnx_output_dir + f"_{args.camera_num}c"
++onnx_path = os.path.join(onnx_dir, "pi05.onnx")
++
++if not os.path.exists(onnx_path) or args.override:
++    os.makedirs(onnx_dir, exist_ok=True)
++    print(f"Exporting ONNX model to {onnx_path}...")
++    torch.onnx.export(
++        inference_model,
++        (images, img_masks, lang_tokens, lang_masks, noise),
++        onnx_path,
++        input_names=["images", "img_masks", "lang_tokens", "lang_masks", "noise"],
++        output_names=["actions_out"],
++        opset_version=14,
++        do_constant_folding=False,
++    )
++    print(f"ONNX model exported to {onnx_path}")
++else:
++    print(f"ONNX model {onnx_path} already exists. Skipping export.")
++
++# -----------------------------
++# OpenVINO Conversion
++# -----------------------------
++suffix = "_FP32" if args.save_fp32 else "_FP16"
++suffix = f"_{args.camera_num}c" + suffix
++ov_model_path = os.path.join(args.ov_output_dir + suffix, "model.xml")
++
++if not os.path.exists(ov_model_path) or args.override:
++    os.makedirs(args.ov_output_dir + suffix, exist_ok=True)
++    print(f"Converting to OpenVINO IR: {ov_model_path}")
++    ov_model = ov.convert_model(onnx_path)
++
++    ov.save_model(ov_model, 
++                output_model=ov_model_path, 
++                compress_to_fp16=not args.save_fp32)
++    print(f"OpenVINO model saved to {ov_model_path}")
++else:
++    print(f"OpenVINO model {ov_model_path} already exists. Skipping conversion.")
++
++model_int8_dir = args.ov_output_dir + f"_{args.camera_num}c_INT8"
++if args.compress_int8 and (not os.path.exists(os.path.join(model_int8_dir, "model.xml")) or args.override):
++    try:
++        from nncf import compress_weights, CompressWeightsMode
++        print("Applying INT8 compression...")
++        
++        os.makedirs(model_int8_dir, exist_ok=True)
++        core = ov.Core()
++        ov_model = core.read_model(ov_model_path)
++        int8_ov_model = compress_weights(
++            ov_model, 
++            mode=CompressWeightsMode.INT8_ASYM,
++        )
++
++        ov.save_model(int8_ov_model, output_model=os.path.join(model_int8_dir, "model.xml"))
++
++    except ImportError:
++        print("NNCF not found. Skipping INT8 compression.")
++    except Exception as e:
++        print(f"INT8 compression failed: {e}")
++
++# -----------------------------
++# Inference & Comparison
++# -----------------------------
++def compare_tensors(name: str, tensor_1, tensor_2, atol=1e-4, rtol=1e-3):
++    def to_numpy(t):
++        if isinstance(t, torch.Tensor):
++            return t.detach().cpu().float().numpy()
++        if hasattr(t, "numpy"):
++            return t.numpy()
++        return np.asarray(t)
++
++    arr1 = to_numpy(tensor_1)
++    arr2 = to_numpy(tensor_2)
++
++    if arr1.shape != arr2.shape:
++        print(f"Shape mismatch comparing {name}: {arr1.shape} vs {arr2.shape}")
++        return False
++
++    diff = np.abs(arr1 - arr2)
++    max_abs = np.max(diff)
++    p99_abs = np.percentile(diff, 99)
++    # Avoid division by zero
++    max_rel = np.max(diff / (np.maximum(np.abs(arr1), 1e-8)))
++
++    # Metrics
++    mse = np.mean(np.square(arr1 - arr2))
++    mae = np.mean(diff)
++
++    # Cosine Similarity
++    v1, v2 = arr1.flatten(), arr2.flatten()
++    norm1, norm2 = np.linalg.norm(v1), np.linalg.norm(v2)
++    if norm1 > 1e-8 and norm2 > 1e-8:
++        cos_sim = np.dot(v1, v2) / (norm1 * norm2)
++    else:
++        cos_sim = 0.0
++
++    ok = np.allclose(arr1, arr2, rtol=rtol, atol=atol)
++
++    print(f"Compare {name}:")
++    print(f"  np.allclose: {ok}")
++    print(f"  Max Abs: {max_abs:.6g}, P99 Abs: {p99_abs:.6g}, Max Rel: {max_rel:.6g}")
++    print(f"  MSE: {mse:.6g}, MAE: {mae:.6g}, Cos Sim: {cos_sim:.6g}")
++    return ok
++
++def run_ov_inference(xml_path: str, inputs: dict) -> dict:
++    """Load OpenVINO IR and run inference with numpy inputs. Returns a dict of outputs as numpy arrays."""
++    from openvino.properties import hint as hints
++    core = ov.Core()
++    core.set_property(
++        "CPU",
++        {hints.execution_mode: hints.ExecutionMode.ACCURACY},
++    )
++    model = core.read_model(xml_path)
++    compiled = core.compile_model(model, device_name="CPU")
++
++    ov_inputs = {}
++    for name, arr in inputs.items():
++        # OpenVINO expects numpy arrays
++        if isinstance(arr, torch.Tensor):
++            ov_inputs[name] = arr.cpu().numpy()
++        else:
++            ov_inputs[name] = arr
++
++    results = compiled(ov_inputs)
++    # compiled(inputs=...) returns a dict of output_name -> numpy array
++    return results
++
++def run_onnx_inference(onnx_path: str, inputs: dict) -> dict:
++    """Run ONNX Runtime inference and return output dict."""
++    import onnxruntime as ort
++    # Prepare inputs: convert torch tensors to numpy
++    ort_inputs = {}
++    for name, arr in inputs.items():
++        ort_inputs[name] = arr.detach().cpu().numpy() if isinstance(arr, torch.Tensor) else np.asarray(arr)
++
++    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
++    out_names = [o.name for o in sess.get_outputs()]
++    out = sess.run(out_names, ort_inputs)
++    return dict(zip(out_names, out))
++
++print("Running PyTorch Inference for Baseline...")
++with torch.no_grad():
++    torch_out = inference_model(images, img_masks, lang_tokens, lang_masks, noise)
++
++print("Running ONNX Inference...")
++inputs = {
++    "images": images.cpu(),
++    "img_masks": img_masks.cpu(),
++    "lang_tokens": lang_tokens.cpu(),
++    "lang_masks": lang_masks.cpu(),
++    "noise": noise.cpu(),
++}
++onnx_results = run_onnx_inference(onnx_path, inputs)
++onnx_out = onnx_results["actions_out"]
++
++print("Running OpenVINO Inference...")
++ov_results = run_ov_inference(ov_model_path, inputs)
++ov_out = ov_results["actions_out"]
++
++print("Comparing Results...")
++print("=====================================================")
++compare_tensors("PyTorch(Wrapper) vs ONNX", torch_out, onnx_out)
++compare_tensors("ONNX vs OpenVINO", onnx_out, ov_out)
++compare_tensors("PyTorch(Wrapper) vs OpenVINO", torch_out, ov_out)
++if args.compress_int8:
++    try:
++        int8_result = run_ov_inference(os.path.join(args.ov_output_dir + f"_{args.camera_num}c_INT8", "model.xml"), inputs)
++        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result["actions_out"])
++    except Exception as e:
++        print(f"INT8 inference failed: {e}")
++
+diff --git a/examples/pi05_with_openvino/scripts/convert_ov_rtc.py b/examples/pi05_with_openvino/scripts/convert_ov_rtc.py
+new file mode 100644
+index 0000000..4815d1f
+--- /dev/null
++++ b/examples/pi05_with_openvino/scripts/convert_ov_rtc.py
+@@ -0,0 +1,602 @@
++from lerobot.configs.types import RTCAttentionSchedule
++from lerobot.policies.rtc.configuration_rtc import RTCConfig
++from lerobot.policies.rtc.modeling_rtc import RTCProcessor
++import torch
++from lerobot.policies.pi05.modeling_pi05 import PI05Policy, make_att_2d_masks
++import os
++import numpy as np
++from torch import Tensor
++import openvino as ov
++import argparse
++import json
++import tempfile
++from pathlib import Path
++from lerobot.configs.policies import PreTrainedConfig
++from lerobot.datasets.lerobot_dataset import LeRobotDataset
++from lerobot.policies.factory import make_pre_post_processors
++from lerobot.utils.constants import ACTION, OBS_LANGUAGE_TOKENS, OBS_LANGUAGE_ATTENTION_MASK
++
++parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to ONNX and OpenVINO IR")
++parser.add_argument("--camera_num", "-c", type=int, default=4, help="Batch size for image input/number of cameras")
++parser.add_argument("--torch_dir", type=str, default="lerobot/pi05_base", help="Path to the pretrained PyTorch model")
++parser.add_argument("--dataset_path", type=str, default=None, help="Path to local LeRobot dataset for real inputs")
++parser.add_argument("--onnx_output_dir", type=str, default="pi05_rtc_onnx", help="Path to save the ONNX model")
++parser.add_argument("--ov_output_dir", type=str, default="pi05_rtc_lerobot_ov_ir", help="Path to save the OpenVINO IR model")
++parser.add_argument("--compress_int8", action="store_true", help="Whether to compress models to INT8")
++parser.add_argument("--save_fp32", action="store_true", help="Whether to save OpenVINO model in FP32 format (FP16 by default)")
++parser.add_argument("--override", action="store_true", help="Whether to override existing files")
++
++args = parser.parse_args()
++
++# -----------------------------
++# Load PyTorch policy
++# -----------------------------
++print(f"LOADING MODEL from {args.torch_dir}")
++
++# Handle extra keys in config that might cause issues (similar to eval_aloha.py)
++config_path = Path(args.torch_dir) / "config.json"
++policy_cfg = None
++
++if config_path.exists():
++    with open(config_path, "r") as f:
++        cfg_dict = json.load(f)
++    
++    # "type" is a property in PreTrainedConfig, not a field, so draccus fails if it's in the json
++    # when loading the subclass directly. However, PreTrainedConfig.from_pretrained REQUIRES "type".
++    # so we must leave it if we use PreTrainedConfig.from_pretrained.
++    invalid_keys = ["use_peft", "freeze_vision_encoder", "train_expert_only"]
++    dirty = False
++    for k in invalid_keys:
++        if k in cfg_dict:
++            del cfg_dict[k]
++            dirty = True
++            
++    if dirty:
++        print(f"Sanitizing config: removed deprecated keys {invalid_keys}")
++        with tempfile.TemporaryDirectory() as temp_dir:
++            temp_config_path = Path(temp_dir) / "config.json"
++            with open(temp_config_path, "w") as f:
++                json.dump(cfg_dict, f)
++            policy_cfg = PreTrainedConfig.from_pretrained(str(Path(temp_dir)))
++    else:
++        policy_cfg = PreTrainedConfig.from_pretrained(args.torch_dir)
++else:
++    policy_cfg = PreTrainedConfig.from_pretrained(args.torch_dir)
++
++# Disable compilation for tracing/export
++if hasattr(policy_cfg, "compile_model"):
++    print("Disabling model compilation for export...")
++    policy_cfg.compile_model = False
++
++policy = PI05Policy.from_pretrained(args.torch_dir, config=policy_cfg)
++device = torch.device("cpu")  # force CPU to avoid mixed precision issues
++policy.to(device)
++policy.eval()
++policy.config.rtc_config = RTCConfig(
++    enabled=True,
++    execution_horizon=10,
++    max_guidance_weight=5.0,
++    prefix_attention_schedule=RTCAttentionSchedule.EXP,
++    debug=False,
++)
++policy.model.rtc_processor = RTCProcessor(policy.config.rtc_config)
++print("Done loading policy.")
++
++# -----------------------------
++# Define inference wrapper
++# -----------------------------
++class Pi05InferenceRTCWrapper(torch.nn.Module):
++    def __init__(self, pi05_policy):
++        super().__init__()
++        self.model = pi05_policy.model
++        self.rtc_processor = RTCProcessor(pi05_policy.config.rtc_config)
++        self.rtc_processor.denoise_step = self.rtc_denoise_step
++
++    def forward(self, images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay, execution_horizon):
++        # Ensure all internal constants are float32
++        images = images.float()
++        
++        # Convert masks to int because ONNX doesn't support CumSum on booleans
++        img_masks = img_masks.long()
++        lang_masks = lang_masks.long()
++        
++        # out = self.model(images, img_masks, lang_tokens, lang_masks, state, actions)
++        out = self.sample_actions(images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay, execution_horizon)
++
++       
++        if torch.is_complex(out):
++            out = out.real
++        
++        torch.save(out, "validation/lerobot_pytorch_pi05_output.pt")
++        return out
++    
++    @torch.no_grad()  # see openpi `sample_actions` (slightly adapted)
++    def sample_actions(
++        self,
++        images,
++        img_masks,
++        tokens,
++        masks,
++        noise,
++        prev_chunk_left_over,
++        inference_delay,
++        execution_horizon, 
++        num_steps=None,
++    ) -> Tensor:
++        """Do a full inference forward and compute the action."""
++        if num_steps is None:
++            num_steps = self.model.config.num_inference_steps
++
++        bsize = tokens.shape[0]
++        device = tokens.device
++
++        prefix_embs, prefix_pad_masks, prefix_att_masks = self.model.embed_prefix(images, img_masks, tokens, masks)
++        prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks.long())
++        prefix_position_ids = torch.cumsum(prefix_pad_masks, dim=1) - 1
++
++        prefix_att_2d_masks_4d = self.model._prepare_attention_masks_4d(prefix_att_2d_masks.bool())
++        self.model.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"  # noqa: SLF001
++
++        _, past_key_values = self.model.paligemma_with_expert.forward(
++            attention_mask=prefix_att_2d_masks_4d,
++            position_ids=prefix_position_ids,
++            past_key_values=None,
++            inputs_embeds=[prefix_embs, None],
++            use_cache=True,
++        )
++
++        dt = -1.0 / num_steps
++
++        x_t = noise
++        for step in range(num_steps):
++            time = 1.0 + step * dt
++            time_tensor = torch.tensor(time, dtype=torch.float32, device=device).expand(bsize)
++
++            def denoise_step_partial_call(input_x_t, current_timestep=time_tensor):
++                return self.model.denoise_step(
++                    prefix_pad_masks=prefix_pad_masks,
++                    past_key_values=past_key_values,
++                    x_t=input_x_t,
++                    timestep=current_timestep,
++                )
++            v_t = self.rtc_processor.denoise_step(
++                    x_t=x_t,
++                    prev_chunk_left_over=prev_chunk_left_over,
++                    inference_delay=inference_delay,
++                    time=time,
++                    original_denoise_step_partial=denoise_step_partial_call,
++                    execution_horizon=execution_horizon,
++                )
++
++            x_t = x_t + dt * v_t
++        return x_t
++    
++    def rtc_denoise_step(
++        self,
++        x_t,
++        prev_chunk_left_over,
++        inference_delay,
++        time,
++        original_denoise_step_partial,
++        execution_horizon=None,
++    ) -> Tensor:
++        
++        tau = 1 - time
++
++        if len(prev_chunk_left_over.shape) < 3:
++            # Add batch dimension
++            prev_chunk_left_over = prev_chunk_left_over.unsqueeze(0)
++
++        if execution_horizon > prev_chunk_left_over.shape[1]:
++            execution_horizon = prev_chunk_left_over.shape[1]
++
++        action_chunk_size = x_t.shape[1]
++        # Instead of static slice assignment which breaks dynamic shapes, we use F.pad.
++        # This allows ONNX to export a dynamic Pad operator that adapts to prev_chunk_left_over's actual length.
++        # We only pad the length dimension (dim=1).
++        
++        curr_len = prev_chunk_left_over.shape[1]
++        pad_len = action_chunk_size - curr_len
++        
++        if pad_len > 0:
++            # F.pad format: (pad_last_dim_left, pad_last_dim_right, pad_2nd_last_dim_left, pad_2nd_last_dim_right)
++            # We want to pad dim 1 (length), which is the 2nd last dim.
++            # dim 2 (action_dim) gets (0, 0)
++            # dim 1 (len) gets (0, pad_len) -> pad right side
++            prev_chunk_left_over = torch.nn.functional.pad(
++                prev_chunk_left_over, 
++                pad=(0, 0, 0, pad_len), 
++                mode='constant', 
++                value=0
++            )
++
++        # Also pad the action dimension (dim 2) if it's smaller than model's max_action_dim
++        # This allows exporting with dynamic/smaller inputs (e.g. from dataset) while model state is fixed size.
++        curr_action_dim = prev_chunk_left_over.shape[2]
++        max_action_dim = x_t.shape[2] # x_t is noise/action with max_action_dim
++        
++        if curr_action_dim < max_action_dim:
++            pad_action_dim = max_action_dim - curr_action_dim
++            prev_chunk_left_over = torch.nn.functional.pad(
++            prev_chunk_left_over,
++            pad=(0, pad_action_dim), # (pad_last_dim_left, pad_last_dim_right) = (0, pad_action_dim)
++            mode='constant',
++            value=0
++            )
++
++        # Use helper function to compute prefix weights for input tensors
++        weights = (
++            self.get_prefix_weights(inference_delay, execution_horizon, action_chunk_size)
++            .to(x_t.device)
++            .unsqueeze(0)
++            .unsqueeze(-1)
++        )
++        v_t = original_denoise_step_partial(x_t)
++
++        x1_t = x_t - time * v_t  # noqa: N806
++        err = (prev_chunk_left_over - x1_t) * weights
++        correction = err
++
++        max_guidance_weight = torch.as_tensor(self.rtc_processor.rtc_config.max_guidance_weight)
++        tau_tensor = torch.as_tensor(tau)
++        squared_one_minus_tau = (1 - tau_tensor) ** 2
++        inv_r2 = (squared_one_minus_tau + tau_tensor**2) / (squared_one_minus_tau)
++        c = torch.nan_to_num((1 - tau_tensor) / tau_tensor, posinf=max_guidance_weight)
++        guidance_weight = torch.nan_to_num(c * inv_r2, posinf=max_guidance_weight)
++        guidance_weight = torch.minimum(guidance_weight, max_guidance_weight)
++
++        result = v_t - guidance_weight * correction
++
++        return result
++
++    
++    def get_prefix_weights(self, start, end, total):
++        # Helper function to compute prefix weights when inputs are tensors
++        import math
++        # Ensure inputs are tensors for proper min/max operations if they aren't already
++        if not isinstance(start, torch.Tensor):
++            start = torch.tensor(start)
++        if not isinstance(end, torch.Tensor):
++            end = torch.tensor(end)
++
++        start = torch.minimum(start, end)
++
++        # This implementation supports both scalar and tensor inputs for start/end
++        # significantly simplifying the logic and making it ONNX-export friendly.
++        # It replaces the previous piecewise construction (ones + linspace + zeros)
++        # with a unified linear decay formula clamped to [0, 1].
++
++        # Create an index grid [0, 1, 2, ..., total-1]
++        idx = torch.arange(total, device=start.device, dtype=torch.float32)
++
++        # Safe denominator (end - start + 1), ensures no division by zero
++        denom = (end - start + 1).float()
++
++        # Linear decay formula:
++        # When idx <= start: (end - idx) >= (end - start) -> value >= (end-start)/denom ~ 1.0
++        # When idx >= end:   (end - idx) <= 0             -> value <= 0.0
++        weights = (end - idx) / denom
++
++        # Clamp to valid range [0, 1]
++        weights = torch.clamp(weights, min=0.0, max=1.0)
++
++        if self.rtc_processor.rtc_config.prefix_attention_schedule == RTCAttentionSchedule.EXP:
++                weights = weights * (torch.exp(weights) - 1).div(math.e - 1)
++        elif self.rtc_processor.rtc_config.prefix_attention_schedule != RTCAttentionSchedule.LINEAR:
++                pass
++        else:
++            raise NotImplementedError(f"Unimplemented prefix attention schedule: {self.rtc_config.prefix_attention_schedule}")
++        return weights
++
++inference_model = Pi05InferenceRTCWrapper(policy)
++inference_model.to(device)
++inference_model.eval()
++
++# -----------------------------
++# Cast parameters and buffers to float32
++# -----------------------------
++for name, buf in inference_model.named_buffers():
++    if buf.dtype == torch.bfloat16:
++        # print("Casting buffer:", name)
++        buf.data = buf.data.float()
++    elif buf.dtype in [torch.int32, torch.int64]:
++        # leave these alone (needed for Gather, indexing, etc.)
++        pass
++
++for name, param in inference_model.named_parameters():
++    if param.dtype == torch.bfloat16:
++        # print("Casting param:", name)
++        param.data = param.data.float()
++
++# -----------------------------
++# Create Inputs (Real or Dummy)
++# -----------------------------
++vocab_size = 30522
++T = policy.config.n_obs_steps
++B = args.camera_num
++C, H, W = 3, 224, 224
++B_lang = 1
++T_lang = policy.config.tokenizer_max_length
++
++if hasattr(policy.config, "image_resolution"):
++     H, W = policy.config.image_resolution
++
++images = None
++img_masks = None
++lang_tokens = None
++lang_masks = None
++
++inference_delay = 8
++execution_horizon = policy.config.rtc_config.execution_horizon
++
++if args.dataset_path:
++    print(f"Using REAL DATASET from {args.dataset_path}")
++    ds = LeRobotDataset(repo_id="local", root=args.dataset_path)
++    # stats are in ds.meta.stats
++    stats = ds.meta.stats
++    
++    # Create preprocessor
++    # make_pre_post_processors uses policy.config to determine keys and normalization
++    preprocessor, _ = make_pre_post_processors(policy.config, dataset_stats=stats)
++    
++    # Get sample (first item)
++    item = ds[0]
++    
++    # Preprocess
++    # We need to add batch dim to all tensors in item, making B=1
++    observation = {}
++    for k, v in item.items():
++         if isinstance(v, torch.Tensor):
++             observation[k] = v.unsqueeze(0).to(device)
++         else:
++             observation[k] = [v] # keep list for strings/text
++             
++    batch = preprocessor(observation)
++    
++    # Move batch keys to device just in case
++    for k in batch:
++        if isinstance(batch[k], torch.Tensor):
++             batch[k] = batch[k].to(device)
++
++    # Get tensors ready for model
++    # _preprocess_images returns lists of tensors (one per camera)
++    images_list, img_masks_list = policy._preprocess_images(batch)
++    
++    # Stack images list -> [N_cams, B, C, H, W]
++    # This matches the structure expected by sample_actions (iterating over cameras)
++    # assuming B=1 from our unsqueeze logic.
++    images = torch.stack(images_list)
++    img_masks = torch.stack(img_masks_list)
++    
++    lang_tokens = batch[OBS_LANGUAGE_TOKENS]
++    lang_masks = batch[OBS_LANGUAGE_ATTENTION_MASK]
++
++    # RTC inputs still need to be synthesized as they are not part of dataset
++    # Use actual action dim from dataset for noise and prev_chunk_left_over
++    # item["action"] is usually (T, action_dim), so last dim is action_dim
++    action_dim = policy_cfg.output_features[ACTION].shape[0]
++    noise = torch.randn(1, policy_cfg.chunk_size, policy_cfg.max_action_dim, device=device).float()
++    prev_chunk_left_over = torch.randn(1, execution_horizon, action_dim, device=device).float()
++    inference_delay_tensor = torch.tensor(inference_delay, device=device)
++    execution_horizon_tensor = torch.tensor(execution_horizon, device=device)
++
++    print(f"Real inputs prepared.")
++    print(f"  Images shape: {images.shape}")
++    print(f"  Lang tokens shape: {lang_tokens.shape}")
++    print(f"  Action dim from dataset: {action_dim} (Model max action dim: {policy.model.config.max_action_dim})")
++
++else:
++    print("Using DUMMY inputs")
++    images = torch.randn(B, T, C, H, W, device=device).float()
++    img_masks = torch.ones(B, T, dtype=torch.bool, device=device)
++    lang_tokens = torch.randint(0, vocab_size, (B_lang, T_lang), device=device).long()
++    lang_masks = torch.ones(B_lang, T_lang, dtype=torch.bool, device=device)
++    noise = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
++    prev_chunk_left_over = torch.randn(1, execution_horizon, policy.model.config.max_action_dim, device=device).float()
++    inference_delay_tensor = torch.tensor(inference_delay, device=device)
++    execution_horizon_tensor = torch.tensor(execution_horizon, device=device)
++
++os.makedirs("validation", exist_ok=True)
++save_path = "validation/lerobot_pi05_input_tensor.pt"
++torch.save({
++    "images": images.cpu(),
++    "img_masks": img_masks.cpu(),
++    "lang_tokens": lang_tokens.cpu(),
++    "lang_masks": lang_masks.cpu(),
++    "noise": noise.cpu(),
++    "prev_chunk_left_over": prev_chunk_left_over.cpu(),
++    "inference_delay": inference_delay_tensor.cpu(),
++    "execution_horizon": execution_horizon_tensor.cpu(),
++}, save_path)
++
++print(f"Saved to {save_path}")
++
++# -----------------------------
++# Export to ONNX
++# -----------------------------
++onnx_dir = args.onnx_output_dir + f"_{args.camera_num}c"
++onnx_path = os.path.join(onnx_dir, "pi05.onnx")
++
++if not os.path.exists(onnx_path) or args.override:
++    os.makedirs(onnx_dir, exist_ok=True)
++    print(f"Exporting ONNX model to {onnx_path}...")
++    torch.onnx.export(
++        inference_model,
++        (images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay_tensor, execution_horizon_tensor),
++        onnx_path,
++        input_names=["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"],
++        output_names=["actions_out"],
++        dynamic_axes={
++            # "images": {0: "batch"},
++            # "img_masks": {0: "batch"},
++            # "lang_tokens": {0: "batch"},
++            # "lang_masks": {0: "batch"},
++            # "noise": {0: "batch"},
++            "prev_chunk_left_over": {1: "chunk_len"}, # <--- KEY: Make length dynamic
++            # "actions_out": {0: "batch"}
++        },
++        opset_version=14,
++        do_constant_folding=False,
++    )
++    print(f"ONNX model exported to {onnx_path}")
++else:
++    print(f"ONNX model {onnx_path} already exists. Skipping export.")
++
++# -----------------------------
++# OpenVINO Conversion
++# -----------------------------
++suffix = "_FP32" if args.save_fp32 else "_FP16"
++suffix = f"_{args.camera_num}c" + suffix
++ov_model_path = os.path.join(args.ov_output_dir + suffix, "model.xml")
++
++if not os.path.exists(ov_model_path) or args.override:
++    os.makedirs(args.ov_output_dir + suffix, exist_ok=True)
++    print(f"Converting to OpenVINO IR: {ov_model_path}")
++    ov_model = ov.convert_model(onnx_path)
++
++    ov.save_model(ov_model, 
++                output_model=ov_model_path, 
++                compress_to_fp16=not args.save_fp32)
++    print(f"OpenVINO model saved to {ov_model_path}")
++else:
++    print(f"OpenVINO model {ov_model_path} already exists. Skipping conversion.")
++
++model_int8_dir = args.ov_output_dir + f"_{args.camera_num}c_INT8"
++if args.compress_int8 and (not os.path.exists(os.path.join(model_int8_dir, "model.xml")) or args.override):
++    try:
++        from nncf import compress_weights, CompressWeightsMode
++        print("Applying INT8 compression...")
++        
++        os.makedirs(model_int8_dir, exist_ok=True)
++        core = ov.Core()
++        ov_model = core.read_model(ov_model_path)
++        int8_ov_model = compress_weights(
++            ov_model, 
++            mode=CompressWeightsMode.INT8_ASYM,
++        )
++
++        ov.save_model(int8_ov_model, output_model=os.path.join(model_int8_dir, "model.xml"))
++
++    except ImportError:
++        print("NNCF not found. Skipping INT8 compression.")
++    except Exception as e:
++        print(f"INT8 compression failed: {e}")
++
++# -----------------------------
++# Inference & Comparison
++# -----------------------------
++def compare_tensors(name: str, tensor_1, tensor_2, atol=1e-4, rtol=1e-3):
++    def to_numpy(t):
++        if isinstance(t, torch.Tensor):
++            return t.detach().cpu().float().numpy()
++        if hasattr(t, "numpy"):
++            return t.numpy()
++        return np.asarray(t)
++
++    arr1 = to_numpy(tensor_1)
++    arr2 = to_numpy(tensor_2)
++
++    if arr1.shape != arr2.shape:
++        print(f"Shape mismatch comparing {name}: {arr1.shape} vs {arr2.shape}")
++        return False
++
++    diff = np.abs(arr1 - arr2)
++    max_abs = np.max(diff)
++    p99_abs = np.percentile(diff, 99)
++    # Avoid division by zero
++    max_rel = np.max(diff / (np.maximum(np.abs(arr1), 1e-8)))
++
++    # Metrics
++    mse = np.mean(np.square(arr1 - arr2))
++    mae = np.mean(diff)
++
++    # Cosine Similarity
++    v1, v2 = arr1.flatten(), arr2.flatten()
++    norm1, norm2 = np.linalg.norm(v1), np.linalg.norm(v2)
++    if norm1 > 1e-8 and norm2 > 1e-8:
++        cos_sim = np.dot(v1, v2) / (norm1 * norm2)
++    else:
++        cos_sim = 0.0
++
++    ok = np.allclose(arr1, arr2, rtol=rtol, atol=atol)
++
++    print(f"Compare {name}:")
++    print(f"  np.allclose: {ok}")
++    print(f"  Max Abs: {max_abs:.6g}, P99 Abs: {p99_abs:.6g}, Max Rel: {max_rel:.6g}")
++    print(f"  MSE: {mse:.6g}, MAE: {mae:.6g}, Cos Sim: {cos_sim:.6g}")
++    return ok
++
++def run_ov_inference(xml_path: str, inputs: dict) -> dict:
++    """Load OpenVINO IR and run inference with numpy inputs. Returns a dict of outputs as numpy arrays."""
++    from openvino.properties import hint as hints
++    core = ov.Core()
++    core.set_property(
++        "CPU",
++        {hints.execution_mode: hints.ExecutionMode.ACCURACY},
++    )
++    model = core.read_model(xml_path)
++    compiled = core.compile_model(model, device_name="CPU")
++
++    ov_inputs = {}
++    for name, arr in inputs.items():
++        # OpenVINO expects numpy arrays
++        if isinstance(arr, torch.Tensor):
++            ov_inputs[name] = arr.cpu().numpy()
++        else:
++            ov_inputs[name] = arr
++
++    results = compiled(ov_inputs)
++    # compiled(inputs=...) returns a dict of output_name -> numpy array
++    return results
++
++def run_onnx_inference(onnx_path: str, inputs: dict) -> dict:
++    """Run ONNX Runtime inference and return output dict."""
++    import onnxruntime as ort
++    # Prepare inputs: convert torch tensors to numpy
++    ort_inputs = {}
++    for name, arr in inputs.items():
++        ort_inputs[name] = arr.detach().cpu().numpy() if isinstance(arr, torch.Tensor) else np.asarray(arr)
++
++    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
++    out_names = [o.name for o in sess.get_outputs()]
++    out = sess.run(out_names, ort_inputs)
++    return dict(zip(out_names, out))
++
++print("Running PyTorch Inference for Baseline...")
++with torch.no_grad():
++    torch_out = inference_model(images, img_masks, lang_tokens, lang_masks, noise, 
++                                prev_chunk_left_over, inference_delay_tensor, execution_horizon_tensor)
++    original_torch_out = policy.model.sample_actions(images, img_masks, lang_tokens, lang_masks, noise,
++                                prev_chunk_left_over=prev_chunk_left_over, inference_delay=inference_delay, execution_horizon=execution_horizon)
++
++print("Running ONNX Inference...")
++inputs = {
++    "images": images.cpu(),
++    "img_masks": img_masks.cpu(),
++    "lang_tokens": lang_tokens.cpu(),
++    "lang_masks": lang_masks.cpu(),
++    "noise": noise.cpu(),
++    "prev_chunk_left_over": prev_chunk_left_over.cpu(),
++    "inference_delay": inference_delay_tensor.cpu(),
++    "execution_horizon": execution_horizon_tensor.cpu(),
++}
++onnx_results = run_onnx_inference(onnx_path, inputs)
++onnx_out = onnx_results["actions_out"]
++
++print("Running OpenVINO Inference...")
++ov_results = run_ov_inference(ov_model_path, inputs)
++ov_out = ov_results["actions_out"]
++
++print("Comparing Results...")
++print("=====================================================")
++compare_tensors("PyTorch(Original) vs Pytorch(Wrapper)", original_torch_out, torch_out)
++compare_tensors("PyTorch(Wrapper) vs ONNX", torch_out, onnx_out)
++compare_tensors("ONNX vs OpenVINO", onnx_out, ov_out)
++compare_tensors("PyTorch(Wrapper) vs OpenVINO", torch_out, ov_out)
++if args.compress_int8:
++    try:
++        int8_result = run_ov_inference(os.path.join(args.ov_output_dir + f"_{args.camera_num}c_INT8", "model.xml"), inputs)
++        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result["actions_out"])
++    except Exception as e:
++        print(f"INT8 inference failed: {e}")
++
+diff --git a/src/lerobot/policies/pi05/modeling_pi05.py b/src/lerobot/policies/pi05/modeling_pi05.py
+index 104ec63..a4aa323 100644
+--- a/src/lerobot/policies/pi05/modeling_pi05.py
++++ b/src/lerobot/policies/pi05/modeling_pi05.py
+@@ -81,7 +81,7 @@ def create_sinusoidal_pos_embedding(  # see openpi `create_sinusoidal_pos_embedd
+     if time.ndim != 1:
+         raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
+ 
+-    dtype = get_safe_dtype(torch.float64, device.type)
++    dtype = torch.float32
+     fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
+     period = min_period * (max_period / min_period) ** fraction
+ 
+@@ -126,7 +126,7 @@ def make_att_2d_masks(pad_masks, att_masks):  # see openpi `make_att_2d_masks` (
+ 
+     cumsum = torch.cumsum(att_masks, dim=1)
+     att_2d_masks = cumsum[:, None, :] <= cumsum[:, :, None]
+-    pad_2d_masks = pad_masks[:, None, :] * pad_masks[:, :, None]
++    pad_2d_masks = (pad_masks[:, None, :] * pad_masks[:, :, None]).bool()
+     return att_2d_masks & pad_2d_masks
+ 
+ 
+@@ -640,17 +640,37 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+         att_masks = []
+ 
+         # Process images
+-        for img, img_mask in zip(images, img_masks, strict=True):
+-
+-            def image_embed_func(img):
+-                return self.paligemma_with_expert.embed_image(img)
+-
+-            img_emb = self._apply_checkpoint(image_embed_func, img)
+-            bsize, num_img_embs = img_emb.shape[:2]
+-
+-            embs.append(img_emb)
+-            pad_masks.append(img_mask[:, None].expand(bsize, num_img_embs))
+-            att_masks += [0] * num_img_embs
++        # Stack all images from all cameras along batch dimension to process efficiently
++        if isinstance(images, torch.Tensor):
++            flat_images = images.flatten(0, 1)
++        else:
++            flat_images = torch.cat(images, dim=0)
++
++        def image_embed_func(img):
++            return self.paligemma_with_expert.embed_image(img)
++
++        flat_img_embs = self._apply_checkpoint(image_embed_func, flat_images)
++        # Reshape back to separate cameras
++        num_cameras = len(images)
++        bsize = images[0].shape[0]
++        _, num_img_embs, embed_dim = flat_img_embs.shape
++        # [N*B, S, D] -> [N, B, S, D] -> [B, N, S, D] -> [B, N*S, D]
++        img_embs = flat_img_embs.view(num_cameras, bsize, num_img_embs, embed_dim)
++        img_embs = img_embs.permute(1, 0, 2, 3).reshape(bsize, -1, embed_dim)
++        embs.append(img_embs)
++
++        # Handle masks
++        # img_masks is list of [B] -> stack to [B, N]
++        if isinstance(img_masks, torch.Tensor):
++            stacked_img_masks = img_masks.transpose(0, 1)
++        else:
++            stacked_img_masks = torch.stack(img_masks, dim=1)
++        # [B, N] -> [B, N, S] -> [B, N*S]
++        img_pad_masks = (
++            stacked_img_masks.unsqueeze(-1).expand(-1, -1, num_img_embs).reshape(bsize, -1)
++        )
++        pad_masks.append(img_pad_masks)
++        att_masks += [0] * (num_cameras * num_img_embs)
+ 
+         # Process language tokens
+         def lang_embed_func(tokens):
+@@ -660,14 +680,14 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+ 
+         lang_emb = self._apply_checkpoint(lang_embed_func, tokens)
+         embs.append(lang_emb)
+-        pad_masks.append(masks)
++        pad_masks.append(masks.to(dtype=torch.long))
+ 
+         num_lang_embs = lang_emb.shape[1]
+         att_masks += [0] * num_lang_embs
+ 
+         embs = torch.cat(embs, dim=1)
+         pad_masks = torch.cat(pad_masks, dim=1)
+-        att_masks = torch.tensor(att_masks, dtype=torch.bool, device=pad_masks.device)
++        att_masks = torch.tensor(att_masks, dtype=torch.long, device=pad_masks.device)
+ 
+         bsize = pad_masks.shape[0]
+         att_masks = att_masks[None, :].expand(bsize, len(att_masks))
+@@ -708,7 +728,7 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+ 
+         embs.append(action_time_emb)
+         bsize, action_time_dim = action_time_emb.shape[:2]
+-        action_time_mask = torch.ones(bsize, action_time_dim, dtype=torch.bool, device=timestep.device)
++        action_time_mask = torch.ones(bsize, action_time_dim, dtype=torch.long, device=timestep.device)
+         pad_masks.append(action_time_mask)
+ 
+         # Set attention masks so that image, language and state inputs do not attend to action tokens
+@@ -807,7 +827,7 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+         prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks)
+         prefix_position_ids = torch.cumsum(prefix_pad_masks, dim=1) - 1
+ 
+-        prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks)
++        prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks.bool())
+         self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"  # noqa: SLF001
+ 
+         _, past_key_values = self.paligemma_with_expert.forward(
+@@ -877,7 +897,7 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+         prefix_offsets = torch.sum(prefix_pad_masks, dim=-1)[:, None]
+         position_ids = prefix_offsets + torch.cumsum(suffix_pad_masks, dim=1) - 1
+ 
+-        full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
++        full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks.bool())
+         self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = "eager"  # noqa: SLF001
+ 
+         outputs_embeds, _ = self.paligemma_with_expert.forward(
+-- 
+2.34.1
+

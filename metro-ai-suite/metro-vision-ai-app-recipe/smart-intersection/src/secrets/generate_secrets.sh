@@ -24,12 +24,14 @@ echo Generating root CA key
 mkdir -p $SECRETSDIR/ca
 openssl ecparam -name secp384r1 -genkey | openssl ec -aes256 -passout pass:$CERTPASS \
     -out $SECRETSDIR/ca/scenescape-ca.key
+chmod 0644 $SECRETSDIR/ca/scenescape-ca.key
 
 # Generate root CA certificate
 echo Generating root CA certificate
 mkdir -p $SECRETSDIR/certs
 openssl req -passin pass:$CERTPASS -x509 -new -key $SECRETSDIR/ca/scenescape-ca.key -days 1825 \
     -out $SECRETSDIR/certs/scenescape-ca.pem -subj "/CN=ca.$CERTDOMAIN"
+chmod 0644 $SECRETSDIR/certs/scenescape-ca.pem
 
 # Generate InfluxDB password and token
 echo Generating InfluxDB password and token
@@ -43,6 +45,7 @@ echo -n "$INFLUXDB_TOKEN" > $SECRETSDIR/influxdb2/influxdb2-admin-token
 # Generate web key and certificate
 echo Generating web.key
 openssl ecparam -name secp384r1 -genkey -noout -out $SECRETSDIR/certs/scenescape-web.key
+chmod 0644 $SECRETSDIR/certs/scenescape-web.key
 echo Generating CSR for web.$CERTDOMAIN
 openssl req -new -out $SECRETSDIR/certs/scenescape-web.csr -key $SECRETSDIR/certs/scenescape-web.key \
     -config <(sed -e "s/##CN##/web.$CERTDOMAIN/" -e "s/##SAN##/DNS.1=web.$CERTDOMAIN/" \
@@ -52,10 +55,12 @@ openssl x509 -passin pass:$CERTPASS -req -in $SECRETSDIR/certs/scenescape-web.cs
     -CA $SECRETSDIR/certs/scenescape-ca.pem -CAkey $SECRETSDIR/ca/scenescape-ca.key -CAcreateserial \
     -out $SECRETSDIR/certs/scenescape-web.crt -days 360 -extensions x509_ext -extfile \
     <(sed -e "s/##SAN##/DNS.1=web.$CERTDOMAIN/" -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
+chmod 0644 $SECRETSDIR/certs/scenescape-web.crt
 
 # Generate broker key and certificate
 echo Generating broker.key
 openssl ecparam -name secp384r1 -genkey -noout -out $SECRETSDIR/certs/scenescape-broker.key
+chmod 0644 $SECRETSDIR/certs/scenescape-broker.key
 echo Generating CSR for broker.$CERTDOMAIN
 openssl req -new -out $SECRETSDIR/certs/scenescape-broker.csr -key $SECRETSDIR/certs/scenescape-broker.key \
     -config <(sed -e "s/##CN##/broker.$CERTDOMAIN/" -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN/" \
@@ -65,6 +70,7 @@ openssl x509 -passin pass:$CERTPASS -req -in $SECRETSDIR/certs/scenescape-broker
     -CA $SECRETSDIR/certs/scenescape-ca.pem -CAkey $SECRETSDIR/ca/scenescape-ca.key -CAcreateserial \
     -out $SECRETSDIR/certs/scenescape-broker.crt -days 360 -extensions x509_ext -extfile \
     <(sed -e "s/##SAN##/DNS.1=broker.$CERTDOMAIN/" -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
+chmod 0644 $SECRETSDIR/certs/scenescape-broker.crt
 
 # Generate Django secrets
 echo Generating Django secrets

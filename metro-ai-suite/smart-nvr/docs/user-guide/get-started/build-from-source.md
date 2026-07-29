@@ -17,7 +17,7 @@ The Smart NVR application consists of multiple components that work together to 
 First, clone the repository and navigate to the Smart NVR directory:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
 
@@ -74,4 +74,4 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 - [System Requirements](./system-requirements.md): Review hardware and software requirements
 - [How to Use the Application](../how-to-use-application.md): Learn about the application's features and functionality
 - [API Reference](../api-reference.md): Explore the available REST API endpoints
-- [Troubleshooting](../troubleshooting.md#troubleshooting-docker-containers): Find solutions to common deployment issues
+- [Troubleshooting](../troubleshooting.md#troubleshooting-docker-deployments): Find solutions to common deployment issues

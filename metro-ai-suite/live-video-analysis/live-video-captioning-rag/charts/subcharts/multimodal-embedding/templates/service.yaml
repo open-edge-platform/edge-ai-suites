@@ -1,0 +1,20 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "multimodal-embedding.fullname" . }}
+  labels:
+    {{- include "multimodal-embedding.labels" . | nindent 4 }}
+    app.kubernetes.io/component: multimodal-embedding
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "multimodal-embedding.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.containerPortName }}
+      protocol: TCP
+      name: {{ .Values.service.portName }}

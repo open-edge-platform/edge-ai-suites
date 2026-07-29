@@ -2,6 +2,7 @@ from components.base_component import PipelineComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.markdown_cleaner import strip_think_tokens
 import logging, os
 
 logger = logging.getLogger(__name__)
@@ -16,9 +17,9 @@ class MindmapComponent(PipelineComponent):
 
     def _get_mindmap_message(self, input_text):
         lang_prompt = vars(config.mindmap.system_prompt)
-        logger.debug(f"Mindmap System Prompt: {lang_prompt.get(config.models.summarizer.language)}")
+        logger.debug(f"Mindmap System Prompt: {lang_prompt.get(config.app.language)}")
         return [
-            {"role": "system", "content": f"{lang_prompt.get(config.models.summarizer.language)}"},
+            {"role": "system", "content": f"{lang_prompt.get(config.app.language)}"},
             {"role": "user", "content": f"{input_text}"}
         ]
 
@@ -36,11 +37,11 @@ class MindmapComponent(PipelineComponent):
             mindmap_prompt = self.model.tokenizer.apply_chat_template(
                 self._get_mindmap_message(summary_text),
                 tokenize=False,
-                add_generation_prompt=True
+                add_generation_prompt=True,
+                enable_thinking=False
             )
 
-            mindmap_streamer = self.model.generate(mindmap_prompt)
-            full_mindmap = "".join(token for token in mindmap_streamer)
+            full_mindmap = self.model.generate(mindmap_prompt, stream=False)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

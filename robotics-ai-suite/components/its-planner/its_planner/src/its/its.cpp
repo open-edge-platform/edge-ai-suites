@@ -133,8 +133,12 @@ void ITS::oneWaySearch(ITS_Shared_State & Q, ITS_Half_State & N1, ITS_Half_State
   Pnode p_temp = N1.p;
   if (!N1.updated) {return;}
   N1.updated = false;
-  double heading_temp = N1.heading;
+  double heading_temp;
   Pnode neighbor;
+
+  if (Q.useDubins) {
+    heading_temp = N1.heading;
+  }
 
   Q.reversed_terms = N1.is_goal_side;
 

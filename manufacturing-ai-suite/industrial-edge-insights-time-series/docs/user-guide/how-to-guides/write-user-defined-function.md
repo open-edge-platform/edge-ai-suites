@@ -68,7 +68,6 @@ class MyHandler(Handler):
 
         # Initialize model for analysis.
         # Load the model using your algorithm's import method and assign it to self.model.
-        # Example: self.model = cb.CatBoostClassifier(...), then self.model.load_model(model_path)
         self.model = None  # Replace None with your actual model instance
 
         self.model.load_model(model_path)
@@ -238,7 +237,6 @@ Use it to extract fields, run inference or business logic, and emit results.
    numpy==1.24.0
    scikit-learn==1.3.0
    pandas==2.0.0
-   catboost==1.2.0
    ```
 
 ## Using Your UDF in TICKscripts
@@ -266,10 +264,8 @@ var data = stream
 ## References
 
 - [Kapacitor UDF Documentation](https://docs.influxdata.com/kapacitor/v1/guides/anomaly_detection/#writing-a-user-defined-function-udf)
-- [Example UDFs in Repository](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/)
+- [Example UDFs in Repository](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps)
   - [Wind Turbine Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
-  - [Weld Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/udfs/weld_anomaly_detector.py)
 - [Kapacitor TICKscript Reference](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/)
   - [Wind Turbine Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
-  - [Weld Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 - [Configure Custom UDF Deployment](./configure-custom-udf.md)

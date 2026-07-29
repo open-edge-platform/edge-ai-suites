@@ -1,0 +1,46 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Python caches / build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Test / coverage / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docs, charts and local resources not needed at build time
+docs/
+chart/
+shared/
+snapshots/
+*.md
+!third_party_programs.txt
+
+# Docker / compose
+docker/docker-compose.yml
+docker/docker-compose.npu.yml
+docker/init_ovms.sh
+.dockerignore

@@ -1,11 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Data aggregator service for Traffic Intersection Agent."""
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
-from collections import deque
+from typing import Dict, Optional, Any
 import structlog
 
 from models import (
@@ -13,6 +11,7 @@ from models import (
     TrafficIntersectionAgentResponse, WeatherData, VLMAnalysisData
 )
 from .config import ConfigService
+from .metrics_client import MetricsManagerClient
 from .vlm_service import VLMService
 
 
@@ -27,7 +26,12 @@ class DataAggregatorService:
     and maintains current traffic state for API responses.
     """
 
-    def __init__(self, config_service: ConfigService, vlm_service: VLMService):
+    def __init__(
+        self,
+        config_service: ConfigService,
+        vlm_service: VLMService,
+        metrics_client: Optional[MetricsManagerClient] = None,
+    ):
         """
         Initialize data aggregator service.
         
@@ -37,6 +41,7 @@ class DataAggregatorService:
         """
         self.config = config_service
         self.vlm_service = vlm_service
+        self.metrics_client = metrics_client
         
         # Data storage - separate temporary and VLM-analyzed data
         self.temp_camera_data: Dict[str, CameraDataMessage] = {}     # direction -> latest temp data
@@ -50,8 +55,10 @@ class DataAggregatorService:
         
         # Current state
         self.current_vlm_analysis: Optional[VLMAnalysisData] = None
-        self.last_analysis_time: Optional[float] = 0.0
+        self.last_analysis_time: float = 0.0
         
+        # Event to notify WebSocket clients when new VLM-analyzed data is available
+        self.new_data_event: asyncio.Event = asyncio.Event()
         
         logger.info("Data aggregator service initialized")
 
@@ -204,19 +211,45 @@ class DataAggregatorService:
         """Save data that was used in VLM analysis as the current analyzed data."""
 
         self.current_vlm_analysis = vlm_analysis
-
         # Copy temporary camera data to VLM-analyzed storage
         self.vlm_analyzed_camera_images = traffic_snapshot.camera_images
         self.vlm_analyzed_intersection_data = traffic_snapshot.intersection_data
         self.vlm_analyzed_weather_data = self.vlm_service.get_weather_details()
     
-
-        # Add to historical snapshots (only VLM-analyzed data)
+        # Notify WebSocket clients of new data
+        old_event: asyncio.Event = self.new_data_event
+        self.new_data_event = asyncio.Event()
+        old_event.set()
+        logger.debug("Event notification sent for new VLM-analyzed data")
         
         logger.info("VLM-analyzed data saved",
                    total_density=traffic_snapshot.total_count,
                    analyzed_cameras=list(self.vlm_analyzed_camera_images.keys()),
                    intersection_id=traffic_snapshot.intersection_id)
+
+    def _schedule_metrics_publish(self, vlm_analysis: VLMAnalysisData) -> None:
+        """Publish STIA application metrics without blocking traffic processing."""
+        if not self.metrics_client or not self.vlm_analyzed_intersection_data:
+            return
+
+        try:
+            metrics = self.metrics_client.build_traffic_metrics(
+                self.vlm_analyzed_intersection_data,
+                vlm_analysis,
+                active_camera_count=len(self.vlm_analyzed_camera_images),
+            )
+            task = asyncio.create_task(self.metrics_client.publish_batch(metrics))
+            task.add_done_callback(self._log_metrics_publish_failure)
+        except (RuntimeError, TypeError, ValueError, AttributeError) as e:
+            logger.warning("Failed to schedule Metrics Manager publish", error=str(e))
+
+    @staticmethod
+    def _log_metrics_publish_failure(task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        error = task.exception()
+        if error:
+            logger.warning("Metrics Manager publish task failed", error=str(error))
 
     async def _check_analysis_trigger(self) -> None:
         """Check if VLM analysis should be triggered based on traffic conditions."""
@@ -228,7 +261,7 @@ class DataAggregatorService:
         # Get current threshold dynamically from config
         high_density_threshold = self.config.get_high_density_threshold()
         
-        logger.info("Checking if VLM analysis should be triggered",
+        logger.debug("Checking if VLM analysis should be triggered",
                    total_density=self.temp_intersection_data.total_density,
                    threshold=high_density_threshold,
                    last_analysis_time=self.last_analysis_time)
@@ -280,13 +313,14 @@ class DataAggregatorService:
         
             # Trigger VLM analysis
             try:
-                vlm_analysis: VLMAnalysisData = await self.vlm_service.analyze_traffic_non_blocking(
+                vlm_analysis: Optional[VLMAnalysisData] = await self.vlm_service.analyze_traffic_non_blocking(
                     traffic_snapshot=traffic_snapshot
                 )
             
                 if vlm_analysis:
                     self._save_vlm_analyzed_data(vlm_analysis, traffic_snapshot)
                     self.last_analysis_time = datetime.now().timestamp()
+                    self._schedule_metrics_publish(vlm_analysis)
 
                     logger.info("VLM analysis completed successfully and data saved",
                             alerts_count=len(vlm_analysis.alerts),
@@ -321,13 +355,7 @@ class DataAggregatorService:
             # Prepare camera images for response (only VLM-analyzed images)
             camera_images_dict = {}
             for direction, camera_image in self.vlm_analyzed_camera_images.items():
-                camera_images_dict[f"{direction}_camera"] = {
-                    'camera_id': camera_image.camera_id,
-                    'direction': camera_image.direction,
-                    'timestamp': camera_image.timestamp,
-                    'image_base64': camera_image.image_base64,  # Include full base64 image
-                    'image_size_bytes': camera_image.image_size_bytes
-                }
+                camera_images_dict[f"{direction}_camera"] = camera_image
             
             # Create response with VLM-analyzed data only
             response = TrafficIntersectionAgentResponse(

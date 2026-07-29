@@ -47,11 +47,11 @@ class Config:
     
     @classmethod
     def get_api_url(cls) -> str:
-        return cls.get_value_from_env("AGENT_API_URL", "http://localhost:8081/api/v1/traffic/current")
+        return cls.get_value_from_env("AGENT_API_URL", "ws://localhost:8081/api/v1/traffic/current/ws")
     
     @classmethod
     def get_app_title(cls) -> str:
-        return cls.get_value_from_env("APP_TITLE", "TRAFFIC MONITORING SYSTEM")
+        return cls.get_value_from_env("APP_TITLE", "Smart Traffic Intersection Agent")
     
     @classmethod
     def get_app_port(cls) -> int:
@@ -72,3 +72,8 @@ class Config:
     @classmethod
     def get_moderate_density_threshold(cls) -> int:
         return int(cls.get_value_from_env("MODERATE_DENSITY_THRESHOLD", 5))
+
+    @staticmethod
+    def get_metrics_stream_url() -> str:
+        metrics_manager_url = os.getenv("METRICS_MANAGER_URL", "http://localhost:9090").rstrip("/")
+        return os.getenv("METRICS_STREAM_URL", f"{metrics_manager_url}/metrics/stream")

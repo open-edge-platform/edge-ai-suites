@@ -1,0 +1,67 @@
+
+# DO NOT COMMIT/PUSH THIS FILE TO ANY REPO WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
+# RESET ALL THE VALUES HERE TO DEFAULT, BEFORE COMMITING/PUSHING.
+global:
+  # Image registry and tags
+  registry: ''
+  tag: 'latest'
+  vssStackTag: ''
+  smartNvrStackTag: ''
+  usePvc: true
+  keepPvc: true
+
+  # Storage mode
+  # false = RWO: pods sharing PVCs are co-located on the same node (default, works with any storage class)
+  # true  = RWX: pods can schedule freely across nodes (requires RWX-capable storage class e.g. longhorn)
+  persistence:
+    rwxEnabled: false
+    # Storage class for shared PVCs. Leave empty to use cluster default.
+    storageClassName: ''
+
+  # Proxy settings
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+  # Credentials required by services (LVS canonical)
+  credentials:
+    minioRootUser: ''
+    minioRootPassword: ''
+    postgresUser: ''
+    postgresPassword: ''
+    mqttUser: ''
+    mqttPassword: ''
+  # Environment values
+  env:
+    embeddingModelName: ''
+    frameInterval: '15'
+    enableObjectDetection: 'true'
+    detectionConfidence: '0.85'
+    ovPerformanceMode: 'THROUGHPUT'
+  # Accelerator controls (GPU / NPU)
+  # Host group ids that own the accelerator device nodes on the target node
+  # (/dev/dri for GPU, /dev/accel for NPU). Added to the pod supplementalGroups
+  # so the non-root container user can open the device when a service uses a
+  # GPU or NPU. These gids are host-specific — check the node with
+  # `ls -ln /dev/accel` and `ls -ln /dev/dri` and override to match.
+  accelGroupIds:
+    - 992
+
+  # Per-service accelerator selection. This is the single source of truth for
+  # device placement of multimodal-embedding-serving and vdms-dataprep.
+  # Set device to CPU | GPU | NPU. When GPU/NPU, key is required and must match
+  # the cluster device-plugin resource key (e.g. gpu.intel.com/i915,
+  # npu.intel.com/accel).
+  devices:
+    multimodalEmbedding:
+      device: CPU # CPU | GPU | NPU
+      key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+    vdmsDataprep:
+      embedding:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+      detection:
+        device: CPU # CPU | GPU | NPU
+        key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+# Optional USB camera override (used with usb_camera_override.yaml profile)
+frigate:
+  usbCameraDevice: '/dev/video0'

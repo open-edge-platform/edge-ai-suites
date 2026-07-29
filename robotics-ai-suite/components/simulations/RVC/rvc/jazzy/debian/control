@@ -1,0 +1,30 @@
+Source: ros-jazzy-rvc
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-std-msgs
+Homepage:
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-rvc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-setuptools,
+    ros-jazzy-ros-gz,
+    gz-harmonic,
+    ros-jazzy-gz-sim-vendor,
+    ros-jazzy-ros2-control,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-launch-ros,
+    ros-jazzy-moveit-msgs,
+    ros-jazzy-moveit-ros-visualization,
+    ros-jazzy-rclpy,
+    ros-jazzy-rmw-cyclonedds-cpp,
+    ros-jazzy-rosidl-default-runtime,
+    ros-jazzy-std-srvs,
+    ros-jazzy-smach,
+    ros-jazzy-robot-config,
+    ros-jazzy-robot-config-plugins
+Description: Single-arm two-conveyor pick-and-place demo built on the shared robot_config simulation framework.

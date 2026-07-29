@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
@@ -14,37 +15,42 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
-import rclpy
-from rclpy.node import Node
-import wave
-from ament_index_python.packages import get_package_share_directory
-import os
-import numpy as np
-from numpy.linalg import norm
-import librosa
-import scipy
-from openvino.inference_engine import IECore
-import simpleaudio as sa
-import sounddevice as sd
+"""Speech recognition node using QuartzNet for audio command detection."""
 
+import os
+import wave
+
+import librosa
+import numpy as np
+import openvino as ov
+import rclpy
+import rclpy.duration
+import scipy
+import sounddevice as sd
+from ament_index_python.packages import get_package_share_directory
+from numpy.linalg import norm
+from rclpy.node import Node
 from std_msgs.msg import String
+
 from follow_me_interfaces.msg import AudioCommand
 
 
 class QuartzNet:
+    """OpenVINO-based QuartzNet inference wrapper for speech recognition."""
     pad_to = 16
     alphabet = " abcdefghijklmnopqrstuvwxyz'"
 
-    def __init__(self, ie, model_path, input_shape, device):
+    def __init__(self, core, model_path, input_shape, device):
+        """Load and compile the QuartzNet model."""
         assert not input_shape[2] % self.pad_to, (
             f"{self.pad_to} must be a divisor of input_shape's third dimension"
         )
-        self.ie = ie
-        network = self.ie.read_network(model_path)
-        if len(network.input_info) != 1:
+        self.core = core
+        network = self.core.read_model(model_path)
+        if len(network.inputs) != 1:
             raise RuntimeError('QuartzNet must have one input')
 
-        model_input_shape = next(iter(network.input_info.values())).input_data.shape
+        model_input_shape = network.inputs[0].shape
         if len(model_input_shape) != 3:
             raise RuntimeError('QuartzNet input must be 3-dimensional')
         if model_input_shape[1] != input_shape[1]:
@@ -55,27 +61,23 @@ class QuartzNet:
             )
         if len(network.outputs) != 1:
             raise RuntimeError('QuartzNet must have one output')
-        model_output_shape = next(iter(network.outputs.values())).shape
+        model_output_shape = network.outputs[0].shape
         if len(model_output_shape) != 3:
             raise RuntimeError('QuartzNet output must be 3-dimensional')
         if model_output_shape[2] != len(self.alphabet) + 1:  # +1 for blank char
             raise RuntimeError(
                 f'QuartzNet output third dimension size must be {len(self.alphabet) + 1}'
             )
-        network.reshape({next(iter(network.input_info)): input_shape})
-        self.exec_net = self.ie.load_network(network, device)
+        network.reshape({network.inputs[0].any_name: input_shape})
+        self.compiled_model = self.core.compile_model(network, device)
 
     def infer(self, melspectrogram):
-        return next(
-            iter(
-                self.exec_net.infer(
-                    {next(iter(self.exec_net.input_info)): melspectrogram}
-                ).values()
-            )
-        )
+        """Run inference on a mel-spectrogram and return character probabilities."""
+        return self.compiled_model(melspectrogram)[0]
 
     @classmethod
     def audio_to_melspectrum(cls, audio, sampling_rate):
+        """Convert raw audio to a log mel-spectrogram suitable for QuartzNet."""
         assert sampling_rate == 16000, 'Only 16 KHz audio supported'
         preemph = 0.97
         # To increase signal to noise ratio we use a pre-emphasis filter.
@@ -150,6 +152,7 @@ class QuartzNet:
 
     @classmethod
     def ctc_greedy_decode(cls, pred):
+        """Decode character probabilities into text using CTC greedy search."""
         prev_id = blank_id = len(cls.alphabet)
         transcription = []
         # Every output has 29 probabilities
@@ -169,12 +172,18 @@ class QuartzNet:
         return ''.join(transcription)
 
 
-class speech_recognizer(Node):
+class SpeechRecognizer(Node):  # pylint: disable=too-many-instance-attributes
+    """ROS 2 node that recognises speech commands from audio files or mic."""
     def __init__(self):
+        """Initialise parameters, subscriptions, and publishers."""
         super().__init__('speech_recognition_node')
         self.get_logger().info('speech_recognition_node has been started')
         # declare parameters
+        self.audio_file_ = ''
+        self.model_file_ = ''
         self.audio_transcript_ = 'no_action'
+        self.command_hold_until_ = self.get_clock().now()
+        self.command_hold_seconds_ = 3.0
         self.allowed_commands_ = [
             'start following',
             'stop following',
@@ -193,7 +202,7 @@ class speech_recognizer(Node):
         self.device_name_ = self.device_name_.upper()
         if self.device_name_ not in ['CPU', 'GPU', 'NPU']:
             self.device_name_ = 'CPU'
-        self.get_logger().info('using device: {}'.format(self.device_name_))
+        self.get_logger().info(f'using device: {self.device_name_}')
         self.fs = self.get_parameter('sampling_rate').value
         self.live_audio_length = self.get_parameter('live_audio_length_in_seconds').value
         self.audio_input_type_ = self.get_parameter('audio_input').value
@@ -216,21 +225,26 @@ class speech_recognizer(Node):
         )
 
     def audio_topic_callback(self, msg):
+        """Handle incoming audio filename messages."""
         audio_filename = msg.data
+        if not audio_filename:
+            return
         self.process_audio_file(audio_filename)
 
     def record_audio(self):
+        """Record live audio from microphone and process it."""
         myrecording = sd.rec(
             int(self.live_audio_length * self.fs), samplerate=self.fs, channels=1, dtype=np.int16
         )
         sd.wait()
         if myrecording is not None:
-            write('recorded.wav', self.fs, myrecording)
-            process_audio_file('recorded.wav')
+            write('recorded.wav', self.fs, myrecording)  # noqa  # pylint: disable=undefined-variable
+            self.process_audio_file('recorded.wav')
         else:
-            process_audio_file('')
+            self.process_audio_file('')
 
-    def process_audio_file(self, audio_filename):
+    def process_audio_file(self, audio_filename):  # pylint: disable=too-many-locals
+        """Transcribe an audio file and map it to a known command."""
         if audio_filename != '':
             self.audio_file_ = os.path.join(
                 get_package_share_directory('speech_recognition_pkg'),
@@ -240,14 +254,10 @@ class speech_recognizer(Node):
             )
             if not os.path.isfile(self.audio_file_):
                 self.get_logger().error(
-                    'recorded audio file: {} is not found'.format(self.audio_file_)
+                    f'recorded audio file: {self.audio_file_} is not found'
                 )
                 return
             with wave.open(self.audio_file_, 'rb') as wave_read:
-                # print("opened audio file")
-                wave_obj = sa.WaveObject.from_wave_file(self.audio_file_)
-                play_obj = wave_obj.play()  # Audio is played from device
-                play_obj.wait_done()
                 channel_num, sample_width, sampling_rate, pcm_length, compression_type, _ = (
                     wave_read.getparams()
                 )
@@ -273,7 +283,7 @@ class speech_recognizer(Node):
                 'quartznet-15x5-en.xml',
             )
             quartz_net = QuartzNet(
-                IECore(), self.model_file_, log_melspectrum.shape, device=self.device_name_
+                ov.Core(), self.model_file_, log_melspectrum.shape, device=self.device_name_
             )
             # Inference on Log Mel Spectrogram which outputs characters with probabilities.
             character_probs = quartz_net.infer(log_melspectrum)
@@ -291,19 +301,27 @@ class speech_recognizer(Node):
             max_similarity = np.max(similarity_score)
             if max_similarity <= 0.75:
                 self.get_logger().info('Audio command not recognized')
-                self.audio_transcript_ = 'no_action'
             else:
                 self.audio_transcript_ = self.outgoing_commands_[command_idx]
-        else:
-            self.audio_transcript_ = 'no_action'
+                self.command_hold_until_ = (
+                    self.get_clock().now()
+                    + rclpy.duration.Duration(seconds=self.command_hold_seconds_)
+                )
 
     def publish_audio_command(self):
+        """Publish the current audio transcript as an AudioCommand message."""
+        if (
+            self.audio_transcript_ != 'no_action'
+            and self.get_clock().now() > self.command_hold_until_
+        ):
+            self.audio_transcript_ = 'no_action'
         audio_msg = AudioCommand()
         audio_msg.audio_command = self.audio_transcript_
         self.audio_command_publisher_.publish(audio_msg)
-        self.get_logger().info('Publishing audio command: {}'.format(audio_msg.audio_command))
+        self.get_logger().info(f'Publishing audio command: {audio_msg.audio_command}')
 
     def string_similarity(self, s1, s2):
+        """Compute cosine similarity between two strings using ordinal vectors."""
         if len(s1) == 0 or len(s2) == 0:
             return 0.0
         s1_vec = [ord(ch) for ch in s1]
@@ -318,8 +336,9 @@ class speech_recognizer(Node):
 
 
 def main(args=None):
+    """Entry point for the speech recognition node."""
     rclpy.init(args=args)
-    node = speech_recognizer()
+    node = SpeechRecognizer()
     rclpy.spin(node)
     rclpy.shutdown()
 

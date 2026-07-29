@@ -18,6 +18,16 @@ def hash_intersection_name(name: str, length: int = 16) -> str:
     return hex_digest[:length]
 
 
+class MetricsConfig:
+    def __init__(self):
+        base_url = os.getenv("METRICS_MANAGER_URL", "http://localhost:9090").rstrip("/")
+        self.base_url = base_url
+        self.stream_url = os.getenv("METRICS_STREAM_URL", f"{base_url}/metrics/stream")
+        self.health_url = os.getenv("METRICS_HEALTH_URL", f"{base_url}/health")
+        self.push_enabled = os.getenv("METRICS_PUSH_ENABLED", "true").lower() in ["true", "1", "yes"]
+        self.push_timeout_seconds = float(os.getenv("METRICS_PUSH_TIMEOUT_SECONDS", "1.0"))
+
+
 class ConfigService:
     """
     Configuration service for Traffic Intersection Agent.
@@ -26,12 +36,13 @@ class ConfigService:
     MQTT topics, weather API, and VLM service settings.
     """
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initialize configuration service."""
         self._config_dir = Path(__file__).resolve().parent.parent / "config"
         self.config = self._load_config()
         logger.info("Configuration service initialized", 
                    intersection_id=self.get_intersection_id())
+        self.metrics = MetricsConfig()
     
     def _load_config(self) -> dict:
         """Load configuration from environment and file."""
@@ -140,6 +151,14 @@ class ConfigService:
             if "vlm" not in config:
                 config["vlm"] = {}
             config["vlm"]["top_p"] = float(os.getenv("VLM_TOP_P"))
+        if os.getenv("VLM_TARGET_DEVICE"):
+            if "vlm" not in config:
+                config["vlm"] = {}
+            config["vlm"]["target_device"] = os.getenv("VLM_TARGET_DEVICE")
+        if os.getenv("VLM_WEIGHT_FORMAT"):
+            if "vlm" not in config:
+                config["vlm"] = {}
+            config["vlm"]["weight_format"] = os.getenv("VLM_WEIGHT_FORMAT")
         
         # Traffic configuration
         if os.getenv("HIGH_DENSITY_THRESHOLD"):

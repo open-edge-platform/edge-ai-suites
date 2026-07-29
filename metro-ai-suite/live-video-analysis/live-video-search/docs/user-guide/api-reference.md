@@ -10,5 +10,5 @@ Live Video Search is composed of Smart NVR and VSS Search microservices. Refer t
 
 ## Full API Docs
 
-- [Smart NVR API](../../../../smart-nvr/docs/user-guide/api-reference.md)
-- [VSS API (public)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/api-reference.md)
+- [Smart NVR API](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/api-reference.html)
+- [VSS API](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/api-reference.html)

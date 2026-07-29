@@ -1,0 +1,8 @@
+mediapipe==0.10.9
+numpy==1.24.3
+librosa
+openvino==2025.3.0
+simpleaudio
+sounddevice
+tqdm
+inflect

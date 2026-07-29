@@ -1,3 +1,10 @@
+ros-jazzy-adbscan-ros2-follow-me (2.3-2) UNRELEASED; urgency=low
+
+  * Update adbscan follow-me processing flow for OpenVINO 2024 validation.
+  * Tune 2D and RealSense defaults and improve gesture/audio subscriber integration.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 10 Mar 2026 00:00:00 +0000
+
 ros-jazzy-adbscan-ros2-follow-me (2.3-1) UNRELEASED; urgency=low
 
   * Initial release

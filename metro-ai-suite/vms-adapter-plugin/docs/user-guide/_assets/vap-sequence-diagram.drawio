@@ -1,0 +1,115 @@
+<mxfile host="65bd71144e">
+    <diagram id="n_pwiXYVIChJNcjnjXVO" name="Page-1">
+        <mxGraphModel dx="1044" dy="851" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="none" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="15" value="VMS Adapter Plugin - Sequence Diagram" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=none;strokeColor=none;rounded=1;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="5" width="820" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=60;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;whiteSpace=wrap;html=1;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="48" width="80" height="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="VMS&amp;nbsp;&lt;div&gt;Client UI&lt;/div&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=60;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;whiteSpace=wrap;html=1;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="140" y="48" width="70" height="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="VMS" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=60;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;whiteSpace=wrap;html=1;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="48" width="140" height="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="VMS Adapter&lt;br&gt;Plugin (VAP)" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=60;fillColor=#1ba1e2;strokeColor=#006EAF;fontStyle=1;fontSize=11;whiteSpace=wrap;html=1;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="48" width="150" height="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="Analytics App" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=60;fillColor=#b0e3e6;strokeColor=#0e8088;fontStyle=1;fontSize=11;whiteSpace=wrap;html=1;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="710" y="48" width="140" height="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="endArrow=none;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;rounded=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="20" y="121" as="sourcePoint"/>
+                        <mxPoint x="850" y="121" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="21" value="Manual Setup" style="text;html=1;fontSize=10;fontStyle=3;align=left;fillColor=none;strokeColor=none;fontColor=#6c8ebf;verticalAlign=middle;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="24" y="122" width="120" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="1. Start VMS" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="178" as="sourcePoint"/>
+                        <mxPoint x="300" y="178" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="8" value="2. Start Analytics App" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;labelBackgroundColor=default;textShadow=0;verticalAlign=bottom;rounded=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="248" as="sourcePoint"/>
+                        <mxPoint x="780" y="248" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="3. Start VMS Adapter Plugin" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;labelBackgroundColor=default;textShadow=0;verticalAlign=bottom;rounded=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="318" as="sourcePoint"/>
+                        <mxPoint x="520" y="318" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="22" value="" style="endArrow=none;strokeColor=#82b366;strokeWidth=1;dashed=1;rounded=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="20" y="358" as="sourcePoint"/>
+                        <mxPoint x="850" y="358" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="23" value="Continuous Processing Loop" style="text;html=1;fontSize=10;fontStyle=3;align=left;fillColor=none;strokeColor=none;fontColor=#82b366;verticalAlign=middle;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="24" y="359" width="230" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="4. Get RTSP URL + camera params" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" target="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="520" y="398" as="sourcePoint"/>
+                        <mxPoint x="420" y="398" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="11" value="5. RTSP URL + params" style="dashed=1;endArrow=open;endFill=0;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" source="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="420" y="463" as="sourcePoint"/>
+                        <mxPoint x="520" y="463" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="12" value="6. Trigger inference pipeline (RTSP URL + params)" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" source="5">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="635" y="533" as="sourcePoint"/>
+                        <mxPoint x="780" y="533" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" value="7. Connect to RTSP stream (direct)" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" target="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="780" y="603" as="sourcePoint"/>
+                        <mxPoint x="420" y="603" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="8. Video frames (continuous)" style="dashed=1;endArrow=open;endFill=0;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" source="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="420" y="663" as="sourcePoint"/>
+                        <mxPoint x="780" y="663" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="31" value="Run Inference&lt;br&gt;(Detection / Caption)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="718" y="675" width="124" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="9. Detections / captions" style="dashed=1;endArrow=open;endFill=0;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" target="5">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="780" y="743" as="sourcePoint"/>
+                        <mxPoint x="635" y="743" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="10. Push detections / captions" style="endArrow=classic;endFill=1;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" target="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="530" y="813" as="sourcePoint"/>
+                        <mxPoint x="420" y="813" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="18" value="11. Render detections / captions" style="dashed=1;endArrow=open;endFill=0;edgeStyle=none;html=1;fontSize=10;verticalAlign=bottom;rounded=1;" parent="1" edge="1" target="3">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="300" y="873" as="sourcePoint"/>
+                        <mxPoint x="225" y="873" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

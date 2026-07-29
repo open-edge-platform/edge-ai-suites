@@ -1,0 +1,59 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handheld Multi-Modal Application</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: system-ui, sans-serif; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 4px;
+      height: 100vh;
+      background: #222;
+    }
+    .pane { display: flex; flex-direction: column; background: #fff; }
+    .pane header {
+      padding: 0;
+      background: #333;
+    }
+    .pane header a {
+      display: block;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-decoration: none;
+    }
+    .pane header a:hover { background: #444; }
+    .pane iframe { flex: 1; width: 100%; border: 0; }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <div class="pane">
+      <header><a href="https://localhost:8443" target="_blank" rel="noopener">Conversational Agent</a></header>
+      <iframe src="https://localhost:8443" title="localhost:8443"></iframe>
+    </div>
+    <div class="pane">
+      <header><a href="https://localhost:1443" target="_blank" rel="noopener">Visual Pipeline and Platform Evaluation Tool</a></header>
+      <iframe src="https://localhost:1443" title="localhost:1443"></iframe>
+    </div>
+    <div class="pane">
+      <header><a href="https://localhost:5443" target="_blank" rel="noopener">Speech To Text</a></header>
+      <iframe src="https://localhost:5443" title="localhost:5443"></iframe>
+    </div>
+    <div class="pane">
+      <header><a href="https://localhost:7443/d/ptl-compact-v2/panther-lake-compact-live-v2" target="_blank" rel="noopener">Grafana Dashboard</a></header>
+      <iframe src="https://localhost:7443/d/ptl-compact-v2/panther-lake-compact-live-v2" title="localhost:7443"></iframe>
+    </div>
+  </div>
+</body>
+</html>

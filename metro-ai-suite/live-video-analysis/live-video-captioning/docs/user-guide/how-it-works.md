@@ -2,16 +2,19 @@
 
 The stack ingests an RTSP stream, runs a DLStreamer pipeline that samples frames for VLM inference, and sends results to the dashboard.
 
-![System Architecture Diagram](./_assets/architecture.jpg)
+![System Architecture Diagram](./_assets/architecture.jpg "system architecture")
 
 ## Data Flow
 
-```
-RTSP Source → dlstreamer-pipeline-server
-            ├─→ 1fps AI branch (GStreamer gvagenai) → MQTT Broker
-            └─→ 30fps preview → mediamtx (WebRTC) → Dashboard
-                                                 ↓
-                                  Dashboard collects metrics (CPU, GPU, RAM)
+```mermaid
+flowchart LR
+  subgraph FLOW["Data Flow"]
+    RTSP["RTSP Source"] --> DPS["DL Streamer Pipeline Server"]
+    DPS -->|"1fps AI branch\n(GStreamer gvagenai)"| MQTT["MQTT Broker"]
+    DPS -->|"30fps preview"| MTX["mediamtx (WebRTC)"]
+    MTX --> DASH["Dashboard"]
+    DASH --> METRICS["Dashboard collects metrics\n(CPU, GPU, RAM)"]
+  end
 ```
 
 ## System Components
@@ -19,9 +22,8 @@ RTSP Source → dlstreamer-pipeline-server
 - **dlstreamer-pipeline-server**: Intel DLStreamer Pipeline Server processing RTSP sources with GStreamer pipelines and `gvagenai` for VLM inference
 - **mediamtx**: WebRTC/WHIP signaling server for video streaming
 - **coturn**: TURN server for NAT traversal in WebRTC connections
-- **app**: Python FastAPI backend serving REST APIs, SSE metadata streams, and WebSocket metrics
-- **collector**: Intel VIP-PET system metrics collector (CPU, GPU, memory, power)
-
+- **app**: Python FastAPI backend serving REST APIs, SSE metadata streams, and WebSocket caption streams
+- **metrics-manager**: Bundled system metrics microservice (`intel/metrics-manager`, Telegraf collector + HTTP/SSE API) reporting CPU, GPU, NPU, memory, and power
 
 ## Learn More
 

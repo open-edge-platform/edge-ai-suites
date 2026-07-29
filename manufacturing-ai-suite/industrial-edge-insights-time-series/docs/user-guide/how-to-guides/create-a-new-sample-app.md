@@ -1,7 +1,7 @@
 # Create a New Sample App
 
 This guide provides step-by-step instructions on how you can create a new sample app by taking
-`Wind Turbine Anomaly Detection` OR `Weld Anomaly Detection` sample app as a reference
+`Wind Turbine Anomaly Detection` sample app as a reference
 by configuring the generic `Time Series AI Stack`. Create a copy of the
 `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection`
 folder and replace the folder name with the sample app name to be created.
@@ -10,15 +10,16 @@ folder and replace the folder name with the sample app name to be created.
 
 ### Configuration
 
-#### 1. **Data Simulators/Destinations**:
+#### 1. **Data Simulators/Destinations**
 
    Options available:
+
    1. Update the OPC-UA/MQTT simulator containers (`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/simulator`) as needed
       to ingest the needed dataset to analyze via a CSV file
    2. If you have existing `OPC-UA/MQTT` simulators, you can use that too. Just adjust the Compose and Helm template files similar to
       the above existing OPC-UA/MQTT simulators
    3. Directly configure `Telegraf` to connect to the device acting as `OPC-UA` server OR `MQTT publisher/broker`.
-      Refer to the [Telegraf plugin documentation](https://docs.influxdata.com/telegraf/v1/plugins/#input-plugins/) for more details
+      Refer to the [Telegraf plugin documentation](https://docs.influxdata.com/telegraf/v1/plugins#input-plugins) for more details
 
 #### 2. **Generic Time Series AI stack**
 

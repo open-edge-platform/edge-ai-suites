@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: coturn
+description: Coturn TURN server for WebRTC NAT traversal.
+type: application
+version: 0.1.0
+appVersion: "4.6.2"

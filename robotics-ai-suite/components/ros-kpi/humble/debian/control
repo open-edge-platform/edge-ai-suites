@@ -1,0 +1,14 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+Source: ros-humble-benchmark-framework
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>=11~)
+Standards-Version: 4.1.4
+
+Package: ros-humble-benchmark-framework
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}, python3, python3-matplotlib, python3-numpy, python3-psutil, python3-yaml, python3-tk, python3-prometheus-client
+Description: ROS2 KPI Monitoring Stack for benchmark analysis and visualization

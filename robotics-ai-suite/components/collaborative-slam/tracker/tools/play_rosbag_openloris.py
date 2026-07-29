@@ -26,7 +26,7 @@ By Xuesong Shi, 2018
 
 import rospy
 import rosbag
-import subprocess
+import subprocess  # nosec B404
 import threading
 import time
 import sys
@@ -170,7 +170,7 @@ def main():
     topics = rosbag.Bag(bagfile).get_type_and_topic_info()[1]
     publishers = {}
     subscribers = {}
-    play_cmd = 'rosbag play ' + bagfile + ' ' + ' '.join(play_args)
+    play_cmd = ['rosbag', 'play', bagfile] + list(play_args)
     static_tf_msg = None
     camera_info_msg = None
     print('Topics in ' + bagfile + ':')
@@ -207,7 +207,7 @@ def main():
                 continue
 
         if 'd400' in topic:
-            play_cmd += ' %s:=%s' % (topic, camera + topic[5:])
+            play_cmd.append('%s:=%s' % (topic, camera + topic[5:]))
 
     print('\nStart to play... Press Ctrl+C to exit')
     if static_tf_msg is not None:
@@ -230,8 +230,8 @@ def main():
         camera_info_pub.setDaemon(True)
         camera_info_pub.start()
 
-    play_cmd += ' --topics /d400/color/image_raw /d400/aligned_depth_to_color/image_raw'
-    p = subprocess.call(play_cmd, shell=True)
+    play_cmd += ['--topics', '/d400/color/image_raw', '/d400/aligned_depth_to_color/image_raw']
+    p = subprocess.call(play_cmd)  # nosec B603
     if static_tf_msg is not None:
         global running
         running = False

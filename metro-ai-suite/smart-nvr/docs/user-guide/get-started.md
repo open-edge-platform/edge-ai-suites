@@ -1,7 +1,5 @@
 # Get Started
 
-## Overview
-
 Smart NVR is a GenAI-powered video analytics application that transforms traditional network
 video recorders with intelligent event detection and real-time insights at the edge. This guide
 will walk you through deploying and configuring the application to extract valuable insights
@@ -41,25 +39,30 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+[VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html)
 
 #### 2. VLM Microservice (Optional)
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the Frigate [config file](../../resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Quick Start
 
-### Step 1: Clone the repo
+### Step 1: Build from Source
+
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-# Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/smart-nvr
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/smart-nvr
 ```
 
 ### Step 2: Configure Environment
@@ -88,7 +91,7 @@ export MQTT_PASSWORD=<mqtt-password>
 
 # Feature Toggles
 export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions
-export NVR_SCENESCAPE=false             # Set to 'true' to enable SceneScape integration
+export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration
 ```
 
 ### Step 3: Launch Application
@@ -100,7 +103,7 @@ source setup.sh start
 
 This launches all required containers:
 
-![Services overview](./_assets/containers.png)
+![Services overview](./_assets/containers.png "services overview")
 
 ### Step 4: Access the Interface
 
@@ -125,76 +128,33 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
 1. Ensure VLM Service Availability
 
-Verify the VLM microservice is running and accessible at the configured endpoint.
+   Verify the VLM microservice is running and accessible at the configured endpoint.
 
 2. Set Environment Variable
 
-```bash
-export NVR_GENAI=true
-export VLM_SERVING_IP=<vlm-serving-device-ip>
-export VLM_SERVING_PORT=<vlm-serving-port>
-```
+   ```bash
+   export NVR_GENAI=true
+   export VLM_SERVING_IP=<vlm-serving-device-ip>
+   export VLM_SERVING_PORT=<vlm-serving-port>
+   ```
 
 3. Run the application
 
-Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
+   Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
-> **Important:**
->
-> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
-> - Requires VLM microservice to be running.
-> - Disabled by default for system stability.
-> - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
->   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
->   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
-> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
+   > **Important:**
+   >
+   > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
+   > - Requires VLM microservice to be running.
+   > - Disabled by default for system stability.
+   > - SmartNVR uses either Frigate or Scenescape for GenAI capabilities.
+   >   GenAI in both cannot be enabled at the same time. If Scenescape is enabled,
+   >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
+   > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 
-### Running Tests and Generating Coverage Report
+### Scenescape Integration
 
-To ensure the functionality of the microservice and measure test coverage, follow these steps:
-
-1. **Install Dependencies**
-   Install the required dependencies, including development dependencies, using:
-
-   ```bash
-   poetry install --with test
-   ```
-
-2. **Run Tests with Poetry**
-   Use the following command to run all tests:
-
-   ```bash
-   poetry run pytest
-   ```
-
-3. **Run Tests with Coverage**
-   To collect coverage data while running tests, use:
-
-   ```bash
-   poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
-   ```
-
-4. **Generate Coverage Report**
-   After running the tests, generate a coverage report:
-
-   ```bash
-   poetry run coverage report -m
-   ```
-
-5. **Generate HTML Coverage Report (Optional)**
-   For a detailed view, generate an HTML report:
-
-   ```bash
-   poetry run coverage html
-   ```
-
-   Open the `htmlcov/index.html` file in your browser to view the report.
-
-These steps will help you verify the functionality of the microservice and ensure adequate test coverage.
-
-### Intel® SceneScape Integration
-
-For traffic analytics capabilities with Intel® SceneScape (vehicle counting, traffic flow analysis), see the **[Intel® SceneScape Integration Guide](./scenescape-integration.md)**.
+For traffic analytics capabilities with Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
 
 ### Custom Build Configuration
 

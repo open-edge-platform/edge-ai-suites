@@ -1,0 +1,94 @@
+From f3fc33def345177ac746eba5e359931743ab96b3 Mon Sep 17 00:00:00 2001
+From: baihe-liu <baihe.liu@intel.com>
+Date: Mon, 1 Jun 2026 14:44:40 +0800
+Subject: [PATCH] Fix insecure usage of temp file in unit test (#5)
+
+---
+ tests/policies/pi0_pi05/test_pi05_ov_rtc.py | 30 ++++++++++++---------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/tests/policies/pi0_pi05/test_pi05_ov_rtc.py b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+index d1f4f53..100260b 100644
+--- a/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
++++ b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+@@ -21,6 +21,10 @@ pytestmark = pytest.mark.skipif(
+     reason="This test requires local OpenPI installation and is not meant for CI",
+ )
+ 
++@pytest.fixture
++def tmp_model_dir(tmp_path):
++    return str(tmp_path / "model")
++
+ @pytest.fixture
+ def mock_openvino():
+     with patch.dict(sys.modules, {"openvino": MagicMock()}):
+@@ -69,13 +73,13 @@ def setup_mock_ov(mock_openvino, input_names):
+     
+     return mock_compiled_model, mock_infer_request
+ 
+-def test_ov_config_initialization():
+-    config = OVConfig(model_dir="/tmp/model", device="CPU")
+-    assert config.model_dir == "/tmp/model"
++def test_ov_config_initialization(tmp_model_dir):
++    config = OVConfig(model_dir=tmp_model_dir, device="CPU")
++    assert config.model_dir == tmp_model_dir
+     assert config.device == "CPU"
+ 
+-def test_policy_ov_init(mock_openvino, pi05_config):
+-    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++def test_policy_ov_init(mock_openvino, pi05_config, tmp_model_dir):
++    ov_config = OVConfig(model_dir=tmp_model_dir, device="CPU")
+     mock_compiled_model, _ = setup_mock_ov(mock_openvino, ["images"])
+ 
+     policy = PI05Policy(pi05_config, ov_config=ov_config)
+@@ -86,9 +90,9 @@ def test_policy_ov_init(mock_openvino, pi05_config):
+     assert policy.model.ov_model == mock_compiled_model
+     assert policy.model.infer_request == mock_compiled_model.create_infer_request.return_value
+ 
+-def test_preprocess_images_ov_device(mock_openvino, pi05_config):
++def test_preprocess_images_ov_device(mock_openvino, pi05_config, tmp_model_dir):
+     pi05_config.device = "cpu"
+-    ov_config = OVConfig(model_dir="/tmp/model", device="GPU")
++    ov_config = OVConfig(model_dir=tmp_model_dir, device="GPU")
+     setup_mock_ov(mock_openvino, ["images"])
+     
+     policy = PI05Policy(pi05_config, ov_config=ov_config)
+@@ -100,9 +104,9 @@ def test_preprocess_images_ov_device(mock_openvino, pi05_config):
+     assert len(images) == 1
+     assert images[0].device == torch.device("cpu")
+ 
+-def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config):
++def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config, tmp_model_dir):
+     # Case 1: Model does NOT expect RTC inputs
+-    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    ov_config = OVConfig(model_dir=tmp_model_dir, device="CPU")
+     mock_compiled_model, mock_infer_request = setup_mock_ov(
+         mock_openvino, ["images", "img_masks", "lang_tokens", "lang_masks", "noise"]
+     )
+@@ -137,9 +141,9 @@ def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config):
+     
+     assert actions.shape == (batch_size, pi05_config.chunk_size, pi05_config.output_features[ACTION].shape[0])
+ 
+-def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_config):
++def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_config, tmp_model_dir):
+     # Case 2: Model DOES expect RTC inputs, and we pass them
+-    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    ov_config = OVConfig(model_dir=tmp_model_dir, device="CPU")
+     mock_compiled_model, mock_infer_request = setup_mock_ov(
+         mock_openvino, 
+         ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "prefix_weights"]
+@@ -181,9 +185,9 @@ def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_confi
+     assert "inference_delay" not in call_args
+     assert "execution_horizon" not in call_args
+ 
+-def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config):
++def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config, tmp_model_dir):
+     # Case 3: Model DOES expect RTC inputs, but we DON'T pass them (verify defaults)
+-    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    ov_config = OVConfig(model_dir=tmp_model_dir, device="CPU")
+     mock_compiled_model, mock_infer_request = setup_mock_ov(
+         mock_openvino, 
+         ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "prefix_weights"]
+-- 
+2.34.1
+

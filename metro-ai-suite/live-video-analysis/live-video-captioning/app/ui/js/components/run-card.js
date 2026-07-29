@@ -2,10 +2,74 @@
  * Run card UI component
  */
 const RunCardComponent = (function () {
+    const MODEL_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+    const DETECTION_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>';
+    const CAMERA_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>';
+    const RTSP_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg>';
+
+    function createChip(text, iconSvg, inlineStyles) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        if (inlineStyles) Object.assign(chip.style, inlineStyles);
+        if (iconSvg) chip.insertAdjacentHTML('beforeend', iconSvg);
+        chip.appendChild(document.createTextNode(text));
+        return chip;
+    }
+
+    function createTooltipRow(label, value, valueClassName) {
+        const row = document.createElement('div');
+        row.className = 'info-tooltip-row';
+
+        const labelEl = document.createElement('strong');
+        labelEl.textContent = `${label}:`;
+
+        const valueEl = document.createElement('span');
+        if (valueClassName) valueEl.className = valueClassName;
+        valueEl.textContent = value;
+
+        row.appendChild(labelEl);
+        row.appendChild(document.createTextNode(' '));
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    function getFrameQualityDisplay(frameQuality, frameWidth, frameHeight) {
+        if (frameQuality === 'custom') {
+            return `Custom (${frameWidth ?? '?'}×${frameHeight ?? '?'})`;
+        }
+        return ({ best: 'Best (1280×720)', better: 'Better (640×480)', good: 'Good (480×360)' }[frameQuality] || frameQuality);
+    }
+
     function formatRunNameForDisplay(runId) {
         // Convert underscores to spaces for UI display
         if (!runId) return runId;
         return runId.replace(/_/g, ' ');
+    }
+
+    function inferSourceType(streamSource) {
+        const source = (streamSource || '').toString().trim().toLowerCase();
+        if (source.startsWith('/dev/video')) return 'camera';
+        return 'rtsp';
+    }
+
+    function inferDeviceType(run) {
+        const selectedVlmDevice = (run.vlmDevice || '').toString().trim().toLowerCase();
+        if (selectedVlmDevice === 'npu') return 'NPU';
+        if (selectedVlmDevice === 'gpu') return 'GPU';
+        if (selectedVlmDevice === 'cpu') return 'CPU';
+
+        const pipelineNameLower = (run.pipelineName || '').toLowerCase();
+        if (pipelineNameLower.includes('npu')) return 'NPU';
+        if (pipelineNameLower.includes('gpu')) return 'GPU';
+        return 'CPU';
+    }
+
+    function formatDeviceLabel(deviceValue, fallback) {
+        const value = (deviceValue || '').toString().trim().toLowerCase();
+        if (value === 'npu') return 'NPU';
+        if (value === 'gpu') return 'GPU';
+        if (value === 'cpu') return 'CPU';
+        return fallback || 'N/A';
     }
 
     function createRunElement(run, onStopCallback) {
@@ -27,38 +91,53 @@ const RunCardComponent = (function () {
         headerLeft.style.fontSize = '0.85rem';
         headerLeft.style.flexWrap = 'wrap';
 
-        // Determine device from pipeline name
-        const deviceType = (run.pipelineName || '').toLowerCase().includes('gpu') ? 'GPU' : 'CPU';
+        // Determine device from selected VLM device (fallback to pipeline name for older runs)
+        const deviceType = inferDeviceType(run);
         const deviceIcon = deviceType === 'GPU'
             ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>'
-            : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>';
+            : deviceType === 'NPU'
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><line x1="4" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="20" y2="12"/></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>';
 
         // Format run name for display: underscores become spaces
         const displayRunName = formatRunNameForDisplay(run.runId);
-        headerLeft.innerHTML = `
-            <span class="dot active"></span>
-            <span><strong> Run Name : </strong>${displayRunName}</strong></span>
-            <span style="color: var(--muted); margin: 0 4px;">|</span>
-            <span class="chip" style="background: var(--accent); color: var(--bg);">
-                ${deviceIcon}
-                <strong>${deviceType}</strong>
-            </span>
-            <span class="chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                ${run.modelName || 'Unknown'}
-            </span>
-            ${run.isEnabledDetection ? `
-                <span class="chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <path d="M16 2v4"></path>
-                    <path d="M8 2v4"></path>
-                    <path d="M3 10h18"></path>
-                </svg>
-                ${run.detectionModelName}
-                </span>
-            ` : ``}
-        `;
+        const dot = document.createElement('span');
+        dot.className = 'dot active';
+        headerLeft.appendChild(dot);
+
+        const runNameWrap = document.createElement('span');
+        const runNameLabel = document.createElement('strong');
+        runNameLabel.textContent = ' Run Name : ';
+        runNameWrap.appendChild(runNameLabel);
+        runNameWrap.appendChild(document.createTextNode(displayRunName || 'N/A'));
+        headerLeft.appendChild(runNameWrap);
+
+        const divider = document.createElement('span');
+        divider.style.color = 'var(--muted)';
+        divider.style.margin = '0 4px';
+        divider.textContent = '|';
+        headerLeft.appendChild(divider);
+
+        const deviceChip = document.createElement('span');
+        deviceChip.className = 'chip';
+        deviceChip.style.background = 'var(--accent)';
+        deviceChip.style.color = 'var(--bg)';
+        deviceChip.insertAdjacentHTML('beforeend', deviceIcon);
+        const deviceStrong = document.createElement('strong');
+        deviceStrong.textContent = deviceType;
+        deviceChip.appendChild(deviceStrong);
+        headerLeft.appendChild(deviceChip);
+
+        const sourceType = inferSourceType(run.rtspUrl);
+        const sourceLabel = sourceType === 'camera' ? 'Camera' : 'RTSP';
+        const sourceIcon = sourceType === 'camera' ? CAMERA_ICON_SVG : RTSP_ICON_SVG;
+        headerLeft.appendChild(createChip(sourceLabel, sourceIcon));
+
+        headerLeft.appendChild(createChip(run.modelName || 'Unknown', MODEL_ICON_SVG));
+
+        if (run.isEnabledDetection) {
+            headerLeft.appendChild(createChip(run.detectionModelName || 'N/A', DETECTION_ICON_SVG));
+        }
 
         // Info button with tooltip
         const infoBtn = document.createElement('button');
@@ -70,27 +149,73 @@ const RunCardComponent = (function () {
         // Create tooltip element
         const tooltip = document.createElement('div');
         tooltip.className = 'info-tooltip';
-        tooltip.innerHTML = `
-            <div class="info-tooltip-title">Run Details</div>
-            <div class="info-tooltip-row"><strong>Pipeline:</strong> <span>${run.pipelineName || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>RTSP URL:</strong> <span>${run.rtspUrl || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>Max Tokens:</strong> <span>${run.maxTokens || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>Prompt:</strong> <span class="info-tooltip-prompt">${run.prompt || 'N/A'}</span></div>
-            ${(run.isEnabledDetection && (run.detectionModelName ?? '') !== '')
-                ? `<div class="info-tooltip-row"><strong>Detection Model:</strong> <span>${run.detectionModelName}</span></div>`
-                : ''}
-            ${(run.isEnabledDetection && (run.detectionThreshold ?? '') !== '')
-                ? `<div class="info-tooltip-row"><strong>Detection Threshold:</strong> <span>${run.detectionThreshold}</span></div>`
-                : ''}
-        `;
+        const tooltipTitle = document.createElement('div');
+        tooltipTitle.className = 'info-tooltip-title';
+        tooltipTitle.textContent = 'Run Details';
+        tooltip.appendChild(tooltipTitle);
+        tooltip.appendChild(createTooltipRow('Pipeline', run.pipelineName || 'N/A'));
+        tooltip.appendChild(createTooltipRow('Stream Source', run.rtspUrl || 'N/A'));
+        tooltip.appendChild(
+            createTooltipRow(
+                'VLM Device',
+                formatDeviceLabel(run.vlmDevice, inferDeviceType(run))
+            )
+        );
+        tooltip.appendChild(createTooltipRow('Max Tokens', String(run.maxTokens ?? 'N/A')));
+        tooltip.appendChild(createTooltipRow('Prompt', run.prompt || 'N/A', 'info-tooltip-prompt'));
+
+        if (run.frameRate != null) {
+            tooltip.appendChild(createTooltipRow('Frame Rate', String(run.frameRate || 'N/A')));
+        }
+        if (run.chunkSize != null) {
+            tooltip.appendChild(createTooltipRow('Chunk Size', String(run.chunkSize || 'N/A')));
+        }
+        if (run.frameQuality != null) {
+            tooltip.appendChild(
+                createTooltipRow(
+                    'Frame Quality',
+                    getFrameQualityDisplay(run.frameQuality, run.frameWidth, run.frameHeight)
+                )
+            );
+        }
+        if (run.isEnabledDetection && (run.detectionModelName ?? '') !== '') {
+            tooltip.appendChild(createTooltipRow('Detection Model', run.detectionModelName));
+        }
+        if (run.isEnabledDetection) {
+            tooltip.appendChild(
+                createTooltipRow(
+                    'Detection Device',
+                    formatDeviceLabel(run.detectionDevice, formatDeviceLabel(run.vlmDevice, 'CPU'))
+                )
+            );
+        }
+        if (run.isEnabledDetection && (run.detectionThreshold ?? '') !== '') {
+            tooltip.appendChild(createTooltipRow('Detection Threshold', String(run.detectionThreshold)));
+        }
         tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+
+        function positionTooltip() {
+            const rect = infoBtn.getBoundingClientRect();
+            const tooltipWidth = 360;
+            let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+            // Clamp to viewport with 8px margin
+            left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+        }
 
         // Toggle tooltip on click
         infoBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const isVisible = tooltip.style.display === 'block';
-            tooltip.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                tooltip.style.display = 'block';
+                positionTooltip();
+            } else {
+                tooltip.style.display = 'none';
+            }
         });
 
         // Close tooltip when clicking outside
@@ -100,11 +225,18 @@ const RunCardComponent = (function () {
             }
         });
 
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', () => {
+            if (tooltip.style.display === 'block') positionTooltip();
+        }, true);
+        window.addEventListener('resize', () => {
+            if (tooltip.style.display === 'block') positionTooltip();
+        });
+
         // Wrapper for info button and tooltip
         const infoBtnWrapper = document.createElement('div');
         infoBtnWrapper.className = 'info-btn-wrapper';
         infoBtnWrapper.appendChild(infoBtn);
-        infoBtnWrapper.appendChild(tooltip);
         headerLeft.appendChild(infoBtnWrapper);
 
         const grid = document.createElement('div');
@@ -113,6 +245,21 @@ const RunCardComponent = (function () {
         const video = document.createElement('iframe');
         video.className = 'run-video';
         video.title = `WebRTC ${run.peerId}`;
+
+        // Wrap the iframe so a "Connecting…" overlay can sit on top of it while
+        // the pipeline spins up and before mediamtx has a publisher for the path.
+        const videoWrap = document.createElement('div');
+        videoWrap.className = 'video-wrap';
+
+        const videoOverlay = document.createElement('div');
+        videoOverlay.className = 'video-overlay';
+        videoOverlay.innerHTML = `
+            <div class="video-overlay-spinner"></div>
+            <div class="video-overlay-text">Connecting to stream…</div>
+        `;
+
+        videoWrap.appendChild(video);
+        videoWrap.appendChild(videoOverlay);
 
         const captionPanel = document.createElement('div');
         captionPanel.className = 'caption-panel';
@@ -154,11 +301,15 @@ const RunCardComponent = (function () {
         const captionContent = document.createElement('div');
         captionContent.className = 'caption-content';
 
-        const caption = document.createElement('p');
-        caption.className = 'caption-text';
-        caption.textContent = 'Waiting for metadata...';
+        const captionTimeline = document.createElement('div');
+        captionTimeline.className = 'caption-timeline';
 
-        captionContent.appendChild(caption);
+        const initialEntry = document.createElement('div');
+        initialEntry.className = 'caption-entry caption-entry-placeholder';
+        initialEntry.textContent = 'Waiting for live captions...';
+        captionTimeline.appendChild(initialEntry);
+
+        captionContent.appendChild(captionTimeline);
 
         const stopBtn = document.createElement('button');
         stopBtn.className = 'btn btn-danger';
@@ -184,13 +335,13 @@ const RunCardComponent = (function () {
         captionPanel.appendChild(watcher);
         captionPanel.appendChild(captionContent);
 
-        grid.appendChild(video);
+        grid.appendChild(videoWrap);
         grid.appendChild(captionPanel);
 
         wrap.appendChild(header);
         wrap.appendChild(grid);
 
-        return { wrap, video, caption, captionPanel, watcher, timestamp, chips, stopBtn };
+        return { wrap, video, videoWrap, videoOverlay, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
     }
 
     function validateAndPrepareRunName(rawName) {
@@ -213,8 +364,72 @@ const RunCardComponent = (function () {
         return finalName;
     }
 
+    /**
+     * Transition a run card into the error state.
+     * Called when the backend reports the pipeline instance has gone away.
+     * Safe to call multiple times — subsequent calls are no-ops.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     */
+    function setRunErrorState(ui, message) {
+        // Switch dot to pulsing red
+        const dot = ui.wrap?.querySelector('.dot');
+        if (dot) {
+            dot.classList.remove('active');
+            dot.classList.add('error');
+        }
+
+        // Show error banner in the watcher row
+        if (ui.watcher) {
+            const text = message || 'Pipeline lost, click Remove to clear';
+            ui.watcher.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span style="color:#ef4444;font-weight:600;"></span>
+            `;
+            const span = ui.watcher.querySelector('span');
+            if (span) span.textContent = text;
+            ui.watcher.style.gap = '6px';
+            ui.watcher.style.display = 'flex';
+            ui.watcher.style.alignItems = 'center';
+        }
+
+        // Re-enable and relabel the stop button so the user can dismiss the card
+        if (ui.stopBtn) {
+            ui.stopBtn.disabled = false;
+            ui.stopBtn.textContent = 'Remove';
+        }
+    }
+
+    /**
+     * Replace the "Connecting…" video overlay with an error message.
+     * Used when the pipeline fails to bring up the stream during startup.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     * @param {string} [message] - Error text to display over the video area.
+     */
+    function setVideoOverlayError(ui, message) {
+        if (!ui.videoOverlay) return;
+        ui.videoOverlay.style.display = '';
+        ui.videoOverlay.innerHTML = `
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div class="video-overlay-text" style="color:#ef4444;"></div>
+        `;
+        const textEl = ui.videoOverlay.querySelector('.video-overlay-text');
+        if (textEl) textEl.textContent = message || 'Stream failed to start';
+    }
+
     return {
         createRunElement,
+        setRunErrorState,
+        setVideoOverlayError,
         validateAndPrepareRunName,
         getUniqueRunName,
         formatRunNameForDisplay

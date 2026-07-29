@@ -134,6 +134,7 @@ To stop the pipelines without waiting for video streams to finish replay:
 
 1. Open a browser and navigate to `https://127.0.0.1/grafana` to access the Grafana dashboard.
    - Change `127.0.0.1` to your host IP if accessing remotely.
+   > **NOTE:** If you experience issues while streaming videos on grafana dashboard on Firefox, it is recommended to use Google Chrome.
 2. Log in with the following credentials:
    - **Username**: `admin`
    - **Password**: `admin`

@@ -1,0 +1,36 @@
+name: smart_classroom
+description: "Flutter — Smart Classroom  pipeline"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP client — multipart uploads, interceptors, progress callbacks
+  # Replaces browser fetch() from React's api.ts
+  dio: ^5.4.3
+
+  # Reactive state management — equivalent of Redux in React
+  flutter_riverpod: ^2.5.1
+
+  # Cross-platform file picker (Windows, Linux, macOS, Web, Android, iOS)
+  # Replaces <input type="file"> hidden ref from UploadSection.tsx
+  file_picker: ^8.1.2
+
+  # .env config loading — equivalent of Vite's import.meta.env
+  flutter_dotenv: ^5.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/.env

@@ -1,0 +1,99 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# values-override.yaml — User-facing overrides for Live Video Captioning
+#
+# Quick start:
+#   1) helm dependency update ./charts
+#   2) helm install lvc ./charts -f ./charts/values-override.yaml -n <namespace> --create-namespace
+#
+# Upgrade:
+#   helm upgrade lvc ./charts -f ./charts/values-override.yaml -n <namespace>
+#
+# Note: model download/conversion can take 30-60+ minutes depending on network and model size.
+
+# -----------------------------------------------------------------------------
+# 1) REQUIRED PLATFORM SETTINGS
+# -----------------------------------------------------------------------------
+global:
+  # REQUIRED: worker node IP/hostname reachable by browser clients.
+  hostIP: ""
+
+  # REQUIRED: Kubernetes node name to schedule workloads.
+  # Note: Please specify the nodeName where the model-download chart runs, as this chart shareds the same PVC for model storage.
+  # If using GPU, ensure that the node has the appropriate GPU resources and drivers installed for charts.
+  nodeName: ""
+
+  # REQUIRED: model-download service location.
+  modelDownload:
+    serviceName: "model-download"
+    port: 8000
+    # REQUIRED: at least one VLM entry.
+    # This VLM model is used in DLSPS pipeline to generate captions text for input video stream.
+    # Parameters:
+    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "OpenGVLab/InternVL2-1B"
+    #          output directory is derived from the final segment of modelId
+    #          and created under /ov_models/<device>/ in the PVC.
+    # modelType: "vlm"
+    # weightFormat: "int8", or "int4" or "fp16"
+    # device: target conversion device(s): "CPU", "GPU", "NPU", or CSV/list (for multiple).
+    #         Example CSV: "CPU,GPU". Example list: ["CPU", "NPU"].
+    #         If NPU is selected, weightFormat is automatically forced to "int4".
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      modelType: "vlm"
+      weightFormat: "int8"
+      device: "CPU"
+  # OPTIONAL: downloaded only when detection pipeline is enabled.
+  detectionModels:
+    - "yolov8s"
+  # OPTIONAL: required only for gated Hugging Face models.
+  huggingface:
+    apiToken: ""
+
+  # OPTIONAL: proxy settings (leave empty if not needed).
+  httpProxy: ""
+  httpsProxy: ""
+  # Add camera host/IP and any internal services that must bypass proxy.
+  noProxy: ""
+
+# -----------------------------------------------------------------------------
+# 2) VIDEO CAPTION SERVICE
+# -----------------------------------------------------------------------------
+video-caption-service:
+  # Set when reusing a pre-created/shared PVC (for example: models-pvc).
+  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
+  # Leave empty to use release-derived default name.
+  modelsPvcName: "models-pvc"
+  env:
+    # Optional default RTSP URL pre-filled in UI.
+    defaultRtspUrl: ""
+
+    # true: binary alert-style responses, false: descriptive captions.
+    alertMode: "false"
+
+    # true: enable object-detection pipeline and detection model downloads.
+    enableDetectionPipeline: "false"
+
+    # Number of previous captions shown in timeline ("0" = current only).
+    captionHistory: "3"
+
+    # KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+    # The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+    VLM_CACHE_SIZE: 4
+
+    # Optional: NPU-specific configuration
+    # NPU_MAX_PROMPT_LENGTH: Maximum number of tokens that the model can process for the input prompt.
+    #                        Higher values may increase processing time, while lower values may limit the model's ability to process high resolution frames.
+    #                        Default set to 4096 tokens, which is adjusted to support 1080p frame. You can adjust this value based on your performance requirements.
+    # NPU_MIN_RESPONSE_LENGTH: Minimum number of tokens that the model can generate for the output response.
+    NPU_MAX_PROMPT_LENGTH: 4096
+    NPU_MIN_RESPONSE_LENGTH: 128
+
+# -----------------------------------------------------------------------------
+# 3) DLSTREAMER PIPELINE SERVER
+# -----------------------------------------------------------------------------
+dlstreamer-pipeline-server:
+  # Must point to the same shared models PVC used by video-caption-service.
+  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
+  modelsPvcName: "models-pvc"

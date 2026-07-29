@@ -161,15 +161,11 @@ services:
       ]
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     networks:
       - scenescape
     privileged: true
     entrypoint: ["./run.sh"]
-    ports:
-      - "8080:8080"
-      - "8555:8555"
-      - "8554:8554"
     devices:
       - "/dev/dri:/dev/dri"
     depends_on:
@@ -178,8 +174,6 @@ services:
     environment:
       - ENABLE_RTSP=true
       - RTSP_PORT=8554
-      - ENABLE_WEBRTC=true
-      - WEBRTC_SIGNALING_SERVER=ws://localhost:8443
       - RUN_MODE=EVA
       - GENICAM=Balluff
       - DETECTION_DEVICE=CPU
@@ -262,6 +256,9 @@ services:
       - "443:443"
     environment:
       - "DBROOT=/workspace"
+      - DBHOST=pgserver
+      - DBTYPE=postgres
+      - DBPORT=5432
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2

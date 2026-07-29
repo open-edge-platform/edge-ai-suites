@@ -1,0 +1,22 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ovms.fullname" . }}-models
+  labels:
+    {{- include "ovms.labels" . | nindent 4 }}
+    app.kubernetes.io/component: model-storage
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    "helm.sh/resource-policy": keep
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.modelStorage.size }}
+  {{- if .Values.modelStorage.storageClassName }}
+  storageClassName: {{ .Values.modelStorage.storageClassName }}
+  {{- end }}

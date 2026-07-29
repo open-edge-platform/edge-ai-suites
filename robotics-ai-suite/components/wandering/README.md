@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Wandering - The Wandering Mobile Robot Application
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
+
 ## Overview
 
 The Wandering mobile robot application is a Robot Operating System 2 (ROS 2) sample application that moves the robot around the room avoiding hitting obstacles, updating a map in real time that is exposed as the ROS topic.
@@ -22,7 +26,7 @@ In the diagram above, kobuki robot was used, and its kobuki ROS node is used for
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -35,7 +39,10 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls|grep -i .deb
+ls|grep -i .deb
+```
+
+```text
 ros-jazzy-wandering_2.3-1_amd64.deb
 ros-jazzy-wandering-aaeon-tutorial_2.3-1_amd64.deb
 ros-jazzy-wandering-irobot-tutorial_2.3-1_amd64.deb
@@ -72,6 +79,37 @@ Finally, install the Debian package that was built via ``make package``:
 sudo apt update
 sudo apt install ./ros-$(ROS_DISTRO)-wandering_*_amd64.deb
 ```
+
+## ROS 2 Jazzy and Gazebo Harmonic Compatibility
+
+### Twist vs TwistStamped
+
+ROS 2 Jazzy with Gazebo Harmonic requires `geometry_msgs/msg/TwistStamped` for robot motion, while Humble with Gazebo Classic uses `geometry_msgs/msg/Twist`. This difference is automatically handled:
+
+**Simulation (Gazebo)**:
+- **Humble + Gazebo Classic**: Uses `Twist` (default)
+- **Jazzy + Gazebo Harmonic**: Uses `TwistStamped` via `enable_stamped_cmd_vel: true` parameter
+- Launch files automatically select the correct configuration based on `ROS_DISTRO` environment variable
+
+**Real Hardware**:
+- Uses `Twist` on both Humble and Jazzy (hardware drivers unchanged)
+- No configuration changes needed when upgrading from Humble to Jazzy
+- Applies to: AAEON, iRobot Create3, Clearpath Jackal, and similar platforms
+
+To verify what your system expects:
+```bash
+ros2 topic info /cmd_vel -v
+```
+
+### LiDAR Visualization
+
+Gazebo Harmonic does not render LiDAR rays in the 3D view like Gazebo Classic. Use RViz2 for LiDAR visualization:
+```bash
+ros2 run rviz2 rviz2
+# Add → LaserScan display → Topic: /scan
+```
+
+The LiDAR sensor data publishes correctly and works with Nav2 navigation.
 
 ### Test
 
@@ -118,7 +156,10 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help                                                                                                                                            
+make help
+```                                                              
+
+```text         
 Target               Description
 ------               -----------
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
@@ -155,10 +196,6 @@ rviz2 -d rviz/config.rviz
 ```
 
 ![Screenshot](rviz/Rviz_config.jpg)
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
 
 ## License
 

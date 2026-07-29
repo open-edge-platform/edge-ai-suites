@@ -12,7 +12,12 @@
   font-family: var(--font-text);
   color: var(--color-dark);
   background-color: #f5f7fa;
- 
+
+  /* Layout heights (kept in sync with header/footer calc() math) */
+  --top-panel-height: 64px;
+  --header-bar-height: 56px;
+  --footer-height: 48px;
+
   --z-index-main-content: 1;
   --z-index-header: 50;
   --z-index-toast: 1100;

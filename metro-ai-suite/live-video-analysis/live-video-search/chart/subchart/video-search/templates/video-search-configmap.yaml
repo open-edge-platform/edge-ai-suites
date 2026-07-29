@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: video-search-config
+  labels:
+    {{- include "lvs.videosearch.labels" . | nindent 4 }}
+data:
+  VDMS_VDB_HOST: "vdms-vector-db"
+  VDMS_VDB_PORT: "55555"
+  EMBEDDINGS_ENDPOINT: "http://multimodal-embedding-serving:8000/embeddings"
+  EMBEDDINGS_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
+  INDEX_NAME: {{ .Values.global.env.vsIndexName | quote }}
+  VIDEO_UPLOAD_ENDPOINT: "http://pipeline-manager:3000"
+  AGGREGATION_ENABLED: {{ .Values.global.env.aggregationEnabled | quote }}
+  AGGREGATION_SEGMENT_DURATION: {{ .Values.global.env.aggregationSegmentDuration | quote }}
+  AGGREGATION_MIN_GAP: {{ .Values.global.env.aggregationMinGap | quote }}
+  AGGREGATION_MAX_RESULTS: {{ .Values.global.env.aggregationMaxResults | quote }}
+  AGGREGATION_INITIAL_K: {{ .Values.global.env.aggregationInitialK | quote }}
+  AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS: {{ .Values.global.env.aggregationContextSeekOffsetSeconds | quote }}
+  no_proxy: "{{ .Values.global.proxy.noProxy }},multimodal-embedding-serving,vdms-dataprep,minio-service,vdms-vector-db,pipeline-manager,localhost"
+  no_proxy_env: "{{ .Values.global.proxy.noProxy }},multimodal-embedding-serving,vdms-dataprep,minio-service,vdms-vector-db,pipeline-manager,localhost"
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}

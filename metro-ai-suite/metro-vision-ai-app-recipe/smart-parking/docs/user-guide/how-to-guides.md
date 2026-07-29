@@ -6,6 +6,7 @@ This section collects guides for the Smart Parking sample application.
 - [Generate Offline Package](./how-to-guides/generate-offline-package.md)
 - [Use GPU for Inference](./how-to-guides/use-gpu-for-inference.md)
 - [View Telemetry Data](./how-to-guides/view-telemetry-data.md)
+- [View System Performance Dashboard](./how-to-guides/system-performance-dashboard.md)
 - [Benchmark](./how-to-guides/benchmark.md)
 
 <!--hide_directive
@@ -17,6 +18,7 @@ This section collects guides for the Smart Parking sample application.
 ./how-to-guides/use-gpu-for-inference
 ./how-to-guides/use-npu-for-inference
 ./how-to-guides/view-telemetry-data
+./how-to-guides/system-performance-dashboard
 ./how-to-guides/benchmark
 
 :::

@@ -4,8 +4,8 @@
 
 The total pipeline needs two machines, one for client and one for server.
 
-- [Client](#environment-setup-for-windows): Windows 11 22H2 or above
-- [Server](#environment-setup-for-ubuntu): Ubuntu 22.04
+- [Client](#environment-setup-for-client-windows): Windows 11 22H2 or above
+- [Server](#environment-setup-for-server-ubuntu): Ubuntu 22.04
 
 For 2D avatar, the [RAG](#prepare-rag) will run on the server and other parts
 will run on the client.\
@@ -131,8 +131,8 @@ To install Docker, refer to the
 
 1. Organize the project code accordingly:
 
-  - In Ubuntu, the required code should be in the `said_docker` folder.
-  - [SAiD models](https://github.com/yunik1004/SAiD) are used for 3D lip sync.
+   - In Ubuntu, the required code should be in the `said_docker` folder.
+   - [SAiD models](https://github.com/yunik1004/SAiD) are used for 3D lip sync.
     `SAiD.pth` should be placed under the `said_docker/said_models` directory:
 
     ```text
@@ -140,7 +140,8 @@ To install Docker, refer to the
     └── said_models
         └── SAiD.pth
     ```
-  - Downloaded third-party models should also be saved within a similar
+
+   - Downloaded third-party models should also be saved within a similar
     file structure.
 
 2. Follow

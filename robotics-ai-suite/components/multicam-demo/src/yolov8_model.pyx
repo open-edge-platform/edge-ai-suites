@@ -5,6 +5,7 @@
 import os, argparse
 import math
 import ctypes
+from time import perf_counter
 from typing import Tuple, Dict
 from collections import deque
 import cython
@@ -17,19 +18,23 @@ from libc.stdint cimport (uint8_t, uint16_t, uint32_t, uint64_t,
                           int8_t, int16_t, int32_t, int64_t)
 from libcpp cimport bool
 
+import pathlib
 from pathlib import Path
 import cv2
 from PIL import Image
-import openvino.runtime as ov
-from openvino.runtime import Core, Model
-from time import perf_counter
-import pathlib
-from openvino.runtime import Core, Model, AsyncInferQueue
+import openvino as ov
+from openvino import Core, Model, AsyncInferQueue
 from ultralytics import YOLO
-from ultralytics.yolo.utils.plotting import colors
+from ultralytics.utils.plotting import colors
 
 
 np.import_array()
+
+# Shared Core instance — all models must share one Core so OpenVINO's GPU
+# scheduler can manage them fairly within a single GPU context.
+# Multiple separate Core() instances each get their own context and the
+# GPU driver schedules them independently, causing some to starve.
+_shared_core = Core()
 
 labels = [
 	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "trafficlight",
@@ -60,25 +65,54 @@ cdef class YoloV8ModelBase():
 
 		self.device = device
 
-		self.core = Core()
+		self.core = _shared_core
 		self.ov_model = self.core.read_model(model_path)
 
 		self.ov_model.reshape({0: [1, 3, image_size, image_size]})
 
-		self.compiled_model = self.core.compile_model(self.ov_model, device)
+		# Fold preprocess (BGR u8 NHWC -> RGB f32 NCHW /255) into the model graph
+		# so the device does color/scale/layout (and on GPU, resize) instead of
+		# the CPU. NPU's compiler does not support dynamic input shapes, so on
+		# NPU we keep the input static and resize on the host before submit.
+		self._device_resize = device.upper().startswith("GPU")
+		ppp = ov.preprocess.PrePostProcessor(self.ov_model)
+		in_tensor = ppp.input().tensor() \
+			.set_element_type(ov.Type.u8) \
+			.set_layout(ov.Layout("NHWC")) \
+			.set_color_format(ov.preprocess.ColorFormat.BGR)
+		if self._device_resize:
+			in_tensor.set_spatial_dynamic_shape()
+		in_pre = ppp.input().preprocess() \
+			.convert_element_type(ov.Type.f32) \
+			.convert_color(ov.preprocess.ColorFormat.RGB)
+		if self._device_resize:
+			in_pre = in_pre.resize(ov.preprocess.ResizeAlgorithm.RESIZE_LINEAR)
+		in_pre.scale(255.0)
+		ppp.input().model().set_layout(ov.Layout("NCHW"))
+		self.ov_model = ppp.build()
 
-		self.input_layer_ir = self.ov_model.input(0)
-		self.input_height = self.input_layer_ir.shape[2]
-		self.input_width = self.input_layer_ir.shape[3]
+		self.compiled_model = self.core.compile_model(
+			self.ov_model, device,
+			{"PERFORMANCE_HINT": "THROUGHPUT"}
+		)
+
+		self.input_layer_ir = self.compiled_model.input(0)
+		# Input tensor H/W are dynamic (PPP resizes whatever we feed it down to
+		# the static model size). Track the model's static input size for any
+		# code that wants the post-resize geometry.
+		self.input_height = image_size
+		self.input_width = image_size
 
 		self.infer_queue = AsyncInferQueue(self.compiled_model)
 		self.infer_queue.set_callback(self.callback)
 
 		self.infer_request = self.compiled_model.create_infer_request()
 
-		self.infer_times = []
+		self.infer_times = deque(maxlen=60)  # rolling window for latency (not used for fps display)
+		self._infer_count = 0          # total inferences completed
+		self._infer_start_time = None  # wall time of first completed inference
 		self.outputs = deque()
-		self.async_mod = False
+		self.async_mod = True
 		self.name = name
 		if name is None:
 			self.name = model_path.split('/')[3]
@@ -89,14 +123,19 @@ cdef class YoloV8ModelBase():
 
 
 	def infer(self, image:np.ndarray):
+		t0 = perf_counter()
 		resized_image = self.preprocess(image)
-		start_time = perf_counter()
+		t1 = perf_counter()
+		start_time = t1
 		if self.async_mod:
 			self.infer_queue.start_async({self.input_layer_ir.any_name:  resized_image}, (image, start_time))
 		else:
 			self.infer_request.set_tensor(self.input_layer_ir, ov.Tensor(resized_image))
 			self.infer_request.infer()
 			self.callback(self.infer_request, (image, start_time))
+		t2 = perf_counter()
+		self._pre_ms = (t1 - t0) * 1000.0
+		self._submit_ms = (t2 - t1) * 1000.0
 
 	def async_mode(self,flag):
 		self.async_mod = flag
@@ -117,29 +156,35 @@ cdef class YoloV8ModelBase():
 		return image
 
 	def fps(self):
-		if len(self.infer_times) > 0:
-			return 1/np.average(self.infer_times);
-		else:
-			return 0
+		# Throughput: inferences completed per wall-clock second.
+		# (1/avg_latency was misleading — it ignores time spent waiting
+		#  between submissions and showed identical values for all streams.)
+		if self._infer_count > 1 and self._infer_start_time is not None:
+			return self._infer_count / (perf_counter() - self._infer_start_time)
+		return 0
 
 	def callback(self, infer_request, info) -> None:
 		image, start_time = info
 
 		infer_time = (perf_counter() - start_time)
 		self.infer_times.append(infer_time)
+		if self._infer_start_time is None:
+			self._infer_start_time = start_time
+		self._infer_count += 1
 		boxes = infer_request.results[self.compiled_model.output(0)]
 		masks = infer_request.results[self.compiled_model.output(1)] if len(infer_request.results) > 1 else None
 
 		self.outputs.append((boxes, masks, image))
 
 	def preprocess(self, image):
-		input_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		input_img = cv2.resize(input_img, (self.input_width, self.input_height))
-		input_img = input_img / 255.0
-		input_img = input_img.transpose(2, 0, 1)
-		input_tensor = input_img[np.newaxis, :, :, :].astype(np.float32)
-
-		return input_tensor
+		# PPP graph handles BGR->RGB, u8->f32, /255, NHWC->NCHW on the device.
+		# When device_resize is on (GPU) we feed the raw camera frame; otherwise
+		# (NPU) we resize on the host so the input matches the static model size.
+		if self._device_resize:
+			frame = image
+		else:
+			frame = cv2.resize(image, (self.input_width, self.input_height))
+		return np.ascontiguousarray(frame[np.newaxis])
 
 	def postprocess(self, pred_boxes, pred_masks, orig_img):
 		boxes, scores, class_ids, mask_pred = self.process_box_output(pred_boxes, orig_img)
@@ -375,6 +420,4 @@ cdef class YoloV8ModelBase():
 class YoloV8Model(YoloV8ModelBase):
 	def __init__(self, model_path, device, image_size=640):
 		super().__init__(model_path, device, image_size)
-
-
 

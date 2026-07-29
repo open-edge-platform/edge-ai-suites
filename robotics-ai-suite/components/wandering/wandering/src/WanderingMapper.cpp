@@ -50,6 +50,11 @@ WanderingMapper::WanderingMapper()
   this->declare_parameter("robot_radius", 0.177);
   this->get_parameter("robot_radius", this->robotRadius_);
   RCLCPP_INFO(this->get_logger(), "Robot radius set to: %f\n", this->robotRadius_);
+  this->declare_parameter("enable_initial_rotation", false);
+  this->get_parameter("enable_initial_rotation", this->enableInitialRotation_);
+  RCLCPP_INFO(
+    this->get_logger(), "Enable initial rotation: %s\n",
+    this->enableInitialRotation_ ? "enabled" : "disabled");
   this->mapEngine_ = std::make_shared<MapEngine>(true, this->robotRadius_);
   this->goalCatcher_ = std::make_shared<GoalCatcher>(
     this, this->global_frame_, this->robot_base_frame_, this->robotRadius_);
@@ -95,8 +100,14 @@ void WanderingMapper::timerCallback()
 
   if (!this->shouldPauseWandering_) {
     if (!this->initRotate_) {
-      this->rotate();
-      return;
+      if (this->enableInitialRotation_) {
+        RCLCPP_INFO(this->get_logger(), "Starting initial rotation...");
+        this->rotate();
+        return;
+      } else {
+        this->initRotate_ = true;
+        RCLCPP_INFO(this->get_logger(), "Initial rotation skipped.");
+      }
     }
 
     if (!this->isMapped()) {

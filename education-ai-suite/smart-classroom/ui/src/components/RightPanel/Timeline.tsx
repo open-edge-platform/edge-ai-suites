@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "../../redux/hooks";
 import "../../assets/css/Timeline.css";
 
@@ -20,6 +21,7 @@ const SPEAKER_LABELS: Record<
 };
 
 const Timeline: React.FC = () => {
+  const { t } = useTranslation();
   const { segments, teacherSpeaker, totalDuration, detectedLanguage } =
     useAppSelector(s => s.transcript);
 
@@ -94,11 +96,10 @@ const Timeline: React.FC = () => {
       const match = speaker.match(/SPEAKER_(\d+)/i);
       if (match) {
         const speakerNumber = match[1];
-        const baseLabel = lang === "zh" ? "说话人" : labels.student;
-        return `${baseLabel}_${speakerNumber}`;
+        return `${labels.student}_${speakerNumber}`;
       }
-      if (lang === "zh" && speaker.toUpperCase() === "SPEAKER") {
-        return "说话人";
+      if (speaker.toUpperCase() === "SPEAKER") {
+        return labels.student;
       }
     }
     if (lang === "zh") {
@@ -141,10 +142,10 @@ const Timeline: React.FC = () => {
     <div className="timeline-container">
       <div className="timeline-header">
         <h4 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '14px' }}>
-          {lang === "zh" ? "发言时间轴" : "Speaking Timeline"}
+          {t('accordion.speakingTimeline')}
         </h4>
         <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-          {lang === "zh" ? "总时长" : "Total Duration"}: {formatTime(maxDuration)}
+          {t('accordion.totalDuration')}: {formatTime(maxDuration)}
         </div>
       </div>
 

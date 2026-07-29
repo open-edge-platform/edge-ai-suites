@@ -182,7 +182,7 @@ class MapCreator:
             longitude = intersection.location_coordinates.longitude
 
             logger.debug(
-                f"Adding marker for intersection: {intersection_name} at ({latitude}, {longitude})"
+                f"Adding marker for intersection: {intersection_name}"
             )
 
             # Create popup content with traffic data

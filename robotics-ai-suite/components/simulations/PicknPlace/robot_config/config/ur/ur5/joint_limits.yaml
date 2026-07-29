@@ -12,8 +12,9 @@
 ---
 joint_limits:
   shoulder_pan_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
@@ -22,8 +23,9 @@ joint_limits:
     max_velocity: !degrees  180.0
     min_position: !degrees -360.0
   shoulder_lift_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
@@ -32,8 +34,9 @@ joint_limits:
     max_velocity: !degrees  180.0
     min_position: !degrees -360.0
   elbow_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
@@ -52,8 +55,9 @@ joint_limits:
     max_velocity: !degrees  180.0
     min_position: !degrees -180.0
   wrist_1_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
@@ -62,8 +66,9 @@ joint_limits:
     max_velocity: !degrees  180.0
     min_position: !degrees -360.0
   wrist_2_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
@@ -72,8 +77,9 @@ joint_limits:
     max_velocity: !degrees  180.0
     min_position: !degrees -360.0
   wrist_3_joint:
-    # acceleration limits are not publicly available
-    has_acceleration_limits: false
+    # acceleration limits are not publicly available - using conservative estimates
+    has_acceleration_limits: true
+    max_acceleration: 3.0
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true

@@ -1,10 +1,14 @@
 <!--
-Copyright (C) 2025 Intel Corporation
+Copyright (C) 2026 Intel Corporation
 
 SPDX-License-Identifier: Apache-2.0
 -->
 
 # ADBSCAN (Adaptive Density-Based Spatial Clustering of Applications with Noise)
+
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/adbscan/index.html)
 
 ## Overview
 
@@ -15,13 +19,7 @@ This repository contains several AMR (Autonomous Mobile Robot) algorithm impleme
 - **ROS2_node** - ROS2 package with a node that subscribes to pointcloud sensors (LIDAR/RealSense) and publishes a list of objects in ObstacleArray message format
 - **Standalone** - Standalone C++ source code for the ADBSCAN algorithm with sample input files
 - **Visualization** - Python scripts to visualize the bounding boxes of detected object clusters in pointcloud data
-- **Follow_me_RS_2D** - ROS2 package implementing a person-following algorithm, including a gesture-based version. This package contains multiple sub-packages:
-  - **adbscan_ros2_follow_me** - Person following algorithm with gesture-based control support
-  - **follow_me_interfaces** - Custom ROS messages for gesture category and audio commands
-  - **gesture_recognition_pkg** - Hand gesture recognition from camera RGB images
-  - **speech_recognition_pkg** - Audio command recognition and conversion to ROS messages
-  - **text_to_speech_pkg** - Text-to-speech conversion package
-  - **turtlebot3_simulations** - Gazebo simulation environment for testing follow-me applications. Supported only for ROS Humble.
+- **Follow_me_RS_2D** - ROS2 package implementing a person-following algorithm with gesture and voice audio control
 - **package/tutorial_follow_me** - ROS2 tutorial for running the follow-me application on a custom AAEON robot
 - **package/tutorial_follow_me_w_gesture** - ROS2 tutorial for running the gesture-based follow-me application on a custom AAEON robot
 - **package/tutorial_aaeon_adbscan** - ROS2 tutorial for running the ADBSCAN algorithm on a custom AAEON robot
@@ -33,7 +31,7 @@ All ROS2 packages support the following platforms:
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -46,7 +44,10 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls | grep -i .deb
+ls | grep -i .deb
+```
+
+```text
 ros-jazzy-adbscan-ros2_2.3-1_amd64.deb
 ros-jazzy-follow-me-interfaces_2.3-1_amd64.deb
 ros-jazzy-adbscan-follow-me-rs2d_2.3-1_amd64.deb
@@ -121,7 +122,10 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
+```
+
+```text
 Target               Description
 ------               -----------
 clean                Clean up all build artifacts
@@ -162,23 +166,8 @@ This directory contains necessary Python scripts to visualize the bounding boxes
 
 This is a ROS2 package for an AMR algorithm where a robot follows a target person. It contains a ROS2 node which subscribes to pointcloud sensors (LIDAR/RealSense camera), uses the ADBSCAN algorithm to cluster the data and detect the location of the target person, and subsequently publishes the velocity commands for a differential drive robot.
 
-This package contains another version of the follow-me application: gesture-based follow-me. This version integrates a gesture recognition model to the existing implementation to control the movement of the robot with hand gestures of the target person.
-
-The `Follow_me_RS_2D` directory contains the following ROS2 packages in the `src` subdirectory:
-
-- **adbscan_ros2_follow_me** - Core follow-me algorithm implementation with gesture-based control capabilities. Subscribes to pointcloud data, performs ADBSCAN clustering for person detection, and publishes velocity commands for differential drive robots.
-
-- **follow_me_interfaces** - Custom ROS message definitions for inter-package communication, including gesture categories and audio command messages used by the gesture and speech recognition packages.
-
-- **gesture_recognition_pkg** - Hand gesture recognition system using camera RGB images. Leverages the Mediapipe Hands Framework to detect and classify hand gestures, enabling gesture-based control of robot movement.
-
-- **speech_recognition_pkg** - Audio command recognition package that captures audio input, recognizes voice commands, and converts them into ROS messages for robot control.
-
-- **text_to_speech_pkg** - Text-to-speech conversion package that provides audio feedback to users by converting text messages into spoken audio output.
-
-- **turtlebot3_simulations** - Gazebo simulation environment for testing and demonstrating the follow-me applications with both 2D LIDAR and RealSense camera configurations. **NOTE:** ``turtlebot3_simulations`` is only supported for ROS Humble. 
-
-Find additional instructions for this package: [Follow_me_RS_2D package instructions](Follow_me_RS_2D/Readme.md).
+This package supports four demo modes combining two sensor types (2D LiDAR or Intel RealSense depth camera) with optional hand-gesture control and voice audio control via OpenVINO speech recognition.
+Find instructions for this package: [Follow_me_RS_2D package instructions](Follow_me_RS_2D/Readme.md)
 
 ### package/tutorial_follow_me
 
@@ -191,10 +180,6 @@ This package provides a ROS2 tutorial for the **gesture-based follow-me applicat
 ### package/tutorial_aaeon_adbscan
 
 This package provides a ROS2 tutorial focused on **running the ADBSCAN algorithm itself** on a custom AAEON robot. It shows how to deploy and configure the ADBSCAN ROS2 node for obstacle clustering and object detection, without the full follow-me behavior.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/adbscan/index.html)
 
 ## License
 

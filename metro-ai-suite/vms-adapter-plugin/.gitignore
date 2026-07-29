@@ -1,0 +1,57 @@
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# ── Node / Vite ────────────────────────────────────────────────────────────
+ui/node_modules/
+ui/dist/
+ui/dist-ssr/
+ui/.vite/
+ui/coverage/
+ui/*.log
+
+# ── Env files (never commit) ───────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Local dev config (may contain secrets) ─────────────────────────────────
+config/config.dev.yaml
+
+# ── DB / state ─────────────────────────────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Frigate runtime state (written by Frigate container into shim config dir)
+vms_shim/frigate/config/*.db
+vms_shim/frigate/config/*.db-shm
+vms_shim/frigate/config/*.db-wal
+vms_shim/frigate/config/.jwt_secret
+vms_shim/frigate/config/.exports
+vms_shim/frigate/config/.timeline
+vms_shim/frigate/config/.vacuum
+vms_shim/frigate/config/model_cache/
+
+# ── Frigate sample videos (large binary files, not tracked in git)
+vms_shim/frigate/videos/
+
+# ── Editor / OS ────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

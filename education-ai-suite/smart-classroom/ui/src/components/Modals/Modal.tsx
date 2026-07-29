@@ -6,13 +6,14 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   showCloseIcon?: boolean; // Optional prop to show/hide the close icon
+  closeOnOverlayClick?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, showCloseIcon = true }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, showCloseIcon = true, closeOnOverlayClick = true }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={closeOnOverlayClick ? onClose : undefined}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {showCloseIcon && (
           <button className="modal-close-icon" onClick={onClose}>

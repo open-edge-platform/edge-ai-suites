@@ -1,28 +1,34 @@
 # Release Notes
 
-## Intel® Metro SDK Manager EAS-2025.2.0 Release
+## Intel® OEP SDK Manager Latest Component Refresh
 
-### New 
+### New
 
-- **Installer** - https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/metro-sdk-manager/index.html
-- **Unified SDK Management**
-Provides a single interface to manage installation and updates for:
-    - Metro Vision AI SDK
-    - Metro Gen AI SDK
-    - Visual AI Demo Kit
-- **Simplified Installation**
-    - One-line command for quick setup of SDKs and all dependencies.
-    - Validated across multiple Intel platforms for reliability.
-    - Streamlined process designed for developers and integrators to save time and effort.
-- **Comprehensive Documentation**
-    - Getting Started Guide for fast onboarding.
-    - Step-by-Step Tutorials to master Intel components and workflows.
-    - Detailed examples for Vision AI, Generative AI, and visual AI demo kit to accelerate learning and development.
-- **Intel Component Integration**
-    - Optimized pipelines for inference and benchmarking.
-    - Full hardware acceleration support with OpenVINO™ and DL Streamer integration for high-performance AI workloads.
-- **Developer-Friendly Features**
-    - Easy binary installs and direct GitHub sourcing for flexibility.
-    - Clear roadmap outlining future enhancements and SDK updates to keep developers ahead.
- 
+- **Latest Available Components**
+    - Updated Docker images to the latest available tags on Docker Hub across all SDKs.
+    - Git repositories remain on the latest available release branch: release-2026.1.0.
+- **Component Version Updates**
+    - DL Streamer and DL Streamer Pipeline Server updated to 2026.1.0 Ubuntu 24 tags.
+    - OpenVINO Model Server upgraded to 2026.2 and OpenVINO development image to 2026.2.0.
+    - Scenescape components updated to 2026.1.0.
+    - Gen AI microservices updated to latest available production tags, with Model Download updated to 2026.1.0-rc2.
+- **Gen AI SDK Enhancements**
+    - Chat Q&A and Chat Q&A UI updated to latest available tags.
+    - Model Download service updated to 2026.1.0-rc2.
+    - Document Ingestion and Embedding services updated to latest available tags.
+- **Updated Documentation**
+    - Enhanced guides and tutorials for improved clarity and usability.
+    - All tutorials updated with latest container image references.
+
+## Intel® OEP SDK Manager EAS-2026.0.0 Release
+
+- **Updated Documentation**
+    - Enhanced guides and tutorials for improved clarity and usability.
+    - Latest best practices integrated across all learning materials.
+- **Component Version Updates**
+    - OpenVINO™ upgraded to latest version for improved performance and features.
+    - DL Streamer updated with latest enhancements for optimized media processing.
+- **Gen AI Tutorials**
+    - Updated to leverage latest Gen AI SDK capabilities and workflows.
+    - Improved examples demonstrating current best practices and advanced techniques.
 

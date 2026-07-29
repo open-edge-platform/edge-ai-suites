@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: dlstreamer-pipeline-server
+description: Intel DL Streamer Pipeline Server — GStreamer-based video analytics with VLM inference.
+type: application
+version: 0.1.0
+appVersion: "2026.0.0-ubuntu24"

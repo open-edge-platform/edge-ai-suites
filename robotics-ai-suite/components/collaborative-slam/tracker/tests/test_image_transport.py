@@ -95,7 +95,7 @@ def args_parse(default_bagfile_dir):
     exefile_dir = os.path.realpath(args.exefile_dir)
     exefile_path = os.path.join(exefile_dir, 'test_image_transport')
     if not os.path.isfile(exefile_path):
-        sys.exit(f'can not find test_image_transport exe in "{exefile_dir}"')
+        sys.exit(f'cannot find test_image_transport exe in "{exefile_dir}"')
 
     # ros1_install_path = os.path.realpath(args.ros1_path)
     # if not os.path.isdir(ros1_install_path):

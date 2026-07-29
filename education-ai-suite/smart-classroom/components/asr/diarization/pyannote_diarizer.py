@@ -1,14 +1,24 @@
 from pyannote.audio import Pipeline
 import torch
+import torchaudio
 from torch.serialization import safe_globals
+import os
 
 # Import all task-related globals used in pyannote checkpoints
 import torch.torch_version
 from pyannote.audio.core.task import Specifications, Problem, Resolution, Task
+from utils.config_loader import config
+from utils.ensure_model import get_diarization_model_path
 
 
 class PyannoteDiarizer:
     def __init__(self, device="cpu", hf_token=None):
+        pipeline_source = config.models.diarization.name
+        local_model_path = get_diarization_model_path()
+        local_config_path = os.path.join(local_model_path, "config.yaml")
+
+        if os.path.exists(local_config_path):
+            pipeline_source = local_config_path
 
         # Allow all needed globals for torch ≥2.6 checkpoint loading
         with safe_globals([
@@ -19,15 +29,18 @@ class PyannoteDiarizer:
             Task
         ]):
             self.pipeline = Pipeline.from_pretrained(
-                "pyannote/speaker-diarization-3.1",
-                use_auth_token=hf_token
+                pipeline_source,
+                token=hf_token
             )
 
         self.device = torch.device(device)
         self.pipeline.to(self.device)
 
     def diarize(self, audio_path):
-        diarization = self.pipeline(audio_path)
+        waveform, sample_rate = torchaudio.load(audio_path)
+        audio_input = {"waveform": waveform, "sample_rate": sample_rate}
+        output = self.pipeline(audio_input)
+        diarization = output.exclusive_speaker_diarization
         segments = []
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             segments.append({

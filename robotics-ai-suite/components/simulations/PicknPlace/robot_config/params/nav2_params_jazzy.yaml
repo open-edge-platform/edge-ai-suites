@@ -3,12 +3,13 @@
 ---
 amcl:
   ros__parameters:
-    alpha1: 0.2
-    alpha2: 0.2
-    alpha3: 0.2
-    alpha4: 0.2
-    alpha5: 0.2
-    base_frame_id: "base_footprint"
+    use_sim_time: true
+    alpha1: 0.05
+    alpha2: 0.05
+    alpha3: 0.05
+    alpha4: 0.05
+    alpha5: 0.05
+    base_frame_id: "amr1/base_footprint"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -20,40 +21,41 @@ amcl:
     laser_min_range: -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
-    max_particles: 2000
-    min_particles: 500
-    odom_frame_id: "odom"
+    max_particles: 5000
+    min_particles: 1000
+    odom_frame_id: "amr1/odom"
     pf_err: 0.05
     pf_z: 0.99
-    recovery_alpha_fast: 0.0
-    recovery_alpha_slow: 0.0
+    recovery_alpha_fast: 0.1
+    recovery_alpha_slow: 0.05
     resample_interval: 1
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
-    sigma_hit: 0.2
+    sigma_hit: 0.1
     tf_broadcast: true
-    transform_tolerance: 0.5
-    update_min_a: 0.2
-    update_min_d: 0.25
+    transform_tolerance: 0.3
+    update_min_a: 0.1
+    update_min_d: 0.10
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
     scan_topic: scan
     map_topic: /map
-    set_initial_pose: false
-    always_reset_initial_pose: false
+    set_initial_pose: true
+    always_reset_initial_pose: true
     first_map_only: false
     initial_pose:
-      x: 0.0
-      y: 0.0
+      x: -0.1
+      y: 2.5
       z: 0.0
-      yaw: 0.0
+      yaw: 3.14159
 
 bt_navigator:
   ros__parameters:
+    use_sim_time: true
     global_frame: map
-    robot_base_frame: base_link
+    robot_base_frame: amr1/base_link
     transform_tolerance: 0.5
     filter_duration: 0.3
     # default_nav_to_pose_bt_xml: "$(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
@@ -85,6 +87,7 @@ bt_navigator:
 
 docking_server:
   ros__parameters:
+    use_sim_time: true
     dock_plugins: ['nova_carter_dock']
     nova_carter_dock:
       plugin: 'opennav_docking::SimpleChargingDock'
@@ -101,10 +104,11 @@ docking_server:
       type: 'nova_carter_dock'
       frame: /map
       pose: [30.0, 30.0, 0.0]
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false
 
 controller_server:
   ros__parameters:
+    use_sim_time: true
     controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
@@ -120,18 +124,18 @@ controller_server:
     goal_checker:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.10
+      yaw_goal_tolerance: 0.15
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: true
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.3
+      max_vel_x: 0.5
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 1.5
       min_speed_xy: 0.0
-      max_speed_xy: 0.3
+      max_speed_xy: 0.5
       min_speed_theta: 0.0
       # Add high threshold velocity for turtlebot 3 issue.
       # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
@@ -163,15 +167,16 @@ controller_server:
       RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false
 
 local_costmap:
   local_costmap:
     ros__parameters:
+      use_sim_time: true
       update_frequency: 5.0
       publish_frequency: 2.0
-      global_frame: odom
-      robot_base_frame: base_link
+      global_frame: amr1/odom
+      robot_base_frame: amr1/base_link
       rolling_window: true
       map_topic: /map
       width: 3
@@ -216,10 +221,11 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
+      use_sim_time: true
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_link
+      robot_base_frame: amr1/base_link
       transform_tolerance: 0.5
       robot_radius: 0.15
       resolution: 0.05
@@ -272,10 +278,12 @@ global_costmap:
 
 map_server:
   ros__parameters:
+    use_sim_time: true
     yaml_filename: "turtlebot3_world.yaml"
 
 map_saver:
   ros__parameters:
+    use_sim_time: true
     save_map_timeout: 5000
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
@@ -283,6 +291,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
+    use_sim_time: true
     expected_planner_frequency: 10.0
     planner_plugins: ["GridBased"]
     GridBased:
@@ -293,6 +302,7 @@ planner_server:
 
 behavior_server:
   ros__parameters:
+    use_sim_time: true
     local_costmap_topic: local_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
     global_costmap_topic: global_costmap/costmap_raw
@@ -311,16 +321,17 @@ behavior_server:
       plugin: "nav2_behaviors::AssistedTeleop"
     local_frame: odom
     global_frame: map
-    robot_base_frame: base_link
+    robot_base_frame: amr1/base_link
     transform_timeout: 0.1
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false
 
 waypoint_follower:
   ros__parameters:
+    use_sim_time: true
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -331,8 +342,9 @@ waypoint_follower:
 
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_footprint"
-    odom_frame_id: "odom"
+    use_sim_time: true
+    base_frame_id: "amr1/base_footprint"
+    odom_frame_id: "amr1/odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
@@ -340,7 +352,7 @@ collision_monitor:
     source_timeout: 5.0
     base_shift_correction: true
     stop_pub_timeout: 2.0
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false
     use_realtime_priority: false
     polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
     PolygonStop:
@@ -421,11 +433,12 @@ collision_monitor:
 
 velocity_smoother:
   ros__parameters:
+    use_sim_time: true
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.5]
-    min_velocity: [-0.5, 0.0, -2.5]
+    max_velocity: [0.6, 0.0, 3.0]
+    min_velocity: [-0.6, 0.0, -3.0]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]
@@ -433,4 +446,4 @@ velocity_smoother:
     odom_topic: "odom"
     odom_duration: 0.1
     use_realtime_priority: false
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false

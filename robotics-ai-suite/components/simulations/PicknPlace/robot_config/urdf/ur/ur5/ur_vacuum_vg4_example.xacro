@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  Example usage of VG_4 vacuum gripper
+
+  This file demonstrates how to use the 4-suction-cup vacuum gripper
+  instead of the default VG_2 variant.
+
+  To use this in your robot:
+  1. Include this file instead of ur_vacuum.xacro, or
+  2. Call ur_vacuum_vg4 macro directly in your robot file
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <!-- Include the vacuum gripper definitions -->
+  <xacro:include filename="$(find robot_config)/urdf/ur/ur5/ur_vacuum.xacro" />
+
+  <!-- Use VG_4 gripper instead of default VG_2 -->
+  <!-- Comment out the VG_2 in ur_vacuum.xacro and uncomment this: -->
+  <!-- <xacro:ur_vacuum_vg4 prefix="$(arg prefix)" /> -->
+
+</robot>

@@ -1,0 +1,78 @@
+voxel_size: [0.1, 0.1, 0.2]
+point_cloud_range: [0, -40.0, -5, 80.0, 40.0, 3]
+
+augment3d:
+  scale: [0.95, 1.05]
+  rotate: [-0.3925, 0.3925]
+  translate: 0
+
+model:
+  encoders:
+    lidar:
+      voxelize_reduce: true 
+      voxelize:
+        max_num_points: 10
+        point_cloud_range: ${point_cloud_range}
+        voxel_size: ${voxel_size}
+        max_voxels: [120000, 160000]
+      backbone:
+        type: SparseEncoder
+        in_channels: 4
+        sparse_shape: [800, 800, 40]
+        output_channels: 128
+        order:
+          - conv
+          - norm
+          - act
+        encoder_channels:
+          - [16, 16, 32]
+          - [32, 32, 64]
+          - [64, 64, 128]
+          - [128, 128]
+        encoder_paddings:
+          - [0, 0, 1]
+          - [0, 0, 1]
+          - [0, 0, [1, 1, 0]]
+          - [0, 0]
+        block_type: basicblock
+    camera:
+      vtransform:
+        type: LSSV2XTransform
+        image_size: ${image_size}
+        xbound: [0, 80.0, 0.8]
+        ybound: [-40.0, 40.0, 0.8]
+        zbound: [-10.0, 10.0, 20.0]
+        dbound: [1.0, 70.0, 1.0]
+  heads:
+    object:
+      train_cfg:
+        point_cloud_range: ${point_cloud_range}
+        voxel_size: ${voxel_size}
+        grid_size: [800, 800, 40]
+        out_size_factor: 8
+      test_cfg:
+        point_cloud_range: ${point_cloud_range}
+        voxel_size: ${voxel_size[:2]}
+        grid_size: [800, 800, 40]
+        out_size_factor: 8
+        nms_type:
+          - circle
+          - rotate
+          - rotate
+          - circle
+          - rotate
+          - rotate
+        nms_scale:
+          - [1.0]
+          - [1.0, 1.0]
+          - [1.0, 1.0]
+          - [1.0]
+          - [1.0, 1.0]
+          - [2.5, 4.0]
+
+      bbox_coder:
+        pc_range: ${point_cloud_range}
+        voxel_size: ${voxel_size[:2]}
+        out_size_factor: 8
+
+lr_config: null

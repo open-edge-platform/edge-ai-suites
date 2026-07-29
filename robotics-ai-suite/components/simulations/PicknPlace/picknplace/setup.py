@@ -31,6 +31,7 @@ setup(
             'arm1_controller = scripts.arm1_controller:main',
             'arm2_controller = scripts.arm2_controller:main',
             'turtlebot_controller = scripts.turtlebot_controller:main',
+            'amr_controller = scripts.amr_controller:main',
         ],
     },
 )

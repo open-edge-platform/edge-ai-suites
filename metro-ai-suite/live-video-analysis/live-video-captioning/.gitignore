@@ -1,8 +1,14 @@
 ov_models
 ov_detection_models
+llm_models
 .env
 .venv/
 .coverage
 shared/
 *__pycache__*
 app/live_video_captioning.egg-info/*
+charts/Chart.lock
+charts/charts/*.tgz
+model_download*
+# Machine-local coding-agent state (never commit — see .github/copilot-instructions.md)
+.claude/settings.local.json

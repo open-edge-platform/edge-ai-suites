@@ -1,15 +1,15 @@
+# Live Video Captioning
+
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-captioning">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/README.md">
      Readme
   </a>
 </div>
 hide_directive-->
-
-# Live Video Captioning
 
 **Live Video Captioning** deploys AI-powered captioning for live video streams with Deep Learning Streamer (DL Streamer) and OpenVINO™ Vision Language Models. You can process RTSP streams, generate real-time captions, and monitor performance metrics on a dashboard.
 
@@ -27,6 +27,8 @@ The key features are:
 
 **Object-Detection-Model Support**: Optionally integrate YOLO-based detection models into the pipeline to enable object detection and frame filtering.
 
+**Helm Deployment**: Deploy the full stack on Kubernetes with the bundled Helm chart and configurable override values.
+
 ## Use Cases
 
 **Real-time Video Analytics**: Monitor security cameras, industrial equipment, or public spaces with AI-powered scene understanding and automatic captioning.
@@ -41,13 +43,13 @@ The key features are:
 :::{toctree}
 :hidden:
 
-get-started
-how-it-works
-alert-mode
-object-detection-pipeline
-api-reference
-known-issues
-release-notes
+get-started.md
+quick-start-guide.md
+how-to-guides.md
+how-it-works.md
+api-reference.md
+known-issues.md
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

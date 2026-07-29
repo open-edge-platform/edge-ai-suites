@@ -1,0 +1,100 @@
+# DO NOT COMMIT/PUSH THIS FILE WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
+# RESET ALL VALUES TO THEIR DEFAULTS BEFORE COMMITTING OR PUSHING.
+
+global:
+  externalIP: ""  # Required: IP of a cluster node reachable from your browser
+  keepPvc: false
+
+  # Hugging Face token — required only for initial download of gated models.
+  huggingfaceToken: ""
+
+  # Proxy settings
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: "localhost,127.0.0.1,.svc.cluster.local"
+
+  appNodePort:
+  #Model configuration with provider as OpenVINO.
+  ovmsModelName: "Phi-3.5-vision-instruct-int4-ov" 
+  ovmsLLMModelName: "Phi-4-mini-instruct-int4-ov"
+
+  # Node selector applied globally (used by metrics-manager, alert-agent-service)
+  nodeSelector:
+    kubernetes.io/hostname: 
+
+  # GPU controls
+  gpu:
+    enabled: true
+    # Set `key` based on device plugin label on the GPU node (e.g. gpu.intel.com/i915 or gpu.intel.com/xe).
+    key: "gpu.intel.com/i915"
+    # Set `device` to GPU when enabled is true.
+    device: "GPU"
+    # GIDs for GPU device access. Verify on your node: getent group render video | cut -d: -f3
+    # supplementalGroups: [109, 110, 992]
+
+  # NPU controls
+  npu:
+    enabled: false
+    # Set `key` based on the NPU device plugin resource on your cluster.
+    key: "npu.intel.com/accel"
+    # Set `device` to NPU when enabled is true.
+    device: "NPU"
+    # Host device path exposed to OVMS for NPU execution.
+    devicePath: "/dev/accel/accel0"
+
+app:
+  # Set registry to override global.registry for the app image only.
+  # Use this when the app image is in a different registry than other components.
+  image:
+    registry: ""
+    # repository: ""
+    # tag: ""
+  # rtspUrl: "rtsp://<host>:<port>/<stream>"
+
+  # Video capture
+  captureFps: 10
+  # Alert Agent Service
+  alertAgentServiceTimeout: "30.0"
+  # MCP integration
+  mcpEnabled: true
+  # MCP server configuration update the below as needed 
+  mcpServersConfig: |
+    {
+      "servers": [
+        {
+          "name": "prometheus",
+          "enabled": false,
+          "transport": "http",
+          "url": "<mcp_server_url>/mcp",
+          "description": "Prometheus MCP Server - query metrics, get alerts, analyze system performance",
+          "timeout": 30.0
+        }
+      ]
+    }
+
+# Alert Agent Service configuration
+alert-agent-service:
+  agentMode: true
+  llmTimeout: "10.0"
+  webhookUrl: ""
+  webhookSecret: ""
+  mqttPort: 1883
+  mqttUsername: ""
+  mqttPassword: ""
+  mqttBaseTopic: "alerts/live-video"
+  mcpEnabled: true
+  actionWorkers: 2
+
+# Keep ovms-llm.enabled: true to deploy the LLM service for ADK agentic dispatch.
+# Set to false to disable LLM (alert-agent-service falls back to rule-based dispatch).
+ovms-llm:
+  enabled: true
+  sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+  targetDevice:
+    device: "GPU"
+#VLM model configuration
+ovms:
+  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+  targetDevice:
+    device: "GPU"

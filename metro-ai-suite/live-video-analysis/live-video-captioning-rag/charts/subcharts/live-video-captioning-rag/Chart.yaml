@@ -1,0 +1,8 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v2
+name: live-video-captioning-rag
+description: Live Video Captioning Retrieval-Augmented Generation (RAG) module — provides contextual video captioning by retrieving relevant information from a vector database and generating captions with a vision-language model. Integrates with the video caption service to enhance real-time RTSP video captioning with external knowledge.
+type: application
+version: 0.1.0
+appVersion: "latest"

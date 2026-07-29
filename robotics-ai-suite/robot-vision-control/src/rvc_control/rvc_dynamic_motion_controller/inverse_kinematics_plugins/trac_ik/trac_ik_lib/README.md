@@ -28,7 +28,7 @@ And here is a diff of the change:
 **This entails that `urdf_param` is now the entire URDF XML file** (as a string, of course).
 Ways to obtain `urdf_param`:
 - Subscribing to the `robot_description` topic if there is a `robot_state_publisher` instance in the ROS graph.
-- Progammatically read a URDF XML file.
+- Programmatically read a URDF XML file.
 - Have the XML string saved in a parameter for the callee node through a launch script (and `xacro`, if desired...).
 
 ### Usage

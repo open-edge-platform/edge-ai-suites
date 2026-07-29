@@ -16,7 +16,7 @@ the loaded global maps on server side, both for keyframe/landmark map and octree
 ## How to select the remapping region
 
 Currently, we only support updating the maps constructed by Collaborative SLAM in mapping mode. Once you have a
-pre-constructed keyframe/landmark map together with a octree map, you can load them in localization mode and visualize
+pre-constructed keyframe/landmark map together with an octree map, you can load them in localization mode and visualize
 them through the server rviz. It will help you to determine the remapping region by publishing points in the rviz window.
 For saving keyframe/landmark map in mapping mode, you can refer to [geekplus_doc.md](geekplus_doc.md). For saving octree map in mapping mode, you
 can use `octree_store_path` parameter when launching tracker node. The usage of such parameter is the same as it in

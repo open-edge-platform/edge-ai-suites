@@ -11,7 +11,7 @@ before proceeding with the following steps.
 1. **Clone the source and build the `Time Series Analytics` microservice**.
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+   git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b main
    cd edge-ai-libraries/microservices/time-series-analytics/docker
 
    # build
@@ -28,7 +28,7 @@ before proceeding with the following steps.
 2. **Clone the source and build the sample app**.
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
    # build

@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# pylint: disable=R0801
 
 """
 Launch file for the AAEON follow-me application.
@@ -24,8 +25,19 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     """Generate the launch description for the AAEON follow-me application."""
+    # Get ROS distro from environment variable, fallback to file detection
+    ros_distro = os.environ.get('ROS_DISTRO')
+    if not ros_distro:
+        # Fallback: detect from filesystem
+        if os.path.exists('/opt/ros/jazzy/setup.bash'):
+            ros_distro = 'jazzy'
+        elif os.path.exists('/opt/ros/humble/setup.bash'):
+            ros_distro = 'humble'
+        else:
+            raise RuntimeError('No supported ROS2 distribution found (humble or jazzy)')
+
     amr_interface_config_file = (
-        '/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml'
+        f'/opt/ros/{ros_distro}/share/ros2_amr_interface/params/aaeon_node_params.yaml'
     )
     package_share = FindPackageShare('tutorial_follow_me')
     package_name = package_share.find('tutorial_follow_me')

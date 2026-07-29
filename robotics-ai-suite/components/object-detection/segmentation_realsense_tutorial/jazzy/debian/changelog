@@ -1,3 +1,9 @@
+ros-jazzy-segmentation-realsense-tutorial (2.3-2) UNRELEASED; urgency=low
+
+  * Update Environment for fastdds
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 09 Jul 2026 12:00:00 +0200
+
 ros-jazzy-segmentation-realsense-tutorial (2.3-1) UNRELEASED; urgency=low
 
   * Initial release

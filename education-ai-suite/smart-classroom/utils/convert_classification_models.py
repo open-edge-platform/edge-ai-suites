@@ -10,6 +10,9 @@ import nncf
 import yaml
 import os
 import tarfile
+import ssl
+import certifi
+import urllib.request
 
 
 # Model URLs
@@ -23,15 +26,24 @@ METADATA_URL = "https://raw.githubusercontent.com/openvinotoolkit/open_model_zoo
 DATASET_URL = "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-320.tgz"
 DATASET_CLASSES = 10
 
+SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+
 
 def download(url, filename, output_dir):
     """Download model weights if not already present."""
     filepath = output_dir / filename
+
     if filepath.exists():
         return filepath
-    
+
     print(f"Downloading {filename}...")
-    urllib.request.urlretrieve(url, filepath)
+
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+
+    with urllib.request.urlopen(url, context=ssl_context) as response:
+        with open(filepath, "wb") as f:
+            f.write(response.read())
+
     return filepath
 
 def download_labels():
@@ -58,16 +70,22 @@ def safe_extract(tar: tarfile.TarFile, path: str):
         # ✅ extract ONE member at a time
         tar.extract(member, path=path)
 
+
 def download_dataset(url, dataset_path):
     archive_path = dataset_path / "imagenette2-320.tgz"
 
     if not (dataset_path / "imagenette2-320/val").exists():
         print(f"Downloading dataset from {url}...")
-        urllib.request.urlretrieve(url, archive_path)
+
+        with urllib.request.urlopen(url, context=SSL_CONTEXT) as response:
+            with open(archive_path, "wb") as f:
+                f.write(response.read())
 
         with tarfile.open(archive_path, "r:*") as tar:
-            safe_extract(tar, dataset_path)   
+            safe_extract(tar, dataset_path)
+
         os.remove(archive_path)
+
     return dataset_path
 
 def convert_to_openvino(model, model_name, output_dir, input_shape=(1, 3, 224, 224)):

@@ -34,6 +34,17 @@ find_package(tf2_eigen REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
 
+# TBB is needed when PCL oneapi components are linked (e.g., libpcl_oneapi_surface_omp.so)
+# Only needed for fuzzing on jazzy with clang++-15
+if(FUZZTEST_FUZZING_MODE AND DEFINED ENV{ROS_DISTRO} AND "$ENV{ROS_DISTRO}" STREQUAL "jazzy")
+  find_package(TBB)
+  if(TBB_FOUND)
+    message(STATUS "TBB found: ${TBB_VERSION}")
+  else()
+    message(STATUS "TBB not found via find_package, will try -ltbb")
+  endif()
+endif()
+
 include_directories(include SYSTEM
   ${PCL_INCLUDE_DIRS}
   ${tf2_ros_INCLUDE_DIRS}
@@ -60,9 +71,18 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2_ros
 )
 
-target_link_libraries(${PROJECT_NAME}
-  ${PCL_LIBRARIES}
-)
+# Link TBB first to ensure symbols available for libpcl_oneapi_surface_omp.so
+# Only needed for fuzzing on jazzy with clang++-15
+if(FUZZTEST_FUZZING_MODE AND DEFINED ENV{ROS_DISTRO} AND "$ENV{ROS_DISTRO}" STREQUAL "jazzy")
+  target_link_libraries(${PROJECT_NAME}
+    /opt/intel/oneapi/redist/lib/libtbb.so.12
+    ${PCL_LIBRARIES}
+  )
+else()
+  target_link_libraries(${PROJECT_NAME}
+    ${PCL_LIBRARIES}
+  )
+endif()
 
 ### Pointcloud input node
 
@@ -81,9 +101,18 @@ ament_target_dependencies(pointcloud_input_node
   tf2_ros
 )
 
-target_link_libraries(pointcloud_input_node
-  ${PCL_LIBRARIES}
-)
+# Link TBB first to ensure symbols available for libpcl_oneapi_surface_omp.so
+# Only needed for fuzzing on jazzy with clang++-15
+if(FUZZTEST_FUZZING_MODE AND DEFINED ENV{ROS_DISTRO} AND "$ENV{ROS_DISTRO}" STREQUAL "jazzy")
+  target_link_libraries(pointcloud_input_node
+    /opt/intel/oneapi/redist/lib/libtbb.so.12
+    ${PCL_LIBRARIES}
+  )
+else()
+  target_link_libraries(pointcloud_input_node
+    ${PCL_LIBRARIES}
+  )
+endif()
 
 ament_package()
 
@@ -101,3 +130,16 @@ install(
   DIRECTORY launch params rviz
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(
+  PROGRAMS scripts/twist_bridge.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+####################################################################
+# tests
+####################################################################
+IF(BUILD_TEST)
+  include(${CMAKE_SOURCE_DIR}/cmake/gtest.cmake)
+  add_subdirectory(test)
+ENDIF(BUILD_TEST)

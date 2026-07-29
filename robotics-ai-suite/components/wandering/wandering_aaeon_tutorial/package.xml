@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <package format="3">
   <name>wandering_aaeon_tutorial</name>
-  <version>2.2.0</version>
+  <version>2.3.0</version>
   <description>Wandering with Aaeon robot tutorial</description>
   <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
   <license>Apache-2.0</license>

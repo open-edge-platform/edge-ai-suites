@@ -3,25 +3,32 @@
 	url = https://github.com/intel-retail/loss-prevention.git
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/g2o"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/g2o
-	url = https://github.com/RainerKuemmerle/g2o.git
+	url = https://github.com/ros2-gbp/libg2o-release.git
+	shallow = true
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/DBoW2"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/DBoW2
 	url = https://github.com/shinsumicco/DBoW2.git
+	shallow = true
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/spdlog"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/spdlog
 	url = https://github.com/gabime/spdlog.git
+	shallow = true
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/json"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/json
 	url = https://github.com/nlohmann/json.git
+	shallow = true
 [submodule "robotics-ai-suite/components/its-planner/3rd_party/navigation2"]
 	path = robotics-ai-suite/components/its-planner/3rd_party/navigation2
 	url = https://github.com/ros-navigation/navigation2
+	shallow = true
 [submodule "robotics-ai-suite/pipelines/act-sample/act"]
 	path = robotics-ai-suite/pipelines/act-sample/act
 	url = https://github.com/tonyzhaozh/act
+	shallow = true
 [submodule "robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3"]
 	path = robotics-ai-suite/pipelines/orb-slam3-sample/ORB_SLAM3
 	url = https://github.com/UZ-SLAMLab/ORB_SLAM3.git
+	shallow = true
 [submodule "retail-ai-suite/order-accuracy"]
 	path = retail-ai-suite/order-accuracy
 	url = https://github.com/intel-retail/order-accuracy
@@ -34,11 +41,45 @@
 [submodule "robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2"]
 	path = robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2
 	url = https://github.com/leggedrobotics/ocs2.git
-[submodule "metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision"]
-	path = metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision
-	url = https://github.com/open-edge-platform/edge-ai-suites.git
-	branch = exp/smart-traffic-adapter
-  	shallow = true
 [submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
 	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp
 	url = https://github.com/mdpnp/mdpnp.git
+[submodule "robotics-ai-suite/pipelines/pi05-rtc-ov/lerobot"]
+	path = robotics-ai-suite/pipelines/pi05-rtc-ov/lerobot
+	url = https://github.com/huggingface/lerobot.git
+	shallow = true
+[submodule "retail-ai-suite/storewide-loss-prevention"]
+	path = retail-ai-suite/storewide-loss-prevention
+	url = https://github.com/intel-retail/storewide-loss-prevention.git
+[submodule "retail-ai-suite/voice-enabled-interactions"]
+	path = retail-ai-suite/voice-enabled-interactions
+	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "retail-ai-suite/digital-signage"]
+	path = retail-ai-suite/digital-signage
+	url = https://github.com/intel-retail/digital-signage.git
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
+	url = https://github.com/agenticros/agenticros.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/openclaw"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/openclaw
+	url = https://github.com/openclaw/openclaw.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/JAKA_KARGO"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/JAKA_KARGO
+	url = https://github.com/JAKARobotics/JAKA_KARGO.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws-robomaker-small-warehouse-world"]
+	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws-robomaker-small-warehouse-world
+	url = https://github.com/aws-robotics/aws-robomaker-small-warehouse-world.git
+	shallow = true
+[submodule "metro-ai-suite/agentic-rag"]
+	path = metro-ai-suite/agentic-rag
+	url = https://github.com/opea-project/GenAIExamples.git
+	shallow = true
+[submodule "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"]
+	path = education-ai-suite/ai-teaching-assistant/edge-ai-libraries
+	url = https://github.com/open-edge-platform/edge-ai-libraries.git
+[submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
+	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
+	url = https://github.com/intel-retail/voice-enabled-interactions.git

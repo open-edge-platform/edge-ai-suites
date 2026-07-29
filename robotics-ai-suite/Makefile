@@ -36,6 +36,9 @@ $(VENV_DIR): docs/requirements.txt
 
 check: | $(VENV_DIR) ## Check for and/or install prerequisite tools
 
+index: ## rename index.rst
+	mv docs/index.rst_ docs/index.rst || :
+
 # Eventually we want:
 # lint: license yamllint pylint black doc8 sphinx-spelling sphinx-linkcheck markdownlint ## Lint all tooling and docs
 
@@ -82,9 +85,9 @@ sphinx-spelling: $(VENV_DIR)
 	set +u; . ./$</bin/activate; set -u ;\
     sphinx-build -b spelling "$(SOURCEDIR)" "$(OUT_DIR)/spelling"
 
-build: sphinx-html ## Build all documentation
+build: index sphinx-html ## Build all documentation
 
-serve: sphinx-serve ## Serve documentation locally
+serve: index sphinx-serve ## Serve documentation locally
 
 ### cleanup targets ###
 clean: ## delete all build artifacts

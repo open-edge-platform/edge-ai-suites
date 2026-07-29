@@ -48,10 +48,12 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   frameData,
   people,
 }) => {
-  // Pose MJPEG stream URL: overridable via env for Helm, defaults to 8085 for docker-compose
-  const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
-  const poseStreamUrl = (import.meta as any).env?.VITE_POSE_STREAM_URL
-    || `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${hostIp}:8085/video_feed`;
+  // Pose MJPEG stream URL: defaults to the nginx reverse-proxy path so the
+  // browser stays on port 3000. Override with VITE_POSE_STREAM_URL (absolute)
+  // for deployments that need to hit the 3D-pose service directly.
+  const poseStreamUrl =
+    ((import.meta as any).env?.VITE_POSE_STREAM_URL as string | undefined)
+    || '/pose-stream/video_feed';
 
   const statusColors = {
     idle: '#6c757d',

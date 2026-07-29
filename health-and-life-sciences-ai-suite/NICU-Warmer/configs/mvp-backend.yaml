@@ -1,0 +1,47 @@
+preparation:
+  model_paths:
+    - ./person-detect-fp32.xml
+    - ./patient-detect-fp32.xml
+    - ./latch-detect-fp32.xml
+  rppg_model_path: ./models_rppg/mtts_can.xml
+  rppg:
+    enabled: false
+    hdf5_path: ./model_cache/mtts_can.hdf5
+    hdf5_url: ""
+    converter_command:
+      - /bin/sh
+      - -c
+      - "echo conversion-not-configured"
+  video_path: ./Warmer_Testbed_YTHD.mp4
+  pipeline_template: ./pipelines/nicu_shared_pipeline.template.json
+  resolved_pipeline: ./pipelines/nicu_shared_pipeline.resolved.json
+
+metrics_collector:
+  base_url: http://nicu-metrics-collector:9000   # docker-compose service DNS
+
+dlsps:
+  base_url: http://nicu-dlsps:8080
+  timeout_seconds: 2.0
+  assume_reachable: true   # set false when DLSPS is actually running
+  # Inference mode:
+  #   "direct"  — backend runs OpenVINO models directly (frame-accurate, 30fps)
+  #   "dlsps"   — DLSPS is the detection engine; publishes via MQTT, backend subscribes
+  #   "hybrid"  — backend runs local OpenVINO for detection, DLSPS runs for metrics/pipeline lifecycle
+  inference_mode: dlsps
+  pipeline_name: user_defined_pipelines
+  pipeline_version: nicu_tee
+  status_endpoint: /pipelines/status
+  status_poll_interval_seconds: 1.0
+  device: CPU      # CPU | GPU | NPU (GPU/NPU need drivers in container)
+  detections_path: /shared/detections.jsonl
+  # MQTT settings (used when inference_mode: dlsps)
+  mqtt_broker: nicu-mqtt:1883
+  mqtt_topic: nicu/detections
+  mqtt_client_id: nicu-backend
+  loop:
+    enabled: true
+    max_loops: -1
+  thresholds:
+    patient_presence: 0.30
+    caretaker_presence: 0.30
+    latch_detection: 0.40

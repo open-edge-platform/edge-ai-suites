@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 
 This document is used to introduce the communication mechanism between tracker and server nodes. The original implementation is based on the TCP socket and now we move it to [ROS Service](https://docs.ros.org/en/foxy/Tutorials/Services/Understanding-ROS2-Services.html).
 Once a service client and a service server have established a connection, the communication between these two sides is safe and reliable, just like the TCP socket does.
-In addition, the requests and responses of a ROS service can not be captured and that's why we decide not to use [ROS Topic](https://docs.ros.org/en/foxy/Tutorials/Topics/Understanding-ROS2-Topics.html).
+In addition, the requests and responses of a ROS service cannot be captured, which is why we decided not to use [ROS Topic](https://docs.ros.org/en/foxy/Tutorials/Topics/Understanding-ROS2-Topics.html).
 
 ---
 

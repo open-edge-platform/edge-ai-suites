@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nvr-event-router
+  labels:
+    {{- include "lvs.nvrrouter.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.nvrEventRouter.type }}
+  ports:
+    - port: {{ .Values.service.nvrEventRouter.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.service.nvrEventRouter.type "NodePort") .Values.service.nvrEventRouter.nodePort }}
+      nodePort: {{ .Values.service.nvrEventRouter.nodePort }}
+      {{- end }}
+  selector:
+    app: nvr-event-router

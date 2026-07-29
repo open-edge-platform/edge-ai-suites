@@ -3,7 +3,7 @@
 <!--hide_directive
 <div class="component_card_widget">
 	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-search">
-		 GitHub project
+		 GitHub
 	</a>
 	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-search/README.md">
 		 Readme
@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-**Live Video Search** is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. The application ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and enables you to select cameras, time ranges, and free-text queries. You can retrieve ranked, playable clips with confidence scores and view live system metrics.
+**Live Video Search** is a Metro AI Suite sample that adapts the Visual Search and Summarization (VSS) pipeline for semantic search on live Frigate streams. The application ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and enables you to select cameras, time ranges, and free-text queries. You can retrieve ranked, playable clips with confidence scores and view live system metrics.
 
 ## Key Features
 
@@ -28,12 +28,12 @@ Live Video Search combines two existing stacks:
   - Frigate NVR ingests live camera streams and emits MQTT events.
   - NVR Event Router brokers event metadata and clip references.
   - Reference UI for Smart NVR management.
-  - See Smart NVR docs: [Smart NVR Overview](../../../../smart-nvr/docs/user-guide/index.md)
+  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/index.html)
 
 - **VSS Search Mode** (Edge AI Libraries sample app)
   - Search‑MS + VDMS DataPrep + VDMS VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
-  - See VSS docs: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/index.md)
+  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html)
 
 ## Use Cases
 
@@ -51,13 +51,14 @@ Live Video Search combines two existing stacks:
 
 - **Get Started**
   - [Get Started](./get-started.md): Deploy the full stack locally.
-  - [System Requirements](./system-requirements.md): Hardware and software prerequisites.
+  - [System Requirements](./get-started/system-requirements.md): Hardware and software prerequisites.
 
 - **How It Works**
   - [Architecture](./how-it-works.md): End‑to‑end architecture and data flow.
 
 - **Deployment**
-  - [Build from Source](./how-to-build-from-source.md): Build the required images.
+  - [Build from Source](./get-started/build-from-source.md): Build the required images.
+  - [Deploy with Helm](./get-started/deploy-with-helm.md): Deploy LVS on Kubernetes using Helm profiles.
 
 - **Usage & API**
   - [API Reference](./api-reference.md): Key endpoints and references.
@@ -70,12 +71,10 @@ Live Video Search combines two existing stacks:
 :maxdepth: 2
 :hidden:
 
-get-started
-system-requirements
-how-to-build-from-source
-how-it-works
-api-reference
-release-notes
+get-started.md
+how-it-works.md
+api-reference.md
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

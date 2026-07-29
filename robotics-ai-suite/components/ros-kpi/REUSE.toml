@@ -1,0 +1,18 @@
+# Copyright (C) 2026 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "**/debian/**",
+    "**/*.json",
+    "uv.lock",
+    "monitoring_sessions/**",
+    ".gitignore",
+    ".github/linters/.pylintrc",
+    ".github/linters/.flake8",
+]
+SPDX-FileCopyrightText = "2026 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"

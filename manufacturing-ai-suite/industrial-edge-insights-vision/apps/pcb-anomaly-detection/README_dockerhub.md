@@ -12,11 +12,6 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 ---
 For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pcb-anomaly-detection/get-started/deploy-with-helm.html).
 
-## Supported versions
-
----
-1.0.0
-
 ## License Agreement
 
 ---

@@ -1,0 +1,70 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+httpProxy: ""
+httpsProxy: ""
+noProxy: ""
+
+replicaCount: 1
+
+image:
+  registry: "docker.io"
+  repository: "intel/smart-route-planning-agent"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: NodePort
+  port: 7860
+
+containerPort: 7860
+containerPortName: agent-uiport
+
+
+# Following values are used to generate config.json in configmap which is mounted into the container.
+trafficIntersections:
+  apiEndpoint: ""
+  # Each host is a WebSocket address of a traffic intersection agent.
+  hosts: []
+
+resources:
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: agent-uiport
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: agent-uiport
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

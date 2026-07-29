@@ -3,19 +3,43 @@
  */
 const ApiService = (function () {
     const DEFAULT_MODEL = 'InternVL2-1B';
-    const DEFAULT_DETECTION_MODEL = 'yolov8s';
-    const DEFAULT_PIPELINE = 'GenAI_Pipeline_on_CPU';
-    let pipelineCache = [];
+    // Full ModelInfo list cached for filtering: [{name, device}, ...]
+    let allModels = [];
+    // Sentinel value stored in allModels when the API call itself failed
+    let modelsFetchFailed = false;
+    let detectionModelsFetchFailed = false;
 
     async function fetchModels() {
         try {
             const resp = await fetch('/api/vlm-models');
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
-            return data?.models || [DEFAULT_MODEL];
+            // Backend returns [{name, device}, ...]; fall back to legacy string list
+            const raw = data?.models || [];
+            allModels = raw.map((m) => {
+                if (m && typeof m === 'object' && typeof m.name === 'string') {
+                    return { name: m.name, device: m.device || 'cpu' };
+                }
+                if (typeof m === 'string') {
+                    return { name: m, device: 'cpu' };
+                }
+                return null;
+            }).filter(Boolean);
+            modelsFetchFailed = false;
+            return allModels;
         } catch (_err) {
-            return [DEFAULT_MODEL];
+            allModels = [];
+            modelsFetchFailed = true;
+            return allModels;
         }
+    }
+
+    function getAllModels() {
+        return allModels;
+    }
+
+    function didModelsFetchFail() {
+        return modelsFetchFailed;
     }
 
     async function fetchDetectionModels() {
@@ -23,64 +47,79 @@ const ApiService = (function () {
             const resp = await fetch('/api/detection-models');
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
-            return data?.models || [DEFAULT_DETECTION_MODEL];
+            detectionModelsFetchFailed = false;
+            return Array.isArray(data?.models) ? data.models : [];
         } catch (_err) {
-            return [DEFAULT_DETECTION_MODEL];
+            detectionModelsFetchFailed = true;
+            return [];
         }
     }
 
-    async function fetchPipelines() {
+    function didDetectionModelsFetchFail() {
+        return detectionModelsFetchFailed;
+    }
+
+    async function fetchCameras() {
         try {
-            const resp = await fetch('/api/pipelines', { method: 'GET' });
+            const resp = await fetch('/api/cameras', { method: 'GET' });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
             const data = await resp.json();
-            const list = Array.isArray(data?.pipelines) ? data.pipelines : [];
-
-            // Accept either correct shape objects or fallback strings (future-proof)
-            const normalized = list
-                .map((it) => {
-                    if (it && typeof it === 'object' && typeof it.pipeline_name === 'string') {
-                        const t = it.pipeline_type;
-                        const type = (t === 'detection' || t === 'non-detection') ? t : 'non-detection';
-                        return { pipeline_name: it.pipeline_name, pipeline_type: type };
-                    }
-                    if (typeof it === 'string') {
-                        return { pipeline_name: it, pipeline_type: 'non-detection' };
-                    }
-                    return null;
-                })
-                .filter(Boolean);
-
-            // De-duplicate by name (last wins), then sort (non-detection first, then name)
-            const map = new Map();
-            for (const p of normalized) map.set(p.pipeline_name, p);
-            const pipelines = Array.from(map.values()).sort((a, b) => {
-                if (a.pipeline_type !== b.pipeline_type) {
-                    return a.pipeline_type === 'non-detection' ? -1 : 1;
-                }
-                return a.pipeline_name.localeCompare(b.pipeline_name);
-            });
-
-            pipelineCache = pipelines.length
-                ? pipelines
-                : [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
-
-            return pipelineCache;
+            return Array.isArray(data?.cameras) ? data.cameras : [];
         } catch (_err) {
-            pipelineCache = [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
-            return pipelineCache;
+            return [];
+        }
+    }
+
+    async function fetchSystemCapabilities(metricsServicePort) {
+        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        const host = window.location.hostname;
+        const capabilitiesUrl = `${protocol}//${host}:${metricsServicePort}/api/v1/capabilities?profile=minimal`;
+
+        try {
+            const resp = await fetch(capabilitiesUrl, { method: 'GET' });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            const devices = Array.isArray(data?.devices) ? data.devices : null;
+            if (!devices) throw new Error('Invalid capability response');
+
+            return {
+                ...data,
+                has_gpu: devices.some(
+                    (device) => device?.present === true
+                        && ['igpu', 'dgpu'].includes(device?.category)
+                ),
+                has_npu: devices.some(
+                    (device) => device?.present === true && device?.category === 'npu'
+                ),
+            };
+        } catch (_err) {
+            try {
+                const resp = await fetch('/api/capabilities', { method: 'GET' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                return {
+                    has_gpu: data?.has_gpu === true,
+                    has_npu: data?.has_npu === true,
+                    devices: [],
+                };
+            } catch (_fallbackErr) {
+                return {
+                    has_gpu: null,
+                    has_npu: null,
+                    devices: [],
+                };
+            }
         }
     }
 
     async function fetchRuns() {
-        const resp = await fetch('/api/runs');
+        const resp = await fetch('/api/generate_captions_alerts');
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return await resp.json();
     }
 
     async function startRun(requestBody) {
-        const resp = await fetch('/api/runs', {
+        const resp = await fetch('/api/generate_captions_alerts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
@@ -118,7 +157,7 @@ const ApiService = (function () {
     }
 
     async function stopRun(runId) {
-        const resp = await fetch(`/api/runs/${runId}`, { method: 'DELETE' });
+        const resp = await fetch(`/api/generate_captions_alerts/${runId}`, { method: 'DELETE' });
         if (!resp.ok) {
             if (resp.status === 404 || resp.status === 502) {
                 return { notFound: true };
@@ -129,14 +168,33 @@ const ApiService = (function () {
         return await resp.json();
     }
 
+    async function checkStreamReady(runId) {
+        try {
+            const resp = await fetch(`/api/generate_captions_alerts/${runId}/stream-ready`);
+            if (!resp.ok) return { ready: false, error: false, state: null };
+            const data = await resp.json();
+            return {
+                ready: data?.ready === true,
+                error: data?.error === true,
+                state: data?.state ?? null,
+            };
+        } catch (_err) {
+            return { ready: false, error: false, state: null };
+        }
+    }
+
     return {
         fetchModels,
+        getAllModels,
+        didModelsFetchFail,
+        didDetectionModelsFetchFail,
         fetchDetectionModels,
-        fetchPipelines,
+        fetchCameras,
+        fetchSystemCapabilities,
         fetchRuns,
         startRun,
         stopRun,
-        DEFAULT_MODEL,
-        DEFAULT_PIPELINE
+        checkStreamReady,
+        DEFAULT_MODEL
     };
 })();

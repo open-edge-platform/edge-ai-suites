@@ -1,18 +1,18 @@
-# Intel® RealSense™ Camera with ROS 2 Sample Application
+# RealSense Camera with ROS 2 Sample Application
 
 This tutorial tells you how to:
 
 - Launch ROS nodes for a camera.
 - List ROS topics.
-- Confirm that Intel® RealSense™ camera topics are publishing data.
-- Retrieve data from the Intel® RealSense™ camera (data coming at FPS).
-- Visualize an image from the Intel® RealSense™ camera displayed in rviz2.
+- Confirm that RealSense camera topics are publishing data.
+- Retrieve data from the RealSense camera (data coming at FPS).
+- Visualize an image from the RealSense camera displayed in rviz2.
 
-This Intel® RealSense™ with ROS 2 Sample Application can be run using two
-different types of Intel® RealSense™ cameras. The next section explains how to
-run this sample application using an Intel® RealSense™ camera connected through
-USB (for example, Intel® RealSense™ camera D435i). The subsequent section focuses
-on an [Intel® RealSense™ Depth Camera D457](https://www.intelrealsense.com/depth-camera-d457)
+This RealSense with ROS 2 Sample Application can be run using two
+different types of RealSense cameras. The next section explains how to
+run this sample application using a RealSense camera connected through
+USB (for example, RealSense camera D435i). The subsequent section focuses
+on an [RealSense Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra)
 in MIPI mode, which is connected to an
 [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408).
 
@@ -20,9 +20,9 @@ in MIPI mode, which is connected to an
 
 Complete the [GSG Robot Guide](../../../gsg_robot/index) before continuing.
 
-## Using Intel® RealSense™ camera connected through USB
+## Using RealSense camera connected through USB
 
-1. Connect an Intel® RealSense™ camera (for example, Intel® RealSense™ D435i)
+1. Connect a RealSense camera (for example, RealSense D435i)
    to the host, through USB.
 
 2. Install the ``librealsense2`` and ``realsense2`` tools:
@@ -46,7 +46,7 @@ Complete the [GSG Robot Guide](../../../gsg_robot/index) before continuing.
    <!--hide_directive:::hide_directive-->
    <!--hide_directive::::hide_directive-->
 
-3. Download and install the Intel® RealSense™ camera with ROS 2 sample application:
+3. Download and install the RealSense camera with ROS 2 sample application:
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -88,13 +88,13 @@ Complete the [GSG Robot Guide](../../../gsg_robot/index) before continuing.
    <!--hide_directive:::hide_directive-->
    <!--hide_directive::::hide_directive-->
 
-5. Run the Intel® RealSense™ camera with ROS 2 sample application:
+5. Run the RealSense camera with ROS 2 sample application:
 
    ```bash
    ros2 launch realsense2_tutorial realsense2_tutorial.launch.py
    ```
 
-   Expected output: The image from the Intel® RealSense™ camera is displayed in rviz2, on the bottom left side.
+   Expected output: The image from the RealSense camera is displayed in rviz2, on the bottom left side.
 
    ![rs_tutorial_usb](../../../images/rs_tutorial_usb.png)
 
@@ -102,19 +102,19 @@ Complete the [GSG Robot Guide](../../../gsg_robot/index) before continuing.
 
    - Type ``Ctrl-c`` in the terminal where the tutorial was run.
 
-## Using [Intel® RealSense™ Depth Camera D457](https://www.intelrealsense.com/depth-camera-d457) on an [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
+## Using [RealSense Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra) on an [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
 
 The following steps are required to set up the Axiomtek Robox500 ROS 2 AMR
-Controller to support the Intel® RealSense™ Depth Camera D457.
+Controller to support the RealSense Depth Camera D457.
 
 ### Axiomtek Robox500 ROS 2 AMR Controller Setup
 
-Connect an Intel® RealSense™ Depth Camera D457 to  the Axiomtek Robox500 ROS 2
+Connect a RealSense Depth Camera D457 to  the Axiomtek Robox500 ROS 2
 AMR Controller as shown in the below picture. Now, power-on the target.
 
 ![rs_tutorial_Axiomtek_gmsl_camera_connection](../../../images/rs_tutorial_Axiomtek_gmsl_camera_connection.png)
 
-> **Note:** Select the "MIPI" mode of the Intel® RealSense™ Depth Camera D457
+> **Note:** Select the "MIPI" mode of the RealSense Depth Camera D457
 > by moving the select switch on the camera to "M", as shown in the below picture:
 > ![MIPI_USB_Switch_in_D457](../../../images/MIPI_USB_Switch_in_D457.jpeg)
 
@@ -122,7 +122,7 @@ AMR Controller as shown in the below picture. Now, power-on the target.
 
 Go to the BIOS menu by pressing "``Del``" or "``Esc``" button when the board is
 powered on. The following BIOS settings should be set to enable
-Intel® RealSense™ Depth Camera D457 support on an Axiomtek Robox500
+RealSense Depth Camera D457 support on an Axiomtek Robox500
 ROS 2 AMR Controller.
 
 - Intel Advanced Menu -> Power & Performance -> CPU-Power Management Control ->
@@ -227,9 +227,9 @@ sudo usermod -a -G video $USER
 sudo usermod -a -G render $USER
 ```
 
-##### Install and run the  Intel® RealSense™ camera with ROS 2 sample application
+##### Install and run the  RealSense camera with ROS 2 sample application
 
-1. Download and install the Intel® RealSense™ camera with ROS 2 sample application:
+1. Download and install the RealSense camera with ROS 2 sample application:
 
    <!--hide_directive::::{tab-set}hide_directive-->
    <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -271,20 +271,20 @@ sudo usermod -a -G render $USER
    <!--hide_directive:::hide_directive-->
    <!--hide_directive::::hide_directive-->
 
-3. Run the following command to bind the Intel® RealSense™ Depth camera D457
+3. Run the following command to bind the RealSense Depth camera D457
    with ``intel-ipu6`` driver with metadata enabled:
 
    ```bash
    rs_ipu6_d457_bind.sh
    ```
 
-4. Run the Intel® RealSense™ camera with ROS 2 sample application:
+4. Run the RealSense camera with ROS 2 sample application:
 
    ```bash
    ros2 launch realsense2_tutorial realsense2_tutorial.launch.py use_sub_camera:=false
    ```
 
-   Expected output: The image from the Intel® RealSense™ camera is displayed in rviz2, on the bottom left side.
+   Expected output: The image from the RealSense camera is displayed in rviz2, on the bottom left side.
 
    ![rs_tutorial_gmsl_Axiomtek](../../../images/rs_tutorial_gmsl_Axiomtek.png)
 

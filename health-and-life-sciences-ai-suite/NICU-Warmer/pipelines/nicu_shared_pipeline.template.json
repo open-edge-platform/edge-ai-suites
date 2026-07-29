@@ -1,0 +1,17 @@
+{
+  "source": {
+    "type": "video",
+    "path": "{{VIDEO_PATH}}",
+    "loop": {{LOOP_ENABLED}},
+    "max_loops": {{LOOP_MAX}}
+  },
+  "analytics": {
+    "person_model": "{{PERSON_MODEL_PATH}}",
+    "patient_model": "{{PATIENT_MODEL_PATH}}",
+    "latch_model": "{{LATCH_MODEL_PATH}}"
+  },
+  "rppg": {
+    "mode": "custom_script",
+    "model": "{{RPPG_MODEL_PATH}}"
+  }
+}

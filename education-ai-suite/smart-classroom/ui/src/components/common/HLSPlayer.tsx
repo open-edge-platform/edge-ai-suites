@@ -158,7 +158,8 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
     playerRef.current = videojs(videoEl, {
       controls: true,
       responsive: true,
-      fluid: true,
+      fluid: false,
+      fill: true,
       playbackRates: [0.5, 1, 1.25, 1.5, 2],
     });
 
@@ -189,7 +190,8 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
     playerRef.current = videojs(videoEl, {
       controls: true,
       responsive: true,
-      fluid: true,
+      fluid: false,
+      fill: true,
       playbackRates: [0.5, 1, 1.25, 1.5, 2],
     });
 
@@ -286,6 +288,7 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
             height="100%"
             style={{ border: 'none' }}
             title="Stream Content"
+            allowFullScreen
           />
         ) : streamUrl ? (
           <video 

@@ -37,7 +37,7 @@ To test the connection, you can use commands like ```dmesg``` or ```lsusb```. Yo
 
 #### FastMapping
 
-Follow the [Readme](../../fast-mapping/) to build. Note that Fast mapping does not have all needed parameters exposed. Following parameters should be changed in the code and re-compiled:
+Follow the [Fast Mapping module](../use_fast_mapping.md) guide to build. Note that Fast mapping does not have all the needed parameters exposed. The following parameters should be changed in the code and re-compiled:
 
 ```sh
 "depth_noise_factor": "0.08",
@@ -47,7 +47,7 @@ robot_radius_around_camera": "0.3"
 
 #### Navigation
 
-Follow the [github readme](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup) and [installation guide](https://navigation.ros.org/getting_started/index.html#installation) to build.
+Follow the [github readme](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup) and [installation guide](https://docs.nav2.org/getting_started/index.html#installation) to build.
 
 The default navigation param file is located [param file](https://github.com/ros-planning/navigation2/tree/main/nav2_bringup/params) for reference. We also include ours in the doc folder. **Note that ```robot_radius``` parameter should be changed to the setting of your robot.**
 

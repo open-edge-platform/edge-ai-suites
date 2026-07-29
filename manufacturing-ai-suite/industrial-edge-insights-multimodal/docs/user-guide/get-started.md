@@ -3,6 +3,10 @@
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
+## Prerequisites
+
+- [System Requirements](./get-started/system-requirements.md)
+
 ## Configure Docker
 
 To configure Docker:
@@ -11,7 +15,7 @@ To configure Docker:
    [Manage Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 2. **Configure Proxy (if required)**:
    - Set up proxy settings for Docker client and containers as described in
-     [Docker Proxy Configuration](https://docs.docker.com/network/proxy/).
+     [Docker Proxy Configuration](https://docs.docker.com/engine/cli/proxy/).
    - Example `~/.docker/config.json`:
 
      ```json
@@ -50,9 +54,15 @@ To configure Docker:
 
 ## Clone source code
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 
 ## Deploy with Docker Compose
@@ -85,24 +95,82 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   Grafana’s minimum refresh interval is 5 seconds.
    > - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
    >   install its dependency packages before it can start running.
+   > - Fusion Analytics starts once the RTP sender timestamp is available in the metadata packet from the DL Streamer Pipeline Server.
+   > - **Known issue:** DL Streamer Pipeline Server may not send RTP sender timestamps for the first ~300 packets.
+   >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make up
    ```
 
 3. Use the following command to verify that all containers are active and error-free.
 
-   > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
+   > **Note:** The command `make status` may show errors in containers like ia-grafana when the user has not logged in
    > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
    > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
    ```sh
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
-## Verify the Weld Defect Detection Results
+### Running Time Series Analytics Microservice User Defined Function(UDF) inference on GPU
+
+By default, UDF for Time Series Analytics Microservice is configured to run on `CPU`.
+
+To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
+
+```sh
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
+```
+
+### Running DL Streamer Pipeline Server model inference on GPU or NPU
+
+By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
+To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the following command:
+
+- To run inference on with GPU, 
+
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+- To run inference on `NPU`, use:
+
+  > **Note:** Ensure NPU support is available on your platform before running NPU inference.
+
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+    curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
+
+
+> **Note:** When stopping the pipeline, Grafana may display the error message: **"Error: stream not found, retrying in some seconds"**. This is expected behavior. The stream will automatically reconnect and resume in Grafana once the pipeline is started again.
+
+## Verify the Multimodal Weld Defect Detection Results
 
 1. Get into the InfluxDB* container.
 
@@ -114,7 +182,7 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
      docker exec -it ia-influxdb bash
     ```
 
-2. Run following commands to see the data in InfluxDB*.
+2. Run the following commands to see the data in InfluxDB*.
 
    > **NOTE:**
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
@@ -136,9 +204,11 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 3. Check the output in Grafana.
 
-   - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://localhost:3000` to launch Grafana from browser (preferably, chrome browser)
 
-   > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+   > **Note:** 
+   > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+   > - For remote access, set `HOST_IP` in `.env` to the host system IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
@@ -158,7 +228,7 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 ## Bring down the sample app
 
 ```sh
-cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make down
 ```
 
@@ -178,6 +248,7 @@ docker logs -f <container_name> | grep -i error
 - [How to deploy with Helm](./get-started/deploy-with-helm.md): Guide for deploying with Helm.
 - [How to configure MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to update config](./how-to-guides/how-to-update-config.md): Guide updating configuration of Time Series Analytics Microservice.
+- [How to deploy vLLM service](./how-to-guides/how-to-deploy-vllm-service.md): Guide for deploying the sample app with vLLM enabled.
 
 <!--hide_directive
 :::{toctree}

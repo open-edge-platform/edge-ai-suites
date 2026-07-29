@@ -29,6 +29,7 @@ SPDX-License-Identifier = "Apache-2.0"
 [[annotations]]
 path = [
     "PicknPlace/picknplace/scripts/moveit2.py",
+    "RVC/rvc/scripts/moveit2.py",
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2022, Andrej Orsula"
 SPDX-License-Identifier = "BSD-3-Clause"

@@ -1,0 +1,23 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "video-caption-service.fullname" . }}
+  labels:
+    {{- include "video-caption-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: video-caption-service
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "video-caption-service.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: dashboard
+      port: {{ .Values.service.port }}
+      targetPort: dashboard
+      protocol: TCP
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}

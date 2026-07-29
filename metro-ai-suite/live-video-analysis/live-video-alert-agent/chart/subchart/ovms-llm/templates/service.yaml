@@ -1,0 +1,18 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ovms-llm.fullname" . }}
+  labels:
+    {{- include "ovms-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: inference
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ include "ovms-llm.fullname" . }}
+  ports:
+    - name: http
+      port: {{ .Values.global.ovmsPort }}
+      targetPort: http
+      protocol: TCP

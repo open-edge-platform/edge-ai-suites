@@ -109,7 +109,7 @@ Find a brief description of the parameters in the following list.
 
   Point cloud data with y-coordinate > ``y_filter_left`` and y-coordinate <
   ``y_filter_right`` are filtered out (positive y-direction is to the left of
-  robot and vice rsa).
+  robot and vice versa).
 
 - ``z_filter``
 

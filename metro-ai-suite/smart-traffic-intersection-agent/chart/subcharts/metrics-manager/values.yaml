@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# =============================================================================
+# Metrics Manager Subchart Values
+# =============================================================================
+
+enabled: true
+
+image:
+  repository: intel/metrics-manager
+  tag: "2026.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+controller:
+  kind: Deployment
+  replicaCount: 1
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+pod:
+  hostPID: true
+  hostNetwork: false
+  dnsPolicy: ""
+  restartPolicy: Always
+  podAnnotations: {}
+  podLabels: {}
+  priorityClassName: ""
+
+securityContext:
+  privileged: false
+  runAsNonRoot: false
+  readOnlyRootFilesystem: false
+  appArmorProfile:
+    type: RuntimeDefault
+  appArmorProfileForce: false
+  seccompProfile:
+    type: RuntimeDefault
+
+hardware:
+  gpu:
+    enabled: true
+
+service:
+  type: ClusterIP
+  metricsPort: 9090
+  telegrafPort: 9273
+  telegrafHttpPort: 8186
+  annotations: {}
+  nodePorts:
+    metrics: ""
+    telegraf: ""
+    telegrafHttp: ""
+
+config:
+  logLevel: INFO
+  logFormat: json
+  corsOrigins: "*"
+  metricsRetentionSeconds: 300
+  maxMetricsBatchSize: 1000
+  hostnameOverride: ""
+  extraEnv: []
+
+telegraf:
+  config: ""
+
+customMetrics:
+  enabled: true
+
+resources:
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: metrics
+  initialDelaySeconds: 30
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3

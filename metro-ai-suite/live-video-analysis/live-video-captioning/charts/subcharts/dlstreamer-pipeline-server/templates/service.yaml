@@ -1,0 +1,30 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dlstreamer-pipeline-server.fullname" . }}
+  labels:
+    {{- include "dlstreamer-pipeline-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dlstreamer-pipeline-server
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "dlstreamer-pipeline-server.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: rest-api
+      port: {{ .Values.service.port }}
+      targetPort: rest-api
+      protocol: TCP
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.hostPort }}
+      {{- end }}
+    - name: webrtc
+      port: {{ .Values.service.webrtcContainerPort }}
+      targetPort: webrtc
+      protocol: TCP
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.webrtcHostPort }}
+      {{- end }}

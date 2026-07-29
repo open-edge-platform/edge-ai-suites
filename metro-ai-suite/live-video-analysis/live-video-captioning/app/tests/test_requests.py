@@ -6,10 +6,11 @@
 import pytest
 from pydantic import ValidationError
 from backend.models.requests import StartRunRequest
+from unittest.mock import patch
 
 
 # ---------------------------------------------------------------------------
-# Valid RTSP URLs
+# Valid source inputs
 # ---------------------------------------------------------------------------
 class TestStartRunRequestValid:
     """Happy-path validation for StartRunRequest."""
@@ -19,7 +20,7 @@ class TestStartRunRequestValid:
         req = StartRunRequest(rtspUrl="rtsp://192.168.1.10:554/stream")
         assert req.rtspUrl == "rtsp://192.168.1.10:554/stream"
         assert req.maxNewTokens == 70
-        assert req.modelName == "OpenGVLab/InternVL2-2B"
+        assert req.modelName == "InternVL2-1B"
 
     def test_rtsps_scheme_accepted(self):
         """rtsps:// scheme is accepted as valid."""
@@ -50,7 +51,6 @@ class TestStartRunRequestValid:
             maxNewTokens=200,
             detectionModelName="yolov5",
             detectionThreshold=0.8,
-            pipelineName="my_pipe",
             runName="demo_run",
         )
         assert req.prompt == "What is happening?"
@@ -58,15 +58,27 @@ class TestStartRunRequestValid:
         assert req.maxNewTokens == 200
         assert req.detectionModelName == "yolov5"
         assert req.detectionThreshold == 0.8
-        assert req.pipelineName == "my_pipe"
         assert req.runName == "demo_run"
 
+    def test_detection_device_field_accepted(self):
+        """Detection device value is parsed and stored."""
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            detectionDevice="npu",
+        )
+        assert req.detectionDevice == "npu"
+
+    def test_linux_video_device_path_accepted(self):
+        """Linux V4L2 camera paths are accepted."""
+        req = StartRunRequest(rtspUrl="/dev/video0")
+        assert req.rtspUrl == "/dev/video0"
+
 
 # ---------------------------------------------------------------------------
-# Invalid RTSP URLs
+# Invalid source inputs
 # ---------------------------------------------------------------------------
 class TestStartRunRequestInvalidUrl:
-    """Validation errors for malformed RTSP URLs."""
+    """Validation errors for malformed stream source values."""
 
     def test_empty_url_rejected(self):
         """An empty string is rejected (min_length=1 + scheme check)."""
@@ -74,19 +86,48 @@ class TestStartRunRequestInvalidUrl:
             StartRunRequest(rtspUrl="")
 
     def test_http_scheme_rejected(self):
-        """HTTP scheme is not a valid RTSP URL."""
-        with pytest.raises(ValidationError, match="rtsp://"):
+        """HTTP scheme is not a valid source type for this API."""
+        with pytest.raises(ValidationError, match="/dev/videoN"):
             StartRunRequest(rtspUrl="http://example.com/stream")
+
+    def test_invalid_linux_video_device_path_rejected(self):
+        """Only /dev/videoN paths are allowed for local camera device input."""
+        with pytest.raises(ValidationError, match="/dev/videoN"):
+            StartRunRequest(rtspUrl="/dev/video")
 
     def test_no_hostname_rejected(self):
         """RTSP URL without a hostname is rejected."""
         with pytest.raises(ValidationError, match="hostname"):
             StartRunRequest(rtspUrl="rtsp:///no-host")
 
-    def test_bare_hostname_without_dot_rejected(self):
-        """Single-label hostnames (no dot) are rejected for domain names."""
-        with pytest.raises(ValidationError, match="qualified domain"):
-            StartRunRequest(rtspUrl="rtsp://localhost/stream")
+    def test_bare_hostname_without_dot_accepted(self):
+        """Single-label hostnames are accepted for local/service discovery usage."""
+        req = StartRunRequest(rtspUrl="rtsp://localhost/stream")
+        assert req.rtspUrl == "rtsp://localhost/stream"
+
+    def test_invalid_hostname_format_rejected(self):
+        """Hostnames with invalid characters are rejected."""
+        with pytest.raises(ValidationError, match="Invalid hostname format"):
+            StartRunRequest(rtspUrl="rtsp://bad_host!/stream")
+
+    def test_hostname_with_trailing_dot_rejected(self):
+        """Hostnames ending with a dot are rejected."""
+        with pytest.raises(ValidationError):
+            StartRunRequest(rtspUrl="rtsp://camera.example.com./stream")
+
+    def test_hostname_trailing_dot_branch_covered(self):
+        """Covers explicit trailing-dot guard when hostname syntax check is bypassed."""
+        with patch("backend.models.requests.re.match", return_value=True):
+            with pytest.raises(ValidationError, match="Hostname cannot end with a dot"):
+                StartRunRequest(rtspUrl="rtsp://camera.example.com./stream")
+
+    def test_unexpected_exception_wrapped_as_validation_error(self):
+        """Unexpected parser errors are wrapped into a user-friendly ValueError."""
+        with patch(
+            "backend.models.requests.urlparse", side_effect=RuntimeError("boom")
+        ):
+            with pytest.raises(ValidationError, match="Invalid RTSP URL format: boom"):
+                StartRunRequest(rtspUrl="rtsp://camera.example.com/stream")
 
 
 # ---------------------------------------------------------------------------
@@ -120,3 +161,62 @@ class TestStartRunRequestBoundaries:
         """Valid thresholds within [0.0, 1.0] are accepted."""
         req = StartRunRequest(rtspUrl="rtsp://10.0.0.1/s", detectionThreshold=threshold)
         assert req.detectionThreshold == threshold
+
+
+# ---------------------------------------------------------------------------
+# Selector validators
+# ---------------------------------------------------------------------------
+class TestStartRunRequestSelectors:
+    """Validation and normalization for stream/pipeline selectors."""
+
+    def test_stream_source_type_valid_values_are_normalized(self):
+        req_rtsp = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            streamSourceType=" RTSP ",
+        )
+        req_camera = StartRunRequest(
+            rtspUrl="/dev/video0",
+            streamSourceType=" Camera ",
+        )
+        assert req_rtsp.streamSourceType == "rtsp"
+        assert req_camera.streamSourceType == "camera"
+
+    def test_stream_source_type_none_is_accepted(self):
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            streamSourceType=None,
+        )
+        assert req.streamSourceType is None
+
+    def test_stream_source_type_invalid_rejected(self):
+        with pytest.raises(ValidationError, match="streamSourceType must be either 'rtsp' or 'camera'"):
+            StartRunRequest(
+                rtspUrl="rtsp://10.0.0.1/stream",
+                streamSourceType="usb",
+            )
+
+    def test_pipeline_type_valid_values_are_normalized(self):
+        req_detection = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=" Detection ",
+        )
+        req_non_detection = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=" NON-DETECTION ",
+        )
+        assert req_detection.pipelineType == "detection"
+        assert req_non_detection.pipelineType == "non-detection"
+
+    def test_pipeline_type_none_is_accepted(self):
+        req = StartRunRequest(
+            rtspUrl="rtsp://10.0.0.1/stream",
+            pipelineType=None,
+        )
+        assert req.pipelineType is None
+
+    def test_pipeline_type_invalid_rejected(self):
+        with pytest.raises(ValidationError, match="pipelineType must be either 'detection' or 'non-detection'"):
+            StartRunRequest(
+                rtspUrl="rtsp://10.0.0.1/stream",
+                pipelineType="smart",
+            )

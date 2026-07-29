@@ -57,9 +57,9 @@ class TrafficIntersectionAgentResponse:
     timestamp: str               # ISO format timestamp
     intersection_id: str         # UUID of intersection
     data: IntersectionData       # Core intersection data
-    camera_images: Dict[str, Dict[str, Any]]  # Camera images by direction
-    weather_data: WeatherData    # Weather information
-    vlm_analysis: VLMAnalysisData  # VLM analysis with alerts
+    camera_images: Dict[str, CameraImage]  # Camera images by direction
+    weather_data: Optional[WeatherData]    # Weather information
+    vlm_analysis: Optional[VLMAnalysisData]  # VLM analysis with alerts
     response_age: Optional[float] = None
 
 
@@ -86,7 +86,7 @@ class TrafficSnapshot:
     intersection_id: str
     directional_counts: Dict[str, int]  # camera direction -> count
     total_count: int
-    camera_images: Optional[Dict[str, CameraImage]] = None
+    camera_images: Dict[str, CameraImage]
     weather_conditions: Optional[WeatherData] = None
     intersection_data: Optional[IntersectionData] = None
 

@@ -4,8 +4,18 @@
 import os
 from pathlib import Path
 
+
+def _read_non_negative_int(var_name: str, default: int) -> int:
+    raw = os.environ.get(var_name)
+    if raw is None:
+        return default
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return default
+
 APP_PORT = int(os.environ.get("DASHBOARD_PORT", "4173"))
-PEER_ID = os.environ.get("WEBRTC_PEER_ID", "genai_pipeline")
+PEER_ID = os.environ.get("WEBRTC_PEER_ID", "video_captioning_pipeline")
 SIGNALING_URL = os.environ.get("SIGNALING_URL", "http://localhost:8889")
 WEBRTC_BITRATE = int(os.environ.get("WEBRTC_BITRATE", "2048"))
 ALERT_MODE = os.environ.get("ALERT_MODE", "false").lower() in ("true", "1", "yes")
@@ -13,6 +23,7 @@ DEFAULT_RTSP_URL = os.environ.get("DEFAULT_RTSP_URL", "")
 ENABLE_DETECTION_PIPELINE = os.environ.get(
     "ENABLE_DETECTION_PIPELINE", "false"
 ).lower() in ("true", "1", "yes")
+CAPTION_HISTORY = _read_non_negative_int("CAPTION_HISTORY", 3)
 
 # Metrics Service Configuration
 METRICS_SERVICE_PORT = os.environ.get("METRICS_SERVICE_PORT", "9090")
@@ -25,7 +36,11 @@ MQTT_TOPIC_PREFIX = os.environ.get("MQTT_TOPIC_PREFIX", "live-video-captioning")
 PIPELINE_SERVER_URL = os.environ.get(
     "PIPELINE_SERVER_URL", "http://dlstreamer-pipeline-server:8080"
 )
-PIPELINE_NAME = os.environ.get("PIPELINE_NAME", "genai_pipeline")
+PIPELINE_NAME = os.environ.get("PIPELINE_NAME", "video_captioning_pipeline")
+
+# How often (in seconds) to poll the pipeline server for run health. 0 disables polling.
+# Keep this low (≤10 s) so the UI reflects a crashed pipeline server quickly.
+PIPELINE_POLL_INTERVAL = _read_non_negative_int("PIPELINE_POLL_INTERVAL", 8)
 
 BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = Path(os.environ.get("MODELS_DIR", str(BASE_DIR / "ov_models")))
@@ -33,3 +48,23 @@ DETECTION_MODELS_DIR = Path(
     os.environ.get("DETECTION_MODELS_DIR", str(BASE_DIR / "ov_detection_models"))
 )
 UI_DIR = BASE_DIR / "ui"
+
+# Host Server Configuration
+LIVE_VIDEO_RAG_HOST_PORT = int(os.environ.get("LIVE_VIDEO_RAG_HOST_PORT", "4172"))
+EMBEDDING_API_URL = os.environ.get(
+    "EMBEDDING_API_URL", f"http://live-video-captioning-rag:{LIVE_VIDEO_RAG_HOST_PORT}/api/embeddings"
+)
+
+# Pipeline Configuration
+# To set the KV_CACHE_SIZE for the VLM model in the pipeline server. This is used to enable caching of the VLM model in the pipeline server.
+# The default value is 4. You can adjust this value based on your system's available memory and performance requirements. Increasing the cache size may improve performance but will also increase memory usage.
+VLM_CACHE_SIZE = os.environ.get("VLM_CACHE_SIZE", "4")
+
+# Enable/Disable Embedding
+ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
+
+# NPU-specific token length controls for static-shape LLM pipelines.
+# Defaults follow documented behavior: prompt up to 1024 tokens and response
+# generation of at least 128 tokens unless EOS is reached or a lower limit is set.
+NPU_MAX_PROMPT_LENGTH = os.environ.get("NPU_MAX_PROMPT_LENGTH", "1024")
+NPU_MIN_RESPONSE_LENGTH = os.environ.get("NPU_MIN_RESPONSE_LENGTH", "128")

@@ -16,6 +16,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     LogInfo,
     OpaqueFunction,
+    SetEnvironmentVariable,
     Shutdown,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -25,6 +26,7 @@ import yaml
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+ROS_DISTRO_VERSION = os.environ.get('ROS_DISTRO', 'humble')  # Default to 'humble' if not set
 
 
 def create_modified_yaml(device):
@@ -61,6 +63,16 @@ def create_modified_yaml(device):
 def generate_launch_description(*args, **kwargs):
     device = LaunchConfiguration('device')
     supported_devices = ['GPU', 'CPU']
+
+    ld_preload_action = None
+    if ROS_DISTRO_VERSION == 'jazzy':
+        ld_preload_action = SetEnvironmentVariable(
+            name='LD_PRELOAD',
+            value=(
+                f'/opt/ros/{ROS_DISTRO_VERSION}/lib/libfastcdr.so:'
+                f'/opt/ros/{ROS_DISTRO_VERSION}/lib/libfastrtps.so'
+            ),
+        )
 
     def launch_nodes(context, *args, **kwargs):
         selected_device = context.launch_configurations['device']
@@ -127,6 +139,7 @@ def generate_launch_description(*args, **kwargs):
             DeclareLaunchArgument(
                 device, default_value='GPU', description='Inference device to use (e.g., GPU, CPU)'
             ),
+            *([ld_preload_action] if ld_preload_action else []),
             OpaqueFunction(function=launch_nodes),
             LogInfo(msg=[LaunchConfiguration('device'), ' device selected for inference']),
         ]

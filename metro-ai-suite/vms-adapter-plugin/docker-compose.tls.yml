@@ -1,0 +1,18 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Example override: mount user-provided TLS certificates for the UI dashboard.
+# Copy this file to docker-compose.override.yml and place your cert.pem and
+# key.pem in ./certs/ui/ to use custom certificates instead of self-signed.
+#
+# Usage:
+#   cp docker-compose.tls.yml docker-compose.override.yml
+#   mkdir -p ./certs/ui
+#   cp /path/to/cert.pem ./certs/ui/cert.pem
+#   cp /path/to/key.pem ./certs/ui/key.pem
+#   docker compose up -d
+
+services:
+  ui:
+    volumes:
+      - ./certs/ui:/etc/nginx/certs:ro

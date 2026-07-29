@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions
 # and limitations under the License.
+"""Launch the wandering application on an iRobot Create 3 platform."""
 
 import datetime
 import os
@@ -25,6 +26,14 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from rclpy.logging import get_logging_directory
+
+# Default RPLidar serial device path. Hard-coded by-id path is intentionally long;
+# split here to satisfy line-length linting while remaining a single string at runtime.
+DEFAULT_LIDAR_SERIAL = (
+    '/dev/serial/by-id/'
+    'usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0'
+)
 
 
 def set_logging_dir(new_log_dir):
@@ -36,18 +45,18 @@ def set_logging_dir(new_log_dir):
 
     This function is borrowed from rolling launch_ros.actions.set_ros_log_dir.py
     """
-    from rclpy.logging import get_logging_directory
-
     current_rclpy_logging_directory = get_logging_directory()
     # Prefer ROS_LOG_DIR over what rclpy reports, but fall back to that if not set.
     current_log_dir = os.environ.get('ROS_LOG_DIR', current_rclpy_logging_directory)
     # If new_log_dir is abs, then current_log_dir will be truncated and not used.
     log_dir = os.path.join(current_log_dir, new_log_dir)
-    assert os.path.isabs(log_dir)
+    if not os.path.isabs(log_dir):
+        raise ValueError(f'Resolved ROS log directory must be absolute, got: {log_dir!r}')
     os.environ['ROS_LOG_DIR'] = log_dir
 
 
-def generate_launch_description():
+def generate_launch_description():  # pylint: disable=too-many-locals
+    """Build the LaunchDescription for the iRobot Create 3 wandering tutorial."""
     nav2_param_file = os.path.join(
         get_package_share_directory('wandering_irobot_tutorial'), 'params', 'irobot_nav.param.yaml'
     )
@@ -94,7 +103,7 @@ def generate_launch_description():
 
     declare_lidar_serial_cmd = DeclareLaunchArgument(
         'lidar_serial',
-        default_value='/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0',  # noqa: E501
+        default_value=DEFAULT_LIDAR_SERIAL,
         description='RPLidar serial port.',
     )
 

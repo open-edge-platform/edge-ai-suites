@@ -21,11 +21,11 @@ def _load_pose_model_config() -> tuple[str, str, str, str, str]:
     This function expects /app/configs/model-config.yaml to exist and to
     define pose-3d.models[0] with at least:
 
-      - name
-      - target_dir
-      - model_url
-      - video_dir
-      - video_url
+            - name
+            - target_dir
+            - source_archive_path
+            - video_dir
+            - video_url
 
     If any of these are missing or the file is not readable, the script
     will raise and fail fast instead of using hardcoded defaults.
@@ -51,13 +51,13 @@ def _load_pose_model_config() -> tuple[str, str, str, str, str]:
     first = models[0] or {}
     name = first.get("name")
     target_dir = first.get("target_dir")
-    model_url = first.get("model_url")
+    source_archive_path = first.get("source_archive_path")
     video_dir = first.get("video_dir")
     video_url = first.get("video_url")
 
-    if not name or not target_dir or not model_url or not video_dir or not video_url:
+    if not name or not target_dir or not source_archive_path or not video_dir or not video_url:
         raise ValueError(
-            "pose-3d.models[0] must define name, target_dir, model_url, "
+            "pose-3d.models[0] must define name, target_dir, source_archive_path, "
             "video_dir, and video_url in model-config.yaml."
         )
 
@@ -65,12 +65,12 @@ def _load_pose_model_config() -> tuple[str, str, str, str, str]:
         str(name),
         str(target_dir),
         str(video_dir),
-        str(model_url),
+        str(source_archive_path),
         str(video_url),
     )
 
 
-MODEL_NAME, MODEL_TARGET_DIR, MODEL_VIDEO_DIR, MODEL_URL, VIDEO_URL = _load_pose_model_config()
+MODEL_NAME, MODEL_TARGET_DIR, MODEL_VIDEO_DIR, MODEL_ARCHIVE_PATH, VIDEO_URL = _load_pose_model_config()
 
 # Directory where the 3D pose model assets will be stored
 # Use the same default as omz-model-download.sh: /models/3d-pose
@@ -85,8 +85,8 @@ videos_dir.mkdir(parents=True, exist_ok=True)
 if str(base_model_dir) not in sys.path:
     sys.path.insert(0, str(base_model_dir))
 
-# Paths for the original checkpoint archive and extracted .pth
-tar_path = base_model_dir / f"{MODEL_NAME}.tar.gz"
+# Paths for the source checkpoint archive and extracted .pth
+source_tar_path = Path(MODEL_ARCHIVE_PATH)
 ckpt_file = base_model_dir / f"{MODEL_NAME}.pth"
 
 # Final OpenVINO IR path
@@ -96,15 +96,16 @@ ov_model_path = base_model_dir / f"{MODEL_NAME}.xml"
 video_path = videos_dir / "face-demographics-walking.mp4"
 
 
-# 1) Download and extract the .pth checkpoint if needed
+# 1) Extract the manually staged .tar.gz checkpoint archive if needed
 if not ckpt_file.exists():
-    if not tar_path.exists():
-        print(f"Downloading 3D pose checkpoint from {MODEL_URL}")
-        urllib.request.urlretrieve(MODEL_URL, tar_path)
-        print(f"Saved checkpoint archive to {tar_path}")
+    if not source_tar_path.exists():
+        raise FileNotFoundError(
+            f"Missing manually staged 3D pose archive: {source_tar_path}. "
+            "Please place the source archive before running make run."
+        )
 
-    print(f"Extracting checkpoint archive into {base_model_dir}")
-    with tarfile.open(tar_path) as f:
+    print(f"Extracting checkpoint archive from {source_tar_path} into {base_model_dir}")
+    with tarfile.open(source_tar_path) as f:
         f.extractall(base_model_dir)
     print("Checkpoint extraction complete")
 

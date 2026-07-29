@@ -2,6 +2,176 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.1] - June 2026
+
+### Added
+- Added GPU and NPU support for Docker Compose and Helm deployments, including `/dev/accel` device mounts and updated UDF configuration. ([#2630])
+- Added how-to guide for configuring an external RTSP camera as the video source. ([#2388])
+- Added functional tests for multimodal analytics and Helm deployment workflows. ([#2283])
+- Added sparse checkout guidance to Manufacturing documentation. ([#2479])
+
+### Changed
+- Integrated new scikit-learn (Intel-accelerated) classifier ML model for weld defect detection, replacing the previous CatBoost model. ([#2378])
+- Updated DL Streamer Pipeline Server to the latest weekly tag. ([#2641])
+- Updated container image versions: SeaweedFS (4.15→4.23), Coturn (4.9.0→4.10.0), MediaMTX (1.16.3→1.18.1). ([#2639])
+- Renamed sample app "Weld Anomaly Detection" to "Weld Defect Detection" across all configs, docs, and scripts. ([#2504])
+- Updated UDF package upload format from zip to tar archives. ([#2441])
+- Updated version to `2026.1.0`. ([#2387])
+- Updated DL Streamer Pipeline Server image version. ([#2772])
+- Updated `gvawatermark` pipeline rendering configuration for DL Streamer Pipeline Server. ([#2723])
+- Updated image suffix and Helm chart version to `rc1`. ([#2717])
+- Removed `tmpfs` size options for SeaweedFS in Docker Compose configuration. ([#2726])
+
+### Security
+- Updated Docker Compose service image versions to address security vulnerabilities. ([#2579])
+- Addressed Bandit security findings in weld data simulator and functional tests. ([#2347])
+- Bumped `requests` to 2.33.0 in test requirements. ([#2343])
+- Fixed Trivy-reported vulnerabilities by updating SeaweedFS and Coturn container image versions. ([#2971])
+- Fixed security vulnerability issues in Helm templates. ([#2869])
+
+### Fixed
+- Fixed Helm automation deployment issues. ([#2424])
+- Fixed failing functional test cases. ([#2450])
+- Fixed minor issue in architecture diagram. ([#2568])
+- Fixed DL Streamer Pipeline Server proxy environment variable handling to support both proxy and non-proxy environments. ([#2727])
+- Improved stability and consistency of multimodal automation test suite. ([#2468])
+- Fixed get-started guide with step to stop and restart the pipeline when switching inference device. ([#2910])
+
+### Documentation
+- Distinguished Time-Series vs Multimodal Weld Defect Detection documentation. ([#2607])
+- Fixed broken reference in Weld Defect Detection documentation. ([#2581])
+- Fixed multimodal article documentation. ([#2489])
+- Updated Helm deployment documentation to describe running inference on different device targets (CPU/GPU/NPU). ([#2933])
+- Updated documentation links and references. ([#2857])
+- Minor documentation updates. ([#2789])
+- Updated release branch references in documentation for 2026.1. ([#2766])
+- Fixed documentation issues. ([#2752])
+- Updated clone commands to include explicit branch or release-tag parameter. ([#2662])
+- Removed "project" instances from GitHub navigation box directives in documentation index. ([#2385])
+- Language and formatting review of documentation. ([#2990])
+- Fixed punctuation and minor corrections in release notes. ([#2947])
+- Miscellaneous documentation fixes. ([#2932])
+
+---
+[#2283]: https://github.com/open-edge-platform/edge-ai-suites/pull/2283
+[#2343]: https://github.com/open-edge-platform/edge-ai-suites/pull/2343
+[#2347]: https://github.com/open-edge-platform/edge-ai-suites/pull/2347
+[#2369]: https://github.com/open-edge-platform/edge-ai-suites/pull/2369
+[#2378]: https://github.com/open-edge-platform/edge-ai-suites/pull/2378
+[#2385]: https://github.com/open-edge-platform/edge-ai-suites/pull/2385
+[#2387]: https://github.com/open-edge-platform/edge-ai-suites/pull/2387
+[#2388]: https://github.com/open-edge-platform/edge-ai-suites/pull/2388
+[#2424]: https://github.com/open-edge-platform/edge-ai-suites/pull/2424
+[#2441]: https://github.com/open-edge-platform/edge-ai-suites/pull/2441
+[#2450]: https://github.com/open-edge-platform/edge-ai-suites/pull/2450
+[#2468]: https://github.com/open-edge-platform/edge-ai-suites/pull/2468
+[#2479]: https://github.com/open-edge-platform/edge-ai-suites/pull/2479
+[#2489]: https://github.com/open-edge-platform/edge-ai-suites/pull/2489
+[#2504]: https://github.com/open-edge-platform/edge-ai-suites/pull/2504
+[#2568]: https://github.com/open-edge-platform/edge-ai-suites/pull/2568
+[#2579]: https://github.com/open-edge-platform/edge-ai-suites/pull/2579
+[#2581]: https://github.com/open-edge-platform/edge-ai-suites/pull/2581
+[#2607]: https://github.com/open-edge-platform/edge-ai-suites/pull/2607
+[#2630]: https://github.com/open-edge-platform/edge-ai-suites/pull/2630
+[#2639]: https://github.com/open-edge-platform/edge-ai-suites/pull/2639
+[#2641]: https://github.com/open-edge-platform/edge-ai-suites/pull/2641
+[#2662]: https://github.com/open-edge-platform/edge-ai-suites/pull/2662
+[#2717]: https://github.com/open-edge-platform/edge-ai-suites/pull/2717
+[#2723]: https://github.com/open-edge-platform/edge-ai-suites/pull/2723
+[#2726]: https://github.com/open-edge-platform/edge-ai-suites/pull/2726
+[#2727]: https://github.com/open-edge-platform/edge-ai-suites/pull/2727
+[#2752]: https://github.com/open-edge-platform/edge-ai-suites/pull/2752
+[#2766]: https://github.com/open-edge-platform/edge-ai-suites/pull/2766
+[#2772]: https://github.com/open-edge-platform/edge-ai-suites/pull/2772
+[#2789]: https://github.com/open-edge-platform/edge-ai-suites/pull/2789
+[#2857]: https://github.com/open-edge-platform/edge-ai-suites/pull/2857
+[#2869]: https://github.com/open-edge-platform/edge-ai-suites/pull/2869
+[#2910]: https://github.com/open-edge-platform/edge-ai-suites/pull/2910
+[#2932]: https://github.com/open-edge-platform/edge-ai-suites/pull/2932
+[#2933]: https://github.com/open-edge-platform/edge-ai-suites/pull/2933
+[#2947]: https://github.com/open-edge-platform/edge-ai-suites/pull/2947
+[#2971]: https://github.com/open-edge-platform/edge-ai-suites/pull/2971
+[#2990]: https://github.com/open-edge-platform/edge-ai-suites/pull/2990
+---
+
+## [2026.0] - March 2026
+
+### Added
+- Added SeaweedFS S3 storage support for DL Streamer image/frame outputs. ([#1576])
+- Added Helm charts for multimodal deployment. ([#1494])
+- Added Helm templates for SeaweedFS components (master, volume, filer, s3). ([#1669])
+- Added S3 image storage access documentation and credential setup guidance. ([#1643], [#1662])
+- Added persistence of DL pipeline vision metadata to InfluxDB in fusion analytics. ([#1547])
+- Added S3 bucket TTL support for automatic image cleanup in SeaweedFS. ([#2039])
+- Added explicit Docker bridge network subnet (172.30.0.0/24) for the compose stack with troubleshooting for network pool overlap conflicts. ([#2184])
+- Added troubleshooting step for `docker exec` failures on EMT OS with Alpine-based images. ([#2032])
+- Added Make target to package and push Helm charts to an OCI registry. ([#1842])
+
+### Changed
+- Updated third-party service image versions: Telegraf (1.38.0), Grafana (12.3.3-ubuntu), Eclipse Mosquitto (2.0.22), MediaMTX (1.16.2), Coturn (4.8.0), SeaweedFS (4.15), nginx (1.29.5-trixie-perl). ([#1857], [#2050], [#2114], [#2029])
+- Updated multimodal architecture/configuration to include S3 frame storage flow with `gvawatermark` element. ([#1720])
+- Embedded `simulation-data` into weld-data-simulator image; removed external volume/WORK_DIR PV-PVC dependency. ([#1582])
+- Updated system requirements to CPU-only validated configuration. ([#1632])
+- Updated fusion analytics to align vision timestamps with RTSP source time using RTP timestamp metadata. ([#1968])
+- Updated version numbering scheme from 1.x.x to 2026.0 date-based format across Helm charts, docker-compose, and environment files. ([#1616])
+- Bumped catboost from 1.2.8 to 1.2.10 in UDF requirements. ([#2025])
+- Applied stricter permissions (`chmod 600`) to `.env` and `helm/values.yaml` config files in Makefile. ([#2071])
+- Added memory and tmpfs size limits for SeaweedFS volume and S3 containers. ([#2039])
+- Added `--non-strict-env-handling` flag to Telegraf entrypoints. ([#2114])
+- Updated third-party program notices to reflect new dependency versions. ([#1975], [#2050])
+
+### Security
+- Hardened SeaweedFS container runtime: read-only root filesystem, non-root UID/GID, seccomp profile, and no privilege escalation. ([#1691])
+
+### Fixed
+- Fixed SeaweedFS access path and proxy bypass configuration for non-default Docker network subnets. ([#2022])
+
+### Documentation
+- Reorganized Multimodal how-to guides and docs navigation/toctree. ([#1687], [#1562])
+- Updated Multimodal/Time Series link blocks and product-name alignment content. ([#1557], [#1492])
+- Updated Deploy-with-Helm documentation and related guidance. ([#1518], [#1538])
+- Fixed duplicated heading and TOC build issues. ([#1789], [#1655])
+- Added 2026.0 release notes. ([#2077])
+- Updated documentation references for 2026.0 release branch. ([#2006], [#1957])
+
+---
+
+[#2184]: https://github.com/open-edge-platform/edge-ai-suites/pull/2184
+[#2114]: https://github.com/open-edge-platform/edge-ai-suites/pull/2114
+[#2077]: https://github.com/open-edge-platform/edge-ai-suites/pull/2077
+[#2071]: https://github.com/open-edge-platform/edge-ai-suites/pull/2071
+[#2050]: https://github.com/open-edge-platform/edge-ai-suites/pull/2050
+[#2039]: https://github.com/open-edge-platform/edge-ai-suites/pull/2039
+[#2032]: https://github.com/open-edge-platform/edge-ai-suites/pull/2032
+[#2029]: https://github.com/open-edge-platform/edge-ai-suites/pull/2029
+[#2025]: https://github.com/open-edge-platform/edge-ai-suites/pull/2025
+[#2022]: https://github.com/open-edge-platform/edge-ai-suites/pull/2022
+[#2006]: https://github.com/open-edge-platform/edge-ai-suites/pull/2006
+[#1975]: https://github.com/open-edge-platform/edge-ai-suites/pull/1975
+[#1968]: https://github.com/open-edge-platform/edge-ai-suites/pull/1968
+[#1957]: https://github.com/open-edge-platform/edge-ai-suites/pull/1957
+[#1857]: https://github.com/open-edge-platform/edge-ai-suites/pull/1857
+[#1842]: https://github.com/open-edge-platform/edge-ai-suites/pull/1842
+[#1789]: https://github.com/open-edge-platform/edge-ai-suites/pull/1789
+[#1720]: https://github.com/open-edge-platform/edge-ai-suites/pull/1720
+[#1691]: https://github.com/open-edge-platform/edge-ai-suites/pull/1691
+[#1687]: https://github.com/open-edge-platform/edge-ai-suites/pull/1687
+[#1669]: https://github.com/open-edge-platform/edge-ai-suites/pull/1669
+[#1662]: https://github.com/open-edge-platform/edge-ai-suites/pull/1662
+[#1655]: https://github.com/open-edge-platform/edge-ai-suites/pull/1655
+[#1643]: https://github.com/open-edge-platform/edge-ai-suites/pull/1643
+[#1632]: https://github.com/open-edge-platform/edge-ai-suites/pull/1632
+[#1616]: https://github.com/open-edge-platform/edge-ai-suites/pull/1616
+[#1582]: https://github.com/open-edge-platform/edge-ai-suites/pull/1582
+[#1576]: https://github.com/open-edge-platform/edge-ai-suites/pull/1576
+[#1562]: https://github.com/open-edge-platform/edge-ai-suites/pull/1562
+[#1557]: https://github.com/open-edge-platform/edge-ai-suites/pull/1557
+[#1547]: https://github.com/open-edge-platform/edge-ai-suites/pull/1547
+[#1538]: https://github.com/open-edge-platform/edge-ai-suites/pull/1538
+[#1518]: https://github.com/open-edge-platform/edge-ai-suites/pull/1518
+[#1494]: https://github.com/open-edge-platform/edge-ai-suites/pull/1494
+[#1492]: https://github.com/open-edge-platform/edge-ai-suites/pull/1492
+
 ## [2025.2] - December 2025
 
 ### Added

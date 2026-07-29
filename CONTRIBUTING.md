@@ -3,7 +3,7 @@
 
 The following are guidelines for contributing to the Edge AI Suites project, including the code of conduct, submitting issues, and contributing code.
 
-# Table of Contents
+## Table of Contents
 
 - [`Code of Conduct`](#code-of-conduct)
 - [`Security`](#security)
@@ -13,44 +13,45 @@ The following are guidelines for contributing to the Edge AI Suites project, inc
 - [`Sign Your Work`](#sign-your-work)
 - [`License`](#license)
 
-# Code of Conduct
+## Code of Conduct
 
 This project and everyone participating in it are governed by the [`CODE_OF_CONDUCT`](CODE_OF_CONDUCT.md) document. By participating, you are expected to adhere to this code.
 
-# Security
+## Security
 
 Read the [`Security Policy`](SECURITY.md).
 
-# Get Started
+## Get Started
 
 Clone the repository and follow the [`README`](README.md) or
 [documentation's](https://docs.openedgeplatform.intel.com/) "Get Started" of the chosen
 applications.
 
-```
+```text
     git clone https://github.com/open-edge-platform/edge-ai-suites.git
     cd edge-ai-suites
 ```
+
 Note that you do not need to clone the entire repository. You can clone just the portion you
 are interested with. To see how ti do it, check out the
 [Contributing to Open Edge Platform](https://docs.openedgeplatform.intel.com/canonical/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning)
 article.
 
 
-# How to Contribute
+## How to Contribute
 
-## Contribute Code Changes
+### Contribute Code Changes
 
 > If you want to help improve Edge AI Suites, choose one of the issues reported in [`GitHub Issues`](https://github.com/open-edge-platform/edge-ai-suites/issues) and create a [`Pull Request`](https://github.com/open-edge-platform/edge-ai-suites/pulls) to address it.
 > Note: Please check that the change hasn't been implemented before you start working on it.
 
-## Improve Documentation
+### Improve Documentation
 
 The easiest way to help with the `Developer Guide` and `User Guide` is to review it and provide feedback on the
 existing articles. Whether you notice a mistake, see the possibility of improving the text, or think more
 information should be added, you can reach out to discuss the potential changes.
 
-## Report Bugs
+### Report Bugs
 
 If you encounter a bug, open an issue in [`Github Issues`](https://github.com/open-edge-platform/edge-ai-suites/issues). Provide the following information to help us
 understand and resolve the issue quickly:
@@ -62,7 +63,7 @@ understand and resolve the issue quickly:
 - Screenshots or logs (if applicable)
 - Your environment (OS, browser, etc.)
 
-## Suggest Enhancements
+### Suggest Enhancements
 
 Intel welcomes suggestions for new features and improvements. Follow these steps to make a suggestion:
 
@@ -73,7 +74,7 @@ Intel welcomes suggestions for new features and improvements. Follow these steps
    - Use cases and benefits
    - Any additional context or references
 
-## Submit Pull Requests
+### Submit Pull Requests
 
 Before submitting a pull request, ensure you follow these guidelines:
 
@@ -85,9 +86,9 @@ Before submitting a pull request, ensure you follow these guidelines:
 - Wait for a review. Intel will review your pull request as soon as possible and provide you with feedback.
 You can expect a merge once your changes are validated with automatic tests and approved by maintainers.
 
-# Development Guidelines
+## Development Guidelines
 
-## Coding Standards
+### Coding Standards
 
 Consistently following coding standards helps maintain readability and quality. Adhere to the following conventions:
 - Language-specific style guides
@@ -95,7 +96,7 @@ Consistently following coding standards helps maintain readability and quality. 
 - Meaningful variable and function names
 - Inline comments and API documentation generator for complex logic
 
-## Commit Messages and Pull Requests
+### Commit Messages and Pull Requests
 
 Clear and informative commit messages make it easier to understand the history of the project. Follow these guidelines:
 - Use the present tense (e.g., "Add feature" not "Added feature")
@@ -105,7 +106,7 @@ Clear and informative commit messages make it easier to understand the history o
 Please fill in the details as per the [pull request template](./.github/PULL_REQUEST_TEMPLATE.md) while submitting the
 pull request.
 
-## Testing
+### Testing
 
 Thorough testing is crucial to maintain project stability. Ensure that you:
 - Write unit tests for new and existing code
@@ -113,11 +114,11 @@ Thorough testing is crucial to maintain project stability. Ensure that you:
 - Run tests locally before submitting a pull request
 - Check for code coverage and aim for high coverage percentage
 
-# Sign Your Work
+## Sign Your Work
 
 Please use the sign-off line at the end of the patch. Your signature certifies that you wrote the patch or otherwise have the right to pass it on as an open-source patch. The rules are pretty simple: if you can certify the below (from developercertificate.org):
 
-```
+```text
 Developer Certificate of Origin
 Version 1.1
 
@@ -157,7 +158,7 @@ By making a contribution to this project, I certify that:
 
 Then you just add a line to every git commit message:
 
-```
+```text
 Signed-off-by: Your Name <your.name@email.com>
 ```
 
@@ -165,7 +166,6 @@ Use your real name (sorry, no pseudonyms or anonymous contributions.)
 
 If you set your `user.name` and `user.email` git configs, you can sign your commit automatically with `git commit -s`.
 
-# License
+## License
 
 By contributing to this project, you agree that your contributions will be licensed under the [`APACHE-2.0`](LICENSE) LICENSE of the repository.
-

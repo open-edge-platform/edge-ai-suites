@@ -49,7 +49,6 @@ For more details, see [Overview](./docs/user-guide/index.md)
 ## Learn More
 
 - [How to Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [Application Security Enablements](./docs/user-guide/application-security-enablement.md): Learn how to enable the various security features.
 - [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 ## License

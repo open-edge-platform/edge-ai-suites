@@ -34,6 +34,8 @@ fi
 
 # Create default buckets using the filer API
 DEFAULT_BUCKETS="${DEFAULT_S3_BUCKETS:-dlstreamer-pipeline-results}"
+# Optional TTL for all default buckets, e.g. 10m, 1h, 7d
+DEFAULT_S3_BUCKET_TTL="${S3_BUCKET_TTL:-30m}"
 
 for bucket in $(echo "$DEFAULT_BUCKETS" | tr ',' ' '); do
     echo "Creating bucket: $bucket"
@@ -44,6 +46,21 @@ for bucket in $(echo "$DEFAULT_BUCKETS" | tr ',' ' '); do
         echo "✓ Bucket '$bucket' created successfully"
     else
         echo "ℹ Bucket '$bucket' may already exist or created (HTTP: $HTTP_CODE)"
+    fi
+
+    if [ -n "$DEFAULT_S3_BUCKET_TTL" ]; then
+        LOCATION_PREFIX="/buckets/$bucket/"
+        FS_CONFIG_CMD="fs.configure -locationPrefix=$LOCATION_PREFIX -ttl=$DEFAULT_S3_BUCKET_TTL -apply"
+        echo "Applying TTL '$DEFAULT_S3_BUCKET_TTL' to path '$LOCATION_PREFIX'"
+
+        FS_CONFIG_OUTPUT=$(printf '%s\n' "$FS_CONFIG_CMD" | weed shell -master=seaweedfs-master:9333 -filer=seaweedfs-filer:8888 2>&1)
+        FS_CONFIG_STATUS=$?
+        if [ $FS_CONFIG_STATUS -eq 0 ]; then
+            echo "✓ TTL configured for bucket '$bucket'"
+        else
+            echo "⚠ Failed to configure TTL for bucket '$bucket'"
+            echo "$FS_CONFIG_OUTPUT"
+        fi
     fi
 done
 

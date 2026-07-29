@@ -22,7 +22,7 @@ in order to receive back the "best" IK solution.
 builds a .so library that can be used as a drop in replacement for KDL's IK
 functions for KDL chains. Details for use are in trac\_ik\_lib/README.md.
 
-- [trac\_ik\_kinematics\_plugin](https://bitbucket.org/traclabs/trac_ik/src/HEAD/trac_ik_kinematics_plugin) builds a [MoveIt! plugin](http://moveit.ros.org/documentation/concepts/#kinematics) that can
+- [trac\_ik\_kinematics\_plugin](https://bitbucket.org/traclabs/trac_ik/src/HEAD/trac_ik_kinematics_plugin) builds a [MoveIt! plugin](https://moveit.ai/documentation/concepts/#kinematics) that can
 replace the default KDL plugin for MoveIt! with TRAC-IK for use in planning.
 Details for use are in trac\_ik\_kinematics\_plugin/README.md. (Note prior to v1.1.2, the plugin was not thread safe.)
 

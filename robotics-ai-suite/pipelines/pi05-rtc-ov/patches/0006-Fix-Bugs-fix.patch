@@ -1,0 +1,190 @@
+From c218f2685750373c947482d0e5cad2faee564133 Mon Sep 17 00:00:00 2001
+From: yichongt <yichong.tang@intel.com>
+Date: Mon, 9 Mar 2026 16:38:46 +0800
+Subject: [PATCH 6/6] [Fix] Bugs fix
+
+---
+ examples/aloha/eval_aloha.py | 35 +++++++++++++++++++++--------------
+ examples/aloha/sim/utils.py  | 11 +++--------
+ pyproject.toml               |  5 +++++
+ 3 files changed, 29 insertions(+), 22 deletions(-)
+
+diff --git a/examples/aloha/eval_aloha.py b/examples/aloha/eval_aloha.py
+index cb38840..bc8ee26 100644
+--- a/examples/aloha/eval_aloha.py
++++ b/examples/aloha/eval_aloha.py
+@@ -94,7 +94,7 @@ def get_actions(
+     try:
+         ready_event.wait()
+         latency_tracker = LatencyTracker()
+-        time_per_chunk = 1.0 / fps
++        time_per_action = 1.0 / fps
+         
+         # Determine threshold
+         get_actions_threshold = min_queue_size_before_refill
+@@ -106,14 +106,15 @@ def get_actions(
+                 # 1. Prepare for inference
+                 current_time = time.perf_counter()
+                 action_index_before_inference = action_queue.get_action_index()
++                action_qsize_before_inference = action_queue.qsize()
+                 prev_actions = action_queue.get_left_over()
+                 prev_actions = prev_actions.unsqueeze(0) if prev_actions is not None else None
+ 
+                 if rtc_enabled:
+                     inference_latency = latency_tracker.max()
+-                    inference_delay = math.ceil(inference_latency / time_per_chunk)
++                    inference_delay = math.ceil(inference_latency / time_per_action)
+                     if inference_delay == 0 and start_execution_event.is_set():
+-                        inference_delay = 10  # Ensure at least 10 chunk delay
++                        inference_delay = 20  # Ensure at least 20 chunk delay
+                 else:
+                     inference_delay = 0
+ 
+@@ -143,9 +144,8 @@ def get_actions(
+                         elif key == 'camera_low':
+                             if "observation.images.cam_low" in image_feature_keys:
+                                 policy_key = "observation.images.cam_low"
+-                            elif "observation.images.top" in image_feature_keys and "observation.images.cam_high" not in image_feature_keys:
+-                                # Fallback: some configs only have a single "top" camera
+-                                policy_key = "observation.images.top"
++                            elif "observation.images.angle" in image_feature_keys:
++                                policy_key = "observation.images.angle"
+ 
+                         # Map wrist cameras
+                         elif key == 'camera_wrist_left':
+@@ -191,8 +191,9 @@ def get_actions(
+                 with torch.no_grad():
+                     inference_start_time = time.perf_counter()
+                     if rtc_enabled:
++                        execution_horizon = min(policy.config.rtc_config.execution_horizon, action_qsize_before_inference)
+                         # Apply prev_chunk_left_over correction
+-                        actions = policy.predict_action_chunk(batch, prev_chunk_left_over=prev_actions, inference_delay=inference_delay, execution_horizon=policy.config.rtc_config.execution_horizon)
++                        actions = policy.predict_action_chunk(batch, prev_chunk_left_over=prev_actions, inference_delay=inference_delay, execution_horizon=execution_horizon)
+                     else:
+                         actions = policy.predict_action_chunk(batch)
+                     dt = time.perf_counter() - inference_start_time
+@@ -226,7 +227,12 @@ def get_actions(
+                         'latency': dt
+                     })
+ 
+-                action_queue.merge(original_actions, processed_actions, inference_delay, action_index_before_inference)
++                if not start_execution_event.is_set():
++                    action_queue.merge(original_actions, processed_actions, 0, action_index_before_inference)
++                elif action_queue.empty():
++                    action_queue.merge(original_actions, processed_actions, action_qsize_before_inference, action_index_before_inference)
++                else:
++                    action_queue.merge(original_actions, processed_actions, math.ceil(dt / time_per_action), action_index_before_inference)
+                 
+                 if not start_execution_event.is_set():
+                     start_execution_event.set()
+@@ -327,7 +333,7 @@ def actor_control(
+ 
+ import os
+ 
+-def save_trajectory_plots(log_data, path, episode_idx, fps=50.0):
++def save_trajectory_plots(log_data, path, episode_idx, fps=50.0, rtc_enabled=False):
+     if not log_data or not log_data.get('steps'):
+         logger.warning(f"No step data to plot for episode {episode_idx}")
+         return
+@@ -363,18 +369,18 @@ def save_trajectory_plots(log_data, path, episode_idx, fps=50.0):
+         dt = 1.0 / fps
+ 
+ 
+-        chunk_colors = ['red', 'orange']
++        chunk_colors = ['orange', 'cyan']
+         for dim in range(action_dim):
+             ax = axes[dim]
+             # Plot State
+             ax.plot(times, states[:, dim], label='State', color='green', linewidth=1.5)
+             # Plot Executed Command
+-            ax.plot(times, actions[:, dim], label='Command', color='blue', linestyle='--', linewidth=1.5)
++            ax.plot(times, actions[:, dim], label='Command', color='pink', linestyle='--', linewidth=1.5)
+ 
+             # Plot Chunks as alternating colored points
+             for i, chunk in enumerate(chunks):
+                 chunk_time = chunk['time'] - start_time
+-                if i > 0:
++                if i > 0 and rtc_enabled:
+                     chunk_time = chunk_time - chunk['latency']
+                 chunk_act = chunk['action']
+                 # Ensure chunk_act is [T, D]
+@@ -385,6 +391,7 @@ def save_trajectory_plots(log_data, path, episode_idx, fps=50.0):
+                 color = chunk_colors[i % 2]
+                 # Plot each action point as a scatter dot
+                 ax.scatter(t_chunk, chunk_act[:, dim], color=color, alpha=0.5, s=8)
++                ax.scatter(t_chunk[:1], chunk_act[:1, dim], color='red', alpha=1.0, s=20, label='Chunk Start' if i == 0 else None)
+ 
+             ax.set_ylabel(f'Dim {dim}')
+             if dim == 0:
+@@ -418,7 +425,7 @@ def main():
+     
+     # RTC Args
+     parser.add_argument("--rtc_enabled", action="store_true", help="Enable Real-Time Chunking")
+-    parser.add_argument("--rtc_horizon", type=int, default=30, help="RTC Execution Horizon")
++    parser.add_argument("--rtc_horizon", type=int, default=45, help="RTC Execution Horizon")
+     parser.add_argument("--plot", action="store_true", help="Enable visualization")
+     parser.add_argument("--fps", type=float, default=50.0, help="Control Frequency (Hz)")
+     parser.add_argument("--save_traj", action="store_true", help="Save trajectory data and plots")
+@@ -721,7 +728,7 @@ def main():
+                 logger.info(f"Episode {episode+1} Max Reward: {max_r}")
+ 
+             if args.save_traj and log_data:
+-                save_trajectory_plots(log_data, args.save_traj_path, episode+1, fps=args.fps)
++                save_trajectory_plots(log_data, args.save_traj_path, episode+1, fps=args.fps, rtc_enabled=args.rtc_enabled)
+ 
+             shutdown_event.clear() # Reset for next episode
+             
+diff --git a/examples/aloha/sim/utils.py b/examples/aloha/sim/utils.py
+index 67eeb53..9737765 100644
+--- a/examples/aloha/sim/utils.py
++++ b/examples/aloha/sim/utils.py
+@@ -19,18 +19,13 @@ class EpisodicDataset(torch.utils.data.Dataset):
+         return len(self.episode_ids)
+ 
+     def __getitem__(self, index):
+-        sample_full_episode = False # hardcode
+-
+         episode_id = self.episode_ids[index]
+         dataset_path = os.path.join(self.dataset_dir, f'episode_{episode_id}.hdf5')
+         with h5py.File(dataset_path, 'r') as root:
+             is_sim = root.attrs['sim']
+             original_action_shape = root['/action'].shape
+             episode_len = original_action_shape[0]
+-            if sample_full_episode:
+-                start_ts = 0
+-            else:
+-                start_ts = np.random.choice(episode_len)
++            start_ts = np.random.choice(episode_len)
+             # get observation at start_ts only
+             qpos = root['/observations/qpos'][start_ts]
+             qvel = root['/observations/qvel'][start_ts]
+@@ -129,8 +124,8 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
+ ### env utils
+ 
+ def sample_box_pose():
+-    x_range = [0.0, 0.2]
+-    y_range = [0.4, 0.6]
++    x_range = [0.05, 0.15]
++    y_range = [0.45, 0.55]
+     z_range = [0.05, 0.05]
+ 
+     ranges = np.vstack([x_range, y_range, z_range])
+diff --git a/pyproject.toml b/pyproject.toml
+index 16eca68..3c50396 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -135,6 +135,11 @@ pi-ov = [
+     "torchvision>=0.21.0,<0.23.0",
+     "torchcodec>=0.2.1,<0.6.0; sys_platform != 'win32' and (sys_platform != 'linux' or (platform_machine != 'aarch64' and platform_machine != 'arm64' and platform_machine != 'armv7l')) and (sys_platform != 'darwin' or platform_machine != 'x86_64')",
+     "openvino==2026.0",
++    "dm_control==1.0.36",
++    "gym-aloha==0.1.3",
++    "matplotlib",
++    "mujoco==3.4.0",
++    "h5py==3.15.1",
+ ]
+ smolvla = ["lerobot[transformers-dep]", "num2words>=0.5.14,<0.6.0", "accelerate>=1.7.0,<2.0.0", "safetensors>=0.4.3,<1.0.0"]
+ groot = [
+-- 
+2.34.1
+

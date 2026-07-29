@@ -503,7 +503,7 @@
     <plugin name="turtlebot3_diff_drive" filename="libgazebo_ros_diff_drive.so">
 
       <ros>
-		      <remapping>/tf:=tf</remapping>
+		      <!-- <remapping>/tf:=tf</remapping> Removed for world TF system -->
       </ros>
 
       <update_rate>10</update_rate>

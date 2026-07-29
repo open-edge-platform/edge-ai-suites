@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: video-caption-service
+description: Live Video Caption Service — FastAPI backend + WebUI for real-time VLM captioning.
+type: application
+version: 0.1.0
+appVersion: "latest"

@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Collaborative SLAM (CSLAM)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
+
 ## Overview
 
 This is a collaborative SLAM system. The main input should come from a camera, either monocular, or stereo, or RGB-D. It also supports wheel odometry, IMU and 2D LiDAR data as auxiliary input. The output include the estimated pose of the camera and visualization of the internal map. All inputs and outputs are in standard ROS formats.
@@ -23,7 +27,7 @@ Refer to [this paper](https://arxiv.org/abs/2102.03228) for more explanation of 
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) and Ubuntu 24.04 with [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html).
 
@@ -51,6 +55,12 @@ Collaborative SLAM requires Intel oneAPI 2025.x with SYCL 8 (`libsycl.so.8`) for
 If you have a locally built ORB extractor with SYCL 8 support, you can use it during the build:
 
 ```bash
+export LOCAL_ORB_PATH=/path/to/orb-extractor
+ROS_DISTRO=jazzy make safe-package
+```
+
+This ensures your local SYCL 8 ORB extractor packages are used instead of repository versions.
+
 #### Safe Build (Recommended for <32GB RAM)
 
 For systems with limited memory (16-24GB), use the safe build option that automatically calculates optimal parallel job count:
@@ -87,7 +97,10 @@ After build process successfully finishes, built packages will be available in t
 You can list all built packages:
 
 ```bash
-$ ls humble_cslam_deb_packages/|grep -i .deb
+ls humble_cslam_deb_packages/|grep -i .deb
+```
+
+```text
 ros-humble-univloc-msgs_2.0.1-1_amd64.deb
 ros-humble-univloc-server_2.0.1-1_amd64.deb
 ros-humble-univloc-slam_2.0.1-1_amd64.deb
@@ -166,7 +179,10 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
+```
+
+```text
 Target               Description
 ------               -----------
 clean                Clean up all build artifacts
@@ -451,9 +467,7 @@ If builds fail with network errors behind proxy:
 
 **Solution:** Export proxy environment variables before building:
 
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
+## Additional Documentation
 
 Additional documentation is placed under docs folder:
 

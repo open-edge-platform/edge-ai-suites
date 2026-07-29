@@ -9,49 +9,49 @@ Feel free to file new tickets there (after learning about the guidelines for [Co
 
 1. **Containers Not Starting**
 
-- **Issue**: The application containers fail to start.
+   - **Issue**: The application containers fail to start.
 
-- **Solution**:
+   - **Solution**:
 
-  ```bash
-  docker compose logs
-  ```
+     ```bash
+     docker compose logs
+     ```
 
-  Check the logs for errors and resolve dependency issues.
+   Check the logs for errors and resolve dependency issues.
 
 2. **Port Conflicts**
 
-- **Issue**: Port conflicts with other running applications.
+   - **Issue**: Port conflicts with other running applications.
 
-- **Solution**: Update the ports section in the Docker Compose file.
+   - **Solution**: Update the ports section in the Docker Compose file.
 
 3. **`ibvs-milvusdb` container is unhealthy**
 
-- **Issue**: `ibvs-milvusdb` container fails to start.
+   - **Issue**: `ibvs-milvusdb` container fails to start.
 
-- **Solution**:
+   - **Solution**:
 
-  Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file.
+     Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file.
 
 4. **Empty search results after clicking on `Search Object`**
 
-- **Issue**: Search results are empty after clicking on `Search Object` button.
+   - **Issue**: Search results are empty after clicking on `Search Object` button.
 
-- **Solution**:
+   - **Solution**:
 
-  - Make sure the models are able to detect the objects in the stream correctly
-  - Make sure you have analysed the stream first to capture the video frames into milvus database
-  - Make sure you are using the right frame to search the object
-  - Increase the 'To' timestamp in the search results to accommodate the latest results
+     - Make sure the models are able to detect the objects in the stream correctly
+     - Make sure you have analysed the stream first to capture the video frames into milvus database
+     - Make sure you are using the right frame to search the object
+     - Increase the 'To' timestamp in the search results to accommodate the latest results
 
 5. **Failure to launch `ibvs-app`, `ibvs-featurematching` or `ibvs-streaming` containers**
 
-- **Issue**: One of the above containers fails to come up.
+   - **Issue**: One of the above containers fails to come up.
 
-- **Solution**:
+   - **Solution**:
 
-  Try building the image locally as mentioned in Step 2 of
-  [Set up and First Use](./get-started.md#set-up-and-first-use) before bringing up the containers.
+     Try building the image locally as mentioned in Step 2 of
+     [Set up and First Use](./get-started.md#set-up-and-first-use) before bringing up the containers.
 
 ## Troubleshooting Helm Deployments
 

@@ -1,4 +1,3 @@
-
 # Configure Secure OPC UA Server Connection
 
 This guide explains how to securely connect your application to an external OPC UA server using

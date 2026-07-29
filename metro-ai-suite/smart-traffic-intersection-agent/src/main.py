@@ -17,6 +17,7 @@ from services.mqtt_service import MQTTService
 from services.weather_service import WeatherService
 from services.vlm_service import VLMService
 from services.data_aggregator import DataAggregatorService
+from services.metrics_client import MetricsManagerClient
 
 
 # Configure structured logging
@@ -60,9 +61,13 @@ async def lifespan(app: FastAPI):
         # Initialize VLM service for traffic analysis
         vlm_service = VLMService(config_service, weather_service)
         app.state.vlm_service = vlm_service
+
+        # Initialize best-effort Metrics Manager client for application KPIs
+        metrics_client = MetricsManagerClient(config_service.metrics)
+        app.state.metrics_client = metrics_client
         
         # Initialize data aggregator service
-        data_aggregator = DataAggregatorService(config_service, vlm_service)
+        data_aggregator = DataAggregatorService(config_service, vlm_service, metrics_client)
         app.state.data_aggregator = data_aggregator
         
         # Initialize and start MQTT service for camera data
@@ -148,7 +153,7 @@ def main():
     app = create_app()
     
     # When running application on host we can override host and port via env variables
-    port = int(os.getenv("AGENT_BACKEND_HOSTPORT", "8081"))
+    port = int(os.getenv("AGENT_BACKEND_HOSTPORT") or 8081)
     host = os.getenv("AGENT_BACKEND_HOST", "0.0.0.0")
     
     logger.info("Starting Traffic Intersection Agent", 
@@ -159,9 +164,11 @@ def main():
         app,
         host=host,
         port=port,
+        ws_max_size=100_000_000,  # Increase WebSocket max size to handle base64 images
         log_level=log_level.lower(),
         access_log=True
     )
+    #TODO: Base64 images are not optimal, consider switching to binary
 
 
 if __name__ == "__main__":

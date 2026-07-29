@@ -129,7 +129,7 @@ class WeatherService:
         """
         logger.info("Getting current weather data", force_refresh=force_refresh, has_cached=self._cached_weather is not None, use_mock=self.use_mock)
         
-        if not force_refresh and self._is_cache_valid():
+        if self._cached_weather and self._is_cache_valid(force_refresh):
             logger.debug("Returning cached weather data")
             self._cached_weather.is_cached = True
             return self._cached_weather
@@ -146,12 +146,11 @@ class WeatherService:
                 logger.warning("Failed to fetch weather data, returning cached if available")
                 return self._cached_weather
 
-        # Update cache
-        self._cached_weather = weather_data
-        self._cache_timestamp = datetime.now(timezone.utc)
+            # Update cache
+            self._cached_weather = weather_data
+            self._cache_timestamp = datetime.now(timezone.utc)
         
-        if not self.use_mock:
-            logger.info("Weather data updated", 
+            logger.debug("Weather data updated", 
                        temperature=weather_data.temperature,
                        conditions=weather_data.detailed_forecast,
                        precipitation=weather_data.is_precipitation)
@@ -414,13 +413,16 @@ class WeatherService:
             end_time=end_time
         )
    
-    def _is_cache_valid(self) -> bool:
+    def _is_cache_valid(self, force_refresh: bool = False) -> bool:
         """Check if cached weather data is still valid."""
-        if not self._cached_weather or not self._cache_timestamp:
+        if force_refresh:
             return False
         
-        age = datetime.now(timezone.utc) - self._cache_timestamp
-        return age < self.cache_duration
+        if self._cache_timestamp and self.cache_duration:
+            age = datetime.now(timezone.utc) - self._cache_timestamp
+            return age < self.cache_duration
+        
+        return False
 
     def get_current_weather_description(self) -> str:
         return self._cached_weather.detailed_forecast if self._cached_weather else "Unknown weather conditions"

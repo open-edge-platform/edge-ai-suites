@@ -46,7 +46,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-influxdb
-        image: influxdb:1.12.2
+        image: influxdb:1.12.4
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}

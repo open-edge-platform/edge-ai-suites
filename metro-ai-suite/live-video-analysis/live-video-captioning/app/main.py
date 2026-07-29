@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -10,11 +11,18 @@ from backend.config import APP_PORT, UI_DIR
 from backend.routes import (
     config_router,
     models_router,
-    pipelines_router,
     runs_router,
     health_router,
+    cameras_router,
 )
 from backend.services import get_mqtt_subscriber, shutdown_mqtt_subscriber
+from backend.services import start_pipeline_health_monitor, stop_pipeline_health_monitor
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("app")
 
 
 @asynccontextmanager
@@ -24,13 +32,15 @@ async def lifespan(app: FastAPI):
     try:
         await get_mqtt_subscriber()
     except Exception as e:
-        import logging
+        logger.warning(f"Failed to initialize MQTT subscriber: {e}")
 
-        logging.getLogger("app").warning(f"Failed to initialize MQTT subscriber: {e}")
+    # Startup: Begin polling the pipeline server for stale runs
+    start_pipeline_health_monitor()
 
     yield
 
-    # Shutdown: Clean up MQTT subscriber
+    # Shutdown: Clean up pipeline health monitor then MQTT subscriber
+    await stop_pipeline_health_monitor()
     await shutdown_mqtt_subscriber()
 
 
@@ -39,9 +49,9 @@ app = FastAPI(title="Live Video Captioning API", lifespan=lifespan)
 # Include all routers
 app.include_router(config_router)
 app.include_router(models_router)
-app.include_router(pipelines_router)
 app.include_router(runs_router)
 app.include_router(health_router)
+app.include_router(cameras_router)
 
 
 @app.get("/")

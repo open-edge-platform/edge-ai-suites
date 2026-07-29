@@ -3,6 +3,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
+
+export type ReportStatus = 'idle' | 'generating' | 'done' | 'error';
 export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
 
 export interface SearchResult {
@@ -21,6 +23,13 @@ export interface UIState {
   summaryComplete: boolean;
   mindmapEnabled: boolean;
   mindmapLoading: boolean;
+  // True once the mind-map image step has finished — i.e. the browser captured
+  // the jsMind view and (attempted to) upload it as the report's mind-map image.
+  // Set even when the capture/upload fails, so report auto-generation is never
+  // blocked forever; a failure just means the report renders without the image.
+  // Report auto-generation waits on this so the PNG is on disk before the
+  // backend reads it (see ReportPanel auto-trigger).
+  mindmapImageReady: boolean;
   activeTab: Tab;
   autoSwitched: boolean;
   autoSwitchedToMindmap: boolean;
@@ -29,6 +38,9 @@ export interface UIState {
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
   shouldStartMindmap: boolean;
+  reportStatus: ReportStatus;
+  reportError: string | null;
+  shouldStartReport: boolean;
   projectLocation: string;
   frontCamera: string;
   backCamera: string;
@@ -49,6 +61,7 @@ export interface UIState {
   videoAnalyticsStopping: boolean;
   hasUploadedVideoFiles: boolean;
   monitoringActive: boolean;
+  monitoringPaused: boolean;
   videoPlaybackMode: boolean;
   uploadedVideoFiles: {
     front: File | null;
@@ -69,6 +82,13 @@ export interface UIState {
     endTime: number;
     topic: string;
   } | null;
+  csProcessing: boolean;
+  csSummarizing: boolean;
+  transcriptionDone: boolean;
+  csUploadsComplete: boolean;
+  csHasUploads: boolean;
+  csServerFilesExist: boolean;
+  csTags: string[];
 }
  
 const initialState: UIState = {
@@ -78,6 +98,7 @@ const initialState: UIState = {
   summaryComplete: false,
   mindmapEnabled: false,
   mindmapLoading: false,
+  mindmapImageReady: false,
   activeTab: 'transcripts',
   autoSwitched: false,
   autoSwitchedToMindmap: false,
@@ -85,7 +106,11 @@ const initialState: UIState = {
   videoSessionId: null,
   uploadedAudioPath: null,
   shouldStartSummary: false,
+  reportStatus: 'idle',
+  reportError: null,
+  shouldStartReport: false,
   shouldStartMindmap: false,
+  transcriptionDone: false,
   projectLocation: 'storage/',
   activeStream: null,
   frontCamera: '',
@@ -106,6 +131,7 @@ const initialState: UIState = {
   videoAnalyticsStopping: false,
   hasUploadedVideoFiles: false,
   monitoringActive: false,
+  monitoringPaused: false,
   videoPlaybackMode: false,
   uploadedVideoFiles: {
     front: null,
@@ -122,6 +148,12 @@ const initialState: UIState = {
   searchError: null,
   contentSegmentationError: null,
   timelineHighlight: null,
+  csProcessing: false,
+  csSummarizing: false,
+  csUploadsComplete: false,
+  csHasUploads: false,
+  csServerFilesExist: false,
+  csTags: [],
 };
 
 const uiSlice = createSlice({
@@ -135,6 +167,7 @@ const uiSlice = createSlice({
       state.summaryComplete = false;
       state.mindmapEnabled = false;
       state.mindmapLoading = false;
+      state.mindmapImageReady = false;
       state.activeTab = 'transcripts';
       state.autoSwitched = false;
       state.autoSwitchedToMindmap = false;
@@ -142,6 +175,10 @@ const uiSlice = createSlice({
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
+      state.reportStatus = 'idle';
+      state.reportError = null;
+      state.shouldStartReport = false;
+      state.transcriptionDone = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
       state.contentSegmentationStatus = 'idle';
@@ -174,21 +211,48 @@ const uiSlice = createSlice({
       state.searchError = null;
     },
  
-    transcriptionComplete(state) {
+    transcriptionComplete(state, action: PayloadAction<{ enableSummary: boolean }>) {
       console.log('transcriptionComplete reducer called');
-      state.summaryEnabled = true;
-      state.summaryLoading = true;
-      state.summaryComplete = false;
-      state.shouldStartSummary = true;
-      state.audioStatus = 'summarizing';
-      if (!state.autoSwitched) {
-        state.activeTab = 'summary';
-        state.autoSwitched = true;
+      state.transcriptionDone = true;
+      
+      // Only enable summary if the feature is enabled in backend
+      if (action.payload.enableSummary) {
+        state.summaryEnabled = true;
+        state.summaryLoading = true;
+        state.summaryComplete = false;
+        state.shouldStartSummary = true;
+        state.audioStatus = 'summarizing';
+        if (!state.autoSwitched) {
+          state.activeTab = 'summary';
+          state.autoSwitched = true;
+        }
+      } else {
+        // Summary feature disabled - mark as complete
+        state.audioStatus = 'complete';
       }
     },
  
     clearSummaryStartRequest(state) {
       state.shouldStartSummary = false;
+    },
+
+    // ===== Report generation =====
+    startReport(state) {
+      state.shouldStartReport = true;
+      state.reportStatus = 'generating';
+      state.reportError = null;
+    },
+    clearReportStartRequest(state) {
+      state.shouldStartReport = false;
+    },
+    reportDone(state) {
+      state.reportStatus = 'done';
+      state.shouldStartReport = false;
+    },
+    reportFailed(state, action: PayloadAction<string>) {
+      state.reportStatus = 'error';
+      state.reportError = action.payload;
+      state.shouldStartReport = false;
     },
 
     summaryStreamComplete(state) {
@@ -227,17 +291,24 @@ const uiSlice = createSlice({
       state.audioStatus = 'summarizing';
     },
  
-    summaryDone(state) {
+    summaryDone(state, action: PayloadAction<{ enableMindmap: boolean }>) {
       state.aiProcessing = false;
       state.summaryComplete = true;
-      state.mindmapEnabled = true;
-      state.mindmapLoading = true;
-      state.shouldStartMindmap = true;
-      state.audioStatus = 'mindmapping';
- 
-      if (!state.autoSwitchedToMindmap) {
-        state.activeTab = 'mindmap';
-        state.autoSwitchedToMindmap = true;
+      
+      // Only enable mindmap if the feature is enabled in backend
+      if (action.payload.enableMindmap) {
+        state.mindmapEnabled = true;
+        state.mindmapLoading = false;
+        state.shouldStartMindmap = true;
+        state.audioStatus = 'mindmapping';
+   
+        if (!state.autoSwitchedToMindmap) {
+          state.activeTab = 'mindmap';
+          state.autoSwitchedToMindmap = true;
+        }
+      } else {
+        // Mindmap feature disabled - mark as complete
+        state.audioStatus = 'complete';
       }
     },
    
@@ -257,6 +328,13 @@ const uiSlice = createSlice({
       state.mindmapLoading = false;
       state.shouldStartMindmap = false;
       state.audioStatus = 'error';
+    },
+
+    // Emitted by MindMapTab after the screenshot capture+upload attempt finishes
+    // (success OR failure). Gates report auto-generation so the mind-map PNG is
+    // saved before the backend reads it.
+    mindmapImageDone(state) {
+      state.mindmapImageReady = true;
     },
  
     clearMindmapStartRequest(state) {
@@ -400,6 +478,10 @@ const uiSlice = createSlice({
     setMonitoringActive: (state, action) => {
       state.monitoringActive = action.payload;
     },
+
+    setMonitoringPaused: (state, action: PayloadAction<boolean>) => {
+      state.monitoringPaused = action.payload;
+    },
     
     setUploadedVideoFiles(state, action: PayloadAction<{
       front?: File | null;
@@ -488,6 +570,30 @@ const uiSlice = createSlice({
       state.timelineHighlight = action.payload;
     },
 
+    setCsProcessing(state, action: PayloadAction<boolean>) {
+      state.csProcessing = action.payload;
+    },
+
+    setCsSummarizing(state, action: PayloadAction<boolean>) {
+      state.csSummarizing = action.payload;
+    },
+
+    setCsUploadsComplete(state, action: PayloadAction<boolean>) {
+      state.csUploadsComplete = action.payload;
+    },
+
+    setCsHasUploads(state, action: PayloadAction<boolean>) {
+      state.csHasUploads = action.payload;
+    },
+
+    setCsTags(state, action: PayloadAction<string[]>) {
+      state.csTags = action.payload;
+    },
+
+    setCsServerFilesExist(state, action: PayloadAction<boolean>) {
+      state.csServerFilesExist = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -498,9 +604,13 @@ const uiSlice = createSlice({
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedCsHasUploads = state.csHasUploads;
+      const preservedCsUploadsComplete = state.csUploadsComplete;
       Object.assign(state, initialState);
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.csHasUploads = preservedCsHasUploads;
+      state.csUploadsComplete = preservedCsUploadsComplete;
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
@@ -516,7 +626,11 @@ export const {
   processingFailed,
   transcriptionComplete,
   clearSummaryStartRequest,
-  summaryStreamComplete, 
+  startReport,
+  clearReportStartRequest,
+  reportDone,
+  reportFailed,
+  summaryStreamComplete,
   setUploadedAudioPath,
   setSessionId,
   setVideoSessionId,
@@ -529,6 +643,7 @@ export const {
   mindmapStart,
   mindmapSuccess,
   mindmapFailed,
+  mindmapImageDone,
   clearMindmapStartRequest,
   setActiveTab,
   setProjectLocation,
@@ -553,6 +668,7 @@ export const {
   startTranscription,
   setHasUploadedVideoFiles,
   setMonitoringActive,
+  setMonitoringPaused,
   setUploadedVideoFiles,
   setVideoPlaybackMode,
   setRecordedVideoType,
@@ -569,6 +685,12 @@ export const {
   clearSearchResults,
   setShowSearchResults,
   setTimelineHighlight,
+  setCsProcessing,
+  setCsSummarizing,
+  setCsUploadsComplete,
+  setCsHasUploads,
+  setCsTags,
+  setCsServerFilesExist,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

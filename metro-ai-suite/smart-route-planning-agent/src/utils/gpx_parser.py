@@ -3,6 +3,7 @@
 
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
+import asyncio
 
 import gpxpy
 
@@ -26,22 +27,30 @@ class MapDataParser:
             gpx_file_path: Path to the GPX file (optional)
         """
         self.gpx_file_path = gpx_file_path
+        self.gpx: Optional[gpxpy.gpx.GPX] = None
+
+    # destroy the instance and free up memory
+    def clean(self):
+        """Destroy the instance and free up memory."""
         self.gpx = None
+        self.gpx_file_path = None
+        logger.debug("MapDataParser instance destroyed and memory freed.")
 
-        if self.gpx_file_path:
-            self._load_gpx_file()
+    # TODO: This method is being called multiple times - possible optimization. Each call creates a new thread.
+    @classmethod
+    async def create(cls, gpx_file_path: str | Path | None = None) -> "MapDataParser":
+        """Asynchronous factory method to create an instance of MapDataParser."""
+        instance = cls(gpx_file_path)
+        if instance.gpx_file_path:
+            # Execute blocking method in ThreadPoolExecutor
+            instance.gpx = await asyncio.to_thread(
+                cls._load_gpx_file, instance.gpx_file_path
+            )
+        return instance
 
-    def _load_gpx_file(self) -> bool:
-        """
-        Load and parse a GPX file.
-
-        Args:
-            gpx_file_path: Path to the GPX file
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        gpx_file_path = self.gpx_file_path
+    @staticmethod
+    def _load_gpx_file(gpx_file_path: str | Path) -> Optional[gpxpy.gpx.GPX]:
+        """Load and parse a GPX file."""
 
         if gpx_file_path is None:
             raise ValueError("GPX file path is not set")
@@ -51,11 +60,11 @@ class MapDataParser:
 
         try:
             with open(gpx_file_path, "r") as gpx_file:
-                self.gpx = gpxpy.parse(gpx_file)
-            return True
+                # TODO: Storing a large data item in memory can cause issues. Need to be improved.
+                return gpxpy.parse(gpx_file)
         except Exception as e:
-            print(f"Error parsing GPX file: {e}")
-            return False
+            logger.error(f"Error parsing GPX file: {e}")
+            raise e
 
     def get_route_data(self) -> Dict[str, Any]:
         """

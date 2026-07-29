@@ -1,0 +1,19 @@
+appId: com.intel.openedgeplatform.educationaisuite.smartclassroom
+productName: Smart Classroom
+directories:
+  output: release
+# Bundle the built UI + the additive electron layer. Production `dependencies`
+# (express, http-proxy-middleware) are picked up automatically by electron-builder.
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+# If express.static fails to read assets from inside the asar at runtime,
+# uncomment the next two lines to unpack the built UI.
+# asarUnpack:
+#   - dist/**
+win:
+  target:
+    - portable
+portable:
+  artifactName: SmartClassroom-${version}-portable.exe

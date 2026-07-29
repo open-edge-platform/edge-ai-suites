@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<net name="camera" version="11">
+	<layers>
+		<layer id="0" name="img" type="Parameter" version="opset1">
+			<data shape="1,3,864,1536" element_type="f32" />
+			<output>
+				<port id="0" precision="FP32" names="img">
+					<dim>1</dim>
+					<dim>3</dim>
+					<dim>864</dim>
+					<dim>1536</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="1" name="Constant_11" type="Const" version="opset1">
+			<data element_type="f32" shape="" offset="0" size="4" />
+			<output>
+				<port id="0" precision="FP32" />
+			</output>
+		</layer>
+		<layer id="2" name="Constant_12" type="Const" version="opset1">
+			<data element_type="i64" shape="4" offset="4" size="32" />
+			<output>
+				<port id="0" precision="I64">
+					<dim>4</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="3" name="Broadcast_13" type="Broadcast" version="opset3">
+			<data mode="numpy" />
+			<input>
+				<port id="0" precision="FP32" />
+				<port id="1" precision="I64">
+					<dim>4</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32">
+					<dim>1</dim>
+					<dim>90</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="4" name="Constant_2" type="Const" version="opset1">
+			<data element_type="i64" shape="4" offset="36" size="32" />
+			<output>
+				<port id="0" precision="I64">
+					<dim>4</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="5" name="ReduceSum_3" type="ReduceSum" version="opset1">
+			<data keep_dims="false" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+					<dim>3</dim>
+					<dim>864</dim>
+					<dim>1536</dim>
+				</port>
+				<port id="1" precision="I64">
+					<dim>4</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32" />
+			</output>
+		</layer>
+		<layer id="6" name="Constant_4" type="Const" version="opset1">
+			<data element_type="f32" shape="" offset="0" size="4" />
+			<output>
+				<port id="0" precision="FP32" />
+			</output>
+		</layer>
+		<layer id="7" name="Multiply_5" type="Multiply" version="opset1">
+			<data auto_broadcast="numpy" />
+			<input>
+				<port id="0" precision="FP32" />
+				<port id="1" precision="FP32" />
+			</input>
+			<output>
+				<port id="2" precision="FP32" />
+			</output>
+		</layer>
+		<layer id="8" name="camera_depth_weights" type="Add" version="opset1">
+			<data auto_broadcast="numpy" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+					<dim>90</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+				<port id="1" precision="FP32" />
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="camera_depth_weights">
+					<dim>1</dim>
+					<dim>90</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="9" name="Constant_6" type="Const" version="opset1">
+			<data element_type="f32" shape="" offset="0" size="4" />
+			<output>
+				<port id="0" precision="FP32" />
+			</output>
+		</layer>
+		<layer id="10" name="Constant_7" type="Const" version="opset1">
+			<data element_type="i64" shape="4" offset="68" size="32" />
+			<output>
+				<port id="0" precision="I64">
+					<dim>4</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="11" name="Broadcast_8" type="Broadcast" version="opset3">
+			<data mode="numpy" />
+			<input>
+				<port id="0" precision="FP32" />
+				<port id="1" precision="I64">
+					<dim>4</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2" precision="FP32">
+					<dim>1</dim>
+					<dim>80</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="12" name="camera_feature" type="Add" version="opset1">
+			<data auto_broadcast="numpy" />
+			<input>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+					<dim>80</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+				<port id="1" precision="FP32" />
+			</input>
+			<output>
+				<port id="2" precision="FP32" names="camera_feature">
+					<dim>1</dim>
+					<dim>80</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="13" name="camera_feature" type="Result" version="opset1">
+			<input>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+					<dim>80</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</input>
+		</layer>
+		<layer id="14" name="camera_depth_weights" type="Result" version="opset1">
+			<input>
+				<port id="0" precision="FP32">
+					<dim>1</dim>
+					<dim>90</dim>
+					<dim>54</dim>
+					<dim>96</dim>
+				</port>
+			</input>
+		</layer>
+	</layers>
+	<edges>
+		<edge from-layer="0" from-port="0" to-layer="5" to-port="0" />
+		<edge from-layer="1" from-port="0" to-layer="3" to-port="0" />
+		<edge from-layer="2" from-port="0" to-layer="3" to-port="1" />
+		<edge from-layer="3" from-port="2" to-layer="8" to-port="0" />
+		<edge from-layer="4" from-port="0" to-layer="5" to-port="1" />
+		<edge from-layer="5" from-port="2" to-layer="7" to-port="0" />
+		<edge from-layer="6" from-port="0" to-layer="7" to-port="1" />
+		<edge from-layer="7" from-port="2" to-layer="8" to-port="1" />
+		<edge from-layer="7" from-port="2" to-layer="12" to-port="1" />
+		<edge from-layer="8" from-port="2" to-layer="14" to-port="0" />
+		<edge from-layer="9" from-port="0" to-layer="11" to-port="0" />
+		<edge from-layer="10" from-port="0" to-layer="11" to-port="1" />
+		<edge from-layer="11" from-port="2" to-layer="12" to-port="0" />
+		<edge from-layer="12" from-port="2" to-layer="13" to-port="0" />
+	</edges>
+	<rt_info />
+</net>

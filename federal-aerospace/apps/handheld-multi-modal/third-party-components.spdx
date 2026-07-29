@@ -1,0 +1,300 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: handheld-multi-modal
+DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
+Creator: Organization: Intel Corporation
+Creator: Tool: manual-curation
+Created: 2026-05-27T00:00:00Z
+CreatorComment: <text>
+SPDX SBOM for the handheld-multi-modal application
+(federal-aerospace/apps/handheld-multi-modal).
+
+Scope: third-party open-source components consumed by the application —
+container base images, Python pip dependencies of the locally built
+whisper-stt service, OS packages installed in those images, and the
+external VIPPET tool the deployment integrates with.
+
+Intel-authored sources in this repository are NOT enumerated as packages;
+only third-party dependencies are listed, per the SBOM request.
+</text>
+
+##############################################################################
+# Top-level package describing the application itself
+##############################################################################
+
+PackageName: handheld-multi-modal
+SPDXID: SPDXRef-Package-handheld-multi-modal
+PackageVersion: 2026.1
+PackageSupplier: Organization: Intel Corporation
+PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-suites
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
+FilesAnalyzed: false
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) 2026 Intel Corporation</text>
+PackageSummary: <text>Full-stack edge AI inference and observability platform combining an OpenVINO-based LLM server, a Whisper speech-to-text service, a chat UI, and a Grafana metrics stack, packaged as a Docker Compose deployment.</text>
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-Package-handheld-multi-modal
+
+
+##############################################################################
+# Container images (pulled from registries)
+##############################################################################
+
+PackageName: alpine
+SPDXID: SPDXRef-Package-alpine
+PackageVersion: 3.23.4
+PackageSupplier: Organization: Alpine Linux Development Team
+PackageDownloadLocation: https://hub.docker.com/_/alpine
+PackageHomePage: https://alpinelinux.org/
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: NOASSERTION
+PackageSummary: <text>Minimal Linux container base image used by the init helper and the nginx-https service to prepare bind-mount permissions and run shell commands.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/library/alpine@3.23.4
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-alpine
+
+PackageName: grafana
+SPDXID: SPDXRef-Package-grafana
+PackageVersion: 13.1.0-25893932881
+PackageSupplier: Organization: Grafana Labs
+PackageDownloadLocation: https://hub.docker.com/r/grafana/grafana
+PackageHomePage: https://grafana.com/oss/grafana/
+PackageLicenseConcluded: AGPL-3.0-only
+PackageLicenseDeclared: AGPL-3.0-only
+PackageCopyrightText: <text>Copyright Grafana Labs and contributors</text>
+PackageSummary: <text>Observability and dashboarding platform; renders the pre-provisioned dashboards that visualize VIPPET metrics, OVMS inference metrics, and Whisper STT Prometheus metrics.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/grafana/grafana@13.1.0-25893932881
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-grafana
+
+PackageName: openvino-model-server
+SPDXID: SPDXRef-Package-ovms
+PackageVersion: latest-gpu
+PackageSupplier: Organization: Intel Corporation
+PackageDownloadLocation: https://hub.docker.com/r/openvino/model_server
+PackageHomePage: https://github.com/openvinotoolkit/model_server
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>
+PackageSummary: <text>OpenVINO Model Server (OVMS) serving the Phi-3.5-mini-instruct INT4 LLM over an OpenAI-compatible REST API, executed on Intel GPU via the OpenVINO runtime.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/openvino/model_server@latest-gpu
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-ovms
+
+PackageName: open-webui
+SPDXID: SPDXRef-Package-open-webui
+PackageVersion: v0.9.6-slim
+PackageSupplier: Organization: Open WebUI Contributors
+PackageDownloadLocation: https://ghcr.io/open-webui/open-webui
+PackageHomePage: https://github.com/open-webui/open-webui
+PackageLicenseConcluded: BSD-3-Clause
+PackageLicenseDeclared: BSD-3-Clause
+PackageCopyrightText: <text>Copyright Open WebUI contributors</text>
+PackageSummary: <text>Browser-based chat UI for LLMs; configured here to talk to OVMS via the OpenAI-compatible endpoint and to invoke the local Whisper STT service for voice input.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/open-webui/open-webui@v0.9.6-slim?repository_url=ghcr.io
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-open-webui
+
+PackageName: nginx
+SPDXID: SPDXRef-Package-nginx
+PackageVersion: alpine
+PackageSupplier: Organization: NGINX, Inc. / F5
+PackageDownloadLocation: https://hub.docker.com/_/nginx
+PackageHomePage: https://nginx.org/
+PackageLicenseConcluded: BSD-2-Clause
+PackageLicenseDeclared: BSD-2-Clause
+PackageCopyrightText: <text>Copyright (C) 2002-2024 Igor Sysoev, Nginx, Inc. and contributors</text>
+PackageSummary: <text>HTTP reverse proxy used as the public TLS edge in front of Grafana, Open WebUI, and the Whisper STT service so the browser can be served over a secure context (required for microphone access).</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/library/nginx@alpine
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-nginx
+
+PackageName: python
+SPDXID: SPDXRef-Package-python-image
+PackageVersion: 3.13-slim
+PackageSupplier: Organization: Docker Official Images / Python Software Foundation
+PackageDownloadLocation: https://hub.docker.com/_/python
+PackageHomePage: https://www.python.org/
+PackageLicenseConcluded: PSF-2.0
+PackageLicenseDeclared: PSF-2.0
+PackageCopyrightText: <text>Copyright (C) Python Software Foundation</text>
+PackageSummary: <text>Debian-slim based Python 3.13 image used as the build/runtime base for the locally built whisper-stt service.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/library/python@3.13-slim
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-python-image
+
+PackageName: metrics-manager
+SPDXID: SPDXRef-Package-metrics-manager
+PackageVersion: 2026.1.0-20260508-weekly
+PackageSupplier: Organization: Intel Corporation
+PackageDownloadLocation: https://hub.docker.com/r/intel/metrics-manager
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>
+PackageSummary: <text>Edge metrics collector/streamer (Telegraf-based) that gathers CPU/GPU/NPU/temperature telemetry and exposes it for Grafana; used by the standalone compose variant.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/intel/metrics-manager@2026.1.0-20260508-weekly
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-metrics-manager
+
+##############################################################################
+# OS packages installed into the whisper-stt and nginx-https images at build/run time
+##############################################################################
+
+PackageName: ffmpeg
+SPDXID: SPDXRef-Package-ffmpeg
+PackageVersion: NOASSERTION
+PackageSupplier: Organization: FFmpeg project
+PackageDownloadLocation: https://www.debian.org/distrib/packages
+PackageHomePage: https://ffmpeg.org/
+PackageLicenseConcluded: LGPL-2.1-or-later
+PackageLicenseDeclared: LGPL-2.1-or-later
+PackageCopyrightText: <text>Copyright FFmpeg developers</text>
+PackageSummary: <text>Audio/video decoding toolchain installed in the whisper-stt image; used by faster-whisper to decode arbitrary uploaded audio/video formats prior to transcription.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:deb/debian/ffmpeg
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-ffmpeg
+
+PackageName: gosu
+SPDXID: SPDXRef-Package-gosu
+PackageVersion: NOASSERTION
+PackageSupplier: Person: Tianon Gravi
+PackageDownloadLocation: https://github.com/tianon/gosu
+PackageHomePage: https://github.com/tianon/gosu
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright Tianon Gravi</text>
+PackageSummary: <text>Minimal su/sudo replacement used by the whisper-stt entrypoint to drop privileges from root to the unprivileged app user after fixing bind-mount ownership.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:deb/debian/gosu
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-gosu
+
+PackageName: openssl
+SPDXID: SPDXRef-Package-openssl
+PackageVersion: NOASSERTION
+PackageSupplier: Organization: OpenSSL Software Foundation
+PackageDownloadLocation: https://pkgs.alpinelinux.org/package/edge/main/x86_64/openssl
+PackageHomePage: https://www.openssl.org/
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) The OpenSSL Project Authors</text>
+PackageSummary: <text>TLS/crypto toolkit installed on-demand inside the nginx-https container to generate a self-signed certificate the first time the proxy starts.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:apk/alpine/openssl
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-openssl
+
+##############################################################################
+# Python (pip) dependencies of the locally built whisper-stt service
+# Source: apps/speech-to-text/requirements.txt
+##############################################################################
+
+PackageName: faster-whisper
+SPDXID: SPDXRef-Package-faster-whisper
+PackageVersion: 1.1.1
+PackageSupplier: Organization: SYSTRAN
+PackageDownloadLocation: https://pypi.org/project/faster-whisper/1.1.1/
+PackageHomePage: https://github.com/SYSTRAN/faster-whisper
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: <text>Copyright (c) 2023 SYSTRAN</text>
+PackageSummary: <text>CTranslate2-based reimplementation of OpenAI Whisper; the core speech-to-text engine that loads the Whisper "base" model and produces transcription segments inside the whisper-stt service.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:pypi/faster-whisper@1.1.1
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-faster-whisper
+
+PackageName: Flask
+SPDXID: SPDXRef-Package-flask
+PackageVersion: 3.1.3
+PackageSupplier: Organization: Pallets
+PackageDownloadLocation: https://pypi.org/project/Flask/3.1.3/
+PackageHomePage: https://flask.palletsprojects.com/
+PackageLicenseConcluded: BSD-3-Clause
+PackageLicenseDeclared: BSD-3-Clause
+PackageCopyrightText: <text>Copyright 2010 Pallets</text>
+PackageSummary: <text>WSGI micro web framework that exposes the whisper-stt service's HTTP endpoints (/transcribe, /health, /metrics, and the static UI).</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:pypi/flask@3.1.3
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-flask
+
+PackageName: Flask-Cors
+SPDXID: SPDXRef-Package-flask-cors
+PackageVersion: 6.0.2
+PackageSupplier: Person: Cory Dolphin
+PackageDownloadLocation: https://pypi.org/project/Flask-Cors/6.0.2/
+PackageHomePage: https://github.com/corydolphin/flask-cors
+PackageLicenseConcluded: MIT
+PackageLicenseDeclared: MIT
+PackageCopyrightText: <text>Copyright (C) Cory Dolphin and contributors</text>
+PackageSummary: <text>Flask extension that adds CORS headers so the whisper-stt API can be called cross-origin from the Open WebUI / browser front-end behind the nginx TLS proxy.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:pypi/flask-cors@6.0.2
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-flask-cors
+
+PackageName: prometheus_client
+SPDXID: SPDXRef-Package-prometheus-client
+PackageVersion: 0.21.1
+PackageSupplier: Organization: Prometheus Authors
+PackageDownloadLocation: https://pypi.org/project/prometheus_client/0.21.1/
+PackageHomePage: https://github.com/prometheus/client_python
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright Prometheus Authors</text>
+PackageSummary: <text>Python client library used by whisper-stt to define and expose Prometheus metrics (audio length, processing time, real-time factor) on the /metrics endpoint scraped by the metrics manager.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:pypi/prometheus-client@0.21.1
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-prometheus-client
+
+PackageName: requests
+SPDXID: SPDXRef-Package-requests
+PackageVersion: NOASSERTION
+PackageSupplier: Organization: Python Software Foundation / Kenneth Reitz
+PackageDownloadLocation: https://pypi.org/project/requests/
+PackageHomePage: https://requests.readthedocs.io/
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright 2019 Kenneth Reitz</text>
+PackageSummary: <text>HTTP client library declared in requirements.txt; available for ancillary HTTP calls from the whisper-stt service. Version is unpinned in requirements.txt.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:pypi/requests
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-requests
+
+##############################################################################
+# External tool the application integrates with at deploy time
+##############################################################################
+
+PackageName: visual-pipeline-and-platform-evaluation-tool
+SPDXID: SPDXRef-Package-vippet
+PackageVersion: see-VIPPET_REF-file
+PackageSupplier: Organization: Intel Corporation
+PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-libraries
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>
+PackageSummary: <text>Visual pipeline benchmarking tool whose Docker network ("visual-pipeline-and-platform-evaluation-tool_default") this stack joins; cloned via `make vippet-get` and brought up by `make deploy` to supply video pipeline metrics consumed by Grafana.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:github/open-edge-platform/edge-ai-libraries
+FilesAnalyzed: false
+
+Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-vippet
+
+##############################################################################
+# End of document
+##############################################################################

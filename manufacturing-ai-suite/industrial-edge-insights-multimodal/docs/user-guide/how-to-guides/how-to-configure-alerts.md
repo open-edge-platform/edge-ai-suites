@@ -9,33 +9,14 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 #### Configure MQTT Alerts
 
 By default, the following MQTT alerts are configured in the
-`edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json` file.
-
-```json
-  "alerts": {
-      "mqtt": {
-          "mqtt_broker_host": "ia-mqtt-broker",
-          "mqtt_broker_port": 1883,
-          "name": "my_mqtt_broker"
-      }
-   }
- ```
+[`configs/time-series-analytics-microservice/config.json`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json)
+file (see the `alerts` section).
 
 #### Configure MQTT Alert in TICK Script
 
-The following snippet shows how to add the MQTT if not
-already added. By default, the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick` TICK Script has the following configuration.
-
-```bash
-data0
-        |alert()
-                .crit(lambda: "anomaly_status" > 0)
-                .message('{"time": "{{ index .Time }}", "Pressure": {{ index .Fields "Pressure" }}, "CO2 Weld Flow": {{ index .Fields "CO2 Weld Flow" }}, "anomaly_status": {{ index .Fields "anomaly_status" }} } ')
-                .noRecoveries()
-                .mqtt('my_mqtt_broker')
-                .topic('alerts/weld_defect_detection')
-                .qos(1)
-```
+The MQTT alert is configured by default in the TICK script. Refer to
+[`configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick)
+for the `alert()` block details.
 
 > **Note:** Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
 

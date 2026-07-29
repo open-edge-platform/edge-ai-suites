@@ -34,20 +34,26 @@ export function useVideoPipelineMonitor() {
           if (!update?.pipelines) continue;
 
           let running = 0;
-          let failed = false;
 
           for (const p of update.pipelines) {
             if (p.status === "running") running++;
-            if (p.status === "stopped_error") failed = true;
+            // Log transient errors but don't fail — the backend restarts automatically.
+            if (p.errors && p.errors.length > 0) {
+              console.warn(
+                `⚠️ Pipeline '${p.pipeline_name}' (PID ${p.pid}) reported errors: ${p.errors.join(", ")}. Waiting for restart...`
+              );
+            }
           }
 
-          if (failed) {
-            handleStop("failed");
-            return;
-          }
-
+          // Only stop monitoring when no pipelines are running at all.
+          // A single pipeline exiting and restarting will keep running > 0.
           if (running === 0) {
-            handleStop("completed");
+            const hasErrors = update.pipelines.some(
+              (p: any) =>
+                p.status === "stopped_error" ||
+                (p.errors && p.errors.length > 0)
+            );
+            handleStop(hasErrors ? "failed" : "completed");
             return;
           }
 

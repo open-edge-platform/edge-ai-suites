@@ -1,3 +1,9 @@
 config/*.js /opt/ros/jazzy/share/pyrealsense2-ai-demo/config
 scripts/generate_ai_models.sh /opt/ros/jazzy/share/pyrealsense2-ai-demo/scripts
 src/mo.py /opt/ros/jazzy/share/pyrealsense2-ai-demo/src
+src/pyrealsense2_ai_demo_launcher.py /opt/ros/jazzy/share/pyrealsense2-ai-demo/src
+src/setup.py /opt/ros/jazzy/share/pyrealsense2-ai-demo/src
+pyproject.toml /opt/ros/jazzy/share/pyrealsense2-ai-demo
+src/yolov8_model.pyx /opt/ros/jazzy/share/pyrealsense2-ai-demo/src
+requirements.txt /opt/ros/jazzy/share/pyrealsense2-ai-demo
+src/pyrealsense2_ai_demo/* /opt/ros/jazzy/share/pyrealsense2-ai-demo/src/pyrealsense2_ai_demo

@@ -14,8 +14,7 @@ from config import (
     MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD,
     SCENESCAPE_MQTT_BROKER, SCENESCAPE_MQTT_PORT, SCENESCAPE_MQTT_TOPIC,
     SCENESCAPE_MQTT_USER, SCENESCAPE_MQTT_PASSWORD,
-    SCENESCAPE_CA_CERT_PATH, SCENESCAPE_CLIENT_CERT_PATH, SCENESCAPE_CLIENT_KEY_PATH, NVR_SCENESCAPE_ENABLED,  
-    SCENESCAPE_THROTTLE_INTERVAL
+    NVR_SCENESCAPE_ENABLED, SCENESCAPE_THROTTLE_INTERVAL
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -150,19 +149,15 @@ def on_message(client, userdata, msg):
     except Exception as e:
         logger.error(f" Exception processing MQTT message: {e}", exc_info=True)
 
-def start_mqtt(broker, port, user, password, userdata,
-               ca_cert=None, client_cert=None, client_key=None):
+def start_mqtt(broker, port, user, password, userdata, use_tls=False):
     client = mqtt.Client(userdata=userdata)
     if user and password:
         client.username_pw_set(user, password)
-    if ca_cert:
-        client.tls_set(
-            ca_certs=ca_cert,
-            certfile=client_cert,
-            keyfile=client_key,
-            tls_version=ssl.PROTOCOL_TLS_CLIENT,
-        )
-        client.tls_insecure_set(True) 
+    if use_tls:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        client.tls_set_context(ctx)
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect_async(broker, port)
@@ -187,8 +182,6 @@ async def start_mqtt_clients():
             SCENESCAPE_MQTT_USER,
             SCENESCAPE_MQTT_PASSWORD,
             "scenescape",
-            ca_cert=SCENESCAPE_CA_CERT_PATH,
-            client_cert=SCENESCAPE_CLIENT_CERT_PATH,
-            client_key=SCENESCAPE_CLIENT_KEY_PATH,
+            use_tls=True,
         )
 

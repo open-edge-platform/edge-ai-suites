@@ -1,0 +1,17 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# These contents may have been developed with support from one or more
+# Intel-operated generative artificial intelligence solutions.
+apiVersion: 1
+
+providers:
+  - name: 'ROS2 KPI Dashboards'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

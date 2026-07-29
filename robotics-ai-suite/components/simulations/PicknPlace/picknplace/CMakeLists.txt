@@ -12,6 +12,12 @@ find_package(geometry_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_launch_structure test/test_launch_structure.py)
+  ament_add_pytest_test(test_ur5_config test/test_ur5_config.py)
+endif()
+
 include_directories(include)
 
 
@@ -40,6 +46,7 @@ install(PROGRAMS ${SCRIPT_FILES} DESTINATION lib/${PROJECT_NAME}/robots)
 
 
 install(DIRECTORY launch params urdf worlds maps rviz DESTINATION share/${PROJECT_NAME})
+install(FILES cyclonedds.xml DESTINATION share/${PROJECT_NAME})
 
 ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/picknplace.dsv.in")
 

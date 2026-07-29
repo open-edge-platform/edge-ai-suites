@@ -3,10 +3,14 @@
 # -----------------------------
 FROM node:20-alpine AS build
  
-# Optional build argument for API base URL
+# Optional build arguments to override the runtime URLs. When unset the
+# UI uses relative paths (`/api`, `/pose-stream/video_feed`) served by
+# the in-image nginx reverse proxy.
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
- 
+ARG VITE_POSE_STREAM_URL
+ENV VITE_POSE_STREAM_URL=$VITE_POSE_STREAM_URL
+
 WORKDIR /app
  
 # Install dependencies

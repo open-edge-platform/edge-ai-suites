@@ -8,16 +8,17 @@ from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
 from components.mindmap_component import MindmapComponent
 from components.segmentation.content_segmentation import ContentSegmentationComponent
+from model_manager import ModelManager
+from components.report_generator.report_generator import ReportGenerator
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
-from utils.topic_faiss_indexer import TopicFaissIndexer
 from pathlib import Path
 import json
-from utils.faiss_content_search import FaissContentSearcher
 from utils.media_validation_service import MediaValidationService
 from utils.session_state_manager import SessionState
+from utils.content_search_client import ContentSearchClient
 import time
 logger = logging.getLogger(__name__)
 
@@ -28,29 +29,31 @@ class Pipeline:
         # Bind models during construction
         self.transcription_pipeline = [
             AudioStreamReader(self.session_id),
-            ASRComponent(self.session_id, provider=config.models.asr.provider, model_name=config.models.asr.name, device=config.models.asr.device, temperature=config.models.asr.temperature) 
+            ASRComponent(self.session_id, temperature=config.models.asr.temperature) 
         ]
 
         self.summarizer_pipeline = [
             SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
         ]
+        
+        text_gen_handler = ModelManager.instance().text_gen()
 
         self.mindmap_component = MindmapComponent(
                 self.session_id,
-                provider=config.models.summarizer.provider,
-                model_name=config.models.summarizer.name, 
-                device=config.models.summarizer.device,
+                provider=config.models.text_gen.provider,
+                model_name=config.models.text_gen.vlm_name,
+                device=config.models.text_gen.device,
                 temperature=config.models.summarizer.temperature,
             )
-        
-        self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
+
+        self.mindmap_component.model = text_gen_handler
 
         self.content_component = ContentSegmentationComponent(
             self.session_id,
             temperature=0.2
         )
 
-        self.content_component.model = self.summarizer_pipeline[0].summarizer
+        self.content_component.model = text_gen_handler
 
 
     def run_transcription(self, input):
@@ -237,7 +240,10 @@ class Pipeline:
             from pathlib import Path
 
             # 🔹 Generate topics (returns JSON string from LLM)
-            topic_json_str = self.content_component.generate_topics(transcript_text)
+            topic_json_str = self.content_component.generate_topics(
+                transcript_text,
+                language=config.app.language,
+            )
 
             # 🔹 Save raw JSON string
             topic_path = os.path.join(session_dir, "topics.json")
@@ -246,20 +252,13 @@ class Pipeline:
             # 🔥 Convert to Python object (CRITICAL FIX)
             topics = json.loads(topic_json_str)
 
-            # -----------------------------
-            # Build FAISS topic embeddings
-            # -----------------------------
-
-            index_dir = Path(session_dir) / "faiss"
-            indexer = TopicFaissIndexer(index_dir)
-
-            vector_count = indexer.index_topics(
+            # Primary: content-search service handles embedding
+            cs_client = ContentSearchClient()
+            cs_client.ingest_topics(
                 session_id=self.session_id,
                 topics=topics,
-                transcript_text=transcript_text
+                transcript_text=transcript_text,
             )
-
-            logger.info(f"FAISS index built with {vector_count} topic vectors.")
 
             # ✅ Return parsed Python object (not string)
             return topics
@@ -276,15 +275,87 @@ class Pipeline:
 
 
     def search_content(self, query: str, top_k: int = 5):
+        cs_client = ContentSearchClient()
+        results = cs_client.search_topics(query=query, top_k=top_k)
+        if results is None:
+            results = []
+        logger.info("Search returned %d result(s) from content-search service.", len(results))
+        return results
 
+    def run_report_generator(self, selected_fields=None, manual_fields=None):
+        """Generate a class evaluation report deterministically (non-agent).
+
+        Uses the ReportGenerator pipeline: collect all session data → fill the
+        default template with the teacher-selected fields → stream the result.
+        ``selected_fields`` is the list of catalog field codes to include (None =
+        the whole catalog); ``manual_fields`` are teacher-typed basic-info values.
+        Template filling lives entirely inside ReportGenerator.
+        """
         project_config = RuntimeConfig.get_section("Project")
-        session_dir = Path(
+        session_dir = os.path.join(
             project_config.get("location"),
             project_config.get("name"),
-            self.session_id
+            self.session_id,
         )
 
-        faiss_dir = session_dir / "faiss"
-        searcher = FaissContentSearcher(faiss_dir)
-        results = searcher.search(query=query, top_k=top_k)
-        return results
+        if not os.path.exists(session_dir):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, session directory not found.",
+            )
+
+        text_gen_handler = ModelManager.instance().text_gen()
+
+        generator = ReportGenerator(
+            session_id=self.session_id,
+            model=text_gen_handler,
+            selected_fields=selected_fields,
+            manual_fields=manual_fields,
+        )
+
+        try:
+            for event in generator.generate_report():
+                yield event
+        except Exception as e:
+            logger.error(f"Error during report generation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Report generation failed: {e}",
+            )
+
+    def reapply_report_selection(self, selected_fields=None, manual_fields=None) -> dict:
+        """Re-render an existing report for a new field selection — no LLM re-run.
+
+        Re-projects the cached full-catalog field values (from a prior
+        run_report_generator) onto the template, dropping the deselected fields and
+        applying any updated ``manual_fields`` (basic info). See
+        ReportGenerator.reapply_selection. Returns {session_id, report}.
+        """
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id,
+        )
+        if not os.path.exists(session_dir):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, session directory not found.",
+            )
+
+        text_gen_handler = ModelManager.instance().text_gen()
+
+        generator = ReportGenerator(
+            session_id=self.session_id,
+            model=text_gen_handler,
+            selected_fields=selected_fields,
+            manual_fields=manual_fields,
+        )
+        try:
+            return generator.reapply_selection(selected_fields)
+        except Exception as e:
+            logger.error(f"Error during report re-selection: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Report re-selection failed: {e}",
+            )

@@ -4,6 +4,19 @@ info:
   description: FastAPI app to interface with Frigate and handle event routing
   version: 1.0.0
 paths:
+  /health:
+    get:
+      summary: Health check for NVR Event Router service
+      description: 'Basic health check endpoint for Docker Compose or monitoring.
+
+        Returns 200 OK if service is running.'
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /cameras:
     get:
       summary: Get list of camera names
@@ -14,153 +27,17 @@ paths:
           content:
             application/json:
               schema: {}
-  '/cameras/{camera_name}/clip':
-    get:
-      summary: Get video clip for specific camera and time range
-      operationId: get_camera_clip_cameras__camera_name__clip_get
-      parameters:
-        - name: camera_name
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Camera Name
-        - name: start_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: Start Time
-        - name: end_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: End Time
-        - name: download
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-            title: Download
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  '/events/{event_id}/clip.mp4':
-    get:
-      summary: Get event clip by event ID
-      operationId: get_event_clip_events__event_id__clip_mp4_get
-      parameters:
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Event Id
-        - name: download
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-            title: Download
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  '/cameras/{camera_name}/export':
-    post:
-      summary: Export video from Frigate
-      operationId: export_camera_clip_cameras__camera_name__export_post
-      parameters:
-        - name: camera_name
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Camera Name
-        - name: start_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: Start Time
-        - name: end_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: End Time
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExportRequest'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  '/exports/{export_id}':
-    get:
-      summary: Get details of a specific export
-      operationId: get_export_details_exports__export_id__get
-      parameters:
-        - name: export_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Export Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /events:
     get:
       summary: Get list of events for a specific camera
       operationId: get_camera_events_events_get
       parameters:
-        - name: camera
-          in: query
-          required: true
-          schema:
-            type: string
-            title: Camera
+      - name: camera
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Camera
       responses:
         '200':
           description: Successful Response
@@ -173,66 +50,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/exports/{export_id}/video':
-    get:
-      summary: Stream or download export video
-      operationId: get_export_video_exports__export_id__video_get
-      parameters:
-        - name: export_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Export Id
-        - name: download
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-            title: Download
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  '/summary/{camera_name}':
+  /summary/{camera_name}:
     get:
       summary: Stream video using clip.mp4 API
       operationId: summarize_video_summary__camera_name__get
       parameters:
-        - name: camera_name
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Camera Name
-        - name: start_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: Start Time
-        - name: end_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: End Time
-        - name: download
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-            title: Download
+      - name: camera_name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Camera Name
+      - name: start_time
+        in: query
+        required: true
+        schema:
+          type: number
+          title: Start Time
+      - name: end_time
+        in: query
+        required: true
+        schema:
+          type: number
+          title: End Time
+      - name: download
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Download
       responses:
         '200':
           description: Successful Response
@@ -245,36 +92,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/search-embeddings/{camera_name}':
+  /search-embeddings/{camera_name}:
     get:
       summary: Stream video using clip.mp4 API
       operationId: search_video_embeddings_search_embeddings__camera_name__get
       parameters:
-        - name: camera_name
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Camera Name
-        - name: start_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: Start Time
-        - name: end_time
-          in: query
-          required: true
-          schema:
-            type: number
-            title: End Time
-        - name: download
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
-            title: Download
+      - name: camera_name
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Camera Name
+      - name: start_time
+        in: query
+        required: true
+        schema:
+          type: number
+          title: Start Time
+      - name: end_time
+        in: query
+        required: true
+        schema:
+          type: number
+          title: End Time
+      - name: download
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Download
       responses:
         '200':
           description: Successful Response
@@ -287,17 +134,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/summary-status/{summary_id}':
+  /summary-status/{summary_id}:
     get:
       summary: Get the summary using id
       operationId: get_summary_summary_status__summary_id__get
       parameters:
-        - name: summary_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Summary Id
+      - name: summary_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Summary Id
       responses:
         '200':
           description: Successful Response
@@ -362,17 +209,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/rules/{rule_id}':
+  /rules/{rule_id}:
     get:
       summary: Get Rule
       operationId: get_rule_rules__rule_id__get
       parameters:
-        - name: rule_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Rule Id
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Rule Id
       responses:
         '200':
           description: Successful Response
@@ -389,12 +236,12 @@ paths:
       summary: Delete Rule
       operationId: delete_rule_rules__rule_id__delete
       parameters:
-        - name: rule_id
-          in: path
-          required: true
-          schema:
-            type: string
-            title: Rule Id
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Rule Id
       responses:
         '200':
           description: Successful Response
@@ -407,72 +254,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/watchers/enable':
+  /watchers/enable:
+    get:
+      summary: Alias to fetch current watcher mapping (GET)
+      description: 'Provide a GET alias on /watchers/enable so users who query that
+        endpoint directly
+
+        (expecting state) receive the same response as /watchers/mapping.'
+      operationId: get_camera_watcher_mapping_alias_watchers_enable_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
     post:
       summary: Enable/disable directory watcher for cameras
-      description: >-
-        Enable or disable directory watchers for one or more cameras. Accepts a list
-        of objects where each object maps a single camera name to a boolean flag
-        indicating whether the watcher should be enabled (true) or disabled (false).
-        Returns the merged mapping after persistence along with convenience lists
-        of enabled and disabled camera names.
       operationId: set_camera_watchers_watchers_enable_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CameraWatcherRequest'
+        required: true
       responses:
         '200':
-          description: Updated watcher mapping
+          description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/CameraWatcherUpdateResponse'
+              schema: {}
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    get:
-      summary: Alias to fetch current watcher mapping (GET)
-      description: >-
-        Convenience alias for GET /watchers/mapping. Provided so clients that
-        probe the POST endpoint with a GET will receive the current mapping
-        state instead of an error.
-      operationId: get_camera_watcher_mapping_alias_watchers_enable_get
-      responses:
-        '200':
-          description: Current watcher mapping
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CameraWatcherMappingResponse'
-  '/watchers/mapping':
+  /watchers/mapping:
     get:
       summary: Get current camera watcher enable/disable mapping
-      description: >-
-        Returns the merged camera watcher mapping. Merge order / precedence:
-        1) Persisted Redis mapping (authoritative across restarts)
-        2) In-memory runtime overrides (reflects changes since process start)
-        If Redis is unavailable, only the in-memory mapping is returned and a
-        warning field MAY be included.
+      description: "Return merged camera watcher mapping.\n\nPriority order:\n  1.\
+        \ In-memory runtime mapping (reflects changes since process start)\n  2. Persisted\
+        \ Redis mapping (authoritative across restarts)\n\nIf Redis is unavailable,\
+        \ fall back to in-memory only."
       operationId: get_camera_watcher_mapping_watchers_mapping_get
       responses:
         '200':
-          description: Current watcher mapping (and optional warning)
+          description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/CameraWatcherMappingResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+              schema: {}
   /:
     get:
       summary: Root
@@ -485,27 +315,19 @@ paths:
               schema: {}
 components:
   schemas:
-    ExportRequest:
+    CameraWatcherRequest:
       properties:
-        playback:
-          type: string
-          title: Playback
-        source:
-          type: string
-          title: Source
-        name:
-          type: string
-          title: Name
-        image_path:
-          type: string
-          title: Image Path
+        cameras:
+          items:
+            additionalProperties:
+              type: boolean
+            type: object
+          type: array
+          title: Cameras
       type: object
       required:
-        - playback
-        - source
-        - name
-        - image_path
-      title: ExportRequest
+      - cameras
+      title: CameraWatcherRequest
     HTTPValidationError:
       properties:
         detail:
@@ -528,22 +350,32 @@ components:
           title: Action
         camera:
           anyOf:
-            - type: string
-            - type: 'null'
+          - type: string
+          - type: 'null'
           title: Camera
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Count
       type: object
       required:
-        - id
-        - label
-        - action
+      - id
+      - label
+      - action
       title: Rule
     ValidationError:
       properties:
         loc:
           items:
             anyOf:
-              - type: string
-              - type: integer
+            - type: string
+            - type: integer
           type: array
           title: Location
         msg:
@@ -554,60 +386,8 @@ components:
           title: Error Type
       type: object
       required:
-        - loc
-        - msg
-        - type
+      - loc
+      - msg
+      - type
       title: ValidationError
-    CameraWatcherRequest:
-      type: object
-      title: CameraWatcherRequest
-      required:
-        - cameras
-      properties:
-        cameras:
-          type: array
-          description: >-
-            List of per-camera mapping objects. Each object maps a single camera
-            name (string) to a boolean indicating whether its watcher should be
-            enabled (true) or disabled (false).
-          items:
-            type: object
-            additionalProperties:
-              type: boolean
-    CameraWatcherUpdateResponse:
-      type: object
-      title: CameraWatcherUpdateResponse
-      properties:
-        mapping:
-          type: object
-          description: Final persisted mapping of camera name to enabled flag.
-          additionalProperties:
-            type: boolean
-        enabled:
-          type: array
-          description: List of camera names whose watcher is enabled.
-          items:
-            type: string
-        disabled:
-          type: array
-          description: List of camera names whose watcher is disabled.
-          items:
-            type: string
-      required:
-        - mapping
-        - enabled
-        - disabled
-    CameraWatcherMappingResponse:
-      type: object
-      title: CameraWatcherMappingResponse
-      properties:
-        mapping:
-          type: object
-          description: Current merged mapping of camera name to enabled flag.
-          additionalProperties:
-            type: boolean
-        warning:
-            type: string
-            description: Optional warning if Redis lookup failed.
-      required:
-        - mapping
+

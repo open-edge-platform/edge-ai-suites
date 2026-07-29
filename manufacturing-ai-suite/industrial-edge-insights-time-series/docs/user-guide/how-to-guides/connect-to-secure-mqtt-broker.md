@@ -1,4 +1,3 @@
-
 # Configure Secure MQTT Broker Connection
 
 This guide explains how to securely connect your application to an external MQTT broker using

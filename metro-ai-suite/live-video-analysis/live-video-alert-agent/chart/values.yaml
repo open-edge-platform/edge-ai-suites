@@ -1,0 +1,227 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+global:
+  externalIP: ""
+  # Set to true to retain the OVMS model PVC on helm uninstall.
+  keepPvc: false
+  # Hugging Face token — required only for initial download of gated models.
+  huggingfaceToken: ""
+
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: "localhost,127.0.0.1,.svc.cluster.local"
+
+  gpu:
+    enabled: false
+    # key: GPU resource label from device plugin (e.g. gpu.intel.com/i915 or gpu.intel.com/xe)
+    key: ""
+    device: ""
+    count: 1
+    # GIDs for render/video/i2c group access — verify on your GPU node with:
+    #   getent group render video | cut -d: -f3
+    supplementalGroups: [109, 110, 992]
+
+  npu:
+    enabled: false
+    # key: NPU resource label from device plugin (for example npu.intel.com/accel)
+    key: ""
+    device: ""
+    count: 1
+    # Host device path mounted into OVMS when targeting NPU.
+    devicePath: ""
+
+  nodeSelector: {}
+
+  serviceAccount:
+    create: true
+
+  # Registry prefix for first-party images, e.g. "myregistry.example.com/"
+  registry: ""
+
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+  utilities:
+    curl:
+      image: curlimages/curl
+      tag: "8.7.1"
+    busybox:
+      image: busybox
+      tag: "1.36"
+
+  ovmsPort: 8000
+  metricsPort: 9090
+  ovmsModelName: "Phi-3.5-vision-instruct-int4-ov"
+  ovmsLLMModelName: "Phi-4-mini-instruct-int4-ov"
+  appNodePort: 30900
+  metricsNodePort: 30090
+
+_ovmsDefaults: &ovmsDefaults
+  image:
+    repository: openvino/model_server
+    tag: "2026.2.1-gpu"
+  task: "text_generation"
+  runAsUser: 5000
+  targetDevice:
+    device: ""
+    key: ""
+    count: 1
+  healthcheck:
+    startupFailureThreshold: 60
+    startupPeriodSeconds: 10
+    startupTimeoutSeconds: 5
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+ovms:
+  <<: *ovmsDefaults
+  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+  pipelineType: "VLM"
+  targetDevice:
+    device: "GPU"
+    key: "gpu.intel.com/i915"
+    count: 1
+  modelStorage:
+    storageClassName: ""
+    size: "10Gi"
+
+ovms-llm:
+  <<: *ovmsDefaults
+  enabled: true  # Set to false to disable LLM service (alert-agent-service won't use ADK)
+  sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+  targetDevice:
+    device: "GPU"
+    key: "gpu.intel.com/i915"
+    count: 1
+  modelStorage:
+    storageClassName: ""
+    size: "6Gi"
+
+app:
+  image:
+    registry: "intel/"  # Override global.registry for this component only
+    repository: live-video-alert-agent
+    tag: latest
+  port: 9000
+  service:
+    type: NodePort
+    port: 9000
+  rtspUrl: ""
+  logLevel: "INFO"
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  healthcheck:
+    path: /health
+    startupInitialDelaySeconds: 5
+    startupPeriodSeconds: 5
+    startupFailureThreshold: 30
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  # Video capture
+  captureFps: 10
+  # Alert Agent Service
+  alertAgentServiceTimeout: "30.0"
+  # MCP integration
+  mcpEnabled: true
+  # MCP server configuration (JSON content mounted as /app/resources/mcp_servers.json)
+  mcpServersConfig: |
+    {
+      "servers": [
+        {
+          "name": "prometheus",
+          "enabled": false,
+          "transport": "http",
+          "url": "<mcp_server_url>/mcp",
+          "description": "Prometheus MCP Server - query metrics, get alerts, analyze system performance",
+          "timeout": 30.0
+        }
+      ]
+    }
+
+alert-agent-service:
+  image:
+    registry: intel
+    repository: alert-agent-service
+    tag: latest
+  port: 8000
+  service:
+    type: ClusterIP
+    port: 8000
+  agentMode: true
+  llmTimeout: "10.0"
+  snapshotDir: "/app/snapshots"
+  webhookUrl: ""
+  webhookSecret: ""
+  mqttPort: 1883
+  mqttUsername: ""
+  mqttPassword: ""
+  mqttBaseTopic: "alerts/live-video"
+  mcpEnabled: true
+  actionWorkers: 2
+  logLevel: "INFO"
+  healthcheck:
+    path: /api/v1/health
+    startupInitialDelay: 10
+    startupPeriod: 5
+    startupFailureThreshold: 12
+    period: 30
+    timeout: 10
+    failureThreshold: 3
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+metrics-manager:
+  image:
+    repository: "intel/metrics-manager"
+    tag: "2026.1.0"
+  service:
+    type: NodePort
+    metricsPort: 9090
+    telegrafPort: 9273
+    telegrafHttpPort: 8186
+    nodePorts:
+      metrics: 30090
+      telegraf: ""
+      telegrafHttp: ""
+  config:
+    logLevel: "INFO"
+    corsOrigins: "*"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  controller:
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []

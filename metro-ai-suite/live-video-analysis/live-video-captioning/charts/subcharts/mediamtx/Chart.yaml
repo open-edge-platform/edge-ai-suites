@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: mediamtx
+description: MediaMTX — WHIP/WebRTC signaling relay and media server.
+type: application
+version: 0.1.0
+appVersion: "1.11.3"

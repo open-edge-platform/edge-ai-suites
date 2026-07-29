@@ -52,7 +52,7 @@ const ProjectLocationInput: React.FC<ProjectLocationInputProps> = ({
           type="button"
           className="folder-icon"
           onClick={onFolderClick}
-          aria-label="Select Folder"
+          aria-label={t('settings.selectFolder')}
         >
           📂
         </button>

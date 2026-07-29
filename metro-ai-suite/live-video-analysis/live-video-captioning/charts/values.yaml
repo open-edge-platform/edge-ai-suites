@@ -1,0 +1,171 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# values.yaml — Live Video Captioning Helm Chart
+#
+# This file contains ALL default values for the chart and its subcharts.
+# It is structured as follows:
+#   1. global.*            — cross-cutting values shared with all subcharts
+#   2. <subchart-name>.*   — per-subchart overrides (forwarded by Helm automatically)
+#
+# Source subcharts live under ./subcharts/. Running `helm dependency update`
+# vendors them into ./charts/ for installation and packaging.
+#
+# To customise for your deployment, copy values-override.yaml, fill in the
+# mandatory fields, and install with:
+#   helm install lvc ./charts -f ./charts/values-override.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. GLOBAL VALUES
+# Accessible in every subchart via .Values.global.*
+# ─────────────────────────────────────────────────────────────────────────────
+global:
+  # ------- Node Placement -------------------------------------------------------
+  # Set nodeName to pin all workloads to one specific Kubernetes node.
+  # The chart matches against the built-in kubernetes.io/hostname label.
+  # REQUIRED: set this to the name of your target worker node.
+  #
+  # Type: string
+  nodeName: ""
+
+  # ------- Host IP -------------------------------------------------------------
+  # The IP address (or DNS name) of the worker node that is reachable by the
+  # browser client.  Required for WebRTC ICE/TURN server URLs and the
+  # signaling URL sent to the caption service.
+  #
+  # Type: string  REQUIRED — change to your node's IP
+  hostIP: ""
+
+  # ------- Proxy ---------------------------------------------------------------
+  # Leave empty if the cluster is not behind a corporate proxy.
+  # Type: string
+  httpProxy: ""
+  httpsProxy: ""
+  # Hosts that must bypass the proxy (pod-to-pod traffic + your RTSP camera hosts/IPs).
+  # Add the host/IP of every RTSP stream source so DL Streamer connects directly.
+  # Type: string
+  noProxy: ""
+
+  # ------- Application Label ---------------------------------------------------
+  # Value for the app.kubernetes.io/part-of label on all workloads.
+  # Override if this chart is embedded inside a larger application.
+  # Type: string
+  partOf: "live-video-captioning"
+
+  # ------- Image Pull Secrets --------------------------------------------------
+  # List of Kubernetes secret names for private registries.
+  # Type: list of strings
+  imagePullSecrets: []
+  # - name: my-registry-secret
+
+  # ------- Models Download ------------------------------------------------------
+  # Model download service location. This service is responsible for downloading and preparing models for use by the caption service and DL Streamer.
+  # The chart does not deploy the model download service,
+  # so you must deploy it separately before deploying this chart by referring to https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md
+
+  modelDownload:
+    serviceName: "model-download" # REQUIRED: e.g., model-download (Service name for model-download service which deployed previously using model-download chart)
+    port: 8000 # REQUIRED: e.g., 8200 or 8000 (use service port, not NodePort)
+
+  # ------- Models --------------------------------------------------------------
+  # Single source of truth for which VLM models are downloaded and used.
+  # Consumed by video-caption-service model init and by DL Streamer startup flow.
+  # Change the model here and all dependent components pick up the update.
+  #
+  # Fields per entry:
+  #   modelId     — HuggingFace repo ID passed to optimum-cli
+  #               — output directory name is derived from the final segment of modelId
+  #                 and created under /ov_models/<device>/ in the PVC.
+  #   weightFormat — "" (fp16 default), "int8", or "int4"
+  #   device      — target device(s) for conversion and per-device output folders.
+  #                 Accepts either a CSV string (e.g. "CPU,GPU") or a list
+  #                 (e.g. ["CPU", "GPU", "NPU"]). Defaults to "CPU".
+  #                 When device includes NPU, weightFormat is forced to "int4".
+  #
+  # Type: list of objects
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      modelType: "vlm"
+      weightFormat: ""
+      device: "CPU"
+  # Detection models to download when the object-detection pipeline is enabled.
+  # Each entry matches the model argument accepted by DL Streamer's
+  # download_public_models.sh helper and is stored under:
+  #   /ov_detection_models/<model-name>/public/<model-name>
+  #
+  # Type: list of strings
+  detectionModels:
+    - "yolov8s"
+  # HuggingFace API token for gated models (e.g. google/gemma-3-4b-it); not needed for public models
+  huggingface:
+    apiToken: ""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. SUBCHART OVERRIDES
+# Keys MUST match the chart name of each source subchart directory under ./subcharts/.
+# Only values that are overridden at the parent level need to appear here.
+# All other subchart defaults live in ./subcharts/<name>/values.yaml.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── mqtt-broker ──────────────────────────────────────────────────────────────
+mqtt-broker:
+  # Fix the Kubernetes Service name to "mqtt-broker" regardless of release name.
+  # Other subcharts reference MQTT by this name.
+  fullnameOverride: "mqtt-broker"
+
+# ── dlstreamer-pipeline-server ───────────────────────────────────────────────
+dlstreamer-pipeline-server:
+  fullnameOverride: "dlstreamer-pipeline-server"
+
+  # Shared models PVC name. Leave empty to auto-derive from release name.
+  modelsPvcName: "" # defaults to <release>-live-video-captioning-models if empty
+
+# ── mediamtx ─────────────────────────────────────────────────────────────────
+mediamtx:
+  fullnameOverride: "mediamtx"
+
+  # TURN server credentials — shown to the browser for ICE negotiation.
+  # These are NOT secrets by nature (they are sent to the browser), but
+  # set them to non-default values for any non-local deployment.
+  webrtcIceUsername: "lvcuser"
+  webrtcIcePassword: "lvcpass"
+
+# ── coturn ───────────────────────────────────────────────────────────────────
+coturn:
+  fullnameOverride: "coturn"
+
+# ── video-caption-service ────────────────────────────────────────────────────
+video-caption-service:
+  fullnameOverride: "video-caption-service"
+
+  # Shared models PVC name. Leave empty to auto-derive from release name.
+  modelsPvcName: "" # defaults to <release>-live-video-captioning-models
+
+# ── metrics-manager ──────────────────────────────────────────────────────────
+# Upstream metrics-manager chart (edge-ai-libraries) vendored under
+# ./subcharts/metrics-manager. It bundles Telegraf system telemetry with a
+# FastAPI REST surface and a Server-Sent Events stream consumed by the UI.
+metrics-manager:
+  # Keep the Kubernetes Service name fixed at "metrics-manager" regardless of
+  # release name. The UI/backend reach the SSE stream at <node>:9090 and the
+  # no_proxy list references this name.
+  fullnameOverride: "metrics-manager"
+
+  service:
+    type: ClusterIP
+    metricsPort: 9090
+    telegrafPort: 9273
+    # Bind the SSE/REST port (and Prometheus port) on the node so the browser
+    # dashboard can reach the metrics stream directly at <node-ip>:9090.
+    hostPorts:
+      metrics: 9090
+      telegraf: 9273
+      telegrafHttp: ""
+
+  # Hardware metrics collection needs privileged access and the host PID
+  # namespace (qmassa GPU/NPU monitoring). Defaults already enable these; kept
+  # explicit here for visibility.
+  pod:
+    hostPID: true
+  securityContext:
+    privileged: true

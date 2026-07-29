@@ -1,0 +1,56 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# mqtt-broker/values.yaml — default values for the Eclipse Mosquitto subchart.
+
+# Override the generated fullname. Set to "mqtt-broker" in parent values.yaml
+# so that other subcharts can reliably reference the service by this name.
+# Type: string
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  # Type: string
+  repository: eclipse-mosquitto
+  # Type: string  — pinned for reproducibility
+  tag: "2.0"
+  # Type: string  [Always | IfNotPresent | Never]
+  pullPolicy: IfNotPresent
+
+service:
+  # Type: string  [ClusterIP | NodePort | LoadBalancer]
+  type: ClusterIP
+  # MQTT listener port.
+  # Type: integer
+  port: 1883
+
+# Mosquitto broker configuration values.
+# Rendered into a ConfigMap and mounted at /mosquitto/config/mosquitto.conf.
+config:
+  # Allow unauthenticated clients (appropriate for in-cluster use).
+  # Type: boolean
+  allowAnonymous: true
+  # Port the broker listens on inside the container.
+  # Type: integer
+  listener: 1883
+
+# Pod security context.
+podSecurityContext: {}
+
+# Container security context.
+securityContext: {}
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "128Mi"
+
+# Additional pod labels.
+podLabels: {}
+
+# Additional pod annotations.
+podAnnotations: {}

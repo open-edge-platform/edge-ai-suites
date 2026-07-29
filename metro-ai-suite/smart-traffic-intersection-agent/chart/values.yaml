@@ -1,0 +1,149 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# =============================================================================
+# Smart Traffic Intersection Agent — Helm Chart Values
+# =============================================================================
+
+global:
+  noProxy: ""
+  httpProxy: ""
+  httpsProxy: ""
+
+image:
+  repository: intel/smart-traffic-intersection-agent
+  tag: "latest"
+  pullPolicy: Always
+
+replicas: 1
+
+service:
+  type: NodePort
+  backendPort: 8081
+  uiPort: 7860
+
+# Intersection identification
+intersection:
+  name: "intersection_1"
+  latitude: "37.51358"
+  longitude: "-122.25591"
+
+# Application settings
+env:
+  logLevel: "INFO"
+  refreshInterval: "15"
+  weatherMock: "false"
+  vlmTimeoutSeconds: "1800"
+
+# MQTT configuration (connects to Scenescape broker)
+# The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
+# If brokerNamespace is empty, it defaults to the release namespace.
+# If host is set explicitly, it takes precedence over the constructed FQDN.
+mqtt:
+  host: ""
+  serviceName: "smart-intersection-broker"
+  brokerNamespace: ""
+  port: "1883"
+
+# Traffic analysis thresholds
+traffic:
+  highDensityThreshold: "10"
+  moderateDensityThreshold: ""
+  bufferDuration: ""
+
+# Leave all empty to auto-wire to the bundled metricsManager subchart.
+# Set these when metricsManager.enabled=false and an external Metrics Manager is used.
+metrics:
+  managerUrl: ""
+  streamUrl: ""
+  healthUrl: ""
+  pushEnabled: ""
+  pushTimeoutSeconds: "1.0"
+
+# Health check configuration
+healthcheck:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+resources:
+
+# Volume for persistent agent data
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+tls:
+  # CA certificate for MQTT broker TLS
+  caCert: ""
+  # If caCertSecretName is set, use an existing secret instead of creating one.
+  caCertSecretName: "smart-intersection-ca-secret"
+  # Key name inside the external secret (required when caCertSecretName is set).
+  caCertKey: "root-cert"
+
+# =============================================================================
+# OVMS subchart overrides
+# =============================================================================
+ovms:
+  enabled: true
+
+  # Uncomment below to override the image tag.
+  # image:
+  #   tag: "2026.1"
+  #   gpuTag: "2026.1-gpu"
+
+  env:
+    # Model Name: Override with `--set ovms.env.modelName="<model>"` during helm install/upgrade.
+    modelName: "OpenVINO/Phi-3.5-vision-instruct-int8-ov"
+    targetDevice: "CPU"
+    # Weight Format: Default int4 for GPU/NPU, int8 for CPU when left empty.
+    weightFormat: ""
+    maxCompletionTokens: "1500"
+    logLevel: "INFO"
+
+  # For gated model downloads. Prefer --set ovms.huggingfaceToken=<token> at install time.
+  huggingfaceToken: ""
+
+  gpu:
+    enabled: true
+    resourceName: "gpu.intel.com/i915"
+    resourceLimit: 1
+    # GIDs of the "render" group (needed for /dev/dri access).
+    # 44=Alpine, 109=Ubuntu/Debian, 992=Fedora/RHE L/SUSE.
+    renderGroupIds:
+      - 44
+      - 109
+      - 992
+
+  nodeSelector: {}
+
+  # Service port — mirrored here so the traffic-agent deployment template can
+  # construct the VLM_BASE_URL without depending on subchart.
+  service:
+    port: 8000
+
+  # Model cache volume
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
+    keepOnUninstall: true
+
+  trustedCompute:
+    enabled: false
+    tc_gpu_enabled: false
+
+# =============================================================================
+# Metrics Manager subchart overrides
+# =============================================================================
+metricsManager:
+  enabled: true
+  nameOverride: "metrics-manager"
+
+  service:
+    metricsPort: 9090
+
+  securityContext:
+    privileged: false

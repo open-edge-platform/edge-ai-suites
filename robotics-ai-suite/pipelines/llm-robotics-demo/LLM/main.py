@@ -25,6 +25,9 @@ from utils.common import draw_rect, draw_points
 from utils.funasr_client import ThreadClient
 from translate import Translator
 
+# add tts
+from utils.tts_client import submit_tts
+
 # add phi3
 from executor import *
 
@@ -188,6 +191,7 @@ class MainThread(QThread):
             if prompt_from_ui == "":
                 time.sleep(0.1)
             else:
+                # get the prompt and translate it
                 input_prompt = prompt_from_ui
                 trans_begin_time = time.time()
                 input_prompt = self.translator.translate(input_prompt)
@@ -196,6 +200,13 @@ class MainThread(QThread):
                 self.updateMicResult.emit(input_prompt)
                 prompt_from_ui = ""
 
+                # get tts result and speak it out
+                tts_begin_time = time.time()
+                submit_tts(input_prompt)
+                tts_end_time = time.time()
+                logger.info(f"TTS time: {tts_end_time-tts_begin_time}s")
+
+                # get VLM result
                 vlm_begin_time = time.time()
                 status, obj_info = get_obj_info(input_prompt, self.color_frame, self.depth_frame, self.depth_scale, self.depth_intrinsics)
                 vlm_end_time = time.time()
@@ -204,6 +215,7 @@ class MainThread(QThread):
                     inf_result_image = self.inference_thread.getInfResultImg()
                     self.updateInferenceImg.emit(inf_result_image)
 
+                    # generate code and execute
                     for i in range(self.max_attempts):
                         lm_begin_time = time.time()
                         content = gen_code_1(input_prompt, obj_info, logger)

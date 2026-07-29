@@ -45,29 +45,29 @@ def args_parse(default_bagfile_dir):
     # bag1_path = os.path.join(bagfile_dir, 'map_merge', 'run1')
     # if not os.path.isfile(os.path.join(bag1_path, 'rosbag2_2022_05_06-13_14_51_0.db3')):
     #     sys.exit(
-    #         'can not find rosbag2_2022_05_06-13_14_51_0.db3 bag file in "{}"'.format(bag1_path)
+    #         'cannot find rosbag2_2022_05_06-13_14_51_0.db3 bag file in "{}"'.format(bag1_path)
     #     )
     # bag2_path = os.path.join(bagfile_dir, 'map_merge', 'run2')
     # if not os.path.isfile(os.path.join(bag2_path, 'rosbag2_2022_05_06-13_24_13_0.db3')):
     #     sys.exit(
-    #         'can not find rosbag2_2022_05_06-13_24_13_0.db3 bag file in "{}"'.format(bag2_path)
+    #         'cannot find rosbag2_2022_05_06-13_24_13_0.db3 bag file in "{}"'.format(bag2_path)
     #     )
 
     bag1_path = os.path.join(bagfile_dir, 'robot1')
     if not os.path.isfile(os.path.join(bag1_path, 'rosbag2_2022_02_22-16_59_26_0.db3')):
         sys.exit(
-            'can not find rosbag2_2022_02_22-16_59_26_0.db3 bag file in "{}"'.format(bag1_path)
+            'cannot find rosbag2_2022_02_22-16_59_26_0.db3 bag file in "{}"'.format(bag1_path)
         )
     bag2_path = os.path.join(bagfile_dir, 'robot2')
     if not os.path.isfile(os.path.join(bag2_path, 'rosbag2_2022_02_22-16_56_35_0.db3')):
         sys.exit(
-            'can not find rosbag2_2022_02_22-16_56_35_0.db3 bag file in "{}"'.format(bag2_path)
+            'cannot find rosbag2_2022_02_22-16_56_35_0.db3 bag file in "{}"'.format(bag2_path)
         )
 
     exefile_dir = os.path.realpath(args.exefile_dir)
     exefile_path = os.path.join(exefile_dir, 'test_map_merge_exe')
     if not os.path.isfile(exefile_path):
-        sys.exit('can not find test_map_merge_exe in "{}"'.format(exefile_dir))
+        sys.exit('cannot find test_map_merge_exe in "{}"'.format(exefile_dir))
 
     args_dict = dict()
     args_dict.update({'BAG1': bag1_path})

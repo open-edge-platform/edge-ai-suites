@@ -9,7 +9,7 @@ the Smart NVR components.
 
 Open your browser and navigate to:
 
-- **Local access**: [https://localhost:7860](https://localhost:7860)
+- **Local access**: [http://localhost:7860](http://localhost:7860)
 - **External access**: Replace `localhost` with your server's IP address.
 
 ### Important Notes

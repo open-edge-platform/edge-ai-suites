@@ -3,6 +3,10 @@
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
+## Prerequisites
+
+- [System Requirements](./get-started/system-requirements.md)
+
 ## Configure Docker
 
 To configure Docker:
@@ -47,10 +51,15 @@ To configure Docker:
 
 ## Clone source code
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-git checkout release-2025.2.0
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-time-series
 ```
 
 ## Deploy with Docker Compose
@@ -93,77 +102,28 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
    make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
    ```
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```bash
-make up_mqtt_ingestion app="weld-anomaly-detection"
-```
 
 <!--hide_directive:::
 ::::hide_directive-->
-
-### Multi-Stream Ingestion support
-
-Multi-stream ingestion enables the simultaneous processing of multiple data streams, improving throughput and scalability.
-
-To activate multi-stream ingestion, set the `num_of_streams` parameter to the required number of parallel streams when deploying the application.
-`<NUMBER_OF_STREAMS>`: Specify the number of parallel streams to run (e.g., `3` for three concurrent streams).
-
-<!--hide_directive::::{tab-set}
-:::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
-<!--hide_directive:sync: tab1hide_directive-->
-
-```bash
-# Deploy with OPC-UA Multi-Stream Ingestion
-make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-
-# Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-```bash
-# Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
-```
-
-<!--hide_directive:::
-::::hide_directive-->
-
-#### Notes
-
-- Ensure system resources (CPU, memory) are sufficient to support the desired number of streams.
-- For troubleshooting or monitoring, use `make status` to verify container health and logs.
-
-  > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
-  > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
-  > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
-
-  ```sh
-  make status
-  ```
 
 ### Running User Defined Function(UDF) inference on GPU
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
-The `Wind Turbine Anomaly Detection` sample app ML model can run on `GPU` while
-the `Weld Anomaly Detection` sample app ML model can only run on `CPU`.
 
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
 
+- **For Wind Turbine Anomaly Detection**:
+
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
+
+
 
 ## Verify the Output Results
 
@@ -200,9 +160,11 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 
 3. To check the output in Grafana:
 
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
+   - Use link `https://localhost:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note:**: Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+     > **Note:**: 
+     > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
+     > - If you are accessing the UI remotely, replace `localhost` with the host system IP address.
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file.
@@ -219,57 +181,6 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
-<!--hide_directive:sync: tab2hide_directive-->
-
-1. Get into the InfluxDB* container:
-
-   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
-   > where for <namespace> replace with namespace name where the application was deployed and
-   > for <influxdb-pod-name> replace with InfluxDB pod name.
-
-   ``` bash
-    docker exec -it ia-influxdb bash
-   ```
-
-2. Run following commands to see the data in InfluxDB*:
-
-   > **NOTE**:
-   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-   > This does not affect any functionality while working with the InfluxDB commands
-
-   ``` bash
-   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-   # for docker compose deployment and `values.yml` for helm deployment
-   influx -username <username> -password <passwd>
-   use datain # database access
-   show measurements
-   # Run below query to check and output measurement processed
-   # by Time Series Analytics microservice
-   select * from "weld-sensor-anomaly-data"
-   ```
-
-3. To check the output in Grafana:
-
-   - Use link `https://<host_ip>:3000/` to launch Grafana from browser (preferably Chrome browser)
-
-     > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
-
-   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in `.env` file.
-
-     ![Grafana login](./_assets/login_wt.png)
-
-   - After login, click on Dashboard
-     ![Menu view](./_assets/dashboard.png)
-
-   - Select the `Weld Anomaly Detection Dashboard`.
-     ![Weld Anomaly Detection dashboard](./_assets/weld_anomaly_detection.png)
-
-   - One will see the below output.
-
-     ![Anomaly prediction in weld sensor data](./_assets/anomaly_detection_weld.png)
 
 <!--hide_directive:::
 ::::hide_directive-->
@@ -301,6 +212,9 @@ guide to learn how to deploy the sample application on a k8s cluster using Helm.
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [How to configure OPC-UA/MQTT alerts](./how-to-guides/configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
 - [How to configure custom UDF deployment package](./how-to-guides/configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
+- [How to enable multi-stream ingestion](./how-to-guides/multi-stream-ingestion.md): Guide to deploy sample apps with multiple parallel ingestion streams
+- [How to run benchmarking](./how-to-guides/benchmarking.md): Guide to benchmark ingestion and UDF processing with stream and batch modes
+
 
 <!--hide_directive
 :::{toctree}

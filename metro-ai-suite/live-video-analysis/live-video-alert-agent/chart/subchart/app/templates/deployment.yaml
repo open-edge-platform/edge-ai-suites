@@ -1,0 +1,179 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "app.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "app.fullname" . }}
+        app.kubernetes.io/component: app
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      initContainers:
+        - name: wait-for-ovms
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-ovms" .Release.Name }}:{{ .Values.global.ovmsPort }}/v2/models/{{ .Values.global.ovmsModelName }}/ready; do
+                echo "waiting for OVMS VLM..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+        - name: wait-for-alert-agent-service
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-alert-agent-service" .Release.Name }}:8000/api/v1/health; do
+                echo "waiting for Alert Agent Service..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+        - name: wait-for-metrics-manager
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-metrics-manager" .Release.Name }}:{{ .Values.global.metricsPort }}/health; do
+                echo "waiting for Metrics Manager..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: live-video-alert-agent
+          image: {{ include "app.image" (dict "registry" (coalesce .Values.image.registry .Values.global.registry) "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "app.proxyEnv" . | nindent 12 }}
+            - name: VLM_URL
+              value: "http://{{ printf "%s-ovms.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
+            - name: MODEL_NAME
+              value: {{ .Values.global.ovmsModelName | quote }}
+            - name: CAPTURE_FPS
+              value: {{ .Values.captureFps | quote }}
+            - name: ALERT_AGENT_SERVICE_URL
+              value: "http://{{ printf "%s-alert-agent-service" .Release.Name }}:8000/api/v1"
+            - name: ALERT_AGENT_SERVICE_TIMEOUT
+              value: {{ .Values.alertAgentServiceTimeout | quote }}
+            - name: SNAPSHOT_DIR
+              value: "/app/snapshots"
+            - name: METRICS_SERVICE_PORT
+              value: {{ .Values.global.metricsPort | quote }}
+            - name: METRICS_NODEPORT
+              value: {{ .Values.global.metricsNodePort | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            {{- if .Values.rtspUrl }}
+            - name: RTSP_URL
+              value: {{ .Values.rtspUrl | quote }}
+            {{- end }}
+            - name: MCP_ENABLED
+              value: {{ .Values.mcpEnabled | quote }}
+            {{- if .Values.mcpEnabled }}
+            - name: MCP_CONFIG_FILE
+              value: "/app/resources/mcp_servers.json"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.startupInitialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.startupPeriodSeconds }}
+            failureThreshold: {{ .Values.healthcheck.startupFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false  # Application writes session state and temp files at runtime
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            {{- if .Values.mcpEnabled }}
+            - name: mcp-config
+              mountPath: /app/resources/mcp_servers.json
+              subPath: mcp_servers.json
+              readOnly: true
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- if .Values.mcpEnabled }}
+        - name: mcp-config
+          configMap:
+            name: {{ include "app.fullname" . }}-mcp
+        {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

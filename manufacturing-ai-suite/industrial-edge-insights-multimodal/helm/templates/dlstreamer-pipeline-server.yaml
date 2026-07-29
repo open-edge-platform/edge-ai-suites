@@ -43,7 +43,7 @@ spec:
         runAsUser: 1999
         seccompProfile:
           type: RuntimeDefault
-        supplementalGroups: [109,110,992]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
+        supplementalGroups: [109,110,992,993]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
       {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -79,9 +79,14 @@ spec:
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
-        - name: dev
-          mountPath: /dev
-          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+        {{- if .Values.privileged_access_required }}
+        - name: dev-dri
+          mountPath: /dev/dri
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        - name: dev-accel
+          mountPath: /dev/accel
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        {{- end }}
         - name: dev-shm
           mountPath: /dev/shm
         - name: tmp
@@ -95,8 +100,6 @@ spec:
         - name: dlstreamer-pipeline-server-input
           mountPath: /home/pipeline-server/config.json
           subPath: config.json
-        - name: model-registry-temp-models
-          mountPath: /home/pipeline-server/mr_models
         - name: pipeline-resources-models
           mountPath: /home/pipeline-server/resources/
         - name: pipeline-resources-videos
@@ -146,14 +149,6 @@ spec:
           value: "{{ $.Values.env.OPCUA_SERVER_USERNAME }}"
         - name: OPCUA_SERVER_PASSWORD
           value: "{{ $.Values.env.OPCUA_SERVER_PASSWORD }}"
-        - name: MR_URL
-          value: "{{ $.Values.env.MR_URL }}"
-        - name: MR_SAVED_MODELS_DIR
-          value: "{{ $.Values.env.MR_SAVED_MODELS_DIR }}"
-        - name: MR_REQUEST_TIMEOUT
-          value: "{{ $.Values.env.MR_REQUEST_TIMEOUT }}"
-        - name: MR_VERIFY_CERT
-          value: "{{ $.Values.env.MR_VERIFY_CERT }}"
         - name: MQTT_HOST
           value: '{{ .Values.config.mqttbroker.name }}'
         - name: MQTT_PORT
@@ -163,9 +158,14 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
-      - name: dev
+      {{ if .Values.privileged_access_required }}
+      - name: dev-dri
         hostPath:
-          path: /dev
+          path: /dev/dri
+      - name: dev-accel
+        hostPath:
+          path: /dev/accel
+      {{- end }}
       - name: dev-shm
         hostPath:
           path: /dev/shm
@@ -178,8 +178,6 @@ spec:
       - name: run-udev
         hostPath:
           path: /run/udev
-      - name: model-registry-temp-models
-        emptyDir: {}
       - name: pipeline-resources-models
         emptyDir: {}
       - name: pipeline-resources-videos

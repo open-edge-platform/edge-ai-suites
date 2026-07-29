@@ -1,7 +1,7 @@
 ############################
 # Stage 1: Builder
 ############################
-FROM eclipse-temurin:17-jdk AS builder
+FROM eclipse-temurin:25-jdk AS builder
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -48,7 +48,7 @@ RUN ./gradlew --no-daemon --info :interop-lab:demo-apps:makeFlatRuntime
 ############################
 # Stage 2: Runtime
 ############################
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:25-jre
 
 # Create non-root user
 RUN useradd -m mdpnpuser

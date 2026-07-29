@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  registry: ""  # Override global.registry for this component only
+
+port: 9000
+
+service:
+  type: NodePort
+  port: 9000
+
+rtspUrl: ""
+logLevel: "INFO"
+
+# Video capture
+captureFps: 10
+
+# Alert Agent Service
+alertAgentServiceTimeout: "30.0"
+
+# MCP integration
+mcpEnabled: true
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "2"
+    memory: "2Gi"
+
+healthcheck:
+  path: /health
+  startupInitialDelaySeconds: 5
+  startupPeriodSeconds: 5
+  startupFailureThreshold: 30
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

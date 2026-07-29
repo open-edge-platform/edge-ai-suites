@@ -1,0 +1,10 @@
+{
+    "dependencies": [
+        {
+            "name": "opencv4",
+            "default-features": false,
+            "features": ["world", "opencl", "calib3d", "fs", "intrinsics", "thread", "win32ui"]
+        },
+        "pkgconf"
+    ]
+}

@@ -1,0 +1,64 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    restart: unless-stopped
+    ports:
+      - "${RTSP_STREAM_BIND_IP:-0.0.0.0}:${RTSP_STREAM_PORT:-8554}:8554"
+
+  ffmpeg:
+    image: jrottenberg/ffmpeg:6.1-alpine
+    container_name: rtsp-publisher
+    restart: unless-stopped
+    entrypoint:
+      - sh
+      - -ec
+    depends_on:
+      - mediamtx
+    volumes:
+      - ../resources/videos:/videos:ro
+    command:
+      - |
+          pids=""
+
+          publish_stream() {
+            stream_name="$$1"
+            file="$$2"
+            [ -f "$$file" ] || {
+              echo "Missing video for $${stream_name}: $${file}" >&2
+              exit 1
+            }
+            ffmpeg \
+              -hide_banner \
+              -loglevel info \
+              -re \
+              -stream_loop -1 \
+              -i "$$file" \
+              -map 0:v:0 \
+              -map 0:a:0? \
+              -c:v libx264 \
+              -preset ultrafast \
+              -tune zerolatency \
+              -profile:v baseline \
+              -level:v 3.1 \
+              -g 30 \
+              -keyint_min 30 \
+              -sc_threshold 0 \
+              -bf 0 \
+              -pix_fmt yuv420p \
+              -c:a copy \
+              -f rtsp \
+              -rtsp_transport tcp \
+              -muxdelay 0.1 \
+              -muxpreload 0 \
+              "rtsp://mediamtx:8554/$${stream_name}" &
+            pids="$$pids $$!"
+          }
+
+          publish_stream camera1 /videos/1122north_h264.ts
+          publish_stream camera2 /videos/1122east_h264.ts
+          publish_stream camera3 /videos/1122south_h264.ts
+          publish_stream camera4 /videos/1122west_h264.ts
+
+          trap 'kill $$pids' INT TERM
+          wait

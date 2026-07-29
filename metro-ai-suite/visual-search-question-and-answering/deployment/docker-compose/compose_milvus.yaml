@@ -170,9 +170,9 @@ services:
     devices:
       - /dev/dri:/dev/dri
     group_add:
-      - ${USER_GROUP_ID-1000} 
-      - ${VIDEO_GROUP_ID}    
-      - ${RENDER_GROUP_ID}    
+      - ${USER_GROUP_ID:-1000} 
+      - ${VIDEO_GROUP_ID:-44}    
+      - ${RENDER_GROUP_ID:-1002}    
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:$DATAPREP_SERVICE_PORT/v1/dataprep/health || exit 1"]
       interval: 60s
@@ -189,30 +189,29 @@ services:
       - ${HOST_DATA_PATH}:/home/user/data:rw
 
   retriever-milvus:
-    image: ${REGISTRY:-}retriever-milvus:${TAG:-latest}
+    image: ${REGISTRY:-}vector-retriever-milvus:${TAG:-latest}
     container_name: retriever-milvus
     ports:
-      - "${RETRIEVER_SERVICE_PORT}:7770"
+      - "${RETRIEVER_SERVICE_PORT}:8000"
     ipc: host
     environment:
       - no_proxy=${no_proxy}
+      - NO_PROXY=${no_proxy}
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - HF_ENDPOINT=${HF_ENDPOINT}
-      - DEVICE=${DEVICE:-CPU}
-      - MILVUS_HOST=${MILVUS_HOST}
-      - MILVUS_PORT=${MILVUS_PORT}
-      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL}
+
+      - RETRIEVER_BACKEND=milvus
+      - MILVUS_URI=http://milvus-standalone:19530
+      - EMBEDDINGS_ENDPOINT=http://multimodal-embedding-serving:8000/embeddings
       - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
+      - INDEX_NAME=${INDEX_NAME:-default}
+      - MILVUS_METADATA_FIELD=meta
+      - DEFAULT_TOP_K=${DEFAULT_TOP_K:-20}
+      - MAX_TOP_K=${MAX_TOP_K:-1000}
+      - LOG_LEVEL=${VECTOR_RETRIEVER_LOG_LEVEL:-INFO}
     restart: unless-stopped
-    devices:
-      - /dev/dri:/dev/dri
-    group_add:
-      - ${USER_GROUP_ID-1000} 
-      - ${VIDEO_GROUP_ID}    
-      - ${RENDER_GROUP_ID}    
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:$RETRIEVER_SERVICE_PORT/v1/retrieval/health || exit 1"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')\""]
       interval: 60s
       timeout: 10s
       retries: 30
@@ -221,7 +220,7 @@ services:
       - default
     depends_on:
       - multimodal-embedding-serving
-      - dataprep-visualdata-milvus
+      - milvus-standalone
 
   visual-search-qa-app:
     image: ${REGISTRY:-}visual-search-qa-app:${TAG:-latest}

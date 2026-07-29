@@ -1,14 +1,15 @@
 import asyncio
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import Header, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi import APIRouter, FastAPI, File, HTTPException, status
+from fastapi import APIRouter, FastAPI, File, HTTPException, Request, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
 from dto.video_metadata_dto import VideoDurationRequest
 from pipeline import Pipeline
-import json, os
+import json, os, time
 import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
@@ -21,9 +22,15 @@ from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
+from components.va.media_service import ensure_media_service_running
 from utils.session_manager import generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
+from dto.ocr_dto import OCRExtractRequest, OCRResponse
+from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
+from utils.telegram_sender import get_sender
+from utils.scp_sender import get_scp_sender
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -35,120 +42,39 @@ def create_session():
 
 @router.get("/health")
 def health():
-    return JSONResponse(content={"status": "ok"}, status_code=200)
+    from model_manager import ModelManager
+    hub = ModelManager.instance().health()
+    return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
-@router.post("/upload-audio")
-def upload_audio(file: UploadFile = File(...)):
-    status_code = status.HTTP_201_CREATED
-    
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
-    try:
-        filename, filepath = save_audio_file(file)
+
+@router.get("/features")
+def get_features(request: Request):
+    """Return enabled features with full UI descriptors for dynamic frontend rendering."""
+    from model_manager.features import in_dependency_order
+
+    eff = getattr(request.app.state, "features", None)
+    if eff is None:
         return JSONResponse(
-            status_code=status_code,
-            content={
-                "filename": filename,
-                "message": "File uploaded successfully",
-                "path": filepath
-            }
+            content={"features": []},
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
-    except HTTPException as he:
-        logger.error(f"HTTPException occurred: {he.detail}")
-        return JSONResponse(
-            status_code=he.status_code,
-            content={"status": "error", "message": he.detail}
-        )
-    except Exception as e:
-        logger.error(f"General exception occurred: {str(e)}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"status": "error", "message": "Failed to upload audio file"}
+
+    features = []
+    for feature in in_dependency_order():
+        if not eff.is_enabled(feature.id):
+            continue
+        
+        # Merge basic metadata with ui_descriptor for complete feature config
+        descriptor = feature.ui_descriptor()
+        descriptor["dependency"] = list(feature.depends_on)
+        descriptor["requires"] = list(feature.requires)
+        features.append(descriptor)
+
+    return JSONResponse(
+        content={"features": features},
+        status_code=status.HTTP_200_OK,
     )
 
-
-@router.post("/transcribe")
-def transcribe_audio(
-    request: TranscriptionRequest,
-    x_session_id: Optional[str] = Header(None)
-):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-   
-    pipeline = Pipeline(x_session_id)
-   
-    def stream_transcription():
-        for chunk_data in pipeline.run_transcription(request):
-            yield json.dumps(chunk_data) + "\n"
-               
- 
-    response = StreamingResponse(stream_transcription(), media_type="application/json")
-    response.headers["X-Session-ID"] = pipeline.session_id
-    return response
-
-
-@router.post("/summarize")
-async def summarize_audio(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    
-    pipeline = Pipeline(request.session_id)
-    
-    async def event_stream():
-        for token in pipeline.run_summarizer():
-            if token.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {token}")
-                yield json.dumps({"token": "", "error": token}) + "\n"
-                break
-            else:
-                yield json.dumps({"token": token, "error": ""}) + "\n"
-            await asyncio.sleep(0)
-
-    return StreamingResponse(event_stream(), media_type="application/json")
-
-@router.post("/mindmap")
-async def generate_mindmap(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-    pipeline = Pipeline(request.session_id)
-    try:
-        mindmap_text = pipeline.run_mindmap()
-        logger.info("Mindmap generated successfully.")
-        return {"mindmap": mindmap_text, "error": ""} 
-    except HTTPException as http_exc:
-        raise http_exc      
-    except Exception as e:
-        logger.exception(f"Error during mindmap generation: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Mindmap generation failed: {e}"
-        )
-
-@router.get("/devices")
-def list_audio_devices():
-    result = subprocess.run(
-        ["ffmpeg", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace"
-    )
-    audio_devices = re.findall(r'"(.*?)"\s*\(audio\)', result.stderr)
-    formatted_devices = [f"audio={d}" for d in audio_devices]
-    return {"devices": formatted_devices}
- 
- 
-@router.post("/stop-mic")
-def stop_microphone(session_id: str):
-    process = audio_preprocessing.FFMPEG_PROCESSES.pop(session_id, None)
-    if process:
-        logger.info(f"Stopping microphone recording for session {session_id}...")
-        process.terminate()
-        process.wait(timeout=5)
-        return {"status": "stopped", "message": f"Microphone for session {session_id} stopped successfully."}
-    else:
-        return {"status": "idle", "message": f"No active microphone session found for {session_id}."}
 
 @router.get("/performance-metrics")
 def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_id")):
@@ -232,7 +158,7 @@ def start_video_analytics_pipeline(
         requests: List of VideoAnalyticsRequest with pipeline_name, source
 
     Returns:
-        JSON array with HLS stream addresses for each pipeline
+        JSON array with HLS/WebRTC stream addresses for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
@@ -260,10 +186,11 @@ def start_video_analytics_pipeline(
 
     results = []
 
-    # Check if a video analytics pipeline is already running for this session
     with video_analytics_lock:
         try:
-            # Create or get service for this session
+            
+            ensure_media_service_running()
+
             if x_session_id not in va_services:
                 project_config = RuntimeConfig.get_section("Project")
                 location = project_config.get("location", "outputs")
@@ -274,6 +201,62 @@ def start_video_analytics_pipeline(
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
                 va_services[x_session_id].x_session_id = x_session_id
+
+                # ── Register callback: fires when ALL pipelines finish (EOS or manual stop) ──
+                _sid      = x_session_id
+                _location = location
+                _pname    = name
+                def _on_all_pipelines_done(session_id, _svc=va_services[x_session_id],
+                                           _loc=_location, _n=_pname):
+                    from utils.scp_sender import write_engagement_reports, get_scp_sender
+                    from utils.telegram_sender import get_sender
+                    try:
+                        _session_dir     = os.path.join(_loc, _n, session_id)
+                        _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
+                        # Use the same engine as the /class-statistics UI endpoint
+                        va_stats, _ = _svc.get_pose_stats(_front_posture)
+                        logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
+
+                        try:
+                            _stats_path = os.path.join(_session_dir, "va", "class_statistics.json")
+                            os.makedirs(os.path.dirname(_stats_path), exist_ok=True)
+                            with open(_stats_path, "w", encoding="utf-8") as _fh:
+                                json.dump(va_stats, _fh, indent=2, ensure_ascii=False)
+                            logger.info(f"[VA done] Saved class_statistics.json to {_stats_path}")
+                        except Exception as _e:
+                            logger.error(f"[VA done] Failed to save class_statistics.json: {_e}")
+
+                        # Always write the files regardless of sender config
+                        write_engagement_reports(session_id, _session_dir, va_stats)
+                        _scp = get_scp_sender()
+                        if _scp:
+                            _scp.send_engagement_package_async(session_id, _session_dir, va_stats)
+                        _tg = get_sender()
+                        if _tg:
+                            _tg.send_engagement_package_async(session_id, _session_dir, _front_posture)
+                    except Exception as _e:
+                        logger.error(f"[VA done] Failed to generate/send reports: {_e}", exc_info=True)
+
+                    # Board OCR: stop only if eos/stopped
+                    try:
+                        from components.board_ocr.board_ocr_pipeline import (
+                            stop_board_ocr,
+                        )
+                        content_status = _svc.pipeline_final_status.get("content")
+                        if content_status == "failed":
+                            logger.info(
+                                "[VA done] content pipeline failed after max retries; "
+                                "leaving board OCR running (reads source directly)."
+                            )
+                        else:
+                            stop_board_ocr(session_id)
+                    except Exception as _e:
+                        logger.error(
+                            f"[VA done] Failed to stop board OCR: {_e}",
+                            exc_info=True,
+                        )
+                va_services[x_session_id].on_all_pipelines_done = _on_all_pipelines_done
+                # ───────────────────────────────────────────────────────────────────────────
 
             service = va_services[x_session_id]
 
@@ -294,52 +277,87 @@ def start_video_analytics_pipeline(
             names = [r.pipeline_name for r in requests]
             record_pipeline = "back" if "back" in names else "content" if "content" in names else "front" if "front" in names else None
 
-            # Launch each pipeline
-            for request in requests:
+            # Launch all pipelines concurrently
+            def _launch_single(req, record):
                 try:
-
-                    options.record = (request.pipeline_name == record_pipeline)
-
-                    # Check if pipeline is already running
-                    if service.is_pipeline_running(request.pipeline_name):
-                        results.append({
+                    if service.is_pipeline_running(req.pipeline_name):
+                        return {
                             "status": "error",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "error": f"Pipeline '{request.pipeline_name}' already running"
-                        })
-                        continue
+                            "error": f"Pipeline '{req.pipeline_name}' already running",
+                        }
 
-                    # Launch pipeline
+                    pipe_options = PipelineOptions(
+                        output_dir=options.output_dir,
+                        output_rtsp=options.output_rtsp,
+                        threshold=options.threshold,
+                        record=record,
+                    )
+
                     success = service.launch_pipeline(
-                        pipeline_name=request.pipeline_name,
-                        source=request.source,
-                        options=options,
+                        pipeline_name=req.pipeline_name,
+                        source=req.source,
+                        options=pipe_options,
                     )
 
                     if not success:
-                        results.append({
+                        return {
                             "status": "error",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "error": f"Failed to start pipeline '{request.pipeline_name}'"
-                        })
+                            "error": f"Failed to start pipeline '{req.pipeline_name}'",
+                        }
                     else:
-                        results.append({
+                        if config.va_pipeline.stream_protocol == "webrtc":
+                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
+                        else:
+                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
+                        return {
                             "status": "success",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "hls_stream": f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream",
-                            "overlays_embedded": True
-                        })
+                            "stream_url": stream_url,
+                            "stream_protocol": config.va_pipeline.stream_protocol,
+                            "overlays_embedded": True,
+                        }
                 except Exception as e:
-                    logger.error(f"Error starting pipeline '{request.pipeline_name}': {e}")
-                    results.append({
+                    logger.error(f"Error starting pipeline '{req.pipeline_name}': {e}")
+                    return {
                         "status": "error",
-                        "pipeline_name": request.pipeline_name,
+                        "pipeline_name": req.pipeline_name,
                         "session_id": x_session_id,
-                        "error": str(e)
-                    })
+                        "error": str(e),
+                    }
+
+            def _launch_single_delayed(req, record, delay):
+                time.sleep(delay)
+                return _launch_single(req, record)
+
+            with ThreadPoolExecutor(max_workers=len(requests)) as executor:
+                futures = [
+                    executor.submit(
+                        _launch_single_delayed, req, req.pipeline_name == record_pipeline, i
+                    )
+                    for i, req in enumerate(requests)
+                ]
+                results = [f.result() for f in futures]
+
+            # Board OCR: bring up the twin pipeline for the content source.
+            # It reads the source directly, so start it even if the VA content
+            # pipeline itself failed to launch/stay up — as long as a content
+            # request with a source is valide.
+            try:
+                content_req = next(
+                    (r for r in requests if r.pipeline_name == "content"), None
+                )
+                if content_req:
+                    from components.board_ocr.board_ocr_pipeline import (
+                        start_board_ocr,
+                    )
+                    start_board_ocr(x_session_id, content_req.source)
+            except Exception as _e:
+                logger.error(f"Failed to start board OCR pipeline: {_e}", exc_info=True)
 
             return JSONResponse(content={"results": results}, status_code=200)
 
@@ -421,6 +439,19 @@ def stop_video_analytics_pipeline(
                             "pipeline_name": request.pipeline_name,
                             "session_id": x_session_id
                         })
+
+                        # Board OCR: stop when content pipeline stops
+                        if request.pipeline_name == "content":
+                            try:
+                                from components.board_ocr.board_ocr_pipeline import (
+                                    stop_board_ocr,
+                                )
+                                stop_board_ocr(x_session_id)
+                            except Exception as _e:
+                                logger.error(
+                                    f"Failed to stop board OCR pipeline: {_e}",
+                                    exc_info=True,
+                                )
                 except Exception as e:
                     logger.error(f"Error stopping pipeline '{request.pipeline_name}': {e}")
                     results.append({
@@ -429,6 +460,24 @@ def stop_video_analytics_pipeline(
                         "session_id": x_session_id,
                         "error": str(e)
                     })                                   
+
+            # ── Telegram: Package B+C (Q2 engagement + Q4 participation) ────
+            # Triggered once all stop requests for this session are processed.
+            # Uses front_posture.txt for video stats; transcription.txt for audio.
+            project_config = RuntimeConfig.get_section("Project")
+            location = project_config.get("location", "outputs")
+            name     = project_config.get("name", "default")
+            session_dir     = os.path.join(location, name, x_session_id)
+            va_posture_file = os.path.join(location, name, x_session_id, "va", "front_posture.txt")
+            sender = get_sender()
+            if sender:
+                sender.send_engagement_package_async(
+                    x_session_id, session_dir, va_posture_file
+                )
+            # Report generation and SCP send are triggered automatically by
+            # service.on_all_pipelines_done, which fires from stop_pipeline()
+            # when the last pipeline is removed, or from _monitor_pipeline on EOS.
+            # ────────────────────────────────────────────────────────────────
 
             return JSONResponse(content={"results": results}, status_code=200)
 
@@ -645,38 +694,6 @@ def store_audio_duration(
             detail=f"Error storing audio duration: {e}"
         )
 
-@router.post("/content-segmentation")
-def content_segmentation(request: SummaryRequest):
-    """
-    Generate content-wise segmentation from teacher transcription.
-    Expects transcription.txt to exist for the session.
-    """
-
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
-    pipeline = Pipeline(request.session_id)
-    
-    # Log session state before validation
-    session_state = SessionState.get_session_state(request.session_id)
-    logger.info(f"📋 Content-segmentation request for session: {request.session_id}")
-    logger.info(f"   Session state: {session_state}")
-
-    try:
-        contents_json = pipeline.run_content_segmentation()
-        logger.info("✅ content segmentation generated successfully.")
-        return JSONResponse(content={"session_id": request.session_id})
-
-    except HTTPException as http_exc:
-        raise http_exc
-
-    except Exception as e:
-        logger.exception(f"❌ Error during content segmentation: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"content segmentation failed: {e}"
-        )
-
 @router.post("/search-content")
 def search_content(request: SearchRequest):
 
@@ -833,6 +850,18 @@ def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None
     except Exception as e:
         logger.error(f"Error serving recorded video: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/ocr/detect-file", response_model=OCRResponse)
+def ocr_detect_file_endpoint(file: UploadFile = File(...)):
+    return ocr_detect_file(file)
+
+
+@router.post("/ocr/extract-text", response_model=OCRResponse)
+def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
+    return ocr_extract_text(file, x_session_id)
 
 def register_routes(app: FastAPI):
     app.include_router(router)
+
+    from api.vlm_chat import router as vlm_chat_router
+    app.include_router(vlm_chat_router)

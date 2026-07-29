@@ -1,11 +1,11 @@
 marshmallow==3.26.2
 pymilvus==2.6.9
-Pillow==12.1.1
+Pillow==12.2.0
 httpx==0.28.1
 paho-mqtt==2.1.0
 fastapi==0.121.0
 uvicorn==0.32.1
 numpy==2.2.1
-python-multipart==0.0.22
+python-multipart==0.0.29
 certifi==2024.8.30
-requests==2.32.4
+requests==2.34.2

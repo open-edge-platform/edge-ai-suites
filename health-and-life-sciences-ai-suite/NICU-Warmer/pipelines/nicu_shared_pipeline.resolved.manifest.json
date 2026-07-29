@@ -1,0 +1,24 @@
+{
+  "video_path": "Warmer_Testbed_YTHD.mp4",
+  "model_paths": [
+    "person-detect-fp32.xml",
+    "patient-detect-fp32.xml",
+    "latch-detect-fp32.xml"
+  ],
+  "device": "CPU",
+  "thresholds": {
+    "patient_presence": 0.3,
+    "caretaker_presence": 0.3,
+    "latch_detection": 0.4
+  },
+  "loop": {
+    "enabled": true,
+    "max_loops": -1
+  },
+  "dlsps_base_url": "http://nicu-dlsps:8080",
+  "rppg": {
+    "xml": "models_rppg/mtts_can.xml",
+    "bin": "models_rppg/mtts_can.bin"
+  },
+  "resolved_pipeline": "pipelines/nicu_shared_pipeline.resolved.json"
+}

@@ -18,6 +18,8 @@ env/
 .venv/
 .env/
 
+**/charts
+
 # Ignore log files
 *.log
 
@@ -34,6 +36,7 @@ logs/
 # Ignore model files
 ov-model/
 ov-models/
+.ovms
 
 
 # Ignore pytest cache
@@ -87,3 +90,6 @@ share/python-wheels/
 MANIFEST
 
 **/docker/ri-compose.yaml
+
+# Ignore cloned dependency directory
+deps/metro-vision/

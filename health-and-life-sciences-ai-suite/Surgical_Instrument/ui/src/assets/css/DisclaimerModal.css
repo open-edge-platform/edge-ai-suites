@@ -1,0 +1,115 @@
+/* Slice F — first-run "not for clinical use" disclaimer.
+ * Uses a high z-index so it sits above the Settings modal (z-index 10000)
+ * in the rare case they might coexist. */
+
+.disclaimer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(15, 23, 42, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: disclaimerFadeIn 0.18s ease;
+}
+
+@keyframes disclaimerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.disclaimer-modal {
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid #e6e7e8;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #1f2933;
+}
+
+.disclaimer-header {
+  padding: 20px 22px 12px;
+  border-bottom: 1px solid #e6e7e8;
+  background: #fafbfc;
+}
+
+.disclaimer-badge {
+  display: inline-block;
+  background: #fdecea;
+  color: #b42318;
+  border: 1px solid #f4c9c4;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.disclaimer-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #101828;
+}
+
+.disclaimer-body {
+  padding: 18px 22px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.disclaimer-body p {
+  margin: 0 0 10px 0;
+}
+
+.disclaimer-not-for {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #c2410c;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #7c2d12;
+}
+
+.disclaimer-list {
+  margin: 12px 0 0 0;
+  padding-left: 18px;
+  color: #475569;
+}
+
+.disclaimer-list li {
+  margin-bottom: 4px;
+}
+
+.disclaimer-footer {
+  padding: 14px 22px 18px;
+  border-top: 1px solid #e6e7e8;
+  background: #fafbfc;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.disclaimer-btn {
+  background: #0071c5;
+  color: #ffffff;
+  border: 1px solid #005a9e;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.disclaimer-btn:hover {
+  background: #005fa3;
+}
+
+.disclaimer-btn:focus {
+  outline: 2px solid #66b3e5;
+  outline-offset: 2px;
+}

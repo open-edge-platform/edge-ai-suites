@@ -19,21 +19,27 @@
 
 
 import math
-import time
-import rclpy
 import random
+import shutil
 import string
+import subprocess  # nosec B404
+import time
+
+import rclpy
 from rclpy.node import Node
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rcl_interfaces.srv import SetParameters, GetParameters
 from gazebo_msgs.srv import GetEntityState
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-import subprocess
+
+_ROS2_BIN = shutil.which('ros2')
+if _ROS2_BIN is None:
+    raise RuntimeError('ros2 executable not found in PATH')
 
 
 # Generate a random name
 def generate_name():
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(4))
+    return ''.join(random.choice(letters) for i in range(4))  # nosec B311
 
     # Sets Node parameter value.
     # Parameters:
@@ -62,13 +68,12 @@ def call_set_parameters(self_node, node_name, parameter):
 
         request = SetParameters.Request()
         request.parameters = [parameter.to_parameter_msg()]
-        if use_async == True:
+        if use_async:
             future = client.call_async(request)
             rclpy.spin_until_future_complete(self_node, future)
             return future.result()
-        else:
-            result = client.call(request)
-            return result
+        result = client.call(request)
+        return result
 
     except Exception as e:
         self_node.get_logger().error(f'Exception occured: {e} - {node_name}')
@@ -94,16 +99,16 @@ def call_get_parameters(self_node, node_name, param_name, sync=False):
         while True:
             request = GetParameters.Request()
             request.names = [param_name]
-            if use_async == True:
+            if use_async:
                 future = client.call_async(request)
                 rclpy.spin_until_future_complete(self_node, future)
-                if future.result().values[0].type != 0 or sync == False:
+                if future.result().values[0].type != 0 or not sync:
                     if use_async:
                         self_node.destroy_node()
                     return future.result()
             else:
                 result = client.call(request)
-                if result.values[0].type != 0 or sync == False:
+                if result.values[0].type != 0 or not sync:
                     return result
 
             time.sleep(1)
@@ -117,18 +122,18 @@ def call_get_parameters(self_node, node_name, param_name, sync=False):
 # Utility function providing synchronization through ros2 tool.
 # Subscribes to a topic and waits for atleast one message is received.
 def wait_for_event(name):
-    cmd = f'ros2 topic echo --once --qos-reliability  reliable /event_{name} std_msgs/msg/Empty'
-    process = subprocess.Popen(cmd, shell=True)
+    cmd = [_ROS2_BIN, 'topic', 'echo', '--once', '--qos-reliability', 'reliable',
+           f'/event_{name}', 'std_msgs/msg/Empty']
+    process = subprocess.Popen(cmd)
     process.wait()
 
 
 # Utility function providing synchronization through ros2 tool.
 # Publishes a topic and waits until atleast one client available.
 def set_event(name):
-    cmd = (
-        f'ros2 topic pub --once -w 1 --qos-reliability reliable  /event_{name} std_msgs/msg/Empty'
-    )
-    process = subprocess.Popen(cmd, shell=True)
+    cmd = [_ROS2_BIN, 'topic', 'pub', '--once', '-w', '1', '--qos-reliability', 'reliable',
+           f'/event_{name}', 'std_msgs/msg/Empty']
+    process = subprocess.Popen(cmd)
     process.wait()
 
 
@@ -148,10 +153,12 @@ def wait_for_interface(self_node, interface_type, interface_name):
             # where each tuple contains a topic name and a list of topic types
             interface_list = self_node.get_topic_names_and_types()
 
-        elif interface_type == 'service' or interface_type == 'action':
+        elif interface_type in ('service', 'action'):
             # get_service_names_and_types returns a list of tuples,
             # where each tuple contains a service name and a list of service types
             interface_list = self_node.get_service_names_and_types()
+        else:
+            interface_list = []
 
         for interface, _ in interface_list:
             if interface_type == 'action':
@@ -159,7 +166,7 @@ def wait_for_interface(self_node, interface_type, interface_name):
                     self_node.get_logger().info(
                         f'{interface_type.capitalize()} {interface_name} is up and running.'
                     )
-                    if node_del == True:
+                    if node_del:
                         self_node.destroy_node()
                     return
 
@@ -167,7 +174,7 @@ def wait_for_interface(self_node, interface_type, interface_name):
                 self_node.get_logger().info(
                     f'{interface_type.capitalize()} {interface_name} is up and running.'
                 )
-                if node_del == True:
+                if node_del:
                     self_node.destroy_node()
                 return
         time.sleep(1)
@@ -239,7 +246,7 @@ def entity_location(self_node, entity_name, reference_frame='world'):
         req.name = entity_name
         req.reference_frame = reference_frame
         srv_call = client.call(req)
-        if srv_call.success == False:
+        if not srv_call.success:
             self_node.get_logger().error(f'Entity {entity_name} not found in Gazebo')
             return None
 

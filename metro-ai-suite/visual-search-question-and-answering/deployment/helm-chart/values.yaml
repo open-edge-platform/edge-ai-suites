@@ -26,7 +26,7 @@ servicePorts:
   vlm: 8000
   mme: 8000
   dataprep: 9990
-  retriever: 7770
+  retriever: 8000
   visualSearch: 17580
 
 MILVUS_HOST: "my-milvus.milvus.svc.cluster.local"
@@ -124,15 +124,21 @@ retrieverMilvus:
   replicaCount: 1
   name: retriever-milvus
   image:
-    repository: "retriever-milvus"
+    repository: "vector-retriever-milvus"
     tag: "latest"
     pullPolicy: "IfNotPresent"
   service:
     type: ClusterIP
-    port: 7770
-    targetPort: 7770
+    port: 8000
+    targetPort: 8000
   env:
+    RETRIEVER_BACKEND: "milvus"
     MILVUS_PORT: 19530
+    INDEX_NAME: "default"
+    MILVUS_METADATA_FIELD: "meta"
+    DEFAULT_TOP_K: "20"
+    MAX_TOP_K: "1000"
+    LOG_LEVEL: "INFO"
     HF_ENDPOINT: "https://hf-mirror.com"
   livenessProbe:
     initialDelaySeconds: 60
@@ -140,10 +146,16 @@ retrieverMilvus:
     timeoutSeconds: 30
     failureThreshold: 120
     httpGet:
-      path: /v1/retrieval/health 
-      port: 7770
+      path: /health
+      port: 8000
   readinessProbe:
-    sameAsLiveness: true
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 30
+    failureThreshold: 120
+    httpGet:
+      path: /ready
+      port: 8000
 
 visualSearchQaApp:
   replicaCount: 1
@@ -158,7 +170,7 @@ visualSearchQaApp:
     targetPort: 17580
   env:
     BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.vsqa.svc.cluster.local:8000"
-    BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:7770"
+    BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:8000"
     BACKEND_DATAPREP_BASE_URL: "http://dataprep-visualdata-milvus.vsqa.svc.cluster.local:9990"
     DATA_INGEST_WITH_DETECT: false
     VISUAL_SEARCH_QA_UI_PORT: 17580

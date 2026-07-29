@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Intel Corporation
+---
+controller_names:
+  - /arm1/arm_controller
+  - /arm1/gripper_controller
+
+/arm1/arm_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: true
+  joints:
+    - arm1/shoulder_pan_joint
+    - arm1/shoulder_lift_joint
+    - arm1/elbow_joint
+    - arm1/wrist_1_joint
+    - arm1/wrist_2_joint
+    - arm1/wrist_3_joint
+
+/arm1/gripper_controller:
+  action_ns: gripper_cmd
+  type: GripperCommand
+  default: true
+  joints:
+    - arm1/left_finger_joint

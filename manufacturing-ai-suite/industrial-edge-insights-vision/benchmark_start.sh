@@ -83,8 +83,6 @@ function check_and_loop_video() {
       local search_paths=(
       "./resources/pallet-defect-detection/videos"
       "./resources/pcb-anomaly-detection/videos"
-      "./resources/weld-porosity/videos"
-      "./resources/worker-safety-gear-detection/videos"
     )
     
     for search_path in "${search_paths[@]}"; do
@@ -218,7 +216,7 @@ function stop_all_pipelines() {
   echo "Found ${#pipelines[@]} running pipelines to stop." >&2
 
   for pipeline_id in "${pipelines[@]}"; do
-    curl -k -s --location -X DELETE "https://$DLSPS_NODE_IP/api/pipelines/${pipeline_id}" &
+    curl -k -s --location -X DELETE "https://$DLSPS_NODE_IP/api/pipelines/${pipeline_id}" > /dev/null &
   done
   
   wait

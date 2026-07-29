@@ -1,0 +1,15 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  ovms-vlm:
+    devices:
+      - "${NPU_DEVICE_PATH:-/dev/accel/accel0}:${NPU_DEVICE_PATH:-/dev/accel/accel0}"
+
+  ovms-llm:
+    devices:
+      - "${NPU_DEVICE_PATH:-/dev/accel/accel0}:${NPU_DEVICE_PATH:-/dev/accel/accel0}"
+  
+  metrics-manager:
+    devices:
+      - "${NPU_DEVICE_PATH:-/dev/accel/accel0}:${NPU_DEVICE_PATH:-/dev/accel/accel0}"

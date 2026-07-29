@@ -1,0 +1,8 @@
+{
+  "max_request_execution_time": 60,
+  "request_throttle_ms": 200,
+  "no_ssl": false,
+  "disable_cert_validation": true,
+  "global_producer_timing_delay": 1,
+  "max_combinations": 20
+}

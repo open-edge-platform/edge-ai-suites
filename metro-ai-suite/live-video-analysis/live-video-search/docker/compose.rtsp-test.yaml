@@ -3,7 +3,7 @@
 
 services:
   rtsp-server:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx:1.18.2
     container_name: rtsp-server
     restart: unless-stopped
     networks:

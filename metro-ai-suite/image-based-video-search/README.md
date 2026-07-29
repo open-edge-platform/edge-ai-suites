@@ -41,7 +41,6 @@ The application includes a demonstration video for testing. The video loops cont
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md)
 - [How It Works](./docs/user-guide/how-it-works.md)
 - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md)
-- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/deploy-with-edge-orchestrator.md)
 - [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Important Notice

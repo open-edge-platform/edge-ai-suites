@@ -24,16 +24,18 @@ odometry and other msgs which will be integrated by using time, you need to set 
 By Xuesong Shi, 2018
 """
 
-import rospy
-import rosbag
-from functools import partial
-import subprocess
+import copy
+import importlib
+import subprocess  # nosec B404
+import sys
 import threading
 import time
-import sys
-from tf2_msgs.msg import TFMessage
+from functools import partial
+
+import rosbag
+import rospy
 from sensor_msgs.msg import CameraInfo
-import copy
+from tf2_msgs.msg import TFMessage
 
 start_time = 0
 first_msg = 0
@@ -173,7 +175,7 @@ def main():
     topics = rosbag.Bag(bagfile).get_type_and_topic_info()[1]
     publishers = {}
     subscribers = {}
-    play_cmd = 'rosbag play ' + bagfile + ' ' + ' '.join(play_args)
+    play_cmd = ['rosbag', 'play', bagfile] + list(play_args)
     static_tf_msg = None
     camera_info_msg = None
     print('Topics in ' + bagfile + ':')
@@ -189,7 +191,7 @@ def main():
                         static_tf_msg.transforms.append(transform)
             if static_tf_msg is not None:
                 print('  ---> will loop %d static transforms on /tf' % len(msg.transforms))
-                play_cmd += ' %s:=%s%s' % (topic, remap_prefix, topic)
+                play_cmd.append('%s:=%s%s' % (topic, remap_prefix, topic))
                 continue
 
         # retrieve camera_info message
@@ -205,24 +207,20 @@ def main():
         msg_type = topics[topic].msg_type.split('/')
         # TODO implement a universal way to take care of remapping
         topic_remapped = topic if topic not in remappings else remappings[topic]
-        cmd = (
-            'from %s.msg import %s;\n' % (msg_type[0], msg_type[-1])
-            + 'publishers[topic] = rospy.Publisher(topic_remapped, %s, queue_size=10)'
-            % msg_type[-1]
-        )
         try:
-            exec(cmd)
-        except ImportError:
+            msg_module = importlib.import_module('%s.msg' % msg_type[0])
+            msg_class = getattr(msg_module, msg_type[-1])
+        except (ImportError, AttributeError):
             print('  ---> unknown type, skipped')
             continue
+        publishers[topic] = rospy.Publisher(topic_remapped, msg_class, queue_size=10)
         if topic in remappings:
             print('  ---> remap to %s' % remappings[topic])
         # define callback and subscriber
         cb = partial(publish_once, publishers[topic])
-        cmd = 'subscribers[topic] = rospy.Subscriber(remap_prefix + topic, %s, cb)' % msg_type[-1]
-        exec(cmd)
+        subscribers[topic] = rospy.Subscriber(remap_prefix + topic, msg_class, cb)
         # add remap option
-        play_cmd += ' %s:=%s%s' % (topic, remap_prefix, topic)
+        play_cmd.append('%s:=%s%s' % (topic, remap_prefix, topic))
 
     print('\nStart to play... Press Ctrl+C to exit')
     if static_tf_msg is not None:
@@ -245,7 +243,7 @@ def main():
         camera_info_pub.setDaemon(True)
         camera_info_pub.start()
 
-    p = subprocess.call(play_cmd, shell=True)
+    p = subprocess.call(play_cmd)  # nosec B603
     if static_tf_msg is not None:
         global running
         running = False

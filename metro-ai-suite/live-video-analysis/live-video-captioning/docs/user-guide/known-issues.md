@@ -1,37 +1,198 @@
 # Known Issues
 
+## NPU high-resolution inference may require token-length tuning
+
+Symptoms:
+
+- With `NPU` selected as the VLM device, higher frame resolutions can fail to start, fail during runtime, if token-length limits are too low for the input.
+
+Details:
+
+- The NPU LLM pipeline uses a static-shape approach that optimizes execution performance, but it can introduce usage limitations for larger prompt/image token inputs.
+- By default, the NPU pipeline supports input prompts up to `1024` tokens and ensures a generated response of at least `128` tokens, unless generation reaches the end-of-sequence (EOS) token or a lower response limit is explicitly configured.
+- Prompt and response length options:
+  - `MAX_PROMPT_LEN`: maximum number of input prompt tokens the pipeline can process (default: `1024`).
+  - `MIN_RESPONSE_LEN`: minimum number of response tokens the pipeline will generate (default: `128`).
+- In this application, these options are configured through:
+  - `NPU_MAX_PROMPT_LENGTH` (maps to `MAX_PROMPT_LEN`)
+  - `NPU_MIN_RESPONSE_LENGTH` (maps to `MIN_RESPONSE_LEN`)
+- For higher-resolution frames, you may need a larger `NPU_MAX_PROMPT_LENGTH` so the prompt/image tokens fit.
+
+Impact:
+
+- Increasing `NPU_MAX_PROMPT_LENGTH` to support higher-resolution inference typically increases generation cost and latency, including higher Time To First Token (TTFT) and slower end-to-end response time.
+- Raising `NPU_MIN_RESPONSE_LENGTH` can further increase decode time because the model is encouraged to generate more tokens before stopping.
+
 ## Pipeline server exits with 2 GPU streams
 
 Symptoms:
+
 - When two GPU pipeline streams are started, the pipeline server exits from the container.
 
 Hardware:
+
 - Issue observed on BMG-580 discrete GPU.
+
+## Video resolution and stream characteristics reduce concurrent stream capacity
+
+Symptoms:
+
+- Starting additional streams may fail, stall, or cause unstable behavior when resolution/FPS/bitrate is high.
+- The practical number of concurrent streams is lower than expected, especially on larger VLMs or when using higher input resolutions.
+- Under heavy workloads, the pipeline server may hit out-of-memory (OOM) conditions and terminate with a segmentation fault.
+
+Details:
+
+- Concurrent stream capacity depends on combined workload, not stream count alone.
+- Higher frame resolution, higher frame rate, larger chunk size, and more complex scenes increase per-stream compute and memory pressure.
+- Upscaling source frames before VLM inference may increase latency and reduce the number of stable concurrent streams.
+- WebRTC re-streaming of 2K/4K video to the dashboard also consumes significant compute resources, which can further reduce stable concurrent stream capacity.
+
+Guidance:
+
+- Start with `Frame Resolution=Default` so the source stream resolution is used as-is.
+- If stability or throughput degrades, downscale resolution first (for example, 640×480), then reduce frame rate/chunk size.
+- Scale streams gradually and validate latency/throughput at each step.
+- If `dlstreamer-pipeline-server` exits unexpectedly, stop and restart the deployment.
+
+## RTSP Stream not reachable from Live Video Captioning Application
+
+Symptoms:
+
+- Stream not able to play or pipeline not able to start
+- DLSPS container shows logs as below:
+
+     ```text
+     dlstreamer-pipeline-server  | 0:01:06.194223369     8 0x7060180012c0 ERROR           default gstrtspconnection.c:1291:gst_rtsp_connection_connect_with_response_usec: failed to connect: Could not connect to 10.102.14.14: Socket I/O timed out
+     ```
+
+Checks:
+
+- Include rtsp stream ip in no_proxy environment variable.
+
+## Pipeline server core dump sometimes
+
+Symptoms:
+
+- New pipelines cannot be created after pipeline server exits.
+- Logs show the pipeline server core-dumping.
+
+Details:
+
+- This issue appears to be caused by resource pressure or instability in the pipeline server rather than in the live-video-captioning application itself.
+
+Checks:
+
+- Verify the `dlstreamer-pipeline-server` service is running.
+- Restart the pipeline server or the full application stack if the service is not running.
+
+Tip:
+
+- Size the number of streams according to the available hardware resources.
+
+## Proxy and no_proxy configuration (mandatory)
+
+Behind a corporate network, incorrect proxy settings are the most common cause of model-download failures and DL Streamer Pipeline Server crashes. Make sure both the Docker daemon proxy and `no_proxy` are set correctly and kept consistent.
+
+Docker daemon proxy (required for internet access during model download):
+
+- Configure the proxy for the Docker daemon.
+- Restart Docker after updating:
+
+  ```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+  ```
+
+`no_proxy` (required so DLSPS does not crash):
+
+- Add the required entries in `/etc/environment`, including your local network ranges:
+
+  ```bash
+  no_proxy=localhost,127.0.0.1,<add-local-network-ranges>
+  ```
+
+- Reload the environment:
+
+  ```bash
+  source /etc/environment
+  ```
+Note:
+
+- On an open network (no proxy), remove the proxy settings from the DLSPS (`dlstreamer-pipeline-server`) service in `compose.yaml`. This is a known bug and will be fixed soon.
+
+## DLSPS segfault from improper proxy configuration
+
+Symptoms:
+
+- Pipeline server failure.
+- Segmentation fault in the DLSPS (DL Streamer Pipeline Server) container.
+
+Details:
+
+- Improper or inconsistent proxy configuration can lead to segmentation faults in DLSPS.
+
+Workarounds:
+
+- Ensure both the Docker daemon proxy and `no_proxy` are configured correctly (see the proxy configuration issue above).
+- Avoid inconsistent proxy settings in `compose.yaml`.
+- Restart the containers after any configuration change.
+
+## Memory deallocation issue on Panther Lake (PTL)
+
+Impact:
+
+- On Panther Lake (PTL) systems, DLSPS may have memory deallocation issues, leading to pipeline instability over time.
+
+Mitigation:
+
+- Restart the services if instability is observed.
+- Monitor memory usage during long runs.
 
 ## WebRTC connectivity issues
 
 Symptoms:
+
 - Black video, no stream, or connection failures in the dashboard.
 
 Checks:
+
 - Verify `HOST_IP` in `.env` is reachable from the browser client.
 - Confirm firewall rules allow the configured ports.
+
+## Camera not supported (hardware-encoded webcam format)
+
+Symptoms:
+
+- USB/webcam input cannot be started for specific camera devices.
+
+Details:
+
+- Some webcams expose hardware-encoded formats (for example H.264) instead of raw formats expected by this application.
+
+Checks:
+
+- Use a compatible webcam that provides raw video output (for example, YUYV or MJEPG).
 
 ## No models in dropdown
 
 Symptoms:
+
 - Model list is empty in the UI.
 
 Checks:
+
 - Ensure `ov_models/` contains at least one model directory with OpenVINO IR files.
 - If you downloaded models, re-run the stack so the service rescans.
 
 ## Pipeline server unreachable
 
 Symptoms:
+
 - Starting a run fails; backend reports it cannot reach the pipeline server.
 
 Checks:
+
 - Ensure the `dlstreamer-pipeline-server` service is running.
 - Verify `PIPELINE_SERVER_URL` (defaults to `http://dlstreamer-pipeline-server:8080`).
 
@@ -45,6 +206,17 @@ If the dashboard or APIs are not reachable, check whether the ports are already 
 - Reduce `max_tokens`.
 - Ensure hardware acceleration and drivers are installed if using GPU.
 
+## Metrics graphs lag on GPU pipelines when running in Helm Deployments
+
+Symptoms:
+
+- Live metrics graphs in the dashboard trail behind real-time by a few seconds intermittently when the pipeline is running on a GPU node.
+
+Details:
+
+- The lag is a display artifact caused by the metrics-manager Telegraf `inputs.exec` plugin taking longer than expected to gather CPU frequency data on high-core-count GPU nodes (e.g. nodes with 192 CPUs). This can cause metric batches to queue up and be flushed slightly out of sync.
+- The pipeline inference and captioning are unaffected; only the metrics visualization is delayed.
+
 ## Gemma model not working in GPU
 
 - Gemma model is not working on GPU. Only working on CPU.
@@ -52,3 +224,35 @@ If the dashboard or APIs are not reachable, check whether the ports are already 
 ## Limited testing on EMT-S and EMT-D
 
 - This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
+
+## PVCs bound to local storage prevent reinstall on a different worker node
+
+If the cluster default `StorageClass` uses node-local storage (for example `local-path`), the PersistentVolumes backing the model PVCs are physically stored on the node where the chart was first installed.
+When `keepPvc` is `true` (the default), uninstalling the chart preserves the PVCs.
+If you then reinstall the chart targeting a different worker node (`global.nodeName`), the pods will remain in `Pending` because the existing PVs are only accessible from the original node.
+
+Workaround — choose one of the following:
+
+- **Delete the old PVCs** before reinstalling on a different node:
+
+  ```bash
+  kubectl delete pvc <release>-live-video-captioning-models
+  kubectl delete pvc <release>-live-video-captioning-detection-models
+  ```
+
+  The model-download hook will repopulate the PVCs on the new node.
+
+- **Set `keepPvc` to `false`** in your override values so Helm deletes and recreates the PVCs on every install:
+
+  ```yaml
+  modelsPvc:
+    keepPvc: false
+  detectionModelsPvc:
+    keepPvc: false
+  ```
+
+- **Use a network-attached `StorageClass`** (for example NFS, Ceph, or Longhorn) by setting `global.storageClassName` so that PVs are accessible from any node.
+
+## Known EMT Limitation with External RTSP Streams
+
+Due to an EMT networking limitation, RTSP streams must be deployed within the same Docker network as the application (accessed via container/service name). RTSP streams hosted outside the Docker network or accessed using <host-ip> are not supported.

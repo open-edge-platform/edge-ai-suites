@@ -1,0 +1,109 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Default values for metrics-manager.
+
+image:
+  repository: intel/metrics-manager
+  tag: "2026.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+controller:
+  kind: Deployment
+  replicaCount: 1
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+pod:
+  hostPID: true
+  hostNetwork: false
+  dnsPolicy: ""
+  restartPolicy: Always
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+  automountServiceAccountToken: false
+  podAnnotations: {}
+  podLabels: {}
+  priorityClassName: ""
+
+securityContext:
+  privileged: true
+  runAsNonRoot: false
+  readOnlyRootFilesystem: false
+  appArmorProfile:
+    type: Unconfined
+  appArmorProfileForce: false
+  seccompProfile:
+    type: Unconfined
+
+service:
+  type: ClusterIP
+  metricsPort: 9090
+  telegrafPort: 9273
+  telegrafHttpPort: 8186
+  annotations: {}
+  nodePorts:
+    metrics: ""
+    telegraf: ""
+    telegrafHttp: ""
+  hostPorts:
+    metrics: ""
+    telegraf: ""
+    telegrafHttp: ""
+
+config:
+  logLevel: INFO
+  logFormat: json
+  corsOrigins: "*"
+  metricsRetentionSeconds: 300
+  maxMetricsBatchSize: 1000
+  hostnameOverride: ""
+  extraEnv: []
+
+telegraf:
+  config: ""
+
+customMetrics:
+  enabled: false
+  storage: emptyDir
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: metrics
+  initialDelaySeconds: 30
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  namespace: ""
+  labels: {}
+  annotations: {}

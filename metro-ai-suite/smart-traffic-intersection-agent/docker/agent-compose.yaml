@@ -6,47 +6,42 @@ secrets:
     file: ${RI_DIR}/src/secrets/certs/scenescape-ca.pem
 
 services:
-  vlm-openvino-serving:
-    image: intel/vlm-openvino-serving:1.3.2
+  ovms-service:
+    image: openvino/model_server:${OVMS_TAG:-2026.1}
     ports:
       - "8000"
-    ipc: host
     networks:
       - scenescape
     environment:
       # Proxy settings
-      no_proxy_env: ${no_proxy:-${NO_PROXY:-}},${HOST_IP}
       no_proxy: ${no_proxy:-${NO_PROXY:-}},${HOST_IP}
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      # VLM Model configuration
-      VLM_MODEL_NAME: ${VLM_MODEL_NAME}
-      VLM_COMPRESSION_WEIGHT_FORMAT: ${VLM_COMPRESSION_WEIGHT_FORMAT:-int4}
-      VLM_DEVICE: ${VLM_DEVICE:-CPU}
-      VLM_SEED: ${VLM_SEED:-42}
-      WORKERS: ${VLM_WORKERS:-1}
-      VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-1500}
-      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
-      OV_CONFIG: ${OV_CONFIG:-}
-      VLM_LOG_LEVEL: ${VLM_LOG_LEVEL:-info}
-      OPENVINO_LOG_LEVEL: ${VLM_OPENVINO_LOG_LEVEL:-1}
-      VLM_ACCESS_LOG_FILE: ${VLM_ACCESS_LOG_FILE:-/dev/null}
     restart: unless-stopped
     devices:
       - /dev/dri:/dev/dri
     group_add:
-      - ${USER_GROUP_ID:-1000} 
-      - ${VIDEO_GROUP_ID:-44}    
-      - ${RENDER_GROUP_ID:-109} 
+      - ${USER_GROUP_ID:-1000}
+      - ${VIDEO_GROUP_ID:-44}
+      - ${RENDER_GROUP_ID:-109}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v2/health/ready"]
       interval: 10s
       timeout: 10s
       retries: 60
       start_period: 10s
+    command:
+      - "--port"
+      - "9000"
+      - "--rest_port"
+      - "8000"
+      - "--config_path"
+      - "/models/config.json"
+      - "--log_level"
+      - "INFO"
+      - "--metrics_enable"
     volumes:
-      - ov-models:/root/.cache/huggingface
-      - ov-models:/app/ov-model
+      - ${OVMS_CONFIG_DIR:-.ovms}/models:/models:ro
 
   traffic-agent:
     build:
@@ -59,7 +54,9 @@ services:
     networks:
       - scenescape
     depends_on:
-      vlm-openvino-serving:
+      ovms-service:
+        condition: service_healthy
+      metrics-manager:
         condition: service_healthy
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -71,8 +68,8 @@ services:
       HTTP_PROXY: ${http_proxy}
       https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
-      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
-      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,ovms-service,metrics-manager
+      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,ovms-service,metrics-manager
       
       # MQTT configuration (connects to broker service)
       MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
@@ -88,6 +85,8 @@ services:
       
       # VLM configuration (overrides src/config/traffic_agent.json)
       VLM_MODEL_NAME: ${VLM_MODEL_NAME}
+      VLM_TARGET_DEVICE: ${VLM_TARGET_DEVICE:-CPU}
+      VLM_WEIGHT_FORMAT: ${VLM_WEIGHT_FORMAT:-}
       VLM_TIMEOUT_SECONDS: ${VLM_TIMEOUT_SECONDS:-}
       VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-}
       VLM_TEMPERATURE: ${VLM_TEMPERATURE:-}
@@ -97,6 +96,16 @@ services:
       HIGH_DENSITY_THRESHOLD: ${HIGH_DENSITY_THRESHOLD:-10}
       MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-}
       TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
+
+      # Metrics Manager endpoints (internal, proxied through traffic-agent)
+      METRICS_MANAGER_URL: ${METRICS_MANAGER_URL:-http://metrics-manager:9090}
+      METRICS_STREAM_URL: ${METRICS_STREAM_URL:-http://metrics-manager:9090/metrics/stream}
+      METRICS_HEALTH_URL: ${METRICS_HEALTH_URL:-http://metrics-manager:9090/health}
+      METRICS_PUSH_ENABLED: ${METRICS_PUSH_ENABLED:-true}
+      METRICS_PUSH_TIMEOUT_SECONDS: ${METRICS_PUSH_TIMEOUT_SECONDS:-1.0}
+
+      # OVMS base URL (overrides src/config/traffic_agent.json)
+      VLM_BASE_URL: http://ovms-service:8000
 
     volumes:
       - ${APP_DIR:-..}/src/config:/app/config:ro
@@ -112,9 +121,52 @@ services:
       start_period: ${HEALTH_CHECK_START_PERIOD:-10s}
     restart: unless-stopped
 
+  # Metrics Manager - unified service for host telemetry and custom STIA metrics
+  metrics-manager:
+    image: ${METRICS_MANAGER_IMAGE:-intel/metrics-manager}:${METRICS_MANAGER_TAG:-2026.1.0}
+    environment:
+      no_proxy: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${no_proxy:-${NO_PROXY:-}}
+      NO_PROXY: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${NO_PROXY:-${no_proxy:-}}
+      http_proxy: ${http_proxy:-}
+      HTTP_PROXY: ${HTTP_PROXY:-${http_proxy:-}}
+      https_proxy: ${https_proxy:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-${https_proxy:-}}
+      METRICS_PORT: 9090
+      TELEGRAF_PORT: 9273
+      TELEGRAF_HTTP_PORT: 8186
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      METRICS_MANAGER_HOSTNAME: ${METRICS_MANAGER_HOSTNAME:-}
+      CUSTOM_METRICS_DIR: /app/custom-metrics
+      TELEGRAF_CONFIG_PATH: /etc/telegraf/telegraf.conf
+      METRICS_RETENTION_SECONDS: ${METRICS_RETENTION_SECONDS:-300}
+      MAX_METRICS_BATCH_SIZE: ${MAX_METRICS_BATCH_SIZE:-1000}
+    expose:
+      - "9090"
+      - "9273"
+      - "8186"
+    # Set METRICS_MANAGER_PRIVILEGED=true only when NPU telemetry requires privileged sysfs access.
+    privileged: ${METRICS_MANAGER_PRIVILEGED:-false}
+    devices:
+      - /dev/dri:/dev/dri
+    pid: host
+    volumes:
+      - /sys:/sys:ro
+      - /run:/run:ro
+      - metrics-manager-custom-metrics:/app/custom-metrics
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - scenescape
+    restart: unless-stopped
+
 volumes:
-  ov-models:
   traffic-agent-data:
+  metrics-manager-custom-metrics:
 
 networks:
   scenescape:

@@ -1,0 +1,23 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coturn.fullname" . }}
+  labels:
+    {{- include "coturn.labels" . | nindent 4 }}
+    app.kubernetes.io/component: coturn
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "coturn.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: turn-udp
+      port: {{ .Values.service.port }}
+      targetPort: turn-udp
+      protocol: UDP
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}

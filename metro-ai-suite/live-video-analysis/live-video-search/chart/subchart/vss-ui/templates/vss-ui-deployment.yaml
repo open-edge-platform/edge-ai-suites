@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vss-ui
+  labels:
+    {{- include "lvs.vssui.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: vss-ui
+  template:
+    metadata:
+      labels:
+        app: vss-ui
+        {{- include "lvs.vssui.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: wait-for-pipeline-manager
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until wget -q -O /dev/null http://pipeline-manager:3000/health; do
+                echo "waiting for pipeline-manager";
+                sleep 3;
+              done
+      containers:
+        - name: vss-ui
+          image: {{ include "lvs.vssui.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.vssUi.repository .Values.imageOverride.repository) "tag" (default (include "lvs.vssui.vssTag" .) .Values.imageOverride.tag)) }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: APP_ENDPOINT_URL
+              value: "/manager"
+            - name: APP_ASSETS_URL
+              value: "/datastore"
+            - name: APP_SOCKET_APPEND
+              value: {{ .Values.global.env.configSocketAppend | quote }}
+            - name: APP_SUMMARY_FEATURE
+              value: {{ .Values.global.env.summaryFeature | quote }}
+            - name: APP_SEARCH_FEATURE
+              value: {{ .Values.global.env.searchFeature | quote }}
+            - name: APP_FEATURE_MUX
+              value: {{ .Values.global.env.appFeatureMux | quote }}
+            - name: APP_CAMERA_CONFIG_FEATURE
+              value: {{ .Values.global.env.cameraConfigFeature | quote }}
+            - name: APP_NVR_API_BASE
+              value: "/nvr-api"
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},pipeline-manager,minio-service,localhost"
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+          ports:
+            - containerPort: 8080
+              name: http
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

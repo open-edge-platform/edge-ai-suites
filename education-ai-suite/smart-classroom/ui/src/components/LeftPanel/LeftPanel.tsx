@@ -11,8 +11,14 @@ import { useTranslation } from 'react-i18next';
 import VideoStream from "./VideoStream";
 import { useContentSegmentation } from "../../redux/useContentSegmentation";
 import { useSearchContent } from "../../redux/useSearchContent";
+import type { FeatureGuard } from "../../utils/featureGuards";
+import type { Tab } from "../../redux/slices/uiSlice";
 
-const LeftPanel = () => {
+interface LeftPanelProps {
+  featureGuard: FeatureGuard;
+}
+
+const LeftPanel: React.FC<LeftPanelProps> = ({ featureGuard }) => {
   const dispatch = useAppDispatch();
   const activeTab = useAppSelector((s) => s.ui.activeTab);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
@@ -31,6 +37,13 @@ const LeftPanel = () => {
   
   const { t } = useTranslation();
   const { performSearch, searchError } = useSearchContent();
+
+  // Feature flags - dynamically determined from backend
+  const hasASR = featureGuard.hasFeature('asr');
+  const hasSummary = featureGuard.hasFeature('summary');
+  const hasMindmap = featureGuard.hasFeature('mindmap');
+  const hasTopicSegmentation = featureGuard.hasFeature('topic_segmentation');
+  const hasVideoAnalytics = featureGuard.hasFeature('video_analytics');
 
   // CRITICAL: This hook handles auto-triggering content-segmentation with duration validation
   useContentSegmentation();
@@ -104,90 +117,107 @@ const LeftPanel = () => {
 
   return (
     <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
-      <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
+      {hasVideoAnalytics && (
+        <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} featureGuard={featureGuard} />
+      )}
     
       <div className="search-container">
         <div
           className="search-wrapper"
           title={
             contentSegmentationStatus !== "complete"
-              ? "Enabled only after content segmentation"
+              ? t("fileManager.enabledAfterSegmentation")
               : ""
           }
         >
-          <SearchBox
-            onSearch={handleSearch}
-            placeholder={getSearchPlaceholder()}
-            className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
-            sessionId={sessionId}
-          />
+          {hasTopicSegmentation && (
+            <>
+              <SearchBox
+                onSearch={handleSearch}
+                placeholder={getSearchPlaceholder()}
+                className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
+                sessionId={sessionId}
+              />
 
-          {contentSegmentationStatus === "loading" && (
-            <div className="search-status loading">
-              <span className="spinner"></span>
-              {t('search.preparingContent', 'Content Generating...')}
-            </div>
-          )}
+              {contentSegmentationStatus === "loading" && (
+                <div className="search-status loading">
+                  <span className="spinner"></span>
+                  {t('search.preparingContent', 'Content Generating...')}
+                </div>
+              )}
 
-          {contentSegmentationStatus === "error" && (
-            <div className={`search-status ${contentSegmentationError?.includes('duration') ? 'warning' : 'error'}`}>
-              {contentSegmentationError || t('search.contentError', 'Content preparation failed. Search unavailable.')}
-            </div>
-          )}
+              {contentSegmentationStatus === "error" && (
+                <div className={`search-status ${contentSegmentationError?.includes('duration') ? 'warning' : 'error'}`}>
+                  {contentSegmentationError || t('search.contentError', 'Content preparation failed. Search unavailable.')}
+                </div>
+              )}
 
-          {searchLoading && (
-            <div className="search-status loading">
-              <span className="spinner"></span>
-              {t('search.searching', 'Searching...')}
-            </div>
-          )}
+              {searchLoading && (
+                <div className="search-status loading">
+                  <span className="spinner"></span>
+                  {t('search.searching', 'Searching...')}
+                </div>
+              )}
 
-          {searchError && (
-            <div className="search-status error">
-              {searchError}
-            </div>
-          )}
+              {searchError && (
+                <div className="search-status error">
+                  {searchError}
+                </div>
+              )}
 
-          {showResultsPreview && (
-            <SearchResultsPreview
-              results={searchResults}
-              query={searchQuery}
-            />
+              {showResultsPreview && (
+                <SearchResultsPreview
+                  results={searchResults}
+                  query={searchQuery}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
       
       <div className="tabs">
-        <button
-          className={activeTab === "transcripts" ? "active" : ""}
-          onClick={() => dispatch(setActiveTab("transcripts"))}
-        >
-          {t('tabs.transcripts')}
-        </button>
-        <button
-          className={activeTab === "summary" ? "active" : ""}
-          onClick={() => dispatch(setActiveTab("summary"))}
-          disabled={!summaryEnabled}
-          title={summaryEnabled ? t('tabs.summary') : t('tabs.summary') + " available after transcription"}
-        >
-          <span>{t('tabs.summary')}</span>
-          {summaryEnabled && summaryLoading && <span className="tab-spinner" aria-label="loading" />}
-        </button>
-        <button
-          className={activeTab === "mindmap" ? "active" : ""}
-          onClick={() => dispatch(setActiveTab("mindmap"))}
-          disabled={!mindmapEnabled}
-          title={mindmapEnabled ? t('tabs.mindmap') : t('tabs.mindmap') + " available after summary"}
-        >
-          <span>{t('tabs.mindmap')}</span>
-          {mindmapEnabled && mindmapLoading && <span className="tab-spinner" aria-label="loading" />}
-        </button>
+        {/* Transcripts tab - always show if ASR is enabled */}
+        {hasASR && (
+          <button
+            className={activeTab === "transcripts" ? "active" : ""}
+            onClick={() => dispatch(setActiveTab("transcripts"))}
+          >
+            {t('tabs.transcripts')}
+          </button>
+        )}
+        
+        {/* Summary tab - only show if summary feature is enabled */}
+        {hasSummary && (
+          <button
+            className={activeTab === "summary" ? "active" : ""}
+            onClick={() => dispatch(setActiveTab("summary"))}
+            disabled={!summaryEnabled}
+            title={summaryEnabled ? t('tabs.summary') : t('tabs.summary') + " available after transcription"}
+          >
+            <span>{t('tabs.summary')}</span>
+            {summaryEnabled && summaryLoading && <span className="tab-spinner" aria-label="loading" />}
+          </button>
+        )}
+        
+        {/* Mindmap tab - only show if mindmap feature is enabled */}
+        {hasMindmap && (
+          <button
+            className={activeTab === "mindmap" ? "active" : ""}
+            onClick={() => dispatch(setActiveTab("mindmap"))}
+            disabled={!mindmapEnabled}
+            title={mindmapEnabled ? t('tabs.mindmap') : t('tabs.mindmap') + " available after summary"}
+          >
+            <span>{t('tabs.mindmap')}</span>
+            {mindmapEnabled && mindmapLoading && <span className="tab-spinner" aria-label="loading" />}
+          </button>
+        )}
       </div>
       
       <div className="tab-content">
-        {activeTab === "transcripts" && <TranscriptsTab />}
-        {activeTab === "summary" && <AISummaryTab />}
-        {activeTab === "mindmap" && <MindMapTab />}
+        {hasASR && activeTab === "transcripts" && <TranscriptsTab />}
+        {hasSummary && activeTab === "summary" && <AISummaryTab />}
+        {hasMindmap && activeTab === "mindmap" && <MindMapTab />}
       </div>
     </div>
   );

@@ -40,16 +40,19 @@
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
    <xacro:arg name="sim_gazebo" default="false" />
-   <xacro:arg name="sim_ignition" default="false" />
    <xacro:arg name="simulation_controllers" default="" />
 
    <!-- initial position for simulations (Fake Hardware, Gazebo, Ignition) -->
    <xacro:arg name="initial_positions_file" default="$(find robot_config)/config/ur/$(arg ur_type)/initial_positions.yaml"/>
    <xacro:arg name="namespace" default=""/>
    <xacro:arg name="pedestal_height" default=".32"/>
-   <xacro:arg name="vacuum_gripper" default="true"/>
-   <xacro:arg name="finger_gripper" default="false"/>
-
+   <xacro:arg name="use_gripper" default="true"/>
+   
+   <!-- Spawn position arguments (from launch file) -->
+   <xacro:arg name="spawn_x" default="0.0"/>
+   <xacro:arg name="spawn_y" default="0.0"/>
+   <xacro:arg name="spawn_z" default="0.0"/>
+   <xacro:arg name="spawn_yaw" default="0.0"/>
 
    <!-- convert to property to use substitution in function -->
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
@@ -73,7 +76,6 @@
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
      sim_gazebo="$(arg sim_gazebo)"
-     sim_ignition="$(arg sim_ignition)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${xacro.load_yaml(initial_positions_file)}"
      use_tool_communication="$(arg use_tool_communication)"
@@ -92,6 +94,42 @@
      >
      <origin rpy="0 0 0.0" xyz="0 0 ${$(arg pedestal_height)/2}"/>          <!-- position robot in the world -->
    </xacro:ur_robot>
+
+   <!-- Pedestal and world joint (always needed for valid URDF tree) -->
+   <link name="$(arg prefix)pedestal">
+     <visual>
+       <origin rpy="0 0 0.0" xyz="0 0 0"/>
+       <geometry>
+         <cylinder radius="0.1" length="$(arg pedestal_height)"/>
+       </geometry>
+       <material name="Grey">
+         <color rgba="0.5 0.5 0.5 1.0"/>
+       </material>
+     </visual>
+     <collision>
+       <origin rpy="0 0 0" xyz="0 0 0.0"/>
+       <geometry>
+         <cylinder radius="0.1" length="$(arg pedestal_height)"/>
+       </geometry>
+     </collision>
+     <inertial>
+       <mass value="120"/>
+       <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+       <inertia ixx="100" ixy="0" ixz="0" iyy="120" iyz="0" izz="130"/>
+     </inertial>
+   </link>
+   <joint name="$(arg prefix)world_joint" type="fixed">
+     <parent link="world"/>
+     <child link="$(arg prefix)pedestal"/>
+     <!-- Position pedestal with its center at half-height above ground -->
+     <origin xyz="$(arg spawn_x) $(arg spawn_y) ${$(arg pedestal_height)/2}" rpy="0.0 0.0 $(arg spawn_yaw)"/>
+   </joint>
+
+   <!-- Include parallel gripper for grasping -->
+   <xacro:if value="$(arg use_gripper)">
+     <xacro:include filename="$(find robot_config)/urdf/ur/ur5/parallel_gripper.xacro" />
+     <xacro:parallel_gripper prefix="$(arg prefix)" />
+   </xacro:if>
 
    <xacro:if value="$(arg sim_gazebo)">
     <!-- Gazebo plugins -->
@@ -119,70 +157,27 @@
         <child link="$(arg prefix)ground_plane_box" />
         <origin xyz="0 0 0.0" rpy="0 0 0" />
       </joint>
-      <link name="$(arg prefix)pedestal">
-        <visual>
-          <origin rpy="0 0 0.0" xyz="0 0 0"/>
-          <geometry>
-            <cylinder radius="0.1" length="$(arg pedestal_height)"/>
-          </geometry>
-          <material name="Grey">
-            <color rbga="0.5 0.5 0.5"/>
-          </material>
-        </visual>
-        <collision>
-          <origin rpy="0 0 0" xyz="0 0 0.0"/>
-          <geometry>
-            <cylinder radius="0.1" length="$(arg pedestal_height)"/>
-          </geometry>
-        </collision>
-        <inertial>
-          <mass value="120"/>
-          <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
-          <inertia ixx="100" ixy="0" ixz="0" iyy="120" iyz="0" izz="130"/>
-        </inertial>
-      </link>
       <gazebo reference="$(arg prefix)pedestal">
-        <mu1>0.2</mu1>
-        <mu2>0.2</mu2>
+        <!-- Gazebo Classic physics parameters mu1/mu2 removed - not supported in Harmonic -->
         <material>
           <ambient>1.00 0.44 0.00 1</ambient>
           <diffuse>1.00 0.44 0.00 1</diffuse>
           <specular>0.1 0.1 0.1 1</specular>
         </material>
       </gazebo>
-      <joint name="$(arg prefix)world_joint" type="fixed">
-        <parent link="world"/>
-        <child link="$(arg prefix)pedestal"/>
-        <origin rpy="0.0 0.0 0.0" xyz="0 0 ${$(arg pedestal_height)/2}"/>
-      </joint>
-      <xacro:if value="$(arg vacuum_gripper)">
-        <xacro:include filename="$(find robot_config)/urdf/ur/ur5/ur_vacuum.xacro" />
-      </xacro:if>
+      
+      <!-- Gazebo Harmonic ros2_control plugin configuration -->
       <gazebo>
-        <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
           <ros>
             <namespace>$(arg namespace)</namespace>
           </ros>
           <parameters>$(arg simulation_controllers)</parameters>
-          <controller_manager_node_name>$(arg namespace)controller_manager</controller_manager_node_name>
+          <robot_param>robot_description</robot_param>
+          <robot_param_node>robot_state_publisher</robot_param_node>
         </plugin>
       </gazebo>
       
-  </xacro:if>
-
-  <xacro:if value="$(eval arg('sim_gazebo') or arg('sim_ignition'))">
-    <!-- Gazebo plugins -->
-    <gazebo reference="world">
-    </gazebo>
-    <gazebo>
-      <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-        <ros>
-          <namespace>$(arg namespace)</namespace>
-        </ros>
-        <parameters>$(arg simulation_controllers)</parameters>
-        <controller_manager_node_name>$(arg prefix)controller_manager</controller_manager_node_name>
-      </plugin>
-    </gazebo>
   </xacro:if>
 
 <!-- Future reference code to enable camera on the arm-->
@@ -193,6 +188,7 @@
 <xacro:cam name="head_camera" parent="$(arg prefix)wrist_3_link" xyz="0.0 -0.02 0.0" rpy="0.0 -1.57 1.57" rate="1.0" radius="0.003" length="0.0001" />
 -->
 <!--
+Example Gazebo Harmonic camera sensor (pure SDF):
  <gazebo reference="camera_link1">
     <sensor name="robot_camera1" type="camera">
       <update_rate>30.0</update_rate>

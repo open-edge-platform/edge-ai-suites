@@ -97,7 +97,7 @@ To have better visualization effect, use the rviz started by the server node and
 ## **Run in remapping mode**
 
 For remapping mode, it targets to update the pre-constructed keyframe/landmark map and octree map in mapping mode. A manual 2D-region input from user is needed to identify which region of pre-constructed maps is pending to be updated. This remapping region is a quadrilateral and can be either convex or concave. Once you have a
-pre-constructed keyframe/landmark map together with a octree map, you can load them in localization mode and visualize them through the server rviz. To determine the vertexes of your remapping region, you can first click on the **Publish Point** button in the top toolbar, then move your cursor to the point which you want to
+pre-constructed keyframe/landmark map together with an octree map, you can load them in localization mode and visualize them through the server rviz. To determine the vertexes of your remapping region, you can first click on the **Publish Point** button in the top toolbar, then move your cursor to the point which you want to
 select as the remapping region vertex, and finally click your mouse to publish it. To get the detailed coordinate value of such point, you can use below command:
 
 ```bash

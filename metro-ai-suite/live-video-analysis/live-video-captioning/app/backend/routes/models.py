@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter
 from ..config import MODELS_DIR, DETECTION_MODELS_DIR
-from ..models import ModelList
+from ..models import ModelList, DetectionModelList
 from ..services import discover_models, discover_detection_models
 
 router = APIRouter(prefix="/api", tags=["models"])
@@ -16,8 +16,8 @@ async def list_models() -> ModelList:
     return ModelList(models=models)
 
 
-@router.get("/detection-models", response_model=ModelList)
-async def list_detection_models() -> ModelList:
+@router.get("/detection-models", response_model=DetectionModelList)
+async def list_detection_models() -> DetectionModelList:
     """List available detection models from the detection models directory."""
     models = discover_detection_models(DETECTION_MODELS_DIR)
-    return ModelList(models=models)
+    return DetectionModelList(models=models)

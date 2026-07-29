@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.2
+    image: telegraf:1.38.4
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -44,7 +44,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.12.2
+    image: influxdb:1.12.4
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped
@@ -62,9 +62,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      # The InfluxDB retention policy durations can be configured using a combination 
-      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
-      RETENTION_DURATION: 1h0m0s
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
@@ -93,8 +91,8 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,model-registry,${no_proxy}"
+      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
       KAPACITOR_PORT: ${KAPACITOR_PORT}
       INFLUX_SERVER: "ia-influxdb"
       KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
@@ -108,16 +106,12 @@ services:
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
-      MODEL_REGISTRY_URL: http://model-registry:8111
       REST_API_ROOT_PATH: "/ts-api"
+      UDF_MAX_FILE_SIZE_MB: 100
     networks:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/:ro
-    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/:ro
-    - ./configs/time-series-analytics-microservice/config.json:/app/config.json:ro
-    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
@@ -125,15 +119,16 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group ID for ubuntu 24.04 host OS
+    # render group IDs for ubuntu 24.04 host OS
     - "992"
+    - "993"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.3.3-ubuntu
+    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -171,8 +166,8 @@ services:
     volumes:
     - "vol_temp_grafana:/tmp"
     - vol_grafana_data:/var/lib/grafana
-    - ./configs/grafana/:/etc/grafana/provisioning/dashboards
-    - ./configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    - ./configs/grafana/provisioning:/etc/grafana/provisioning/dashboards
+    - ./configs/grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     
   ia-mqtt-broker:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -232,7 +227,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.29.1-bookworm-perl
+    image: nginx:1.31.1-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -248,9 +243,9 @@ services:
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
       - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
-      - "1883:1883" # MQTT TCP Proxy
+      # - "1883:1883" # MQTT TCP Proxy
     volumes:
-      - ./configs/nginx/nginx.conf:/tmp/default.conf.template:ro
+      - ${NGINX_CONFIG_PATH}:/tmp/default.conf.template:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
       - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw
@@ -258,6 +253,11 @@ services:
       - vol_nginx_tmpfs:/etc/nginx/:rw
     networks:
       - timeseries_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f https://localhost:15443/ -k || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     depends_on:
       - ia-grafana
       - ia-time-series-analytics-microservice
@@ -323,10 +323,8 @@ services:
       ENABLE_WEBRTC: true
       WEBRTC_SIGNALING_SERVER: http://mediamtx:8889
       ENABLE_RTSP: true
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${S3_STORAGE_HOST}
@@ -342,11 +340,6 @@ services:
       OPCUA_SERVER_PORT: ${OPCUA_SERVER_PORT:-4840}
       OPCUA_SERVER_USERNAME: ${OPCUA_SERVER_USERNAME:-""}
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD:-""}
-      # Model Registry Microservice
-      MR_URL: ${MR_URL:-""}
-      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR:-""}
-      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT:-""}
-      MR_VERIFY_CERT: ${MR_VERIFY_CERT:-""}
       MQTT_HOST: ia-mqtt-broker
       MQTT_PORT: 1883
       LOG_LEVEL: ${LOG_LEVEL}
@@ -359,7 +352,8 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
+    - ${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -373,6 +367,7 @@ services:
     - "110"
       # render group ID for ubuntu 24.04 host OS
     - "992"
+    - "993"
     device_cgroup_rules:
       # Default run - device-cgroup-rule='c 189:* rmw'
       # Selective rules can be applied for deployment
@@ -384,10 +379,11 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
+    - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.2
+    image: bluenviron/mediamtx:1.18.2
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -431,8 +427,8 @@ services:
     volumes:
       - seaweed_master_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
 
   seaweedfs-volume:
@@ -441,6 +437,8 @@ services:
     container_name: seaweedfs-volume
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
+    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
     security_opt:
     - no-new-privileges
     networks:
@@ -448,8 +446,8 @@ services:
     volumes:
       - seaweed_volume_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
       - seaweedfs-master
@@ -468,8 +466,8 @@ services:
       - seaweed_filer_data:/data
       - "vol_temp_seaweed_filer:/tmp"
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
       - seaweedfs-master
@@ -487,18 +485,21 @@ services:
     container_name: seaweedfs-s3
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
+    memswap_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
     security_opt:
     - no-new-privileges
     networks:
       - timeseries_network
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       # Comma-separated list of default buckets to create
       - DEFAULT_S3_BUCKETS=dlstreamer-pipeline-results
       # S3 credentials from .env file
       - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
       - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
+      - S3_BUCKET_TTL=${S3_BUCKET_TTL:-30m}
     entrypoint: ["/s3-init-buckets.sh"]
     command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
     depends_on:
@@ -520,7 +521,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.8.0
+    image: coturn/coturn:4.12.0
     container_name: coturn
     read_only: true
     security_opt:
@@ -528,9 +529,10 @@ services:
     ports:
       - "${COTURN_UDP_PORT}:3478"
       - "${COTURN_UDP_PORT}:3478/udp"
-    command: ["-v"]  # Verbose mode for logging
+    command: ["-v", "--external-ip=${HOST_IP}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
     networks:
     - timeseries_network
+
 networks:
   timeseries_network:
     driver: bridge

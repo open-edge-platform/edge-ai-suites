@@ -976,7 +976,7 @@ void Client::send_relocalization_request_to_server(Keyframe * keyfrm_to_be_reloc
     "Send relocalization single keyframe to server cost time: {} ms ", duration_ms(end - start));
 }
 
-void Client::send_octree_to_server(univloc_msgs::Octree & octree_msg)
+void Client::send_octree_to_server(univloc_msgs::Octree && octree_msg)
 {
   // may need to wait
   if (unlikely(!connected_)) {

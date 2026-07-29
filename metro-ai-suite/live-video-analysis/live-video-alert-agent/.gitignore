@@ -26,5 +26,9 @@ Thumbs.db
 # Project specific
 *.log
 resources/streams.json
-resources/agents.json
+resources/alerts.json
 models/
+shared/
+# Helm
+chart/charts/*.tgz
+chart/charts.lock

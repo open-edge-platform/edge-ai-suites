@@ -1,10 +1,111 @@
-import logging, os
+import logging, os, subprocess
 from typing import Tuple
+import yaml
 from utils.config_loader import config
 from utils.cli_utils import run_cli
 from utils.convert_classification_models import convert_classification_models
 from utils.convert_yolo_models import convert_yolo_models
+
 logger = logging.getLogger(__name__)
+from huggingface_hub import snapshot_download
+
+HF_PYTORCH_WEIGHTS_NAME = "pytorch_model.bin"
+
+def _download_hf_model(
+    model_name: str,
+    output_dir: str,
+    hf_token: str = None,
+    force: bool = False,
+    required_files: list[str] | None = None
+) -> Tuple[bool, str]:
+    """Download a HuggingFace model locally (full snapshot, offline usable)."""
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    required_files = required_files or []
+    has_required_files = all(
+        os.path.exists(os.path.join(output_dir, required_file))
+        for required_file in required_files
+    )
+
+    # If already downloaded and not forcing, reuse
+    if not force and os.listdir(output_dir) and has_required_files:
+        logger.info(f"⚡ Using cached HF model at {output_dir}")
+        return True, output_dir
+
+    if os.listdir(output_dir) and not has_required_files:
+        logger.warning(f"Incomplete HF model cache detected at {output_dir}. Re-downloading snapshot.")
+
+    logger.info(f"🚀 Downloading HF model {model_name} → {output_dir}\n"
+                "⏳ This may take time depending on model size...\n"
+                "⚠️ Please do not terminate.")
+
+    try:
+        snapshot_download(
+            repo_id=model_name,
+            local_dir=output_dir,
+            local_dir_use_symlinks=False,   # important for portability (Docker etc.)
+            token=hf_token
+        )
+    except Exception as e:
+        logger.error(f"❌ HF download failed: {e}")
+        return False, output_dir
+
+    success = len(os.listdir(output_dir)) > 0
+    logger.info("✅ Download successful" if success else "❌ Download incomplete")
+    return success, output_dir
+
+def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = None) -> None:
+    config_path = os.path.join(pipeline_dir, "config.yaml")
+    if not os.path.exists(config_path):
+        return
+
+    with open(config_path, "r", encoding="utf-8") as handle:
+        pipeline_config = yaml.safe_load(handle) or {}
+
+    pipeline_params = pipeline_config.get("pipeline", {}).get("params", {})
+    changed = False
+
+    for key in ("segmentation", "embedding", "plda"):
+        model_ref = pipeline_params.get(key)
+        if not isinstance(model_ref, str):
+            continue
+        if os.path.isfile(model_ref) or os.path.isdir(model_ref):
+            continue
+        if "/" not in model_ref:
+            continue
+
+        # pyannote 4.0 uses "$model/<name>" to reference sub-models bundled in the snapshot
+        if model_ref.startswith("$model/"):
+            sub_name = model_ref[len("$model/"):]
+            sub_dir = os.path.join(pipeline_dir, sub_name)
+            local_checkpoint = os.path.join(sub_dir, HF_PYTORCH_WEIGHTS_NAME)
+            if os.path.exists(local_checkpoint):
+                pipeline_params[key] = local_checkpoint
+                changed = True
+            elif os.path.isdir(sub_dir):
+                pipeline_params[key] = sub_dir
+                changed = True
+            continue
+
+        dependency_dir = os.path.join(pipeline_dir, "dependencies", model_ref.replace("/", "_"))
+        success, _ = _download_hf_model(
+            model_ref,
+            dependency_dir,
+            hf_token=hf_token,
+            required_files=[HF_PYTORCH_WEIGHTS_NAME, "config.yaml"]
+        )
+        if not success:
+            continue
+
+        checkpoint_path = os.path.join(dependency_dir, HF_PYTORCH_WEIGHTS_NAME)
+        if os.path.exists(checkpoint_path):
+            pipeline_params[key] = checkpoint_path
+            changed = True
+
+    if changed:
+        with open(config_path, "w", encoding="utf-8") as handle:
+            yaml.safe_dump(pipeline_config, handle, sort_keys=False)
 
 def _ir_exists(output_dir: str) -> bool:
     """Check if exported OpenVINO IR files exist."""
@@ -50,16 +151,19 @@ def _download_openvino_model(
     return success, output_dir
 
 def ensure_model():
-    if config.models.summarizer.provider == "openvino":
-        output_dir = get_model_path()
-        _download_openvino_model(config.models.summarizer.name, output_dir, config.models.summarizer.weight_format)
-    if config.models.asr.provider == "openvino":
-        output_dir = get_asr_model_path()
-        _download_openvino_model(f"openai/{config.models.asr.name}", output_dir, None)
+    # NOTE: Core capabilities (text_gen VLM, ASR, OCR) handle model download/
+    # conversion lazily during first warmup via their respective handlers:
+    # - VLMTextGen: downloads and converts on first _load()
+    # - AsrHandler: calls _ensure_openvino_asr_model() from _build_processor()
+    # - OcrHandler: calls _ensure_openvino_models() from _build_processor()
+    # No pre-download is needed here; models are prepared on-demand.
     
+    # Video Analytics models (YOLO, classification) are still prepared eagerly
+    # since they don't use the handler pattern yet.
     output_dir = get_va_model_path()
-    convert_yolo_models(output_dir)
+    convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
+
 
 def get_model_path() -> str:
     return os.path.join(config.models.summarizer.models_base_path, config.models.summarizer.provider, f"{config.models.summarizer.name.replace('/', '_')}_{config.models.summarizer.weight_format}")
@@ -69,3 +173,10 @@ def get_asr_model_path() -> str:
 
 def get_va_model_path() -> str:
     return os.path.join(config.models.va.models_base_path, "va")
+
+def get_diarization_model_path() -> str:
+    return os.path.join(
+        config.models.diarization.models_base_path,
+        config.models.diarization.provider,
+        config.models.diarization.name.replace('/', '_')
+    )

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "MCP (Model Context Protocol) server configuration for Live Video Alert Agent",
+  "servers": [
+    {
+      "name": "prometheus",
+      "enabled": true,
+      "transport": "http",
+      "url": "<mcp_server_url>/mcp",
+      "description": "Prometheus MCP Server - query metrics, get alerts, analyze system performance",
+      "timeout": 30.0,
+      "tool_defaults": {
+        "_note": "Default arguments for each tool. Supports {{variable}} template placeholders rendered from alert context (stream_id, alert_name, severity, answer, reason, consecutive_count, escalated, snapshot_path). Tools not listed here, or listed with empty {}, are called with no arguments.",
+        "health_check": {},
+        "execute_query": {
+          "query": "up"
+        },
+        "execute_range_query": {
+          "query": "up",
+          "start": "1h",
+          "end": "now",
+          "step": "15s"
+        },
+        "list_metrics": {},
+        "get_metric_metadata": {},
+        "get_targets": {}
+      }
+    }
+  ],
+  "_prometheus_docker_run": {
+    "_note": "Run the Prometheus MCP server with Docker before enabling",
+    "command": "docker run -d --name prometheus-mcp -p 8080:8080 -e PROMETHEUS_URL=http://your-prometheus:9090 -e PROMETHEUS_MCP_SERVER_TRANSPORT=http -e PROMETHEUS_MCP_BIND_HOST=0.0.0.0 ghcr.io/pab1it0/prometheus-mcp-server:latest",
+    "env_vars": {
+      "PROMETHEUS_URL": "URL of your Prometheus server (required)",
+      "PROMETHEUS_MCP_SERVER_TRANSPORT": "http | sse | stdio (default: stdio)",
+      "PROMETHEUS_MCP_BIND_HOST": "0.0.0.0 for external access (default: 127.0.0.1)",
+      "PROMETHEUS_MCP_BIND_PORT": "Port to listen on (default: 8080)",
+      "PROMETHEUS_USERNAME": "Optional basic auth username",
+      "PROMETHEUS_PASSWORD": "Optional basic auth password",
+      "PROMETHEUS_TOKEN": "Optional bearer token auth"
+    }
+  }
+}
+  

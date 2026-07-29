@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
@@ -14,15 +15,20 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
-import rclpy
-from rclpy.node import Node
-from nav_msgs.msg import Odometry
-from std_msgs.msg import String
+"""Publish simulated audio filenames based on guide-robot odometry."""
+
 import math
 
+import rclpy
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from std_msgs.msg import String
 
-class audio_publisher(Node):
+
+class AudioPublisher(Node):  # pylint: disable=too-many-instance-attributes
+    """Emit audio filename commands triggered by the guide-robot position."""
     def __init__(self):
+        """Initialize subscriptions, publishers, and parameters."""
         super().__init__('audio_publisher_node')
         # declare parameters
         self.declare_parameter('odom_topic', '/guide_robot/odom')
@@ -43,6 +49,7 @@ class audio_publisher(Node):
         self.get_logger().info('audio_publisher_node has been started')
 
     def odom_topic_callback(self, odom_msg):
+        """Store pose from odometry messages."""
         self.rpy_ = self.euler_from_quaternion(
             odom_msg.pose.pose.orientation.x,
             odom_msg.pose.pose.orientation.y,
@@ -56,18 +63,24 @@ class audio_publisher(Node):
         ]
 
     def publish(self):
+        """Choose and publish the audio filename based on guide position."""
         audio_filename_msg = String()
 
-        # if (self.pos_[1] <= 0.4) and (self.pos_[1] > -0.5) and self.pos_[0] < 0.7:
-        #     audio_filename_msg.data = "start-1.wav"
-        if (self.pos_[1] <= 1.0) and (self.pos_[1] > -0.5) and self.pos_[0] < 1.0:
+        # Guide now moves in +X direction with S-curve trajectory.
+        # "start" fires once when guide is near its starting position (~0.8, 0).
+        # "stop" fires once when guide has nearly finished its trajectory.
+        # Both are one-shot: after publishing the command once, we go back to
+        # empty so the ADBSCAN node isn't flooded with persistent stop/start.
+        if self.pos_[0] > 0.5 and self.pos_[0] < 1.5 and not self.start_audio_published:
             audio_filename_msg.data = 'start-1.wav'
-        elif (self.pos_[1] > 0.0 and self.pos_[1] < 0.7) and (self.rpy_[2] > 0):
+            self.start_audio_published = True
+        elif self.pos_[0] > 3.5 and not self.stop_audio_published:
             audio_filename_msg.data = 'stop-1.wav'
+            self.stop_audio_published = True
         else:
             audio_filename_msg.data = ''
         self.audio_publisher_.publish(audio_filename_msg)
-        self.get_logger().info('publishing audio file: {}'.format(audio_filename_msg.data))
+        self.get_logger().info(f'publishing audio file: {audio_filename_msg.data}')
 
     def euler_from_quaternion(self, x, y, z, w):
         """
@@ -93,8 +106,9 @@ class audio_publisher(Node):
 
 
 def main(args=None):
+    """Entry point for the audio publisher node."""
     rclpy.init(args=args)
-    node = audio_publisher()
+    node = AudioPublisher()
     rclpy.spin(node)
     rclpy.shutdown()
 

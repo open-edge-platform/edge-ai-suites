@@ -14,6 +14,26 @@ The **Fusion Analytics** module in the `Multimodal weld defect detection` sample
 
 > **Note**: The tags suffixed with `-weekly` and `-rcX` are developmental builds, may not be stable.
 
+### [2026.1.0](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/release-notes.html#version-2026-1)
+
+#### Deploy using Docker Compose
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started.html).
+
+#### Deploy on Kubernetes cluster using Helm Charts
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started/deploy-with-helm.html).
+
+### [2026.0.0](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/release-notes.html#version-2026-0)
+
+#### Deploy using Docker Compose
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started.html).
+
+#### Deploy on Kubernetes cluster using Helm Charts
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started/deploy-with-helm.html).
+
 ## [1.0.0](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/release_notes/dec-2025.html#v1-0-0)
 
 ### Deploy using Docker Compose

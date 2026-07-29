@@ -1,3 +1,10 @@
+ros-jazzy-speech-recognition-pkg (2.3-2) UNRELEASED; urgency=low
+
+  * Update audio publisher variants and speech node behavior for OpenVINO 2024 tests.
+  * Refresh package build configuration used by follow-me audio demos.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 10 Mar 2026 00:00:00 +0000
+
 ros-jazzy-speech-recognition-pkg (2.3-1) UNRELEASED; urgency=low
 
   * Initial release

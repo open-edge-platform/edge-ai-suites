@@ -16,3 +16,4 @@ traj_and_img_publisher_node:
     Verbose: True
     publish_frequency: 6
     Camera_topic: /sim_camera
+    use_sim_time: True

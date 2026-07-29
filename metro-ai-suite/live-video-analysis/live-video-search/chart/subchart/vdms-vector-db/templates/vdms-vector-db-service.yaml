@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vdms-vector-db
+  labels:
+    {{- include "lvs.vdmsdb.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: vdms
+      protocol: TCP
+      name: vdms
+  selector:
+    app: vdms-vector-db

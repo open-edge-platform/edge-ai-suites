@@ -1,0 +1,72 @@
+{{- if and (eq .Values.frigate.mode "rtsp") .Values.rtspTest.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtsp-publisher
+  labels:
+    {{- include "lvs.rtsptest.labels" . | nindent 4 }}
+    app: rtsp-publisher
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: rtsp-publisher
+  template:
+    metadata:
+      labels:
+        app: rtsp-publisher
+        {{- include "lvs.rtsptest.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: wait-for-rtsp-dependencies
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z rtsp-server 8554; do
+                echo "waiting for rtsp-server:8554";
+                sleep 2;
+              done
+              until [ -f /videos/garage.mp4 ]; do
+                echo "waiting for /videos/garage.mp4";
+                sleep 2;
+              done
+          volumeMounts:
+            - name: videos
+              mountPath: /videos
+      containers:
+        - name: rtsp-publisher
+          image: {{ .Values.images.rtspPublisher }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              ffmpeg -re -stream_loop -1 -i /videos/garage.mp4 -c copy -f rtsp -rtsp_transport tcp rtsp://rtsp-server:8554/rtsp-garage
+          {{- with .Values.publisherResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: videos
+              mountPath: /videos
+      volumes:
+        - name: videos
+          {{- if eq (.Values.global.videos.source | default "download") "local" }}
+          hostPath:
+            path: {{ required "global.videos.hostPath is required when global.videos.source=local" .Values.global.videos.hostPath }}
+            type: Directory
+          {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.rtsptest.fullname" . }}-videos
+          {{- end }}
+{{- end }}

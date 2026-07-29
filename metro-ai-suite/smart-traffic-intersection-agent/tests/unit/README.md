@@ -37,7 +37,7 @@ Follow these steps to run the tests:
    Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent
    ```
 
@@ -58,7 +58,7 @@ Follow these steps to run the tests:
    # Using uv (recommended)
    cd src
    uv pip install -e ".[dev]"
-   
+
    # Or using pip
    cd src
    pip install -e ".[dev]"
@@ -80,7 +80,7 @@ Follow these steps to run the tests:
    # Verify you're in the virtual environment (should show .venv path)
    which python
    # Expected: /path/to/smart-traffic-intersection-agent/.venv/bin/python
-   
+
    # If not activated, activate it first:
    source .venv/bin/activate
    ```

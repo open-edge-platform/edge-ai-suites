@@ -16,20 +16,6 @@
 # and limitations under the License.
 
 # Description: Helper launch file to spawn AMR in Gazebo separated by namespace
-# Example usage:
-#
-#    gazebo_launch_cmd = IncludeLaunchDescription(
-#        PythonLaunchDescriptionSource(
-#            os.path.join(robot_config_launch_dir, 'gazebo.launch.py')),
-#        launch_arguments={ 'use_sim_time': 'true',
-#                           'world': os.path.join(
-#                                        package_path,
-#                                        'worlds',
-#                                        'warehouse.world',
-#                                    )
-#                          }.items()
-#                        )
-#    ld.add_action(gazebo_launch_cmd)
 
 import os
 
@@ -71,13 +57,13 @@ def generate_launch_description():
             os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
         ),
         launch_arguments={
-            'gz_args': [world, ' -v 4'],
+            'gz_args': [world, ' -v 4 -r'],
             'on_exit_shutdown': 'true'
         }.items(),
     )
     ld.add_action(gzserver_cmd)
 
-    # Clock Bridge (global)
+    # Clock Bridge (global) - Fixed syntax for Gazebo Harmonic
     gz_ros_bridge_clock = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -85,29 +71,4 @@ def generate_launch_description():
         output='screen',
     )
     ld.add_action(gz_ros_bridge_clock)
-
-    # TF Bridge (global)
-    gz_ros_bridge_tf = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
-        ],
-        output='screen',
-    )
-    ld.add_action(gz_ros_bridge_tf)
-
-    # Entity State Bridge - for entity_location function (via services)
-    gz_ros_bridge_entity = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/world/default/get_entity_state@gazebo_msgs/srv/GetEntityState',
-            '/world/default/set_entity_state@gazebo_msgs/srv/SetEntityState',
-        ],
-        output='screen',
-    )
-    ld.add_action(gz_ros_bridge_entity)
-
     return ld

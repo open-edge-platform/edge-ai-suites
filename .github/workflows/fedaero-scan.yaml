@@ -1,0 +1,124 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# CI security scanning workflow for the Federal Aerospace AI Suite.
+# Triggered on pull requests that modify files under federal-aerospace/.
+#
+# Jobs:
+#   trivy-scan   - Runs a filesystem vulnerability scan and generates an SPDX SBOM
+#                  for the federal-aerospace/ directory using Trivy.
+#   shellcheck   - Scans all shell scripts (.sh) under federal-aerospace/ for
+#                  syntax and style issues using ShellCheck.
+#   bandit-scan  - Runs static analysis on Python code under federal-aerospace/apps
+#                  using Bandit to detect common security issues.
+#
+# All job reports are uploaded as GitHub Actions artifacts.
+
+name: "FedAero-Suite-CI"
+run-name: "[FedAero-Suite-CI] PR  workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'federal-aerospace/**'
+
+jobs:
+
+  trivy-scan:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
+        id: trivy-fs
+        with:
+          scan_type: "fs"
+          scan-scope: "all"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          scan_target: "federal-aerospace/"
+          report_suffix: "-fs-federal-aerospace-trivy"
+
+      - name: Run trivy Scan - fedaero-suite (SPDX SBOM)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
+        id: fedaero-spdx
+        with:
+          scan_type: "fs"
+          scan-scope: "all"
+          scan_target: "federal-aerospace/"
+          severity: "HIGH,CRITICAL"
+          format: "spdx-json"
+          scanners: "vuln"
+          report_suffix: "-federal-aerospace-spdx-trivy"
+          generate_sbom: "true"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report-federal-aerospace
+          path: security-results/trivy*
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          cd federal-aerospace/
+          echo "Scanning for .sh files and running ShellCheck..."
+          find . -type f -name "*.sh" | tee shell_files.txt | xargs -r shellcheck -f gcc > shellcheck_report.txt || true
+          echo "### ShellCheck Results" >> $GITHUB_STEP_SUMMARY
+          echo "Please find ShellCheck report in shellcheck_report.txt" >> $GITHUB_STEP_SUMMARY
+          cp shellcheck_report.txt ${{ github.workspace }}
+
+      - name: Upload ShellCheck report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: shellcheck-report-federal-aerospace
+          path: shellcheck_report.txt
+
+  bandit-scan:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+
+      - name: Run Bandit Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
+        id: bandit
+        with:
+          scan-scope: "all"
+          output-format: "txt"
+          fail-on-findings: "false"
+          paths: "federal-aerospace/apps"
+          report_suffix: "-bandit-federal-aerospace"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: bandit-federal-aerospace
+          path: bandit-report-*.txt

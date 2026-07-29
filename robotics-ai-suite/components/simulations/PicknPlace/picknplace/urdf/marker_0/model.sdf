@@ -7,24 +7,28 @@
       <collision name="collision">
         <geometry>
           <!-- Box or plane geometry is used -->
-        <box><size>0.05 0.05 0.05</size></box></geometry>
+        <box><size>0.045 0.045 0.045</size></box></geometry>
         <surface>
           <friction>
             <ode>
-              <mu>.5</mu>
-	      <mu2>.5</mu2>  
-	    <minDepth>0.003</minDepth>
-	    <maxVel>0</maxVel>
-	    <kp>1e+13</kp>
-	    <kd>1.0</kd>
+              <mu>1.5</mu>
+	      <mu2>1.5</mu2>
             </ode>   
-          </friction>                                  
+          </friction>
+          <contact>
+            <ode>
+	      <min_depth>0.001</min_depth>
+	      <max_vel>0.01</max_vel>
+	      <kp>100000</kp>
+	      <kd>10.0</kd>
+            </ode>
+          </contact>
         </surface>
       </collision>
       <visual name="visual">
         <geometry>
           <!-- Box or plane geometry is used -->
-        <box><size>0.05 0.05 0.05</size></box></geometry>
+        <box><size>0.045 0.045 0.045</size></box></geometry>
         <material>
           <ambient>1 1 1 1</ambient>
           <diffuse>1 1 1 1</diffuse>
@@ -37,14 +41,14 @@
         </material>
       </visual>
       <inertial>
-        <mass>0.1</mass>
+        <mass>0.05</mass>
         <inertia>
-          <ixx>0.45e-4</ixx>
+          <ixx>2.25e-5</ixx>
           <ixy>0.0</ixy>
           <ixz>0.0</ixz>
-          <iyy>0.45e-4</iyy>
+          <iyy>2.25e-5</iyy>
           <iyz>0.0</iyz>
-          <izz>0.45e-4</izz>
+          <izz>2.25e-5</izz>
         </inertia>
       </inertial>
     </link>

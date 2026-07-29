@@ -114,8 +114,6 @@ def CreateBag(args):  # Directory
         args[0]
     )  # sychrilized rgb and depth image has the same timestamp and name
     """Creates a bag file with camera images"""
-    if not os.path.exists(args[1]):
-        os.system(r'touch %s' % args[1])
     bag = rosbag.Bag(args[1], 'w')
 
     align_depth_to_color = False

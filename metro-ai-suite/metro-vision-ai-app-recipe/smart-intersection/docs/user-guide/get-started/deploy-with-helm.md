@@ -22,7 +22,62 @@ configured Kubernetes cluster.
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
 - **Storage Provisioner**: A default storage class is required for persistent volumes
+- **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
 
+  ```bash
+  # Pick a release version compatible with your cluster
+  export RELEASE_VERSION=v0.35.0
+
+  # Step 1: Create namespace for the Intel device plugins
+  kubectl create namespace intel-device-plugins
+
+  # Step 2: Allow privileged pods in the device plugin namespace
+  # Required because the plugin needs hostPath mounts and access to host device files.
+  kubectl label namespace intel-device-plugins \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 3: Install Node Feature Discovery (NFD)
+  # NFD uses its own namespace: node-feature-discovery
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=${RELEASE_VERSION}"
+
+  # Step 4: Allow privileged pods in the NFD namespace
+  kubectl label namespace node-feature-discovery \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 5: Install Intel GPU NodeFeatureRules
+  # These rules let NFD detect and label Intel GPU nodes.
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=${RELEASE_VERSION}"
+
+  # Step 6: Verify NFD pods are running
+  kubectl get pods -n node-feature-discovery
+
+  # Step 7: Verify the node got Intel GPU and NPU labels
+  kubectl get node $(hostname) --show-labels | tr ',' '\n' | grep intel
+
+  # Step 8: Install the Intel GPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+
+  # Step 9: Install the Intel NPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  ```
+
+  Verify the Intel Device Plugin pods are running:
+
+  ```bash
+  kubectl get pods -n intel-device-plugins
+  ```
+
+  Verify the GPU and NPU resources are advertised on nodes:
+  ```bash
+  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
+  ```
+  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 ## Steps to Deploy
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
@@ -33,7 +88,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -47,10 +102,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.18.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.19.0
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.18.0-rc1.tgz
+tar -xvf smart-intersection-1.19.0.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart
@@ -74,7 +129,8 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-> **Note:** To run the pipeline on GPU set the property `gpuWorkload` to `true` in the above `values.yaml` file. Similarly, to run the pipeline on NPU set the property `npuWorkload` to `true` in the above `values.yaml` file.
+> **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. 
+For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
 
 ### Step 3: Configure External IP and Proxy Settings
 
@@ -187,21 +243,9 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 > **Security Note:** The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
 
-## Uninstall the Application
+## Deploy with Trusted Compute
 
-To uninstall the application, run the following command:
-
-```bash
-helm uninstall smart-intersection -n smart-intersection
-```
-
-## Delete the Namespace
-
-To delete the namespace and all resources within it, run the following command:
-
-```bash
-kubectl delete namespace smart-intersection
-```
+To deploy the Smart Intersection application with Intel Trusted Compute for hardware-isolated workloads (CPU or GPU passthrough), refer to the [Deploy with Trusted Compute using Helm](./deploy-with-trusted-compute-helm.md) guide.
 
 ## Complete Cleanup
 
@@ -227,7 +271,7 @@ kubectl delete storageclass hostpath local-storage standard
 > **Note:** This complete cleanup will remove storage provisioning from your cluster. You will
 > need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
-> **Run workload on GPU**: Set `gpuWorkload: true` in `values.yaml` file before deploying the Helm chart.
+> **Run workload on GPU**: Set `gpu.enabled: true` in `values.yaml` file before deploying the Helm chart.
 
 ## Next Steps
 

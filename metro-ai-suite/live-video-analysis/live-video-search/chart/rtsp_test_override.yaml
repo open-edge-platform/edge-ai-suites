@@ -1,0 +1,44 @@
+global:
+  persistence:
+    rwxEnabled: false
+
+frigate:
+  mode: rtsp
+rtspTest:
+  enabled: true
+
+frigate-vms:
+  frigate:
+    mode: rtsp
+  service:
+    frigate:
+      nodePort: null
+
+rtsp-test:
+  frigate:
+    mode: rtsp
+  rtspTest:
+    enabled: true
+
+nginx:
+  service:
+    app:
+      nodePort: null
+
+minio-service:
+  service:
+    minioApi:
+      nodePort: null
+    minioConsole:
+      nodePort: null
+
+nvr-event-router:
+  service:
+    nvrEventRouter:
+      nodePort: null
+
+vss-collector:
+  telemetry:
+    enabled: true
+  collectorSignals:
+    usePvc: true

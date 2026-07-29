@@ -1,7 +1,7 @@
 # Build from Source
 
 This guide provides step-by-step instructions for building the `Time Series Analytics`
-microservice and `Wind Turbine Anomaly Detection` or `Weld Anomaly Detection` Sample Application from source.
+microservice and `Wind Turbine Anomaly Detection` Sample Application from source.
 Please follow the [prerequisites](../get-started.md#configure-docker) and ensure you understand
 the data flow of the selected app before proceeding with the following steps.
 
@@ -10,7 +10,7 @@ the data flow of the selected app before proceeding with the following steps.
 1. **Clone the source and build the `Time Series Analytics` microservice**:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+    git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b main
     cd edge-ai-libraries/microservices/time-series-analytics/docker
 
     # build
@@ -27,7 +27,7 @@ the data flow of the selected app before proceeding with the following steps.
 2. **Clone the source and build the sample app**:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 
     # build
@@ -41,6 +41,6 @@ the data flow of the selected app before proceeding with the following steps.
     > make build_copyleft_sources
     > ```
 
-2. **Docker compose deployment and Verification**:
+3. **Docker compose deployment and Verification**:
 
     Follow the remaining steps/sections starting from [docker compose deployment](../get-started.md#deploy-with-docker-compose)

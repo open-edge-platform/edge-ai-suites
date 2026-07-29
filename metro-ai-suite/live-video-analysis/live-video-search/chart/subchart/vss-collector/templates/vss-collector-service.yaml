@@ -1,0 +1,17 @@
+{{- if .Values.telemetry.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: vss-collector
+  labels:
+    {{- include "lvs.collector.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.telemetry.type }}
+  ports:
+    - port: {{ .Values.service.telemetry.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    app: vss-collector
+{{- end }}

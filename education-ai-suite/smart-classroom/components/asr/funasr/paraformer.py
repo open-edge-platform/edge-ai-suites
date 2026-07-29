@@ -7,6 +7,7 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
+
 FUNASR_MODEL_MAP = {
     "paraformer-zh": "iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
     "paraformer-en": "iic/speech_paraformer-large-vad-punc_asr_nat-en-16k-common-vocab10020",
@@ -16,6 +17,7 @@ FUNASR_MODEL_MAP = {
 # use same vad and punc model for different ASR models
 VAD_MODEL = "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch"
 PUNC_MODEL = "iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
+
 
 class Paraformer(BaseASR):
     def __init__(self, model_name, device="cpu", revision="v2.0.4"):

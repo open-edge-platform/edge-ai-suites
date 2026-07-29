@@ -1,8 +1,8 @@
 # Create Your Own Robot Kit
 
-This tutorial guides guides you through creating an autonomous mobile robot capable of
+This tutorial guides you through creating an autonomous mobile robot capable of
 exploring and mapping an area. It involves adding an Intel® compute system, placing a
-Intel® RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
+RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
 
 Use the [robot-keyboard-teleop](./robot-keyboard-teleop.md) ROS 2 node to validate that the robot kit's hardware
 setup has been done correctly.
@@ -15,10 +15,10 @@ The robot base should contain:
 
 - Intel® compute system with Autonomous Mobile Robot installed
 
-- Intel® RealSense™ camera
+- RealSense™ camera
 
 - Robot base support (chassis) for the Intel® compute system and the
-  Intel® RealSense™ camera
+  RealSense™ camera
 
 - Wheels
 
@@ -46,7 +46,7 @@ The robot base should feature a ROS 2 node with the ability to:
 - When using multiple robots, the ability to change these names for
   each robot like ``robot1_odom`` and ``robot1_base_link`` (more information
   can be found `here
-  <https://navigation.ros.org/setup_guides/transformation/setup_transforms.html>`__).
+  <https://docs.nav2.org/setup_guides/transformation/setup_transforms.html>`__).
 
 > **Note**: This ROS 2 node runs on the compute system and retrieving information from the
 > motor robot's controller via a wired connection, usually a USB connection.
@@ -61,11 +61,11 @@ The standard assembly involves the following steps:
 
 1. Mount the motors onto the lower chassis board and then assemble the wheels.
 2. Fix the motor controller on the chassis board and establish connections with the motors.
-3. Attach the Intel® RealSense™ camera and the SSD drive to the upper chassis board.
-4. Mount the Intel® compute system to the the upper chassis board.
+3. Attach the RealSense™ camera and the SSD drive to the upper chassis board.
+4. Mount the Intel® compute system to the upper chassis board.
 5. Connect the two chassis boards.
-6. Establish a connection between the Intel® compute system and both Intel® RealSense™ camera and motor controller via USB.
-7. Connect both the the Intel® compute system and the motor controller to a power source.
+6. Establish a connection between the Intel® compute system and both RealSense™ camera and motor controller via USB.
+7. Connect both the Intel® compute system and the motor controller to a power source.
 8. Power the Intel® compute system using a power source.
 
 ### Step 2: Integration into Autonomous Mobile Robot
@@ -86,7 +86,7 @@ The Autonomous Mobile Robot pipeline assumes that the robot base ROS 2 node:
   - ``odom`` is used by the Navigation 2 package and others to get information
     from sensors, especially the wheel encoders. For more information refer to `Navigation 2
     tutorial on Odometry
-    <https://navigation.ros.org/setup_guides/odom/setup_odom.html>`__.
+    <https://docs.nav2.org/setup_guides/odom/setup_odom_gz.html>`__.
 
   - ``base_link`` represents the center of the robot to which all other links
     are connected.
@@ -263,13 +263,13 @@ You can check the following:
 #### Introduction to the ROS 2 Navigation Parameter File
 
 The Autonomous Mobile Robot pipeline for AMRs uses the
-[Navigation 2 package](https://navigation.ros.org) from ROS 2. Setting parameters specific to the
+[Navigation 2 package](https://docs.nav2.org) from ROS 2. Setting parameters specific to the
 robot and the mapping area is essential for the Navigation 2 packages to function properly.
 
 #### Robot Navigation Parameter File
 
 To help understand the options in this parameter file, see ROS 2
-[Navigation 2 Packages Configuration Guide](https://navigation.ros.org/configuration/index.html).
+[Navigation 2 Packages Configuration Guide](https://docs.nav2.org/configuration/index.html).
 
 With numerous parameters to configure, Intel® recommends referring to
 Navigation 2 documentation for a comprehensive understanding of the setup.
@@ -320,7 +320,7 @@ The most important parameters to set are:
 
 The Autonomous Mobile Robot navigation full stack contains numerous components designed to assist the robot in navigation, obstacle avoidance, and mapping an area. For example:
 
-- Intel® RealSense™ Camera Node: receives input from the camera and publishes topics used by
+- RealSense™ Camera Node: receives input from the camera and publishes topics used by
   the vSLAM algorithm.
 
 - Robot Base Node: receives input from the motor controller (for example, from
@@ -343,7 +343,7 @@ The Autonomous Mobile Robot navigation full stack contains numerous components d
   Robots paper <https://arxiv.org/abs/2102.03228>`__.
 
 - FastMapping: It is an algorithm to create a 3D voxelmap of a robot's surroundings,
-  based on Intel® RealSense™ camera's depth sensor data and provide the 2D map needed by the Navigation 2 stack.
+  based on RealSense™ camera's depth sensor data and provide the 2D map needed by the Navigation 2 stack.
 
 - ``nav2``: the navigation package.
 
@@ -450,7 +450,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
 
 3. In the ``ros-base-camera-tf`` target, change the transform values from
    ``static_transform_publisher``. The values for x, y, and z depend on where
-   your Intel® RealSense™ camera is set.
+   your RealSense™ camera is set.
 
 #### Start Mapping an Area with Your Robot
 
@@ -468,7 +468,7 @@ The [wandering-aaeon-tutorial](../../../dev_guide/tutorials_amr/navigation/wande
    ```bash
    source /opt/ros/jazzy/setup.bash
    export ROS_DOMAIN_ID=<value>
-   /opt/ros/humble/share/wandering_aaeon_tutorial/scripts/wandering_aaeon.sh
+   /opt/ros/jazzy/share/wandering_aaeon_tutorial/scripts/wandering_aaeon.sh
    ```
 
    <!--hide_directive:::hide_directive-->

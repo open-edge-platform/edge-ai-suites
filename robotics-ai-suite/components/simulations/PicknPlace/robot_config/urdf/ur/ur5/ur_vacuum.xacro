@@ -20,9 +20,9 @@
         </material>
       </visual>
       <collision name="vacuum_collision_${index}">
-        <origin rpy="0 0 0" xyz="0 0 0.0025"/>
+        <origin rpy="0 0 0" xyz="0 0 0.015"/>
         <geometry>
-          <cylinder radius="0.01" length="0.005"/>
+          <cylinder radius="0.02" length="0.03"/>
         </geometry>
       </collision>
       <inertial name="vacuum_inertial_${index}">
@@ -41,82 +41,32 @@
       <dynamics damping="0.0" friction="10"/>
     </joint>
 
-    <!-- Contact sensors dla ARIAC plugin -->
+    <!-- Gazebo properties for vacuum gripper -->
     <gazebo reference="${prefix}vacuum_gripper${index}">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <minDepth>0.003</minDepth>
+      <mu1>5.0</mu1>
+      <mu2>5.0</mu2>
+      <minDepth>0.0005</minDepth>
       <maxVel>0</maxVel>
-      <kp>1e+13</kp>
-      <kd>1.0</kd>
+      <kp>1e+18</kp>
+      <kd>1000.0</kd>
       <material>Gazebo/Grey</material>
-      
-      <!-- Contact sensor 1 -->
-      <sensor name="vacuum_contact_sensor_1_${index}" type="contact">
-        <contact>
-          <collision>vacuum_collision_${index}</collision>
-        </contact>
-        <update_rate>100</update_rate>
-        <plugin name="contact_sensor_1_plugin_${index}" filename="libgz_ros_contact.so">
-          <ros>
-            <namespace>${namespace}</namespace>
-            <remapping>~/contacts:=vacuum_gripper${index}/contact_sensor_1</remapping>
-          </ros>
-        </plugin>
-      </sensor>
-      
-      <!-- Contact sensor 2 -->
-      <sensor name="vacuum_contact_sensor_2_${index}" type="contact">
-        <contact>
-          <collision>vacuum_collision_${index}</collision>
-        </contact>
-        <update_rate>100</update_rate>
-        <plugin name="contact_sensor_2_plugin_${index}" filename="libgz_ros_contact.so">
-          <ros>
-            <namespace>${namespace}</namespace>
-            <remapping>~/contacts:=vacuum_gripper${index}/contact_sensor_2</remapping>
-          </ros>
-        </plugin>
-      </sensor>
     </gazebo>
   
-    <!-- ARIAC Vacuum Tool Plugin -->
+    <!-- DetachableJoint Plugin for vacuum gripper -->
     <gazebo>
-      <plugin name="${prefix}vacuum_tool_plugin_${index}" filename="libariac_vacuum_tool_plugin.so">
-        <ros>
-          <namespace>${namespace}</namespace>
-        </ros>
-        
-        <!-- Basic parameters -->
-        <tool_type>2</tool_type> <!-- VacuumTools::VG_2 -->
-        <gripper_base_link>${prefix}vacuum_gripper${index}</gripper_base_link>
-        
-        <!-- Contact sensor topics -->
-        <contact_sensor_1_topic>/${namespace}/vacuum_gripper${index}/contact_sensor_1</contact_sensor_1_topic>
-        <contact_sensor_2_topic>/${namespace}/vacuum_gripper${index}/contact_sensor_2</contact_sensor_2_topic>
-        
-        <!-- Serwisy ROS -->
-        <attach_service>attach_${index}</attach_service>
-        <detach_service>detach_${index}</detach_service>
-        
-        <!-- Parameters malfunctions (optional) -->
-        <malfunction_occurrence>0</malfunction_occurrence>
-        <grasp_occurrence>1</grasp_occurrence>
-        
-        <!-- Joint for lock/unlock -->
-        <lock_joint>${prefix}gripper_joint${index}</lock_joint>
-        
-        <!-- Physical parameters -->
-        <max_force>50.0</max_force>
-        <max_distance>0.1</max_distance>
-        <min_distance>0.01</min_distance>
+      <plugin name="gz::sim::systems::DetachableJoint" filename="libgz-sim-detachable-joint-system.so">
+        <parent_link>${prefix}vacuum_gripper${index}</parent_link>
+        <child_model>cube_0</child_model>
+        <child_link>link</child_link>
+        <topic>/${namespace}/vacuum_gripper/attach_${index}</topic>
+        <suppress_child_warning>true</suppress_child_warning>
       </plugin>
     </gazebo>
 
 </xacro:macro>
   
 <!-- Base link dla vacuum gripper -->
-<link name="vacuum_gripper_base">
+<link name="$(arg prefix)vacuum_gripper_base">
   <gravity>0</gravity>
   <visual name="vacuum_visual_base">
     <origin rpy="0 0 0" xyz="0 0 0.00" />
@@ -140,16 +90,16 @@
   </collision>
 </link>
 
-<joint name="vacuum_gripper_base_joint" type="fixed">
-  <parent link="ee_link" />
-  <child link="vacuum_gripper_base" />
+<joint name="$(arg prefix)vacuum_gripper_base_joint" type="fixed">
+  <parent link="$(arg prefix)ee_link" />
+  <child link="$(arg prefix)vacuum_gripper_base" />
   <origin rpy="0.0 0.0 0.0" xyz="0.0025 0.0 0.0"/>
   <limit effort="0.0" velocity="0.0" lower="0" upper="0" />
   <dynamics damping="0.0" friction="10"/>
 </joint>
 
 <!-- Gazebo properties dla base -->
-<gazebo reference="vacuum_gripper_base">
+<gazebo reference="$(arg prefix)vacuum_gripper_base">
   <material>Gazebo/DarkGrey</material>
 </gazebo>
  
@@ -158,14 +108,14 @@
   prefix="$(arg prefix)" 
   namespace="$(arg namespace)" 
   index="1" 
-  base_link="vacuum_gripper_base" 
+  base_link="$(arg prefix)vacuum_gripper_base" 
   xyz="0.0 0.0125 0.002"/>
  
 <xacro:ur_vacuum_gripper 
   prefix="$(arg prefix)" 
   namespace="$(arg namespace)" 
   index="2" 
-  base_link="vacuum_gripper_base" 
+  base_link="$(arg prefix)vacuum_gripper_base" 
   xyz="0.0 -0.0125 0.002"/>
 
 </robot>

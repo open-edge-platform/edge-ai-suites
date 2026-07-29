@@ -1,0 +1,31 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "multimodal-embedding.fullname" . }}-config
+  labels:
+    {{- include "multimodal-embedding.labels" . | nindent 4 }}
+data:
+  EMBEDDING_MODEL_NAME: {{ .Values.global.embeddingModel.modelId | quote }}
+  {{- if .Values.global.embeddingModel.useGPU.enabled }}
+  EMBEDDING_DEVICE: "GPU"
+  {{- else }}
+  EMBEDDING_DEVICE: "CPU"
+  {{- end }}
+  EMBEDDING_USE_OV: {{ .Values.env.embeddingUseOV | quote }}
+  EMBEDDING_OV_MODELS_DIR: {{ .Values.env.embeddingOVModelsDir | quote }}
+  OV_MODELS_DIR: {{ .Values.env.embeddingOVModelsDir | quote }}
+  DEFAULT_START_OFFSET_SEC: {{ .Values.env.defaultStartOffsetSec | quote }}
+  DEFAULT_CLIP_DURATION: {{ .Values.env.defaultClipDuration | quote }}
+  DEFAULT_NUM_FRAMES: {{ .Values.env.defaultNumFrames | quote }}
+  OV_PERFORMANCE_MODE: {{ .Values.env.ovPerformanceMode | quote }}
+  HF_HOME: "/home/appuser/.cache/huggingface"
+  TRANSFORMERS_CACHE: "/home/appuser/.cache/huggingface"
+  HUGGINGFACE_HUB_CACHE: "/home/appuser/.cache/huggingface"
+  http_proxy: {{ .Values.global.httpProxy | quote }}
+  https_proxy: {{ .Values.global.httpsProxy | quote }}
+  no_proxy: "{{ .Values.global.noProxy }},mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding,live-video-captioning-rag"
+  no_proxy_env: "{{ .Values.global.noProxy }},mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding,live-video-captioning-rag"

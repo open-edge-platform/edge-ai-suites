@@ -1,0 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: ovms-llm
+description: OpenVINO Model Server subchart for LLM text generation (ADK agentic dispatch)
+version: 1.0.1

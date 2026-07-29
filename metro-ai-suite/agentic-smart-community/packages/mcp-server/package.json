@@ -1,0 +1,28 @@
+{
+  "name": "@smartbuilding-video/mcp-server",
+  "version": "0.1.0",
+  "description": "SmartBuilding Video MCP Server — tools, resources, and video-worker orchestration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/index.ts --http"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@smartbuilding-video/tools": "*",
+    "@smartbuilding-video/db": "*",
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.0"
+  }
+}

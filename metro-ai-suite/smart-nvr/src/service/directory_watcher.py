@@ -41,6 +41,17 @@ if not _root_watch_paths:
 # Removed initial upload status tracking (was unused externally)
 
 
+def _normalize_watcher_mapping(mapping: Dict[str, bool]) -> Dict[str, bool]:
+    """Normalize persisted/API watcher values so only boolean True enables a camera."""
+    normalized = {}
+    for camera, enabled in (mapping or {}).items():
+        camera_name = str(camera).strip()
+        if not camera_name:
+            continue
+        normalized[camera_name] = enabled is True
+    return normalized
+
+
 class DebouncedHandler(FileSystemEventHandler):
     last_updated = None  # Class-level attribute
     lock = Lock()  # Lock for thread safety
@@ -83,7 +94,7 @@ class DebouncedHandler(FileSystemEventHandler):
                 # Fallback: assume first part is the camera (legacy layout)
                 camera = parts[0]
             with _mapping_lock:
-                enabled = _enabled_cameras.get(camera, False)
+                enabled = _enabled_cameras.get(camera, False) is True
             if not enabled:
                 logger.debug(f"Ignoring file {file_path} (camera '{camera}' not enabled | root={root_used})")
             return enabled
@@ -223,12 +234,13 @@ async def set_camera_watcher_mapping(
         request: FastAPI request (for Redis client)
     """
     global _enabled_cameras
+    normalized_mapping = _normalize_watcher_mapping(mapping)
     with _mapping_lock:
-        _enabled_cameras.update(mapping)
-        # Remove cameras explicitly set to False but keep for persistence
-        effective = {k: v for k, v in _enabled_cameras.items() if v}
-    newly_enabled = [k for k, v in mapping.items() if v]
-    newly_disabled = [k for k, v in mapping.items() if not v]
+        previously_enabled = {k for k, v in _enabled_cameras.items() if v is True}
+        _enabled_cameras.update(normalized_mapping)
+        currently_enabled = {k for k, v in _enabled_cameras.items() if v is True}
+    newly_enabled = sorted(currently_enabled - previously_enabled)
+    newly_disabled = [k for k, v in normalized_mapping.items() if v is False]
     logger.info(
         f"[Watcher] Mapping updated. Newly enabled: {newly_enabled or 'None'} | Newly disabled: {newly_disabled or 'None'} | Full mapping: {_enabled_cameras}"
     )

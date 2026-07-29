@@ -39,7 +39,7 @@ class TrafficTrendsController(RouteStatusInterface):
         # Match for smaller areas around ~55x55 Sq.Mtr.
         return 0.0005
 
-    def fetch_route_status(self) -> Optional[TrafficTrendsData]:
+    async def fetch_route_status(self) -> Optional[TrafficTrendsData]:
         """
         Fetch the historical traffic trends for the route based on provided latitude and longitude.
         """

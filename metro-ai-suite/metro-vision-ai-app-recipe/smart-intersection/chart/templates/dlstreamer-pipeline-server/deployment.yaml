@@ -1,3 +1,6 @@
+{{- if and .Values.trustedCompute.enabled .Values.dlstreamerPipelineServer.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and dlstreamerPipelineServer.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,19 +16,28 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
+      {{- if .Values.trustedCompute.enabled }}
+      annotations:
+        io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        {{- if .Values.trustedCompute.tc_gpu_enabled }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        cdi-devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
+          {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
     spec:
+      {{- if .Values.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
       securityContext:
-        supplementalGroups: [109,110,992]
+        supplementalGroups: [44,109,110,990,992,993,994,996]
       volumes:
-      - name: dev
-        hostPath:
-          path: /dev
       - name: dev-shm
         hostPath:
           path: /dev/shm
-      - name: run-udev
-        hostPath:
-          path: /run/udev
       - name: dlstreamer-pipeline-server-videos-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-videos-pvc
@@ -106,29 +118,38 @@ spec:
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
-        securityContext:
-          privileged: true
-          runAsUser: 0
-          runAsGroup: 0
-        {{- else }}
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+        {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
+        resources:
+          {{- if not .Values.trustedCompute.enabled }}
+          {{- with .Values.resources.requests }}
+          requests:
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- with .Values.resources.limits }}
+          limits:
+             {{- toYaml . | nindent 13 }}
+          {{- end }}
+          {{- else }}
+          requests:
+             memory: {{ .Values.trustedCompute.resources.requests.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.requests.cpu | quote }}
+          limits:
+             memory: {{ .Values.trustedCompute.resources.limits.memory | quote }}
+             cpu: {{ .Values.trustedCompute.resources.limits.cpu | quote }}
+          {{- end }}
         {{- end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         terminationMessagePath: /tmp/termination-log
         command: ["/bin/bash", "-c"]
         args:
           - |
             {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
         volumeMounts:
-        - name: dev
-          mountPath: /dev
         - name: dev-shm
           mountPath: /dev/shm
-        - name: run-udev
-          mountPath: /run/udev
         - mountPath: /home/pipeline-server/videos
           name: dlstreamer-pipeline-server-videos-data
         - mountPath: /home/pipeline-server/models/object_detection
@@ -147,6 +168,16 @@ spec:
         ports:
           - containerPort: 8080
           - containerPort: 8555
+      {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+      {{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+            {{ .Values.dlstreamerPipelineServer.npu.type }}: {{ .Values.dlstreamerPipelineServer.npu.count }}
+      {{- end }}
       restartPolicy: Always
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

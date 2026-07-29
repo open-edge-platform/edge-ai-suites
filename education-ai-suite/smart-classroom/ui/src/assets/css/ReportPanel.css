@@ -1,0 +1,411 @@
+/* Report Panel - Slide-in sidebar based on report-ui-demo.html */
+
+:root {
+  --intel-blue: #0071c5;
+  --intel-blue-dark: #005a9e;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #edf0f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #5a6374;
+  --text-tertiary: #8c95a6;
+  --border-color: #dfe3e8;
+  --success: #00a854;
+  --error: #f5222d;
+  --shadow-panel: -4px 0 24px rgba(0,0,0,0.12);
+  --radius: 8px;
+  --radius-sm: 4px;
+}
+
+/* Overlay */
+.report-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.report-panel-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel Container */
+.report-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 560px;
+  max-width: 92vw;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-panel);
+  z-index: 1600;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.report-panel.open {
+  transform: translateX(0);
+}
+
+/* Header */
+.report-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.report-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.report-panel-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.report-panel-close {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-panel-close:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Body */
+.report-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* Field Selection Block */
+.field-block {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  background: var(--bg-secondary);
+}
+
+.field-block-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.field-block-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.field-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-group {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  padding: 8px 10px;
+}
+
+.field-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.field-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 22px;
+}
+
+.field-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.field-item-label {
+  flex: 1;
+}
+
+.field-item input,
+.field-group-head input {
+  cursor: pointer;
+}
+
+.field-actions {
+  margin-top: 14px;
+}
+
+.template-action-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.template-action-btn.primary-action {
+  background: var(--intel-blue);
+  color: white;
+}
+
+.template-action-btn.primary-action:hover:not(:disabled) {
+  background: var(--intel-blue-dark);
+}
+
+/* "Apply changes" is a pending call-to-action (amber), NOT a success state —
+   distinct from the green ✓ done indicator so users read it as "click me". */
+.template-action-btn.apply-action {
+  background: #f0a020;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+  border: 1px solid #d98a12;
+}
+
+.template-action-btn.apply-action:hover:not(:disabled) {
+  background: #e0940f;
+}
+
+.template-action-btn:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.field-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Report Section */
+.report-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* Empty State */
+.report-state-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.report-state-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.report-state-empty span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Generating State */
+.report-state-generating {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.gen-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid var(--bg-tertiary);
+  border-top-color: var(--intel-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gen-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Error State */
+.report-state-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--error);
+}
+
+.report-error-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.report-error-text {
+  font-size: 13px;
+}
+
+/* Done State */
+.report-state-done {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.report-done-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+  background: var(--success);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.report-done-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.report-download-btn {
+  display: inline-block;
+  padding: 10px 24px;
+  background: var(--intel-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-download-btn:hover {
+  background: var(--intel-blue-dark);
+}
+
+/* Done-state action row */
+.report-done-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* Inline rendered report (markdown) — shown while generating and when done */
+.report-markdown {
+  text-align: left;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary, #1a1a2e);
+}
+.report-markdown h1 { font-size: 18px; margin: 0 0 10px; }
+.report-markdown h2 { font-size: 15px; margin: 16px 0 8px; }
+.report-markdown h3 { font-size: 14px; margin: 12px 0 6px; }
+.report-markdown table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+.report-markdown th, .report-markdown td { border: 1px solid #dfe3e8; padding: 5px 8px; text-align: left; }
+.report-markdown ul, .report-markdown ol { padding-left: 20px; margin: 6px 0; }
+.report-markdown img { max-width: 100%; height: auto; display: block; margin: 8px 0; border: 1px solid #edf0f5; border-radius: 6px; }
+
+/* Compact left-aligned header now that the report body renders inline */
+.report-state-done { text-align: left; padding: 8px 0 0; }
+.report-done-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.report-done-header .report-done-icon { width: 24px; height: 24px; font-size: 15px; margin: 0; }
+.report-done-header .report-done-text { margin-bottom: 0; }
+.report-done-actions { margin-top: 12px; }
+
+/* Generating: spinner+status row above the streaming raw-first skeleton */
+.report-state-generating { text-align: left; padding: 8px 0 0; }
+.gen-status { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.gen-status .gen-spinner { width: 22px; height: 22px; margin: 0; }
+
+/* Manual field rows (basic info): checkbox label + text input side by side */
+.field-manual-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.field-manual-check {
+  flex: 0 0 96px;
+}
+.field-manual-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+.field-manual-input:focus { border-color: var(--intel-blue); outline: none; }
+.field-manual-input:disabled { background: var(--bg-tertiary); color: var(--text-tertiary); }

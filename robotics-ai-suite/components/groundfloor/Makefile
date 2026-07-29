@@ -10,12 +10,6 @@ COMMIT := $(shell git rev-parse --short HEAD)
 DATE := $(shell git log -1 --format=%cd --date=format:"%Y%m%d")
 VERSION := $(COMMIT)-$(DATE)
 
-# Absolute path to the git repository root (needed so super-linter sees .git even when invoked from this component)
-REPO_ROOT:=$(shell git rev-parse --show-toplevel 2>/dev/null || echo $(ROOT_DIR))
-
-# Path of this component relative to repo root (used to scope linting with FILTER_REGEX_INCLUDE)
-COMPONENT_PATH_REL:=$(shell realpath --relative-to "$(REPO_ROOT)" "$(ROOT_DIR)" 2>/dev/null || echo robotics-ai-suite/components/groundfloor)
-
 ROS_DISTRO ?= humble
 ifeq ($(ROS_DISTRO),humble)
 	UBUNTU_CODENAME := jammy
@@ -24,7 +18,7 @@ else
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: build license-check help lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json source-package clean
+.PHONY: build license-check help lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json test source-package clean
 
 build:
 	@# Help: Build debian package
@@ -46,6 +40,29 @@ build:
         		mk-build-deps -i --host-arch amd64 --build-arch amd64 \
 				-t \"apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades\" debian/control && \
 			dpkg-buildpackage -us -uc"
+
+test:
+	@# Help: Run tests
+	docker run --rm -t --platform linux/amd64 \
+		-v $(ROOT_DIR):/src \
+		-e DEBIAN_FRONTEND=noninteractive \
+		-e ROS_DISTRO=$(ROS_DISTRO) \
+		-w /src \
+		amd64/ros:${ROS_DISTRO}-ros-base \
+		bash -c "apt -qq update && apt install -y equivs devscripts psmisc && \
+		cd pointcloud_groundfloor_segmentation && \
+		mk-build-deps -i --host-arch amd64 --build-arch amd64 \
+			-t \"apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades\" ${ROS_DISTRO}/debian/control && \
+		source /opt/ros/${ROS_DISTRO}/setup.bash && \
+		colcon build --cmake-args -DBUILD_TEST=ON -DCMAKE_BUILD_TYPE=Release && \
+		source install/setup.bash && \
+		cd build/pointcloud_groundfloor_segmentation/test && \
+		./pointcloud-groundfloor-segmentation-tests >> test_log_seg_${ROS_DISTRO}.log && \
+		cd ../../../ && \
+		cd build/pointcloud_groundfloor_segmentation/test && \
+		chmod +x test_*.sh && \
+		./test_realsense.sh  >> test_log_realsense_${ROS_DISTRO}.log && \
+		./test_lidar.sh  >> test_log_lidar_${ROS_DISTRO}.log"
 
 source-package:
 	@# Help: Create source package tarball
@@ -101,8 +118,6 @@ lint-all:
 		-e SHELL=/bin/bash \
 		-e RUN_LOCAL=true \
 		--env-file ".github/linters/super-linter.env" \
-		-e FILTER_REGEX_INCLUDE="^$(COMPONENT_PATH_REL)/" \
-		-e LINTER_RULES_PATH=$(COMPONENT_PATH_REL)/.github/linters \
 		$(if $(VALIDATE_GITHUB_ACTIONS),-e VALIDATE_GITHUB_ACTIONS=$(VALIDATE_GITHUB_ACTIONS)) \
 		$(if $(VALIDATE_YAML),-e VALIDATE_YAML=$(VALIDATE_YAML)) \
 		$(if $(VALIDATE_JSON),-e VALIDATE_JSON=$(VALIDATE_JSON)) \
@@ -111,7 +126,7 @@ lint-all:
 		$(if $(VALIDATE_BASH),-e VALIDATE_BASH=$(VALIDATE_BASH)) \
 		$(if $(VALIDATE_MARKDOWN),-e VALIDATE_MARKDOWN=$(VALIDATE_MARKDOWN)) \
 		$(if $(VALIDATE_CLANG_FORMAT),-e VALIDATE_CLANG_FORMAT=$(VALIDATE_CLANG_FORMAT)) \
-		-v $(REPO_ROOT):/tmp/lint \
+		-v $(ROOT_DIR):/tmp/lint \
 			ghcr.io/super-linter/super-linter:slim-v8.1.0
 
 lint-clang:

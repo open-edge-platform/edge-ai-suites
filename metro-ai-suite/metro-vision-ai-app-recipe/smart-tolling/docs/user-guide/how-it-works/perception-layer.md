@@ -1,6 +1,6 @@
 # The Perception Layer
 
-The core of the system is the **DLStreamer Pipeline Server**, which orchestrates
+The core of the system is the **DL Streamer Pipeline Server**, which orchestrates
 three parallel pipelines defined in `config.json`.
 
 ## Pipeline Strategy

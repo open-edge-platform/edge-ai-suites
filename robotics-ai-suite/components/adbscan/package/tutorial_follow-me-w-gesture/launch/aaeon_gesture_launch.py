@@ -1,5 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# pylint: disable=R0801
+
+"""Launch file for AAEON robot with gesture recognition and dual cameras."""
 
 import os
 
@@ -14,7 +17,8 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def generate_launch_description():
+def generate_launch_description():  # pylint: disable=too-many-locals
+    """Generate launch description for AAEON follow-me with gesture recognition."""
     # launch arguments for two cameras one for nav and other for gesture
     camera1_serial_no_arg = DeclareLaunchArgument(
         'camera1_serial_no', description='Serial number of camera 1'
@@ -23,8 +27,19 @@ def generate_launch_description():
         'camera2_serial_no', description='Serial number of camera 2'
     )
 
+    # Get ROS distro from environment variable, fallback to file detection
+    ros_distro = os.environ.get('ROS_DISTRO')
+    if not ros_distro:
+        # Fallback: detect from filesystem
+        if os.path.exists('/opt/ros/jazzy/setup.bash'):
+            ros_distro = 'jazzy'
+        elif os.path.exists('/opt/ros/humble/setup.bash'):
+            ros_distro = 'humble'
+        else:
+            raise RuntimeError('No supported ROS2 distribution found (humble or jazzy)')
+
     amr_interface_config_file = (
-        '/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml'
+        f'/opt/ros/{ros_distro}/share/ros2_amr_interface/params/aaeon_node_params.yaml'
     )
     package_name = FindPackageShare('tutorial_follow_me_w_gesture').find(
         'tutorial_follow_me_w_gesture'

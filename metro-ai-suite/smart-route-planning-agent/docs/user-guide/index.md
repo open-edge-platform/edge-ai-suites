@@ -1,7 +1,7 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-route-planning-agent">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-route-planning-agent/README.md">
      Readme
@@ -54,7 +54,7 @@ User Input (Source/Destination) → Route Planning Agent
 :hidden:
 
 get-started
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->

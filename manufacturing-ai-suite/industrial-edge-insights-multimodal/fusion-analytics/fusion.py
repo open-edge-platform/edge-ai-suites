@@ -89,9 +89,9 @@ def find_nearest(buf, ts, type):
     
     # Find the message with minimum timestamp difference
     if type == "vision":
-        # Vision messages have timestamp in metadata.time
-        nearest_index, nearest_item = min(enumerate(buf), key=lambda x: abs(x[1]["metadata"]["time"] - ts))
-        diff = abs(nearest_item["metadata"]["time"] - ts)
+        # Vision messages have timestamp in metadata.rtp.sender_ntp_unix_timestamp_ns
+        nearest_index, nearest_item = min(enumerate(buf), key=lambda x: abs(x[1]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"] - ts))
+        diff = abs(nearest_item["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"] - ts)
     elif type == "timeseries":
         # Time-series messages have timestamp in time field
         nearest_index, nearest_item =  min(enumerate(buf), key=lambda x: abs(x[1]["time"] - ts))
@@ -177,16 +177,23 @@ def on_message(client, userdata, msg):
             
         elif msg.topic == VISION_TOPIC:
             # Process vision-based defect detection message
-            queues["vision"].append(payload)
+            if "metadata" not in payload or "rtp" not in payload["metadata"] or "sender_ntp_unix_timestamp_ns" not in payload["metadata"]["rtp"]:
+                logger.warning(f"missing RTP timestamp metadata in vision message. Skipping timestamp-based fusion for frame_id: {payload['metadata'].get('frame_id', 'unknown')}")
+                time = payload["metadata"]["time"]
+            else:
+                time = payload["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]
+                queues["vision"].append(payload)
             
             # Debug: uncomment to see incoming messages
             # logger.info(f"Received from Vision: {payload}")
 
             # Write vision weld classification results to InfluxDB
-            time = payload["metadata"]["time"]
             json_body = [{
                 "measurement": "vision-weld-classification-results",
                 "time": pd.to_datetime(time, unit="ns").isoformat(),
+                "tags": {
+                    "search_time": int(time)
+                },
                 "fields": {
                     "frame_id": int(payload["metadata"]["frame_id"]),
                     "height": int(payload["metadata"]["height"]),
@@ -245,7 +252,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     front_vision = queues["vision"][0]
 
     # Determine which message came first based on timestamps
-    if front_ts["time"] <= front_vision["metadata"]["time"]:
+    if front_ts["time"] <= front_vision["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]:
         # Time-series message is older, process it first
         source_queue = "ts"
         target_queue = "vision"
@@ -256,7 +263,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         source_queue = "vision"
         target_queue = "ts"
         source_entry = queues[source_queue].popleft()
-        target_index = find_nearest(queues[target_queue], source_entry["metadata"]["time"], "timeseries")
+        target_index = find_nearest(queues[target_queue], source_entry["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"], "timeseries")
 
     # Check if a matching message was found within tolerance
     if target_index is None:
@@ -280,23 +287,31 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     del queues[target_queue][target_index]
 
     vision_classification = "No Label"
+    timeseries_classification = "No Label"
 
     data_dict = {}
-
+    ts_time = None
+    vision_rtp_time = None
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
-        vision_confidence = source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
+        vision_confidence = source_entry["metadata"]["objects"][0]["classification/Model6"]["confidence"]
+        vision_rtp_time = source_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
+        ts_time = target_entry["time"]
         timeseries_anomaly = target_entry["anomaly_status"]
+        timeseries_classification = target_entry.get("predicted_category", "No Label")
         data_dict = source_entry
     else:
         # Time-series message processed first
-        vision_confidence = target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
+        vision_confidence = target_entry["metadata"]["objects"][0]["classification/Model6"]["confidence"]
+        vision_rtp_time = target_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
+        ts_time = source_entry["time"]
         timeseries_anomaly = source_entry["anomaly_status"]
+        timeseries_classification = source_entry.get("predicted_category", "No Label")
         data_dict = target_entry
-        
-    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]:
-            vision_classification = str(data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
+
+    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification/Model6"]:
+        vision_classification = str(data_dict["metadata"]["objects"][0]["classification/Model6"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
@@ -311,7 +326,10 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     else:  # mode == "OR"
         # Either system detecting anomaly triggers alert
         fused_decision = vision_anomaly | timeseries_anomaly
-    logger.info(f"Vision_Anomaly Type: {vision_classification}, Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision}")
+    
+    time_diff = diff_timestamps_ns(vision_rtp_time, ts_time) if vision_rtp_time is not None else None
+
+    logger.info(f"Vision_Anomaly Type: {vision_classification}, Vision anomaly: {vision_anomaly}, TS anomaly: {timeseries_anomaly} fused decision: {fused_decision} time diff between RTP and ts: {time_diff['ms']:.3f} ms" if time_diff is not None else "N/A")
     return {
         "from": source_entry,
         "nearest": target_entry,
@@ -321,7 +339,9 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         "target_queue": target_queue,
         "vision_anomaly": vision_anomaly,
         "timeseries_anomaly": timeseries_anomaly,
-        "vision_classification": vision_classification
+        "vision_classification": vision_classification,
+        "timeseries_classification": timeseries_classification,
+        "src_time_diff_ms": time_diff['ms'] if time_diff is not None else None
     }
 
 
@@ -369,7 +389,14 @@ def main():
                 # Write fused result to InfluxDB (InfluxDB v1.11.8)
 
                 if result["fused_decision"] is not None:
-                    ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["time"]
+                    ts = result["from"]["time"] if "time" in result["from"] else result["from"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]
+                    vision_time = result["from"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"] if "metadata" in result["from"] and "rtp" in result["from"]["metadata"] else None
+                    if vision_time is None and "nearest" in result and result["nearest"] and "metadata" in result["nearest"] and "rtp" in result["nearest"]["metadata"]:
+                        vision_time = result["nearest"]["metadata"]["rtp"]["sender_ntp_unix_timestamp_ns"]
+
+                    timeseries_time = result["nearest"]["time"] if result["nearest"] and "time" in result["nearest"] else None
+                    if timeseries_time is None and "from" in result and "time" in result["from"]:
+                        timeseries_time = result["from"]["time"]
                     
                     json_body = [{
                         "measurement": "fusion_result",
@@ -378,13 +405,18 @@ def main():
                             "fused_decision": int(result["fused_decision"]),
                             "mode": str(result["mode"]),
                             "vision_classification": result["vision_classification"],
+                            "timeseries_classification": result["timeseries_classification"],
                             "ts_anomaly": (
                                 str(result["nearest"]["anomaly_status"])
                                 if "anomaly_status" in result["nearest"]
                                 else str(result["from"]["anomaly_status"])
                             ),
                             "vision_anomaly": int(result["vision_anomaly"]),
-                            "timeseries_anomaly": int(result["timeseries_anomaly"])
+                            "timeseries_anomaly": int(result["timeseries_anomaly"]),
+                            "vision_rtsp_ts_diff_ms": float(result["src_time_diff_ms"]) if result["src_time_diff_ms"] is not None else None,
+                            "vision_timestamp": int(vision_time) if vision_time is not None else None,
+                            "timeseries_timestamp": int(timeseries_time) if timeseries_time is not None else None
+
                         }
                     }]
                     influx_client.write_points(json_body)

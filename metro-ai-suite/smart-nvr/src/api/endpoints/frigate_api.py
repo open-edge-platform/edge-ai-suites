@@ -84,7 +84,7 @@ class FrigateService:
                 status_code=400, detail="End time must be after start time"
             )
 
-        url = f"{self.base_url}/api/{camera_name}/start/{start_time}/end/{end_time}/clip.mp4"
+        url = f"{self.base_url}/api/{camera_name}/start/{int(start_time)}/end/{int(end_time)}/clip.mp4"
         if download:
             url += "?download=1"
 

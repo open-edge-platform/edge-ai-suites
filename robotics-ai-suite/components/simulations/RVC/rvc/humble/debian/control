@@ -1,0 +1,30 @@
+Source: ros-humble-rvc
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0),
+    ros-humble-builtin-interfaces,
+    ros-humble-geometry-msgs,
+    ros-humble-rosidl-default-generators,
+    ros-humble-std-msgs
+Homepage:
+Standards-Version: 3.9.2
+
+Package: ros-humble-rvc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-setuptools,
+    ros-humble-ros-gz,
+    gz-sim7-cli,
+    libgz-sim7,
+    ros-humble-geometry-msgs,
+    ros-humble-launch-ros,
+    ros-humble-moveit-msgs,
+    ros-humble-moveit-ros-visualization,
+    ros-humble-rclpy,
+    ros-humble-rmw-cyclonedds-cpp,
+    ros-humble-rosidl-default-runtime,
+    ros-humble-std-srvs,
+    ros-humble-smach,
+    ros-humble-robot-config,
+    ros-humble-robot-config-plugins
+Description: Single-arm two-conveyor pick-and-place demo built on the shared robot_config simulation framework.

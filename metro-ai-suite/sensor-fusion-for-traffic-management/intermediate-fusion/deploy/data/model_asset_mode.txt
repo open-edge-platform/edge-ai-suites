@@ -1,0 +1,3 @@
+mode=dummy
+note=Bundled deploy model files use dummy weights for runtime smoke tests only.
+note=They preserve model interfaces but do not produce meaningful detections.

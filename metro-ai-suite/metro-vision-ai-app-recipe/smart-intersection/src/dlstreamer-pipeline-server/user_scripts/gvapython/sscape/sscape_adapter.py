@@ -152,10 +152,10 @@ class PostInferenceDataPublish:
     self.client = mqtt.Client()
     self.client.on_connect = self.on_connect
     self.broker = "broker.scenescape.intel.com"
-    self.client.connect(self.broker, 1883, 120)
-    self.client.on_message = self.handleCameraMessage
     if ROOT_CA and os.path.exists(ROOT_CA):
       self.client.tls_set(ca_certs=ROOT_CA)
+    self.client.connect(self.broker, 1883, 120)
+    self.client.on_message = self.handleCameraMessage
     self.client.loop_start()
     return
 

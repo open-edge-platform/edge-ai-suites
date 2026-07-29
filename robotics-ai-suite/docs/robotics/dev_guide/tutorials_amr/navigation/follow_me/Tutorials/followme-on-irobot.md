@@ -2,7 +2,7 @@
 
 This tutorial provides instructions for running the ADBSCAN-based Follow-me
 algorithm from Autonomous Mobile Robot using Intel® RealSense™ camera input.
-Validation of the the algorithm was performed on a custom iRobot Create 3.
+Validation of the algorithm was performed on a custom iRobot Create 3.
 The Intel® RealSense™ camera publishes to `/camera/depth/color/points` topic.
 The `adbscan_sub_node` subscribes to the corresponding topic,
 detects the obstacle array, computes the robot's velocity and publishes to the
@@ -32,7 +32,10 @@ connection. Output on the robot with the configuration from the image
 above:
 
 ```bash
-$ ping -c 3 192.168.99.2
+ping -c 3 192.168.99.2
+```
+
+```text
 PING 192.168.99.2 (192.168.99.2) 56(84) bytes of data.
 64 bytes from 192.168.99.2: icmp_seq=1 ttl=64 time=1.99 ms
 64 bytes from 192.168.99.2: icmp_seq=2 ttl=64 time=2.31 ms

@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Intel Corporation
+cmake_minimum_required(VERSION 3.5)
+project(rvc)
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_launch_structure test/test_launch_structure.py)
+  ament_add_pytest_test(test_ur5_config test/test_ur5_config.py)
+endif()
+
+include_directories(include)
+
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "interface/msg/BoxState.msg"
+  DEPENDENCIES
+  builtin_interfaces
+  std_msgs
+  geometry_msgs
+)
+
+ament_export_dependencies(
+  rosidl_default_runtime
+  rclpy
+  std_msgs
+  geometry_msgs
+  builtin_interfaces
+)
+
+file(GLOB SCRIPT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.py")
+install(PROGRAMS ${SCRIPT_FILES} DESTINATION lib/${PROJECT_NAME})
+
+file(GLOB SCRIPT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/robots/*.py")
+install(PROGRAMS ${SCRIPT_FILES} DESTINATION lib/${PROJECT_NAME}/robots)
+
+
+install(DIRECTORY launch params urdf worlds rviz DESTINATION share/${PROJECT_NAME})
+install(FILES cyclonedds.xml DESTINATION share/${PROJECT_NAME})
+
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/rvc.dsv.in")
+
+ament_package()
