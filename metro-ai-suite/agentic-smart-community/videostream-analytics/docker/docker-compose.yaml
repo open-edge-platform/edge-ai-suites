@@ -8,8 +8,6 @@ services:
         HTTP_PROXY: ${HTTP_PROXY:-}
         HTTPS_PROXY: ${HTTPS_PROXY:-}
         NO_PROXY: ${NO_PROXY:-}
-    ports:
-      - "8999:8999"
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
       # MCP server's data root. Defaults to ~/.mcp-smartbuilding (the MCP default);
@@ -27,6 +25,10 @@ services:
       # extractor / VLM can read them. See smarthome_arch2_dev.md §32.
       - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
       - ${MODEL_DIR:-${HOME}/models}:${MODEL_DIR:-${HOME}/models}:ro
+      # setup_docker.sh generates this host-side runtime configuration with the
+      # absolute PREFILTER_MODEL path before starting the service.
+      - ${VIDEOSTREAM_CONFIG_FILE:-../config/config.yaml}:/app/config/config.yaml:ro
+    entrypoint: ["videostream-analytics", "serve", "--config", "/app/config/config.yaml"]
     # NPU passthrough: expose the host's Intel NPU device node so the containerised
     # OpenVINO NPU plugin can reach it. The host node is /dev/accel/accel0 (crw-rw----
     # root render). group_add adds the host 'render' gid (992) so a non-root container
@@ -35,7 +37,7 @@ services:
     devices:
       - /dev/accel/accel0:/dev/accel/accel0
     group_add:
-      - "992" # host 'render' gid — see `getent group render`
+      - ${RENDER_GROUP_ID:-992}
     # Runs as root (default). Clip files written to the mounted data dir are therefore
     # root-owned; the MCP clip extractor / VLM read them fine. If you need the MCP
     # storage cleaner (running as your host user) to purge them, run the container as

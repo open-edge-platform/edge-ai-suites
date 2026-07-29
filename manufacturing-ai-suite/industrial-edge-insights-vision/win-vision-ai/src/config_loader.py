@@ -271,13 +271,10 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
             raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'serial'")
         if not raw.get("pixel-format"):
             raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'pixel-format' — enter a valid value (e.g. mono8, bgr8)")
-        if not raw.get("width"):
-            raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'width' — enter a valid integer value")
-        if not raw.get("height"):
-            raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'height' — enter a valid integer value")
-        # Collect any extra keys as passthrough properties for gencamsrc
+        # Collect any extra keys as passthrough properties for gencamsrc.
+        # width/height are optional — if omitted, set to "" or null, they are excluded and gencamsrc will use its own defaults.
         reserved = {"type", "serial"}
-        extra_props = {k: v for k, v in raw.items() if k not in reserved}
+        extra_props = {k: v for k, v in raw.items() if k not in reserved and v not in (None, "")}
         return InputConfig(
             type=input_type,
             serial=str(raw["serial"]),

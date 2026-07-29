@@ -45,7 +45,7 @@ This application demonstrates a **unique dual-interaction model**:
 
 ## Architecture
 
-The Flutter app acts as a REST API client to the Content Search backend:
+The Flutter app acts as a REST API client to the Content Search backend, which depends on a standalone VLM service:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -68,14 +68,25 @@ The Flutter app acts as a REST API client to the Content Search backend:
                           │ HTTP REST API
                           ▼
          ┌────────────────────────────────────────┐
-         │      Content Search Backend            │
-         │       (FastAPI +OpenVINO)              │
+         │   Content Search Backend (Port 9011)   │
+         │        (FastAPI + ChromaDB)            │
          ├────────────────────────────────────────┤
          │   • File upload & ingestion            │
-         │   • Vector indexing                    │
-         │   • LLM-powered Q&A                    │
-         │   • Multi-modal processing             │
+         │   • Vector indexing (ChromaDB)         │
+         │   • RAG Q&A orchestration              │
          │   • Task management                    │
+         └─────────────┬──────────────────────────┘
+                       │
+                       │ VLM API Calls
+                       ▼
+         ┌────────────────────────────────────────┐
+         │   Standalone VLM Service (Port 8000)   │
+         │   (Lightweight FastAPI + OpenVINO)     │
+         ├────────────────────────────────────────┤
+         │   • VLM inference (Qwen3-VL-8B)        │
+         │   • /v1/chat/completions endpoint      │
+         │   • Multi-modal processing             │
+         │   • OpenVINO GenAI runtime             │
          └─────────────┬──────────────────────────┘
                        │
                        ▼
@@ -86,10 +97,18 @@ The Flutter app acts as a REST API client to the Content Search backend:
          └────────────────────────────────────────┘
 ```
 
+**Service Dependencies**:
+1. **Standalone VLM (Port 8000)**: Lightweight VLM-only service - must start first
+2. **Content Search (Port 9011)**: RAG pipeline - depends on VLM service
+3. **Flutter UI**: Cross-platform interface - depends on Content Search API
+
+**Why Standalone VLM?**: Instead of running the entire Smart Classroom main application, we use a lightweight standalone VLM server (`components/vlm/vlm_openvino_serving/app.py`) that only provides the VLM inference endpoint. This is much faster to start and uses fewer resources.
+
 **Key Components**:
 - **Flutter Frontend**: Cross-platform UI (Windows Desktop, Web)
 - **Content Search API**: REST endpoints for file management and RAG operations
-- **OpenVINO Models**: Local inference for embeddings and LLM
+- **Standalone VLM**: Dedicated OpenVINO VLM service (Qwen3-VL-8B-Instruct)
+- **OpenVINO Models**: Local inference for embeddings, VLM, and document processing
 - **Skill Files**: AI agent automation scripts in `.github/skills/`
 
 ---
@@ -187,6 +206,12 @@ Agent: [Reads sc-files skill, calls files endpoint, displays table]
 - **VS Code** (recommended for agentic mode)
 - **Coding Companion** (optional): GitHub Copilot, Continue, Cursor, Claude Code, etc.
 
+### Python Dependencies (Optimized)
+
+**For the Flutter integration, you only need minimal VLM dependencies:**
+
+The setup script installs from [`smart-classroom/components/vlm/vlm_openvino_serving/requirements.txt`](../../smart-classroom/components/vlm/vlm_openvino_serving/requirements.txt)
+
 ### Network
 - **Internet access** for first-time model downloads
 ---
@@ -201,15 +226,31 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/education-ai-suite
 
 # 2. Run setup (one-time)
+#    Installs Flutter deps + Python venv + minimal VLM dependencies
+#    (NOT the full Smart Classroom - only what's needed for VLM service)
 .\utils\flutter\setup.ps1
 
 # 3. Start the application
+#    This starts THREE services in separate windows:
+#    - Standalone VLM (port 8000): Lightweight VLM server
+#    - Content Search (port 9011): RAG backend
+#    - Flutter UI: Desktop application
 .\utils\flutter\start.ps1
 
-# 4. Open browser or desktop app
-# Backend: http://127.0.0.1:9011
-# Flutter Web: http://localhost:5000 (or desktop window)
+# 4. Use the application
+# VLM Service: http://127.0.0.1:8000/health
+# Content Search: http://127.0.0.1:9011/api/v1/system/health
+# Flutter: Desktop window opens automatically
 ```
+
+**Startup Sequence** (handled automatically by start.ps1):
+1. Standalone VLM service launches (lightweight, port 8000)
+2. Waits 45s for VLM model loading
+3. Content Search starts (depends on VLM service)
+4. Waits for Content Search to be healthy
+5. Flutter UI launches
+
+**Note**: The standalone VLM service is much lighter than the full Smart Classroom application. It only provides the `/v1/chat/completions` endpoint needed by Content Search.
 
 ### Agentic Mode (Coding Companion)
 

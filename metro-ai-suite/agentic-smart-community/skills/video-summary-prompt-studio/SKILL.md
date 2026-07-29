@@ -1,394 +1,266 @@
 ---
 name: video-summary-prompt-studio
-description: "Use when: creating or registering a new Smart Building video analytics use case, generating `use-cases/<name>/prompt.md`, generating `use-cases/<name>/evaluate_rules.py` when custom alert logic is needed, adding scenarios such as pet_safety/elder fall/parking safety, refining prompts, or managing multilevel-video-understanding `/v1/tasks`. From a use case name plus natural-language description, infer events/schema, draft the four-section prompt (GLOBAL / MACRO / LOCAL / T_MINUS_1), save prompt.md and any needed evaluate_rules.py, then register through `smartbuilding_use_case_register` when MCP is available; otherwise use `/v1/tasks` curl recipes."
+description: "MANDATORY for creating/registering any Smart Building video analytics use case. Before calling `smartbuilding_use_case_register` or drafting files, ask Q1 (alerting?) and Q2 (extend schema?), then confirm Final Schema + Rule Path. Registration runs through `smartbuilding_use_case_register` in two steps; for direct `/v1/tasks` task management without the MCP server see references/curl-fallback.md."
 homepage: https://github.com/open-edge-platform/edge-ai-libraries
 metadata:
   {
     "openclaw":
       {
-        "emoji": "✍️",
-        "requires": { "env": ["VIDEO_SUMMARY_BASE_URL"] }
+        "emoji": "✍️"
       }
   }
 ---
 
 # Video Summary Prompt Studio
 
-Manages runtime prompts for the video summary service. A task is a bundle of
-four prompts that drive a multi-level hierarchy: **LOCAL** (per micro-chunk)
-→ **MACRO** (per macro-chunk) → **GLOBAL** (whole video) + a **T_MINUS_1**
-context envelope for continuity.
+Authors and registers Smart Building video-analytics use cases: from a use-case
+name + description, ask the two gating questions, draft the four-section prompt
+(GLOBAL / MACRO / LOCAL / T_MINUS_1), then register via
+`smartbuilding_use_case_register` in two steps. **Registration is gated — obey
+the HARD GATE below before doing anything.**
 
-Pure skill, no plugin. In Smart Building use-case creation, the agent authors
-`use-cases/<use_case>/prompt.md` and, when the default severity rule is not
-enough, `use-cases/<use_case>/evaluate_rules.py`. It should call the MCP tool
-`smartbuilding_use_case_register` with `prompt_text` and `evaluate_rules_path`
-when available. For direct video-summary task management without the Smart
-Building MCP server, use `bash` + `curl` against `/v1/tasks`.
+Reference files (read only when the situation applies):
 
----
+- `references/curl-fallback.md` — direct `/v1/tasks` curl flow when the MCP
+  server is unavailable (recipes, error table, `_zh`/`_en` naming).
+- `references/inspect-existing.md` — reading an existing use case's schema
+  from config (only when refining / re-registering).
+- `references/evaluate-rules.md` — `evaluate_rules.py` contract + templates
+  (custom rule path only).
+- `scripts/list_use_cases.sh` — list registered use-case keys from the
+  server's booted config (Phase 4).
 
-## Hard Invariants (check before every POST/PATCH)
+## Mental Model
 
-| Rule | Value |
-|---|---|
-| Anchor names (**CASE-SENSITIVE, literal match**) | `GLOBAL_PROMPT`, `MACRO_CHUNK_PROMPT`, `LOCAL_PROMPT`, `T_MINUS_1_PROMPT` |
-| Required placeholders — `LOCAL`, `MACRO` | `{st_tm}`, `{end_tm}` |
-| Required placeholders — `T_MINUS_1` | `{dur}`, `{st_tm}`, `{end_tm}`, `{past_summary}` |
-| Optional placeholder — `GLOBAL`, `MACRO`, `LOCAL` | `{question}` |
-| `task_name` regex | `^[a-z][a-z0-9_]{1,63}$` (lowercase ASCII + underscore) |
-| Name suffix convention | `_zh` or `_en` (`pet_guard_zh`, `warehouse_ppe_en`) |
-| Smart Building parser output | `LOCAL_PROMPT` must require plain line-oriented text with schema fields as `KEY: value` lines. Never ask for JSON, YAML, Markdown tables, arrays, or code blocks as the VLM output. |
-| Schema field keys — **ENGLISH, verbatim** | The structured output lines MUST use the English schema field names as keys (`EVENT:`, `SEVERITY:`, `DESC:`, and any extension like `PET_ZONE:`). **Never translate the key** (no `事件:` / `严重性:`) — the runtime validates by case-insensitive substring, so a Chinese-only prompt with no literal `event` / `desc` substring FAILS `use_case_validate`. Values may be in any language; keys stay English. |
-| Banned tokens anywhere in any section | Triple-backtick code fences, and the literal string `<<<` |
-| Built-in names (never shadow, never modify, never delete) | `summary`, `engine_valves_sop`, `refrigerator_monitor`, `daily_report`, `daily_report_en`, `refrigerator_monitor_en`, `child_safety_monitor` |
-| Final gate before POST/PATCH | Run the 6-item checklist in `Lint checklist (self-check before POST)` |
+Five layers, each answering one question:
 
-**Missing placeholders** get smart-autofilled server-side (safe to skip).
-**Missing or misspelled anchors** cause 422 with a `missing` list + a
-reference template — fix and retry. The anchor names are case-sensitive:
-`global_prompt` or `GlobalPrompt` will **not** match.
+- **Use Case** — what the business wants to watch (name + description).
+- **Prompt** — how the VLM should look and report. Drafted by you (the
+  agent), NOT generated by the VLM service; the service only stores it.
+  LOCAL ends with `KEY: value` lines.
+- **Schema** — which report fields get persisted as DB columns: base
+  `severity, event, desc` + user-requested extras. The prompt's `KEY:` lines
+  are the source of truth — when `schema_extensions` is omitted, register
+  infers the schema from them. Note the gate scans EVERY `UPPER_SNAKE:` line
+  in LOCAL_PROMPT (not only the `## 输出格式` block), so an example `KEY:`
+  line in prose also counts as an output field.
+- **EVENT** — one schema field; its *values* are what was detected.
+  Detection targets (escape, trapped, …) live HERE as values, never as
+  columns.
+- **Alert Rule** — reads the persisted fields and decides whether to notify
+  (default: `severity=warn|critical`; custom: `evaluate_rules.py`).
 
----
+The pipeline, end to end:
 
-## Prompt Language (auto-select)
+    user gives name + description
+      → Q1/Q2 dialogue fixes the Final Schema   (skill layer — the code never sees it)
+      → you draft the prompt (LOCAL's KEY lines = the Final Schema, expressed)
+      → register_task: gate checks prompt KEYs ↔ schema → POST VLM task → write prompt.md
+      → register:      gate re-checks → ALTER schema → use_case_dict → config.yaml
 
-- Detect the language of the user's latest request and author **all four
-  sections in that same language**. Do not mix languages inside one prompt.
-- If the user explicitly asks for a language (e.g. "write it in English" /
-  "请用中文写"), honor that.
-- Placeholder names (`{st_tm}`, `{end_tm}`, `{dur}`, `{past_summary}`,
-  `{question}`) stay as literal English tokens in both languages.
-- Use the `_zh` / `_en` suffix on `task_name` accordingly.
+Unsure where something belongs? Ask: is it something to *detect* (→ an EVENT
+value, named in LOCAL's guidance) or something to *store* (→ a schema field,
+only if the user asked to keep it)?
 
----
+## REGISTRATION HARD GATE
 
-## Smart Building Use Case Workflow
+- **P1 — Ask before acting.** Do NOT generate `prompt.md` /
+  `evaluate_rules.py`, and do NOT call `smartbuilding_use_case_register`,
+  until Q1 + Q2 are answered and the final schema is confirmed. If you
+  genuinely cannot ask the user, fall back to the default schema
+  `severity, event, desc` and **invent no extension fields** (extend only
+  fields the user's own message explicitly named).
+- **P2 — Schema ≠ events.** Final Schema = `severity, event, desc` **+ only
+  the extra fields the user explicitly asked to store**. Detection targets /
+  behaviors (`escape`, `trapped`, `aggressive_behavior`, `*_risk`,
+  `*_detected`, `*_count`, `risk_level`) are **`EVENT` values, never columns**.
+- **P3 — `KEY: value` only.** LOCAL_PROMPT emits one `KEY: value` line per
+  schema field. No JSON, no code fences, no arrays, no tables (enforced by the
+  lint checklist).
+- **P4 — One registration tool.** All registration goes through
+  `smartbuilding_use_case_register` (two steps, see Register). Never
+  `POST /v1/tasks` yourself for a use case, never treat the agent workspace as
+  the durable home for business files (the server stages them into its repo),
+  never query the DB for use-case config (it lives in the server's booted
+  config under `use_case_dict`).
+- **P5 — Bad draft discard rule.** If a draft prompt asks for JSON, contains
+  code fences, misses the four required anchors, uses 0-5 numeric severity, or
+  leaves business files under `~/.openclaw/workspace` as the durable copy,
+  discard it and regenerate from the template below before registering.
 
-Use this workflow when the user asks OpenClaw or another agent to create a
-video analytics use case from a name plus description, for example
-`pet_safety -- 检测宠物逃跑、受困、攻击性行为`.
+## REQUIRED QUESTION FLOW
 
-### Inputs
+Ask **at most two** questions; skip any the initial request already answers.
+Ask a third only if event names / severity cannot be inferred from the
+description, or the user requests non-default report behavior (weekly/custom)
+or custom alert behavior beyond warn/critical.
 
-Minimum input:
-- `use_case`: lowercase snake_case identifier, e.g. `pet_safety`
-- `description`: natural-language event description in the user's language
+- **Q1 — Alerting?** Does this use case need to raise alerts?
+  - **No** → *report-only*: Final Schema = none, no `evaluate_rules.py`;
+    LOCAL_PROMPT declares/emits no output fields. Skip Q2.
+  - **Yes** → alert via the built-in `defaultRuleEvaluator` (fires on parsed
+    `severity=warn|critical`); base schema is `severity, event, desc`. Go to Q2.
+- **Q2 — Schema extension?** *(only when Q1 = yes)* Extra persisted fields
+  beyond `severity/event/desc` (e.g. `zone_id`, `risk_area`,
+  `motion_direction`)?
+  - **No** → **default rule path**: Final Schema stays
+    `severity, event, desc`; **no** `evaluate_rules.py`.
+  - **Yes** → **custom rule path**: Final Schema = base **+ extensions**
+    (incremental, never replaces the base); you **must** create an
+    `evaluate_rules.py` that reads that final schema (see
+    `references/evaluate-rules.md`). Never infer extensions from event names
+    or behavior descriptions.
 
-Optional input:
-- explicit event names and severity mapping
-- schema fields such as `pet_zone`, `parking_zone`, or `motion_direction`
-- custom alert behavior such as excluded events, zone filters, time windows,
-  custom alert messages, or preview-before-register
+A user request for custom alert behavior beyond warn/critical (event
+exclusions, zone filters, time windows, custom alert text) also selects the
+custom rule path, even if no new schema field was added.
 
-### Defaults
+## FINAL SCHEMA CONFIRMATION
 
-- `use_case` must match `^[a-z][a-z0-9_]{1,63}$`; ask for a corrected name if
-  it does not.
-- `video_summary_task` defaults to `<use_case>_monitor`.
-- Prompt file path defaults to `use-cases/<use_case>/prompt.md` under the
-  Smart Building repo root.
-- Default action is generate + register. If the user asks to preview, or if
-  event/schema inference is ambiguous, show a concise draft summary before
-  registration.
-- Default rule behavior for simple alert-style use cases is the built-in
-  `defaultRuleEvaluator`: alert when parsed `severity` is `warn` or `critical`.
-- If the use case needs event filters, zone filters, custom alert text, or any
-  behavior beyond warn/critical severity, generate an `evaluate_rules.py` and
-  register it via `evaluate_rules_path`.
-- Treat LOCAL_PROMPT's final structured output contract as the source of truth:
-  every output field must be declared in `schema_extensions`, and every custom
-  `evaluate_rules.py` must read those same parsed fields. Never invent schema
-  fields that are not emitted by LOCAL_PROMPT.
-- Choose exactly one alert-rule path after the output contract is known:
-  - **Default severity rule path**: do not create `evaluate_rules.py`. This path
-    requires LOCAL_PROMPT and `schema_extensions` to include `severity`, `event`,
-    and `desc`; `defaultRuleEvaluator` alerts on `severity=warn|critical`.
-  - **Custom rule path**: create `evaluate_rules.py`. The script must consume the
-    schema fields emitted by LOCAL_PROMPT. If LOCAL_PROMPT emits
-    `severity/event/desc/pet_zone`, the script must read those fields; if it
-    emits boolean fields, the script must read those boolean fields.
+Before generating any file or calling register, echo the decision and get
+confirmation (unless the user already said "proceed"):
+
+    Final Schema: severity, event, desc      (+ <extensions> ONLY if requested in Q2)
+    Rule Path:    defaultRuleEvaluator        (or evaluate_rules.py on the custom path)
+
+## CANONICAL EXAMPLE — pet_safety (default path)
+
+Request: "monitor pet escape / trapped / aggressive behavior, RTSP
+`rtsp://.../live/pet`."
+
+- Q1 yes → `defaultRuleEvaluator`; Q2 no — the behaviors are things to detect,
+  not columns to store.
+- Events: `pet_escape`, `pet_trapped`, `aggressive_behavior`, `pet_normal`,
+  `no_incident` (escape/aggression → `warn`, trapped → `critical`,
+  normal/none → `info`).
+- Final Schema: `severity, event, desc`; `schema_extensions` omitted; no
+  `evaluate_rules.py`; monitor `cam_pet_safety` → the RTSP URL.
+
+Wrong version: putting `escape_risk`, `trapped`, `aggressive_behavior`,
+`pet_count`, `risk_level` in `schema_extensions` — those are detection targets
+→ `EVENT` values (P2).
+
+Variant (custom path): same request + "also store which zone the pet is in"
+→ Q2 yes: Final Schema = `severity, event, desc, pet_zone`; LOCAL's
+`## 输出格式` adds a `PET_ZONE:` line; `evaluate_rules.py` REQUIRED (reads
+`severity/event/desc/pet_zone` only — see `references/evaluate-rules.md`).
+
+## Defaults
+
+Applied without asking; shown in the pre-draft summary (Generate step 2):
+
+- `video_summary_task = <use_case>_monitor` (register default — do not pass
+  it). `use_case` must match the name regex (Hard Constraints); ask for a
+  corrected name if it does not.
+- `reports: { data_source: "alerts", default_type: "daily", filter: {} }`.
+- `summarize`: **do NOT pass it** — register applies
+  `{ method: "SIMPLE", processor_kwargs: { levels: 1, level_sizes: [-1], process_fps: 2 } }`.
+  If ever passed explicitly, `method` MUST be exactly one of `SIMPLE` /
+  `USE_VLM_T-1` / `USE_LLM_T-1` / `USE_ALL_T-1` — an illegal value (e.g.
+  `"default"`) makes the VLM return HTTP 400 and every summary silently fails.
+- `persist: true`; `overwrite: false` unless the user explicitly asks to update.
 - Never create `rules`, `alert_conditions`, `severity_levels`, or
-  `cooldown_seconds` fields in `use_case_dict` or MCP register params. There is
+  `cooldown_seconds` fields in `use_case_dict` or register params — there is
   no YAML rule DSL; custom decisions belong in `evaluate_rules.py`.
-- Default `summarize` for monitor-alert use cases:
-  - `method: "SIMPLE"`
-  - `processor_kwargs: { levels: 1, level_sizes: [-1], process_fps: 2 }`
-- Default `reports`: `{ data_source: "alerts", default_type: "daily", filter: {} }`
+- Default action is generate + register. If the user asks to preview, or
+  event/schema inference is ambiguous, show a concise draft summary first.
 
-### Infer Events And Fields
+## Infer Events And Fields
 
-Infer event names from the description using lowercase snake_case. Prefer 3-6
-events total: the risky events the user named plus safe/no-incident events.
+Infer event names from the description, lowercase snake_case, 3–6 total: the
+named risky events plus safe/no-incident events.
 
 Severity mapping:
 - `critical`: immediate injury, trapped/stuck, violent attack, fall, fire,
-  drowning, severe intrusion, or a person/animal unable to self-resolve.
+  drowning, severe intrusion, or an actor unable to self-resolve.
 - `warn`: escape attempts, abnormal agitation, risk proximity, forbidden-area
-  entry, unsafe parking, suspicious behavior, or conditions that may escalate.
-- `info`: normal activity, expected activity, no visible actor, no incident.
-- `normal`: only use as a severity keyword inside prose when the domain already
-  uses it; for structured `SEVERITY` prefer `info` for safe/no-incident rows.
+  entry, unsafe or suspicious conditions that may escalate.
+- `info`: normal activity, no visible actor, no incident.
 
-Safe event defaults:
-- `<domain>_normal` when the actor is visible and safe.
-- `no_incident` when the actor is absent or nothing relevant is happening.
+Safe event defaults: `<domain>_normal` (actor visible and safe), `no_incident`
+(actor absent / nothing relevant).
 
-Schema field defaults:
-- Derive `schema_extensions` from the exact field names listed in LOCAL_PROMPT's
-  output section.
-- For severity/event prompts, declare `severity`, `event`, and `desc`; add
-  optional context fields such as `pet_zone` only if LOCAL_PROMPT outputs them.
-- For boolean-style prompts, declare the boolean-style field names only when
-  LOCAL_PROMPT actually outputs them as `field_name: true/false` lines.
-- Add at most one optional location/context field when useful for alerts, such
-  as `pet_zone`, `parking_zone`, `fall_zone`, or `motion_direction`.
-- Schema extension names are lowercase snake_case. Prompt output keys may be
-  uppercase (`EVENT:`, `SEVERITY:`, `DESC:`, `PET_ZONE:`) because the runtime
-  parser matches schema fields case-insensitively, but include the lowercase
-  schema name somewhere in LOCAL guidance so validation can find it.
+Field rules:
+- Detection targets and inferred events become allowed `EVENT` values, never
+  schema fields — no `*_risk`, `*_status`, boolean, `confidence`, or
+  `recommendation` fields unless the user explicitly requested them.
+- At most one optional location/context field (`zone_id`, `risk_area`,
+  `motion_direction`), only when explicitly requested and useful for alerts.
+- Extension names are lowercase snake_case. Prompt output keys may be
+  uppercase (`EVENT:`, `ZONE_ID:`) — both the register gate and
+  `use_case_validate` match case-insensitively.
 
-Example inference for `pet_safety -- 检测宠物逃跑、受困、攻击性行为`:
-- If LOCAL_PROMPT outputs `SEVERITY`, `EVENT`, `DESC`, and `PET_ZONE`,
-  schema_extensions must be `severity`, `event`, `desc`, and optional
-  `pet_zone`.
-- If a custom `evaluate_rules.py` is generated for that prompt, it should read
-  `event`, `severity`, `desc`, and `pet_zone`, exclude `pet_normal` /
-  `no_incident`, alert on warn/critical severity, and append `pet_zone` to the
-  message.
+## Generate the prompt
 
-### Generate, Save, Register
+1. Fix the Final Schema from the Q1/Q2 answers before drafting.
+2. Echo the pre-draft summary, then continue unless the user objects:
+   - Use Case: `<use_case>`
+   - Events: `<risk_event_1>`, `<risk_event_2>`, `<normal_event>`, `no_incident`
+   - Alerting: `enabled` (or `report-only` when Q1 = no)
+   - Reports: daily
+   - Schema: `severity`, `event`, `desc`  *(+ `<extensions>` on the custom path)*
+   - Rule Path: `defaultRuleEvaluator` *(default)* or `evaluate_rules.py` *(custom)*
+3. Draft the full Markdown prompt from the template below, with exactly these
+   four top-level section headers: `## GLOBAL_PROMPT`,
+   `## MACRO_CHUNK_PROMPT`, `## LOCAL_PROMPT`, `## T_MINUS_1_PROMPT`.
+   LOCAL_PROMPT has two non-negotiable rules (the register gate enforces both):
+   - **`## 输出格式` lists exactly the Final Schema fields** — one
+     `KEY: <说明>` line per field, UPPER_SNAKE keys, the SAME set as the Final
+     Schema (no extra field, none missing; report-only declares none).
+   - **A `## 禁止事项` block is mandatory** (keep the intent verbatim; see
+     template).
+4. Run the lint checklist before registering.
 
-1. Read the schema before drafting (see `Read The Output Schema`).
-2. Draft a complete Markdown `prompt.md` with exactly these top-level section
-   headers: `## GLOBAL_PROMPT`, `## MACRO_CHUNK_PROMPT`, `## LOCAL_PROMPT`,
-   `## T_MINUS_1_PROMPT`.
-3. Run the lint checklist in this skill. Fix all failures before writing or
-   registering.
-4. Save the prompt to `use-cases/<use_case>/prompt.md` if the user requested a
-   Smart Building use case. If the file already exists, do not overwrite unless
-   the user explicitly requested replacement.
-5. If custom alert behavior is needed, save `use-cases/<use_case>/evaluate_rules.py`.
-  It must accept parsed fields on argv[1] and print an AlertOutcome object or
-  `null`. The script must be generated from the LOCAL_PROMPT output fields and
-  `schema_extensions`. For severity/event prompts with an optional zone field,
-  use this pattern:
+### Language
 
-  ```python
-  import json, sys
+- Author all four sections in the language of the user's latest request (or
+  the language they explicitly ask for); never mix languages in one prompt.
+  The template below is Chinese — for English prompts translate the prose;
+  anchors, placeholders, `KEY:` names, and the `## 输出格式` / `## 禁止事项`
+  headers stay literal.
+- The `description` register argument and monitor `name` stay **English**
+  (management metadata, consistent with the built-in use cases) even when the
+  prompt body is Chinese.
 
-  SEVERITY_ORDER = {"info": 0, "warn": 1, "critical": 2}
+### Writing the four sections
 
-  def main():
-      fields = json.loads(sys.argv[1])
-      event = fields.get("event", "")
-      severity = fields.get("severity", "info").lower()
-      desc = fields.get("desc", "")
-      zone = fields.get("pet_zone", "unknown")
-      excluded = {"no_incident", "pet_normal"}
-      should_alert = event not in excluded and SEVERITY_ORDER.get(severity, 0) >= SEVERITY_ORDER["warn"]
-      outcome = {
-          "alertType": event or "alert",
-          "severity": severity,
-          "description": f"{desc} (zone={zone})",
-      } if should_alert else None
-      print(json.dumps(outcome))
+**LOCAL_PROMPT — seconds granularity; the VLM sees raw frames.** The only
+section where perceptual detail enters the system; spend ~50% of drafting
+effort here.
+- Domain-focus heading; time line with `{st_tm}` / `{end_tm}`.
+- Priority-ordered focus list (3–5 items): actor presence + appearance →
+  hazardous objects → hazardous actions → guardian/operator intervention →
+  safe activity (1–2 sentences only).
+- Output rules: 2–5 sentences; tag every hazard with a severity keyword
+  (`critical` / `warn` / `info`); on-screen text original + parenthetical
+  translation; describe truthfully when no actor is visible (no
+  hallucination); no `[` `]`, no echo of the time lines; structured part is
+  plain `KEY: value` lines exactly matching the schema; optional fields only
+  when detected.
+- NEVER put a schema field line in GLOBAL instead of LOCAL — the gate extracts
+  `KEY:` lines from LOCAL_PROMPT only; a field in GLOBAL is rejected with
+  `missing_in_prompt`.
 
-  if __name__ == "__main__":
-      main()
-  ```
+**MACRO_CHUNK_PROMPT — minutes granularity; a compression pass.**
+- Merge-goal heading; time line; promote critical/warn events to the front
+  verbatim; collapse consecutive safe periods into one sentence; keep actor
+  identity consistent via appearance features; do not carry vanished
+  objects/scenes forward; no `[` `]`, no echo of the time lines.
 
-  For boolean-style prompts, use a boolean parser only when LOCAL_PROMPT and
-  schema_extensions actually declare those boolean fields:
+**GLOBAL_PROMPT — whole-video narrative, ≤ 5 short paragraphs.**
+- Product heading; parseable opening-line convention — critical → fixed token
+  (`ALERT: <critical hazard>` / `【注意】<最严重事件>`), warn-only → "N
+  warn-level events occurred." / "出现 N 次 warn 级别事件", else "Overall
+  safe." / "整体安全"; no timestamps in the prose; domain statistics (actor
+  count, hazard-type list, intervention count, ...); do not fabricate beyond
+  macro summaries; weave in `{question}` if present.
 
-  ```python
-  import json, sys
+**T_MINUS_1_PROMPT — previous-window context envelope.**
+- Context heading + "prior context; do not copy into output"; continuity note
+  (hazard still present? resolved? actor in the same area?); the bracketed
+  envelope with the time line and `{past_summary}` (see template).
 
-  def truthy(value) -> bool:
-      if isinstance(value, bool):
-          return value
-      return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
-
-  def main():
-      fields = json.loads(sys.argv[1])
-      should_alert = truthy(fields.get("<risk_field>"))
-      outcome = {
-          "alertType": "<event_name>",
-          "severity": "warn",
-          "description": "<human-readable alert>",
-      } if should_alert else None
-      print(json.dumps(outcome))
-
-  if __name__ == "__main__":
-      main()
-  ```
-
-6. Prefer registering through MCP:
-   - tool: `smartbuilding_use_case_register`
-   - `action: "register"`
-   - `use_case: <use_case>`
-   - `description: <user description>`
-  - `schema_extensions: <LOCAL_PROMPT output fields>` (e.g. `severity`, `event`, `desc`, `pet_zone`)
-   - `persist: true`
-   - `overwrite: false` unless the user explicitly asks to update
-
-   **You do NOT need to pass `prompt_text` / `evaluate_rules_path` / `summarize` /
-   `reports` / `video_summary_task` in the normal flow** — register fills them by
-   convention:
-   - `prompt_text` is **auto-read from `use-cases/<use_case>/prompt.md`** when omitted.
-     So the HARD prerequisite is: **write `use-cases/<use_case>/prompt.md` to disk
-     BEFORE calling register** (step 4). If neither `prompt_text` nor that file
-     exists, register now **errors out** (no more silent half-registration).
-   - `evaluate_rules_path` is auto-picked from `use-cases/<use_case>/evaluate_rules.py`
-     when that file exists; otherwise the built-in `defaultRuleEvaluator` is used.
-     Therefore, if no `evaluate_rules.py` is generated, `schema_extensions` must
-     include `severity`, `event`, and `desc` so the default evaluator can fire.
-   - `summarize` / `reports` / `video_summary_task` fall back to the defaults above.
-   - Pass any of these explicitly only to override the convention.
-7. If MCP is unavailable and the user only asked for a video-summary task, use
-   the `/v1/tasks` curl recipes below. Do not claim the Smart Building use case
-   is registered unless `smartbuilding_use_case_register` succeeds.
-
----
-
-## Prerequisites
-
-```bash
-: "${VIDEO_SUMMARY_BASE_URL:=http://localhost:8192}"
-export VIDEO_SUMMARY_BASE_URL
-curl -fsS "$VIDEO_SUMMARY_BASE_URL/v1/health" | jq .
-```
-
----
-
-## Read The Output Schema (before drafting)
-
-Always read schema first, then draft prompts. Field names in
-`schema.video_summary_tasks.extensions` are consumed downstream by
-`parseSummaryFields`; the model must emit those exact field names as
-`field_name: value` lines, or extraction/rules can silently miss.
-
-The Smart Building runtime is **not** a JSON parser for summary output. It scans
-plain text for one field per line. For alert use cases, the LOCAL output must end
-with structured text lines such as:
-
-```text
-SEVERITY: warn
-EVENT: pet_escape
-DESC: pet is trying to leave through the balcony door
-PET_ZONE: balcony
-```
-
-Do not ask the VLM to output JSON like `{ "severity": "warn", ... }`; those keys
-will remain inside `summary_text` and the parser will not populate the `event`,
-`severity`, `desc`, or optional extension columns needed by the rule engine.
-
-1. Prefer workspace runtime config: `config.yaml`
-2. Fallback: `config.yaml.example`
-
-Suggested extraction flow:
-
-```bash
-if [[ -f config.yaml ]]; then
-  CFG=config.yaml
-else
-  CFG=config.yaml.example
-fi
-
-yq '.schema.video_summary_tasks.extensions // []' "$CFG"
-```
-
-Build a working field list before writing prompt text:
-- `required=true` fields: must appear as one line each in output contract.
-- `required=false` fields: emit only when detectable in the clip.
-- Keep original lowercase field names from schema (no renaming/translation in key).
-
----
-
-## Writing the 4 Sections — What Each Is For
-
-The four prompts do **different jobs**; scope and detail differ accordingly.
-
-### LOCAL_PROMPT — seconds granularity; the VLM sees raw frames
-
-**This is the only section where perceptual detail enters the system.** If a
-hazard is not captured in LOCAL, it will not appear in MACRO or GLOBAL.
-
-Must contain:
-- Domain-focus heading
-- Time line using `{st_tm}` and `{end_tm}`
-- Priority-ordered **focus list** (3–5 items for monitoring use cases):
-  1. Actor presence + appearance (clothing / age / location)
-  2. Hazardous objects in hand or nearby
-  3. Hazardous actions (climbing / falling / ingesting / ...)
-  4. Guardian / operator presence & intervention
-  5. Safe activity — 1–2 sentences only
-- Output rules:
-  - 2–5 sentences total
-  - **Tag every hazard with a severity keyword: `critical` / `warn` / `info` / `normal`**
-  - On-screen text: original + parenthetical translation
-  - If no actor visible, describe the scene truthfully; no hallucination
-  - No `[` `]` characters; no echo of the time lines
-  - **Do not output JSON/YAML/Markdown tables. The final structured part must be plain text lines.**
-  - After narrative, append structured lines for schema extraction:
-    - One line per required field: `<field_name>: <value>`
-    - Optional fields: include only when detected
-    - Field names must exactly match schema declarations
-  - If hierarchy has levels > 1 and a field is intentionally cross-window,
-    place the field line in GLOBAL output contract instead of LOCAL
-
-Spend ~50% of drafting effort here.
-
-### MACRO_CHUNK_PROMPT — minutes granularity; LLM sees micro summaries joined by `>|<`
-
-A **compression pass**. Must contain:
-- Merge-goal heading
-- Time line with `{st_tm}` / `{end_tm}`
-- **Promote critical/warn events to the front, verbatim**
-- **Collapse consecutive safe periods into a single sentence**
-- Keep actor identity consistent via appearance features
-- Do not carry earlier objects/scenes forward unless they still appear
-- No `[` `]`, no echo of time lines
-
-### GLOBAL_PROMPT — whole-video summary; the final deliverable
-
-A **narrative pass**, not a ledger. Must contain:
-- Product heading ("safety-oriented summary", "daily report", ...)
-- **A parseable opening-line convention** — critical triggers a fixed warning
-  token so downstream code can detect it:
-  - English: start with `ALERT:` when critical, else "Overall safe." /
-    "N warn-level events occurred."
-  - Chinese: start with `【注意】` when critical, else "整体安全" /
-    "出现 N 次 warn 级别事件"
-- **No timestamps in the prose**
-- Statistics to report (domain-specific): actor count, hazard-type list,
-  intervention count, ...
-- Do not fabricate beyond macro summaries
-- Optional `{question}` — weave in if present
-
-Keep GLOBAL ≤ 5 short paragraphs.
-
-### T_MINUS_1_PROMPT — previous-window context envelope
-
-Small templated section. Must contain:
-- Context heading + "this is prior context; do not copy into output"
-- Domain-specific continuity note (was the hazard still present? did it
-  end?)
-- The bracketed envelope:
-  ```
-  [
-  <time line with {st_tm} / {end_tm}>
-  {past_summary}
-  ]
-  ```
-
----
-
-## Markdown prompt.md Template For Smart Building
-
-When writing `use-cases/<use_case>/prompt.md`, use Markdown sections instead of
-Python constants. `smartbuilding_use_case_register` accepts this format through
-`prompt_text` and converts it for the video-summary service.
+### prompt.md template
 
 ```text
 ## GLOBAL_PROMPT
@@ -430,11 +302,16 @@ End time: {end_tm}s
 - 如果没有相关对象出现，如实说明，不要臆测。
 - 不要使用方括号，不要复述时间行。
 - 不要输出 JSON、YAML、Markdown 表格或代码块；结构化部分必须是纯文本 `字段名: 值` 行。
-- 最后追加结构化字段，每个字段单独一行，字段名必须和 schema 语义一致:
-  SEVERITY: critical/warn/info
-  EVENT: <event_1>/<event_2>/<safe_event>/no_incident
-  DESC: <一句话描述>
-  <OPTIONAL_FIELD>: <只在可见时输出>
+## 输出格式:
+SEVERITY: critical/warn/info
+EVENT: <event_1>/<event_2>/<safe_event>/no_incident
+DESC: <一句话描述>
+<OPTIONAL_FIELD>: <只在用户显式请求该 schema 扩展且画面可见时输出>
+## 禁止事项:
+- 不要输出 JSON 格式
+- 不要加 markdown 符号或方括号
+- 不要写分析过程或逐条排查
+- 只输出 schema 要求的字段行,无其他内容
 
 ## T_MINUS_1_PROMPT
 ## 上下文:
@@ -447,237 +324,166 @@ End time: {end_tm}s
 ]
 ```
 
-Before saving, replace placeholders such as `<domain>`, `<actor>`, `<event_1>`,
-and `<OPTIONAL_FIELD>` with concrete domain terms. Remove optional field lines
-when no optional schema field is inferred.
+Before saving, replace placeholders such as `<domain>`, `<actor>`,
+`<event_1>`, and `<OPTIONAL_FIELD>` with concrete domain terms. Remove the
+optional field line when no extension field was requested.
 
----
+## Lint checklist (self-check before register)
 
-## Skeleton (English; translate into the user's language as needed)
+Run on the final prompt text before registering:
 
-Draft each section, concatenate into one `content.text` string, then POST.
-Only the placeholder names in braces are literal; everything else is prose.
+1. `missing_local_prompt` — no `## LOCAL_PROMPT` header → add a real section;
+   do not hide LOCAL rules elsewhere.
+2. `code_fence` — contains a triple-backtick fence → remove all fences; keep
+   plain text/indented examples only.
+3. `missing_event` — expected event names absent → add each explicitly in
+   LOCAL guidance/examples.
+4. `missing_required_schema_field` — required field name not present → add it
+   verbatim (case-insensitive substring is the acceptance rule; exact key
+   spelling strongly recommended).
+5. `pipe_enum` — `A | B | C` pipe-style enums → rewrite as bullet lists or
+   explicit sentence rules.
+6. `think_block` — `<think>...</think>` markup → strip.
+7. `json_summary_output` — LOCAL asks for JSON/YAML/arrays/tables, or examples
+   show `{"severity": ...}` → rewrite as plain `KEY: value` lines.
+
+The authoritative schema↔prompt↔rules consistency gate runs **inside
+register** before any side effect; this checklist is the pre-flight so the
+first register call passes. `smartbuilding_use_case_validate` is only a
+post-registration self-check, not the pre-registration authority.
+
+## Register (two steps)
+
+Tool: `smartbuilding_use_case_register`. Common arguments: `use_case`,
+`description` (one-line **English** summary), `persist: true`,
+`overwrite: false` unless updating.
+
+- **Step 1 — `action=register_task`**: pass `prompt_text` (the full Markdown,
+  no code fences) and — **only on the custom rule path** —
+  `evaluate_rules_path` pointing at the Python rule file (any location; the
+  server stages it into its repo). Runs the consistency gate, registers the
+  VLM task, and writes `use-cases/<uc>/prompt.md` in the server repo.
+- **Step 2 — `action=register` (`persist=true`)**: pass `description` etc.,
+  **omit `prompt_text`** (auto-read from the file step 1 wrote) and
+  `evaluate_rules_path` (auto-discovered). Applies the schema, injects
+  `use_case_dict`, writes config. (One-shot fallback: passing `prompt_text`
+  inline to `register` still works; the two-step flow just avoids re-sending
+  the large text on retry.)
+- **`schema_extensions`: omit it.** The Final Schema is inferred from the
+  prompt's `## 输出格式` `KEY:` lines, and register adds `severity/event/desc`
+  internally. Pass it **only** to declare a non-text column type
+  (integer/real), listing only fields the user explicitly requested — never
+  LLM-inferred fields derived from event names or detection goals.
+- On the default path omit `evaluate_rules_path`; the built-in
+  `defaultRuleEvaluator` fires on parsed `severity=warn|critical`, so
+  LOCAL_PROMPT must emit `SEVERITY:` / `EVENT:` / `DESC:`.
+
+The consistency gate runs before any side effect (no ALTER, no VLM POST, no
+config write). On mismatch it returns `ok:false` with a `steps.consistency`
+diff and applies zero changes — fix the named file and call register again
+(≤3 attempts); do not move on to monitor registration until `ok:true`. Read
+the diff to fix the RIGHT thing:
+
+- Large `missing_in_prompt` / `default_path_missing_fields` full of
+  behavior-like names (`escape_risk`, `trapped`, `*_count`, `risk_level`, …)
+  ⇒ your `schema_extensions` is wrong, not the prompt: drop them, move those
+  names into `EVENT` values, keep `## 输出格式` to `SEVERITY:/EVENT:/DESC:`.
+  Do NOT expand LOCAL_PROMPT to emit the bogus fields.
+- `default_path_missing_fields: [severity, event, desc]` ⇒ a base field was
+  dropped; put all three back in schema and prompt.
+- `format_violations` (fences, `<<<`, JSON literal) ⇒ strip fences / rewrite
+  the JSON block as `KEY: value` lines (P3).
+- `extra_in_prompt` ⇒ the prompt emits a `KEY:` not in schema; delete that
+  line, or add the field only if the user asked to store it.
+- Do not escalate to manual `POST /v1/tasks`, DB queries, or web searches —
+  the diff already names the file to fix.
+
+### Custom rule path: evaluate_rules.py
+
+The script reads the parsed fields as JSON on `argv[1]` and prints an
+AlertOutcome object or `null`. Generate it from the LOCAL_PROMPT output fields
+and the Final Schema; it may read only declared fields. Templates and the full
+contract: `references/evaluate-rules.md`.
+
+## Normalize Failed Register Payloads
+
+When the user pastes a failed `smartbuilding_use_case_register` payload or
+tool output, treat it as a draft to repair, not as authoritative config:
+
+- JSON/YAML/tables/fences in `prompt_text` → rewrite LOCAL_PROMPT to plain
+  `KEY: value` lines.
+- Behavior/risk names or boolean checklist items in `schema_extensions`
+  (`escape`, `trapped`, `aggressive`, `fall`, `*_risk`, …) → drop them; they
+  become `EVENT` values. Keep only true persisted columns the user separately
+  requested for reporting/querying.
+- Default path → `schema_extensions` omitted; LOCAL emits exactly `SEVERITY:`,
+  `EVENT:`, `DESC:`.
+- If a stream URL is present, retry use-case registration first; register the
+  monitor only after `ok:true`.
+
+## Register the monitor (only when a stream URL was given)
+
+After `ok:true`, bind the camera with `smartbuilding_monitor_ctl
+action=register_source` — when `source_url` is provided this is part of the
+default workflow; do not stop after registering only the use case:
+
+- `monitor_id`: **omit** — defaults to `cam_<use_case>`. Pass it only to add a
+  second camera on the same use case, and it MUST start with `cam_`. **NEVER
+  pass `<use_case>_monitor` as `monitor_id`** — register_source rejects it.
+- `name`: a short **English** display name, consistent with the built-ins.
+- `source_url`: the RTSP/HTTP/... URL the user gave; `use_case`: the key just
+  registered; `persist: true` so the monitor survives an MCP restart.
+
+## Phase 4 — Final Configuration Report
+
+Mandatory after `ok:true` (and monitor binding, if any). Two parts:
+
+**Part A — New use case:**
+- Use Case: `<use_case>`  ·  VLM task: `<use_case>_monitor`
+- Events: `<...>`  ·  Alerting: `enabled` / `report-only`  ·  Reports: `daily`
+- Schema: `severity, event, desc` (+ `<extensions>` on the custom path)
+- Rule path: `defaultRuleEvaluator` **or** `evaluate_rules.py`
+- Monitor: `cam_<use_case>` → `<source_url>` (omit if no stream URL was given)
+
+**Part B — System inventory (counts + lists, never silently dropped):**
+- **Monitors** — `smartbuilding_monitor_ctl action=list` (or the
+  `smartbuilding://monitors` resource); list each `monitor_id` + `use_case`.
+- **Use cases** — no list tool exists; run
+  `scripts/list_use_cases.sh <server-config-path>` (the file the MCP server
+  booted from — `persist=true` writes back to THAT file, not necessarily the
+  `config.yaml` in your CWD).
+
+Render compactly:
 
 ```text
-GLOBAL_PROMPT = '''
-## Task:
-<product name, e.g. "safety-oriented summary of <domain>">.
-- Start with "Overall safe." / "N warn-level events occurred." / "ALERT: <critical hazard>".
-- Use "ALERT:" as the fixed opening token whenever any critical event occurs.
-- Expand event details grouped by category; NO timestamps in the prose.
-- Report statistics: <actor-count, hazard-type list, intervention count, ...>.
-- Do not fabricate content not present in the macro summaries.
-User question: {question}
-'''
-
-MACRO_CHUNK_PROMPT = '''
-## Task:
-Merge sub-chunks into a concise narrative for this window. Critical / warn events first.
-Start time: {st_tm}s
-End time: {end_tm}s
-## Guidelines:
-- Collapse consecutive safe/inactive periods into one sentence.
-- Keep actor identity consistent via appearance features (e.g. "the girl in a red dress").
-- Do not carry earlier objects/scenes forward unless they still appear.
-- No "[" or "]"; no echo of the time lines.
-User question: {question}
-'''
-
-LOCAL_PROMPT = '''
-## Task:
-Describe activity in this short clip for <domain>.
-Start time: {st_tm}s
-End time: {end_tm}s
-## Focus (priority order):
-1. <actor presence and appearance>
-2. <hazardous objects in hand or nearby>
-3. <hazardous actions>
-4. <guardian / operator presence & intervention>
-5. <safe activity — 1–2 sentences only>
-## Guidelines:
-- 2–5 sentences total.
-- Tag every hazard with a severity keyword: critical / warn / info / normal.
-- On-screen text: original + parenthetical translation.
-- If no actor visible, describe truthfully; no hallucination.
-- No "[" or "]"; no echo of the time lines.
-'''
-
-T_MINUS_1_PROMPT = '''
-## Context:
-The previous {dur}s video summary is below in brackets.
-**Important** Use it only as context; do not copy into the current output.
-Watch for continuity of <actor position / action / contact with hazards>.
-If the previous window's state has ended (e.g. the hazard has been resolved), say so explicitly.
-[
-Start time: {st_tm}s
-End time: {end_tm}s
-{past_summary}
-]
-'''
+System Inventory
+  Monitor Count:  3
+  Monitors:       cam_child_safety, cam_fridge, cam_pet_safety
+  Use Case Count: 5
+  Use Cases:      child_safety, elder_wakeup, fridge, parking_safety, pet_safety
 ```
 
-When the user writes in Chinese, keep the same structure but write the
-prose in Chinese: `##任务:` / `##重点关注的内容:` / `##指南:` / `##上下文:`,
-opening-line token `【注意】`, etc. Placeholder names stay in English.
+If the monitor list is unreachable, still report the use-case count/list and
+say the monitor list could not be fetched.
 
----
+## Hard Constraints
 
-## Lint checklist (self-check before POST)
-
-Run this checklist on the final prompt text before POST/PATCH. These checks
-mirror the removed MCP prompt-lint behavior and should be enforced inline.
-
-1. `missing_local_prompt`
-Symptom: no `## LOCAL_PROMPT` section header.
-Fix: add a real `## LOCAL_PROMPT` section; do not hide LOCAL rules elsewhere.
-
-2. `code_fence`
-Symptom: contains triple-backtick code fence.
-Fix: remove all fences; keep plain text/indented examples only.
-
-3. `missing_event`
-Symptom: expected event names do not appear in prompt text.
-Fix: add each event name explicitly in LOCAL guidance/examples.
-
-4. `missing_required_schema_field`
-Symptom: required schema field name not present in prompt text.
-Fix: add the missing field name verbatim (case-insensitive substring check is
-the acceptance rule; exact key spelling is still strongly recommended).
-
-5. `pipe_enum`
-Symptom: `A | B | C` pipe-style enums appear.
-Fix: rewrite as bullet lists or explicit sentence rules; no pipe enums.
-
-6. `think_block`
-Symptom: `<think>` markup remains from model output.
-Fix: strip all `<think>...</think>` blocks before submission.
-
-7. `json_summary_output`
-Symptom: LOCAL_PROMPT asks for JSON/YAML/arrays/tables, or examples show
-`{"severity": ...}` instead of line-oriented `SEVERITY: ...` output.
-Fix: rewrite the output contract as plain text with one schema field per line,
-for example `SEVERITY: warn`, `EVENT: pet_escape`, `DESC: ...`.
-
-After POST/PATCH, optionally run server-side validation via
-`smartbuilding_use_case_validate` for a second gate (task registration +
-schema consistency).
-
----
-
-## Curl Recipes
-
-```bash
-# List all tasks (built-in + dynamic)
-curl -sS "$VIDEO_SUMMARY_BASE_URL/v1/tasks" | jq .
-
-# Inspect one task (built-in or dynamic) — returns `{name, source, description,
-# content}` where `content` is a single round-trip-safe string with all four
-# anchor sections concatenated. Copy it, edit, and re-submit as `content.text`.
-curl -sS "$VIDEO_SUMMARY_BASE_URL/v1/tasks/<name>" | jq .
-
-# Delete a dynamic task (built-ins are 403).
-curl -sS -X DELETE "$VIDEO_SUMMARY_BASE_URL/v1/tasks/<name>" -w "%{http_code}\n"
-```
-
-### Register full-mode (the primary workflow)
-
-Write the body to a file so shell-quoting doesn't interfere:
-
-```bash
-cat > /tmp/body.json <<'JSON'
-{
-  "task_name": "pet_guard_en",
-  "mode": "full",
-  "description": "Pet-at-home monitoring; detect abnormal behaviors.",
-  "content": {
-    "text": "<<< the 4-anchor content string, with literal \\n between lines >>>"
-  }
-}
-JSON
-
-curl -sS -X POST "$VIDEO_SUMMARY_BASE_URL/v1/tasks" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/tmp/body.json | jq .
-```
-
-### PATCH variants (rename / replace content / edit description)
-
-```bash
-# Rename only
-curl -sS -X PATCH "$VIDEO_SUMMARY_BASE_URL/v1/tasks/<name>" \
-  -H 'Content-Type: application/json' \
-  -d '{"new_task_name": "<new>"}' | jq .
-
-# Replace all four sections (same body shape as register, plus "mode":"full")
-curl -sS -X PATCH "$VIDEO_SUMMARY_BASE_URL/v1/tasks/<name>" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/tmp/body.json | jq .
-
-# Description only
-curl -sS -X PATCH "$VIDEO_SUMMARY_BASE_URL/v1/tasks/<name>" \
-  -H 'Content-Type: application/json' \
-  -d '{"description": "<new>"}' | jq .
-```
-
-### Autogen mode (fallback, lower quality)
-
-Use only if drafting a full prompt is not feasible. Quality depends on the
-model the service is configured with via `LLM_MODEL_NAME` / `LLM_BASE_URL`.
-
-```bash
-curl -sS -X POST "$VIDEO_SUMMARY_BASE_URL/v1/tasks" \
-  -H 'Content-Type: application/json' \
-  -d '{"task_name":"<name>","mode":"autogen","description":"<natural language use case>"}' | jq .
-```
-
----
-
-## Error Handling
-
-| Status | Code | Fix |
-|---|---|---|
-| 201 | (success) | Show the four sections to the user |
-| 422 | `missing_anchors` | Read `missing` + `reference_template`; add the anchors, retry |
-| 422 | `missing_placeholders` | Section names a required `{foo}`; reply with `section` + `missing` |
-| 422 | `autogen_empty_output` | Service LLM returned nothing; retry once, else switch to `mode=full` |
-| 400 | `parse_error` | Content malformed (unbalanced `'''`, stray token); compare with `reference_template` |
-| 400 | `duplicate_anchor` | Same anchor twice; keep one |
-| 400 | `invalid_name` | `task_name` doesn't match `^[a-z][a-z0-9_]{1,63}$` |
-| 400 | `banned_token` | Contains triple-backtick fence or `<<<`; remove |
-| 400 | `invalid_url` | Non-HTTPS or private-network URL |
-| 409 | `builtin_conflict` | Name matches a built-in; pick a different name |
-| 409 | `already_registered` | Name used by another dynamic task; pick different or PATCH |
-| 403 | `builtin_immutable` | Tried to PATCH / DELETE a built-in; register a new one instead |
-| 404 | `not_found` | Typo or never registered; list first |
-
-Retry budget: ≤ 2 attempts on 4xx. On the third failure, surface the server's
-`detail` + `reference_template` to the user and ask for guidance.
-
----
+| Constraint | Value |
+|---|---|
+| Anchors (**case-sensitive**, literal match) | `GLOBAL_PROMPT`, `MACRO_CHUNK_PROMPT`, `LOCAL_PROMPT`, `T_MINUS_1_PROMPT` — missing/misspelled → 422 with a `missing` list + reference template; `global_prompt` / `GlobalPrompt` do NOT match |
+| Placeholders — LOCAL, MACRO | `{st_tm}`, `{end_tm}` |
+| Placeholders — T_MINUS_1 | `{dur}`, `{st_tm}`, `{end_tm}`, `{past_summary}` |
+| Placeholder — optional (GLOBAL/MACRO/LOCAL) | `{question}`; missing placeholders are smart-autofilled server-side (safe to skip) |
+| `task_name` / `use_case` regex | `^[a-z][a-z0-9_]{1,63}$` (lowercase ASCII + underscore) |
+| Schema field keys — **ENGLISH, verbatim** | Structured output lines use the English schema field names as keys (`EVENT:`, `SEVERITY:`, `DESC:`, extensions like `CONTEXT_ZONE:`). Never translate the key — the runtime validates by case-insensitive substring, so a Chinese-only prompt with no literal `event` / `desc` substring FAILS `use_case_validate`. Values may be any language. |
+| Banned tokens in any section | Triple-backtick code fences, and the literal string `<<<` |
+| Built-in tasks | Never shadow, modify, or delete any runtime task reported as built-in by `/v1/tasks`; inspect before overwriting or deleting |
 
 ## Intent Mapping
 
 | User utterance (sample) | Action |
 |---|---|
-| "创建 use case pet_safety，检测宠物逃跑、受困、攻击性行为" | Infer events/schema → draft `use-cases/pet_safety/prompt.md` with 4 Markdown sections → generate `evaluate_rules.py` only if custom logic is needed → call `smartbuilding_use_case_register` with `persist=true` |
-| "先预览 parking_safety 的 prompt，不要注册" | Infer and draft the prompt → show events/schema/path summary → do not call registration until confirmed |
-| "覆盖更新 pet_safety prompt 并重新注册" | Read existing prompt if present → rewrite/refine → save with overwrite intent → call `smartbuilding_use_case_register` with `overwrite=true` |
-| "Add a pet-at-home monitoring task" / "给视频摘要服务加个宠物看家任务" | If Smart Building MCP is available, use the generate + register workflow; otherwise draft 4 sections in the user's language → POST `/v1/tasks` mode=full |
-| "List all video summary tasks" / "列一下任务" | GET `/v1/tasks` |
-| "Show me the `child_safety_monitor` prompt" | GET `/v1/tasks/child_safety_monitor` |
-| "Make `pet_guard_en`'s local prompt stricter" | GET the task → edit `content` → confirm with user → PATCH mode=full |
-| "Delete `pet_guard_en`" | Confirm → DELETE `/v1/tasks/pet_guard_en` |
-| "Use the LLM to draft a prompt for me" | Prefer `mode=full` (draft via this SKILL); use `mode=autogen` only for a throwaway first cut |
-
----
-
-## Notes
-
-- **Persistence**: dynamic tasks live under the service's
-  `VIDEO_SUMMARY_CACHE` dir (default `~/.cache/.multilevel-video-understanding`
-  on the host). They survive container restarts.
-- **Round-trip editing**: the `content` field returned by GET is ready to
-  POST/PATCH back — no reformatting needed.
-- **URL content**: `content.url` (HTTPS only, ≤ 256 KB, public hosts) is an
-  alternative to `content.text` for loading the four-section string from a
-  remote file.
+| "Create/register a use case `<uc>` that detects `<events>`" | Full pipeline above: Q1/Q2 → confirm schema → draft + lint → register (two steps) → monitor if a stream URL was given → Phase 4 report |
+| "Preview the prompt for `<uc>`; do not register yet" | Q1/Q2 → draft → show events/schema/path summary → wait for confirmation |
+| "Overwrite and re-register the `<uc>` prompt" | Read existing prompt/schema (`references/inspect-existing.md`) → refine → register with `overwrite=true` |
+| "Add a video monitoring task" / list / show / edit / delete tasks (MCP unavailable) | `references/curl-fallback.md` |

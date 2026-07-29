@@ -2,6 +2,13 @@
 
 This guide explains how to deploy the multimodal sample app with the vLLM service enabled using the Makefile targets.
 
+## System Requirements
+
+| Component | Minimum Requirement |
+|-----------|---------------------|
+| Operating System | Ubuntu 24.04 LTS or later |
+| Hardware | Intel® Core™ Ultra Platform (PTL) or newer |
+
 ## Prerequisites
 
 1. Ensure `.env` is configured and includes valid values for:
@@ -37,6 +44,8 @@ cd ../..
 ```
 
 ## Deploy the vLLM Service
+
+> **Note:** vLLM preallocates GPU-addressable memory up to the limit specified by `VLLM_GPU_MEMORY_UTILIZATION` (VRAM on dGPU, shared system memory on iGPU). Since the optimal value varies between platforms, update `VLLM_GPU_MEMORY_UTILIZATION` in the `.env` file to match your target hardware.
 
 Run:
 

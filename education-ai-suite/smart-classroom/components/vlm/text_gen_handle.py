@@ -46,6 +46,7 @@ class TextGenHandler:
         stream: bool = True,
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
+        enable_thinking: Optional[bool] = None,
     ) -> Union[Iterator[str], str]:
         return self._get_runner().submit(
             prompt,
@@ -53,6 +54,7 @@ class TextGenHandler:
             stream=stream,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
+            enable_thinking=enable_thinking,
         )
 
     def load(self) -> None:

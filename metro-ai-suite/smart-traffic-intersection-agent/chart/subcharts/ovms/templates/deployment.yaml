@@ -4,10 +4,11 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if and .Values.trustedCompute.enabled .Values.gpu.enabled -}}
-{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. Use trustedCompute.tc_gpu_enabled for GPU support with Trusted Compute." -}}
 {{- end -}}
-{{- $targetDevice := ternary "GPU" .Values.env.targetDevice .Values.gpu.enabled -}}
-{{- $needsGpu := contains "GPU" $targetDevice -}}
+{{- $tcGpu := and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled -}}
+{{- $targetDevice := ternary "GPU" .Values.env.targetDevice (or .Values.gpu.enabled $tcGpu) -}}
+{{- $needsGpu := and .Values.gpu.enabled (not .Values.trustedCompute.enabled) -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.env.weightFormat -}}
 {{- $sanitized := .Values.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
 {{- $isOpenvino := hasPrefix "OpenVINO/" .Values.env.modelName -}}
@@ -31,6 +32,19 @@ spec:
         app: {{ include "ovms.fullname" . }}
         {{- include "ovms.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: ovms
+      {{- if .Values.trustedCompute.enabled }}
+      annotations:
+        io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
+        {{- if .Values.trustedCompute.tc_gpu_enabled }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
+        io.katacontainers.config.hypervisor.kernel_params: "push_host={{ .Values.trustedCompute.tc_push_host }} push_port={{ .Values.trustedCompute.tc_relay_listen_port }} push_path={{ .Values.trustedCompute.tc_push_path }}"
+        cdi-devices.noderesource.dev/container.ovms: |
+          {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
       runtimeClassName: kata-qemu
@@ -97,13 +111,10 @@ spec:
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"
           {{- if .Values.trustedCompute.enabled }}
+          {{- if .Values.trustedCompute.resources }}
           resources:
-            limits:
-              cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
-              memory: {{ (.Values.resources.limits).memory | default "20Gi" | quote }}
-            requests:
-              cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
-              memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+            {{- toYaml .Values.trustedCompute.resources | nindent 12 }}
+          {{- end }}
           {{- else if or (.Values.resources.requests) (.Values.resources.limits) }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -164,20 +175,33 @@ spec:
             timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
             failureThreshold: {{ .Values.healthcheck.failureThreshold }}
           resources:
-            {{- $res := deepCopy .Values.resources }}
             {{- if .Values.trustedCompute.enabled }}
-            {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
-            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6")) }}
+            {{- if .Values.trustedCompute.resources }}
+            {{- toYaml .Values.trustedCompute.resources | nindent 12 }}
             {{- end }}
-            {{- if $needsGpu }}
+            {{- else if $needsGpu }}
+            {{- $res := deepCopy .Values.resources }}
             {{- $gpuLimits := dict .Values.gpu.resourceName (.Values.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
             {{- toYaml $res | nindent 12 }}
             {{- else }}
-            {{- toYaml $res | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
+        {{- if $tcGpu }}
+        - name: tc-matrix-relay
+          image: "{{ .Values.trustedCompute.tc_matrix_relay_image }}:{{ .Values.trustedCompute.tc_matrix_relay_tag }}"
+          args:
+            - "TCP-LISTEN:{{ .Values.trustedCompute.tc_relay_listen_port }},reuseaddr,fork"
+            - "TCP:{{ .Release.Name }}-metrics-manager:{{ .Values.trustedCompute.tc_metrics_manager_port }}"
+          ports:
+            - name: relay
+              containerPort: {{ .Values.trustedCompute.tc_relay_listen_port | int }}
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+        {{- end }}
       volumes:
         - name: ov-models
           {{- if .Values.persistence.enabled }}
