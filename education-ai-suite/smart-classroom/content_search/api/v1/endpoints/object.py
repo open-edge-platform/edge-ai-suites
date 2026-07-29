@@ -124,6 +124,53 @@ async def upload_file_with_ingest(
     )
     return resp_200(data=result)
 
+class IngestPathRequest(BaseModel):
+    path: str
+    meta: Dict[str, Any] = Field(default_factory=dict)
+    prompt: Optional[str] = None
+    chunk_duration: Optional[int] = None
+
+
+# Loopback addresses allowed to use server-side path ingest.
+_LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost", "::ffff:127.0.0.1"}
+
+
+@router.post("/ingest-path")
+async def ingest_local_path(
+    payload: IngestPathRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """Ingest a file that already exists on this machine, by absolute path.
+
+    Used by the Electron desktop app, which runs alongside this service and can pass
+    a real path, avoiding a multipart upload of potentially multi-GB media over
+    localhost HTTP. The file is copied into the object store, so the user's original
+    is never touched by later cleanup/delete operations.
+
+    Restricted to loopback callers: the UI is often served on 0.0.0.0, and reading
+    arbitrary server-side paths must not be reachable from other devices.
+    """
+    client_host = request.client.host if request.client else None
+    if client_host not in _LOOPBACK_HOSTS:
+        logger.warning(f"Rejected /ingest-path from non-loopback client: {client_host}")
+        return resp_200(
+            code=40300,
+            message="Path-based ingest is only available to local clients."
+        )
+
+    if not payload.path or not payload.path.strip():
+        return resp_200(code=40000, message="path is required")
+
+    result = await asset_service.process_path_and_ingest(
+        db, payload.path.strip(), background_tasks,
+        meta=payload.meta or {},
+        prompt=payload.prompt,
+        chunk_duration=payload.chunk_duration
+    )
+    return resp_200(data=result)
+
 @router.post("/search")
 async def file_search(payload: dict, db: Session = Depends(get_db)):
     result = await task_service.handle_sync_search(db, payload)

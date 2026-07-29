@@ -1,7 +1,7 @@
 ---
 name: smartbuilding-toolkit
 description: >-
-  Generic, use-case-agnostic guide to the smart-community MCP server and its
+  Generic, use-case-agnostic guide to the smart-building MCP server and its
   smartbuilding_* video tool set. Read this before touching any smartbuilding_* tool.
   IMPORTANT: this toolkit must not create/register new use cases directly; for any new
   use case request, first load video-summary-prompt-studio and follow its Q1/Q2 schema
@@ -12,7 +12,7 @@ description: >-
   Cursor, …) with no persona required.
 ---
 
-# smart-community Toolkit
+# Smart-Building Toolkit
 
 Every tool is keyed on **`monitor_id`** (the camera id, e.g. `cam_child`). There is no
 global `source_id`; ids are per-monitor and never assume they are unique across use cases.
@@ -29,7 +29,7 @@ This toolkit resumes only after the use case exists, or for ordinary monitor/rep
 
 ## 1. Tool catalog
 
-All tool ids are defined in MCP server: `smart-community`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
+All tool ids are defined in MCP server: `smart-building`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
 
 ### smartbuilding_alert_query — read/ack the important alerts
 Every row in `alerts` is already rule-engine-filtered, so you do **not** re-filter by

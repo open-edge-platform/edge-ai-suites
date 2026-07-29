@@ -50,7 +50,7 @@ class TestFullPipeline:
         return p
 
     def test_pipeline_produces_motion_clips(self, pipeline, data_dir, mock_sink):
-        """Pipeline should produce at least 1 motion clip from child_safety_demo.mp4."""
+        """Pipeline should produce at least one motion clip from the generated video."""
         pipeline.start()
         # Let it run for 20 seconds (enough for motion events to trigger)
         time.sleep(20)
