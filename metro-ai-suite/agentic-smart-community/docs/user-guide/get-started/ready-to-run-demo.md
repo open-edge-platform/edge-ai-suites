@@ -122,7 +122,51 @@ openclaw cron list
 openclaw cron rm <job-id>
 ```
 
-## Step 5 - Stop the demo
+## Step 5 - Talk with agents
+
+Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Building tools.
+
+If you installed the OpenClaw adapter in Step 4, open the Control UI and select one of these agents:
+
+### Fridge agent
+
+Select `fridge-agent` to discuss the current fridge contents, reports, nutrition, and related lifestyle goals. For example:
+
+- "What is currently visible in my fridge?"
+- "Generate today's fridge report and summarize anything I should restock."
+- "Based on my health goals, is the food in my fridge reasonable?"
+- "Can you turn that into a practical meal plan for tomorrow?"
+- "What else could help with weight loss, and where can I exercise nearby?"
+
+Try following up with questions such as "Why did you recommend that?", "What changed since yesterday?", or "Give me a shorter shopping list."
+
+### Child Safety agent
+
+Select `child-safety-agent` to ask about recent safety events, the current scene, or patterns over a period of time. For example:
+
+- "Is the child safe right now?"
+- "Were there any child-safety alerts today?"
+- "Generate today's child-safety report and explain the most important event."
+- "How many risky events happened this week?"
+- "What changes would make this room safer?"
+
+You can continue with requests such as "Show me only unacknowledged alerts", "What happened before that alert?", or "Compare today with yesterday."
+
+### Elder Wakeup agent
+
+Select `elder-wakeup-agent` to discuss wakeup activity, daily status, and longer-term patterns. For example:
+
+- "What happened in the elder's bedroom today?"
+- "Has the elder gotten up yet?"
+- "Was today's wakeup later than usual?"
+- "Generate this week's wakeup report and highlight anything unusual."
+- "Compare this week's wakeup times with last week."
+
+Follow up naturally with questions such as "Which day was latest?", "Check the current scene again", or "Explain why this was marked unusual."
+
+These are conversation starters, not a required script. Try your own wording, combine several questions in one conversation, and ask the agent to clarify, compare, summarize, or take a closer look whenever the first answer raises another question. If you skipped the optional OpenClaw adapter, ask the MCP-capable agent connected in Step 3 and include the relevant monitor ID, such as `cam_fridge`, `cam_child`, or `cam_elder_bedroom`.
+
+## Step 6 - Stop the demo
 
 Stop the MCP server and RTSP pushers together:
 

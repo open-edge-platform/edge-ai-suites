@@ -1,4 +1,4 @@
-# MCP Tools Reference
+# MCP Tools Guide
 
 This document lists every tool exposed by the `smart-community` (`smartbuilding-video`) MCP
 server — its purpose, `action` enum, parameters, and return shape.
