@@ -54,16 +54,13 @@ export TAG="latest"
 export VSS_IP=<vss-device-ip>
 export VSS_PORT=<vss-port>                         # optional, default 12345
 
-# Mode selection (required)
-export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration
-
 # Optional — set only if needed
+# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable SceneScape integration
 # export http_proxy=<http-proxy>
 # export https_proxy=<https-proxy>
 # export no_proxy=<no_proxy>
 # export MQTT_USER=<mqtt-username>      # auto-generated if omitted
 # export MQTT_PASSWORD=<mqtt-password>  # auto-generated if omitted
-# export NVR_GENAI=false               # set to 'true' to enable AI-powered event descriptions (see Advanced Configuration)
 ```
 
 ### Step 3: Launch Application

@@ -283,10 +283,7 @@ stop_scenescape() {
 }
 
 validate_environment() {
-    if [ -z "${NVR_SCENESCAPE}" ]; then
-        print_error "NVR_SCENESCAPE environment variable is required (true/false)"
-        return 1
-    fi
+    export NVR_SCENESCAPE="${NVR_SCENESCAPE:-false}"
 
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
