@@ -8,21 +8,15 @@ networks:
 services:
   route-planner-agent:
     image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-1000}
-        USER_GROUP_ID: ${USER_GROUP_ID:-1000}
     ports:
       - "${AI_ROUTE_PLANNER_PORT:-7864}:7860"
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP},ovms
-      - NO_PROXY=${no_proxy},${HOST_IP},ovms
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
+      - NO_PROXY=${no_proxy},${HOST_IP},ovms
       - REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}  # Optional. When empty, rule based planning is used.
     volumes:
       - ./data/config.json:/app/data/config.json:ro

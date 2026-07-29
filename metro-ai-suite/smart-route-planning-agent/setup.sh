@@ -116,21 +116,14 @@ echo -e "  HOST_IP: ${YELLOW}$HOST_IP${NC}"
 echo -e "  TAG: ${YELLOW}$TAG${NC}"
 echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
 
-if [[ -n "$REASONING_MODEL_NAME" ]]; then
-    echo -e "  Route planning mode: ${YELLOW}AI reasoning${NC}"
-    echo -e "  REASONING_MODEL_NAME: ${YELLOW}$REASONING_MODEL_NAME${NC}"
-    echo -e "${YELLOW}Note: the first start downloads the model and can take several minutes.${NC}"
-else
-    echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
-    echo -e "${BLUE}Tip: export REASONING_MODEL_NAME=<hf-org/model> before sourcing this script to enable AI reasoning.${NC}"
-fi
 
 # Function to build Docker images
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
 
-    if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" build; then
-        echo -e "${GREEN}Docker container built successfully!${NC}"
+    if docker build -t "${REGISTRY}smart-route-planning-agent:${TAG}" -f ./src/Dockerfile ./src/; then
+        echo -e "${GREEN}Docker image ${YELLOW}${REGISTRY}smart-route-planning-agent:${TAG}${GREEN} built successfully!${NC}"
+        return 0
     else
         echo -e "${RED}Failed to build Docker container!${NC}"
         return 1
@@ -140,6 +133,15 @@ build_images() {
 # Function to start the service
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
+
+    if [[ -n "$REASONING_MODEL_NAME" ]]; then
+        echo -e "  Route planning mode: ${YELLOW}AI reasoning${NC}"
+        echo -e "  REASONING_MODEL_NAME: ${YELLOW}$REASONING_MODEL_NAME${NC}"
+        echo -e "${YELLOW}Note: Model is downloaded if not already present/cached and can take several minutes.${NC}"
+    else
+        echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
+        echo -e "${BLUE}Tip: export REASONING_MODEL_NAME=<hf-org/model> before sourcing this script to enable AI reasoning.${NC}"
+    fi
 
     if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
@@ -160,7 +162,6 @@ fi
 case "$1" in
     "--setup")
         echo -e "${BLUE}==> Running full setup (build and start)...${NC}"
-        build_images
         if build_images; then
             start_service
         else
@@ -214,7 +215,7 @@ case "$1" in
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing container images...${NC}"
-            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}" 2>/dev/null || true
+            docker rmi -f "${REGISTRY}smart-route-planning-agent:${TAG}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
 
