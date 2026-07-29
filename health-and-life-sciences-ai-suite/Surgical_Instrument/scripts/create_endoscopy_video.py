@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -18,6 +20,19 @@ except Exception as exc:
 
 VALID_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 H264_CODEC_CANDIDATES = ("avc1", "H264", "X264")
+ENCODER_CHOICES = ("auto", "opencv", "ffmpeg")
+
+
+def _default_images_dir(repo_root: Path) -> Path:
+    candidates = [
+        repo_root / "datasets" / "CVC-ColonDB" / "raw" / "CVC-ColonDB" / "images",
+        repo_root / "datasets" / "CVC-ColonDB" / "images" / "train",
+        repo_root / "datasets" / "CVC-ColonDB" / "raw" / "images",  # legacy layout
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return candidates[0]
 
 
 def _numeric_sort_key(path: Path):
@@ -77,6 +92,112 @@ def _open_video_writer(output: Path, fps: int, width: int, height: int, codec: s
     )
 
 
+class _FFmpegWriter:
+    def __init__(self, proc: subprocess.Popen):
+        self._proc = proc
+        self._closed = False
+
+    def write(self, frame):
+        if self._closed:
+            raise RuntimeError("ffmpeg writer already closed")
+        assert self._proc.stdin is not None
+        try:
+            self._proc.stdin.write(frame.tobytes())
+        except BrokenPipeError as exc:
+            raise RuntimeError("ffmpeg encoder pipeline closed unexpectedly") from exc
+
+    def close(self):
+        if self._closed:
+            return
+        self._closed = True
+        _, stderr = self._proc.communicate()
+        if self._proc.returncode != 0:
+            tail = (stderr or "").strip()[-600:]
+            detail = f" Details: {tail}" if tail else ""
+            raise RuntimeError(f"ffmpeg failed with exit code {self._proc.returncode}.{detail}")
+
+
+class _OpenCVWriter:
+    def __init__(self, writer, codec: str):
+        self._writer = writer
+        self.codec = codec
+
+    def write(self, frame):
+        self._writer.write(frame)
+
+    def close(self):
+        self._writer.release()
+
+
+def _open_ffmpeg_writer(output: Path, fps: int, width: int, height: int) -> _FFmpegWriter:
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError(
+            "OpenCV H.264 encoding failed and ffmpeg is not installed. "
+            "Install ffmpeg (for example: apt-get install ffmpeg) or provide an OpenCV build with libx264."
+        )
+
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-loglevel",
+        "error",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "bgr24",
+        "-s",
+        f"{width}x{height}",
+        "-r",
+        str(fps),
+        "-i",
+        "-",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        str(output),
+    ]
+    proc = subprocess.Popen(  # noqa: S603
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    return _FFmpegWriter(proc)
+
+
+def _open_writer(
+    output: Path,
+    fps: int,
+    width: int,
+    height: int,
+    codec: str,
+    encoder: str,
+):
+    opencv_error = None
+    if encoder in ("auto", "opencv"):
+        try:
+            writer, selected_codec = _open_video_writer(output, fps, width, height, codec)
+            return _OpenCVWriter(writer, selected_codec), f"opencv:{selected_codec}"
+        except Exception as exc:
+            opencv_error = exc
+            if encoder == "opencv":
+                raise
+
+    if encoder in ("auto", "ffmpeg"):
+        try:
+            return _open_ffmpeg_writer(output, fps, width, height), "ffmpeg:libx264"
+        except Exception as ffmpeg_exc:
+            if opencv_error is not None:
+                raise RuntimeError(f"OpenCV writer failed ({opencv_error}); ffmpeg fallback failed ({ffmpeg_exc})") from ffmpeg_exc
+            raise
+
+    raise RuntimeError(f"Unsupported encoder mode: {encoder}")
+
+
 def build_video(
     images_dir: Path,
     output: Path,
@@ -85,6 +206,7 @@ def build_video(
     width: int,
     height: int,
     codec: str,
+    encoder: str,
 ) -> None:
     images = _list_images(images_dir)
     if not images:
@@ -93,7 +215,7 @@ def build_video(
     output.parent.mkdir(parents=True, exist_ok=True)
     total_frames = seconds * fps
 
-    writer, selected_codec = _open_video_writer(output, fps, width, height, codec)
+    writer, selected_codec = _open_writer(output, fps, width, height, codec, encoder)
 
     print(f"[video] source images : {images_dir}")
     print(f"[video] image count   : {len(images)}")
@@ -114,14 +236,14 @@ def build_video(
             if i == 0 or (i + 1) % 300 == 0 or (i + 1) == total_frames:
                 print(f"[video] progress      : {i + 1}/{total_frames}")
     finally:
-        writer.release()
+        writer.close()
 
     print("[video] done")
 
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
-    default_images = repo_root / "datasets" / "CVC-ColonDB" / "raw" / "images"
+    default_images = _default_images_dir(repo_root)
     default_output = repo_root / "videos" / "polyp_test.mp4"
 
     parser = argparse.ArgumentParser(
@@ -142,6 +264,12 @@ def parse_args() -> argparse.Namespace:
             f"in order: {', '.join(H264_CODEC_CANDIDATES)}"
         ),
     )
+    parser.add_argument(
+        "--encoder",
+        choices=ENCODER_CHOICES,
+        default="auto",
+        help="Encoder backend: auto (try OpenCV then ffmpeg), opencv, or ffmpeg",
+    )
     return parser.parse_args()
 
 
@@ -155,7 +283,11 @@ def main() -> int:
         print("ERROR: width and height must be positive integers", file=sys.stderr)
         return 2
     if not args.images_dir.exists():
-        print(f"ERROR: images directory not found: {args.images_dir}", file=sys.stderr)
+        print(
+            f"ERROR: images directory not found: {args.images_dir}. "
+            "Use --images-dir to point to extracted dataset images.",
+            file=sys.stderr,
+        )
         return 2
 
     try:
@@ -167,6 +299,7 @@ def main() -> int:
             width=args.width,
             height=args.height,
             codec=args.codec,
+            encoder=args.encoder,
         )
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
