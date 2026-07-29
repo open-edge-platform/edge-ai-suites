@@ -30,7 +30,7 @@ export type {
   ParsedSummary,
 } from "./rule-engine/index.js";
 export { monitorCtl, detachMonitor } from "./monitor-ctl.js";
-export type { MonitorCtlParams } from "./monitor-ctl.js";
+export type { IWorkerService, MonitorCtlParams } from "./monitor-ctl.js";
 export { loadMonitorsFromYaml, validateMonitors } from "./monitors-compose.js";
 export type {
   ComposeAction,

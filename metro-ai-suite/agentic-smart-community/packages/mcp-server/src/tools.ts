@@ -138,10 +138,11 @@ export function registerTools(
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
       webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
       persist: z.boolean().optional().describe(
-        "register_source/unregister only: mirror the change back to the monitors.yaml the server " +
-        "was booted from (--monitors), comment-preserving. Lets a restart auto-recover this monitor " +
-        "(incl. pipeline_config, which is not stored in the DB). Skipped with a warning if the server " +
-        "was started without --monitors.",
+        "Mirror the change back to the monitors.yaml the server was booted from (--monitors), " +
+        "comment-preserving: register_source writes the entry (lets a restart auto-recover this " +
+        "monitor incl. pipeline_config, which is not stored in the DB), unregister deletes it, " +
+        "stop flips its enabled to false, start flips it back to true. Skipped with a warning " +
+        "if the server was started without --monitors.",
       ),
     },
   }, async (params) => {
@@ -445,8 +446,10 @@ export function registerTools(
       // is kept, marked offline — and log a warning to the MCP log.
       // This is independent of persist — without it, an in-memory unregister would
       // leave orphan monitors whose use_case no longer exists (task-poller then
-      // errors on the next poll). persist only controls whether the monitor is
-      // also stripped from monitors.yaml.
+      // errors on the next poll). persist only controls whether the mutation is
+      // mirrored to monitors.yaml: unregister removes the entry; the stop fallback
+      // instead flips the entry's `enabled` to false so a restart cleanly skips it
+      // (entry + pipeline_config survive for a later re-enable).
       if (params.action === "unregister" && result.ok) {
         const affected = db.listMonitors().filter((m) => m.useCase === params.use_case);
         const cascaded: unknown[] = [];
@@ -469,6 +472,8 @@ export function registerTools(
               const stopped = (await monitorCtl(db, config.videostreamAnalytics.url, workerService, {
                 action: "stop",
                 monitor_id: m.id,
+                monitors_path: config.monitorsPath,
+                persist: params.persist === true,
               })) as Record<string, unknown>;
               cascaded.push({
                 ...stopped,
@@ -481,7 +486,12 @@ export function registerTools(
                 `monitor "${m.id}": unregister failed (${error}); fell back to stop, ` +
                 `monitors row kept offline` +
                 (params.persist === true
-                  ? ` (monitors.yaml entry kept — remove it manually or it will be re-registered on restart)`
+                  ? stopped.monitors_yaml === "disabled"
+                    ? `; monitors.yaml entry kept with enabled: false — set it back to true to re-enable`
+                    : `; monitors.yaml entry unchanged` +
+                      (Array.isArray(stopped.persist_warnings) && stopped.persist_warnings.length
+                        ? ` (${(stopped.persist_warnings as string[]).join("; ")})`
+                        : ` — set enabled: false manually or it will fail/revive on restart`)
                   : ``),
               );
             } catch (e2: any) {
