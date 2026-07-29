@@ -403,7 +403,7 @@ Semantics are whole-sub-block replacement: any sub-block supplied is applied ver
 
 ## 4. Event Plane — VSA → Downstream Webhook
 
-Every event produced by a running source is delivered as an HTTP POST to the configured webhook URL. The envelope shape has been aligned with the MCP `events-endpoint` since Phase 7 (see [mcp_webhook_event_api.md](./mcp_webhook_event_api.md) for the receiving contract).
+Every event produced by a running source is delivered as an HTTP POST to the configured webhook URL. The envelope shape has been aligned with the MCP `events-endpoint` since Phase 7 (see [MCP Webhook Event API Reference](./api-reference-mcp-webhook-event.md) for the receiving contract).
 
 ### 4.1 Envelope
 
