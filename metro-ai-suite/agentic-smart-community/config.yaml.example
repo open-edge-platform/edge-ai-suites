@@ -1,17 +1,13 @@
 # ─────────────────────────────────────────────────────────────
-# Clean core configuration (use-case-agnostic)
+# Core configuration
 # ─────────────────────────────────────────────────────────────
-# This is the pristine reference config for a fresh MCP server: it wires the
-# dependent services and runtime knobs, but ships ZERO use cases and ZERO
-# monitors. `bash scripts/mcp-server/start.sh` boots from this file (or from a
-# local `config.yaml` copy if you make one) with an empty use-case library —
-# then you add use cases and monitors at runtime by chatting with the agent
-# (video-summary-prompt-studio → use_case_register → monitor_ctl).
+# This reference config wires the dependent services, runtime knobs, and bundled
+# use cases. It does not declare monitors; add monitors at runtime by chatting
+# with the agent (video-summary-prompt-studio → use_case_register → monitor_ctl).
 #
-# Want the three validated examples (fridge / child / elder) instead? Use the
-# demo bundle: `bash demo/scripts/start-demo.sh`, which loads
-# demo/config.demo.yaml + demo/monitors.demo.yaml. Copy those as a starting
-# point when authoring your own use cases.
+# To run the optional Fridge, Child Safety, and Elder Wakeup reference demo, see
+# docs/user-guide/get-started/ready-to-run-demo.md. The demo launcher uses a
+# monitor subset matching the user-provided videos.
 #
 # ─────────────────────────────────────────────────────────────
 # Prerequisites
@@ -88,12 +84,12 @@ events_webhook:
   port: 3101
 
 # ─────────────────────────────────────────────────────────────
-# Use case library — EMPTY by default (this is a use-case-agnostic core).
+# Use case library
 # ─────────────────────────────────────────────────────────────
-# Monitors reference use cases by their `use_case` key. With an empty library
-# the server starts clean; register use cases at runtime via the
-# smartbuilding_use_case_register tool (draft the prompt with the
-# video-summary-prompt-studio skill), or seed them here.
+# Monitors reference use cases by their `use_case` key. The bundled entries are
+# ready to use as starting points; register additional use cases at runtime via
+# the smartbuilding_use_case_register tool (draft the prompt with the
+# video-summary-prompt-studio skill).
 #
 # Each entry owns its own `schema:` (extension columns parsed on the shared
 # video_summary_tasks table, applied via idempotent ALTER TABLE at startup),
@@ -101,26 +97,64 @@ events_webhook:
 # use-cases/<name>/evaluate_rules.py, and its `reports:` defaults. The `alerts`
 # table stays use-case-agnostic — no extensions.
 #
-# For a complete, working example of this block filled in, see
-# demo/config.demo.yaml (fridge / child_safety / elder_wakeup).
-#
-# Example shape (uncomment and adapt, or just register at runtime):
-#
-#   child_safety:
-#     description: "Child safety monitoring"
-#     video_summary_task: child_safety_monitor
-#     schema:
-#       video_summary_tasks:
-#         extensions:
-#           - { name: "severity", type: "text", required: false }
-#           - { name: "event",    type: "text", required: true }
-#           - { name: "desc",     type: "text", required: true }
-#       custom_tables: []
-#     summarize:
-#       method: SIMPLE
-#       processor_kwargs: { levels: 1, level_sizes: [ -1 ], process_fps: 2 }
-#     reports:
-#       data_source: alerts
-#       default_type: daily
-#       filter: {}
-use_case_dict: {}
+use_case_dict:
+  fridge:
+    description: "Fridge content tracking"
+    video_summary_task: fridge_monitor
+    schema:
+      video_summary_tasks: { extensions: [] }
+      custom_tables: []
+    summarize:
+      method: SIMPLE
+      processor_kwargs:
+        levels: 1
+        level_sizes: [ -1 ]
+        process_fps: 2
+    reports:
+      data_source: events
+      default_type: daily
+      filter: { motion_type: motion }
+
+  child_safety:
+    description: "Child safety monitoring"
+    video_summary_task: child_safety_monitor
+    schema:
+      video_summary_tasks:
+        extensions:
+          - { name: "severity", type: "text", required: false }
+          - { name: "event", type: "text", required: true }
+          - { name: "desc", type: "text", required: true }
+      custom_tables: []
+    summarize:
+      method: SIMPLE
+      processor_kwargs:
+        levels: 1
+        level_sizes: [ -1 ]
+        process_fps: 2
+    reports:
+      data_source: alerts
+      default_type: daily
+      filter: {}
+
+  elder_wakeup:
+    description: "Elder wakeup monitoring"
+    video_summary_task: elder_wakeup_monitor
+    evaluate_rules_path: ./use-cases/elder_wakeup/evaluate_rules.py
+    schema:
+      video_summary_tasks:
+        extensions:
+          - { name: "event", type: "text", required: true }
+          - { name: "wakeup_time", type: "text", required: false }
+          - { name: "desc", type: "text", required: true }
+      custom_tables: []
+    summarize:
+      method: SIMPLE
+      processor_kwargs:
+        levels: 1
+        level_sizes: [ -1 ]
+        process_fps: 2
+    reports:
+      data_source: video_summary_tasks
+      default_type: weekly
+      filter:
+        event: wakeup
