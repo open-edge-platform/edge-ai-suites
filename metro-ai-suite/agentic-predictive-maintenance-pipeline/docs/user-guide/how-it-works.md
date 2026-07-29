@@ -116,7 +116,7 @@ and has no concept of "a run in progress" beyond that.
 ```bash
 curl -X POST http://localhost:8080/run \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d 'device=CPU&video_filename=sample.mp4'
+  -d 'device=CPU&video_filename=datastream.mp4'
 ```
 
 Or call the detection-service directly through the proxy:
@@ -124,7 +124,7 @@ Or call the detection-service directly through the proxy:
 ```bash
 curl -X POST http://localhost:8080/api/detection/run \
   -H "Content-Type: application/json" \
-  -d '{"device": "CPU", "video_filename": "sample.mp4"}'
+  -d '{"device": "CPU", "video_filename": "datastream.mp4"}'
 # {"run_id": "abc123", "status": "running"}
 ```
 
@@ -204,7 +204,7 @@ docker exec apm-mqtt-broker mosquitto_sub -t 'apm/batch-complete'
   "run_id": "abc123",
   "status": "completed",
   "device": "CPU",
-  "video_filename": "sample.mp4",
+  "video_filename": "datastream.mp4",
   "start_id": 1204,
   "end_id": 1339,
   "pipeline_status": {"state": "COMPLETED", "avg_fps": 24.7}

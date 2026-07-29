@@ -64,7 +64,7 @@ services:
       retries: 5
 
   apm-storage:
-    image: ${REGISTRY:-intel/}apm-storage-service:${TAG:-1.0.0}
+    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-1.0.0}
     container_name: apm-storage
     hostname: apm-storage
     build:
@@ -122,12 +122,6 @@ services:
       - "109"
       - "110"
       - "992"
-    devices:
-      - /dev/dri:/dev/dri
-      # Required for NPU (DL_DEVICE=NPU) — without this the OpenVINO NPU
-      # plugin cannot see the device and fails with
-      # "Unrecognized device ID! 0x0x0" during pipeline inference.
-      - /dev/accel:/dev/accel
     depends_on:
       mqtt-broker:
         condition: service_healthy

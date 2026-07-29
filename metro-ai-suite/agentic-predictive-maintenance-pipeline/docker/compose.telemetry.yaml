@@ -31,8 +31,6 @@ services:
     pid: host
     security_opt:
       - apparmor:unconfined
-    devices:
-      - "/dev/dri:/dev/dri"
     volumes:
       - "/sys:/sys:ro"
       - "/run:/run:ro"

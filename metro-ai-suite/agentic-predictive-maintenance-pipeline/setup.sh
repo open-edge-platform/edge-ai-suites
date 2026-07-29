@@ -76,6 +76,8 @@ validate_env() {
     # Capture any vars the caller explicitly set before sourcing the env file
     # so they take precedence over file values (e.g. LLM_MODE=fallback ./setup.sh)
     local _pre_llm_mode="${LLM_MODE:-}"
+    local _pre_llm_device="${LLM_DEVICE:-}"
+    local _pre_dl_device="${DL_DEVICE:-}"
 
     # Source the env file
     set -a
@@ -84,14 +86,20 @@ validate_env() {
 
     # Restore caller-supplied overrides
     [ -n "${_pre_llm_mode}" ] && export LLM_MODE="${_pre_llm_mode}"
+    [ -n "${_pre_llm_device}" ] && export LLM_DEVICE="${_pre_llm_device}"
+    [ -n "${_pre_dl_device}" ] && export DL_DEVICE="${_pre_dl_device}"
 
     # HOST_IP is optional — default to localhost if not set in the env file
     export HOST_IP="${HOST_IP:-localhost}"
     
-    #GPU Configuration
-    # Check if render device exist
-    echo -e "\nRENDER device exist. Getting the GID...\n"
-    export RENDER_GROUP_ID=$(stat -c "%g" /dev/dri/render* | head -n 1)
+    # GPU render group configuration. Keep the compose default if this host
+    # does not expose a render node.
+    local render_devices=(/dev/dri/render*)
+    if [ -e "${render_devices[0]}" ]; then
+        echo -e "\nRENDER device exists. Getting the GID...\n"
+        export RENDER_GROUP_ID
+        RENDER_GROUP_ID=$(stat -c "%g" "${render_devices[0]}")
+    fi
 
     # LLM_MODEL_PATH is stored relative to the repo root in the use-case env
     # file (e.g. "./apps/.../Phi-4-mini-instruct") for portability across
@@ -131,6 +139,33 @@ validate_env() {
     fi
 
     echo -e "${GREEN}Environment validated.${NC}"
+    return 0
+}
+
+validate_npu_device() {
+    if ! has_npu_device; then
+        echo -e "${RED}ERROR: NPU was selected, but /dev/accel does not exist on this host.${NC}" >&2
+        echo -e "${YELLOW}   Use CPU/GPU, or install/enable the Intel NPU driver so /dev/accel is available.${NC}" >&2
+        return 1
+    fi
+    return 0
+}
+
+has_npu_device() {
+    [ -d /dev/accel ]
+}
+
+has_gpu_device() {
+    local render_devices=(/dev/dri/render*)
+    [ -e "${render_devices[0]}" ]
+}
+
+validate_gpu_device() {
+    if ! has_gpu_device; then
+        echo -e "${RED}ERROR: GPU was selected, but no /dev/dri/render* device exists on this host.${NC}" >&2
+        echo -e "${YELLOW}   Use CPU, or install/enable the Intel GPU driver so a render device is available.${NC}" >&2
+        return 1
+    fi
     return 0
 }
 
@@ -215,8 +250,15 @@ case "${ACTION}" in
         export USE_CASE_MODELS_DIR="${USE_CASE_DIR}/models"
         export USE_CASE_RESOURCES_DIR="${USE_CASE_DIR}/resources"
 
+        LLM_DEVICE_NORMALIZED="${LLM_DEVICE:-CPU}"
+        LLM_DEVICE_NORMALIZED="${LLM_DEVICE_NORMALIZED^^}"
+        AVAILABLE_DEVICES="CPU"
+        has_gpu_device && AVAILABLE_DEVICES="${AVAILABLE_DEVICES},GPU"
+        has_npu_device && AVAILABLE_DEVICES="${AVAILABLE_DEVICES},NPU"
+        export AVAILABLE_DEVICES
+
         # Warn if sample video is missing (DL Streamer needs it for auto_start pipeline)
-        SAMPLE_VIDEO="${USE_CASE_RESOURCES_DIR}/videos/sample.mp4"
+        SAMPLE_VIDEO="${USE_CASE_RESOURCES_DIR}/videos/datastream.mp4"
         if [ ! -f "${SAMPLE_VIDEO}" ]; then
             echo -e "${YELLOW}⚠️  Sample video not found: ${SAMPLE_VIDEO}${NC}"
             echo -e "${YELLOW}   Run the data prep script to download and create it:${NC}"
@@ -235,10 +277,34 @@ case "${ACTION}" in
             -f docker/compose.agents.yaml \
             -f docker/compose.ui.yaml"
 
+        if has_gpu_device; then
+            COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.telemetry-gpu.yaml"
+        fi
+
+        if has_gpu_device; then
+            COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.dlstreamer-gpu.yaml"
+            echo -e "${BLUE}DL Streamer GPU device mapping enabled.${NC}"
+        fi
+
+        if has_npu_device; then
+            COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.dlstreamer-npu.yaml"
+            echo -e "${BLUE}DL Streamer NPU device mapping enabled.${NC}"
+        fi
+
         # Include VLM service only when LLM mode is active
         if [ "${LLM_MODE:-llm}" != "fallback" ]; then
             COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.llm.yaml"
             echo -e "${BLUE}LLM mode: ${LLM_MODEL_NAME} on ${LLM_DEVICE}${NC}"
+            if [ "${LLM_DEVICE_NORMALIZED}" = "GPU" ]; then
+                validate_gpu_device || { return 1 2>/dev/null || exit 1; }
+                COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.llm-gpu.yaml"
+                echo -e "${BLUE}LLM GPU device mapping enabled.${NC}"
+            fi
+            if [ "${LLM_DEVICE_NORMALIZED}" = "NPU" ]; then
+                validate_npu_device || { return 1 2>/dev/null || exit 1; }
+                COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.llm-npu.yaml"
+                echo -e "${BLUE}LLM NPU device mapping enabled.${NC}"
+            fi
         else
             echo -e "${YELLOW}Fallback mode: rule-based reasoning (no VLM service)${NC}"
         fi

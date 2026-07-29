@@ -35,6 +35,13 @@ _AGENT_URL     = os.environ.get("AGENT_SERVICE_URL",     "http://apm-agent:5002"
 _DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5004")
 _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:5001")
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
+_AVAILABLE_DEVICES = [
+    device.strip().upper()
+    for device in os.environ.get("AVAILABLE_DEVICES", "CPU").split(",")
+    if device.strip().upper() in {"CPU", "GPU", "NPU"}
+]
+if not _AVAILABLE_DEVICES:
+    _AVAILABLE_DEVICES = ["CPU"]
 _TIMEOUT       = 15.0
 
 app = FastAPI(title="APM UI", docs_url=None, redoc_url=None)
@@ -160,7 +167,7 @@ async def index(request: Request):
             "runs": runs,
             "active_run": active_run,
             "videos": videos,
-            "devices": ["CPU", "GPU", "NPU"],
+            "devices": _AVAILABLE_DEVICES,
         },
     )
 
