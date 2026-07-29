@@ -22,20 +22,23 @@
 # Env overrides:
 #   OPENCLAW_HOME   target home                       (default: ~/.openclaw)
 #   MCP_URL         SmartBuilding MCP endpoint         (default: http://localhost:3100/mcp)
-#   AGENT_MODEL     model alias for the demo agents    (default: Qwen3.6-35B-A3B)
+#   AGENT_MODEL     model for new demo agents          (default: agents.defaults.model.primary)
 #   SKIP_RESTART=1  skip the gateway restart (step 7)
 #   SKIP_WAKEUP=1   skip the agent wakeup   (step 8)
 set -euo pipefail
 
 SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
-HERE="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"      # examples/openclaw/scripts
-PLUGIN_DIR="$(cd "$HERE/.." && pwd)"                 # examples/openclaw (the adapter plugin)
-SDK_DIR="$(cd "$PLUGIN_DIR/../.." && pwd)"           # packages/framework-adapter-sdk
-REPO_ROOT="$(cd "$SDK_DIR/../.." && pwd)"            # repo root
+HERE="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"      # demo/openclaw-adapter
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"                # agentic-smart-community
+SDK_DIR="$REPO_ROOT/packages/framework-adapter-sdk"
+PLUGIN_DIR="$SDK_DIR/examples/openclaw"
+PERSONA_DIR="$HERE/agents"
 OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
 PLUGIN_ID="smartbuilding-alerts"
+MCP_URL_EXPLICIT=false
+[[ -n "${MCP_URL+x}" ]] && MCP_URL_EXPLICIT=true
 MCP_URL="${MCP_URL:-http://localhost:3100/mcp}"
-AGENT_MODEL="${AGENT_MODEL:-Qwen3.6-35B-A3B}"
+AGENT_MODEL="${AGENT_MODEL:-}"
 
 # Demo agents (id order matters: `main` first — it is OpenClaw's default agent).
 # The 3 persona agents below are the ones with bundled workspaces under agents/.
@@ -43,6 +46,18 @@ PERSONA_AGENTS=(fridge-agent child-safety-agent elder-wakeup-agent)
 
 command -v openclaw >/dev/null 2>&1 || { echo "ERROR: 'openclaw' CLI not found on PATH." >&2; exit 1; }
 command -v jq       >/dev/null 2>&1 || { echo "ERROR: 'jq' not found on PATH."       >&2; exit 1; }
+[[ -f "$PLUGIN_DIR/package.json" ]] || { echo "ERROR: OpenClaw adapter plugin not found: $PLUGIN_DIR" >&2; exit 1; }
+[[ -f "$SDK_DIR/package.json" ]] || { echo "ERROR: framework-adapter-sdk not found: $SDK_DIR" >&2; exit 1; }
+[[ -d "$PERSONA_DIR" ]] || { echo "ERROR: demo agent personas not found: $PERSONA_DIR" >&2; exit 1; }
+
+if [[ -z "$AGENT_MODEL" ]]; then
+  configured_model="$(openclaw config get agents.defaults.model.primary --json 2>/dev/null || true)"
+  AGENT_MODEL="$(jq -r 'if type == "string" then . else empty end' <<<"$configured_model")"
+fi
+[[ -n "$AGENT_MODEL" ]] || {
+  echo "ERROR: No default OpenClaw model is configured. Configure a provider first or set AGENT_MODEL." >&2
+  exit 1
+}
 
 echo "==> Building framework-adapter-sdk"
 npm --prefix "$REPO_ROOT" -w @smartbuilding-video/framework-adapter-sdk run build
@@ -70,7 +85,16 @@ rm -f "$OPENCLAW_HOME/extensions/$PLUGIN_ID"
 # ---------------------------------------------------------------------------
 echo "==> Registering plugin entry in openclaw.json"
 if openclaw config get "plugins.entries.$PLUGIN_ID" --json >/dev/null 2>&1; then
-  echo "    - plugins.entries.$PLUGIN_ID already present — left as-is"
+  if [[ "$MCP_URL_EXPLICIT" == "true" ]]; then
+    patch_file="$(mktemp)"
+    jq -n --arg id "$PLUGIN_ID" --arg url "$MCP_URL" \
+      '{ plugins: { entries: { ($id): { config: { mcpServer: { url: $url } } } } } }' > "$patch_file"
+    openclaw config patch --file "$patch_file"
+    rm -f "$patch_file"
+    echo "    - updated mcpServer.url=$MCP_URL; existing alert routes preserved"
+  else
+    echo "    - plugins.entries.$PLUGIN_ID already present — left as-is"
+  fi
 else
   patch_file="$(mktemp)"
   cat > "$patch_file" <<EOF
@@ -175,7 +199,7 @@ else
 fi
 
 echo "==> Seeding agent personas into $OPENCLAW_HOME/agents (cp -n, non-destructive)"
-for agent_dir in "$PLUGIN_DIR"/agents/*/; do
+for agent_dir in "$PERSONA_DIR"/*/; do
   agent_id="$(basename "$agent_dir")"
   dst="$OPENCLAW_HOME/agents/$agent_id/workspace"
   mkdir -p "$dst" "$OPENCLAW_HOME/agents/$agent_id/agent"

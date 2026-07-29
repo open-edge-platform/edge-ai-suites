@@ -567,7 +567,7 @@ class StreamPipeline(BaseMonitor):
     def _emit_static(self, start_iso: str | None, end_iso: str, duration: float) -> None:
         """Emit a `static` event via the shared MCP envelope.
 
-        Payload matches mcp_webhook_event_api.md §4: required `start_time` +
+        Payload matches api-reference-mcp-webhook-event.md §4: required `start_time` +
         `duration_seconds`, optional `end_time`.
         """
         self._emit_envelope("static", {

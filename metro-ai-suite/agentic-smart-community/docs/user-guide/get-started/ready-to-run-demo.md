@@ -4,20 +4,25 @@ This optional guide configures reference video streams and monitors for the bund
 
 ## Prerequisites
 
-Complete [Get Started](../get-started.md) through **Step 1 - Start dependent services**. The demo also requires `ffmpeg`, `ffprobe`, Python 3, and MediaMTX at `~/.local/bin/mediamtx` unless you change `mediamtx.binary` in [streams.yaml](../../../demo/videos/streams.yaml).
+Before starting the demo, complete both of the following sections in [Get Started](../get-started.md):
 
-The demo supports four independent video-analysis streams. Videos are not included in release artifacts. All four entries in [streams.yaml](../../../demo/videos/streams.yaml) default to `enabled: true`, but a stream is automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file. Its corresponding monitor is not registered.
+1. Complete all [Prerequisites](../get-started.md#prerequisites), including the required system software and command-line tools.
+2. Complete [Step 1 - Start dependent services](../get-started.md#step-1---start-dependent-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
 
-| Stream | Environment variable | Purpose |
-|---|---|---|
-| `cam_fridge` | `SMARTBUILDING_DEMO_FRIDGE_VIDEO` | Tracks fridge door activity and supports inventory-oriented daily reports. |
-| `cam_child` | `SMARTBUILDING_DEMO_CHILD_VIDEO` | Detects potentially dangerous child behavior for safety alerts and reports. |
-| `cam_elder_bedroom` | `SMARTBUILDING_DEMO_ELDER_VIDEO` | Tracks daily wakeup activity for the elder-wakeup workflow. |
-| `cam_elder_bedroom_2` | `SMARTBUILDING_DEMO_ELDER_2_VIDEO` | Runs a second, independent elder-wakeup camera input. |
+The demo supports four independent video-analysis streams with bundled use cases.
+
+| Stream | Purpose |
+|---|---|
+| `cam_fridge` | Tracks fridge door activity and supports inventory-oriented daily reports. |
+| `cam_child` | Detects potentially dangerous child behavior for safety alerts and reports. |
+| `cam_elder_bedroom` | Tracks daily wakeup activity for the elder-wakeup workflow. |
+| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input. |
 
 Prepare any subset of compatible local MP4 files. The RTSP pusher copies the source stream, so each selected file must be playable by `ffmpeg` and compatible with your MediaMTX deployment.
 
 ## Step 1 - Provide video paths
+
+Video files are not included in release artifacts. All four entries in [streams.yaml](../../../demo/videos/streams.yaml) default to `enabled: true`, but a stream will be automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file.
 
 Export an absolute path for every stream you want to run. Omit variables for streams you do not have; no YAML edits are required.
 
@@ -32,49 +37,61 @@ To manually disable a stream even when its variable is available, set that strea
 
 ## Step 2 - Start the demo
 
-From the component root, run:
+From the component root (`metro-ai-suite/agentic-smart-community`), run:
 
 ```bash
 bash demo/scripts/start-demo.sh
 ```
 
-The MCP server registers the three bundled tasks with `multilevel-video-understanding`. The demo launcher starts MediaMTX and the selected RTSP pushers, then starts the MCP server with the matching subset of [monitors.demo.yaml](../../../demo/monitors.demo.yaml).
+> If an MCP server is already running on port `3100`, stop it with `bash scripts/mcp-server/stop.sh` before starting the demo.
+
+The demo launcher starts MediaMTX and the selected RTSP pushers, then starts the MCP server with the matching subset of [monitors.demo.yaml](../../../demo/monitors.demo.yaml).
 
 It prints the active stream file at `demo/videos/.run/active-streams.txt`. Verify the running RTSP paths and the selected monitors:
 
 ```bash
 cat demo/videos/.run/active-streams.txt
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
+curl -fsS http://localhost:3101/health
 tail -f /tmp/smartbuilding-$(id -u)/mcp-server.log
 ```
 
-Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
+Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. Press `Ctrl-C` to stop following the log. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
 
 ## Step 3 - Connect an agent
 
 Connect an MCP client as described in [Get Started - Step 3](../get-started.md#step-3---connect-an-agent-host). The demo supports reactive tool use immediately after the MCP server is registered.
 
-## Step 4 - Optional OpenClaw demo integration
+## Step 4 - *[Optional]* Enable proactive OpenClaw alerts
 
-The reference OpenClaw installer is demo-specific: it installs the alert adapter, imports the repository skills, provisions the Fridge, Child Safety, and Elder Wakeup personas, and creates the reference alert routes for `cam_child` and `cam_elder_bedroom`.
+If you are connecting Smart Building to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
 
-Before running it, complete the OpenClaw MCP registration in [Get Started](../get-started.md#openclaw). On a development machine that needs the reference local-vLLM and MiniMax provider configuration, run the optional helper first. It only writes a `MINIMAX_API_KEY` placeholder; provide the real value through OpenClaw's supported secret configuration.
+The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Building skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
+
+This OpenClaw adapter is built with the [Framework Adapter SDK](../../../packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](../../../packages/framework-adapter-sdk/examples/openclaw/README.md).
+
+Run the installer from the component root:
 
 ```bash
-cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw
-
-# Optional development-only provider setup.
-bash scripts/fire_models.sh
-
-# Install the demo adapter, agents, skills, and alert routes.
-bash scripts/install.sh
+bash demo/openclaw-adapter/install.sh
 ```
 
-The installer restarts the OpenClaw gateway and wakes the demo agents. Open the dashboard with `openclaw dashboard`; the `cam_child` and `cam_elder_bedroom` sessions receive their routed alert turns as selected video pipelines create alerts.
+The installer is safe to run again. It builds the SDK, installs and links the OpenClaw plugin, preserves existing alert routes, merges missing demo agents by ID, copies personas without overwriting existing files, imports skills, validates `openclaw.json`, and restarts the gateway. New demo agents use the current `agents.defaults.model.primary`; set `AGENT_MODEL` to override it. By default the adapter uses `http://localhost:3100/mcp`; set `MCP_URL` to update the endpoint.
 
-### Optional scheduled reports
+Open the Control UI at `http://localhost:18789` with `openclaw dashboard`. When a selected video pipeline raises an alert, the adapter immediately appends the formatted notification to the configured agent session. This zero-LLM delivery path keeps latency low and requires no user prompt or polling. The demo enables this flow for `cam_child` and `cam_elder_bedroom`.
 
-The installer does not create cron jobs. Add only the scheduled demo behavior you want, replacing `Asia/Shanghai` with the applicable timezone:
+### Scheduled reports based on OpenClaw Cron
+
+The following optional OpenClaw cron jobs provide scheduled reports and a safety fallback for the demo agents:
+
+| Cron job | Schedule | Agent | Session | Behavior |
+|---|---|---|---|---|
+| Fridge daily report | Daily at 22:00 | `fridge-agent` | `daily_report` | Generates a daily fridge inventory and dietary report. |
+| Child-safety daily report | Daily at 22:30 | `child-safety-agent` | `daily_report` | Summarizes the day's child-safety alerts and notable events. |
+| Elder-wakeup weekly report | Sunday at 22:00 | `elder-wakeup-agent` | `weekly_report` | Summarizes the week's wakeup activity for `cam_elder_bedroom`. |
+| Elder no-wakeup fallback | Daily at 10:00 | `elder-wakeup-agent` | `cam_elder_bedroom` | Rechecks the scene and raises a `no_wakeup` alert when no get-up event has been observed. |
+
+Add only the scheduled demo behavior you want, replacing `Asia/Shanghai` with the applicable timezone:
 
 ```bash
 # Fridge daily report at 22:00.
@@ -105,7 +122,51 @@ openclaw cron list
 openclaw cron rm <job-id>
 ```
 
-## Step 5 - Stop the demo
+## Step 5 - Talk with agents
+
+Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Building tools.
+
+If you installed the OpenClaw adapter in Step 4, open the Control UI and select one of these agents:
+
+### Fridge agent
+
+Select `fridge-agent` to discuss the current fridge contents, reports, nutrition, and related lifestyle goals. For example:
+
+- "What is currently visible in my fridge?"
+- "Generate today's fridge report and summarize anything I should restock."
+- "Based on my health goals, is the food in my fridge reasonable?"
+- "Can you turn that into a practical meal plan for tomorrow?"
+- "What else could help with weight loss, and where can I exercise nearby?"
+
+Try following up with questions such as "Why did you recommend that?", "What changed since yesterday?", or "Give me a shorter shopping list."
+
+### Child Safety agent
+
+Select `child-safety-agent` to ask about recent safety events, the current scene, or patterns over a period of time. For example:
+
+- "Is the child safe right now?"
+- "Were there any child-safety alerts today?"
+- "Generate today's child-safety report and explain the most important event."
+- "How many risky events happened this week?"
+- "What changes would make this room safer?"
+
+You can continue with requests such as "Show me only unacknowledged alerts", "What happened before that alert?", or "Compare today with yesterday."
+
+### Elder Wakeup agent
+
+Select `elder-wakeup-agent` to discuss wakeup activity, daily status, and longer-term patterns. For example:
+
+- "What happened in the elder's bedroom today?"
+- "Has the elder gotten up yet?"
+- "Was today's wakeup later than usual?"
+- "Generate this week's wakeup report and highlight anything unusual."
+- "Compare this week's wakeup times with last week."
+
+Follow up naturally with questions such as "Which day was latest?", "Check the current scene again", or "Explain why this was marked unusual."
+
+These are conversation starters, not a required script. Try your own wording, combine several questions in one conversation, and ask the agent to clarify, compare, summarize, or take a closer look whenever the first answer raises another question. If you skipped the optional OpenClaw adapter, ask the MCP-capable agent connected in Step 3 and include the relevant monitor ID, such as `cam_fridge`, `cam_child`, or `cam_elder_bedroom`.
+
+## Step 6 - Stop the demo
 
 Stop the MCP server and RTSP pushers together:
 
