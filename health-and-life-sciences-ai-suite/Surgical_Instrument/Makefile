@@ -158,14 +158,23 @@ list-cameras:  ## List /dev/video* + Basler serials (SOURCE_ARG values)
 	@echo ""
 	@lsusb -d 2676: 2>/dev/null || echo "[list-cameras] no Basler USB device present"
 	@echo ""
-	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx surgical-pipeline; then \
-		echo "[list-cameras] Basler serials (SOURCE_ARG candidates):"; \
+	@echo "[list-cameras] Basler serials (SOURCE_ARG candidates):"
+	@if python3 -c "import pypylon" >/dev/null 2>&1; then \
+		python3 scripts/list_basler.py; \
+	elif docker ps --format '{{.Names}}' 2>/dev/null | grep -qx surgical-pipeline; then \
 		docker exec surgical-pipeline python3 -c "from pypylon import pylon;\
  devs = pylon.TlFactory.GetInstance().EnumerateDevices();\
  print('  (none)') if not devs else [print(f'  serial={d.GetSerialNumber()}  model={d.GetModelName()}') for d in devs]" \
 			2>/dev/null || echo "  (pypylon query failed inside surgical-pipeline)"; \
+	elif docker image inspect surgical-pipeline:dev >/dev/null 2>&1; then \
+		docker run --rm --entrypoint python3 \
+			--device /dev/bus/usb:/dev/bus/usb \
+			-v $(PWD)/scripts/list_basler.py:/opt/list_basler.py:ro \
+			surgical-pipeline:dev /opt/list_basler.py \
+			2>/dev/null || echo "  (pypylon query failed in one-shot container)"; \
 	else \
-		echo "[list-cameras] surgical-pipeline container not running — run 'make up' once to enumerate Basler serials"; \
+		echo "  (host pypylon missing; install with 'python3 -m pip install pypylon'"; \
+		echo "   or run 'make up' once to build the pipeline image and re-run this target)"; \
 	fi
 
 # Internal: (re)generate the camera override if any /dev/video* exist, else

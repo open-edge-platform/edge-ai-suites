@@ -77,7 +77,7 @@ the metrics collector.
 
 ## Discovering `SOURCE_ARG` for your Basler camera
 
-One command:
+One command — works before `make up`, no running stack required:
 
 ```bash
 make list-cameras
@@ -94,9 +94,30 @@ Bus 004 Device 004: ID 2676:ba02 Basler AG ace
   serial=40067928  model=acA1920-150uc
 ```
 
-Copy the value after `serial=` into `SOURCE_ARG`. If the serial section
-prints `surgical-pipeline container not running`, run `make up` once
-first (the pypylon query happens inside the running container).
+Copy the value after `serial=` into `SOURCE_ARG`.
+
+Under the hood, `make list-cameras` runs
+[scripts/list_basler.py](../../scripts/list_basler.py) — a standalone
+`pypylon` enumeration script. Three attempts, in order:
+
+1. **Host `pypylon`** (fastest): if `python3 -c "import pypylon"` works on
+   the host, the script runs directly. Install once with
+   `python3 -m pip install pypylon` for this path.
+2. **Running `surgical-pipeline` container**: if the stack is up,
+   enumerates via `docker exec`.
+3. **One-shot container from the built image**: if only
+   `surgical-pipeline:dev` exists (built by a previous `make up`), spins
+   up a throwaway `docker run --rm` with the USB bus mounted and prints
+   the serial. This is what makes the command work "before make up" once
+   the image has been built at least once.
+
+You can also run the script directly on the host:
+
+```bash
+python3 scripts/list_basler.py
+# prints one line per camera:
+#   serial=40067928  model=acA1920-150uc
+```
 
 For `SOURCE_KIND=file`, list packaged videos on the host with
 `ls -1 videos/*.mp4` and pass the in-container path
@@ -112,6 +133,9 @@ in the README are captured from.
 
 ```bash
 make up SOURCE_KIND=basler SOURCE_ARG=40067928 DETECT=1 AUTOVIDEOSINK=true SCHEDULING_POLICY=latency BATCH_SIZE=1
+
+
+# To start the pipeline run the following command:
 curl -X POST http://localhost:8080/api/start
 ```
 
@@ -165,6 +189,8 @@ disabled. Use this to prove camera-to-window plumbing works end to end.
 
 ```bash
 make up SOURCE_KIND=basler SOURCE_ARG=40067928 DETECT=0 MINIMAL=1 AUTOVIDEOSINK=true
+
+# To start the pipeline run the following command:
 curl -X POST http://localhost:8080/api/start
 ```
 
@@ -195,33 +221,24 @@ Notes
 
 ---
 
-## Case 3 — Basler live camera + detect + tuning (watermark toggleable)
+## Case 3 — Basler live camera + detect + tuning, watermark disabled
 
-Full production shape. Live Basler → tuned `gvadetect` → optional
-`gvawatermark` → `gvafpscounter` → preview window. This is the case used
-for latency measurement and the demo.
-
-With watermark overlay (default):
-
-```bash
-make up SOURCE_KIND=basler SOURCE_ARG=40067928 \
-        DETECT=1 WATERMARK=1 \
-        SCHEDULING_POLICY=latency BATCH_SIZE=1 \
-        AUTOVIDEOSINK=true
-curl -X POST http://localhost:8080/api/start
-```
-
-Without watermark overlay (raw preview, same inference):
+Same tuned production shape as Case 1, but with the `gvawatermark`
+overlay disabled. Use this when you want the raw camera frame in the
+preview window (no bounding-box overlay) while still running the same
+`gvadetect` inference behind the scenes.
 
 ```bash
 make up SOURCE_KIND=basler SOURCE_ARG=40067928 \
         DETECT=1 WATERMARK=0 \
         SCHEDULING_POLICY=latency BATCH_SIZE=1 \
         AUTOVIDEOSINK=true
+
+# To start the pipeline run the following command:
 curl -X POST http://localhost:8080/api/start
 ```
 
-Resulting spawn with `WATERMARK=1`:
+Resulting spawn (Basler feeder piped into gst-launch):
 
 ```text
 python3 /opt/basler_reader.py 40067928 --geometry 1920x1080@60 --pixel-format uyvy \
@@ -237,26 +254,27 @@ python3 /opt/basler_reader.py 40067928 --geometry 1920x1080@60 --pixel-format uy
               nireq=1 ie-config=PERFORMANCE_HINT=LATENCY \
               scheduling-policy=latency batch-size=1 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
-  ! gvawatermark \
   ! gvafpscounter interval=1 \
   ! vapostproc ! "video/x-raw" \
   ! videoconvert \
   ! autovideosink sync=true
 ```
 
-With `WATERMARK=0` the only difference is the `gvawatermark` element is
-removed from the chain. Same detect, same tuning.
-
-Confirmed live output (from container INFO log, `WATERMARK=1`):
+Confirmed live output (from container INFO log):
 
 ```text
-[pipeline] knobs: detect=True watermark=True minimal=False
+[pipeline] knobs: detect=True watermark=False minimal=False
               scheduling_policy=latency batch_size=1 sink_sync=true
 status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
-FpsCounter (avg 22.20s): 58.83 fps
-latency window (last 200 samples):
-    mean=13.951 ms   p50=14.748 ms   p95=16.751 ms   p99=17.488 ms   max=19.707 ms
 ```
+
+Notes
+- The only pipeline-level difference from Case 1 is the missing
+  `gvawatermark` element — `gvadetect` still runs and its metadata is
+  attached to buffers, but nothing draws it on the frame.
+- Latency numbers are effectively identical to Case 1; `gvawatermark` is
+  a lightweight CPU overlay and skipping it does not materially change
+  the tuned window.
 
 ---
 
