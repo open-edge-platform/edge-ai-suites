@@ -2,7 +2,7 @@
 
 The Live Video Captioning RAG sample application uses the Retrieval-Augmented Generation technique, which creates caption-text embeddings and stores them in a vector database with video frames and metadata. The sample application works with the [Live Video Captioning](../live-video-captioning/) sample application to process Real-Time Streaming Protocol (RTSP) streams and generate live captions using a Vision-Language Model. The application uses an LLM optimized through the OpenVINO™ toolkit to power chatbots that answer questions based on the generated captions.
 
-![demo](./docs/user-guide/_assets/live-captioning-rag.gif)
+![demo](./docs/user-guide/_assets/live-video-captioning-rag.gif)
 
 ## Get Started
 

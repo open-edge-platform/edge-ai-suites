@@ -8,6 +8,7 @@ import '../entities/ingest_task_result.dart';
 import '../entities/qa_models.dart';
 import '../entities/health_status.dart';
 import '../entities/file_asset.dart';
+import 'ui_keepalive_interceptor.dart';
 
 /// Result of POST /api/v1/object/upload-ingest
 class UploadIngestResult {
@@ -40,6 +41,9 @@ class ContentSearchApiService {
         headers: {'Accept': 'application/json'},
       ),
     );
+
+    // Keep UI responsive during long VLM operations (2-3 minutes)
+    _dio.interceptors.add(UiKeepAliveInterceptor());
 
      assert(() {
        _dio.interceptors.add(

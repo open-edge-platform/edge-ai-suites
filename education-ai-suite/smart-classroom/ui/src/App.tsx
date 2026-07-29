@@ -3,22 +3,62 @@ import { createPortal } from 'react-dom'; // Add this import
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
+import GradingScreen from './components/Grading/GradingScreen';
 import Footer from './components/Footer/Footer';
 import Modal from './components/Modals/Modal'; // Import your existing Modal
 import SettingsForm from './components/Modals/SettingsForm'; // Import your existing SettingsForm
+import ReportPanel from './components/ReportPanel';
 import './App.css';
+import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useTranslation } from 'react-i18next';
+import { useFeatureConfig } from './hooks/useFeatureConfig';
   
 const App: React.FC = () => {
   const { t } = useTranslation();
   const [projectName, setProjectName] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
-  const [activeScreen, setActiveScreen] = useState<'main' | 'content-search'>('main');
+  const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading'>('main');
+  const [isReportOpen, setIsReportOpen] = useState(false);
   useVideoPipelineMonitor();
+
+  // Load feature configuration
+  const { features, guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();
+
+  // Check if any main features are enabled
+  const hasMainFeatures = featuresLoaded && guard ? 
+    ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'].some(f => guard.hasFeature(f)) : 
+    true; // Default to true during loading
+
+  // Auto-switch to content-search or grading screen if only those features are enabled
+  useEffect(() => {
+    if (!featuresLoaded || !guard) return;
+
+    const mainFeatures = ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'];
+    const contentSearchFeatures = ['content_search', 'qa'];
+    const gradingFeatures = ['grading'];
+
+    const hasMainFeature = mainFeatures.some(f => guard.hasFeature(f));
+    const hasContentSearchFeature = contentSearchFeatures.some(f => guard.hasFeature(f));
+    const hasGradingFeature = gradingFeatures.some(f => guard.hasFeature(f));
+
+    // If main features are disabled, auto-switch based on what's available
+    if (!hasMainFeature) {
+      // Prefer content-search if available (grading can coexist)
+      if (hasContentSearchFeature) {
+        console.log('📋 Main features disabled, content-search enabled - auto-switching to content-search screen');
+        setActiveScreen('content-search');
+      }
+      // Only switch to grading if content-search is not available
+      else if (hasGradingFeature) {
+        console.log('📝 Only grading feature enabled - auto-switching to grading screen');
+        setActiveScreen('grading');
+      }
+    }
+  }, [featuresLoaded, guard]);
   const checkBackendHealth = async () => {
     try {
       const isHealthy = await pingBackend();
@@ -61,8 +101,8 @@ const App: React.FC = () => {
       <div className="app-loading">
         <div className="loading-content">
           <div className="spinner" />
-          <h2>Checking backend status</h2>
-          <p>Please wait while we connect to the backend…</p>
+          <h2>{t('app.checkingBackendTitle')}</h2>
+          <p>{t('app.checkingBackendMessage')}</p>
         </div>
       </div>
     );
@@ -72,15 +112,40 @@ const App: React.FC = () => {
     return (
       <div className="app-error">
         <div className="error-content">
-          <h1>Backend Not Available</h1>
+          <h1>{t('app.backendUnavailableTitle')}</h1>
           <p>
-            The backend server is currently unreachable.
-            Please ensure it is running.
+            {t('app.backendUnavailableMessage')}
           </p>
         </div>
       </div>
     );
   }
+
+  // Wait for features to load before rendering main UI
+  if (featuresLoading || !featuresLoaded) {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <div className="spinner" />
+          <h2>{t('app.loadingConfigTitle')}</h2>
+          <p>{t('app.loadingConfigMessage')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (featuresError) {
+    return (
+      <div className="app-error">
+        <div className="error-content">
+          <h1>{t('app.configErrorTitle')}</h1>
+          <p>{featuresError}</p>
+          <p>{t('app.configErrorMessage')}</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="app">
@@ -92,18 +157,31 @@ const App: React.FC = () => {
         setIsSettingsOpen={setIsSettingsOpen}
         activeScreen={activeScreen}
         setActiveScreen={setActiveScreen}
+        featureGuard={guard}
+        hasMainFeatures={hasMainFeatures}
+        onViewReport={() => setIsReportOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
-        <HeaderBar projectName={projectName} setProjectName={setProjectName} />
+        <HeaderBar projectName={projectName} setProjectName={setProjectName} featureGuard={guard} />
       </div>
       {activeScreen === 'content-search' && (
         <div className="content-search-subheader">
           <span>{t('contentSearch.subtitle')}</span>
         </div>
       )}
-      <div className="main-content">
-        <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} />
+      <div style={{ display: activeScreen === 'grading' ? 'none' : 'contents' }}>
+        <div className="main-content">
+          <Body isModalOpen={isSettingsOpen} activeScreen={activeScreen} featureGuard={guard} hasMainFeatures={hasMainFeatures} />
+        </div>
       </div>
+      {activeScreen === 'grading' && (
+        <>
+          <div className="header-bar grading-header-bar" />
+          <div className="main-content">
+            <GradingScreen />
+          </div>
+        </>
+      )}
       <Footer />
       
       {/* Render modal as portal to document.body using your existing Modal component */}
@@ -117,10 +195,18 @@ const App: React.FC = () => {
             onClose={() => setIsSettingsOpen(false)}
             projectName={projectName}
             setProjectName={setProjectName}
+            featureGuard={guard}
           />
         </Modal>,
         document.body
       )}
+      
+      {/* Report Panel */}
+      <ReportPanel
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        featureGuard={guard}
+      />
     </div>
   );
 };

@@ -64,12 +64,13 @@ has 2 input videos:
 
 | Scenario | source_id | Use case | Video | ss | Prefilter | GT |
 |---|---|---|---|---|---|---|
-| `child` | cam_child | child_safety | `cam_child/child_safety_demo.mp4` (9'15") | 40 | on | yes |
-| `fridge` | cam_fridge | fridge | `cam_fridge/demo006-2_expanded_20min_v2.mp4` (20') | 0 | **off** | yes (4 [TAKE] cues) |
-| `elder_day1` | cam_elder_bedroom | elder_wakeup | `cam_elder_bedroom/day1_elder_wakeup.mp4` (8'00") | 0 | on | yes (excl `[EMPTY]`) |
-| `elder_day2` | cam_elder_bedroom_2 | elder_wakeup | `cam_elder_bedroom_2/day2_elder_wakeup.mp4` (8'29") | 0 | on | yes (excl `[EMPTY]`) |
+| `child` | cam_child | child_safety | `VSA_EVAL_CHILD_VIDEO` | 40 | on | yes |
+| `fridge` | cam_fridge | fridge | `VSA_EVAL_FRIDGE_VIDEO` | 0 | **off** | yes (4 [TAKE] cues) |
+| `elder_day1` | cam_elder_bedroom | elder_wakeup | `VSA_EVAL_ELDER_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
+| `elder_day2` | cam_elder_bedroom_2 | elder_wakeup | `VSA_EVAL_ELDER_2_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
 
 Notes:
+- Set the corresponding `VSA_EVAL_*_VIDEO` variables to local MP4 files before running an evaluation. Videos are not distributed with the repository.
 - `fridge` runs with `prefilter.enabled=false` because `target_classes=["person"]`
   would filter out hand-only motion.
 - `elder_*` GT cue 3 is `[EMPTY]` (no person); the eval excludes it via

@@ -80,7 +80,7 @@ By default, the model is converted to run on CPU. To explicitly run on other dev
   --weight-format int8 \
   --device <CPU|GPU|NPU>
 ```
-> Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
+> Note: NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 ---
 

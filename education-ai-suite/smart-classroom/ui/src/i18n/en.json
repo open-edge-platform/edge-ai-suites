@@ -72,7 +72,12 @@
       "boardCamera2": "Board Camera 2",
       "frontCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/front",
       "backCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/back",
-      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content"
+      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content",
+      "enterAudioPath": "Enter audio path",
+      "enterFrontCameraPath": "Enter front camera path",
+      "enterBackCameraPath": "Enter rear camera path",
+      "enterBoardCameraPath": "Enter board camera path",
+      "selectFolder": "Select Folder"
     },
     "uploadFiles": {
     "title": "Upload Files",
@@ -84,12 +89,24 @@
     "audioFileLabel": "Audio File",
     "frontCameraFile": "Front Camera File",
     "backCameraFile": "Back Camera File",
-    "boardCameraFile": "Board Camera File"
+    "boardCameraFile": "Board Camera File",
+    "enterBaseDirectory": "Enter the base directory",
+    "selectAudioFile": "Select an audio file",
+    "selectFrontCameraFile": "Select a front camera file",
+    "selectBackCameraFile": "Select a back camera file",
+    "selectBoardCameraFile": "Select a board camera file",
+    "chooseFile": "Choose File"
   },
     "menu": {
       "settings": "Settings",
       "help": "Help",
-      "about": "About"
+      "about": "About",
+      "toggle": "Toggle menu",
+      "navigation": "Navigation",
+      "home": "Home",
+      "appMenu": "Application menu",
+      "aboutDescription": "Learn more about the Smart Classroom application.",
+      "helpDescription": "Here you can find help and support resources."
     },
     "tabs": {
       "transcripts": "Transcripts",
@@ -154,7 +171,9 @@
       "backCamera": "Back",
       "boardCamera": "Board",
       "allCameras": "All",
-      "noSessionActiveContentSearch": "No active session. Upload content to begin searching."
+      "noSessionActiveContentSearch": "No active session. Upload content to begin searching.",
+      "speakingTimeline": "Speaking Timeline",
+      "totalDuration": "Total Duration"
     },
     "monitoring": {
     "pausedTitle": "Resource Monitoring Paused",
@@ -168,6 +187,16 @@
       "failedToStopRecording": "Failed to stop recording",
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
+    },
+    "app": {
+      "checkingBackendTitle": "Checking backend status",
+      "checkingBackendMessage": "Please wait while we connect to the backend…",
+      "backendUnavailableTitle": "Backend Not Available",
+      "backendUnavailableMessage": "The backend server is currently unreachable. Please ensure it is running.",
+      "loadingConfigTitle": "Loading configuration",
+      "loadingConfigMessage": "Detecting enabled features from backend…",
+      "configErrorTitle": "Configuration Error",
+      "configErrorMessage": "Please check your backend configuration."
     },
     "videoStream": {
     "configureCameras": "Configure cameras in settings to enable video analytics",
@@ -222,6 +251,128 @@
     "upload": "Upload",
     "backendUnreachable": "Unable to connect to the Content Search backend. Please ensure the service is running.",
     "servicesUnhealthy": "Some backend services are unavailable: {{services}}. Functionality may be limited."
+  },
+  "grading": {
+    "title": "Smart Grading",
+    "open": "Grading",
+    "back": "← Back",
+    "tabMain": "Grading",
+    "tabResults": "Results",
+    "mainTitle": "Grading",
+    "resultsTitle": "Results",
+    "placeholderMain": "Grading main page — coming soon.",
+    "placeholderResults": "Results page — coming soon.",
+    "resultsFor": "Results for task {{id}}",
+    "backendUnreachable": "Unable to connect to the Grading backend. Please ensure the service is running.",
+    "config": {
+      "title": "Grading Configuration",
+      "dpi": "Render DPI",
+      "vlmModel": "VLM Model",
+      "ocrModel": "OCR Model",
+      "layoutModel": "Layout Model",
+      "vlmTemperature": "Temperature",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved. Takes effect on next task.",
+      "invalidDpi": "DPI must be a positive integer",
+      "invalidTemp": "Temperature must be between 0 and 2",
+      "pollInterval": "Poll Interval (s)",
+      "stableChecks": "Stable Checks",
+      "idleTimeout": "Idle Timeout (s)"
+    },
+    "editor": {
+      "title": "Edit Rubric",
+      "loading": "Loading…",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "close": "Close"
+    },
+    "form": {
+      "title": "New grading task",
+      "rubric": "Rubric",
+      "noRubric": "No rubric available",
+      "upload": "Upload",
+      "uploading": "Uploading...",
+      "paperPath": "Target directory",
+      "paperPathPlaceholder": "/abs/path/to/papers",
+      "browse": "Browse",
+      "edit": "Edit",
+      "editDisabledHint": "Select a rubric first",
+      "pathHint": "A path visible to the server, not a browser upload.",
+      "start": "Start",
+      "starting": "Starting...",
+      "needPaperPath": "Please enter the target directory or file path."
+    },
+    "list": {
+      "title": "Tasks",
+      "refresh": "Refresh",
+      "running": "Running",
+      "completed": "Completed",
+      "paused": "Paused",
+      "total": "Total",
+      "empty": "No tasks yet.",
+      "emptyFiltered": "No tasks in this status.",
+      "progressUnknown": "—/—"
+    },
+    "detail": {
+      "total": "Total",
+      "completed": "Completed",
+      "failed": "Failed",
+      "processing": "Processing",
+      "delete": "Delete",
+      "timing": "Processing time",
+      "timingStudent": "Student",
+      "timingSeconds": "Time (s)",
+      "timingTotal": "Total",
+      "deleteConfirm": "Delete this task and all its output files? This cannot be undone.",
+      "pause": "Pause",
+      "resume": "Resume",
+      "viewResults": "View results →",
+      "dir": "Directory",
+      "rubric": "Rubric",
+      "elapsed": "Elapsed",
+      "log": "Live log",
+      "logExpand": "Expand full log",
+      "logLoading": "Loading...",
+      "logEmpty": "No log output yet."
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "pausing": "Pausing",
+      "paused": "Paused",
+      "cancelling": "Cancelling",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "picker": {
+      "title": "Select a directory",
+      "up": "↑ Up",
+      "roots": "Drives",
+      "loading": "Loading...",
+      "empty": "Empty directory.",
+      "cancel": "Cancel",
+      "select": "Select this directory"
+    },
+    "results": {
+      "back": "← Back to tasks",
+      "refresh": "Refresh",
+      "export": "Export CSV",
+      "tableTitle": "Grading Results",
+      "taskId": "Task",
+      "papersDir": "Directory",
+      "count": "Students",
+      "updated": "Updated",
+      "name": "Student",
+      "total": "Total",
+      "objective": "Objective",
+      "subjective": "Subjective",
+      "maxScore": "Max",
+      "empty": "No graded papers yet.",
+      "noTask": "Open a task from the list to view its results."
+    }
   },
   "uploadSection":{
     "upload":"Upload",

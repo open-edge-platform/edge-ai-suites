@@ -6,6 +6,7 @@ import classStatisticsReducer from './slices/fetchClassStatistics';
 import mindmapReducer from './slices/mindmapSlice';
 import resourceReducer from './slices/resourceSlice';
 import mediaValidationReducer from './slices/mediaValidationSlice';
+import featureConfigReducer from './slices/featureConfigSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     mindmap: mindmapReducer,
     resource: resourceReducer,
     mediaValidation: mediaValidationReducer,
+    featureConfig: featureConfigReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

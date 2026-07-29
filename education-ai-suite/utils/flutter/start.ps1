@@ -15,12 +15,19 @@ Write-Host "`n=== Starting Smart Classroom RAG ===" -ForegroundColor Cyan
 
 # Check prerequisites
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$contentSearchPath = Join-Path $repoRoot "smart-classroom\content_search"
-$venvPython = Join-Path $contentSearchPath "venv_content_search\Scripts\python.exe"
-$backendScript = Join-Path $contentSearchPath "start_services.py"
+$smartClassroomPath = Join-Path $repoRoot "smart-classroom"
+$mainVenvPath = Join-Path $repoRoot "smartclassroom"
+$mainPythonPath = Join-Path $mainVenvPath "Scripts\python.exe"
+$mainScript = Join-Path $smartClassroomPath "main.py"
 
-if (-not (Test-Path $venvPython)) {
-    Write-Host "[X] Python venv not found. Run .\setup.ps1 first" -ForegroundColor Red
+if (-not (Test-Path $mainPythonPath)) {
+    Write-Host "[X] Main backend venv not found. Run .\setup.ps1 first" -ForegroundColor Red
+    Write-Host "    Expected at: $mainVenvPath" -ForegroundColor Yellow
+    exit 1
+}
+
+if (-not (Test-Path $mainScript)) {
+    Write-Host "[X] main.py not found at: $mainScript" -ForegroundColor Red
     exit 1
 }
 
@@ -29,99 +36,76 @@ if (-not (Test-Path (Join-Path $PSScriptRoot "pubspec.yaml"))) {
     exit 1
 }
 
-# Start backend in separate window
-Write-Host "`nStarting Content Search backend..." -ForegroundColor Yellow
-Write-Host "  Backend will launch in a separate window" -ForegroundColor Gray
-$backendCmd = "Set-Location '$repoRoot'; & '$venvPython' '$backendScript'; Read-Host 'Backend stopped - press Enter to close'"
+# Start main backend in background window (automatically starts content search when enabled)
+Write-Host "`nStarting main backend in background window..." -ForegroundColor Yellow
+Write-Host "  Port 8000: VLM, OCR, ASR, core services" -ForegroundColor Gray
+Write-Host "  Port 9011: Content Search (auto-started if enabled in config.yaml)" -ForegroundColor Gray
+Write-Host "  Using venv: smartclassroom/" -ForegroundColor Gray
+Write-Host "  Backend will run in a separate window" -ForegroundColor Gray
+
+$mainCmd = "Set-Location '$smartClassroomPath'; & '$mainPythonPath' '$mainScript'"
 
 Start-Process powershell.exe `
-    -ArgumentList "-NoExit", "-Command", $backendCmd `
-    -WorkingDirectory $repoRoot
+    -ArgumentList "-NoExit", "-Command", $mainCmd `
+    -WorkingDirectory $smartClassroomPath
 
-Write-Host "[OK] Backend window opened" -ForegroundColor Green
+Write-Host "[OK] Main backend started in background" -ForegroundColor Green
 
-# Wait for backend to be fully ready
-Write-Host "`nWaiting for backend to be fully healthy..." -ForegroundColor Yellow
-Write-Host "  This ensures backend is completely ready before launching Flutter" -ForegroundColor Gray
-Write-Host "  Health endpoint: http://127.0.0.1:9011/api/v1/system/health" -ForegroundColor Gray
+# Wait for services with proper health checks (using same logic as smart-classroom scripts)
+Write-Host "`nWaiting for services to become ready..." -ForegroundColor Yellow
+Write-Host "  Backend (port 8000): VLM and core services" -ForegroundColor Gray
+Write-Host "  Content Search (port 9011): Auto-started by backend" -ForegroundColor Gray
+Write-Host "  Initial startup: 2-3 minutes (VLM model loading)" -ForegroundColor Gray
 
-# Give backend time to start up without interference from health checks
-Write-Host "`n  Initial startup delay (30 seconds)..." -ForegroundColor Gray
-Write-Host "  Allowing services to initialize without polling overhead" -ForegroundColor Gray
-Start-Sleep -Seconds 30
+$maxWaitSeconds = 300  # 5 minutes total timeout
+$startTime = Get-Date
+$checkInterval = 5  # Check every 5 seconds
 
-Write-Host "`n  Now checking health status..." -ForegroundColor Gray
-$deadline = (Get-Date).AddSeconds(150)  # 2.5 minutes after initial wait
-$backendReady = $false
-$attempts = 0
-$lastStatus = "unknown"
-
-do {
-    Start-Sleep -Seconds 10  # Check every 10 seconds to reduce load
-    $attempts++
+# Function to check if port is listening (not just bound)
+function Test-ServiceListening {
+    param([int]$Port)
     try {
-        $response = Invoke-WebRequest -Uri "http://127.0.0.1:9011/api/v1/system/health" `
-                                       -UseBasicParsing -TimeoutSec 5
-        if ($response.StatusCode -eq 200) {
-            # Parse JSON response to check actual health status
-            $healthData = $response.Content | ConvertFrom-Json
-            $lastStatus = $healthData.status
-            
-            if ($healthData.status -eq "ok") {
-                Write-Host "`n[OK] Backend is fully healthy (status: ok) after $attempts checks" -ForegroundColor Green
-                
-                # Show service statuses
-                if ($healthData.services) {
-                    Write-Host "  Service statuses:" -ForegroundColor Gray
-                    $healthData.services.PSObject.Properties | ForEach-Object {
-                        $serviceStatus = if ($_.Value -eq "healthy") { "[OK]" } else { "[X]" }
-                        $color = if ($_.Value -eq "healthy") { "Green" } else { "Red" }
-                        Write-Host "    $serviceStatus $($_.Name): $($_.Value)" -ForegroundColor $color
-                    }
-                }
-                
-                $backendReady = $true
-                break
-            } else {
-                # Backend is responding but status is "degraded"
-                Write-Host "`n  Backend status: $($healthData.status) (check $attempts)" -ForegroundColor Yellow
-                if ($healthData.services) {
-                    $unhealthyServices = @()
-                    $healthData.services.PSObject.Properties | ForEach-Object {
-                        if ($_.Value -ne "healthy") {
-                            $unhealthyServices += "$($_.Name): $($_.Value)"
-                        }
-                    }
-                    if ($unhealthyServices.Count -gt 0) {
-                        Write-Host "    Waiting for: $($unhealthyServices -join ', ')" -ForegroundColor Gray
-                    }
-                }
-            }
-        }
+        $connection = Get-NetTCPConnection -LocalPort $Port -State "Listen" -ErrorAction SilentlyContinue
+        return $null -ne $connection
     } catch {
-        Write-Host "`n  Waiting for backend to start... (check $attempts)" -ForegroundColor Gray
+        return $false
     }
-} while ((Get-Date) -lt $deadline)
-
-if (-not $backendReady) {
-    Write-Host "`n`n[X] Backend failed to become fully healthy" -ForegroundColor Red
-    Write-Host "  Total wait time: 3 minutes (30s initial + 2.5 minutes polling)" -ForegroundColor Yellow
-    Write-Host "  Last status: $lastStatus" -ForegroundColor Yellow
-    Write-Host "  Check the backend window for error messages" -ForegroundColor Yellow
-    Write-Host "  Common issues:" -ForegroundColor Yellow
-    Write-Host "    - Port 9011 already in use" -ForegroundColor Gray
-    Write-Host "    - Missing dependencies (run .\utils\flutter\setup.ps1)" -ForegroundColor Gray
-    Write-Host "    - Python environment issues" -ForegroundColor Gray
-    Write-Host "    - VLM service taking longer than expected to load models" -ForegroundColor Gray
-    Write-Host "    - ChromaDB or other dependent services not starting" -ForegroundColor Gray
-    Write-Host "`nExiting without launching Flutter..." -ForegroundColor Red
-    exit 1
 }
 
-# Backend is ready - no additional delay needed
+# Wait for backend to start listening
+Write-Host "  Waiting for backend to start..." -ForegroundColor Gray
+while (-not (Test-ServiceListening -Port 8000)) {
+    $elapsed = ((Get-Date) - $startTime).TotalSeconds
+    if ($elapsed -gt $maxWaitSeconds) {
+        Write-Host "`n[X] Timeout: Backend did not start within 5 minutes" -ForegroundColor Red
+        Write-Host "  Check the minimized backend window for errors" -ForegroundColor Yellow
+        exit 1
+    }
+    Start-Sleep -Seconds $checkInterval
+}
+$backendStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
+Write-Host "  [OK] Backend is listening on port 8000 (after ${backendStartTime}s)" -ForegroundColor Green
+
+# Wait for content search to start listening
+Write-Host "  Waiting for content search to start..." -ForegroundColor Gray
+while (-not (Test-ServiceListening -Port 9011)) {
+    $elapsed = ((Get-Date) - $startTime).TotalSeconds
+    if ($elapsed -gt $maxWaitSeconds) {
+        Write-Host "`n[X] Timeout: Content Search did not start within 5 minutes" -ForegroundColor Red
+        Write-Host "  Check the minimized backend window for errors" -ForegroundColor Yellow
+        exit 1
+    }
+    Start-Sleep -Seconds $checkInterval
+}
+$csStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
+Write-Host "  [OK] Content Search is listening on port 9011 (after ${csStartTime}s)" -ForegroundColor Green
+
+Write-Host "`n[OK] All backend services are ready!" -ForegroundColor Green
+$totalTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
+Write-Host "  Total startup time: $totalTime seconds" -ForegroundColor Gray
 
 # Start Flutter app in separate window
-Write-Host "`nBackend is ready - now starting Flutter app..." -ForegroundColor Yellow
+Write-Host "`nAll services ready - now starting Flutter app..." -ForegroundColor Yellow
 Write-Host "  Flutter will launch in a separate window" -ForegroundColor Gray
 
 $flutterCmd = "Set-Location '$PSScriptRoot'; flutter run -d windows; Write-Host '`nFlutter app closed' -ForegroundColor Cyan; Read-Host 'Press Enter to close this window'"
@@ -132,8 +116,10 @@ Start-Process powershell.exe `
 
 Write-Host "[OK] Flutter window opened" -ForegroundColor Green
 Write-Host "`n=== Startup Complete ===" -ForegroundColor Cyan
-Write-Host "Both services are running in separate windows:" -ForegroundColor Green
-Write-Host "  - Backend: Content Search service on port 9011" -ForegroundColor Gray
-Write-Host "  - Flutter: Smart Classroom app" -ForegroundColor Gray
-Write-Host "`nYou can now use commands like 'upload a file'" -ForegroundColor Yellow
-Write-Host "Remember to close both windows when done" -ForegroundColor Yellow
+Write-Host "All services are running:" -ForegroundColor Green
+Write-Host "  - Main Backend (port 8000): VLM, OCR, ASR, core services [minimized window]" -ForegroundColor Gray
+Write-Host "  - Content Search (port 9011): RAG, file management [auto-started]" -ForegroundColor Gray
+Write-Host "  - Flutter UI: Smart Classroom app [new window]" -ForegroundColor Gray
+Write-Host "`nYou can now upload files and ask questions in the Flutter app" -ForegroundColor Yellow
+Write-Host "To stop all services: close the Flutter window and the minimized backend window" -ForegroundColor Yellow
+Write-Host "`nThis terminal can now be closed safely." -ForegroundColor Gray
