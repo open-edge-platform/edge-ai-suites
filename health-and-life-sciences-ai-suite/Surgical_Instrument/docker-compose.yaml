@@ -39,7 +39,7 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
-    image: surgical-pipeline:dev
+    image: ${SURGICAL_PIPELINE_IMAGE:-intel/hl-ai-surgical-pipeline:${TAG:-1.0.0}}
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
@@ -106,7 +106,7 @@ services:
   # Instrument exposes only UI :8080 to the host; backend reaches collector
   # over the internal `surgical-internal` bridge network.
   surgical-metrics-collector:
-    image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}
+    image: ${SURGICAL_METRICS_COLLECTOR_IMAGE:-intel/hl-ai-metrics-collector:${TAG:-1.0.0}}
     container_name: surgical-metrics-collector
     restart: unless-stopped
     networks: [surgical-internal]
@@ -131,7 +131,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: surgical-backend:dev
+    image: ${SURGICAL_BACKEND_IMAGE:-intel/hl-ai-surgical-backend:${TAG:-1.0.0}}
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
@@ -212,7 +212,7 @@ services:
     build:
       context: ./ui
       dockerfile: Dockerfile
-    image: surgical-ui:dev
+    image: ${SURGICAL_UI_IMAGE:-intel/hl-ai-surgical-ui:${TAG:-1.0.0}}
     container_name: surgical-ui
     restart: unless-stopped
     networks: [surgical-internal]
