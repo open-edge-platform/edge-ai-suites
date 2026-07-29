@@ -150,7 +150,7 @@ The following demonstrates running two AI pipelines.
    ::::
    hide_directive-->
 
-   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer to the [View Open Telemetry Data document](./view-telemetry-data.md) to learn more.
+   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer to the [View Open Telemetry Data document](../how-to-extend-functionality/view-telemetry-data.md) to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
 

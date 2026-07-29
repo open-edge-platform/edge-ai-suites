@@ -7,7 +7,7 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    If you already have a functioning OPC UA server, you can skip this step. Otherwise, this section provides instructions for using the OPC UA server provided by [Unified Automation](https://www.unified-automation.com).
 
    1. **Download and Install the OPC UA Server**
-      Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Please note that this server is available only for Windows.
+      Download the [OPC UA C++ Demo Server (Windows)](https://www.unified-automation.com/downloads/opc-ua-servers.html) and install it on your Windows machine. Note that this server is available only for Windows.
    2. **Starting the OPC UA Server**
 
       - Open the Start menu on your Windows machine and search for **UaCPPServer**.
@@ -55,9 +55,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
    ::::
    hide_directive-->
 
-4. To use an AI model of your own please follow the steps as mentioned in this [document](./use-your-ai-model-and-video.md)
+4. To use an AI model of your own please follow the steps as mentioned in this [document](../how-to-customize/use-your-ai-model-and-video.md)
 
-5. Setup the application to use the Docker based deployment following this [document](../get-started.md#set-up-the-application).
+5. Setup the application to use the Docker based deployment following the [Get Started Guide](../get-started.md#set-up-the-application).
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 

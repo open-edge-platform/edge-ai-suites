@@ -7,7 +7,7 @@ You can also bring your own video file source. This article will show you how to
 > the default sample model and video are downloaded under `resource/<app_name>` in your repo.
 > You can manually add your files next to them.
 >
-> For compose-based deployment, the entire resources directory is a volume mounted and made
+> For compose-based deployment, the entire resources directory is volume mounted and made
 > available to pipeline server. However for Helm, you need to manually copy those to the
 > container.
 
