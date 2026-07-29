@@ -30,7 +30,7 @@ committing, not as work to redo.
 - **Added** service `surgical-metrics-collector`
   - `image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}`
   - `pid: host`, `privileged: true`
-  - Publishes `${METRICS_HOST_PORT:-9100}:9000`
+  - Internal-only on `surgical-internal` (no host port publish)
   - Env: `METRICS_DIR=/tmp/results`, `NPU_LOG=/tmp/results/npu_usage.csv`
   - Mounts: `./metrics:/tmp/results`, `/sys`, `/dev`, `/run`
   - Healthcheck: `curl -sf http://localhost:9000/metrics`
@@ -111,22 +111,15 @@ docker compose up -d
 docker compose ps                                # all Up (healthy)
 ```
 
-If host port `9100` is already occupied (common when NICU-Warmer is
-running), re-run with an override:
-```bash
-METRICS_HOST_PORT=9110 docker compose up -d
-METRICS_HOST_PORT=9110 docker compose ps
-```
-
 ### 2.4 Wait for the collector, then hit the proxy
 ```bash
-# 1) Collector direct — real numbers, not empty arrays
-# If METRICS_HOST_PORT was overridden in 2.3, use that host port here.
-curl -sf http://localhost:${METRICS_HOST_PORT:-9100}/metrics | \
-  python3 -c 'import json,sys; d=json.load(sys.stdin); \
-             assert len(d.get("cpu_utilization", [])) > 0, "empty cpu"; \
-             assert len(d.get("memory", [])) > 0, "empty memory"; \
-             print("collector ok:", {k: len(v) for k,v in d.items() if isinstance(v,list)})'
+# 1) Collector direct (internal network) — real numbers, not empty arrays
+docker compose exec -T surgical-backend python3 -c 'import json,urllib.request; \
+u="http://surgical-metrics-collector:9000/metrics"; \
+d=json.loads(urllib.request.urlopen(u, timeout=10).read().decode()); \
+assert len(d.get("cpu_utilization", [])) > 0, "empty cpu"; \
+assert len(d.get("memory", [])) > 0, "empty memory"; \
+print("collector internal ok:", {k: len(v) for k,v in d.items() if isinstance(v,list)})'
 
 # 2) Backend proxy — same shape, same data (routes through nginx :8080)
 curl -sf http://localhost:8080/api/hardware-metrics | \
@@ -137,6 +130,12 @@ curl -sf http://localhost:8080/api/hardware-metrics | \
 ```
 
 Both invocations must exit 0 and print non-empty series lengths.
+
+Notes:
+- Surgical Instrument intentionally does not publish the collector port on
+  the host. Only UI `:8080` is host-exposed.
+- Collector diagnostics from the host should go through backend proxy
+  (`/api/hardware-metrics`) or an internal-network container exec as above.
 
 ### 2.5 UI smoke
 Open `http://localhost:8080/` in a browser and confirm the Resource
@@ -276,7 +275,7 @@ image and JSON schema; this PR wires Surgical Instrument to it.
 
 ### Test
 - `docker compose up -d` — all services healthy
-- `curl http://localhost:9100/metrics` returns populated series
+- collector reachable from backend container network and returns populated series
 - `curl http://localhost:8080/api/hardware-metrics` returns the same
   under the backend's canonical schema
 - UI Resource Utilisation panel renders live traces

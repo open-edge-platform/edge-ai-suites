@@ -80,8 +80,10 @@ services:
       THRESHOLD:   "0.5"
       DISPLAY:     ${DISPLAY:-}
       XAUTHORITY:  /root/.Xauthority
-      PIPELINE_DISPLAY_VIEW: "1"
-      PIPELINE_VIDEO_SINK: autovideosink
+      # Headless-safe default for environments without X display. Set
+      # PIPELINE_DISPLAY_VIEW=1 to re-enable popup rendering on desktop hosts.
+      PIPELINE_DISPLAY_VIEW: ${PIPELINE_DISPLAY_VIEW:-0}
+      PIPELINE_VIDEO_SINK: ${PIPELINE_VIDEO_SINK:-autovideosink}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
@@ -98,9 +100,11 @@ services:
   # /api/hardware-metrics.
   #
   # Requires pid=host + privileged + /sys /dev /run mounts to read sar,
-  # qmassa (GPU), and NPU sysfs counters. Publishing on 9100 (host) →
-  # 9000 (container) matches the NICU convention and keeps the port free
-  # for a future local `curl` from the host during triage.
+  # qmassa (GPU), and NPU sysfs counters.
+  #
+  # IMPORTANT: this service is intentionally NOT host-published. Surgical
+  # Instrument exposes only UI :8080 to the host; backend reaches collector
+  # over the internal `surgical-internal` bridge network.
   surgical-metrics-collector:
     image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}
     container_name: surgical-metrics-collector
@@ -108,8 +112,6 @@ services:
     networks: [surgical-internal]
     pid: host
     privileged: true
-    ports:
-      - "${METRICS_HOST_PORT:-9100}:9000"
     environment:
       METRICS_DIR: /tmp/results
       NPU_LOG:     /tmp/results/npu_usage.csv

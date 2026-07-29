@@ -21,9 +21,9 @@ pipeline:
 metrics_collector:
   # Host-metrics sidecar (CPU / GPU / NPU / memory / power). The backend
   # proxies GET /api/hardware-metrics through to `${base_url}/metrics`.
-  # Docker-compose service name is surgical-metrics-collector; when
-  # running the backend on the host during dev, override with
-  # METRICS_COLLECTOR_URL=http://localhost:9100.
+  # Docker-compose service name is surgical-metrics-collector.
+  # Surgical exposes only UI :8080 to host; collector path is internal unless
+  # backend is run directly on host for development.
   base_url: ${METRICS_COLLECTOR_URL:-http://surgical-metrics-collector:9000}
   poll_interval_s: 1.0
 
