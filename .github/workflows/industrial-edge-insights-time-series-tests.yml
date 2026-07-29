@@ -169,6 +169,24 @@ jobs:
           ref: ${{ inputs.suites_ref || inputs.tag || github.ref }}
           persist-credentials: false
 
+      - name: Set weekly build date in .env files
+        if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'no' && env.WEEKLY_BUILD_DATE_INPUT != '' }}
+        run: |
+          # docker-compose reads WEEKLY_BUILD_DATE from .env to build the image tag
+          # (${IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE}-weekly). Without this, docker-compose
+          # falls back to the undated ${IMAGE_SUFFIX} tag instead of the requested
+          # weekly build, so it must be kept in sync with the workflow input.
+          for env_file in \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/.env" \
+            "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/.env"; do
+            if [[ -f "$env_file" ]]; then
+              sed -i "s/^WEEKLY_BUILD_DATE=.*/WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}/" "$env_file"
+              echo "Updated $env_file -> WEEKLY_BUILD_DATE=${WEEKLY_BUILD_DATE_INPUT}"
+            else
+              echo "Warning: $env_file not found, skipping"
+            fi
+          done
+
       - name: Resolve edge-ai-libraries ref
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
         env:
