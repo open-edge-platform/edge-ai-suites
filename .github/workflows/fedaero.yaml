@@ -242,9 +242,9 @@ jobs:
           GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
           GH_REPO: ${{ github.repository }}
         run: |
+          notes=$'Rolling dev build from `${{ github.sha }}`.\n\nFor the stable pinned release see the "Latest release" badge.'
           gh release create --prerelease --title "Federal and Aerospace | Edge AI Suites (latest)" \
-            --notes "Rolling dev build from \`${{ github.sha }}\`.\n\nFor the stable pinned release see the \"Latest release\" badge." \
-            fedaero-latest assets/*.zip
+            --notes "$notes" fedaero-latest assets/*.zip
 
   release-versioned:
     name: Publish immutable versioned release (v$VERSION)
@@ -313,6 +313,6 @@ jobs:
           GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
           GH_REPO: ${{ github.repository }}
         run: |
+          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app\n- `federal-aerospace.zip` — federal aerospace app'
           gh release create --title "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}" \
-            --notes "Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- \`handheld-multi-modal.zip\` — handheld multi-modal app\n- \`deterministic-threat-detection.zip\` — deterministic threat detection app\n- \`federal-aerospace.zip\` — federal aerospace app" \
-            v${{ env.VERSION }} assets/*.zip
+            --notes "$notes" v${{ env.VERSION }} assets/*.zip
