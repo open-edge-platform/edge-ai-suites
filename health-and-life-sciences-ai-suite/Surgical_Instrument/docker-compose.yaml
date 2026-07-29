@@ -80,14 +80,52 @@ services:
       THRESHOLD:   "0.5"
       DISPLAY:     ${DISPLAY:-}
       XAUTHORITY:  /root/.Xauthority
-      PIPELINE_DISPLAY_VIEW: "1"
-      PIPELINE_VIDEO_SINK: autovideosink
+      # Headless-safe default for environments without X display. Set
+      # PIPELINE_DISPLAY_VIEW=1 to re-enable popup rendering on desktop hosts.
+      PIPELINE_DISPLAY_VIEW: ${PIPELINE_DISPLAY_VIEW:-0}
+      PIPELINE_VIDEO_SINK: ${PIPELINE_VIDEO_SINK:-autovideosink}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # Host-metrics sidecar (CPU / iGPU / NPU / memory / power).
+  # Prebuilt image from the NICU-Warmer / multi-modal patient monitoring
+  # program — same source of truth so the UI's Resource Utilisation panel
+  # renders identically across suites. Exposes GET /metrics on :9000 in
+  # the shape { cpu_utilization, gpu_utilization, npu_utilization,
+  # memory, power } which the backend proxies unchanged at
+  # /api/hardware-metrics.
+  #
+  # Requires pid=host + privileged + /sys /dev /run mounts to read sar,
+  # qmassa (GPU), and NPU sysfs counters.
+  #
+  # IMPORTANT: this service is intentionally NOT host-published. Surgical
+  # Instrument exposes only UI :8080 to the host; backend reaches collector
+  # over the internal `surgical-internal` bridge network.
+  surgical-metrics-collector:
+    image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}
+    container_name: surgical-metrics-collector
+    restart: unless-stopped
+    networks: [surgical-internal]
+    pid: host
+    privileged: true
+    environment:
+      METRICS_DIR: /tmp/results
+      NPU_LOG:     /tmp/results/npu_usage.csv
+    volumes:
+      - ./metrics:/tmp/results
+      - /sys:/sys
+      - /dev:/dev
+      - /run:/run
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
 
   surgical-backend:
     build:
@@ -99,6 +137,8 @@ services:
     networks: [surgical-internal]
     depends_on:
       surgical-pipeline:
+        condition: service_healthy
+      surgical-metrics-collector:
         condition: service_healthy
 
     # torch DataLoader worker processes share tensors via /dev/shm; the
@@ -153,6 +193,10 @@ services:
       DETECTION_DEVICE: ${DETECTION_DEVICE:-GPU}
       PIPELINE_HOST:  surgical-pipeline
       PIPELINE_PORT:  "8000"
+      # Host-metrics sidecar (surgical-metrics-collector). The backend
+      # proxies GET /api/hardware-metrics through to this URL — see
+      # backend/consumer/metrics_client.py.
+      METRICS_COLLECTOR_URL: http://surgical-metrics-collector:9000
 
     # start_period covers first-boot training (20-35 min on Arc iGPU).
     healthcheck:

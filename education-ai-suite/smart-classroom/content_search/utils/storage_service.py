@@ -4,6 +4,8 @@
 #
 
 import hashlib
+import mimetypes
+import pathlib
 import uuid
 import logging
 from fastapi import HTTPException, UploadFile
@@ -111,6 +113,115 @@ class StorageService:
             "file_key": object_key,
             "bucket": self._store.bucket,
             "filename": file.filename,
+            "run_id": run_id,
+            "file_hash": hasher.hexdigest(),
+            "size_bytes": total_bytes,
+        }
+
+    async def copy_path_and_prepare_payload(
+        self,
+        src_path: str,
+        asset_id: str = "default",
+        max_size_bytes: Optional[int] = None,
+    ) -> dict:
+        """Ingest a file that already exists on the server's filesystem.
+
+        Mirror of :meth:`upload_and_prepare_payload`, but the bytes are read from
+        ``src_path`` instead of an HTTP multipart upload.
+
+        The file is COPIED into the object store so the returned ``file_key`` always
+        refers to a store-owned copy: later cleanup/delete paths unlink the object by
+        key, and must never be able to remove the user's original file.
+        """
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+
+        src = pathlib.Path(src_path).expanduser()
+        try:
+            src = src.resolve(strict=True)
+        except (OSError, RuntimeError):
+            logger.warning(f"Ingest rejected: path does not exist: {src_path}")
+            return {"validation_error": "File not found on the server filesystem", "error_type": "invalid_file"}
+
+        if not src.is_file():
+            logger.warning(f"Ingest rejected: not a regular file: {src}")
+            return {"validation_error": "Path is not a regular file", "error_type": "invalid_file"}
+
+        filename = src.name
+        content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        try:
+            file_size = src.stat().st_size
+        except OSError as e:
+            logger.warning(f"Ingest rejected: cannot stat {src}: {e}")
+            return {"validation_error": "File is not readable", "error_type": "invalid_file"}
+
+        is_valid, error_msg = file_validator.validate_basic_file(
+            filename=filename,
+            content_type=content_type,
+            file_size=file_size
+        )
+        if not is_valid:
+            logger.warning(f"Ingest rejected: {error_msg}")
+            return {"validation_error": error_msg, "error_type": "invalid_file"}
+
+        if max_size_bytes is not None and file_size > max_size_bytes:
+            logger.warning(f"Ingest rejected: file '{filename}' size {file_size} bytes exceeds maximum allowed {max_size_bytes} bytes")
+            return {"validation_error": f"File size {file_size / 1024 / 1024:.2f} MB exceeds maximum allowed {max_size_bytes / 1024 / 1024:.2f} MB", "error_type": "file_too_large"}
+
+        run_id = str(uuid.uuid4())
+        main_type = content_type.split('/')[0]
+        object_key = self._store.build_raw_object_key(
+            run_id=run_id,
+            asset_type=main_type,
+            asset_id=asset_id,
+            filename=filename
+        )
+
+        dst_path = self._store._object_path(object_key)
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Stream-copy while hashing in the same pass, so memory stays bounded and
+        # the destination never holds a partially-validated file.
+        hasher = hashlib.sha256()
+        total_bytes = 0
+        is_first_chunk = True
+        try:
+            with open(src, "rb") as source, open(dst_path, "wb") as out:
+                while True:
+                    chunk = source.read(_STREAM_CHUNK_SIZE)
+                    if not chunk:
+                        break
+
+                    if is_first_chunk:
+                        is_valid, error_msg = file_validator.validate_file_content(chunk, filename)
+                        if not is_valid:
+                            logger.warning(f"Ingest rejected: {error_msg}")
+                            out.close()
+                            dst_path.unlink(missing_ok=True)
+                            return {"validation_error": error_msg, "error_type": "invalid_file"}
+                        is_first_chunk = False
+
+                    total_bytes += len(chunk)
+                    if max_size_bytes is not None and total_bytes > max_size_bytes:
+                        logger.warning(f"Ingest rejected during copy: file '{filename}' reached {total_bytes} bytes, exceeds maximum allowed {max_size_bytes} bytes")
+                        out.close()
+                        dst_path.unlink(missing_ok=True)
+                        return {"validation_error": f"File size {total_bytes / 1024 / 1024:.2f} MB exceeds maximum allowed {max_size_bytes / 1024 / 1024:.2f} MB", "error_type": "file_too_large"}
+                    hasher.update(chunk)
+                    out.write(chunk)
+        except OSError as e:
+            logger.error(f"Ingest failed while copying {src}: {e}")
+            try:
+                dst_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            return {"validation_error": f"Could not read the file: {e}", "error_type": "invalid_file"}
+
+        return {
+            "source": "local",
+            "file_key": object_key,
+            "bucket": self._store.bucket,
+            "filename": filename,
             "run_id": run_id,
             "file_hash": hasher.hexdigest(),
             "size_bytes": total_bytes,

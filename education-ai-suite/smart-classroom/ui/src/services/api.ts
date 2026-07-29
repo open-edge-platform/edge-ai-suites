@@ -873,6 +873,42 @@ export async function csUploadIngest(
   });
 }
 
+/**
+ * Ingest a file that already exists on the machine running the backend, by absolute
+ * path, no multipart upload. Electron-only: the desktop app and the backend share a
+ * filesystem, so this avoids pushing multi-GB media through localhost HTTP.
+ * The backend copies the file into its store, so the original is never modified.
+ */
+export async function csIngestPath(
+  path: string,
+  meta?: Record<string, unknown>
+): Promise<{ task_id: string; status: string; file_key?: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/ingest-path`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, ...(meta ? { meta } : {}) }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.detail || json.message || `Path ingest failed (${res.status})`);
+    }
+    const data = await res.json();
+    // code 40901 = file already exists; backend returns task_id for cleanup
+    if (data.code === 40901) {
+      return { task_id: data.data?.task_id ?? '', status: 'ALREADY_EXISTS', file_key: data.data?.file_key };
+    }
+    if (data.code && data.code !== 20000) {
+      throw new Error(data.message || `Path ingest failed (code ${data.code})`);
+    }
+    const payload = data.data ?? data;
+    if (!payload?.task_id) {
+      throw new Error('ingest-path response missing task_id');
+    }
+    return payload;
+  });
+}
+
 export async function csIngest(
   fileKey: string,
   meta: Record<string, unknown>,
