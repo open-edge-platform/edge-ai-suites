@@ -29,7 +29,7 @@ Registering a use case is a short conversation with the agent:
 
 5. **Bind a camera (optional).** If you supplied a stream URL, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the flow; otherwise add one later through the connected agent.
 
-When registration finishes, the agent reports the new use case's configuration along with the full list of monitors and registered use cases. The use case is live immediately — alerts start flowing to any client subscribed to `smartbuilding://monitor/<monitor_id>/alerts`.
+When registration finishes, the agent reports the new use case's configuration followed by a grouped system inventory — each registered use case (from `smartbuilding_use_case_register action=list`, which reads the server's live in-memory `use_case_dict`: task, schema fields, rule path, and report source) with its bound monitors nested underneath (from `smartbuilding_monitor_ctl action=list`), so a use case with no camera yet shows up explicitly instead of disappearing from a monitors-only list. The use case is live immediately — alerts start flowing to any client subscribed to `smartbuilding://monitor/<monitor_id>/alerts`.
 
 > **Tip:** Things to *detect* (escape, trapped, aggressive behavior, …) are event **values**, not schema fields — describe what to watch for, and only name extra schema fields in Q2 when you truly need them persisted and queryable.
 

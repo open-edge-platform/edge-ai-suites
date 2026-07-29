@@ -51,6 +51,7 @@ export type {
   UseCaseRegisterParams,
   UseCaseRegisterDeps,
   UseCaseRegisterResult,
+  UseCaseListEntry,
 } from "./use-case-register.js";
 export { ruleEval } from "./rule-eval.js";
 export type { RuleEvalParams, RuleEvalDeps, RuleEvalResult } from "./rule-eval.js";

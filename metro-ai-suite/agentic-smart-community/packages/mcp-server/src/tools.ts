@@ -333,7 +333,7 @@ export function registerTools(
   // --- smartbuilding_use_case_register ---
   server.registerTool("smartbuilding_use_case_register", {
     description:
-      "Manage use_case lifecycle at runtime without restarting the MCP server. Three actions. " +
+      "Manage use_case lifecycle at runtime without restarting the MCP server. Four actions. " +
       "For NEW use cases, do not call this tool until the user has answered the " +
       "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
@@ -378,10 +378,19 @@ export function registerTools(
       "For action=register, if prompt_text is provided with persist=true it is saved to " +
       "<data_dir>/use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
       "<data_dir>/use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
-      "conventional absolute path is stored in config.yaml for runtime rule execution.",
+      "conventional absolute path is stored in config.yaml for runtime rule execution. " +
+      "action=list: READ-ONLY inventory of the LIVE in-memory use_case_dict — no other arguments " +
+      "needed. Returns one entry per use case with video_summary_task, schema_fields, rule_path " +
+      "(defaultRuleEvaluator | evaluate_rules.py | none), and report_source. This reflects what the " +
+      "running server actually uses, including entries registered with persist=false, so prefer it " +
+      "over parsing config.yaml from disk. Call it after a successful register/unregister to report " +
+      "the system's current use cases.",
     inputSchema: {
-      action: z.enum(["register", "generate_task", "unregister"]).describe("register | generate_task | unregister"),
-      use_case: z.string().describe("Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/)"),
+      action: z.enum(["register", "generate_task", "unregister", "list"]).describe("register | generate_task | unregister | list"),
+      use_case: z.string().optional().describe(
+        "Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/). " +
+        "Required for register/generate_task/unregister; omit for list."
+      ),
       video_summary_task: z.string().optional().describe(
         "VLM task name (default: <use_case>_monitor). Must not collide with VLM builtins."
       ),

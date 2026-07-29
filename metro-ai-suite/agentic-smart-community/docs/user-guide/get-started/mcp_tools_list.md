@@ -225,6 +225,12 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   `persist: true`, the entries are also removed from `config.yaml` and `monitors.yaml`, then
   `use-cases/<use_case>/` is moved to `use-cases/.backup/`. Incomplete cleanup keeps `ok: true`
   for the removed in-memory entry but sets `degraded: true` and explains the failure in `warnings`.
+- `action: list` — **read-only** inventory of the live in-memory `use_case_dict`; needs no other
+  arguments. Returns one entry per use case with `video_summary_task`, `schema_fields`,
+  `rule_path` (`defaultRuleEvaluator` \| `evaluate_rules.py` \| `none`), and `report_source`.
+  This reflects what the running server actually uses — including entries registered with
+  `persist: false` — so prefer it over parsing `config.yaml` from disk. Call it after a
+  successful register/unregister to report the system's current use cases.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
 `video-summary-prompt-studio` skill, then pass it via `prompt_text` (or let register auto-read
@@ -232,8 +238,8 @@ Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with t
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `action` | enum | ✅ | `register` \| `generate_task` \| `unregister` |
-| `use_case` | string | ✅ | Key matching `^[a-z][a-z0-9_]{1,63}$` |
+| `action` | enum | ✅ | `register` \| `generate_task` \| `unregister` \| `list` |
+| `use_case` | string | ✅ (not for `list`) | Key matching `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | — | VLM task name (default `<use_case>_monitor`; must not collide with builtins) |
 | `description` | string | — | Human description shown by `/v1/tasks` |
 | `evaluate_rules_path` | string | required for extended schema/custom alerts | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
@@ -293,7 +299,7 @@ completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by de
 | `monitor_ctl` | single-monitor lifecycle; atomic DB+analytics+worker; use-case pre-check |
 | `monitors_compose` | docker-compose over a yaml; `validate`/`up`/`down`/`restart`/`ps`; idempotent |
 | `use_case_validate` | 3-step wiring check; case-insensitive; returns missing fields |
-| `use_case_register` | runtime use-case register/unregister; schema ALTER; `/v1/tasks`; optional persist |
+| `use_case_register` | runtime use-case register/unregister; schema ALTER; `/v1/tasks`; optional persist; `list` inventory |
 | `plan_ctl` | per-monitor JSON plans CRUD; soft-delete |
 | `rule_eval` | manual re-run of the rule evaluator; dry by default |
 

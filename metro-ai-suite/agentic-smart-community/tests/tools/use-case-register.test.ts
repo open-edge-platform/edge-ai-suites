@@ -90,3 +90,91 @@ test("unregister reports a missing VLM task name as degraded", async () => {
   assert.equal(result.steps.vlm_task, "skipped");
   assert.ok(result.warnings.some((warning) => warning.includes("has no video_summary_task")));
 });
+test("list returns the in-memory use_case_dict inventory without a use_case argument", async () => {
+  const useCaseDict = {
+    child_safety: {
+      video_summary_task: "child_safety_monitor",
+      description: "Child danger alerts",
+      reports: { data_source: "alerts", default_type: "daily", filter: {} },
+      schema: {
+        video_summary_tasks: {
+          extensions: [
+            { name: "severity", type: "text", required: false },
+            { name: "event", type: "text", required: true },
+            { name: "desc", type: "text", required: true },
+          ],
+        },
+        custom_tables: [],
+      },
+    },
+    elder_wakeup: {
+      video_summary_task: "elder_wakeup_monitor",
+      description: "Elder wake-up tracking alerts",
+      evaluate_rules_path: "/data/use-cases/elder_wakeup/evaluate_rules.py",
+      reports: { data_source: "alerts", default_type: "daily", filter: {} },
+      schema: {
+        video_summary_tasks: {
+          extensions: [
+            { name: "severity", type: "text", required: false },
+            { name: "event", type: "text", required: true },
+            { name: "desc", type: "text", required: true },
+            { name: "wake_status", type: "text", required: false },
+          ],
+        },
+        custom_tables: [],
+      },
+    },
+    fridge: {
+      video_summary_task: "fridge_monitor",
+      description: "Fridge activity reports",
+      reports: { data_source: "video_summary_tasks", default_type: "daily", filter: { status: "completed" } },
+    },
+  };
+
+  const result = await useCaseRegister(
+    { action: "list" },
+    { useCaseDict, summaryServiceUrl: "http://unused", db: {} },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.use_cases?.map((e) => e.use_case).join(","), "child_safety,elder_wakeup,fridge");
+
+  const elder = result.use_cases!.find((e) => e.use_case === "elder_wakeup")!;
+  assert.equal(elder.video_summary_task, "elder_wakeup_monitor");
+  assert.equal(elder.rule_path, "evaluate_rules.py");
+  assert.deepEqual(elder.schema_fields, ["severity", "event", "desc", "wake_status"]);
+  assert.equal(elder.report_source, "alerts");
+
+  const child = result.use_cases!.find((e) => e.use_case === "child_safety")!;
+  assert.equal(child.rule_path, "defaultRuleEvaluator");
+  assert.deepEqual(child.schema_fields, ["severity", "event", "desc"]);
+
+  const fridge = result.use_cases!.find((e) => e.use_case === "fridge")!;
+  assert.equal(fridge.rule_path, "none");
+  assert.deepEqual(fridge.schema_fields, []);
+  assert.equal(fridge.report_source, "video_summary_tasks");
+
+  // Read-only: the dict must be untouched.
+  assert.deepEqual(Object.keys(useCaseDict).sort(), ["child_safety", "elder_wakeup", "fridge"]);
+});
+
+test("list with an empty use_case_dict returns an empty inventory", async () => {
+  const result = await useCaseRegister(
+    { action: "list" },
+    { useCaseDict: {}, summaryServiceUrl: "http://unused", db: {} },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.use_cases, []);
+});
+
+test("register without use_case still fails validation", async () => {
+  const result = await useCaseRegister(
+    { action: "register" } as any,
+    { useCaseDict: {}, summaryServiceUrl: "http://unused", db: {} },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("must match")));
+});

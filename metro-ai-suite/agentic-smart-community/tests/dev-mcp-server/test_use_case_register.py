@@ -20,6 +20,7 @@ overwrite is rejected pre-flight, and same-content re-runs report "unchanged".
 """
 
 import json
+import os
 import sys
 import subprocess
 import threading
@@ -208,6 +209,11 @@ def main():
     tmp = get_temp_dir("uc-register")
     db_path = str(tmp / "test.db")
     init_test_db(db_path).close()
+
+    # Point the server's data dir at the test tmp: use-cases/<uc>/ artifacts are
+    # staged under dataDir (default ~/.mcp-smartbuilding), so without this the
+    # staging assertions below look in the wrong tree and pollute the real one.
+    os.environ["SMARTBUILDING_DATA_DIR"] = str(tmp)
 
     config_path = tmp / "config.yaml"
     config_path.write_text(f"""
@@ -447,6 +453,28 @@ video_summary_max_concurrent: 1
             t.check(a14.get("evaluate_rules_py") == "unchanged", "T14: artifacts.evaluate_rules_py == 'unchanged'")
         finally:
             vlm.stop()
+
+        # ── T15: action=list — read-only inventory of the LIVE use_case_dict ──
+        # pet_staged was registered (persist) in T12, so the in-memory dict is non-empty.
+        r15 = client.register({"action": "list"})
+        t.check(r15.get("ok") is True,
+                f"T15 action=list without use_case: ok == true (errors: {r15.get('errors')})")
+        ucs = {e.get("use_case"): e for e in r15.get("use_cases", [])}
+        t.check("pet_staged" in ucs, "T15: inventory includes the use case registered in T12")
+        e15 = ucs.get("pet_staged", {})
+        t.check(e15.get("video_summary_task") == "pet_staged_monitor",
+                "T15: entry reports video_summary_task")
+        t.check(e15.get("rule_path") == "evaluate_rules.py",
+                "T15: entry reports rule_path == evaluate_rules.py")
+        t.check(e15.get("schema_fields") == ["severity", "event", "desc", "pet_zone"],
+                "T15: entry reports final schema fields")
+        t.check(e15.get("report_source") == "alerts", "T15: entry reports report_source")
+
+        # ── T16: register without use_case → clean validation error, not a crash ──
+        r16 = client.register({"action": "register"})
+        t.check(r16.get("ok") is False, "T16 register without use_case: ok == false")
+        t.check(any("must match" in e for e in r16.get("errors", [])),
+                "T16: error names the use_case requirement")
 
     finally:
         proc.terminate()

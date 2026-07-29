@@ -8,8 +8,9 @@ import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
 export interface UseCaseRegisterParams {
-  action: "register" | "generate_task" | "unregister";
-  use_case: string;
+  action: "register" | "generate_task" | "unregister" | "list";
+  /** Required for register/generate_task/unregister; omitted for list. */
+  use_case?: string;
   video_summary_task?: string;
   description?: string;
   evaluate_rules_path?: string;
@@ -46,10 +47,23 @@ export interface UseCaseRegisterDeps {
   baseDir?: string;
 }
 
+export interface UseCaseListEntry {
+  use_case: string;
+  video_summary_task?: string;
+  description?: string;
+  /** Final schema extension column names declared under this use case's own schema. */
+  schema_fields: string[];
+  rule_path: "defaultRuleEvaluator" | "evaluate_rules.py" | "none";
+  report_source?: string;
+}
+
 export interface UseCaseRegisterResult {
-  action: "register" | "generate_task" | "unregister";
+  action: "register" | "generate_task" | "unregister" | "list";
+  /** Empty string for action=list (no single use case in scope). */
   use_case: string;
   ok: boolean;
+  /** action=list only: live in-memory use_case_dict inventory, sorted by key. */
+  use_cases?: UseCaseListEntry[];
   /**
    * unregister only: true when the use_case_dict entry was removed but some
    * best-effort cleanup failed (e.g. the VLM task DELETE errored), so the
@@ -427,18 +441,58 @@ function stageEvaluateRulesOverride(
   return { path: dst, status };
 }
 
+/**
+ * Read-only inventory of the live in-memory use_case_dict, sorted by key. This
+ * reflects what the RUNNING server actually uses — unlike parsing config.yaml
+ * from disk, it also covers entries registered with persist=false (or whose
+ * config write degraded to a warning). Pure memory read: no DB, VLM, config,
+ * or artifact access.
+ */
+function listUseCases(deps: UseCaseRegisterDeps): UseCaseListEntry[] {
+  return Object.keys(deps.useCaseDict)
+    .sort()
+    .map((key) => {
+      const entry: any = deps.useCaseDict[key] ?? {};
+      const schemaFields: string[] = Array.isArray(entry.schema?.video_summary_tasks?.extensions)
+        ? entry.schema.video_summary_tasks.extensions.map((e: any) => String(e?.name ?? "")).filter(Boolean)
+        : [];
+      const rulePath: UseCaseListEntry["rule_path"] = entry.evaluate_rules_path
+        ? "evaluate_rules.py"
+        : schemaFields.length > 0
+          ? "defaultRuleEvaluator"
+          : "none";
+      return {
+        use_case: key,
+        video_summary_task: entry.video_summary_task,
+        description: entry.description,
+        schema_fields: schemaFields,
+        rule_path: rulePath,
+        report_source: entry.reports?.data_source,
+      };
+    });
+}
+
 export async function useCaseRegister(
   params: UseCaseRegisterParams,
   deps: UseCaseRegisterDeps,
 ): Promise<UseCaseRegisterResult> {
   const result: UseCaseRegisterResult = {
     action: params.action,
-    use_case: params.use_case,
+    use_case: params.use_case ?? "",
     ok: false,
     steps: {},
     warnings: [],
     errors: [],
   };
+
+  // list is a read-only inventory of the live in-memory use_case_dict — it runs
+  // BEFORE the use_case validation below (which only applies to the mutating
+  // actions) and never touches the DB, VLM service, config, or artifacts.
+  if (params.action === "list") {
+    result.use_cases = listUseCases(deps);
+    result.ok = true;
+    return result;
+  }
 
   if (!params.use_case || !TASK_NAME_RE.test(params.use_case)) {
     result.errors.push(`use_case "${params.use_case}" must match ${TASK_NAME_RE}`);
@@ -446,11 +500,11 @@ export async function useCaseRegister(
   }
 
   if (params.action === "unregister") {
-    return await unregister(params, deps, result);
+    return await unregister({ ...params, use_case: params.use_case }, deps, result);
   }
 
   if (params.action === "generate_task") {
-    return await registerTaskOnly(params, deps, result);
+    return await registerTaskOnly({ ...params, use_case: params.use_case }, deps, result);
   }
 
   const taskName = params.video_summary_task ?? `${params.use_case}_monitor`;
@@ -722,7 +776,7 @@ export async function useCaseRegister(
  * useCaseRegister).
  */
 async function registerTaskOnly(
-  params: UseCaseRegisterParams,
+  params: UseCaseRegisterParams & { use_case: string },
   deps: UseCaseRegisterDeps,
   result: UseCaseRegisterResult,
 ): Promise<UseCaseRegisterResult> {
@@ -914,7 +968,7 @@ function buildEvaluateRulesSmokeFields(schemaExtensions: SchemaExtension[]): Rec
 }
 
 async function unregister(
-  params: UseCaseRegisterParams,
+  params: UseCaseRegisterParams & { use_case: string },
   deps: UseCaseRegisterDeps,
   result: UseCaseRegisterResult,
 ): Promise<UseCaseRegisterResult> {
