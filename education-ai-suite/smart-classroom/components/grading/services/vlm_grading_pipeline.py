@@ -226,7 +226,7 @@ def run_vlm_grading_pipeline(
     # any failure degrades to empty fields and never blocks grading.
     paper_meta: dict[str, Any] = {"paper_title": None, "subject": None}
     student_meta: dict[str, Any] = {"student_name": None, "class_name": None, "exam_number": None}
-    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}))
+    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}), cfg.get("_language", "en"))
     if header_instruction is None:
         _log("header_extract skipped (no header block in rubric)")
     else:
