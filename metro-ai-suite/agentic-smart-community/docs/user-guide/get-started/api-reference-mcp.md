@@ -302,7 +302,7 @@ mcp_resource_read() {
 |---|---|
 | `smartbuilding://monitors` | `{ monitors }`: every registered monitor and its database status |
 | `smartbuilding://monitor/{id}/latest-frame` | Placeholder frame response; currently returns `frame: null` until analytics frame integration is implemented |
-| `smartbuilding://monitor/{id}/stats` | `{ monitorId, total, unacked }`: today's alert statistics |
+| `smartbuilding://monitor/{id}/stats` | `{ monitorId, events, alerts }`: today's event and alert counts |
 | `smartbuilding://monitor/{id}/alerts` | `{ monitorId, latestId, alerts }`: latest 20 delivered alerts |
 | `smartbuilding://monitor/{id}/alerts{?since}` | Up to 200 delivered alerts whose IDs are greater than the cursor; call it as `smartbuilding://monitor/{id}/alerts?since={alert_id}` |
 

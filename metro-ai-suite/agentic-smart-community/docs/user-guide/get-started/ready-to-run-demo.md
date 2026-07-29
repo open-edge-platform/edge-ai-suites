@@ -95,23 +95,23 @@ Add only the scheduled demo behavior you want, replacing `Asia/Shanghai` with th
 
 ```bash
 # Fridge daily report at 22:00.
-openclaw cron add --name fridge-daily-report-22 --cron "0 22 * * *" --tz Asia/Shanghai --exact \
-  --agent fridge-agent --session isolated --session-key agent:fridge-agent:daily_report \
+openclaw cron add --name fridge-daily-report-22 --cron "0 22 * * *" --tz Asia/Shanghai \
+  --agent fridge-agent --session "session:daily_report" --session-key agent:fridge-agent:daily_report \
   --no-deliver --message "Generate today's fridge daily report."
 
 # Child-safety daily report at 22:30.
-openclaw cron add --name child-safety-daily-22 --cron "30 22 * * *" --tz Asia/Shanghai --exact \
-  --agent child-safety-agent --session isolated --session-key agent:child-safety-agent:daily_report \
+openclaw cron add --name child-safety-daily-22 --cron "30 22 * * *" --tz Asia/Shanghai \
+  --agent child-safety-agent --session "session:daily_report" --session-key agent:child-safety-agent:daily_report \
   --no-deliver --message "Generate today's child-safety daily report."
 
 # Elder-wakeup weekly report every Sunday at 22:00.
-openclaw cron add --name elder-wakeup-weekly-22 --cron "0 22 * * 0" --tz Asia/Shanghai --exact \
-  --agent elder-wakeup-agent --session isolated --session-key agent:elder-wakeup-agent:weekly_report \
+openclaw cron add --name elder-wakeup-weekly-22 --cron "0 22 * * 0" --tz Asia/Shanghai \
+  --agent elder-wakeup-agent --session "session:weekly_report" --session-key agent:elder-wakeup-agent:weekly_report \
   --no-deliver --message "Generate this week's elder wakeup report for cam_elder_bedroom."
 
 # Daily no-wakeup fallback at 10:00.
-openclaw cron add --name elder-wakeup-fallback-10 --cron "0 10 * * *" --tz Asia/Shanghai --exact \
-  --agent elder-wakeup-agent --session isolated --session-key agent:elder-wakeup-agent:cam_elder_bedroom \
+openclaw cron add --name elder-wakeup-fallback-10 --cron "0 10 * * *" --tz Asia/Shanghai \
+  --agent elder-wakeup-agent --session "session:cam_elder_bedroom" --session-key agent:elder-wakeup-agent:cam_elder_bedroom \
   --no-deliver --message "If no get_up event has been observed by 10:00, use scene_query to recheck whether the bed is occupied and emit a no_wakeup alert when appropriate."
 ```
 
