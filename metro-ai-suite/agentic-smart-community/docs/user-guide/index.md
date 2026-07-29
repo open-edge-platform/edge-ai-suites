@@ -8,7 +8,7 @@ Concretely, an agent can remind you when the fridge is running low on groceries,
 
 ## Example Use Cases
 
-These demos are validated end-to-end. They are only a starting point — describe a new scenario in chat and trigger a new use case monitoring following (`TODO: how-to-register-new-use-cases`).
+These demos are validated end-to-end. They are only a starting point — describe a new scenario in chat and trigger a new use case monitoring by following [Register a New Use Case](./get-started/register-new-use-case.md).
 
 | Use Case | Description | Proactive Alerts |
 |----|-------------|-----|
@@ -101,7 +101,7 @@ The server exposes a standardized, use-case-agnostic tool surface (every id pref
 | **Use-case authoring** | `use_case_validate` · `use_case_register` | Validate a use case is wired end-to-end, register/unregister one at runtime |
 | **Rules & plans** | `plan_ctl` · `rule_eval` | Per-monitor JSON plans; manual replay of the rule evaluator (alerts normally fire automatically) |
 
-See the full reference — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Reference](./get-started/mcp_tools_list.md)**.
+See the full guide — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Guide](./get-started/mcp-tools.md)**.
 
 ### Agent Skills
 

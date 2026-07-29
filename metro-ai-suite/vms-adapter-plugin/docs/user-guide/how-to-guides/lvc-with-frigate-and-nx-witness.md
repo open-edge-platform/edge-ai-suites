@@ -409,7 +409,7 @@ When using Nx Witness, the recommended way to start and stop an LVC pipeline is 
 1. In the Nx Witness desktop client, right-click the camera in the resource tree.
 2. Select **Camera Settings**.
 3. Go to the **Integrations** tab.
-4. Click **DLStreamerAnalyticsIntegrationVMS** to expand the per-camera settings.
+4. Click **VAP Analytics Integration** to expand the per-camera settings.
 
 You will see a **Live Video Captioning** group with the following fields:
 
@@ -440,7 +440,7 @@ Expected output:
 
 #### 5.1.3 Stop the Pipeline
 
-1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+1. Re-open **Camera Settings → Integrations → VAP Analytics Integration**.
 2. Uncheck **Enable Live Video Captioning Pipeline**.
 3. Click **Apply** then **OK**.
 
@@ -562,7 +562,7 @@ Each caption appears as a bookmark entry timestamped to when it was generated. T
 ### 6.2 Stop the Captioning Run
 
 **Nx Witness (recommended):**
-1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+1. Re-open **Camera Settings → Integrations → VAP Analytics Integration**.
 2. Uncheck **Enable Live Video Captioning Pipeline**.
 3. Click **Apply** then **OK**.
 
@@ -705,7 +705,7 @@ The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some s
    cd metro-ai-suite/vms-adapter-plugin
    docker compose up -d
    ```
-5. In the Nx Witness client, open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**. You will see two GroupBoxes: **Live Video Captioning** and **Loitering Detection**. Enable the checkboxes for both.
+5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics Integration**. You will see two GroupBoxes: **Live Video Captioning** and **Loitering Detection**. Enable the checkboxes for both.
 
 VAP starts both pipelines independently within 5 seconds.
 
@@ -732,6 +732,6 @@ This is an Nx Witness limitation: the client cannot overlay detection boxes and 
 | Start VAP | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
 | Discover cameras | Dashboard → Discover Cameras |
 | Enable cameras for analytics | Dashboard → Camera toggle |
-| **Nx Witness:** Start pipeline | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Enable checkbox |
+| **Nx Witness:** Start pipeline | Camera Settings → Integrations → VAP Analytics Integration → Enable checkbox |
 | View live captions | Nx Witness client → camera Bookmarks tab (each caption is a bookmark) |
-| **Nx Witness:** Stop the run | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Uncheck the checkbox |
+| **Nx Witness:** Stop the run | Camera Settings → Integrations → VAP Analytics Integration → Uncheck the checkbox |

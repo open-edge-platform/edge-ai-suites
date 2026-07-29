@@ -435,7 +435,7 @@ configured Kubernetes cluster.
 
 ### Start GPU- and NPU-Based Pipelines
 
-For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines.
+For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-evaluate-accelerate/use-gpu-for-inference.md#deployment-with-helm) from here, and start the respective pipelines.
 
 <!--hide_directive::::{tab-set} hide_directive-->
 <!--hide_directive:::{tab-item} hide_directive-->Pallet Defect Detection

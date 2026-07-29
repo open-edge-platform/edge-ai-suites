@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
 import { SchemaManager, type SchemaExtension } from "@smartbuilding-video/db";
@@ -16,7 +16,6 @@ export interface UseCaseRegisterParams {
   reports?: Record<string, unknown>;
   summarize?: Record<string, unknown>;
   prompt_text?: string;
-  evaluate_rules_text?: string;
   schema_extensions?: SchemaExtension[];
   overwrite?: boolean;
   /**
@@ -385,6 +384,28 @@ function validateTextArtifactWritable(
   return `${path} already exists; pass overwrite=true to replace it`;
 }
 
+/**
+ * Stage a caller-supplied evaluate_rules.py into the conventional repo location
+ * `use-cases/<uc>/evaluate_rules.py` and return the ABSOLUTE conventional path.
+ * config.yaml / use_case_dict therefore always reference the stable in-repo
+ * file, never the caller's (possibly temporary, possibly relative) location.
+ * If the source already IS the conventional file, nothing is copied ("skipped").
+ * Copy conflicts reuse writeTextArtifact semantics: identical content →
+ * "unchanged"; different content without overwrite → throws.
+ */
+function stageEvaluateRulesOverride(
+  sourcePath: string,
+  conventionalPath: string,
+  overwrite: boolean | undefined,
+  warnings: string[],
+): { path: string; status: "written" | "unchanged" | "skipped" } {
+  const src = resolve(sourcePath);
+  const dst = resolve(conventionalPath);
+  if (src === dst) return { path: dst, status: "skipped" };
+  const status = writeTextArtifact(dst, readFileSync(src, "utf-8"), overwrite, warnings);
+  return { path: dst, status };
+}
+
 export async function useCaseRegister(
   params: UseCaseRegisterParams,
   deps: UseCaseRegisterDeps,
@@ -442,7 +463,7 @@ export async function useCaseRegister(
   const baseDir = deps.baseDir ?? process.cwd();
   const useCaseDir = join(baseDir, "use-cases", params.use_case);
   const promptPath = join(useCaseDir, "prompt.md");
-  const evaluateRulesTextPath = join(useCaseDir, "evaluate_rules.py");
+  const conventionalEvaluateRulesPath = join(useCaseDir, "evaluate_rules.py");
   let promptText = params.prompt_text;
   let promptSource = "param";
   if (!promptText) {
@@ -470,21 +491,32 @@ export async function useCaseRegister(
   // consistency gate below can static-scan the rule's field access (G4), and so the
   // wiring step later reuses the same resolved path instead of re-deriving it.
   let evaluateRulesPath = params.evaluate_rules_path;
-  if (!evaluateRulesPath && params.evaluate_rules_text !== undefined) {
-    evaluateRulesPath = evaluateRulesTextPath;
+  if (!evaluateRulesPath && existsSync(conventionalEvaluateRulesPath)) {
+    evaluateRulesPath = conventionalEvaluateRulesPath;
   }
-  if (!evaluateRulesPath && existsSync(evaluateRulesTextPath)) {
-    evaluateRulesPath = evaluateRulesTextPath;
-  }
-  let evaluateRulesText = params.evaluate_rules_text;
-  if (evaluateRulesText === undefined && evaluateRulesPath && existsSync(evaluateRulesPath)) {
+  let evaluateRulesText: string | undefined;
+  if (evaluateRulesPath) {
+    if (!existsSync(evaluateRulesPath)) {
+      result.errors.push(`evaluate_rules_path "${evaluateRulesPath}" does not exist`);
+      return result;
+    }
     evaluateRulesText = readFileSync(evaluateRulesPath, "utf-8");
+  }
+
+  // Pre-flight the rules staging (the copy into use-cases/<uc>/ is unconditional —
+  // the runtime entry references the conventional path), so an overwrite conflict
+  // fails BEFORE any side effect (ALTER / VLM POST / config write).
+  if (evaluateRulesPath && resolve(evaluateRulesPath) !== resolve(conventionalEvaluateRulesPath)) {
+    const stagingError = validateTextArtifactWritable(conventionalEvaluateRulesPath, evaluateRulesText, params.overwrite);
+    if (stagingError) {
+      result.errors.push(`artifact persist failed: ${stagingError}`);
+      return result;
+    }
   }
 
   if (params.persist) {
     const artifactErrors = [
       validateTextArtifactWritable(promptPath, params.prompt_text, params.overwrite),
-      validateTextArtifactWritable(evaluateRulesTextPath, params.evaluate_rules_text, params.overwrite),
     ].filter((err): err is string => Boolean(err));
     if (artifactErrors.length > 0) {
       result.errors.push(`artifact persist failed: ${artifactErrors.join("; ")}`);
@@ -554,18 +586,12 @@ export async function useCaseRegister(
     return result;
   }
 
-  if (params.persist && (params.prompt_text !== undefined || params.evaluate_rules_text !== undefined)) {
+  if (params.persist && params.prompt_text !== undefined) {
     try {
       const artifacts = ensureArtifactsStep(result);
       artifacts.prompt_md = writeTextArtifact(
         promptPath,
         params.prompt_text,
-        params.overwrite,
-        result.warnings,
-      );
-      artifacts.evaluate_rules_py = writeTextArtifact(
-        evaluateRulesTextPath,
-        params.evaluate_rules_text,
         params.overwrite,
         result.warnings,
       );
@@ -575,13 +601,30 @@ export async function useCaseRegister(
     }
   }
 
-  // evaluate_rules smoke test — the path/source were resolved up-front (before the
-  // consistency gate); here we execute the script once to confirm it runs and
-  // returns a well-formed AlertOutcome / null.
+  // Stage the caller-supplied evaluate_rules.py into the conventional repo
+  // location use-cases/<uc>/evaluate_rules.py (no-op when already there), then
+  // smoke-test THAT file — the exact artifact the runtime rule engine will
+  // execute — to confirm it runs and returns a well-formed AlertOutcome / null.
+  let stagedEvaluateRulesPath: string | undefined;
   if (evaluateRulesPath) {
+    try {
+      const staged = stageEvaluateRulesOverride(
+        evaluateRulesPath,
+        conventionalEvaluateRulesPath,
+        params.overwrite,
+        result.warnings,
+      );
+      stagedEvaluateRulesPath = staged.path;
+      if (staged.status !== "skipped") {
+        ensureArtifactsStep(result).evaluate_rules_py = staged.status;
+      }
+    } catch (err: any) {
+      result.errors.push(`artifact persist failed: ${err.message}`);
+      return result;
+    }
     const error = await validateEvaluateRulesOverride(
       params.use_case,
-      evaluateRulesPath,
+      stagedEvaluateRulesPath!,
       schemaExtensions,
     );
     if (error) {
@@ -596,7 +639,7 @@ export async function useCaseRegister(
     video_summary_task: taskName,
   };
   entry.description = params.description ?? `${params.use_case} use case`;
-  if (evaluateRulesPath !== undefined) entry.evaluate_rules_path = evaluateRulesPath;
+  if (stagedEvaluateRulesPath !== undefined) entry.evaluate_rules_path = stagedEvaluateRulesPath;
   entry.reports = params.reports ?? { data_source: "alerts", default_type: "daily", filter: {} };
   // Never trust the caller's method verbatim — normalize so an illegal value
   // (e.g. "default") can't get persisted and later 400 every summary request.
@@ -690,7 +733,28 @@ async function registerTaskOnly(
   const baseDir = deps.baseDir ?? process.cwd();
   const useCaseDir = join(baseDir, "use-cases", params.use_case);
   const promptPath = join(useCaseDir, "prompt.md");
-  const evaluateRulesTextPath = join(useCaseDir, "evaluate_rules.py");
+  const conventionalEvaluateRulesPath = join(useCaseDir, "evaluate_rules.py");
+  const evaluateRulesPath = params.evaluate_rules_path ?? (
+    existsSync(conventionalEvaluateRulesPath) ? conventionalEvaluateRulesPath : undefined
+  );
+  let evaluateRulesText: string | undefined;
+  if (evaluateRulesPath) {
+    if (!existsSync(evaluateRulesPath)) {
+      result.errors.push(`evaluate_rules_path "${evaluateRulesPath}" does not exist`);
+      return result;
+    }
+    evaluateRulesText = readFileSync(evaluateRulesPath, "utf-8");
+  }
+
+  // Pre-flight the rules staging (the copy into use-cases/<uc>/ happens on VLM
+  // success below), so an overwrite conflict fails BEFORE the VLM POST.
+  if (evaluateRulesPath && resolve(evaluateRulesPath) !== resolve(conventionalEvaluateRulesPath)) {
+    const stagingError = validateTextArtifactWritable(conventionalEvaluateRulesPath, evaluateRulesText, params.overwrite);
+    if (stagingError) {
+      result.errors.push(`artifact persist failed: ${stagingError}`);
+      return result;
+    }
+  }
 
   // Normalize the final schema (base severity/event/desc + caller extras) and run the
   // same schema↔prompt↔rules consistency gate register uses — BEFORE the VLM POST — so
@@ -717,7 +781,7 @@ async function registerTaskOnly(
   const consistency = checkUseCaseConsistency({
     promptText,
     schemaExtensions,
-    evaluateRulesText: params.evaluate_rules_text,
+    evaluateRulesText,
   });
   result.steps.consistency = consistency;
   if (!consistency.consistent) {
@@ -741,26 +805,35 @@ async function registerTaskOnly(
 
   // 落盘: persisting the artifacts is the whole point of this action, so it is
   // unconditional (not gated on persist). overwrite is honored by writeTextArtifact;
-  // a same-content re-run returns "unchanged".
+  // a same-content re-run returns "unchanged". The rules file is staged into the
+  // conventional use-cases/<uc>/evaluate_rules.py so step 2 (register) can
+  // auto-discover it and config.yaml references the stable in-repo path.
+  let stagedEvaluateRulesPath: string | undefined;
   try {
     const artifacts = ensureArtifactsStep(result);
     artifacts.prompt_md = writeTextArtifact(promptPath, params.prompt_text, params.overwrite, result.warnings);
-    artifacts.evaluate_rules_py = writeTextArtifact(
-      evaluateRulesTextPath,
-      params.evaluate_rules_text,
-      params.overwrite,
-      result.warnings,
-    );
+    if (evaluateRulesPath !== undefined) {
+      const staged = stageEvaluateRulesOverride(
+        evaluateRulesPath,
+        conventionalEvaluateRulesPath,
+        params.overwrite,
+        result.warnings,
+      );
+      stagedEvaluateRulesPath = staged.path;
+      if (staged.status !== "skipped") {
+        artifacts.evaluate_rules_py = staged.status;
+      }
+    }
   } catch (err: any) {
     result.errors.push(`artifact persist failed: ${err.message}`);
     return result;
   }
 
-  // Smoke-test the just-written evaluate_rules.py so a broken override is caught here
-  // rather than silently failing at runtime. Runs whenever rules text was supplied
-  // (covers both freshly "written" and identical "unchanged" files on disk).
-  if (params.evaluate_rules_text !== undefined) {
-    const error = await validateEvaluateRulesOverride(params.use_case, evaluateRulesTextPath, schemaExtensions);
+  // Smoke-test the staged evaluate_rules.py — the exact file the runtime rule
+  // engine will execute — so a broken override is caught here rather than
+  // silently failing at runtime.
+  if (stagedEvaluateRulesPath !== undefined) {
+    const error = await validateEvaluateRulesOverride(params.use_case, stagedEvaluateRulesPath, schemaExtensions);
     if (error) {
       result.errors.push(error);
       return result;
