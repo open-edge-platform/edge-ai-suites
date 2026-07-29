@@ -4,34 +4,8 @@ The VMS Adapter Plugin (VAP) is a modular orchestration service that routes vide
 
 ## Architecture
 
-```
-VMS / VMS Systems
-  ┌──────────┐   RTSP / REST    ┌──────────────────────────────────────────┐
-  │Nx Witness├─────────────────►│                                          │
-  └──────────┘                  │           VMS Adapter Plugin             │
-  ┌──────────┐   RTSP / REST    │                                          │
-  │ Genetec  ├─────────────────►│  FastAPI Backend    ┌──────────────────┐ │
-  └──────────┘                  │  ─────────────      │  PostgreSQL DB   │ │
-  ┌──────────┐   RTSP / REST    │  Orchestrator   ◄──►│  (cameras,       │ │
-  │ Milestone├─────────────────►│  Camera sync        │   sessions,      │ │
-  └──────────┘                  │  Schema fetch       │   events)        │ │
-  ┌──────────┐   RTSP / REST    │                     └──────────────────┘ │
-  │ Frigate  ├─────────────────►└────────┬─────────────────────┬───────────┘
-  └──────────┘                           │                     │
-                          ┌──────────────▼──────┐   ┌─────────▼──────────────┐
-                          │  Live Video         │   │  DLStreamer Vision     │
-                          │  Captioning (LVC)   │   │  (e.g. Loitering Det)  │
-                          │                     │   │                        │
-                          │  DLStreamer +VLM    │   │  DLStreamer Pipeline   │
-                          │  MediaMTX (WebRTC)  │   │  Server + MQTT Broker  │
-                          └──────────┬──────────┘   └────────────┬───────────┘
-                                     │                           │
-                          ┌──────────▼──────────────────────────▼──────────┐
-                          │              Provider Dashboard (React)        │
-                          │   Camera list | Run controls | Live stream     │
-                          │   Caption overlay | Analysis results           │
-                          └────────────────────────────────────────────────┘
-```
+<img src="_assets/VAP_architecture.png" alt="VAP Analytics Integration architecture" style="width: 600px; max-width: 100%;" />
+
 
 ## Data Flow
 

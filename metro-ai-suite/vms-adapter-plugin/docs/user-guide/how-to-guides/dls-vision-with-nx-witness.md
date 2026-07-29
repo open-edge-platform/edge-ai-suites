@@ -367,14 +367,14 @@ docker compose logs vms-backend | grep -i "nx_integration\|autoregist"
 You should see entries like:
 
 ```
-nx_integration_approved username=DLStreamerAnalyticsIntegrationVMS request_id=...
-nx_integration_autoregistered vms=nx-main analytics_app_id=DLStreamerAnalyticsIntegrationVMS status=approved
+nx_integration_approved username=VAP Analytics Integration request_id=...
+nx_integration_autoregistered vms=nx-main analytics_app_id=VAP Analytics Integration status=approved
 ```
 
 > **If VAP has already registered before** (database record exists and integration exists in Nx), VAP restores the integration credentials from its database and skips re-registration. You will see:
 > ```
-> nx_integration_already_registered vms=nx-main analytics_app_id=DLStreamerAnalyticsIntegrationVMS
-> nx_integration_credentials_restored vms=nx-main username=DLStreamerAnalyticsIntegrationVMS
+> nx_integration_already_registered vms=nx-main analytics_app_id=VAP Analytics Integration
+> nx_integration_credentials_restored vms=nx-main username=VAP Analytics Integration
 > ```
 
 ### 4.3 Verify the Integration in Nx Witness
@@ -386,7 +386,7 @@ curl -k -u admin:<password> https://<NX_HOST>:7001/rest/v4/analytics/integration
   | python3 -m json.tool | grep '"name"\|"id"\|"status"'
 ```
 
-You should see an integration named `DLStreamerAnalyticsIntegrationVMS` with `"status": "active"` or equivalent.
+You should see an integration named `VAP Analytics Integration` with `"status": "active"` or equivalent.
 
 In the Nx Witness desktop client, navigate to **System Administration** → **Analytics** (or **Plugins**) to see the integration listed.
 
@@ -401,7 +401,7 @@ Before VAP can push detection overlays to a specific camera, the analytics integ
 1. In the Nx Witness client, right-click the camera in the resource tree.
 2. Select **Camera Settings**.
 3. Go to the **Integrations** tab.
-4. Find **DLStreamerAnalyticsIntegrationVMS** in the list.
+4. Find **VAP Analytics Integration** in the list.
 5. Toggle the switch to **Enable**.
 6. Click **Apply** or **OK**.
 
@@ -476,7 +476,7 @@ restarts.
 #### 6.2.2 Navigate to the Integration Panel
 
 1. In the Camera Settings window, click the **Integrations** tab.
-2. Click **DLStreamerAnalyticsIntegrationVMS** to expand the per-camera settings.
+2. Click **VAP Analytics Integration** to expand the per-camera settings.
 
 You will see:
 
@@ -485,7 +485,7 @@ You will see:
 | **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera |
 | **Device** | Dropdown | Inference device: `CPU`, `GPU`, or `NPU` |
 
-<img src="../_assets/DLStreamerAnalyticsIntegrationVMS_LD_pipeline_enable_UI.png" alt="DLStreamerAnalyticsIntegrationVMS settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
+<img src="../_assets/VAP_Analytics_Integration_LD_pipeline_enable_UI.png" alt="VAP Analytics Integration settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
 
 #### 6.2.3 Enable the Pipeline
 
@@ -513,7 +513,7 @@ Expected log output:
 
 #### 6.2.4 Stop the Pipeline
 
-1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+1. Re-open **Camera Settings → Integrations → VAP Analytics Integration**.
 2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
 3. Click **Apply** and then click **OK**.
 
@@ -674,7 +674,7 @@ docker compose down
 **Cause:** The Nx integration and the VAP database are out of sync (for example, the integration was manually deleted from Nx, or the VAP database was cleared).
 
 **Fix:**
-1. In the Nx Witness client, delete the `DLStreamerAnalyticsIntegrationVMS` integration from **System Administration** → **Analytics**.
+1. In the Nx Witness client, delete the `VAP Analytics Integration` integration from **System Administration** → **Analytics**.
 2. Drop the VAP integration record from the database:
 
    ```bash
@@ -782,7 +782,7 @@ The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some s
    cd metro-ai-suite/vms-adapter-plugin
    docker compose up -d
    ```
-5. In the Nx Witness client, open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
+5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics Integration**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
 
 VAP starts both pipelines independently within 5 seconds.
 
@@ -808,6 +808,6 @@ This is an Nx Witness limitation: the client cannot overlay detection boxes and 
 | Start VAP (integration auto-registers on startup) | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
 | Discover cameras | Dashboard → Discover Cameras |
 | Enable cameras for analytics | Dashboard → Camera toggle |
-| **Nx Witness:** Start pipeline | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Enable checkbox |
+| **Nx Witness:** Start pipeline | Camera Settings → Integrations → VAP Analytics Integration → Enable checkbox |
 | View detection overlays | Nx Witness client → live camera feed (Objects panel) |
-| **Nx Witness:** Stop the run | Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS → Uncheck the checkbox |
+| **Nx Witness:** Stop the run | Camera Settings → Integrations → VAP Analytics Integration → Uncheck the checkbox |
