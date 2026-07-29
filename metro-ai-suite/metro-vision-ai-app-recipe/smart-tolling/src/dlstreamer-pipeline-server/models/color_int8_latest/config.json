@@ -1,0 +1,8 @@
+{
+   "model_parameters": {
+      "labels": "yellow white red orange grey green brown blue black",
+      "label_ids": "6942730a386945bd18da6e86 6942730a386945bd18da6e87 6942730a386945bd18da6e89 6942730a386945bd18da6e8a 6942730a386945bd18da6e8b 6942730a386945bd18da6e8c 6942730a386945bd18da6e8d 6942730a386945bd18da6e8e 6942730a386945bd18da6e8f"
+   },
+   "model_type": "Classification",
+   "task_type": "classification"
+}

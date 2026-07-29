@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb2:8086
+    basicAuth: false
+    secureJsonData:
+      token: <influx-api-token>
+    jsonData:
+      organization: ITM
+      defaultBucket: smart-toll-bucket
+      version: Flux
+      tlsSkipVerify: false
+      httpMode: POST
+    uid: xU6Z19aVk

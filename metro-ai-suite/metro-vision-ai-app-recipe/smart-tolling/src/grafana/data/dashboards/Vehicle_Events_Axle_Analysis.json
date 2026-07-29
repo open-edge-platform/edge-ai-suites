@@ -1,0 +1,917 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_SMART-TOLL-BUCKET",
+      "label": "smart-toll-bucket",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.6.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Smart Toll - Overview ",
+      "tooltip": "",
+      "type": "link",
+      "url": "/grafana/d/df9fxv6i7vp4wc/smart-toll-overview?orgId=1&from=now-1h&to=now&timezone=browser&var-scene=$__all&var-region=$__all"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Speed"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "image_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "license_plate_text"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Plate No."
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "dwell"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Dwell Time"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "license_plate_text"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Vehicle Details",
+                    "url": "/grafana/d/df9g66bhn9y4gf/smart-toll-live-vehicle-events?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-query0=&var-plate=${__data.fields.license_plate_text}&var-image=${__data.fields.image_url}&var-axles=${__data.fields.axles}&var-speed=${__data.fields.speed}&var-dwell=${__data.fields.dwell}&var-toll_class=${__data.fields.toll_class}&var-toll_fee=${__data.fields.toll_fee}&var-vehicle_img=${__data.fields.vehicle_image_url}\n"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "roi_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Region Name"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "toll_class"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Toll Class"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "toll_fee"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Toll Fee($)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_image_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 17,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "License Plate Number"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"smart-toll-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n \n  |> filter(fn: (r) =>\n      r._measurement == \"smart_tolling_events\"\n  )\n \n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n \n  |> filter(fn: (r) =>\n      exists r.license_plate_text and\n      r.license_plate_text != \"\"\n  )\n \n  |> filter(fn: (r) =>\n      exists r.front_plate_image_url or\n      exists r.rear_plate_image_url or\n      exists r.vehicle_front_image_url or\n      exists r.vehicle_rear_image_url\n  )\n \n  |> map(fn: (r) => ({\n \n      _time: r._time,\n      roi_name: r.region_name,\n      license_plate_text: r.license_plate_text,\n      axles: r.axle_count,\n      speed: string(v: r.speed) + \" km/h\",\n      dwell: string(v: r.dwell) + \" s\",\n      image_url:\n \n        if exists r.front_plate_image_url\n \n        then r.front_plate_image_url\n \n        else if exists r.rear_plate_image_url\n \n        then r.rear_plate_image_url\n \n        else \"\",\n \n      vehicle_image_url:\n \n        if exists r.vehicle_front_image_url\n \n        then r.vehicle_front_image_url\n \n        else if exists r.vehicle_rear_image_url\n \n        then r.vehicle_rear_image_url\n \n        else \"\",\n \n      toll_class:\n \n        if r.axle_count < 3 then \"Light\"\n \n        else if r.axle_count == 3 then \"Medium\"\n \n        else if r.axle_count > 3 then \"Heavy\"\n \n        else \"No Class\",\n \n      toll_fee:\n \n        if r.axle_count < 3 then 10\n \n        else if r.axle_count == 3 then 15\n \n        else if r.axle_count > 3 then 20\n \n        else 0\n \n  }))\n \n  |> keep(columns: [\n \n      \"_time\",\n \n      \"license_plate_text\",\n \n      \"axles\",\n \n      \"toll_class\",\n \n      \"toll_fee\",\n \n      \"speed\",\n \n      \"dwell\",\n \n      \"roi_name\",\n \n      \"image_url\",\n \n      \"vehicle_image_url\"\n \n  ])\n \n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "Events Table"
+        }
+      ],
+      "title": "Vehicle Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "axle_count": 2,
+              "dwell": 5,
+              "image_url": 8,
+              "license_plate_text": 1,
+              "roi_name": 4,
+              "speed": 3,
+              "toll_class": 6,
+              "toll_fee": 7
+            },
+            "renameByName": {
+              "_time": "",
+              "license_plate_text": ""
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Vehicle",
+      "gridPos": {
+        "h": 16,
+        "w": 7,
+        "x": 17,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  display: grid;\n  grid-template-columns: 1fr 1.2fr;\n  padding: 2px;\n  align-items: left;\n\">\n\n\n  <!-- RIGHT: IMAGE -->\n  <div style=\"\n    text-align:center;\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 12px;\n  \">\n    <h3 style=\"margin-bottom: 10px; color:#a5d6a7;\">\n       License Plate Image\n    </h3>\n\n    <img\n      src=\"${image}\"\n      style=\"\n        width: 250px;\n        max-height: 420px;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"License Plate Image\"\n    />\n <h3 style=\"margin-bottom: 10px; color:#a5d6a7;\">\n       Vehicle Image\n    </h3>\n\n    <img\n      src=\"${vehicle_img}\"\n      style=\"\n        width: 250px;\n        max-height: 420px;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"Vehilce Image\"\n    />\n\n    <div style=\"margin-top:8px; font-size:12px; color:#777;\">\n      Click another row to update\n    </div>\n  </div>\n  <!-- LEFT: VEHICLE STATS -->\n  <div style=\"\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 10px;\n  \">\n    <h4 style=\"margin-bottom: 2px; color:#90caf9;\">\n      Vehicle Details\n    </h4>\n\n    <table style=\"width:100%; border-collapse: collapse; font-size:12px;\">\n      <tr>\n        <td style=\"padding:6px; color:#aaa;\">License Plate</td>\n        <td style=\"padding:6px; font-weight:bold;\">${plate}</td>\n      </tr>\n      <!-- <tr>\n        <td style=\"padding:6px; color:#aaa;\">Axles </td>\n        <td style=\"padding:6px;\">${axles}</td>\n      </tr> -->\n      <tr>\n        <td style=\"padding:6px; color:#aaa;\">Toll Class </td>\n        <td style=\"padding:6px;\">${toll_class}</td>\n      </tr>\n      <tr>\n        <td style=\"padding:6px; color:#aaa;\">Toll Fee</td>\n        <td style=\"padding:6px;\">$${toll_fee}</td>\n      </tr>\n      <tr>\n        <td style=\"padding:6px; color:#aaa;\">Speed</td>\n        <td style=\"padding:6px;\">${speed}</td>\n      </tr>\n        <tr>\n        <td style=\"padding:6px; color:#aaa;\">Dwell</td>\n        <td style=\"padding:6px;\">${dwell} s</td>\n      </tr>\n    </table>\n  </div>\n\n\n\n</div>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Vehicle Stats",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 11
+      },
+      "id": 9,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  ℹ️ <b>Note:</b> Click on the <b>Plate No</b> in the table above to view\n  vehicle details, toll class, fee, and license plate image.\n</div>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 0,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [
+            {
+              "options": {
+                "Axle-2": {
+                  "color": "light-blue",
+                  "index": 0
+                },
+                "Axle-3": {
+                  "color": "light-orange",
+                  "index": 1
+                },
+                "Axle-4": {
+                  "color": "light-green",
+                  "index": 2
+                },
+                "Axle-5": {
+                  "color": "semi-dark-red",
+                  "index": 3
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_count"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vehicle Count"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": ""
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 10,
+        "x": 0,
+        "y": 13
+      },
+      "id": 11,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.37,
+        "colorByField": "axles",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 22
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "axles",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"smart-toll-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n\n  |> filter(fn: (r) =>\n      r._measurement == \"smart_tolling_events\" and\n      r._field == \"axle_count\" and\n      r._value >= 2 and\n      r.scene_name == \"${scene}\"\n  )\n\n  // create categorical label + counter\n  |> map(fn: (r) => ({\n      axles: \"Axle-\" + string(v: r._value),\n      vehicle_count: 1\n  }))\n\n  // aggregate\n  |> group(columns: [\"axles\"])\n  |> sum(column: \"vehicle_count\")\n\n  // 🔑 REQUIRED: ungroup for Grafana bar chart\n  |> group()\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Axle Count",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "axisWidth": 50,
+            "fillOpacity": 58,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 0,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [
+            {
+              "options": {
+                "Heavy": {
+                  "color": "red",
+                  "index": 2
+                },
+                "Light": {
+                  "color": "super-light-blue",
+                  "index": 0
+                },
+                "Medium": {
+                  "color": "orange",
+                  "index": 1
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "toll_fee"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Toll Fee"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 7,
+        "x": 10,
+        "y": 13
+      },
+      "id": 12,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.46,
+        "colorByField": "vehicle_class",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 20
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"smart-toll-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n\n  |> filter(fn: (r) =>\n      r._measurement == \"smart_tolling_events\" and\n      r.scene_name == \"${scene}\" \n  )\n\n  // bring axle_count into rows\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n\n  // keep only valid axle detections\n  |> filter(fn: (r) =>\n      exists r.axle_count and\n      r.axle_count > 0\n  )\n\n  // compute axle class and toll fee\n  |> map(fn: (r) => ({\n      vehicle_class:\n        if r.axle_count < 3 then \"Light\"\n        else if r.axle_count == 3 then \"Medium\"\n        else \"Heavy\",\n\n      toll_fee:\n        if r.axle_count < 3 then 10\n        else if r.axle_count == 3 then 15\n        else 20\n  }))\n\n  // aggregate revenue per axle class\n  |> group(columns: [\"vehicle_class\"])\n  |> sum(column: \"toll_fee\")\n\n  // 🔑 required for Grafana bar chart\n  |> group()\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Axle-Wise Toll Revenue",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "Same Plate",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "width": 150
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "roi_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Region"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "axless"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Axles"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 17,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"smart-toll-bucket\")\n  |> range(start: -7d)\n\n  |> filter(fn: (r) =>\n      r._measurement == \"smart_tolling_events\" and\n      r.scene_name == \"${scene}\" \n  )\n\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n\n  // filter AFTER pivot\n  |> filter(fn: (r) =>\n      exists r.license_plate_text and\n      r.license_plate_text == \"${plate}\"\n  )\n\n  |> map(fn: (r) => ({\n      _time: r._time,\n      roi_name: r.region_name,\n      axless: r.axle_count\n  }))\n\n  |> keep(columns: [\n      \"_time\",\n      \"roi_name\",\n      \"axless\"\n  ])\n\n  |> sort(columns: [\"_time\"], desc: true)\n",
+          "refId": "Vehicle_History"
+        }
+      ],
+      "title": "Vehicle History",
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "GZ142N",
+          "value": "GZ142N"
+        },
+        "hide": 2,
+        "name": "plate",
+        "options": [
+          {
+            "selected": true,
+            "text": "GZ142N",
+            "value": "GZ142N"
+          }
+        ],
+        "query": "GZ142N",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "/images/vehicle-events/2026-06-25/test/plate_front_GZ142N_000126.jpg",
+          "value": "/images/vehicle-events/2026-06-25/test/plate_front_GZ142N_000126.jpg"
+        },
+        "hide": 2,
+        "name": "image",
+        "options": [
+          {
+            "selected": true,
+            "text": "/images/vehicle-events/2026-06-25/test/plate_front_GZ142N_000126.jpg",
+            "value": "/images/vehicle-events/2026-06-25/test/plate_front_GZ142N_000126.jpg"
+          }
+        ],
+        "query": "/images/vehicle-events/2026-06-25/test/plate_front_GZ142N_000126.jpg",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "axles",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "0.55 km/h",
+          "value": "0.55 km/h"
+        },
+        "hide": 2,
+        "name": "speed",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.55 km/h",
+            "value": "0.55 km/h"
+          }
+        ],
+        "query": "0.55 km/h",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "13.67 s",
+          "value": "13.67 s"
+        },
+        "hide": 2,
+        "name": "dwell",
+        "options": [
+          {
+            "selected": true,
+            "text": "13.67 s",
+            "value": "13.67 s"
+          }
+        ],
+        "query": "13.67 s",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "No Class",
+          "value": "No Class"
+        },
+        "hide": 2,
+        "name": "toll_class",
+        "options": [
+          {
+            "selected": true,
+            "text": "No Class",
+            "value": "No Class"
+          }
+        ],
+        "query": "No Class",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "0",
+          "value": "0"
+        },
+        "hide": 2,
+        "name": "toll_fee",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          }
+        ],
+        "query": "0",
+        "type": "textbox"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "influxdb",
+          "uid": "xU6Z19aVk"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"smart-toll-bucket\",\n  tag: \"scene_name\"\n)\n",
+        "hide": 2,
+        "includeAll": true,
+        "label": "scene",
+        "multi": true,
+        "name": "scene",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"smart-toll-bucket\",\n  tag: \"scene_name\"\n)\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "influxdb",
+          "uid": "xU6Z19aVk"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"smart-toll-bucket\",\n  tag: \"region_name\"\n)\n",
+        "hide": 2,
+        "includeAll": true,
+        "multi": true,
+        "name": "region",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"smart-toll-bucket\",\n  tag: \"region_name\"\n)\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "/images/vehicle-events/2026-06-25/test/vehicle_front_9_000126.jpg",
+          "value": "/images/vehicle-events/2026-06-25/test/vehicle_front_9_000126.jpg"
+        },
+        "hide": 2,
+        "name": "vehicle_img",
+        "options": [
+          {
+            "selected": true,
+            "text": "/images/vehicle-events/2026-06-25/test/vehicle_front_9_000126.jpg",
+            "value": "/images/vehicle-events/2026-06-25/test/vehicle_front_9_000126.jpg"
+          }
+        ],
+        "query": "/images/vehicle-events/2026-06-25/test/vehicle_front_9_000126.jpg",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "2026-06-24T07:02:05.505Z",
+    "to": "2026-06-25T07:02:05.505Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Smart Toll - Vehicle Events & Axle Analysis",
+  "uid": "df9g66bhn9y4gf",
+  "version": 4,
+  "weekStart": ""
+}

@@ -1,0 +1,8 @@
+# Git LFS tracking for large binary assets in the smart-tolling demo.
+# Video clips use the .ts (MPEG-TS) extension and are scoped to the videos/
+# directory only, so this rule never affects TypeScript source files.
+src/dlstreamer-pipeline-server/videos/*.ts filter=lfs diff=lfs merge=lfs -text
+*.odt filter=lfs diff=lfs merge=lfs -text
+*.tar.bz2 filter=lfs diff=lfs merge=lfs -text
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
+*.bin filter=lfs diff=lfs merge=lfs -text

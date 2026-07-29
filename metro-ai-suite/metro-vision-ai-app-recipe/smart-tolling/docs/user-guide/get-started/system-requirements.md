@@ -1,29 +1,69 @@
 # System Requirements
+This page provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
 
-## Hardware Prerequisites
 
-To ensure 30+ FPS performance and real-time inference, the following hardware is recommended:
+<!--
+## User Stories Addressed
+- **US-2: Evaluating System Requirements**
+  - **As a developer**, I want to review the hardware and software requirements, so that I can determine if my environment supports the application.
 
-| Component | Specification |
-| :--- | :--- |
-| **Processor** | Intel® Xeon® Scalable Processor or Intel® Core™ i9 (12th Gen+) |
-| **Accelerator** | **Intel® Data Center GPU Flex Series** (Highly Recommended for high-density streams/transcoding) |
-| **Memory** | 32 GB DDR4/DDR5 ECC |
-| **Storage** | 512 GB NVMe SSD (High Endurance) |
-| **Network** | Dual 10GbE Uplink (for Camera Streams + Cloud Backhaul) |
+### Acceptance Criteria
+1. A detailed table of hardware requirements (e.g., processor type, memory).
+2. A list of software dependencies and supported operating systems.
+3. Clear guidance on compatibility issues.
+-->
 
-## Software Prerequisites
+## Supported Platforms
+<!--
+**Guidelines**:
+- Include supported operating systems, versions, and platform-specific notes.
+-->
+**Operating Systems**
+- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
-- **Operating System**: Ubuntu 22.04 LTS (Jammy Jellyfish)
-- **Container Runtime**: Docker Engine 24.0+
-- **Orchestration**: Docker Compose v2.20+
-- **Drivers**: Intel® GPU Drivers (verified for Flex Series)
 
-## Network Requirements
+## Minimum Requirements
+<!--
+**Guidelines**:
+- Use a table to clearly outline minimum and recommended configurations.
+-->
 
-- **Ports**:
-  - `1883`: MQTT Broker (Internal/External)
-  - `3000`: Grafana Dashboard
-  - `8080`: Web UI
-  - `8086`: InfluxDB
-- **Time Sync**: Local NTP Server connectivity is critical for multi-camera correlation.
+| **Component**      | **Minimum Requirement**   |
+|---------------------|--------------------------|
+| **Processor**       | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors   |
+| **Memory**          | 16 GB                    |
+| **Disk Space**      | 128 GB SSD               |
+
+### Validated Platforms
+
+| Product / Family     | CPU |  iGPU |  NPU |
+|----------------------|-----------|------------|-----------|
+| Intel® Core™ Ultra Processors (Series 3, 2, 1) | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 3 | ✓         | ✓          | ✓         |
+| Intel® Core™ Processors Series 2 | ✓         | ✓          |    NA      |
+| Intel® Core™ Processors (14th/13th/12th Gen) | ✓         | ✓          | NA         |
+| 4th Gen Intel® Xeon® Scalable Processors | ✓         |      NA      |      NA     |
+
+**Validated on Intel® Arc™ dGPU models:** A770, B580, B60, and B50.
+
+## Software Requirements
+<!--
+**Guidelines**:
+- List software dependencies, libraries, and tools.
+-->
+**Required Software**:
+- Docker 24.0 or higher
+- Git, jq, unzip
+
+## Compatibility Notes
+<!--
+**Guidelines**:
+- Include any limitations or known issues with supported platforms.
+-->
+**Known Limitations**:
+- GPU optimizations require Intel® integrated graphics or compatible accelerators.
+
+## Validation
+
+- Follow instructions at [Get Started](../get-started.md).

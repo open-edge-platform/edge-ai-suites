@@ -1,0 +1,8 @@
+{
+   "model_parameters": {
+      "labels": "vehicle",
+      "label_ids": "6a3a53ba0e2d4c1f0f7be18f"
+   },
+   "model_type": "ssd",
+   "task_type": "detection"
+}

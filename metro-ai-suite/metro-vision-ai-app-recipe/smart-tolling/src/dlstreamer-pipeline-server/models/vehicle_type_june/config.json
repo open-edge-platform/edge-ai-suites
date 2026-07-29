@@ -1,0 +1,8 @@
+{
+   "model_parameters": {
+      "labels": "van bus truck car",
+      "label_ids": "6a27e26007197ebc0ced31d9 6a27e26007197ebc0ced31da 6a27e26007197ebc0ced31db 6a27e26007197ebc0ced31dc"
+   },
+   "model_type": "ssd",
+   "task_type": "detection"
+}

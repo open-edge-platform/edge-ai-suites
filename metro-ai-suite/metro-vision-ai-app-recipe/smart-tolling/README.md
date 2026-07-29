@@ -1,56 +1,56 @@
-# Smart Tolling Application
+# Smart Intersection
 
-The **Metro Smart Tolling Application** is a high-precision Edge AI solution designed to revolutionize automated tolling. By fusing multi-camera inputs (Front, Rear, and Side profiles), the system delivers accurate vehicle detection and classification, license plate detection, color classification, axle counting and tariffing.
+The **Smart Intersection** is a sample application that unifies the analytics of a traffic intersection.
 
-Enabling such use cases across multiple viewpoints helps in understanding the object interaction with the real world in 3-D space. All the components used run on a single system enabling low latency, simplified deployment and cost efficiency.
+It demonstrates how edge AI technologies can address traffic management challenges using scene-based analytics. It combines analytics from multiple traffic cameras to provide a unified intersection view, enabling advanced use cases such as object tracking across multiple viewpoints, motion vector analysis (e.g., speed and heading), and understanding object interactions in three-dimensional space. This application highlights how existing camera infrastructure can be leveraged for real-time, multi-camera scene analytics, showcasing a shift from frame-based analysis to integrated, edge AI-driven solutions for smarter traffic management.
 
-![Smart Tolling System Architecture](./docs/user-guide/_assets/smart_tolling_architecture.png)
+The following are some example use cases:
 
-## Key Features
+- **Use Case 1**: Pedestrian Safety - Enhance the safety for vulnerable road users (VRUs) at crosswalks.
+  - Example: Scene-based region of interest (ROI) analytics help identify VRUs actively using crosswalks and detect unsafe situations, such as pedestrians walking outside the designated crosswalk areas.
+- **Use Case 2**: Measure average vehicle count and average dwell time in each lane. Dwell time refers to the amount of time a vehicle spends at a stop, such as a bus stop or train station, without moving.
+  - Example: Vehicles spending too much time in a lane indicates anomalies such as stalled vehicles, accidents, and congestion.
 
-**Multi vision**: Scene-based analytics allow insights beyond single sensor views.
+The key benefits are as follows:
 
-- **Vehicle axle detection**:
+- **Multi-camera multi-object tracking**: Enables tracking of objects across multiple camera views.
+- **Scene based analytics**: Regions of interest that span multiple views can be easily defined on the map rather than independently on each camera view. This greatly simplifies business logic, enables more flexibility in defining regions, and allows various types of sensors to be used to track vehicles and people such as lidar and radar in addition to cameras.
+- **Improved Urban Management**: Object tracking and analytics are available near-real-time on the MQTT broker to enable actionable insights for traffic monitoring and safety applications.
+- **Reduced TCO**: Works with existing cameras, simplifies business logic development, and future-proofs the solution by enabling additional sensors and cameras as needed without changing the business logic.
 
-  Vehicle class is determined based on axle and wheel count. Intended for toll
-  classification, as well as revenue calculation and protection.
+## Get Started
 
-- **Lift axle detection**:
+To see the system requirements and other installations, see the following guides:
 
-  The type of axle is determined based on camera feed. Ensures accurate tariffing,
-  as lift axles may affect toll classification even when raised.
+- [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
-- **License plate detection**:
+## How It Works
+This section provides a high-level view of how the application integrates with a typical system architecture.
 
-  The application identifies vehicles uniquely by their license plates, which are
-  read from both front and rear views. The image evidence is included in every
-  transaction for simplified auditing.
+![High-Level System Diagram](./docs/user-guide/_assets/smart-intersection-architecture.drawio.svg)
 
-**Visualization & analytics**: Provides real-time and historical insights for
-toll operators.
+### Diagram Description
 
-**Modularity**: Architecture based on modular microservices enables composability
-and reconfiguration.
+- **Inputs**:
+  - **Video Files** - Four traffic intersection cameras that capture videos simultaneously.
+  - **Scene Database** - Pre-configured intersection scene with satellite view of intersection, calibrated cameras, and regions of interest.
+  Video recordings are used to simulate a live feed from cameras deployed at a traffic intersection. The application can be configured to work with live cameras.
+- **Processing**:
+  - **Video Analytics** - Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) utilizes a pre-trained object detection model to generate object detection metadata and and a local NTP server for synchronized timestamps. This metadata is published to the MQTT broker.
+  - **Sensor Fusion** - Scene Controller Microservice fuses the metadata from video analytics utilizing scene data obtained through the Scene Management API. It uses the fused tracks and the configured analytics (regions of interest) to generate events that are published to the MQTT broker.
+  - **Aggregate Scene Analytics** - Region of interest analytics are read from the MQTT broker and stored in an InfluxDB bucket which enables time series analysis through Flux queries.
+- **Outputs**:
+  - Fused object tracks are available on the MQTT broker and visualized through the Scene Management UI.
+  - Aggregate scene analytics are visualized through a Grafana dashboard.
 
-**High-throughput processing**: [Optimized video pipelines](./docs/user-guide/how-it-works/optimization.md#zero-copy-video-pipeline)
-for Intel edge devices.
-
-## How it Works
-
-The system uses the **Metro Edge Architecture** based on three key principles:
-
-- **Perception**: Deep Learning Streamer (DL Streamer) [processes 3/4 camera feeds](./docs/user-guide/how-it-works/perception-layer.md).
-- **Control**: Scenescape Controller [aggregates metadata](./docs/user-guide/how-it-works/analytics-pipeline.md).
-- **Analytics**: Node-RED [transforms events into traffic insights](./docs/user-guide/how-it-works/analytics-pipeline.md#node-red-transformation)
-  (Traffic Volume, Flow Efficiency, Tariffing).
+For more details, see [Overview](./docs/user-guide/index.md)
 
 ## Learn More
 
-- [System Requirements](./docs/user-guide/get-started/system-requirements.md)
-- [Get Started](docs/user-guide/get-started.md)
-- [How It Works](./docs/user-guide/how-it-works.md)
-- [Troubleshooting](./docs/user-guide/troubleshooting.md)
+- [How to Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 ## License
 
-Metro Vision AI - Internal Use Only.
+The application is licensed under the [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](./LICENSE.txt).

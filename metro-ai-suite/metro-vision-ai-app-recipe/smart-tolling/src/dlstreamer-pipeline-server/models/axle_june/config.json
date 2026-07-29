@@ -1,0 +1,8 @@
+{
+   "model_parameters": {
+      "labels": "axle",
+      "label_ids": "6a2f8c2d470a261d649b90a6"
+   },
+   "model_type": "ssd",
+   "task_type": "detection"
+}

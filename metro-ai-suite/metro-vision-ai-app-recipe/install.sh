@@ -18,7 +18,7 @@ if [ -z "$SAMPLE_APP_ARG" ]; then
 fi
 
 case "$SAMPLE_APP_ARG" in
-    "smart-parking"|"loitering-detection"|"smart-intersection")
+    "smart-parking"|"loitering-detection"|"smart-intersection"|"smart-tolling")
         # Update SAMPLE_APP in .env file
         if grep -q "^SAMPLE_APP=" "$ENV_FILE"; then
             sed -i "s/^SAMPLE_APP=.*/SAMPLE_APP=$SAMPLE_APP_ARG/" "$ENV_FILE"
