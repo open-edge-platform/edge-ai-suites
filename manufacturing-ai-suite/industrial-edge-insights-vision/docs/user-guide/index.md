@@ -54,12 +54,12 @@ get-started.md
 How To Customize <./how-to-customize/index.md>
 How To Evaluate and Accelerate <./how-to-evaluate-accelerate/index.md>
 How To Extend Functionality <./how-to-extend-functionality/index.md>
-./pallet-defect-detection/index.md
-./pcb-anomaly-detection/index.md
+Pallet Defect Detection Sample Application <./pallet-defect-detection/index.md>
+PCB Anomaly Detection Sample Application <./pcb-anomaly-detection/index.md>
 api-reference.md
 Troubleshooting <./troubleshooting.md>
-./win-vision-ai/index.md
 Release Notes <release-notes.md>
+./win-vision-ai/index.md
 
 :::
 hide_directive-->
