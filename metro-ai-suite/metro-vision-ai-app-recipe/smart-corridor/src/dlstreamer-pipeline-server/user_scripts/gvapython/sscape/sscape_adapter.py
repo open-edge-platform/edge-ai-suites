@@ -217,7 +217,7 @@ class PostInferenceDataPublish:
 
     return
 
-  def buildObjData(self, gvadata):
+  def buildObjData(self, gvadata, frame=None):
     now = time.time()
     self.frame_level_data.update({
       'timestamp': gvadata['postdecode_timestamp'],
@@ -225,6 +225,21 @@ class PostInferenceDataPublish:
       'debug_processing_time': now - float(gvadata['timestamp_for_next_block']),
       'rate': float(gvadata['fps'])
     })
+
+    # Efficiently encode plain clean full camera frame once per frame (downsampled to 640px)
+    full_frame_b64 = None
+    if frame is not None:
+      try:
+        with frame.data() as image:
+          fh, fw = image.shape[:2]
+          target_w = 640
+          target_h = int(fh * (target_w / fw))
+          small_frame = cv2.resize(image, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+          _, full_buf = cv2.imencode('.jpg', small_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+          full_frame_b64 = base64.b64encode(full_buf).decode('utf-8')
+      except Exception:
+        pass
+
     objects = defaultdict(list)
     if 'objects' in gvadata and len(gvadata['objects']) > 0:
       framewidth, frameheight = gvadata['resolution']['width'], gvadata['resolution']['height']
@@ -233,6 +248,36 @@ class PostInferenceDataPublish:
         self.metadatagenpolicy(vaobj, det, framewidth, frameheight)
         otype = vaobj['category']
         vaobj['id'] = len(objects[otype]) + 1
+        
+        # Attach crop image and highlighted full frame image directly inside the vehicle object (vaobj)
+        if otype == 'vehicle' and frame is not None:
+          bbox = vaobj.get('bounding_box_px')
+          if bbox:
+            bx, by, bw, bh = int(bbox['x']), int(bbox['y']), int(bbox['width']), int(bbox['height'])
+            if bw > 0 and bh > 0 and bx >= 0 and by >= 0:
+              try:
+                with frame.data() as image:
+                  # 1. Cropped vehicle image
+                  crop = image[by:by+bh, bx:bx+bw]
+                  if crop.size > 0:
+                    _, buf = cv2.imencode('.jpg', crop)
+                    vaobj['image_b64'] = base64.b64encode(buf).decode('utf-8')
+
+                  # 2. Draw red bounding box ONLY around target vehicle (Ultra-fast, zero-overhead)
+                  highlighted = image.copy()
+                  cv2.rectangle(highlighted, (bx, by), (bx + bw, by + bh), (0, 0, 255), 3) # Red Box
+                  cv2.putText(highlighted, f"TARGET VEHICLE #{vaobj['id']}", (bx, max(20, by - 8)),
+                              cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+                  fh, fw = highlighted.shape[:2]
+                  target_w = 640
+                  target_h = int(fh * (target_w / fw))
+                  small_frame = cv2.resize(highlighted, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+                  _, full_buf = cv2.imencode('.jpg', small_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                  vaobj['frame_b64'] = base64.b64encode(full_buf).decode('utf-8')
+              except Exception:
+                pass
+
         objects[otype].append(vaobj)
     self.frame_level_data['objects'] = objects
 
@@ -243,7 +288,7 @@ class PostInferenceDataPublish:
       utils.get_gva_meta_messages(frame, gvametadata)
       gvametadata['gva_meta'] = utils.get_gva_meta_regions(frame)
 
-      self.buildObjData(gvametadata)
+      self.buildObjData(gvametadata, frame)
 
       if self.is_publish_image:
         self.buildImgData(imgdatadict, frame, True)

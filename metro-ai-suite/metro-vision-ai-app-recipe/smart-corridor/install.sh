@@ -25,13 +25,34 @@ ENV_FILE="../.env"
 if [[ -f "$ENV_FILE" ]]; then
     TOTAL_REMOTE_CHILD=$(grep -E "^TOTAL_REMOTE_CHILD=" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
     TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD:--1}
+
+    # ── Always clean up symlinks before any deployment ──────────────────
+    # Remove symlinks only — never removes real files
+    echo "Cleaning up any existing symlinks..."
+    if [[ -L "src/webserver/smart-corridor-ri.tar.bz2" ]]; then
+        unlink src/webserver/smart-corridor-ri.tar.bz2
+        echo "  Removed symlink: smart-corridor-ri.tar.bz2"
+    fi
+    if [[ -L "src/dlstreamer-pipeline-server/config.json" ]]; then
+        unlink src/dlstreamer-pipeline-server/config.json
+        echo "  Removed symlink: config.json"
+    fi
+    
     if [[ "$TOTAL_REMOTE_CHILD" -gt 0 ]] 2>/dev/null; then
         echo "Parent deployment detected (TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD})"
         echo "Running CA bundle..."
         bash ./ca-bundle.sh
+        echo "Using smart-corridor-parent-ri.tar.bz2"
+        ln -sf smart-corridor-parent-ri.tar.bz2 src/webserver/smart-corridor-ri.tar.bz2
+        echo "Using config_parent.json"
+        ln -sf config_parent.json src/dlstreamer-pipeline-server/config.json
     elif [[ "$TOTAL_REMOTE_CHILD" -eq 0 ]]; then
         echo "Single Node Parent deployment detected(TOTAL_REMOTE_CHILD=${TOTAL_REMOTE_CHILD})"
         echo "No child deployments — skipping CA bundle"
+        echo "Using smart-corridor-parent-ri.tar.bz2"
+        ln -sf smart-corridor-parent-ri.tar.bz2 src/webserver/smart-corridor-ri.tar.bz2
+        echo "Using config_parent.json"
+        ln -sf config_parent.json src/dlstreamer-pipeline-server/config.json
     else
         # Child deployment: use child appdata and config
         echo "Child deployment detected — using smart-corridor-child-ri.tar.bz2"

@@ -1,0 +1,1806 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_SS-ANTHEM",
+      "label": "SS-Anthem",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.6.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px; border-left:4px solid #e05c1a; background-color:#1a1a2e; color:#e5e7eb; font-size:15px; font-weight:bold;\">\n  \u26a0\ufe0f Wrong Way Events\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "List of wrong way vehicle events detected in the corridor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "frame_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speed"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vehicle ID"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Event Details",
+                    "url": "${__url.path}?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-ww_location=${__data.fields.location}&var-ww_time=${__data.fields._time}&var-ww_full_id=${__data.fields.full_vehicle_id}&var-ww_speed=${__data.fields.speed}&var-ww_img=${__data.fields.event_url}&var-ww_frame=${__data.fields.frame_url}&kiosk=tv",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Location"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date & Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "import \"strings\"\n\nfrom(bucket: \"SS-Anthem\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n  |> filter(fn: (r) => exists r.wrong_way and r.wrong_way > 0)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      full_vehicle_id: if exists r.object_id then r.object_id else \"N/A\",\n      vehicle_id: if exists r.object_id and strings.strlen(v: r.object_id) >= 8 then strings.substring(v: r.object_id, start: 0, end: 8) else (if exists r.object_id then r.object_id else \"N/A\"),\n      location: if exists r.location then r.location else \"N/A\",\n      speed: if exists r.speed then string(v: r.speed) + \" km/h\" else \"N/A\",\n      event_url: if exists r.event_url then r.event_url else \"\",\n      frame_url: if exists r.frame_url and r.frame_url != \"\" then r.frame_url else \"\"\n  }))\n  |> group()\n  |> keep(columns: [\"_time\", \"vehicle_id\", \"full_vehicle_id\", \"location\", \"speed\", \"event_url\", \"frame_url\"])\n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "WrongWayEvents"
+        }
+      ],
+      "title": "Wrong Way Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "vehicle_id": 1,
+              "location": 2,
+              "full_vehicle_id": 3,
+              "speed": 4,
+              "event_url": 5
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Wrong Way Event",
+      "gridPos": {
+        "h": 18,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  display: grid;\n  grid-template-columns: 1fr 1.4fr;\n  gap: 16px;\n  width: 100%;\n  height: 100%;\n  padding: 4px;\n  box-sizing: border-box;\n  align-items: start;\n\">\n  <!-- LEFT COLUMN: Event Details Table (Top) + Captured Vehicle Image (Bottom) -->\n  <div style=\"display: flex; flex-direction: column; gap: 14px; width: 100%;\">\n    <!-- Event Details Card -->\n    <div style=\"\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n    \">\n      <h3 style=\"margin-top:0; margin-bottom: 12px; color:#90caf9; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; font-size: 15px; font-weight: 600;\">\n        Event Details\n      </h3>\n      <table style=\"width:100%; border-collapse: collapse;\">\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; width:40%; font-size:13px;\">Event Type</td>\n          <td style=\"padding:8px 10px; font-weight:bold; color:#ef4444; font-size:13px;\">Wrong Way Event</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Date & Time</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${ww_time}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Vehicle ID</td>\n          <td style=\"padding:8px 10px; font-family:monospace; word-break:break-all; font-size:13px;\">${ww_full_id}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Location</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${ww_location}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Speed</td>\n          <td style=\"padding:8px 10px; font-weight:500; font-size:13px;\">${ww_speed}</td>\n        </tr>\n      </table>\n    </div>\n\n    <!-- Captured Vehicle Image Card (Placed under Event Details table card, exact same size/style) -->\n    <div style=\"\n      text-align: center;\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n    \">\n      <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#a5d6a7; font-size: 15px; font-weight: 600;\">\n        Captured Vehicle Image\n      </h3>\n      <img\n        src=\"${ww_img}\"\n        style=\"\n          width: 250px;\n          max-width: 100%;\n          max-height: 380px;\n          object-fit: contain;\n          border-radius: 8px;\n          border: 1px solid rgba(255,255,255,0.1);\n        \"\n        alt=\"Captured Vehicle Image\"\n      />\n    </div>\n  </div>\n\n  <!-- RIGHT COLUMN: Captured Region Image (Full Frame with Bounding Box) -->\n  <div style=\"\n    text-align: center;\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 14px;\n    border: 1px solid rgba(255,255,255,0.08);\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  \">\n    <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#90caf9; font-size: 15px; font-weight: 600;\">\n      Captured Region Image\n    </h3>\n    <img\n      src=\"${ww_frame}\"\n      style=\"\n        width: 100%;\n        max-height: 520px;\n        object-fit: contain;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"Captured Region Image\"\n    />\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Wrong Way Event Stats",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 18
+      },
+      "id": 101,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  \u2139\ufe0f <b>Note:</b> Click on the <b>Vehicle ID</b> in the table above to view event details and image.\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 102,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px; border-left:4px solid #e01a1a; background-color:#1a1a2e; color:#e5e7eb; font-size:15px; font-weight:bold;\">\n  \ud83d\udca5 Collision Events\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "List of collision vehicle events detected in the corridor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "frame_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vehicle ID"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Event Details",
+                    "url": "${__url.path}?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-col_location=${__data.fields.location}&var-col_time=${__data.fields._time}&var-col_full_id=${__data.fields.full_vehicle_id}&var-col_img=${__data.fields.event_url}&var-col_frame=${__data.fields.frame_url}&kiosk=tv",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Location"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date & Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "import \"strings\"\n\nfrom(bucket: \"SS-Anthem\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"collision_events_2\")\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n  |> filter(fn: (r) => exists r.count and r.count > 0)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      full_vehicle_id: if exists r.object_id then r.object_id else \"N/A\",\n      vehicle_id: if exists r.object_id and strings.strlen(v: r.object_id) >= 8 then strings.substring(v: r.object_id, start: 0, end: 8) else (if exists r.object_id then r.object_id else \"N/A\"),\n      location: if exists r.location then r.location else \"N/A\",\n      event_url: if exists r.event_url then r.event_url else \"\",\n      frame_url: if exists r.frame_url and r.frame_url != \"\" then r.frame_url else \"\"\n  }))\n  |> group()\n  |> keep(columns: [\"_time\", \"vehicle_id\", \"full_vehicle_id\", \"location\", \"event_url\", \"frame_url\"])\n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "CollisionEvents"
+        }
+      ],
+      "title": "Collision Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "vehicle_id": 1,
+              "location": 2,
+              "full_vehicle_id": 3
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Collision Event",
+      "gridPos": {
+        "h": 18,
+        "w": 16,
+        "x": 8,
+        "y": 20
+      },
+      "id": 4,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  display: grid;\n  grid-template-columns: 1fr 1.4fr;\n  gap: 16px;\n  width: 100%;\n  height: 100%;\n  padding: 4px;\n  box-sizing: border-box;\n  align-items: start;\n\">\n  <!-- LEFT COLUMN: Event Details Table (Top) + Captured Vehicle Image (Bottom) -->\n  <div style=\"display: flex; flex-direction: column; gap: 14px; width: 100%;\">\n    <!-- Event Details Card -->\n    <div style=\"\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n    \">\n      <h3 style=\"margin-top:0; margin-bottom: 12px; color:#90caf9; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; font-size: 15px; font-weight: 600;\">\n        Event Details\n      </h3>\n      <table style=\"width:100%; border-collapse: collapse;\">\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; width:40%; font-size:13px;\">Event Type</td>\n          <td style=\"padding:8px 10px; font-weight:bold; color:#ef4444; font-size:13px;\">Collision Event</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Date & Time</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${col_time}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Vehicle ID</td>\n          <td style=\"padding:8px 10px; font-family:monospace; word-break:break-all; font-size:13px;\">${col_full_id}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Location</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${col_location}</td>\n        </tr>\n      </table>\n    </div>\n\n    <!-- Captured Vehicle Image Card (Placed under Event Details table card, exact same size/style) -->\n    <div style=\"\n      text-align: center;\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n    \">\n      <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#a5d6a7; font-size: 15px; font-weight: 600;\">\n        Captured Vehicle Image\n      </h3>\n      <img\n        src=\"${col_img}\"\n        style=\"\n          width: 250px;\n          max-width: 100%;\n          max-height: 380px;\n          object-fit: contain;\n          border-radius: 8px;\n          border: 1px solid rgba(255,255,255,0.1);\n        \"\n        alt=\"Captured Vehicle Image\"\n      />\n    </div>\n  </div>\n\n  <!-- RIGHT COLUMN: Captured Region Image (Full Frame with Bounding Box) -->\n  <div style=\"\n    text-align: center;\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 14px;\n    border: 1px solid rgba(255,255,255,0.08);\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  \">\n    <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#90caf9; font-size: 15px; font-weight: 600;\">\n      Captured Region Image\n    </h3>\n    <img\n      src=\"${col_frame}\"\n      style=\"\n        width: 100%;\n        max-height: 520px;\n        object-fit: contain;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"Captured Region Image\"\n    />\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Collision Event Stats",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 38
+      },
+      "id": 103,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  \u2139\ufe0f <b>Note:</b> Click on the <b>Vehicle ID</b> in the table above to view event details and image.\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 104,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px; border-left:4px solid #e0a01a; background-color:#1a1a2e; color:#e5e7eb; font-size:15px; font-weight:bold;\">\n  \ud83d\ude97 Stalled Vehicle Events\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "List of stalled vehicle events detected in the corridor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "frame_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "stall_duration"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vehicle ID"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Event Details",
+                    "url": "${__url.path}?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-stall_location=${__data.fields.location}&var-stall_time=${__data.fields._time}&var-stall_full_id=${__data.fields.full_vehicle_id}&var-stall_duration=${__data.fields.stall_duration}&var-stall_img=${__data.fields.event_url}&var-stall_frame=${__data.fields.frame_url}&kiosk=tv",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Location"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 8,
+        "x": 0,
+        "y": 40
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date & Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "import \"strings\"\n\nfrom(bucket: \"SS-Anthem\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"stalled_vehicle_alert\")\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n  |> filter(fn: (r) => exists r.trigger and r.trigger > 0)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      full_vehicle_id: if exists r.vehicle_id then r.vehicle_id else (if exists r.object_id then r.object_id else \"N/A\"),\n      vehicle_id: if exists r.vehicle_id and strings.strlen(v: r.vehicle_id) >= 8 then strings.substring(v: r.vehicle_id, start: 0, end: 8) else (if exists r.object_id and strings.strlen(v: r.object_id) >= 8 then strings.substring(v: r.object_id, start: 0, end: 8) else \"N/A\"),\n      location: if exists r.location then r.location else \"N/A\",\n      stall_duration: if exists r.stalled_duration then string(v: r.stalled_duration) + \" s\" else \"N/A\",\n      event_url: if exists r.event_url then r.event_url else \"\",\n      frame_url: if exists r.frame_url and r.frame_url != \"\" then r.frame_url else \"\"\n  }))\n  |> group()\n  |> keep(columns: [\"_time\", \"vehicle_id\", \"full_vehicle_id\", \"location\", \"stall_duration\", \"event_url\", \"frame_url\"])\n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "StalledVehicleEvents"
+        }
+      ],
+      "title": "Stalled Vehicle Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "vehicle_id": 1,
+              "location": 2,
+              "full_vehicle_id": 3,
+              "stall_duration": 4
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Stalled Vehicle Event",
+      "gridPos": {
+        "h": 18,
+        "w": 16,
+        "x": 8,
+        "y": 40
+      },
+      "id": 6,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  display: grid;\n  grid-template-columns: 1fr 1.4fr;\n  gap: 16px;\n  width: 100%;\n  height: 100%;\n  padding: 4px;\n  box-sizing: border-box;\n  align-items: start;\n\">\n  <!-- LEFT COLUMN: Event Details Table (Top) + Captured Vehicle Image (Bottom) -->\n  <div style=\"display: flex; flex-direction: column; gap: 14px; width: 100%;\">\n    <!-- Event Details Card -->\n    <div style=\"\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n    \">\n      <h3 style=\"margin-top:0; margin-bottom: 12px; color:#90caf9; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; font-size: 15px; font-weight: 600;\">\n        Event Details\n      </h3>\n      <table style=\"width:100%; border-collapse: collapse;\">\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; width:40%; font-size:13px;\">Event Type</td>\n          <td style=\"padding:8px 10px; font-weight:bold; color:#f59e0b; font-size:13px;\">Stalled Vehicle Event</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Date & Time</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${stall_time}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Vehicle ID</td>\n          <td style=\"padding:8px 10px; font-family:monospace; word-break:break-all; font-size:13px;\">${stall_full_id}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Location</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${stall_location}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Duration</td>\n          <td style=\"padding:8px 10px; font-weight:500; font-size:13px;\">${stall_duration}</td>\n        </tr>\n      </table>\n    </div>\n\n    <!-- Captured Vehicle Image Card (Placed under Event Details table card, exact same size/style) -->\n    <div style=\"\n      text-align: center;\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n    \">\n      <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#a5d6a7; font-size: 15px; font-weight: 600;\">\n        Captured Vehicle Image\n      </h3>\n      <img\n        src=\"${stall_img}\"\n        style=\"\n          width: 250px;\n          max-width: 100%;\n          max-height: 380px;\n          object-fit: contain;\n          border-radius: 8px;\n          border: 1px solid rgba(255,255,255,0.1);\n        \"\n        alt=\"Captured Vehicle Image\"\n      />\n    </div>\n  </div>\n\n  <!-- RIGHT COLUMN: Captured Region Image (Full Frame with Bounding Box) -->\n  <div style=\"\n    text-align: center;\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 14px;\n    border: 1px solid rgba(255,255,255,0.08);\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  \">\n    <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#90caf9; font-size: 15px; font-weight: 600;\">\n      Captured Region Image\n    </h3>\n    <img\n      src=\"${stall_frame}\"\n      style=\"\n        width: 100%;\n        max-height: 520px;\n        object-fit: contain;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"Captured Region Image\"\n    />\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Stalled Vehicle Event Stats",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 58
+      },
+      "id": 105,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  \u2139\ufe0f <b>Note:</b> Click on the <b>Vehicle ID</b> in the table above to view event details and image.\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "id": 106,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px; border-left:4px solid #1ae05c; background-color:#1a1a2e; color:#e5e7eb; font-size:15px; font-weight:bold;\">\n  \u26a1 Near Miss Events\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "List of near miss vehicle events detected in the corridor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "frame_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "full_vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "speed"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vehicle_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Vehicle ID"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Event Details",
+                    "url": "${__url.path}?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-nm_location=${__data.fields.location}&var-nm_time=${__data.fields._time}&var-nm_full_id=${__data.fields.full_vehicle_id}&var-nm_speed=${__data.fields.speed}&var-nm_img=${__data.fields.event_url}&var-nm_frame=${__data.fields.frame_url}&kiosk=tv",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Location"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 8,
+        "x": 0,
+        "y": 60
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date & Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "import \"strings\"\n\nfrom(bucket: \"SS-Anthem\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"near_miss_events\")\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n  |> filter(fn: (r) => exists r.count and r.count > 0)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      full_vehicle_id: if exists r.object_id then r.object_id else \"N/A\",\n      vehicle_id: if exists r.object_id and strings.strlen(v: r.object_id) >= 8 then strings.substring(v: r.object_id, start: 0, end: 8) else (if exists r.object_id then r.object_id else \"N/A\"),\n      location: if exists r.location then r.location else \"N/A\",\n      speed: if exists r.speed then string(v: r.speed) + \" km/h\" else (if exists r.proximity then string(v: r.proximity) + \" m\" else \"N/A\"),\n      event_url: if exists r.event_url then r.event_url else \"\",\n      frame_url: if exists r.frame_url and r.frame_url != \"\" then r.frame_url else \"\"\n  }))\n  |> group()\n  |> keep(columns: [\"_time\", \"vehicle_id\", \"full_vehicle_id\", \"location\", \"speed\", \"event_url\", \"frame_url\"])\n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "NearMissEvents"
+        }
+      ],
+      "title": "Near Miss Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "vehicle_id": 1,
+              "location": 2,
+              "full_vehicle_id": 3,
+              "speed": 4
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Near Miss Event",
+      "gridPos": {
+        "h": 18,
+        "w": 16,
+        "x": 8,
+        "y": 60
+      },
+      "id": 8,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  display: grid;\n  grid-template-columns: 1fr 1.4fr;\n  gap: 16px;\n  width: 100%;\n  height: 100%;\n  padding: 4px;\n  box-sizing: border-box;\n  align-items: start;\n\">\n  <!-- LEFT COLUMN: Event Details Table (Top) + Captured Vehicle Image (Bottom) -->\n  <div style=\"display: flex; flex-direction: column; gap: 14px; width: 100%;\">\n    <!-- Event Details Card -->\n    <div style=\"\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n    \">\n      <h3 style=\"margin-top:0; margin-bottom: 12px; color:#90caf9; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; font-size: 15px; font-weight: 600;\">\n        Event Details\n      </h3>\n      <table style=\"width:100%; border-collapse: collapse;\">\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; width:40%; font-size:13px;\">Event Type</td>\n          <td style=\"padding:8px 10px; font-weight:bold; color:#f59e0b; font-size:13px;\">Near Miss Event</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Date & Time</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${nm_time}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Vehicle ID</td>\n          <td style=\"padding:8px 10px; font-family:monospace; word-break:break-all; font-size:13px;\">${nm_full_id}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Location</td>\n          <td style=\"padding:8px 10px; font-size:13px;\">${nm_location}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px 10px; color:#aaa; font-size:13px;\">Speed</td>\n          <td style=\"padding:8px 10px; font-weight:500; font-size:13px;\">${nm_speed}</td>\n        </tr>\n      </table>\n    </div>\n\n    <!-- Captured Vehicle Image Card (Placed under Event Details table card, exact same size/style) -->\n    <div style=\"\n      text-align: center;\n      background: rgba(255,255,255,0.03);\n      border-radius: 10px;\n      padding: 14px;\n      border: 1px solid rgba(255,255,255,0.08);\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n    \">\n      <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#a5d6a7; font-size: 15px; font-weight: 600;\">\n        Captured Vehicle Image\n      </h3>\n      <img\n        src=\"${nm_img}\"\n        style=\"\n          width: 250px;\n          max-width: 100%;\n          max-height: 380px;\n          object-fit: contain;\n          border-radius: 8px;\n          border: 1px solid rgba(255,255,255,0.1);\n        \"\n        alt=\"Captured Vehicle Image\"\n      />\n    </div>\n  </div>\n\n  <!-- RIGHT COLUMN: Captured Region Image (Full Frame with Bounding Box) -->\n  <div style=\"\n    text-align: center;\n    background: rgba(255,255,255,0.03);\n    border-radius: 10px;\n    padding: 14px;\n    border: 1px solid rgba(255,255,255,0.08);\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  \">\n    <h3 style=\"margin-top: 0; margin-bottom: 10px; color:#90caf9; font-size: 15px; font-weight: 600;\">\n      Captured Region Image\n    </h3>\n    <img\n      src=\"${nm_frame}\"\n      style=\"\n        width: 100%;\n        max-height: 520px;\n        object-fit: contain;\n        border-radius: 8px;\n        border: 1px solid rgba(255,255,255,0.1);\n      \"\n      alt=\"Captured Region Image\"\n    />\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Near Miss Event Stats",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 78
+      },
+      "id": 107,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  \u2139\ufe0f <b>Note:</b> Click on the <b>Vehicle ID</b> in the table above to view event details and image.\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 78
+      },
+      "id": 108,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding:8px; border-left:4px solid #1a8ce0; background-color:#1a1a2e; color:#e5e7eb; font-size:15px; font-weight:bold;\">\n  \ud83d\udea6 Congestion Events\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "List of congestion events detected in the corridor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false,
+            "minWidth": 70
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Date & Time"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "frame_url"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "region"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Region"
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Click to see Event Details",
+                    "url": "${__url.path}?orgId=1&from=${__from}&to=${__to}&timezone=browser&var-cong_region=${__data.fields.region}&var-cong_location=${__data.fields.location}&var-cong_dwell=${__data.fields.avg_dwell_time}&var-cong_speed=${__data.fields.avg_speed}&var-cong_frame=${__data.fields.frame_url}&kiosk=tv",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Location"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "avg_dwell_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg Dwell Time"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "avg_speed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg Speed"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 10,
+        "x": 0,
+        "y": 80
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date & Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"congestion_events\" or r[\"_measurement\"] == \"region_obj_dwell_2\")\n  |> pivot(\n      rowKey: [\"_time\"],\n      columnKey: [\"_field\"],\n      valueColumn: \"_value\"\n  )\n  |> map(fn: (r) => ({\n      _time: r._time,\n      region: if exists r.region then r.region else \"N/A\",\n      location: if exists r.location then r.location else \"N/A\",\n      avg_dwell_time: if exists r.dwell_time then string(v: r.dwell_time) + \" s\" else (if exists r.avg_dwell_time then string(v: r.avg_dwell_time) + \" s\" else \"N/A\"),\n      avg_speed: if exists r.avg_speed then string(v: r.avg_speed) + \" km/h\" else (if exists r.speed then string(v: r.speed) + \" km/h\" else \"N/A\"),\n      frame_url: if exists r.frame_url and r.frame_url != \"\" then r.frame_url else \"/images/vehicle-events/latest_congestion.jpg\"\n  }))\n  |> group()\n  |> keep(columns: [\"_time\", \"region\", \"location\", \"avg_dwell_time\", \"avg_speed\", \"frame_url\"])\n  |> sort(columns: [\"_time\"], desc: true)",
+          "refId": "CongestionEvents"
+        }
+      ],
+      "title": "Congestion Events Table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "_time": 0,
+              "region": 1,
+              "location": 2,
+              "avg_speed": 3,
+              "avg_dwell_time": 4
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "description": "Details of the Congestion Event",
+      "gridPos": {
+        "h": 18,
+        "w": 14,
+        "x": 10,
+        "y": 80
+      },
+      "id": 10,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display: flex; flex-direction: column; gap: 12px; padding: 4px; height: 100%;\">\n  <div style=\"text-align:center; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: center; height: 100%; box-sizing: border-box;\">\n    <h3 style=\"margin-top: 0; margin-bottom: 12px; color:#90caf9; font-size: 15px; font-weight: 600;\">\n      Congestion Overview (Full Camera Frame)\n    </h3>\n    <div style=\"flex: 1; width: 100%; min-height: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;\">\n      <img\n        src=\"${cong_frame}\"\n        style=\"max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);\"\n        alt=\"Congestion Camera Frame Image\"\n      />\n    </div>\n  </div>\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "title": "Congestion Event Captured Image",
+      "type": "text"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 17,
+        "x": 0,
+        "y": 98
+      },
+      "id": 109,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"\n  padding:5px;\n  border-left:4px solid #1f78c1;\n  background-color:#111827;\n  color:#e5e7eb;\n  font-size:14px;\n\">\n  \u2139\ufe0f <b>Note:</b> Click on the <b>Vehicle ID</b> in the table above to view event details and image.\n</div>",
+        "mode": "html"
+      },
+      "pluginVersion": "11.6.0",
+      "transparent": true,
+      "type": "text"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_location",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_time",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_full_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_speed",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_img",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "ww_frame",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "col_location",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "col_time",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "col_full_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "col_img",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "col_frame",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_location",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_time",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_full_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_img",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "stall_frame",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_location",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_time",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_full_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_speed",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_img",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "nm_frame",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "cong_region",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "cong_location",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "cong_dwell",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "cong_speed",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 2,
+        "name": "cong_frame",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Smart Corridor - Vehicle Events",
+  "uid": "smart-corridor-vehicle-events",
+  "version": 1,
+  "weekStart": ""
+}

@@ -65,6 +65,7 @@ services:
       - ./${SAMPLE_APP}/src/node-red/settings.js:/data/settings.js
       - ./${SAMPLE_APP}/src/node-red/install_package.sh:/data/install_package.sh
       - node-red-node-modules-smart-corridor:/usr/src/node-red/node_modules
+      - smart_corridor_images:/images_data:rw
     secrets:
       - influxdb2-admin-token
       - root-cert
@@ -124,6 +125,7 @@ services:
     user: root
     volumes:
       - ./${SAMPLE_APP}/src/grafana/data/dashboards/anthem-intersection.json:/tmp/anthem-intersection.json
+      - ./${SAMPLE_APP}/src/grafana/data/dashboards/Vehicle_Events.json:/tmp/Vehicle_Events.json
       - ./${SAMPLE_APP}/src/grafana/dashboards.yml:/tmp/dashboards.yml
       - ./${SAMPLE_APP}/src/grafana/datasources.yml:/tmp/datasources.yml
       - grafana-storage-smart-corridor:/var/lib/grafana
@@ -152,6 +154,7 @@ services:
         "-c",
         "mkdir -p /var/lib/grafana/dashboards && \
         cp /tmp/anthem-intersection.json /var/lib/grafana/dashboards/anthem-intersection.json && \
+        cp /tmp/Vehicle_Events.json /var/lib/grafana/dashboards/Vehicle_Events.json && \
         mkdir -p /etc/grafana/provisioning/dashboards && \
         cp /tmp/dashboards.yml /etc/grafana/provisioning/dashboards/main.yml && \
         mkdir -p /etc/grafana/provisioning/datasources && \
@@ -386,6 +389,7 @@ services:
     volumes:
       - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
       - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
+      - "smart_corridor_images:/images_data:ro"
     networks:
       - scenescape
     depends_on:
@@ -463,3 +467,4 @@ volumes:
   pgserver-media-smart-corridor:
   sample-data-smart-corridor:
   node-red-node-modules-smart-corridor:
+  smart_corridor_images:
