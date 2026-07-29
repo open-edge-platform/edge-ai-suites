@@ -1,10 +1,8 @@
-# Smart Community MCP x OpenClaw Adapter
+# Smart Building MCP OpenClaw Adapter
 
-This OpenClaw plugin is a reference framework adapter for a clean **Smart Community MCP server**. It subscribes to configured monitor alert resources and injects new alerts into routed OpenClaw session(s).
+This directory is a framework-adapter example implemented as a pure OpenClaw plugin. It subscribes to configured Smart Building MCP monitor-alert resources and routes new alerts to OpenClaw sessions or their external delivery channels.
 
-The MCP server remains host-agnostic: it does not know about OpenClaw, Feishu, agents, or session routing. This plugin supplies that boundary without adding rules or persona logic to the server.
-
-For the preconfigured Fridge, Child Safety, and Elder Wakeup demo agents, routes, and scheduled reports, follow [Ready-to-Run Demo](../../../../docs/user-guide/get-started/ready-to-run-demo.md).
+The example contains no demo agents, personas, monitor definitions, model setup, or scheduled jobs. Supply monitor and agent IDs from your own deployment.
 
 ## How it works
 
@@ -14,7 +12,7 @@ For the preconfigured Fridge, Child Safety, and Elder Wakeup demo agents, routes
 
 ```mermaid
 sequenceDiagram
-    participant MCP as Smart Community MCP
+    participant MCP as Smart Building MCP
     participant Adapter as OpenClaw adapter
     participant Session as OpenClaw session
 
@@ -29,23 +27,26 @@ sequenceDiagram
 
 - A clean MCP server is running and reachable at `http://localhost:3100/mcp`, or at the URL that you configure.
 - OpenClaw is installed and initialized.
-- At least one monitor exists on the MCP server and an OpenClaw agent/session is available to receive its alerts.
-- Node.js and npm are available to build the SDK and install the plugin dependencies.
+- At least one monitor exists on the MCP server.
+- The target OpenClaw agent and session already exist.
+- Node.js and npm are available.
 
-Register the MCP server, import skills, and create use cases/monitors by following [Get Started](../../../../docs/user-guide/get-started.md).
+## Build the plugin
 
-## Install the adapter
-
-From this directory, build the SDK and install the plugin dependencies:
+From the `agentic-smart-community` component root, build the SDK and install the plugin dependencies:
 
 ```bash
-npm --prefix ../.. run build
-npm install
+npm -w @smartbuilding-video/framework-adapter-sdk run build
+npm --prefix packages/framework-adapter-sdk/examples/openclaw install
 ```
 
-Before linking the plugin into OpenClaw, add its configuration to `~/.openclaw/openclaw.json`. The plugin schema requires both `mcpServer` and `monitors`; configuring it first avoids OpenClaw rejecting an already-discovered but incomplete plugin.
+OpenClaw loads `index.ts` as declared by `package.json` under `openclaw.bundle.extensions`. The plugin imports the compiled SDK from `../../dist`, so build the SDK before starting the gateway.
 
-Use your own monitor ID, agent ID, and session key:
+## Configure OpenClaw
+
+Add the plugin entry to `~/.openclaw/openclaw.json` before linking the plugin. Its schema requires `mcpServer` and `monitors`; linking an unconfigured plugin can make OpenClaw configuration validation fail.
+
+The following example assumes monitor `cam_loading_dock`, agent `operations-agent`, and an existing target session:
 
 ```json
 {
@@ -75,20 +76,27 @@ Use your own monitor ID, agent ID, and session key:
 }
 ```
 
-Apply that configuration using your normal OpenClaw configuration workflow, then link the plugin and restart the gateway:
+Do not commit credentials in `mcpServer.headers`. Resolve them through OpenClaw's supported environment or secret configuration.
+
+## Link and load the plugin
+
+From the plugin directory, link it into the OpenClaw extension directory, validate the complete configuration, and restart the gateway:
 
 ```bash
+cd packages/framework-adapter-sdk/examples/openclaw
 mkdir -p ~/.openclaw/extensions
 ln -sfn "$(pwd)" ~/.openclaw/extensions/smartbuilding-alerts
 openclaw config validate
 openclaw gateway restart
 ```
 
+The extension ID in the destination path and `plugins.entries` must match `smartbuilding-alerts`, the ID declared in `openclaw.plugin.json`.
+
 ## Configuration reference
 
 | Field | Meaning |
 |---|---|
-| `mcpServer.url` | Smart Community MCP Streamable HTTP endpoint. |
+| `mcpServer.url` | Smart Building MCP Streamable HTTP endpoint. |
 | `mcpServer.headers` | Optional HTTP headers sent on every MCP request. Keep credentials in OpenClaw's supported secret configuration, not in this repository. |
 | `monitors.<id>.alerts[]` | The target routes for `smartbuilding://monitor/<id>/alerts`. |
 | `agentId` | The OpenClaw agent that owns the target session. |
@@ -97,7 +105,9 @@ openclaw gateway restart
 | `cursorFile` | Optional persistent delivery-cursor path. Defaults to `<OPENCLAW_HOME>/smartbuilding-alerts-cursor.json`. |
 | `pollFallbackMs` | Optional safety-net poll interval in milliseconds. `0` disables polling. |
 
-Add another `monitors.<id>` entry to route an additional MCP monitor. No server code change is required.
+Add another `monitors.<id>` entry to route an additional MCP monitor. One monitor can contain multiple alert targets.
+
+With `deliver: false`, the adapter injects the alert into the configured session without an LLM call. With `deliver: true`, the adapter invokes OpenClaw's subagent runtime to relay the alert to the session's configured external channel and record the turn.
 
 ## Subscription behavior
 
@@ -105,4 +115,13 @@ Add another `monitors.<id>` entry to route an additional MCP monitor. No server 
 2. When an alert changes a resource, MCP sends `notifications/resources/updated` containing the URI.
 3. The adapter reads the resource with `?since=<cursor>`, advances the cursor after successful delivery, and appends the alert into each configured session.
 
-The cursor makes delivery at-least-once: after a restart, an already delivered alert can be retried if the previous delivery did not complete.
+The cursor makes delivery at least once: after a restart, an alert can be retried if its previous delivery did not complete. The plugin supplies a stable idempotency key based on monitor ID and alert ID.
+
+## Verify the adapter
+
+After the gateway restarts:
+
+1. Confirm the plugin starts without `[sb-alerts] invalid plugin config` in the OpenClaw gateway log.
+2. Create an alert for the configured MCP monitor.
+3. Confirm the alert appears in the target OpenClaw session or external channel.
+4. Check `<OPENCLAW_HOME>/smartbuilding-alerts-cursor.json` to confirm the monitor cursor advances.

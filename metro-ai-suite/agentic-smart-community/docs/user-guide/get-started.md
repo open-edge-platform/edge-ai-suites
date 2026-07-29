@@ -11,11 +11,11 @@ Before you begin, ensure the following:
 - **System Requirements:** Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
 - **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
-- **Required command-line tools:** Install Node.js 22 and npm to build the MCP server, `curl` and `jq` for service setup, `ffmpeg` and `ffprobe` for video processing, and MediaMTX for local RTSP streaming:
+- **Required command-line tools:** Install Node.js 22 and npm to build the MCP server, Python 3 with virtual-environment support for the demo launcher, `curl`, `wget`, `git`, and `jq` for service setup, `ffmpeg` and `ffprobe` for video processing, and MediaMTX for local RTSP streaming:
 
   ```bash
   sudo apt-get update
-  sudo apt-get install -y curl jq ffmpeg
+  sudo apt-get install -y curl wget git jq ffmpeg python3 python3-venv python3-pip
 
   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
   sudo apt-get install -y nodejs
@@ -68,6 +68,7 @@ bash setup_docker.sh
 
 > - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding` and `videostream-analytics`.
 > - Use `bash setup_docker.sh --down` to stop all three services.
+> - If the YOLO11s OpenVINO IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 
 Confirm the model serving is ready before continuing:
 
