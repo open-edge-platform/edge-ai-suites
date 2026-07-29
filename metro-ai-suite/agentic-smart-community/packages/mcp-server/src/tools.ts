@@ -137,8 +137,8 @@ export function registerTools(
       use_case: z.string().optional().describe("Use case key from config.yaml use_case_dict (required for register_source)"),
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
       webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
-      persist: z.boolean().optional().describe(
-        "register_source/unregister only: mirror the change back to the monitors.yaml the server " +
+      persist: z.boolean().default(true).describe(
+        "register_source/unregister only (default true): mirror the change back to the monitors.yaml the server " +
         "was booted from (--monitors), comment-preserving. Lets a restart auto-recover this monitor " +
         "(incl. pipeline_config, which is not stored in the DB). Skipped with a warning if the server " +
         "was started without --monitors.",
