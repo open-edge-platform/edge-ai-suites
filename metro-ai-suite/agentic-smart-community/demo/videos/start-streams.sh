@@ -17,6 +17,7 @@ RUN_DIR="$SCRIPT_DIR/.run"
 VENV_DIR="$SCRIPT_DIR/.venv"
 REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
 PYTHON_BIN="$VENV_DIR/bin/python"
+ACTIVE_STREAMS_FILE="$RUN_DIR/active-streams.txt"
 mkdir -p "$RUN_DIR"
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg not found in PATH" >&2; exit 1; }
@@ -40,17 +41,34 @@ ensure_python_env() {
 }
 
 parse_streams() {
-  # Emit one tab-separated row per stream: id\tenabled\tfile\trtsp\tloop
+  # Emit one unit-separator-delimited row per stream. Bash collapses empty fields
+  # when IFS uses whitespace such as tabs, but an unset ${VAR} must stay empty.
   "$PYTHON_BIN" - "$CONFIG_FILE" <<'PY'
-import sys, yaml
+import os
+import re
+import sys
+
+import yaml
+
+ENV_VAR = re.compile(r"\$\{([A-Z_][A-Z0-9_]*)\}", re.IGNORECASE)
+
+
+def expand_env(value):
+    if not isinstance(value, str):
+        return "", []
+    names = ENV_VAR.findall(value)
+    missing = [name for name in names if not os.environ.get(name)]
+    return ENV_VAR.sub(lambda match: os.environ.get(match.group(1), ""), value), missing
+
+
 with open(sys.argv[1]) as f:
     cfg = yaml.safe_load(f) or {}
 for sid, s in (cfg.get("streams") or {}).items():
     enabled = bool(s.get("enabled", False))
-    file = s.get("file", "")
+    file, missing = expand_env(s.get("file", ""))
     rtsp = s.get("rtsp_url", "")
     loop = bool(s.get("loop", False))
-    print(f"{sid}\t{enabled}\t{file}\t{rtsp}\t{loop}")
+    print("\x1f".join((sid, str(enabled), file, rtsp, str(loop), ",".join(missing))))
 PY
 }
 
@@ -151,10 +169,14 @@ cmd_status() {
 
 start_one() {
   local sid="$1" file="$2" rtsp="$3" loop="$4"
+  if [[ -z "$file" ]]; then
+    echo "  warning: skip $sid: video path is empty" >&2
+    return 1
+  fi
   local abs_file="$file"
   [[ "$abs_file" != /* ]] && abs_file="$SCRIPT_DIR/$file"
   if [[ ! -f "$abs_file" ]]; then
-    echo "  skip $sid: file not found: $abs_file" >&2
+    echo "  warning: skip $sid: video file not found: $abs_file" >&2
     return 1
   fi
 
@@ -194,9 +216,12 @@ ensure_python_env
 
 start_mediamtx || true
 
+# This invocation defines the monitor set that start-demo.sh will register.
+: >"$ACTIVE_STREAMS_FILE"
+
 started=0
 skipped=0
-while IFS=$'\t' read -r sid enabled file rtsp loop; do
+while IFS=$'\x1f' read -r sid enabled file rtsp loop missing_vars; do
   [[ -z "$sid" ]] && continue
   if (( filter_active )) && [[ -z "${WANTED[$sid]:-}" ]]; then
     continue
@@ -206,10 +231,19 @@ while IFS=$'\t' read -r sid enabled file rtsp loop; do
     skipped=$((skipped+1))
     continue
   fi
+  if [[ -n "$missing_vars" ]]; then
+    echo "  warning: skip $sid: required video variable is unset or empty: $missing_vars" >&2
+    skipped=$((skipped+1))
+    continue
+  fi
   if start_one "$sid" "$file" "$rtsp" "$loop"; then
+    printf '%s\n' "$sid" >>"$ACTIVE_STREAMS_FILE"
     started=$((started+1))
+  else
+    skipped=$((skipped+1))
   fi
 done < <(parse_streams)
 
 echo
 echo "summary: started=$started skipped=$skipped (logs: $RUN_DIR/<id>.log)"
+echo "active streams: $ACTIVE_STREAMS_FILE"

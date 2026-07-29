@@ -3,21 +3,34 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
 import pytest
 
 TESTS_DIR = Path(__file__).parent
 FIXTURES_DIR = TESTS_DIR / "fixtures"
-PROJECT_DIR = TESTS_DIR.parent
-REPO_DIR = PROJECT_DIR.parent
-
-TEST_VIDEO_PATH = REPO_DIR / "demo/videos" / "cam_child" / "child_safety_demo.mp4"
 
 
-@pytest.fixture
-def test_video_path():
-    """Path to the test video file."""
-    assert TEST_VIDEO_PATH.exists(), f"Test video not found: {TEST_VIDEO_PATH}"
-    return str(TEST_VIDEO_PATH)
+@pytest.fixture(scope="session")
+def test_video_path(tmp_path_factory):
+    """Create a short MP4 with deterministic motion for video pipeline tests."""
+    video_path = tmp_path_factory.mktemp("video") / "moving-square.mp4"
+    width, height, fps, frame_count = 1280, 720, 30, 900
+    writer = cv2.VideoWriter(
+        str(video_path),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        fps,
+        (width, height),
+    )
+    assert writer.isOpened(), "Cannot create temporary test video"
+
+    for frame_index in range(frame_count):
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+        x_position = (frame_index * 10) % (width - 160)
+        cv2.rectangle(frame, (x_position, 270), (x_position + 160, 450), (255, 255, 255), -1)
+        writer.write(frame)
+    writer.release()
+
+    return str(video_path)
 
 
 @pytest.fixture
@@ -31,8 +44,8 @@ def video_capture(test_video_path):
 
 @pytest.fixture
 def video_frames(video_capture):
-    """Read 600 frames starting from frame 1200 (40s in) to capture motion region."""
-    video_capture.set(cv2.CAP_PROP_POS_FRAMES, 1200)
+    """Read enough frames to exercise deterministic motion detection."""
+    video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
     frames = []
     for _ in range(600):
         ret, frame = video_capture.read()

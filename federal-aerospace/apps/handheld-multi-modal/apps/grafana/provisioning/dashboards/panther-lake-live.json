@@ -55,7 +55,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Frame Rate Average",
+          "title": "Latest Pipeline Frame Rate Average",
           "description": "",
           "links": [],
           "data": {
@@ -87,7 +87,55 @@
                   }
                 }
               ],
-              "transformations": [],
+              "transformations": [
+              {
+                "kind": "Transformation",
+                "group": "calculateField",
+                "spec": {
+                  "options": {
+                    "mode": "reduceRow",
+                    "reduce": {
+                      "reducer": "lastNotNull"
+                    },
+                    "alias": "Latest Pipeline"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterByValue",
+                "spec": {
+                  "options": {
+                    "filters": [
+                      {
+                        "fieldName": "Latest Pipeline",
+                        "config": {
+                          "id": "notEqual",
+                          "options": {
+                            "value": "0"
+                          }
+                        }
+                      }
+                    ],
+                    "type": "include",
+                    "match": "any"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterFieldsByName",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "Latest Pipeline"
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
               "queryOptions": {
                 "maxDataPoints": 100
               }
@@ -106,7 +154,7 @@
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
                   "calcs": [
-                    "mean"
+                    "lastNotNull"
                   ],
                   "fields": "",
                   "values": false
@@ -229,8 +277,7 @@
                     ]
                   },
                   "color": {
-                    "mode": "fixed",
-                    "fixedColor": "blue"
+                    "mode": "palette-classic"
                   },
                   "custom": {
                     "axisBorderShow": false,
@@ -276,7 +323,7 @@
                     "properties": [
                       {
                         "id": "displayName",
-                        "value": "Frame Rate"
+                        "value": "Pipeline ID: ${__field.labels.job_id}"
                       }
                     ]
                   }
