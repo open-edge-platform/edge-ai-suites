@@ -37,6 +37,16 @@ TARGET_FPS  = int(os.environ.get("TARGET_FPS", "60"))
 HTTP_PORT   = int(os.environ.get("PIPELINE_HTTP_PORT", "8000"))
 DISPLAY_VIEW = os.environ.get("PIPELINE_DISPLAY_VIEW", "1") == "1"
 VIDEO_SINK   = os.environ.get("PIPELINE_VIDEO_SINK", "autovideosink")
+PIPELINE_SINK_SYNC = os.environ.get("PIPELINE_SINK_SYNC", "").strip().lower()
+SCHEDULING_POLICY = os.environ.get("SCHEDULING_POLICY", "").strip()
+_batch_size_raw = os.environ.get("BATCH_SIZE", "").strip()
+try:
+    BATCH_SIZE = int(_batch_size_raw) if _batch_size_raw else None
+except ValueError:
+    BATCH_SIZE = None
+DETECT_ENABLED = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
+WATERMARK_ENABLED = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
+MINIMAL = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
 # 0 = unlimited (default for live demo). Set PIPELINE_FRAME_LIMIT=N to cap
 # at N frames — useful for benchmarking runs that should auto-terminate.
 FRAME_LIMIT  = int(os.environ.get("PIPELINE_FRAME_LIMIT", "0"))
@@ -77,6 +87,9 @@ def _spawn(
 ) -> subprocess.Popen:
     _latency.reset()
     use_display = DISPLAY_VIEW if display_view is None else display_view
+    sink_sync: bool | None = None
+    if PIPELINE_SINK_SYNC:
+        sink_sync = PIPELINE_SINK_SYNC in {"1", "true", "yes", "on"}
     # FRAME_LIMIT defaults to 0 (unlimited). A file source plays to its own
     # natural EOS; a live Basler source runs until /stop or a genuine failure.
     # Set PIPELINE_FRAME_LIMIT env var to cap frames for benchmarking only.
@@ -90,6 +103,12 @@ def _spawn(
         frame_limit=FRAME_LIMIT,
         display_view=use_display,
         video_sink=VIDEO_SINK,
+        scheduling_policy=SCHEDULING_POLICY or None,
+        batch_size=BATCH_SIZE,
+        sink_sync=sink_sync,
+        enable_detect=DETECT_ENABLED,
+        enable_watermark=WATERMARK_ENABLED,
+        minimal=MINIMAL,
     )
 
     env = os.environ.copy()
@@ -124,6 +143,15 @@ def _spawn(
         cmd = f"exec gst-launch-1.0 {pipeline}"
 
     log.info("[pipeline] generated cmd: %s", cmd)
+    log.info(
+        "[pipeline] knobs: detect=%s watermark=%s minimal=%s scheduling_policy=%s batch_size=%s sink_sync=%s",
+        DETECT_ENABLED,
+        WATERMARK_ENABLED,
+        MINIMAL,
+        SCHEDULING_POLICY or "<unset>",
+        BATCH_SIZE,
+        PIPELINE_SINK_SYNC or "<default>",
+    )
 
     proc = subprocess.Popen(
         cmd,

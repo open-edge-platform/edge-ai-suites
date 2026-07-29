@@ -84,6 +84,14 @@ services:
       # PIPELINE_DISPLAY_VIEW=1 to re-enable popup rendering on desktop hosts.
       PIPELINE_DISPLAY_VIEW: ${PIPELINE_DISPLAY_VIEW:-0}
       PIPELINE_VIDEO_SINK: ${PIPELINE_VIDEO_SINK:-autovideosink}
+      PIPELINE_SINK_SYNC: ${PIPELINE_SINK_SYNC:-}
+      SCHEDULING_POLICY: ${SCHEDULING_POLICY:-}
+      BATCH_SIZE: ${BATCH_SIZE:-}
+      DETECT: ${DETECT:-1}
+      WATERMARK: ${WATERMARK:-1}
+      MINIMAL: ${MINIMAL:-0}
+      SOURCE_KIND: ${SOURCE_KIND:-file}
+      SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
