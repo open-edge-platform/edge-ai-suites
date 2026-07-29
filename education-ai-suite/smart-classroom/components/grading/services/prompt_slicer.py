@@ -4,6 +4,14 @@ import re
 from typing import Any
 
 
+def _select_scalar_by_language(value: Any, language: str) -> str | None:
+    if isinstance(value, dict):
+        return value.get(language)
+    if isinstance(value, str):
+        return value
+    return None
+
+
 def _split_blocks(text: str, separator: str) -> list[str]:
     """Split text into blocks on separator lines. Returns block strings
     (separator lines removed, surrounding blank lines trimmed)."""
@@ -75,6 +83,7 @@ def slice_prompt_for_section(
     full_prompt: str,
     section_title: str,
     cfg: dict[str, Any],
+    language: str = "en",
 ) -> str:
     """Return the prompt slice for a section, or the full prompt as fallback."""
     slicing = cfg.get("prompt_slicing", {})
@@ -82,7 +91,10 @@ def slice_prompt_for_section(
         return full_prompt
 
     separator = slicing.get("separator", r"^\s*={5,}\s*$")
-    ordinal_pattern = re.compile(slicing.get("ordinal_pattern", r"^\s*([一二三四五六七八九十]+)"))
+    ordinal_pattern = re.compile(
+        _select_scalar_by_language(slicing.get("ordinal_pattern"), language)
+        or r"^\s*([一二三四五六七八九十]+)"
+    )
     keep_first = bool(slicing.get("keep_first_block", True))
     keep_last = bool(slicing.get("keep_last_block", True))
 

@@ -391,7 +391,6 @@ $anyRunning = $backendRunning -or $contentSearchRunning -or $layoutDetectionRunn
 
 $script:skipBackend = $backendRunning
 $script:skipContentSearch = $contentSearchRunning
-$script:skipGrading = $layoutDetectionRunning -and $gradingRunning
 $script:skipFrontend = $frontendRunning
 
 $gradingEnabled = $false
@@ -467,7 +466,6 @@ if ($Restart) {
 
     $script:skipBackend = $false
     $script:skipContentSearch = $false
-    $script:skipGrading = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
     if ($Silent) {
@@ -515,7 +513,6 @@ if ($Restart) {
             
             $script:skipBackend = $false
             $script:skipContentSearch = $false
-            $script:skipGrading = $false
             $script:skipFrontend = $false
             Write-Host "  Existing services stopped." -ForegroundColor Green
         }
@@ -524,7 +521,6 @@ if ($Restart) {
             Write-Host "  Smart Start: Keeping running services, starting stopped ones." -ForegroundColor Yellow
             $script:skipBackend = $backendRunning
             $script:skipContentSearch = $contentSearchRunning
-            $script:skipGrading = $layoutDetectionRunning -and $gradingRunning
             $script:skipFrontend = $frontendRunning
         }
         "A" {
@@ -1114,6 +1110,43 @@ if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
 
     # ========================================================================
+    # LAYOUT MODEL PREPARATION (one-time; the layout & grading services
+    # themselves are launched by the main app via GradingFeature.build())
+    # ========================================================================
+    if ($gradingEnabled) {
+        $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+        $layoutDir = Join-Path $ScriptDir "components\grading\providers\layout_detection_service"
+        $layoutIrModel = Join-Path $ScriptDir "models\detection_model\PP-DocLayoutV2-ov\fp16\model.xml"
+
+        # The layout IR model needs a separate conversion venv (paddle2onnx
+        # conflicts with the main venv). Prepared once when the IR is absent;
+        # subsequent starts skip this and the main app launches the service.
+        if (-not (Test-Path $layoutIrModel)) {
+            Write-Host ""
+            Write-Host "Preparing layout model (one-time, may take several minutes)..." -ForegroundColor Yellow
+
+            $convertVenv = Join-Path $layoutDir "venv_convert"
+            if (-not (Test-Path (Join-Path $convertVenv "Scripts\paddle2onnx.exe"))) {
+                Write-Host "  Creating conversion venv..." -ForegroundColor Gray
+                & "$venvBackendPath\Scripts\python.exe" -m venv $convertVenv
+                & "$convertVenv\Scripts\python.exe" -m pip install --upgrade pip | Out-Null
+                & "$convertVenv\Scripts\pip.exe" install -r (Join-Path $layoutDir "requirements_convert.txt")
+            }
+
+            Write-Host "  Downloading and converting layout model..." -ForegroundColor Gray
+            Push-Location $layoutDir
+            & "$venvBackendPath\Scripts\python.exe" ensure_layout_model.py
+            $ensureExit = $LASTEXITCODE
+            Pop-Location
+            if ($ensureExit -ne 0 -or -not (Test-Path $layoutIrModel)) {
+                Write-Host "Exiting script: layout model preparation failed." -ForegroundColor Red
+                exit 1
+            }
+            Write-Host "  Layout model ready." -ForegroundColor Green
+        }
+    }
+
+    # ========================================================================
     # BACKEND (runs in THIS terminal, with paddleocr check)
     # ========================================================================
     if ($script:skipBackend) {
@@ -1200,100 +1233,9 @@ python main.py
         Write-Host ""
         Write-Host "Content Search is disabled in config (content_search/topic_segmentation/qa all off); skipping." -ForegroundColor Gray
     }
-    
-    # ========================================================================
-    # TERMINAL 3: GRADING
-    # ========================================================================
-    if ($gradingEnabled) {
-        if ($script:skipGrading) {
-            Write-Host ""
-            Write-Host "Skipping Grading (already running on ports 9902 and 9012)" -ForegroundColor Yellow
-        } else {
-            Write-Host ""
-            Write-Host "Launching Terminal 3: Grading..." -ForegroundColor Yellow
 
-            $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
-
-            $layoutScript = @"
-`$ErrorActionPreference = 'Continue'
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-$proxyCommands
-
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  LAYOUT DETECTION SERVICE' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
-Set-Location '$ScriptDir\components\grading\providers'
-Write-Host "Working directory: `$PWD" -ForegroundColor Gray
-Write-Host ''
-
-Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
-& '$venvBackendPath\Scripts\Activate.ps1'
-
-Write-Host ''
-Write-Host 'Starting Layout Detection Service (port 9902)...' -ForegroundColor Green
-Write-Host ''
-python .\layout_detection_service\layout_detection_server.py
-"@
-            $layoutEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($layoutScript))
-
-            $gradingScript = @"
-`$ErrorActionPreference = 'Continue'
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-$proxyCommands
-
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  GRADING SERVICE' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
-Set-Location '$ScriptDir\components\grading'
-Write-Host "Working directory: `$PWD" -ForegroundColor Gray
-Write-Host ''
-
-Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
-& '$venvBackendPath\Scripts\Activate.ps1'
-
-Write-Host ''
-Write-Host 'Starting Grading Service (port 9012)...' -ForegroundColor Green
-Write-Host ''
-python grading_service.py
-"@
-            $gradingEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($gradingScript))
-
-            if ($wtExists) {
-                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title LayoutDetection powershell -NoExit -EncodedCommand $layoutEncoded"
-            } else {
-                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $layoutEncoded" | Out-Null
-            }
-            Write-Host "  Layout Detection terminal launched" -ForegroundColor Green
-        }
-
-        $layoutHealthy = Wait-ForService -ServiceName "Layout Detection" -Url "http://localhost:9902/health" -Port 9902 -DependentPorts @(8000) -CommandLinePattern "layout_detection_server.py"
-        if (-not $layoutHealthy) {
-            Write-Host "Exiting script due to Layout Detection startup failure." -ForegroundColor Red
-            exit 1
-        }
-
-        if (-not $script:skipGrading) {
-            if ($wtExists) {
-                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Grading powershell -NoExit -EncodedCommand $gradingEncoded"
-            } else {
-                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $gradingEncoded" | Out-Null
-            }
-            Write-Host "  Grading terminal launched" -ForegroundColor Green
-            Write-Host ""
-        }
-
-        $gradingHealthy = Wait-ForService -ServiceName "Grading" -Url "http://localhost:9012/api/v1/health" -Port 9012 -DependentPorts @(8000) -CommandLinePattern "grading_service.py"
-        if (-not $gradingHealthy) {
-            Write-Host "Exiting script due to Grading startup failure." -ForegroundColor Red
-            exit 1
-        }
-    }
+    # Grading service (port 9012) is launched by the main app via
+    # GradingFeature.build(); no separate terminal needed here.
 
     # ========================================================================
     # TERMINAL 4: FRONTEND
