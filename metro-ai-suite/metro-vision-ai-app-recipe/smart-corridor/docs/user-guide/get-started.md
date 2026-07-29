@@ -71,17 +71,7 @@ On the child node, clone the repo and run the install script **without** setting
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
 
-2. Configure the `.env` file:
-
-   ```bash
-   cd metro-ai-suite/metro-vision-ai-app-recipe/
-   cat > .env << 'EOF'
-   SAMPLE_APP=smart-corridor
-   ENABLE_OPEN_TELEMETRY=true
-   EOF
-   ```
-
-3. Run the install script:
+2. Run the install script:
 
    - Use the installation script to configure the application and download required models:
 
@@ -98,7 +88,7 @@ On the child node, clone the repo and run the install script **without** setting
    - Uses child-specific scene data (`smart-corridor-child-ri.tar.bz2`)
    - Uses child-specific pipeline config (`config_child.json` with camera401–camera404)
 
-4. Start the application:
+3. Start the application:
 
    ```bash
    export SUPASS=$(cat ./smart-corridor/src/secrets/supass)
