@@ -106,7 +106,7 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 ::::
 hide_directive-->
 
-### Understanding Results
+### Understand the Results
 
 The benchmark uses binary search to find optimal stream density. Key metrics include:
 

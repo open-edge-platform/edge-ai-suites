@@ -38,7 +38,7 @@ Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libr
 
 DL Streamer inference elements also provides property such as `device=GPU` and `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
 
-### Selecting the GPU render device of your choice if there is more than one GPU device on the system
+### Select the GPU render device of your choice if there is more than one GPU device on the system
 
 If you have multiple GPUs (integrated/discrete), please follow [this](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.
 
@@ -71,7 +71,7 @@ The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses
 ::::
 hide_directive-->
 
-## Deploying with Helm
+## Deployment with Helm
 
 ### Intel® GPU K8S Extension
 

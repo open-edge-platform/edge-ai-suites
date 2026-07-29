@@ -122,7 +122,7 @@ Follow the steps below to run the pipeline.
     ::::
     hide_directive-->
 
-## Deploying with Helm
+## Deployment with Helm
 
 ### Intel® NPU K8S Extension
 

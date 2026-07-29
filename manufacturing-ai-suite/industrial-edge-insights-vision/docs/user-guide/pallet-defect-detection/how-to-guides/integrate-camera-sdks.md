@@ -9,7 +9,7 @@ It supports Balluff, Basler, and other GenICam-compatible cameras connected over
 
 - [System Requirements](../../get-started/vision-system-requirements.md)
 
-## Cloning and Building the Docker Image
+## Clone and Build the Docker Image
 
 ### Step 1: Base Image and User Setup
 
@@ -191,7 +191,7 @@ Verify that `/tmp/gencam_basler_output.avi` has the captured content.
 ::::
 hide_directive-->
 
-## Deploying the Pallet Defect Detection (PDD) Application Using Live Camera
+## Deploy the Pallet Defect Detection (PDD) Application Using Live Camera
 
 This section provides detailed, step-by-step instructions for setting up and deploying the **Pallet Defect Detection (PDD)** pipeline using a live camera feed.
 

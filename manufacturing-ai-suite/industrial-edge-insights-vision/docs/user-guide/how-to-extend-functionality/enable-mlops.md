@@ -308,7 +308,7 @@ hide_directive-->
 
 ## Additional resources
 
-### Downloading models from Geti™ Server
+### Download models from Geti™ Server
 
 To learn how to download models from a running Geti™ server, see the [Model Download service documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 

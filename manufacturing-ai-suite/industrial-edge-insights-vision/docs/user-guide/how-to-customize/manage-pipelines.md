@@ -195,7 +195,7 @@ curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 
 ## Additional Usage
 
-### Frame Batching
+### Batch Frames
 
 You can process multiple streams together when batching is enabled and the same model instance (that is, the same model-instance-id) is used across pipeline instances.
 
