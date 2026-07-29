@@ -3,7 +3,7 @@
 
 secrets:
   root-cert:
-    file: ${RI_DIR}/src/secrets/certs/scenescape-ca.pem
+    file: ${SCENESCAPE_CA_CERT_PATH}
 
 services:
   ovms-service:
