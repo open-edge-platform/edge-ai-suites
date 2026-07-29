@@ -307,6 +307,6 @@ jobs:
           GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
           GH_REPO: ${{ github.repository }}
         run: |
-          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app\n- `federal-aerospace.zip` — federal aerospace app'
+          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app'
           gh release create --title "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}" \
             --notes "$notes" v${{ env.VERSION }} assets/*.zip
