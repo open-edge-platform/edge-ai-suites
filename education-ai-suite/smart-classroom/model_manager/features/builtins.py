@@ -23,6 +23,7 @@ _BUILTIN_FEATURES = [
     BoardOCRFeature,
     ContentSearchFeature,
     QAFeature,
+    GradingFeature,
     ReportFeature,
     GradingFeature,
 ]

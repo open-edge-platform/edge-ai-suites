@@ -69,7 +69,56 @@ To set up the integrated deployment, obtain the chart and install it with your e
 
 ### Acquire the chart
 
-#### Option 1: Install from source
+#### Option 1: Get charts from Docker Hub
+
+1. Run the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning-rag/tags) from Docker Hub. Refer to the release notes for details on the latest version number to use for the sample application.
+
+     ```bash
+	 helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
+     ```
+	 > Note: When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
+
+2. Extract the `.tgz` file.
+
+     ```bash
+	 tar -xvf live-video-captioning-rag-<version-no>.tgz
+	 cd live-video-captioning-rag
+	 ```
+
+3. Configure the `values-override.yaml` using the [Select target node](#select-the-target-node) and [Configured required values](#configure-required-values) sections below.
+
+4. Install/Deploy the chart.
+
+     ```bash
+	 helm install lvc-rag . \
+	 -f values-override.yaml \
+	 -n "$my_namespace"
+	 ```
+
+5. See the [Verify the deployment section](#verify-the-deployment) to confirm the deployment.
+
+6. If you modify the chart or subcharts, refresh dependencies first:
+
+     ```bash
+	 # Update/refresh the chart
+	 helm dependency update
+	 ```
+
+   Then upgrade the deployment:
+
+	 ```bash
+	 helm upgrade lvc-rag . \
+	 -f values-override.yaml \
+	 -n "$my_namespace"
+	 ```
+
+6. Uninstall the chart.
+
+     ```bash
+	 helm uninstall lvc-rag -n "$my_namespace"
+	 ```
+
+#### Option 2: Install from source
 
 1. Clone the repository.
 
@@ -85,16 +134,6 @@ To set up the integrated deployment, obtain the chart and install it with your e
 	 ```bash
 	 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag/charts
 	 ```
-
-#### Option 2: Pull from Docker Hub
-
-If your target release publishes this chart as an OCI artifact:
-
-```bash
-helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
-tar -xvf live-video-captioning-rag-<version-no>.tgz
-cd live-video-captioning-rag/charts
-```
 
 ### Select the target node
 

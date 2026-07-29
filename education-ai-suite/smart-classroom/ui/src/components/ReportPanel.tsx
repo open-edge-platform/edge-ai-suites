@@ -18,6 +18,7 @@ import {
   type TemplateFieldMeta,
 } from '../services/api';
 import { useTranslation } from 'react-i18next';
+import type { FeatureGuard } from '../utils/featureGuards';
 import '../assets/css/ReportPanel.css';
 
 const activeReportSessions = new Set<string>();
@@ -51,9 +52,10 @@ const fallbackGroupLabel = (g: TemplateFieldGroup, lang: 'en' | 'zh') =>
 interface ReportPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  featureGuard?: FeatureGuard;
 }
 
-const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
+const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard }) => {
   const dispatch = useAppDispatch();
   const { i18n, t } = useTranslation();
   const lang: 'en' | 'zh' = (i18n.language || 'en').startsWith('zh') ? 'zh' : 'en';
@@ -90,8 +92,15 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
 
   // Load the field catalog once on mount (NOT gated on the panel being open),
   // so UI-triggered generation always has a ready default selection.
+  // Only load if the report feature is enabled.
   useEffect(() => {
     if (fieldGroups.length > 0) return;
+    // Don't poll if report feature is disabled
+    if (!featureGuard?.hasFeature('report')) {
+      setReportAvailable(false);
+      setReportUnavailableReason(disabledMsg);
+      return;
+    }
     getTemplateFields()
       .then(data => {
         setReportAvailable(true);
@@ -109,7 +118,7 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
         setFieldGroups([]);
         setSelected(new Set());
       });
-  }, []);
+  }, [featureGuard]);
 
   // Load an already-generated report's content when the panel opens, so the
   // markdown is shown inline (not only downloadable) without re-running anything.
