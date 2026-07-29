@@ -6,30 +6,33 @@
 # :3100 + events webhook on :3101) — like OpenClaw, it runs on the host, not in a
 # container. Backgrounded via nohup; pid + logs live under /tmp/smartbuilding-<uid>/.
 #
-#   scripts/mcp-server/start.sh [config-path]           # start (idempotent)
-#   MCP_MONITORS=... start.sh [config-path]             # override monitors path
-#   scripts/mcp-server/stop.sh                         # stop
+#   scripts/mcp-server/start.sh                                # use data-dir config
+#   scripts/mcp-server/start.sh <config-path> [monitors-path]  # import then start
+#   scripts/mcp-server/stop.sh                                 # stop
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROMPTS_DIR="$REPO_DIR/demo/prompts"
+DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
 LOG_DIR="/tmp/smartbuilding-$(id -u)"
 PID_FILE="$LOG_DIR/mcp-server.pid"
 LOG_FILE="$LOG_DIR/mcp-server.log"
 mkdir -p "$LOG_DIR"
 
-# The tracked reference configuration is the default. Pass a path explicitly
-# when starting with a customized configuration.
-CONFIG="${1:-config.yaml.example}"
-[[ "$CONFIG" != /* ]] && CONFIG="$REPO_DIR/$CONFIG"
-[[ -f "$CONFIG" ]] || { echo "config file not found: $CONFIG" >&2; exit 1; }
+command -v md5sum >/dev/null || { echo "md5sum not found in PATH" >&2; exit 1; }
+mkdir -p "$DATA_DIR"
+DATA_DIR="$(cd "$DATA_DIR" && pwd)"
+CONFIG="$DATA_DIR/config.yaml"
+MONITORS="$DATA_DIR/monitors.yaml"
 
-# Monitors are OPTIONAL. The clean core ships none — omit --monitors so the
-# server boots with zero cameras (add them at runtime via monitor_ctl /
-# monitors_compose). Set MCP_MONITORS (or drop a monitors.yaml at the repo root)
-# to auto-register a set at boot. The demo bundle is wired via start-demo.sh.
-MONITORS="${MCP_MONITORS:-}"
-[[ -z "$MONITORS" && -f "$REPO_DIR/monitors.yaml" ]] && MONITORS="$REPO_DIR/monitors.yaml"
+# With no arguments, use the active files in the data directory. Explicit
+# source paths are imported before startup (used by the demo launcher).
+CONFIG_SOURCE="${1:-$CONFIG}"
+MONITORS_SOURCE="${2:-}"
+[[ "$CONFIG_SOURCE" != /* ]] && CONFIG_SOURCE="$REPO_DIR/$CONFIG_SOURCE"
+[[ -n "$MONITORS_SOURCE" && "$MONITORS_SOURCE" != /* ]] && MONITORS_SOURCE="$REPO_DIR/$MONITORS_SOURCE"
+[[ -f "$CONFIG_SOURCE" ]] || { echo "config file not found: $CONFIG_SOURCE (initialize it from config.yaml.example before starting)" >&2; exit 1; }
+[[ -z "$MONITORS_SOURCE" || -f "$MONITORS_SOURCE" ]] || { echo "monitors file not found: $MONITORS_SOURCE" >&2; exit 1; }
 
 # Already running?
 if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
@@ -37,6 +40,44 @@ if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null;
   exit 0
 fi
 rm -f "$PID_FILE"
+
+sync_config_file() {
+  local source="$1"
+  local target="$2"
+  local backup
+
+  [[ ! -L "$target" ]] || { echo "refusing to overwrite symbolic link: $target" >&2; return 1; }
+  [[ ! -e "$target" || -f "$target" ]] || { echo "refusing to overwrite non-regular file: $target" >&2; return 1; }
+  if [[ -e "$target" && "$source" -ef "$target" ]]; then
+    return
+  fi
+  if [[ -f "$target" ]] && [[ "$(md5sum "$source" | awk '{print $1}')" == "$(md5sum "$target" | awk '{print $1}')" ]]; then
+    return
+  fi
+  if [[ -f "$target" ]]; then
+    backup="$target.$(date '+%Y%m%d-%H%M%S').bak"
+    [[ ! -e "$backup" && ! -L "$backup" ]] || { echo "backup already exists: $backup" >&2; return 1; }
+    cp -- "$target" "$backup"
+    echo "backed up ${target} to ${backup}"
+  fi
+  cp -- "$source" "$target"
+  echo "updated $target from $source"
+}
+
+sync_config_file "$CONFIG_SOURCE" "$CONFIG"
+if [[ -n "$MONITORS_SOURCE" ]]; then
+  sync_config_file "$MONITORS_SOURCE" "$MONITORS"
+elif [[ -L "$MONITORS" ]]; then
+  echo "refusing to initialize through symbolic link: $MONITORS" >&2
+  exit 1
+elif [[ ! -f "$MONITORS" ]]; then
+  cat >"$MONITORS" <<'YAML'
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+monitors: {}
+YAML
+  echo "initialized empty monitor configuration at $MONITORS"
+fi
 
 # Fresh log per launch — truncate instead of appending so it doesn't grow unbounded.
 : >"$LOG_FILE"
@@ -80,12 +121,8 @@ for task in fridge_monitor child_safety_monitor elder_wakeup_monitor; do
     || { echo "failed to register $task" >&2; exit 1; }
 done
 
-# Build node argv — only pass --monitors when a monitors file was resolved.
-ARGS=(--http --config "$CONFIG")
-[[ -n "$MONITORS" ]] && ARGS+=(--monitors "$MONITORS")
-
-echo "starting mcp-server (config: ${CONFIG#"$REPO_DIR"/}, monitors: ${MONITORS:+${MONITORS#"$REPO_DIR"/}}${MONITORS:-<none>})"
-nohup node packages/mcp-server/dist/index.js "${ARGS[@]}" >>"$LOG_FILE" 2>&1 &
+echo "starting mcp-server (config: $CONFIG, monitors: $MONITORS)"
+nohup node packages/mcp-server/dist/index.js --http --config "$CONFIG" --monitors "$MONITORS" >>"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 
 # Wait for the HTTP port to bind (or the process to die).
