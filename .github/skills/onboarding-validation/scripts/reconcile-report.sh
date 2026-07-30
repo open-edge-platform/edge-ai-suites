@@ -15,18 +15,27 @@ trap 'rm -rf "$TMPDIR"' EXIT
 [[ -f "$RULES_FILE" ]]  || { echo "ERROR: Rules file not found: $RULES_FILE"; exit 1; }
 [[ -f "$REPORT_FILE" ]] || { echo "ERROR: Report file not found: $REPORT_FILE"; exit 1; }
 
+# Report format contract:
+# only these anchors bind this checker to the report template. If any anchor
+# changes, bump Skill Version and update references/report-format.md.
+RULE_ROW_RE='^[|] [0-9]+\.[0-9]+ [|]'
+SUMMARY_ROW_RE='^[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|]'
+OVERALL_RESULT_RE='^\*\*Overall Result\*\*:'
+UX_BAR_RE='^[█░]+ [0-9]+\.[0-9]+ / 10'
+RATIONALE_STOP_RE='^## Rationale'
+
 # 1. Extract canonical rule IDs from sections 1-16 ONLY (stop at the Rationale table),
 #    then de-duplicate as a safety net. The "## Rationale for Key Thresholds" section is
 #    explanatory, not part of the rule set; stopping at its heading means its rows can never
 #    inflate the count, regardless of how that table is formatted. There is NO merging of real
 #    rules here -- a duplicate rule ID is a rules-file error, caught by the check below.
-awk -F'|' '
-  /^## Rationale/ { exit }
-  /^\| [0-9]+\.[0-9]+ \|/ { gsub(/ /,"",$2); print $2 }
+awk -F'|' -v RATIONALE_STOP_RE="$RATIONALE_STOP_RE" -v RULE_ROW_RE="$RULE_ROW_RE" '
+  $0 ~ RATIONALE_STOP_RE { exit }
+  $0 ~ RULE_ROW_RE { gsub(/ /,"",$2); print $2 }
 ' "$RULES_FILE" | sort -u > "$TMPDIR/reconcile_rules.txt"
 
 # 2. Extract rule IDs present in the report's Detailed Results table
-grep -E "^\| [0-9]+\.[0-9]+ \|" "$REPORT_FILE" \
+grep -E "$RULE_ROW_RE" "$REPORT_FILE" \
   | awk -F'|' '{gsub(/ /,"",$2); print $2}' \
   > "$TMPDIR/reconcile_report.txt"
 
@@ -63,8 +72,8 @@ fi
 #    (e.g. the text "Critical") double-counted a rule. Reading the columns also lets us assert
 #    that every row resolves to exactly one verdict (and each FAIL to exactly one severity).
 read -r PASS CRITICAL MAJOR MINOR NA SUM BADROWS < <(
-  awk -F'|' '
-    /^\| [0-9]+\.[0-9]+ \|/ {
+  awk -F'|' -v RULE_ROW_RE="$RULE_ROW_RE" '
+    $0 ~ RULE_ROW_RE {
       r=$4; s=$5
       pass=(r ~ /✅/); fail=(r ~ /❌/); na=(r ~ /⚪/)
       if (pass+fail+na != 1) { bad++; next }          # exactly one verdict per row
@@ -96,7 +105,7 @@ fi
 # 6. Cross-check the human-visible Summary count table against the computed per-row tally.
 #    Catches the case where the headline numbers drift from the actual verdicts even though
 #    their sum still equals the rule total -- the exact failure that motivated this hardening.
-SUMMARY_ROW=$(grep -E '^\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\|' "$REPORT_FILE" | head -1 || true)
+SUMMARY_ROW=$(grep -E "$SUMMARY_ROW_RE" "$REPORT_FILE" | head -1 || true)
 if [[ -z "$SUMMARY_ROW" ]]; then
   echo "ERROR: Could not find the Summary count table row (6 integer columns) in the report."
   ERRORS=1
@@ -138,7 +147,7 @@ elif [[ $((MAJOR + MINOR)) -gt 0 ]]; then
 else
   EXPECTED_RESULT="PASS"
 fi
-DECLARED_RESULT=$(grep -E '^\*\*Overall Result\*\*:' "$REPORT_FILE" | head -1 \
+DECLARED_RESULT=$(grep -E "$OVERALL_RESULT_RE" "$REPORT_FILE" | head -1 \
   | sed -E 's/^\*\*Overall Result\*\*:[[:space:]]*//; s/[[:space:]]*$//; s/\*//g' \
   | tr '[:lower:]' '[:upper:]')
 if [[ -z "$DECLARED_RESULT" ]]; then
@@ -164,7 +173,7 @@ UX_LINE=$(grep -E '^\*\*Overall UX Score\*\*:' "$REPORT_FILE" | head -1 || true)
 # New format (skill >= 1.11.0): score is inside a fenced code block after "**Overall UX Score**"
 # Line looks like: ██████████████████████████████████████████░░░░░░░░ 8.4 / 10 — Good
 if [[ -z "$UX_LINE" ]]; then
-  UX_LINE=$(grep -E '^[█░]+ [0-9]+\.[0-9]+ / 10' "$REPORT_FILE" | head -1 || true)
+  UX_LINE=$(grep -E "$UX_BAR_RE" "$REPORT_FILE" | head -1 || true)
 fi
 
 if [[ -z "$UX_LINE" ]]; then
@@ -176,7 +185,7 @@ if [[ -z "$UX_LINE" ]]; then
   fi
 else
   read -r RECOMPUTED_UX UNMAPPED_IDS < <(
-    awk -F'|' -v CRIT="$CRITICAL" -v MAJ="$MAJOR" -v MIN="$MINOR" '
+    awk -F'|' -v CRIT="$CRITICAL" -v MAJ="$MAJOR" -v MIN="$MINOR" -v RULE_ROW_RE="$RULE_ROW_RE" '
       BEGIN{
         n=split("1.5 4.1 4.3 4.4 4.5 7.2",A," "); for(i=1;i<=n;i++) dim[A[i]]="D1";
         n=split("3.1 3.2 3.3 3.4 3.5 3.6 3.7 4.2 5.1 5.2 5.3 5.4 5.5",A," "); for(i=1;i<=n;i++) dim[A[i]]="D2";
@@ -188,7 +197,7 @@ else
         w["D1"]=2.0; w["D2"]=2.0; w["D3"]=1.5; w["D4"]=1.5; w["D5"]=2.5; w["D6"]=1.0; w["D7"]=1.0;
         unmapped="";
       }
-      /^\| [0-9]+\.[0-9]+ \|/ {
+      $0 ~ RULE_ROW_RE {
         id=$2; gsub(/ /,"",id);
         d=dim[id];
         if (d=="") { unmapped = unmapped (unmapped==""?"":",") id; next }

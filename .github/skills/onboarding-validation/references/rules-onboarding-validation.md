@@ -10,6 +10,7 @@
 | Status | Active |
 
 These rules define the expected behavior of an application from the customer perspective.
+This file is normative for every run of this skill.
 An AI agent must use these rules to validate the get-started experience.
 
 Written in ASD-STE100 Simplified Technical English.
@@ -191,5 +192,3 @@ These values are engineering decisions based on practical constraints of the tar
 | Images (rule 9.1) | ≤ 30 GB | 30 GB per app allows running multiple applications on the same host without filling the disk. |
 | Sample data (rule 12.3) | ≤ 500 MB | Must be downloadable in ~2 min on the reference 50 Mbps connection. Enough for a meaningful demo (e.g., 30s video, small dataset). |
 | UI discoverable (rule 16.3) | 30s | If a user opens the dashboard and cannot figure out how to start within 30s, the UI needs better labeling. Based on informal usability testing of similar tools. |
-
-

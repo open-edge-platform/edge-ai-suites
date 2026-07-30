@@ -7,6 +7,7 @@
       "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: live-video-captioning\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/metro-ai-suite/live-video-analysis/live-video-captioning\n- **Deployment method**: docker-compose\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
       "expected_output": "Structured markdown report with 76 rule verdicts, UX score, and overall PASS/CONDITIONAL PASS/FAIL result saved to validation-reports/",
       "should_trigger": true,
+      "suite": "metro-ai-suite",
       "files": [],
       "assertions": [
         {
@@ -41,10 +42,11 @@
     },
     {
       "id": 2,
-      "prompt_file": null,
+      "prompt_file": "example-prompts/01-validate-onboarding.md",
       "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: smart-nvr\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/metro-ai-suite/smart-nvr\n- **Deployment method**: helm\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
       "expected_output": "Structured markdown report evaluating Helm/Kubernetes deployment path with 76 rule verdicts",
       "should_trigger": true,
+      "suite": "metro-ai-suite",
       "files": [],
       "assertions": [
         {
@@ -84,10 +86,11 @@
     },
     {
       "id": 4,
-      "prompt_file": null,
+      "prompt_file": "example-prompts/01-validate-onboarding.md",
       "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: automated-self-checkout\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/retail-ai-suite/automated-self-checkout\n- **Deployment method**: docker-compose\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
       "expected_output": "Structured markdown report for a submodule-based app with both base and submodule commit SHAs recorded",
       "should_trigger": true,
+      "suite": "retail-ai-suite",
       "files": [],
       "assertions": [
         {
@@ -119,6 +122,26 @@
       "should_trigger": false,
       "files": [],
       "assertions": []
+    },
+    {
+      "id": 6,
+      "prompt_file": null,
+      "prompt": "Run the skill integrity check script scripts/self-test.sh and confirm it finishes successfully.",
+      "expected_output": "Agent should NOT trigger onboarding-validation skill and should return that scripts/self-test.sh exits with code 0 and prints OK.",
+      "should_trigger": false,
+      "files": [],
+      "assertions": [
+        {
+          "type": "command_exit_code",
+          "command": ".github/skills/onboarding-validation/scripts/self-test.sh",
+          "expected": 0
+        },
+        {
+          "type": "command_output_contains",
+          "command": ".github/skills/onboarding-validation/scripts/self-test.sh",
+          "text": "OK"
+        }
+      ]
     }
   ]
 }
