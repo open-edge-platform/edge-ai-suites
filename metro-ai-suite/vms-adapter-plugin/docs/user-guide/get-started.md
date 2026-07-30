@@ -61,7 +61,7 @@ curl http://localhost:4173/health
 
 > Skip this step if you are only using Live Video Captioning.
 
-Loitering Detection is a user-provided application based on the Intel DLStreamer Pipeline Server. Bring up the application according to its own documentation. The following services must be reachable from the VAP backend container:
+Loitering Detection is a user-provided application based on the Intel DLStreamer Pipeline Server. Follow the [Loitering detection Get Started guide](../../../metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/get-started.md) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
 | **Service**              | **Default Port** | **Purpose**                            |
 |--------------------------|------------------|----------------------------------------|
