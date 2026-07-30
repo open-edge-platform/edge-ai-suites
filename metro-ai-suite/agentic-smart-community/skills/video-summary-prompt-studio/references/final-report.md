@@ -27,6 +27,5 @@ System Inventory
 ```
 
 - If one inventory source is unavailable, report the other and state the gap.
-  Only when the MCP server itself is unavailable, fall back to
-  `scripts/list_use_cases.sh <server-config-path>` against the config the
-  server booted with.
+  If the MCP server itself is unavailable, state that the inventory cannot be
+  fetched; there is no config-file fallback.

@@ -30,7 +30,6 @@ test("main Skill stays slim and links every conditional reference", async () => 
     "references/delete-use-case.md",
     "references/final-report.md",
     "references/curl-fallback.md",
-    "scripts/list_use_cases.sh",
   ]) {
     assert.match(skill, new RegExp(relativePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     await access(join(skillDir, relativePath));

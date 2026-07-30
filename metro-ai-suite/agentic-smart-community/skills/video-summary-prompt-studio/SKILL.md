@@ -33,9 +33,6 @@ Read references only at their stated trigger:
 - **Final report:** `references/final-report.md` — report blocks, inventory rendering, fallbacks.
 - **MCP server unavailable:**
   `references/curl-fallback.md` — direct `/v1/tasks` task management only.
-- **Final inventory (MCP unavailable only):**
-  `scripts/list_use_cases.sh` — fallback that lists use cases from the server's
-  booted config. Normal flow uses `smartbuilding_use_case_register action=list`.
 
 ## Data-model boundary
 
