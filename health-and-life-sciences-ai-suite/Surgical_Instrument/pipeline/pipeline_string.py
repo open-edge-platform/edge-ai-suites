@@ -135,22 +135,9 @@ def build(
     post_q = POST_DETECT_QUEUE_LIVE if is_live else POST_DETECT_QUEUE_FILE
 
     if display_view:
-        # The VA pipeline keeps frames in VAMemory (NV12) all the way to the
-        # sink. A software X sink such as `ximagesink` cannot negotiate those
-        # caps ("not-negotiated") and the pipeline aborts before a window ever
-        # opens — which the launcher then masks by falling back to a headless
-        # fakesink, so no popup appears (notably on the Basler path, which
-        # forces `video/x-raw(memory:VAMemory),format=NV12`). Download to
-        # system memory with `vapostproc ! video/x-raw` and colour-convert
-        # before the sink. Matches the known-good DISPLAY sink tail in
-        # scripts/run_basler_pipeline.sh.
-        #
-        # sync=true on the sink for file sources: without it the pipeline
-        # decodes/renders as fast as the GPU allows (e.g. 105 fps for a 25 fps
-        # file), so a 69 s clip finishes in ~16 s wall time. sync=true lets
-        # the GStreamer clock throttle each buffer to the file's native PTS so
-        # playback runs at the encoded speed. Live sources (basler) keep
-        # sync=false — they have no file clock and must render as frames arrive.
+        # The VA pipeline keeps frames in VAMemory (NV12). Download to system
+        # memory with `vapostproc ! video/x-raw` and colour-convert before
+        # the sink. sync=false for live (basler) sources — no file clock.
         sink_tail = [
             "vapostproc",
             '"video/x-raw"',

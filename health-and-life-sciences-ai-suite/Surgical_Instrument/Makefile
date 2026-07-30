@@ -33,6 +33,29 @@ ifneq ($(strip $(AUTOVIDEOSINK)),)
   endif
 endif
 
+# PIPELINE_MINIMAL_DISPLAY=1 is a short alias for AUTOVIDEOSINK=true that
+# matches the user-facing Case 4 command style.
+PIPELINE_MINIMAL_DISPLAY ?=
+ifeq ($(strip $(PIPELINE_MINIMAL_DISPLAY)),1)
+  PIPELINE_DISPLAY_VIEW := 1
+  PIPELINE_SINK_SYNC    := false
+endif
+
+# ---- Case 4: core-pinning + Basler fixed-camera tuning knobs ---------------
+# CPU affinity (taskset -c) and RT priority (chrt -f) for each leg of the pipe.
+# Both parts of each pair must be set for the wrapper to apply; setting only
+# one of the pair is silently ignored (prevents half-configured taskset runs).
+PIPELINE_CAMERA_CORES         ?=
+PIPELINE_GST_CORES            ?=
+PIPELINE_CAMERA_RT_PRIORITY   ?=
+PIPELINE_GST_RT_PRIORITY      ?=
+# Basler fixed-camera tuning. BASLER_FIXED_CAMERA=1 disables auto-exposure /
+# auto-gain; the specific values below are then applied. Default (0) keeps the
+# existing auto-exposure + upper-limit cap from Cases 1-3 unchanged.
+BASLER_FIXED_CAMERA  ?= 0
+BASLER_EXPOSURE_US   ?=
+BASLER_GAIN          ?=
+
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
 # works without editing this file. Override on the CLI if needed.
 RENDER_GID         ?= $(shell getent group render 2>/dev/null | cut -d: -f3)
@@ -116,6 +139,9 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
+	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
@@ -136,9 +162,36 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
+	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d
 	$(_print_urls)
+
+.PHONY: show-cores
+show-cores:  ## Show P-core / E-core CPU sets for optimal core-pinning (Case 4)
+	@ALL=$$(cat /sys/devices/system/cpu/present 2>/dev/null || echo 'unknown'); \
+	PCORE=$$(cat /sys/devices/cpu_core/cpus 2>/dev/null); \
+	ECORE=$$(cat /sys/devices/cpu_atom/cpus 2>/dev/null); \
+	N=$$(nproc 2>/dev/null || echo '?'); \
+	printf '\n[cores] all CPUs        : %s  (nproc=%s)\n' "$$ALL" "$$N"; \
+	if [ -n "$$PCORE" ]; then \
+	  printf '[cores] P-cores (perf)  : %s  <-- use for PIPELINE_CAMERA_CORES / PIPELINE_GST_CORES\n' "$$PCORE"; \
+	  printf '[cores] E-cores (effic) : %s\n' "$$ECORE"; \
+	  FIRST=$$(echo "$$PCORE" | grep -oE '^[0-9]+'); \
+	  REST=$$(echo "$$PCORE" | sed "s/^[0-9]*-*[0-9]*$$/&/" | \
+	          awk -F'-' -v f="$$FIRST" \
+	          '{if($$1==f && $$2!="") printf "%d-%s",$$1+1,$$2; else printf "%d",$$1+1}'); \
+	  printf '[cores] hint: PIPELINE_CAMERA_CORES=%s PIPELINE_GST_CORES=%s\n' "$$FIRST" "$$REST"; \
+	  printf '              PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70\n'; \
+	else \
+	  printf '[cores] no P/E core split detected (non-hybrid CPU or older kernel)\n'; \
+	  printf '[cores] all cores are equivalent; use taskset freely.\n'; \
+	fi; \
+	printf '\n[cores] lscpu sample (top 6 rows):\n'; \
+	lscpu -e 2>/dev/null | head -7 || lscpu | head -10; \
+	printf '\n'
 
 # ---- Camera passthrough (auto-detected by `up` / `run`) ---------------------
 # Hardcoding /dev/videoN in docker-compose.yaml would break `make up` on

@@ -66,6 +66,12 @@ services:
       - 'c 81:* rmw'
       - 'c 189:* rmw'
 
+    # SYS_NICE is required for `chrt -f` (SCHED_FIFO) inside the container.
+    # Without it, chrt fails with EPERM and the pipeline exits immediately
+    # when PIPELINE_CAMERA_RT_PRIORITY or PIPELINE_GST_RT_PRIORITY are set.
+    cap_add:
+      - SYS_NICE
+
     volumes:
       - ./models:/models:ro
       - ./videos:/videos:ro
@@ -92,6 +98,14 @@ services:
       MINIMAL: ${MINIMAL:-0}
       SOURCE_KIND: ${SOURCE_KIND:-file}
       SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}
+      # Case 4 — core-pinning + Basler fixed-camera tuning (all unset by default).
+      PIPELINE_CAMERA_CORES:       ${PIPELINE_CAMERA_CORES:-}
+      PIPELINE_GST_CORES:          ${PIPELINE_GST_CORES:-}
+      PIPELINE_CAMERA_RT_PRIORITY: ${PIPELINE_CAMERA_RT_PRIORITY:-}
+      PIPELINE_GST_RT_PRIORITY:    ${PIPELINE_GST_RT_PRIORITY:-}
+      BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
+      BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
+      BASLER_GAIN:                 ${BASLER_GAIN:-}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]

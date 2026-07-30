@@ -278,6 +278,180 @@ Notes
 
 ---
 
+## Case 4 — Basler + detect + core pinning + fixed-camera tuning
+
+Pins each leg of the pipe to a specific CPU core set and scheduling policy
+using `taskset` (affinity) and `chrt` (SCHED_FIFO priority), and optionally
+locks the Basler camera to a fixed exposure and gain so the scene is fully
+deterministic. Use this case when you want the lowest possible jitter in the
+latency distribution by eliminating OS scheduler interference and Basler AE/AGC
+loop perturbation.
+
+### Step 0 — find the P-cores on your machine
+
+```bash
+make show-cores
+```
+
+Sample output on a Meteor Lake / Arrow Lake host:
+
+```text
+[cores] all CPUs        : 0-21  (nproc=22)
+[cores] P-cores (perf)  : 0-11  <-- use for PIPELINE_CAMERA_CORES / PIPELINE_GST_CORES
+[cores] E-cores (effic) : 12-21
+[cores] hint: PIPELINE_CAMERA_CORES=0 PIPELINE_GST_CORES=1-11
+              PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70
+```
+
+On a non-hybrid CPU (all cores equivalent):
+
+```text
+[cores] no P/E core split detected (non-hybrid CPU or older kernel)
+[cores] all cores are equivalent; use taskset freely.
+```
+
+### Step 1 — bring up with Case 4 (optimised) knobs
+
+Based on benchmarking on Arrow Lake (see experiment results below),
+the best configuration is **2 adjacent P-cores for gst-launch** with
+**cam\_prio < gst\_prio** (consumer-first scheduling).
+
+```bash
+make up \
+  SOURCE_KIND=basler SOURCE_ARG=40067928 \
+  DETECT=1 AUTOVIDEOSINK=true \
+  SCHEDULING_POLICY=latency BATCH_SIZE=1 \
+  BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 BASLER_GAIN=0 \
+  PIPELINE_CAMERA_CORES=2 PIPELINE_GST_CORES=3-4 \
+  PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70
+
+# Start the pipeline
+curl -X POST http://localhost:8080/api/start
+```
+
+### Resulting spawned command (from container INFO log)
+
+```text
+taskset -c 2 chrt -f 80 python3 /opt/basler_reader.py 40067928 \
+    --geometry 1920x1080@60 --pixel-format uyvy \
+    --fixed-camera --exposure-us 5000 --gain 0 \
+| taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
+    fdsrc fd=0 blocksize=4147200 do-timestamp=true \
+  ! rawvideoparse format=yuy2 width=1920 height=1080 framerate=60/1 \
+  ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+  ! identity \
+  ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
+  ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
+              device=GPU threshold=0.5 \
+              pre-process-backend=va-surface-sharing \
+              nireq=1 ie-config=PERFORMANCE_HINT=LATENCY \
+              scheduling-policy=latency batch-size=1 \
+  ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
+  ! gvawatermark \
+  ! gvafpscounter interval=1 \
+  ! vapostproc ! "video/x-raw" \
+  ! videoconvert \
+  ! autovideosink sync=true
+```
+
+Container INFO log knobs lines:
+
+```text
+[pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
+                  basler_fixed=True basler_exposure_us=5000 basler_gain=0
+[pipeline] knobs: detect=True watermark=True minimal=False
+                  scheduling_policy=latency batch_size=1 sink_sync=true
+```
+
+### Knob reference for Case 4
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PIPELINE_CAMERA_CORES` | *(unset)* | `taskset -c` core list for the Basler feeder (e.g. `2`) |
+| `PIPELINE_GST_CORES` | *(unset)* | `taskset -c` core list for `gst-launch-1.0` (e.g. `3-4`) |
+| `PIPELINE_CAMERA_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for feeder, 1–99 (e.g. `80`) |
+| `PIPELINE_GST_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for gst-launch, 1–99 (e.g. `70`) |
+| `BASLER_FIXED_CAMERA` | `0` | `1` disables auto-exposure/gain and applies the fixed values below |
+| `BASLER_EXPOSURE_US` | *(unset)* | Fixed ExposureTime in µs (only when `BASLER_FIXED_CAMERA=1`) |
+| `BASLER_GAIN` | *(unset)* | Fixed sensor gain in dB (only when `BASLER_FIXED_CAMERA=1`) |
+| `PIPELINE_MINIMAL_DISPLAY` | *(unset)* | `1` is a short alias for `AUTOVIDEOSINK=true` with `sync=false` |
+
+Notes
+- Setting only `PIPELINE_CAMERA_CORES` without `PIPELINE_CAMERA_RT_PRIORITY` (or vice versa)
+  is allowed — each part is independent (`taskset` without `chrt` or vice versa).
+- `BASLER_FIXED_CAMERA=0` (default) preserves the auto-exposure + upper-limit cap
+  from Cases 1–3 exactly; no regression.
+- `chrt -f` requires `SYS_NICE` capability inside the container (already set via
+  `cap_add: [SYS_NICE]` in `docker-compose.yaml`). Without it the feeder exits
+  with `Operation not permitted` and the pipeline will not start.
+
+### Verifying affinity and priority took effect
+
+```bash
+PID=$(docker exec surgical-pipeline pgrep -f gst-launch-1.0)
+docker exec surgical-pipeline taskset -pc $PID   # expect: 3-4
+docker exec surgical-pipeline chrt   -p  $PID    # expect: SCHED_FIFO, prio 70
+```
+
+### Confirmed live output (Optimised Case 4 — E2 config)
+
+```text
+[pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
+                  basler_fixed=True basler_exposure_us=5000 basler_gain=0
+status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
+FpsCounter (avg 177s): 60.00 fps
+latency window (last 200 samples):
+    mean=11.557 ms   p50=11.634 ms   p90=11.988 ms   p95=12.071 ms   p99=12.229 ms   max=12.493 ms
+```
+
+### Core-pinning experiment results
+
+Three experiments were run on Arrow Lake to find the optimal core-pinning
+configuration. Results are captured from rolling 200-sample latency windows
+after at least 60 seconds of warm-up.
+
+#### Latency comparison table
+
+| Metric | Case 1 (no pinning) | Case 4 baseline (cores 3-7, prio 80/70) | E1 — raise priorities (cores 3-7, prio 90/85) | **E2 — tight cores ✅ (cores 3-4, prio 80/70)** | E3 — consumer-first (cores 3-4, prio cam=70 / gst=90) |
+| --- | --- | --- | --- | --- | --- |
+| **cam cores / gst cores** | — | 2 / 3-7 | 2 / 3-7 | **2 / 3-4** | 2 / 3-4 |
+| **cam prio / gst prio** | — | 80 / 70 | 90 / 85 | **80 / 70** | 70 / 90 |
+| **Mean** | 13.951 ms | 12.931 ms | 13.371 ms | **11.557 ms** | 11.764 ms |
+| **P50** | 14.748 ms | 13.278 ms | 13.747 ms | **11.634 ms** | 11.742 ms |
+| **P90** | — | 14.454 ms | 14.957 ms | **11.988 ms** | 12.175 ms |
+| **P95** | 16.751 ms | 14.587 ms | 15.644 ms | **12.071 ms** | 12.264 ms |
+| **P99** | 17.488 ms | 15.010 ms | 16.482 ms | **12.229 ms** | 12.959 ms |
+| **Max** | 19.707 ms | 17.015 ms | 16.674 ms | **12.493 ms** | 13.470 ms |
+| **FPS** | 58.83 | 58.63 | 58.63 | **60.00** | 59.97 |
+
+#### What each experiment changed and why
+
+**E1 — Raise RT priorities (cam=90, gst=85):**
+Hypothesis: higher priority preempts more system threads, reducing jitter.
+Result: mean and P50 slightly improved but P99 worsened (+1.5 ms vs baseline).
+Root cause: at priority 90, the RT threads compete with GPU interrupt handlers and VA
+driver threads which also run at elevated internal priority, introducing occasional
+long-tail spikes.
+
+**E2 — Tighten gst to 2 adjacent P-cores (3-4) ✅ Winner:**
+Hypothesis: gst-launch's main pipeline is serial; too many cores causes thread
+migration overhead. Fewer cores keep all pipeline threads' working set in the
+same L2 cache.
+Result: mean −1.4 ms, P99 −2.8 ms vs baseline. FPS locked to exactly 60.00.
+Root cause of improvement: all GStreamer threads (main + OpenVINO infer + latency-tracer)
+stay within the same L2 cache slice — no cross-core invalidation, no migration cost.
+
+**E3 — Consumer-first scheduling (cam=70, gst=90):**
+Hypothesis: gst-launch is the consumer; making it higher priority means it is
+always ready to drain the OS pipe, eliminating pipe-read blocking latency.
+Result: mean 11.764 ms (close to E2) but P99 13.0 ms — worse than E2's 12.2 ms.
+Root cause: with gst at prio 90, it occasionally starves other high-priority kernel
+threads long enough to cause a brief pipeline stall, which shows up in the tail.
+
+**Recommendation: use E2 configuration (PIPELINE_GST_CORES=3-4, priorities 80/70).**
+
+---
+
 ## Verifying and retrieving results
 
 ### Live latency snapshot

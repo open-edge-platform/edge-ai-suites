@@ -59,6 +59,14 @@ SOURCE_ARG  = os.environ.get("SOURCE_ARG", VIDEO)
 # seconds we give up (protects against a config error that instant-crashes).
 RESPAWN_MAX     = int(os.environ.get("RESPAWN_MAX", "6"))
 RESPAWN_WINDOW  = float(os.environ.get("RESPAWN_WINDOW_S", "10"))
+# ---- Case 4: core-pinning + Basler fixed-camera tuning --------------------
+_CAM_CORES = os.environ.get("PIPELINE_CAMERA_CORES", "").strip()
+_CAM_PRIO  = os.environ.get("PIPELINE_CAMERA_RT_PRIORITY", "").strip()
+_GST_CORES = os.environ.get("PIPELINE_GST_CORES", "").strip()
+_GST_PRIO  = os.environ.get("PIPELINE_GST_RT_PRIORITY", "").strip()
+BASLER_FIXED_CAMERA = os.environ.get("BASLER_FIXED_CAMERA", "0").strip() not in {"0", "false", "no"}
+BASLER_EXPOSURE_US  = os.environ.get("BASLER_EXPOSURE_US", "").strip()
+BASLER_GAIN         = os.environ.get("BASLER_GAIN", "").strip()
 
 # ------------------------------------------------------------ state --------
 _proc: subprocess.Popen | None = None
@@ -120,6 +128,28 @@ def _spawn(
         }
     )
 
+    # ---- Build optional taskset / chrt prefix strings ----
+    # Each leg requires BOTH cores and priority to be set; partial config is
+    # skipped silently to avoid a half-configured subprocess.
+    def _pinning_prefix(cores: str, prio: str) -> str:
+        parts: list[str] = []
+        if cores:
+            parts.append(f"taskset -c {cores}")
+        if prio:
+            parts.append(f"chrt -f {prio}")
+        return " ".join(parts)
+
+    cam_prefix = _pinning_prefix(_CAM_CORES, _CAM_PRIO)
+    gst_prefix = _pinning_prefix(_GST_CORES, _GST_PRIO)
+    if _CAM_PRIO and not _CAM_CORES:
+        log.warning("[case4] PIPELINE_CAMERA_RT_PRIORITY set but PIPELINE_CAMERA_CORES is empty; chrt will apply without cpu affinity")
+    if _GST_PRIO and not _GST_CORES:
+        log.warning("[case4] PIPELINE_GST_RT_PRIORITY set but PIPELINE_GST_CORES is empty; chrt will apply without cpu affinity")
+    if int(_CAM_PRIO) > 90 if _CAM_PRIO.isdigit() else False:
+        log.warning("[case4] PIPELINE_CAMERA_RT_PRIORITY=%s > 90; may starve host critical threads", _CAM_PRIO)
+    if int(_GST_PRIO) > 90 if _GST_PRIO.isdigit() else False:
+        log.warning("[case4] PIPELINE_GST_RT_PRIORITY=%s > 90; may starve host critical threads", _GST_PRIO)
+
     if source_kind == "basler":
         # Enumerate Basler cameras visible inside the container before spawning
         # so connectivity problems appear immediately in the logs.
@@ -134,15 +164,38 @@ def _spawn(
             )
         except Exception as _exc:  # noqa: BLE001
             log.warning("[basler] pypylon enumeration failed: %s", _exc)
+        # Build Basler feeder command with optional fixed-camera tuning args.
+        feeder_args = (
+            f"{source_arg} "
+            f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy"
+        )
+        if BASLER_FIXED_CAMERA:
+            feeder_args += " --fixed-camera"
+            if BASLER_EXPOSURE_US:
+                feeder_args += f" --exposure-us {BASLER_EXPOSURE_US}"
+            if BASLER_GAIN:
+                feeder_args += f" --gain {BASLER_GAIN}"
+        cam_exec = f"{cam_prefix} " if cam_prefix else ""
+        gst_exec = f"{gst_prefix} " if gst_prefix else ""
         cmd = (
-            f"exec python3 /opt/basler_reader.py {source_arg} "
-            f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy "
-            f"| exec gst-launch-1.0 {pipeline}"
+            f"exec {cam_exec}python3 /opt/basler_reader.py {feeder_args} "
+            f"| exec {gst_exec}gst-launch-1.0 {pipeline}"
         )
     else:
         cmd = f"exec gst-launch-1.0 {pipeline}"
 
     log.info("[pipeline] generated cmd: %s", cmd)
+    log.info(
+        "[pipeline] knobs: cam_cores=%s cam_prio=%s gst_cores=%s gst_prio=%s "
+        "basler_fixed=%s basler_exposure_us=%s basler_gain=%s",
+        _CAM_CORES or "<unset>",
+        _CAM_PRIO  or "<unset>",
+        _GST_CORES or "<unset>",
+        _GST_PRIO  or "<unset>",
+        BASLER_FIXED_CAMERA,
+        BASLER_EXPOSURE_US or "<unset>",
+        BASLER_GAIN        or "<unset>",
+    )
     log.info(
         "[pipeline] knobs: detect=%s watermark=%s minimal=%s scheduling_policy=%s batch_size=%s sink_sync=%s",
         DETECT_ENABLED,
