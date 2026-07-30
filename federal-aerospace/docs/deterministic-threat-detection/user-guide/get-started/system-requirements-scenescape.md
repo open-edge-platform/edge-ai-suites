@@ -4,7 +4,7 @@
 
 - **Operating System:** Ubuntu 24.04 or later
 - **Docker Engine** with Docker Compose V2
-- [**Scenescape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0)
+- [**Scenescape**](https://github.com/open-edge-platform/scenescape/tree/main)
 
 ## Hardware Requirements
 
