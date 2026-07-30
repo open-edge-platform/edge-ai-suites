@@ -14,6 +14,7 @@ import type { ServerConfig } from "../../packages/mcp-server/src/config.js";
 import { createDashboardRouter } from "../../packages/mcp-server/src/dashboard/router.js";
 import { LiveStreamManager } from "../../packages/mcp-server/src/dashboard/live-stream.js";
 import { mountStaticUi } from "../../packages/mcp-server/src/dashboard/static-ui.js";
+import { ChatCredentialStore } from "../../packages/mcp-server/src/dashboard/chat-credentials.js";
 
 test("dashboard API validates inputs and contains monitor media", async () => {
   delete process.env.SMARTBUILDING_ROUTER_URL;
@@ -26,6 +27,10 @@ test("dashboard API validates inputs and contains monitor media", async () => {
   writeFileSync(join(monitorDir, "latest.jpg"), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
   const clipPath = join(monitorDir, "clip.mp4");
   writeFileSync(clipPath, Buffer.from("0123456789"));
+  const fullClipPath = join(monitorDir, "full.mp4");
+  writeFileSync(fullClipPath, Buffer.from("full-video"));
+  const croppedClipPath = join(monitorDir, "cropped.mp4");
+  writeFileSync(croppedClipPath, Buffer.from("cropped-video"));
   const outsideClip = join(root, "outside.mp4");
   writeFileSync(outsideClip, Buffer.from("outside"));
   const symlinkClip = join(monitorDir, "linked.mp4");
@@ -35,13 +40,16 @@ test("dashboard API validates inputs and contains monitor media", async () => {
   db.initialize();
   db.createMonitor({ id: "cam-1", name: "Camera One", sourceUrl: "rtsp://user:secret@localhost/live", status: "online", useCase: "child", videoSummaryTask: "child_task" });
   const clipTask = db.createTask({ monitorId: "cam-1", summaryClipInput: clipPath, status: "completed" });
+  const fullClipEvent = db.createEvent({ monitorId: "cam-1", motionType: "motion", startTime: "2026-07-30T09:00:00", eventFilePath: fullClipPath });
+  const croppedTask = db.createTask({ monitorId: "cam-1", eventId: fullClipEvent.id, summaryClipInput: croppedClipPath, status: "completed" });
   const outsideTask = db.createTask({ monitorId: "cam-1", summaryClipInput: outsideClip, status: "completed" });
   const symlinkTask = db.createTask({ monitorId: "cam-1", summaryClipInput: symlinkClip, status: "completed" });
   const config = { segmentsDir, reportsLogsDir: join(root, "reports"), useCaseDict: {} } as ServerConfig;
   const liveStreams = new LiveStreamManager();
+  const chatCredentials = new ChatCredentialStore({});
   const app = express();
   app.use(express.json({ limit: "64kb" }));
-  app.use("/api", createDashboardRouter(db, config, {} as VideoSummaryClient, liveStreams));
+  app.use("/api", createDashboardRouter(db, config, {} as VideoSummaryClient, liveStreams, chatCredentials));
   mountStaticUi(app);
   const server = createServer(app);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -53,6 +61,24 @@ test("dashboard API validates inputs and contains monitor media", async () => {
     const dashboardConfig = await fetch(`${base}/api/dashboard/config`).then((response) => response.json()) as any;
     assert.equal(dashboardConfig.router, "unconfigured");
     assert.equal(dashboardConfig.chat, "unconfigured");
+    assert.deepEqual(dashboardConfig.frameworks.map((framework: any) => framework.id), ["openclaw"]);
+    const publicTarget = await fetch(`${base}/api/dashboard/chat/config`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ framework: "openclaw", url: "https://example.com", token: "secret" }),
+    });
+    assert.equal(publicTarget.status, 400);
+    const configured = await fetch(`${base}/api/dashboard/chat/config`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ framework: "openclaw", url: "http://127.0.0.1:18789/", token: "secret" }),
+    });
+    assert.equal(configured.status, 200);
+    const sessionCookie = configured.headers.get("set-cookie")?.split(";", 1)[0];
+    assert.ok(sessionCookie);
+    assert.doesNotMatch(await configured.text(), /secret/);
+    const configuredStatus = await fetch(`${base}/api/dashboard/config`, { headers: { Cookie: sessionCookie } }).then((response) => response.json()) as any;
+    assert.equal(configuredStatus.chat, "configured");
     const ui = await fetch(`${base}/`);
     assert.equal(ui.status, 200);
     assert.match(await ui.text(), /Agentic Smart Community/);
@@ -76,6 +102,9 @@ test("dashboard API validates inputs and contains monitor media", async () => {
     const suffixRange = await fetch(`${base}/api/tasks/${clipTask.id}/clip?monitor_id=cam-1`, { headers: { Range: "bytes=-3" } });
     assert.equal(suffixRange.status, 206);
     assert.equal(await suffixRange.text(), "789");
+    const fullClip = await fetch(`${base}/api/tasks/${croppedTask.id}/clip?monitor_id=cam-1`);
+    assert.equal(fullClip.status, 200);
+    assert.equal(await fullClip.text(), "full-video");
 
     assert.equal((await fetch(`${base}/api/tasks/${clipTask.id}/clip?monitor_id=other-monitor`)).status, 404);
     assert.equal((await fetch(`${base}/api/tasks/${outsideTask.id}/clip?monitor_id=cam-1`)).status, 404);

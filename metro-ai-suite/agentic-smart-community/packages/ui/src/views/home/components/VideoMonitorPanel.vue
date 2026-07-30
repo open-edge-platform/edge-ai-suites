@@ -165,10 +165,7 @@ import {
   getCamReport,
   requestGenerateReport,
 } from "@/api/smartHome";
-import {
-  DEFAULT_SMART_HOME_SOURCE_ID,
-  getSmartHomeSourceMeta,
-} from "../deviceMeta";
+import { getSmartHomeSourceMeta } from "../deviceMeta";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -210,9 +207,7 @@ const selectedDate = computed({
 
 const selectedSourceId = computed(() => {
   const sourceId = route.query.source_id;
-  return typeof sourceId === "string" && sourceId
-    ? sourceId
-    : DEFAULT_SMART_HOME_SOURCE_ID;
+  return typeof sourceId === "string" ? sourceId : "";
 });
 
 const currentSourceMeta = computed(() => {
@@ -220,6 +215,10 @@ const currentSourceMeta = computed(() => {
 });
 
 const liveVideoSrc = computed(() => {
+  if (!selectedSourceId.value) {
+    return "";
+  }
+
   return `/api/monitors/${encodeURIComponent(selectedSourceId.value)}/live-stream`;
 });
 
@@ -312,6 +311,12 @@ const buildReportExportContent = (reports: CameraReport[]) => {
 const queryCamFridgeList = async ({ showLoading = false } = {}) => {
   const requestId = ++latestActivityRequestId;
 
+  if (!selectedSourceId.value) {
+    taskList.value = [];
+    activityLoading.value = false;
+    return;
+  }
+
   if (showLoading) {
     activityLoading.value = true;
     taskList.value = [];
@@ -346,6 +351,12 @@ const queryCamFridgeList = async ({ showLoading = false } = {}) => {
 
 const queryCamReport = async (silent = true) => {
   const requestId = ++latestReportRequestId;
+
+  if (!selectedSourceId.value) {
+    reportList.value = [];
+    reportLoading.value = false;
+    return;
+  }
 
   reportLoading.value = true;
   try {

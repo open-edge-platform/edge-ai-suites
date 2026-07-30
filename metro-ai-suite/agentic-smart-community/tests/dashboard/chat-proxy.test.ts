@@ -6,6 +6,7 @@ import { createServer, type Server } from "node:http";
 import test from "node:test";
 import { WebSocket, WebSocketServer } from "ws";
 import { OpenClawChatProxy } from "../../packages/mcp-server/src/dashboard/chat-proxy.js";
+import { ChatCredentialStore } from "../../packages/mcp-server/src/dashboard/chat-credentials.js";
 
 function listen(server: Server): Promise<number> {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => {
@@ -23,17 +24,28 @@ test("chat proxy replaces browser credentials and closes cleanly", async () => {
   const upstreamServer = createServer();
   const upstreamWebSockets = new WebSocketServer({ server: upstreamServer });
   const upstreamPort = await listen(upstreamServer);
+  let upstreamOrigin = "";
   const received = new Promise<Record<string, any>>((resolve) => {
-    upstreamWebSockets.once("connection", (socket) => {
-      socket.once("message", (data) => resolve(JSON.parse(data.toString())));
+    upstreamWebSockets.once("connection", (socket, request) => {
+      upstreamOrigin = request.headers.origin || "";
+      socket.once("message", (data) => {
+        resolve(JSON.parse(data.toString()));
+        socket.send(JSON.stringify({
+          type: "res",
+          id: "large-history",
+          ok: true,
+          payload: { content: "x".repeat(80 * 1024) },
+        }));
+      });
     });
   });
 
   const proxyServer = createServer();
-  const proxy = new OpenClawChatProxy({
+  const credentials = new ChatCredentialStore({
     openClawGatewayUrl: new URL(`http://127.0.0.1:${upstreamPort}`),
     openClawGatewayToken: "server-only-token",
   });
+  const proxy = new OpenClawChatProxy(credentials);
   proxy.attach(proxyServer);
   const proxyPort = await listen(proxyServer);
   const browser = new WebSocket(`ws://127.0.0.1:${proxyPort}/api/chat`);
@@ -41,11 +53,17 @@ test("chat proxy replaces browser credentials and closes cleanly", async () => {
     browser.once("open", resolve);
     browser.once("error", reject);
   });
+  const relayedResponse = new Promise<Record<string, any>>((resolve) => {
+    browser.once("message", (data) => resolve(JSON.parse(data.toString())));
+  });
   browser.send(JSON.stringify({ type: "req", id: "1", method: "connect", params: { auth: { token: "browser-token" } } }));
 
   const frame = await received;
+  assert.equal(upstreamOrigin, `http://127.0.0.1:${upstreamPort}`);
   assert.equal(frame.params.auth.token, "server-only-token");
   assert.doesNotMatch(JSON.stringify(frame), /browser-token/);
+  const largeHistory = await relayedResponse;
+  assert.equal(largeHistory.payload.content.length, 80 * 1024);
 
   browser.close();
   await proxy.close();

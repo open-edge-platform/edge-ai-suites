@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import type { Dayjs } from "dayjs";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { BarChartOutlined, DownOutlined } from "@ant-design/icons-vue";
@@ -152,6 +152,7 @@ const router = useRouter();
 const monitors = ref<ApplianceInfo[]>([]);
 const isMonitorOpen = ref(false);
 const showOfflineAppliances = ref(false);
+let monitorPollingTimer: number | null = null;
 
 const openMonitor = () => {
   isMonitorOpen.value = true;
@@ -256,7 +257,6 @@ const queryMonitors = async () => {
     );
 
     if (matchedMonitor) {
-      await updateSelection(matchedMonitor);
       return;
     }
 
@@ -268,15 +268,18 @@ const queryMonitors = async () => {
     }
   } catch {
     monitors.value = [];
-
-    if (monitors.value[0]) {
-      await updateSelection(monitors.value[0]);
-    }
   }
 };
 
 onMounted(() => {
   void queryMonitors();
+  monitorPollingTimer = window.setInterval(queryMonitors, 30 * 1000);
+});
+
+onUnmounted(() => {
+  if (monitorPollingTimer !== null) {
+    window.clearInterval(monitorPollingTimer);
+  }
 });
 </script>
 
@@ -398,7 +401,18 @@ onMounted(() => {
 }
 
 .appliance-item.offline {
-  opacity: 0.68;
+  .appliance-tab-body {
+    opacity: 0.68;
+  }
+
+  .appliance-tab-status {
+    color: var(--font-text-color);
+    background: color-mix(in srgb, var(--font-text-color) 14%, transparent);
+
+    .status-dot {
+      background: var(--font-text-color);
+    }
+  }
 }
 
 .appliance-item {

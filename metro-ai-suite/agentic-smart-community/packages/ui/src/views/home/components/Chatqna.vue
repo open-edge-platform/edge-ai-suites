@@ -19,11 +19,21 @@
       <div class="header-right flex-left">
         <div
           v-if="selectedSessionLabel"
-          class="selected-session-pill single-ellipsis"
+          class="selected-session-pill"
           :title="selectedSessionLabel"
         >
           {{ selectedSessionLabel }}
         </div>
+        <a-tooltip :title="$t('chat.frameworkSettings')">
+          <button
+            type="button"
+            class="header-status"
+            :title="$t('chat.frameworkSettings')"
+            @click="frameworkSettingsOpen = !frameworkSettingsOpen"
+          >
+            <SettingOutlined />
+          </button>
+        </a-tooltip>
         <a-popover
           placement="bottomRight"
           trigger="hover"
@@ -45,7 +55,9 @@
                 :key="group.agentId"
                 class="session-agent-group flex-column"
               >
-                <div class="session-agent-title">{{ group.displayName }}</div>
+                <div class="session-agent-title">
+                  {{ buildAgentGroupLabel(group) }}
+                </div>
                 <div v-if="group.description" class="session-agent-description">
                   {{ group.description }}
                 </div>
@@ -69,9 +81,9 @@
                   </span>
                   <span
                     class="session-history-name single-ellipsis"
-                    :title="buildSessionOptionLabel(session)"
+                    :title="buildSessionDropdownLabel(session)"
                   >
-                    {{ buildSessionOptionLabel(session) }}
+                    {{ buildSessionDropdownLabel(session) }}
                   </span>
                 </button>
               </div>
@@ -96,7 +108,92 @@
       </div>
     </div>
 
-    <div class="chatbot-wrap" :class="{ 'has-messages': hasMessages }">
+    <div
+      class="chatbot-wrap"
+      :class="{
+        'has-messages': hasMessages,
+        'has-framework-card': showFrameworkCard,
+      }"
+    >
+      <div v-if="showFrameworkCard" class="framework-card flex-column">
+        <div class="framework-card-head flex-between">
+          <div class="framework-card-copy flex-column">
+            <div class="framework-card-title">
+              {{
+                frameworkConfigured
+                  ? $t("chat.frameworkTitle")
+                  : $t("chat.frameworkUnconfiguredTitle")
+              }}
+            </div>
+            <div class="framework-card-description">
+              {{
+                frameworkConfigured
+                  ? $t("chat.frameworkConfiguredDescription")
+                  : $t("chat.frameworkUnconfiguredDescription")
+              }}
+            </div>
+          </div>
+          <button
+            v-if="frameworkConfigured"
+            type="button"
+            class="framework-card-close"
+            :title="$t('common.cancel')"
+            @click="closeFrameworkSettings"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="framework-supported-label">
+          {{ $t("chat.frameworkSupported") }}
+        </div>
+        <div class="framework-options flex-left">
+          <button
+            v-for="framework in agentFrameworks"
+            :key="framework.id"
+            type="button"
+            class="framework-option"
+            :class="{ active: framework.id === selectedFrameworkId && frameworkFormOpen }"
+            @click="selectFramework(framework)"
+          >
+            {{ framework.label }}
+          </button>
+        </div>
+
+        <div v-if="frameworkFormOpen" class="framework-form flex-column">
+          <div class="framework-field flex-column">
+            <label for="agent-framework-url">{{ $t("chat.frameworkUrl") }}</label>
+            <a-input
+              id="agent-framework-url"
+              v-model:value.trim="frameworkUrl"
+              placeholder="http://127.0.0.1:18789/"
+            />
+          </div>
+          <div class="framework-field flex-column">
+            <label for="agent-framework-token">{{ $t("chat.frameworkToken") }}</label>
+            <a-input-password
+              id="agent-framework-token"
+              v-model:value="frameworkToken"
+              :placeholder="$t('chat.frameworkTokenPlaceholder')"
+              autocomplete="off"
+            />
+          </div>
+          <div class="framework-cache-note">{{ $t("chat.frameworkCacheNote") }}</div>
+          <div class="framework-actions flex-end">
+            <a-button @click="frameworkFormOpen = false">
+              {{ $t("common.cancel") }}
+            </a-button>
+            <a-button
+              type="primary"
+              :loading="frameworkSaving"
+              @click="handleFrameworkConfigure"
+            >
+              {{ $t("chat.frameworkConnect") }}
+            </a-button>
+          </div>
+        </div>
+      </div>
+
       <div v-if="hasMessages" ref="scrollContainer" class="message-box">
         <div class="intel-markdown">
           <div ref="messageComponent">
@@ -250,6 +347,7 @@ import {
   ArrowDownOutlined,
   HistoryOutlined,
   ReloadOutlined,
+  SettingOutlined,
 } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { throttle } from "lodash-es";
@@ -265,6 +363,11 @@ import {
   WebSocketChatService,
 } from "./WebSocketChatService";
 import { sessionAppStore } from "@/store/session";
+import {
+  configureAgentFramework,
+  getDashboardConfig,
+  type AgentFrameworkOption,
+} from "@/api/smartHome";
 
 const sessionStore = sessionAppStore();
 const { t } = useI18n();
@@ -283,6 +386,14 @@ const isStreaming = ref(false);
 const isHistoryLoading = ref(false);
 const isCreatingSession = ref(false);
 const connectionStatus = ref<ConnectionStatus>("disconnected");
+const frameworkConfigured = ref(false);
+const frameworkSettingsOpen = ref(false);
+const frameworkFormOpen = ref(false);
+const frameworkSaving = ref(false);
+const agentFrameworks = ref<AgentFrameworkOption[]>([]);
+const selectedFrameworkId = ref<AgentFrameworkOption["id"]>("openclaw");
+const frameworkUrl = ref("http://127.0.0.1:18789/");
+const frameworkToken = ref("");
 
 const imgVisible = ref(false);
 const imageSrc = ref("");
@@ -313,6 +424,77 @@ const WS_URL = resolveSocketUrl();
 let throttledHandleScroll: ((event: Event) => void) | null = null;
 let chatService: WebSocketChatService | null = null;
 let lastAutoSelectedSourceId = "";
+
+const selectFramework = (framework: AgentFrameworkOption) => {
+  selectedFrameworkId.value = framework.id;
+  frameworkUrl.value = frameworkUrl.value || framework.defaultUrl;
+  frameworkFormOpen.value = true;
+};
+
+const showFrameworkCard = computed(
+  () => !frameworkConfigured.value || frameworkSettingsOpen.value,
+);
+
+const closeFrameworkSettings = () => {
+  frameworkSettingsOpen.value = false;
+  frameworkFormOpen.value = false;
+  frameworkToken.value = "";
+};
+
+const connectChat = () => {
+  chatService?.disconnect();
+  chatService = new WebSocketChatService({
+    url: WS_URL,
+    authToken: AUTH_TOKEN,
+    onMessagesChange: (messages: ChatMessageView[]) => {
+      messagesList.value = messages;
+    },
+    onSessionsChange: (
+      nextSessions: ChatSessionSummary[],
+      nextSessionGroups: ChatSessionGroup[],
+    ) => {
+      sessions.value = nextSessions;
+      sessionGroups.value = nextSessionGroups;
+    },
+    onHistoryLoadingChange: (loading: boolean) => {
+      isHistoryLoading.value = loading;
+    },
+    onStreamingChange: (streaming: boolean) => {
+      isStreaming.value = streaming;
+    },
+    onStatusChange: (status: ConnectionStatus) => {
+      connectionStatus.value = status;
+    },
+    onError: (errorMessage: string) => {
+      message.error(errorMessage);
+    },
+  });
+  chatService.connect();
+};
+
+const handleFrameworkConfigure = async () => {
+  if (!frameworkUrl.value.trim() || !frameworkToken.value) {
+    message.warning(t("chat.frameworkRequired"));
+    return;
+  }
+
+  frameworkSaving.value = true;
+  try {
+    await configureAgentFramework({
+      framework: selectedFrameworkId.value,
+      url: frameworkUrl.value.trim(),
+      token: frameworkToken.value,
+    });
+    frameworkToken.value = "";
+    frameworkConfigured.value = true;
+    closeFrameworkSettings();
+    connectChat();
+  } catch {
+    message.error(t("chat.frameworkConfigureFailed"));
+  } finally {
+    frameworkSaving.value = false;
+  }
+};
 
 const hasMessages = computed(() => messagesList.value.length > 0);
 const routeSessionKey = computed(() => {
@@ -354,7 +536,7 @@ const selectedSessionLabel = computed(() => {
     (session) => session.key === selectedSessionKey.value,
   );
 
-  return matchedSession ? buildSessionOptionLabel(matchedSession) : "";
+  return matchedSession?.key || "";
 });
 const displaySessionGroups = computed<ChatSessionGroup[]>(() => {
   if (sessionGroups.value.length) {
@@ -395,8 +577,19 @@ const getLastUserQuestion = () => {
   return "";
 };
 
-const buildSessionOptionLabel = (session: ChatSessionSummary) => {
-  return session.displayName || session.key;
+const buildAgentGroupLabel = (group: ChatSessionGroup) => {
+  return group.agentId === "ungrouped"
+    ? group.displayName
+    : `agent:${group.agentId}`;
+};
+
+const buildSessionDropdownLabel = (session: ChatSessionSummary) => {
+  const label = session.displayName || session.key;
+  const agentPrefix = session.agentId ? `agent:${session.agentId}:` : "";
+
+  return agentPrefix && label.startsWith(agentPrefix)
+    ? label.slice(agentPrefix.length)
+    : label;
 };
 
 const resolvePreferredSessionKeyForSource = () => {
@@ -439,8 +632,8 @@ const applySessionSelection = async (sessionKey: string) => {
   showScrollToBottomBtn.value = false;
   selectedSessionKey.value = sessionKey;
   sessionStore.setSessionId(sessionKey);
-  chatService?.selectSession(sessionKey);
   await updateRouteSession(sessionKey);
+  chatService?.selectSession(sessionKey);
   scrollToBottom();
 };
 
@@ -723,35 +916,23 @@ onUnmounted(() => {
   resizeObserverRef.value?.disconnect();
 });
 
-onMounted(() => {
-  chatService = new WebSocketChatService({
-    url: WS_URL,
-    authToken: AUTH_TOKEN,
-    onMessagesChange: (messages: ChatMessageView[]) => {
-      messagesList.value = messages;
-    },
-    onSessionsChange: (
-      nextSessions: ChatSessionSummary[],
-      nextSessionGroups: ChatSessionGroup[],
-    ) => {
-      sessions.value = nextSessions;
-      sessionGroups.value = nextSessionGroups;
-    },
-    onHistoryLoadingChange: (loading: boolean) => {
-      isHistoryLoading.value = loading;
-    },
-    onStreamingChange: (streaming: boolean) => {
-      isStreaming.value = streaming;
-    },
-    onStatusChange: (status: ConnectionStatus) => {
-      connectionStatus.value = status;
-    },
-    onError: (errorMessage: string) => {
-      message.error(errorMessage);
-    },
-  });
-
-  chatService.connect();
+onMounted(async () => {
+  try {
+    const config = await getDashboardConfig();
+    agentFrameworks.value = config.frameworks || [];
+    const defaultFramework = agentFrameworks.value[0];
+    if (defaultFramework) {
+      selectedFrameworkId.value = defaultFramework.id;
+      frameworkUrl.value = defaultFramework.defaultUrl;
+    }
+    if (config.chat === "configured") {
+      frameworkConfigured.value = true;
+      connectChat();
+    }
+  } catch {
+    frameworkConfigured.value = false;
+    message.error(t("chat.frameworkConfigLoadFailed"));
+  }
 });
 </script>
 
@@ -763,6 +944,7 @@ onMounted(() => {
 
 .chat-header {
   .flex-between;
+  flex-wrap: wrap;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-main-color);
   background: var(--surface-glass-bg);
@@ -806,6 +988,8 @@ onMounted(() => {
   .header-right {
     gap: 10px;
     min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .header-status {
@@ -847,6 +1031,83 @@ onMounted(() => {
     transform: translateY(-1px);
     box-shadow: 0 8px 16px var(--bg-box-shadow);
   }
+}
+
+.framework-form {
+  gap: 18px;
+  padding-top: 4px;
+}
+
+.framework-card {
+  flex-shrink: 0;
+  margin: 16px 20px 0;
+  padding: 16px;
+  gap: 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--surface-panel-bg);
+}
+
+.framework-card-copy {
+  gap: 4px;
+}
+
+.framework-card-title {
+  color: var(--font-main-color);
+  font-size: var(--font-size-14);
+  font-weight: 700;
+}
+
+.framework-card-description,
+.framework-supported-label {
+  color: var(--font-info-color);
+  font-size: var(--font-size-12);
+}
+
+.framework-card-close {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--font-tip-color);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.framework-field {
+  gap: 8px;
+
+  label {
+    color: var(--font-main-color);
+    font-weight: 600;
+  }
+}
+
+.framework-options {
+  gap: 8px;
+}
+
+.framework-option {
+  padding: 7px 14px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--surface-panel-bg);
+  color: var(--font-main-color);
+  cursor: pointer;
+
+  &.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
+.framework-cache-note {
+  color: var(--font-tip-color);
+  font-size: var(--font-size-12);
+}
+
+.framework-actions {
+  gap: 8px;
 }
 
 @keyframes chat-refresh-spin {
@@ -987,6 +1248,10 @@ onMounted(() => {
       flex-shrink: 0;
       padding: 10px 0 20px 0;
     }
+  }
+
+  &.has-framework-card .chat-content.full-height {
+    height: auto;
   }
 }
 
@@ -1238,6 +1503,12 @@ onMounted(() => {
       width: 100%;
       justify-content: flex-end;
     }
+
+    .selected-session-pill {
+      flex: 1 1 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .message-box .intel-markdown {
@@ -1254,8 +1525,8 @@ onMounted(() => {
   }
 }
 .selected-session-pill {
-  max-width: 240px;
-  min-width: 0;
+  flex: 0 0 auto;
+  width: max-content;
   padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid var(--border-primary);
@@ -1264,5 +1535,6 @@ onMounted(() => {
   font-size: var(--font-size-12);
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
 }
 </style>

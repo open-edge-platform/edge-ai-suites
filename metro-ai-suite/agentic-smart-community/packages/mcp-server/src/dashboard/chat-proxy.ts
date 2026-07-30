@@ -4,10 +4,11 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocket, WebSocketServer, type RawData } from "ws";
-import type { DashboardIntegrationConfig } from "./integration-env.js";
+import type { ChatCredentialStore, ChatCredentials } from "./chat-credentials.js";
 
 const MAX_CONNECTIONS = 20;
-const MAX_MESSAGE_BYTES = 64 * 1024;
+const MAX_BROWSER_MESSAGE_BYTES = 64 * 1024;
+const MAX_UPSTREAM_MESSAGE_BYTES = 25 * 1024 * 1024;
 const MAX_BUFFERED_BYTES = 1024 * 1024;
 
 interface SocketPair { browser: WebSocket; upstream: WebSocket }
@@ -19,12 +20,12 @@ function rawDataBytes(data: RawData): number {
 }
 
 export class OpenClawChatProxy {
-  private readonly webSocketServer = new WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE_BYTES });
+  private readonly webSocketServer = new WebSocketServer({ noServer: true, maxPayload: MAX_BROWSER_MESSAGE_BYTES });
   private readonly pairs = new Set<SocketPair>();
   private server?: Server;
   private upgradeHandler?: (request: IncomingMessage, socket: Duplex, head: Buffer) => void;
 
-  constructor(private readonly config: DashboardIntegrationConfig) {}
+  constructor(private readonly credentials: ChatCredentialStore) {}
 
   attach(server: Server): void {
     this.server = server;
@@ -34,7 +35,8 @@ export class OpenClawChatProxy {
         socket.destroy();
         return;
       }
-      if (!this.config.openClawGatewayUrl || !this.config.openClawGatewayToken) {
+      const credentials = this.credentials.resolve(request);
+      if (!credentials) {
         socket.end("HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n");
         return;
       }
@@ -42,7 +44,7 @@ export class OpenClawChatProxy {
         socket.end("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n");
         return;
       }
-      this.webSocketServer.handleUpgrade(request, socket, head, (browser) => this.connect(browser));
+      this.webSocketServer.handleUpgrade(request, socket, head, (browser) => this.connect(browser, credentials));
     };
     server.on("upgrade", this.upgradeHandler);
   }
@@ -57,13 +59,14 @@ export class OpenClawChatProxy {
     await new Promise<void>((resolve) => this.webSocketServer.close(() => resolve()));
   }
 
-  private connect(browser: WebSocket): void {
-    const gateway = new URL(this.config.openClawGatewayUrl!);
+  private connect(browser: WebSocket, credentials: ChatCredentials): void {
+    const gateway = new URL(credentials.gatewayUrl);
     gateway.protocol = gateway.protocol === "https:" ? "wss:" : "ws:";
     const upstream = new WebSocket(gateway, {
       handshakeTimeout: 5_000,
-      maxPayload: MAX_MESSAGE_BYTES,
-      headers: { Authorization: `Bearer ${this.config.openClawGatewayToken}` },
+      maxPayload: MAX_UPSTREAM_MESSAGE_BYTES,
+      origin: credentials.gatewayUrl.origin,
+      headers: { Authorization: `Bearer ${credentials.token}` },
     });
     const pair = { browser, upstream };
     this.pairs.add(pair);
@@ -92,7 +95,7 @@ export class OpenClawChatProxy {
       try {
         const frame = JSON.parse(data.toString()) as { type?: string; method?: string; params?: Record<string, unknown> };
         if (frame.type === "req" && frame.method === "connect") {
-          frame.params = { ...frame.params, auth: { token: this.config.openClawGatewayToken } };
+          frame.params = { ...frame.params, auth: { token: credentials.token } };
           return Buffer.from(JSON.stringify(frame));
         }
       } catch { /* The upstream gateway validates malformed frames. */ }
@@ -103,7 +106,7 @@ export class OpenClawChatProxy {
       const secured = injectToken(data, binary);
       if (upstream.readyState === WebSocket.CONNECTING) {
         const bytes = rawDataBytes(secured);
-        if (pendingBytes + bytes > MAX_MESSAGE_BYTES) { cleanup(); return; }
+        if (pendingBytes + bytes > MAX_BROWSER_MESSAGE_BYTES) { cleanup(); return; }
         pending.push({ data: secured, binary });
         pendingBytes += bytes;
         return;

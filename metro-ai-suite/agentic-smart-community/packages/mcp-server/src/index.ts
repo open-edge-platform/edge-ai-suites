@@ -19,7 +19,7 @@ import { startStorageCleaner } from "./storage-cleaner.js";
 import { startKeepaliveSender } from "./keepalive-sender.js";
 import { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
 import { startSessionSweeper } from "./session-sweeper.js";
-import { createDashboardRouter, LiveStreamManager, mountStaticUi, OpenClawChatProxy } from "./dashboard/index.js";
+import { ChatCredentialStore, createDashboardRouter, LiveStreamManager, mountStaticUi, OpenClawChatProxy } from "./dashboard/index.js";
 import { loadDashboardIntegrationConfig } from "./dashboard/integration-env.js";
 
 /**
@@ -140,12 +140,13 @@ async function main() {
   const summaryClient = new VideoSummaryClient(config.summaryService.url, config.summaryService.pathRemap);
   const workerService = new WorkerService(config, db, summaryClient, onAlert);
   const liveStreams = new LiveStreamManager();
-  const chatProxy = new OpenClawChatProxy(loadDashboardIntegrationConfig());
+  const chatCredentials = new ChatCredentialStore(loadDashboardIntegrationConfig());
+  const chatProxy = new OpenClawChatProxy(chatCredentials);
 
   if (transportMode === "http") {
     const app = createMcpExpressApp();
 
-    app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams));
+    app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams, chatCredentials));
 
     // Stateful HTTP: one McpServer + transport per sessionId. Required for `resources/subscribe`
     // to persist across requests. Session lifetimes end when the transport closes (client DELETE
@@ -272,24 +273,33 @@ async function main() {
   // videostream-analytics watchdog (armed at register_source) doesn't auto-pause them.
   const stopKeepalive = startKeepaliveSender(config, db);
 
+  let shuttingDown = false;
   const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     logger.info("[mcp-server] Shutting down...");
     stopCleaner();
     stopKeepalive();
     stopSessionSweeper?.();
+    const onlineMonitors = db.listOnlineMonitors();
+    if (onlineMonitors.length > 0) {
+      logger.info(`[shutdown] Stopping ${onlineMonitors.length} online monitors in videostream-analytics (${config.videostreamAnalytics.url})`);
+      await Promise.all(onlineMonitors.map((m) =>
+        fetch(`${config.videostreamAnalytics.url}/sources/${encodeURIComponent(m.id)}/stop`, {
+          method: "POST", signal: AbortSignal.timeout(25_000),
+        }).then((response) => {
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          db.updateMonitorStatus(m.id, "offline");
+        }).catch((error) => {
+          logger.warn(`[shutdown] Failed to stop ${m.id} in videostream-analytics: ${error?.message ?? error}`);
+        })
+      ));
+    }
     await chatProxy.close();
     await liveStreams.close();
     await workerService.stopAll();
-    const onlineMonitors = db.listOnlineMonitors();
-    if (onlineMonitors.length > 0) {
-      logger.info(`[shutdown] Pausing ${onlineMonitors.length} online monitors in videostream-analytics (${config.videostreamAnalytics.url})`);
-      await Promise.all(onlineMonitors.map((m) =>
-        fetch(`${config.videostreamAnalytics.url}/sources/${m.id}/pause`, {
-          method: "POST", signal: AbortSignal.timeout(3000),
-        }).catch(() => {})
-      ));
-      for (const m of onlineMonitors) db.updateMonitorStatus(m.id, "offline");
-    }
     eventsEndpoint.stop();
     db.close();
     process.exit(0);

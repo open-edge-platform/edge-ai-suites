@@ -289,7 +289,7 @@ import CustomRenderer from "@/utils/customRenderer";
 import type { ActivityRecord, CameraTaskRecord } from "../type";
 import { getSmartHomeSourceMeta } from "../deviceMeta";
 
-type AlertFilterValue = string;
+type AlertFilterValue = "motion" | "alert";
 
 interface AlertFilterOption {
   value: AlertFilterValue;
@@ -364,8 +364,8 @@ const KNOWN_ALERT_CONFIG: Record<
   string,
   { label: () => string; tokens: AlertVisualTokens; order: number }
 > = {
-  danger: {
-    label: () => t("smartHome.alertDanger"),
+  alert: {
+    label: () => t("smartHome.timelineAlert"),
     order: 0,
     tokens: {
       color:
@@ -376,8 +376,8 @@ const KNOWN_ALERT_CONFIG: Record<
         "color-mix(in srgb, var(--color-error) 90%, var(--font-main-color) 10%)",
     },
   },
-  normal_play: {
-    label: () => t("smartHome.alertNormalPlay"),
+  motion: {
+    label: () => t("smartHome.timelineMotionEvent"),
     order: 1,
     tokens: {
       color:
@@ -386,18 +386,6 @@ const KNOWN_ALERT_CONFIG: Record<
       chipBg: "color-mix(in srgb, var(--color-successBg) 88%, transparent)",
       chipText:
         "color-mix(in srgb, var(--color-success) 88%, var(--font-main-color) 12%)",
-    },
-  },
-  wakeup: {
-    label: () => t("smartHome.alertWakeup"),
-    order: 2,
-    tokens: {
-      color:
-        "color-mix(in srgb, var(--color-primary) 84%, var(--color-primaryBg) 16%)",
-      ring: "color-mix(in srgb, var(--color-primaryBg) 78%, transparent)",
-      chipBg: "color-mix(in srgb, var(--color-primaryBg) 88%, transparent)",
-      chipText:
-        "color-mix(in srgb, var(--color-primary) 88%, var(--font-main-color) 12%)",
     },
   },
 };
@@ -517,8 +505,9 @@ const datedAlertTypes = computed(() => {
       const timestamp = dayjs(task.clip_start_time || task.created_at);
       return timestamp.format("YYYY-MM-DD") === props.selectedDate;
     })
-    .map((task) => normalizeAlertType(task.alert))
-    .filter((alertType): alertType is string => Boolean(alertType));
+    .map((task): AlertFilterValue =>
+      task.actual_alert ? "alert" : "motion",
+    );
 });
 
 const sortedAlertTypes = computed(() => {
@@ -636,7 +625,7 @@ const mapTaskToRecord = (task: CameraTaskRecord): ActivityRecord => {
   const recordKind: ActivityRecord["recordKind"] =
     task.event_type === "motion" ? "motion" : "static";
   const videoSrc = `/api/tasks/${task.id}/clip?monitor_id=${encodeURIComponent(task.source_id)}`;
-  const alertType = normalizeAlertType(task.alert);
+  const alertType = task.actual_alert ? "alert" : null;
 
   return {
     id: `record-${task.id}`,
@@ -661,12 +650,8 @@ const mapTaskToRecord = (task: CameraTaskRecord): ActivityRecord => {
   };
 };
 
-const hasAlertValue = (alertType: CameraTaskRecord["alert"]) => {
-  return Boolean(normalizeAlertType(alertType));
-};
-
 const showAlertFilter = computed(() => {
-  return props.tasks.some((task) => hasAlertValue(task.alert));
+  return datedAlertTypes.value.length > 0;
 });
 
 const datedMotionRecords = computed(() => {
@@ -682,11 +667,8 @@ const matchesAlertFilter = (record: ActivityRecord) => {
     return true;
   }
 
-  if (!record.alertType) {
-    return false;
-  }
-
-  return selectedAlertFilters.value.includes(record.alertType);
+  const category: AlertFilterValue = record.alertType ? "alert" : "motion";
+  return selectedAlertFilters.value.includes(category);
 };
 
 const visibleRecords = computed(() => {
@@ -1198,7 +1180,17 @@ watch(
     );
 
     if (!previousValues.length && !selectedAlertFilters.value.length) {
-      selectedAlertFilters.value = [...nextValues];
+      selectedAlertFilters.value = [
+        nextValues.includes("alert") ? "alert" : "motion",
+      ];
+      return;
+    }
+
+    if (
+      nextValues.includes("alert") &&
+      !previousValues.includes("alert")
+    ) {
+      selectedAlertFilters.value = ["alert"];
       return;
     }
 

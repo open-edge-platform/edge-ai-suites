@@ -46,6 +46,7 @@ export interface CameraTaskRecord {
   status: string;
   created_at: string;
   event_type?: string;
+  actual_alert: boolean;
   alert?: string | null;
   [key: string]: unknown;
 }

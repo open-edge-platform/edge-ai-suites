@@ -9,6 +9,7 @@ import type { ServerConfig } from "../config.js";
 import { loadDashboardIntegrationConfig } from "./integration-env.js";
 import { LiveStreamManager } from "./live-stream.js";
 import { sendMp4, sendSnapshot } from "./media.js";
+import type { ChatCredentialStore } from "./chat-credentials.js";
 
 const monitorIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -45,16 +46,27 @@ export function createDashboardRouter(
   config: ServerConfig,
   summaryClient: VideoSummaryClient,
   liveStreams: LiveStreamManager,
+  chatCredentials: ChatCredentialStore,
 ): Router {
   const router = Router();
   const integrations = loadDashboardIntegrationConfig();
 
-  router.get("/dashboard/config", (_req, res) => {
+  router.get("/dashboard/config", (req, res) => {
     res.json({
       router: integrations.routerUrl ? "configured" : "unconfigured",
-      chat: integrations.openClawGatewayUrl && integrations.openClawGatewayToken ? "configured" : "unconfigured",
+      chat: chatCredentials.isConfigured(req) ? "configured" : "unconfigured",
+      frameworks: chatCredentials.getFrameworks(),
       media: { mode: "live-stream", snapshotFallback: true },
     });
+  });
+
+  router.post("/dashboard/chat/config", (req, res) => {
+    const result = chatCredentials.configure(req, res);
+    if ("error" in result) {
+      res.status(400).json(result);
+      return;
+    }
+    res.json(result);
   });
 
   router.get("/monitors", (_req, res) => {
@@ -153,11 +165,19 @@ export function createDashboardRouter(
       return;
     }
     const task = db.getTask(taskId.data);
-    if (!task || task.monitorId !== monitorId || !task.summaryClipInput) {
+    if (!task || task.monitorId !== monitorId) {
       res.status(404).json({ error: "Clip not found" });
       return;
     }
-    sendMp4(res, config.segmentsDir, monitorId, task.summaryClipInput, req.headers.range);
+    const event = task.eventId ? db.getEvent(task.eventId) : undefined;
+    const clipPath = event?.monitorId === monitorId
+      ? event.eventFilePath ?? task.summaryClipInput
+      : task.summaryClipInput;
+    if (!clipPath) {
+      res.status(404).json({ error: "Clip not found" });
+      return;
+    }
+    sendMp4(res, config.segmentsDir, monitorId, clipPath, req.headers.range);
   });
 
   return router;

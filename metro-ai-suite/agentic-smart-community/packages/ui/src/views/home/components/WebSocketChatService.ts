@@ -5,6 +5,7 @@ export type ConnectionStatus = "disconnected" | "connecting" | "connected";
 const CONNECT_FAILED_CLOSE_CODE = 4008;
 const CONNECT_DELAY_MS = 750;
 const HISTORY_LIMIT = 200;
+const OPENCLAW_GATEWAY_PROTOCOL = 4;
 const CONTROL_UI_OPERATOR_ROLE = "operator";
 const CONTROL_UI_OPERATOR_SCOPES = [
   "operator.admin",
@@ -298,7 +299,7 @@ export class WebSocketChatService {
   }
 
   selectSession(sessionKey: string) {
-    if (!sessionKey) {
+    if (!sessionKey || sessionKey === this.selectedSessionKey) {
       return;
     }
 
@@ -530,8 +531,8 @@ export class WebSocketChatService {
     const token = this.options.authToken.trim();
 
     return {
-      minProtocol: 3,
-      maxProtocol: 3,
+      minProtocol: OPENCLAW_GATEWAY_PROTOCOL,
+      maxProtocol: OPENCLAW_GATEWAY_PROTOCOL,
       client: {
         id: "openclaw-control-ui",
         version: "control-ui",

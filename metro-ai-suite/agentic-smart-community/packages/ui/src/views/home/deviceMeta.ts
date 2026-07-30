@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 type Translate = (key: string) => string;
 
-export const DEFAULT_SMART_HOME_SOURCE_ID = "cam_fridge";
-
 export const KNOWN_SMART_HOME_SOURCE_IDS = [
   "cam_fridge",
   "cam_child",

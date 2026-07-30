@@ -29,6 +29,17 @@ interface ReportResponse {
   createdAt: string;
 }
 
+export interface AgentFrameworkOption {
+  id: "openclaw";
+  label: string;
+  defaultUrl: string;
+}
+
+export interface DashboardConfig {
+  chat: "configured" | "unconfigured";
+  frameworks: AgentFrameworkOption[];
+}
+
 export const getMonitors = async (params: Object) => {
   const monitors = await request<unknown, MonitorResponse[]>({
     url: "/api/monitors",
@@ -37,6 +48,25 @@ export const getMonitors = async (params: Object) => {
   });
 
   return { monitors };
+};
+
+export const getDashboardConfig = () => {
+  return request<unknown, DashboardConfig>({
+    url: "/api/dashboard/config",
+    method: "get",
+  });
+};
+
+export const configureAgentFramework = (data: {
+  framework: AgentFrameworkOption["id"];
+  url: string;
+  token: string;
+}) => {
+  return request({
+    url: "/api/dashboard/chat/config",
+    method: "post",
+    data,
+  });
 };
 
 export const getCameraActivityList = async (params: Record<string, unknown>) => {
@@ -54,13 +84,14 @@ export const getCameraActivityList = async (params: Record<string, unknown>) => 
       ...task,
       source_id: task.monitorId,
       clip_start_time: task.clipStartTime || task.createdAt,
-      clip_duration: task.clipDuration || 0,
+      clip_duration: task.clipDuration ?? event?.durationSeconds ?? 0,
       clip_file_path: task.summaryClipInput || "",
       summary_text: task.summaryText || alert?.description || "",
       created_at: task.createdAt,
       event_type: event?.motionType || "static",
+      actual_alert: alert?.notified === true,
       alert: alert
-        ? task.alert_type || task.event || task.severity || "danger"
+        ? task.alert_type || task.event || task.severity || "alert"
         : null,
     })),
   };
