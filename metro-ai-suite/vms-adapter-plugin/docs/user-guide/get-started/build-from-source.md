@@ -8,9 +8,10 @@ you through the complete build process.
 
 The VAP application consists of the following components built from source:
 
-- **Backend**: FastAPI Python service (`plugin/`) that manages VMS shims, analytics app shims,
-  camera sync, event processing, and result routing.
-- **UI**: React 19 / Vite frontend (`ui/`) served by nginx, providing the provider dashboard.
+- **Backend**: FastAPI Python service (`plugin/`) that manages VMS shims,
+  analytics app shims, camera sync, event processing, and result routing.
+- **UI**: React 19 / Vite frontend (`ui/`) served by nginx, providing the provider
+  dashboard.
 
 The `Dockerfile` in the repository root builds the backend image. The UI is built inside a
 multi-stage Docker build. Both are orchestrated by Docker Compose.
@@ -49,7 +50,8 @@ Set at minimum the following variables before building:
 
 Refer to `.env.example` for all available variables.
 
-For certificate path examples and TLS behavior details, see [TLS and Certificate Configuration](../how-to-guides/tls-and-certificates.md).
+For certificate path examples and TLS behavior details, see
+[TLS and Certificate Configuration](../how-to-guides/tls-and-certificates.md).
 
 ## Step 3: Build and Start with Docker Compose
 
@@ -59,7 +61,7 @@ Build all images and start the full stack:
 docker compose up -d --build
 ```
 
-### Customizing the Build
+### Customize the Build
 
 You can control the image registry and tag by setting environment variables before running
 the build command:
@@ -69,7 +71,7 @@ export REGISTRY_URL=<your-container-registry-url>    # e.g. "docker.io/username/
 export TAG=<your-tag>                                # e.g. "1.0.0" or "latest"
 ```
 
-> **Note:** If `REGISTRY_URL` or `TAG` are not set, the defaults in the Docker Compose file
+> **Note**: If `REGISTRY_URL` or `TAG` are not set, the defaults in the Docker Compose file
 > are used.
 
 ## Step 4: Verify the Build
@@ -82,7 +84,7 @@ docker compose ps
 
 Expected output — all services should show **healthy** or **running**:
 
-```
+```text
 NAME              STATUS
 vms-backend       Up (healthy)
 vms-ui            Up

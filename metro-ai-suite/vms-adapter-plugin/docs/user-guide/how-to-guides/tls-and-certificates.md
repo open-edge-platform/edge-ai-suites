@@ -1,29 +1,33 @@
-# TLS and Certificate Configuration
+# Transport Layer Security and Certificate Configuration
 
-This guide explains how to configure certificate verification for these external connections used by the VMS Adapter Plugin (VAP):
+This guide explains how to configure certificate verification for these external connections
+used by the VMS Adapter Plugin (VAP):
 
 - Nx Witness HTTPS
-- DLStreamer Vision HTTPS
+- DL Streamer Vision HTTPS
 - MQTT subscribing for dls_vision metadata
 - MQTT subscribing for the Live Video Captioning (LVC) broker
 
-This page covers client-side TLS only. Server-side broker hardening, topic ACLs, and certificate issuance are managed outside VAP.
+This page covers client-side TLS only. Server-side broker hardening, topic ACLs, and certificate
+issuance are managed outside VAP.
 
 ## What VAP Verifies
 
 VAP acts as a client in three separate places:
 
 - HTTPS client to Nx Witness
-- HTTPS client to the DLS Vision analytics app
+- HTTPS client to the DL Streamer Vision analytics app
 - MQTT client to one or two brokers, depending on which analytics apps are enabled
 
 Certificate verification is controlled independently for each connection family.
 
 ## Certificate File Paths
 
-The backend container mounts `./config` from the repository to `/app/config` inside the container through `docker-compose.yml`.
+The backend container mounts `./config` from the repository to `/app/config` inside the
+container through `docker-compose.yml`.
 
-That means certificate files placed on the host under `./config/certs/` are available inside the container as `/app/config/certs/...`.
+That means certificate files placed on the host under `./config/certs/` are available inside
+the container as `/app/config/certs/...`.
 
 Recommended host directory layout:
 
@@ -54,8 +58,10 @@ NX_CA_BUNDLE=
 Behavior:
 
 - `NX_TLS_VERIFY=false`: VAP does not verify the Nx server certificate.
-- `NX_TLS_VERIFY=true` with `NX_CA_BUNDLE` empty: VAP uses the container's default system CA store.
-- `NX_TLS_VERIFY=true` with `NX_CA_BUNDLE=/app/config/certs/nx-ca.crt`: VAP verifies Nx using the provided CA bundle.
+- `NX_TLS_VERIFY=true` with `NX_CA_BUNDLE` empty: VAP uses the container's default system CA
+  store.
+- `NX_TLS_VERIFY=true` with `NX_CA_BUNDLE=/app/config/certs/nx-ca.crt`: VAP verifies Nx using
+  the provided CA bundle.
 
 Typical self-signed or private-CA setup:
 
@@ -66,13 +72,14 @@ Typical self-signed or private-CA setup:
 NX_TLS_VERIFY=true
 NX_CA_BUNDLE=/app/config/certs/nx-ca.crt
 ```
-To generate and add your own self signed certificate for Nx, see [How to generate and add a self signed trusted certificate](https://support.networkoptix.com/hc/en-us/articles/16635062678039-How-to-generate-and-add-a-self-signed-trusted-certificate)
+
+To generate and add your own self signed certificate for Nx, see [How to generate and add a self signed trusted certificate](https://support.networkoptix.com/hc/en-us/articles/16635062678039-How-to-generate-and-add-a-self-signed-trusted-certificate).
 
 For more information about Nx Witness security, see [How secure is Nx Witness](https://support.networkoptix.com/hc/en-us/articles/115011970028-How-secure-is-Nx-Witness).
 
-## DLS Vision HTTPS
+## DL Streamer Vision HTTPS
 
-DLS Vision certificate verification is controlled by these variables:
+DL Streamer Vision certificate verification is controlled by these variables:
 
 ```dotenv
 DLS_VISION_TLS_VERIFY=false
@@ -81,13 +88,13 @@ DLS_VISION_CA_BUNDLE=
 
 Behavior:
 
-- `DLS_VISION_TLS_VERIFY=false`: VAP does not verify the DLS Vision server certificate.
+- `DLS_VISION_TLS_VERIFY=false`: VAP does not verify the DL Streamer Vision server certificate.
 - `DLS_VISION_TLS_VERIFY=true` with `DLS_VISION_CA_BUNDLE` empty: VAP uses the container's default system CA store.
-- `DLS_VISION_TLS_VERIFY=true` with `DLS_VISION_CA_BUNDLE=/app/config/certs/dls-vision-ca.crt`: VAP verifies DLS Vision using the provided CA bundle.
+- `DLS_VISION_TLS_VERIFY=true` with `DLS_VISION_CA_BUNDLE=/app/config/certs/dls-vision-ca.crt`: VAP verifies DL Streamer Vision using the provided CA bundle.
 
 Typical self-signed or private-CA setup:
 
-1. Copy the DLS Vision server certificate or issuing CA certificate to `./config/certs/dls-vision-ca.crt`.
+1. Copy the DL Streamer Vision server certificate or issuing CA certificate to `./config/certs/dls-vision-ca.crt`.
 2. Set:
 
 ```dotenv
