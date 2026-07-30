@@ -114,6 +114,8 @@ def run_vlm_grading_pipeline(
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
     contrast_enhance = bool(cfg_image.get("contrast_enhance", False))
     contrast_factor = float(cfg_image.get("contrast_factor", 1.5))
+    page_columns = int(cfg_image.get("page_columns", 1))
+    column_split_ratio = float(cfg_image.get("column_split_ratio", 0.5))
     debug_mode = bool(cfg_grading.get("debug_mode", False))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
@@ -146,8 +148,10 @@ def run_vlm_grading_pipeline(
     _t = _step_start("render")
     images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
                                 contrast_enhance=contrast_enhance,
-                                contrast_factor=contrast_factor)
-    _step_done("render", _t, f"pages={len(images)} dpi={dpi}")
+                                contrast_factor=contrast_factor,
+                                page_columns=page_columns,
+                                column_split_ratio=column_split_ratio)
+    _step_done("render", _t, f"pages={len(images)} dpi={dpi} columns={page_columns}")
     if not images:
         raise RuntimeError("PDF produced no pages")
 
