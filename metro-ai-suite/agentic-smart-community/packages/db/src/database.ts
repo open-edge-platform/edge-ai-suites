@@ -192,7 +192,6 @@ export class SmartBuildingDB {
     // the row is still kept for full audit). DEFAULT 1 → legacy rows count as
     // "notified", matching the old behaviour where only pushed alerts existed.
     this.ensureColumn("alerts", "notified", "INTEGER NOT NULL DEFAULT 1");
-    this.removeUnusedTaskColumns();
   }
 
   /** Idempotently add a column if it is missing (mirrors SchemaManager.addColumnIfMissing). */
@@ -201,24 +200,6 @@ export class SmartBuildingDB {
     if (!cols.some((c) => c.name === column)) {
       this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
     }
-  }
-
-  /** Remove deprecated task columns from databases created by older releases. */
-  private removeUnusedTaskColumns(): void {
-    const deprecatedColumns = ["clip_start_time", "clip_end_time", "clip_duration", "started_at"];
-    const existingColumns = new Set(
-      (this.db.prepare("PRAGMA table_info(video_summary_tasks)").all() as any[])
-        .map((column) => column.name)
-    );
-
-    const migrate = this.db.transaction(() => {
-      for (const column of deprecatedColumns) {
-        if (existingColumns.has(column)) {
-          this.db.exec(`ALTER TABLE video_summary_tasks DROP COLUMN ${column}`);
-        }
-      }
-    });
-    migrate();
   }
 
   close(): void {
