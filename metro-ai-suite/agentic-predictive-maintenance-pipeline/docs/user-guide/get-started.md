@@ -114,6 +114,11 @@ This script:
 - Splits it into training and validation sets.
 - Builds `apps/pipeline-defect-detection/resources/videos/datastream.mp4` for use by DL Streamer.
 
+> **Training note**: This release does not include a production-trained defect detection model
+> because a representative, properly licensed, and sufficiently labeled dataset is not available
+> for release validation. To train a detector for your own inspection scenario, see
+> [Training a Defect Detection Model with Intel Geti](./training-with-geti.md).
+
 > **Note**: Skip this step if you have your own video, or if you plan to run in
 > `LLM_MODE=fallback` where no video or DL Streamer inference is required.
 

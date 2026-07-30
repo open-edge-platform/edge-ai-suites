@@ -34,6 +34,12 @@ function statusBadgeHtml(run) {
   return `<span class="status-badge status-${escapeHtml(run.status)}">${escapeHtml(run.status)}${suffix}</span>`;
 }
 
+function runningLabel(activeRun) {
+  return activeRun && activeRun.phase
+    ? `Inspection: RUNNING (${activeRun.phase})`
+    : "Inspection: RUNNING";
+}
+
 function runActionHtml(run) {
   if (run.status === "completed") return `<a href="/results/${run.run_id}">View Results</a>`;
   if (run.status === "running") return `<a href="/results/${run.run_id}">Waiting…</a>`;
@@ -103,7 +109,7 @@ async function pollStatus() {
       banner.classList.toggle("live-on", isActive);
       banner.classList.toggle("live-off", !isActive);
       bannerText.textContent = isActive
-        ? `Inspection: RUNNING (${data.active_run.phase})`
+        ? runningLabel(data.active_run)
         : "Inspection: IDLE";
     }
 

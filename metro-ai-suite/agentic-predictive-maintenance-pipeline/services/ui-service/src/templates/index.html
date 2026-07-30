@@ -15,7 +15,11 @@
       <span class="use-case-badge">{{ use_case_id }}</span>
       <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
         <span class="live-dot"></span>
-        <span id="pipeline-live-text">{{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run else 'Inspection: IDLE' }}</span>
+        <span id="pipeline-live-text">
+          {% if active_run %}
+            {{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run.phase else 'Inspection: RUNNING' }}
+          {% else %}Inspection: IDLE{% endif %}
+        </span>
       </span>
     </div>
   </header>
@@ -36,6 +40,12 @@
             {{ summary.by_class | sum(attribute="count") if summary and summary.by_class else 0 }}
           </span>
           <span class="live-stat-label">Total detections stored</span>
+          <form method="POST" action="/clear-detections" class="live-stat-action">
+            <button type="submit" class="btn-danger btn-small"
+              onclick="return confirm('This will permanently delete all detection records. Continue?')">
+              Clear
+            </button>
+          </form>
         </div>
         <div class="live-stat">
           <span class="live-stat-value" id="stat-runs-completed">

@@ -190,6 +190,7 @@ tr:hover td { background: #fafcff; }
 .btn-secondary { background: #e0e0e0; color: #333; }
 .btn-danger   { background: var(--error); color: #fff; }
 .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover { opacity: 0.88; }
+.btn-small { padding: 0.25rem 0.65rem; font-size: 0.78rem; }
 
 /* Messages */
 .empty    { color: #999; font-style: italic; font-size: 0.9rem; padding: 0.5rem 0; }
@@ -282,6 +283,7 @@ footer {
 }
 .live-stat-value { display: block; font-size: 1.6rem; font-weight: 700; color: var(--intel-blue); }
 .live-stat-label { display: block; font-size: 0.78rem; color: #666; margin-top: 0.2rem; }
+.live-stat-action { margin-top: 0.5rem; }
 
 /* Run Pipeline action row */
 .run-now-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1rem; }
