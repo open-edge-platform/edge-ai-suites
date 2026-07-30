@@ -2,7 +2,7 @@
 
 Source modes:
     file   -> tuned recorded-file pipeline
-    basler -> live Basler pipeline via pypylon -> fdsrc
+    basler -> live Basler pipeline via gencamsrc
 
 A handful of env-driven knobs make the pipeline configurable at `make up`
 time without introducing new pipeline shapes:
@@ -29,7 +29,16 @@ PRE_DETECT_QUEUE_LIVE   = "queue max-size-buffers=1 max-size-bytes=0 max-size-ti
 POST_DETECT_QUEUE_LIVE  = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream"
 
 
-def _build_source(kind: str, arg: str, target_fps: int) -> tuple[list[str], str]:
+def _build_source(
+    kind: str,
+    arg: str,
+    target_fps: int,
+    *,
+    basler_pixel_format: str = "bayerbggr",
+    basler_fixed_camera: bool = False,
+    basler_exposure_us: str | None = None,
+    basler_gain: str | None = None,
+) -> tuple[list[str], str]:
     """Return the source elements and the matching gvadetect preproc backend."""
     kind = kind.lower()
     if kind == "file":
@@ -43,16 +52,25 @@ def _build_source(kind: str, arg: str, target_fps: int) -> tuple[list[str], str]
             "vah264dec",
         ], "ie"
     if kind == "basler":
-        blocksize = 1920 * 1080 * 2  # UYVY = 2 B/px
+        camera_serial = shlex.quote(arg)
+        pixel_format = shlex.quote(basler_pixel_format)
+        source_props = [
+            f"serial={camera_serial}",
+            f"pixel-format={pixel_format}",
+        ]
+        if basler_fixed_camera:
+            source_props.extend(["exposure-auto=off", "gain-auto=off"])
+            if basler_exposure_us:
+                source_props.append(f"exposure-time={shlex.quote(basler_exposure_us)}")
+            if basler_gain:
+                source_props.append(f"gain={shlex.quote(basler_gain)}")
         return [
-            f"fdsrc fd=0 blocksize={blocksize} do-timestamp=true",
-            (
-                f"rawvideoparse format=yuy2 width=1920 height=1080 "
-                f"framerate={target_fps}/1"
-            ),
-            "vapostproc",
-            '"video/x-raw(memory:VAMemory),format=NV12"',
-        ], "va-surface-sharing"
+            f"gencamsrc {' '.join(source_props)}",
+            "bayer2rgb",
+            "videoscale",
+            "videoconvert",
+            "video/x-raw,width=1280,height=720,format=NV12",
+        ], "ie"
     raise ValueError(f"unsupported source_kind: {kind!r} (want file|basler)")
 
 
@@ -74,6 +92,10 @@ def build(
     enable_detect: bool = True,
     enable_watermark: bool = True,
     minimal: bool = False,
+    basler_pixel_format: str = "bayerbggr",
+    basler_fixed_camera: bool = False,
+    basler_exposure_us: str | None = None,
+    basler_gain: str | None = None,
 ) -> str:
     """Return the finalized single-branch gst-launch pipeline string.
 
@@ -91,7 +113,15 @@ def build(
             raise ValueError("must supply source_arg (or legacy `video=`)")
         source_arg = video
 
-    src_elems, pre_proc = _build_source(source_kind, source_arg, target_fps)
+    src_elems, pre_proc = _build_source(
+        source_kind,
+        source_arg,
+        target_fps,
+        basler_pixel_format=basler_pixel_format,
+        basler_fixed_camera=basler_fixed_camera,
+        basler_exposure_us=basler_exposure_us,
+        basler_gain=basler_gain,
+    )
 
     is_live = source_kind == "basler"
     if sink_sync is None:
@@ -100,17 +130,9 @@ def build(
         sink_sync_str = "true" if sink_sync else "false"
 
     if minimal:
-        # Absolute minimum: just source -> sink. For the basler path we skip
-        # the VA upload (no vapostproc / NV12) so the raw UYVY frames go
-        # straight through videoconvert into the sink. Detect / queues /
-        # identity are all disabled.
-        if is_live:
-            raw_src = [
-                src_elems[0],   # fdsrc
-                src_elems[1],   # rawvideoparse
-            ]
-        else:
-            raw_src = src_elems  # file source keeps its demux/decoder
+        # Absolute minimum: just source -> sink. Detect / queues / identity
+        # are all disabled.
+        raw_src = src_elems
         if display_view:
             sink_tail = ["videoconvert", f"{video_sink} sync={sink_sync_str}"]
         else:
@@ -138,10 +160,8 @@ def build(
         # The VA pipeline keeps frames in VAMemory (NV12). Download to system
         # memory with `vapostproc ! video/x-raw` and colour-convert before
         # the sink. sync=false for live (basler) sources — no file clock.
-        sink_tail = [
+        sink_tail = ["videoconvert", f"{video_sink} sync={sink_sync_str}"] if is_live else [
             "vapostproc",
-            '"video/x-raw"',
-            "videoconvert",
             f"{video_sink} sync={sink_sync_str}",
         ]
     else:
@@ -171,6 +191,8 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
     detect_enabled = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
     watermark_enabled = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
     minimal = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
+    basler_pixel_format = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
+    basler_fixed_camera = os.environ.get("BASLER_FIXED_CAMERA", "0").strip().lower() not in {"0", "false", "no"}
 
     print(
         build(
@@ -189,5 +211,9 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
             enable_detect=detect_enabled,
             enable_watermark=watermark_enabled,
             minimal=minimal,
+            basler_pixel_format=basler_pixel_format,
+            basler_fixed_camera=basler_fixed_camera,
+            basler_exposure_us=os.environ.get("BASLER_EXPOSURE_US", "").strip() or None,
+            basler_gain=os.environ.get("BASLER_GAIN", "").strip() or None,
         )
     )

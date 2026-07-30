@@ -160,7 +160,7 @@ gst-launch-1.0 \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! autovideosink sync=true
+  ! ximagesink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -213,7 +213,7 @@ gst-launch-1.0 \
   ! videoconvert \
   ! video/x-raw,width=1280,height=720,format=NV12 \
   ! videoconvert \
-  ! autovideosink sync=true
+  ! ximagesink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -278,7 +278,7 @@ gst-launch-1.0 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! autovideosink sync=true
+  ! ximagesink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -377,7 +377,7 @@ taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! autovideosink sync=true
+  ! ximagesink sync=true
 ```
 
 Container INFO log knobs lines:

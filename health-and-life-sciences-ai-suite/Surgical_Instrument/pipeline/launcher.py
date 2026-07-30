@@ -67,6 +67,7 @@ _GST_PRIO  = os.environ.get("PIPELINE_GST_RT_PRIORITY", "").strip()
 BASLER_FIXED_CAMERA = os.environ.get("BASLER_FIXED_CAMERA", "0").strip() not in {"0", "false", "no"}
 BASLER_EXPOSURE_US  = os.environ.get("BASLER_EXPOSURE_US", "").strip()
 BASLER_GAIN         = os.environ.get("BASLER_GAIN", "").strip()
+BASLER_PIXEL_FORMAT = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
 
 # ------------------------------------------------------------ state --------
 _proc: subprocess.Popen | None = None
@@ -117,6 +118,10 @@ def _spawn(
         enable_detect=DETECT_ENABLED,
         enable_watermark=WATERMARK_ENABLED,
         minimal=MINIMAL,
+        basler_pixel_format=BASLER_PIXEL_FORMAT,
+        basler_fixed_camera=BASLER_FIXED_CAMERA,
+        basler_exposure_us=BASLER_EXPOSURE_US or None,
+        basler_gain=BASLER_GAIN or None,
     )
 
     env = os.environ.copy()
@@ -150,6 +155,7 @@ def _spawn(
     if int(_GST_PRIO) > 90 if _GST_PRIO.isdigit() else False:
         log.warning("[case4] PIPELINE_GST_RT_PRIORITY=%s > 90; may starve host critical threads", _GST_PRIO)
 
+    gst_exec = f"{gst_prefix} " if gst_prefix else ""
     if source_kind == "basler":
         # Enumerate Basler cameras visible inside the container before spawning
         # so connectivity problems appear immediately in the logs.
@@ -164,30 +170,14 @@ def _spawn(
             )
         except Exception as _exc:  # noqa: BLE001
             log.warning("[basler] pypylon enumeration failed: %s", _exc)
-        # Build Basler feeder command with optional fixed-camera tuning args.
-        feeder_args = (
-            f"{source_arg} "
-            f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy"
-        )
-        if BASLER_FIXED_CAMERA:
-            feeder_args += " --fixed-camera"
-            if BASLER_EXPOSURE_US:
-                feeder_args += f" --exposure-us {BASLER_EXPOSURE_US}"
-            if BASLER_GAIN:
-                feeder_args += f" --gain {BASLER_GAIN}"
-        cam_exec = f"{cam_prefix} " if cam_prefix else ""
-        gst_exec = f"{gst_prefix} " if gst_prefix else ""
-        cmd = (
-            f"exec {cam_exec}python3 /opt/basler_reader.py {feeder_args} "
-            f"| exec {gst_exec}gst-launch-1.0 {pipeline}"
-        )
+        cmd = f"exec {gst_exec}gst-launch-1.0 {pipeline}"
     else:
         cmd = f"exec gst-launch-1.0 {pipeline}"
 
     log.info("[pipeline] generated cmd: %s", cmd)
     log.info(
         "[pipeline] knobs: cam_cores=%s cam_prio=%s gst_cores=%s gst_prio=%s "
-        "basler_fixed=%s basler_exposure_us=%s basler_gain=%s",
+        "basler_fixed=%s basler_exposure_us=%s basler_gain=%s basler_pixel_format=%s",
         _CAM_CORES or "<unset>",
         _CAM_PRIO  or "<unset>",
         _GST_CORES or "<unset>",
@@ -195,6 +185,7 @@ def _spawn(
         BASLER_FIXED_CAMERA,
         BASLER_EXPOSURE_US or "<unset>",
         BASLER_GAIN        or "<unset>",
+        BASLER_PIXEL_FORMAT,
     )
     log.info(
         "[pipeline] knobs: detect=%s watermark=%s minimal=%s scheduling_policy=%s batch_size=%s sink_sync=%s",

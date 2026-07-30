@@ -18,7 +18,8 @@ WATERMARK             ?= 1
 MINIMAL               ?= 0
 PIPELINE_SINK_SYNC    ?=
 PIPELINE_DISPLAY_VIEW ?= 0
-PIPELINE_VIDEO_SINK   ?= autovideosink
+PIPELINE_VIDEO_SINK   ?= ximagesink
+PIPELINE_X_DISPLAY    ?= $(or $(DISPLAY),$(if $(wildcard /tmp/.X11-unix/X0),:0,))
 
 # Friendly alias: `make up AUTOVIDEOSINK=true` -> DISPLAY_VIEW=1 + SINK_SYNC=true
 #                 `make up AUTOVIDEOSINK=false` -> DISPLAY_VIEW=0 + SINK_SYNC=false
@@ -55,6 +56,7 @@ PIPELINE_GST_RT_PRIORITY      ?=
 BASLER_FIXED_CAMERA  ?= 0
 BASLER_EXPOSURE_US   ?=
 BASLER_GAIN          ?=
+BASLER_PIXEL_FORMAT  ?= bayerbggr
 
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
 # works without editing this file. Override on the CLI if needed.
@@ -131,10 +133,10 @@ endef
 
 .PHONY: up
 up:  ## First-boot: build images + start stack. May take 20-35 min if no cached IR.
-	@xhost +local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
-	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	DISPLAY=$(PIPELINE_X_DISPLAY) UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
 	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
@@ -142,6 +144,7 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
 	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
@@ -154,10 +157,10 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 		echo "[run] No cached IR at $(IR_DIR)/ — run 'make up' first for first-boot train,"; \
 		echo "[run] or 'make assets' to seed IR from POC."; \
 		exit 1)
-	@xhost +local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
-	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	DISPLAY=$(PIPELINE_X_DISPLAY) UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
 	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
 	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
@@ -165,6 +168,7 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
 	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d
 	$(_print_urls)
@@ -281,7 +285,7 @@ logs:  ## Tail logs for all services
 .PHONY: down
 down:  ## Stop and remove containers
 	$(COMPOSE) down
-	@xhost -local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost -local:root >/dev/null 2>&1 || true
 
 .PHONY: clean
 clean: down  ## Remove containers, named volumes, and built images

@@ -106,6 +106,7 @@ services:
       BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
       BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
       BASLER_GAIN:                 ${BASLER_GAIN:-}
+      BASLER_PIXEL_FORMAT:         ${BASLER_PIXEL_FORMAT:-bayerbggr}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
