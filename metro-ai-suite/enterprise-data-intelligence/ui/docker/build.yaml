@@ -1,0 +1,6 @@
+services:
+  office-poc-ui:
+    image: ${REGISTRY:-opea}/office-poc-ui:${TAG:-latest}
+    build:
+      context: ../..
+      dockerfile: ./ui/docker/Dockerfile.ui

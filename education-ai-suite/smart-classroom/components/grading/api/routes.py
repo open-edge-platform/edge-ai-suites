@@ -73,10 +73,19 @@ def create_router(language: str) -> APIRouter:
         try:
             return GradingConfigResponse(**update_grading_config_impl(
                 dpi=req.dpi,
+                contrast_enhance=req.contrast_enhance,
+                contrast_factor=req.contrast_factor,
+                max_tokens=req.max_tokens,
                 vlm_temperature=req.vlm_temperature,
+                max_image_pixels=req.max_image_pixels,
                 poll_interval=req.poll_interval,
                 stable_checks=req.stable_checks,
                 idle_timeout=req.idle_timeout,
+                min_score=req.min_score,
+                sort_boxes=req.sort_boxes,
+                expand_margin=req.expand_margin,
+                merge_overlapping=req.merge_overlapping,
+                iou_threshold=req.iou_threshold,
             ))
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc

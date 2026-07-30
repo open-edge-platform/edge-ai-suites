@@ -1,0 +1,657 @@
+﻿# Flutter Smart Classroom Configuration
+# This is a complete copy of smart-classroom/config.yaml with ONLY content_search and qa enabled.
+# All other features are disabled to prevent loading ASR, OCR, summarizer, and VA models.
+# The backend uses this config when started by Flutter scripts via SC_CONFIG_PATH environment variable.
+
+app:
+  name: Smart Classroom
+  cleanup_on_exit: true
+  use_ov_genai: True # True or False, applicable for provider: openvino
+  language: en # en or zh
+
+features:
+  asr:                { enabled: false }
+  summary:            { enabled: false }
+  mindmap:            { enabled: false }
+  topic_segmentation: { enabled: false }
+  video_analytics:    { enabled: false }
+  board_ocr:          { enabled: false }
+  content_search:     { enabled: true }
+  qa:                 { enabled: true }
+  grading:            { enabled: false }
+  report:             { enabled: false }
+
+monitoring:
+  logs_dir: ./monitoring/logs
+  interval: 2
+  socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
+  npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
+  execution_logs: monitoring/executionlogs
+
+models:
+  asr:
+    provider: openai # openvino, funasr and openai supported
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    device: CPU # CPU Recommended
+    temperature: 0.0
+    diarization: False
+    hf_token: None   # needed only if diarization=true
+    models_base_path: "models"
+    threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
+    no_speech_threshold: 0.6
+    logprob_threshold: -1.0
+    min_duration_sec: 0.25
+    min_words: 2
+    max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
+  
+  diarization: #Only applicable when diarization is set to True for ASR
+    provider: "huggingface"
+    name: "pyannote/speaker-diarization-community-1"
+    models_base_path: "models"
+
+  summarizer:
+    provider: openvino 
+    name: Qwen/Qwen3-8B 
+    device: GPU # GPU or CPU
+    weight_format: int4 # supports fp16, int4, int8 (Recommended)
+    max_new_tokens: 5120
+    temperature: 0.0 # 0.5 default
+    use_cache: True
+    models_base_path: "models"
+    mode: dialog   # dialog | teacher | hybrid
+    system_prompt: 
+      en:
+
+        Dialog: |
+          Summarize the classroom transcript.
+
+          Format:
+          TEACHER = instructor
+          STUDENT_XX = students
+
+          Instructions:
+          - Provide a full dialog summary.
+          - Preserve the flow of discussion.
+          - Include both teacher explanations and questions.
+          - Ignore filler or repetition.
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Questions
+          - ...
+
+          ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+
+
+        Teacher: |
+          Summarize only the TEACHER explanations from the transcript.
+
+          Instructions:
+          - Ignore student dialog completely.
+          - Focus strictly on teacher explanations.
+          - Do not invent missing content.
+          - If a section has no content, write "None".
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Questions
+          - None
+
+          ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+
+
+        Hybrid: |
+          Summarize with focus on TEACHER explanations,
+          but use STUDENT questions as supporting context.
+
+          Instructions:
+          - Teacher explanations are primary.
+          - Include student questions only when they clarify context.
+          - Do not invent content.
+          - Ignore filler.
+          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
+
+          Output valid Markdown using exactly these sections:
+
+          ## Teacher Summary
+          - ...
+
+          ## Questions
+          - ...
+
+          ## Key Takeaways
+          - ...
+
+          ## Keywords
+          - ...
+
+          ## Key Difficulty Points
+          - ...
+
+          ## Session Outline
+          - ...
+
+          Rules:
+          - Bullet points only.
+          - Do not quote transcript text.
+          - Do not add extra headings.
+      zh:
+        Dialog: |
+          总结课堂转录内容。
+
+          转录格式:
+          教师 = 教师发言
+          学生_XX = 学生发言
+
+          指示:
+          - 提供完整的对话摘要。
+          - 保持讨论的整体流程。
+          - 包含教师讲解和学生提问。
+          - 忽略无意义的填充语或重复内容。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 问题
+          - ...
+
+          ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
+        Teacher: |
+          仅总结转录中 教师 的讲解内容。
+
+          指示:
+          - 完全忽略学生对话。
+          - 严格聚焦教师的解释内容。
+          - 不要编造缺失的内容。
+          - 如果某个章节没有内容，写 "None"。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 问题
+          - None
+
+          ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
+
+        Hybrid: |
+          以 教师 讲解为重点进行总结，
+          并在必要时使用 学生 提问作为上下文补充。
+
+          指示:
+          - 教师讲解为主要内容。
+          - 仅在学生问题能帮助理解上下文时才包含。
+          - 不要编造内容。
+          - 忽略填充语或重复内容。
+          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
+
+          使用以下固定章节标题输出有效 Markdown:
+
+          ## 教师总结
+          - ...
+
+          ## 问题
+          - ...
+
+          ## 关键要点
+          - ...
+
+          ## 关键词
+          - ...
+
+          ## 重难点
+          - ...
+
+          ## 课程结构
+          - ...
+
+          规则:
+          - 仅使用项目符号列表。
+          - 不要直接引用原始转录文本。
+          - 不要添加额外标题。
+
+    board_ocr_prompt:
+      en: |
+        The user message also contains a [BOARD CONTENT] block: text captured frame by
+        frame by OCR from the classroom display / interactive flat panel (slide titles,
+        bullet points, tables, equations), in chronological order. It may contain OCR
+        noise, watermarks, or site/channel names, and the same title may repeat across
+        many frames.
+
+        Synthesize this content and, in ADDITION to the sections above, append exactly one
+        more section at the end:
+
+        ## Board/IFPD Content
+        - ...
+
+        Rules for this section only:
+        - Write complete, fluent sentences that describe WHAT the board presented, e.g.
+          "Showed ...", "Explained ...", "Described ...", "Illustrated ...", "Listed ...".
+        - Do NOT output isolated keywords or fragments. Merge repeated/related frames on the
+          same topic into one coherent statement.
+        - Organize into a few bullet points by topic or teaching sequence; each bullet is a
+          full sentence, not a phrase.
+        - Ignore watermarks, channel/site names, and other noise; fix obvious OCR errors
+          when the meaning is clear.
+        - Do not repeat content already covered in the transcript sections.
+        - If the board content is empty or unreadable, write "- None".
+
+      zh: |
+        用户消息中还包含一个 [BOARD CONTENT] 板书内容块：通过 OCR 从教室显示屏/交互式白板
+        逐帧捕获的文本（幻灯片标题、要点、表格、公式等），按时间先后排列，可能含有 OCR 噪声、
+        水印或网站/频道名称，且同一标题可能在多帧中重复出现。
+
+        请综合这些内容，在上述章节之外，在最后额外追加且仅追加一个章节:
+
+        ## 板书/大屏内容
+        - ...
+
+        本章节规则:
+        - 用完整、通顺的句子说明板书/屏幕上“呈现了/讲解了/说明了/描述了/列举了”哪些相关内容，
+          而不是罗列零散的关键词或短语。
+        - 将同一主题的重复帧或相关帧归纳为一句连贯的表述。
+        - 按主题或授课顺序组织为若干条要点，每条都是一个完整句子，而非短语。
+        - 忽略水印、网站/频道名称等无关噪声；在含义明确时修正明显的 OCR 错误。
+        - 不要在此重复转录章节已有的内容。
+        - 如果板书内容为空或无法识别，写 "- 无"。
+
+  model_hub: huggingface # huggingface or modelscope
+
+  va:
+    models_base_path: "models"
+    front_pose_model: yolov8m-pose # yolov8m-pose/yolo11m-pose/yolo26m-pose
+    back_pose_model: yolov8s-pose # yolov8s-pose/yolo11s-pose/yolo26s-pose
+    threshold: 0.5 # confidence threshold for YOLO detections
+  
+  embedding:
+    name: "BAAI/bge-large-en-v1.5"
+    min_score: 0.65
+
+  ocr:
+    enabled: true # Set to false to disable OCR features
+    provider: openvino # native or openvino
+    device: CPU # CPU or GPU
+    concurrency: 2    # CapabilityRunner max_concurrency (worker pool size)
+    queue_max: 16     # CapabilityRunner queue depth before 503 backpressure
+    model_dir: models/ocr # Base directory for OCR models
+    ocr_version: PP-OCRv6
+    det_model: PP-OCRv6_small_det
+    rec_model: PP-OCRv6_small_rec
+    cls_model: PP-LCNet_x1_0_doc_ori
+
+  text_gen:
+    enabled: true 
+    provider: vlm
+    vlm_name: Qwen/Qwen3-VL-8B-Instruct
+    device: GPU # GPU or CPU
+    weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
+    max_new_tokens: 5120
+    concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
+    queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
+
+mindmap:
+  system_prompt:
+    en: |
+      Generate a comprehensive jsMind JSON structure that accurately captures ALL key concepts from the summary. Follow these strict rules:
+ 
+      1. The output must be a valid JSON object with "meta", "format", and "data" properties
+      2. Set format to "node_tree"
+      3. There must be exactly ONE root node with id "root"
+      4. If the summary contains multiple top-level topics, create a synthetic root topic that reflects the main theme:
+         - Use the actual title if provided 
+         - Otherwise use descriptive titles like "Class Overview", "Lecture Summary", "Main Topics"
+      5. Each node must have "id" and "topic" properties
+      6. Child nodes are placed in a "children" array
+      7. IMPORTANT: Extract ALL key details and concepts from the summary:
+         - Include specific examples, definitions, and explanations mentioned
+         - Capture contrasts, comparisons, and relationships between concepts
+         - Include technical terms, equations, or scientific principles mentioned
+         - Don't oversimplify - preserve the depth and nuance of the content
+      8. Use descriptive and specific topic names that reflect the actual content:
+         - Instead of "Topic A" use "Discontinuous electron transitions between orbits"
+         - Instead of "Definition" use "Areas without atomic particles (ether/empty space)"
+         - Capture the essence and specificity of each concept
+      9. Create 2-4 levels of hierarchy to properly organize information:
+         - Main topics (from headings)
+         - Sub-concepts (key points within each topic)
+         - Specific details (examples, explanations, technical details)
+      10. Ensure conceptual accuracy - each node should represent a distinct, meaningful concept
+      11. Do NOT include any markdown formatting, code fences, or explanatory text
+      12. Output only the raw JSON structure
+      13. Always return a valid JSON structure.
+ 
+      Example of GOOD specificity:
+      {
+        "meta": {
+          "name": "physics_lecture",
+          "author": "ai_assistant", 
+          "version": "1.0"
+        },
+        "format": "node_tree",
+        "data": {
+          "id": "root",
+          "topic": "Quantum Mechanics and Wave Theory",
+          "children": [
+            {
+              "id": "wave_particle_duality",
+              "topic": "Wave-Particle Duality",
+              "children": [
+                {"id": "photon_behavior", "topic": "Photons exhibit both wave and particle properties"},
+                {"id": "double_slit", "topic": "Double-slit experiment demonstrates interference"},
+                {"id": "measurement_effect", "topic": "Measurement collapses wave function"}
+              ]
+            },
+            {
+              "id": "uncertainty_principle",
+              "topic": "Heisenberg Uncertainty Principle",
+              "children": [
+                {"id": "position_momentum", "topic": "Cannot precisely know both position and momentum"},
+                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 mathematical relationship"},
+                {"id": "quantum_limitations", "topic": "Fundamental limit of quantum measurements"}
+              ]
+            }
+          ]
+        }
+      }
+
+    zh: |
+      生成全面的jsMind JSON结构，准确捕获摘要中的所有关键概念。严格遵循以下规则：
+ 
+      1. 输出必须是包含"meta"、"format"和"data"属性的有效JSON对象
+      2. 将format设置为"node_tree"
+      3. 必须且只能有一个id为"root"的根节点
+      4. 如果总结内容包含多个顶级主题，创建反映主要主题的合成根主题：
+         - 如果提供了实际标题则使用（如"相对论与原子世界"）
+         - 否则使用描述性标题如"课堂概览"、"课程总结"、"主要内容"
+      5. 每个节点必须有"id"和"topic"属性
+      6. 子节点放在"children"数组中
+      7. 重要：从摘要中提取所有关键细节和概念：
+         - 包括提到的具体例子、定义和解释
+         - 捕获概念之间的对比、比较和关系
+         - 包括提到的技术术语、方程或科学原理
+         - 不要过度简化 - 保持内容的深度和细致差别
+      8. 使用反映实际内容的描述性和具体的主题名称：
+         - 不用"主题A"而用"电子在轨道间的不连续跃迁"
+         - 不用"定义"而用"无原子粒子区域（以太/空间）"
+         - 捕获每个概念的本质和特殊性
+      9. 创建2-4层级结构来正确组织信息：
+         - 主要主题（来自标题）
+         - 子概念（每个主题内的关键点）
+         - 具体细节（例子、解释、技术细节）
+      10. 确保概念准确性 - 每个节点应代表一个独特、有意义的概念
+      11. 不要包含任何markdown格式、代码块或解释性文本
+      12. 只输出原始JSON结构
+      13. 始终返回有效的JSON结构。
+ 
+      良好特异性示例：
+      {
+        "meta": {
+          "name": "物理课程",
+          "author": "人工智能助手",
+          "version": "1.0"
+        },
+        "format": "node_tree", 
+        "data": {
+          "id": "root",
+          "topic": "量子力学与波动理论",
+          "children": [
+            {
+              "id": "波粒二象性",
+              "topic": "波粒二象性",
+              "children": [
+                {"id": "光子特性", "topic": "光子同时表现出波动和粒子特性"},
+                {"id": "双缝实验", "topic": "双缝实验证明干涉现象"},
+                {"id": "测量效应", "topic": "测量导致波函数坍缩"}
+              ]
+            },
+            {
+              "id": "不确定性原理",
+              "topic": "海森堡不确定性原理",
+              "children": [
+                {"id": "位置动量", "topic": "无法同时精确知道位置和动量"},
+                {"id": "数学表达式", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
+                {"id": "量子限制", "topic": "量子测量的基本限制"}
+              ]
+            }
+          ]
+        }
+      }
+  min_token: 20
+
+audio_preprocessing:
+  chunk_duration_sec: 15
+  silence_threshold: -35  # in dB
+  silence_duration: 0.3   # minimum silence length in seconds
+  search_window_sec: 1    # how far to look for silence if no silence exactly at chunk boundary
+  chunk_output_path: chunks/
+
+audio_util:
+  max_size_mb: 300
+  allowed_extensions:
+    - .wav
+    - .mp3
+    - .m4a
+  chunk_size: 52428800   # 1024 * 1024 * 50 = 50MB
+
+pipeline:
+  delete_chunks_after_use: true
+
+va_pipeline:
+  mediamtx_path: components/va/bin/mediamtx
+  plugin_path: components/va
+  rtsp_codec: h264 # h264 or h265
+  output_rtsp_url: rtsp://127.0.0.1:8554
+  hls_base_url: http://127.0.0.1:8888
+  webrtc_base_url: http://127.0.0.1:8889
+  stream_protocol: webrtc # webrtc or hls
+
+  pose_statistics:
+    min_frames_for_transition: 3            # frames to confirm raise-hand for identified students
+    min_frames_for_transition_unid: 15      # frames to confirm raise-hand for unidentified students
+    absence_threshold: 90                   # forget student after unseen for N frames (90 ≈ 3s)
+    min_stand_frames: 10                    # frames a student must be seen before counting stand-up (10 ≈ 0.3s)
+    center_dist_threshold: 0.1              # how close two bounding boxes must be to count as same person (0~1)
+    unidentified_max: 50                    # max unidentified students to track
+    stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
+
+board_ocr:
+  enabled: true # requires ocr.enabled=true
+  frame_rate: "1/3"    # frame/seconds
+  debug: false
+
+report:
+  max_keywords: 8
+  max_difficulty_points: 4
+  pacing_slow_max: 260
+  pacing_fast_min: 520
+
+content_search:
+  host_addr: "127.0.0.1"
+  port: 9011
+  video_summarization_enabled: true
+  python_executable: "content_search/venv_content_search/Scripts/python.exe"
+
+  chromadb:
+    host: "127.0.0.1"
+    port: 9090
+    data_dir: './data/chroma_data'
+
+  storage:
+    data_dir: './data/local_storage'
+    bucket: "content-search"
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
+
+  vlm:
+    model_name: "Qwen/Qwen3-VL-8B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
+    device: "GPU"
+    weight_format: "int8"
+    ingest_enabled: true
+    stream: false  
+
+  video_preprocess:
+    host_addr: "127.0.0.1"
+    port: 8001
+    vlm_timeout_seconds: 300
+    chunk_duration_s: 30
+    chunk_overlap_s: 4
+    max_num_frames: 8
+    frame_width: 0
+    frame_height: 0
+
+  file_ingest:
+    host_addr: "127.0.0.1"
+    port: 9990
+    collection_name: "content-search"
+    doc_embedding_device: "CPU"
+    visual_embedding_model: "CLIP/clip-xlm-roberta-base-vit-b-32"
+    doc_embedding_model: "intfloat/multilingual-e5-small"
+    frame_extract_interval: 30      # for video: extract a frame every N frames
+    frame_extract_interval_sparse: 90  # for long videos (>20min): extract a frame every N frames
+    do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
+    document_parser:
+      chunk_method: "semantic"              # "fixed": split by character count; "semantic": split by topic/meaning using embeddings
+      chunk_size: 250                    # (fixed mode) max characters per chunk
+      chunk_overlap: 50                  # (fixed mode) overlapping characters between consecutive chunks
+      semantic_min_chunk_size: 250       # (semantic mode) chunks shorter than this are merged into the next one
+      semantic_breakpoint_percentile: 85 # (semantic mode) higher = fewer, larger chunks; lower = more, smaller chunks (range: 0-100)
+      semantic_buffer_size: 2            # (semantic mode) how many neighboring sentences to group when comparing similarity; larger = less sensitive to noise
+    reranker:
+      model: "BAAI/bge-reranker-base"
+      device: "GPU"
+      dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
+      overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
+
+  qa:
+    max_context: 5          # number of top chunks retrieved from ChromaDB to use as RAG context
+    max_tokens: 1024        # maximum tokens the VLM can generate for an answer (prevents mid-sentence cutoff)
+    max_history_turns: 3    # number of prior conversation turns (user+assistant pairs) sent to the VLM
+    context_window: 16384   # token budget for dynamic context selection; 
+    retrieval_score_threshold: 85  # minimum relevance score (0-100) a chunk must have to be used as context
+
+# ── Telegram integration (OpenClaw bridge) ────────────────────────────────────
+# Set enabled: true and fill in bot_token + chat_id to activate.
+# Smart Classroom will send session data to the shared Telegram group after
+# each pipeline stage completes; OpenClaw listens on the Linux side and
+# answers teacher / parent queries from that same group.
+telegram:
+  enabled: false                          # flip to true to activate
+  api_id: 0                               # from my.telegram.org → Your Apps
+  api_hash: "YOUR_API_HASH_HERE"          # from my.telegram.org → Your Apps
+  session_string: "YOUR_SESSION_STRING"   # generated by generate_session.py
+  chat_id: "YOUR_CHAT_ID_HERE"            # negative number for the group chat
+  class_name: "Class 10A - Physics"       # displayed in every Telegram message
+  proxy:                                  # remove or leave host empty to disable
+    host: ""                              # e.g. proxy.company.com
+    port: 8080                            # proxy port
+    type: http                            # http or socks5
+    username: ""                          # leave empty if no auth required
+    password: ""                          # leave empty if no auth required
+
+# ── SCP integration (OpenClaw bridge — alternative to Telegram) ──────────────
+# Use when the Windows machine cannot reach Telegram's servers directly.
+# Prerequisites:
+#   1. OpenSSH client installed on Windows (scp.exe / ssh.exe on PATH).
+#   2. Generate an SSH key pair on Windows:  ssh-keygen -t ed25519
+#   3. Append the public key to ~/.ssh/authorized_keys on the Linux machine.
+#   4. Optionally add a Host alias to %USERPROFILE%\.ssh\config so you can
+#      refer to the Linux machine by a short name (e.g. "ptl").
+#
+# Only one of  telegram.enabled  or  scp_sender.enabled  should be true.
+scp_sender:
+  enabled: false                          # flip to true to activate
+  host: "ptl"                             # SSH alias from ~/.ssh/config, or IP/hostname
+  identity_file: ""                       # path to private key, e.g. C:\Users\you\.ssh\id_ed25519
+                                          # leave empty to use the SSH default (~/.ssh/id_*)
+  remote_base_path: "/home/intel/smart_classroom_incoming"  # landing dir on Linux
+  class_name: "Class 10A - Physics"       # included in session_meta.json
+
+grading:
+  host_addr: "127.0.0.1"
+  port: 9012
+  provider:
+    layout_detection: http://127.0.0.1:9902
+    vlm_provider: http://127.0.0.1:8000

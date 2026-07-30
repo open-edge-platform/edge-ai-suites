@@ -101,7 +101,7 @@ The server exposes a standardized, use-case-agnostic tool surface (every id pref
 | **Use-case authoring** | `use_case_validate` · `use_case_register` | Validate a use case is wired end-to-end, register/unregister one at runtime |
 | **Rules & plans** | `plan_ctl` · `rule_eval` | Per-monitor JSON plans; manual replay of the rule evaluator (alerts normally fire automatically) |
 
-See the full reference — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Reference](./get-started/mcp_tools_list.md)**.
+See the full guide — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Guide](./get-started/mcp-tools.md)**.
 
 ### Agent Skills
 

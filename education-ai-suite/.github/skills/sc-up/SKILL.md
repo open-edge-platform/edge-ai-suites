@@ -18,13 +18,20 @@ the output.**
 
 ## What Starts
 
-1. **Main backend** (port 8000) — VLM service, OCR, ASR, core components
-   - VLM model (Qwen3-VL-8B-Instruct) loads on startup
+1. **Main backend** (port 8000) — Single process using Flutter's config.yaml
+   - Loads ONLY VLM service (Qwen3-VL-8B-Instruct)
+   - ASR, OCR, summarizer models NOT loaded (features disabled in Flutter config)
    - **Initial startup takes 2-3 minutes** for VLM model loading
-2. **Content Search** (port 9011) — auto-started by main backend when enabled
+   - Config: `utils/flutter/config.yaml` (passed via `SC_CONFIG_PATH` environment variable)
+2. **Content Search** (port 9011) — auto-started by main backend as subprocess
+   - Inherits `SC_CONFIG_PATH` from parent process
+   - Uses same Flutter config for consistent settings
+   - Starts ChromaDB, file ingest, and Q&A services
 3. **Flutter app** — Windows application for RAG interactions
 
 **Architecture:** Flutter → Content Search (RAG) → VLM (answer generation)
+
+**Key optimization:** Both main backend and Content Search use `utils/flutter/config.yaml` via `SC_CONFIG_PATH`, ensuring all features disabled except `content_search` and `qa`, preventing unnecessary model loading.
 
 ---
 

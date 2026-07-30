@@ -4,6 +4,44 @@ import re
 from typing import Any
 
 
+def _select_scalar_by_language(value: Any, language: str) -> str | None:
+    if isinstance(value, dict):
+        return value.get(language)
+    if isinstance(value, str):
+        return value
+    return None
+
+
+def _markers(cfg: dict[str, Any], language: str) -> dict[str, re.Pattern]:
+    raw = ((cfg.get("rubric_markers") or {}).get(language)) or {}
+    return {name: re.compile(pat) for name, pat in raw.items() if isinstance(pat, str)}
+
+
+def _parse_marked_blocks(full_prompt: str, markers: dict[str, re.Pattern]) -> list[dict]:
+    def kind_of(line: str) -> str | None:
+        for name, pat in markers.items():
+            if pat.match(line):
+                return name
+        return None
+
+    blocks: list[dict] = []
+    current: dict | None = None
+    for line in full_prompt.splitlines():
+        k = kind_of(line)
+        if k is not None:
+            if current is not None:
+                current["text"] = "\n".join(current["lines"]).strip("\n")
+                blocks.append(current)
+            title = markers[k].sub("", line, count=1).strip()
+            current = {"kind": k, "title": title, "lines": []}
+        elif current is not None:
+            current["lines"].append(line)
+    if current is not None:
+        current["text"] = "\n".join(current["lines"]).strip("\n")
+        blocks.append(current)
+    return blocks
+
+
 def _split_blocks(text: str, separator: str) -> list[str]:
     """Split text into blocks on separator lines. Returns block strings
     (separator lines removed, surrounding blank lines trimmed)."""
@@ -44,26 +82,25 @@ def _is_header_block(block: str, marker_pattern: re.Pattern) -> bool:
     return False
 
 
-def extract_header_block(full_prompt: str, cfg: dict[str, Any]) -> str | None:
-    """Return the header-extraction instruction block from the rubric, or None.
-
-    The rubric is split on the same separator used for section slicing; the block
-    whose first line matches `header_extract.marker_pattern` is returned with its
-    marker line stripped. Returns None when no such block exists (caller then
-    skips header extraction entirely).
-    """
+def extract_header_block(full_prompt: str, cfg: dict[str, Any], language: str = "en") -> str | None:
+    """Return the exam-info (header) instruction block from the rubric, or None."""
     header_cfg = cfg.get("header_extract", {})
     if not isinstance(header_cfg, dict) or not header_cfg.get("enabled", False):
+        return None
+
+    markers = _markers(cfg, language)
+    if "exam_info" in markers:
+        for block in _parse_marked_blocks(full_prompt, markers):
+            if block["kind"] == "exam_info":
+                return block["text"] or None
         return None
 
     separator = header_cfg.get("separator") \
         or cfg.get("prompt_slicing", {}).get("separator", r"^\s*={5,}\s*$")
     marker = re.compile(header_cfg.get("marker_pattern", r"^\s*(?:\[HEADER\]|【卷头信息】)"))
-
     for block in _split_blocks(full_prompt, separator):
         if _is_header_block(block, marker):
             lines = block.splitlines()
-            # drop the marker line (first non-blank line)
             for i, line in enumerate(lines):
                 if line.strip():
                     return "\n".join(lines[i + 1:]).strip() or block.strip()
@@ -71,23 +108,55 @@ def extract_header_block(full_prompt: str, cfg: dict[str, Any]) -> str | None:
     return None
 
 
+def _slice_by_markers(
+    full_prompt: str,
+    section_title: str,
+    markers: dict[str, re.Pattern],
+    ordinal_pattern: re.Pattern,
+) -> str:
+    blocks = _parse_marked_blocks(full_prompt, markers)
+    context = next((b["text"] for b in blocks if b["kind"] == "context"), None)
+    output = next((b["text"] for b in blocks if b["kind"] == "output"), None)
+
+    target = _leading_ordinal(section_title, ordinal_pattern)
+    matched = None
+    if target:
+        for b in blocks:
+            if b["kind"] == "section" and _leading_ordinal(b["title"], ordinal_pattern) == target:
+                matched = f'{b["title"]}\n{b["text"]}'.strip()
+                break
+
+    if matched is None:
+        return full_prompt
+
+    parts = [p for p in (context, matched, output) if p]
+    return "\n\n".join(parts)
+
+
 def slice_prompt_for_section(
     full_prompt: str,
     section_title: str,
     cfg: dict[str, Any],
+    language: str = "en",
 ) -> str:
     """Return the prompt slice for a section, or the full prompt as fallback."""
     slicing = cfg.get("prompt_slicing", {})
     if not isinstance(slicing, dict) or not slicing.get("enabled", False):
         return full_prompt
 
+    ordinal_pattern = re.compile(
+        _select_scalar_by_language(slicing.get("ordinal_pattern"), language)
+        or r"^\s*([一二三四五六七八九十]+)"
+    )
+
+    markers = _markers(cfg, language)
+    if "section" in markers:
+        return _slice_by_markers(full_prompt, section_title, markers, ordinal_pattern)
+
     separator = slicing.get("separator", r"^\s*={5,}\s*$")
-    ordinal_pattern = re.compile(slicing.get("ordinal_pattern", r"^\s*([一二三四五六七八九十]+)"))
     keep_first = bool(slicing.get("keep_first_block", True))
     keep_last = bool(slicing.get("keep_last_block", True))
 
-    # A header-extraction block (if any) is metadata, not a gradable section —
-    # exclude it so it is never mistaken for a question block.
     header_cfg = cfg.get("header_extract", {})
     header_marker = None
     if isinstance(header_cfg, dict) and header_cfg.get("enabled", False):
