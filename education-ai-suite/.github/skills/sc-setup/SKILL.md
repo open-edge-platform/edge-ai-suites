@@ -21,9 +21,11 @@ the output.**
 1. **Flutter dependencies** (via `flutter pub get`)
 2. **Main backend venv** (`smartclassroom/`) — includes VLM service dependencies
 3. **Content Search venv** (`venv_content_search/`) — RAG pipeline dependencies
-4. **Configuration validation** — checks `content_search.enabled` in config.yaml
+4. **Flutter-specific configuration** — `utils/flutter/config.yaml` with only `content_search` and `qa` enabled
 
-**VLM Model:** Qwen3-VL-8B-Instruct (auto-downloaded on first run)
+**Configuration approach:** Full config.yaml copy in `utils/flutter/` with all features disabled except `content_search` and `qa`. This prevents loading ASR, OCR, summarizer, and VA models.
+
+**VLM Model:** Qwen3-VL-8B-Instruct (auto-downloaded on first run, shared by Content Search)
 
 ---
 

@@ -87,7 +87,11 @@ function persistMonitorEntry(
     const doc = parseDocument(raw);
     const existing = doc.get("monitors");
     if (!existing || !isMap(existing)) {
-      doc.set("monitors", doc.createNode({}));
+      const monitors = doc.createNode({});
+      if (isMap(monitors)) monitors.flow = false;
+      doc.set("monitors", monitors);
+    } else {
+      existing.flow = false;
     }
     if (decl === null) {
       doc.deleteIn(["monitors", monitorId]);
