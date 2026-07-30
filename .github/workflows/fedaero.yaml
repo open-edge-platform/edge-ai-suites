@@ -108,17 +108,17 @@ jobs:
       # job (rather than living in its own job we `needs:` on) to avoid the
       # GitHub Actions quirk where downstream `needs.changes.outputs.*` are
       # not propagated when the chain involves `if: always() && ...`.
-      # - name: Guard manual dispatch ref
-      #   if: github.event_name == 'workflow_dispatch'
-      #   run: |
-      #     ref="${GITHUB_REF}"
-      #     echo "Triggered from ref: $ref"
-      #     if [[ "$ref" == refs/heads/release-* ]] || [[ "$ref" == refs/tags/* ]]; then
-      #       echo "OK — $ref is allowed for manual dispatch."
-      #     else
-      #       echo "::error::Manual dispatch is only allowed from a release-* branch or a tag. Got: $ref"
-      #       exit 1
-      #     fi
+      - name: Guard manual dispatch ref
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          ref="${GITHUB_REF}"
+          echo "Triggered from ref: $ref"
+          if [[ "$ref" == refs/heads/release-* ]] || [[ "$ref" == refs/tags/* ]]; then
+            echo "OK — $ref is allowed for manual dispatch."
+          else
+            echo "::error::Manual dispatch is only allowed from a release-* branch or a tag. Got: $ref"
+            exit 1
+          fi
 
       - name: Checkout
         uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
