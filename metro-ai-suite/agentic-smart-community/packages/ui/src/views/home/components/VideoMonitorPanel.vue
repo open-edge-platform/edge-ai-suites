@@ -517,6 +517,7 @@ const startLiveStreamPlayback = async () => {
   let sourceBuffer: SourceBuffer | null = null;
   let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   let disposed = false;
+  let playbackStarted = false;
 
   const pumpQueue = () => {
     if (!sourceBuffer || sourceBuffer.updating || disposed) {
@@ -541,6 +542,24 @@ const startLiveStreamPlayback = async () => {
     sourceBuffer.appendBuffer(chunk);
   };
 
+  const handleUpdateEnd = () => {
+    if (!sourceBuffer || disposed) {
+      return;
+    }
+
+    if (!playbackStarted && sourceBuffer.buffered.length) {
+      playbackStarted = true;
+      const liveEdge = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+      video.currentTime = Math.max(sourceBuffer.buffered.start(0), liveEdge - 0.1);
+      void video.play().catch((error) => {
+        playbackStarted = false;
+        console.error("[live] autoplay failed:", error);
+      });
+    }
+
+    pumpQueue();
+  };
+
   const dispose = () => {
     if (disposed) {
       return;
@@ -550,7 +569,7 @@ const startLiveStreamPlayback = async () => {
     controller.abort();
     void reader?.cancel().catch(() => undefined);
     mediaSource.removeEventListener("sourceopen", handleSourceOpen);
-    sourceBuffer?.removeEventListener("updateend", pumpQueue);
+    sourceBuffer?.removeEventListener("updateend", handleUpdateEnd);
     appendQueue.length = 0;
     queuedBytes = 0;
 
@@ -575,9 +594,9 @@ const startLiveStreamPlayback = async () => {
       }
 
       sourceBuffer = mediaSource.addSourceBuffer(
-        'video/mp4; codecs="avc1.42E01E"',
+        'video/mp4; codecs="avc1.42C01F"',
       );
-      sourceBuffer.addEventListener("updateend", pumpQueue);
+      sourceBuffer.addEventListener("updateend", handleUpdateEnd);
       const response = await fetch(activeRecord.value.videoSrc, {
         signal: controller.signal,
       });
