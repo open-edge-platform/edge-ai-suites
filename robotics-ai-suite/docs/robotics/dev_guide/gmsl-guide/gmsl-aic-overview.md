@@ -20,7 +20,11 @@ There are two design approaches for GMSL Add-in-Card (AIC):
 
   It is crucial to understand the `SerDes` I2C connectivity specific to each ODM/OEM motherboard, Add-in-Card (AIC), and GMSL2 camera module. Illustrated below are all details a user needs to learn about I2C communication between a BDF (Bit-Definition File) Linux I2C adapter and GMSL2 I2C devices for Intel® Core™ Ultra Series 1 and 2 (Arrow Lake-U/H) and 12th/13th/14th Gen Intel® Core™ platforms to detect and configure GMSL capability. See [SerDes I2C mapping](#how-to-detect-in-i2c-bus-to-gmsl2-deserializer-and-serializer-acpi-devices-mapping) for further details.
 
-  ![SerDes I2C mapping overview](../../images/gmsl/GMSL-overview2.png "serdes i2c mapping overview")
+  ![SerDes MAX9296 I2C mapping overview](../../images/gmsl/GMSL-overview2.png "serdes max9296 i2c and mipi csi mapping overview")
+
+  Another Aggregated link `MAX9724` example includes [AAEON CEXD-INTRBL - Robinson Bay](https://www.aaeon.com/en/article/detail/accelerate-robotics-development-aaeon-intel) Add-in-Cards (AIC)
+
+  ![SerDes MAX96724 I2C mapping overview](../../images/gmsl/gmsl-ptl-max96724.png "serdes max96724 i2c and mipi csi mapping overview")
 
   More details are available in the [Mobile Industry Processor Interface (MIPI) Camera Serial Interface (CSI) Gigabit Multimedia Serial Link (GMSL) Add-in Card (AIC) Schematic](https://cdrdv2.intel.com/v1/dl/getContent/814789?explicitVersion=true).
 
