@@ -34,6 +34,11 @@ const SystemCapabilityCards = (function () {
         return parts.filter(Boolean).join(' · ') || fallback;
     }
 
+    function hasOpenvinoGpuInference(device) {
+        return Array.isArray(device?.sw_functional_capabilities)
+            && device.sw_functional_capabilities.includes('openvino_gpu_inference');
+    }
+
     function cpuDetails(device, platform) {
         const cores = device?.details?.cores || {};
         const physical = numberOrNull(cores.physical);
@@ -81,7 +86,8 @@ const SystemCapabilityCards = (function () {
             : [];
         const cpu = devices.find((device) => device.category === 'cpu');
         const gpus = devices.filter(
-            (device) => device.category === 'igpu' || device.category === 'dgpu'
+            (device) => (device.category === 'igpu' || device.category === 'dgpu')
+                && hasOpenvinoGpuInference(device)
         );
         const npu = devices.find((device) => device.category === 'npu');
         const cards = [];

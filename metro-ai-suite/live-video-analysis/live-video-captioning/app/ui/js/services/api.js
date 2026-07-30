@@ -87,6 +87,8 @@ const ApiService = (function () {
                 has_gpu: devices.some(
                     (device) => device?.present === true
                         && ['igpu', 'dgpu'].includes(device?.category)
+                        && Array.isArray(device?.sw_functional_capabilities)
+                        && device.sw_functional_capabilities.includes('openvino_gpu_inference')
                 ),
                 has_npu: devices.some(
                     (device) => device?.present === true && device?.category === 'npu'
