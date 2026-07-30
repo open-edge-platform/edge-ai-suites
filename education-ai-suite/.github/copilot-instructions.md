@@ -22,6 +22,7 @@ The system has multiple tiers:
   (runs on port `9011` by default)
   - Uses VLM from main backend for answer generation
   - Auto-started by main backend when `content_search.enabled: true` in config.yaml
+  - Inherits configuration via `SC_CONFIG_PATH` environment variable from parent process
 - **Frontend UI** — `smart-classroom/ui/` — React-based web interface (port 5173)
 - **Flutter UI** — `utils/flutter/` — a cross-platform app (Windows, Web) built
   with Flutter + Riverpod for content search interactions
@@ -75,11 +76,13 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 |---|---|
 | `.github/skills/` | Workflow skills — automation for setup, startup, and operations |
 | `smart-classroom/` | Main Python services (backend, video analytics, OCR, ASR) |
+| `smart-classroom/config.yaml` | Main app configuration (all features enabled) |
 | `smart-classroom/content_search/` | Python RAG backend (FastAPI) |
+| `utils/flutter/` | Flutter app for content search interactions |
+| `utils/flutter/config.yaml` | Flutter-specific config (only content_search + qa enabled) |
 | `utils/flutter/setup.ps1` | Setup script for Flutter integration |
 | `utils/flutter/start.ps1` | Startup script for Flutter app and backend |
 | `smart-classroom/ui/` | React frontend |
-| `utils/flutter/` | Flutter app for content search interactions |
 | `smart-classroom/content_search/venv_content_search/` | Python virtual environment (created during setup) |
 
 ---
@@ -101,6 +104,11 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 - The Flutter app root is `utils/flutter/` — run `flutter` commands from there
 - **Setup and startup for Flutter integration use PowerShell scripts**:
   `setup.ps1` and `start.ps1` in `utils/flutter/`
+- **Flutter configuration**: Uses `utils/flutter/config.yaml` (with only `content_search` and `qa` enabled)
+  - Backend receives this config via `SC_CONFIG_PATH` environment variable set by `start.ps1`
+  - Content Search subprocess inherits `SC_CONFIG_PATH` and uses the same Flutter config
+  - Prevents loading ASR, OCR, summarizer, and VA models — only VLM loads
+  - Main app uses `smart-classroom/config.yaml` (all features enabled)
 - Skills invoke these scripts rather than executing commands directly
 - Target `http://127.0.0.1:9011` for the Content Search API
 - Target `http://127.0.0.1:8000` for the main backend API

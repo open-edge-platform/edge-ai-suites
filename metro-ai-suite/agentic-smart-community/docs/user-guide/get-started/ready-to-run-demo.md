@@ -45,12 +45,15 @@ bash demo/scripts/start-demo.sh
 
 > If an MCP server is already running on port `3100`, stop it with `bash scripts/mcp-server/stop.sh` before starting the demo.
 
-The demo launcher starts MediaMTX and the selected RTSP pushers, then starts the MCP server with the matching subset of [monitors.demo.yaml](../../../demo/monitors.demo.yaml).
+The demo launcher writes [config.demo.yaml](../../../demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](../../../demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+
+If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMARTBUILDING_DATA_DIR`; the files under `demo/` remain unchanged.
 
 It prints the active stream file at `demo/videos/.run/active-streams.txt`. Verify the running RTSP paths and the selected monitors:
 
 ```bash
 cat demo/videos/.run/active-streams.txt
+cat "${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
 tail -f /tmp/smartbuilding-$(id -u)/mcp-server.log
