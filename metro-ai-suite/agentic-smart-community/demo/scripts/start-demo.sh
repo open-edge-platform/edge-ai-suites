@@ -13,6 +13,7 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROMPTS_DIR="$REPO_DIR/demo/prompts"
+DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
 
 # Service endpoints (must match config.yaml.example).
 SUMMARY_URL="${SUMMARY_URL:-http://localhost:8192}"      # multilevel-video-understanding
@@ -20,6 +21,7 @@ ANALYTICS_URL="${ANALYTICS_URL:-http://localhost:8999}"  # videostream-analytics
 
 command -v curl >/dev/null || { echo "curl not found in PATH" >&2; exit 1; }
 command -v jq   >/dev/null || { echo "jq not found in PATH"   >&2; exit 1; }
+command -v md5sum >/dev/null || { echo "md5sum not found in PATH" >&2; exit 1; }
 
 # 0. Pre-requisites must be healthy before we register tasks or process clips.
 #    Note the two services expose DIFFERENT health paths.
@@ -90,6 +92,35 @@ with open(output_path, "w", encoding="utf-8") as output_file:
 print(f"  registering {len(monitors_config['monitors'])} monitor(s) for active streams")
 PY
 
-# 4. Start the MCP server with the bundled use cases and demo monitors.
-export MCP_MONITORS="$FILTERED_MONITORS"
-exec "$REPO_DIR/scripts/mcp-server/start.sh"
+# 4. Persist the demo config and active monitor subset before starting the server.
+mkdir -p "$DATA_DIR"
+DATA_DIR="$(cd "$DATA_DIR" && pwd)"
+ACTIVE_CONFIG="$DATA_DIR/config.yaml"
+ACTIVE_MONITORS="$DATA_DIR/monitors.yaml"
+
+persist_demo_config() {
+  local source="$1"
+  local target="$2"
+  local backup
+
+  [[ ! -L "$target" ]] || { echo "refusing to overwrite symbolic link: $target" >&2; return 1; }
+  [[ ! -e "$target" || -f "$target" ]] || { echo "refusing to overwrite non-regular file: $target" >&2; return 1; }
+  if [[ -f "$target" ]] && [[ "$(md5sum "$source" | awk '{print $1}')" == "$(md5sum "$target" | awk '{print $1}')" ]]; then
+    return
+  fi
+  if [[ -f "$target" ]]; then
+    backup="$target.$(date '+%Y%m%d-%H%M%S').bak"
+    [[ ! -e "$backup" && ! -L "$backup" ]] || { echo "backup already exists: $backup" >&2; return 1; }
+    cp -- "$target" "$backup"
+    echo "backed up ${target} to ${backup}"
+  fi
+  cp -- "$source" "$target"
+  echo "updated $target from $source"
+}
+
+persist_demo_config "$REPO_DIR/demo/config.demo.yaml" "$ACTIVE_CONFIG"
+persist_demo_config "$FILTERED_MONITORS" "$ACTIVE_MONITORS"
+rm -f "$FILTERED_MONITORS"
+trap - EXIT
+
+exec "$REPO_DIR/scripts/mcp-server/start.sh" "$ACTIVE_CONFIG" "$ACTIVE_MONITORS"

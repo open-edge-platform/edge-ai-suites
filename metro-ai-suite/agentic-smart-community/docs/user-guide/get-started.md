@@ -80,17 +80,25 @@ curl -fsS http://localhost:8999/health
 
 ### Step 2 - Start the MCP server
 
-Start the MCP server:
+For the first run, create the runtime data directory and copy the configuration template into it:
 
 ```bash
-cp config.yaml.example config.yaml
+export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
+mkdir -p "$SMARTBUILDING_DATA_DIR"
+cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
+
+# Optional: start with an existing monitor configuration.
+# cp <your-monitors.yaml> "$SMARTBUILDING_DATA_DIR/monitors.yaml"
 ```
 
-Customize `config.yaml` as needed for your deployment, then start the server:
+Customize `$SMARTBUILDING_DATA_DIR/config.yaml` as needed, then start the server:
 
 ```bash
-bash scripts/mcp-server/start.sh config.yaml
+bash scripts/mcp-server/start.sh
 ```
+
+The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. If `monitors.yaml` does not exist on the first run, the launcher creates an empty one. For later configuration changes, update these two files and restart the server.
+
 The server runs as a host process and exposes:
 
 ```text
@@ -108,6 +116,7 @@ curl -fsS -X POST http://localhost:3100/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"startup-check","version":"1.0"}}}'
 curl -fsS http://localhost:3101/health
 ls ~/.mcp-smartbuilding/smartbuilding.db
+ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
 ```
 
 > Use `bash scripts/mcp-server/stop.sh` to stop the MCP server.
@@ -233,6 +242,10 @@ export SMARTBUILDING_DATA_DIR=/path/to/data   # default: ~/.mcp-smartbuilding
 
 ```text
 $SMARTBUILDING_DATA_DIR/
+|- config.yaml
+|- config.yaml.<YYYYMMDD-HHMMSS>.bak
+|- monitors.yaml
+|- monitors.yaml.<YYYYMMDD-HHMMSS>.bak
 |- smartbuilding.db
 |- segments/
 |  `- <monitor_id>/
@@ -244,6 +257,8 @@ $SMARTBUILDING_DATA_DIR/
    |- reports/
    `- monitors/<monitor_id>/<YYYY-MM-DD>.log
 ```
+
+The timestamped backup entries are present only after the launcher replaces a different active configuration. `config.yaml` and `monitors.yaml` are not removed by automatic data cleanup.
 
 Automatic cleanup runs on server start and every 24 hours. It removes `.log` files older than `logging.retention_days` (default 14) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default 7). It leaves `latest.jpg`, `smartbuilding.db`, and non-date directory names untouched.
 

@@ -36,14 +36,26 @@ if (-not (Test-Path (Join-Path $PSScriptRoot "pubspec.yaml"))) {
     exit 1
 }
 
-# Start main backend in background window (automatically starts content search when enabled)
-Write-Host "`nStarting main backend in background window..." -ForegroundColor Yellow
-Write-Host "  Port 8000: VLM, OCR, ASR, core services" -ForegroundColor Gray
-Write-Host "  Port 9011: Content Search (auto-started if enabled in config.yaml)" -ForegroundColor Gray
+# Check Flutter config exists
+$flutterConfigPath = Join-Path $PSScriptRoot "config.yaml"
+if (-not (Test-Path $flutterConfigPath)) {
+    Write-Host "[X] Flutter config.yaml not found at $flutterConfigPath" -ForegroundColor Red
+    Write-Host "    Run .\setup.ps1 first" -ForegroundColor Yellow
+    exit 1
+}
+
+# Start main backend with Flutter config in background window
+Write-Host "`nStarting backend with Flutter configuration..." -ForegroundColor Yellow
+Write-Host "  Config: utils/flutter/config.yaml" -ForegroundColor Gray
+Write-Host "  Port 8000: VLM service (warm start)" -ForegroundColor Gray
+Write-Host "  Port 9011: Content Search (auto-started)" -ForegroundColor Gray
 Write-Host "  Using venv: smartclassroom/" -ForegroundColor Gray
 Write-Host "  Backend will run in a separate window" -ForegroundColor Gray
 
-$mainCmd = "Set-Location '$smartClassroomPath'; & '$mainPythonPath' '$mainScript'"
+# Convert to relative path from smart-classroom directory
+$relativeConfigPath = "..\\utils\\flutter\\config.yaml"
+
+$mainCmd = "Set-Location '$smartClassroomPath'; `$env:SC_CONFIG_PATH='$relativeConfigPath'; & '$mainPythonPath' '$mainScript'"
 
 Start-Process powershell.exe `
     -ArgumentList "-NoExit", "-Command", $mainCmd `
@@ -51,10 +63,9 @@ Start-Process powershell.exe `
 
 Write-Host "[OK] Main backend started in background" -ForegroundColor Green
 
-# Wait for services with proper health checks (using same logic as smart-classroom scripts)
-Write-Host "`nWaiting for services to become ready..." -ForegroundColor Yellow
+# Wait for main backend with proper health checks
+Write-Host "`nWaiting for main backend to become ready..." -ForegroundColor Yellow
 Write-Host "  Backend (port 8000): VLM and core services" -ForegroundColor Gray
-Write-Host "  Content Search (port 9011): Auto-started by backend" -ForegroundColor Gray
 Write-Host "  Initial startup: 2-3 minutes (VLM model loading)" -ForegroundColor Gray
 
 $maxWaitSeconds = 300  # 5 minutes total timeout
@@ -86,8 +97,8 @@ while (-not (Test-ServiceListening -Port 8000)) {
 $backendStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
 Write-Host "  [OK] Backend is listening on port 8000 (after ${backendStartTime}s)" -ForegroundColor Green
 
-# Wait for content search to start listening
-Write-Host "  Waiting for content search to start..." -ForegroundColor Gray
+# Wait for content search to start listening (auto-started by backend with Flutter config)
+Write-Host "  Waiting for Content Search to start..." -ForegroundColor Gray
 while (-not (Test-ServiceListening -Port 9011)) {
     $elapsed = ((Get-Date) - $startTime).TotalSeconds
     if ($elapsed -gt $maxWaitSeconds) {
@@ -117,9 +128,12 @@ Start-Process powershell.exe `
 Write-Host "[OK] Flutter window opened" -ForegroundColor Green
 Write-Host "`n=== Startup Complete ===" -ForegroundColor Cyan
 Write-Host "All services are running:" -ForegroundColor Green
-Write-Host "  - Main Backend (port 8000): VLM, OCR, ASR, core services [minimized window]" -ForegroundColor Gray
-Write-Host "  - Content Search (port 9011): RAG, file management [auto-started]" -ForegroundColor Gray
+Write-Host "  - Backend (port 8000): VLM service [minimized window]" -ForegroundColor Gray
+Write-Host "  - Content Search (port 9011): RAG API [auto-started by backend]" -ForegroundColor Gray
 Write-Host "  - Flutter UI: Smart Classroom app [new window]" -ForegroundColor Gray
+Write-Host "`nConfiguration: utils/flutter/config.yaml" -ForegroundColor Yellow
+Write-Host "  Features enabled: content_search, qa" -ForegroundColor Gray
+Write-Host "  All other features disabled" -ForegroundColor Gray
 Write-Host "`nYou can now upload files and ask questions in the Flutter app" -ForegroundColor Yellow
-Write-Host "To stop all services: close the Flutter window and the minimized backend window" -ForegroundColor Yellow
+Write-Host "To stop all services: close the backend window" -ForegroundColor Yellow
 Write-Host "`nThis terminal can now be closed safely." -ForegroundColor Gray
