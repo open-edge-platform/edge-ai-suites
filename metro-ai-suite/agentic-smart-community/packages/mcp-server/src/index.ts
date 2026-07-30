@@ -19,6 +19,8 @@ import { startStorageCleaner } from "./storage-cleaner.js";
 import { startKeepaliveSender } from "./keepalive-sender.js";
 import { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
 import { startSessionSweeper } from "./session-sweeper.js";
+import { createDashboardRouter, LiveStreamManager, mountStaticUi, OpenClawChatProxy } from "./dashboard/index.js";
+import { loadDashboardIntegrationConfig } from "./dashboard/integration-env.js";
 
 /**
  * Build an McpServer for a single MCP session. Stateful HTTP creates one per new sessionId;
@@ -137,9 +139,13 @@ async function main() {
 
   const summaryClient = new VideoSummaryClient(config.summaryService.url, config.summaryService.pathRemap);
   const workerService = new WorkerService(config, db, summaryClient, onAlert);
+  const liveStreams = new LiveStreamManager();
+  const chatProxy = new OpenClawChatProxy(loadDashboardIntegrationConfig());
 
   if (transportMode === "http") {
     const app = createMcpExpressApp();
+
+    app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams));
 
     // Stateful HTTP: one McpServer + transport per sessionId. Required for `resources/subscribe`
     // to persist across requests. Session lifetimes end when the transport closes (client DELETE
@@ -219,10 +225,13 @@ async function main() {
       }
     });
 
+    mountStaticUi(app);
+
     const port = config.mcp!.port;
-    app.listen(port, () => {
+    const httpServer = app.listen(port, () => {
       logger.info(`[mcp-server] Streamable HTTP (stateful) on http://localhost:${port}/mcp`);
     });
+    chatProxy.attach(httpServer);
 
     // Evict idle HTTP sessions (no open SSE + no requests past the timeout) so abandoned
     // subscriptions don't leak the registry. stdio mode has a single resident session, so no sweeper.
@@ -268,6 +277,8 @@ async function main() {
     stopCleaner();
     stopKeepalive();
     stopSessionSweeper?.();
+    await chatProxy.close();
+    await liveStreams.close();
     await workerService.stopAll();
     const onlineMonitors = db.listOnlineMonitors();
     if (onlineMonitors.length > 0) {

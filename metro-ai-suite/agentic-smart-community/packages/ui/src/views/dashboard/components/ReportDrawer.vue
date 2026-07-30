@@ -1,0 +1,4 @@
+<!-- SPDX-FileCopyrightText: (C) 2026 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<template><div class="drawer-backdrop" @click.self="$emit('close')"><aside class="drawer"><header><h2>{{ t('reports') }}</h2><button class="icon-button" :title="t('close')" @click="$emit('close')">×</button></header><button class="primary" :disabled="generating" @click="$emit('generate')">{{ t('generate') }}</button><div v-if="!reports.length" class="empty">{{ t('emptyReport') }}</div><article v-for="report in reports" :key="report.id"><time>{{ report.periodStart }} – {{ report.periodEnd }}</time><p>{{ report.reportText || report.status }}</p></article></aside></div></template>
+<script setup lang="ts">import { useI18n } from 'vue-i18n'; import type { SmartbuildingReport } from '../../../types/smartbuilding.js'; defineProps<{ reports: SmartbuildingReport[]; generating: boolean }>(); defineEmits<{ close: []; generate: [] }>(); const { t } = useI18n();</script>

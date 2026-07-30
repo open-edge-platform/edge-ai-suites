@@ -15,6 +15,7 @@
     "@smartbuilding-video/db": "*",
     "express": "^5.1.0",
     "cors": "^2.8.5",
+    "ws": "8.21.1",
     "yaml": "^2.7.0",
     "zod": "^3.24.0"
   },
@@ -23,6 +24,7 @@
     "tsx": "^4.19.0",
     "@types/node": "^22.0.0",
     "@types/express": "^5.0.0",
+    "@types/ws": "^8.18.1",
     "@types/cors": "^2.8.0"
   }
 }

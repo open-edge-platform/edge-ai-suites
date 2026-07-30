@@ -102,10 +102,26 @@ The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING
 The server runs as a host process and exposes:
 
 ```text
+UI:     http://localhost:3100/
 MCP:    http://localhost:3100/mcp
 Events: http://localhost:3101/events
 Logs:   /tmp/smartbuilding-<uid>/mcp-server.log
 ```
+
+Open `http://localhost:3100/` to use the dashboard. It discovers monitors from the runtime database; no monitor IDs are compiled into the frontend. For local frontend development, run `npm run dev --workspace=packages/ui` and open `http://localhost:5173/`; Vite proxies `/api` and `/mcp` to port 3100.
+
+The dashboard works without Router or OpenClaw. To enable either optional integration, set server-side environment variables before starting the MCP server:
+
+```bash
+export SMARTBUILDING_ROUTER_URL=http://localhost:18000
+export SMARTBUILDING_OPENCLAW_GATEWAY_URL=http://localhost:18789
+export SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN='<gateway-token>'
+bash scripts/mcp-server/start.sh
+```
+
+These variables are not part of `config.yaml`. The OpenClaw token remains in the MCP server process and is injected into the upstream WebSocket handshake; it is not returned by the dashboard API or included in the frontend bundle. When Router is absent, the dashboard displays its explicit unconfigured state.
+
+For RTSP monitors, the browser connects to the same-origin live-stream endpoint. The MCP server starts at most one ffmpeg process per monitor and shares it among viewers. It converts RTSP to fragmented MP4 because browsers do not play RTSP directly. When live streaming is unsupported or unavailable, the UI falls back to the monitor's `latest.jpg` snapshot. Install `ffmpeg` on the MCP host; never expose RTSP credentials to browser code.
 
 Verify that the MCP endpoint, events webhook, and data root are available:
 
