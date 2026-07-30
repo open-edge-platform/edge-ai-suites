@@ -1,28 +1,64 @@
-use_case_id: pipeline-defect-detection
+# apps/weld-quality-monitoring/configs/agents.yaml
+use_case_id: weld-quality-monitoring
 
-# Agent configuration for pipeline defect detection
 analysis:
   min_confidence: 0.5
-  max_detections_per_run: 500
+  max_detections_per_run: 1000
+  # NEW: fused event mode — each "detection" is a fusion_result record, not a bbox
+  detection_schema: fusion_result   # "bbox_detection" (APM default) | "fusion_result"
+  # NEW: enable multimodal analysis (sensor + vision together)
+  multimodal: true
+  sensor_fields:
+    - Primary Weld Current
+    - Secondary Weld Voltage
+    - Pressure
+    - CO2 Weld Flow
+    - Feed
+    - Wire Consumed
 
 policy:
-  # Labels emitted by the DL Streamer model
   defect_classes:
-    - Rupture
-    - Deformation
-    - Disconnect
-    - Obstacle
-  alert_threshold: 0.7     # confidence above which a detection is a violation
-  critical_classes:         # these always trigger HIGH priority ticket
-    - Rupture
-    - Disconnect
+    - Bad_Weld
+    - Spattering
+    - Porosity
+    - Crack
+    - Good_Weld       # included so policy can confirm "PASS" tickets
+    - No_Weld
+  alert_threshold: 0.7
+  critical_classes:
+    - Crack
+    - Bad_Weld
+  # NEW: fusion policy — require both modalities to agree for HIGH priority
+  fusion_mode: AND   # "AND" | "OR" — mirrors IEI-MM FUSION_MODE
+  # NEW: sensor threshold violations treated as independent alert triggers
+  sensor_policy:
+    Primary Weld Current:
+      max: 350         # Amperes
+      min: 80
+    Secondary Weld Voltage:
+      max: 40          # Volts
+      min: 15
+    Pressure:
+      max: 6.0         # bar
+      min: 2.0
+    CO2 Weld Flow:
+      max: 25          # L/min
+      min: 5
 
 evidence:
-  retention_frames: 1000    # keep evidence for last N frames
+  retention_frames: 2000
+  # NEW: include weld images from SeaweedFS in evidence bundle
+  include_images: true
+  image_source: seaweedfs   # "none" | "seaweedfs"
+  max_images_per_evidence: 3
 
 ticketing:
-  # Ticket priority rules (fallback mode)
   priority_rules:
-    high:   ["Rupture", "Disconnect"]
-    medium: ["Deformation"]
-    low:    ["Obstacle"]
+    high:   ["Crack", "Bad_Weld"]
+    medium: ["Spattering", "Porosity"]
+    low:    ["No_Weld"]
+  # NEW: auto-create tickets in external system via MCP
+  auto_create: true
+  backend: jira   # "jira" | "servicenow" | "none"
+  notify_slack: true
+  slack_channel: "#weld-quality-alerts"

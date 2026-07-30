@@ -1,27 +1,43 @@
 {
   "thresholds": {
-    "Rupture": {
+    "Bad_Weld": {
       "alert_above": 0.6,
-      "description": "Pipeline wall rupture — immediate shutdown risk"
+      "description": "Defective weld detected — workpiece likely rejected"
     },
-    "Deformation": {
-      "alert_above": 0.7,
-      "description": "Structural deformation — schedule inspection"
-    },
-    "Disconnect": {
+    "Spattering": {
       "alert_above": 0.65,
-      "description": "Pipeline segment disconnection — high risk"
+      "description": "Excessive spatter — electrode or gas flow issue"
     },
-    "Obstacle": {
-      "alert_above": 0.8,
-      "description": "Foreign obstacle in pipeline — monitor"
+    "Porosity": {
+      "alert_above": 0.7,
+      "description": "Gas porosity in weld bead — shielding gas or contamination"
+    },
+    "Crack": {
+      "alert_above": 0.55,
+      "description": "Weld crack — immediate halt required"
+    },
+    "No_Weld": {
+      "alert_above": 0.9,
+      "description": "No weld bead detected — wire feed or arc failure"
+    },
+    "Good_Weld": {
+      "alert_above": 0.0,
+      "description": "Acceptable weld — no action"
     }
   },
   "actions": {
-    "Rupture":     "HALT_PIPELINE",
-    "Disconnect":  "HALT_PIPELINE",
-    "Deformation": "SCHEDULE_MAINTENANCE",
-    "Obstacle":    "MONITOR"
+    "Bad_Weld":   "HALT_LINE",
+    "Crack":      "HALT_LINE",
+    "Spattering": "ADJUST_PARAMETERS",
+    "Porosity":   "SCHEDULE_INSPECTION",
+    "No_Weld":    "HALT_LINE",
+    "Good_Weld":  "CONTINUE"
+  },
+  "sensor_actions": {
+    "Primary Weld Current_over":  "REDUCE_CURRENT",
+    "Primary Weld Current_under": "INCREASE_CURRENT",
+    "Pressure_over":              "CHECK_GAS_SUPPLY",
+    "CO2 Weld Flow_under":        "CHECK_GAS_FLOW"
   },
   "default_action": "MONITOR"
 }
