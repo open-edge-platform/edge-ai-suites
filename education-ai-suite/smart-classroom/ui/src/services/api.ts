@@ -1429,6 +1429,9 @@ async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
       const json = await res.json().catch(() => ({}));
       throw new Error(json.detail || `Grading request failed (${res.status})`);
     }
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      return undefined as T;
+    }
     return (await res.json()) as T;
   });
 }
@@ -1466,10 +1469,6 @@ export async function gradingListTasks(status?: string): Promise<{
 }> {
   const q = status ? `?status=${encodeURIComponent(status)}` : '';
   return gradingFetch(`/grading/tasks${q}`);
-}
-
-export async function gradingGetTask(taskId: string): Promise<GradingTask> {
-  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`);
 }
 
 export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
@@ -1538,10 +1537,19 @@ export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<Grad
 
 export interface GradingConfig {
   dpi: number | null;
+  contrast_enhance: boolean | null;
+  contrast_factor: number | null;
+  max_tokens: number | null;
   vlm_temperature: number | null;
+  max_image_pixels: number | null;
   poll_interval: number | null;
   stable_checks: number | null;
   idle_timeout: number | null;
+  min_score: number | null;
+  sort_boxes: boolean | null;
+  expand_margin: number | null;
+  merge_overlapping: boolean | null;
+  iou_threshold: number | null;
   vlm_model: string | null;
   ocr_model: string | null;
   layout_model: string | null;
@@ -1551,7 +1559,12 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
   return gradingFetch('/grading/config');
 }
 
-export async function gradingUpdateConfig(updates: { dpi?: number | null; vlm_temperature?: number | null; poll_interval?: number | null; stable_checks?: number | null; idle_timeout?: number | null }): Promise<GradingConfig> {
+export type GradingConfigUpdate = Partial<Pick<GradingConfig,
+  'dpi' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'poll_interval' | 'stable_checks' | 'idle_timeout' |
+  'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
+
+export async function gradingUpdateConfig(updates: GradingConfigUpdate): Promise<GradingConfig> {
   return gradingFetch('/grading/config', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
