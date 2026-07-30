@@ -38,7 +38,12 @@ const CONFIG = {
         },
         {
           label: "Drone Mission Compute SDK",
-          value: "DRONE_MISSION_COMPUTE"
+          value: "DRONE_MISSION_COMPUTE",
+          // Limit which options in other categories are compatible with this SDK.
+          // Buttons for values not listed here will be greyed out when this SDK is selected.
+          supports: {
+            VERSION: ["latest"]
+          }
         }
       ]
     },
@@ -647,6 +652,7 @@ function init() {
 
   // state from URL (shareable)
   STATE = { ...defaults, ...parseQuery(CONFIG.shareKeys || []) };
+  repairState(STATE);
 
   renderCategories();
   updateOutputsAndUrl();
@@ -674,13 +680,20 @@ function renderCategories() {
       const isActive = STATE[cat.key] === opt.value;
       if (isActive) btn.classList.add("spark-toggle-button-clicked-ghost", "pill-active");
 
+      const available = isOptionAvailable(cat, opt, STATE);
+      if (!available) {
+        btn.disabled = true;
+        btn.setAttribute("aria-disabled", "true");
+        btn.title = "Not available for the current selection";
+        btn.classList.add("pill-disabled");
+      }
+
       btn.addEventListener("click", () => {
+        if (btn.disabled) return;
         STATE[cat.key] = opt.value;
-        // update selected visuals
-        Array.from(group.children).forEach((b) =>
-          b.classList.remove("spark-toggle-button-clicked-ghost", "pill-active")
-        );
-        btn.classList.add("spark-toggle-button-clicked-ghost", "pill-active");
+        repairState(STATE);
+        // Re-render everything
+        renderCategories();
         updateOutputsAndUrl();
       });
 
@@ -691,6 +704,46 @@ function renderCategories() {
     content.append(row);
     sec.append(title, content);
     host.append(sec);
+  });
+}
+
+// Return true if `opt` in category `cat` is compatible with the rest of `state`.
+function isOptionAvailable(cat, opt, state) {
+  // Check constraints declared by other selected options against `opt`.
+  for (const other of CONFIG.categories || []) {
+    if (other.key === cat.key) continue;
+    const selectedValue = state[other.key];
+    if (selectedValue == null) continue;
+    const selectedOpt = (other.options || []).find((o) => o.value === selectedValue);
+    const allowed = selectedOpt && selectedOpt.supports && selectedOpt.supports[cat.key];
+    if (Array.isArray(allowed) && !allowed.includes(opt.value)) {
+      return false;
+    }
+  }
+
+  // Check constraints declared by `opt` against currently selected values in other categories.
+  if (opt.supports) {
+    for (const otherKey of Object.keys(opt.supports)) {
+      const allowed = opt.supports[otherKey];
+      const selectedValue = state[otherKey];
+      if (Array.isArray(allowed) && selectedValue != null && !allowed.includes(selectedValue)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+// If the current selection in any category is no longer available given the
+// rest of `state`, replace it with the first available option in that category.
+function repairState(state) {
+  (CONFIG.categories || []).forEach((cat) => {
+    const currentValue = state[cat.key];
+    const currentOpt = (cat.options || []).find((o) => o.value === currentValue);
+    if (currentOpt && isOptionAvailable(cat, currentOpt, state)) return;
+    const firstAvailable = (cat.options || []).find((o) => isOptionAvailable(cat, o, state));
+    if (firstAvailable) state[cat.key] = firstAvailable.value;
   });
 }
 
