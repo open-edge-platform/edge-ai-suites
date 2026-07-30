@@ -239,8 +239,7 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
             "destination": {
                 "metadata": {
                     "type": "mqtt",
-                    "host": f"{self._config.pipeline_server_mqtt_host}:{self._config.pipeline_server_mqtt_port}",
-                    "topic": mqtt_topic,
+                    "topic": mqtt_topic
                 },
             },
             "parameters": extra_params,
@@ -298,21 +297,40 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
 
     async def start_for_camera(self, camera_id: str, stream_url: str, controls: dict) -> str | None:
         """Start a DLStreamer pipeline for one camera from VMS control values."""
-        pipeline_name = self._config.pipeline_name
-        if not pipeline_name:
-            logger.error("od_pipeline_name_not_configured", app_id=self.app_id)
+        configured_devices = self._config.configured_pipeline_devices()
+        if not configured_devices:
+            logger.error("od_pipeline_not_configured", app_id=self.app_id)
             return None
         # _param_model is bare BaseModel until fetch_schema() runs; guard against
         # the unlikely race where the polling task fires before schema fetch completes.
         if not self._pipeline_root_map:
             logger.warning("od_schema_not_ready", app_id=self.app_id)
             return None
-        device = controls.get("device", "CPU")
+
+        selected_device = str(controls.get("device", "")).upper() or configured_devices[0]
+        if selected_device not in configured_devices:
+            logger.warning(
+                "od_invalid_device_selected",
+                app_id=self.app_id,
+                selected_device=selected_device,
+                fallback_device=configured_devices[0],
+            )
+            selected_device = configured_devices[0]
+
+        pipeline_name = self._config.pipeline_for_device(selected_device)
+        if not pipeline_name:
+            logger.error(
+                "od_pipeline_not_found_for_device",
+                app_id=self.app_id,
+                device=selected_device,
+            )
+            return None
+
         params = self._param_model.model_validate({
             "pipeline_name": pipeline_name,
             "camera_id": stream_url,
             "camera_id_ref": camera_id,
-            "parameters": {"detection-properties": {"device": device}},
+            "parameters": {"detection-properties": {"device": selected_device}},
         })
         try:
             result = await self.start(params)

@@ -3,21 +3,14 @@ import type { DetectionState } from '../../types/detection';
 
 interface DetectionSliceState {
   data: DetectionState;
-  expandedSection: 'video' | null;
 }
 
 const initialState: DetectionSliceState = {
   data: {
     systemStatus: 'ready',
-    polyp: {
-      detected: false, count: 0, confidence: 0,
-      distinct_polyps: 0,
-      frames_processed: 0, frames_with_detection: 0, detection_rate: 0,
-      peak_confidence: 0, session_seconds: 0,
-    },
     pipelinePerformance: { workloads: [], pipeline_fps: 0, decode: '' },
+    pipelineLatency: { mean_ms: 0, p50_ms: 0, p90_ms: 0, p95_ms: 0, p99_ms: 0 },
     modelInfo: null,
-    frameUrl: null,
     fps: 0,
     uptime: 0,
     totalFrames: 0,
@@ -30,7 +23,6 @@ const initialState: DetectionSliceState = {
     totalP95Ms: 0,
     totalP99Ms: 0,
   },
-  expandedSection: null,
 };
 
 const detectionSlice = createSlice({
@@ -45,7 +37,6 @@ const detectionSlice = createSlice({
     },
     resetDetectionState(state) {
       state.data = initialState.data;
-      state.expandedSection = null;
     },
     setActiveDevice(state, action: PayloadAction<string>) {
       // Optimistic device swap for the frozen post-stop state: SSE is closed,
@@ -63,12 +54,8 @@ const detectionSlice = createSlice({
           : [{ name: 'Polyp Detection', device: dev, fps: 0, status: 'stopped' } as any],
       };
     },
-    setExpandedSection(state, action: PayloadAction<'video' | null>) {
-      state.expandedSection =
-        state.expandedSection === action.payload ? null : action.payload;
-    },
   },
 });
 
-export const { updateDetectionState, patchDetectionState, resetDetectionState, setActiveDevice, setExpandedSection } = detectionSlice.actions;
+export const { updateDetectionState, patchDetectionState, resetDetectionState, setActiveDevice } = detectionSlice.actions;
 export default detectionSlice.reducer;

@@ -5,10 +5,10 @@ tests — they require a ground-truth SRT and either a running mock webhook or a
 exported events JSON. Keep them out of `tests/` so pytest discovery stays clean.
 
 Current video corpus layout (relative to repo root):
-- `../demo-videos/cam_child/...`
-- `../demo-videos/cam_fridge/...`
-- `../demo-videos/cam_elder_bedroom/...`
-- `../demo-videos/cam_elder_bedroom_2/...`
+- `../demo/videos/cam_child/...`
+- `../demo/videos/cam_fridge/...`
+- `../demo/videos/cam_elder_bedroom/...`
+- `../demo/videos/cam_elder_bedroom_2/...`
 
 ## Quick map
 
@@ -33,7 +33,7 @@ latter — `--tolerance 2.0` recovers it.
 ```bash
 # Use the dumps run_eval.sh leaves behind (file paths printed at end of run):
 .venv/bin/python tools/render_eval_timeline.py \
-  --srt ../demo-videos/cam_fridge/demo006-2_expanded_20min_v2_groundtruth.srt \
+  --srt ../demo/videos/cam_fridge/demo006-2_expanded_20min_v2_groundtruth.srt \
     --events-json /tmp/fridge_events_<pid>.json \
     --status-json /tmp/fridge_status_<pid>.json \
     --source-id cam_fridge --ss 0
@@ -64,12 +64,13 @@ has 2 input videos:
 
 | Scenario | source_id | Use case | Video | ss | Prefilter | GT |
 |---|---|---|---|---|---|---|
-| `child` | cam_child | child_safety | `cam_child/child_safety_demo.mp4` (9'15") | 40 | on | yes |
-| `fridge` | cam_fridge | fridge | `cam_fridge/demo006-2_expanded_20min_v2.mp4` (20') | 0 | **off** | yes (4 [TAKE] cues) |
-| `elder_day1` | cam_elder_bedroom | elder_wakeup | `cam_elder_bedroom/day1_elder_wakeup.mp4` (8'00") | 0 | on | yes (excl `[EMPTY]`) |
-| `elder_day2` | cam_elder_bedroom_2 | elder_wakeup | `cam_elder_bedroom_2/day2_elder_wakeup.mp4` (8'29") | 0 | on | yes (excl `[EMPTY]`) |
+| `child` | cam_child | child_safety | `VSA_EVAL_CHILD_VIDEO` | 40 | on | yes |
+| `fridge` | cam_fridge | fridge | `VSA_EVAL_FRIDGE_VIDEO` | 0 | **off** | yes (4 [TAKE] cues) |
+| `elder_day1` | cam_elder_bedroom | elder_wakeup | `VSA_EVAL_ELDER_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
+| `elder_day2` | cam_elder_bedroom_2 | elder_wakeup | `VSA_EVAL_ELDER_2_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
 
 Notes:
+- Set the corresponding `VSA_EVAL_*_VIDEO` variables to local MP4 files before running an evaluation. Videos are not distributed with the repository.
 - `fridge` runs with `prefilter.enabled=false` because `target_classes=["person"]`
   would filter out hand-only motion.
 - `elder_*` GT cue 3 is `[EMPTY]` (no person); the eval excludes it via
@@ -157,7 +158,7 @@ bash scripts/test-videostream-analytics.sh --local --integration-only
 # 2. In another terminal, evaluate while the service is still up.
 #    --anchor-mode stream-start asks the service for the real stream-open time.
 .venv/bin/python tools/eval_prefilter_from_webhook.py \
-  --srt ../demo-videos/cam_child/child_safety_demo_groundtruth.srt \
+  --srt ../demo/videos/cam_child/child_safety_demo_groundtruth.srt \
     --source-id cam_child --ss 40
 ```
 

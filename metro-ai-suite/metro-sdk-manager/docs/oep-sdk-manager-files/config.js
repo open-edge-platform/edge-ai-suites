@@ -35,6 +35,10 @@ const CONFIG = {
         {
           label: "Metro AI Demo Kit",
           value: "VISUAL_AI_DEMO"
+        },
+        {
+          label: "Drone Mission Compute SDK",
+          value: "DRONE_MISSION_COMPUTE"
         }
       ]
     },
@@ -215,6 +219,17 @@ const CONFIG = {
             "MQTT Broker",
             "Edge AI Suites - Repo"
           ]
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          components: [
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
         }
       ]
     },
@@ -300,6 +315,14 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
         }
 
       ]
@@ -389,6 +412,15 @@ const CONFIG = {
           },
           text: `Get Started`,
           link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/drone-mission-compute-sdk/get-started.html`
         }
       ]
     },
@@ -533,6 +565,17 @@ const CONFIG = {
           links: [
             { text: "DL Streamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
             { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          links: [
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]

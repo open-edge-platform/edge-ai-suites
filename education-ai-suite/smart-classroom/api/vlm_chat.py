@@ -146,6 +146,7 @@ async def chat_completions(request: Request):
             stream=True,
             max_new_tokens=chat_req.max_completion_tokens,
             temperature=chat_req.temperature,
+            enable_thinking=chat_req.enable_thinking,
         )
         return StreamingResponse(
             _sse_stream(token_iter, model_name),
@@ -159,6 +160,7 @@ async def chat_completions(request: Request):
         stream=False,
         max_new_tokens=chat_req.max_completion_tokens,
         temperature=chat_req.temperature,
+        enable_thinking=chat_req.enable_thinking,
     )
     response = mods.ChatCompletionResponse(
         id=str(uuid.uuid4()),

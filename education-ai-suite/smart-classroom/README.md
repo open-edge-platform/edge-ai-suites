@@ -1,6 +1,6 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models for the Windows OS. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
 
 The main features are as follows:
 
@@ -26,6 +26,14 @@ The main features are as follows:
 - Document text extraction with OCR support (PaddleOCR)
 - RAG-based Question & Answer over uploaded educational materials
 - Vector-based retrieval using ChromaDB with CLIP and mE5 embeddings
+
+#### Report Generator
+
+- Report generation triggered via report API after session outputs are ready
+- Session-based inputs from summary, mindmap, and topic segmentation outputs
+- Field-selectable template report generation with streaming output
+- Report retrieval and export in Markdown, DOCX, and PDF formats
+- Fast reselect flow to update included fields without rerunning full LLM generation
 
 #### Architecture
 

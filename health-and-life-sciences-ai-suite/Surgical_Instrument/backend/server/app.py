@@ -1,14 +1,12 @@
 """Real Flask server for the Surgical Instrument backend.
 
-Replaces ``backend_mvp/mock_server.py``. Wire shape identical to the mock so
-the existing Redux UI works unmodified — the only differences are that the
-lifecycle drives a real :class:`Orchestrator` FSM (weights → dataset → train →
-export → ready) and frames come from a real DL Streamer pipeline running in
-the ``surgical-pipeline`` container. This backend is a *consumer* of that
-pipeline: it POSTs /start /stop to the pipeline HTTP control plane, subscribes
-to the ``surgical/detections`` MQTT topic for per-frame metadata, tails the
-GStreamer ``latency_tracer`` log for infer + total latency, and reads annotated
-JPEGs from the shared ``/frames`` volume. See :mod:`backend.consumer`.
+Replaces ``backend_mvp/mock_server.py``. Wire shape remains compatible with the
+existing Redux UI while lifecycle is driven by a real :class:`Orchestrator`
+FSM (weights → dataset → train → export → ready). Runtime inference is handled
+by the ``surgical-pipeline`` container and this backend acts as the control
+plane consumer: it POSTs /start /stop to the pipeline HTTP API and polls
+pipeline health + rolling latency snapshots for SSE emission. See
+:mod:`backend.consumer`.
 
 Emitted shapes (unchanged from mock):
   GET  /api/health           -> {status, build_sha, uptime_s}
@@ -17,8 +15,6 @@ Emitted shapes (unchanged from mock):
   POST /api/start            -> {status, message}
   POST /api/stop             -> {status, message}
   GET  /api/events           -> SSE named events 'full' and 'delta'
-  GET  /api/frame/latest     -> ?base64=1 -> {available, data}; else JPEG
-  GET  /api/video_feed       -> multipart/x-mixed-replace MJPEG
   GET  /api/hardware-metrics -> {cpu_utilization, gpu_utilization, memory,
                                  power, npu_utilization}
   GET  /api/platform-info    -> {Processor, NPU, iGPU, Memory, Storage, OS}
@@ -32,25 +28,19 @@ Lifecycle mapping (FSM state -> UI lifecycle):
 """
 from __future__ import annotations
 
-import base64
-import io
 import json
-import math
 import os
 import queue
-import random
 import threading
 import time
-from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from flask import Flask, Response, jsonify, request
-from PIL import Image, ImageDraw, ImageFont
 
 from ..bootstrap.orchestrator import Orchestrator
+from ..consumer import MetricsClient
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +48,6 @@ from ..bootstrap.orchestrator import Orchestrator
 # ---------------------------------------------------------------------------
 
 LIFECYCLE_RUN = {"starting", "running"}
-BOUNDARY = "frame"
 
 
 @dataclass
@@ -66,7 +55,7 @@ class ServerState:
     lifecycle: str = "initializing"           # UI-facing lifecycle
     instance_id: Optional[str] = None
     device: str = "GPU"
-    # Selected pipeline input source. `source_kind` is one of file|v4l2|basler,
+    # Selected pipeline input source. `source_kind` is one of file|basler,
     # `source_arg` is the path/device/serial. Both None → pipeline uses its own
     # SOURCE_KIND/SOURCE_ARG env defaults (backward-compat with pre-slice-B UI).
     source_kind: Optional[str] = None
@@ -79,27 +68,30 @@ class ServerState:
 
     lock: threading.Lock = field(default_factory=threading.Lock)
 
-    # Rolling hardware-metrics buffers (last ~60 samples = ~4 min at 4 Hz)
-    cpu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    gpu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    npu_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    mem_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-    pwr_hist: deque = field(default_factory=lambda: deque(maxlen=60))
-
 
 STATE = ServerState()
 _orch: Optional[Orchestrator] = None
 _worker = None  # type: Optional[Any]  # InferenceWorker — lazy import
 _cfg: Optional[dict] = None
+_metrics: Optional[MetricsClient] = None
 
-# Frozen snapshot of the last session — populated on Stop, cleared on Start,
-# so the UI keeps showing the final frame + session KPIs after the user stops.
+    # Frozen snapshot of the last session — populated on Stop, cleared on Start,
+    # so the UI keeps showing the final KPI values after the user stops.
 _last_stats: Optional[dict] = None
 _last_dets: Optional[dict] = None
-_last_frame_jpeg: Optional[bytes] = None
 
 
 VALID_DEVICES = {"CPU", "GPU", "NPU"}
+
+
+def _stopped_snapshot(inf: dict[str, Any] | None) -> dict[str, Any]:
+    """Return a lifecycle-consistent frozen snapshot for post-stop UI state."""
+    base = dict(inf or {})
+    base["running"] = False
+    base["pipeline_running"] = False
+    base["wanted_running"] = False
+    base["delivered_fps"] = 0.0
+    return base
 
 
 # ---------------------------------------------------------------------------
@@ -135,12 +127,20 @@ def _map_fsm_to_lifecycle(fsm_state: str, worker_running: bool) -> str:
 
 
 def _snapshot_full() -> dict[str, Any]:
+    global _worker, _last_stats
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
     # Live worker wins; frozen last-session stats used when worker is None.
     if _worker is not None:
         inf = _worker.stats()
+        # Auto-heal stale running sessions: if control-plane health says the
+        # pipeline is not running, release the worker and transition to ready.
+        if STATE.lifecycle == "running" and not bool(inf.get("pipeline_running")) and not bool(inf.get("wanted_running")):
+            inf = _stopped_snapshot(inf)
+            _last_stats = inf
+            _worker = None
+            _set_lifecycle("ready", publish=False)
     elif _last_stats is not None:
-        inf = _last_stats
+        inf = _stopped_snapshot(_last_stats)
     else:
         inf = {
             "running": False, "delivered_fps": 0.0,
@@ -155,22 +155,7 @@ def _snapshot_full() -> dict[str, Any]:
             "cumulative_detections": 0, "frames_with_detection": 0, "detection_rate": 0.0,
             "peak_confidence": 0.0, "distinct_polyps": 0,
         }
-
-    if _worker is not None:
-        dets = _worker.latest_detections()
-        detections = dets.get("detections", [])
-        n_polyp = sum(1 for d in detections if str(d.get("class_name", "")).lower() == "polyp")
-        conf = max((float(d.get("confidence", 0.0)) for d in detections), default=0.0)
-    else:
-        # Post-stop: no live detection. Session totals still come from _last_stats.
-        n_polyp = 0
-        conf = 0.0
     fps = float(inf.get("delivered_fps", 0.0))
-    e2e_mean = float(inf.get("e2e_mean_ms", inf.get("total_mean_ms", 0.0)))
-    e2e_p50 = float(inf.get("e2e_p50_ms", 0.0))
-    e2e_p90 = float(inf.get("e2e_p90_ms", 0.0))
-    e2e_p95 = float(inf.get("e2e_p95_ms", 0.0))
-    e2e_p99 = float(inf.get("e2e_p99_ms", inf.get("total_p99_ms", 0.0)))
     proc_mean = float(inf.get("processing_mean_ms", 0.0))
     proc_p50 = float(inf.get("processing_p50_ms", 0.0))
     proc_p90 = float(inf.get("processing_p90_ms", 0.0))
@@ -181,6 +166,8 @@ def _snapshot_full() -> dict[str, Any]:
     infer_p90 = float(inf.get("infer_p90_ms", 0.0))
     infer_p95 = float(inf.get("infer_p95_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
+    source_kind = str(inf.get("source_kind") or STATE.source_kind or "file")
+    input_source = "Basler live camera" if source_kind == "basler" else "Recorded file"
 
     cfg = _cfg or {}
     model_cfg = cfg.get("model", {}) or {}
@@ -192,19 +179,6 @@ def _snapshot_full() -> dict[str, Any]:
     return {
         "lifecycle": STATE.lifecycle,
         "bootstrap": boot,
-        "analytics": {
-            "polyp_detection": {
-                "detected": n_polyp > 0,
-                "count": n_polyp,
-                "confidence": round(conf, 3),
-                "distinct_polyps": int(inf.get("distinct_polyps", 0)),
-                "frames_processed": int(inf.get("frame_id", 0)),
-                "frames_with_detection": int(inf.get("frames_with_detection", 0)),
-                "detection_rate": round(float(inf.get("detection_rate", 0.0)), 4),
-                "peak_confidence": round(float(inf.get("peak_confidence", 0.0)), 3),
-                "session_seconds": round(float(inf.get("uptime_s", 0.0)), 1),
-            },
-        },
         "metrics": {
             "fps": round(fps, 2),
             "loop_count": int(inf.get("frame_id", 0)),
@@ -219,53 +193,39 @@ def _snapshot_full() -> dict[str, Any]:
             "processing_p90_ms": round(proc_p90, 2),
             "processing_p95_ms": round(proc_p95, 2),
             "processing_p99_ms": round(proc_p99, 2),
-            "e2e_mean_ms": round(e2e_mean, 2),
-            "e2e_p50_ms": round(e2e_p50, 2),
-            "e2e_p90_ms": round(e2e_p90, 2),
-            "e2e_p95_ms": round(e2e_p95, 2),
-            "e2e_p99_ms": round(e2e_p99, 2),
-            # Legacy aliases — same values as e2e_*.
-            "total_mean_ms": round(e2e_mean, 2),
-            "total_p99_ms": round(e2e_p99, 2),
+            "total_mean_ms": round(proc_mean, 2),
+            "total_p99_ms": round(proc_p99, 2),
         },
-        "frame": (
-            (_worker is not None and _worker.latest_frame_jpeg() is not None)
-            or _last_frame_jpeg is not None
-        ),
+        "pipeline_latency": {
+            "mean_ms": round(proc_mean, 2),
+            "p50_ms": round(proc_p50, 2),
+            "p90_ms": round(proc_p90, 2),
+            "p95_ms": round(proc_p95, 2),
+            "p99_ms": round(proc_p99, 2),
+        },
         "pipeline_performance": {
             "workloads": [{
                 "name": "Polyp Detection",
                 "device": STATE.device,
                 "status": "running" if STATE.lifecycle in LIFECYCLE_RUN else "stopped",
                 "fps": round(fps, 2),
-                "infer_ms": round(infer_ms, 2),
-                "infer_p50_ms": round(infer_p50, 2),
-                "infer_p90_ms": round(infer_p90, 2),
-                "infer_p95_ms": round(infer_p95, 2),
-                "infer_p99_ms": round(infer_p99, 2),
                 "processing_mean_ms": round(proc_mean, 2),
                 "processing_p50_ms": round(proc_p50, 2),
                 "processing_p90_ms": round(proc_p90, 2),
                 "processing_p95_ms": round(proc_p95, 2),
                 "processing_p99_ms": round(proc_p99, 2),
-                "e2e_mean_ms": round(e2e_mean, 2),
-                "e2e_p50_ms": round(e2e_p50, 2),
-                "e2e_p90_ms": round(e2e_p90, 2),
-                "e2e_p95_ms": round(e2e_p95, 2),
-                "e2e_p99_ms": round(e2e_p99, 2),
-                # Legacy keys the current UI may still read.
-                "latency_ms": round(e2e_mean, 2),
-                "latency_p99_ms": round(e2e_p99, 2),
+                "latency_ms": round(proc_mean, 2),
+                "latency_p99_ms": round(proc_p99, 2),
             }],
             "pipeline_fps": round(fps, 2),
-            "decode": f"{out_w}x{out_h} H.264",
+            "decode": "Basler UYVY" if source_kind == "basler" else f"{out_w}x{out_h} H.264",
         },
         "model_info": {
             "name": model_cfg.get("name", "yolo11n"),
             "precision": "FP16 OpenVINO IR",
             "task": "Polyp Detection",
             "dataset": ds_cfg.get("name", "CVC-ColonDB"),
-            "input_source": f"{out_h}p H.264 (looped)",
+            "input_source": input_source,
             "model_input": f"{infer_size}x{infer_size}",
             "device": STATE.device,
         },
@@ -298,94 +258,22 @@ def _start_bootstrap(config_path: Path) -> Orchestrator:
 
 
 # ---------------------------------------------------------------------------
-# Delta broadcaster + hardware metrics sampler
+# Delta broadcaster
 # ---------------------------------------------------------------------------
-
-def _sample_hardware(t: float) -> tuple[float, float, float, float, float]:
-    """Return (cpu%, gpu%, npu%, mem%, power W) — synthetic for now."""
-    running = STATE.lifecycle == "running"
-    if running:
-        cpu = max(0.0, min(100.0, 32.0 + 24.0 * math.sin(t * 0.4) + random.uniform(-3, 3)))
-        gpu = max(0.0, min(100.0, 68.0 + 20.0 * math.sin(t * 0.45) + random.uniform(-4, 4)))
-        npu = max(0.0, min(100.0, 6.0 + 4.0 * abs(math.sin(t * 0.6))))
-        mem_pct = max(0.0, min(100.0, 25.0 + 6.0 * abs(math.sin(t * 0.15))))
-        pwr = 30.0 + 8.0 * math.sin(t * 0.3)
-    else:
-        cpu = 8.0 + 4.0 * abs(math.sin(t * 0.25))
-        gpu = 4.0 + 3.0 * abs(math.sin(t * 0.6))
-        npu = 0.0
-        mem_pct = 20.0
-        pwr = 18.0
-    return cpu, gpu, npu, mem_pct, pwr
-
 
 def _delta_loop(stop_event: threading.Event) -> None:
-    t = 0.0
-    while not stop_event.is_set():
-        ts_iso = datetime.now().isoformat(timespec="seconds")
-        cpu, gpu, npu, mem_pct, pwr = _sample_hardware(t)
-        STATE.cpu_hist.append([ts_iso, round(cpu, 1)])
-        STATE.gpu_hist.append([ts_iso, round(gpu, 1)])
-        STATE.npu_hist.append([ts_iso, round(npu, 1)])
-        STATE.mem_hist.append([ts_iso, round(32 * mem_pct / 100, 2), 32.0, 0.0, round(mem_pct, 1)])
-        STATE.pwr_hist.append([ts_iso, round(pwr, 1)])
+    """Push pipeline snapshot deltas to SSE subscribers on a fixed cadence.
 
+    Hardware metrics (CPU / iGPU / NPU / memory / power) are *not* sampled
+    here — the UI pulls those on-demand from /api/hardware-metrics, which
+    proxies the surgical-metrics-collector sidecar. This loop only exists
+    so the UI's pipeline KPIs (fps, latency, uptime) refresh smoothly
+    while inference is running.
+    """
+    while not stop_event.is_set():
         if STATE.lifecycle == "running":
             _publish("delta", _snapshot_full())
-
-        t += 0.25
         stop_event.wait(0.25)
-
-
-# ---------------------------------------------------------------------------
-# Frame delivery — real InferenceWorker JPEG, with placeholder fallback
-# ---------------------------------------------------------------------------
-
-_PLACEHOLDER_W, _PLACEHOLDER_H = 960, 540
-
-
-def _placeholder_jpeg(message: str) -> bytes:
-    img = Image.new("RGB", (_PLACEHOLDER_W, _PLACEHOLDER_H), color=(12, 16, 22))
-    d = ImageDraw.Draw(img)
-    font = ImageFont.load_default()
-    d.text((16, 16), "Surgical Instrument backend", fill=(180, 200, 220), font=font)
-    d.text((16, 40), f"lifecycle: {STATE.lifecycle}", fill=(180, 200, 220), font=font)
-    d.text((16, 64), message, fill=(255, 217, 168), font=font)
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=70)
-    return buf.getvalue()
-
-
-def _current_jpeg() -> bytes:
-    if _worker is not None:
-        jpeg = _worker.latest_frame_jpeg()
-        if jpeg:
-            return jpeg
-    # Post-stop: keep showing the last real frame so the video panel doesn't blank.
-    if _last_frame_jpeg is not None and STATE.lifecycle in ("ready", "stopping"):
-        return _last_frame_jpeg
-    if STATE.lifecycle == "initializing":
-        boot_msg = ""
-        if _orch is not None:
-            snap = _orch.state_snapshot()
-            boot_msg = f"{snap.get('state','')} — {snap.get('message','')}"
-        return _placeholder_jpeg(boot_msg or "bootstrap in progress...")
-    if STATE.lifecycle == "error":
-        return _placeholder_jpeg(STATE.error or "error")
-    return _placeholder_jpeg("press Start to begin inference")
-
-
-def _mjpeg_stream() -> Generator[bytes, None, None]:
-    while True:
-        jpeg = _current_jpeg()
-        yield (
-            b"--" + BOUNDARY.encode() + b"\r\n"
-            b"Content-Type: image/jpeg\r\n"
-            b"Content-Length: " + str(len(jpeg)).encode() + b"\r\n\r\n"
-            + jpeg + b"\r\n"
-        )
-        # Deliver at ~30 fps when running, slower otherwise to save CPU.
-        time.sleep(0.033 if STATE.lifecycle == "running" else 0.25)
 
 
 # ---------------------------------------------------------------------------
@@ -424,12 +312,21 @@ def readiness() -> Response:
 
 @app.get(f"{API}/status")
 def status() -> Response:
+    global _worker, _last_stats
     boot = _orch.state_snapshot() if _orch else {"state": "initializing"}
     # Live worker wins; when stopped, fall through to the last-session
     # snapshot frozen by /stop so the UI keeps rendering the final KPIs
     # (fps, latency, detection totals) instead of blanking to zero.
     # `_last_stats` is cleared on /start (fresh session) and /reset.
-    inf = _worker.stats() if _worker else _last_stats
+    if _worker:
+        inf = _worker.stats()
+        if STATE.lifecycle == "running" and not bool(inf.get("pipeline_running")) and not bool(inf.get("wanted_running")):
+            inf = _stopped_snapshot(inf)
+            _last_stats = inf
+            _worker = None
+            _set_lifecycle("ready", publish=False)
+    else:
+        inf = _stopped_snapshot(_last_stats) if _last_stats else None
     return jsonify({
         "lifecycle": STATE.lifecycle,
         "device": STATE.device,
@@ -461,7 +358,15 @@ def start() -> Response:
     if isinstance(src, dict):
         kind = src.get("kind")
         arg  = src.get("arg")
-        if kind in ("file", "v4l2", "basler") and isinstance(arg, str) and arg:
+        if kind in ("file", "basler") and isinstance(arg, str) and arg:
+            if kind == "basler":
+                basler, basler_note = _enumerate_basler_cameras()
+                if not basler:
+                    return jsonify({
+                        "status": "not_ready",
+                        "error": basler_note or "no Basler camera detected",
+                        "source": {"kind": "basler", "arg": arg},
+                    }), 409
             STATE.source_kind = kind
             STATE.source_arg  = arg
 
@@ -472,7 +377,7 @@ def start() -> Response:
 
 
 def _do_start() -> None:
-    global _worker, _last_stats, _last_dets, _last_frame_jpeg
+    global _worker, _last_stats, _last_dets
     assert _cfg is not None
     try:
         from ..consumer import InferenceConsumer
@@ -480,7 +385,6 @@ def _do_start() -> None:
         # Fresh session — clear any frozen snapshot from the previous run.
         _last_stats = None
         _last_dets = None
-        _last_frame_jpeg = None
 
         # STATE.device is the authoritative runtime choice (POST /api/device);
         # falls back to the config value at first boot via create_app().
@@ -491,12 +395,6 @@ def _do_start() -> None:
             source_arg=STATE.source_arg,
         )
         _worker.start()
-        # Wait briefly for the pipeline container to produce the first
-        # annotated frame; then mark running.
-        for _ in range(100):
-            if _worker.latest_frame_jpeg() is not None:
-                break
-            time.sleep(0.1)
         _set_lifecycle("running")
     except Exception as exc:  # noqa: BLE001
         with STATE.lock:
@@ -510,13 +408,12 @@ def stop() -> Response:
     _set_lifecycle("stopping")
 
     def _do_stop() -> None:
-        global _worker, _last_stats, _last_dets, _last_frame_jpeg
+        global _worker, _last_stats, _last_dets
         if _worker is not None:
-            # Freeze the last session so the UI keeps showing final KPIs + frame.
+            # Freeze the last session so the UI keeps showing final KPIs.
             try:
-                _last_stats = _worker.stats()
+                _last_stats = _stopped_snapshot(_worker.stats())
                 _last_dets = _worker.latest_detections()
-                _last_frame_jpeg = _worker.latest_frame_jpeg()
             except Exception:  # noqa: BLE001
                 pass
             _worker.stop(timeout=5.0)
@@ -535,7 +432,7 @@ def reset() -> Response:
     changing the inference device and pressing Start again. Rejected while
     inference is running (Stop first).
     """
-    global _last_stats, _last_dets, _last_frame_jpeg
+    global _last_stats, _last_dets
     if STATE.lifecycle in LIFECYCLE_RUN:
         return jsonify({
             "error": "cannot reset while running — stop inference first",
@@ -543,7 +440,6 @@ def reset() -> Response:
         }), 409
     _last_stats = None
     _last_dets = None
-    _last_frame_jpeg = None
     with STATE.lock:
         STATE.error = None
         if STATE.lifecycle == "error":
@@ -603,38 +499,28 @@ def events() -> Response:
     })
 
 
-@app.get(f"{API}/frame/latest")
-def frame_latest() -> Response:
-    jpeg = _current_jpeg()
-    if request.args.get("base64"):
-        # "available" mirrors _current_jpeg's real output: live worker frame OR
-        # the frozen last-session frame. Without this the UI treats every
-        # post-Stop poll as a miss and shows a stale-overlay spinner.
-        available = (
-            (_worker is not None and _worker.latest_frame_jpeg() is not None)
-            or _last_frame_jpeg is not None
-        )
-        return jsonify({
-            "available": available,
-            "data": base64.b64encode(jpeg).decode("ascii"),
-        })
-    return Response(jpeg, mimetype="image/jpeg")
-
-
-@app.get(f"{API}/video_feed")
-def video_feed() -> Response:
-    return Response(_mjpeg_stream(), mimetype=f"multipart/x-mixed-replace; boundary={BOUNDARY}")
-
-
 @app.get(f"{API}/hardware-metrics")
 def hardware_metrics() -> Response:
-    return jsonify({
-        "cpu_utilization": list(STATE.cpu_hist),
-        "gpu_utilization": list(STATE.gpu_hist),
-        "npu_utilization": list(STATE.npu_hist),
-        "memory":          list(STATE.mem_hist),
-        "power":           list(STATE.pwr_hist),
-    })
+    """Proxy to the surgical-metrics-collector sidecar.
+
+    The collector container (image ``intel/hl-ai-metrics-collector``)
+    scrapes host CPU (sar), iGPU (qmassa), NPU (sysfs CSV), memory
+    (``free``), and Intel PCM power counters and exposes the aggregate at
+    ``GET /metrics``. This route forwards that payload unchanged so the
+    UI's Resource Utilisation panel renders real values instead of a
+    synthetic sine wave. Returns an empty canonical payload with
+    ``available: False`` when the collector is unreachable.
+    """
+    if _metrics is None:
+        return jsonify({
+            "cpu_utilization": [],
+            "gpu_utilization": [],
+            "npu_utilization": [],
+            "memory":          [],
+            "power":           [],
+            "available":       False,
+        })
+    return jsonify(_metrics.fetch_metrics())
 
 
 # ---------------------------------------------------------------------------
@@ -762,6 +648,24 @@ def platform_info() -> Response:
     })
 
 
+def _enumerate_basler_cameras() -> tuple[list[dict], str | None]:
+    basler: list[dict] = []
+    basler_note: str | None = None
+    try:
+        from pypylon import pylon  # type: ignore
+        for d in pylon.TlFactory.GetInstance().EnumerateDevices():
+            basler.append({
+                "serial": d.GetSerialNumber(),
+                "model": d.GetModelName(),
+                "vendor": d.GetVendorName(),
+            })
+    except ImportError:
+        basler_note = "pypylon not installed in backend image (ships in slice E)"
+    except Exception as e:
+        basler_note = f"pylon enumerate failed: {e}"
+    return basler, basler_note
+
+
 @app.get(f"{API}/devices/cameras")
 def devices_cameras() -> Response:
     v4l2: list[dict] = []
@@ -777,20 +681,7 @@ def devices_cameras() -> Response:
     except FileNotFoundError:
         pass
 
-    basler: list[dict] = []
-    basler_note: str | None = None
-    try:
-        from pypylon import pylon  # type: ignore
-        for d in pylon.TlFactory.GetInstance().EnumerateDevices():
-            basler.append({
-                "serial": d.GetSerialNumber(),
-                "model":  d.GetModelName(),
-                "vendor": d.GetVendorName(),
-            })
-    except ImportError:
-        basler_note = "pypylon not installed in backend image (ships in slice E)"
-    except Exception as e:
-        basler_note = f"pylon enumerate failed: {e}"
+    basler, basler_note = _enumerate_basler_cameras()
 
     resp: dict = {"v4l2": v4l2, "basler": basler}
     if basler_note:
@@ -939,7 +830,7 @@ def health_alias() -> Response:
 
 def create_app(config_path: str | Path) -> Flask:
     """Wire orchestrator + background threads; return the Flask app."""
-    global _cfg
+    global _cfg, _metrics
     from ..bootstrap.config import load_config
 
     _cfg = load_config(config_path)
@@ -947,6 +838,19 @@ def create_app(config_path: str | Path) -> Flask:
     cfg_device = str((_cfg.get("pipeline", {}) or {}).get("device", "GPU")).upper()
     if cfg_device in VALID_DEVICES:
         STATE.device = cfg_device
+
+    # Metrics-collector proxy. Env var wins so `docker compose` can point
+    # the backend at a host-mode collector during dev without editing the
+    # yaml. Falls back to the yaml, then to the compose-network DNS name.
+    mc_cfg = (_cfg.get("metrics_collector", {}) or {})
+    mc_base = os.environ.get(
+        "METRICS_COLLECTOR_URL",
+        mc_cfg.get("base_url", "http://surgical-metrics-collector:9000"),
+    )
+    _metrics = MetricsClient(
+        mc_base,
+        max_points=int(mc_cfg.get("max_points", 120)),
+    )
 
     _start_bootstrap(Path(config_path))
 

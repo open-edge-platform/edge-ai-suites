@@ -111,19 +111,23 @@ class VLMTextGen:
         self._pipe = ov_genai.VLMPipeline(
             str(model_dir), device=self._device, **self._ov_config()
         )
-        # The OpenVINO conversion writes ``extra_special_tokens`` as a list in
-        # tokenizer_config.json, but transformers expects a dict. Override it to
-        # avoid ``AttributeError: 'list' object has no attribute 'keys'``.
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            str(model_dir), extra_special_tokens={}
-        )
-        if "qwen3" in self._model_name.lower():
-            _think_tokens = ["<think>", "</think>"]
-            _existing = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
-            _missing = [t for t in _think_tokens if t not in _existing]
-            if _missing:
-                self.tokenizer.add_special_tokens({"additional_special_tokens": _missing})
-                logger.info("Registered think tags as special tokens: %s", _missing)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                str(model_dir), extra_special_tokens={}
+            )
+            if "qwen3" in self._model_name.lower():
+                _think_tokens = ["<think>", "</think>"]
+                _existing = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
+                _missing = [t for t in _think_tokens if t not in _existing]
+                if _missing:
+                    self.tokenizer.add_special_tokens({"additional_special_tokens": _missing})
+                    logger.info("Registered think tags as special tokens: %s", _missing)
+        except Exception as exc:
+            logger.warning(
+                "transformers AutoTokenizer failed (%s); falling back to the "
+                "OpenVINO pipeline tokenizer.", exc
+            )
+            self.tokenizer = self._pipe.get_tokenizer()
         logger.info("Warm VLM ready.")
 
     def release(self) -> None:
@@ -147,6 +151,7 @@ class VLMTextGen:
         stream: bool = True,
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
+        enable_thinking: Optional[bool] = None,
     ) -> Union[Iterator[str], str]:
         """Generate from ``prompt`` (optionally multimodal) using the warm pipeline.
 
@@ -154,7 +159,8 @@ class VLMTextGen:
         non-streaming returns the full string. ``images`` (a list of
         ``ov.Tensor`` frames, already decoded by the caller) enables the
         multimodal path used by content-search video summarization; when
-        omitted the call is text-only.
+        omitted the call is text-only. ``enable_thinking=False`` suppresses
+        Qwen3 thinking for this request only; ``None`` keeps the model default.
         """
         if self._pipe is None:
             raise RuntimeError("VLM pipeline is not loaded")
@@ -162,6 +168,8 @@ class VLMTextGen:
             raise ValueError("Invalid prompt provided.")
 
         config = self._generation_config(max_new_tokens, temperature)
+        if enable_thinking is False:
+            prompt = self._apply_no_think_template(prompt, config, bool(images))
         if stream:
             return self._generate_stream(prompt, config, images)
         if images:
@@ -169,6 +177,21 @@ class VLMTextGen:
                 self._pipe.generate(prompt, images=images, generation_config=config)
             )
         return str(self._pipe.generate(prompt, generation_config=config))
+
+    def _apply_no_think_template(
+        self, prompt: str, config: "ov_genai.GenerationConfig", has_images: bool
+    ) -> str:
+        try:
+            media_tags = "<ov_genai_image_0>" if has_images else ""
+            history = [{"role": "user", "content": media_tags + prompt}]
+            templated = self._pipe.get_tokenizer().apply_chat_template(
+                history, True, "", None, {"enable_thinking": False}
+            )
+            config.apply_chat_template = False
+            return templated
+        except Exception as exc:  # noqa: BLE001 - fall back to raw prompt with think
+            logger.warning("no-think template failed (%s); using raw prompt", exc)
+            return prompt
 
     def _generation_config(
         self, max_new_tokens: Optional[int], temperature: Optional[float]

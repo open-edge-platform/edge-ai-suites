@@ -151,34 +151,18 @@ def _download_openvino_model(
     return success, output_dir
 
 def ensure_model():
-    # NOTE: The summarizer, mindmap and segmentation components now share the
-    # warm ``text_gen`` VLM (config.models.text_gen), which is downloaded and
-    # converted lazily by VLMTextGen on first warmup -- not here. The old
-    # summarizer LLM (config.models.summarizer) is no longer loaded, so its
-    # download/convert flow below is dead code and is commented out to avoid
-    # exporting an unused model at startup.
-    # if config.models.summarizer.provider == "openvino":
-    #     output_dir = get_model_path()
-    #     _download_openvino_model(config.models.summarizer.name, output_dir, config.models.summarizer.weight_format)
-    if config.models.asr.provider == "openvino":
-        output_dir = get_asr_model_path()
-        _download_openvino_model(f"openai/{config.models.asr.name}", output_dir, None)
-    if config.models.diarization.provider == "huggingface":
-        output_dir = get_diarization_model_path()
-        success, _ = _download_hf_model(
-            config.models.diarization.name,
-            output_dir,
-            hf_token=config.models.asr.hf_token,
-            required_files=["config.yaml"]
-        )
-        if success:
-            _cache_diarization_dependencies_locally(output_dir, hf_token=config.models.asr.hf_token)
+    # NOTE: Core capabilities (text_gen VLM, ASR, OCR) handle model download/
+    # conversion lazily during first warmup via their respective handlers:
+    # - VLMTextGen: downloads and converts on first _load()
+    # - AsrHandler: calls _ensure_openvino_asr_model() from _build_processor()
+    # - OcrHandler: calls _ensure_openvino_models() from _build_processor()
+    # No pre-download is needed here; models are prepared on-demand.
     
+    # Video Analytics models (YOLO, classification) are still prepared eagerly
+    # since they don't use the handler pattern yet.
     output_dir = get_va_model_path()
     convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
-    # OCR model download/conversion moved to OcrHandler._ensure_openvino_models(),
-    # called lazily from OcrHandler._build_processor() when provider == "openvino".
 
 
 def get_model_path() -> str:

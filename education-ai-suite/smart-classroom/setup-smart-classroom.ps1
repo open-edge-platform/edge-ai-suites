@@ -1508,11 +1508,92 @@ function Update-YamlValue {
     }
 }
 
+# Derive the feature list from the features: block in config.yaml (preserves order).
+$featureIds = @()
+$featuresBlockMatch = [regex]::Match($configContent, "(?ms)^features:[ \t]*\r?\n(.*?)(?=^\S|\z)")
+if ($featuresBlockMatch.Success) {
+    foreach ($m in [regex]::Matches($featuresBlockMatch.Groups[1].Value, "(?m)^\s+([A-Za-z0-9_]+)\s*:\s*\{\s*enabled\s*:\s*(?:true|false)\s*\}")) {
+        $featureIds += $m.Groups[1].Value
+    }
+}
+if ($featureIds.Count -eq 0) {
+    $featureIds = @("asr", "summary", "mindmap", "topic_segmentation", "video_analytics", "board_ocr", "content_search", "qa", "grading", "report")
+}
+
+function Get-FeatureState {
+    param(
+        [string]$Content,
+        [string]$Id
+    )
+    $match = [regex]::Match($Content, "$([regex]::Escape($Id))\s*:\s*\{\s*enabled\s*:\s*(true|false)\s*\}")
+    if ($match.Success) { return $match.Groups[1].Value } else { return "true" }
+}
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing config.yaml values" -ForegroundColor Gray
+    $doConfigChanges = "N"
+} else {
+    $doConfigChanges = Read-Host "Do you want to configure config.yaml? (Y/N)"
+}
+Write-Host ""
+
+if ($doConfigChanges -match "^[Yy]") {
+
 # ============================================================================
-# [3.1] Language & ASR Configuration
+# [3.1] Feature Configuration
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.1] Language & ASR Configuration" -ForegroundColor Cyan
+Write-Host "[3.1] Feature Configuration" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $state = Get-FeatureState -Content $configContent -Id $fid
+    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
+}
+Write-Host ""
+Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing feature configuration" -ForegroundColor Gray
+    $changeFeatures = "N"
+} else {
+    $changeFeatures = Read-Host "Do you want to change feature configuration? (Y/N)"
+}
+
+if ($changeFeatures -match "^[Yy]") {
+    Write-Host ""
+    Write-Host "For each feature, enter T (True) to enable, F (False) to disable, or press Enter to keep the current value." -ForegroundColor Yellow
+    Write-Host ""
+    foreach ($fid in $featureIds) {
+        $current = Get-FeatureState -Content $configContent -Id $fid
+        $answer = Read-Host ("  {0,-20} (enabled: {1}) [T/F/Enter]" -f $fid, $current)
+        $newState = $null
+        if ($answer -match "^[Tt]") { $newState = "true" }
+        elseif ($answer -match "^[Ff]") { $newState = "false" }
+
+        if ($newState) {
+            $configContent = $configContent -replace "($([regex]::Escape($fid))\s*:\s*\{\s*enabled\s*:\s*)(true|false)(\s*\})", "`${1}$newState`${3}"
+            Write-Host "    [OK] $fid set to $newState" -ForegroundColor Green
+        }
+    }
+    Write-Host ""
+    Write-Host "Feature configuration updated." -ForegroundColor Green
+} else {
+    Write-Host "Keeping current feature configuration." -ForegroundColor Gray
+}
+
+Write-Host ""
+
+# ============================================================================
+# [3.2] Language & ASR Configuration
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "[3.2] Language & ASR Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1656,10 +1737,10 @@ if ($changeAsr -match "^[Yy]") {
 Write-Host ""
 
 # ============================================================================
-# [3.2] Upload Size Limits
+# [3.3] Upload Size Limits
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.2] Upload Size Limits" -ForegroundColor Cyan
+Write-Host "[3.3] Upload Size Limits" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1707,10 +1788,10 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.3] OCR Configuration
+# [3.4] OCR Configuration
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.3] OCR Configuration" -ForegroundColor Cyan
+Write-Host "[3.4] OCR Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1754,10 +1835,10 @@ if ($changeOcr.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.4] Board OCR Configuration
+# [3.5] Board OCR Configuration
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.4] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
+Write-Host "[3.5] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1802,6 +1883,11 @@ if ($changeBoardOcr.ToUpper() -eq "Y") {
 
 Write-Host ""
 
+} else {
+    Write-Host "Skipping configuration changes, using existing config.yaml values." -ForegroundColor Gray
+    Write-Host ""
+}
+
 # ============================================================================
 # SAVE CONFIG FILE
 # ============================================================================
@@ -1832,6 +1918,19 @@ $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] 
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
 $finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
+
+$csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
+$segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+$qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
+$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+
+Write-Host "  Features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $fState = Get-FeatureState -Content $finalConfig -Id $fid
+    $fColor = if ($fState -eq "true") { "Green" } else { "DarkGray" }
+    Write-Host ("    {0,-20} enabled: {1}" -f $fid, $fState) -ForegroundColor $fColor
+}
+Write-Host "" -ForegroundColor White
 Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
@@ -1840,6 +1939,7 @@ Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
@@ -1853,10 +1953,13 @@ Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
+$venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
+
+$gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
@@ -1904,28 +2007,61 @@ if (-not (Test-Path $venvBackend)) {
 Write-Host ""
 
 Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-    Remove-Item $venvContentSearch -Recurse -Force
-}
-if (-not (Test-Path $venvContentSearch)) {
-    python -m venv $venvContentSearch
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
-} elseif ($upgradeVenvs) {
-    Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+if (-not $contentSearchEnabled) {
+    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
 } else {
-    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+        Remove-Item $venvContentSearch -Recurse -Force
+    }
+    if (-not (Test-Path $venvContentSearch)) {
+        python -m venv $venvContentSearch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    }
 }
 Write-Host ""
+
+if ($gradingEnabled -eq "true") {
+    Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow
+    if ($recreateVenvs -and (Test-Path $venvConvert)) {
+        Remove-Item $venvConvert -Recurse -Force
+    }
+    if (-not (Test-Path $venvConvert)) {
+        python -m venv $venvConvert
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create Grading conversion venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing Grading model conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading Grading conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] Grading conversion venv already exists" -ForegroundColor Green
+    }
+    Write-Host ""
+} else {
+    Write-Host "[SKIP] Grading is disabled (grading.enabled: false)" -ForegroundColor Gray
+    Write-Host ""
+}
 
 # ============================================================================
 # SETUP COMPLETE

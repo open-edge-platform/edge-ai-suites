@@ -25,6 +25,7 @@
     <a href="/detections">Detections</a>
   </nav>
 
+  <div class="layout-wrapper">
   <main>
     <section class="card">
       <h2>Run Pipeline</h2>
@@ -150,10 +151,39 @@
     </section>
   </main>
 
+  <aside class="metrics-sidebar">
+    <div class="card">
+      <h2>System Metrics</h2>
+      <p class="metrics-status" id="metrics-status">Connecting to metrics stream…</p>
+      <div class="metrics-stats">
+        <div class="metric-item">
+          <span class="live-stat-value" id="metric-cpu">—</span>
+          <span class="live-stat-label">CPU</span>
+        </div>
+        <div class="metric-item">
+          <span class="live-stat-value" id="metric-ram">—</span>
+          <span class="live-stat-label">RAM</span>
+        </div>
+        <div class="metric-item">
+          <span class="live-stat-value" id="metric-gpu">—</span>
+          <span class="live-stat-label">GPU</span>
+        </div>
+        <div class="metric-item">
+          <span class="live-stat-value" id="metric-npu">—</span>
+          <span class="live-stat-label">NPU</span>
+        </div>
+      </div>
+      <canvas id="metrics-chart" height="160"></canvas>
+    </div>
+  </aside>
+  </div>
+
   <footer>
     <p>&#169; Intel Corporation — Agentic Predictive Maintenance Blueprint</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="/static/js/live-status.js"></script>
+  <script src="/static/js/metrics.js"></script>
 </body>
 </html>
