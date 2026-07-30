@@ -38,9 +38,6 @@ export interface VideoSummaryTask {
   id: number;
   monitorId: string;
   eventId?: number;
-  clipStartTime?: string;
-  clipEndTime?: string;
-  clipDuration?: number;
   summaryClipInput?: string;   // cropped/prepared clip sent to video summary service (*_input.mp4)
   summaryText?: string;
   status: "pending" | "processing" | "completed" | "failed" | "ignored";
@@ -49,7 +46,6 @@ export interface VideoSummaryTask {
   promptTokens?: number;
   imageTokens?: number;
   completionTokens?: number;
-  startedAt?: string;
   completedAt?: string;
   createdAt: string;
   // User-defined extension fields (added via SchemaManager, e.g. event, severity, desc)

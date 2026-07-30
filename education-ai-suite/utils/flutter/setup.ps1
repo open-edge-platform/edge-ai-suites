@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 <#
 .SYNOPSIS
     Smart Classroom RAG Flutter setup
@@ -11,40 +8,39 @@
 #>
 
 Write-Host "`n=== Smart Classroom RAG Setup ===" -ForegroundColor Cyan
-# Check config.yaml for content_search.enabled
-Write-Host "\nChecking Smart Classroom configuration..." -ForegroundColor Yellow
-$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$configPath = Join-Path $repoRoot "smart-classroom\config.yaml"
+# Check Flutter's config.yaml for content_search settings
+Write-Host "`nChecking Flutter configuration..." -ForegroundColor Yellow
+$configPath = Join-Path $PSScriptRoot "config.yaml"
 
 if (Test-Path $configPath) {
-    $configContent = Get-Content $configPath -Raw
-    if ($configContent -match 'content_search:\s*\{\s*enabled:\s*(true|false)\s*\}') {
-        $contentSearchEnabled = $matches[1]
-        if ($contentSearchEnabled -eq "false") {
-            Write-Host "[X] Content Search is DISABLED in config.yaml" -ForegroundColor Red
-            Write-Host "" -ForegroundColor Yellow
-            Write-Host "    Content Search must be enabled for Flutter integration." -ForegroundColor Yellow
-            Write-Host "    Please edit: $configPath" -ForegroundColor Yellow
-            Write-Host "    Change:  content_search: { enabled: false }" -ForegroundColor Gray
-            Write-Host "    To:      content_search: { enabled: true }" -ForegroundColor Green
-            Write-Host "" -ForegroundColor Yellow
-            $response = Read-Host "Would you like me to enable it now? (Y/N)"
-            if ($response -eq "Y" -or $response -eq "y") {
-                $configContent = $configContent -replace 'content_search:\s*\{\s*enabled:\s*false\s*\}', 'content_search: { enabled: true }'
-                Set-Content $configPath $configContent
-                Write-Host "[OK] Content Search enabled in config.yaml" -ForegroundColor Green
-            } else {
-                Write-Host "[X] Setup aborted. Please enable content_search manually." -ForegroundColor Red
-                exit 1
-            }
-        } else {
+    Write-Host "[OK] Flutter config.yaml found" -ForegroundColor Green
+    try {
+        $configContent = Get-Content $configPath -Raw
+        # Check if content_search is enabled
+        if ($configContent -match 'content_search:\s*\{\s*enabled:\s*true\s*\}') {
             Write-Host "[OK] Content Search is enabled" -ForegroundColor Green
+        } else {
+            Write-Host "[X] Content Search is DISABLED in Flutter config.yaml" -ForegroundColor Red
+            Write-Host "    Please enable it by changing:" -ForegroundColor Yellow
+            Write-Host "    content_search: { enabled: false }" -ForegroundColor Gray
+            Write-Host "    to:" -ForegroundColor Yellow
+            Write-Host "    content_search: { enabled: true }" -ForegroundColor Green
+            exit 1
         }
-    } else {
-        Write-Host "[!] Warning: Could not parse content_search.enabled from config.yaml" -ForegroundColor Yellow
+        # Check if qa is enabled
+        if ($configContent -match 'qa:\s*\{\s*enabled:\s*true\s*\}') {
+            Write-Host "[OK] Q&A is enabled" -ForegroundColor Green
+        } else {
+            Write-Host "[!] Warning: Q&A feature is disabled" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "[!] Warning: Could not parse config.yaml" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "[!] Warning: config.yaml not found at $configPath" -ForegroundColor Yellow
+    Write-Host "[X] Flutter config.yaml not found at $configPath" -ForegroundColor Red
+    Write-Host "    A config.yaml should exist in utils/flutter/" -ForegroundColor Yellow
+    Write-Host "    Copy it from smart-classroom/config.yaml and enable only content_search & qa" -ForegroundColor Yellow
+    exit 1
 }
 # Check prerequisites
 Write-Host "`nChecking prerequisites..." -ForegroundColor Yellow
@@ -82,6 +78,9 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[OK] Flutter dependencies installed" -ForegroundColor Green
 Pop-Location
+
+# Determine repository root (parent of utils/)
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Create Python venv for main backend
 Write-Host "`nCreating Python virtual environment for main backend..." -ForegroundColor Yellow
