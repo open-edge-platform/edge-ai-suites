@@ -2,7 +2,7 @@
 
 The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline events pushed by any upstream video-analytics client. This document is the **server-side contract**: as long as a client follows it, the MCP server applies the same parsing, DB writes, and downstream pipeline rules regardless of who the sender is. The production sender is `videostream-analytics`, but the same protocol applies equally to third-party analytics services, replay tools, unit-test mocks, and integration fixtures.
 
-Implementation entry point: [packages/mcp-server/src/events-endpoint.ts](../../packages/mcp-server/src/events-endpoint.ts).
+Implementation entry point: [packages/mcp-server/src/events-endpoint.ts](../../../packages/mcp-server/src/events-endpoint.ts).
 
 ---
 
@@ -47,7 +47,7 @@ All non-2xx responses are **errors** the client must handle. We split client err
 
 Why `422` not `400` for the missing-field / unknown-type cases? They are **business-rule** failures, not transport failures — the JSON parsed cleanly, the envelope is well-formed, but the body cannot be applied to a known table. Splitting them into a distinct status code lets the client tell "my serializer is broken" (`400`) from "my pipeline emitted a stale or new event type the server doesn't know about" (`422`) without string-matching the error message. A stable `code` field is included in every error body for the same reason.
 
-This matrix is enforced end-to-end by [packages/mcp-server/src/events-endpoint.ts](../../packages/mcp-server/src/events-endpoint.ts) and pinned by the integration test [tests/dev-mcp-server/test_events_webhook.py](../../tests/dev-mcp-server/test_events_webhook.py).
+This matrix is enforced end-to-end by [packages/mcp-server/src/events-endpoint.ts](../../../packages/mcp-server/src/events-endpoint.ts) and pinned by [tests/test_api/test_webhook_api.py](../../../tests/test_api/test_webhook_api.py).
 
 ### 1.3 Request constraints
 

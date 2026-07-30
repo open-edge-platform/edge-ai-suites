@@ -11,7 +11,7 @@ Before you begin, ensure the following:
 - **System Requirements:** Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
 - **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
-- **Required command-line tools:** Install Node.js 22 and npm to build the MCP server, Python 3 with virtual-environment support for the demo launcher, `curl`, `wget`, `git`, and `jq` for service setup, `ffmpeg` and `ffprobe` for video processing, and MediaMTX for local RTSP streaming:
+- **Required command-line tools:** Install Node.js `>=22.22.3 <23` (the commands below use the supported 22.x line) and npm to build the MCP server and run OpenClaw 2026.7.1. Node.js `>=24.15.0 <25` and `>=25.9.0` are also supported. Install Python 3 with virtual-environment support for the demo launcher, `curl`, `wget`, `git`, and `jq` for service setup, `ffmpeg` and `ffprobe` for video processing, and MediaMTX for local RTSP streaming:
 
   ```bash
   sudo apt-get update
@@ -22,6 +22,9 @@ Before you begin, ensure the following:
 
   mkdir -p "$HOME/.npm-global" "$HOME/.local/bin"
   npm config set prefix "$HOME/.npm-global"
+  export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"
+  grep -qxF 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' "$HOME/.bashrc" || \
+    echo 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
 
   curl -fL --retry 3 \
     https://github.com/bluenviron/mediamtx/releases/download/v1.12.2/mediamtx_v1.12.2_linux_amd64.tar.gz \
@@ -32,7 +35,7 @@ This guide assumes basic familiarity with Docker commands and terminal usage. Fo
 
 ### Memory and swap requirements
 
-`Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-intensive on a shared-RAM host. The default configuration targets a **64 GB system**:
+`Qwen/Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-intensive on a shared-RAM host. The default configuration targets a **64 GB system**:
 
 - Provide at least **32 GB of swap** so weight loading and the KV cache can spill under peak pressure without triggering the OOM killer. See [Adding Swap Space](./get-started/add-swap.md).
 - The **first startup takes 3-20 minutes** while weights download and compile. The serving is ready when `http://<host>:41091/v1/models` responds.
@@ -260,7 +263,7 @@ $SMARTBUILDING_DATA_DIR/
 
 The timestamped backup entries are present only after the launcher replaces a different active configuration. `config.yaml` and `monitors.yaml` are not removed by automatic data cleanup.
 
-Automatic cleanup runs on server start and every 24 hours. It removes `.log` files older than `logging.retention_days` (default 14) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default 7). It leaves `latest.jpg`, `smartbuilding.db`, and non-date directory names untouched.
+Automatic cleanup runs on server start and then daily at approximately 00:05 local time. It removes `.log` files older than `logging.retention_days` (14 days in `config.yaml.example`) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (2 days in `config.yaml.example`). It leaves `latest.jpg`, `smartbuilding.db`, and non-date directory names untouched.
 
 ## Supporting resources
 

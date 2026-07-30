@@ -164,7 +164,7 @@ Manage one monitor across the database, videostream-analytics, and video worker.
 | `name` | string | No | Display name |
 | `pipeline_config` | object | No | Overrides the default analytics pipeline configuration |
 | `webhook_url` | string | No | Overrides the derived MCP event webhook URL |
-| `persist` | boolean | No | Mirrors register/unregister into the booted `monitors.yaml` |
+| `persist` | boolean | No | Mirrors lifecycle changes into the booted `monitors.yaml`; default true |
 
 List all monitors:
 
@@ -191,7 +191,7 @@ Validate or apply all monitor declarations in a `monitors.yaml` file.
 
 ```bash
 mcp_tool_call smartbuilding_monitors_compose \
-  '{"action":"ps","file":"demo/config/monitors.yaml"}'
+  '{"action":"ps","file":"demo/monitors.demo.yaml"}'
 ```
 
 ### `smartbuilding_video_db`
@@ -222,27 +222,27 @@ mcp_tool_call smartbuilding_use_case_validate '{"use_case":"child_safety"}'
 
 ### `smartbuilding_use_case_register`
 
-Register or unregister a use case at runtime. New use cases normally use `register_task` first,
+Manage a use case at runtime. New use cases normally use `generate_task` first,
 then `register` after the prompt and final schema have been confirmed.
 
 | Argument | Type | Required | Notes |
 |---|---|---|---|
-| `action` | enum | Yes | `register_task`, `register`, or `unregister` |
-| `use_case` | string | Yes | Must match `^[a-z][a-z0-9_]{1,63}$` |
+| `action` | enum | Yes | `generate_task`, `register`, `unregister`, or `list` |
+| `use_case` | string | Except for `list` | Must match `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | No | Defaults to `<use_case>_monitor` |
 | `description` | string | No | Human-readable task description |
-| `prompt_text` | string | For `register_task` | Full prompt text without Markdown code fences |
-| `evaluate_rules_path` | string | No | Path to a Python rule override to stage and validate |
-| `schema_extensions` | array | No | Objects with `name`, `type` (`text`, `integer`, `real`), and `required` |
+| `prompt_text` | string | For `generate_task` | Full four-section prompt text without Markdown code fences |
+| `evaluate_rules_path` | string | For extended schema or custom alert behavior | Path to a Python rule override to stage and validate |
+| `schema_extensions` | array | No | Extra fields `{name, type, required}`; normally inferred from `LOCAL_PROMPT`, so pass only to set a non-text type or override `required` |
 | `reports`, `summarize` | object | No | Use-case report and per-clip summary configuration |
 | `overwrite` | boolean | No | Replace an existing use-case entry; default false |
-| `persist` | boolean | No | Mirror the mutation into the booted `config.yaml` |
+| `persist` | boolean | No | Mirror the mutation into the booted `config.yaml`; default true |
 
 Step 1, register the VLM task and save its prompt:
 
 ```bash
 mcp_tool_call smartbuilding_use_case_register \
-  '{"action":"register_task","use_case":"door_watch","description":"Door activity monitoring","prompt_text":"## LOCAL_PROMPT\nReturn exactly:\nSEVERITY: <text>\nEVENT: <text>\nDESC: <text>"}'
+  '{"action":"generate_task","use_case":"door_watch","description":"Door activity monitoring","prompt_text":"## GLOBAL_PROMPT\nSummarize door activity over the full period.\n## MACRO_CHUNK_PROMPT\nSummarize notable door activity in this chunk.\n## LOCAL_PROMPT\nReturn exactly:\nSEVERITY: <text>\nEVENT: <text>\nDESC: <text>\n## T_MINUS_1_PROMPT\nUse the previous chunk only as context for the current observation."}'
 ```
 
 Step 2, apply the schema and persist the use case:
