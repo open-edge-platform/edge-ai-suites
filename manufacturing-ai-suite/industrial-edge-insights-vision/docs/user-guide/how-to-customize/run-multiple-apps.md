@@ -362,7 +362,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Start the pipeline for <INSTANCE_NAME> where the pipeline is loaded from <file>:
+2. Start the pipeline for `<INSTANCE_NAME>`, where the pipeline is loaded from `<file>`:
 
    ```bash
    ./sample_start.sh -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>

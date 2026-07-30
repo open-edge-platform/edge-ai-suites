@@ -26,13 +26,19 @@ def _component_root() -> Path:
 
 
 def _load_component_config() -> dict[str, Any]:
-    """Grading component defaults (image quality, vlm gen params, prompt path)."""
     path = _component_root() / "config.yaml"
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        return raw if isinstance(raw, dict) else {}
+        cfg = raw if isinstance(raw, dict) else {}
     except Exception:
-        return {}
+        cfg = {}
+    root = _component_root().parents[1] / "config.yaml"
+    try:
+        root_raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
+        cfg["_language"] = str((root_raw.get("app") or {}).get("language", "en"))
+    except Exception:
+        cfg["_language"] = "en"
+    return cfg
 
 
 def _load_provider_url(key: str, default: str) -> str:
@@ -220,7 +226,7 @@ def run_vlm_grading_pipeline(
     # any failure degrades to empty fields and never blocks grading.
     paper_meta: dict[str, Any] = {"paper_title": None, "subject": None}
     student_meta: dict[str, Any] = {"student_name": None, "class_name": None, "exam_number": None}
-    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}))
+    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}), cfg.get("_language", "en"))
     if header_instruction is None:
         _log("header_extract skipped (no header block in rubric)")
     else:
@@ -280,7 +286,7 @@ def run_vlm_grading_pipeline(
         # For a section, use just its slice of the rubric prompt; for a page
         # fallback, use the full prompt. Slicing config lives under section_split.
         prompt_for_unit = (
-            slice_prompt_for_section(user_prompt, title, cfg.get("section_split", {}))
+            slice_prompt_for_section(user_prompt, title, cfg.get("section_split", {}), cfg.get("_language", "en"))
             if title else user_prompt
         )
 

@@ -52,7 +52,7 @@ DL Streamer inference elements also provides property such as `device=NPU` and `
 
 ## Tutorial on how to use NPU specific pipelines
 
-> **Note:** This sample application already provides a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
+> **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
@@ -122,11 +122,11 @@ Follow the steps below to run the pipeline.
     ::::
     hide_directive-->
 
-## Deploying with Helm
+## Deployment with Helm
 
-### Intel NPU K8S Extension
+### Intel® NPU K8S Extension
 
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® NPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® NPU K8S Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
 npu:

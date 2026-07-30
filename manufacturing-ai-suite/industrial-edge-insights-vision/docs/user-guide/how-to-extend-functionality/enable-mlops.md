@@ -308,8 +308,8 @@ hide_directive-->
 
 ## Additional resources
 
-### Downloading models from Geti™ Server
+### Download models from Geti™ Server
 
-To learn how to download models from a running Geti™ server, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
+To learn how to download models from a running Geti™ server, see the [Model Download service documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 
 > **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.
