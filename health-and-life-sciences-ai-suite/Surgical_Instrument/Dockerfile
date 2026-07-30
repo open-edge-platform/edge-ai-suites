@@ -153,6 +153,12 @@ ENV BACKEND_CONFIG=/app/backend/config/model.yaml \
     PORT=5001 \
     LD_LIBRARY_PATH=/usr/local/lib:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
 
+# Pre-create the weights cache dir so `docker cp yolo11n.pt surgical-backend:/cache/weights/`
+# succeeds even on a container that has never run the bootstrap. Without this
+# the post-copy chown step fails with "no such directory" when a user seeds
+# the weights before first `make up`.
+RUN mkdir -p /cache/weights
+
 EXPOSE 5001
 
 # First-boot may train for 20-35 min on Arc iGPU. `start_period` in compose
