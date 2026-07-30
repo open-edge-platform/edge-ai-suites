@@ -334,6 +334,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         ts_time = target_entry["time"]
         timeseries_anomaly = target_entry["anomaly_status"]
         timeseries_classification = target_entry.get("predicted_category", "No Label")
+        timeseries_confidence = float(target_entry.get("confidence", 0) or 0)
         data_dict = source_entry
     else:
         # Time-series message processed first
@@ -342,6 +343,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         ts_time = source_entry["time"]
         timeseries_anomaly = source_entry["anomaly_status"]
         timeseries_classification = source_entry.get("predicted_category", "No Label")
+        timeseries_confidence = float(source_entry.get("confidence", 0) or 0)
         data_dict = target_entry
 
     if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification/Model6"]:
@@ -375,6 +377,8 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         "timeseries_anomaly": timeseries_anomaly,
         "vision_classification": vision_classification,
         "timeseries_classification": timeseries_classification,
+        "vision_confidence": vision_confidence,
+        "timeseries_confidence": timeseries_confidence,
         "src_time_diff_ms": time_diff['ms'] if time_diff is not None else None
     }
 
@@ -624,7 +628,9 @@ def main():
                             "timeseries_anomaly": int(result["timeseries_anomaly"]),
                             "vision_rtsp_ts_diff_ms": float(result["src_time_diff_ms"]) if result["src_time_diff_ms"] is not None else None,
                             "vision_timestamp": int(vision_time) if vision_time is not None else None,
-                            "timeseries_timestamp": int(timeseries_time) if timeseries_time is not None else None
+                            "timeseries_timestamp": int(timeseries_time) if timeseries_time is not None else None,
+                            "vision_confidence": float(result["vision_confidence"]) if result["vision_confidence"] is not None else None,
+                            "timeseries_confidence": float(result["timeseries_confidence"]) if result["timeseries_confidence"] is not None else None,
 
                         }
                     }]

@@ -32,6 +32,7 @@ from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import PlainTextResponse
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -49,6 +50,9 @@ _MQTT_KEEPALIVE = int(os.environ.get("MQTT_KEEPALIVE",   "60"))
 _MQTT_CLIENT_ID = os.environ.get("MQTT_CLIENT_ID",       "apm-ui-service")
 _MQTT_DISABLED = os.environ.get("MQTT_DISABLED",         "false").lower() == "true"
 
+
+_start_time = time.time()
+_request_count = 0
 
 REST_API_ROOT_PATH = os.getenv('REST_API_ROOT_PATH', '')
 app = FastAPI(
@@ -298,6 +302,7 @@ async def index(request: Request):
 async def api_status():
     """Lightweight JSON snapshot used by the dashboard to poll live pipeline status
     (detection counts + agent run counts) without a full page reload."""
+
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         summary, runs = await _fetch_summary_and_runs(client)
 
@@ -434,3 +439,20 @@ async def clear_detections(request: Request):
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "ui-service", "use_case_id": _USE_CASE_ID}
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    global _start_time, _request_count
+    uptime = time.time() - _start_time
+    count = 0
+    return (
+        f"# HELP apm_storage_detections_total Total detections stored\n"
+        f"# TYPE apm_storage_detections_total gauge\n"
+        f"apm_storage_detections_total {count}\n"
+        f"# HELP apm_storage_requests_total Total HTTP requests handled\n"
+        f"# TYPE apm_storage_requests_total counter\n"
+        f"apm_storage_requests_total {_request_count}\n"
+        f"# HELP apm_storage_uptime_seconds Service uptime in seconds\n"
+        f"# TYPE apm_storage_uptime_seconds gauge\n"
+        f"apm_storage_uptime_seconds {uptime:.1f}\n"
+    )
