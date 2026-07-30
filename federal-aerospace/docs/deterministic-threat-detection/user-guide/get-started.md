@@ -23,15 +23,7 @@ An aggregation node collects the MQTT messages and calculates the end-to-end lat
 
 ## System Requirements
 
-### Software Requirements
-- **Operating System:** Ubuntu 24.04 or later
-- **Docker Engine** with Docker Compose V2
-- [**DL Streamer Pipeline Server**](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server)
-
-### Hardware Requirements
-- **AXIS RTSP Cameras**: Cameras that support RTSP streaming.
-- **MOXA TSN Switch**: A switch that supports IEEE 802.1AS (PTP) and IEEE 802.1Qbv (Time-Aware Shaper).
-- **Arrow Lake Machines**: Linux-based systems equipped with Intel i226 TSN-capable network cards.
+See [System Requirements](./get-started/system-requirements.md) for the full list of software and hardware prerequisites.
 
 ## Network Topology
 
@@ -166,3 +158,12 @@ All machines are connected to a MOXA switch and synchronized using PTP.
 
 - [How-to Guides](./how-to-guides.md)
 - [Release Notes](./release-notes.md)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements
+
+:::
+hide_directive-->

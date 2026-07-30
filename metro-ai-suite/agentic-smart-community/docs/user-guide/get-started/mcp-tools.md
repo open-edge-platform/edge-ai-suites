@@ -200,41 +200,55 @@ to help locate the fix.
 
 Manage a use case's lifecycle at runtime, **without restarting the server**.
 
-- `action: register_task` — step 1 of the recommended two-step flow: run the schema↔prompt
+- `action: generate_task` — step 1 of the recommended two-step flow: run the schema↔prompt
   consistency check, `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
-  and on success write `use-cases/<use_case>/prompt.md` to disk. On the custom rule path,
+  and on success write `$SMARTBUILDING_DATA_DIR/use-cases/<use_case>/prompt.md` to disk
+  (`~/.mcp-smartbuilding` is the default data directory). On the custom rule path,
   pass `evaluate_rules_path`; the tool reads that file for the consistency check, stages it to
-  `use-cases/<use_case>/evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
+  the same use-case directory as `evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
   schema, `use_case_dict`, or `config.yaml`. `prompt_text` is **required** here.
+- Any Final Schema field beyond `severity/event/desc` requires `evaluate_rules.py`. Both
+  `generate_task` and `register` reject an extended schema without a rule before DB, VLM, config,
+  or artifact side effects.
 - `action: register` — (1) apply `schema_extensions` via `ALTER TABLE` (idempotent),
   (2) `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
   (3) inject the entry into the in-memory `use_case_dict` so the task-poller and other tools see
   it, (4) re-run `use_case_validate`. With `persist: true`, also writes the entry back to
   `config.yaml` (comment-preserving). As step 2 of the two-step flow, omit `prompt_text` — it is
-  auto-read from the file `register_task` wrote. If `evaluate_rules_path` is supplied it is staged
-  to `use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
+  auto-read from the file `generate_task` wrote. If `evaluate_rules_path` is supplied it is staged
+  to `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
   e.g. staged by step 1), and that conventional absolute path is stored in `config.yaml` for
   runtime rule execution.
-- `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict` (also deletes
-  the yaml entry when `persist: true`).
+- `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict`. The VLM
+  delete is skipped when another use case shares the task. Every referencing monitor is detached
+  (worker stopped, analytics source removed, DB row left offline with history retained). With
+  `persist: true`, the entries are also removed from `config.yaml` and `monitors.yaml`, then
+  `<data_dir>/use-cases/<use_case>/` is moved to `<data_dir>/use-cases/.backup/`. Incomplete cleanup keeps `ok: true`
+  for the removed in-memory entry but sets `degraded: true` and explains the failure in `warnings`.
+- `action: list` — **read-only** inventory of the live in-memory `use_case_dict`; needs no other
+  arguments. Returns one entry per use case with `video_summary_task`, `schema_fields`,
+  `rule_path` (`defaultRuleEvaluator` \| `evaluate_rules.py` \| `none`), and `report_source`.
+  This reflects what the running server actually uses — including entries registered with
+  `persist: false` — so prefer it over parsing `config.yaml` from disk. Call it after a
+  successful register/unregister to report the system's current use cases.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
 `video-summary-prompt-studio` skill, then pass it via `prompt_text` (or let register auto-read
-`use-cases/<use_case>/prompt.md`).
+`<data_dir>/use-cases/<use_case>/prompt.md`).
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `action` | enum | ✅ | `register` \| `register_task` \| `unregister` |
-| `use_case` | string | ✅ | Key matching `^[a-z][a-z0-9_]{1,63}$` |
+| `action` | enum | ✅ | `register` \| `generate_task` \| `unregister` \| `list` |
+| `use_case` | string | ✅ (not for `list`) | Key matching `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | — | VLM task name (default `<use_case>_monitor`; must not collide with builtins) |
 | `description` | string | — | Human description shown by `/v1/tasks` |
-| `evaluate_rules_path` | string | — | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
+| `evaluate_rules_path` | string | required for extended schema/custom alerts | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `<data_dir>/use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
 | `reports` | object | — | `{ data_source, default_type, filter }` |
 | `summarize` | object | — | Per-clip summarize config `{ method, processor_kwargs }` |
-| `prompt_text` | string | ✅ for `register_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `use-cases/<use_case>/prompt.md` |
-| `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from the prompt's `KEY:` output lines |
+| `prompt_text` | string | ✅ for `generate_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `<data_dir>/use-cases/<use_case>/prompt.md` |
+| `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from prompt `KEY:` lines. Any extension selects the custom-rule path |
 | `overwrite` | boolean | — | Replace an existing entry (default false) |
-| `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default false) |
+| `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default true; on unregister also strips bound monitors from `monitors.yaml` and archives `<data_dir>/use-cases/<use_case>/` to `<data_dir>/use-cases/.backup/`) |
 
 ---
 
@@ -285,7 +299,7 @@ completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by de
 | `monitor_ctl` | single-monitor lifecycle; atomic DB+analytics+worker; use-case pre-check |
 | `monitors_compose` | docker-compose over a yaml; `validate`/`up`/`down`/`restart`/`ps`; idempotent |
 | `use_case_validate` | 3-step wiring check; case-insensitive; returns missing fields |
-| `use_case_register` | runtime use-case register/unregister; schema ALTER; `/v1/tasks`; optional persist |
+| `use_case_register` | runtime use-case register/unregister; schema ALTER; `/v1/tasks`; optional persist; `list` inventory |
 | `plan_ctl` | per-monitor JSON plans CRUD; soft-delete |
 | `rule_eval` | manual re-run of the rule evaluator; dry by default |
 
