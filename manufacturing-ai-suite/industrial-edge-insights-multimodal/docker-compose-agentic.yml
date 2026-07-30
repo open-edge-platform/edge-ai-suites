@@ -50,13 +50,7 @@ services:
       - ./configs/agentic/policy_fallback.json:/app/config/policy_fallback.json:ro
       - ./configs/agentic/prompts:/app/prompts:ro
       - apm_agent_output:/app/output
-    ports:
-      - "${AGENT_PORT:-5002}:5002"
-    # depends_on:
-    #   ia-fusion-analytics:
-    #     condition: service_healthy
-    #   ia-mqtt-broker:
-    #     condition: service_healthy
+      
     networks:
       - timeseries_network
     restart: unless-stopped
@@ -150,8 +144,6 @@ services:
       https_proxy: ${https_proxy:-}
       no_proxy: ${no_proxy:-},localhost
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${METRICS_PORT:-9091}:8080"
     networks:
       - timeseries_network
     restart: unless-stopped
@@ -164,8 +156,6 @@ services:
     hostname: apm-prometheus
     volumes:
       - ./configs/agentic/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
       - timeseries_network
     restart: unless-stopped
@@ -177,7 +167,7 @@ services:
       - '--web.enable-lifecycle'
 
   apm-ui:
-    image: ${REGISTRY:-intel/}apm-ui-service:${TAG:-1.0.0}
+    image: ${DOCKER_REGISTRY}${APM_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     container_name: apm-ui
     hostname: apm-ui
     build:
@@ -186,7 +176,7 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},apm-agent,apm-detection,ia-fusion-analytics,localhost
+      no_proxy: ${no_proxy:-},apm-agent,apm-detection,ia-fusion-analytics,localhost,ia-mqtt-broker
       APM_API_KEY: ${APM_API_KEY:-change-me-apm-key}
       AGENT_SERVICE_URL: http://apm-agent:5002
       DETECTION_SERVICE_URL: http://apm-detection:5004
@@ -195,8 +185,7 @@ services:
       HOST: 0.0.0.0
       PORT: 5003
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${UI_PORT:-5003}:5003"
+      REST_API_ROOT_PATH: "/agentic-ui"
     networks:
       - timeseries_network
     restart: unless-stopped

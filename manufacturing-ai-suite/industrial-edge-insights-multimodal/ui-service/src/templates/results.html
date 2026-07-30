@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Results — {{ run_id[:8] }} — {{ use_case_id }}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  {% set root = request.scope.get("root_path", "") %}
+  <link rel="stylesheet" href="{{ root }}/static/css/style.css">
   {% if result.get("status") == "running" %}
   <meta http-equiv="refresh" content="3">
   {% endif %}
@@ -17,8 +18,8 @@
     </div>
   </header>
   <nav>
-    <a href="/">Dashboard</a>
-    <a href="/detections">Detections</a>
+    <a href="{{ root }}/">Dashboard</a>
+    <a href="{{ root }}/detections">Detections</a>
   </nav>
 
   <main>
@@ -118,9 +119,9 @@
       {% endif %}
     </section>
     <p>
-      <a href="/">&larr; Back to Dashboard</a>
+      <a href="{{ root }}/">&larr; Back to Dashboard</a>
       &nbsp;
-      <form method="POST" action="/run" style="display:inline;">
+      <form method="POST" action="{{ root }}/run" style="display:inline;">
         <button type="submit" class="btn-primary">&#9654; Run Again</button>
       </form>
     </p>

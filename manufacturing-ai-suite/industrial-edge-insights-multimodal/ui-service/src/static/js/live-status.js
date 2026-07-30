@@ -6,6 +6,11 @@
 // stay current without a full page reload.
 
 const POLL_INTERVAL_MS = 3000;
+const rootPath = (document.body?.dataset.rootPath || "").replace(/\/$/, "");
+
+function withRoot(path) {
+  return `${rootPath}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -35,9 +40,9 @@ function statusBadgeHtml(run) {
 }
 
 function runActionHtml(run) {
-  if (run.status === "completed") return `<a href="/results/${run.run_id}">View Results</a>`;
-  if (run.status === "running") return `<a href="/results/${run.run_id}">Waiting…</a>`;
-  return `<a href="/results/${run.run_id}">View Error</a>`;
+  if (run.status === "completed") return `<a href="${withRoot(`/results/${run.run_id}`)}">View Results</a>`;
+  if (run.status === "running") return `<a href="${withRoot(`/results/${run.run_id}`)}">Waiting…</a>`;
+  return `<a href="${withRoot(`/results/${run.run_id}`)}">View Error</a>`;
 }
 
 function renderRunsRows(runs) {
@@ -63,7 +68,7 @@ function phaseHintText(activeRun) {
 
 async function pollStatus() {
   try {
-    const res = await fetch("/api/status", { cache: "no-store" });
+    const res = await fetch(withRoot("/api/status"), { cache: "no-store" });
     if (!res.ok) return;
     const data = await res.json();
 

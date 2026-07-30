@@ -46,10 +46,17 @@ _MQTT_PORT     = int(os.environ.get("MQTT_PORT",         "1883"))
 _MQTT_TOPIC    = os.environ.get("MQTT_BATCH_TOPIC",      "apm/batch-complete")
 _MQTT_QOS      = int(os.environ.get("MQTT_QOS",          "1"))
 _MQTT_KEEPALIVE = int(os.environ.get("MQTT_KEEPALIVE",   "60"))
-_MQTT_DISABLED = os.environ.get("MQTT_DISABLED",         "false").lower() == "true"
 _MQTT_CLIENT_ID = os.environ.get("MQTT_CLIENT_ID",       "apm-ui-service")
+_MQTT_DISABLED = os.environ.get("MQTT_DISABLED",         "false").lower() == "true"
 
-app = FastAPI(title="APM UI", docs_url=None, redoc_url=None)
+
+REST_API_ROOT_PATH = os.getenv('REST_API_ROOT_PATH', '')
+app = FastAPI(
+    title="APM UI",
+    docs_url=None,
+    redoc_url=None,
+    root_path=REST_API_ROOT_PATH
+)
 
 _src_dir = os.path.dirname(__file__)
 app.mount("/static", StaticFiles(directory=os.path.join(_src_dir, "static")), name="static")
@@ -82,19 +89,47 @@ def _startup_mqtt_connection() -> None:
         log.info("MQTT startup connect skipped because MQTT_DISABLED=true")
         return
 
-    try:
-        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=_MQTT_CLIENT_ID)
-        client.on_connect = _on_mqtt_connect
-        client.on_disconnect = _on_mqtt_disconnect
-        client.connect(_MQTT_HOST, _MQTT_PORT, _MQTT_KEEPALIVE)
-        client.loop_start()
-        if not _mqtt_connected.wait(timeout=5):
-            log.warning("MQTT startup connect timed out after 5s")
-        _mqtt_client = client
-    except Exception:
-        _mqtt_client = None
-        _mqtt_connected.clear()
-        log.exception("Failed to initialize MQTT client at startup")
+    _mqtt_client = None
+    _mqtt_connected.clear()
+
+    max_attempts = 60
+    retry_delay_s = 5
+
+    for attempt in range(1, max_attempts + 1):
+        client: Optional[mqtt.Client] = None
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=_MQTT_CLIENT_ID)
+            client.on_connect = _on_mqtt_connect
+            client.on_disconnect = _on_mqtt_disconnect
+            client.connect(_MQTT_HOST, _MQTT_PORT, _MQTT_KEEPALIVE)
+            client.loop_start()
+
+            if _mqtt_connected.wait(timeout=retry_delay_s):
+                _mqtt_client = client
+                log.info("MQTT client initialized on attempt %s/%s", attempt, max_attempts)
+                return
+
+            log.warning(
+                "MQTT connect attempt %s/%s timed out after %ss",
+                attempt,
+                max_attempts,
+                retry_delay_s,
+            )
+        except Exception:
+            log.exception("MQTT startup attempt %s/%s failed", attempt, max_attempts)
+        finally:
+            # Ensure failed attempts don't leave a background network loop running.
+            if client is not None and _mqtt_client is None:
+                try:
+                    client.loop_stop()
+                    client.disconnect()
+                except Exception:
+                    log.debug("Ignoring MQTT client cleanup error on failed startup attempt")
+
+        if attempt < max_attempts:
+            time.sleep(retry_delay_s)
+
+    log.error("Failed to initialize MQTT client after %s attempts", max_attempts)
 
 
 @app.on_event("shutdown")
@@ -165,6 +200,12 @@ def _publish_batch_complete(payload: dict) -> None:
     except Exception as exc:
         log.exception("Failed to publish MQTT batch event")
         raise HTTPException(status_code=502, detail=f"Failed to publish MQTT batch event: {exc}") from exc
+
+
+def _redirect_path(request: Request, route_name: str, **path_params: str) -> str:
+    """Build a proxy-safe relative redirect path, preserving root_path and avoiding host/port issues."""
+    root_path = request.scope.get("root_path", "")
+    return f"{root_path}{app.url_path_for(route_name, **path_params)}"
 
 
 # ── Run merging helpers ────────────────────────────────────────────────────────
@@ -345,6 +386,7 @@ async def results_page(request: Request, run_id: str):
 
 @app.post("/run")
 async def trigger_run(
+    request: Request,
     device: str = Form("CPU"),
     time_range: str = Form(""),
 ):
@@ -376,15 +418,15 @@ async def trigger_run(
     log.info(f"Computed trigger payload: {trigger_payload}")
     _publish_batch_complete(trigger_payload)
     
-    return RedirectResponse(url=f"/results/{run_id}", status_code=303)
+    return RedirectResponse(url=_redirect_path(request, "results_page", run_id=run_id), status_code=303)
     # mosquitto_pub -h localhost -p 1883  -t "apm/batch-complete" -m '{"run_id":"1","status":"completed","device":"CPU","video_filename":"welding","start_id":1785384705037648000,"end_id":1785384706008029000,"pipeline_status":"running"}'
 
 @app.post("/clear-detections")
-async def clear_detections():
+async def clear_detections(request: Request):
     """Clear all detections from storage."""
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         await client.delete(f"{_STORAGE_URL}/detections")
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url=_redirect_path(request, "index"), status_code=303)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

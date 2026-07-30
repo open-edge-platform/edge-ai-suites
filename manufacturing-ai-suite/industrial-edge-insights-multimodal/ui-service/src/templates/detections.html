@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Detections — {{ use_case_id }}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  {% set root = request.scope.get("root_path", "") %}
+  <link rel="stylesheet" href="{{ root }}/static/css/style.css">
 </head>
 <body>
   <header>
@@ -14,14 +15,14 @@
     </div>
   </header>
   <nav>
-    <a href="/">Dashboard</a>
-    <a href="/detections" class="active">Detections</a>
+    <a href="{{ root }}/">Dashboard</a>
+    <a href="{{ root }}/detections" class="active">Detections</a>
   </nav>
 
   <main>
     <section class="card">
       <h2>Filter Detections</h2>
-      <form method="GET" action="/detections" class="filter-form">
+      <form method="GET" action="{{ root }}/detections" class="filter-form">
         <label>Label: <input type="text" name="label" value="{{ filter_label }}"></label>
         <label>Min Confidence: <input type="number" name="min_confidence" step="0.01" min="0" max="1" value="{{ filter_confidence }}"></label>
         <label>Limit:
@@ -32,7 +33,7 @@
           </select>
         </label>
         <button type="submit" class="btn-primary">Filter</button>
-        <a href="/detections" class="btn-secondary">Reset</a>
+        <a href="{{ root }}/detections" class="btn-secondary">Reset</a>
       </form>
     </section>
 
@@ -67,7 +68,7 @@
     </section>
     <section class="card card-danger">
       <h2>&#9888; Danger Zone</h2>
-      <form method="POST" action="/clear-detections">
+      <form method="POST" action="{{ root }}/clear-detections">
         <button type="submit" class="btn-danger" onclick="return confirm('This will permanently delete all detection records. Continue?')">&#10005; Clear All Detections</button>
       </form>
     </section>

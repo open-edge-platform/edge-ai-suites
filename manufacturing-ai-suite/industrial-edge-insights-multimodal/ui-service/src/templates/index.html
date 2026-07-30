@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agentic Predictive Maintenance — {{ use_case_id }}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  {% set root = request.scope.get("root_path", "") %}
+  <link rel="stylesheet" href="{{ root }}/static/css/style.css">
   <noscript><meta http-equiv="refresh" content="15"></noscript>
 </head>
-<body>
+<body data-root-path="{{ root }}">
   <header>
     <div class="header-inner">
       <span class="logo">&#9632; Intel</span>
@@ -21,8 +22,8 @@
   </header>
 
   <nav>
-    <a href="/" class="active">Dashboard</a>
-    <a href="/detections">Detections</a>
+    <a href="{{ root }}/" class="active">Dashboard</a>
+    <a href="{{ root }}/detections">Detections</a>
   </nav>
 
   <div class="layout-wrapper">
@@ -73,7 +74,7 @@
       </table>
       {% endif %}
 
-      <form method="POST" action="/run" class="run-now-form">
+      <form method="POST" action="{{ root }}/run" class="run-now-form">
         <label class="config-field">
           <span>Time Range</span>
           <select name="time_range">
@@ -92,7 +93,7 @@
             <option value="NPU">NPU</option>
           </select>
         </label>
-        <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>>
+        <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>
           &#9654; {{ 'Running…' if active_run else 'Run Agentic Analysis' }}
         </button>
         <span class="status-note" id="run-phase-hint">
@@ -117,11 +118,11 @@
             <td><span class="status-badge status-{{ run.status }}">{{ run.status }}{{ ' — ' ~ run.phase if run.status == 'running' and run.phase else '' }}</span></td>
             <td>
               {% if run.status == "completed" %}
-              <a href="/results/{{ run.run_id }}">View Results</a>
+              <a href="{{ root }}/results/{{ run.run_id }}">View Results</a>
               {% elif run.status == "running" %}
-              <a href="/results/{{ run.run_id }}">Waiting…</a>
+              <a href="{{ root }}/results/{{ run.run_id }}">Waiting…</a>
               {% else %}
-              <a href="/results/{{ run.run_id }}">View Error</a>
+              <a href="{{ root }}/results/{{ run.run_id }}">View Error</a>
               {% endif %}
             </td>
           </tr>
@@ -170,7 +171,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="/static/js/live-status.js"></script>
-  <script src="/static/js/metrics.js"></script>
+  <script src="{{ root }}/static/js/live-status.js"></script>
+  <script src="{{ root }}/static/js/metrics.js"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
 (function () {
   "use strict";
 
+  // Metrics is exposed by nginx at /api/metrics/* globally.
   const METRICS_STREAM_URL = "/api/metrics/stream";
   const MAX_POINTS = 60;
   const RECONNECT_DELAY_MS = 3000;
