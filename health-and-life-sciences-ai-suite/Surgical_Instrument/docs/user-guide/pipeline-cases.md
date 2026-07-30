@@ -24,10 +24,11 @@ has a documented default.
 | `SOURCE_ARG` | `/videos/polyp_test.mp4` | file path (in-container) or Basler serial |
 | `DETECT` | `1` | `1` inserts `gvadetect` (+ optional watermark) into the chain; `0` skips it |
 | `WATERMARK` | `1` | when `DETECT=1`, `1` keeps `gvawatermark`; `0` drops it (raw video, no overlay) |
-| `MINIMAL` | `0` | `1` collapses the pipeline to `source ! rawvideoparse ! videoconvert ! sink` (nothing else) |
+| `MINIMAL` | `0` | `1` collapses the pipeline to `source ! videoconvert ! sink` (nothing else) |
 | `SCHEDULING_POLICY` | *(unset)* | if set, appended as `scheduling-policy=<val>` on `gvadetect` (e.g. `latency`) |
 | `BATCH_SIZE` | *(unset)* | if set, appended as `batch-size=<N>` on `gvadetect` (e.g. `1`) |
 | `AUTOVIDEOSINK` | *(unset)* | `true` -> popup + `sink sync=true`; `false` -> headless `fakesink` |
+| `BASLER_PIXEL_FORMAT` | `bayerbggr` | Bayer pixel format passed to `gencamsrc` (e.g. `bayerbggr`, `bayerrggb`) |
 | `DETECTION_DEVICE` | `GPU` | initial device for `/api/device` (`CPU`/`GPU`/`NPU`) |
 | `UI_HOST_PORT` | `8080` | host port for the UI (Nginx) |
 
@@ -139,25 +140,25 @@ make up SOURCE_KIND=basler SOURCE_ARG=40067928 DETECT=1 AUTOVIDEOSINK=true SCHED
 curl -X POST http://localhost:8080/api/start
 ```
 
-Resulting spawn (Basler feeder piped into gst-launch):
+Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
-python3 /opt/basler_reader.py 40067928 --geometry 1920x1080@60 --pixel-format uyvy \
-| gst-launch-1.0 \
-    fdsrc fd=0 blocksize=4147200 do-timestamp=true \
-  ! rawvideoparse format=yuy2 width=1920 height=1080 framerate=60/1 \
-  ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+gst-launch-1.0 \
+    gencamsrc serial=40067928 pixel-format=bayerbggr \
+  ! bayer2rgb \
+  ! videoscale \
+  ! videoconvert \
+  ! video/x-raw,width=1280,height=720,format=NV12 \
   ! identity \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
               device=GPU threshold=0.5 \
-              pre-process-backend=va-surface-sharing \
+              pre-process-backend=ie \
               nireq=1 ie-config=PERFORMANCE_HINT=LATENCY \
               scheduling-policy=latency batch-size=1 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
-  ! vapostproc ! "video/x-raw" \
   ! videoconvert \
   ! autovideosink sync=true
 ```
@@ -171,6 +172,14 @@ status:running  device:GPU  source_kind:basler  source_arg:40067928  display_vie
 FpsCounter (avg 22.20s): 58.83 fps
 latency window (last 200 samples):
     mean=13.951 ms   p50=14.748 ms   p95=16.751 ms   p99=17.488 ms   max=19.707 ms
+```
+
+Bench verification (2026-07-29, headless `fakesink` run):
+
+```json
+{ "case": 1, "pass": true,
+  "contains": { "scheduling_policy_latency": true, "batch_size_1": true },
+  "returncode": 0 }
 ```
 
 Notes
@@ -194,13 +203,15 @@ make up SOURCE_KIND=basler SOURCE_ARG=40067928 DETECT=0 MINIMAL=1 AUTOVIDEOSINK=
 curl -X POST http://localhost:8080/api/start
 ```
 
-Resulting spawn (Basler feeder piped into gst-launch):
+Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
-python3 /opt/basler_reader.py 40067928 --geometry 1920x1080@60 --pixel-format uyvy \
-| gst-launch-1.0 \
-    fdsrc fd=0 blocksize=4147200 do-timestamp=true \
-  ! rawvideoparse format=yuy2 width=1920 height=1080 framerate=60/1 \
+gst-launch-1.0 \
+    gencamsrc serial=40067928 pixel-format=bayerbggr \
+  ! bayer2rgb \
+  ! videoscale \
+  ! videoconvert \
+  ! video/x-raw,width=1280,height=720,format=NV12 \
   ! videoconvert \
   ! autovideosink sync=true
 ```
@@ -211,6 +222,16 @@ Confirmed live output (from container INFO log):
 [pipeline] knobs: detect=False watermark=True minimal=True scheduling_policy=<unset> batch_size=None sink_sync=true
 status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
 ```
+
+Bench-case 2 result (2026-07-29, basler_raw / GPU, 10 s run / 3 s warm):
+
+| Metric | Samples | Mean (ms) | P50 (ms) | P95 (ms) |
+|---|---:|---:|---:|---:|
+| e2e | 7 | 15.781 | 16.307 | 16.997 |
+| infer | 0 | — | — | — |
+| processing_chain | 0 | — | — | — |
+
+fps mean=24.0  p95=60.0  samples=5
 
 Notes
 - Passing `SCHEDULING_POLICY` or `BATCH_SIZE` in this case is a no-op —
@@ -238,24 +259,24 @@ make up SOURCE_KIND=basler SOURCE_ARG=40067928 \
 curl -X POST http://localhost:8080/api/start
 ```
 
-Resulting spawn (Basler feeder piped into gst-launch):
+Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
-python3 /opt/basler_reader.py 40067928 --geometry 1920x1080@60 --pixel-format uyvy \
-| gst-launch-1.0 \
-    fdsrc fd=0 blocksize=4147200 do-timestamp=true \
-  ! rawvideoparse format=yuy2 width=1920 height=1080 framerate=60/1 \
-  ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+gst-launch-1.0 \
+    gencamsrc serial=40067928 pixel-format=bayerbggr \
+  ! bayer2rgb \
+  ! videoscale \
+  ! videoconvert \
+  ! video/x-raw,width=1280,height=720,format=NV12 \
   ! identity \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
               device=GPU threshold=0.5 \
-              pre-process-backend=va-surface-sharing \
+              pre-process-backend=ie \
               nireq=1 ie-config=PERFORMANCE_HINT=LATENCY \
               scheduling-policy=latency batch-size=1 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvafpscounter interval=1 \
-  ! vapostproc ! "video/x-raw" \
   ! videoconvert \
   ! autovideosink sync=true
 ```
@@ -331,25 +352,30 @@ curl -X POST http://localhost:8080/api/start
 
 ### Resulting spawned command (from container INFO log)
 
+> **Note:** The Basler source is driven by `gencamsrc` directly. Only one
+> `gst-launch-1.0` process is spawned, so only `PIPELINE_GST_CORES` /
+> `PIPELINE_GST_RT_PRIORITY` are effective — the `PIPELINE_CAMERA_CORES` /
+> `PIPELINE_CAMERA_RT_PRIORITY` knobs are accepted but have no effect.
+
 ```text
-taskset -c 2 chrt -f 80 python3 /opt/basler_reader.py 40067928 \
-    --geometry 1920x1080@60 --pixel-format uyvy \
-    --fixed-camera --exposure-us 5000 --gain 0 \
-| taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
-    fdsrc fd=0 blocksize=4147200 do-timestamp=true \
-  ! rawvideoparse format=yuy2 width=1920 height=1080 framerate=60/1 \
-  ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
+    gencamsrc serial=40067928 pixel-format=bayerbggr \
+              exposure-auto=off gain-auto=off \
+              exposure-time=5000 gain=0 \
+  ! bayer2rgb \
+  ! videoscale \
+  ! videoconvert \
+  ! video/x-raw,width=1280,height=720,format=NV12 \
   ! identity \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
               device=GPU threshold=0.5 \
-              pre-process-backend=va-surface-sharing \
+              pre-process-backend=ie \
               nireq=1 ie-config=PERFORMANCE_HINT=LATENCY \
               scheduling-policy=latency batch-size=1 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
-  ! vapostproc ! "video/x-raw" \
   ! videoconvert \
   ! autovideosink sync=true
 ```
@@ -358,7 +384,7 @@ Container INFO log knobs lines:
 
 ```text
 [pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
-                  basler_fixed=True basler_exposure_us=5000 basler_gain=0
+                  basler_fixed=True basler_exposure_us=5000 basler_gain=0 basler_pixel_format=bayerbggr
 [pipeline] knobs: detect=True watermark=True minimal=False
                   scheduling_policy=latency batch_size=1 sink_sync=true
 ```
@@ -367,9 +393,9 @@ Container INFO log knobs lines:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `PIPELINE_CAMERA_CORES` | *(unset)* | `taskset -c` core list for the Basler feeder (e.g. `2`) |
+| `PIPELINE_CAMERA_CORES` | *(unset)* | *(no-op with gencamsrc; kept for backward compat)* |
 | `PIPELINE_GST_CORES` | *(unset)* | `taskset -c` core list for `gst-launch-1.0` (e.g. `3-4`) |
-| `PIPELINE_CAMERA_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for feeder, 1–99 (e.g. `80`) |
+| `PIPELINE_CAMERA_RT_PRIORITY` | *(unset)* | *(no-op with gencamsrc; kept for backward compat)* |
 | `PIPELINE_GST_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for gst-launch, 1–99 (e.g. `70`) |
 | `BASLER_FIXED_CAMERA` | `0` | `1` disables auto-exposure/gain and applies the fixed values below |
 | `BASLER_EXPOSURE_US` | *(unset)* | Fixed ExposureTime in µs (only when `BASLER_FIXED_CAMERA=1`) |
@@ -382,10 +408,13 @@ Notes
 - `BASLER_FIXED_CAMERA=0` (default) preserves the auto-exposure + upper-limit cap
   from Cases 1–3 exactly; no regression.
 - `chrt -f` requires `SYS_NICE` capability inside the container (already set via
-  `cap_add: [SYS_NICE]` in `docker-compose.yaml`). Without it the feeder exits
-  with `Operation not permitted` and the pipeline will not start.
+  `cap_add: [SYS_NICE]` in `docker-compose.yaml`). Without it `gst-launch-1.0`
+  exits with `Operation not permitted` and the pipeline will not start.
 
 ### Verifying affinity and priority took effect
+
+With `gencamsrc` the camera runs inside `gst-launch-1.0` — there is only one
+process to verify:
 
 ```bash
 PID=$(docker exec surgical-pipeline pgrep -f gst-launch-1.0)
@@ -397,12 +426,17 @@ docker exec surgical-pipeline chrt   -p  $PID    # expect: SCHED_FIFO, prio 70
 
 ```text
 [pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
-                  basler_fixed=True basler_exposure_us=5000 basler_gain=0
+                  basler_fixed=True basler_exposure_us=5000 basler_gain=0 basler_pixel_format=bayerbggr
+[pipeline] knobs: detect=True watermark=True minimal=False
+                  scheduling_policy=latency batch_size=1 sink_sync=true
 status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
 FpsCounter (avg 177s): 60.00 fps
 latency window (last 200 samples):
     mean=11.557 ms   p50=11.634 ms   p90=11.988 ms   p95=12.071 ms   p99=12.229 ms   max=12.493 ms
 ```
+
+> **Note:** The generated Case 4 pipeline uses `gencamsrc` directly, with
+> fixed exposure and gain applied as source properties.
 
 ### Core-pinning experiment results
 
@@ -504,12 +538,18 @@ metrics still run.
 **`make up` finished but no `gst-launch` in the logs.** Expected. The
 launcher is idle until `POST /api/start` (or the UI Start button).
 
-**Basler camera not visible.** Confirm from inside the container:
+**Basler camera not visible.** Confirm from inside the container (pypylon is still installed for enumeration even though the runtime uses `gencamsrc`):
 
 ```bash
 docker exec surgical-pipeline python3 -c "from pypylon import pylon;\
  print([(d.GetSerialNumber(), d.GetModelName())\
         for d in pylon.TlFactory.GetInstance().EnumerateDevices()])"
+```
+
+Or list via gencamsrc directly:
+
+```bash
+docker exec surgical-pipeline gst-launch-1.0 gencamsrc ! fakesink num-buffers=1
 ```
 
 If the list is empty, replug the camera or check host USB visibility with
