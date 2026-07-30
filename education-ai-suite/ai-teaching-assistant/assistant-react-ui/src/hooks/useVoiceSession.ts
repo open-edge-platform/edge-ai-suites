@@ -10,6 +10,7 @@ import {
 import { MicRecorder } from "../audio/MicRecorder";
 import { ResponsePlayer } from "../audio/ResponsePlayer";
 import type { ChatMessage, SessionPerfSnapshot } from "../types";
+import { useSessionManager } from "./useSessionManager";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const MAX_SESSION_POINTS = 90;
@@ -52,16 +53,31 @@ export function useVoiceSession() {
   const messagesRef = useRef<ChatMessage[]>([]);
   messagesRef.current = messages;
 
+  // Session manager for 15-second inactivity timeout
+  const { startSessionTimeout, cancelSessionTimeout } = useSessionManager({
+    onSessionReset: () => {
+      // Clear the conversation when session times out
+      console.log("[useVoiceSession] Session timeout callback invoked - clearing messages");
+      setMessages([]);
+      setStatus("Session ended — tap the mic to start a new question.");
+    },
+  });
+
   const ensurePlayer = useCallback(() => {
     if (!playerRef.current) {
       const player = new ResponsePlayer();
       player.onStart = () => setResponseActive(true);
-      player.onIdle = () => setResponseActive(false);
+      player.onIdle = () => {
+        console.log("[useVoiceSession] ResponsePlayer.onIdle triggered - starting session timeout");
+        setResponseActive(false);
+        // Start the session timeout when TTS finishes playing
+        startSessionTimeout();
+      };
       playerRef.current = player;
       setResponseAnalyser(player.analyser);
     }
     return playerRef.current;
-  }, []);
+  }, [startSessionTimeout]);
 
   const flushPending = useCallback(async () => {
     const sid = sessionIdRef.current;
@@ -121,6 +137,10 @@ export function useVoiceSession() {
     sessionStartErrorRef.current = null;
     streamSampleRateRef.current = AUDIO.sampleRate;
     pendingChunks.current = [];
+    // Cancel the session timeout when a new question is being asked
+    // This ensures the session continues if the user asks within 15 seconds
+    console.log("[useVoiceSession] New question started - cancelling session timeout");
+    cancelSessionTimeout();
     ensurePlayer();
     const recorder = new MicRecorder(AUDIO.sampleRate, AUDIO.chunkSeconds, onChunk);
     try {
@@ -132,7 +152,7 @@ export function useVoiceSession() {
     } catch (err) {
       setStatus(`❌ ${err instanceof Error ? err.message : "Microphone error"}`);
     }
-  }, [ensurePlayer, onChunk]);
+  }, [ensurePlayer, onChunk, cancelSessionTimeout]);
 
   const stop = useCallback(async () => {
     const stopStartedAt = performance.now();
