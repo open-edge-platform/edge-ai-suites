@@ -7,6 +7,7 @@ import type { Request, Response } from "express";
 
 const MAX_SESSIONS = 8;
 const MAX_CLIENTS_PER_SESSION = 12;
+const MAX_CLIENT_QUEUE_BYTES = 4 * 1024 * 1024;
 const MAX_INIT_SEGMENT_BYTES = 2 * 1024 * 1024;
 const MAX_STDERR_BYTES = 16 * 1024;
 const IDLE_TIMEOUT_MS = 5_000;
@@ -14,6 +15,11 @@ const STOP_TIMEOUT_MS = 3_000;
 
 interface StreamClient {
   response: Response;
+  queue: Buffer[];
+  queuedBytes: number;
+  waitingForDrain: boolean;
+  handleDrain: () => void;
+  flush: () => void;
   detach: () => void;
 }
 
@@ -111,6 +117,8 @@ export class LiveStreamManager {
       "-loglevel", "warning",
       "-rtsp_transport", "tcp",
       "-i", sourceUrl,
+      "-map", "0:v:0",
+      "-vf", "setpts=PTS-STARTPTS",
       "-c:v", "libx264",
       "-preset", "ultrafast",
       "-tune", "zerolatency",
@@ -118,9 +126,12 @@ export class LiveStreamManager {
       "-level", "3.1",
       "-pix_fmt", "yuv420p",
       "-crf", "23",
+      "-g", "30",
+      "-keyint_min", "30",
+      "-sc_threshold", "0",
       "-an",
       "-f", "mp4",
-      "-movflags", "frag_keyframe+empty_moov+default_base_moof",
+      "-movflags", "frag_every_frame+empty_moov+default_base_moof",
       "pipe:1",
     ], { shell: false, stdio: ["ignore", "pipe", "pipe"] });
 
@@ -163,12 +174,34 @@ export class LiveStreamManager {
     let detached = false;
     const client: StreamClient = {
       response: res,
+      queue: [],
+      queuedBytes: 0,
+      waitingForDrain: false,
+      handleDrain: () => {
+        client.waitingForDrain = false;
+        client.flush();
+      },
+      flush: () => {
+        if (detached || client.waitingForDrain || res.destroyed) return;
+        while (client.queue.length > 0) {
+          const chunk = client.queue.shift()!;
+          client.queuedBytes -= chunk.length;
+          if (!res.write(chunk)) {
+            client.waitingForDrain = true;
+            res.once("drain", client.handleDrain);
+            return;
+          }
+        }
+      },
       detach: () => {
         if (detached) return;
         detached = true;
         req.off("aborted", client.detach);
         res.off("close", client.detach);
         res.off("error", client.detach);
+        res.off("drain", client.handleDrain);
+        client.queue = [];
+        client.queuedBytes = 0;
         session.clients.delete(client);
         if (session.clients.size === 0 && session.state === "running" && !session.idleTimer) {
           session.idleTimer = setTimeout(() => this.stopSession(session), this.options.idleTimeoutMs ?? IDLE_TIMEOUT_MS);
@@ -181,20 +214,27 @@ export class LiveStreamManager {
     res.once("error", client.detach);
     session.clients.add(client);
 
-    if (session.initSegment && !res.write(session.initSegment)) {
-      client.detach();
-      res.destroy();
+    if (session.initSegment) {
+      this.enqueueClientChunk(client, session.initSegment);
     }
   }
 
   private broadcast(session: StreamSession, chunk: Buffer): void {
     this.captureInitSegment(session, chunk);
     for (const client of [...session.clients]) {
-      if (client.response.destroyed || !client.response.write(chunk)) {
-        client.detach();
-        client.response.destroy();
-      }
+      this.enqueueClientChunk(client, chunk);
     }
+  }
+
+  private enqueueClientChunk(client: StreamClient, chunk: Buffer): void {
+    if (client.response.destroyed || client.queuedBytes + chunk.length > MAX_CLIENT_QUEUE_BYTES) {
+      client.detach();
+      client.response.destroy();
+      return;
+    }
+    client.queue.push(chunk);
+    client.queuedBytes += chunk.length;
+    client.flush();
   }
 
   private captureInitSegment(session: StreamSession, chunk: Buffer): void {
