@@ -108,23 +108,6 @@ Events: http://localhost:3101/events
 Logs:   /tmp/smartbuilding-<uid>/mcp-server.log
 ```
 
-Open `http://localhost:3100/` to use the dashboard. It discovers monitors from the runtime database; no monitor IDs are compiled into the frontend. For local frontend development, run `npm run dev --workspace=packages/ui` and open `http://localhost:5173/`; Vite proxies `/api` and `/mcp` to port 3100.
-
-The dashboard works without Router or an agent framework. When OpenClaw environment variables are not set, open the chat framework settings in the dashboard, select **OpenClaw**, and enter the gateway URL (for example, `http://127.0.0.1:18789/`) and token. The token is held in a bounded server-side cache and associated with an opaque HttpOnly browser cookie. Browser refreshes reuse the cached credential; restarting the MCP server clears it and requires the token to be entered again.
-
-For unattended deployments, configure Router or OpenClaw with server-side environment variables before starting the MCP server:
-
-```bash
-export SMARTBUILDING_ROUTER_URL=http://localhost:18000
-export SMARTBUILDING_OPENCLAW_GATEWAY_URL=http://localhost:18789
-export SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN='<gateway-token>'
-bash scripts/mcp-server/start.sh
-```
-
-These variables are not part of `config.yaml` and take precedence over a browser session. Whether supplied by environment variable or the dashboard, the OpenClaw token remains in the MCP server process and is injected into the upstream WebSocket handshake; it is not returned by the dashboard API, stored in browser storage, or included in the frontend bundle. Manual gateway URLs are limited to HTTP(S) localhost, loopback, and private IPv4 addresses. When Router is absent, the dashboard displays its explicit unconfigured state.
-
-For RTSP monitors, the browser connects to the same-origin live-stream endpoint. The MCP server starts at most one ffmpeg process per monitor and shares it among viewers. It converts RTSP to fragmented MP4 because browsers do not play RTSP directly. When live streaming is unsupported or unavailable, the UI falls back to the monitor's `latest.jpg` snapshot. Install `ffmpeg` on the MCP host; never expose RTSP credentials to browser code.
-
 Verify that the MCP endpoint, events webhook, and data root are available:
 
 ```bash
@@ -142,6 +125,9 @@ ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
 ### Step 3 - Connect an agent host
 
 The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smartbuilding_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
+
+**Agentic Smart Community WebUI**
+Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It provides live camera views, activity timelines, alert records, and report generation for registered monitors. The chat panel can also connect to a supported agent framework.
 
 #### OpenClaw
 
@@ -187,6 +173,8 @@ The MCP server is framework-agnostic. Once configured, a compatible MCP client c
     > - Find the gateway token from `~/.openclaw/openclaw.json`
 
 Agents can now use the MCP tools when you ask them to create a use case, analyze a monitor, or generate a report. Try the following examples in the OpenClaw Control UI (http://localhost:18789).
+
+To use OpenClaw from the Agentic Smart Community Web UI, open `http://localhost:3100/`, select **OpenClaw** in the chat panel, and enter the gateway URL and token. After connecting, select an OpenClaw session to chat alongside the live video and activity views. You can alternatively use the standalone OpenClaw Control UI at `http://localhost:18789/`.
 
 **A. Inspect the Smart Building tools**
 
