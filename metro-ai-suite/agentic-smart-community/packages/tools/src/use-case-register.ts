@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
@@ -8,8 +8,9 @@ import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
 export interface UseCaseRegisterParams {
-  action: "register" | "register_task" | "unregister";
-  use_case: string;
+  action: "register" | "generate_task" | "unregister" | "list";
+  /** Required for register/generate_task/unregister; omitted for list. */
+  use_case?: string;
   video_summary_task?: string;
   description?: string;
   evaluate_rules_path?: string;
@@ -41,15 +42,36 @@ export interface UseCaseRegisterDeps {
   /**
    * Root directory that holds `use-cases/<use_case>/{prompt.md,evaluate_rules.py}`.
    * When `prompt_text` / `evaluate_rules_path` are omitted, register auto-picks
-   * these conventional files. Defaults to `process.cwd()` when unset.
+   * these conventional files. The MCP server passes `config.dataDir` here
+   * (`~/.mcp-smartbuilding` or `$SMARTBUILDING_DATA_DIR`); defaults to
+   * `process.cwd()` when unset.
    */
   baseDir?: string;
 }
 
+export interface UseCaseListEntry {
+  use_case: string;
+  video_summary_task?: string;
+  description?: string;
+  /** Final schema extension column names declared under this use case's own schema. */
+  schema_fields: string[];
+  rule_path: "defaultRuleEvaluator" | "evaluate_rules.py" | "none";
+  report_source?: string;
+}
+
 export interface UseCaseRegisterResult {
-  action: "register" | "register_task" | "unregister";
+  action: "register" | "generate_task" | "unregister" | "list";
+  /** Empty string for action=list (no single use case in scope). */
   use_case: string;
   ok: boolean;
+  /** action=list only: live in-memory use_case_dict inventory, sorted by key. */
+  use_cases?: UseCaseListEntry[];
+  /**
+   * unregister only: true when the use_case_dict entry was removed but some
+   * best-effort cleanup failed (e.g. the VLM task DELETE errored), so the
+   * caller should surface the warnings instead of reporting a clean removal.
+   */
+  degraded?: boolean;
   steps: {
     use_case_dict?: "added" | "updated" | "removed" | "skipped";
     vlm_task?: "registered" | "updated" | "unchanged" | "deleted" | "skipped";
@@ -63,6 +85,8 @@ export interface UseCaseRegisterResult {
     artifacts?: {
       prompt_md?: "written" | "unchanged" | "skipped";
       evaluate_rules_py?: "written" | "unchanged" | "skipped";
+      /** unregister+persist only: where use-cases/<uc>/ was moved to. */
+      archived_to?: string;
     };
   };
   warnings: string[];
@@ -169,6 +193,8 @@ export interface ConsistencyReport {
   format_violations: string[];
   /** default-rule path: severity/event/desc missing from schema. */
   default_path_missing_fields: string[];
+  /** Extended schema fields that require evaluate_rules.py when no custom rule was supplied. */
+  extended_schema_missing_rule: string[];
   /** custom-rule path: fields evaluate_rules.py reads that aren't in schema. */
   rule_fields_not_in_schema: string[];
 }
@@ -279,6 +305,7 @@ export function checkUseCaseConsistency(input: {
       extra_in_prompt: prompt_fields,
       format_violations,
       default_path_missing_fields: [],
+      extended_schema_missing_rule: [],
       rule_fields_not_in_schema: [],
     };
   }
@@ -289,9 +316,11 @@ export function checkUseCaseConsistency(input: {
 
   // G4 — alert-rule path.
   let default_path_missing_fields: string[] = [];
+  let extended_schema_missing_rule: string[] = [];
   let rule_fields_not_in_schema: string[] = [];
   if (evaluateRulesText === undefined) {
     default_path_missing_fields = DEFAULT_ALERT_FIELDS.filter((f) => !schemaSet.has(f));
+    extended_schema_missing_rule = schema_fields.filter((f) => !DEFAULT_ALERT_FIELDS.includes(f));
   } else {
     rule_fields_not_in_schema = scanRuleFieldKeys(evaluateRulesText).filter((k) => {
       const canonical = RULE_FIELD_ALIASES[k] ?? k;
@@ -304,6 +333,7 @@ export function checkUseCaseConsistency(input: {
     extra_in_prompt.length === 0 &&
     format_violations.length === 0 &&
     default_path_missing_fields.length === 0 &&
+    extended_schema_missing_rule.length === 0 &&
     rule_fields_not_in_schema.length === 0;
 
   return {
@@ -314,6 +344,7 @@ export function checkUseCaseConsistency(input: {
     extra_in_prompt,
     format_violations,
     default_path_missing_fields,
+    extended_schema_missing_rule,
     rule_fields_not_in_schema,
   };
 }
@@ -336,6 +367,12 @@ function consistencyErrors(r: ConsistencyReport): string[] {
     errs.push(
       `default rule path needs schema field(s) [${r.default_path_missing_fields.join(", ")}] ` +
       `— with no evaluate_rules.py, defaultRuleEvaluator requires severity/event/desc.`,
+    );
+  }
+  if (r.extended_schema_missing_rule.length > 0) {
+    errs.push(
+      `extended schema field(s) [${r.extended_schema_missing_rule.join(", ")}] require evaluate_rules.py ` +
+      `— defaultRuleEvaluator is allowed only for severity/event/desc.`,
     );
   }
   if (r.rule_fields_not_in_schema.length > 0) {
@@ -385,10 +422,11 @@ function validateTextArtifactWritable(
 }
 
 /**
- * Stage a caller-supplied evaluate_rules.py into the conventional repo location
- * `use-cases/<uc>/evaluate_rules.py` and return the ABSOLUTE conventional path.
- * config.yaml / use_case_dict therefore always reference the stable in-repo
- * file, never the caller's (possibly temporary, possibly relative) location.
+ * Stage a caller-supplied evaluate_rules.py into the conventional data-dir
+ * location `use-cases/<uc>/evaluate_rules.py` and return the ABSOLUTE
+ * conventional path. config.yaml / use_case_dict therefore always reference
+ * the stable data-dir file, never the caller's (possibly temporary, possibly
+ * relative) location.
  * If the source already IS the conventional file, nothing is copied ("skipped").
  * Copy conflicts reuse writeTextArtifact semantics: identical content →
  * "unchanged"; different content without overwrite → throws.
@@ -406,18 +444,58 @@ function stageEvaluateRulesOverride(
   return { path: dst, status };
 }
 
+/**
+ * Read-only inventory of the live in-memory use_case_dict, sorted by key. This
+ * reflects what the RUNNING server actually uses — unlike parsing config.yaml
+ * from disk, it also covers entries registered with persist=false (or whose
+ * config write degraded to a warning). Pure memory read: no DB, VLM, config,
+ * or artifact access.
+ */
+function listUseCases(deps: UseCaseRegisterDeps): UseCaseListEntry[] {
+  return Object.keys(deps.useCaseDict)
+    .sort()
+    .map((key) => {
+      const entry: any = deps.useCaseDict[key] ?? {};
+      const schemaFields: string[] = Array.isArray(entry.schema?.video_summary_tasks?.extensions)
+        ? entry.schema.video_summary_tasks.extensions.map((e: any) => String(e?.name ?? "")).filter(Boolean)
+        : [];
+      const rulePath: UseCaseListEntry["rule_path"] = entry.evaluate_rules_path
+        ? "evaluate_rules.py"
+        : schemaFields.length > 0
+          ? "defaultRuleEvaluator"
+          : "none";
+      return {
+        use_case: key,
+        video_summary_task: entry.video_summary_task,
+        description: entry.description,
+        schema_fields: schemaFields,
+        rule_path: rulePath,
+        report_source: entry.reports?.data_source,
+      };
+    });
+}
+
 export async function useCaseRegister(
   params: UseCaseRegisterParams,
   deps: UseCaseRegisterDeps,
 ): Promise<UseCaseRegisterResult> {
   const result: UseCaseRegisterResult = {
     action: params.action,
-    use_case: params.use_case,
+    use_case: params.use_case ?? "",
     ok: false,
     steps: {},
     warnings: [],
     errors: [],
   };
+
+  // list is a read-only inventory of the live in-memory use_case_dict — it runs
+  // BEFORE the use_case validation below (which only applies to the mutating
+  // actions) and never touches the DB, VLM service, config, or artifacts.
+  if (params.action === "list") {
+    result.use_cases = listUseCases(deps);
+    result.ok = true;
+    return result;
+  }
 
   if (!params.use_case || !TASK_NAME_RE.test(params.use_case)) {
     result.errors.push(`use_case "${params.use_case}" must match ${TASK_NAME_RE}`);
@@ -425,11 +503,11 @@ export async function useCaseRegister(
   }
 
   if (params.action === "unregister") {
-    return await unregister(params, deps, result);
+    return await unregister({ ...params, use_case: params.use_case }, deps, result);
   }
 
-  if (params.action === "register_task") {
-    return await registerTaskOnly(params, deps, result);
+  if (params.action === "generate_task") {
+    return await registerTaskOnly({ ...params, use_case: params.use_case }, deps, result);
   }
 
   const taskName = params.video_summary_task ?? `${params.use_case}_monitor`;
@@ -479,7 +557,7 @@ export async function useCaseRegister(
     // persisting a half-baked entry.
     result.errors.push(
       `prompt_text not provided and no use-cases/${params.use_case}/prompt.md found — ` +
-      `do NOT retry register with the same empty args. Call action="register_task" first ` +
+      `do NOT retry register with the same empty args. Call action="generate_task" first ` +
       `(it registers the VLM task and writes use-cases/${params.use_case}/prompt.md to disk), ` +
       `then retry action="register" (prompt_text may then be omitted; it is auto-read from disk). ` +
       `Alternatively pass prompt_text directly.`,
@@ -601,7 +679,7 @@ export async function useCaseRegister(
     }
   }
 
-  // Stage the caller-supplied evaluate_rules.py into the conventional repo
+  // Stage the caller-supplied evaluate_rules.py into the conventional data-dir
   // location use-cases/<uc>/evaluate_rules.py (no-op when already there), then
   // smoke-test THAT file — the exact artifact the runtime rule engine will
   // execute — to confirm it runs and returns a well-formed AlertOutcome / null.
@@ -701,7 +779,7 @@ export async function useCaseRegister(
  * useCaseRegister).
  */
 async function registerTaskOnly(
-  params: UseCaseRegisterParams,
+  params: UseCaseRegisterParams & { use_case: string },
   deps: UseCaseRegisterDeps,
   result: UseCaseRegisterResult,
 ): Promise<UseCaseRegisterResult> {
@@ -717,13 +795,13 @@ async function registerTaskOnly(
     return result;
   }
 
-  // prompt_text is mandatory here — register_task is the one place the full prompt is
+  // prompt_text is mandatory here — generate_task is the one place the full prompt is
   // supplied. It deliberately does NOT auto-read use-cases/<uc>/prompt.md (that is
   // phase 2's job); a missing prompt is a terminal error, not a silent bounce.
   const promptText = params.prompt_text;
   if (!promptText) {
     result.errors.push(
-      `action="register_task" requires prompt_text (the full 4-section prompt) — it does ` +
+      `action="generate_task" requires prompt_text (the full 4-section prompt) — it does ` +
       `not auto-read from disk. Pass prompt_text; on success it is POSTed to the VLM ` +
       `service and written to use-cases/${params.use_case}/prompt.md.`,
     );
@@ -807,7 +885,7 @@ async function registerTaskOnly(
   // unconditional (not gated on persist). overwrite is honored by writeTextArtifact;
   // a same-content re-run returns "unchanged". The rules file is staged into the
   // conventional use-cases/<uc>/evaluate_rules.py so step 2 (register) can
-  // auto-discover it and config.yaml references the stable in-repo path.
+  // auto-discover it and config.yaml references the stable data-dir path.
   let stagedEvaluateRulesPath: string | undefined;
   try {
     const artifacts = ensureArtifactsStep(result);
@@ -893,7 +971,7 @@ function buildEvaluateRulesSmokeFields(schemaExtensions: SchemaExtension[]): Rec
 }
 
 async function unregister(
-  params: UseCaseRegisterParams,
+  params: UseCaseRegisterParams & { use_case: string },
   deps: UseCaseRegisterDeps,
   result: UseCaseRegisterResult,
 ): Promise<UseCaseRegisterResult> {
@@ -903,30 +981,52 @@ async function unregister(
     return result;
   }
 
-  const taskName: string = cfg.video_summary_task;
+  const taskName: string | undefined = cfg.video_summary_task;
 
-  try {
-    const resp = await fetch(`${deps.summaryServiceUrl}/v1/tasks/${taskName}`, {
-      method: "DELETE",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (resp.status === 403) {
-      result.warnings.push(
-        `VLM task "${taskName}" is a builtin (immutable) — not deleted; use_case_dict entry still removed`,
-      );
-      result.steps.vlm_task = "skipped";
-    } else if (resp.status === 404) {
-      result.warnings.push(`VLM task "${taskName}" already absent`);
-      result.steps.vlm_task = "skipped";
-    } else if (!resp.ok) {
-      result.warnings.push(`VLM task "${taskName}" delete returned HTTP ${resp.status}`);
-      result.steps.vlm_task = "skipped";
-    } else {
-      result.steps.vlm_task = "deleted";
-    }
-  } catch (err: any) {
-    result.warnings.push(`VLM task delete error: ${err.message}`);
+  // Shared-task guard: if another use case references the SAME video_summary_task,
+  // the task must outlive this entry — skip the DELETE instead of pulling the task
+  // out from under the sibling use case.
+  const sharedBy = Object.entries(deps.useCaseDict)
+    .filter(([key, entry]: [string, any]) => key !== params.use_case && entry?.video_summary_task === taskName)
+    .map(([key]) => key);
+
+  if (!taskName) {
+    result.warnings.push(
+      `use case "${params.use_case}" has no video_summary_task; no VLM task could be deleted`,
+    );
     result.steps.vlm_task = "skipped";
+    result.degraded = true;
+  } else if (sharedBy.length > 0) {
+    result.warnings.push(
+      `VLM task "${taskName}" is still referenced by use case(s) [${sharedBy.join(", ")}] — not deleted; use_case_dict entry still removed`,
+    );
+    result.steps.vlm_task = "skipped";
+  } else {
+    try {
+      const resp = await fetch(`${deps.summaryServiceUrl}/v1/tasks/${encodeURIComponent(taskName)}`, {
+        method: "DELETE",
+        signal: AbortSignal.timeout(5000),
+      });
+      if (resp.status === 403) {
+        result.warnings.push(
+          `VLM task "${taskName}" is a builtin (immutable) — not deleted; use_case_dict entry still removed`,
+        );
+        result.steps.vlm_task = "skipped";
+      } else if (resp.status === 404) {
+        result.warnings.push(`VLM task "${taskName}" already absent`);
+        result.steps.vlm_task = "skipped";
+      } else if (!resp.ok) {
+        result.warnings.push(`VLM task "${taskName}" delete returned HTTP ${resp.status} — the task may still exist on the VLM service`);
+        result.steps.vlm_task = "skipped";
+        result.degraded = true;
+      } else {
+        result.steps.vlm_task = "deleted";
+      }
+    } catch (err: any) {
+      result.warnings.push(`VLM task "${taskName}" delete error: ${err.message} — the task may still exist on the VLM service`);
+      result.steps.vlm_task = "skipped";
+      result.degraded = true;
+    }
   }
 
   delete deps.useCaseDict[params.use_case];
@@ -939,10 +1039,56 @@ async function unregister(
       null,
       result.warnings,
     );
+    if (result.steps.config_yaml === "removed") {
+      // Archive only after the persistent entry is gone. Otherwise a restart
+      // would restore a use case whose prompt/rules were moved out from under it.
+      const archive = archiveUseCaseArtifacts(deps.baseDir ?? process.cwd(), params.use_case);
+      if (archive.archivedTo) {
+        ensureArtifactsStep(result).archived_to = archive.archivedTo;
+        result.warnings.push(`artifacts archived: ${archive.archivedTo}`);
+      } else if (archive.error) {
+        result.warnings.push(`artifact archive failed: ${archive.error}`);
+        result.degraded = true;
+      }
+    } else {
+      result.warnings.push(
+        "artifact archive skipped because the config.yaml entry was not removed",
+      );
+      result.degraded = true;
+    }
   }
 
   result.ok = true;
   return result;
+}
+
+/**
+ * Archive a use case's on-disk artifacts by moving `use-cases/<uc>/` into
+ * `use-cases/.backup/<uc>/` (timestamped on collision) rather than deleting it —
+ * the tree stays recoverable, but a later register of the same use case no longer
+ * auto-reads stale prompt.md / auto-discovers stale evaluate_rules.py. The move is
+ * within the same parent tree, so renameSync never crosses filesystems.
+ * Non-throwing: returns the archive path or an error for the caller to report.
+ */
+function archiveUseCaseArtifacts(
+  baseDir: string,
+  useCase: string,
+): { archivedTo?: string; error?: string } {
+  const src = join(baseDir, "use-cases", useCase);
+  if (!existsSync(src)) return {};
+  const backupDir = join(baseDir, "use-cases", ".backup");
+  let dst = join(backupDir, useCase);
+  if (existsSync(dst)) {
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    dst = join(backupDir, `${useCase}.${stamp}`);
+  }
+  try {
+    mkdirSync(backupDir, { recursive: true });
+    renameSync(src, dst);
+    return { archivedTo: dst };
+  } catch (err: any) {
+    return { error: `${src} -> ${dst}: ${err?.message ?? String(err)}` };
+  }
 }
 
 /**

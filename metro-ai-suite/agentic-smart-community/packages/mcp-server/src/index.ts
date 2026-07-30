@@ -313,8 +313,8 @@ async function reconcileOnStartup(
   const onlineMonitors = db.listOnlineMonitors();
   for (const m of onlineMonitors) {
     if (analyticsSources.has(m.id)) {
-      await fetch(`${analyticsUrl}/sources/${m.id}`, { method: "DELETE", signal: AbortSignal.timeout(5000) }).catch(() => {});
-      logger.warn(`[reconcile] monitor ${m.id} found in videostream-analytics (${analyticsUrl}) on startup, deleted and marked offline — call register_source to restart`);
+      const removed = await deleteAnalyticsSource(analyticsUrl, m.id);
+      logger.warn(`[reconcile] monitor ${m.id} found in videostream-analytics (${analyticsUrl}) on startup, ${removed ? "deleted" : "FAILED to delete"} and marked offline — call register_source to restart`);
     } else {
       logger.warn(`[reconcile] monitor ${m.id} not found in videostream-analytics (${analyticsUrl}) after restart, marked offline — call register_source to restart`);
     }
@@ -326,15 +326,31 @@ async function reconcileOnStartup(
   const dbIds = new Set(db.listMonitors().map((m) => m.id));
   for (const sourceId of analyticsSources.keys()) {
     if (!dbIds.has(sourceId)) {
-      await fetch(`${analyticsUrl}/sources/${sourceId}`, { method: "DELETE", signal: AbortSignal.timeout(5000) }).catch(() => {
+      if (await deleteAnalyticsSource(analyticsUrl, sourceId)) {
+        logger.info(`[reconcile] deleted orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
+        deleted++;
+      } else {
         logger.warn(`[reconcile] failed to delete orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
-      });
-      logger.info(`[reconcile] deleted orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
-      deleted++;
+      }
     }
   }
 
   logger.info(`[reconcile] complete: ${offlined} marked offline, ${deleted} orphans deleted`);
+}
+
+// DELETE a source from videostream-analytics; retries once after 1s since the
+// analytics service may still be starting up. Returns true only on a 2xx response.
+async function deleteAnalyticsSource(analyticsUrl: string, sourceId: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await fetch(`${analyticsUrl}/sources/${sourceId}`, { method: "DELETE", signal: AbortSignal.timeout(5000) });
+      if (resp.ok) return true;
+    } catch {
+      // network error / timeout — fall through to retry
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 1000));
+  }
+  return false;
 }
 
 main().catch((err) => {

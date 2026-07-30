@@ -53,9 +53,6 @@ function rowToTask(row: any): VideoSummaryTask {
     id: row.id,
     monitorId: row.monitor_id,
     eventId: row.event_id ?? undefined,
-    clipStartTime: row.clip_start_time ?? undefined,
-    clipEndTime: row.clip_end_time ?? undefined,
-    clipDuration: row.clip_duration ?? undefined,
     summaryClipInput: row.summary_clip_input ?? undefined,
     summaryText: row.summary_text ?? undefined,
     status: row.status,
@@ -64,7 +61,6 @@ function rowToTask(row: any): VideoSummaryTask {
     promptTokens: row.prompt_tokens ?? undefined,
     imageTokens: row.image_tokens ?? undefined,
     completionTokens: row.completion_tokens ?? undefined,
-    startedAt: row.started_at ?? undefined,
     completedAt: row.completed_at ?? undefined,
     createdAt: row.created_at,
   };
@@ -113,9 +109,6 @@ CREATE TABLE IF NOT EXISTS video_summary_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   monitor_id TEXT NOT NULL,
   event_id INTEGER REFERENCES events(id),
-  clip_start_time TEXT,
-  clip_end_time TEXT,
-  clip_duration REAL,
   summary_clip_input TEXT,
   summary_text TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
@@ -124,7 +117,6 @@ CREATE TABLE IF NOT EXISTS video_summary_tasks (
   prompt_tokens INTEGER,
   image_tokens INTEGER,
   completion_tokens INTEGER,
-  started_at TEXT,
   completed_at TEXT,
   created_at TEXT DEFAULT (datetime('now', 'localtime'))
 );
@@ -574,15 +566,13 @@ export class SmartBuildingDB {
 
   // --- Video Summary Tasks ---
 
-  createTask(task: Pick<VideoSummaryTask, "monitorId" | "eventId" | "clipStartTime" | "clipEndTime" | "summaryClipInput" | "status">): VideoSummaryTask {
+  createTask(task: Pick<VideoSummaryTask, "monitorId" | "eventId" | "summaryClipInput" | "status">): VideoSummaryTask {
     const result = this.db.prepare(`
-      INSERT INTO video_summary_tasks (monitor_id, event_id, clip_start_time, clip_end_time, summary_clip_input, status)
-      VALUES (@monitorId, @eventId, @clipStartTime, @clipEndTime, @summaryClipInput, @status)
+      INSERT INTO video_summary_tasks (monitor_id, event_id, summary_clip_input, status)
+      VALUES (@monitorId, @eventId, @summaryClipInput, @status)
     `).run({
       monitorId: task.monitorId,
       eventId: task.eventId ?? null,
-      clipStartTime: task.clipStartTime ?? null,
-      clipEndTime: task.clipEndTime ?? null,
       summaryClipInput: task.summaryClipInput ?? null,
       status: task.status,
     });

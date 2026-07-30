@@ -18,6 +18,8 @@ services:
       - http_proxy=
       - https_proxy=
       - no_proxy=localhost,127.0.0.1
+      # Writable home for the non-root container user (see `user:` below).
+      - HOME=/tmp
     volumes:
       # Identity bind mount (host X -> container X): the absolute data_dir MCP sends
       # (<root>/segments/<id>) resolves to the SAME real host directory inside the
@@ -38,9 +40,12 @@ services:
       - /dev/accel/accel0:/dev/accel/accel0
     group_add:
       - ${RENDER_GROUP_ID:-992}
-    # Runs as root (default). Clip files written to the mounted data dir are therefore
-    # root-owned; the MCP clip extractor / VLM read them fine. If you need the MCP
-    # storage cleaner (running as your host user) to purge them, run the container as
-    # your user instead, e.g.:  `docker run ... --user "$(id -u):$(id -g)"`.
+    # Run as the host user (VSA_UID/VSA_GID exported by docker/set_env.sh, falling
+    # back to 1000) so clip/segment files written to the bind-mounted data dir are
+    # owned by the host user and the MCP storage cleaner can purge them. The uid
+    # has no passwd entry in the image, so point HOME at /tmp for tools that need
+    # a writable home (Python/OpenVINO caches). NPU access still works via
+    # group_add on the host render gid above.
+    user: "${VSA_UID:-1000}:${VSA_GID:-1000}"
     network_mode: host
     restart: unless-stopped

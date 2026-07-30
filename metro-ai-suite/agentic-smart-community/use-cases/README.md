@@ -207,18 +207,18 @@ cam_parking:
     segment: { max_duration: 10 }
 ```
 
-**`demo/videos/streams.yaml` → `streams`** (bring your own clips — `*.mp4` is gitignored, so `cam_ha_test/building-throwing-2.mp4` / `cam_parking/false-parking.mp4` are not shipped in the repo):
+**`demo/videos/streams.yaml` → `streams`** (bring your own clips. `*.mp4` files are Git ignored and not released; export the corresponding absolute paths before starting streams):
 
 ```yaml
 cam_high_altitude:
   enabled: true
-  file: cam_ha_test/building-throwing-2.mp4
+  file: ${SMARTBUILDING_DEMO_HIGH_ALTITUDE_VIDEO}
   rtsp_url: rtsp://localhost:8554/live/high_altitude
   loop: true
 
 cam_parking:
   enabled: true
-  file: cam_parking/false-parking.mp4
+  file: ${SMARTBUILDING_DEMO_PARKING_VIDEO}
   rtsp_url: rtsp://localhost:8554/live/parking
   loop: true
 ```

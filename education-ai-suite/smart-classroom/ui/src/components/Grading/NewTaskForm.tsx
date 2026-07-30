@@ -70,6 +70,23 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     }
   };
 
+  // In Electron, use the OS-native folder chooser: the app and the Python
+  // backends run on the same machine, so a locally picked path is also readable
+  // by the server. On the web, fall back to the in-app picker that browses the
+  // server's filesystem over the API.
+  const handleBrowse = async () => {
+    if (!window.electronAPI?.pickDirectory) {
+      setPickerOpen(true);
+      return;
+    }
+    try {
+      const picked = await window.electronAPI.pickDirectory(paperPath || undefined);
+      if (picked) setPaperPath(picked);
+    } catch (e) {
+      setError(toErrorMessage(e));
+    }
+  };
+
   const handleStart = async () => {
     if (!paperPath.trim()) {
       setError(t('grading.form.needPaperPath', 'Please enter the target directory or file path.'));
@@ -153,7 +170,7 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
         <div className="grading-form-btns">
           <button
             className="grading-btn grading-btn-secondary"
-            onClick={() => setPickerOpen(true)}
+            onClick={handleBrowse}
           >
             {t('grading.form.browse', 'Browse')}
           </button>
