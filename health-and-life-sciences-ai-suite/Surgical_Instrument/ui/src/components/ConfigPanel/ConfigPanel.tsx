@@ -13,8 +13,13 @@ const ConfigPanel: React.FC = () => {
   const pipelinePerf = useAppSelector((state) => state.detection.data.pipelinePerformance);
 
   const isProcessing = systemStatus === 'running' || systemStatus === 'starting';
-  const currentDevice = useMemo<Device>(
-    () => (modelInfo?.device as Device) || (pipelinePerf?.workloads?.[0]?.device as Device) || 'GPU',
+  // Show the *actual* device the backend reports. Only fall back to 'GPU' after
+  // both sources have been consulted AND the system is running — otherwise the
+  // pill would flash 'GPU' before the first backend snapshot arrives, hiding a
+  // real CPU/NPU boot-time selection (see validation report #13).
+  const currentDevice = useMemo<Device | undefined>(
+    () => (modelInfo?.device as Device | undefined)
+       || (pipelinePerf?.workloads?.[0]?.device as Device | undefined),
     [modelInfo, pipelinePerf],
   );
 
@@ -24,7 +29,7 @@ const ConfigPanel: React.FC = () => {
   const [pendingKind, setPendingKind] = useState<SourceKind>('file');
   const [pendingVideo, setPendingVideo] = useState<string | null>(null);
   const [pendingCamera, setPendingCamera] = useState<string | null>(null);
-  const [pendingDevice, setPendingDevice] = useState<Device>(currentDevice);
+  const [pendingDevice, setPendingDevice] = useState<Device>(currentDevice ?? 'GPU');
   const [baslerCams, setBaslerCams] = useState<BaslerCamera[]>([]);
   const [baslerNote, setBaslerNote] = useState<string | null>(null);
   const [status, setStatus] = useState('');
@@ -73,7 +78,7 @@ const ConfigPanel: React.FC = () => {
   }, [refreshSources]);
 
   useEffect(() => {
-    setPendingDevice(currentDevice);
+    if (currentDevice) setPendingDevice(currentDevice);
   }, [currentDevice]);
 
   const applyPendingSource = () => {
@@ -99,7 +104,7 @@ const ConfigPanel: React.FC = () => {
       await refreshSources();
       setPendingKind('file');
       setPendingVideo(res.name);
-      setStatus(`Uploaded ${res.name} (${formatMB(res.size_bytes)}).`);
+      setStatus(`Uploaded ${res.name} (${formatMB(res.size_bytes)}). Select it and press Start. Note: the pipeline expects an H.264-encoded MP4.`);
     } catch (err) {
       console.error('Upload failed', err);
       const msg = err instanceof Error ? err.message : String(err);

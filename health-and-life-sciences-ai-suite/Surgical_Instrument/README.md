@@ -17,7 +17,7 @@ Real-time polyp detection on endoscopic video using Intel hardware acceleration 
 
 ## What the UI shows
 
-Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`). After clicking **Start** in the left configuration panel, the right column exposes the KPIs a reviewer typically asks for:
+Open http://localhost:8080 (or from another machine on your LAN: http://<HOST_IP>:8080). After clicking **Start** in the left configuration panel, the right column exposes the KPIs a reviewer typically asks for:
 
 - **Config panel (left accordion)** — source selection (`file` or `basler`), source argument (video path / camera serial), device choice, and Start/Stop/Reset controls.
 - **Pipeline Performance table** — `Workload | Model | Device | FPS | Mean | P50 | P90 | P95 | P99 | Status`. Percentiles are computed from the pipeline latency tracer rolling window.
@@ -45,35 +45,48 @@ The UI does **not** unblock until `surgical-backend` reports `/api/readiness →
 
 ## Quickstart (Docker)
 
-The repo does not ship the medical dataset, trained model binaries, or demo videos. Prepare them locally first, then start the stack. This keeps the demo reproducible without any dependency on a private PTL/Bangalore machine.
+The repo does not ship the medical dataset, trained model binaries, or demo videos. Prepare them locally first, then start the stack.
 
-> **Behind a corporate proxy?** Read [0. Corporate proxy setup](#0-corporate-proxy-setup) first. Both the image build and the runtime `yolo11n.pt` download need proxy settings, otherwise `make up` will fail with a curl timeout during bootstrap.
+**Host prerequisites**
 
-### 0. Corporate proxy setup
+- Docker Engine ≥ 24 with the `docker compose` v2 plugin
+- `make`, `git`, `curl`
+- `ffmpeg` (only if you plan to run `scripts/create_endoscopy_video.py` to synthesise a demo clip)
+- Python 3.11+ (only if you plan to run `make backend-venv` for local training)
 
-Two equivalent ways to inject proxy settings — pick one:
-
-**Option A (recommended, persistent):** copy `.env.example` to `.env` and edit it. `docker compose` auto-loads `.env` in this directory for variable interpolation, so `make up` picks the values up without needing them exported in your shell.
+### 0. Clone the repository
 
 ```bash
-cp .env.example .env
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/health-and-life-sciences-ai-suite/Surgical_Instrument
+```
+
+<details>
+<summary><strong>Behind a corporate proxy? (skip if you have direct internet access)</strong></summary>
+
+`make up` and the base image `docker pull` both need to reach the internet during first boot (base image, `pip install`, `yolo11n.pt` from GitHub). If your machine sits behind an HTTP/HTTPS proxy, configure it once — two equivalent options:
+
+**Option A (recommended, persistent):** copy the sample env file to the repo root and edit it. `docker compose` auto-loads `.env` from the working directory, so `make up` picks the values up without exporting them in your shell.
+
+```bash
+cp configs/.env.example .env
 # then edit .env and uncomment / set HTTP_PROXY, HTTPS_PROXY, NO_PROXY.
 ```
 
 **Option B (ad-hoc):** export the standard proxy env vars in the shell you run `make` from **before** `make up`.
 
 ```bash
-export HTTP_PROXY=http://proxy.your-corp.com:912
-export HTTPS_PROXY=http://proxy.your-corp.com:912
-export NO_PROXY=localhost,127.0.0.1,.your-corp.com,surgical-pipeline,surgical-backend,surgical-ui
+export HTTP_PROXY=http://<your-proxy-host>:<port>
+export HTTPS_PROXY=http://<your-proxy-host>:<port>
+export NO_PROXY=localhost,127.0.0.1,surgical-pipeline,surgical-backend,surgical-ui
 ```
 
-Either way `docker-compose.yaml` forwards the values to `docker build` (as build args) and to the running containers (as env vars), so `apt`, `pip`, `wget`, `curl`, and Ultralytics all honour them. `make up` runs a preflight check and warns if you appear to be on an Intel corp network but neither `.env` nor exported vars provide a proxy.
+Either way `docker-compose.yaml` forwards the values to `docker build` (as build args) and to the running containers (as env vars), so `apt`, `pip`, `wget`, `curl`, and Ultralytics all honour them. `make up` prints a warning if it detects an environment that likely needs a proxy but none is configured.
 
 Notes:
 - Include the internal service names in `NO_PROXY` so container-to-container traffic (backend → pipeline) is not routed through the proxy.
-- Docker daemon also needs a proxy config to `pull` the base image. If `docker pull ubuntu:24.04` works, you're fine. Otherwise configure `~/.docker/config.json` or `/etc/systemd/system/docker.service.d/http-proxy.conf` per your IT policy.
-- Verify from the shell before building:
+- The Docker daemon itself also needs a proxy config to `pull` the base image. If `docker pull ubuntu:24.04` works, you are fine. Otherwise configure `~/.docker/config.json` or `/etc/systemd/system/docker.service.d/http-proxy.conf` per your IT policy.
+- Verify connectivity before building:
 
   ```bash
   curl -sS -o /dev/null -w "%{http_code}\n" https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt
@@ -81,6 +94,8 @@ Notes:
   ```
 
 If GitHub is fully blocked even with the proxy, use the offline weights workaround in [step 2.1](#21-optional-pre-place-yolo11npt-if-github-is-blocked).
+
+</details>
 
 ### 1. Download the dataset
 
@@ -108,8 +123,11 @@ Model source:
 
 ```bash
 make backend-venv       # one-time Python environment with torch+xpu, Ultralytics, OpenVINO
+source .venv-backend/bin/activate   # activate the venv in your current shell
 make backend-bootstrap  # prepares CVC-ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
 ```
+
+> **Note.** `make backend-venv` prepares `.venv-backend/` and exits — that is the expected behaviour. A Make target runs in a subshell and cannot modify your interactive shell's `PATH`, so you must `source .venv-backend/bin/activate` yourself before running `backend-bootstrap` or `create_endoscopy_video.py`.
 
 `backend-bootstrap` does the full model preparation:
 
@@ -221,6 +239,17 @@ the host and layer in a compose override that makes them available to the
 pipeline container. The UI's Settings modal is the primary runtime picker for
 choosing between the recorded video and any attached camera — see [Runtime
 configuration](#runtime-configuration) below.
+
+### 5. Pipeline cases (configurable via `make up`)
+
+The DL Streamer pipeline is fully configurable at `make up` time via
+environment variables (`SOURCE_KIND`, `DETECT`, `WATERMARK`, `MINIMAL`,
+`SCHEDULING_POLICY`, `BATCH_SIZE`, `AUTOVIDEOSINK`). Three canonical shapes
+cover the surface — file preview, minimal live camera, and tuned live
+inference. Exact commands, generated `gst-launch-1.0` strings, verified
+latency numbers, and troubleshooting live in:
+
+[docs/user-guide/pipeline-cases.md](docs/user-guide/pipeline-cases.md)
 
 ## Runtime configuration
 

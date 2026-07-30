@@ -81,7 +81,7 @@ Expect to see the FSM walk through:
 
 ### Open the UI
 
-Once the backend is healthy the UI starts and answers on `http://localhost:8080` (override with `make up UI_HOST_PORT=9090`). `make up` and `make run` also print the LAN URL (e.g. `http://10.223.23.206:8080`) so you can open it from another machine on the same network.
+Once the backend is healthy the UI starts and answers on `http://localhost:8080` (override with `make up UI_HOST_PORT=9090`). `make up` and `make run` also print the LAN URL (e.g. `http://<HOST_IP>:8080` — replace `<HOST_IP>` with your machine's LAN IP) so you can open it from another machine on the same network.
 
 Use the left **Config** accordion to pick source (`file` or `basler`), source argument, and device, then click **Start** to kick off inference. The right-side KPI blocks begin populating within ~1 second.
 

@@ -167,7 +167,10 @@ def _snapshot_full() -> dict[str, Any]:
     infer_p95 = float(inf.get("infer_p95_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
     source_kind = str(inf.get("source_kind") or STATE.source_kind or "file")
-    input_source = "Basler live camera" if source_kind == "basler" else "Recorded file"
+    if source_kind == "basler":
+        input_source = "Basler live camera"
+    else:
+        input_source = "Recorded file"
 
     cfg = _cfg or {}
     model_cfg = cfg.get("model", {}) or {}
@@ -600,6 +603,21 @@ def _host_kernel() -> str:
     return _read_first_line("/proc/sys/kernel/osrelease") or "unknown"
 
 
+def _disk_summary(path: str = "/") -> str:
+    """Return a short human-readable summary of free/total disk on ``path``.
+
+    Example: ``"238.4 GiB free / 512.0 GiB (/)"``. Falls back to ``"unknown"``
+    when the filesystem cannot be stat'd (rare inside a container).
+    """
+    try:
+        import shutil as _sh
+        total, _used, free = _sh.disk_usage(path)
+        gib = 1024 ** 3
+        return f"{free / gib:.1f} GiB free / {total / gib:.1f} GiB ({path})"
+    except OSError:
+        return "unknown"
+
+
 def _detect_intel_devices() -> tuple[str, str]:
     """Return (iGPU, NPU) friendly names from /sys/bus/pci/devices."""
     igpu = "not detected"
@@ -644,6 +662,7 @@ def platform_info() -> Response:
         "NPU":       npu,
         "iGPU":      igpu,
         "Memory":    _mem_total_gib(),
+        "Storage":   _disk_summary(),
         "OS":        f"{os_line} (kernel {kernel})" if kernel != "unknown" else os_line,
     })
 

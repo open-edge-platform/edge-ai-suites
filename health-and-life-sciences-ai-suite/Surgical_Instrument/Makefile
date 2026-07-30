@@ -7,7 +7,37 @@ SHELL := /bin/bash
 # ---- Tunables (override on the CLI: `make up UI_HOST_PORT=9000`) -----------
 UI_HOST_PORT       ?= 8080
 DETECTION_DEVICE   ?= GPU
+# Normalize to upper-case so `DETECTION_DEVICE=cpu` and `DETECTION_DEVICE=CPU`
+# both reach the backend/pipeline as "CPU" (which is what the code compares).
+# `override` is required because command-line overrides otherwise beat a plain
+# `:=` reassignment in the file.
+override DETECTION_DEVICE := $(shell echo $(DETECTION_DEVICE) | tr '[:lower:]' '[:upper:]')
 COMPOSE            ?= docker compose
+# Runtime pipeline knobs (overridable via `make up VAR=...`).
+SOURCE_KIND           ?= file
+SOURCE_ARG            ?=
+SCHEDULING_POLICY     ?=
+BATCH_SIZE            ?=
+DETECT                ?= 1
+WATERMARK             ?= 1
+MINIMAL               ?= 0
+PIPELINE_SINK_SYNC    ?=
+PIPELINE_DISPLAY_VIEW ?= 0
+PIPELINE_VIDEO_SINK   ?= autovideosink
+
+# Friendly alias: `make up AUTOVIDEOSINK=true` -> DISPLAY_VIEW=1 + SINK_SYNC=true
+#                 `make up AUTOVIDEOSINK=false` -> DISPLAY_VIEW=0 + SINK_SYNC=false
+AUTOVIDEOSINK ?=
+ifneq ($(strip $(AUTOVIDEOSINK)),)
+  ifeq ($(strip $(AUTOVIDEOSINK)),true)
+    PIPELINE_DISPLAY_VIEW := 1
+    PIPELINE_SINK_SYNC    := true
+  else
+    PIPELINE_DISPLAY_VIEW := 0
+    PIPELINE_SINK_SYNC    := false
+  endif
+endif
+
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
 # works without editing this file. Override on the CLI if needed.
 RENDER_GID         ?= $(shell getent group render 2>/dev/null | cut -d: -f3)
@@ -87,6 +117,10 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
+	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
+	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
+	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
@@ -103,6 +137,10 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
 	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
+	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
+	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
+	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d
 	$(_print_urls)
