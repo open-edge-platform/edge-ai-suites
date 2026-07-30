@@ -76,7 +76,7 @@ LVC must be running before VAP starts. VAP fetches the LVC OpenAPI schema at sta
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](../../live-video-analysis/live-video-captioning/docs/user-guide/get-started.md) to download models and configure its `.env`, then start the stack:
+Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started.html) to download models and configure its `.env`, then start the stack:
 
 ```bash
 docker compose up -d
