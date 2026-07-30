@@ -46,6 +46,7 @@ except ValueError:
     BATCH_SIZE = None
 DETECT_ENABLED = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
 WATERMARK_ENABLED = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
+IDENTITY_ENABLED = os.environ.get("PIPELINE_IDENTITY", "0").strip().lower() not in {"0", "false", "no"}
 MINIMAL = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
 # 0 = unlimited (default for live demo). Set PIPELINE_FRAME_LIMIT=N to cap
 # at N frames — useful for benchmarking runs that should auto-terminate.
@@ -117,6 +118,7 @@ def _spawn(
         sink_sync=sink_sync,
         enable_detect=DETECT_ENABLED,
         enable_watermark=WATERMARK_ENABLED,
+        enable_identity=IDENTITY_ENABLED,
         minimal=MINIMAL,
         basler_pixel_format=BASLER_PIXEL_FORMAT,
         basler_fixed_camera=BASLER_FIXED_CAMERA,
@@ -188,9 +190,10 @@ def _spawn(
         BASLER_PIXEL_FORMAT,
     )
     log.info(
-        "[pipeline] knobs: detect=%s watermark=%s minimal=%s scheduling_policy=%s batch_size=%s sink_sync=%s",
+        "[pipeline] knobs: detect=%s watermark=%s identity=%s minimal=%s scheduling_policy=%s batch_size=%s sink_sync=%s",
         DETECT_ENABLED,
         WATERMARK_ENABLED,
+        IDENTITY_ENABLED,
         MINIMAL,
         SCHEDULING_POLICY or "<unset>",
         BATCH_SIZE,

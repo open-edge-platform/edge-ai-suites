@@ -95,6 +95,7 @@ services:
       BATCH_SIZE: ${BATCH_SIZE:-}
       DETECT: ${DETECT:-1}
       WATERMARK: ${WATERMARK:-1}
+      PIPELINE_IDENTITY: ${PIPELINE_IDENTITY:-0}
       MINIMAL: ${MINIMAL:-0}
       SOURCE_KIND: ${SOURCE_KIND:-file}
       SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}

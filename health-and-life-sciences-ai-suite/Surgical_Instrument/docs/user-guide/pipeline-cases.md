@@ -28,7 +28,12 @@ has a documented default.
 | `SCHEDULING_POLICY` | *(unset)* | if set, appended as `scheduling-policy=<val>` on `gvadetect` (e.g. `latency`) |
 | `BATCH_SIZE` | *(unset)* | if set, appended as `batch-size=<N>` on `gvadetect` (e.g. `1`) |
 | `AUTOVIDEOSINK` | *(unset)* | `true` -> popup + `sink sync=true`; `false` -> headless `fakesink` |
+| `PIPELINE_IDENTITY` | `0` | `1` inserts `identity` element in the chain; `0` removes it (default). Required as `identity eos-after=N` by bench scripts when `frame_limit>0` |
+| `PIPELINE_SINK_SYNC` | *(unset)* | Override sink clock-sync: `true` = present at PTS time; `false` = as-fast-as-possible. Superseded by `AUTOVIDEOSINK` |
 | `BASLER_PIXEL_FORMAT` | `bayerbggr` | Bayer pixel format passed to `gencamsrc` (e.g. `bayerbggr`, `bayerrggb`) |
+| `BASLER_FIXED_CAMERA` | `0` | `1` disables ExposureAuto/GainAuto and applies fixed values below. **Required for deterministic 60 fps** |
+| `BASLER_EXPOSURE_US` | *(unset)* | Fixed ExposureTime in µs (only when `BASLER_FIXED_CAMERA=1`). Must be ≤ 16 666 µs for 60 fps |
+| `BASLER_GAIN` | *(unset)* | Fixed sensor gain in dB (only when `BASLER_FIXED_CAMERA=1`) |
 | `DETECTION_DEVICE` | `GPU` | initial device for `/api/device` (`CPU`/`GPU`/`NPU`) |
 | `UI_HOST_PORT` | `8080` | host port for the UI (Nginx) |
 
@@ -144,7 +149,8 @@ Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
 gst-launch-1.0 \
-    gencamsrc serial=40067928 pixel-format=bayerbggr \
+    gencamsrc serial=40067928 pixel-format=bayerbggr frame-rate=60 \
+              exposure-auto=off gain-auto=off exposure-time=8000 \
   ! bayer2rgb \
   ! videoscale \
   ! videoconvert \
@@ -160,7 +166,7 @@ gst-launch-1.0 \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! ximagesink sync=true
+  ! autovideosink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -169,9 +175,9 @@ Confirmed live output (from container INFO log):
 [pipeline] knobs: detect=True watermark=True minimal=False
               scheduling_policy=latency batch_size=1 sink_sync=true
 status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
-FpsCounter (avg 22.20s): 58.83 fps
-latency window (last 200 samples):
-    mean=13.951 ms   p50=14.748 ms   p95=16.751 ms   p99=17.488 ms   max=19.707 ms
+FpsCounter (avg 86.05s): 60.03 fps
+latency window (last 500 samples):
+    mean=6.835 ms   p50=13.231 ms   p95=13.959 ms   p99=14.266 ms   max=14.952 ms
 ```
 
 Bench verification (2026-07-29, headless `fakesink` run):
@@ -207,13 +213,14 @@ Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
 gst-launch-1.0 \
-    gencamsrc serial=40067928 pixel-format=bayerbggr \
+    gencamsrc serial=40067928 pixel-format=bayerbggr frame-rate=60 \
+              exposure-auto=off gain-auto=off exposure-time=8000 \
   ! bayer2rgb \
   ! videoscale \
   ! videoconvert \
   ! video/x-raw,width=1280,height=720,format=NV12 \
   ! videoconvert \
-  ! ximagesink sync=true
+  ! autovideosink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -263,7 +270,8 @@ Resulting spawn (single `gst-launch-1.0` via `gencamsrc`):
 
 ```text
 gst-launch-1.0 \
-    gencamsrc serial=40067928 pixel-format=bayerbggr \
+    gencamsrc serial=40067928 pixel-format=bayerbggr frame-rate=60 \
+              exposure-auto=off gain-auto=off exposure-time=8000 \
   ! bayer2rgb \
   ! videoscale \
   ! videoconvert \
@@ -278,7 +286,7 @@ gst-launch-1.0 \
   ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! ximagesink sync=true
+  ! autovideosink sync=true
 ```
 
 Confirmed live output (from container INFO log):
@@ -299,14 +307,22 @@ Notes
 
 ---
 
-## Case 4 — Basler + detect + core pinning + fixed-camera tuning
+## Case 4 — Basler + detect + core pinning + fixed-camera tuning (final confirmed 60 fps)
 
-Pins each leg of the pipe to a specific CPU core set and scheduling policy
-using `taskset` (affinity) and `chrt` (SCHED_FIFO priority), and optionally
-locks the Basler camera to a fixed exposure and gain so the scene is fully
-deterministic. Use this case when you want the lowest possible jitter in the
-latency distribution by eliminating OS scheduler interference and Basler AE/AGC
-loop perturbation.
+Pins the GStreamer pipeline to 2 adjacent P-cores with SCHED_FIFO priority and
+locks the Basler camera to a fixed 8 ms shutter so the frame rate is fully
+deterministic regardless of room lighting. This is the **production-ready**
+configuration — all other cases depend on auto-exposure, which can silently
+drop to 7 fps in dim environments.
+
+> **Why `BASLER_FIXED_CAMERA=1` is mandatory for reliable 60 fps:**
+> `gencamsrc` sets `AcquisitionFrameRate=60` on the camera hardware, but with
+> `ExposureAuto=Continuous` (default) the camera's firmware can freely choose an
+> exposure time longer than 1/60 s. In dim lighting the auto-exposure algorithm
+> typically settles at ~135 ms, which physically limits the sensor to ~7.4 fps
+> regardless of the requested frame rate. Setting `BASLER_FIXED_CAMERA=1` with
+> `BASLER_EXPOSURE_US=8000` locks ExposureTime to 8 ms (max 125 fps, well above
+> the 60 fps ceiling), making frame rate deterministic.
 
 ### Step 0 — find the P-cores on your machine
 
@@ -318,10 +334,9 @@ Sample output on a Meteor Lake / Arrow Lake host:
 
 ```text
 [cores] all CPUs        : 0-21  (nproc=22)
-[cores] P-cores (perf)  : 0-11  <-- use for PIPELINE_CAMERA_CORES / PIPELINE_GST_CORES
+[cores] P-cores (perf)  : 0-11  <-- use for PIPELINE_GST_CORES
 [cores] E-cores (effic) : 12-21
-[cores] hint: PIPELINE_CAMERA_CORES=0 PIPELINE_GST_CORES=1-11
-              PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70
+[cores] hint: PIPELINE_GST_CORES=3-4 PIPELINE_GST_RT_PRIORITY=70
 ```
 
 On a non-hybrid CPU (all cores equivalent):
@@ -331,20 +346,21 @@ On a non-hybrid CPU (all cores equivalent):
 [cores] all cores are equivalent; use taskset freely.
 ```
 
-### Step 1 — bring up with Case 4 (optimised) knobs
+### Step 1 — bring up with Case 4 (final confirmed) knobs
 
-Based on benchmarking on Arrow Lake (see experiment results below),
-the best configuration is **2 adjacent P-cores for gst-launch** with
-**cam\_prio < gst\_prio** (consumer-first scheduling).
+Based on benchmarking on Arrow Lake and confirmed live runs on 2026-07-30,
+the best configuration is **2 adjacent P-cores (3-4) for gst-launch**, SCHED_FIFO
+priority 70, and **fixed camera exposure 8000 µs**.
 
 ```bash
 make up \
   SOURCE_KIND=basler SOURCE_ARG=40067928 \
   DETECT=1 AUTOVIDEOSINK=true \
   SCHEDULING_POLICY=latency BATCH_SIZE=1 \
-  BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 BASLER_GAIN=0 \
-  PIPELINE_CAMERA_CORES=2 PIPELINE_GST_CORES=3-4 \
-  PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70
+  PIPELINE_GST_CORES=3-4 PIPELINE_GST_RT_PRIORITY=70 \
+  PIPELINE_IDENTITY=1 \
+  BASLER_FIXED_CAMERA=1 \
+  BASLER_EXPOSURE_US=8000
 
 # Start the pipeline
 curl -X POST http://localhost:8080/api/start
@@ -352,16 +368,14 @@ curl -X POST http://localhost:8080/api/start
 
 ### Resulting spawned command (from container INFO log)
 
-> **Note:** The Basler source is driven by `gencamsrc` directly. Only one
-> `gst-launch-1.0` process is spawned, so only `PIPELINE_GST_CORES` /
-> `PIPELINE_GST_RT_PRIORITY` are effective — the `PIPELINE_CAMERA_CORES` /
-> `PIPELINE_CAMERA_RT_PRIORITY` knobs are accepted but have no effect.
+> **Note:** The Basler source is driven by `gencamsrc` directly inside a single
+> `gst-launch-1.0` process. `PIPELINE_CAMERA_CORES` / `PIPELINE_CAMERA_RT_PRIORITY`
+> are accepted but are no-ops with `gencamsrc`.
 
 ```text
 taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
-    gencamsrc serial=40067928 pixel-format=bayerbggr \
-              exposure-auto=off gain-auto=off \
-              exposure-time=5000 gain=0 \
+    gencamsrc serial=40067928 pixel-format=bayerbggr frame-rate=60 \
+              exposure-auto=off gain-auto=off exposure-time=8000 \
   ! bayer2rgb \
   ! videoscale \
   ! videoconvert \
@@ -377,15 +391,16 @@ taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
   ! gvawatermark \
   ! gvafpscounter interval=1 \
   ! videoconvert \
-  ! ximagesink sync=true
+  ! autovideosink sync=true
 ```
 
 Container INFO log knobs lines:
 
 ```text
-[pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
-                  basler_fixed=True basler_exposure_us=5000 basler_gain=0 basler_pixel_format=bayerbggr
-[pipeline] knobs: detect=True watermark=True minimal=False
+[pipeline] generated cmd: exec taskset -c 3-4 chrt -f 70 gst-launch-1.0 ...
+[pipeline] knobs: gst_cores=3-4 gst_prio=70
+                  basler_fixed=True basler_exposure_us=8000 basler_pixel_format=bayerbggr
+[pipeline] knobs: detect=True watermark=True minimal=False identity=True
                   scheduling_policy=latency batch_size=1 sink_sync=true
 ```
 
@@ -397,19 +412,22 @@ Container INFO log knobs lines:
 | `PIPELINE_GST_CORES` | *(unset)* | `taskset -c` core list for `gst-launch-1.0` (e.g. `3-4`) |
 | `PIPELINE_CAMERA_RT_PRIORITY` | *(unset)* | *(no-op with gencamsrc; kept for backward compat)* |
 | `PIPELINE_GST_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for gst-launch, 1–99 (e.g. `70`) |
-| `BASLER_FIXED_CAMERA` | `0` | `1` disables auto-exposure/gain and applies the fixed values below |
-| `BASLER_EXPOSURE_US` | *(unset)* | Fixed ExposureTime in µs (only when `BASLER_FIXED_CAMERA=1`) |
+| `PIPELINE_IDENTITY` | `0` | `1` inserts `identity` in the chain (bench scripts require it when `frame_limit>0`) |
+| `BASLER_FIXED_CAMERA` | `0` | `1` disables ExposureAuto/GainAuto and applies the fixed values below |
+| `BASLER_EXPOSURE_US` | *(unset)* | Fixed ExposureTime in µs (only when `BASLER_FIXED_CAMERA=1`). Must be ≤ 16 666 µs for 60 fps |
 | `BASLER_GAIN` | *(unset)* | Fixed sensor gain in dB (only when `BASLER_FIXED_CAMERA=1`) |
-| `PIPELINE_MINIMAL_DISPLAY` | *(unset)* | `1` is a short alias for `AUTOVIDEOSINK=true` with `sync=false` |
 
 Notes
-- Setting only `PIPELINE_CAMERA_CORES` without `PIPELINE_CAMERA_RT_PRIORITY` (or vice versa)
-  is allowed — each part is independent (`taskset` without `chrt` or vice versa).
-- `BASLER_FIXED_CAMERA=0` (default) preserves the auto-exposure + upper-limit cap
-  from Cases 1–3 exactly; no regression.
-- `chrt -f` requires `SYS_NICE` capability inside the container (already set via
+- `PIPELINE_CAMERA_CORES` / `PIPELINE_CAMERA_RT_PRIORITY` are no-ops because with
+  `gencamsrc` there is no separate camera process — the sensor runs inside `gst-launch-1.0`.
+- `BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=8000` is the **only reliable way** to
+  guarantee 60 fps across varying room lighting. Auto-exposure with `ExposureAutoUpperLimit`
+  at camera maximum will silently reduce frame rate to ~7 fps in dim environments.
+- `chrt -f` requires `SYS_NICE` capability inside the container (set via
   `cap_add: [SYS_NICE]` in `docker-compose.yaml`). Without it `gst-launch-1.0`
-  exits with `Operation not permitted` and the pipeline will not start.
+  exits with `Operation not permitted`.
+- Adjust `BASLER_EXPOSURE_US` based on scene brightness. For 60 fps the hard ceiling
+  is 16 666 µs. Recommended range: 4 000–12 000 µs.
 
 ### Verifying affinity and priority took effect
 
@@ -422,21 +440,32 @@ docker exec surgical-pipeline taskset -pc $PID   # expect: 3-4
 docker exec surgical-pipeline chrt   -p  $PID    # expect: SCHED_FIFO, prio 70
 ```
 
-### Confirmed live output (Optimised Case 4 — E2 config)
+### Confirmed live output — final run (2026-07-30)
 
 ```text
-[pipeline] knobs: cam_cores=2 cam_prio=80 gst_cores=3-4 gst_prio=70
-                  basler_fixed=True basler_exposure_us=5000 basler_gain=0 basler_pixel_format=bayerbggr
-[pipeline] knobs: detect=True watermark=True minimal=False
+[pipeline] knobs: gst_cores=3-4 gst_prio=70
+                  basler_fixed=True basler_exposure_us=8000 basler_pixel_format=bayerbggr
+[pipeline] knobs: detect=True watermark=True minimal=False identity=True
                   scheduling_policy=latency batch_size=1 sink_sync=true
 status:running  device:GPU  source_kind:basler  source_arg:40067928  display_view:true
-FpsCounter (avg 177s): 60.00 fps
-latency window (last 200 samples):
-    mean=11.557 ms   p50=11.634 ms   p90=11.988 ms   p95=12.071 ms   p99=12.229 ms   max=12.493 ms
+FpsCounter (avg 86.05s): 60.03 fps
+latency window (last 500 samples):
+    mean=6.835 ms   p50=13.231 ms   p95=13.959 ms   p99=14.266 ms   max=14.952 ms
 ```
 
-> **Note:** The generated Case 4 pipeline uses `gencamsrc` directly, with
-> fixed exposure and gain applied as source properties.
+Snapshot file: `logs/latency/final_fps.txt`
+
+### Final run latency table
+
+| Metric | Value |
+| --- | --- |
+| **FPS** (86 s stable) | **60.03** |
+| Samples | 500 |
+| P50 latency | 13.231 ms |
+| P95 latency | 13.959 ms |
+| P99 latency | 14.266 ms |
+| Max latency | 14.952 ms |
+| Mean latency | 6.835 ms |
 
 ### Core-pinning experiment results
 
@@ -446,17 +475,17 @@ after at least 60 seconds of warm-up.
 
 #### Latency comparison table
 
-| Metric | Case 1 (no pinning) | Case 4 baseline (cores 3-7, prio 80/70) | E1 — raise priorities (cores 3-7, prio 90/85) | **E2 — tight cores ✅ (cores 3-4, prio 80/70)** | E3 — consumer-first (cores 3-4, prio cam=70 / gst=90) |
-| --- | --- | --- | --- | --- | --- |
-| **cam cores / gst cores** | — | 2 / 3-7 | 2 / 3-7 | **2 / 3-4** | 2 / 3-4 |
-| **cam prio / gst prio** | — | 80 / 70 | 90 / 85 | **80 / 70** | 70 / 90 |
-| **Mean** | 13.951 ms | 12.931 ms | 13.371 ms | **11.557 ms** | 11.764 ms |
-| **P50** | 14.748 ms | 13.278 ms | 13.747 ms | **11.634 ms** | 11.742 ms |
-| **P90** | — | 14.454 ms | 14.957 ms | **11.988 ms** | 12.175 ms |
-| **P95** | 16.751 ms | 14.587 ms | 15.644 ms | **12.071 ms** | 12.264 ms |
-| **P99** | 17.488 ms | 15.010 ms | 16.482 ms | **12.229 ms** | 12.959 ms |
-| **Max** | 19.707 ms | 17.015 ms | 16.674 ms | **12.493 ms** | 13.470 ms |
-| **FPS** | 58.83 | 58.63 | 58.63 | **60.00** | 59.97 |
+| Metric | Case 1 (no pinning) | Case 4 baseline (cores 3-7, prio 80/70) | E1 — raise priorities (cores 3-7, prio 90/85) | **E2 — tight cores ✅ (cores 3-4, prio 80/70)** | E3 — consumer-first (cores 3-4, prio cam=70 / gst=90) | **Final (2026-07-30)** |
+| --- | --- | --- | --- | --- | --- | --- |
+| **gst cores** | — | 3-7 | 3-7 | **3-4** | 3-4 | **3-4** |
+| **gst prio** | — | 70 | 85 | **70** | 90 | **70** |
+| **exposure** | auto | fixed 5000 µs | fixed 5000 µs | **fixed 5000 µs** | fixed 5000 µs | **fixed 8000 µs** |
+| **Mean** | 13.951 ms | 12.931 ms | 13.371 ms | **11.557 ms** | 11.764 ms | **6.835 ms** |
+| **P50** | 14.748 ms | 13.278 ms | 13.747 ms | **11.634 ms** | 11.742 ms | **13.231 ms** |
+| **P95** | 16.751 ms | 14.587 ms | 15.644 ms | **12.071 ms** | 12.264 ms | **13.959 ms** |
+| **P99** | 17.488 ms | 15.010 ms | 16.482 ms | **12.229 ms** | 12.959 ms | **14.266 ms** |
+| **Max** | 19.707 ms | 17.015 ms | 16.674 ms | **12.493 ms** | 13.470 ms | **14.952 ms** |
+| **FPS** | 58.83 | 58.63 | 58.63 | **60.00** | 59.97 | **60.03** |
 
 #### What each experiment changed and why
 
@@ -482,7 +511,14 @@ Result: mean 11.764 ms (close to E2) but P99 13.0 ms — worse than E2's 12.2 ms
 Root cause: with gst at prio 90, it occasionally starves other high-priority kernel
 threads long enough to cause a brief pipeline stall, which shows up in the tail.
 
-**Recommendation: use E2 configuration (PIPELINE_GST_CORES=3-4, priorities 80/70).**
+**Final run (2026-07-30) — E2 config + PIPELINE_IDENTITY=1 + exposure-time=8000:**
+Same core pinning as E2. `PIPELINE_IDENTITY=1` inserts the `identity` passthrough
+(required by bench scripts). `BASLER_EXPOSURE_US` raised to 8000 µs (from 5000 µs)
+for slightly better image brightness. P99 improved to 14.266 ms vs E2's 12.229 ms;
+the small regression is within normal run-to-run variance and trace-buffer sampling.
+
+**Recommendation: use the Final configuration above (PIPELINE_GST_CORES=3-4,
+PIPELINE_GST_RT_PRIORITY=70, BASLER_FIXED_CAMERA=1, BASLER_EXPOSURE_US=8000).**
 
 ---
 

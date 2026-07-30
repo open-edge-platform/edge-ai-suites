@@ -11,6 +11,8 @@ time without introducing new pipeline shapes:
     BATCH_SIZE          -> gvadetect batch-size=<N>           (e.g. 1)
     AUTOVIDEOSINK       -> render popup + set sink sync=true|false
     DETECT              -> include/skip the gvadetect stage
+    PIPELINE_IDENTITY   -> include/skip the passthrough `identity` element
+    PIPELINE_SINK_SYNC  -> force sink `sync=true|false` (aka clock-sync)
 """
 from __future__ import annotations
 
@@ -54,9 +56,15 @@ def _build_source(
     if kind == "basler":
         camera_serial = shlex.quote(arg)
         pixel_format = shlex.quote(basler_pixel_format)
+        # Explicit frame-rate is REQUIRED: without it, gencamsrc lets the
+        # camera default to a very low rate (~7 fps observed on
+        # acA1920-150uc), which then propagates through the entire pipeline
+        # regardless of downstream tuning. Set to target_fps so the sensor
+        # actually delivers frames at the intended rate.
         source_props = [
             f"serial={camera_serial}",
             f"pixel-format={pixel_format}",
+            f"frame-rate={target_fps}",
         ]
         if basler_fixed_camera:
             source_props.extend(["exposure-auto=off", "gain-auto=off"])
@@ -91,6 +99,7 @@ def build(
     sink_sync: bool | None = None,
     enable_detect: bool = True,
     enable_watermark: bool = True,
+    enable_identity: bool = True,
     minimal: bool = False,
     basler_pixel_format: str = "bayerbggr",
     basler_fixed_camera: bool = False,
@@ -140,6 +149,11 @@ def build(
         return " ! ".join(raw_src + sink_tail)
 
     eos = f"identity eos-after={frame_limit}" if frame_limit > 0 else "identity"
+    # When frame_limit > 0 the `identity eos-after=N` element is structurally
+    # required to terminate the pipeline cleanly, so the toggle is ignored in
+    # that case. When frame_limit == 0 `identity` is a pure passthrough and
+    # can safely be dropped via PIPELINE_IDENTITY=0.
+    include_identity = enable_identity or frame_limit > 0
     model_arg = shlex.quote(ir_xml)
     gvadetect_parts = [
         f"gvadetect model={model_arg} device={dev} threshold={threshold}",
@@ -172,9 +186,11 @@ def build(
         if enable_watermark:
             detect_tail.append("gvawatermark")
         detect_tail.append("gvafpscounter interval=1")
-        chain = src_elems + [eos, pre_q, gvadetect, post_q] + detect_tail + sink_tail
+        head = src_elems + ([eos] if include_identity else [])
+        chain = head + [pre_q, gvadetect, post_q] + detect_tail + sink_tail
     else:
-        chain = src_elems + [eos, pre_q] + sink_tail
+        head = src_elems + ([eos] if include_identity else [])
+        chain = head + [pre_q] + sink_tail
     return " ! ".join(chain)
 
 
@@ -190,6 +206,7 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
     batch = int(batch_raw) if batch_raw.isdigit() else None
     detect_enabled = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
     watermark_enabled = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
+    identity_enabled = os.environ.get("PIPELINE_IDENTITY", "0").strip().lower() not in {"0", "false", "no"}
     minimal = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
     basler_pixel_format = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
     basler_fixed_camera = os.environ.get("BASLER_FIXED_CAMERA", "0").strip().lower() not in {"0", "false", "no"}
@@ -210,6 +227,7 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
             batch_size=batch,
             enable_detect=detect_enabled,
             enable_watermark=watermark_enabled,
+            enable_identity=identity_enabled,
             minimal=minimal,
             basler_pixel_format=basler_pixel_format,
             basler_fixed_camera=basler_fixed_camera,
