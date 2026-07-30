@@ -42,7 +42,9 @@ export interface UseCaseRegisterDeps {
   /**
    * Root directory that holds `use-cases/<use_case>/{prompt.md,evaluate_rules.py}`.
    * When `prompt_text` / `evaluate_rules_path` are omitted, register auto-picks
-   * these conventional files. Defaults to `process.cwd()` when unset.
+   * these conventional files. The MCP server passes `config.dataDir` here
+   * (`~/.mcp-smartbuilding` or `$SMARTBUILDING_DATA_DIR`); defaults to
+   * `process.cwd()` when unset.
    */
   baseDir?: string;
 }
@@ -420,10 +422,11 @@ function validateTextArtifactWritable(
 }
 
 /**
- * Stage a caller-supplied evaluate_rules.py into the conventional repo location
- * `use-cases/<uc>/evaluate_rules.py` and return the ABSOLUTE conventional path.
- * config.yaml / use_case_dict therefore always reference the stable in-repo
- * file, never the caller's (possibly temporary, possibly relative) location.
+ * Stage a caller-supplied evaluate_rules.py into the conventional data-dir
+ * location `use-cases/<uc>/evaluate_rules.py` and return the ABSOLUTE
+ * conventional path. config.yaml / use_case_dict therefore always reference
+ * the stable data-dir file, never the caller's (possibly temporary, possibly
+ * relative) location.
  * If the source already IS the conventional file, nothing is copied ("skipped").
  * Copy conflicts reuse writeTextArtifact semantics: identical content →
  * "unchanged"; different content without overwrite → throws.
@@ -676,7 +679,7 @@ export async function useCaseRegister(
     }
   }
 
-  // Stage the caller-supplied evaluate_rules.py into the conventional repo
+  // Stage the caller-supplied evaluate_rules.py into the conventional data-dir
   // location use-cases/<uc>/evaluate_rules.py (no-op when already there), then
   // smoke-test THAT file — the exact artifact the runtime rule engine will
   // execute — to confirm it runs and returns a well-formed AlertOutcome / null.
@@ -882,7 +885,7 @@ async function registerTaskOnly(
   // unconditional (not gated on persist). overwrite is honored by writeTextArtifact;
   // a same-content re-run returns "unchanged". The rules file is staged into the
   // conventional use-cases/<uc>/evaluate_rules.py so step 2 (register) can
-  // auto-discover it and config.yaml references the stable in-repo path.
+  // auto-discover it and config.yaml references the stable data-dir path.
   let stagedEvaluateRulesPath: string | undefined;
   try {
     const artifacts = ensureArtifactsStep(result);

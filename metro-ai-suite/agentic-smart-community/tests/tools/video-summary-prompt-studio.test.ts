@@ -27,6 +27,8 @@ test("main Skill stays slim and links every conditional reference", async () => 
     "references/prompt-authoring.md",
     "references/evaluate-rules.md",
     "references/inspect-existing.md",
+    "references/delete-use-case.md",
+    "references/final-report.md",
     "references/curl-fallback.md",
     "scripts/list_use_cases.sh",
   ]) {

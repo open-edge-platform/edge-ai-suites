@@ -216,14 +216,14 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   it, (4) re-run `use_case_validate`. With `persist: true`, also writes the entry back to
   `config.yaml` (comment-preserving). As step 2 of the two-step flow, omit `prompt_text` — it is
   auto-read from the file `generate_task` wrote. If `evaluate_rules_path` is supplied it is staged
-  to `use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
+  to `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
   e.g. staged by step 1), and that conventional absolute path is stored in `config.yaml` for
   runtime rule execution.
 - `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict`. The VLM
   delete is skipped when another use case shares the task. Every referencing monitor is detached
   (worker stopped, analytics source removed, DB row left offline with history retained). With
   `persist: true`, the entries are also removed from `config.yaml` and `monitors.yaml`, then
-  `use-cases/<use_case>/` is moved to `use-cases/.backup/`. Incomplete cleanup keeps `ok: true`
+  `<data_dir>/use-cases/<use_case>/` is moved to `<data_dir>/use-cases/.backup/`. Incomplete cleanup keeps `ok: true`
   for the removed in-memory entry but sets `degraded: true` and explains the failure in `warnings`.
 - `action: list` — **read-only** inventory of the live in-memory `use_case_dict`; needs no other
   arguments. Returns one entry per use case with `video_summary_task`, `schema_fields`,
@@ -234,7 +234,7 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
 `video-summary-prompt-studio` skill, then pass it via `prompt_text` (or let register auto-read
-`use-cases/<use_case>/prompt.md`).
+`<data_dir>/use-cases/<use_case>/prompt.md`).
 
 | Param | Type | Required | Description |
 |---|---|---|---|
@@ -242,13 +242,13 @@ Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with t
 | `use_case` | string | ✅ (not for `list`) | Key matching `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | — | VLM task name (default `<use_case>_monitor`; must not collide with builtins) |
 | `description` | string | — | Human description shown by `/v1/tasks` |
-| `evaluate_rules_path` | string | required for extended schema/custom alerts | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
+| `evaluate_rules_path` | string | required for extended schema/custom alerts | Path to a custom `evaluate_rules.py`; read for consistency checks, staged to `<data_dir>/use-cases/<use_case>/evaluate_rules.py`, smoke-tested, and the conventional absolute path persisted into `config.yaml` |
 | `reports` | object | — | `{ data_source, default_type, filter }` |
 | `summarize` | object | — | Per-clip summarize config `{ method, processor_kwargs }` |
-| `prompt_text` | string | ✅ for `generate_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `use-cases/<use_case>/prompt.md` |
+| `prompt_text` | string | ✅ for `generate_task` | Full 4-section prompt (Markdown or raw Python). For `register`, omit to auto-read `<data_dir>/use-cases/<use_case>/prompt.md` |
 | `schema_extensions` | array | — | Extra `video_summary_tasks` columns `{ name, type: text\|integer\|real, required }`. When omitted, inferred from prompt `KEY:` lines. Any extension selects the custom-rule path |
 | `overwrite` | boolean | — | Replace an existing entry (default false) |
-| `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default false) |
+| `persist` | boolean | — | Mirror the mutation into the booted `config.yaml` (default true; on unregister also strips bound monitors from `monitors.yaml` and archives `<data_dir>/use-cases/<use_case>/` to `<data_dir>/use-cases/.backup/`) |
 
 ---
 

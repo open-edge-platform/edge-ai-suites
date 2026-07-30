@@ -3,18 +3,19 @@
 #
 # Usage: list_use_cases.sh [config-file]
 #
-# CFG must be the file the MCP server booted from (dirname of its --config
-# argument) — persist=true writes back to THAT file, which is not necessarily
-# the config.yaml in your CWD.
+# CFG must be the file the MCP server booted from (its --config argument) —
+# persist=true writes back to THAT file. By default that is the config.yaml in
+# the server's data dir ($SMARTBUILDING_DATA_DIR or ~/.mcp-smartbuilding), not
+# any config.yaml in your CWD.
 set -euo pipefail
 
 if [[ $# -ge 1 ]]; then
   CFG="$1"
-elif [[ -f config.yaml ]]; then
-  CFG=config.yaml
 else
-  CFG=config.yaml.example
+  CFG="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/config.yaml"
 fi
+
+[[ -f "$CFG" ]] || { echo "config not found: $CFG (pass the server's booted config path explicitly)" >&2; exit 1; }
 
 if command -v yq >/dev/null 2>&1; then
   yq '.use_case_dict | keys' "$CFG"

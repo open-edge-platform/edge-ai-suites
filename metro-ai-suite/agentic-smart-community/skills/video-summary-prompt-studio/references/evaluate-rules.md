@@ -19,7 +19,9 @@ Contract:
   ownership but cannot prove that every extension changes the decision.
 - Pass its path as `evaluate_rules_path` to step 1 (`action=generate_task`).
   The file may live anywhere — the server stages it to
-  `use-cases/<use_case>/evaluate_rules.py` in its repo, smoke-tests the staged
+  `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (`<data_dir>` is the
+  server's data dir: `$SMARTBUILDING_DATA_DIR` or `~/.mcp-smartbuilding` by
+  default), smoke-tests the staged
   copy, and persists that path into config.
 
 ## Severity/event template (with an extension zone field)

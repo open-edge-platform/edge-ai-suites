@@ -29,6 +29,8 @@ Read references only at their stated trigger:
   `references/evaluate-rules.md` — `evaluate_rules.py` contract and templates.
 - **Overwrite/refine an existing use case:**
   `references/inspect-existing.md` — read its active schema and artifacts.
+- **Delete a use case:** `references/delete-use-case.md` — impact, confirmation, cascade verification.
+- **Final report:** `references/final-report.md` — report blocks, inventory rendering, fallbacks.
 - **MCP server unavailable:**
   `references/curl-fallback.md` — direct `/v1/tasks` task management only.
 - **Final inventory (MCP unavailable only):**
@@ -200,8 +202,9 @@ Extended alerting
   `{ data_source: "video_summary_tasks", default_type: "daily", filter: { status: "completed" } }`.
 - Omit `summarize`; register supplies
   `{ method: "SIMPLE", processor_kwargs: { levels: 1, level_sizes: [-1], process_fps: 2 } }`.
-- `persist: true`; `overwrite: false` unless the user explicitly updates an
-  existing use case.
+- `persist: true` (tool default; mirrors into the booted `<data_dir>/config.yaml`
+  — `<data_dir>` = `$SMARTBUILDING_DATA_DIR` or `~/.mcp-smartbuilding`);
+  `overwrite: false` unless the user explicitly updates an existing use case.
 - Never invent YAML fields such as `rules`, `alert_conditions`,
   `severity_levels`, or `cooldown_seconds`.
 
@@ -250,7 +253,7 @@ Call `action=generate_task` with the complete `prompt_text`.
 - Base alerting/report-only: omit `evaluate_rules_path`.
 - Extended alerting/custom behavior: pass `evaluate_rules_path`.
 - The server checks consistency, registers/updates the VLM task, and on success
-  writes `use-cases/<use_case>/prompt.md`; a rule file is staged beside it.
+  writes `<data_dir>/use-cases/<use_case>/prompt.md`; a rule file is staged beside it.
 - It does not ALTER schema or update `use_case_dict`/config.
 
 ### Step 2 — register the use case
@@ -295,32 +298,16 @@ Pass a custom `monitor_id` only for additional cameras; it must start with
 
 ## Delete a use case (confirmation gate)
 
-Deletion is destructive: it removes the use-case entry, stops and unregisters
-every bound monitor, and archives artifacts. It requires a mandatory cross-turn
-confirmation gate, just like registration.
+Deletion is destructive (entry removed, bound monitors unregistered, artifacts
+archived) and requires a mandatory cross-turn confirmation gate.
 
-1. On a delete request, first fetch the real impact with
-   `smartbuilding_use_case_register action=list` and
-   `smartbuilding_monitor_ctl action=list`, then display what deletion will do:
-   - remove `<use_case>` from the in-memory `use_case_dict` and the booted
-     config (`persist: true`);
-   - move its artifacts to `use-cases/.backup/<use_case>/` (recoverable);
-   - stop and unregister every monitor bound to it (list them by ID).
-2. Ask the user to explicitly confirm the deletion, for example
-   `confirm delete <use_case>`.
-3. End the assistant turn immediately. Do not call `action=unregister` in the
-   same turn that displays the impact.
-4. Call `action=unregister` with `persist: true` only after a later user
-   message explicitly confirms. The initial delete request itself is never
-   confirmation — even when it says "delete", "remove", or "drop" — because the
-   user has not yet seen the cascade impact. Silence, a recommendation, or the
-   agent's own summary is never confirmation. If the reply is ambiguous, ask
-   again and end the turn; if the user declines, do not delete.
-5. After unregister returns, verify `cascaded_monitors`: `db_row="deleted"`
-   means the monitor was fully unregistered; `db_row="kept_offline"` means the
-   row delete failed (e.g. existing alerts history) and it fell back to stop —
-   tell the user the monitor row remains offline, and that its monitors.yaml
-   entry was kept with `enabled: false` (flip back to `true` to re-enable).
+1. On a delete request, read `references/delete-use-case.md`, fetch the real
+   impact (`action=list` on both register and monitor tools), display it, and
+   ask for explicit confirmation (e.g. `confirm delete <use_case>`). End the
+   turn — the initial request is never confirmation, even when it says
+   "delete", because the user has not yet seen the cascade impact.
+2. Only after a later message explicitly confirms: `action=unregister` with
+   `persist: true`, then verify `cascaded_monitors` per the reference.
 
 ## Validation and final report
 
@@ -345,31 +332,8 @@ New Use Case
 ```
 
 Then report system inventory as ONE grouped view — use cases as headers,
-their monitors nested underneath — not two flat lists:
-
-- Fetch both sources: `smartbuilding_use_case_register action=list` (no other
-  arguments; reads the server's live in-memory `use_case_dict`, one entry per
-  use case with `video_summary_task`, `schema_fields`, `rule_path`,
-  `report_source`) and `smartbuilding_monitor_ctl action=list`.
-- Render every use case on one line with its VLM task and rule path; nest each
-  monitor bound to it (ID, source URL, online/offline) below. A use case with
-  no monitor gets `(no camera bound yet)` — that is expected right after a
-  registration without a stream URL, not an error.
-
-```text
-System Inventory
-  pet_safety     task: pet_safety_monitor   rules: evaluate_rules.py
-    cam_pet_safety -> rtsp://...   (online)
-  child_safety   task: child_safety_monitor rules: defaultRuleEvaluator
-    cam_child_01 -> rtsp://...     (offline)
-  fridge         task: fridge_monitor       rules: none
-    (no camera bound yet)
-```
-
-- If one inventory source is unavailable, report the other and state the gap.
-  Only when the MCP server itself is unavailable, fall back to
-  `scripts/list_use_cases.sh <server-config-path>` against the config the server
-  booted with.
+bound monitors nested underneath — fetched from `action=list` on both tools;
+format, example, and fallbacks per `references/final-report.md`.
 
 ## Failure handling
 

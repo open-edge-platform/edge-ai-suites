@@ -430,9 +430,11 @@ export function registerTools(
       overwrite: z.boolean().optional().describe(
         "When true, replace an existing use_case entry. Default false."
       ),
-      persist: z.boolean().optional().describe(
-        "When true, mirror the mutation to the config.yaml the server was booted from " +
-        "(comment-preserving via yaml.Document). Requires MCP server to have been started " +
+      persist: z.boolean().default(true).describe(
+        "Mirror the mutation to the config.yaml the server was booted from " +
+        "(comment-preserving via yaml.Document), default true. On unregister it also " +
+        "strips bound monitors from monitors.yaml and archives the use case's on-disk " +
+        "artifacts to <data_dir>/use-cases/.backup/. Requires MCP server to have been started " +
         "with --config <path>. Failure to write only produces a warning; in-memory " +
         "registration still stands."
       ),
