@@ -6,57 +6,64 @@ analysis:
   max_detections_per_run: 1000
   # NEW: fused event mode — each "detection" is a fusion_result record, not a bbox
   detection_schema: fusion_result   # "bbox_detection" (APM default) | "fusion_result"
-  # NEW: enable multimodal analysis (sensor + vision together)
-  multimodal: true
-  sensor_fields:
-    - Primary Weld Current
-    - Secondary Weld Voltage
-    - Pressure
-    - CO2 Weld Flow
-    - Feed
-    - Wire Consumed
+  multimodal: false
 
 policy:
   defect_classes:
-    - Bad_Weld
-    - Spattering
+    - Burnthrough
+    - Crater Cracks
+    - Excessive Convexity
+    - Excessive Penetration
+    - Lack of Fusion
+    - No Label
+    - No Weld
+    - Overlap
     - Porosity
-    - Crack
-    - Good_Weld       # included so policy can confirm "PASS" tickets
-    - No_Weld
-  alert_threshold: 0.7
+    - Porosity with Excessive Penetration
+    - Spatter
+    - Undercut
+    - Warping
+    - Good Weld
+  alert_threshold: 0.75
   critical_classes:
-    - Crack
-    - Bad_Weld
+    - Burnthrough
+    - Lack of Fusion
+    - Crater Cracks
   # NEW: fusion policy — require both modalities to agree for HIGH priority
-  fusion_mode: AND   # "AND" | "OR" — mirrors IEI-MM FUSION_MODE
-  # NEW: sensor threshold violations treated as independent alert triggers
-  sensor_policy:
-    Primary Weld Current:
-      max: 350         # Amperes
-      min: 80
-    Secondary Weld Voltage:
-      max: 40          # Volts
-      min: 15
-    Pressure:
-      max: 6.0         # bar
-      min: 2.0
-    CO2 Weld Flow:
-      max: 25          # L/min
-      min: 5
+  fusion_mode: OR   # "AND" | "OR" — mirrors IEI-MM FUSION_MODE
 
 evidence:
+  source_measurement: fusion_result
+  evidence_schema: fusion_result_v1
+  evidence_fields:
+    - time
+    - fused_decision
+    - fusion_classification
+    - fusion_confidence
+    - mode
+    - timeseries_anomaly
+    - timeseries_classification
+    - timeseries_confidence
+    - timeseries_timestamp
+    - ts_anomaly
+    - vision_anomaly
+    - vision_classification
+    - vision_confidence
+    - vision_rtsp_ts_diff_ms
+    - vision_timestamp
+  evidence_sort: time_desc
+  min_fusion_confidence: 0.6
+  max_records_per_evidence: 100
   retention_frames: 2000
-  # NEW: include weld images from SeaweedFS in evidence bundle
-  include_images: true
-  image_source: seaweedfs   # "none" | "seaweedfs"
-  max_images_per_evidence: 3
+  include_images: false
+  image_source: none
+  max_images_per_evidence: 0
 
 ticketing:
   priority_rules:
-    high:   ["Crack", "Bad_Weld"]
-    medium: ["Spattering", "Porosity"]
-    low:    ["No_Weld"]
+    high:   ["Burnthrough", "Lack of Fusion", "Crater Cracks", "Excessive Penetration"]
+    medium: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Spatter", "Warping", "Overlap", "Excessive Convexity"]
+    low:    ["No Weld", "Good Weld", "No Label"]
   # NEW: auto-create tickets in external system via MCP
   auto_create: true
   backend: jira   # "jira" | "servicenow" | "none"
