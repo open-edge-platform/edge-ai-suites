@@ -1,3 +1,0 @@
-/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
-/* SPDX-License-Identifier: Apache-2.0 */
-:root { --bg: #eef2ef; --panel: #fbfcfb; --ink: #17221b; --muted: #68736c; --line: #d7ded9; --green: #207a51; --lime: #c8f169; --red: #c4443c; --amber: #b7791f; --shadow: 0 16px 42px rgba(31, 51, 39, .08); font-family: "Aptos", "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }

@@ -1,9 +1,13 @@
 // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createRouter, createWebHistory } from "vue-router";
 
-export default createRouter({
+import { createRouter, createWebHistory } from "vue-router";
+import { routeList, notFoundAndNoPower } from "./routes";
+
+const router = createRouter({
   history: createWebHistory(),
-  routes: [{ path: "/", name: "dashboard", component: () => import("../views/dashboard/index.vue") }],
+  routes: [...notFoundAndNoPower, ...routeList],
 });
+
+export default router;
