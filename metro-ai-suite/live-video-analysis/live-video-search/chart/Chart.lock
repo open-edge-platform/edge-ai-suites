@@ -53,8 +53,8 @@ dependencies:
 - name: rtsp-test
   repository: file://subchart/rtsp-test
   version: 1.0.0
-- name: vss-collector
-  repository: file://subchart/vss-collector
+- name: metrics-manager
+  repository: file://subchart/metrics-manager
   version: 1.0.0
-digest: sha256:d375417527252456f013641c37e055adeafa0e9c3c779dca3b80ecc3d081ddec
-generated: "2026-07-28T09:44:10.68026409+05:30"
+digest: sha256:41b8ef830b344822bc6141af7ed034a810547686f4fedbddcc2f823bdb5259d2
+generated: "2026-07-30T13:25:51.468844061+05:30"

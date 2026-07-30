@@ -87,6 +87,9 @@ Common optional values:
 | `global.smartNvrStackTag` | Override tag for Smart NVR services | `latest` |
 | `global.pullPolicy` | Pull-policy override for application images selected by the shared or stack-specific tags | `Always`, `IfNotPresent`, or `Never` |
 | `global.vectordbBackend` | Vector database used by Multimodal DataPrep and Vector Retriever | `vdms` (default) or `milvus` |
+| `global.metricsManager.enabled` | Deploy Metrics Manager and enable live system/DataPrep metrics | `true` (default) or `false` |
+| `metrics-manager.image.repository` | Metrics Manager image repository | `intel/metrics-manager` |
+| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0-20260715-weekly` |
 | `global.proxy.httpProxy` | HTTP proxy | `http://proxy-example.com:000` |
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
@@ -115,6 +118,14 @@ Common optional values:
 > **OpenVINO Cache Note:** On GPU/NPU, MME and DataPrep write the first-time OpenVINO model compilation to `ovCacheDir` (default `/app/ov_models/ov_cache`) on the persistent models mount, so the compile is reused across pod restarts instead of recompiling on every start.
 
 > **Storage Note:** MME and DataPrep now use independent PVCs (`<release>-live-video-search-mmes-models-pvc` and `<release>-live-video-search-dataprep-models-pvc`, with per-service `*-data-pvc` fallback), so they are no longer coupled through a shared PVC.
+
+> **Metrics Manager Note:** Metrics Manager runs with host PID access,
+> privileged device access, and read-only `/sys` and `/run` mounts so it can
+> collect host metrics. It does not use or share a PVC. Multimodal DataPrep
+> publishes throughput metrics directly to `metrics-manager:9090`; NGINX exposes
+> only the health and SSE stream endpoints to the UI. Publishing is non-blocking,
+> so ingestion continues if Metrics Manager becomes unavailable. The bundled
+> DataPrep image must support `MM_DATAPREP_METRICS_MANAGER_URL`.
 
 ### 3. Build Helm Dependencies
 
@@ -214,6 +225,16 @@ kubectl describe pod <pod-name> -n $my_namespace
 kubectl logs <pod-name> -n $my_namespace
 ```
 
+When metrics are enabled, verify the same-origin endpoints through NGINX:
+
+```bash
+kubectl get pods -n $my_namespace -l app.kubernetes.io/name=metrics-manager
+kubectl port-forward svc/nginx 12345:80 -n $my_namespace
+curl http://localhost:12345/metrics-manager/health
+curl -N -H "Accept: text/event-stream" \
+  http://localhost:12345/metrics-manager/metrics/stream
+```
+
 ### Step 7: Accessing the application
 
 Nginx service runs as a reverse proxy in one of the pods and is exposed via NodePort by default. Get the host IP and NodePort using:
@@ -275,6 +296,11 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
 
 - **Search not returning expected results:**
   Verify `global.env.embeddingModelName`, confirm clips are ingested, and check that Vector Retriever is ready with the same backend selected by `global.vectordbBackend`.
+
+- **Live metrics are not displayed:**
+  Confirm `global.metricsManager.enabled` is `true`, the Metrics Manager pod is
+  ready, and `kubectl logs deployment/metrics-manager -n "$my_namespace"` does
+  not report missing host access.
 
 - **USB mode does not detect camera:**
   Confirm device path and override `frigate.usbCameraDevice` in `user_values_override.yaml` when not using `/dev/video0`.

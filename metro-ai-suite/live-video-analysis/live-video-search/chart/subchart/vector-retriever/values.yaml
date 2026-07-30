@@ -34,6 +34,12 @@ retriever:
   milvusTextField: text
   milvusMetadataField: ''
 
+embeddingService:
+  waitForHealthy: true
+  healthUrl: "http://multimodal-embedding-serving:8000/health"
+  healthTimeoutSeconds: 5
+  retryIntervalSeconds: 5
+
 podSecurityContext: {}
 securityContext:
   allowPrivilegeEscalation: false

@@ -18,7 +18,8 @@ data:
   SEARCH_ENDPOINT: "http://video-search:8000"
   SEARCH_DATAPREP_ENDPOINT: "http://multimodal-dataprep:8000"
   SEARCH_DATAPREP_TIMEOUT_MS: {{ .Values.global.env.searchDataprepTimeoutMs | default "600000" | quote }}
+  SEARCH_DATAPREP_POLL_MAX_RETRIES: {{ .Values.global.env.searchDataprepPollMaxRetries | default "3" | quote }}
+  SEARCH_DATAPREP_POLL_TIMEOUT_MS: {{ .Values.global.env.searchDataprepPollTimeoutMs | default "10000" | quote }}
+  SEARCH_DATAPREP_POLL_RETRY_DELAY_MS: {{ .Values.global.env.searchDataprepPollRetryDelayMs | default "500" | quote }}
   SUMMARY_FEATURE: {{ .Values.global.env.summaryFeature | quote }}
   SEARCH_FEATURE: {{ .Values.global.env.searchFeature | quote }}
-  DATAPREP_TELEMETRY_URL: {{ .Values.global.env.dataprepTelemetryUrl | quote }}
-  TELEMETRY_SIGNAL_DIR: "/app/.collector-signals"

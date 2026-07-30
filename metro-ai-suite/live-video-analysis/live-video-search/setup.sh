@@ -36,7 +36,7 @@ stop_containers() {
       -f docker/compose.search.yaml \
       -f docker/compose.search.milvus.yaml \
       -f docker/compose.smart-nvr.yaml \
-      -f docker/compose.telemetry.yaml \
+      -f docker/compose.metrics-manager.yaml \
       -f docker/compose.rtsp-test.yaml \
       down --remove-orphans
     if [ $? -ne 0 ]; then
@@ -96,7 +96,7 @@ elif [ "$1" = "--down" ]; then
 elif [ "$1" = "--clean-data" ]; then
     stop_containers || return 1
     echo -e "${YELLOW}Removing Docker volumes and networks created by the application... ${NC}"
-    docker volume rm docker_minio_data docker_pg_data docker_vdms_db docker_milvus_db docker_milvus_etcd docker_data_prep docker_dataprep-yolox-models docker_mosquitto_data docker_mosquitto_log docker_redis_data docker_frigate_recordings docker_collector_signals data-prep minikube 2>/dev/null || true
+    docker volume rm docker_minio_data docker_pg_data docker_vdms_db docker_milvus_db docker_milvus_etcd docker_data_prep docker_dataprep-yolox-models docker_mosquitto_data docker_mosquitto_log docker_redis_data docker_frigate_recordings data-prep minikube 2>/dev/null || true
     docker network rm docker_live-video-network live-video-network 2>/dev/null || true
     echo -e "${GREEN}Clean operation completed successfully! ${NC}"
     return 0
@@ -105,6 +105,7 @@ fi
 export APP_HOST_PORT=${APP_HOST_PORT:-12345}
 export HOST_IP=$(get_host_ip)
 export TAG=${TAG:-latest}
+export ENABLE_METRICS_MANAGER=${ENABLE_METRICS_MANAGER:-true}
 
 # Stack-specific image tags (override-able via env vars)
 export VSS_STACK_TAG=${VSS_STACK_TAG:-$TAG}
@@ -151,7 +152,7 @@ export POSTGRES_DB=${POSTGRES_DB:-video_summary_db}
 export VS_HOST_PORT=${VS_HOST_PORT:-7890}
 export VS_HOST=${VS_HOST:-video-search}
 export VS_ENDPOINT=http://${VS_HOST}:8000
-export VDMS_PIPELINE_MANAGER_UPLOAD=http://${PM_HOST}:3000
+export VIDEO_UPLOAD_ENDPOINT=http://${PM_HOST}:3000
 export VS_INDEX_NAME=${VS_INDEX_NAME:-video_frame_embeddings}
 if [ -z "$MULTIMODAL_EMBEDDING_MODEL" ]; then
     echo -e "${RED}ERROR: MULTIMODAL_EMBEDDING_MODEL is not set in your shell environment.${NC}" >&2
@@ -181,9 +182,9 @@ fi
 # Vector database / DataPrep / Embeddings
 export VDMS_VDB_HOST_PORT=${VDMS_VDB_HOST_PORT:-55555}
 export VDMS_VDB_HOST=${VDMS_VDB_HOST:-vdms-vector-db}
-export VDMS_DATAPREP_HOST_PORT=${VDMS_DATAPREP_HOST_PORT:-6016}
-export VDMS_DATAPREP_HOST=${VDMS_DATAPREP_HOST:-multimodal-dataprep}
-export VDMS_DATAPREP_ENDPOINT=http://${VDMS_DATAPREP_HOST}:8000
+export MM_DATAPREP_HOST_PORT=${MM_DATAPREP_HOST_PORT:-6016}
+export MM_DATAPREP_HOST=${MM_DATAPREP_HOST:-multimodal-dataprep}
+export MM_DATAPREP_ENDPOINT=http://${MM_DATAPREP_HOST}:8000
 export DEFAULT_BUCKET_NAME=${DEFAULT_BUCKET_NAME:-vdms-bucket}
 export FRAME_INTERVAL=${FRAME_INTERVAL:-15}
 export ENABLE_OBJECT_DETECTION=${ENABLE_OBJECT_DETECTION:-true}
@@ -330,7 +331,13 @@ if [ "$1" = "--setenv" ]; then
     return 0
 fi
 
-APP_COMPOSE_FILE="-f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml -f docker/compose.telemetry.yaml"
+APP_COMPOSE_FILE="-f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml"
+if [ "$ENABLE_METRICS_MANAGER" = "true" ]; then
+    APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.metrics-manager.yaml"
+    echo -e "${GREEN}Metrics Manager enabled.${NC}"
+else
+    echo -e "${YELLOW}Metrics Manager disabled (set ENABLE_METRICS_MANAGER=true to enable).${NC}"
+fi
 if [ "$VECTORDB_BACKEND" = "milvus" ]; then
     APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.search.milvus.yaml"
 fi

@@ -61,11 +61,15 @@ data:
   MM_DATAPREP_ALLOW_ORIGINS: "*"
   MM_DATAPREP_ALLOW_METHODS: "*"
   MM_DATAPREP_ALLOW_HEADERS: "*"
+  {{- if .Values.global.metricsManager.enabled }}
+  MM_DATAPREP_METRICS_MANAGER_URL: {{ .Values.metricsManager.url | quote }}
+  MM_DATAPREP_METRICS_MANAGER_TIMEOUT_SECONDS: {{ .Values.metricsManager.timeoutSeconds | quote }}
+  {{- end }}
   HF_HOME: "/home/appuser/.cache/huggingface"
   TRANSFORMERS_CACHE: "/home/appuser/.cache/huggingface"
   HUGGINGFACE_HUB_CACHE: "/home/appuser/.cache/huggingface"
   XDG_CACHE_HOME: "/home/appuser/.cache"
   FASTAPI_ENV: "development"
-  no_proxy: "{{ .Values.global.proxy.noProxy }},vdms-vector-db,milvus-standalone,minio-service,localhost"
+  no_proxy: "{{ .Values.global.proxy.noProxy }},vdms-vector-db,milvus-standalone,minio-service,metrics-manager,localhost"
   http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
   https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}

@@ -1,4 +1,6 @@
 global:
+  metricsManager:
+    enabled: true
   vectordbBackend: vdms
   volumeHostPath: ''
   usePvc: true
@@ -67,6 +69,10 @@ replicaCount: 1
 hostIPC: true
 
 imagePullPolicy: IfNotPresent
+
+metricsManager:
+  url: "http://metrics-manager:9090"
+  timeoutSeconds: "2"
 
 service:
   type: ClusterIP

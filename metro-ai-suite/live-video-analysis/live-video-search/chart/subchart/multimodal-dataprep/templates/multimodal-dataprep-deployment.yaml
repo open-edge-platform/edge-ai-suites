@@ -38,6 +38,7 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/multimodal-dataprep-configmap.yaml") . | sha256sum }}
       labels:
         app: multimodal-dataprep
+        app.kubernetes.io/component: multimodal-dataprep
         {{- include "lvs.dataprep.selectorLabels" . | nindent 8 }}
     spec:
       {{- if .Values.hostIPC }}
@@ -77,6 +78,12 @@ spec:
                 echo "waiting for minio-service";
                 sleep 3;
               done
+              {{- if .Values.global.metricsManager.enabled }}
+              until wget -q -O /dev/null http://metrics-manager:9090/health; do
+                echo "waiting for metrics-manager";
+                sleep 3;
+              done
+              {{- end }}
       containers:
         - name: multimodal-dataprep
           image: {{ include "lvs.dataprep.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.multimodalDataprep.repository .Values.imageOverride.repository) "tag" (default (include "lvs.dataprep.vssTag" .) .Values.imageOverride.tag)) }}

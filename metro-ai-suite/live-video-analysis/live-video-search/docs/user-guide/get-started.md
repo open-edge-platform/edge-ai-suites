@@ -15,14 +15,13 @@ live-video-search/
 ├── config/                        # Local configuration and assets
 │   ├── frigate-config/            # Frigate camera configs (active + templates)
 │   ├── mqtt-config/               # Mosquitto configuration
-│   ├── telemetry/                 # Telemetry collector configs
 │   └── nginx.conf                 # NGINX reverse proxy
 ├── data/                           # Runtime data (recordings, caches)
 ├── docker/                         # Compose files
 │   ├── compose.search.yaml        # VSS Search stack
 │   ├── compose.search.milvus.yaml # Optional Milvus backend
 │   ├── compose.smart-nvr.yaml      # Smart NVR stack
-│   └── compose.telemetry.yaml      # Telemetry collector
+│   └── compose.metrics-manager.yaml # Metrics Manager integration
 ├── docs/                           # Documentation
 │   └── user-guide/                # User guides
 ├── setup.sh                        # Main setup script
@@ -158,6 +157,20 @@ You can customize the application behavior by setting the following optional env
     Router continuous camera watcher and the Search MS directory watcher. They
     do not affect single event-rule clips or video summarization.
 
+6. **Optional: disable live metrics**:
+
+    Metrics Manager is enabled by default. Disable it before startup when host
+    and DataPrep throughput metrics are not required:
+
+    ```bash
+    export ENABLE_METRICS_MANAGER=false
+    ```
+
+    This integration requires a coordinated `multimodal-dataprep` image that
+    supports `MM_DATAPREP_METRICS_MANAGER_URL`. Publishing is non-blocking, so
+    ingestion continues if Metrics Manager becomes unavailable. GPU and NPU
+    panels remain empty when those devices are not present.
+
 ## Configure Cameras
 
 Edit `config/frigate-config/config.yml` to add or update camera inputs. This is the active Frigate configuration used at startup.
@@ -256,7 +269,7 @@ Search results include clip timestamps, confidence scores, and metadata. Use the
 - If results are empty, confirm cameras are enabled in **Configure Cameras** and clips have been ingested.
 - Confirm `vector-retriever` is healthy and that its backend matches `VECTORDB_BACKEND`.
 - Narrow time ranges improve query latency and relevance.
-- If telemetry is not visible, check that `vss-collector` is running.
+- If metrics are not visible, check that `metrics-manager` is healthy.
 
 ## Stop or Reset
 
@@ -268,9 +281,12 @@ source setup.sh --down
 source setup.sh --clean-data
 ```
 
-## Telemetry
+## Live Metrics
 
-Telemetry is enabled for Live Video Search and shows live system metrics in the VSS UI when the collector is connected.
+Metrics Manager is enabled by default. It collects host CPU, memory, and
+accelerator metrics, while Multimodal DataPrep publishes embedding throughput
+directly to it. The VSS UI consumes the combined stream through the same-origin
+NGINX endpoint.
 
 ## Troubleshooting
 
@@ -285,10 +301,15 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
   - `source setup.sh --clean-data`
   - `source setup.sh --start`
 
-### Telemetry information is not being displayed
+### Metrics are not being displayed
 
-- Verify `vss-collector` is running.
-- Check Pipeline Manager status: `/manager/metrics/status`.
+- Verify `metrics-manager` is running and healthy:
+  `docker compose -f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml -f docker/compose.metrics-manager.yaml ps`.
+- Check the same-origin health endpoint: `http://<host-ip>:12345/metrics-manager/health`.
+- Inspect the live stream with
+  `curl -N -H "Accept: text/event-stream" http://<host-ip>:12345/metrics-manager/metrics/stream`.
+- Check Metrics Manager logs: `docker logs metrics-manager`.
+- Confirm `ENABLE_METRICS_MANAGER` is not set to `false`.
 
 ### MQTT connection errors
 

@@ -63,6 +63,7 @@ dependencies:
   - name: rtsp-test
     version: 1.0.0
     repository: "file://subchart/rtsp-test"
-  - name: vss-collector
+  - name: metrics-manager
     version: 1.0.0
-    repository: "file://subchart/vss-collector"
+    repository: "file://subchart/metrics-manager"
+    condition: global.metricsManager.enabled

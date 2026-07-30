@@ -27,7 +27,9 @@ graph TD
   R --> G
   R --> M[Multimodal Embedding Serving]
   H --> I[VSS UI Configure Cameras and Search]
-  K[Telemetry Collector] --> H
+  L[Host CPU RAM GPU NPU] --> K[Metrics Manager]
+  D -->|Throughput metrics| K[Metrics Manager]
+  K -->|SSE through NGINX| I
 ```
 
 ## Learn More
@@ -40,7 +42,7 @@ graph TD
 
 ## Notes
 
-- Telemetry is **enabled** for this app and shown in the VSS UI when connected.
+- Metrics Manager is **enabled by default** and streams live system and DataPrep throughput metrics to the VSS UI.
 - Use VSS UI **Configure Cameras** to enable camera feeds for search ingestion.
 - Use `source setup.sh --start-usb-camera` to run Frigate with a USB camera input.
 - Set `VECTORDB_BACKEND=milvus` before startup to use Milvus instead of the default VDMS backend.

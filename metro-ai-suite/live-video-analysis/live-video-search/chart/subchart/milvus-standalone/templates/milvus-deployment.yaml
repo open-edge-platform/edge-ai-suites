@@ -38,14 +38,23 @@ spec:
             httpGet:
               path: /healthz
               port: metrics
-            initialDelaySeconds: 90
             periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /healthz
               port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 24
           volumeMounts:
             - name: data
               mountPath: /var/lib/milvus

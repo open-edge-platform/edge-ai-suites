@@ -9,7 +9,7 @@
 # This application consumes pre-built images and also images build from source from upstream projects:
 #   - VSS Search (Video Search and Summarization)
 #   - Smart NVR (Frigate-based network video recorder)
-#   - Telemetry (vss-collector)
+#   - Metrics Manager
 # 
 #
 # Quick Start:
@@ -27,6 +27,7 @@
 #   DATAPREP_DETECTION_DEVICE - Object detection device (default: CPU)
 #   MME_EMBEDDING_DEVICE      - Query embedding device (default: CPU)
 #   APP_HOST_PORT             - Main app port (default: 12345)
+#   ENABLE_METRICS_MANAGER    - Live system/DataPrep metrics (default: true)
 #
 # Required Secrets (must be set before deploy):
 #   MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
@@ -72,9 +73,6 @@ VSS_COMPONENTS := vss-ui pipeline-manager video-search multimodal-dataprep multi
 # Smart NVR stack components
 SMART_NVR_COMPONENTS := nvr-event-router
 
-# Telemetry stack components (uses fixed upstream tag)
-TELEMETRY_COMPONENTS := vss-collector
-
 # All first-party components
 COMPONENTS := $(VSS_COMPONENTS) $(SMART_NVR_COMPONENTS)
 
@@ -92,6 +90,7 @@ DATAPREP_EMBEDDING_DEVICE ?= CPU
 DATAPREP_DETECTION_DEVICE ?= CPU
 MME_EMBEDDING_DEVICE ?= CPU
 VECTORDB_BACKEND ?= vdms
+ENABLE_METRICS_MANAGER ?= true
 VS_WATCH_BATCH_SIZE ?= 10
 VS_BATCH_JOB_POLL_INTERVAL_SECONDS ?= 0.5
 VS_BATCH_JOB_TIMEOUT_SECONDS ?= 3600
@@ -113,7 +112,10 @@ else
 endif
 
 # Compose file set based on mode
-COMPOSE_BASE := -f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml -f docker/compose.telemetry.yaml
+COMPOSE_BASE := -f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml
+ifeq ($(ENABLE_METRICS_MANAGER),true)
+  COMPOSE_BASE += -f docker/compose.metrics-manager.yaml
+endif
 ifeq ($(VECTORDB_BACKEND),milvus)
   COMPOSE_BASE += -f docker/compose.search.milvus.yaml
 endif
@@ -144,6 +146,7 @@ define EXPORT_RUNTIME_ENV
 	export DATAPREP_DETECTION_DEVICE="$${DATAPREP_DETECTION_DEVICE:-$(DATAPREP_DETECTION_DEVICE)}"
 	export MME_EMBEDDING_DEVICE="$${MME_EMBEDDING_DEVICE:-$(MME_EMBEDDING_DEVICE)}"
 	export VECTORDB_BACKEND="$${VECTORDB_BACKEND:-$(VECTORDB_BACKEND)}"
+	export ENABLE_METRICS_MANAGER="$${ENABLE_METRICS_MANAGER:-$(ENABLE_METRICS_MANAGER)}"
 	export VS_WATCH_BATCH_SIZE="$${VS_WATCH_BATCH_SIZE:-$(VS_WATCH_BATCH_SIZE)}"
 	export VS_BATCH_JOB_POLL_INTERVAL_SECONDS="$${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-$(VS_BATCH_JOB_POLL_INTERVAL_SECONDS)}"
 	export VS_BATCH_JOB_TIMEOUT_SECONDS="$${VS_BATCH_JOB_TIMEOUT_SECONDS:-$(VS_BATCH_JOB_TIMEOUT_SECONDS)}"

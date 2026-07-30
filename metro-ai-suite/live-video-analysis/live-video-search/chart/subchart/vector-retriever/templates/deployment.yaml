@@ -23,10 +23,40 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.embeddingService.waitForHealthy }}
       initContainers:
-        - name: wait-for-query-embedding
-          image: busybox:1.36
-          command: ["sh", "-c", "until wget -q -O /dev/null http://multimodal-embedding-serving:8000/health; do echo waiting for multimodal-embedding-serving; sleep 3; done"]
+        - name: wait-for-multimodal-embedding
+          image: {{ include "lvs.vectorretriever.image" . | quote }}
+          imagePullPolicy: {{ include "lvs.imagePullPolicy" (.Values.global.pullPolicy | default .Values.image.pullPolicy) }}
+          command:
+            - python3
+            - -c
+          args:
+            - |
+              import os
+              import time
+              import urllib.request
+
+              url = os.environ["MME_HEALTH_URL"]
+              timeout = float(os.environ["MME_HEALTH_TIMEOUT_SECONDS"])
+              interval = float(os.environ["MME_HEALTH_RETRY_INTERVAL_SECONDS"])
+              while True:
+                  try:
+                      with urllib.request.urlopen(url, timeout=timeout) as response:
+                          if response.status == 200:
+                              print("Multimodal Embedding service is healthy")
+                              break
+                  except Exception as error:
+                      print(f"Waiting for Multimodal Embedding service: {error}")
+                  time.sleep(interval)
+          env:
+            - name: MME_HEALTH_URL
+              value: {{ .Values.embeddingService.healthUrl | quote }}
+            - name: MME_HEALTH_TIMEOUT_SECONDS
+              value: {{ .Values.embeddingService.healthTimeoutSeconds | quote }}
+            - name: MME_HEALTH_RETRY_INTERVAL_SECONDS
+              value: {{ .Values.embeddingService.retryIntervalSeconds | quote }}
+      {{- end }}
       containers:
         - name: vector-retriever
           image: {{ include "lvs.vectorretriever.image" . | quote }}

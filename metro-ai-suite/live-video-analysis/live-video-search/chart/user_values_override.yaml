@@ -15,6 +15,10 @@ global:
   usePvc: true
   keepPvc: true
 
+  # Enable live CPU, RAM, accelerator, and DataPrep throughput metrics.
+  metricsManager:
+    enabled: true
+
   # Storage mode
   # false = RWO: pods sharing PVCs are co-located on the same node (default, works with any storage class)
   # true  = RWX: pods can schedule freely across nodes (requires RWX-capable storage class e.g. longhorn)
@@ -67,6 +71,7 @@ global:
       detection:
         device: CPU # CPU | GPU | NPU
         key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+
 # Optional USB camera override (used with usb_camera_override.yaml profile)
 frigate:
   usbCameraDevice: '/dev/video0'

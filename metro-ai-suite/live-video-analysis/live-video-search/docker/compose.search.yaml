@@ -76,7 +76,7 @@ services:
       video-search:
         condition: service_started
     environment:
-      no_proxy: ${no_proxy},${EVAM_HOST},${VLM_HOST},${AUDIO_HOST},${RABBITMQ_HOST},${MINIO_HOST},${POSTGRES_HOST},${OVMS_HOST},${VDMS_DATAPREP_HOST},${VS_HOST},localhost
+      no_proxy: ${no_proxy},${EVAM_HOST},${VLM_HOST},${AUDIO_HOST},${RABBITMQ_HOST},${MINIO_HOST},${POSTGRES_HOST},${OVMS_HOST},${MM_DATAPREP_HOST},${VS_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       MINIO_PROTOCOL: "http:"
@@ -91,23 +91,21 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       SEARCH_ENDPOINT: ${VS_ENDPOINT}
-      SEARCH_DATAPREP_ENDPOINT: ${VDMS_DATAPREP_ENDPOINT}
+      SEARCH_DATAPREP_ENDPOINT: ${MM_DATAPREP_ENDPOINT}
       SEARCH_DATAPREP_TIMEOUT_MS: ${SEARCH_DATAPREP_TIMEOUT_MS:-90000}
+      SEARCH_DATAPREP_POLL_MAX_RETRIES: ${SEARCH_DATAPREP_POLL_MAX_RETRIES:-3}
+      SEARCH_DATAPREP_POLL_TIMEOUT_MS: ${SEARCH_DATAPREP_POLL_TIMEOUT_MS:-10000}
+      SEARCH_DATAPREP_POLL_RETRY_DELAY_MS: ${SEARCH_DATAPREP_POLL_RETRY_DELAY_MS:-500}
       SUMMARY_FEATURE: ${SUMMARY_FEATURE:-FEATURE_OFF}
       SEARCH_FEATURE: ${SEARCH_FEATURE:-FEATURE_ON}
       OTLP_TRACE_URL: ${OTLP_TRACE_URL:-}
       OTEL_CONSOLE_EXPORTER: ${OTEL_CONSOLE_EXPORTER:-false}
-      DATAPREP_TELEMETRY_URL: ${DATAPREP_TELEMETRY_URL:-http://multimodal-dataprep:8000/v1/dataprep/telemetry?limit=1}
-      TELEMETRY_SIGNAL_DIR: ${TELEMETRY_SIGNAL_DIR:-/app/.collector-signals}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    user: "0:0"
-    volumes:
-      - collector_signals:/app/.collector-signals
     networks:
       - live-video-network
 
@@ -173,15 +171,15 @@ services:
     ports:
       - "${VS_HOST_PORT}:8000"
     environment:
-      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
-      no_proxy_env: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
+      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${MM_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
+      no_proxy_env: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${MM_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       EMBEDDINGS_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
       EMBEDDINGS_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
       INDEX_NAME: ${VS_INDEX_NAME}
       RETRIEVER_ENDPOINT: ${VS_RETRIEVER_ENDPOINT:-http://vector-retriever:8000/query}
-      VIDEO_UPLOAD_ENDPOINT: ${VDMS_PIPELINE_MANAGER_UPLOAD}
+      VIDEO_UPLOAD_ENDPOINT: ${VIDEO_UPLOAD_ENDPOINT}
       WATCH_BATCH_SIZE: ${VS_WATCH_BATCH_SIZE:-10}
       BATCH_JOB_POLL_INTERVAL_SECONDS: ${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
       BATCH_JOB_TIMEOUT_SECONDS: ${VS_BATCH_JOB_TIMEOUT_SECONDS:-3600}
@@ -217,7 +215,8 @@ services:
     image: ${REGISTRY:-}multimodal-dataprep:${VSS_STACK_TAG:-${TAG:-latest}}
     hostname: multimodal-dataprep
     environment:
-      no_proxy: ${no_proxy},${VDMS_VDB_HOST},${MINIO_HOST},milvus-standalone,localhost
+      no_proxy: ${no_proxy},${VDMS_VDB_HOST},${MINIO_HOST},milvus-standalone,metrics-manager,localhost
+      NO_PROXY: ${NO_PROXY:-${no_proxy}},${VDMS_VDB_HOST},${MINIO_HOST},milvus-standalone,metrics-manager,localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       MM_DATAPREP_APP_HOST: multimodal-dataprep
@@ -263,7 +262,7 @@ services:
       MM_DATAPREP_ROI_CONSOLIDATION_CONTEXT_SCALE: ${ROI_CONSOLIDATION_CONTEXT_SCALE:-0.2}
       MM_DATAPREP_FRAMES_TEMP_DIR: ${FRAMES_TEMP_DIR:-/tmp/dataprep}
       MM_DATAPREP_DETECTION_MODEL_DIR: ${YOLOX_MODELS_MOUNT_PATH}
-      MM_DATAPREP_LOG_LEVEL: ${VDMS_DATAPREP_LOG_LEVEL:-INFO}
+      MM_DATAPREP_LOG_LEVEL: ${MM_DATAPREP_LOG_LEVEL:-INFO}
       MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS: ${MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS:-true}
       MM_DATAPREP_ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
       MM_DATAPREP_ALLOW_METHODS: ${ALLOW_METHODS:-*}
@@ -274,7 +273,7 @@ services:
             hard: 65535
     ipc: host
     ports:
-      - "${VDMS_DATAPREP_HOST_PORT}:8000"
+      - "${MM_DATAPREP_HOST_PORT}:8000"
     depends_on:
       vdms-vector-db:
         condition: service_started
@@ -314,8 +313,8 @@ services:
       - "${EMBEDDING_SERVER_PORT:-9777}:8000"
     ipc: host
     environment:
-      no_proxy: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
-      no_proxy_env: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
+      no_proxy: ${no_proxy},${MINIO_HOST},${MM_DATAPREP_HOST},localhost
+      no_proxy_env: ${no_proxy},${MINIO_HOST},${MM_DATAPREP_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       EMBEDDING_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
@@ -413,8 +412,6 @@ volumes:
   data_prep:
     driver: local
   dataprep-yolox-models:
-    driver: local
-  collector_signals:
     driver: local
 
 networks:
