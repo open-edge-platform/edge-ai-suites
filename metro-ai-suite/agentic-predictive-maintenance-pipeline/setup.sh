@@ -84,10 +84,27 @@ validate_env() {
     source "${env_file}"
     set +a
 
-    # Restore caller-supplied overrides
-    [ -n "${_pre_llm_mode}" ] && export LLM_MODE="${_pre_llm_mode}"
-    [ -n "${_pre_llm_device}" ] && export LLM_DEVICE="${_pre_llm_device}"
-    [ -n "${_pre_dl_device}" ] && export DL_DEVICE="${_pre_dl_device}"
+    # Restore caller-supplied overrides. Since this script is normally
+    # sourced (`source setup.sh ...`), variables exported in a *previous*
+    # invocation stay in the shell and would otherwise silently keep
+    # overriding the .env file on every subsequent run — warn loudly so a
+    # stale exported LLM_DEVICE/LLM_MODE/DL_DEVICE isn't mistaken for the
+    # .env file being ignored/broken.
+    if [ -n "${_pre_llm_mode}" ] && [ "${_pre_llm_mode}" != "${LLM_MODE:-}" ]; then
+        echo -e "${YELLOW}NOTE: LLM_MODE is already exported in this shell ('${_pre_llm_mode}') and overrides '${LLM_MODE:-}' from ${env_file}.${NC}" >&2
+        echo -e "${YELLOW}      Run 'unset LLM_MODE' if you meant to use the value from the env file.${NC}" >&2
+        export LLM_MODE="${_pre_llm_mode}"
+    fi
+    if [ -n "${_pre_llm_device}" ] && [ "${_pre_llm_device}" != "${LLM_DEVICE:-}" ]; then
+        echo -e "${YELLOW}NOTE: LLM_DEVICE is already exported in this shell ('${_pre_llm_device}') and overrides '${LLM_DEVICE:-}' from ${env_file}.${NC}" >&2
+        echo -e "${YELLOW}      Run 'unset LLM_DEVICE' if you meant to use the value from the env file.${NC}" >&2
+        export LLM_DEVICE="${_pre_llm_device}"
+    fi
+    if [ -n "${_pre_dl_device}" ] && [ "${_pre_dl_device}" != "${DL_DEVICE:-}" ]; then
+        echo -e "${YELLOW}NOTE: DL_DEVICE is already exported in this shell ('${_pre_dl_device}') and overrides '${DL_DEVICE:-}' from ${env_file}.${NC}" >&2
+        echo -e "${YELLOW}      Run 'unset DL_DEVICE' if you meant to use the value from the env file.${NC}" >&2
+        export DL_DEVICE="${_pre_dl_device}"
+    fi
 
     # HOST_IP is optional — default to localhost if not set in the env file
     export HOST_IP="${HOST_IP:-localhost}"

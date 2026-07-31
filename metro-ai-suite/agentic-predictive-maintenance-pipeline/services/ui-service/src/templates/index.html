@@ -84,7 +84,7 @@
       {% endif %}
 
       <form method="POST" action="/run" class="run-now-form">
-        <fieldset class="pipeline-config" {{ 'disabled' if active_run else '' }}>
+        <fieldset class="pipeline-config" id="pipeline-config-fieldset" {{ 'disabled' if active_run else '' }}>
           <legend>&#9881; Pipeline Configuration</legend>
           <div class="config-grid">
             <label class="config-field">

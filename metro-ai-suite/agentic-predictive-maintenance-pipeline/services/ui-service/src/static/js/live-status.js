@@ -119,6 +119,13 @@ async function pollStatus() {
       runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Inspection";
     }
 
+    // Re-enable the Device/Video config fields once the run finishes — the
+    // fieldset is disabled server-side only for the initial page render
+    // (based on active_run at load time), so without this it would stay
+    // grayed out forever after a run completes since this page never reloads.
+    const configFieldset = document.getElementById("pipeline-config-fieldset");
+    if (configFieldset) configFieldset.disabled = !!data.active_run;
+
     const phaseHint = document.getElementById("run-phase-hint");
     if (phaseHint) phaseHint.textContent = phaseHintText(data.active_run);
   } catch (err) {
