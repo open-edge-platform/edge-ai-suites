@@ -21,10 +21,11 @@ trap 'rm -rf "$WORK"' EXIT
 fail() { echo "ERROR: $*"; exit 1; }
 
 # Run the checker; print nothing, return its exit code.
+# Optional 2nd argument overrides the rules file (used by the duplicate-rule mutation).
 run_checker() {
-  local report="$1" out rc
+  local report="$1" rules="${2:-$RULES_FILE}" out rc
   set +e
-  out=$(RULES_FILE="$RULES_FILE" REPORT_FILE="$report" "$CHECKER" 2>&1)
+  out=$(RULES_FILE="$rules" REPORT_FILE="$report" "$CHECKER" 2>&1)
   rc=$?
   set -e
   printf '%s\n' "$out" > "$WORK/last-output.txt"
@@ -84,6 +85,22 @@ check_mutations_are_detected() {
       fail "Mutation '$m' was NOT detected; the report format contract is not enforced."
     fi
   done
+
+  # g) A rule row is duplicated in the RULES file -> the checker must reject the rules file
+  #    instead of silently de-duplicating it (which would hide a real authoring error).
+  awk 'BEGIN{done=0} { print } /^\| [0-9]+[.][0-9]+ \|/ && !done { done=1; print }' \
+    "$RULES_FILE" > "$WORK/mut-dup-rules.md"
+  if run_checker "$FIXTURE" "$WORK/mut-dup-rules.md"; then
+    cat "$WORK/last-output.txt"
+    fail "A duplicated rule ID in the rules file was NOT detected."
+  fi
+  grep -q "Duplicate rule ID" "$WORK/last-output.txt" \
+    || fail "Duplicated rule ID was rejected, but not with the expected error message."
+
+  # ...and the skeleton generator must refuse the same rules file.
+  if RULES_FILE="$WORK/mut-dup-rules.md" "$CHECKER" --emit-skeleton >/dev/null 2>&1; then
+    fail "--emit-skeleton accepted a rules file with a duplicated rule ID."
+  fi
 }
 
 # -----------------------------------------------------------------------------

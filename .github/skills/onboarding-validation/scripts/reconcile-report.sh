@@ -88,8 +88,9 @@ NBSP=$'\xc2\xa0'
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-# Emit "<id><TAB><short>" for every rule in the rules file, stopping at the Rationale section
-# (explanatory, not part of the rule set).
+# Emit "<id><TAB><short>" for every rule row in the rules file, stopping at the Rationale section
+# (explanatory, not part of the rule set). Rows are emitted VERBATIM -- no de-duplication -- so that
+# a duplicated rule ID in the rules file surfaces as an error instead of being silently merged.
 extract_rules() {
   awk -F'|' -v STOP="$RATIONALE_STOP_RE" -v ROW="$RULE_ROW_RE" -v CI="$COL_ID" -v CSH="$COL_SHORT" '
     $0 ~ STOP { exit }
@@ -97,9 +98,21 @@ extract_rules() {
       id=$CI; short=$CSH
       gsub(/^[ \t]+|[ \t]+$/, "", id)
       gsub(/^[ \t]+|[ \t]+$/, "", short)
-      if (!(id in seen)) { seen[id]=1; printf "%s\t%s\n", id, short }
+      printf "%s\t%s\n", id, short
     }
   ' "$1"
+}
+
+# A duplicate rule ID is a rules-file error: it makes the rule total ambiguous and would let two
+# different rules share one report row. Fail loudly in BOTH modes rather than de-duplicating.
+assert_unique_rule_ids() {
+  local dupes
+  dupes=$(extract_rules "$1" | cut -f1 | sort | uniq -d || true)
+  if [[ -n "$dupes" ]]; then
+    echo "ERROR: Duplicate rule ID(s) in $1:" >&2
+    printf '%s\n' "$dupes" >&2
+    die "Each rule ID MUST appear exactly once in the rules file."
+  fi
 }
 
 band_for_score() {
@@ -234,6 +247,7 @@ if [[ "${1:-}" == "--emit-skeleton" ]]; then
   : "${RULES_FILE:?ERROR: RULES_FILE not set. Export it before running.}"
   [[ -f "$RULES_FILE" ]]  || die "Rules file not found: $RULES_FILE"
   [[ -f "$FORMAT_FILE" ]] || die "Report format reference not found: $FORMAT_FILE"
+  assert_unique_rule_ids "$RULES_FILE"
   emit_skeleton "$RULES_FILE"
   exit 0
 elif [[ -n "${1:-}" ]]; then
@@ -283,11 +297,12 @@ check_identity_row() {
 check_identity_row "AI agent" "$AGENT_ROW_RE" || ERRORS=1
 check_identity_row "Model" "$MODEL_ROW_RE" || ERRORS=1
 
-# 1. Extract canonical rule IDs from the rules file (stop at the Rationale table), then
-#    de-duplicate as a safety net. The "## Rationale for Key Thresholds" section is explanatory,
-#    not part of the rule set; stopping at its heading means its rows can never inflate the count.
-#    There is NO merging of real rules here -- a duplicate rule ID is a rules-file error.
-extract_rules "$RULES_FILE" | cut -f1 | sort -u > "$TMPDIR/reconcile_rules.txt"
+# 1. Extract canonical rule IDs from the rules file (stop at the Rationale table). The
+#    "## Rationale for Key Thresholds" section is explanatory, not part of the rule set; stopping
+#    at its heading means its rows can never inflate the count. Duplicate rule IDs are rejected
+#    first -- they are a rules-file error and MUST NOT be silently merged.
+assert_unique_rule_ids "$RULES_FILE"
+extract_rules "$RULES_FILE" | cut -f1 | sort > "$TMPDIR/reconcile_rules.txt"
 
 # 2. Extract rule IDs present in the report's Detailed Results table
 grep -E "$RULE_ROW_RE" "$REPORT_FILE" \
