@@ -147,8 +147,8 @@ check_contract_not_drifted() {
 
 # -----------------------------------------------------------------------------
 check_references_and_links() {
-  echo "[5/5] Reference files are linked and all relative links resolve..."
-  local missing=0 rel link
+  echo "[5/5] Bundled files are referenced from SKILL.md and all relative links resolve..."
+  local missing=0 rel link root
 
   while IFS= read -r rel; do
     rel="references/${rel##*/}"
@@ -157,6 +157,18 @@ check_references_and_links() {
       missing=1
     fi
   done < <(find "$SKILL_DIR/references" -maxdepth 1 -type f | sort)
+
+  # Root-level companion files (benchmark.md, ...) must be named in SKILL.md too. An agent only
+  # discovers a bundled file through an explicit reference, and skill-validator warns about
+  # "potentially unreferenced file" otherwise. SKILL.md itself is the entry point, so it is exempt.
+  while IFS= read -r root; do
+    root="${root##*/}"
+    [[ "$root" == "SKILL.md" ]] && continue
+    if ! grep -Fq "$root" "$SKILL_FILE"; then
+      echo "ERROR: Unreferenced root-level file: $root (name it in SKILL.md so agents can find it)"
+      missing=1
+    fi
+  done < <(find "$SKILL_DIR" -maxdepth 1 -type f -name '*.md' | sort)
 
   while IFS= read -r link; do
     [[ -z "$link" ]] && continue

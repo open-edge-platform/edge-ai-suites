@@ -41,6 +41,7 @@ Validate the get-started experience of a containerized application from the pers
 | Rules | `references/rules-onboarding-validation.md` (**normative**) |
 | Charter | `references/rules-charter.md` (**normative**) |
 | Checker | `scripts/reconcile-report.sh` (also generates the report skeleton) |
+| Benchmark | `benchmark.md` — validation runs, eval coverage, open gaps (maintainers only; not read during a run) |
 
 > **Inherits `references/rules-charter.md`.** This skill ships with the full charter so it remains self-contained after installation. The operational detail here (isolation, "No workarounds", reconciliation, faithful reporting) is the concrete *realization* of those principles, not a replacement — if anything here appears to conflict with the bundled charter, **the charter wins**.
 
