@@ -1,6 +1,6 @@
 # Get Started
 
-The Smart Intersection Sample Application is a modular sample application designed to help
+The Smart Corridor Sample Application is a modular sample application designed to help
 developers create intelligent intersection monitoring solutions. By leveraging AI and sensor
 fusion, this sample application demonstrates how to achieve accurate traffic detection,
 congestion management, and real-time alerting.
@@ -48,30 +48,48 @@ camera pipelines and sends tracking data to the parent's scene controller.
 ### Deployment Architecture
 
 ```
-Parent Machine (e.g., 10.223.22.95)
+Parent Machine
 ├── SceneScape Controller (aggregates all scenes)
 ├── SceneScape Manager (Web UI)
 ├── DLStreamer (local cameras: camera1–camera4)
 ├── MQTT Broker (port 1883 TLS, 1882 internal)
 └── CA Server (port 8888, serves CA cert to parent)
 
-Child Machine (e.g., 10.223.22.20)
+Child Machine
 ├── DLStreamer (child cameras: camera401–camera404)
 ├── MQTT Broker (port 1883 TLS)
 └── CA Server (port 8888, serves CA cert to parent)
 ```
 
-> **Note:** For a single-node deployment (no remote child), skip this section and go
+### Important Notes for Multi-Machine Deployments
+
+- **Deploy child nodes first**: The parent's `ca-bundle.sh` fetches CA certificates from
+  child nodes via HTTP (port 8888). **Child nodes must be installed and running before the parent node installation.**
+- **Network access**: Port 8888 (CA server) and port 1883 (MQTT TLS) must be accessible
+  between machines.
+- **Scene configuration**: After deployment, add the remote child scene in the SceneScape
+  Web UI under the parent scene's settings (using the child's broker IP and port 1883).
+- **Time synchronization**: Ensure NTP is synchronized across all machines to avoid a delayed or no tracking behaviour in Smart-Corridor Scene.
+
+> **Note:** For a single-node deployment (no remote child), skip this below section and go
 > directly to [Deploy a Parent Node](#deploy-a-parent-node).
 
 ### Deploy a Child Node
 
-On the child node, clone the repo and run the install script **without** setting
-`TOTAL_REMOTE_CHILD` in the `.env` file:
+If there are multiple child nodes to be deployed, then number each node deployment(**REMOTE_CHILD_DEPLOY**) starting from `1` in their respective [.env](../../../.env) file:
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
 
-2. Run the install script:
+2. The Smart-Corridor needs to know which Child node this deployment is. So, configure `REMOTE_CHILD_DEPLOY` as `1` or `2` or `3` in the [.env](../../../.env) file to select a specific child scene data and pipeline configuration:
+
+   ```bash
+   REMOTE_CHILD_DEPLOY=1
+   ```
+
+   - If `REMOTE_CHILD_DEPLOY=1` is set, the installer picks `smart-corridor-child-1-ri.tar.bz2` and `config_child_1.json`.
+   - If `REMOTE_CHILD_DEPLOY=2` is set, the installer picks `smart-corridor-child-2-ri.tar.bz2` and `config_child_2.json`, and so on.
+
+3. Run the install script:
 
    - Use the installation script to configure the application and download required models:
 
@@ -83,28 +101,42 @@ On the child node, clone the repo and run the install script **without** setting
     > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
     > `./install.sh smart-corridor <HOST_IP>`
 
-   The installer detects a child deployment (no `TOTAL_REMOTE_CHILD` in `.env`) and
+   The installer detects which child node deployment it is and
    automatically:
-   - Uses child-specific scene data (`smart-corridor-child-ri.tar.bz2`)
-   - Uses child-specific pipeline config (`config_child.json` with camera401–camera404)
+   - Uses child-specific scene data (`smart-corridor-child-${REMOTE_CHILD_DEPLOY}-ri.tar.bz2`)
+   - Uses child-specific pipeline config (`config_child_${REMOTE_CHILD_DEPLOY}.json`)
 
-3. Start the application:
+4. **Start the Application**:
+   - Export admin password as environment variable:
 
-   ```bash
-   export SUPASS=$(cat ./smart-corridor/src/secrets/supass)
-   docker compose up -d
-   ```
+     ```bash
+     export SUPASS=$(cat ./smart-corridor/src/secrets/supass)
+     ```
+
+   - Download container images with Application microservices and run with Docker Compose:
+
+     ```bash
+     docker compose up -d
+     ```
+
+- Repeat the above steps in [Deploy a Child Node](#deploy-a-child-node) section for all the Child node deployments by incrementing the REMOTE_CHILD_DEPLOY value for every other Child node deployment.
 
 ### Deploy a Parent Node
 
-On the parent machine, configure the `.env` file to declare how many remote child nodes exist:
+On the parent machine, configure the [.env](../../../.env) file to declare how many remote child nodes exist:
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
 
-2. Configure the `.env` file with the remote child IPs:
+2. Configure the [.env](../../../.env) file with the remote child IPs:
+
+   For Single Node deployment with no child nodes:
 
    ```bash
-   SAMPLE_APP=smart-corridor
+   TOTAL_REMOTE_CHILD=0
+   ```
+   For Multi Node deployment, mention total number of remote child nodes that were deployed and corresponding Host IP addresses:
+
+   ```bash
    TOTAL_REMOTE_CHILD=1
    REMOTE_IP_1=<CHILD_MACHINE_IP>
    ```
@@ -115,12 +147,6 @@ On the parent machine, configure the `.env` file to declare how many remote chil
    TOTAL_REMOTE_CHILD=2
    REMOTE_IP_1=10.223.22.20
    REMOTE_IP_2=10.223.22.30
-   ```
-
-   For Single Node deployment with no child nodes:
-
-   ```bash
-   TOTAL_REMOTE_CHILD=0
    ```
 
 3. Run the install script:
@@ -135,25 +161,14 @@ On the parent machine, configure the `.env` file to declare how many remote chil
     > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
     > `./install.sh smart-corridor <HOST_IP>`
 
-   The installer detects a parent deployment and automatically:
-   - Keeps the parent pipeline config (camera1–camera4 + camera5)
+   The installer detects a parent node deployment (`TOTAL_REMOTE_CHILD` defined in `.env`) and
+   automatically:
+   - Uses parent-specific scene data (`smart-corridor-parent-ri.tar.bz2`)
+   - Uses parent-specific pipeline config (`config_parent.json`)
    - Runs `ca-bundle.sh` to fetch CA certificates from each remote child and build a
      combined trust bundle for TLS connectivity
 
- 
-### Important Notes for Multi-Machine Deployments
-
-- **Deploy child nodes first**: The parent's `ca-bundle.sh` fetches CA certificates from
-  child nodes via HTTP (port 8888). **Child nodes must be running before the parent node installation.**
-- **Network access**: Port 8888 (CA server) and port 1883 (MQTT TLS) must be accessible
-  between machines.
-- **Scene configuration**: After deployment, add the remote child scene in the SceneScape
-  Web UI under the parent scene's settings (using the child's broker IP and port 1883).
-- **Time synchronization**: Ensure NTP is synchronized across all machines to avoid tracking lag.
-
-## Run the Application
-
-1. **Start the Application**:
+4. **Start the Application**:
    - Export admin password as environment variable:
 
      ```bash
@@ -182,8 +197,8 @@ On the parent machine, configure the `.env` file to declare how many remote chil
    - Grafana Dashboard
    - DL Streamer Pipeline Server
    - MQTT Broker
-   - Node-RED (for applications without Scenescape)
-   - Scenescape services (for Smart Intersection only)
+   - Node-RED
+   - Scenescape services
 
    </details>
 
@@ -288,7 +303,7 @@ Follow the [Trusted Compute baremetal installation guide](https://github.com/ope
 
 > **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
 
-### 2. Deploy the Smart Intersection Sample Application with Trusted Compute
+### 2. Deploy the Smart Corridor Sample Application with Trusted Compute
 
 **Configure Network Settings**
 
@@ -334,7 +349,7 @@ To uninstall Trusted Compute from the host, refer to the [Trusted Compute docume
 
 ## Other Deployment Options
 
-Choose one of the following methods to deploy the Smart Intersection Sample Application:
+Choose one of the following methods to deploy the Smart Corridor Sample Application:
 
 - **[Deploy Using Helm](./get-started/deploy-with-helm.md)**: Use Helm to deploy the
   application to a Kubernetes cluster for scalable and production-ready deployments.
@@ -344,7 +359,7 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 With AI systems handling sensitive city data and making autonomous decisions, robust security
 is essential. Intel platforms provide built-in security features to protect data, infrastructure,
 and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
-that uses the example of Smart Intersection to show how to secure Open Edge Platform
+that uses the example of Smart Corridor to show how to secure Open Edge Platform
 applications.
 
 ## Learn More

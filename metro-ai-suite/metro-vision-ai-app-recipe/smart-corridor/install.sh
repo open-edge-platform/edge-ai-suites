@@ -54,11 +54,21 @@ if [[ -f "$ENV_FILE" ]]; then
         echo "Using config_parent.json"
         ln -sf config_parent.json src/dlstreamer-pipeline-server/config.json
     else
-        # Child deployment: use child appdata and config
-        echo "Child deployment detected — using smart-corridor-child-ri.tar.bz2"
-        ln -sf smart-corridor-child-ri.tar.bz2 src/webserver/smart-corridor-ri.tar.bz2
-        echo "Child deployment detected — using config_child.json"
-        ln -sf config_child.json src/dlstreamer-pipeline-server/config.json
+        # Child deployment: check REMOTE_CHILD_DEPLOY setting in env file if present
+        REMOTE_CHILD_DEPLOY=$(grep -E "^REMOTE_CHILD_DEPLOY=" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"' || true)
+        
+        CHILD_TAR="smart-corridor-child-ri.tar.bz2"
+        CHILD_CONFIG="config_child.json"
+
+        if [[ -n "$REMOTE_CHILD_DEPLOY" ]]; then
+            CHILD_TAR="smart-corridor-child-${REMOTE_CHILD_DEPLOY}-ri.tar.bz2"
+            CHILD_CONFIG="config_child_${REMOTE_CHILD_DEPLOY}.json"
+        fi
+
+        echo "Child deployment detected — using ${CHILD_TAR}"
+        ln -sf "${CHILD_TAR}" src/webserver/smart-corridor-ri.tar.bz2
+        echo "Child deployment detected — using ${CHILD_CONFIG}"
+        ln -sf "${CHILD_CONFIG}" src/dlstreamer-pipeline-server/config.json
     fi
 else
     # No .env — default to child

@@ -78,6 +78,49 @@ to file new tickets there (after learning about the guidelines for [Contributing
     docker compose up -d
     ```
 
+### 8. Resolving Time Sync Issues between Parent and Child Nodes**
+
+
+    You can follow the steps below to synchronize system time using NTP.
+    1. **Install systemd-timesyncd** if not already installed:
+
+       ```bash
+       sudo apt install systemd-timesyncd
+       ```
+
+    2. **Check service status**:
+
+       ```bash
+       systemctl status systemd-timesyncd
+       ```
+
+    3. **Configure an NTP server** (if behind a corporate proxy):
+
+       ```bash
+       sudo nano /etc/systemd/timesyncd.conf
+       ```
+
+       Add:
+
+       ```ini
+       [Time]
+       NTP=corp.intel.com
+       ```
+
+       > **Note:** Replace `corp.intel.com` with a common ntp server that is supported for all the nodes on your network.
+
+    4. **Restart the service**:
+
+       ```bash
+       sudo systemctl restart systemd-timesyncd
+       ```
+
+    5. **Verify the status**:
+
+       ```bash
+       systemctl status systemd-timesyncd
+       ```
+
 ## Troubleshooting Docker Deployments
 
 ### 1. Containers Failing To Start
