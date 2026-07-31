@@ -306,7 +306,7 @@ async def api_status():
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         summary, runs = await _fetch_summary_and_runs(client)
 
-    by_class = summary.get("by_class", [])
+    by_class = list(summary.values()) if summary else []
     total_detections = sum(c.get("count", 0) for c in by_class)
     completed = sum(1 for r in runs if r.get("status") == "completed")
     running = sum(1 for r in runs if r.get("status") == "running")
@@ -425,14 +425,6 @@ async def trigger_run(
     
     return RedirectResponse(url=_redirect_path(request, "results_page", run_id=run_id), status_code=303)
     # mosquitto_pub -h localhost -p 1883  -t "apm/batch-complete" -m '{"run_id":"1","status":"completed","device":"CPU","video_filename":"welding","start_id":1785384705037648000,"end_id":1785384706008029000,"pipeline_status":"running"}'
-
-@app.post("/clear-detections")
-async def clear_detections(request: Request):
-    """Clear all detections from storage."""
-    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        await client.delete(f"{_STORAGE_URL}/detections")
-    return RedirectResponse(url=_redirect_path(request, "index"), status_code=303)
-
 
 # ── Health ────────────────────────────────────────────────────────────────────
 

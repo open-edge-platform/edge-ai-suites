@@ -103,5 +103,3 @@ Ticketing rules:
     with fusion_confidence >= 0.8.
   - Use HIGH when class is Excessive Penetration with fusion_confidence >= 0.75.
   - For Good Weld / No Label and fused_decision=0, use LOW and include monitoring note.
-
-Return as a structured JSON object.

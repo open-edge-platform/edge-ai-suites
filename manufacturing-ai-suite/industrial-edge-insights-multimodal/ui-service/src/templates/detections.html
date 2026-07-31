@@ -66,14 +66,7 @@
       <p class="empty">No detections match the current filter.</p>
       {% endif %}
     </section>
-    <section class="card card-danger">
-      <h2>&#9888; Danger Zone</h2>
-      <form method="POST" action="{{ root }}/clear-detections">
-        <button type="submit" class="btn-danger" onclick="return confirm('This will permanently delete all detection records. Continue?')">&#10005; Clear All Detections</button>
-      </form>
-    </section>
   </main>
-
   <footer>
     <p>&#169; Intel Corporation — Agentic Predictive Maintenance Blueprint</p>
   </footer>
