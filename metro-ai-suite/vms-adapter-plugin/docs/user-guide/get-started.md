@@ -4,8 +4,6 @@
 
 The **VMS Adapter Plugin (VAP)** bridges VMS systems (Nx Witness, Genetec, Milestone, etc.) with AI Analytics Apps (Live Video Captioning (LVC), DLStreamer vision analytics app like Loitering Detection) and provides a unified React based provider dashboard for managing cameras and analytics runs. This guide shows how to deploy the full stack with Docker Compose and run your first analytics session.
 
-Note: Frigate is used as an open-source proxy for limited VMS capabilities as a means to demonstrate the VAP capabilities. 
-
 This guide shows how to:
 
 - **Set up prerequisites**: Start LVC or DLS vision analytics (Loitering Detection) before VAP, since VAP fetches their schemas at startup.
@@ -21,9 +19,7 @@ Check the [folder layout](#folder-layout) to familiarize with the code structure
 - Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- One or more of the following running and reachable:
-  - **Nx Witness** VMS with accessible REST API (`NX_HOST`, `NX_USERNAME`, `NX_PASSWORD`). This document does not intend to provide reference on setup of Nx Witness and Nx Cloud.
-  - **Frigate** VMS with cameras configured (RTSP streams). Refer to [usage](#41-install-frigate) instructions for a quick guide on how to deploy, configure camera, and use Frigate.
+- **Nx Witness** VMS is running and reachable with REST API (`NX_HOST`, `NX_USERNAME`, `NX_PASSWORD`). This document does not intend to provide reference on setup of Nx Witness and Nx Cloud.
 - At least one Analytics App running before VAP starts:
   - **Live Video Captioning (LVC)** — for VLM based AI captioning
   - **Loitering Detection (DLS vision based)** — for real-time detection of loitering behavior in transportation hubs with Nx write-back
@@ -43,7 +39,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](../../../live-video-analysis/live-video-captioning/docs/user-guide/quick-start-guide.md) to prepare models and configure the environment, then start the stack:
+Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/quick-start-guide.html) to prepare models and configure the environment, then start the stack:
 
 ```bash
 docker compose up -d
@@ -61,7 +57,7 @@ curl http://localhost:4173/health
 
 > Skip this step if you are only using Live Video Captioning.
 
-Loitering Detection is a user-provided application based on the Intel DLStreamer Pipeline Server. Bring up the application according to its own documentation. The following services must be reachable from the VAP backend container:
+Loitering Detection is a user-provided application based on the Intel DLStreamer Pipeline Server. Follow the [Loitering detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
 | **Service**              | **Default Port** | **Purpose**                            |
 |--------------------------|------------------|----------------------------------------|
@@ -83,22 +79,33 @@ cd metro-ai-suite/vms-adapter-plugin
 cp .env.example .env
 ```
 
-Open `.env` and update the variables for your environment:
+Open `.env` and update the variables for your environment. Variables are grouped by scope. Within each analytics app group, **Mandatory** applies only if you are using that app.
 
-| **Variable**                         | **Description**                                                          |
-|--------------------------------------|--------------------------------------------------------------------------|
-| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`            |
-| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         |
-| `FRIGATE_HOST`                       | Hostname/IP of the Frigate instance reachable from the backend container |
-| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx)                       |
-| `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
-| `LOITERING_DET_HOST` / `LOITERING_DET_PORT`              | DLStreamer Pipeline Server host and port for Loitering Detection app (default: `8080`)       |
-| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
-| `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             |
-| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
-| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
-| `PG_PASSWORD`                        | PostgreSQL password (change from default)                                |
-| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (`3443`)                              |
+**Common (VAP + Nx Witness):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials                                     | Mandatory     |
+| `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) | Optional      |
+| `PG_PASSWORD`                        | PostgreSQL password (change from default)                                | Optional     |
+| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (default: `3443`)                      | Optional      |
+
+**Live Video Captioning (LVC):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`            | Mandatory     |
+| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         | Mandatory     |
+| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber | Optional |
+
+**DLStreamer Vision (dls_vision — Loitering Detection):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `DLS_VISION_HOST` / `DLS_VISION_PORT` | DLStreamer Pipeline Server host and port for Loitering Detection app (default port: `443`) | Mandatory |
+| `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             | Mandatory     |
+| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber | Optional |
 
 > If LVC or Loitering Detectopm is running on the same host as VAP, use `host.docker.internal` (Linux/Mac). Otherwise, use the actual IP address.
 
@@ -106,73 +113,7 @@ For certificate path examples and TLS behavior details, see [TLS and Certificate
 
 ---
 
-## Step 4 — Start Frigate (only if using Frigate)
-
-> Skip this step if you are not using Frigate as your VMS.
-
-Frigate is **not** included in the VAP Docker Compose stack. You must install, configure, and start it separately before bringing up VAP.
-
-### 4.1 Install Frigate
-
-Follow the [official Frigate installation guide](https://docs.frigate.video/frigate/installation). The recommended approach is Docker:
-
-```bash
-docker run -d \
-  --name frigate \
-  --restart=unless-stopped \
-  --shm-size=256m \
-  -p 5000:5000 \
-  -p 8554:8554 \
-  -v /path/to/your/frigate/config:/config \
-  -v /etc/localtime:/etc/localtime:ro \
-  ghcr.io/blakeblackshear/frigate:0.15.1
-```
-
-Or use Frigate's own compose file from the [Frigate documentation](https://docs.frigate.video/frigate/installation/#docker-compose).
-
-### 4.2 Configure Cameras
-
-Edit your Frigate `config.yml` to add camera RTSP streams. Add each camera to **both** the `go2rtc.streams:` and `cameras:` sections — VAP discovers cameras via Frigate's `GET /api/go2rtc/streams` API:
-
-```yaml
-go2rtc:
-  streams:
-    front-door:
-      - rtsp://user:pass@192.168.1.10:554/stream
-    warehouse-cam:
-      - rtsp://user:pass@192.168.1.11:554/stream
-
-cameras:
-  front-door:
-    ffmpeg:
-      inputs:
-        - path: rtsp://user:pass@192.168.1.10:554/stream
-          roles:
-            - detect
-  warehouse-cam:
-    ffmpeg:
-      inputs:
-        - path: rtsp://user:pass@192.168.1.11:554/stream
-          roles:
-            - detect
-```
-
-- The key under `go2rtc.streams:` (e.g. `front-door`) becomes the camera name in the VAP dashboard.
-- VAP builds RTSP URLs as `rtsp://<FRIGATE_HOST>:8554/<stream_name>`.
-- Both `go2rtc.streams` and `cameras` entries must use the **same key name**.
-- Refer to the [Frigate configuration docs](https://docs.frigate.video/configuration/) for the full YAML schema.
-
-### 4.3 Verify Frigate is Running
-
-```bash
-curl http://localhost:5000/api/go2rtc/streams
-```
-
-You should see a JSON object listing your configured streams. Then set `FRIGATE_HOST` in your `.env` to point VAP at the running Frigate instance (use `host.docker.internal` if Frigate is on the same host as VAP).
-
----
-
-## Step 5 — Build and Start VAP
+## Step 4 — Build and Start VAP
 
 ```bash
 docker compose up -d --build
@@ -201,7 +142,7 @@ curl -k https://localhost:3443/v1/health
 
 ---
 
-## Step 6 — Open the Provider Dashboard
+## Step 5 — Open the Provider Dashboard
 
 
 | **Service**             | **URL**                            |
@@ -216,7 +157,7 @@ curl -k https://localhost:3443/v1/health
 
 ---
 
-## Step 7 — Discover Cameras
+## Step 6 — Discover Cameras
 
 In the dashboard, click **Discover Cameras** to sync cameras from all connected VMS systems. You can also trigger discovery via the API:
 
@@ -224,11 +165,11 @@ In the dashboard, click **Discover Cameras** to sync cameras from all connected 
 curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
-The backend queries all configured VMS shims (Frigate, Nx Witness) and persists discovered cameras to PostgreSQL.
+The backend queries all configured VMS shims (Nx Witness in our case) and persists discovered cameras to PostgreSQL.
 
 ---
 
-## Step 8 — Enable Cameras and Start Analytics
+## Step 7 — Enable Cameras and Start Analytics
 
 1. In the **Camera Discovery** panel, enable the cameras you want to use for analytics.
 2. In the **Analytics Engine** panel, select a Analytics App (for example, **Live Video Captioning** or **Loitering Detection**).
@@ -339,7 +280,7 @@ vms-adapter/
 │   └── config.yaml                 # Runtime config (cameras, VMS endpoints, LVC URL)
 ├── tests/                          # pytest unit + integration tests
 ├── Dockerfile                      # Backend image
-├── docker-compose.yml              # backend + ui + postgres + frigate
+├── docker-compose.yml              # backend + ui + postgres
 ├── pyproject.toml                  # Python deps + package config
 └── .env.example                    # Environment variable reference
 ```

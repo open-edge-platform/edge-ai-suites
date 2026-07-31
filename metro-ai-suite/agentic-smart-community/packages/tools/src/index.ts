@@ -30,7 +30,7 @@ export type {
   ParsedSummary,
 } from "./rule-engine/index.js";
 export { monitorCtl, detachMonitor } from "./monitor-ctl.js";
-export type { MonitorCtlParams } from "./monitor-ctl.js";
+export type { IWorkerService, MonitorCtlParams } from "./monitor-ctl.js";
 export { loadMonitorsFromYaml, validateMonitors } from "./monitors-compose.js";
 export type {
   ComposeAction,
@@ -51,6 +51,7 @@ export type {
   UseCaseRegisterParams,
   UseCaseRegisterDeps,
   UseCaseRegisterResult,
+  UseCaseListEntry,
 } from "./use-case-register.js";
 export { ruleEval } from "./rule-eval.js";
 export type { RuleEvalParams, RuleEvalDeps, RuleEvalResult } from "./rule-eval.js";

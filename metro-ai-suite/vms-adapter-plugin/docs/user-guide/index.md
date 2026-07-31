@@ -15,18 +15,18 @@ The VMS Adapter Plugin (VAP) is an I/O bridge between Video Management Systems (
 
 ## Overview
 
-The **VMS Adapter Plugin** connects VMS solutions like Nx Witness, Genetec, Milestone, and Frigate cameras to AI analytics
+The **VMS Adapter Plugin** connects VMS solutions like Nx Witness, Genetec, and Milestone to AI analytics
 applications such as Live Video Captioning and DLStreamer Vision based Loitering Detection, and presents a unified React provider dashboard for discovering cameras, managing analytics runs, and viewing live results. Adding support for a new VMS or a new Analytics App requires only a new shim class — no route changes are needed.
 
 ### Example Use Cases
 
 - **Intelligent Surveillance**: Connect IP cameras from Nx Witness to Live Video Captioning for scene description and prompt-driven monitoring (for example, "Is there an unauthorized person in the area?").
-- **Warehouse Quality Control**: Route camera feeds from Frigate or Nx Witness to DLStreamer Vision application and automatically push detected defect bounding boxes back into Nx Witness for operator review.
+- **Warehouse Quality Control**: Route camera feeds from Nx Witness to DLStreamer Vision application and automatically push detected defect bounding boxes back into Nx Witness for operator review.
 - **Multi-Camera Analytics Management**: Discover all cameras from all connected VMS systems in one dashboard and selectively enable AI analytics on specific cameras without reconfiguring each system individually.
 
 ### Key Benefits
 
-- **Multi-VMS Support**: Connect cameras from Nx Witness and Frigate simultaneously from a
+- **Multi-VMS Support**: Connect cameras from supported VMS systems such as Nx Witness through a
   single plugin instance.
 - **Pluggable Analytics Apps**: AI analytics applications plug in as shims. New apps require no route changes — just a new shim class registered in `factory.py`.
 - **Dynamic Schema Forms**: The dashboard renders analytics configuration forms directly from each Analytics App's live OpenAPI schema — no frontend changes are needed when parameters change.

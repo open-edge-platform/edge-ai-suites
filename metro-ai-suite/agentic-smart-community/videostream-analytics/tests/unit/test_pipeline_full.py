@@ -159,6 +159,23 @@ class TestFullPipeline:
         assert isinstance(payload["start_time"], str)
         assert isinstance(payload["end_time"], str)
 
+    def test_non_roi_clip_is_transcoded_before_emit(self, pipeline, tmp_path, mock_sink):
+        clip_path = str(tmp_path / "motion.mp4")
+        result = MagicMock(
+            path=clip_path,
+            start_time="2026-07-30T09:00:00",
+            end_time="2026-07-30T09:00:04",
+            duration_s=4.0,
+        )
+
+        with patch("stream_monitor.rtsp_monitor.transcode_h264_in_place") as transcode:
+            pipeline._emit_segment(result)
+
+        transcode.assert_called_once_with(clip_path)
+        payload = mock_sink.emit.call_args.args[0]["payload"]
+        assert payload["event_file_path"] == clip_path
+        assert payload["summary_clip_input"] == clip_path
+
     def test_pipeline_stops_cleanly(self, pipeline, mock_sink):
         """Pipeline should stop without errors and report stopped status."""
         pipeline.start()

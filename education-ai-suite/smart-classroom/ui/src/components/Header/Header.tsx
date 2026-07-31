@@ -360,7 +360,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
 
     // Check if we have actual live capabilities based on enabled features
     const hasAudioCapability = hasAudioFeatures && hasAudioDevices;
-    const hasLiveCapability = hasAudioCapability || hasVideoCapability;
+    
+    // If audio features are enabled, we need audio capability
+    // If video analytics is enabled, we need video capability
+    // If BOTH are enabled, we need BOTH capabilities
+    const hasLiveCapability = (() => {
+      const audioRequired = hasAudioFeatures;
+      const videoRequired = hasVideoAnalyticsFeature;
+      
+      if (audioRequired && videoRequired) {
+        // Both enabled: need both capabilities
+        return hasAudioCapability && hasVideoCapability;
+      } else if (audioRequired) {
+        // Only audio enabled: need audio capability
+        return hasAudioCapability;
+      } else if (videoRequired) {
+        // Only video enabled: need video capability
+        return hasVideoCapability;
+      }
+      // Neither enabled
+      return false;
+    })();
 
     const isAudioBusy =
       audioStatus === 'processing' ||
