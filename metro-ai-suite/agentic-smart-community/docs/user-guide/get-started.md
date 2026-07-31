@@ -227,6 +227,14 @@ Leave the monitor online long enough to process video and store events in `~/.mc
 "Generate today's report for the cam_child_safety monitor."
 ```
 
+**D. Delete a monitor**
+
+Ask the agent to delete the monitor registered in the previous step:
+
+```text
+"Delete the cam_child_safety monitor."
+```
+
 **MCP resource subscriptions** deliver alert-update notifications directly to the connected client; see [MCP Subscription Reference](./get-started/api-reference-mcp-subscription.md). This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 #### Other MCP clients
