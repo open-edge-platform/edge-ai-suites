@@ -51,14 +51,20 @@ The Summary count table header MUST carry matching icons, each joined to its lab
 
 ## Reconciliation Script Checks
 
-The script (`scripts/reconcile-report.sh` relative to this skill file) performs these checks, in order:
-1. Extracts rule IDs from the rules file (sections 1–16 only — it stops at the `## Rationale` heading) and from the report's Detailed Results table.
-2. Detects missing, extra, or duplicate rule IDs.
-3. Counts per-category verdicts (PASS, Critical, Major, Minor, N/A) by reading the **Result and Severity columns only** — never the whole line — asserts every row resolves to exactly one verdict (and each FAIL to exactly one severity), and prints a `CHAT_SUMMARY:` line with the authoritative counts for the agent to reuse verbatim.
-4. Verifies the sum equals the total rule count, AND cross-checks that the headline **Summary count table** matches the counted rows (catches drift even when the sum is still correct).
-5. Enforces a **non-breaking space (U+00A0)** between each status icon and its label in table rows, so icons never wrap onto their own line in the rendered table.
-6. Cross-checks the headline **Overall Result** against the computed FAIL counts: FAIL ⟺ ≥1 Critical; CONDITIONAL PASS ⟺ 0 Critical and ≥1 Major/Minor; PASS ⟺ no FAILs.
-7. Exits with code 1 and prints `FAILED` if any check fails; prints `OK: Reconciliation passed.` on success.
+`scripts/reconcile-report.sh` (relative to this skill file) runs in two modes. With `--emit-skeleton`
+it writes the report skeleton — one Detailed Results row per rule, both tables, every anchor — from
+the same constants it validates against (see `report-format.md`, *Report format contract*). Without
+arguments it performs these checks, in order:
+
+1. Asserts the **Detailed Results** and **Summary count** table headers before reading any column, so an inserted or reordered column fails loudly instead of shifting the counts.
+2. Requires the run-identity rows **`AI agent`** and **`Model`** to be present and non-empty.
+3. Extracts rule IDs from the rules file (sections 1–16 only — it stops at the `## Rationale` heading) and from the report's Detailed Results table, and detects missing, extra, or duplicate rule IDs.
+4. Counts per-category verdicts (PASS, Critical, Major, Minor, N/A) by reading the **Result and Severity columns only** — never the whole line — asserts every row resolves to exactly one verdict (and each FAIL to exactly one severity), and prints a `CHAT_SUMMARY:` line with the authoritative counts for the agent to reuse verbatim.
+5. Verifies the sum equals the total rule count, AND cross-checks that the headline **Summary count table** matches the counted rows (catches drift even when the sum is still correct).
+6. Enforces a **non-breaking space (U+00A0)** between each status icon and its label in table rows, so icons never wrap onto their own line in the rendered table.
+7. Cross-checks the headline **Overall Result** against the computed FAIL counts: FAIL ⟺ ≥1 Critical; CONDITIONAL PASS ⟺ 0 Critical and ≥1 Major/Minor; PASS ⟺ no FAILs.
+8. Recomputes the **Overall UX Score** and its band from the verdicts, using the dimension table it reads directly from `report-format.md`, and fails on any mismatch or on a rule ID that table does not cover. The score is mandatory for every report.
+9. Exits with code 1 and prints `FAILED` if any check fails; prints `OK: Reconciliation passed.` on success.
 
 ## Severity Levels
 

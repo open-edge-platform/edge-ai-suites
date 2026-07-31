@@ -7,17 +7,83 @@ This file is part of the `onboarding-validation` skill instructions.
 
 ## Report format contract
 
-`scripts/reconcile-report.sh` binds to this report template through five named anchors only:
+`scripts/reconcile-report.sh` is both the **producer** and the **consumer** of this template: run with
+`--emit-skeleton` it writes the report skeleton, run without arguments it validates a filled-in
+report. Both modes read the same constants, so the structure an agent fills in and the structure the
+checker expects cannot drift apart.
 
-- `RULE_ROW_RE`: `^\| [0-9]+\.[0-9]+ \|`
-- `SUMMARY_ROW_RE`: `^\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\| *[0-9]+ *\|`
-- `OVERALL_RESULT_RE`: `^\*\*Overall Result\*\*:`
-- `UX_BAR_RE`: `^[█░]+ [0-9]+\.[0-9]+ / 10`
-- `RATIONALE_STOP_RE`: `^## Rationale`
+The constants below are declared once at the top of `scripts/reconcile-report.sh` and nowhere else.
+This block is the contract, copied **verbatim** from the script; `scripts/self-test.sh` fails if the
+two ever disagree.
 
-Changing any of these anchors requires a `Skill Version` bump and updates to this file and the checker.
+```bash
+RULE_ROW_RE='^[|] [0-9]+[.][0-9]+ [|]'
+SUMMARY_ROW_RE='^[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|]'
+OVERALL_RESULT_RE='^\*\*Overall Result\*\*:'
+UX_BAR_RE='^[█░]+ [0-9]+\.[0-9]+ / 10'
+UX_INLINE_RE='^\*\*Overall UX Score\*\*:'
+RATIONALE_STOP_RE='^## Rationale'
+AGENT_ROW_RE='^[|] *AI agent *[|]'
+MODEL_ROW_RE='^[|] *Model *[|]'
+UX_DIM_ROW_RE='^[|] *D[0-9]+ *[|]'
+DETAIL_HEADER_RE='^[|] *ID *[|] *Rule \(short\) *[|] *Result *[|] *Severity *[|]'
+SUMMARY_HEADER_RE='^[|] *Total Rules *[|]'
+COL_ID=2
+COL_SHORT=3
+COL_RESULT=4
+COL_SEVERITY=5
+COL_VALUE=3
+SUMMARY_COL_FIRST=2
+ICON_PASS='✅'
+ICON_FAIL='❌'
+ICON_NA='⚪'
+ICON_ANY_RE='(✅|❌|⚪|🔴|🟠|🟡)'
+SEV_CRITICAL='Critical'
+SEV_MAJOR='Major'
+SEV_MINOR='Minor'
+RESULT_FAIL='FAIL'
+RESULT_CONDITIONAL='CONDITIONAL PASS'
+RESULT_PASS='PASS'
+BAND_EXCELLENT='Excellent'
+BAND_GOOD='Good'
+BAND_FAIR='Fair'
+BAND_POOR='Poor'
+BAND_VERY_POOR='Very Poor'
+```
+
+What each group binds to:
+
+| Group | Binds to |
+|-------|----------|
+| `RULE_ROW_RE`, `RATIONALE_STOP_RE` | rule rows in Detailed Results and in the rules file; end of the rule set |
+| `SUMMARY_ROW_RE`, `SUMMARY_HEADER_RE`, `SUMMARY_COL_FIRST` | the six-integer Summary count table |
+| `DETAIL_HEADER_RE`, `COL_ID`, `COL_SHORT`, `COL_RESULT`, `COL_SEVERITY` | the Detailed Results table and its column order |
+| `AGENT_ROW_RE`, `MODEL_ROW_RE`, `COL_VALUE` | the run-identity rows of the Summary table |
+| `OVERALL_RESULT_RE`, `RESULT_*` | the headline verdict line and its vocabulary |
+| `UX_BAR_RE`, `UX_INLINE_RE`, `BAND_*` | the Overall UX Score line, current and pre-1.11.0 form |
+| `UX_DIM_ROW_RE` | rows of the canonical UX dimension table below |
+| `ICON_*`, `SEV_*` | verdict and severity vocabulary, and the U+00A0 rule |
+
+The column positions are asserted through `DETAIL_HEADER_RE` and `SUMMARY_HEADER_RE` before any
+value is read, so a reordered or inserted column fails loudly instead of shifting the counts.
+
+Changing any constant requires a `Skill Version` bump plus an update to this block and to the
+checker. Both are covered by `scripts/self-test.sh`, which also runs the checker against the golden
+fixture in `assets/sample-report.md` and against deliberately mutated copies of it.
 
 ## Output Format
+
+The agent MUST NOT hand-write the report structure. It MUST create the report file from the
+generator, then fill in the values:
+
+```bash
+export RULES_FILE="<absolute-path-to-this-skill>/references/rules-onboarding-validation.md"
+./scripts/reconcile-report.sh --emit-skeleton > "validation-reports/<application>-<date>-<commit8>.md"
+```
+
+The skeleton already contains one Detailed Results row per rule (so no rule can be forgotten), both
+tables, and every anchor the checker looks for. The agent fills in the Summary values, the verdicts,
+the evidence, and the narrative sections.
 
 The agent MUST save the report as a markdown file — NOT display it inline in chat. The file MUST be saved to:
 
@@ -47,6 +113,8 @@ The report MUST use the following structure. It MUST begin with a top-level titl
 |-------|-------|
 | Rules Version | X.Y.Z |
 | Skill Version | X.Y.Z |
+| AI agent | The harness that executed this run, e.g. `GitHub Copilot coding agent (VS Code)`, `Claude Code CLI`. |
+| Model | The model identifier the harness used, e.g. `claude-sonnet-4.5`. |
 | Date | YYYY-MM-DD |
 | Application | kebab-case name, e.g., `live-video-captioning` |
 | GitHub URL | The URL from the validation prompt |
@@ -59,6 +127,14 @@ The report MUST use the following structure. It MUST begin with a top-level titl
 | GPU | e.g., Intel Arc A770 (`/dev/dri/renderD128` present) or "not found" |
 | NPU | e.g., available (`/dev/accel/accel0` present) or "not found" |
 | Documentation path followed | Ordered list of document(s) and section(s) the agent read to complete the installation. Example: `1. README.md → "Quick Start Guide"  2. docs/prerequisites.md → "GPU Driver Setup"`. List every page and heading the agent had to visit — this shows the complexity of the documentation trail. |
+
+**Run identity.** `AI agent` and `Model` are **mandatory** — the checker fails the report if either
+row is missing or empty. They make two runs of the same application comparable: the same model in a
+different harness (different tool access, different auto-approval policy) does not produce the same
+onboarding experience. Both values are **self-reported**: the agent MUST record what it actually
+knows about itself and MUST NOT guess a version number. If the model identifier is not available to
+the agent, write `unknown (self-reported)`. The agent also echoes both values into the process log
+(Execution step 1) so the Evaluation layer can see them in the transcript.
 
 **Overall UX Score**
 
@@ -134,7 +210,7 @@ In addition to the per-rule verdicts and the Overall Result, the agent MUST comp
 
 ### Dimensions and weights (canonical)
 
-Every rule belongs to **exactly one** of seven UX dimensions — a strict partition of all 76 rules, so no rule is counted twice. This table is the **single source of truth**; `scripts/reconcile-report.sh` embeds a copy and self-checks that the copy covers every rule ID in the report (it prints any unmapped ID). When the rules file changes, update BOTH this table and the script.
+Every rule belongs to **exactly one** of seven UX dimensions — a strict partition of all 76 rules, so no rule is counted twice. This table is the **single source of truth**: `scripts/reconcile-report.sh` parses it directly (anchor `UX_DIM_ROW_RE`) instead of keeping a copy, and reports any rule ID in the report that this table does not cover. When the rules file changes, update this table — there is nothing else to keep in sync.
 
 | Dim | Name | Weight | Rule IDs |
 |-----|------|--------|----------|

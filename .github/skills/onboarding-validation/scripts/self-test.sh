@@ -1,54 +1,133 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+#
+# Offline integrity check for the onboarding-validation skill. Requires no access to any
+# validated application. Run it after ANY change to the skill (rules, SKILL.md, scripts,
+# reference files) and before opening a PR.
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SKILL_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 SKILL_FILE="$SKILL_DIR/SKILL.md"
 RULES_FILE="$SKILL_DIR/references/rules-onboarding-validation.md"
-REPORT_FILE="$SKILL_DIR/assets/sample-report.md"
+FORMAT_FILE="$SKILL_DIR/references/report-format.md"
+FIXTURE="$SKILL_DIR/assets/sample-report.md"
+CHECKER="$SCRIPT_DIR/reconcile-report.sh"
 
-check_report_contract() {
-  echo "[1/3] Checking report format contract via golden fixture..."
-  local output
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+
+fail() { echo "ERROR: $*"; exit 1; }
+
+# Run the checker; print nothing, return its exit code.
+run_checker() {
+  local report="$1" out rc
   set +e
-  output=$(RULES_FILE="$RULES_FILE" REPORT_FILE="$REPORT_FILE" "$SCRIPT_DIR/reconcile-report.sh" 2>&1)
-  local rc=$?
+  out=$(RULES_FILE="$RULES_FILE" REPORT_FILE="$report" "$CHECKER" 2>&1)
+  rc=$?
   set -e
-
-  # The fixture intentionally covers a subset of rules; reconcile should fail on
-  # completeness, but still parse all format anchors and emit canonical counters.
-  if [[ "$rc" -eq 0 ]]; then
-    echo "ERROR: Expected reconcile-report.sh to fail on partial-rule fixture, but it passed."
-    exit 1
-  fi
-  [[ "$output" == *"Counted: PASS=9 Critical=1 Major=2 Minor=1 N/A=2"* ]] || {
-    echo "ERROR: Reconcile output does not match expected parsed verdict counters."
-    echo "$output"
-    exit 1
-  }
-  [[ "$output" != *"Could not find the Summary count table row"* ]] || {
-    echo "ERROR: Summary table anchor not detected in sample report."
-    echo "$output"
-    exit 1
-  }
-  [[ "$output" != *"Could not find the '**Overall Result**:' line"* ]] || {
-    echo "ERROR: Overall Result anchor not detected in sample report."
-    echo "$output"
-    exit 1
-  }
-  [[ "$output" != *"requires an Overall UX Score"* ]] || {
-    echo "ERROR: UX score anchor not detected in sample report."
-    echo "$output"
-    exit 1
-  }
+  printf '%s\n' "$out" > "$WORK/last-output.txt"
+  return "$rc"
 }
 
-check_references_linked() {
-  echo "[2/3] Checking that all references files are linked from SKILL.md..."
-  local missing=0
-  local rel
+# -----------------------------------------------------------------------------
+check_fixture_passes() {
+  echo "[1/5] Golden fixture reconciles cleanly..."
+  if ! run_checker "$FIXTURE"; then
+    cat "$WORK/last-output.txt"
+    fail "reconcile-report.sh failed on the golden fixture. Regenerate it with --emit-skeleton."
+  fi
+  grep -q "OK: Reconciliation passed." "$WORK/last-output.txt" \
+    || fail "Checker did not report success on the golden fixture."
+}
+
+# -----------------------------------------------------------------------------
+# Mutation tests: each mutation breaks exactly one part of the report contract. If the checker
+# still passes, the contract is not actually enforced and the golden fixture proves nothing.
+check_mutations_are_detected() {
+  echo "[2/5] Mutated fixtures are rejected..."
+
+  # a) A rule row silently deleted -> completeness check must fire.
+  awk 'BEGIN{done=0} /^\| [0-9]+[.][0-9]+ \|/ && !done { done=1; next } { print }' \
+    "$FIXTURE" > "$WORK/mut-missing-rule.md"
+
+  # b) The Summary count table drifts from the verdicts (PASS inflated by one).
+  awk '{
+    if ($0 ~ /^\| [0-9]+ \| [0-9]+ \| [0-9]+ \| [0-9]+ \| [0-9]+ \| [0-9]+ \|$/) {
+      n=split($0, F, "|")
+      p=F[3]+1
+      printf "|%s| %s |%s|%s|%s|%s|\n", F[2], p, F[4], F[5], F[6], F[7]
+      next
+    }
+    print
+  }' "$FIXTURE" > "$WORK/mut-summary-drift.md"
+
+  # c) The UX score is changed, so it no longer matches the verdicts.
+  sed 's|4\.0 / 10|9.5 / 10|' "$FIXTURE" > "$WORK/mut-ux-score.md"
+
+  # d) A status icon is followed by a regular space instead of U+00A0. Written as explicit UTF-8
+  #    bytes: $'\u00a0' / printf '\u00a0' depend on the locale and can emit a lone 0xA0.
+  sed "s/$(printf '\xc2\xa0')/ /g" "$FIXTURE" > "$WORK/mut-nbsp.md"
+
+  # e) A column is inserted into the Detailed Results table -> header assertion must fire.
+  awk '{ sub(/^\| ID \| Rule \(short\) \|/, "| ID | Owner | Rule (short) |"); print }' \
+    "$FIXTURE" > "$WORK/mut-header.md"
+
+  # f) The run identity is removed.
+  grep -v '^| AI agent |' "$FIXTURE" > "$WORK/mut-identity.md"
+
+  local m
+  for m in mut-missing-rule mut-summary-drift mut-ux-score mut-nbsp mut-header mut-identity; do
+    if run_checker "$WORK/$m.md"; then
+      cat "$WORK/last-output.txt"
+      fail "Mutation '$m' was NOT detected; the report format contract is not enforced."
+    fi
+  done
+}
+
+# -----------------------------------------------------------------------------
+check_skeleton_matches_rules() {
+  echo "[3/5] Generated skeleton covers every rule..."
+  RULES_FILE="$RULES_FILE" "$CHECKER" --emit-skeleton > "$WORK/skeleton.md"
+
+  awk -F'|' '/^\| [0-9]+[.][0-9]+ \|/ { v=$2; gsub(/ /,"",v); print v }' "$WORK/skeleton.md" \
+    | sort -u > "$WORK/skeleton-ids.txt"
+  awk -F'|' '/^## Rationale/ { exit } /^\| [0-9]+[.][0-9]+ \|/ { v=$2; gsub(/ /,"",v); print v }' \
+    "$RULES_FILE" | sort -u > "$WORK/rules-ids.txt"
+
+  if ! diff -q "$WORK/rules-ids.txt" "$WORK/skeleton-ids.txt" >/dev/null; then
+    diff "$WORK/rules-ids.txt" "$WORK/skeleton-ids.txt" || true
+    fail "The generated skeleton does not contain exactly one row per rule."
+  fi
+
+  # An unfilled skeleton must NOT pass: it has no verdicts yet.
+  if run_checker "$WORK/skeleton.md"; then
+    fail "An unfilled skeleton passed reconciliation; the verdict check is not enforced."
+  fi
+}
+
+# -----------------------------------------------------------------------------
+check_contract_not_drifted() {
+  echo "[4/5] Format contract in the script matches references/report-format.md..."
+  awk '/^# CONTRACT-BEGIN/{f=1;next} /^# CONTRACT-END/{f=0} f && /^[A-Z_]+=/ { print }' \
+    "$CHECKER" | sort > "$WORK/contract-script.txt"
+  grep -E '^[A-Z_]+=' "$FORMAT_FILE" | sort > "$WORK/contract-doc.txt"
+
+  [[ -s "$WORK/contract-script.txt" ]] || fail "No contract constants found in $CHECKER."
+
+  if ! diff -q "$WORK/contract-script.txt" "$WORK/contract-doc.txt" >/dev/null; then
+    echo "--- script vs report-format.md ---"
+    diff "$WORK/contract-script.txt" "$WORK/contract-doc.txt" || true
+    fail "The report format contract drifted. Update references/report-format.md and bump Skill Version."
+  fi
+}
+
+# -----------------------------------------------------------------------------
+check_references_and_links() {
+  echo "[5/5] Reference files are linked and all relative links resolve..."
+  local missing=0 rel link
+
   while IFS= read -r rel; do
     rel="references/${rel##*/}"
     if ! grep -Fq "$rel" "$SKILL_FILE"; then
@@ -57,26 +136,12 @@ check_references_linked() {
     fi
   done < <(find "$SKILL_DIR/references" -maxdepth 1 -type f | sort)
 
-  if [[ "$missing" -ne 0 ]]; then
-    exit 1
-  fi
-}
-
-check_relative_links_resolve() {
-  echo "[3/3] Checking that relative links in SKILL.md resolve..."
-  local missing=0
-  local link
-
   while IFS= read -r link; do
     [[ -z "$link" ]] && continue
     [[ "$link" =~ ^https?:// ]] && continue
     [[ "$link" =~ ^mailto: ]] && continue
-
-    if [[ "$link" == *"#"* ]]; then
-      link="${link%%#*}"
-    fi
+    [[ "$link" == *"#"* ]] && link="${link%%#*}"
     [[ -z "$link" ]] && continue
-
     if [[ ! -e "$SKILL_DIR/$link" ]]; then
       echo "ERROR: Broken relative link in SKILL.md: $link"
       missing=1
@@ -88,13 +153,15 @@ check_relative_links_resolve() {
     } | sort -u
   )
 
-  if [[ "$missing" -ne 0 ]]; then
-    exit 1
-  fi
+  [[ "$missing" -eq 0 ]] || exit 1
 }
 
-check_report_contract
-check_references_linked
-check_relative_links_resolve
+check_fixture_passes
+check_mutations_are_detected
+check_skeleton_matches_rules
+check_contract_not_drifted
+check_references_and_links
 
 echo "OK"
+
+

@@ -37,6 +37,16 @@
           "type": "content_contains",
           "file_pattern": "validation-reports/live-video-captioning-*.md",
           "text": "| Deployment method | docker-compose"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| Model |"
         }
       ]
     },
@@ -72,6 +82,11 @@
           "type": "content_contains",
           "file_pattern": "validation-reports/smart-nvr-*.md",
           "text": "/ 10"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| AI agent |"
         }
       ]
     },
@@ -111,6 +126,11 @@
           "type": "content_contains",
           "file_pattern": "validation-reports/automated-self-checkout-*.md",
           "text": "/ 10"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "| AI agent |"
         }
       ]
     },
@@ -127,7 +147,7 @@
       "id": 6,
       "prompt_file": null,
       "prompt": "Run the skill integrity check script scripts/self-test.sh and confirm it finishes successfully.",
-      "expected_output": "Agent should NOT trigger onboarding-validation skill and should return that scripts/self-test.sh exits with code 0 and prints OK.",
+      "expected_output": "Agent should NOT trigger onboarding-validation skill and should return that scripts/self-test.sh exits with code 0 and prints OK. The script verifies the golden fixture, the mutation tests, the generated skeleton, the format contract, and the reference links.",
       "should_trigger": false,
       "files": [],
       "assertions": [

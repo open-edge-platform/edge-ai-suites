@@ -21,7 +21,7 @@ compatibility: >-
   Helm/Kubernetes, depending on the documented deployment method.
 metadata:
   author: open-edge-platform
-  version: "1.12.0"
+  version: "1.13.0"
   tags: validation, onboarding, qa, docker-compose, helm, kubernetes, edge-ai
 allowed-tools: bash git
 ---
@@ -33,14 +33,14 @@ Validate the get-started experience of a containerized application from the pers
 | Field | Value |
 |-------|-------|
 | Skill ID | onboarding-validation |
-| Version | 1.12.0 |
-| Date | 2026-07-29 |
+| Version | 1.13.0 |
+| Date | 2026-07-31 |
 | Trigger | Validation prompt (see `example-prompts/01-validate-onboarding.md`) |
 | Input | GitHub URL of application + deployment method |
 | Output | Markdown report in `./validation-reports/` + process log in `./validation-logs/` |
 | Rules | `references/rules-onboarding-validation.md` (**normative**) |
 | Charter | `references/rules-charter.md` (**normative**) |
-| Checker | `scripts/reconcile-report.sh` |
+| Checker | `scripts/reconcile-report.sh` (also generates the report skeleton) |
 
 > **Inherits `references/rules-charter.md`.** This skill ships with the full charter so it remains self-contained after installation. The operational detail here (isolation, "No workarounds", reconciliation, faithful reporting) is the concrete *realization* of those principles, not a replacement — if anything here appears to conflict with the bundled charter, **the charter wins**.
 
@@ -95,8 +95,9 @@ The agent MUST follow this procedure to avoid using stale or pre-existing worksp
    mkdir -p "$WORK_DIR" && cd "$WORK_DIR"
    RUN_LOG="$WORK_DIR/run.log"
    script -q -f "$RUN_LOG"        # everything below is now recorded; type `exit` at the very end to flush
+   echo "=== Run identity: agent=<harness> model=<model id or 'unknown (self-reported)'> ==="
    ```
-   The persistent SSH terminal makes this a faithful, verbatim record of commands + outputs. As you work, **mark each phase in the log** so it reads step by step — e.g. `echo "=== Step 4: clone (ref=<ref>) ==="` — and echo a one-line note before any judgement the chat would otherwise explain (severity calls, skips, retries), e.g. `echo "NOTE: rule 12.1 FAIL Major — no bundled sample"`. The log is saved next to the report at the end (see `references/report-format.md`).
+   The persistent SSH terminal makes this a faithful, verbatim record of commands + outputs. The run identity line is the first entry: it names the harness and the model executing this run, and the same two values go into the report's Summary rows `AI agent` and `Model` (both mandatory — see `references/report-format.md`). The agent MUST state only what it knows about itself and MUST NOT invent a model version. As you work, **mark each phase in the log** so it reads step by step — e.g. `echo "=== Step 4: clone (ref=<ref>) ==="` — and echo a one-line note before any judgement the chat would otherwise explain (severity calls, skips, retries), e.g. `echo "NOTE: rule 12.1 FAIL Major — no bundled sample"`. The log is saved next to the report at the end (see `references/report-format.md`).
 2. **Clone from scratch.** The agent MUST NOT use any pre-existing copy of the application from the workspace. All commands MUST start from the fresh clone as a first-time user would. The prompt's `GITHUB_URL` is a GitHub **web URL** (e.g. `…/tree/<ref>/<path>`), not a `git clone` target — extract the base repo, `<ref>`, and `<path>` from it; clone the base repo at `<ref>`, then `cd` into `<path>`. If the `GITHUB_URL` folder contains more than one application, the prompt's **`Name`** selects which one to validate — scope the clone and follow the get-started for that sub-app only.
 3. **Use only the cloned documentation.** After cloning, the agent MUST read and follow get-started instructions exclusively from the cloned repository — not from any workspace copy. This ensures the tested docs match the tested code.
    - **Documentation path selection.** The agent MUST scan the application's root `README.md` **from top to bottom** and select the **first section** whose heading clearly serves the purpose of guiding a new user through installation and first run. Common headings include "Get Started", "Getting Started", "Quick Start", "Quickstart", "Installation", "Setup", "Deploy", "Deployment", "Deployment Options", or similar — the exact wording may vary, but the intent must be unambiguous. The agent MUST NOT skip ahead to a shorter path or cherry-pick a different section — this tests the experience of a real first-time user who reads from the top. If a simplified quick-start exists below the fold but the first installation section is a full get-started guide, the agent follows the full guide and notes the quick-start in "Documentation path followed".
@@ -121,11 +122,23 @@ Before saving the report, the agent MUST run these checks and fix any failure:
 
 ### Runtime Verification (MANDATORY)
 
-The manual tally that fills the Summary counts is a starting point, not the final authority. After writing the report file, the agent MUST run the reconciliation script and fix any discrepancy before considering the report complete:
+The agent MUST NOT hand-write the report structure. It MUST create the report file with the bundled
+generator, which emits one Detailed Results row per rule plus every section the checker expects:
 
 ```bash
 export RULES_FILE="<absolute-path-to-this-skill>/references/rules-onboarding-validation.md"
 export REPORT_FILE="<absolute-path-to-generated-report>"
+./scripts/reconcile-report.sh --emit-skeleton > "$REPORT_FILE"
+```
+
+The generator and the checker are the same script and share one definition of the format, so a
+skeleton is always structurally valid; only its **content** is missing.
+
+The manual tally that fills the Summary counts is a starting point, not the final authority. After
+filling in the report file, the agent MUST run the reconciliation and fix any discrepancy before
+considering the report complete:
+
+```bash
 ./scripts/reconcile-report.sh
 ```
 

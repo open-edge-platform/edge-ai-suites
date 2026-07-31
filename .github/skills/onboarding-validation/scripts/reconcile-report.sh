@@ -3,54 +3,307 @@
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SKILL_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+
+# Canonical UX dimension/weight table lives in the report format reference; this script parses it
+# instead of embedding a copy, so the two can never drift.
+FORMAT_FILE="${FORMAT_FILE:-$SKILL_DIR/references/report-format.md}"
+
 # Use a private temp directory to avoid /tmp collisions in shared environments
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
+
+# =============================================================================
+# Report format contract
+#
+# Everything that binds this script to the report template is declared below and
+# NOWHERE else. The same constants drive both modes of this script:
+#   --emit-skeleton  writes a report skeleton FROM these constants
+#   (default)        validates a filled-in report AGAINST these constants
+# Because the producer and the consumer of the format share one definition, a
+# template change cannot silently break the checker.
+#
+# Changing any constant below requires bumping `Skill Version` and updating the
+# "Report format contract" section of references/report-format.md, which lists
+# them verbatim. scripts/self-test.sh fails if the two lists drift apart.
+# =============================================================================
+# CONTRACT-BEGIN
+
+# --- Row anchors -------------------------------------------------------------
+# Note: bracket expressions ([|], [.]) are used instead of backslash escapes because these
+# patterns are also passed to awk with -v, where awk would interpret "\." as an escape sequence.
+RULE_ROW_RE='^[|] [0-9]+[.][0-9]+ [|]'
+SUMMARY_ROW_RE='^[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|]'
+OVERALL_RESULT_RE='^\*\*Overall Result\*\*:'
+UX_BAR_RE='^[█░]+ [0-9]+\.[0-9]+ / 10'
+UX_INLINE_RE='^\*\*Overall UX Score\*\*:'
+RATIONALE_STOP_RE='^## Rationale'
+AGENT_ROW_RE='^[|] *AI agent *[|]'
+MODEL_ROW_RE='^[|] *Model *[|]'
+UX_DIM_ROW_RE='^[|] *D[0-9]+ *[|]'
+
+# --- Table headers (asserted before any positional parsing) ------------------
+DETAIL_HEADER_RE='^[|] *ID *[|] *Rule \(short\) *[|] *Result *[|] *Severity *[|]'
+SUMMARY_HEADER_RE='^[|] *Total Rules *[|]'
+
+# --- Column positions (awk fields, -F'|') ------------------------------------
+# COL_VALUE is the value column of the "| Field | Value |" Summary table.
+# SUMMARY_COL_FIRST is "Total Rules"; the next five are PASS, Critical, Major, Minor, N/A.
+COL_ID=2
+COL_SHORT=3
+COL_RESULT=4
+COL_SEVERITY=5
+COL_VALUE=3
+SUMMARY_COL_FIRST=2
+
+# --- Verdict and severity vocabulary -----------------------------------------
+ICON_PASS='✅'
+ICON_FAIL='❌'
+ICON_NA='⚪'
+ICON_ANY_RE='(✅|❌|⚪|🔴|🟠|🟡)'
+SEV_CRITICAL='Critical'
+SEV_MAJOR='Major'
+SEV_MINOR='Minor'
+RESULT_FAIL='FAIL'
+RESULT_CONDITIONAL='CONDITIONAL PASS'
+RESULT_PASS='PASS'
+
+# --- UX bands ----------------------------------------------------------------
+BAND_EXCELLENT='Excellent'
+BAND_GOOD='Good'
+BAND_FAIR='Fair'
+BAND_POOR='Poor'
+BAND_VERY_POOR='Very Poor'
+# CONTRACT-END
+
+# Non-breaking space (U+00A0) between a status icon and its label; a regular space would let the
+# icon wrap onto its own line in rendered Markdown tables. Written as explicit UTF-8 bytes: $'\u00a0'
+# depends on the locale and emits a lone 0xA0 (invalid UTF-8) under LC_ALL=C.
+NBSP=$'\xc2\xa0'
+
+# =============================================================================
+# Helpers
+# =============================================================================
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+# Emit "<id><TAB><short>" for every rule in the rules file, stopping at the Rationale section
+# (explanatory, not part of the rule set).
+extract_rules() {
+  awk -F'|' -v STOP="$RATIONALE_STOP_RE" -v ROW="$RULE_ROW_RE" -v CI="$COL_ID" -v CSH="$COL_SHORT" '
+    $0 ~ STOP { exit }
+    $0 ~ ROW {
+      id=$CI; short=$CSH
+      gsub(/^[ \t]+|[ \t]+$/, "", id)
+      gsub(/^[ \t]+|[ \t]+$/, "", short)
+      if (!(id in seen)) { seen[id]=1; printf "%s\t%s\n", id, short }
+    }
+  ' "$1"
+}
+
+band_for_score() {
+  awk -v s="$1" -v e="$BAND_EXCELLENT" -v g="$BAND_GOOD" -v f="$BAND_FAIR" \
+      -v p="$BAND_POOR" -v v="$BAND_VERY_POOR" 'BEGIN{
+    s=s+0
+    if (s >= 9.0)      print e
+    else if (s >= 7.0) print g
+    else if (s >= 5.0) print f
+    else if (s >= 3.0) print p
+    else               print v
+  }'
+}
+
+# =============================================================================
+# Mode: --emit-skeleton
+#
+# Writes an empty but structurally complete report to stdout: one Detailed Results row per rule,
+# both tables, and every anchor the checker looks for. The agent fills in the values; it never
+# hand-writes the structure.
+# =============================================================================
+
+emit_skeleton() {
+  local rules_file="$1" total id short bar rules_version skill_version
+  bar=$(printf '░%.0s' $(seq 1 50))
+  total=$(extract_rules "$rules_file" | wc -l | tr -d ' ')
+  [[ "$total" -gt 0 ]] || die "No rules extracted from $rules_file. Check file format."
+
+  rules_version=$(grep -E '^\| *Version *\|' "$rules_file" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+  skill_version=$(grep -E '^\| *Version *\|' "$SKILL_DIR/SKILL.md" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+
+  cat <<EOF
+# Onboarding Validation Report: <App Display Name>
+
+### Summary
+
+| Field | Value |
+|-------|-------|
+| Rules Version | ${rules_version:-<x.y.z>} |
+| Skill Version | ${skill_version:-<x.y.z>} |
+| AI agent | <harness that executed this run> |
+| Model | <model identifier, or "unknown (self-reported)"> |
+| Date | $(date +%F) |
+| Application | <kebab-case-name> |
+| GitHub URL | <url from the validation prompt> |
+| Commit | <40-character SHA> |
+| Deployment method | <docker-compose / helm / docker> |
+| OS | <operating system> |
+| CPU | <cpu> |
+| RAM | <ram> |
+| GPU | <gpu, or "not found"> |
+| NPU | <npu, or "not found"> |
+| Documentation path followed | <ordered list of documents and sections> |
+
+**Overall UX Score**
+
+\`\`\`text
+$bar 0.0 / 10 — $BAND_VERY_POOR
+\`\`\`
+
+| Total Rules | ${ICON_PASS}${NBSP}PASS | 🔴${NBSP}FAIL (Critical) | 🟠${NBSP}FAIL (Major) | 🟡${NBSP}FAIL (Minor) | ${ICON_NA}${NBSP}N/A |
+|-------------|------|-----------------|-----------------|-----------------|-----|
+| $total | 0 | 0 | 0 | 0 | 0 |
+
+**Overall Result**: $RESULT_PASS
+
+### User Experience Summary
+
+**Measured UX Facts**
+
+| # | Metric | Value | Target | Source |
+|---|--------|-------|--------|--------|
+| 1 | Clone size | | ≤ 100 MB | rule 1.2 |
+| 2 | Clone time | | < 2 min | rule 1.5 |
+| 3 | Get-started steps | | ≤ 4 | rule 5.1 |
+| 4 | Start commands | | 1 | rule 4.2 |
+| 5 | App start (deploy) | | < 5 min | rule 4.1 |
+| 6 | One-time model prep | | one-time | rule 4.4 |
+| 7 | Time-to-first-result | | n/a | rule 7.6 |
+| 8 | Image size | | ≤ 30 GB | rule 9.1 |
+| 9 | Peak RAM | | ≤ 80% of min | rule 9.2 |
+| 10 | External tools | | ≤ 3 | rule 2.2 |
+| 11 | UI ready | | ≤ 60 s | rule 7.2 |
+| 12 | Minimum skill level | | B | rule 11.6 |
+
+**UX Dimension Scores**
+
+| Dim | Name | Rating (1–10) | Band | Rule basis (non-N/A) → points/max | Notes |
+|-----|------|---------------|------|-----------------------------------|-------|
+EOF
+
+  # Only the canonical dimension table has a numeric weight column; the illustrative table in the
+  # report structure section uses placeholders and must not be emitted as well.
+  awk -F'|' -v ROW="$UX_DIM_ROW_RE" '
+    $0 ~ ROW {
+      d=$2; n=$3; w=$4
+      gsub(/^[ \t]+|[ \t]+$/, "", d); gsub(/^[ \t]+|[ \t]+$/, "", n); gsub(/^[ \t]+|[ \t]+$/, "", w)
+      if (w !~ /^[0-9]+(\.[0-9]+)?$/) next
+      printf "| %s | %s | | | | |\n", d, n
+    }
+  ' "$FORMAT_FILE"
+
+  cat <<'EOF'
+
+### Detailed Results
+
+| ID | Rule (short) | Result | Severity | Evidence / Reason |
+|----|--------------|--------|----------|-------------------|
+EOF
+
+  while IFS=$'\t' read -r id short; do
+    printf '| %s | %s |  |  |  |\n' "$id" "$short"
+  done < <(extract_rules "$rules_file")
+
+  cat <<'EOF'
+
+### Critical Issues
+
+<one item per Critical FAIL>
+
+### Recommendations
+
+<grouped by severity, each referencing a rule ID>
+
+### Execution Notes
+
+<procedural issues, retries, timing anomalies>
+EOF
+}
+
+if [[ "${1:-}" == "--emit-skeleton" ]]; then
+  : "${RULES_FILE:?ERROR: RULES_FILE not set. Export it before running.}"
+  [[ -f "$RULES_FILE" ]]  || die "Rules file not found: $RULES_FILE"
+  [[ -f "$FORMAT_FILE" ]] || die "Report format reference not found: $FORMAT_FILE"
+  emit_skeleton "$RULES_FILE"
+  exit 0
+elif [[ -n "${1:-}" ]]; then
+  die "Unknown argument: $1 (supported: --emit-skeleton)"
+fi
+
+# =============================================================================
+# Mode: check (default)
+# =============================================================================
 
 # Require RULES_FILE and REPORT_FILE as environment variables
 : "${RULES_FILE:?ERROR: RULES_FILE not set. Export it before running.}"
 : "${REPORT_FILE:?ERROR: REPORT_FILE not set. Export it before running.}"
 
 # Validate files exist
-[[ -f "$RULES_FILE" ]]  || { echo "ERROR: Rules file not found: $RULES_FILE"; exit 1; }
-[[ -f "$REPORT_FILE" ]] || { echo "ERROR: Report file not found: $REPORT_FILE"; exit 1; }
+[[ -f "$RULES_FILE" ]]  || die "Rules file not found: $RULES_FILE"
+[[ -f "$REPORT_FILE" ]] || die "Report file not found: $REPORT_FILE"
+[[ -f "$FORMAT_FILE" ]] || die "Report format reference not found: $FORMAT_FILE"
 
-# Report format contract:
-# only these anchors bind this checker to the report template. If any anchor
-# changes, bump Skill Version and update references/report-format.md.
-RULE_ROW_RE='^[|] [0-9]+\.[0-9]+ [|]'
-SUMMARY_ROW_RE='^[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|] *[0-9]+ *[|]'
-OVERALL_RESULT_RE='^\*\*Overall Result\*\*:'
-UX_BAR_RE='^[█░]+ [0-9]+\.[0-9]+ / 10'
-RATIONALE_STOP_RE='^## Rationale'
+ERRORS=0
 
-# 1. Extract canonical rule IDs from sections 1-16 ONLY (stop at the Rationale table),
-#    then de-duplicate as a safety net. The "## Rationale for Key Thresholds" section is
-#    explanatory, not part of the rule set; stopping at its heading means its rows can never
-#    inflate the count, regardless of how that table is formatted. There is NO merging of real
-#    rules here -- a duplicate rule ID is a rules-file error, caught by the check below.
-awk -F'|' -v RATIONALE_STOP_RE="$RATIONALE_STOP_RE" -v RULE_ROW_RE="$RULE_ROW_RE" '
-  $0 ~ RATIONALE_STOP_RE { exit }
-  $0 ~ RULE_ROW_RE { gsub(/ /,"",$2); print $2 }
-' "$RULES_FILE" | sort -u > "$TMPDIR/reconcile_rules.txt"
+# 0. Assert both table headers BEFORE any positional parsing. Without this, an added or reordered
+#    column would silently shift COL_RESULT/COL_SEVERITY and produce wrong counts instead of an
+#    error -- exactly the failure mode that makes a format change dangerous.
+if ! grep -qE "$DETAIL_HEADER_RE" "$REPORT_FILE"; then
+  echo "ERROR: Detailed Results header not found, or its columns changed."
+  echo "       Expected: | ID | Rule (short) | Result | Severity | Evidence / Reason |"
+  exit 1
+fi
+if ! grep -qE "$SUMMARY_HEADER_RE" "$REPORT_FILE"; then
+  echo "ERROR: Summary count table header ('| Total Rules |') not found."
+  exit 1
+fi
+
+# 0b. Run identity: the report MUST state which agent and model produced it. Two runs of the same
+#     application are only comparable when the harness and the model are known.
+check_identity_row() {
+  local label="$1" re="$2" value
+  value=$(grep -E "$re" "$REPORT_FILE" | head -1 \
+    | awk -F'|' -v C="$COL_VALUE" '{v=$C; gsub(/^[ \t]+|[ \t]+$/,"",v); print v}')
+  if [[ -z "$value" ]]; then
+    echo "ERROR: Summary table row '| $label |' is missing or empty."
+    echo "       Record the harness and the model used for this run (see references/report-format.md)."
+    return 1
+  fi
+}
+check_identity_row "AI agent" "$AGENT_ROW_RE" || ERRORS=1
+check_identity_row "Model" "$MODEL_ROW_RE" || ERRORS=1
+
+# 1. Extract canonical rule IDs from the rules file (stop at the Rationale table), then
+#    de-duplicate as a safety net. The "## Rationale for Key Thresholds" section is explanatory,
+#    not part of the rule set; stopping at its heading means its rows can never inflate the count.
+#    There is NO merging of real rules here -- a duplicate rule ID is a rules-file error.
+extract_rules "$RULES_FILE" | cut -f1 | sort -u > "$TMPDIR/reconcile_rules.txt"
 
 # 2. Extract rule IDs present in the report's Detailed Results table
 grep -E "$RULE_ROW_RE" "$REPORT_FILE" \
-  | awk -F'|' '{gsub(/ /,"",$2); print $2}' \
+  | awk -F'|' -v C="$COL_ID" '{v=$C; gsub(/ /,"",v); print v}' \
   > "$TMPDIR/reconcile_report.txt"
 
 # 3. Sanity check: rules file must yield at least one rule
 TOTAL=$(wc -l < "$TMPDIR/reconcile_rules.txt")
 if [[ "$TOTAL" -eq 0 ]]; then
-  echo "ERROR: No rules extracted from $RULES_FILE. Check file format."
-  exit 1
+  die "No rules extracted from $RULES_FILE. Check file format."
 fi
 
 # 4. Check for missing or extra rules (grep -Fxvf requires no sorting)
 MISSING=$(grep -Fxvf "$TMPDIR/reconcile_report.txt" "$TMPDIR/reconcile_rules.txt" || true)
 EXTRA=$(grep -Fxvf "$TMPDIR/reconcile_rules.txt" "$TMPDIR/reconcile_report.txt" || true)
 
-ERRORS=0
 if [[ -n "$MISSING" ]]; then
   echo "ERROR: Rules missing from report:" && echo "$MISSING"
   ERRORS=1
@@ -67,20 +320,21 @@ if [[ -n "$DUPES" ]]; then
   ERRORS=1
 fi
 
-# 5. Count per category from the Result ($4) and Severity ($5) COLUMNS only.
-#    The old approach grepped the whole line, so a severity word inside the Evidence column
-#    (e.g. the text "Critical") double-counted a rule. Reading the columns also lets us assert
-#    that every row resolves to exactly one verdict (and each FAIL to exactly one severity).
+# 5. Count per category from the Result and Severity COLUMNS only. Grepping whole lines would
+#    double-count a rule whose Evidence column contains a severity word. Reading the columns also
+#    lets us assert that every row resolves to exactly one verdict (and each FAIL to one severity).
 read -r PASS CRITICAL MAJOR MINOR NA SUM BADROWS < <(
-  awk -F'|' -v RULE_ROW_RE="$RULE_ROW_RE" '
-    $0 ~ RULE_ROW_RE {
-      r=$4; s=$5
-      pass=(r ~ /✅/); fail=(r ~ /❌/); na=(r ~ /⚪/)
+  awk -F'|' -v ROW="$RULE_ROW_RE" -v CR="$COL_RESULT" -v CS="$COL_SEVERITY" \
+      -v I_PASS="$ICON_PASS" -v I_FAIL="$ICON_FAIL" -v I_NA="$ICON_NA" \
+      -v S_CRIT="$SEV_CRITICAL" -v S_MAJ="$SEV_MAJOR" -v S_MIN="$SEV_MINOR" '
+    $0 ~ ROW {
+      r=$CR; s=$CS
+      pass=(index(r, I_PASS)>0); fail=(index(r, I_FAIL)>0); na=(index(r, I_NA)>0)
       if (pass+fail+na != 1) { bad++; next }          # exactly one verdict per row
       if (pass) { P++ }
       else if (na) { NA++ }
       else {
-        c=(s ~ /Critical/); mj=(s ~ /Major/); mn=(s ~ /Minor/)
+        c=(index(s, S_CRIT)>0); mj=(index(s, S_MAJ)>0); mn=(index(s, S_MIN)>0)
         if (c+mj+mn != 1) { bad++; next }             # exactly one severity per FAIL
         if (c) C++; else if (mj) MJ++; else MN++
       }
@@ -94,7 +348,7 @@ echo "Expected: $TOTAL | Counted: PASS=$PASS Critical=$CRITICAL Major=$MAJOR Min
 echo "CHAT_SUMMARY: ${TOTAL} rules — ✅ ${PASS} PASS | 🔴 ${CRITICAL} Critical | 🟠 ${MAJOR} Major | 🟡 ${MINOR} Minor | ⚪ ${NA} N/A"
 
 if [[ "$BADROWS" -ne 0 ]]; then
-  echo "ERROR: $BADROWS row(s) lack exactly one verdict (✅/❌/⚪) and (for FAIL) one severity. Fix the Result/Severity columns."
+  echo "ERROR: $BADROWS row(s) lack exactly one verdict (${ICON_PASS}/${ICON_FAIL}/${ICON_NA}) and (for FAIL) one severity. Fix the Result/Severity columns."
   ERRORS=1
 fi
 if [[ "$SUM" -ne "$TOTAL" ]]; then
@@ -111,7 +365,8 @@ if [[ -z "$SUMMARY_ROW" ]]; then
   ERRORS=1
 else
   read -r D_TOTAL D_PASS D_CRIT D_MAJOR D_MINOR D_NA < <(
-    printf '%s\n' "$SUMMARY_ROW" | awk -F'|' '{for(i=2;i<=7;i++) gsub(/ /,"",$i); print $2, $3, $4, $5, $6, $7}'
+    printf '%s\n' "$SUMMARY_ROW" \
+      | awk -F'|' -v F="$SUMMARY_COL_FIRST" '{for(i=F;i<=F+5;i++) gsub(/ /,"",$i); print $F, $(F+1), $(F+2), $(F+3), $(F+4), $(F+5)}'
   )
   if [[ "$D_TOTAL/$D_PASS/$D_CRIT/$D_MAJOR/$D_MINOR/$D_NA" != "$TOTAL/$PASS/$CRITICAL/$MAJOR/$MINOR/$NA" ]]; then
     echo "ERROR: Summary count table ($D_TOTAL/$D_PASS/$D_CRIT/$D_MAJOR/$D_MINOR/$D_NA) does not match counted rows ($TOTAL/$PASS/$CRITICAL/$MAJOR/$MINOR/$NA)."
@@ -120,19 +375,26 @@ else
   fi
 fi
 
-# 7. Enforce a NON-BREAKING space (U+00A0) between every status icon and its label in table
-#    rows. A regular space (U+0020) right after an icon lets the icon wrap onto its own line in
-#    rendered Markdown tables. Done with awk (same engine used for counting -- avoids the
-#    grep -P "supports only unibyte and UTF-8 locales" pitfall). A correctly formatted cell has
-#    the icon followed by U+00A0, so "icon + regular space" never matches.
-#    Icons: ✅ ❌ ⚪ (Result column) and 🔴 🟠 🟡 (Summary count header).
+# 7. Enforce a NON-BREAKING space (U+00A0) between every status icon and its label in table rows.
+#    A regular space (U+0020) right after an icon lets the icon wrap onto its own line in rendered
+#    Markdown tables. The check is positive -- every icon MUST be followed by the exact UTF-8
+#    sequence for U+00A0 -- so it also catches a lone 0xA0 byte, which looks like a non-breaking
+#    space in some editors but is invalid UTF-8 and renders as a replacement character.
+#    Done with awk (same engine used for counting -- avoids the grep -P "supports only unibyte and
+#    UTF-8 locales" pitfall).
 read -r BADICON_COUNT BADICON_EXAMPLES < <(
-  awk '/^\|/ && /(✅|❌|⚪|🔴|🟠|🟡) /{ c++; if (c<=3) ex=ex (ex?",":"") NR }
-       END { print c+0, (ex==""?"-":ex) }' "$REPORT_FILE"
+  awk -v ICONS="$ICON_ANY_RE" -v NB="$NBSP" '
+    /^\|/ {
+      a=$0; total=gsub(ICONS, "", a)
+      if (total == 0) next
+      b=$0; good=gsub(ICONS NB, "", b)
+      if (good != total) { c++; if (c<=3) ex=ex (ex?",":"") NR }
+    }
+    END { print c+0, (ex==""?"-":ex) }' "$REPORT_FILE"
 )
 if [[ "$BADICON_COUNT" -gt 0 ]]; then
-  echo "ERROR: $BADICON_COUNT table row(s) put a regular space after a status icon; use a"
-  echo "       non-breaking space (U+00A0) so the icon cannot wrap onto its own line."
+  echo "ERROR: $BADICON_COUNT table row(s) do not put a non-breaking space (U+00A0, UTF-8 C2 A0)"
+  echo "       directly after a status icon, so the icon can wrap onto its own line."
   echo "       Example line(s): $BADICON_EXAMPLES"
   ERRORS=1
 fi
@@ -141,72 +403,80 @@ fi
 #    no rule IDs). FAIL iff >=1 Critical; CONDITIONAL PASS iff 0 Critical and >=1 Major/Minor;
 #    PASS iff zero FAILs. Catches a verdict that contradicts its own defect counts.
 if [[ "$CRITICAL" -gt 0 ]]; then
-  EXPECTED_RESULT="FAIL"
+  EXPECTED_RESULT="$RESULT_FAIL"
 elif [[ $((MAJOR + MINOR)) -gt 0 ]]; then
-  EXPECTED_RESULT="CONDITIONAL PASS"
+  EXPECTED_RESULT="$RESULT_CONDITIONAL"
 else
-  EXPECTED_RESULT="PASS"
+  EXPECTED_RESULT="$RESULT_PASS"
 fi
 DECLARED_RESULT=$(grep -E "$OVERALL_RESULT_RE" "$REPORT_FILE" | head -1 \
   | sed -E 's/^\*\*Overall Result\*\*:[[:space:]]*//; s/[[:space:]]*$//; s/\*//g' \
   | tr '[:lower:]' '[:upper:]')
+EXPECTED_RESULT_UC=$(printf '%s' "$EXPECTED_RESULT" | tr '[:lower:]' '[:upper:]')
 if [[ -z "$DECLARED_RESULT" ]]; then
   echo "ERROR: Could not find the '**Overall Result**:' line in the report."
   ERRORS=1
-elif [[ "$DECLARED_RESULT" != "$EXPECTED_RESULT" ]]; then
+elif [[ "$DECLARED_RESULT" != "$EXPECTED_RESULT_UC" ]]; then
   echo "ERROR: Overall Result is '$DECLARED_RESULT' but the counts (Critical=$CRITICAL, Major=$MAJOR, Minor=$MINOR) require '$EXPECTED_RESULT'."
   echo "       FAIL needs >=1 Critical; CONDITIONAL PASS needs 0 Critical + >=1 Major/Minor; PASS needs zero FAILs."
   ERRORS=1
 fi
 
-# 9. Recompute the Overall UX Score (1-10) from the verdicts and cross-check the declared
-#    value + band. The dimension map and weights below are a COPY of the canonical table in
-#    SKILL.md (section "User Experience Score"); keep the two in sync.
-#    The script self-checks that this map covers every rule ID found in the report, so a rules
-#    change that is not reflected here is caught (it prints the unmapped IDs and FAILs).
+# 9. Recompute the Overall UX Score (1-10) from the verdicts and cross-check the declared value
+#    and band. The dimension map and weights are READ FROM references/report-format.md -- the
+#    single source of truth -- so a rules or weighting change cannot leave a stale copy behind.
 #    Points: PASS=1.0, FAIL Minor=0.5, FAIL Major=0.25, FAIL Critical=0.0, N/A excluded.
 #    Severity caps keep the score consistent with the Overall Result: >=1 Critical => <=4.0;
 #    0 Critical and >=1 Major/Minor => <=8.9; zero FAILs => 10.0. Rounding: half-up, 1 decimal.
-SKILL_VER=$(grep -E '^\| *Skill Version *\|' "$REPORT_FILE" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
-UX_REQUIRED=$(awk -v v="$SKILL_VER" 'BEGIN{ n=split(v,a,"."); maj=a[1]+0; mn=a[2]+0; print (maj>1||(maj==1&&mn>=11))?"1":"0" }')
-UX_LINE=$(grep -E '^\*\*Overall UX Score\*\*:' "$REPORT_FILE" | head -1 || true)
-# New format (skill >= 1.11.0): score is inside a fenced code block after "**Overall UX Score**"
-# Line looks like: ██████████████████████████████████████████░░░░░░░░ 8.4 / 10 — Good
+awk -F'|' -v ROW="$UX_DIM_ROW_RE" '
+  $0 ~ ROW {
+    d=$2; w=$4; ids=$5
+    gsub(/^[ \t]+|[ \t]+$/, "", d); gsub(/^[ \t]+|[ \t]+$/, "", w)
+    gsub(/[ \t]/, "", ids)
+    if (w !~ /^[0-9]+(\.[0-9]+)?$/) next
+    n=split(ids, A, ",")
+    for (i=1; i<=n; i++) if (A[i] != "") printf "%s %s %s\n", A[i], d, w
+  }
+' "$FORMAT_FILE" > "$TMPDIR/ux_dimensions.txt"
+
+if [[ ! -s "$TMPDIR/ux_dimensions.txt" ]]; then
+  die "Could not parse the UX dimension table from $FORMAT_FILE."
+fi
+
+UX_LINE=$(grep -E "$UX_INLINE_RE" "$REPORT_FILE" | head -1 || true)
+# Since skill 1.11.0 the score lives in a fenced code block after "**Overall UX Score**":
+# ██████████████████████████████████████████░░░░░░░░ 8.4 / 10 — Good
 if [[ -z "$UX_LINE" ]]; then
   UX_LINE=$(grep -E "$UX_BAR_RE" "$REPORT_FILE" | head -1 || true)
 fi
 
 if [[ -z "$UX_LINE" ]]; then
-  if [[ "$UX_REQUIRED" -eq 1 ]]; then
-    echo "ERROR: Skill Version ${SKILL_VER:-?} requires an Overall UX Score (inline or code block), but none was found."
-    ERRORS=1
-  else
-    echo "NOTE: No Overall UX Score found; report predates skill 1.11.0 - skipping UX score check."
-  fi
+  echo "ERROR: No Overall UX Score found (inline or code block). The score is mandatory."
+  ERRORS=1
 else
   read -r RECOMPUTED_UX UNMAPPED_IDS < <(
-    awk -F'|' -v CRIT="$CRITICAL" -v MAJ="$MAJOR" -v MIN="$MINOR" -v RULE_ROW_RE="$RULE_ROW_RE" '
+    awk -F'|' -v CRIT="$CRITICAL" -v MAJ="$MAJOR" -v MIN="$MINOR" -v ROW="$RULE_ROW_RE" \
+        -v CI="$COL_ID" -v CR="$COL_RESULT" -v CS="$COL_SEVERITY" -v DIMFILE="$TMPDIR/ux_dimensions.txt" \
+        -v I_PASS="$ICON_PASS" -v I_NA="$ICON_NA" \
+        -v S_CRIT="$SEV_CRITICAL" -v S_MAJ="$SEV_MAJOR" -v S_MIN="$SEV_MINOR" '
       BEGIN{
-        n=split("1.5 4.1 4.3 4.4 4.5 7.2",A," "); for(i=1;i<=n;i++) dim[A[i]]="D1";
-        n=split("3.1 3.2 3.3 3.4 3.5 3.6 3.7 4.2 5.1 5.2 5.3 5.4 5.5",A," "); for(i=1;i<=n;i++) dim[A[i]]="D2";
-        n=split("1.1 1.2 1.3 1.4 2.1 2.2 2.3 2.4 2.5 2.6 2.7 6.1 6.2 6.3 6.4 9.1 9.2 9.3 12.3",A," "); for(i=1;i<=n;i++) dim[A[i]]="D3";
-        n=split("7.1 11.1 11.2 11.3 11.4 11.5 11.6 11.7 11.8",A," "); for(i=1;i<=n;i++) dim[A[i]]="D4";
-        n=split("7.3 7.4 7.5 7.6 10.1 10.2 10.3 10.4 12.1 12.2 15.1 15.2 15.3 15.4",A," "); for(i=1;i<=n;i++) dim[A[i]]="D5";
-        n=split("8.1 8.2 8.3 13.1 13.2 13.3 13.4 14.1 14.2 14.3",A," "); for(i=1;i<=n;i++) dim[A[i]]="D6";
-        n=split("16.1 16.2 16.3 16.4 16.5",A," "); for(i=1;i<=n;i++) dim[A[i]]="D7";
-        w["D1"]=2.0; w["D2"]=2.0; w["D3"]=1.5; w["D4"]=1.5; w["D5"]=2.5; w["D6"]=1.0; w["D7"]=1.0;
+        while ((getline line < DIMFILE) > 0) {
+          split(line, F, " ")
+          dim[F[1]] = F[2]; w[F[2]] = F[3] + 0
+        }
+        close(DIMFILE)
         unmapped="";
       }
-      $0 ~ RULE_ROW_RE {
-        id=$2; gsub(/ /,"",id);
+      $0 ~ ROW {
+        id=$CI; gsub(/ /,"",id);
         d=dim[id];
         if (d=="") { unmapped = unmapped (unmapped==""?"":",") id; next }
-        r=$4; s=$5;
-        if (r ~ /⚪/) next;                       # N/A excluded from denominator
-        if (r ~ /✅/) { p=1.0 }
-        else if (s ~ /Critical/) { p=0.0 }
-        else if (s ~ /Major/)    { p=0.25 }
-        else if (s ~ /Minor/)    { p=0.5 }
+        r=$CR; s=$CS;
+        if (index(r, I_NA)>0) next;                  # N/A excluded from denominator
+        if (index(r, I_PASS)>0) { p=1.0 }
+        else if (index(s, S_CRIT)>0) { p=0.0 }
+        else if (index(s, S_MAJ)>0)  { p=0.25 }
+        else if (index(s, S_MIN)>0)  { p=0.5 }
         else { p=0.0 }
         pts[d]+=p; cnt[d]+=1;
       }
@@ -223,19 +493,12 @@ else
     ' "$REPORT_FILE"
   )
 
-  EXPECTED_BAND=$(awk -v s="$RECOMPUTED_UX" 'BEGIN{
-    s=s+0;
-    if (s >= 9.0)      print "Excellent";
-    else if (s >= 7.0) print "Good";
-    else if (s >= 5.0) print "Fair";
-    else if (s >= 3.0) print "Poor";
-    else               print "Very Poor";
-  }')
+  EXPECTED_BAND=$(band_for_score "$RECOMPUTED_UX")
   echo "UX_SUMMARY: Overall UX Score = ${RECOMPUTED_UX} / 10 - ${EXPECTED_BAND}"
 
   if [[ "$UNMAPPED_IDS" != "-" ]]; then
     echo "ERROR: report rule IDs not mapped to any UX dimension: $UNMAPPED_IDS"
-    echo "       The UX dimension map in reconcile-report.sh is out of sync with the rules file."
+    echo "       The UX dimension table in $FORMAT_FILE does not cover every rule."
     ERRORS=1
   fi
 
@@ -253,7 +516,7 @@ else
   UXNUM_OK=$(awk -v a="${DECLARED_UX:-0}" -v b="$RECOMPUTED_UX" 'BEGIN{ d=a-b; if(d<0)d=-d; print (d<=0.05)?"1":"0" }')
   if [[ "$UXNUM_OK" -ne 1 ]]; then
     echo "ERROR: Overall UX Score is '${DECLARED_UX:-<none>}' but recomputed from the verdicts is '$RECOMPUTED_UX'."
-    echo "       Update the '**Overall UX Score**:' line to match the computed value."
+    echo "       Update the Overall UX Score line to match the computed value."
     ERRORS=1
   fi
   if [[ "$DECLARED_BAND" != "$EXPECTED_BAND" ]]; then
@@ -268,3 +531,4 @@ if [[ "$ERRORS" -ne 0 ]]; then
 else
   echo "OK: Reconciliation passed."
 fi
+

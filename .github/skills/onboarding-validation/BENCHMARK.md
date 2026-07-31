@@ -5,9 +5,9 @@
 
 | Field | Value |
 |-------|-------|
-| Skill version | 1.12.0 |
+| Skill version | 1.13.0 |
 | Rules version | 1.4.0 |
-| Date | 2026-07-29 |
+| Date | 2026-07-31 |
 | Status | Manual validation complete; automated benchmark pending |
 
 ## Summary
@@ -16,10 +16,13 @@ The skill has been validated through 2 runs against 2 distinct OEP applications 
 
 ## Validation Results
 
-| Application | Commit | Deployment | Overall Result | UX Score | Date |
-|-------------|--------|-----------|----------------|----------|------|
-| live-video-captioning | `c645ac49` | docker-compose | CONDITIONAL PASS | 8.7 / 10 — Good | 2026-07-21 |
-| handheld-multi-modal | `0bdf172c` | docker-compose | CONDITIONAL PASS | 8.1 / 10 — Good | 2026-07-21 |
+| Application | Commit | Deployment | AI agent | Model | Overall Result | UX Score | Date |
+|-------------|--------|-----------|----------|-------|----------------|----------|------|
+| live-video-captioning | `c645ac49` | docker-compose | not recorded (pre-1.13.0) | not recorded (pre-1.13.0) | CONDITIONAL PASS | 8.7 / 10 — Good | 2026-07-21 |
+| handheld-multi-modal | `0bdf172c` | docker-compose | not recorded (pre-1.13.0) | not recorded (pre-1.13.0) | CONDITIONAL PASS | 8.1 / 10 — Good | 2026-07-21 |
+
+Run identity (`AI agent`, `Model`) became a mandatory Summary field in skill 1.13.0. Earlier runs are
+kept as-is rather than back-filled from memory; every run from 1.13.0 on records both values.
 
 ## Eval Coverage
 
@@ -38,10 +41,15 @@ Evals cover classes of skill behavior (docker-compose, Helm/K8s, submodule, two 
 
 ## Skill Integrity Checks
 
+`scripts/self-test.sh` runs offline, needs no access to a validated application, and must pass after
+any change to the skill.
+
 | Check | Method | Result |
 |-------|--------|--------|
-| All reference files reachable from SKILL.md | `scripts/self-test.sh` | PASS |
-| All relative links in SKILL.md resolve | `scripts/self-test.sh` | PASS |
-| Report format contract honoured | `scripts/self-test.sh` (golden fixture) | PASS |
+| Golden fixture reconciles cleanly (76 rules) | `scripts/self-test.sh` [1/5] | PASS |
+| Contract mutations are detected (missing rule, summary drift, wrong UX score, U+00A0, column insert, missing run identity) | `scripts/self-test.sh` [2/5] | PASS |
+| Generated skeleton covers exactly one row per rule, and an unfilled skeleton is rejected | `scripts/self-test.sh` [3/5] | PASS |
+| Format contract in the checker matches `references/report-format.md` | `scripts/self-test.sh` [4/5] | PASS |
+| All reference files reachable from SKILL.md, all relative links resolve | `scripts/self-test.sh` [5/5] | PASS |
 | Structure & spec compliance | `skill-validator check` | PASS |
 | Instruction quality (clarity / actionability / novelty) | `skill-validator score evaluate` | *(result)* |
