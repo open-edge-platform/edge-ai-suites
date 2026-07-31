@@ -40,7 +40,6 @@ Default ports (configurable via `.env`):
 | Backend API          | `8085`           | REST API and Swagger UI              |
 | Provider Dashboard   | `3100`           | React UI (nginx)                     |
 | PostgreSQL           | `5433`           | Internal database (host-mapped)      |
-| Frigate UI           | `5000`           | Frigate camera management (optional) |
 
 > Ensure these ports are not in use by other services before starting the stack.
 

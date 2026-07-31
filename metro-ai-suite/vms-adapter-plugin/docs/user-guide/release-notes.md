@@ -12,8 +12,6 @@ Details about the changes and known issues in each release of the VMS Adapter Pl
 
 **New Features**:
 
-- **Multi-VMS Support**: Connect  Nx Witness (REST v4) and Frigate (0.15) cameras simultaneously from a single plugin instance. Camera IDs are vendor-prefixed (`frigate:*`, `nx:*`) to ensure uniqueness across systems.
-
 - **Live Video Captioning Integration**: Stream RTSP feeds from any connected camera to the Intel Live Video Captioning application (DLStreamer + VLM). Captions are streamed back to the operator dashboard via SSE and overlaid on the WebRTC video player.
 
 - **DLStreamer Vision Integration**: Route camera feeds to a DLStreamer Pipeline Server for warehouse defect detection. Bounding-box detections are translated from DLStreamer GVA JSON format and pushed back to Nx Witness as analytics objects via the Nx REST v4 analytics API.
@@ -26,7 +24,7 @@ Details about the changes and known issues in each release of the VMS Adapter Pl
 
 - **PostgreSQL Persistence**: Camera registrations, analytics sessions, and metadata events are stored in a PostgreSQL 15 database via async SQLAlchemy 2.
 
-- **Docker Compose Deployment**: Full stack in four services — `vms-backend`, `vms-ui` (nginx), `postgres`, and `frigate`.
+- **Docker Compose Deployment**: Full stack in three services — `vms-backend`, `vms-ui` (nginx), and `postgres`.
 
 **Known Issues**:
 

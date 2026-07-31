@@ -208,6 +208,9 @@ def mcp_api(tmp_path_factory: pytest.TempPathFactory) -> McpApiClient:
     log_path = workdir / "mcp-server.log"
     log_file = log_path.open("w", encoding="utf-8")
     env = os.environ.copy()
+    env.pop("SMARTBUILDING_ROUTER_URL", None)
+    env.pop("SMARTBUILDING_OPENCLAW_GATEWAY_URL", None)
+    env.pop("SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN", None)
     env["SMARTBUILDING_DATA_DIR"] = str(workdir / "data")
     process = subprocess.Popen(
         ["node", str(dist_entry), "--http", "--config", str(config_path)],

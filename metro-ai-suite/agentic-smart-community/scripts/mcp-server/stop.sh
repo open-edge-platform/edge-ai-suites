@@ -16,9 +16,13 @@ fi
 PID="$(cat "$PID_FILE" 2>/dev/null || true)"
 if [[ -n "${PID:-}" ]] && kill -0 "$PID" 2>/dev/null; then
   kill "$PID" 2>/dev/null || true
-  for _ in $(seq 1 15); do kill -0 "$PID" 2>/dev/null || break; sleep 0.3; done
-  kill -0 "$PID" 2>/dev/null && kill -9 "$PID" 2>/dev/null || true
-  echo "stopped mcp-server (pid $PID)"
+  for _ in $(seq 1 100); do kill -0 "$PID" 2>/dev/null || break; sleep 0.3; done
+  if kill -0 "$PID" 2>/dev/null; then
+    kill -9 "$PID" 2>/dev/null || true
+    echo "forced mcp-server shutdown after 30s timeout (pid $PID)"
+  else
+    echo "gracefully stopped mcp-server (pid $PID)"
+  fi
 else
   echo "mcp-server not running (stale pidfile)"
 fi
