@@ -7,7 +7,7 @@ import { WebSocket, WebSocketServer, type RawData } from "ws";
 import type { ChatCredentialStore, ChatCredentials } from "./chat-credentials.js";
 
 const MAX_CONNECTIONS = 20;
-const MAX_BROWSER_MESSAGE_BYTES = 64 * 1024;
+const MAX_BROWSER_MESSAGE_BYTES = 17 * 1024 * 1024;
 const MAX_UPSTREAM_MESSAGE_BYTES = 25 * 1024 * 1024;
 const MAX_BUFFERED_BYTES = 1024 * 1024;
 
