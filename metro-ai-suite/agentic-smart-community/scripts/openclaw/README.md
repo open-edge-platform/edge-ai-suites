@@ -8,11 +8,15 @@ You add your own models yourself — during onboarding (step 3) or later (step 4
 ### 1. Pre-requisites
 
 ```bash
-# Configure npm previledge
-mkdir -p ~/.npm-global 
-npm config set prefix '~/.npm-global'
+# Configure a user-owned npm install location.
+mkdir -p "$HOME/.npm-global"
+npm config set prefix "$HOME/.npm-global"
+export PATH="$HOME/.npm-global/bin:$PATH"
+grep -qxF 'export PATH="$HOME/.npm-global/bin:$PATH"' "$HOME/.bashrc" || \
+	echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
 
-# Node.js >= 24
+# OpenClaw 2026.7.1 supports Node.js >=22.22.3 <23, >=24.15.0 <25, or >=25.9.0.
+# This recipe installs the supported 22.x line.
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```

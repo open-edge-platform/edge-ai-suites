@@ -89,6 +89,7 @@ command -v node >/dev/null || { echo "node not found in PATH" >&2; exit 1; }
 command -v npm >/dev/null || { echo "npm not found in PATH" >&2; exit 1; }
 command -v curl >/dev/null || { echo "curl not found in PATH" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq not found in PATH" >&2; exit 1; }
+command -v ffmpeg >/dev/null || { echo "ffmpeg not found in PATH (required for RTSP live preview)" >&2; exit 1; }
 echo "building workspace — see $LOG_FILE"
 { npm install && npm run build; } >>"$LOG_FILE" 2>&1
 
@@ -129,6 +130,7 @@ echo $! >"$PID_FILE"
 for _ in $(seq 1 40); do
   if ss -tln 2>/dev/null | grep -q ':3100 '; then
     echo "mcp-server up (pid $(cat "$PID_FILE"))"
+    echo "  UI:     http://localhost:3100/"
     echo "  MCP:    http://localhost:3100/mcp"
     echo "  events: http://localhost:3101/events"
     echo "  logs:   $LOG_FILE"

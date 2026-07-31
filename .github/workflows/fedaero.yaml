@@ -242,6 +242,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           notes=$'Rolling dev build from `${{ github.sha }}`.\n\nFor the stable pinned release see the "Latest release" badge.'
+          gh release delete fedaero-latest --cleanup-tag --yes || true
           gh release create --prerelease --title "Federal and Aerospace | Edge AI Suites (latest)" \
             --notes "$notes" fedaero-latest assets/*.zip
 

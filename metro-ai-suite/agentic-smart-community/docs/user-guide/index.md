@@ -123,4 +123,4 @@ Together they close the loop: `video-summary-prompt-studio` **creates** a use ca
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](../../LICENSE).
