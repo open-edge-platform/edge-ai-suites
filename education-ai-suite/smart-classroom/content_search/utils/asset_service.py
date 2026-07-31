@@ -4,6 +4,7 @@
 #
 
 import json
+import mimetypes
 import os
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -17,17 +18,26 @@ VIDEO_CONTENT_PREFIX = "video/"
 VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv"}
 
 
-def _max_bytes_for(file: UploadFile) -> Optional[int]:
+def _max_bytes_for_name(filename: Optional[str], content_type: Optional[str]) -> Optional[int]:
+    """Size cap for a file, chosen from its mime type / extension.
+
+    Takes plain values rather than an ``UploadFile`` so the same thresholds apply to
+    both multipart uploads and server-side path ingest.
+    """
     document_max_mb = int(os.environ.get("DOCUMENT_MAX_MB", "100"))
     video_max_mb = int(os.environ.get("VIDEO_MAX_MB", "1024"))
 
-    ctype = (file.content_type or "").lower()
+    ctype = (content_type or "").lower()
     if ctype.startswith(VIDEO_CONTENT_PREFIX):
         return video_max_mb * 1024 * 1024
-    name = (file.filename or "").lower()
+    name = (filename or "").lower()
     if any(name.endswith(ext) for ext in VIDEO_EXTENSIONS):
         return video_max_mb * 1024 * 1024
     return document_max_mb * 1024 * 1024
+
+
+def _max_bytes_for(file: UploadFile) -> Optional[int]:
+    return _max_bytes_for_name(file.filename, file.content_type)
 
 
 class AssetService:
@@ -112,6 +122,24 @@ class AssetService:
             file, max_size_bytes=max_size_bytes
         )
 
+        return AssetService._finalize_asset(
+            db, payload, file.filename, file.content_type, **kwargs
+        )
+
+    @staticmethod
+    def _finalize_asset(
+        db: Session,
+        payload: dict,
+        filename: Optional[str],
+        content_type: Optional[str],
+        **kwargs
+    ) -> dict:
+        """Shared post-storage handling for both multipart upload and path ingest.
+
+        Turns validation errors into FAILED tasks, integrity-checks PDFs/videos, and
+        applies hash-based deduplication. `payload` is whatever the storage layer
+        returned for the stored copy.
+        """
         if "validation_error" in payload:
             from utils.crud_task import task_crud
             from utils.schemas_task import TaskStatus
@@ -122,8 +150,8 @@ class AssetService:
                 db,
                 task_type="file_search",
                 payload={
-                    "file_name": file.filename,
-                    "content_type": file.content_type,
+                    "file_name": filename,
+                    "content_type": content_type,
                     "validation_error": payload["validation_error"],
                     "error_type": payload["error_type"],
                     **kwargs
@@ -142,13 +170,13 @@ class AssetService:
                 "message": f"Upload validation failed: {payload['validation_error']}",
                 "data": {
                     "task_id": str(failed_task.id),
-                    "file_name": file.filename,
+                    "file_name": filename,
                     "reason": payload["validation_error"]
                 }
             }
 
         file_key = payload.get("file_key")
-        file_name_lower = (file.filename or "").lower()
+        file_name_lower = (filename or "").lower()
 
         if any(file_name_lower.endswith(ext) for ext in ['.pdf', '.mp4', '.avi', '.mov', '.mkv']):
             from utils.crud_task import task_crud
@@ -159,7 +187,7 @@ class AssetService:
             is_valid, error_msg = file_validator.validate_file_integrity(str(file_path))
 
             if not is_valid:
-                print(f"[ASSET] File integrity check failed: {file.filename}, Error: {error_msg}", flush=True)
+                print(f"[ASSET] File integrity check failed: {filename}, Error: {error_msg}", flush=True)
 
                 try:
                     storage_service.delete_file(file_key, missing_ok=True)
@@ -170,8 +198,8 @@ class AssetService:
                     db,
                     task_type="file_search",
                     payload={
-                        "file_name": file.filename,
-                        "content_type": file.content_type,
+                        "file_name": filename,
+                        "content_type": content_type,
                         "file_key": file_key,
                         "validation_error": error_msg,
                         "error_type": "corrupted_file",
@@ -191,7 +219,7 @@ class AssetService:
                     "message": f"File integrity validation failed: {error_msg}",
                     "data": {
                         "task_id": str(failed_task.id),
-                        "file_name": file.filename,
+                        "file_name": filename,
                         "reason": error_msg
                     }
                 }
@@ -200,7 +228,7 @@ class AssetService:
 
         existing_asset = AssetService._find_existing_asset(db, file_hash)
         if existing_asset:
-            print(f"[ASSET] File existed! filename: {file.filename}, Hash: {file_hash}")
+            print(f"[ASSET] File existed! filename: {filename}, Hash: {file_hash}")
             # The file we just wrote is a duplicate; drop it so we don't
             # accumulate orphaned copies in the object store.
             try:
@@ -209,11 +237,11 @@ class AssetService:
                 pass
             return AssetService._handle_deduplication_policy(db, existing_asset, file_hash)
 
-        print(f"[ASSET] New upload: {file.filename}", flush=True)
+        print(f"[ASSET] New upload: {filename}", flush=True)
         payload.update({
             "is_biz_error": False,
-            "file_name": file.filename,
-            "content_type": file.content_type,
+            "file_name": filename,
+            "content_type": content_type,
             "bucket_name": payload.get("bucket_name") or "content-search",
             **kwargs
         })
@@ -231,6 +259,32 @@ class AssetService:
     @staticmethod
     async def process_upload_and_ingest(db: Session, file: UploadFile, background_tasks: BackgroundTasks, **kwargs):
         payload = await AssetService._prepare_and_upload_asset(db, file, **kwargs)
+
+        if payload.get("is_biz_error"):
+            return payload
+
+        return await task_service.handle_file_upload(db, payload, background_tasks, should_ingest=True)
+
+    @staticmethod
+    async def process_path_and_ingest(db: Session, src_path: str, background_tasks: BackgroundTasks, **kwargs):
+        """Ingest a file already present on the server's filesystem.
+
+        Same pipeline as :meth:`process_upload_and_ingest` (dedup, integrity checks,
+        OCR, video summarization) but the bytes are copied from ``src_path`` instead of
+        being uploaded over HTTP. Intended for the Electron app, which runs on the same
+        machine as this service.
+        """
+        filename = os.path.basename(src_path)
+        content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        max_size_bytes = _max_bytes_for_name(filename, content_type)
+
+        payload = await storage_service.copy_path_and_prepare_payload(
+            src_path, max_size_bytes=max_size_bytes
+        )
+
+        payload = AssetService._finalize_asset(
+            db, payload, payload.get("filename", filename), content_type, **kwargs
+        )
 
         if payload.get("is_biz_error"):
             return payload

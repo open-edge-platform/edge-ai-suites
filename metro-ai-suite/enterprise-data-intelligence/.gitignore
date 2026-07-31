@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+model_download_venv/
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets & environment
+.env
+.env.*
+*.key
+openclaw.json
+
+# Generated config (from *.example / generate scripts)
+router_config/config.yaml
+
+# Generated artifacts & reports
+media/
+*.pdf
+workspace/
+data/
+logs/
+*.log
+
+# Models & vector store (heavy; download/regenerate on demand)
+models/
+*.gguf
+*.safetensors

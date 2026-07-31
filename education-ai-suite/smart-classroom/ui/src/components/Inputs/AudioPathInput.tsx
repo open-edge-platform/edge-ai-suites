@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ProjectLocationInput from './PathInput';
 
 interface AudioPathInputProps {
@@ -8,11 +9,13 @@ interface AudioPathInputProps {
 }
 
 const AudioPathInput: React.FC<AudioPathInputProps> = ({ audioPath, onChange, onFolderClick }) => {
+  const { t } = useTranslation();
+  
   return (
     <ProjectLocationInput
       value={audioPath}
       onChange={onChange}
-      placeholder="Enter audio path"
+      placeholder={t('settings.enterAudioPath')}
       prefix="audio/"
       showFolderIcon={true}
       onFolderClick={onFolderClick}

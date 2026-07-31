@@ -7,8 +7,9 @@
 //
 // The Python backends are expected to be started separately.
 
+const fs = require('fs');
 const path = require('path');
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const { startServer } = require('./server.cjs');
 
 // Height (px) of the custom title bar strip. Matches the TopPanel so the
@@ -214,6 +215,49 @@ if (!app.requestSingleInstanceLock()) {
     if (typeof lang !== 'string' || !lang) return;
     currentLanguage = lang;
     Menu.setApplicationMenu(buildAppMenu(currentLanguage));
+  });
+
+  // Open the OS-native file chooser (multi-select) and return the chosen files as
+  // { path, name, size } records — size is read here so the renderer can show it in
+  // the staging table without ever holding the file contents. Empty when cancelled.
+  ipcMain.handle('dialog:pickFiles', async (event, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const extensions = Array.isArray(options?.extensions) ? options.extensions : [];
+    const dialogOptions = {
+      properties: ['openFile', 'multiSelections'],
+      ...(extensions.length ? { filters: [{ name: 'Supported files', extensions }] } : {}),
+      ...(typeof options?.defaultPath === 'string' && options.defaultPath
+        ? { defaultPath: options.defaultPath }
+        : {}),
+    };
+    const result = win
+      ? await dialog.showOpenDialog(win, dialogOptions)
+      : await dialog.showOpenDialog(dialogOptions);
+    if (result.canceled || !result.filePaths.length) return [];
+    return result.filePaths.map((filePath) => {
+      let size = 0;
+      try {
+        size = fs.statSync(filePath).size;
+      } catch {
+        // Unreadable file: report size 0 and let the backend reject it on ingest.
+      }
+      return { path: filePath, name: path.basename(filePath), size };
+    });
+  });
+
+  // Open the OS-native folder chooser and return the selected absolute path
+  // ('' when cancelled).
+  ipcMain.handle('dialog:pickDirectory', async (event, defaultPath) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const options = {
+      properties: ['openDirectory', 'createDirectory'],
+      ...(typeof defaultPath === 'string' && defaultPath ? { defaultPath } : {}),
+    };
+    const result = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options);
+    if (result.canceled || !result.filePaths.length) return '';
+    return result.filePaths[0];
   });
 
   app.whenReady().then(() => {

@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList, csGetTags } from "../../services/api";
+import { csUploadIngest, csIngestPath, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList, csGetTags } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
 import FileManager from "./FileManager";
@@ -19,7 +19,13 @@ type TaskStatus =
 
 interface UploadEntry {
   id: string;
-  file: File;
+  /** Browser File object — absent for entries staged from a native path (Electron). */
+  file?: File;
+  /**
+   * Absolute filesystem path, set only in Electron. When present the file is ingested
+   * by path (no HTTP upload); otherwise `file` is uploaded as multipart.
+   */
+  sourcePath?: string;
   filename: string;
   fileType: string;
   fileSize: number;
@@ -302,15 +308,43 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
     [updateEntry]
   );
 
-  // Stage files locally — upload is triggered explicitly by the user
+  // Stage files locally — upload is triggered explicitly by the user.
+  // In Electron we also resolve each file's real path so the upload can skip HTTP
+  // and let the backend read it from disk. Works for the file input and drag-drop.
   const processFiles = useCallback(
     (files: File[]) => {
       const newEntries: UploadEntry[] = files.map((f) => ({
         id: genId(),
         file: f,
+        sourcePath: window.electronAPI?.getPathForFile?.(f) || undefined,
         filename: f.name,
         fileType: f.name.split(".").pop()?.toUpperCase() ?? "—",
         fileSize: f.size,
+        taskId: null,
+        fileKey: null,
+        status: "STAGED" as TaskStatus,
+        progress: 0,
+        error: null,
+        selected: false,
+        tags: [],
+        vsEnabled: false,
+        ocrTextKey: null,
+        videoSummaryStatus: null,
+      }));
+      setEntries((prev) => [...prev, ...newEntries]);
+    },
+    []
+  );
+
+  // Stage files chosen through Electron's native dialog: path only, no File object.
+  const processPaths = useCallback(
+    (picked: Array<{ path: string; name: string; size: number }>) => {
+      const newEntries: UploadEntry[] = picked.map((p) => ({
+        id: genId(),
+        sourcePath: p.path,
+        filename: p.name,
+        fileType: p.name.split(".").pop()?.toUpperCase() ?? "—",
+        fileSize: p.size,
         taskId: null,
         fileKey: null,
         status: "STAGED" as TaskStatus,
@@ -362,7 +396,10 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
             updateEntry(entry.id, { taskId: ingestRes.task_id, status: "PROCESSING", fileKey: entry.fileKey });
             startPolling(entry.id, ingestRes.task_id);
           } else {
-            const res = await csUploadIngest(entry.file, meta);
+            // Electron: ingest by path, no HTTP upload. Web: multipart upload.
+            const res = entry.sourcePath
+              ? await csIngestPath(entry.sourcePath, meta)
+              : await csUploadIngest(entry.file!, meta);
             if (res.status === "ALREADY_EXISTS") {
               // File was already fully processed — store task_id so cleanup works on remove
               updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, taskId: res.task_id || null });
@@ -389,7 +426,9 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
         const baseMeta: Record<string, unknown> = entry.tags.length ? { tags: entry.tags } : {};
         if (isVideo) baseMeta.vs_enabled = entry.vsEnabled;
         const meta = Object.keys(baseMeta).length ? baseMeta : undefined;
-        const res = await csUploadIngest(entry.file, meta);
+        const res = entry.sourcePath
+          ? await csIngestPath(entry.sourcePath, meta)
+          : await csUploadIngest(entry.file!, meta);
         if (res.status === "ALREADY_EXISTS") {
           // Already fully processed — store task_id so cleanup works on remove
           updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, taskId: res.task_id || null });
@@ -404,7 +443,31 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
     [updateEntry, startPolling]
   );
 
-  const handleBrowse = () => fileInputRef.current?.click();
+  // Electron: OS-native multi-file dialog, files are then ingested by path.
+  // Web: the hidden file input, as before.
+  const handleBrowse = async () => {
+    const pickFiles = window.electronAPI?.pickFiles;
+    if (!pickFiles) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const picked = await pickFiles({
+        extensions: [...ALLOWED_EXTENSIONS].map((ext) => ext.replace(/^\./, "")),
+      });
+      if (!picked.length) return;
+      const validFiles = picked.filter((p) => isAllowed(p.name));
+      const rejectedFiles = picked.filter((p) => !isAllowed(p.name));
+      if (rejectedFiles.length) {
+        setUnsupportedWarning(
+          t("uploadSection.unsupportedFilesWarning", { files: rejectedFiles.map((p) => p.name).join(", ") })
+        );
+      }
+      if (validFiles.length) processPaths(validFiles);
+    } catch (err) {
+      console.warn("Native file picker failed:", err);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const allFiles = Array.from(e.target.files ?? []);

@@ -14,11 +14,11 @@ README.md          @xwu2intel
 # Education-AI Suite
 # ============================================================================
 
-/education-ai-suite/                                                  @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208
-/education-ai-suite/README.md                                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/                                                  @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @tingjiec
+/education-ai-suite/README.md                                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @tingjiec @open-edge-platform/open-edge-platform-docs-write
 
-/education-ai-suite/smart-classroom/docs/                             @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
-/education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/smart-classroom/docs/                             @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @tingjiec @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @tingjiec @open-edge-platform/open-edge-platform-docs-write
 
 # ============================================================================
 # Health And Life Sciences AI Suite
@@ -131,6 +131,10 @@ README.md          @xwu2intel
 /metro-ai-suite/agentic-smart-community/            @Johere @lijiunderstand @llin60 @xwu2intel
 /metro-ai-suite/agentic-smart-community/docs/       @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/agentic-smart-community/README.md   @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
+/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @xwu2intel
+/metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
 /metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write

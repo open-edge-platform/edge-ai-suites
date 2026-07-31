@@ -187,12 +187,12 @@ The bootstrap looks for `${CACHE_DIR}/weights/<model_name>.pt` (default: `/cache
 
   ```bash
   .venv-backend/bin/python scripts/create_endoscopy_video.py \
-    --images-dir datasets/CVC-ColonDB/raw/images \
+    --images-dir datasets/CVC-ColonDB/raw/CVC-ColonDB/images \
     --output videos/polyp_test.mp4 \
     --seconds 60 --fps 60 --width 1920 --height 1080
   ```
 
-  This creates/overwrites `videos/polyp_test.mp4` using an H.264-compatible codec for the default app file-source pipeline.
+  This creates/overwrites `videos/polyp_test.mp4` using an H.264-compatible codec for the default app file-source pipeline. By default the script tries OpenCV first, then automatically falls back to system `ffmpeg` (`libx264`) when OpenCV H.264 is unavailable.
 
 ### 4. Validate and start
 
@@ -317,3 +317,6 @@ Surgical_Instrument/
 └── Makefile                   # up / run / down / logs / clean
 ```
 
+## Disclaimer
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.  
