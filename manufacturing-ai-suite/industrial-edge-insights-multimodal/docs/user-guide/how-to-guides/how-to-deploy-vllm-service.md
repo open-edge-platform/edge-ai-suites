@@ -35,7 +35,7 @@ python3 -m venv .modelenv && \
 source .modelenv/bin/activate && \
 pip3 install huggingface_hub==1.23.0 && \
 rm -rf huggingface models && \
-hf download Qwen/Qwen3.5-2B \
+hf download unsloth/Qwen3.5-2B \
     --local-dir ./huggingface/Qwen3.5-2B && \
 hf download Intel/qwen3.5-2b-vlm-weld-explainability-lora \
     --local-dir ./models/qwen3.5-2b-vlm-weld-explainability-lora && \
