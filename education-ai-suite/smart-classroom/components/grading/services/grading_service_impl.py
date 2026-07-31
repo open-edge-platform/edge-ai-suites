@@ -387,14 +387,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         if slot is None:
             slot = str(len(students) + 1)
 
-        questions = {}
-        for qid, q in (data.get("questions") or {}).items():
-            questions[qid] = {
-                "catalog": q.get("catalog"),
-                "type": q.get("type"),
-                "score": q.get("vlm_score"),
-                "max_score": q.get("max_score"),
-            }
+        questions_hierarchy = data.get("questions_hierarchy") or []
 
         students[slot] = {
             "student_id": student_id,
@@ -409,7 +402,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "subjective_score": source_summary.get("subjective_score"),
             "subjective_max": source_summary.get("subjective_max"),
             "processing_seconds": data.get("processing_seconds"),
-            "questions": questions,
+            "questions_hierarchy": questions_hierarchy,
         }
         summary["updated_at"] = _now_utc_iso()
         summary["student_count"] = len(students)
@@ -838,6 +831,8 @@ def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
 
 def update_grading_config(
     dpi: int | None = None,
+    page_columns: int | None = None,
+    column_split_ratio: float | None = None,
     contrast_enhance: bool | None = None,
     contrast_factor: float | None = None,
     max_tokens: int | None = None,
@@ -870,6 +865,10 @@ def update_grading_config(
 
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
+    if page_columns is not None:
+        text = replace_scalar(text, "page_columns", str(int(page_columns)))
+    if column_split_ratio is not None:
+        text = replace_scalar(text, "column_split_ratio", str(float(column_split_ratio)))
     if contrast_enhance is not None:
         text = replace_scalar(text, "contrast_enhance", yaml_bool(contrast_enhance))
     if contrast_factor is not None:
@@ -934,6 +933,8 @@ def get_grading_config() -> dict[str, Any]:
 
     return {
         "dpi": image.get("dpi"),
+        "page_columns": image.get("page_columns"),
+        "column_split_ratio": image.get("column_split_ratio"),
         "contrast_enhance": image.get("contrast_enhance"),
         "contrast_factor": image.get("contrast_factor"),
         "max_tokens": vlm.get("max_tokens"),

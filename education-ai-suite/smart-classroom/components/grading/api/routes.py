@@ -73,6 +73,8 @@ def create_router(language: str) -> APIRouter:
         try:
             return GradingConfigResponse(**update_grading_config_impl(
                 dpi=req.dpi,
+                page_columns=req.page_columns,
+                column_split_ratio=req.column_split_ratio,
                 contrast_enhance=req.contrast_enhance,
                 contrast_factor=req.contrast_factor,
                 max_tokens=req.max_tokens,

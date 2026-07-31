@@ -35,6 +35,21 @@ const sortQuestionIds = (ids: string[]): string[] =>
     return a.localeCompare(b);
   });
 
+const toRootQuestionMap = (student: GradingStudentResult): Record<string, { score: number | null; max_score: number | null }> => {
+  const roots = student.questions_hierarchy || [];
+  const out: Record<string, { score: number | null; max_score: number | null }> = {};
+  for (const node of roots) {
+    const qn = node.question_no;
+    if (qn === null || qn === undefined) continue;
+    const key = String(qn);
+    out[key] = {
+      score: node.meta?.grading_score ?? null,
+      max_score: node.meta?.max_score ?? null,
+    };
+  }
+  return out;
+};
+
 const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState<GradingSummary | null>(null);
@@ -104,12 +119,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
     });
   }, [summary, sortField, sortDir]);
 
-  // Union of every question id across all students, plus each question's max.
+  // Union of every first-level question id across all students, plus each question's max.
   const { questionIds, questionMax } = useMemo(() => {
     const maxMap: Record<string, number | null | undefined> = {};
     const idSet = new Set<string>();
     for (const { student } of rows) {
-      const questions = student.questions || {};
+      const questions = toRootQuestionMap(student);
       for (const [qid, q] of Object.entries(questions)) {
         idSet.add(qid);
         if (!(qid in maxMap)) maxMap[qid] = q.max_score;
@@ -143,7 +158,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
         numOrDash(student.total_score),
         numOrDash(student.objective_score),
         numOrDash(student.subjective_score),
-        ...questionIds.map((qid) => numOrDash(student.questions?.[qid]?.score)),
+        ...questionIds.map((qid) => numOrDash(toRootQuestionMap(student)[qid]?.score)),
       ];
       lines.push(cells.join(','));
     });
@@ -246,7 +261,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
                   <td>{numOrDash(student.objective_score)}</td>
                   <td>{numOrDash(student.subjective_score)}</td>
                   {questionIds.map((qid) => {
-                    const q = student.questions?.[qid];
+                    const q = toRootQuestionMap(student)[qid];
                     return (
                       <td key={qid} className="grading-results-q">
                         {q ? numOrDash(q.score) : dash}
