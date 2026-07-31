@@ -87,6 +87,11 @@
           "type": "content_contains",
           "file_pattern": "validation-reports/smart-nvr-*.md",
           "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| Model |"
         }
       ]
     },
@@ -131,6 +136,11 @@
           "type": "content_contains",
           "file_pattern": "validation-reports/automated-self-checkout-*.md",
           "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "| Model |"
         }
       ]
     },

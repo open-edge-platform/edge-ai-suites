@@ -86,7 +86,17 @@ NBSP=$'\xc2\xa0'
 # Helpers
 # =============================================================================
 
-die() { echo "ERROR: $*" >&2; exit 1; }
+# Every failure path MUST be observable the same way: exit 1 and, in check mode, a `FAILED:` footer
+# (references/evaluation-model.md, "Reconciliation Script Checks", item 9).
+MODE=check
+die() {
+  echo "ERROR: $*" >&2
+  if [[ "$MODE" == "check" ]]; then
+    echo "FAILED: Reconciliation aborted: $*" >&2
+  fi
+  exit 1
+}
+
 
 # Emit "<id><TAB><short>" for every rule row in the rules file, stopping at the Rationale section
 # (explanatory, not part of the rule set). Rows are emitted VERBATIM -- no de-duplication -- so that
@@ -244,6 +254,7 @@ EOF
 }
 
 if [[ "${1:-}" == "--emit-skeleton" ]]; then
+  MODE=skeleton
   : "${RULES_FILE:?ERROR: RULES_FILE not set. Export it before running.}"
   [[ -f "$RULES_FILE" ]]  || die "Rules file not found: $RULES_FILE"
   [[ -f "$FORMAT_FILE" ]] || die "Report format reference not found: $FORMAT_FILE"
@@ -275,10 +286,12 @@ ERRORS=0
 if ! grep -qE "$DETAIL_HEADER_RE" "$REPORT_FILE"; then
   echo "ERROR: Detailed Results header not found, or its columns changed."
   echo "       Expected: | ID | Rule (short) | Result | Severity | Evidence / Reason |"
+  echo "FAILED: Reconciliation found errors above."
   exit 1
 fi
 if ! grep -qE "$SUMMARY_HEADER_RE" "$REPORT_FILE"; then
   echo "ERROR: Summary count table header ('| Total Rules |') not found."
+  echo "FAILED: Reconciliation found errors above."
   exit 1
 fi
 

@@ -75,18 +75,23 @@ check_mutations_are_detected() {
   awk '{ sub(/^\| ID \| Rule \(short\) \|/, "| ID | Owner | Rule (short) |"); print }' \
     "$FIXTURE" > "$WORK/mut-header.md"
 
-  # f) The run identity is removed.
+  # f) The run identity is removed (agent).
   grep -v '^| AI agent |' "$FIXTURE" > "$WORK/mut-identity.md"
 
+  # g) The run identity is removed (model). Checked separately from (f): a checker that validates
+  #    only the agent row would still pass (f)'s sibling mutation and hide the regression.
+  grep -v '^| Model |' "$FIXTURE" > "$WORK/mut-identity-model.md"
+
   local m
-  for m in mut-missing-rule mut-summary-drift mut-ux-score mut-nbsp mut-header mut-identity; do
+  for m in mut-missing-rule mut-summary-drift mut-ux-score mut-nbsp mut-header mut-identity \
+           mut-identity-model; do
     if run_checker "$WORK/$m.md"; then
       cat "$WORK/last-output.txt"
       fail "Mutation '$m' was NOT detected; the report format contract is not enforced."
     fi
   done
 
-  # g) A rule row is duplicated in the RULES file -> the checker must reject the rules file
+  # h) A rule row is duplicated in the RULES file -> the checker must reject the rules file
   #    instead of silently de-duplicating it (which would hide a real authoring error).
   awk 'BEGIN{done=0} { print } /^\| [0-9]+[.][0-9]+ \|/ && !done { done=1; print }' \
     "$RULES_FILE" > "$WORK/mut-dup-rules.md"
