@@ -11,8 +11,40 @@ COMPOSE            ?= docker compose
 # Runtime pipeline knobs (overridable via `make up VAR=...`).
 SOURCE_KIND           ?= file
 SOURCE_ARG            ?=
+
+# ---- Finalized Basler live pipeline defaults ------------------------------
+# When SOURCE_KIND=basler, `make up` activates the tuned production Basler
+# pipeline documented in docs/user-guide/basler-final-pipeline.md:
+#
+#   gencamsrc(ycbcr422_8,1280x720) ! vapostproc !
+#     video/x-raw(memory:VAMemory),format=NV12 ! queue !
+#     gvadetect(va-surface-sharing, GPU, latency) ! queue !
+#     gvawatermark ! gvafpscounter ! vapostproc ! xvimagesink sync=true
+#
+# with `taskset -c 3-5 chrt -f 70` core pinning applied by the launcher.
+#
+# Any knob can still be overridden on the CLI (e.g. `make up SOURCE_KIND=basler
+# SOURCE_ARG=40067928 BASLER_PIXEL_FORMAT=bayerbggr`).
+ifeq ($(strip $(SOURCE_KIND)),basler)
+  BASLER_PIXEL_FORMAT           ?= ycbcr422_8
+  PIPELINE_PREPROC_BACKEND      ?= va-surface-sharing
+  SCHEDULING_POLICY             ?= latency
+  BATCH_SIZE                    ?= 1
+  PIPELINE_GST_CORES            ?= 3-5
+  PIPELINE_GST_RT_PRIORITY      ?= 70
+  PIPELINE_DISPLAY_VIEW         ?= 1
+  # autovideosink is avoided here: in-container it auto-selects kmssink, which
+  # fails with a DRM resource error and crash-loops. xvimagesink is the
+  # reliable X sink for this stack.
+  PIPELINE_VIDEO_SINK           ?= xvimagesink
+  PIPELINE_SINK_SYNC            ?= true
+endif
+
 SCHEDULING_POLICY     ?=
 BATCH_SIZE            ?=
+PIPELINE_PREPROC_BACKEND ?=
+PIPELINE_IE_CONFIG    ?= PERFORMANCE_HINT=LATENCY
+PIPELINE_FPSCOUNTER   ?= 1
 DETECT                ?= 1
 WATERMARK             ?= 1
 # PIPELINE_IDENTITY controls the passthrough `identity` element in the main
@@ -154,6 +186,9 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
 	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
 	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
+	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
+	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
@@ -179,6 +214,9 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
 	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
 	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
+	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
+	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \

@@ -13,6 +13,9 @@ time without introducing new pipeline shapes:
     DETECT              -> include/skip the gvadetect stage
     PIPELINE_IDENTITY   -> include/skip the passthrough `identity` element
     PIPELINE_SINK_SYNC  -> force sink `sync=true|false` (aka clock-sync)
+    PIPELINE_PREPROC_BACKEND -> gvadetect pre-process backend override
+    PIPELINE_IE_CONFIG  -> gvadetect ie-config string override
+    PIPELINE_FPSCOUNTER -> include/skip gvafpscounter in detect branch
 """
 from __future__ import annotations
 
@@ -25,10 +28,10 @@ VALID_SOURCE_KINDS = {"file", "basler"}
 # File source: no leaky — every frame of the recorded clip must be inferred.
 # Basler live source: leaky=downstream so the queue sheds old frames instead
 # of building up unbounded latency when inference is slower than capture.
-PRE_DETECT_QUEUE_FILE   = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000"
-POST_DETECT_QUEUE_FILE  = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=0"
-PRE_DETECT_QUEUE_LIVE   = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream"
-POST_DETECT_QUEUE_LIVE  = "queue max-size-buffers=1 max-size-bytes=0 max-size-time=16000000 leaky=downstream"
+PRE_DETECT_QUEUE_FILE   = "queue max-size-buffers=1"
+POST_DETECT_QUEUE_FILE  = "queue max-size-buffers=1"
+PRE_DETECT_QUEUE_LIVE   = "queue max-size-buffers=1 leaky=downstream"
+POST_DETECT_QUEUE_LIVE  = "queue max-size-buffers=1 leaky=downstream"
 
 
 def _build_source(
@@ -36,6 +39,7 @@ def _build_source(
     arg: str,
     target_fps: int,
     *,
+    pre_proc_backend: str = "ie",
     basler_pixel_format: str = "bayerbggr",
     basler_fixed_camera: bool = False,
     basler_exposure_us: str | None = None,
@@ -56,15 +60,16 @@ def _build_source(
     if kind == "basler":
         camera_serial = shlex.quote(arg)
         pixel_format = shlex.quote(basler_pixel_format)
-        # Explicit frame-rate is REQUIRED: without it, gencamsrc lets the
-        # camera default to a very low rate (~7 fps observed on
-        # acA1920-150uc), which then propagates through the entire pipeline
-        # regardless of downstream tuning. Set to target_fps so the sensor
-        # actually delivers frames at the intended rate.
+        # width/height are set on gencamsrc so it emits the intended
+        # 1280x720 frame directly and no downstream `videoscale` is needed.
+        # Frame rate is intentionally NOT pinned here: the finalized
+        # production pipeline lets the camera free-run and paces on the
+        # display clock via `autovideosink sync=true`.
         source_props = [
             f"serial={camera_serial}",
             f"pixel-format={pixel_format}",
-            f"frame-rate={target_fps}",
+            "width=1280",
+            "height=720",
         ]
         if basler_fixed_camera:
             source_props.extend(["exposure-auto=off", "gain-auto=off"])
@@ -72,12 +77,42 @@ def _build_source(
                 source_props.append(f"exposure-time={shlex.quote(basler_exposure_us)}")
             if basler_gain:
                 source_props.append(f"gain={shlex.quote(basler_gain)}")
+        gencamsrc_elem = f"gencamsrc {' '.join(source_props)}"
+        is_bayer = basler_pixel_format.lower().startswith("bayer")
+        if pre_proc_backend == "va-surface-sharing":
+            # Finalized production Basler pipeline. See
+            # docs/user-guide/basler-final-pipeline.md.
+            # gencamsrc emits YCbCr422_8 (default) or Bayer directly; a single
+            # `vapostproc` uploads to VAMemory as NV12 for zero-copy inference
+            # via gvadetect(pre-process-backend=va-surface-sharing).
+            # The caps element is single-quoted because it contains parens
+            # (memory:VAMemory) which the shell would otherwise interpret.
+            va_caps = "'video/x-raw(memory:VAMemory),format=NV12'"
+            if is_bayer:
+                return [
+                    gencamsrc_elem,
+                    "bayer2rgb",
+                    "vapostproc",
+                    va_caps,
+                ], pre_proc_backend
+            return [
+                gencamsrc_elem,
+                "vapostproc",
+                va_caps,
+            ], pre_proc_backend
+
+        # Non-VA (ie) preproc backend needs system-memory NV12/RGB.
+        if is_bayer:
+            return [
+                gencamsrc_elem,
+                "bayer2rgb",
+                "videoconvert",
+                "video/x-raw,format=NV12",
+            ], "ie"
         return [
-            f"gencamsrc {' '.join(source_props)}",
-            "bayer2rgb",
-            "videoscale",
+            gencamsrc_elem,
             "videoconvert",
-            "video/x-raw,width=1280,height=720,format=NV12",
+            "video/x-raw,format=NV12",
         ], "ie"
     raise ValueError(f"unsupported source_kind: {kind!r} (want file|basler)")
 
@@ -97,8 +132,11 @@ def build(
     scheduling_policy: str | None = None,
     batch_size: int | None = None,
     sink_sync: bool | None = None,
+    pre_proc_backend: str | None = None,
+    ie_config: str | None = "PERFORMANCE_HINT=LATENCY",
     enable_detect: bool = True,
     enable_watermark: bool = True,
+    enable_fpscounter: bool = True,
     enable_identity: bool = True,
     minimal: bool = False,
     basler_pixel_format: str = "bayerbggr",
@@ -122,15 +160,20 @@ def build(
             raise ValueError("must supply source_arg (or legacy `video=`)")
         source_arg = video
 
+    requested_pre_proc = (pre_proc_backend or "").strip().lower()
     src_elems, pre_proc = _build_source(
         source_kind,
         source_arg,
         target_fps,
+        pre_proc_backend=requested_pre_proc or "ie",
         basler_pixel_format=basler_pixel_format,
         basler_fixed_camera=basler_fixed_camera,
         basler_exposure_us=basler_exposure_us,
         basler_gain=basler_gain,
     )
+
+    if requested_pre_proc:
+        pre_proc = requested_pre_proc
 
     is_live = source_kind == "basler"
     if sink_sync is None:
@@ -159,8 +202,9 @@ def build(
         f"gvadetect model={model_arg} device={dev} threshold={threshold}",
         f"pre-process-backend={pre_proc}",
         "nireq=1",
-        "ie-config=PERFORMANCE_HINT=LATENCY",
     ]
+    if ie_config:
+        gvadetect_parts.append(f"ie-config={ie_config}")
     if scheduling_policy:
         gvadetect_parts.append(f"scheduling-policy={scheduling_policy}")
     if batch_size is not None and batch_size > 0:
@@ -174,10 +218,15 @@ def build(
         # The VA pipeline keeps frames in VAMemory (NV12). Download to system
         # memory with `vapostproc ! video/x-raw` and colour-convert before
         # the sink. sync=false for live (basler) sources — no file clock.
-        sink_tail = ["videoconvert", f"{video_sink} sync={sink_sync_str}"] if is_live else [
+        if is_live and pre_proc == "va-surface-sharing":
+            sink_tail = ["vapostproc", f"{video_sink} sync={sink_sync_str}"]
+        elif is_live:
+            sink_tail = ["videoconvert", f"{video_sink} sync={sink_sync_str}"]
+        else:
+            sink_tail = [
             "vapostproc",
             f"{video_sink} sync={sink_sync_str}",
-        ]
+            ]
     else:
         sink_tail = ["fakesink sync=false async=false"]
 
@@ -185,7 +234,8 @@ def build(
         detect_tail: list[str] = []
         if enable_watermark:
             detect_tail.append("gvawatermark")
-        detect_tail.append("gvafpscounter interval=1")
+        if enable_fpscounter:
+            detect_tail.append("gvafpscounter interval=1")
         head = src_elems + ([eos] if include_identity else [])
         chain = head + [pre_q, gvadetect, post_q] + detect_tail + sink_tail
     else:
@@ -206,8 +256,11 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
     batch = int(batch_raw) if batch_raw.isdigit() else None
     detect_enabled = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
     watermark_enabled = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
+    fpscounter_enabled = os.environ.get("PIPELINE_FPSCOUNTER", "1").strip().lower() not in {"0", "false", "no"}
     identity_enabled = os.environ.get("PIPELINE_IDENTITY", "0").strip().lower() not in {"0", "false", "no"}
     minimal = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
+    pre_proc_backend = os.environ.get("PIPELINE_PREPROC_BACKEND", "").strip() or None
+    ie_config = os.environ.get("PIPELINE_IE_CONFIG", "PERFORMANCE_HINT=LATENCY").strip() or None
     basler_pixel_format = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
     basler_fixed_camera = os.environ.get("BASLER_FIXED_CAMERA", "0").strip().lower() not in {"0", "false", "no"}
 
@@ -225,8 +278,11 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
             sink_sync=True,
             scheduling_policy=sched,
             batch_size=batch,
+            pre_proc_backend=pre_proc_backend,
+            ie_config=ie_config,
             enable_detect=detect_enabled,
             enable_watermark=watermark_enabled,
+            enable_fpscounter=fpscounter_enabled,
             enable_identity=identity_enabled,
             minimal=minimal,
             basler_pixel_format=basler_pixel_format,
