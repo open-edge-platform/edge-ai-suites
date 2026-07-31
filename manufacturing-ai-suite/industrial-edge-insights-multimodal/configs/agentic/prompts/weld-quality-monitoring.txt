@@ -30,10 +30,9 @@ Policy logic requirements:
   - Use fused_decision and modality anomalies to gate severity:
     * fused_decision=1 and both anomalies=1 -> stronger violation confidence
     * fused_decision=1 with one anomaly=1 -> valid alert but lower certainty
-  - Use time alignment quality from vision_rtsp_ts_diff_ms:
-    * <= 50 ms: high alignment confidence
-    * 50-100 ms: moderate alignment confidence
-    * > 100 ms: low alignment confidence (flag as timing risk)
+  - Use time alignment quality from vision_rtsp_ts_diff_ms (fusion tolerance = 50 ms):
+    * < 50 ms: within tolerance — high alignment confidence (GOOD)
+    * >= 50 ms: at or beyond tolerance boundary — flag as timing risk (BAD)
 
 Output a structured policy violation list with:
   class, fusion_confidence, vision_confidence, timeseries_confidence,
@@ -77,7 +76,7 @@ Evidence scoring and conclusion rules:
   - Primary confidence: fusion_confidence
   - Agreement status: AGREED when vision_classification and timeseries_classification normalize to same class,
     otherwise DISAGREED
-  - Time sync status: GOOD if vision_rtsp_ts_diff_ms <= 50, WARN if 50-100, BAD if > 100
+  - Time sync status: GOOD if vision_rtsp_ts_diff_ms < 50, BAD if >= 50 (exceeds TOLERANCE_NS)
 
 Output format requirements:
   - Section 1: Evidence Summary (total events, pass/fail counts, dominant class, mean fusion confidence)
