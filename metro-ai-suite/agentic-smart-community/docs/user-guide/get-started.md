@@ -51,7 +51,7 @@ cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 
 ### Step 1 - Start dependent services
 
-The on-device stack is defined in [docker/compose.yaml](../../docker/compose.yaml) and managed by [setup_docker.sh](../../setup_docker.sh):
+The on-device stack is defined in [docker/compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/compose.yaml) and managed by [setup_docker.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/setup_docker.sh):
 
 | Service | Port | Role |
 |---|---|---|
@@ -138,7 +138,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
 
 #### OpenClaw
 
-1. Install OpenClaw using the official [OpenClaw documentation](https://openclaw.ai/), or use [our validated platform guide](../../scripts/openclaw/README.md).
+1. Install OpenClaw using the official [OpenClaw documentation](https://openclaw.ai/), or use [our validated platform guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/scripts/openclaw/README.md).
 
 2. Ensure that OpenClaw has a valid model provider configured, such as MiniMax, Kimi, DeepSeek, etc. Alternatively, run the following script to add the model served by `vllm-ipex-serving` from [Step 1 - Start dependent services](#step-1---start-dependent-services), into `~/.openclaw/openclaw.json`:
 
@@ -227,13 +227,21 @@ Leave the monitor online long enough to process video and store events in `~/.mc
 "Generate today's report for the cam_child_safety monitor."
 ```
 
-**MCP resource subscriptions** deliver alert-update notifications directly to the connected client; see [MCP Subscription Reference](./get-started/api-reference-mcp-subscription.md). This OpenClaw adapter is built with the [Framework Adapter SDK](../../packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](../../packages/framework-adapter-sdk/examples/openclaw/README.md).
+**D. Delete a monitor**
+
+Ask the agent to delete the monitor registered in the previous step:
+
+```text
+"Delete the cam_child_safety monitor."
+```
+
+**MCP resource subscriptions** deliver alert-update notifications directly to the connected client; see [MCP Subscription Reference](./get-started/api-reference-mcp-subscription.md). This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 #### Other MCP clients
 
 Hermes, Claude Desktop, Cursor, and other compatible MCP clients can similarly use the same `http://localhost:3100/mcp` endpoint through their own MCP-server configuration. The client can use the server reactively without an adapter, or subscribe to monitor alert updates as described in [MCP Subscription Reference](./get-started/api-reference-mcp-subscription.md). 
 
-If your agent framework requires an adapter to route those updates into agent sessions or external channels, use the [Framework Adapter SDK](../../packages/framework-adapter-sdk/README.md).
+If your agent framework requires an adapter to route those updates into agent sessions or external channels, use the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md).
 
 ### Step 4 - Register a new use case
 
