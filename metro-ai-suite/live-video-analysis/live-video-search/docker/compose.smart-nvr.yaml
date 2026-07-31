@@ -48,7 +48,7 @@ services:
       - live-video-network
     ipc: host
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.build_opener(u.ProxyHandler({})).open('http://localhost:8000/health', timeout=5)"]
       interval: 10s
       timeout: 10s
       retries: 40
