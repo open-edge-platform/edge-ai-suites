@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from "react";
-import { AUDIO, POLL_INTERVAL_MS } from "../config";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AUDIO, INACTIVITY_RESET_MS, POLL_INTERVAL_MS } from "../config";
 import {
   endAudioStream,
   getSession,
@@ -10,7 +10,6 @@ import {
 import { MicRecorder } from "../audio/MicRecorder";
 import { ResponsePlayer } from "../audio/ResponsePlayer";
 import type { ChatMessage, SessionPerfSnapshot } from "../types";
-import { useSessionManager } from "./useSessionManager";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const MAX_SESSION_POINTS = 90;
@@ -24,6 +23,7 @@ function keepLast(values: number[], next: number): number[] {
 
 export function useVoiceSession() {
   const [recording, setRecording] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState("Idle — tap the mic to ask a question.");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [partialUser, setPartialUser] = useState("");
@@ -31,6 +31,7 @@ export function useVoiceSession() {
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
   const [responseAnalyser, setResponseAnalyser] = useState<AnalyserNode | null>(null);
   const [responseActive, setResponseActive] = useState(false);
+  const [resetIn, setResetIn] = useState<number | null>(null);
   const [sessionPerf, setSessionPerf] = useState<SessionPerfSnapshot>({
     ttstMs: null,
     endToEndMs: null,
@@ -53,31 +54,16 @@ export function useVoiceSession() {
   const messagesRef = useRef<ChatMessage[]>([]);
   messagesRef.current = messages;
 
-  // Session manager for 15-second inactivity timeout
-  const { startSessionTimeout, cancelSessionTimeout } = useSessionManager({
-    onSessionReset: () => {
-      // Clear the conversation when session times out
-      console.log("[useVoiceSession] Session timeout callback invoked - clearing messages");
-      setMessages([]);
-      setStatus("Session ended — tap the mic to start a new question.");
-    },
-  });
-
   const ensurePlayer = useCallback(() => {
     if (!playerRef.current) {
       const player = new ResponsePlayer();
       player.onStart = () => setResponseActive(true);
-      player.onIdle = () => {
-        console.log("[useVoiceSession] ResponsePlayer.onIdle triggered - starting session timeout");
-        setResponseActive(false);
-        // Start the session timeout when TTS finishes playing
-        startSessionTimeout();
-      };
+      player.onIdle = () => setResponseActive(false);
       playerRef.current = player;
       setResponseAnalyser(player.analyser);
     }
     return playerRef.current;
-  }, [startSessionTimeout]);
+  }, []);
 
   const flushPending = useCallback(async () => {
     const sid = sessionIdRef.current;
@@ -137,10 +123,6 @@ export function useVoiceSession() {
     sessionStartErrorRef.current = null;
     streamSampleRateRef.current = AUDIO.sampleRate;
     pendingChunks.current = [];
-    // Cancel the session timeout when a new question is being asked
-    // This ensures the session continues if the user asks within 15 seconds
-    console.log("[useVoiceSession] New question started - cancelling session timeout");
-    cancelSessionTimeout();
     ensurePlayer();
     const recorder = new MicRecorder(AUDIO.sampleRate, AUDIO.chunkSeconds, onChunk);
     try {
@@ -152,13 +134,14 @@ export function useVoiceSession() {
     } catch (err) {
       setStatus(`❌ ${err instanceof Error ? err.message : "Microphone error"}`);
     }
-  }, [ensurePlayer, onChunk, cancelSessionTimeout]);
+  }, [ensurePlayer, onChunk]);
 
   const stop = useCallback(async () => {
     const stopStartedAt = performance.now();
     let ttstMs: number | null = null;
     setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
     setRecording(false);
+    setProcessing(true);
     setStatus("⏳ Processing…");
     const recorder = recorderRef.current;
     recorderRef.current = null;
@@ -171,6 +154,7 @@ export function useVoiceSession() {
 
     const sid = sessionIdRef.current;
     if (!sid) {
+      setProcessing(false);
       if (sessionStartErrorRef.current) {
         setStatus(`❌ ${sessionStartErrorRef.current}`);
       } else {
@@ -182,6 +166,7 @@ export function useVoiceSession() {
     try {
       await endAudioStream(sid);
     } catch (err) {
+      setProcessing(false);
       setStatus(`❌ ${err instanceof Error ? err.message : "End stream failed"}`);
       return;
     }
@@ -194,6 +179,7 @@ export function useVoiceSession() {
       try {
         snap = await getSession(sid);
       } catch (err) {
+        setProcessing(false);
         setStatus(`❌ ${err instanceof Error ? err.message : "Polling failed"}`);
         return;
       }
@@ -242,6 +228,7 @@ export function useVoiceSession() {
         setPartialUser("");
         setPartialAssistant("");
         sessionIdRef.current = null;
+        setProcessing(false);
         setStatus(
           snap.tts_errors && snap.tts_errors.length > 0
             ? `⚠ Answered, but speech failed: ${snap.tts_errors.join("; ")}`
@@ -254,6 +241,57 @@ export function useVoiceSession() {
     }
   }, [ensurePlayer, flushPending]);
 
+  // Instantly clears the current conversation so the next question starts a
+  // brand-new session. Because conversation history lives client-side and is
+  // forwarded to kiosk-core on each turn, clearing it here resets the session
+  // immediately (the backend drops its draft cart when history is empty). No
+  // effect while a turn is recording/processing.
+  const reset = useCallback(() => {
+    if (recording) return;
+    playerRef.current?.stop();
+    setResponseActive(false);
+    pendingChunks.current = [];
+    sessionIdRef.current = null;
+    startPromiseRef.current = null;
+    sessionStartErrorRef.current = null;
+    setProcessing(false);
+    setMessages([]);
+    setPartialUser("");
+    setPartialAssistant("");
+    setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
+    setStatus("Idle — tap the mic to ask a question.");
+  }, [recording]);
+
+  // Auto-reset the conversation after a period of inactivity. The countdown
+  // only runs when the kiosk is truly idle: there is existing conversation
+  // history, the mic is not recording, no turn is being processed, and the
+  // assistant is not speaking. Any of those becoming active clears the pending
+  // timer, so the 15s window effectively starts once the assistant finishes.
+  // `resetIn` exposes the remaining whole seconds for the UI countdown.
+  useEffect(() => {
+    const idle =
+      messages.length > 0 && !recording && !processing && !responseActive;
+    if (!idle) {
+      setResetIn(null);
+      return;
+    }
+    const deadline = Date.now() + INACTIVITY_RESET_MS;
+    setResetIn(Math.ceil(INACTIVITY_RESET_MS / 1000));
+    const tick = window.setInterval(() => {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        window.clearInterval(tick);
+        reset();
+      } else {
+        setResetIn(Math.ceil(remainingMs / 1000));
+      }
+    }, 250);
+    return () => {
+      window.clearInterval(tick);
+      setResetIn(null);
+    };
+  }, [messages, recording, processing, responseActive, reset]);
+
   return {
     recording,
     status,
@@ -263,9 +301,11 @@ export function useVoiceSession() {
     micAnalyser,
     responseAnalyser,
     responseActive,
+    resetIn,
     sessionPerf,
     sessionPerfSeries,
     start,
     stop,
+    reset,
   };
 }

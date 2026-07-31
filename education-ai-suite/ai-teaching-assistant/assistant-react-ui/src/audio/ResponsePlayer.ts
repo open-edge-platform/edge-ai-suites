@@ -5,6 +5,7 @@ export class ResponsePlayer {
   public analyser: AnalyserNode;
   private queue: string[] = [];
   private playing = false;
+  private current: AudioBufferSourceNode | null = null;
 
   public onStart?: () => void;
   public onIdle?: () => void;
@@ -48,8 +49,27 @@ export class ResponsePlayer {
       src.buffer = audioBuffer;
       src.connect(this.analyser);
       src.onended = () => resolve();
+      this.current = src;
       src.start();
     });
+    this.current = null;
+  }
+
+  // Immediately stop playback and drop any queued segments. The player stays
+  // usable — subsequent enqueue() calls will start a fresh drain loop.
+  stop(): void {
+    this.queue = [];
+    if (this.current) {
+      try {
+        this.current.onended = null;
+        this.current.stop();
+      } catch {
+        // Already stopped/ended — ignore.
+      }
+      this.current = null;
+    }
+    this.playing = false;
+    this.onIdle?.();
   }
 
   get isPlaying(): boolean {

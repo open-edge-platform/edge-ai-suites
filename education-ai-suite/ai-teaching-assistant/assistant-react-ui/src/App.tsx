@@ -26,9 +26,11 @@ export default function App() {
     micAnalyser,
     responseAnalyser,
     responseActive,
+    resetIn,
     sessionPerf,
     start,
     stop,
+    reset,
   } = useVoiceSession();
   const micLevel = useAudioLevel(micAnalyser, recording);
   const perfMetrics = usePerformanceMetrics();
@@ -117,13 +119,34 @@ export default function App() {
               />
               <div className="flex-1 space-y-2">
                 <p className="text-sm text-black/80">{status}</p>
-                <Visualizer
-                  analyser={micAnalyser}
-                  active={recording}
-                  color="#0068B5"
-                  label="Your voice"
-                  compact
-                />
+                <div className="flex items-end gap-4">
+                  <div className="flex-1">
+                    <Visualizer
+                      analyser={micAnalyser}
+                      active={recording}
+                      color="#0068B5"
+                      label="Your voice"
+                      compact
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={reset}
+                    disabled={recording}
+                    title="Start a new conversation"
+                    className="shrink-0 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-intel-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Reset
+                  </button>
+                  {resetIn !== null && (
+                    <span
+                      title="Conversation auto-resets when the timer reaches zero"
+                      className="shrink-0 tabular-nums text-sm font-medium text-black/60"
+                    >
+                      Auto-reset in {resetIn}s
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </section>

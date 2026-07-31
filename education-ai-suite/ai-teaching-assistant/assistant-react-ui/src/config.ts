@@ -26,3 +26,8 @@ export const AUDIO = {
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 export const ALLOWED_EXTENSIONS = [".txt", ".md", ".docx", ".pdf"];
 export const POLL_INTERVAL_MS = 400;
+
+// Auto-reset the conversation after this many milliseconds of inactivity
+// (measured from when the assistant finishes speaking). Paused while
+// recording, processing, or playing back a response.
+export const INACTIVITY_RESET_MS = 15_000;
