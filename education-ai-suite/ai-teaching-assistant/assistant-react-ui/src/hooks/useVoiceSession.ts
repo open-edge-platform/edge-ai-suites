@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AUDIO, INACTIVITY_RESET_MS, POLL_INTERVAL_MS } from "../config";
+import { AUDIO, INACTIVITY_RESET_MS, POLL_INTERVAL_MS, WAKEWORD } from "../config";
 import {
   endAudioStream,
   getSession,
+  pushBrowserWakewordAudio,
   pushAudioChunk,
   responseAudioUrl,
+  startBrowserWakewordSession,
   startStreamSession,
+  stopBrowserWakewordSession,
 } from "../api";
 import { MicRecorder } from "../audio/MicRecorder";
 import { ResponsePlayer } from "../audio/ResponsePlayer";
@@ -21,7 +24,7 @@ function keepLast(values: number[], next: number): number[] {
     : updated;
 }
 
-export function useVoiceSession() {
+export function useVoiceSession(deviceId?: string) {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState("Idle — tap the mic to ask a question.");
@@ -42,6 +45,8 @@ export function useVoiceSession() {
     endToEndMs: [] as number[],
     rtf: [] as number[],
   });
+  const [wakewordEnabled, setWakewordEnabled] = useState<boolean>(WAKEWORD.enabledByDefault);
+  const [wakewordListening, setWakewordListening] = useState(false);
 
   const recorderRef = useRef<MicRecorder | null>(null);
   const playerRef = useRef<ResponsePlayer | null>(null);
@@ -51,8 +56,26 @@ export function useVoiceSession() {
   const sessionStartErrorRef = useRef<string | null>(null);
   const streamSampleRateRef = useRef<number>(AUDIO.sampleRate);
   const pendingChunks = useRef<ArrayBuffer[]>([]);
+  const wakewordRecorderRef = useRef<MicRecorder | null>(null);
+  const wakewordSessionRef = useRef<string | null>(null);
+  const wakewordClosingRef = useRef(false);
   const messagesRef = useRef<ChatMessage[]>([]);
+  const wakewordEnabledRef = useRef<boolean>(WAKEWORD.enabledByDefault);
+  const wakewordAbortRef = useRef(false);
+  const wakewordInFlightRef = useRef(false);
+  const wakewordSuppressUntilRef = useRef<number>(0);
+  const wakewordCancelVersionRef = useRef(0);
+  const autoStopArmedRef = useRef(false);
+  const autoStopSilenceMsRef = useRef(0);
+  const autoStoppingRef = useRef(false);
+  const recordingRef = useRef(false);
+  const stopRef = useRef<() => Promise<void>>(async () => undefined);
   messagesRef.current = messages;
+
+  const setWakewordEnabledSafe = useCallback((enabled: boolean) => {
+    wakewordEnabledRef.current = enabled;
+    setWakewordEnabled(enabled);
+  }, []);
 
   const ensurePlayer = useCallback(() => {
     if (!playerRef.current) {
@@ -129,6 +152,7 @@ export function useVoiceSession() {
       await recorder.start(deviceId);
       recorderRef.current = recorder;
       setMicAnalyser(recorder.analyser);
+      recordingRef.current = true;
       setRecording(true);
       setStatus("🎙 Listening — speak now.");
     } catch (err) {
@@ -137,10 +161,16 @@ export function useVoiceSession() {
   }, [ensurePlayer, onChunk]);
 
   const stop = useCallback(async () => {
+    if (!recordingRef.current) {
+      return;
+    }
     const stopStartedAt = performance.now();
     let ttstMs: number | null = null;
     setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
+    recordingRef.current = false;
     setRecording(false);
+    autoStopArmedRef.current = false;
+    autoStopSilenceMsRef.current = 0;
     setProcessing(true);
     setStatus("⏳ Processing…");
     const recorder = recorderRef.current;
@@ -232,14 +262,255 @@ export function useVoiceSession() {
         setStatus(
           snap.tts_errors && snap.tts_errors.length > 0
             ? `⚠ Answered, but speech failed: ${snap.tts_errors.join("; ")}`
-            : "✓ Done — tap the mic for another question."
+            : "✓ Done"
         );
+        // Avoid instantly re-arming wake-word detection on residual room/TTS audio.
+        wakewordSuppressUntilRef.current = Date.now() + 1200;
         break;
       }
 
       await sleep(POLL_INTERVAL_MS);
     }
   }, [ensurePlayer, flushPending]);
+
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
+
+  // Auto-stop recording after 3s silence once speech has started.
+  useEffect(() => {
+    if (!recording || !micAnalyser) {
+      recordingRef.current = false;
+      autoStopArmedRef.current = false;
+      autoStopSilenceMsRef.current = 0;
+      return;
+    }
+
+    recordingRef.current = true;
+
+    const intervalMs = 120;
+    const data = new Uint8Array(micAnalyser.fftSize);
+
+    const id = window.setInterval(() => {
+      if (!recordingRef.current || autoStoppingRef.current) return;
+
+      micAnalyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        const centered = (data[i] - 128) / 128;
+        sum += centered * centered;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      const normalized = Math.max(0, Math.min(1, rms * 3.2));
+
+      if (normalized >= AUDIO.autoStopSpeechLevel) {
+        autoStopArmedRef.current = true;
+        autoStopSilenceMsRef.current = 0;
+        return;
+      }
+
+      if (!autoStopArmedRef.current) {
+        return;
+      }
+
+      autoStopSilenceMsRef.current += intervalMs;
+      if (autoStopSilenceMsRef.current >= AUDIO.autoStopPauseMs) {
+        autoStoppingRef.current = true;
+        setStatus("⏸ Silence detected — auto-stopping...");
+        void stopRef.current().finally(() => {
+          autoStoppingRef.current = false;
+          autoStopArmedRef.current = false;
+          autoStopSilenceMsRef.current = 0;
+        });
+      }
+    }, intervalMs);
+
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [recording, micAnalyser, stop]);
+
+  const runWakewordTurn = useCallback(async (): Promise<void> => {
+    const myVersion = wakewordCancelVersionRef.current;
+    setProcessing(false);
+    setStatus(`👂 Listening for \"${WAKEWORD.model}\" from browser mic...`);
+
+    let wakewordSessionId: string;
+    try {
+      const started = await startBrowserWakewordSession({
+        sampleRate: AUDIO.sampleRate,
+        wakewordModel: WAKEWORD.model,
+        wakewordThreshold: WAKEWORD.threshold,
+        wakewordVadThreshold: WAKEWORD.vadThreshold,
+        wakewordPatienceFrames: WAKEWORD.patienceFrames,
+        wakewordInferenceFramework: WAKEWORD.inferenceFramework,
+      });
+      wakewordSessionId = started.wakeword_session_id;
+      wakewordSessionRef.current = wakewordSessionId;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Wake-word activation failed";
+      setStatus(`❌ ${msg}`);
+      setProcessing(false);
+      return;
+    }
+    let detectedLabel: string | undefined;
+    let detectedScore = 0;
+    let settled = false;
+    let uploadQueue = Promise.resolve();
+
+    const settleOnce = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      fn();
+    };
+
+    const detectPromise = new Promise<void>((resolve, reject) => {
+      const onWakeChunk = (wav: ArrayBuffer) => {
+        uploadQueue = uploadQueue
+          .then(async () => {
+            if (wakewordClosingRef.current || settled) return;
+            if (myVersion !== wakewordCancelVersionRef.current) {
+              settleOnce(resolve);
+              return;
+            }
+            if (!wakewordEnabledRef.current || wakewordAbortRef.current) {
+              settleOnce(resolve);
+              return;
+            }
+            const res = await pushBrowserWakewordAudio(wakewordSessionId, wav);
+            if (res.detected) {
+              detectedLabel = res.detected_label ?? undefined;
+              detectedScore = res.score;
+              settleOnce(resolve);
+            }
+          })
+          .catch((err) => {
+            if (wakewordClosingRef.current || settled) {
+              settleOnce(resolve);
+              return;
+            }
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("Unknown wake-word session")) {
+              settleOnce(resolve);
+              return;
+            }
+            settleOnce(() => reject(err));
+          });
+      };
+
+      const recorder = new MicRecorder(AUDIO.sampleRate, 0.4, async (wav) => {
+        onWakeChunk(wav);
+      });
+      wakewordRecorderRef.current = recorder;
+      recorder
+        .start(deviceId)
+        .catch((err) => settleOnce(() => reject(err)));
+    });
+
+    try {
+      await detectPromise;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Wake-word listening failed";
+      setStatus(`❌ ${msg}`);
+      setProcessing(false);
+      return;
+    } finally {
+      wakewordClosingRef.current = true;
+      try {
+        await wakewordRecorderRef.current?.stop();
+      } catch {
+        // ignore recorder shutdown noise
+      }
+      wakewordRecorderRef.current = null;
+      if (wakewordSessionRef.current) {
+        try {
+          await stopBrowserWakewordSession(wakewordSessionRef.current);
+        } catch {
+          // best-effort cleanup
+        }
+      }
+      wakewordSessionRef.current = null;
+      wakewordClosingRef.current = false;
+    }
+
+    if (myVersion !== wakewordCancelVersionRef.current) {
+      setProcessing(false);
+      return;
+    }
+
+    if (!wakewordEnabledRef.current || wakewordAbortRef.current) {
+      setProcessing(false);
+      return;
+    }
+
+    setStatus(
+      `✅ Wake word detected${detectedLabel ? ` (${detectedLabel})` : ""}` +
+      `${detectedScore ? ` score ${detectedScore.toFixed(2)}` : ""}. Speak now.`
+    );
+    setProcessing(false);
+    await start(deviceId);
+  }, [deviceId, start]);
+
+  useEffect(() => {
+    wakewordEnabledRef.current = wakewordEnabled;
+  }, [wakewordEnabled]);
+
+  useEffect(() => {
+    if (!wakewordEnabled) {
+      wakewordAbortRef.current = true;
+      setWakewordListening(false);
+      return;
+    }
+    if (recording || responseActive || processing) {
+      return;
+    }
+
+    wakewordAbortRef.current = false;
+    let cancelled = false;
+
+    const loop = async () => {
+      while (!cancelled && !wakewordAbortRef.current && wakewordEnabledRef.current) {
+        if (Date.now() < wakewordSuppressUntilRef.current) {
+          await sleep(120);
+          continue;
+        }
+        if (wakewordInFlightRef.current || recording || responseActive || processing) {
+          await sleep(200);
+          continue;
+        }
+        wakewordInFlightRef.current = true;
+        setWakewordListening(true);
+        await runWakewordTurn();
+        setWakewordListening(false);
+        wakewordInFlightRef.current = false;
+        if (!wakewordEnabledRef.current || wakewordAbortRef.current) {
+          break;
+        }
+        await sleep(150);
+      }
+      setWakewordListening(false);
+    };
+
+    void loop();
+
+    return () => {
+      cancelled = true;
+      wakewordAbortRef.current = true;
+      wakewordClosingRef.current = true;
+      const recorder = wakewordRecorderRef.current;
+      wakewordRecorderRef.current = null;
+      if (recorder) {
+        void recorder.stop().catch(() => undefined);
+      }
+      const wakeSessionId = wakewordSessionRef.current;
+      wakewordSessionRef.current = null;
+      if (wakeSessionId) {
+        void stopBrowserWakewordSession(wakeSessionId).catch(() => undefined);
+      }
+      wakewordClosingRef.current = false;
+      setWakewordListening(false);
+    };
+  }, [wakewordEnabled, runWakewordTurn, recording, responseActive, processing]);
 
   // Instantly clears the current conversation so the next question starts a
   // brand-new session. Because conversation history lives client-side and is
@@ -248,18 +519,39 @@ export function useVoiceSession() {
   // effect while a turn is recording/processing.
   const reset = useCallback(() => {
     if (recording) return;
+    recordingRef.current = false;
+    // Invalidate any in-flight wake-word turn so it cannot call start().
+    wakewordCancelVersionRef.current += 1;
     playerRef.current?.stop();
     setResponseActive(false);
     pendingChunks.current = [];
     sessionIdRef.current = null;
     startPromiseRef.current = null;
     sessionStartErrorRef.current = null;
+    const wakeRecorder = wakewordRecorderRef.current;
+    wakewordRecorderRef.current = null;
+    wakewordClosingRef.current = true;
+    if (wakeRecorder) {
+      void wakeRecorder.stop().catch(() => undefined);
+    }
+    const wakeSessionId = wakewordSessionRef.current;
+    wakewordSessionRef.current = null;
+    if (wakeSessionId) {
+      void stopBrowserWakewordSession(wakeSessionId).catch(() => undefined);
+    }
+    wakewordClosingRef.current = false;
     setProcessing(false);
     setMessages([]);
     setPartialUser("");
     setPartialAssistant("");
     setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
-    setStatus("Idle — tap the mic to ask a question.");
+    setStatus(
+      wakewordEnabledRef.current
+        ? `Idle — say \"${WAKEWORD.model}\" to begin.`
+        : "Idle — tap the mic to ask a question."
+    );
+    // Prevent immediate false wake-word retrigger right after reset.
+    wakewordSuppressUntilRef.current = Date.now() + 8000;
   }, [recording]);
 
   // Auto-reset the conversation after a period of inactivity. The countdown
@@ -294,6 +586,8 @@ export function useVoiceSession() {
 
   return {
     recording,
+    wakewordEnabled,
+    wakewordListening,
     status,
     messages,
     partialUser,
@@ -306,6 +600,7 @@ export function useVoiceSession() {
     sessionPerfSeries,
     start,
     stop,
+    setWakewordEnabled: setWakewordEnabledSafe,
     reset,
   };
 }

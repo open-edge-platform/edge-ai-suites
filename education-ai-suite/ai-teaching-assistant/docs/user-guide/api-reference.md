@@ -59,6 +59,85 @@ Request body (typical):
 
 Response: session snapshot object with `status: "running"`.
 
+### Start Session After Wake Word (Host Microphone)
+`POST /api/v1/sessions/start-after-wakeword`
+
+Waits on the host microphone until the wake word is detected, then starts a
+normal microphone session and returns its snapshot.
+
+Request body (example):
+```json
+{
+  "sample_rate": 16000,
+  "chunk_seconds": 5.0,
+  "silence_timeout_seconds": 1.5,
+  "max_session_seconds": 20.0,
+  "silence_threshold": 900,
+  "wakeword_model": "hey jarvis",
+  "wakeword_threshold": 0.5,
+  "wakeword_vad_threshold": 0.4,
+  "wakeword_patience_frames": 2,
+  "wakeword_timeout_seconds": 0,
+  "wakeword_inference_framework": "onnx"
+}
+```
+
+Notes:
+- `sample_rate` must be `16000` for wake-word detection.
+- This endpoint listens on the kiosk host microphone, not browser audio chunks.
+
+### Start Browser Wake-Word Session (Cross-Machine)
+`POST /api/v1/wakeword/start`
+
+Creates a wake-word detector session that processes browser-streamed WAV chunks.
+
+Request body:
+```json
+{
+  "sample_rate": 16000,
+  "wakeword_model": "hey jarvis",
+  "wakeword_threshold": 0.5,
+  "wakeword_vad_threshold": 0.4,
+  "wakeword_patience_frames": 2,
+  "wakeword_inference_framework": "onnx"
+}
+```
+
+Response:
+```json
+{
+  "wakeword_session_id": "...",
+  "status": "listening"
+}
+```
+
+### Push Browser Wake-Word Audio Chunk
+`POST /api/v1/wakeword/{wakeword_session_id}/audio`
+
+Request headers:
+- `Content-Type: audio/wav`
+
+Response:
+```json
+{
+  "wakeword_session_id": "...",
+  "detected": false,
+  "score": 0.12,
+  "detected_label": "hey_jarvis"
+}
+```
+
+### Stop Browser Wake-Word Session
+`POST /api/v1/wakeword/{wakeword_session_id}/stop`
+
+Response:
+```json
+{
+  "wakeword_session_id": "...",
+  "status": "stopped"
+}
+```
+
 ### Push Audio Chunk
 `POST /api/v1/sessions/{session_id}/audio`
 

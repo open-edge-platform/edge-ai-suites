@@ -44,6 +44,17 @@ cd education-ai-suite/ai-teaching-assistant
 
 Open `http://127.0.0.1:7860`.
 
+## Wake-Word Voice Activation (Jarvis)
+
+You can run host-microphone wake-word activation with openwakeword:
+
+```powershell
+cd education-ai-suite/ai-teaching-assistant
+python mic_session.py --wakeword --wakeword-model "hey jarvis"
+```
+
+This arms detection and opens a normal voice session after the wake word is detected.
+
 ## Documentation Map
 
 - Overview: [docs/user-guide/index.md](docs/user-guide/index.md)
