@@ -79,21 +79,33 @@ cd metro-ai-suite/vms-adapter-plugin
 cp .env.example .env
 ```
 
-Open `.env` and update the variables for your environment:
+Open `.env` and update the variables for your environment. Variables are grouped by scope. Within each analytics app group, **Mandatory** applies only if you are using that app.
 
-| **Variable**                         | **Description**                                                          |
-|--------------------------------------|--------------------------------------------------------------------------|
-| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`            |
-| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         |
-| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx)                       |
-| `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
-| `LOITERING_DET_HOST` / `LOITERING_DET_PORT`              | DLStreamer Pipeline Server host and port for Loitering Detection app (default: `8080`)       |
-| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
-| `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             |
-| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
-| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
-| `PG_PASSWORD`                        | PostgreSQL password (change from default)                                |
-| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (`3443`)                              |
+**Common (VAP + Nx Witness):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials                                     | Mandatory     |
+| `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) | Optional      |
+| `PG_PASSWORD`                        | PostgreSQL password (change from default)                                | Optional     |
+| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (default: `3443`)                      | Optional      |
+
+**Live Video Captioning (LVC):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g. `http://<lvc-host>:4173`            | Mandatory     |
+| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         | Mandatory     |
+| `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber | Optional |
+
+**DLStreamer Vision (dls_vision — Loitering Detection):**
+
+| **Variable**                         | **Description**                                                          | **Required?** |
+|--------------------------------------|--------------------------------------------------------------------------|---------------|
+| `DLS_VISION_HOST` / `DLS_VISION_PORT` | DLStreamer Pipeline Server host and port for Loitering Detection app (default port: `443`) | Mandatory |
+| `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             | Mandatory     |
+| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber | Optional |
 
 > If LVC or Loitering Detectopm is running on the same host as VAP, use `host.docker.internal` (Linux/Mac). Otherwise, use the actual IP address.
 
