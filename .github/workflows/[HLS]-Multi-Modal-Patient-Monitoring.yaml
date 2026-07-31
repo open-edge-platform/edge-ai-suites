@@ -319,7 +319,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-      
+        with:
+          persist-credentials: false
       - name: Run Bandit Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
         id: bandit
@@ -343,7 +344,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-      
+        with:
+          persist-credentials: false
       - name: Run ClamAV Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
         id: clamav
@@ -404,7 +406,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-      
+        with:
+          persist-credentials: false
+          
       - name: Setup environment with shellcheck
         uses: open-edge-platform/orch-ci/.github/actions/bootstrap@5f1c7f544b235db6ded508b6b4c6a2d3a78a38be
         with:

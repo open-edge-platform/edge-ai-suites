@@ -50,7 +50,9 @@ Content-Type: application/json
 | 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
 | 40001 | AUTH_FAILED | Invalid username or password. |
 | 40002 | INVALID_FILE | File validation failed (empty file, content mismatch, or corrupted). |
+| 40300 | FORBIDDEN | Operation restricted to local (loopback) clients — see `/object/ingest-path`. |
 | 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
+| 41301 | FILE_TOO_LARGE | File exceeds the configured size limit (`DOCUMENT_MAX_MB` / `VIDEO_MAX_MB`). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
 | 50003 | PROCESS_FAILED | Internal processing error (e.g., file system or DB delete failed). |
@@ -366,6 +368,81 @@ Response (200 OK):
     "timestamp": 1776148605
 }
 ```
+
+#### Local path ingestion (no upload)
+Ingests a file that already exists on the filesystem of the machine running this service, given its absolute path. Functionally equivalent to `upload-ingest` — same storage keys, hash-based deduplication, content indexing, OCR, and Video Summarization — but the bytes are read directly from disk instead of being transferred as a multipart body.
+
+Intended for the Electron desktop app, which runs alongside this service: it avoids pushing potentially multi-GB media through localhost HTTP. The browser-based web UI cannot use it (browsers do not expose real file paths) and continues to use `upload-ingest`.
+
+The file is **copied** into the object store, so the returned `file_key` always refers to a store-owned copy. Later cleanup operations (`cleanup-task`, `files/{file_hash}` delete) only remove that copy — the user's original file is never modified or deleted.
+
+* URL: /api/v1/object/ingest-path
+* Method: POST
+* Content-Type: application/json
+* Pattern: ASYNC
+* Access: **Loopback clients only** (`127.0.0.1`, `::1`). Requests from any other address are rejected with code `40300`, because reading arbitrary server-side paths must not be reachable from other devices on the network.
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `path` | `string` | Yes | Absolute path to the file on the server's filesystem. Must be an existing regular file. |
+| `meta` | `object` | No | Metadata object (e.g., `{"tags": ["class"], "vs_enabled": true}`). Unlike `upload-ingest` this is a JSON **object**, not a JSON string. `vs_enabled` (optional): set to `true` to enable video summarization, default is `false`. |
+| `prompt` | `string` | No | Summarization instructions. |
+| `chunk_duration` | `integer` | No | Segment duration in seconds. |
+
+* Example:
+Request:
+```
+curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-path' \
+--header 'Content-Type: application/json' \
+--data '{
+    "path": "C:/videos/classroom_8.mp4",
+    "meta": { "tags": ["class"], "course": "CS101", "vs_enabled": true }
+}'
+```
+Response (200 OK):
+```json
+// example 1: Normal path ingest
+{
+    "code": 20000,
+    "data": {
+        "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
+        "status": "PROCESSING",
+        "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
+    },
+    "message": "Upload and Ingest started",
+    "timestamp": 1774878113
+}
+// example 2: File already exists (same content hash), returns the existing task id
+{
+    "code": 40901,
+    "data": {
+        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+        "file_name": "classroom_8.mp4",
+        "created_at": "2026-04-14 14:33:53.107540",
+        "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
+    },
+    "message": "Upload failed: File already exists.",
+    "timestamp": 1776148605
+}
+// example 3: Called from a non-loopback address
+{
+    "code": 40300,
+    "data": {},
+    "message": "Path-based ingest is only available to local clients.",
+    "timestamp": 1776148605
+}
+```
+
+* Error conditions:
+
+| Code | Condition |
+| :--- | :--- |
+| `40000` | `path` is missing or empty. |
+| `40002` | Path does not exist, is not a regular file, is unreadable, or failed file/content validation. |
+| `40300` | Caller is not on a loopback address. |
+| `40901` | A file with the same content hash was already ingested. |
+| `41301` | File exceeds the size limit (`DOCUMENT_MAX_MB`, or `VIDEO_MAX_MB` for video types). |
 
 #### Retrieve and Search
 Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and object references.

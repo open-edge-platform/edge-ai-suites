@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+  "package-lock.json",
+  "packages/ui/package.json",
+  "packages/ui/tsconfig.json",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "(C) 2026 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"

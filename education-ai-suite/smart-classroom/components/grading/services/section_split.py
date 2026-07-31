@@ -10,6 +10,14 @@ from PIL import Image
 OcrRegionFn = Callable[[Any, list], str]  # (page_image_path, bbox) -> text
 
 
+def _select_by_language(value: Any, language: str) -> list:
+    if isinstance(value, dict):
+        return list(value.get(language) or []) + list(value.get("common") or [])
+    if isinstance(value, list):
+        return value
+    return []
+
+
 def _load_page_boxes(step1_dir: Path, page_num: int) -> list[dict]:
     jf = step1_dir / f"page_{page_num}_detections.json"
     if not jf.exists():
@@ -280,8 +288,9 @@ def split_sections(
     cfg = config.get("section_split", {})
     if not isinstance(cfg, dict):
         cfg = {}
+    language = str(config.get("_language", "en"))
     title_labels = cfg.get("title_labels") or ["paragraph_title", "title"]
-    raw_patterns = cfg.get("title_patterns") or []
+    raw_patterns = _select_by_language(cfg.get("title_patterns"), language)
     patterns = [re.compile(p) for p in raw_patterns]
     direction = cfg.get("stitch_direction", "vertical")
     compress = bool(cfg.get("compress_whitespace", False))

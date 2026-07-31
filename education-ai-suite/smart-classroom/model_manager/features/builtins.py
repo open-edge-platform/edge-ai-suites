@@ -25,6 +25,7 @@ _BUILTIN_FEATURES = [
     QAFeature,
     GradingFeature,
     ReportFeature,
+    GradingFeature,
 ]
 
 
