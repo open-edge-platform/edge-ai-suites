@@ -10,9 +10,14 @@ import {
 import { getClassStatistics } from '../../services/api';
 import Accordion from '../common/Accordion';
 import { useTranslation } from 'react-i18next';
-import Timeline from "./Timeline";
+import Timeline from './Timeline';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
-const ClassStatisticsAccordion: React.FC = () => {
+interface ClassStatisticsAccordionProps {
+  featureGuard: FeatureGuard;
+}
+
+const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ featureGuard }) => {
   const dispatch = useAppDispatch();
 
   const sessionId = useAppSelector((state) => state.ui.sessionId);
@@ -168,9 +173,12 @@ const ClassStatisticsAccordion: React.FC = () => {
             />
           )}
         </div>
-        <div className="analytics-section audio-analytics" style={{ margin: '20px 2px 3px 4px', color: '#388e3c',  }}>
-          <Timeline />
-        </div>
+        
+        {featureGuard.hasFeature('asr') && (
+          <div className="analytics-section audio-analytics" style={{ margin: '20px 2px 3px 4px' }}>
+            <Timeline />
+          </div>
+        )}
       </div>
     </Accordion>
   );

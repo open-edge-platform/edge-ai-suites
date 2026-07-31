@@ -59,6 +59,8 @@ header {
     padding-bottom: 4px;
     padding-right: 16px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 20;
 }
 
 h1,
@@ -112,7 +114,7 @@ main {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
-    z-index: 100;
+    z-index: 1000;
     pointer-events: none;
 }
 
@@ -187,18 +189,27 @@ main {
 }
 
 .header-buttons {
-    display: flex;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 6px;
     align-items: center;
     flex: 1;
     min-width: 0;
 }
 
+.header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
 .system-capability-cards {
     display: flex;
     gap: 6px;
     min-width: 0;
+    justify-self: end;
+    overflow: hidden;
 }
 
 .system-device-card {

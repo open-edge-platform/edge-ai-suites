@@ -49,6 +49,7 @@ def health():
 
 @router.get("/features")
 def get_features(request: Request):
+    """Return enabled features with full UI descriptors for dynamic frontend rendering."""
     from model_manager.features import in_dependency_order
 
     eff = getattr(request.app.state, "features", None)
@@ -62,10 +63,12 @@ def get_features(request: Request):
     for feature in in_dependency_order():
         if not eff.is_enabled(feature.id):
             continue
-        features.append({
-            "id": feature.id,
-            "dependency": list(feature.depends_on),
-        })
+        
+        # Merge basic metadata with ui_descriptor for complete feature config
+        descriptor = feature.ui_descriptor()
+        descriptor["dependency"] = list(feature.depends_on)
+        descriptor["requires"] = list(feature.requires)
+        features.append(descriptor)
 
     return JSONResponse(
         content={"features": features},

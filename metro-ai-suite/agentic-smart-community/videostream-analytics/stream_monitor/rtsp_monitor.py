@@ -37,7 +37,7 @@ from stream_monitor.base_monitor import BaseMonitor
 from stream_monitor.pipeline.motion_detector import MotionDetector
 from stream_monitor.pipeline.segment_extractor import SegmentExtractor
 from stream_monitor.pipeline.prefilter_yolo import YoloPrefilter, FramePrefilter
-from stream_monitor.pipeline.roi_processor import prepare_roi_segment
+from stream_monitor.pipeline.roi_processor import prepare_roi_segment, transcode_h264_in_place
 
 logger = logging.getLogger(__name__)
 
@@ -519,6 +519,8 @@ class StreamPipeline(BaseMonitor):
             if os.path.exists(crop_path):
                 summary_clip_input = crop_path
 
+        transcode_h264_in_place(clip_path)
+
         payload: dict[str, Any] = {
             "event_file_path": clip_path,
             "summary_clip_input": summary_clip_input,
@@ -567,7 +569,7 @@ class StreamPipeline(BaseMonitor):
     def _emit_static(self, start_iso: str | None, end_iso: str, duration: float) -> None:
         """Emit a `static` event via the shared MCP envelope.
 
-        Payload matches mcp_webhook_event_api.md §4: required `start_time` +
+        Payload matches api-reference-mcp-webhook-event.md §4: required `start_time` +
         `duration_seconds`, optional `end_time`.
         """
         self._emit_envelope("static", {

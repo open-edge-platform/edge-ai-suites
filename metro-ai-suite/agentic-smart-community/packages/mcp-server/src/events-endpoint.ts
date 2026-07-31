@@ -28,7 +28,7 @@ type DispatchOutcome =
  * HTTP webhook receiver for events pushed by any upstream video-analytics client.
  * Listens on a dedicated port for POST /events.
  *
- * Response contract is documented in docs/apis/mcp_webhook_event_api.md.
+ * Response contract is documented in docs/user-guide/get-started/api-reference-mcp-webhook-event.md.
  * Summary:
  *   200 — DB write succeeded; body carries inserted row ids
  *   400 — body not JSON, or envelope shape invalid (transport / framing error)

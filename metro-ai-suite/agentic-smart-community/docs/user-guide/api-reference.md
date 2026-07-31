@@ -1,15 +1,20 @@
-# RESTful API Reference
+# API Reference
 
-The platform's HTTP services expose two RESTful APIs. Both speak JSON over HTTP, run in a trusted network segment (no auth), and use standard status codes.
+The platform exposes MCP capabilities through Streamable HTTP and two RESTful HTTP APIs.
 
 | API | Service | Base | What it covers |
 |-----|---------|------|----------------|
-| [MCP Webhook Event API](get-started/mcp_webhook_event_api.md) | MCP Server | `http://<mcp-host>:3101` | The `POST /events` ingest contract — envelope, per-`type` payloads (`motion` / `static` / `recording`), response codes, and the resulting DB writes. |
-| [Videostream Analytics HTTP API](get-started/videostream_analytics_api.md) | videostream-analytics (VSA) | `http://<vsa-host>:8999` | The VSA control plane — register / start / stop / pause / restart sources, hot-update pipeline config, the source lifecycle state machine, and the events VSA emits. |
+| [MCP Tools and Resources API Reference](get-started/api-reference-mcp.md) | MCP Server | `http://<mcp-host>:3100/mcp` | Complete JSON-RPC reference for session setup, all MCP tool calls, resource reads, subscriptions, and SSE notifications. |
+| [MCP Subscription Reference](get-started/api-reference-mcp-subscription.md) | MCP Server | `http://<mcp-host>:3100/mcp` | MCP session initialization, alert-resource subscriptions, SSE update notifications, cursor-based reads, and proactive-delivery integration. |
+| [MCP Webhook Event API](get-started/api-reference-mcp-webhook-event.md) | MCP Server | `http://<mcp-host>:3101` | The `POST /events` ingest contract — envelope, per-`type` payloads (`motion` / `static` / `recording`), response codes, and the resulting DB writes. |
+| [Dashboard API Reference](get-started/api-reference-dashboard.md) | MCP Server | `http://<mcp-host>:3100/api` | Monitor discovery, activity, reports, stats, snapshot/clip media, RTSP live preview, Router status, and optional OpenClaw chat proxy. |
+| [Videostream Analytics HTTP API](get-started/api-reference-videostream-analytics.md) | videostream-analytics (VSA) | `http://<vsa-host>:8999` | The VSA control plane — register / start / stop / pause / restart sources, hot-update pipeline config, the source lifecycle state machine, and the events VSA emits. |
 
 ## Data flow
 
-The two APIs form a producer → consumer pair: an operator drives **VSA's control plane** to register cameras, and VSA in turn pushes pipeline events to the MCP server's **webhook**.
+The MCP and REST APIs form a control and event flow: an MCP client calls tools or reads resources,
+the MCP server drives **VSA's control plane**, and VSA pushes pipeline events back to the MCP
+server's **webhook**.
 
 ```
    MCP server                       videostream-analytics (:8999)
@@ -23,7 +28,7 @@ The two APIs form a producer → consumer pair: an operator drives **VSA's contr
 
 ## Conventions
 
-Common to both APIs:
+Common to the two RESTful APIs:
 
 - **Transport** — JSON request/response bodies, `Content-Type: application/json`, UTF-8.
 - **Auth** — none; deploy on loopback / private LAN / behind a reverse proxy.
@@ -35,5 +40,7 @@ See each linked document for the full endpoint list, request / response schemas,
 ## See also
 
 - [Get Started Guide](get-started.md)
+- [MCP Tools and Resources API Reference](get-started/api-reference-mcp.md)
+- [MCP Subscription Reference](get-started/api-reference-mcp-subscription.md)
 - [System Requirements](get-started/system-requirements.md)
 - [Release Notes](release-notes.md)

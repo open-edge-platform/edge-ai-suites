@@ -9,6 +9,8 @@ segment and the gvadetect pre-process backend.
 """
 from __future__ import annotations
 
+import shlex
+
 
 VALID_DEVICES = {"CPU", "GPU", "NPU"}
 VALID_SOURCE_KINDS = {"file", "basler"}
@@ -26,8 +28,11 @@ def _build_source(kind: str, arg: str, target_fps: int) -> tuple[list[str], str]
     """Return the source elements and the matching gvadetect preproc backend."""
     kind = kind.lower()
     if kind == "file":
+        # Quote file paths so uploaded filenames with spaces (e.g. "qa upload.mp4")
+        # do not break gst-launch tokenization.
+        file_arg = shlex.quote(arg)
         return [
-            f"filesrc location={arg}",
+            f"filesrc location={file_arg}",
             "qtdemux",
             "h264parse",
             "vah264dec",
@@ -73,8 +78,9 @@ def build(
 
     src_elems, pre_proc = _build_source(source_kind, source_arg, target_fps)
     eos = f"identity eos-after={frame_limit}" if frame_limit > 0 else "identity"
+    model_arg = shlex.quote(ir_xml)
     gvadetect = (
-        f"gvadetect model={ir_xml} device={dev} threshold={threshold} "
+        f"gvadetect model={model_arg} device={dev} threshold={threshold} "
         f"pre-process-backend={pre_proc} nireq=1 "
         "ie-config=PERFORMANCE_HINT=LATENCY"
     )
