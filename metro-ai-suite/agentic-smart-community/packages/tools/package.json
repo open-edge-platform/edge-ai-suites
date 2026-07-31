@@ -1,0 +1,17 @@
+{
+  "name": "@smartbuilding-video/tools",
+  "version": "0.1.0",
+  "description": "SmartBuilding Video tool implementations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@smartbuilding-video/db": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}

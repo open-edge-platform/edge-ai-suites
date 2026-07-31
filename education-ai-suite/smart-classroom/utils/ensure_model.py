@@ -1,5 +1,4 @@
 import logging, os, subprocess
-from pathlib import Path
 from typing import Tuple
 import yaml
 from utils.config_loader import config
@@ -152,78 +151,18 @@ def _download_openvino_model(
     return success, output_dir
 
 def ensure_model():
-    if config.models.summarizer.provider == "openvino":
-        output_dir = get_model_path()
-        _download_openvino_model(config.models.summarizer.name, output_dir, config.models.summarizer.weight_format)
-    if config.models.asr.provider == "openvino":
-        output_dir = get_asr_model_path()
-        _download_openvino_model(f"openai/{config.models.asr.name}", output_dir, None)
-    if config.models.diarization.provider == "huggingface":
-        output_dir = get_diarization_model_path()
-        success, _ = _download_hf_model(
-            config.models.diarization.name,
-            output_dir,
-            hf_token=config.models.asr.hf_token,
-            required_files=["config.yaml"]
-        )
-        if success:
-            _cache_diarization_dependencies_locally(output_dir, hf_token=config.models.asr.hf_token)
+    # NOTE: Core capabilities (text_gen VLM, ASR, OCR) handle model download/
+    # conversion lazily during first warmup via their respective handlers:
+    # - VLMTextGen: downloads and converts on first _load()
+    # - AsrHandler: calls _ensure_openvino_asr_model() from _build_processor()
+    # - OcrHandler: calls _ensure_openvino_models() from _build_processor()
+    # No pre-download is needed here; models are prepared on-demand.
     
+    # Video Analytics models (YOLO, classification) are still prepared eagerly
+    # since they don't use the handler pattern yet.
     output_dir = get_va_model_path()
     convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
-    
-    if config.models.ocr.enabled and config.models.ocr.provider == "openvino":
-        _initialize_ocr()
-
-
-def _initialize_ocr():
-    import shutil
-    import openvino as ov
-    from paddlex.inference.utils.official_models import official_models
-
-    model_dir = Path(config.models.ocr.model_dir)
-    det_model = config.models.ocr.det_model
-    rec_model = config.models.ocr.rec_model
-    cls_model = config.models.ocr.cls_model
-
-    models = [
-        ("det", det_model),
-        ("rec", rec_model),
-        ("cls", cls_model),
-    ]
-
-    all_cached = all(
-        (model_dir / mtype / mname / "inference.xml").exists()
-        for mtype, mname in models
-    )
-    if all_cached:
-        logger.info("OpenVINO IR models already cached, skipping download/conversion")
-        return
-
-    core = ov.Core()
-
-    for model_type, model_name in models:
-        out_dir = model_dir / model_type / model_name
-        ir_path = out_dir / "inference.xml"
-
-        if ir_path.exists():
-            continue
-
-        logger.info(f"Downloading {model_name} (ONNX format)...")
-        downloaded_dir = Path(official_models.get_model_path(model_name, model_formats=["onnx"]))
-
-        out_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = downloaded_dir / "inference.onnx"
-        yml_src = downloaded_dir / "inference.yml"
-
-        if yml_src.exists():
-            shutil.copy2(yml_src, out_dir / "inference.yml")
-
-        logger.info(f"Converting {model_name} ONNX → OpenVINO IR...")
-        model = core.read_model(str(onnx_path))
-        ov.save_model(model, str(ir_path))
-        logger.info(f"Saved: {ir_path}")
 
 
 def get_model_path() -> str:

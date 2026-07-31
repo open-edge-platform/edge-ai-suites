@@ -263,6 +263,8 @@ class AnomalyDetectorHandler(Handler):
                         data_prediction,
                     )
 
+                    point.fieldsString["predicted_category"] = predicted_category
+
                     point.fieldsString["prediction_details"] = json.dumps(data_prediction)
 
                     if bad_defect > 50:

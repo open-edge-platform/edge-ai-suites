@@ -1,0 +1,86 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+cmake_minimum_required(VERSION 3.22.1)
+project(isaac_ros_benchmark LANGUAGES C CXX)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(vision_msgs QUIET)
+
+ament_python_install_package(${PROJECT_NAME})
+
+function(add_optional_openvino_node target source class_name needs_vision_msgs)
+  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
+    return()
+  endif()
+
+  if(${needs_vision_msgs} AND NOT vision_msgs_FOUND)
+    message(FATAL_ERROR
+      "Source ${source} requires vision_msgs but it was not found. Install ros-${ROS_DISTRO}-vision-msgs.")
+  endif()
+
+  add_library(${target} SHARED ${source})
+  target_compile_features(${target} PUBLIC cxx_std_17)
+  target_include_directories(${target} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+  if(${needs_vision_msgs})
+    ament_target_dependencies(${target}
+      rclcpp
+      rclcpp_components
+      sensor_msgs
+      vision_msgs)
+  else()
+    ament_target_dependencies(${target}
+      rclcpp
+      rclcpp_components
+      sensor_msgs)
+  endif()
+
+  rclcpp_components_register_nodes(${target} "${class_name}")
+  set(node_plugins "${node_plugins}${class_name};$<TARGET_FILE:${target}>\n" PARENT_SCOPE)
+
+  install(TARGETS ${target}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+  set(HAS_OPENVINO_NODE TRUE PARENT_SCOPE)
+endfunction()
+
+set(HAS_OPENVINO_NODE FALSE)
+
+add_optional_openvino_node(centerpose_openvino_node src/centerpose_openvino_node.cpp "isaac_ros_benchmark::CenterPoseOpenVINONode" TRUE)
+add_optional_openvino_node(detectnet_openvino_node src/detectnet_openvino_node.cpp "isaac_ros_benchmark::DetectNetOpenVINONode" TRUE)
+add_optional_openvino_node(dope_openvino_node src/dope_openvino_node.cpp "isaac_ros_benchmark::DopeOpenVINONode" TRUE)
+add_optional_openvino_node(rtdetr_openvino_node src/rtdetr_openvino_node.cpp "isaac_ros_benchmark::RtDetrOpenVINONode" TRUE)
+add_optional_openvino_node(segmentation_openvino_node src/segmentation_openvino_node.cpp "isaac_ros_benchmark::SegmentationOpenVINONode" FALSE)
+
+if(NOT HAS_OPENVINO_NODE)
+  message(FATAL_ERROR "No OpenVINO node source files found under src/.")
+endif()
+
+install(DIRECTORY include/
+  DESTINATION include)
+
+install(PROGRAMS
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_index_has_resource(HAS_ISAAC_ROS_COMMON isaac_ros_common_cmake_path isaac_ros_common)
+if(HAS_ISAAC_ROS_COMMON)
+  ament_index_get_resource(ISAAC_ROS_COMMON_CMAKE_PATH isaac_ros_common_cmake_path isaac_ros_common)
+  include("${ISAAC_ROS_COMMON_CMAKE_PATH}/isaac_ros_common-version-info.cmake")
+  generate_version_info(${PROJECT_NAME})
+endif()
+
+ament_package()

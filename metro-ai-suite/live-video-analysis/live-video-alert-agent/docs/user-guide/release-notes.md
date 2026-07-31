@@ -1,5 +1,32 @@
 # Release Notes: Live Video Alert Agent
 
+## Version 2026.2.0
+
+**New**
+
+- **Microservice architecture for action dispatch.** Alert action dispatch
+  (tool execution, ADK agent reasoning, webhook/MQTT delivery) is now handled
+  by the external `alert-agent-service` microservice, deployed as a sidecar
+  container. This provides better separation of concerns, independent scaling,
+  and reusability across different detection pipelines.
+- **Simplified live-video-alert-agent.** The agent now focuses solely on video
+  ingestion, VLM inference, and alert state management. Dependencies on
+  `google-adk`, `litellm`, and `paho-mqtt` have been removed.
+- **HTTP-based tool proxy.** The `/tools` API endpoints now proxy to the
+  alert-agent-service, maintaining backward compatibility for dashboard and
+  API consumers.
+
+**Changed**
+
+- `USE_ADK` environment variable removed — use `AGENT_MODE` on the
+  `alert-agent-service` container instead.
+- `LLM_*`, `WEBHOOK_*`, and `MQTT_*` environment variables moved from
+  live-video-alert-agent to alert-agent-service.
+- New environment variables: `ALERT_AGENT_SERVICE_URL`,
+  `ALERT_AGENT_SERVICE_TIMEOUT`.
+- Docker Compose now includes `alert-agent-service` as a required sidecar
+  and an optional `mqtt` service.
+
 ## Version 2026.1.0
 
 **June 17, 2026**

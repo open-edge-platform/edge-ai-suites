@@ -68,11 +68,11 @@ make clean CONFIRM=yes  # removes containers, volumes, and data or directories â
 
 Open WebUI chat UI, Grafana dashboard, and Whisper speech-to-text service are only accessible via the NGINX TLS reverse proxy; their container ports are not exposed to the host. Use `-k` with curl for a self-signed certificate.
 
-| Service                                        | URL                      | Notes                               |
-| ---------------------------------------------- | ------------------------ | ----------------------------------- |
-| Open WebUI chat UI                             | https://localhost:8443   | LLM chat UI (via NGINX              |
-| Grafana dashboard                              | https://localhost:7443   | Dashboards (via NGINX)              |
-| Whisper speech-to-text service                 | https://localhost:5443   | Speech-to-text feature (via NGINX)  |
-| Visual Pipeline and Platform Evaluation Tool UI| https://localhost:443    | via NGINX (standard/CDI modes only) |
-| Metrics Manager                                | http://localhost:9090    | Prometheus metrics API              |
-| Metrics Manager                                | http://localhost:9273    | Telegraf metrics endpoint           |
+| Service           | URL                            | Notes                      |
+|-------------------|--------------------------------|----------------------------|
+| Single pane page  | https://localhost:443          | Page with 4 applications   |
+| Vippet UI         | https://localhost:1443         | ViPPET page                |
+| Whisper STT       | https://localhost:5443         | Speech-to-text             |
+| OVMS metrics      | https://localhost:6443/metrics | Prometheus metrics         |
+| Grafana           | https://localhost:7443         | Telemetry dashboards       |
+| Open WebUI        | https://localhost:8443         | LLM chat UI                |

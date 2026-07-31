@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 .python-version
+.pytest_cache/
 __pycache__/
 .gitignore
 .dockerignore

@@ -17,6 +17,7 @@ from services.mqtt_service import MQTTService
 from services.weather_service import WeatherService
 from services.vlm_service import VLMService
 from services.data_aggregator import DataAggregatorService
+from services.metrics_client import MetricsManagerClient
 
 
 # Configure structured logging
@@ -60,9 +61,13 @@ async def lifespan(app: FastAPI):
         # Initialize VLM service for traffic analysis
         vlm_service = VLMService(config_service, weather_service)
         app.state.vlm_service = vlm_service
+
+        # Initialize best-effort Metrics Manager client for application KPIs
+        metrics_client = MetricsManagerClient(config_service.metrics)
+        app.state.metrics_client = metrics_client
         
         # Initialize data aggregator service
-        data_aggregator = DataAggregatorService(config_service, vlm_service)
+        data_aggregator = DataAggregatorService(config_service, vlm_service, metrics_client)
         app.state.data_aggregator = data_aggregator
         
         # Initialize and start MQTT service for camera data

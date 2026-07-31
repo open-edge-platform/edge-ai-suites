@@ -27,30 +27,6 @@ an introduction.
   export TAG="latest"
   ```
 
-## Using Edge Microvisor Toolkit
-
-If you are running STIA on an OS image built with **Edge Microvisor Toolkit (EMT)** — an Azure Linux-based build pipeline for Intel® platforms — the deployment approach depends on the EMT flavor. Refer to the detailed documentation for [EMT-D](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image) and [EMT-S](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for full details.
-
-### EMT-D (Mutable)
-
-EMT-D is a **mutable** image that supports standard package management. You can run the `setup.sh` script directly on the node after installing any required dependencies using `dnf` or `tdnf`.
-
-### EMT-S (Immutable)
-
-EMT-S is an **immutable** OS image — standard package managers such as `apt` are not available, and the `setup.sh` script **cannot be run directly on the EMT-S node** (doing so will fail with `sudo: apt: command not found`). Use one of the following approaches:
-
-- **Option 1 (USB provisioning):** While preparing the USB drive, copy the required Docker images under `/opt/user-apps` on the image, then flash and deploy the Edge node.
-- **Option 2 (Remote copy):** On a Ubuntu development system, pull/build all required Docker images and prepare the project directory. Copy the entire directory to the EMT-S node without modifications and deploy from there. This approach has been verified to successfully bring up all containers.
-
-If any packages must be installed on EMT-S, use the installroot method (replace `<package>` with the required package name):
-
-```bash
-sudo env no_proxy="localhost,127.0.0.1" dnf --installroot=/opt/user-apps/tools/ -y install <package>
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/user-apps/tools/usr/lib/
-```
-
-Refer to the [EMT-S documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for further details.
-
 ## Quick Start with Setup Script
 
 Intel recommends using the automated setup script that handles environment configuration,
@@ -73,8 +49,20 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ### 2. Set the required environment variables
 
 ```bash
-export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+export VLM_MODEL_NAME=<supported_model_name>
 ```
+
+The application has been validated with following models:
+
+| Model | `VLM_MODEL_NAME` |
+|-------|-----------------|
+| Microsoft Phi-3.5 Vision (pre-converted) | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` |
+| Microsoft Phi-3.5 Vision (raw, auto-converted) | `microsoft/Phi-3.5-vision-instruct` |
+| Qwen2-VL 2B (pre-converted) | `OpenVINO/Qwen2-VL-2B-Instruct-int4-ov` |
+| Qwen2-VL 7B (pre-converted) | `OpenVINO/Qwen2-VL-7B-Instruct-int4-ov` |
+| InternVL2 1B (pre-converted) | `OpenVINO/InternVL2-1B-int4-ov` |
+
+> **Note:** Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
 
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
@@ -171,8 +159,10 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
+
+   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
@@ -214,8 +204,10 @@ locations on the same machine for `n` required instances.
 3. Set the required environment variable.
 
    ```bash
-   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
+
+   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
@@ -270,7 +262,22 @@ export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of tr
 
 # To mock the weather data (say in airgapped deployment)
 export WEATHER_MOCK=True
+
+# Metrics Manager backs the System Telemetry panel and accepts STIA application metrics.
+# Override these only when using a non-default Metrics Manager endpoint or stable host label.
+export METRICS_MANAGER_HOSTNAME=intersection-1
+export METRICS_MANAGER_URL=http://metrics-manager:9090
+export METRICS_STREAM_URL=http://metrics-manager:9090/metrics/stream
+export METRICS_PUSH_ENABLED=True
+export METRICS_PUSH_TIMEOUT_SECONDS=1.0
+export METRICS_MANAGER_PRIVILEGED=False      # Set True only when NPU telemetry requires it
 ```
+
+The **System Telemetry** panel in the UI is backed by Metrics Manager. If you override the
+Metrics Manager endpoint, keep `METRICS_MANAGER_URL` and `METRICS_STREAM_URL` reachable from
+the Traffic Intersection Agent container. Docker Compose uses the published
+`intel/metrics-manager:2026.1.0` image by default; set `METRICS_MANAGER_IMAGE` and
+`METRICS_MANAGER_TAG` only when deploying a custom Metrics Manager build.
 
 ### Customizing the video used by sample application
 
@@ -289,63 +296,7 @@ URLs for accessing the relevant services:
 
 ## Deploy with Trusted Compute
 
-Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
-
-> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
-
-### 1. Install Trusted Compute
-
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
-
-1. [Prerequisites](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#1-prerequisites)
-2. [Download the Trusted Compute Package](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#2-download-the-trusted-compute-package)
-3. [Docker Option](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md#4-docker-option)
-
-> **Note:** Trusted Compute version 1.5.0 is required for this deployment. However, Trusted
-> Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
-
-### 2. Deploy the Smart Traffic Intersection Agent with Trusted Compute
-
-#### Configure Network Settings
-
-By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
-
-**Requirements:**
-
-- Subnet format must be exactly `172.X.0.0/16` where X is between 18-31 (RFC 1918 private IP range)
-- The subnet must not conflict with existing Docker networks on your system
-- DNS relay service will be automatically configured at `172.X.0.200`
-
-**Example:**
-
-```bash
-# Optional: Customize the subnet if needed (default is 172.20.0.0/16)
-export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
-```
-
-#### Perform the STIA Deployment with Trusted Compute
-
-```bash
-export ENABLE_TC=true
-source ./setup.sh --setup
-```
-
-The DL Streamer Pipeline Server and OpenVINO model server (OVMS) containers will run
-inside hardware-isolated TC VMs, protecting inference workloads and video data from
-untrusted co-tenants on the same host.
-
-> **Note:** All other setup and configuration steps remain the same as described in the
-> [Quick Start with Setup Script](#quick-start-with-setup-script) section above.
-
-### 3. Clean Up the Deployment
-
-To stop and remove the Smart Traffic Intersection Agent containers:
-
-```bash
-source ./setup.sh --clean
-```
-
-To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
+To deploy the Smart Traffic Intersection Agent with Intel Trusted Compute for hardware-isolated workloads, refer to the [Deploy with Trusted Compute](./deploy-with-trusted-compute.md) guide.
 
 ## Upgrading
 
@@ -461,6 +412,8 @@ source setup.sh --setup
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
+./get-started/deploy-with-trusted-compute-helm
+./deploy-with-trusted-compute
 
 :::
 hide_directive-->

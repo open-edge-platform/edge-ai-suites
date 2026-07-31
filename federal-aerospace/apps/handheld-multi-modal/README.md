@@ -74,12 +74,14 @@ make up-standalone
 
 Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only accessible via the NGINX Transport Layer Security (TLS) reverse proxy — their container ports are not exposed directly to the host.
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| Open WebUI | https://localhost:8443 | LLM chat UI — browser microphone enabled (via NGINX reverse proxy) |
-| Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
-| Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
+| Service                                         | URL                             | Notes                                                                 |
+|-------------------------------------------------|---------------------------------|-----------------------------------------------------------------------|
+| Single pane page                                | https://localhost:443           | via NGINX reverse proxy                                               |
+| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:1443          | via NGINX reverse proxy                                               |
+| Whisper speech-to-text service                  | https://localhost:5443          | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
+| OVMS metrics                                    | https://localhost:6443/metrics  | Prometheus metrics (via NGINX reverse proxy)                          |
+| Grafana dashboard                               | https://localhost:7443          | Pre-provisioned dashboards (via NGINX reverse proxy)                  |
+| Open WebUI                                      | https://localhost:8443          | LLM chat UI — browser microphone enabled (via NGINX reverse proxy)    |
 
 ## Make Targets
 

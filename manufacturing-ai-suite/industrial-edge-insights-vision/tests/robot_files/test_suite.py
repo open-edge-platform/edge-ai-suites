@@ -37,31 +37,6 @@ class test_suite(unittest.TestCase):
         ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
         return ret
 
-    def TC_001_WELD(self):
-        env["TEST_CASE"] = "WELD001"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_002_WELD(self):
-        env["TEST_CASE"] = "WELD002"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_003_WELD(self):
-        env["TEST_CASE"] = "WELD003"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_004_WELD(self):
-        env["TEST_CASE"] = "WELD004"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-    
-    def TC_005_WELD(self):
-        env["TEST_CASE"] = "WELD005"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
     def TC_001_PCB(self):
         env["TEST_CASE"] = "PCB001"
         ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
@@ -87,31 +62,6 @@ class test_suite(unittest.TestCase):
         ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
         return ret
     
-    def TC_001_WSG(self):
-        env["TEST_CASE"] = "WSG001"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_002_WSG(self):
-        env["TEST_CASE"] = "WSG002"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_003_WSG(self):
-        env["TEST_CASE"] = "WSG003"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_004_WSG(self):
-        env["TEST_CASE"] = "WSG004"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-    
-    def TC_005_WSG(self):
-        env["TEST_CASE"] = "WSG005"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-    
     def TC_001_PDDHELM(self):
         env["TEST_CASE"] = "PDDHELM001"
         ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps_helm.py:TestCaseManager.test_apps", shell=True, env=env)
@@ -122,15 +72,6 @@ class test_suite(unittest.TestCase):
         ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps_helm.py:TestCaseManager.test_apps", shell=True, env=env)
         return ret
 
-    def TC_001_WELDHELM(self):
-        env["TEST_CASE"] = "WELDHELM001"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps_helm.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
-
-    def TC_001_WSGHELM(self):
-        env["TEST_CASE"] = "WSGHELM001"
-        ret = subprocess.call("nosetests3 --nocapture -v ../functional_tests/apps_helm.py:TestCaseManager.test_apps", shell=True, env=env)
-        return ret
 
 
 if __name__ == '__main__':

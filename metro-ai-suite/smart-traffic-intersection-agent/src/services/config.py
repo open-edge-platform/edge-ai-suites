@@ -20,8 +20,12 @@ def hash_intersection_name(name: str, length: int = 16) -> str:
 
 class MetricsConfig:
     def __init__(self):
-        self.ws_url = os.getenv("METRICS_WS_URL", "ws://localhost:9090/ws/clients")
-        self.health_url = os.getenv("METRICS_HEALTH_URL", "http://localhost:9090/health")
+        base_url = os.getenv("METRICS_MANAGER_URL", "http://localhost:9090").rstrip("/")
+        self.base_url = base_url
+        self.stream_url = os.getenv("METRICS_STREAM_URL", f"{base_url}/metrics/stream")
+        self.health_url = os.getenv("METRICS_HEALTH_URL", f"{base_url}/health")
+        self.push_enabled = os.getenv("METRICS_PUSH_ENABLED", "true").lower() in ["true", "1", "yes"]
+        self.push_timeout_seconds = float(os.getenv("METRICS_PUSH_TIMEOUT_SECONDS", "1.0"))
 
 
 class ConfigService:

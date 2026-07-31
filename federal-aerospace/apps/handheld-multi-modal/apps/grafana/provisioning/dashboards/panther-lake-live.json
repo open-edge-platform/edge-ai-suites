@@ -55,7 +55,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Frame Rate Average",
+          "title": "Latest Pipeline Frame Rate Average",
           "description": "",
           "links": [],
           "data": {
@@ -87,7 +87,55 @@
                   }
                 }
               ],
-              "transformations": [],
+              "transformations": [
+              {
+                "kind": "Transformation",
+                "group": "calculateField",
+                "spec": {
+                  "options": {
+                    "mode": "reduceRow",
+                    "reduce": {
+                      "reducer": "lastNotNull"
+                    },
+                    "alias": "Latest Pipeline"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterByValue",
+                "spec": {
+                  "options": {
+                    "filters": [
+                      {
+                        "fieldName": "Latest Pipeline",
+                        "config": {
+                          "id": "notEqual",
+                          "options": {
+                            "value": "0"
+                          }
+                        }
+                      }
+                    ],
+                    "type": "include",
+                    "match": "any"
+                  }
+                }
+              },
+              {
+                "kind": "Transformation",
+                "group": "filterFieldsByName",
+                "spec": {
+                  "options": {
+                    "include": {
+                      "names": [
+                        "Latest Pipeline"
+                      ]
+                    }
+                  }
+                }
+              }
+            ],
               "queryOptions": {
                 "maxDataPoints": 100
               }
@@ -106,7 +154,7 @@
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
                   "calcs": [
-                    "mean"
+                    "lastNotNull"
                   ],
                   "fields": "",
                   "values": false
@@ -229,8 +277,7 @@
                     ]
                   },
                   "color": {
-                    "mode": "fixed",
-                    "fixedColor": "blue"
+                    "mode": "palette-classic"
                   },
                   "custom": {
                     "axisBorderShow": false,
@@ -276,7 +323,7 @@
                     "properties": [
                       {
                         "id": "displayName",
-                        "value": "Frame Rate"
+                        "value": "Pipeline ID: ${__field.labels.job_id}"
                       }
                     ]
                   }
@@ -1718,7 +1765,7 @@
         "kind": "Panel",
         "spec": {
           "id": 32,
-          "title": "Speech To Text Processing Over Time",
+          "title": "Speech To Text Processing Ratio",
           "description": "",
           "links": [],
           "data": {
@@ -1775,7 +1822,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "times",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -1956,7 +2003,7 @@
         "kind": "Panel",
         "spec": {
           "id": 34,
-          "title": "Speech to text Processing Time Last",
+          "title": "Speech to text Processing Ratio Last",
           "description": "",
           "links": [],
           "data": {
@@ -2011,7 +2058,7 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "times",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -2590,7 +2637,7 @@
         "30s",
         "1m"
       ],
-      "hideTimepicker": false,
+      "hideTimepicker": true,
       "fiscalYearStartMonth": 0
     },
     "title": "Panther Lake Live Dashboard",

@@ -63,7 +63,6 @@ This script sets these important values:
 | `DEFAULT_RTSP_URL` | *(empty)* | Pre-fills the RTSP URL field in the dashboard on load. |
 | `HUGGINGFACEHUB_API_TOKEN` | *(empty)* | Required for downloading gated Hugging Face models. |
 
-
 ### 3. Download Models (one-time)
 
 Download a VLM model that is required to generate captions. For default CPU example:
@@ -94,7 +93,7 @@ By default the model is converted on CPU. To explicitly set the device:
   --weight-format int8 \
   --device <CPU|GPU|NPU>
 ```
-> Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
+> Note: NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 See [Model Preparation](./get-started/model-preparation.md) for detailed usage.
 
@@ -149,30 +148,6 @@ This places the model under `ov_detection_models/`.
 
 See [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) for full details.
 
-#### Enable RAG / Embedding
-
-To connect Live Video Captioning to the RAG service for caption-based Q&A, run the provided helper script instead of editing `.env` manually:
-
-```bash
-source scripts/setup_embeddings.sh
-```
-
-This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services.
-
-Download a LLM model for RAG. For example:
-
-```bash
-./model_download_scripts/download_models.sh \
-  --model Qwen/Qwen2.5-3B-Instruct \
-  --type llm \
-  --device CPU \
-  --weight-format int8
-```
-
-This places the model under `llm_models/`.
-
-See [Configure Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) for full details.
-
 ### 5. Start the application
 
 ```bash
@@ -192,8 +167,12 @@ Then:
 1. Enter an RTSP stream URL or select the available USB/webcam camera.
 2. Select the device on which the VLM model will run (e.g., "CPU", "GPU", "NPU"), based on the hardware available on your host system.
 3. Select a VLM model.
-4. Adjust the prompt and maximum token settings if needed.
-5. Click **Start**.
+4. Set **Frame Resolution** for frames parsed by the VLM:
+  - Choose `Default` to keep the input source resolution.
+  - Choose a preset resolution to downscale or upscale before VLM inference.
+  - Choose `Custom` to set a specific width and height.
+5. Adjust the prompt and maximum token settings if needed.
+6. Click **Start**.
 
 If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so the stream connection does not go through the proxy.
 

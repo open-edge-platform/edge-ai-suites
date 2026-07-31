@@ -8,6 +8,7 @@ import logging
 import traceback
 import httpx
 
+from utils.config import DEFAULT_VLM_MODEL
 from utils.search_service import search_service
 
 logger = logging.getLogger(__name__)
@@ -63,9 +64,9 @@ def _format_seconds(seconds: float) -> str:
 class QAService:
     def __init__(self):
         host = os.getenv("VLM_HOST", "127.0.0.1")
-        port = os.getenv("VLM_PORT", "9900")
+        port = os.getenv("VLM_PORT", "8000")
         self.vlm_url = f"http://{host}:{port}/v1/chat/completions"
-        self.model_name = os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct")
+        self.model_name = os.getenv("VLM_MODEL_NAME", DEFAULT_VLM_MODEL)
         self.timeout = 120.0
 
     async def ask(
@@ -229,6 +230,17 @@ class QAService:
         except httpx.ConnectError:
             msg = "VLM service is not reachable. Please ensure the VLM server is running."
             logger.error(f"[QAService] {msg}")
+            return {"answer": None, "sources": sources, "error": msg}
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 503:
+                if _LANGUAGE == "zh":
+                    msg = "VLM 服务暂时不可用。模型可能正在加载（首次启动需 2-3 分钟）或服务队列已满。请稍后重试。"
+                else:
+                    msg = "VLM service is temporarily unavailable. The model may still be loading (2-3 minutes on first startup) or the service queue is full. Please try again shortly."
+                logger.warning(f"[QAService] 503 Service Unavailable - model may still be loading or queue full")
+            else:
+                msg = f"VLM service returned HTTP {exc.response.status_code}: {exc.response.text}"
+                logger.error(f"[QAService] HTTP error: {msg}")
             return {"answer": None, "sources": sources, "error": msg}
         except Exception as exc:
             logger.error(f"[QAService] VLM call failed: {exc}")

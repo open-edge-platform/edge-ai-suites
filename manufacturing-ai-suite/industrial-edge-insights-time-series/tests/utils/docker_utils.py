@@ -14,6 +14,7 @@ import threading
 import copy
 import random
 import re
+import shlex
 from pathlib import Path
 import pytest
 import logging
@@ -26,7 +27,16 @@ sys.path.append(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 
 import constants
-from constants import CONTAINERS, MULTIMODAL_APPLICATION_DIRECTORY
+from constants import (
+    CONTAINERS,
+    MULTIMODAL_APPLICATION_DIRECTORY,
+    MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+    MULTIMODAL_DLSTREAMER_MODEL_XML_PATH,
+    MULTIMODAL_DLSTREAMER_MQTT_TOPIC,
+    MULTIMODAL_DLSTREAMER_S3_BUCKET,
+    MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX,
+    MULTIMODAL_WEBRTC_PEER_ID,
+)
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
 # Try to import security_utils, but make it optional for multimodal tests
@@ -39,15 +49,20 @@ except ImportError:
 
 def run_command(cmd, capture_output=False):
     """
-    Execute shell commands. 
-    Note: This function uses shell=True but only for predefined commands 
-    from constants/makefiles, not user input.
+    Execute shell commands.
+    Args:
+        cmd: Command string or list of command arguments
+        capture_output: Whether to capture stdout/stderr
     """
+    # Convert string to list if needed to avoid shell=True
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+    
     if capture_output:
-        proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True)
         return proc.returncode, proc.stdout + proc.stderr
     else:
-        proc = subprocess.run(cmd, shell=True)
+        proc = subprocess.run(cmd)
         return proc.returncode
 
 def get_container_logs(container_name, tail=None):
@@ -1748,21 +1763,36 @@ def update_config_file(ingestion_type="opcua"):
         os.chdir(original_dir) if 'original_dir' in locals() else None
         return False
 
-def execute_gpu_config_curl(device="gpu"):
+def execute_gpu_config_curl(device="gpu", sample_app=constants.WIND_SAMPLE_APP):
     """Execute curl command to post GPU configuration to the time-series analytics API.
     
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
+        sample_app (str): Sample app key used to pick UDF/model from SAMPLE_APPS_CONFIG
     """
     try:
-        logger.info(f"Executing curl command to post {device.upper()} configuration to API...")
+        logger.info(
+            f"Executing curl command to post {device.upper()} configuration for app '{sample_app}' to API..."
+        )
         
         # Create configuration with device field using SAMPLE_APPS_CONFIG
-        wind_config = constants.SAMPLE_APPS_CONFIG["wind-turbine-anomaly-detection"]
+        app_config = constants.SAMPLE_APPS_CONFIG.get(sample_app)
+        if not app_config:
+            logger.error(f"Unknown sample_app '{sample_app}'. Available apps: {list(constants.SAMPLE_APPS_CONFIG.keys())}")
+            return False
+
+        udf_name = app_config.get("udf")
+        model_name = app_config.get("model")
+        if not udf_name or not model_name:
+            logger.error(
+                f"Invalid app configuration for '{sample_app}'. Missing required keys 'udf' or 'model'."
+            )
+            return False
+
         gpu_config = {
             "udfs": {
-                "name": wind_config["udf"],
-                "models": wind_config["model"],
+                "name": udf_name,
+                "models": model_name,
                 "device": device
             },
             "alerts": {
@@ -1801,7 +1831,6 @@ def execute_gpu_config_curl(device="gpu"):
         return False
 
 # Idempotent helpers to ensure the UDF loaded in TSAM matches the alert mode the caller needs.
-
 def _kapacitor_task_alert_mode_matches(alert_mode):
     """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is
     currently executing the TICK for the given alert_mode ("mqtt" or "opcua").
@@ -4059,7 +4088,7 @@ def validate_multimodal_alerts_infrastructure():
     
     # Step 2: Wait for containers to stabilize
     logger.info("Waiting for multimodal containers to stabilize and begin data processing...")
-    time.sleep(60)  # Increased wait time for multimodal to process initial data
+    time.sleep(constants.MULTIMODAL_WAIT_FOR_VISION_DATA)
     
     # Step 3: Validate container processing instead of MQTT topics
     validation_results["processing_results"] = validate_multimodal_container_processing()
@@ -4117,13 +4146,14 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         # Convert to JSON
         gpu_config_json = json.dumps(gpu_config)
         
-        # Construct curl command for multimodal deployment - use port 9092 for Kapacitor
+        # Construct curl command for multimodal deployment using external API endpoint
+        # as documented in get-started.md
         curl_command = [
-            "docker", "exec", "ia-time-series-analytics-microservice",
-            "curl", "-X", "POST",
-            "http://localhost:9092/kapacitor/v1/config",
+            "curl", "-k", "-X", "POST",
+            f"{constants.DOCKER_TSA_API_BASE_URL}/config",
+            "-H", "accept: application/json",
             "-H", "Content-Type: application/json",
-            f"-d", f"{gpu_config_json}"
+            "-d", gpu_config_json
         ]
         
         # Execute curl command
@@ -4160,15 +4190,16 @@ def check_system_gpu_devices():
         # Method 1: Check for Intel GPU devices
         try:
             result = subprocess.run(
-                ["lspci", "|", "grep", "-i", "vga"], 
-                shell=True,
-                capture_output=True, 
+                ["lspci"],
+                capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
-            if result.returncode == 0 and "intel" in result.stdout.lower():
-                gpu_devices.append("Intel iGPU")
-                logger.info("Intel iGPU detected via lspci")
+            if result.returncode == 0:
+                vga_lines = [line for line in result.stdout.splitlines() if "vga" in line.lower()]
+                if any("intel" in line.lower() for line in vga_lines):
+                    gpu_devices.append("Intel iGPU")
+                    logger.info("Intel iGPU detected via lspci")
         except:
             pass
         
@@ -5184,7 +5215,7 @@ def execute_seaweedfs_bucket_query():
         dict: Result with success status, jpg_files list, and bucket URL used
     """
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
-    bucket_url = f"https://localhost:{nginx_port}/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/?limit=5000"
+    bucket_url = f"https://localhost:{nginx_port}/image-store/buckets/{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}/?limit=5000"
     
     # Use existing function to get bucket files
     bucket_result = get_seaweedfs_bucket_files(bucket_url)
@@ -5193,17 +5224,19 @@ def execute_seaweedfs_bucket_query():
     return bucket_result
 
 
-def check_s3_image_file_size(img_filename, bucket_path="dlstreamer-pipeline-results/weld-defect-classification"):
+def check_s3_image_file_size(img_filename, bucket_path=None):
     """
     Check if a specific S3 image file is empty or has content using curl HEAD request
 
     Args:
         img_filename (str): Image filename to check (e.g., "ZZHR95D2V4.jpg")
-        bucket_path (str): S3 bucket path
+        bucket_path (str): S3 bucket path (default: uses constants)
 
     Returns:
         dict: Result with file size, empty status, and file details  
     """
+    if bucket_path is None:
+        bucket_path = f"{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}"
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
     file_url = f"https://localhost:{nginx_port}/image-store/buckets/{bucket_path}/{img_filename}"
     
@@ -5431,3 +5464,202 @@ def get_seaweedfs_bucket_files(bucket_url):
             "jpg_files": [],
             "total_files": 0
         }
+
+
+def execute_dlstreamer_pipeline_activation(device="GPU",
+                                           pipeline_name=MULTIMODAL_DLSTREAMER_PIPELINE_NAME,
+                                           pipeline_request_file=None):
+    """
+    Activate the DL Streamer Pipeline Server pipeline on a Docker-based multimodal deployment
+    with the model inference targeted at the specified device (CPU/GPU/NPU).
+
+    Sends a POST request to the dlstreamer-pipeline-server REST API using the external
+    endpoint as documented in get-started.md:
+
+        curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+             -X POST -H 'Content-Type: application/json' \
+             -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+
+    Args:
+        device (str): Device for model inference ('CPU', 'GPU', or 'NPU'). Case-insensitive; uppercased before send.
+        pipeline_name (str): Name of the user-defined pipeline to activate.
+        pipeline_request_file (str): Path to the pipeline request JSON file. If None, uses the default from constants.
+
+    Returns:
+        bool: True if the pipeline was activated successfully, False otherwise.
+    """
+    try:
+        device_value = device.upper()
+        logger.info(f"Activating DL Streamer pipeline '{pipeline_name}' on device {device_value} (Docker)")
+
+        # Use the pipeline request file from configs (same as user documentation)
+        if pipeline_request_file is None:
+            pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
+        
+        # Resolve path relative to this utils directory
+        utils_dir = os.path.dirname(os.path.abspath(__file__))
+        json_file_path = os.path.join(utils_dir, pipeline_request_file)
+        
+        if not os.path.exists(json_file_path):
+            logger.error(f"Pipeline request file not found: {json_file_path}")
+            return False
+        
+        # Read the base pipeline request JSON file
+        with open(json_file_path, 'r') as f:
+            pipeline_request = json.load(f)
+        
+        # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
+        if "parameters" in pipeline_request and "classification-properties" in pipeline_request["parameters"]:
+            pipeline_request["parameters"]["classification-properties"]["device"] = device_value
+        else:
+            logger.error("Invalid pipeline request JSON structure")
+            return False
+        
+        payload_json = json.dumps(pipeline_request)
+
+        # Use external API endpoint as documented in get-started.md
+        curl_command = [
+            "curl", "-k",
+            f"{constants.DOCKER_DSPS_API_BASE_URL}/pipelines/user_defined_pipelines/{pipeline_name}",
+            "-X", "POST",
+            "-H", "Content-Type: application/json",
+            "-d", payload_json
+        ]
+
+        logger.info(f"Executing DL Streamer activation: {' '.join(curl_command)}")
+        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0:
+            logger.info(f"✓ DL Streamer pipeline '{pipeline_name}' activated successfully on {device_value}")
+            logger.debug(f"Response: {result.stdout}")
+            return True
+        else:
+            logger.error(f"✗ Failed to activate DL Streamer pipeline '{pipeline_name}' on {device_value}")
+            logger.error(f"Error: {result.stderr}")
+            return False
+
+    except subprocess.TimeoutExpired:
+        logger.error("DL Streamer pipeline activation curl command timed out")
+        return False
+    except FileNotFoundError as e:
+        logger.error(f"Pipeline request file not found: {e}")
+        return False
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in pipeline request file: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Error executing DL Streamer pipeline activation: {e}")
+        return False
+
+
+
+def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database="datain", limit=5):
+    """
+    Execute InfluxDB commands inside the InfluxDB container for the multimodal
+    weld-defect-detection deployment and return query output.
+
+    Equivalent to running, inside the container:
+        influx -username <user> -password <pass>
+        use datain
+        show measurements
+        select * from "weld-sensor-anomaly-data"           # Time Series Analytics
+        select * from "vision-weld-classification-results" # DL Streamer Pipeline Server
+
+    Args:
+        container_name (str): InfluxDB container name (default: "ia-influxdb").
+        database (str): InfluxDB database to query (default: "datain").
+        limit (int): Row limit for SELECT queries.
+
+    Returns:
+        str | None: Combined query results from the container on success,
+        otherwise None.
+    """
+    logger.info(f"Executing multimodal InfluxDB commands in container '{container_name}'...")
+    try:
+        if not container_exists(container_name):
+            logger.info(f"{container_name} container does not exist")
+            return None
+
+        # Multimodal credentials live in the multimodal app's .env, not the
+        # time-series .env that get_influxdb_credentials() reads from.
+        influxdb_username, influxdb_password = None, None
+        multimodal_env_path = os.path.join(constants.MULTIMODAL_APPLICATION_DIRECTORY, ".env")
+        try:
+            with open(os.path.expandvars(multimodal_env_path), "r") as env_file:
+                for line in env_file:
+                    line = line.strip()
+                    if line.startswith("INFLUXDB_USERNAME="):
+                        influxdb_username = line.split("=", 1)[1]
+                    elif line.startswith("INFLUXDB_PASSWORD="):
+                        influxdb_password = line.split("=", 1)[1]
+            logger.info(f"Loaded InfluxDB credentials from multimodal .env: {multimodal_env_path}")
+        except FileNotFoundError:
+            logger.warning(f"Multimodal .env not found at {multimodal_env_path}; "
+                           f"falling back to time-series .env")
+
+        if not influxdb_username or not influxdb_password:
+            influxdb_username, influxdb_password = get_influxdb_credentials()
+
+        if not influxdb_username or not influxdb_password:
+            logger.info("Failed to get InfluxDB credentials")
+            return None
+
+        multimodal_config = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP) \
+            if hasattr(constants, "MULTIMODAL_SAMPLE_APP") and hasattr(constants, "get_app_config") \
+            else None
+
+        # Get measurement names from constants config (avoid hardcoding)
+        if multimodal_config:
+            analytics_measurement = multimodal_config.get("analytics_topic")
+            vision_measurement = multimodal_config.get("vision_measurement")
+        else:
+            # Fallback to direct access to constants if get_app_config not available
+            analytics_measurement = getattr(constants, "WELD_ANALYTICS_TOPIC", 
+                                           constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("analytics_topic"))
+            vision_measurement = constants.SAMPLE_APPS_CONFIG.get("multimodal-weld-detection", {}).get("vision_measurement")
+
+        verify_tables = [analytics_measurement, vision_measurement]
+
+        influx_execute = (
+            f'SHOW MEASUREMENTS; '
+            f'SELECT * FROM "{analytics_measurement}" LIMIT {limit}; '
+            f'SELECT * FROM "{vision_measurement}" LIMIT {limit}'
+        )
+
+        exec_command = [
+            "docker", "exec", container_name,
+            "influx", "-username", influxdb_username, "-password", influxdb_password,
+            "-database", database, "-execute", influx_execute
+        ]
+        logger.info(
+            f"Executing multimodal InfluxDB query inside {container_name} "
+            f"(measurements: {analytics_measurement}, {vision_measurement}) with redacted credentials."
+        )
+
+        result = subprocess.run(exec_command, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            logger.info(f"Multimodal InfluxDB command failed with return code {result.returncode}")
+            logger.info(f"Error: {result.stderr}")
+            return None
+
+        response = result.stdout.strip()
+        logger.info("Multimodal InfluxDB query results:")
+        logger.info(response)
+
+        if response and any(table in response for table in verify_tables):
+            logger.info("✓ Successfully retrieved multimodal InfluxDB data "
+                        "(time-series analytics and vision measurements present).")
+            return response
+        else:
+            logger.info("No data found or required multimodal measurements are not present.")
+            return response if response else "Connected but no data found"
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"An error occurred while executing a command: {e}")
+        if hasattr(e, 'stderr') and e.stderr:
+            logger.error(f"Error details: {e.stderr}")
+        return None
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        return None

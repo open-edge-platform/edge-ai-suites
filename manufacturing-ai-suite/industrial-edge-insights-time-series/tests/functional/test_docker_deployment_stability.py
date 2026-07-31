@@ -29,7 +29,7 @@ def test_long_run_stability_one_hour(setup_docker_environment):
     """
     logger.info("Long run test: Deploying sample app and monitoring for 1 hour.")
     context = setup_docker_environment
-    context["deploy_mqtt"]()  # or context["deploy_opcua"](), adjust as needed
+    context["deploy_mqtt"]()
 
     # Record initial resource usage
     initial_stats = docker_utils.get_resource_usage()

@@ -15,5 +15,3 @@ Using the template above, several industrial recipes have been provided for user
 
 * [Pallet Defect Detection](apps/pallet-defect-detection/README.md)
 * [PCB Anomaly Detection](apps/pcb-anomaly-detection/README.md)
-* [Weld Porosity Classification](apps/weld-porosity/README.md)
-* [Worker Safety Gear Detection](apps/worker-safety-gear-detection/README.md)

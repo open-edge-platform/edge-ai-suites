@@ -3,7 +3,6 @@
 
 import logging
 import os
-import threading
 
 from PIL import Image
 import base64
@@ -18,7 +17,7 @@ from providers.file_ingest_and_retrieve.models import (
 logger = logging.getLogger(__name__)
 
 class ChromaRetriever:
-    def __init__(self, collection_name="default", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None, doc_embed_lock=None):
+    def __init__(self, collection_name="default", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None):
         self.client = ChromaClientWrapper()
 
         self.visual_collection_name = collection_name
@@ -49,7 +48,6 @@ class ChromaRetriever:
         self._overfetch_multiplier = overfetch_multiplier
 
         self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
-        self._embed_lock = doc_embed_lock or threading.Lock()
 
     def get_visual_query_embedding(self, query):
         embedding = self.visual_embedding_model.handler.encode_text(query)
@@ -58,8 +56,7 @@ class ChromaRetriever:
     def get_document_query_embedding(self, query):
         if not self.document_embedding_model:
             raise RuntimeError("Document embedding model not available.")
-        with self._embed_lock:
-            return self.document_embedding_model.get_query_embedding(query)
+        return self.document_embedding_model.get_query_embedding(query)
 
     def get_image_embedding(self, image_base64):
         img_data = base64.b64decode(image_base64)

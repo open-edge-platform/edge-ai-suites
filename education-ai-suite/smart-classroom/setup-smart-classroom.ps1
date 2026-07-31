@@ -74,7 +74,7 @@ This script will:
   1. Configure proxy for downloads (if needed)
   2. Check system requirements (OS, RAM, Python, Node.js, etc.)
   3. Check application dependencies (FFmpeg, DL Streamer)
-  4. Configure smart-classroom settings (language, upload limits, OCR)
+  4. Configure smart-classroom settings (language, upload limits, OCR, board OCR)
   5. Launch the startup script
 
 "@ -ForegroundColor Cyan
@@ -121,16 +121,42 @@ if (Test-Path $proxyConfigFile) {
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
     if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
-    if (-not $script:httpProxy -and -not $script:httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
+    if (-not $script:httpProxy -and -not $script:httpsProxy) { 
+        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
+        
+        # Check environment for proxy settings
+        Write-Host ""
+        Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+        $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+        $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+        $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+        
+        $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+        if ($envProxies) {
+            $envProxies | ForEach-Object {
+                Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+            }
+            Write-Host ""
+            Write-Host "  Environment variables detected. You can save these to .proxy-config." -ForegroundColor Yellow
+        } else {
+            Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+        }
+    }
     Write-Host ""
 
     if ($Silent) {
         Write-Host "  Silent mode: using saved proxy settings" -ForegroundColor Gray
         $changeProxy = "N"
     } else {
-        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
-        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
-        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        if (-not $script:httpProxy -and -not $script:httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            Write-Host "  [Y] Yes - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Save environment proxy settings to .proxy-config" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+            Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+            Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
     }
@@ -161,19 +187,60 @@ if (Test-Path $proxyConfigFile) {
         $script:httpsProxy = ""
         Write-Host "  No proxy - using direct connection." -ForegroundColor Yellow
     } else {
-        Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+        # If .proxy-config is empty but environment has proxy, save environment values
+        if (-not $script:httpProxy -and -not $script:httpsProxy -and ($envHttpProxy -or $envHttpsProxy)) {
+            $script:httpProxy = $envHttpProxy
+            $script:httpsProxy = $envHttpsProxy
+            $script:noProxy = $envNoProxy
+            
+            $proxyConfig = @{
+                httpProxy = $script:httpProxy
+                httpsProxy = $script:httpsProxy
+                noProxy = $script:noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+            if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
+            if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
+            if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
+        } else {
+            Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+        }
     }
 } else {
     Write-Host ""
-    Write-Host "  No proxy configuration found." -ForegroundColor Gray
+    Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
+    Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
+    Write-Host ""
+    
+    # Check environment variables for proxy settings
+    $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
+    $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
+    $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
+    
+    $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
+    if ($envProxies) {
+        $envProxies | ForEach-Object {
+            Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor Cyan
+        }
+        Write-Host ""
+        Write-Host "  Environment variables detected. You can save these or configure different settings." -ForegroundColor Yellow
+    } else {
+        Write-Host "    (No proxy environment variables found)" -ForegroundColor Gray
+    }
     Write-Host ""
 
     if ($Silent) {
-        Write-Host "  Silent mode: assuming no proxy (direct connection)" -ForegroundColor Gray
+        Write-Host "  Silent mode: using environment proxy settings if available" -ForegroundColor Gray
         $configureProxy = "N"
     } else {
-        Write-Host "  [Y] Yes  - Configure proxy" -ForegroundColor White
-        Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        if ($envHttpProxy -or $envHttpsProxy) {
+            Write-Host "  [Y] Yes  - Configure different proxy settings" -ForegroundColor White
+            Write-Host "  [N] No   - Save current environment proxy settings to .proxy-config" -ForegroundColor White
+        } else {
+            Write-Host "  [Y] Yes  - Configure proxy (save to .proxy-config)" -ForegroundColor White
+            Write-Host "  [N] No   - No proxy (direct connection)" -ForegroundColor White
+        }
         Write-Host ""
         $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
     }
@@ -200,13 +267,31 @@ if (Test-Path $proxyConfigFile) {
         $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
         Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
     } else {
-        $proxyConfig = @{
-            httpProxy = ""
-            httpsProxy = ""
-            noProxy = ""
+        # If environment variables exist, save them; otherwise save empty config
+        if ($envHttpProxy -or $envHttpsProxy) {
+            $script:httpProxy = $envHttpProxy
+            $script:httpsProxy = $envHttpsProxy
+            $script:noProxy = $envNoProxy
+            
+            $proxyConfig = @{
+                httpProxy = $script:httpProxy
+                httpsProxy = $script:httpsProxy
+                noProxy = $script:noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Environment proxy settings saved to .proxy-config:" -ForegroundColor Green
+            if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
+            if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
+            if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
+        } else {
+            $proxyConfig = @{
+                httpProxy = ""
+                httpsProxy = ""
+                noProxy = ""
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
         }
-        $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
-        Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
     }
 }
 
@@ -1423,11 +1508,92 @@ function Update-YamlValue {
     }
 }
 
+# Derive the feature list from the features: block in config.yaml (preserves order).
+$featureIds = @()
+$featuresBlockMatch = [regex]::Match($configContent, "(?ms)^features:[ \t]*\r?\n(.*?)(?=^\S|\z)")
+if ($featuresBlockMatch.Success) {
+    foreach ($m in [regex]::Matches($featuresBlockMatch.Groups[1].Value, "(?m)^\s+([A-Za-z0-9_]+)\s*:\s*\{\s*enabled\s*:\s*(?:true|false)\s*\}")) {
+        $featureIds += $m.Groups[1].Value
+    }
+}
+if ($featureIds.Count -eq 0) {
+    $featureIds = @("asr", "summary", "mindmap", "topic_segmentation", "video_analytics", "board_ocr", "content_search", "qa", "grading", "report")
+}
+
+function Get-FeatureState {
+    param(
+        [string]$Content,
+        [string]$Id
+    )
+    $match = [regex]::Match($Content, "$([regex]::Escape($Id))\s*:\s*\{\s*enabled\s*:\s*(true|false)\s*\}")
+    if ($match.Success) { return $match.Groups[1].Value } else { return "true" }
+}
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing config.yaml values" -ForegroundColor Gray
+    $doConfigChanges = "N"
+} else {
+    $doConfigChanges = Read-Host "Do you want to configure config.yaml? (Y/N)"
+}
+Write-Host ""
+
+if ($doConfigChanges -match "^[Yy]") {
+
 # ============================================================================
-# [3.1] Language & ASR Configuration
+# [3.1] Feature Configuration
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.1] Language & ASR Configuration" -ForegroundColor Cyan
+Write-Host "[3.1] Feature Configuration" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $state = Get-FeatureState -Content $configContent -Id $fid
+    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
+}
+Write-Host ""
+Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing feature configuration" -ForegroundColor Gray
+    $changeFeatures = "N"
+} else {
+    $changeFeatures = Read-Host "Do you want to change feature configuration? (Y/N)"
+}
+
+if ($changeFeatures -match "^[Yy]") {
+    Write-Host ""
+    Write-Host "For each feature, enter T (True) to enable, F (False) to disable, or press Enter to keep the current value." -ForegroundColor Yellow
+    Write-Host ""
+    foreach ($fid in $featureIds) {
+        $current = Get-FeatureState -Content $configContent -Id $fid
+        $answer = Read-Host ("  {0,-20} (enabled: {1}) [T/F/Enter]" -f $fid, $current)
+        $newState = $null
+        if ($answer -match "^[Tt]") { $newState = "true" }
+        elseif ($answer -match "^[Ff]") { $newState = "false" }
+
+        if ($newState) {
+            $configContent = $configContent -replace "($([regex]::Escape($fid))\s*:\s*\{\s*enabled\s*:\s*)(true|false)(\s*\})", "`${1}$newState`${3}"
+            Write-Host "    [OK] $fid set to $newState" -ForegroundColor Green
+        }
+    }
+    Write-Host ""
+    Write-Host "Feature configuration updated." -ForegroundColor Green
+} else {
+    Write-Host "Keeping current feature configuration." -ForegroundColor Gray
+}
+
+Write-Host ""
+
+# ============================================================================
+# [3.2] Language & ASR Configuration
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "[3.2] Language & ASR Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1571,10 +1737,10 @@ if ($changeAsr -match "^[Yy]") {
 Write-Host ""
 
 # ============================================================================
-# [3.2] Upload Size Limits
+# [3.3] Upload Size Limits
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.2] Upload Size Limits" -ForegroundColor Cyan
+Write-Host "[3.3] Upload Size Limits" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1622,10 +1788,10 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.3] OCR Configuration
+# [3.4] OCR Configuration
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.3] OCR Configuration" -ForegroundColor Cyan
+Write-Host "[3.4] OCR Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -1669,6 +1835,60 @@ if ($changeOcr.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
+# [3.5] Board OCR Configuration
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "[3.5] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Extract current Board OCR enabled value
+$boardOcrMatch = [regex]::Match($configContent, "board_ocr:\s*\n\s*enabled:\s*(true|false)")
+$currentBoardOcr = if ($boardOcrMatch.Success) { $boardOcrMatch.Groups[1].Value } else { "false" }
+
+Write-Host "Current Board OCR configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  board_ocr:" -ForegroundColor White
+Write-Host "    enabled: $currentBoardOcr" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: Board OCR requires OCR to be enabled (ocr.enabled: true)." -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing Board OCR setting" -ForegroundColor Gray
+    $changeBoardOcr = "N"
+} else {
+    $changeBoardOcr = Read-Host "Do you want to change Board OCR setting? (Y/N)"
+}
+
+if ($changeBoardOcr.ToUpper() -eq "Y") {
+    Write-Host ""
+    Write-Host "Board OCR Options:" -ForegroundColor Yellow
+    Write-Host "  true  - Enable Board OCR (extracts text from the teacher's display for summary)" -ForegroundColor Gray
+    Write-Host "  false - Disable Board OCR" -ForegroundColor Gray
+    Write-Host ""
+
+    $newBoardOcr = Read-Host "Enable Board OCR? (true/false, blank = $currentBoardOcr)"
+
+    if ($newBoardOcr.ToLower() -eq "true" -or $newBoardOcr.ToLower() -eq "false") {
+        $configContent = $configContent -replace "(board_ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newBoardOcr.ToLower())"
+        Write-Host "  Board OCR enabled set to $($newBoardOcr.ToLower())" -ForegroundColor Gray
+        Write-Host "Board OCR configuration updated." -ForegroundColor Green
+    } else {
+        Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+    }
+} else {
+    Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+}
+
+Write-Host ""
+
+} else {
+    Write-Host "Skipping configuration changes, using existing config.yaml values." -ForegroundColor Gray
+    Write-Host ""
+}
+
+# ============================================================================
 # SAVE CONFIG FILE
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
@@ -1696,7 +1916,21 @@ $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matc
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
+$finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
+
+$csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
+$segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
+$qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
+$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+
+Write-Host "  Features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $fState = Get-FeatureState -Content $finalConfig -Id $fid
+    $fColor = if ($fState -eq "true") { "Green" } else { "DarkGray" }
+    Write-Host ("    {0,-20} enabled: {1}" -f $fid, $fState) -ForegroundColor $fColor
+}
+Write-Host "" -ForegroundColor White
 Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
@@ -1704,6 +1938,8 @@ Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
@@ -1717,17 +1953,28 @@ Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
 $venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
+$venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
+
+$gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch)) {
+$upgradeVenvs = $false
+if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
     } else {
-        $response = Read-Host "Do you want to reinstall virtual environments? (Y/N, default: N)"
+        Write-Host "  [Y] Yes - Recreate venvs (delete and reinstall from scratch)" -ForegroundColor White
+        Write-Host "  [U] Upgrade - Keep venvs, upgrade packages via pip (no full reinstall)" -ForegroundColor White
+        Write-Host "  [N] No  - Use existing venvs (faster startup)" -ForegroundColor White
+        Write-Host ""
+        $response = Read-Host "Do you want to reinstall virtual environments? (Y/U/N, default: N)"
         $recreateVenvs = $response.ToUpper() -eq "Y"
+        $upgradeVenvs = $response.ToUpper() -eq "U"
         if ($recreateVenvs) {
             Write-Host "Virtual environments will be recreated" -ForegroundColor Yellow
+        } elseif ($upgradeVenvs) {
+            Write-Host "Virtual environment packages will be upgraded (venvs kept)" -ForegroundColor Yellow
         } else {
             Write-Host "Using existing virtual environments (faster startup)" -ForegroundColor Gray
         }
@@ -1749,29 +1996,72 @@ if (-not (Test-Path $venvBackend)) {
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
     & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
+} elseif ($upgradeVenvs) {
+    Write-Host "Upgrading Backend dependencies (keeping existing venv)..." -ForegroundColor Yellow
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    & "$venvBackend\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    Write-Host "[OK] Backend dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
 }
 Write-Host ""
 
 Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-    Remove-Item $venvContentSearch -Recurse -Force
-}
-if (-not (Test-Path $venvContentSearch)) {
-    python -m venv $venvContentSearch
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-    & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-    & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-    Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+if (-not $contentSearchEnabled) {
+    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
 } else {
-    Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
+        Remove-Item $venvContentSearch -Recurse -Force
+    }
+    if (-not (Test-Path $venvContentSearch)) {
+        python -m venv $venvContentSearch
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
+        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
+    }
 }
 Write-Host ""
+
+if ($gradingEnabled -eq "true") {
+    Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow
+    if ($recreateVenvs -and (Test-Path $venvConvert)) {
+        Remove-Item $venvConvert -Recurse -Force
+    }
+    if (-not (Test-Path $venvConvert)) {
+        python -m venv $venvConvert
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create Grading conversion venv" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "Installing Grading model conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies installed" -ForegroundColor Green
+    } elseif ($upgradeVenvs) {
+        Write-Host "Upgrading Grading conversion dependencies..." -ForegroundColor Yellow
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        & "$venvConvert\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        Write-Host "[OK] Grading conversion dependencies upgraded" -ForegroundColor Green
+    } else {
+        Write-Host "[OK] Grading conversion venv already exists" -ForegroundColor Green
+    }
+    Write-Host ""
+} else {
+    Write-Host "[SKIP] Grading is disabled (grading.enabled: false)" -ForegroundColor Gray
+    Write-Host ""
+}
 
 # ============================================================================
 # SETUP COMPLETE

@@ -1,6 +1,7 @@
 import subprocess
 import signal
 import sys
+import atexit
 import logging
 from pathlib import Path
 from typing import Dict
@@ -88,3 +89,14 @@ def stop_rtsp_recording(name: str, timeout: float = 10.0) -> bool:
 def is_rtsp_recording_running(name: str) -> bool:
     process = _recorders.get(name)
     return process is not None and process.poll() is None
+
+
+@atexit.register
+def _cleanup_recorders() -> None:
+    """Stop any still-running RTSP recorders on interpreter exit so that
+    orphaned ffmpeg processes are not left behind after shutdown."""
+    for name in list(_recorders.keys()):
+        try:
+            stop_rtsp_recording(name, timeout=5.0)
+        except Exception:
+            pass

@@ -1,0 +1,341 @@
+/* src/assets/css/WorkloadCard.css */
+.workload-card {
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #ccc;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.workload-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Expanded card - more vertical space and content */
+.workload-card.expanded {
+  cursor: default;
+  min-height: 400px;
+  overflow-y: auto;
+}
+
+.workload-card.expanded:hover {
+  transform: none;
+}
+
+.workload-card.expanded .workload-card-header {
+  margin-bottom: 24px;
+}
+
+.workload-card.expanded .workload-vitals {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.workload-card.expanded .vitals-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.workload-card.expanded .vital-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 3px solid #0071c5;
+}
+
+.workload-card.expanded .vital-value {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.workload-card.expanded .vital-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workload-card.expanded .vital-unit {
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+/* Collapsed cards in row - compact display */
+.collapsed-cards-row .workload-card {
+  min-height: 140px;
+  padding: 12px;
+}
+
+.collapsed-cards-row .workload-card .workload-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+}
+
+.collapsed-cards-row .workload-card .workload-name {
+  font-size: 14px;
+}
+
+.collapsed-cards-row .workload-card .workload-description {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.collapsed-cards-row .workload-card .vital-value {
+  font-size: 16px;
+}
+
+.collapsed-cards-row .workload-card .vital-label {
+  font-size: 10px;
+}
+
+.collapsed-cards-row .workload-card .workload-footer {
+  font-size: 9px;
+}
+
+/* Card header */
+.workload-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.fullscreen-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.fullscreen-icon:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.workload-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.workload-info {
+  flex: 1;
+  min-width: 0;
+  padding-right: 30px;
+}
+
+.workload-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--color-dark);
+}
+
+.workload-description {
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: var(--color-gray-700);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Status indicator */
+.workload-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-text {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  text-transform: capitalize;
+}
+
+/* Vitals display */
+.workload-vitals {
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.vitals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vital-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-text);
+}
+
+.vital-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+.vital-value {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-dark);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.vital-unit {
+  font-size: 11px;
+  color: var(--color-gray-700);
+  font-weight: 400;
+}
+
+.no-vitals {
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: var(--color-gray-700);
+  font-style: italic;
+  text-align: center;
+  padding: 16px 0;
+}
+.waveform-preview {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e6e7e8;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+    padding: 16px;
+  }
+}
+
+.waveform-title {
+  font-size: 12px;
+  margin: 0 0 12px 0;
+  color: #6A6D75;
+  font-weight: 600;
+}
+
+.waveform-canvas {
+  display: block;
+  width: 100%;
+  height: 150px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+/* Footer */
+.workload-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #e6e7e8;
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: var(--color-gray-700);
+  margin-top: auto;
+  gap: 12px;
+}
+
+.event-count,
+.last-update {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.event-count .label,
+.last-update .label {
+  font-weight: 500;
+}
+
+.event-count .value,
+.last-update .value {
+  font-weight: 400;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .workload-card {
+    min-height: 180px;
+  }
+
+  .workload-card.expanded {
+    min-height: 300px;
+  }
+
+  .workload-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .workload-name {
+    font-size: 14px;
+  }
+
+  .vital-value {
+    font-size: 16px;
+  }
+
+  .workload-card.expanded .vital-value {
+    font-size: 28px;
+  }
+
+  .workload-card.expanded .vitals-list {
+    grid-template-columns: 1fr;
+  }
+}

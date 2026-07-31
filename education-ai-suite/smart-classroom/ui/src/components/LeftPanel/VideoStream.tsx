@@ -7,14 +7,17 @@ import { setActiveStream, setVideoPlaybackMode } from "../../redux/slices/uiSlic
 import HLSPlayer from "../common/HLSPlayer";
 import { useTranslation } from "react-i18next";
 import { getRecordedVideoUrl } from "../../services/api";
+import type { FeatureGuard } from "../../utils/featureGuards";
 
 interface VideoStreamProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
+  featureGuard: FeatureGuard;
 }
 
 const VideoStream: React.FC<VideoStreamProps> = ({
   isFullScreen,
+  featureGuard,
 }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -450,21 +453,23 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                     </div>
                   )}
 
-                  <div className="side-streams-container">
-                    {isValidStream(streams.back) && (
-                      <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
-                        <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
-                      </div>
-                    )}
+                  {(isValidStream(streams.back) || isValidStream(streams.content)) && (
+                    <div className="side-streams-container">
+                      {isValidStream(streams.back) && (
+                        <div className="side-stream">
+                          <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
+                          <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
+                        </div>
+                      )}
 
-                    {isValidStream(streams.content) && (
-                      <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
-                        <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
-                      </div>
-                    )}
-                  </div>
+                      {isValidStream(streams.content) && (
+                        <div className="side-stream">
+                          <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
+                          <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )} 
 
@@ -487,6 +492,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
         <UploadFilesModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
+          featureGuard={featureGuard}
         />
       )}
     </div>

@@ -74,5 +74,6 @@ class Config:
         return int(cls.get_value_from_env("MODERATE_DENSITY_THRESHOLD", 5))
 
     @staticmethod
-    def get_metrics_ws_url() -> str:
-        return os.getenv("METRICS_WS_URL", "ws://localhost:9090/ws/clients")
+    def get_metrics_stream_url() -> str:
+        metrics_manager_url = os.getenv("METRICS_MANAGER_URL", "http://localhost:9090").rstrip("/")
+        return os.getenv("METRICS_STREAM_URL", f"{metrics_manager_url}/metrics/stream")

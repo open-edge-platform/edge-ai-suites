@@ -5,6 +5,7 @@ This page summarizes the recommended environment for running Live Video Alert Ag
 ## Hardware Platforms used for validation
 
 - This application is specifically targeting the Core&trade; platforms. Intel® Core&trade; Ultra 2 and 3 with integrated GPU are supported currently.
+- Intel® Core&trade; Ultra platforms with integrated NPU are supported for LLM inference offloading.
 - While there is no hard restriction in using this application on Intel® Xeon® platforms with/without Intel® Arc&trade; GPUs, the user is requested to raise a feature ticket in case of any requirement.
 
 ## Operating Systems used for validation
@@ -43,6 +44,13 @@ Configure these via environment variables:
 ```bash
 export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
 ```
+
+> **Note:** Use pre-converted OpenVINO IR models from the
+> [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
+> for best compatibility with OVMS. These models are already optimized and
+> require no additional conversion. Browse the available models at
+> <https://huggingface.co/OpenVINO> and select the variant that matches
+> your target device and quantization requirements.
 
 The user is expected to acknowledge the licensing terms and conditions before selecting the model.
 

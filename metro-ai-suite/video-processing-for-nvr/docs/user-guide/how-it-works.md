@@ -31,7 +31,7 @@ usually offloaded to accelerators like GPUs.
 
 ## Intel GPU
 
-![GPU](./_assets/GPU.png)
+![GPU](./_assets/VPNVR-GPU.drawio.svg)
 
 *Figure 2: Intel® GPU*
 
@@ -41,7 +41,7 @@ an Intel Core/Celeron CPU can be a good option for the core processor of a VPP p
 
 ## Video Processing Platform SDK Architecture
 
-![architecture](./_assets/architecture.png)
+![architecture](./_assets/VPNVR-VPP-architecture.drawio.svg)
 
 *Figure 3: Video Processing Platform SDK Architecture*
 
@@ -68,7 +68,7 @@ The Video Processing Platform SDK provides different types of streams:
 - Video capture
 - Audio in/out
 
-![pipeline](./_assets/pipeline.png)
+![pipeline](./_assets/VPNVR-pipeline.drawio.svg)
 
 *Figure 4: Video Processing Platform SDK Pipeline Construction Illustration*
 
@@ -89,7 +89,7 @@ runtime performance and for debugging core video-processing workloads without mo
 
 Figure 5 shows a typical multi-channel decode, composition, and display workload.
 
-![Multi-channel](./_assets/svet-Multi-channel.png)
+![Multi-channel](./_assets/VPNVR-SVET-multi-channel.drawio.svg)
 
 *Figure 5: Multi-channel Decode, Composition, and Display Workload*
 
@@ -104,7 +104,7 @@ the video layer's resolution, and the composition fps. The [sample_config](https
 sample configuration files; for descriptions of each configuration file, refer to
 [sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
-![Architecture](./_assets/svet-Architecture.png)
+![Architecture](./_assets/VPNVR-SVET-architecture.drawio.svg)
 
 *Figure 6: High-level Architecture of svet_app*
 

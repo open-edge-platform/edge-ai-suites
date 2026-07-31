@@ -1,0 +1,49 @@
+.mindmap-tab-fullscreen {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.mindmap-wrapper-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.mindmap-content-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.jsmind-container-fullscreen {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.jsmind-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: #d32f2f;
+  font-size: 18px;
+  text-align: center;
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .mindmap-tab-fullscreen {
+    height: calc(100vh - 60px);
+  }
+  
+  .jsmind-container-fullscreen jmnode {
+    font-size: 12px !important;
+    max-width: 250px !important;
+    padding: 6px 10px !important;
+  }
+  
+  .jsmind-container-fullscreen .jmexpander {
+    width: 10px !important;
+    height: 10px !important;
+  }
+}

@@ -1,18 +1,27 @@
 # Known Issues
 
-## NPU pipeline ignores user-selected resolution and uses 160×160
+## NPU high-resolution inference may require token-length tuning
 
 Symptoms:
 
-- When the `NPU` VLM Device is selected, the frame resolution shown or chosen in the UI is not applied. The backend always sends frames at 160×160 pixels regardless of what the user selects.
+- With `NPU` selected as the VLM device, higher frame resolutions can fail to start, fail during runtime, if token-length limits are too low for the input.
 
 Details:
 
-- This is a current limitation of the DLStreamer `gvagenai` element on Intel NPU. For VLM workloads, hardcoded prompt-token limits and the lack of exposed NPU-specific configuration in the `gvagenai` element can cause pipeline failures when higher frame resolutions generate input embeddings that exceed the default 1024-token limit. For now, 160×160 is the only validated input size for the supported VLMs running on NPU as a workaround until a fix is available.
+- The NPU LLM pipeline uses a static-shape approach that optimizes execution performance, but it can introduce usage limitations for larger prompt/image token inputs.
+- By default, the NPU pipeline supports input prompts up to `1024` tokens and ensures a generated response of at least `128` tokens, unless generation reaches the end-of-sequence (EOS) token or a lower response limit is explicitly configured.
+- Prompt and response length options:
+  - `MAX_PROMPT_LEN`: maximum number of input prompt tokens the pipeline can process (default: `1024`).
+  - `MIN_RESPONSE_LEN`: minimum number of response tokens the pipeline will generate (default: `128`).
+- In this application, these options are configured through:
+  - `NPU_MAX_PROMPT_LENGTH` (maps to `MAX_PROMPT_LEN`)
+  - `NPU_MIN_RESPONSE_LENGTH` (maps to `MIN_RESPONSE_LEN`)
+- For higher-resolution frames, you may need a larger `NPU_MAX_PROMPT_LENGTH` so the prompt/image tokens fit.
 
 Impact:
 
-- When using the NPU pipeline, captioning frames are limited to 160×160 resolution, which can reduce visual quality and may result in lower caption quality than CPU or GPU pipelines that support higher frame resolutions.
+- Increasing `NPU_MAX_PROMPT_LENGTH` to support higher-resolution inference typically increases generation cost and latency, including higher Time To First Token (TTFT) and slower end-to-end response time.
+- Raising `NPU_MIN_RESPONSE_LENGTH` can further increase decode time because the model is encouraged to generate more tokens before stopping.
 
 ## Pipeline server exits with 2 GPU streams
 
@@ -23,6 +32,28 @@ Symptoms:
 Hardware:
 
 - Issue observed on BMG-580 discrete GPU.
+
+## Video resolution and stream characteristics reduce concurrent stream capacity
+
+Symptoms:
+
+- Starting additional streams may fail, stall, or cause unstable behavior when resolution/FPS/bitrate is high.
+- The practical number of concurrent streams is lower than expected, especially on larger VLMs or when using higher input resolutions.
+- Under heavy workloads, the pipeline server may hit out-of-memory (OOM) conditions and terminate with a segmentation fault.
+
+Details:
+
+- Concurrent stream capacity depends on combined workload, not stream count alone.
+- Higher frame resolution, higher frame rate, larger chunk size, and more complex scenes increase per-stream compute and memory pressure.
+- Upscaling source frames before VLM inference may increase latency and reduce the number of stable concurrent streams.
+- WebRTC re-streaming of 2K/4K video to the dashboard also consumes significant compute resources, which can further reduce stable concurrent stream capacity.
+
+Guidance:
+
+- Start with `Frame Resolution=Default` so the source stream resolution is used as-is.
+- If stability or throughput degrades, downscale resolution first (for example, 640×480), then reduce frame rate/chunk size.
+- Scale streams gradually and validate latency/throughput at each step.
+- If `dlstreamer-pipeline-server` exits unexpectedly, stop and restart the deployment.
 
 ## RTSP Stream not reachable from Live Video Captioning Application
 

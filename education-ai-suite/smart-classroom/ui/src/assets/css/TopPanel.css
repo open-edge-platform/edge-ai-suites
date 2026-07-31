@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 30;
+  z-index: 100;
   background-color: var(--color-theme);
   width: 100%;
   height: 64px;
@@ -91,7 +91,7 @@
   top: 64px;
   left: 0;
   right: 0;
-  z-index: 25;
+  z-index: 98;
   display: flex;
   align-items: center;
   padding: 0 2rem;
@@ -103,4 +103,162 @@
   color: #333;
 }
 
+/* ---------------------------------------------------------------------------
+   Electron custom title bar (Window Controls Overlay).
+   These rules only apply when running inside Electron (body.electron). 
+   The top panel becomes the draggable title bar; interactive controls opt back
+   out of dragging.
+   --------------------------------------------------------------------------- */
+body.electron .top-panel {
+  -webkit-app-region: drag;
+  /* Reserve room on the right for the native window controls overlay
+     (Windows/Linux). Falls back to the normal 2rem padding elsewhere. */
+  padding-right: calc(2rem + (100vw - env(titlebar-area-width, 100vw)));
+}
 
+body.electron .top-panel .action-slot,
+body.electron .top-panel .brand-slot .logo,
+body.electron .top-panel .menu-icon,
+body.electron .top-panel .content-search-btn,
+body.electron .top-panel .content-search-back-btn,
+body.electron .top-panel button,
+body.electron .top-panel input,
+body.electron .top-panel select {
+  -webkit-app-region: no-drag;
+}
+
+/* Navigation Menu beside Intel Logo */
+.nav-menu-container {
+  position: relative;
+  margin-right: 0.75rem;
+}
+
+.nav-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 18px;
+}
+
+.hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.nav-menu-dropdown {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+  overflow: hidden;
+  animation: navSlideDown 0.2s ease;
+  z-index: 10000;
+}
+
+@keyframes navSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-menu-header {
+  padding: 1rem 1.25rem;
+  background: var(--color-theme, #0071c5);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav-menu-list {
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+.nav-menu-list li {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.95rem;
+  color: #333;
+  gap: 0.75rem;
+}
+
+.nav-menu-list li:hover {
+  background: #f5f5f5;
+}
+
+.nav-menu-list li.active {
+  background: #e8f4fd;
+  color: var(--color-theme, #0071c5);
+  font-weight: 600;
+  border-left: 3px solid var(--color-theme, #0071c5);
+}
+
+/* Keep all menu icons in their natural color always */
+.nav-menu-list .menu-icon {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Disabled state - only gray out text, not icon */
+.nav-menu-list li span.disabled {
+  opacity: 0.4;
+  color: #999;
+}
+
+/* Prevent clicking on disabled items */
+.nav-menu-list li.no-click {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Electron only: native application menu entry, separated from the
+   navigation items above since it opens an OS menu rather than a screen. */
+.nav-menu-list li.nav-menu-app-menu {
+  margin-top: 0.5rem;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 0.875rem;
+}
+
+body.electron .nav-menu-toggle {
+  -webkit-app-region: no-drag;
+}

@@ -1,8 +1,8 @@
 # Update Configuration
 
-The Time Series Analytics Microservice provides an interactive Swagger UI at `https://<host_ip>:3000/ts-api/docs`.
+The Time Series Analytics Microservice provides an interactive Swagger UI at `https://localhost:3000/ts-api/docs`.
 
-> **Note:** Use the link `https://<host_ip>:30001/ts-api/docs` to access the Swagger UI if
+> **Note:** Use the link `https://localhost:30001/ts-api/docs` to access the Swagger UI if
 > doing a Helm-based deployment on a Kubernetes cluster.
 
 ## Accessing the Swagger UI

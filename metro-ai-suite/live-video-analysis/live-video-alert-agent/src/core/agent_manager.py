@@ -10,8 +10,7 @@ Key improvements
   asyncio.gather(), so cycle time = max(VLM latency) not sum(VLM latency).
 - Per-stream independent analysis loops 
 - AlertStateManager integration: deduplication, escalation.
-- AlertActionAgent integration: Google ADK tool-calling (or rule-based fallback).
-- Snapshot tool callback registration per stream.
+- External alert-agent-service integration for action dispatch via HTTP.
 - Proper AlertConfig (Pydantic) instead of raw dicts for alert configuration.
 - Runtime metrics: per-stream analysis counters and inference latency.
 - Graceful shutdown: cancels all per-stream tasks cleanly.
@@ -20,7 +19,6 @@ Key improvements
 from __future__ import annotations
 
 import asyncio
-import copy
 import json
 import logging
 import os
@@ -30,16 +28,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import cv2
 from pydantic import ValidationError
 
 from .stream_manager import LiveStreamManager
 from .vlm_client import VLMClient
 from .event_manager import EventManager
 from .alert_state_manager import AlertStateManager
-from src.agentic.alert_agent import AlertActionAgent
-from src.agentic.tools.snapshot_tool import (
-    register_frame_callback, unregister_frame_callback, capture_snapshot,
-)
+from .alert_service_client import AlertServiceClient
 from src.schemas.monitor import AgentResult, AlertConfig
 from src.config import settings
 
@@ -200,8 +196,7 @@ class AgentManager:
         self._vlm_semaphore = asyncio.Semaphore(settings.VLM_MAX_CONCURRENCY)
         self.events = EventManager()
         self.alert_state = AlertStateManager()
-        self.action_agent = AlertActionAgent()
-        self._worker_agents: List[AlertActionAgent] = []
+        self.alert_service = AlertServiceClient()
         self.latest_results: Dict[str, Dict] = {}
         self._metrics: Dict[str, StreamMetrics] = {}
         self._stream_tasks: Dict[str, asyncio.Task] = {}
@@ -232,7 +227,6 @@ class AgentManager:
             self._launch_stream_task(stream_id)
 
         num_workers = max(settings.ACTION_WORKERS, len(self.streams))
-        self._worker_agents = [AlertActionAgent() for _ in range(num_workers)]
 
         for i in range(num_workers):
             t = asyncio.create_task(
@@ -244,7 +238,7 @@ class AgentManager:
             f"AgentManager started — {len(self.streams)} stream(s), "
             f"{len(self.alerts)} alert(s), "
             f"{num_workers} action worker(s), "
-            f"ADK={'on' if settings.USE_ADK else 'off'}"
+            f"dispatch=alert-agent-service"
         )
 
         while self.running:
@@ -261,13 +255,14 @@ class AgentManager:
         self._action_workers.clear()
         for mgr in self.streams.values():
             mgr.stop()
+        # Schedule client cleanup (fire-and-forget safe in shutdown)
+        asyncio.ensure_future(self.alert_service.close())
         logger.info("AgentManager stopped")
 
     def reload_action_agent(self):
-        """Rebuild the action agent so runtime tool registry changes take effect."""
-        self.action_agent = AlertActionAgent()
-        self._worker_agents = [AlertActionAgent() for _ in range(len(self._worker_agents))]
-        logger.info("Action agent reloaded")
+        """Reload tools in the remote alert-agent-service."""
+        asyncio.ensure_future(self.alert_service.reload_tools())
+        logger.info("Requested tool reload on alert-agent-service")
 
     @property
     def uptime_seconds(self) -> float:
@@ -295,11 +290,6 @@ class AgentManager:
         self.stream_alerts[stream_id] = alerts or []
         self.stream_names[stream_id] = name or stream_id
 
-        register_frame_callback(
-            stream_id,
-            lambda sid: self._get_latest_frame(sid),
-        )
-
         if self.running:
             mgr.start()
             self._launch_stream_task(stream_id)
@@ -323,7 +313,6 @@ class AgentManager:
         self.stream_tools.pop(stream_id, None)
         self.stream_alerts.pop(stream_id, None)
         self.stream_names.pop(stream_id, None)
-        unregister_frame_callback(stream_id)
         self._save_streams_config()
         logger.info(f"Stream removed: {stream_id}")
 
@@ -414,13 +403,6 @@ class AgentManager:
                     f"Drained {drained} stale action job(s) for changed alerts: "
                     f"{changed_alert_names}"
                 )
-
-            # Clear ADK sessions for any stream that had stale jobs drained,
-            # plus all streams that are currently active (they will have new
-            # detections from the updated prompt on the next cycle).
-            affected_streams = set(self.streams.keys())
-            for agent in [self.action_agent, *self._worker_agents]:
-                agent.clear_sessions_for_streams(affected_streams)
 
         try:
             _RESOURCES.mkdir(parents=True, exist_ok=True)
@@ -697,11 +679,6 @@ class AgentManager:
 
     async def _action_worker(self, worker_id: int):
         """Background worker that processes alert action jobs."""
-        agent = (
-            self._worker_agents[worker_id]
-            if worker_id < len(self._worker_agents)
-            else self.action_agent
-        )
         logger.info(f"Action worker {worker_id} started")
 
         while True:
@@ -734,7 +711,7 @@ class AgentManager:
 
             job = get_task.result()
             try:
-                await self._execute_action_job(job, agent)
+                await self._execute_action_job(job)
             except Exception as exc:
                 logger.error(f"Action worker {worker_id} error: {exc}")
             finally:
@@ -742,11 +719,11 @@ class AgentManager:
 
         logger.info(f"Action worker {worker_id} stopped")
 
-    async def _execute_action_job(self, job: dict, agent: AlertActionAgent):
-        """Execute snapshot + tool dispatch for one alert.
+    async def _execute_action_job(self, job: dict):
+        """Execute action dispatch for one alert via alert-agent-service.
 
-        Uses the pinned frame (captured at analysis time) for snapshots so
-        the saved image matches the exact frame the VLM analysed.
+        Encodes the pinned frame (captured at analysis time) as base64 JPEG
+        in the payload so the alert-agent-service can save it as a snapshot.
         """
         stream_id = job["stream_id"]
         if stream_id not in self.streams:
@@ -760,46 +737,37 @@ class AgentManager:
         escalated = job["escalated"]
         pinned_frame = job.get("pinned_frame")
 
-        snapshot_path: Optional[str] = None
-        wants_snapshot = "capture_snapshot" in effective_tools or (
-            escalated
-            and alert_cfg.escalation
-            and "capture_snapshot" in alert_cfg.escalation.additional_tools
-        )
-        if wants_snapshot:
-            try:
-                if pinned_frame is not None:
-                    snap_result = await capture_snapshot(
-                        stream_id=stream_id,
-                        alert_name=alert_cfg.name,
-                        frame=pinned_frame,
-                    )
-                else:
-                    snap_result = await capture_snapshot(
-                        stream_id=stream_id,
-                        alert_name=alert_cfg.name,
-                    )
-                snapshot_path = snap_result.get("path")
-            except Exception as snap_exc:
-                logger.error(
-                    f"Snapshot capture failed for '{stream_id}': {snap_exc}"
-                )
+        # Encode frame as JPEG bytes for the service
+        image_bytes: Optional[bytes] = None
+        if pinned_frame is not None:
+            ret, buf = cv2.imencode(
+                ".jpg", pinned_frame,
+                [int(cv2.IMWRITE_JPEG_QUALITY), 85],
+            )
+            if ret:
+                image_bytes = buf.tobytes()
 
-        dispatch_cfg = copy.copy(alert_cfg)
-        dispatch_cfg.tools = [t for t in effective_tools if t != "capture_snapshot"]
+        metadata = {
+            "stream_name": self.stream_names.get(stream_id, stream_id),
+            "is_transition": job.get("is_transition", False),
+            "frame_age_ms": job.get("frame_age_ms"),
+        }
 
-        actions_taken = await agent.dispatch(
-            stream_id=stream_id,
-            alert_cfg=dispatch_cfg,
+        result = await self.alert_service.dispatch_alert(
+            source_id=stream_id,
+            alert_name=alert_cfg.name,
             answer=answer,
             reason=reason,
             consecutive_count=consecutive_count,
             escalated=escalated,
-            snapshot_path=snapshot_path,
+            tools=effective_tools,
+            tool_arguments=alert_cfg.tool_arguments,
+            metadata=metadata,
+            image_frame=image_bytes,
         )
 
-        if snapshot_path and "capture_snapshot" not in actions_taken:
-            actions_taken = ["capture_snapshot"] + actions_taken
+        actions_taken = result.get("actions_taken", [])
+        snapshot_path = result.get("snapshot_path")
 
         if answer == "YES":
             await self.events.broadcast("alert_action", {
@@ -809,8 +777,8 @@ class AgentManager:
                 "answer": answer,
                 "reason": reason,
                 "actions_taken": actions_taken,
-                "effective_tools": job.get("effective_tools", []),
-                "consecutive_count": job.get("consecutive_count", 0),
+                "effective_tools": effective_tools,
+                "consecutive_count": consecutive_count,
                 "is_transition": job.get("is_transition", False),
                 "escalated": escalated,
                 "frame_age_ms": job.get("frame_age_ms"),
@@ -937,36 +905,6 @@ class AgentManager:
                 tools=["log_alert"],
             ),
         ]
-
-    def augment_alerts_with_mcp_tools(self):
-        """Append newly-discovered MCP tools to every alert's tools list.
-
-        Called after MCP servers are connected so that existing/persisted
-        alert configs automatically gain access to MCP tools without
-        manual editing.
-        """
-        from src.agentic.alert_agent import get_all_tools as _get_all_tools
-
-        all_tools, _ = _get_all_tools()
-        mcp_tool_names = [n for n in all_tools if n.startswith("mcp_")]
-        if not mcp_tool_names:
-            return
-
-        changed = False
-        for alert_cfg in self.alerts:
-            existing = set(alert_cfg.tools)
-            new_tools = [t for t in mcp_tool_names if t not in existing]
-            if new_tools:
-                alert_cfg.tools.extend(new_tools)
-                changed = True
-                logger.info(
-                    f"Alert '{alert_cfg.name}': added MCP tools {new_tools}"
-                )
-
-        if changed:
-            self.save_alerts_config(
-                [a.model_dump() for a in self.alerts]
-            )
 
     def _load_streams_config(self):
         path = self._streams_config_file

@@ -52,13 +52,15 @@ import {
 } from '../../services/api';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
+import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface HeaderBarProps {
   projectName: string;
   setProjectName: (name: string) => void;
+  featureGuard: FeatureGuard;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const [showToast, setShowToast] = useState(false);
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
@@ -66,7 +68,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
   const dispatch = useAppDispatch();
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
@@ -83,6 +85,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const videoAnalyticsActive = useAppSelector((s) => s.ui.videoAnalyticsActive);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
+  const reportStatus = useAppSelector((s) => s.ui.reportStatus);
   const hasAudioDevices = useAppSelector((s) => s.ui.hasAudioDevices);
   const audioDevicesLoading = useAppSelector((s) => s.ui.audioDevicesLoading);
   const isRecording = useAppSelector((s) => s.ui.isRecording);
@@ -90,6 +93,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Check if video_analytics feature is enabled in backend
+  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  
+  // Check if audio features are enabled
+  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
+                           featureGuard.hasFeature('summary') ||
+                           featureGuard.hasFeature('mindmap') ||
+                           featureGuard.hasFeature('topic_segmentation') ||
+                           featureGuard.hasFeature('report');
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -106,28 +119,35 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     };
     stopExistingMonitoring();
     
-    const checkAudioDevices = async () => {
-      try {
-        dispatch(setAudioDevicesLoading(true));
-        const devices = await getAudioDevices();
-        const hasDevices = devices && devices.length > 0;
-        dispatch(setHasAudioDevices(hasDevices));
-        
-        console.log('Audio devices check:', {
-          devices,
-          count: devices?.length || 0,
-          hasDevices
-        });
-      } catch (error) {
-        console.error('Failed to check audio devices:', error);
-        dispatch(setHasAudioDevices(false));
-      } finally {
-        dispatch(setAudioDevicesLoading(false));
-      }
-    };
+    // Only check audio devices if audio features are enabled
+    const hasAudioFeatures = featureGuard.hasFeature('asr') ||
+                             featureGuard.hasFeature('summary') ||
+                             featureGuard.hasFeature('mindmap');
+    
+    if (hasAudioFeatures) {
+      const checkAudioDevices = async () => {
+        try {
+          dispatch(setAudioDevicesLoading(true));
+          const devices = await getAudioDevices();
+          const hasDevices = devices && devices.length > 0;
+          dispatch(setHasAudioDevices(hasDevices));
+          
+          console.log('Audio devices check:', {
+            devices,
+            count: devices?.length || 0,
+            hasDevices
+          });
+        } catch (error) {
+          console.error('Failed to check audio devices:', error);
+          dispatch(setHasAudioDevices(false));
+        } finally {
+          dispatch(setAudioDevicesLoading(false));
+        }
+      };
 
-    checkAudioDevices();
-  }, [dispatch]);
+      checkAudioDevices();
+    }
+  }, [dispatch, featureGuard]);
 
   useEffect(() => {
     if (justStoppedRecording) {
@@ -180,6 +200,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   }, [processingMode]);
 
   const hasVideoCapability = useMemo(() => {
+    // Video capability requires BOTH backend feature AND config/uploads
+    if (!hasVideoAnalyticsFeature) {
+      return false;
+    }
+    
     const hasCameraSettings = Boolean(
       frontCamera?.trim() || 
       backCamera?.trim() || 
@@ -187,7 +212,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     );
 
     return hasCameraSettings || hasUploadedVideoFiles === true;
-  }, [frontCamera, backCamera, boardCamera, hasUploadedVideoFiles]);
+  }, [frontCamera, backCamera, boardCamera, hasUploadedVideoFiles, hasVideoAnalyticsFeature]);
 
 
     useEffect(() => {
@@ -201,6 +226,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
     }, [hasVideoCapability, videoStatus, dispatch]);
 
   useEffect(() => {
+    // Only set audio notifications if audio features are enabled
+    if (!hasAudioFeatures) {
+      setAudioNotification('');
+      return;
+    }
+    
     switch (audioStatus) {
       case 'checking':
         setAudioNotification(t('notifications.checkingAudioDevices'));
@@ -247,9 +278,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       default:
         setAudioNotification(t('notifications.audioReady'));
     }
-  }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, t]);
+  }, [audioStatus, summaryLoading, mindmapEnabled, mindmapState.finalText, mindmapState.error, summaryEnabled, t, hasAudioFeatures]);
 
   useEffect(() => {
+    // Only set video notifications if video analytics feature is enabled
+    if (!hasVideoAnalyticsFeature) {
+      setVideoNotification('');
+      return;
+    }
+    
     if (justStoppedRecording && hasVideoCapability) {
       setVideoNotification(t('notifications.videoStreamingStopped'));
       return;
@@ -282,7 +319,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       default:
         setVideoNotification(hasVideoCapability ? t('notifications.videoReady') : t('notifications.noVideoConfigured'));
     }
-  }, [videoStatus, justStoppedRecording, hasVideoCapability, isPlaybackMode, t]);
+  }, [videoStatus, justStoppedRecording, hasVideoCapability, isPlaybackMode, hasVideoAnalyticsFeature, t]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -321,9 +358,29 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
       isRecording ||
       !isUploadButtonEnabled;
 
-    const hasLiveCapability =
-      hasAudioDevices ||
-      Boolean(frontCamera?.trim() || backCamera?.trim() || boardCamera?.trim());
+    // Check if we have actual live capabilities based on enabled features
+    const hasAudioCapability = hasAudioFeatures && hasAudioDevices;
+    
+    // If audio features are enabled, we need audio capability
+    // If video analytics is enabled, we need video capability
+    // If BOTH are enabled, we need BOTH capabilities
+    const hasLiveCapability = (() => {
+      const audioRequired = hasAudioFeatures;
+      const videoRequired = hasVideoAnalyticsFeature;
+      
+      if (audioRequired && videoRequired) {
+        // Both enabled: need both capabilities
+        return hasAudioCapability && hasVideoCapability;
+      } else if (audioRequired) {
+        // Only audio enabled: need audio capability
+        return hasAudioCapability;
+      } else if (videoRequired) {
+        // Only video enabled: need video capability
+        return hasVideoCapability;
+      }
+      // Neither enabled
+      return false;
+    })();
 
     const isAudioBusy =
       audioStatus === 'processing' ||
@@ -738,7 +795,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         />
       )}
       {isUploadModalOpen && (
-        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} />
+        <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} featureGuard={featureGuard} />
       )}
     </div>
   );

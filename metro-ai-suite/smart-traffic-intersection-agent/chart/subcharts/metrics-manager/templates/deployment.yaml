@@ -1,0 +1,192 @@
+{{/*
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.enabled -}}
+{{- $kind := .Values.controller.kind | default "Deployment" -}}
+apiVersion: apps/v1
+kind: {{ $kind }}
+metadata:
+  name: {{ include "metrics-manager.fullname" . }}
+  labels:
+    {{- include "metrics-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-manager
+spec:
+  {{- if eq $kind "Deployment" }}
+  replicas: {{ .Values.controller.replicaCount }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ include "metrics-manager.fullname" . }}
+      app.kubernetes.io/component: metrics-manager
+  template:
+    metadata:
+      labels:
+        app: {{ include "metrics-manager.fullname" . }}
+        {{- include "metrics-manager.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: metrics-manager
+        {{- with .Values.pod.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.telegraf.config }}
+        checksum/telegraf-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if and .Values.securityContext.appArmorProfile (eq (.Values.securityContext.appArmorProfile.type | default "") "Unconfined") }}
+        container.apparmor.security.beta.kubernetes.io/metrics-manager: unconfined
+        {{- end }}
+        {{- with .Values.pod.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      hostPID: {{ .Values.pod.hostPID }}
+      hostNetwork: {{ .Values.pod.hostNetwork }}
+      {{- $dnsPolicy := .Values.pod.dnsPolicy }}
+      {{- if not $dnsPolicy }}
+        {{- if .Values.pod.hostNetwork }}
+          {{- $dnsPolicy = "ClusterFirstWithHostNet" }}
+        {{- else }}
+          {{- $dnsPolicy = "ClusterFirst" }}
+        {{- end }}
+      {{- end }}
+      dnsPolicy: {{ $dnsPolicy }}
+      restartPolicy: {{ .Values.pod.restartPolicy }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pod.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: metrics-manager
+          image: {{ include "metrics-manager.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            privileged: {{ .Values.securityContext.privileged }}
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+            {{- with .Values.securityContext.seccompProfile }}
+            seccompProfile:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.service.metricsPort }}
+              protocol: TCP
+            - name: telegraf
+              containerPort: {{ .Values.service.telegrafPort }}
+              protocol: TCP
+            - name: telegraf-http
+              containerPort: {{ .Values.service.telegrafHttpPort }}
+              protocol: TCP
+          env:
+            - name: http_proxy
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: HTTP_PROXY
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.noProxy }},localhost,127.0.0.1,{{ include "metrics-manager.fullname" . }},{{ .Release.Name }}-traffic-agent,{{ .Release.Name }}-ovms"
+            - name: NO_PROXY
+              value: "{{ .Values.global.noProxy }},localhost,127.0.0.1,{{ include "metrics-manager.fullname" . }},{{ .Release.Name }}-traffic-agent,{{ .Release.Name }}-ovms"
+            - name: METRICS_PORT
+              value: {{ .Values.service.metricsPort | quote }}
+            - name: TELEGRAF_PORT
+              value: {{ .Values.service.telegrafPort | quote }}
+            - name: TELEGRAF_HTTP_PORT
+              value: {{ .Values.service.telegrafHttpPort | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: LOG_FORMAT
+              value: {{ .Values.config.logFormat | quote }}
+            - name: CORS_ORIGINS
+              value: {{ .Values.config.corsOrigins | quote }}
+            - name: METRICS_RETENTION_SECONDS
+              value: {{ .Values.config.metricsRetentionSeconds | quote }}
+            - name: MAX_METRICS_BATCH_SIZE
+              value: {{ .Values.config.maxMetricsBatchSize | quote }}
+            - name: METRICS_MANAGER_HOSTNAME
+              value: {{ .Values.config.hostnameOverride | quote }}
+            - name: CUSTOM_METRICS_DIR
+              value: /app/custom-metrics
+            - name: TELEGRAF_CONFIG_PATH
+              value: /etc/telegraf/telegraf.conf
+            {{- with .Values.config.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+              readOnly: true
+            - name: run
+              mountPath: /run
+              readOnly: true
+            {{- if .Values.hardware.gpu.enabled }}
+            - name: dev-dri
+              mountPath: /dev/dri
+            {{- end }}
+            {{- if .Values.telegraf.config }}
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            {{- end }}
+            {{- if .Values.customMetrics.enabled }}
+            - name: custom-metrics
+              mountPath: /app/custom-metrics
+            {{- end }}
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: run
+          hostPath:
+            path: /run
+            type: Directory
+        {{- if .Values.hardware.gpu.enabled }}
+        - name: dev-dri
+          hostPath:
+            path: /dev/dri
+        {{- end }}
+        {{- if .Values.telegraf.config }}
+        - name: telegraf-config
+          configMap:
+            name: {{ include "metrics-manager.fullname" . }}-telegraf
+        {{- end }}
+        {{- if .Values.customMetrics.enabled }}
+        - name: custom-metrics
+          emptyDir: {}
+        {{- end }}
+{{- end }}

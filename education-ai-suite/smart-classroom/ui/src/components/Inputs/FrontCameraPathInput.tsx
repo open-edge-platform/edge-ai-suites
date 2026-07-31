@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ProjectLocationInput from './PathInput';
 
 interface FrontCameraPathInputProps {
@@ -12,11 +13,13 @@ const FrontCameraPathInput: React.FC<FrontCameraPathInputProps> = ({
   onChange,
   onFolderClick,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <ProjectLocationInput
       value={frontCameraPath}
       onChange={onChange}
-      placeholder="Enter front camera path"
+      placeholder={t('settings.enterFrontCameraPath')}
       prefix="camera/front/"
       showFolderIcon={true}
       onFolderClick={onFolderClick}

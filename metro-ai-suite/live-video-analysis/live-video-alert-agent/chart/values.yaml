@@ -23,6 +23,17 @@ global:
     #   getent group render video | cut -d: -f3
     supplementalGroups: [109, 110, 992]
 
+  npu:
+    enabled: false
+    # key: NPU resource label from device plugin (for example npu.intel.com/accel)
+    key: ""
+    device: ""
+    count: 1
+    # Host device path mounted into OVMS when targeting NPU.
+    devicePath: ""
+
+  nodeSelector: {}
+
   serviceAccount:
     create: true
 
@@ -50,9 +61,13 @@ global:
 _ovmsDefaults: &ovmsDefaults
   image:
     repository: openvino/model_server
-    tag: "2026.1-gpu"
+    tag: "2026.2.1-gpu"
   task: "text_generation"
   runAsUser: 5000
+  targetDevice:
+    device: ""
+    key: ""
+    count: 1
   healthcheck:
     startupFailureThreshold: 60
     startupPeriodSeconds: 10
@@ -72,14 +87,22 @@ ovms:
   <<: *ovmsDefaults
   sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
   pipelineType: "VLM"
+  targetDevice:
+    device: "GPU"
+    key: "gpu.intel.com/i915"
+    count: 1
   modelStorage:
     storageClassName: ""
     size: "10Gi"
 
 ovms-llm:
   <<: *ovmsDefaults
-  enabled: true  # Set to false (with app.useAdk=false) to disable LLM service
+  enabled: true  # Set to false to disable LLM service (alert-agent-service won't use ADK)
   sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+  targetDevice:
+    device: "GPU"
+    key: "gpu.intel.com/i915"
+    count: 1
   modelStorage:
     storageClassName: ""
     size: "6Gi"
@@ -88,7 +111,7 @@ app:
   image:
     registry: "intel/"  # Override global.registry for this component only
     repository: live-video-alert-agent
-    tag: "latest"
+    tag: latest
   port: 9000
   service:
     type: NodePort
@@ -114,19 +137,10 @@ app:
   nodeSelector: {}
   affinity: {}
   tolerations: []
-  # Agentic dispatch
-  useAdk: true
   # Video capture
   captureFps: 10
-  # Action tools — webhook
-  webhookUrl: ""
-  webhookSecret: ""
-  # Action tools — MQTT
-  mqttBroker: ""
-  mqttPort: 1883
-  mqttUsername: ""
-  mqttPassword: ""
-  mqttBaseTopic: "alerts/live-video"
+  # Alert Agent Service
+  alertAgentServiceTimeout: "30.0"
   # MCP integration
   mcpEnabled: true
   # MCP server configuration (JSON content mounted as /app/resources/mcp_servers.json)
@@ -143,52 +157,71 @@ app:
         }
       ]
     }
-  # Host path for collector-signals — must match collector.collectorSignalsPath
-  collectorSignalsPath: /opt/lva/collector-signals
 
-metrics-service:
-  enabled: true
+alert-agent-service:
   image:
-    repository: "intel/live-metrics-service"
-    tag: "1.0.0"
+    registry: intel
+    repository: alert-agent-service
+    tag: latest
+  port: 8000
+  service:
+    type: ClusterIP
+    port: 8000
+  agentMode: true
+  llmTimeout: "10.0"
+  snapshotDir: "/app/snapshots"
+  webhookUrl: ""
+  webhookSecret: ""
+  mqttPort: 1883
+  mqttUsername: ""
+  mqttPassword: ""
+  mqttBaseTopic: "alerts/live-video"
+  mcpEnabled: true
+  actionWorkers: 2
+  logLevel: "INFO"
+  healthcheck:
+    path: /api/v1/health
+    startupInitialDelay: 10
+    startupPeriod: 5
+    startupFailureThreshold: 12
+    period: 30
+    timeout: 10
+    failureThreshold: 3
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+metrics-manager:
+  image:
+    repository: "intel/metrics-manager"
+    tag: "2026.1.0"
   service:
     type: NodePort
-  corsOrigins: "*"
-  logLevel: "INFO"
+    metricsPort: 9090
+    telegrafPort: 9273
+    telegrafHttpPort: 8186
+    nodePorts:
+      metrics: 30090
+      telegraf: ""
+      telegrafHttp: ""
+  config:
+    logLevel: "INFO"
+    corsOrigins: "*"
   resources:
     requests:
       cpu: "100m"
-      memory: "128Mi"
+      memory: "256Mi"
     limits:
-      cpu: "500m"
+      cpu: "1000m"
       memory: "512Mi"
-  healthcheck:
-    startupInitialDelaySeconds: 5
-    startupPeriodSeconds: 5
-    startupFailureThreshold: 30
-    initialDelaySeconds: 15
-    periodSeconds: 30
-    timeoutSeconds: 10
-    failureThreshold: 3
-  nodeSelector: {}
-  affinity: {}
-  tolerations: []
-
-collector:
-  enabled: true
-  # Must match app.collectorSignalsPath — both sides mount the same host directory.
-  collectorSignalsPath: /opt/lva/collector-signals
-  image:
-    registry: "intel/"
-    repository: vippet-collector
-    tag: "2026.0.0"
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-  nodeSelector: {}
-  affinity: {}
-  tolerations: []
+  controller:
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []

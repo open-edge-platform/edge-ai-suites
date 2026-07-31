@@ -1,6 +1,8 @@
-# December 2025
+# Release Notes: Industrial Edge Insights Multimodal 2025
 
-## version 1.0.0
+## Version 1.0.0
+
+**December 2025**
 
 This is the first version of the Multimodal Weld Defect Detection sample app,
 showcasing the Vision and Time Series defect detection use case by detecting anomalous welding.

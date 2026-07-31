@@ -43,6 +43,7 @@
         pipelineServerError: document.getElementById('pipelineServerError'),
         modelCompatibilityWarningIcon: document.getElementById('modelCompatibilityWarningIcon'),
         detectionModelCompatibilityWarningIcon: document.getElementById('detectionModelCompatibilityWarningIcon'),
+        systemCapabilityCards: document.getElementById('systemCapabilityCards'),
     };
 
     const state = {
@@ -522,7 +523,8 @@
     }
 
     async function loadSystemCapabilities() {
-        const capabilities = await ApiService.fetchSystemCapabilities();
+        const capabilities = await ApiService.fetchSystemCapabilities(cfg.metricsServicePort);
+        SystemCapabilityCards.render(els.systemCapabilityCards, capabilities);
         if (capabilities?.has_gpu === true || capabilities?.has_gpu === false) {
             state.hasGpuDevice = capabilities.has_gpu;
         } else {

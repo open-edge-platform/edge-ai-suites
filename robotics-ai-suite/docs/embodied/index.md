@@ -41,6 +41,14 @@ To ensure seamless integration with robotic hardware, the SDK runs on a real-tim
 
 Overall, the Humanoid - Imitation Learning provides a highly optimized, AI-driven framework for robotics and Embodied Intelligence, combining computer vision, motion planning, real-time processing, and large-scale AI models into a cohesive system. By leveraging Intel's hardware acceleration and software ecosystem, it enables next-generation robotic applications with enhanced intelligence, efficiency, and adaptability.
 
+### Reference Application: Language-guided Manipulation
+
+The reference application turns a natural-language command into robot motion. An LLM task planner (Phi-4 / Qwen2.5-VL) interprets the request and conditions an imitation-learning policy — ACT, Diffusion Policy / iDP3, or a VLA such as Pi0.5+RTC / RDT-1B — on visual observations from object grounding (SAM / CLIP), VSLAM (ORB-SLAM3), and depth estimation. The chosen action chunk is executed through MoveIt and a real-time PLCopen (Ruckig) motion stack on a `PREEMPT_RT` kernel, driving the robot arm. Speech (Whisper / FunASR) and vision run on the NPU / iGPU, the policy and LLM on the iGPU (optionally a discrete GPU), and deterministic control on the CPU.
+
+![Humanoid reference application: LLM task planning with VLA/ACT manipulation](../images/architecture/Humanoid-Reference-Application.png)
+
+The ACT, Diffusion Policy / iDP3, and VLA models are interchangeable skill policies trained from demonstrations (for example, ALOHA teleoperation). For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+
 ## Humanoid - Imitation Learning Resources
 
 - [Get Started](get_started.md)

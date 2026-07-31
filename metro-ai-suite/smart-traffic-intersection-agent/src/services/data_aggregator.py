@@ -11,6 +11,7 @@ from models import (
     TrafficIntersectionAgentResponse, WeatherData, VLMAnalysisData
 )
 from .config import ConfigService
+from .metrics_client import MetricsManagerClient
 from .vlm_service import VLMService
 
 
@@ -25,7 +26,12 @@ class DataAggregatorService:
     and maintains current traffic state for API responses.
     """
 
-    def __init__(self, config_service: ConfigService, vlm_service: VLMService):
+    def __init__(
+        self,
+        config_service: ConfigService,
+        vlm_service: VLMService,
+        metrics_client: Optional[MetricsManagerClient] = None,
+    ):
         """
         Initialize data aggregator service.
         
@@ -35,6 +41,7 @@ class DataAggregatorService:
         """
         self.config = config_service
         self.vlm_service = vlm_service
+        self.metrics_client = metrics_client
         
         # Data storage - separate temporary and VLM-analyzed data
         self.temp_camera_data: Dict[str, CameraDataMessage] = {}     # direction -> latest temp data
@@ -220,6 +227,30 @@ class DataAggregatorService:
                    analyzed_cameras=list(self.vlm_analyzed_camera_images.keys()),
                    intersection_id=traffic_snapshot.intersection_id)
 
+    def _schedule_metrics_publish(self, vlm_analysis: VLMAnalysisData) -> None:
+        """Publish STIA application metrics without blocking traffic processing."""
+        if not self.metrics_client or not self.vlm_analyzed_intersection_data:
+            return
+
+        try:
+            metrics = self.metrics_client.build_traffic_metrics(
+                self.vlm_analyzed_intersection_data,
+                vlm_analysis,
+                active_camera_count=len(self.vlm_analyzed_camera_images),
+            )
+            task = asyncio.create_task(self.metrics_client.publish_batch(metrics))
+            task.add_done_callback(self._log_metrics_publish_failure)
+        except (RuntimeError, TypeError, ValueError, AttributeError) as e:
+            logger.warning("Failed to schedule Metrics Manager publish", error=str(e))
+
+    @staticmethod
+    def _log_metrics_publish_failure(task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        error = task.exception()
+        if error:
+            logger.warning("Metrics Manager publish task failed", error=str(error))
+
     async def _check_analysis_trigger(self) -> None:
         """Check if VLM analysis should be triggered based on traffic conditions."""
         
@@ -289,6 +320,7 @@ class DataAggregatorService:
                 if vlm_analysis:
                     self._save_vlm_analyzed_data(vlm_analysis, traffic_snapshot)
                     self.last_analysis_time = datetime.now().timestamp()
+                    self._schedule_metrics_publish(vlm_analysis)
 
                     logger.info("VLM analysis completed successfully and data saved",
                             alerts_count=len(vlm_analysis.alerts),

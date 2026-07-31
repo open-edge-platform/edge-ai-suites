@@ -46,21 +46,12 @@ Common causes:
 
 ## Camera Discovery
 
-### No Cameras Discovered from Frigate
-
-**Symptoms**: `POST /v1/cameras/discover` returns an empty list for Frigate cameras.
-
-**Checks**:
-- Verify that `vms_shim/frigate/config/config.yml` contains camera definitions under the `cameras:` key.
-- Confirm `FRIGATE_HOST` in `.env` is reachable from the `vms-backend` container.
-- Check Frigate logs: `docker compose logs frigate`.
-
 ### No Cameras Discovered from Nx Witness
 
 **Symptoms**: Nx Witness cameras are missing after discovery.
 
 **Checks**:
-- Verify `NX_BASE_URL`, `NX_USERNAME`, and `NX_PASSWORD` are set correctly in `.env`.
+- Verify `NX_HOST`, `NX_USERNAME`, and `NX_PASSWORD` are set correctly in `.env`.
 - Confirm the Nx Witness REST API is reachable: `curl -k https://<NX_HOST>:7001/rest/v4/devices`.
 - Check that the Nx Witness user has sufficient permissions to list devices.
 

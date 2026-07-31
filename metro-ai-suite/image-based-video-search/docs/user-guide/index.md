@@ -90,7 +90,7 @@ how-it-works
 how-to-use-gpu-for-inference
 how-to-use-npu-for-inference
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

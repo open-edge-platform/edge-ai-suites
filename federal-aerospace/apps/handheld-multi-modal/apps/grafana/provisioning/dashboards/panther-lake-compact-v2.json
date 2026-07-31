@@ -988,7 +988,7 @@
         "30s",
         "1m"
       ],
-      "hideTimepicker": false,
+      "hideTimepicker": true,
       "fiscalYearStartMonth": 0
     },
     "title": "Panther Lake Compact Live v2",

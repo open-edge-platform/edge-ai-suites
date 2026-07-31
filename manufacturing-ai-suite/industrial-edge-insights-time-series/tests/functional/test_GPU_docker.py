@@ -37,7 +37,9 @@ def _run_gpu_config_test(context, ingestion_type):
     logger.info(f"Settle period {constants.WIND_TURBINE_POST_DEPLOY_SETTLE}s before GPU POST...")
     time.sleep(constants.WIND_TURBINE_POST_DEPLOY_SETTLE)
 
-    curl_result = docker_utils.execute_gpu_config_curl(device="gpu")
+    curl_result = docker_utils.execute_gpu_config_curl(
+        device="gpu", sample_app=constants.WIND_SAMPLE_APP
+    )
     logger.info(f"GPU configuration curl result: {curl_result}")
     assert curl_result, "GPU configuration test via REST API failed"
 

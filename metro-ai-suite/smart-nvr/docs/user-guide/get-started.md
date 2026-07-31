@@ -10,45 +10,21 @@ from your video data.
 ### System Requirements
 
 - System must meet [minimum requirements](./get-started/system-requirements.md).
-- 3-4 devices for distributed deployment.
+- VSS and Smart NVR can run on the same device using VSS Dual Mode, or on separate devices.
 
-Smart NVR operates in a distributed architecture requiring multiple services across 3-4
-devices for optimal performance:
+| Deployment Option | VSS Mode | Minimum Devices |
+| ----------------- | -------- | --------------- |
+| Single device | Dual Mode (`--summary --search`) | 1 |
+| Separate VSS device | Any mode | 2 |
+| With GenAI (optional) | Any | +1 for VLM Microservice |
 
-| Device     | Service          | Purpose                                  |
-| ---------- | ---------------- | ---------------------------------------- |
-| Device 1   | VSS Search       | Video search functionality               |
-| Device 2   | VSS Summary      | Video summarization                      |
-| Device 3   | VLM Microservice | AI-powered event descriptions (optional) |
-| Device 3/4 | Smart NVR App    | Main application interface               |
+Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
 
 ### Software Dependencies
 
 - **Docker**: [Installation Guide](https://docs.docker.com/get-docker/)
   - Must be configured to run without sudo ([Post-install guide](https://docs.docker.com/engine/install/linux-postinstall/))
 - **Git**: [Installation Guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-
-### Required Services
-
-Before setting up Smart NVR, ensure these services are running on their respective devices:
-
-#### 1. VSS (Video Search and Summarization) Services
-
-Deploy these on separate devices:
-
-- **VSS Search**: Handles video search functionality
-- **VSS Summary**: Provides video summarization capabilities
-
-[VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html)
-
-#### 2. VLM Microservice (Optional)
-
-Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
-
-- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
-- Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
-
-[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Quick Start
 
@@ -74,24 +50,17 @@ Set up the required environment variables:
 export REGISTRY_URL="intel"
 export TAG="latest"
 
-# VSS Service Endpoints
-export http_proxy=<http-proxy>
-export https_proxy=<https-proxy>
-export no_proxy=<no_proxy>
+# VSS Service Endpoint (required)
+export VSS_IP=<vss-device-ip>
+export VSS_PORT=<vss-port>                         # optional, default 12345
 
-# VSS Service Endpoints
-export VSS_SUMMARY_IP=<vss-summary-device-ip>
-export VSS_SUMMARY_PORT=<vss-summary-port>        # Default: 12345
-export VSS_SEARCH_IP=<vss-search-device-ip>
-export VSS_SEARCH_PORT=<vss-search-port>          # Default: 12345
-
-# MQTT Configuration
-export MQTT_USER=<mqtt-username>
-export MQTT_PASSWORD=<mqtt-password>
-
-# Feature Toggles
-export NVR_GENAI=false                  # Set to 'true' to enable AI-powered event descriptions
-export NVR_SCENESCAPE=false             # Set to 'true' to enable Scenescape integration
+# Optional — set only if needed
+# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable SceneScape integration
+# export http_proxy=<http-proxy>
+# export https_proxy=<https-proxy>
+# export no_proxy=<no_proxy>
+# export MQTT_USER=<mqtt-username>      # auto-generated if omitted
+# export MQTT_PASSWORD=<mqtt-password>  # auto-generated if omitted
 ```
 
 ### Step 3: Launch Application
@@ -122,35 +91,7 @@ source setup.sh stop
 
 ## Advanced Configuration
 
-### Enabling AI-Powered Event Descriptions
-
-To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
-
-1. Ensure VLM Service Availability
-
-   Verify the VLM microservice is running and accessible at the configured endpoint.
-
-2. Set Environment Variable
-
-   ```bash
-   export NVR_GENAI=true
-   export VLM_SERVING_IP=<vlm-serving-device-ip>
-   export VLM_SERVING_PORT=<vlm-serving-port>
-   ```
-
-3. Run the application
-
-   Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
-
-   > **Important:**
-   >
-   > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
-   > - Requires VLM microservice to be running.
-   > - Disabled by default for system stability.
-   > - SmartNVR uses either Frigate or Scenescape for GenAI capabilities.
-   >   GenAI in both cannot be enabled at the same time. If Scenescape is enabled,
-   >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
-   > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
+For optional features including AI-powered event descriptions (GenAI) and custom build options, see the **[Advanced Configuration Guide](./advanced-configuration.md)**.
 
 ### Scenescape Integration
 
@@ -173,6 +114,7 @@ ensure the same environment variables are set before running the setup script.
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
+./advanced-configuration
 
 :::
 hide_directive-->

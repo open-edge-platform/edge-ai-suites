@@ -18,6 +18,41 @@ The types of collection are as follows:
 - **Stationary Robot Vision & Control**
   For fixed-position robots using vision systems for tasks like inspection, assembly, or quality control.
 
+## Architecture
+
+The diagram below is the single, consolidated view of the Robotics AI Suite. It shows the major software components, how perception, navigation, manipulation, Physical AI, and benchmarking relate, which parts are Intel-provided versus upstream open source, and how workloads map onto Intel® heterogeneous compute (CPU / iGPU / NPU). You should be able to understand what the suite includes — and where Intel adds value — without reading further.
+
+![Robotics AI Suite reference architecture](docs/images/architecture/Robotics-AI-Suite-Architecture.png)
+
+**How to read it**
+
+- Colour tells you ownership: **Intel-provided / optimized** (blue), **ROS 2 / upstream open source** (green), **Intel® silicon** (dark blue), and **user-supplied** robot, sensors, and datasets (grey). A **★** marks Intel value-add over the upstream component.
+- The stack is layered top-to-bottom: **developer experience & tooling**, **AI models & pipelines** (OpenVINO™-optimized), **robotics middleware & frameworks** on **ROS 2**, **system software** (real-time kernel, drivers, EtherCAT), and the **Intel® Core™ / Core™ Ultra** hardware. Everything above the hardware line is what you consolidate onto a single Intel platform.
+
+**What you get, and how it fits together**
+
+- **Perception, navigation, and manipulation** are ROS 2 stacks. Intel adds optimized components on top of upstream Nav2, MoveIt, and ORB-SLAM3 — ITS-Planner, FastMapping, Collaborative SLAM, ADBScan, and GroundFloor Segmentation for AMRs; Robot Vision & Control (RVC) and Visual Servoing (CNS) for stationary arms.
+- **Physical AI / Embodied models** — VLA (Pi0.5+RTC, RDT-1B), ACT, and Diffusion Policy / iDP3 — plus **LLM / VLM task planning** run through the OpenVINO™ runtime and oneAPI.
+- **Benchmarking & tooling** — ROS 2 KPI monitoring, Gazebo simulation, sample applications, and model-optimization / setup tooling — sit in the top developer-experience layer.
+
+**Where Intel accelerates the workload**
+
+Perception and detection run on the **NPU / iGPU**; VLA / diffusion policies and LLM / VLM planning on the **iGPU** (optionally a discrete **Arc™ GPU**); deterministic motion control and planning on the **CPU** with a `PREEMPT_RT` kernel and EtherCAT. OpenVINO™ selects the device per workload, so perception, AI, planning, and real-time control are consolidated on one Intel® platform.
+
+### Runtime data flow
+
+Sensor data flows through perception into the AI decision models, then to planning and real-time control, and out to the actuators — with feedback closing the loop. Each stage is annotated with the compute it targets.
+
+![Runtime data flow from sensors through models to control](docs/images/architecture/robotics-runtime-data-flow.png)
+
+### Workloads mapped to Intel hardware
+
+Each collection uses Intel heterogeneous compute differently. The matrix summarizes the primary (●) and optional (○) compute target for each collection.
+
+![Collections mapped to Intel heterogeneous compute](docs/images/architecture/robotics-hardware-mapping.png)
+
+The per-collection reference application architectures — which zoom into a representative end-to-end application — are shown on the collection pages linked in the tables below.
+
 **Humanoid - Imitation Learning:**
 
 | Application | Documentation | Description |

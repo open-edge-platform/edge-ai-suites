@@ -59,53 +59,30 @@ VMS Adapter Plugin (VAP)                                                │
 ## Part 1 — Set Up Loitering Detection application
 
 ### 1.1 Configure the Lotiering Detection Environment
-Clone the edge-ai-suites repo as instructed in the setup document
+Clone the edge-ai-suites repo as instructed in the setup document and install loitering detection as mentioned [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
+Do not bring up the application yet.
 
-Navigate to the Loitering Detection application directory and add this convenient pipeline for streaming metadata to an MQTT broker.
+> The above setup generates a docker-compose.yml file
 
-```sh
-cd [WORK_DIR]/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/src/dlstreamer-pipeline-server/config.json
-```
-Edit the config.json and add the following pipeline.
-```json
-            {
-                "name": "loitering_detection_vms_mqtt",
-                "source": "gstreamer",
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! queue ! gvametapublish name=destination ! appsink name=appsink",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "detection-properties": {
-                            "element": {
-                                "name": "detection",
-                                "format": "element-properties"
-                            }
-                        }
-                    }
-                },
-                "auto_start": false
-            }
-```
-This pipeline:
-- Accepts an RTSP source via `{auto_source}`.
-- Runs `gvadetect` for object detection.
-- Uses `gvametapublish` (the `destination` element) to publish inference results to the configured MQTT topic.
+### 1.2 Verify MQTT Port Exposure and set MQTT host for DLStreamer Pipeline Server to publish
 
-### 1.2 Verify MQTT Port Exposure
-
-The dls_vision Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`:
+The Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`. Also set the `MQTT_HOST` for dlstreamer pipeline server to publish
 
 ```yaml
 broker:
   image: docker.io/library/eclipse-mosquitto:2.0.21
   ports:
     - "1883:1883"
+
+dlstreamer-pipeline-server:
+  environment:
+    - MQTT_HOST=${HOST_IP}  # we set to HOST_IP as broker is running in the same host
+    - MQTT_PORT=1883
 ```
 
 This is the default configuration. The Mosquitto broker uses an anonymous-access configuration (`allow_anonymous true`), which is required for VMS Analytics plugin and the DLStreamer Pipeline Server to publish and subscribe without credentials.
 
 > **Important:** The plugin connects to this MQTT broker from outside the dls_vision Docker network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP runs on the same host, `host.docker.internal` resolves to the host from inside the plugin container.
-
 
 ### 1.3 Start Loitering Detection Application
 
@@ -248,27 +225,15 @@ NX_CA_BUNDLE=
 DLS_VISION_HOST=host.docker.internal
 DLS_VISION_PORT=8080
 DLS_VISION_TLS_VERIFY=false
+DLS_PIPELINE_CPU=object_tracking_cpu
+DLS_PIPELINE_GPU=object_tracking_gpu
+DLS_PIPELINE_NPU=
 DLS_VISION_CA_BUNDLE=
 
 # MQTT Broker — address as seen by VAP (subscribing from outside the dls_vision Docker network)
 # If dls_vision runs on the same host: use host.docker.internal
 MQTT_HOST=host.docker.internal
 MQTT_PORT=1883
-
-# PIPELINE_SERVER_MQTT_HOST — address as seen by the DLStreamer Pipeline Server
-# container inside the dls_vision Docker network.
-# The GStreamer Paho C MQTT client cannot resolve Docker service names across networks.
-# Use the host machine's LAN IP — this is the most reliable choice because port 1883
-# is published from the mqtt-broker container to the host, making it reachable from
-# any container regardless of which Docker network it belongs to.
-#
-# Find your host LAN IP:
-#   hostname -I | awk '{print $1}'
-#
-# DO NOT use 172.18.0.1 (the default Docker bridge gateway) unless you have confirmed
-# that the dls_vision containers are on that exact subnet.
-PIPELINE_SERVER_MQTT_HOST=<HOST_LAN_IP>
-PIPELINE_SERVER_MQTT_PORT=1883
 
 # DLS Vision App MQTT — broker address as seen by VAP (for subscribing)
 MQTT_HOST=
@@ -285,15 +250,6 @@ MQTT_BROKER_PORT=1883
 `NX_TLS_VERIFY` and `DLS_VISION_TLS_VERIFY` are `false` by default for compatibility with self-signed certificates.
 Set either value to `true` to enforce certificate verification. When enabled, set the matching `*_CA_BUNDLE`
 to a CA certificate path that exists inside the `vms-backend` container.
-
-> **Finding your host LAN IP:**
-> ```bash
-> hostname -I | awk '{print $1}'
-> ```
-> Use this value for `PIPELINE_SERVER_MQTT_HOST`. It is reachable from any Docker container
-> because port `1883` is published from the `mqtt-broker` container to the host.
-> Avoid using `172.18.0.1` (the default Docker bridge gateway) — it only works if the
-> dls_vision containers are on that exact subnet, and this is not guaranteed.
 
 ### 3.2 Configure VAP `config.yaml`
 
@@ -328,14 +284,19 @@ analytics_apps:
     tls_ca_bundle: "${DLS_VISION_CA_BUNDLE:-}"
     mqtt_host: "${MQTT_HOST:-host.docker.internal}"
     mqtt_port: ${MQTT_PORT:-1883}
-    pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST}"
-    pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
-    pipeline_name: "${DLS_PIPELINE_NAME:-loitering_detection_vms_mqtt}"
+    pipeline:
+      cpu: ${DLS_PIPELINE_CPU:-}
+      gpu: ${DLS_PIPELINE_GPU:-}
+      npu: ${DLS_PIPELINE_NPU:-}
     label_type_map:
       vehicle: vap.vehicle
       pedestrian: vap.pedestrian
       background: vap.background
 ```
+
+At least one of `DLS_PIPELINE_CPU`, `DLS_PIPELINE_GPU`, or `DLS_PIPELINE_NPU` must be set.
+In Nx UI, the **Device** dropdown only shows configured devices, and selecting one starts
+the corresponding configured pipeline with the same device in `detection-properties.device`.
 
 ### 3.3 Configure the `label_type_map`
 
@@ -406,14 +367,14 @@ docker compose logs vms-backend | grep -i "nx_integration\|autoregist"
 You should see entries like:
 
 ```
-nx_integration_approved username=DLStreamerAnalyticsIntegrationVMS request_id=...
-nx_integration_autoregistered vms=nx-main analytics_app_id=DLStreamerAnalyticsIntegrationVMS status=approved
+nx_integration_approved username=VAP Analytics Integration request_id=...
+nx_integration_autoregistered vms=nx-main analytics_app_id=VAP Analytics Integration status=approved
 ```
 
 > **If VAP has already registered before** (database record exists and integration exists in Nx), VAP restores the integration credentials from its database and skips re-registration. You will see:
 > ```
-> nx_integration_already_registered vms=nx-main analytics_app_id=DLStreamerAnalyticsIntegrationVMS
-> nx_integration_credentials_restored vms=nx-main username=DLStreamerAnalyticsIntegrationVMS
+> nx_integration_already_registered vms=nx-main analytics_app_id=VAP Analytics Integration
+> nx_integration_credentials_restored vms=nx-main username=VAP Analytics Integration
 > ```
 
 ### 4.3 Verify the Integration in Nx Witness
@@ -425,7 +386,7 @@ curl -k -u admin:<password> https://<NX_HOST>:7001/rest/v4/analytics/integration
   | python3 -m json.tool | grep '"name"\|"id"\|"status"'
 ```
 
-You should see an integration named `DLStreamerAnalyticsIntegrationVMS` with `"status": "active"` or equivalent.
+You should see an integration named `VAP Analytics Integration` with `"status": "active"` or equivalent.
 
 In the Nx Witness desktop client, navigate to **System Administration** → **Analytics** (or **Plugins**) to see the integration listed.
 
@@ -440,7 +401,7 @@ Before VAP can push detection overlays to a specific camera, the analytics integ
 1. In the Nx Witness client, right-click the camera in the resource tree.
 2. Select **Camera Settings**.
 3. Go to the **Integrations** tab.
-4. Find **DLStreamerAnalyticsIntegrationVMS** in the list.
+4. Find **VAP Analytics Integration** in the list.
 5. Toggle the switch to **Enable**.
 6. Click **Apply** or **OK**.
 
@@ -515,7 +476,7 @@ restarts.
 #### 6.2.2 Navigate to the Integration Panel
 
 1. In the Camera Settings window, click the **Integrations** tab.
-2. Click **DLStreamerAnalyticsIntegrationVMS** to expand the per-camera settings.
+2. Click **VAP Analytics Integration** to expand the per-camera settings.
 
 You will see:
 
@@ -524,7 +485,7 @@ You will see:
 | **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera |
 | **Device** | Dropdown | Inference device: `CPU`, `GPU`, or `NPU` |
 
-<img src="../_assets/DLStreamerAnalyticsIntegrationVMS_LD_pipeline_enable_UI.png" alt="DLStreamerAnalyticsIntegrationVMS settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
+<img src="../_assets/VAP_Analytics_Integration_LD_pipeline_enable_UI.png" alt="VAP Analytics Integration settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
 
 #### 6.2.3 Enable the Pipeline
 
@@ -544,17 +505,15 @@ Expected log output:
 ```
 [info] {'source': {'uri': '<rtsp_url>', 'type': 'uri', 'properties': {'protocols': 'tcp',
         'add-reference-timestamp-meta': True, 'latency': 100}},
-        'destination': {'metadata': {'type': 'mqtt', 'host': '<PIPELINE_SERVER_MQTT_HOST>:1883',
-        'topic': 'nx/dls_vision/<device-uuid>'}},
+  'destination': {'metadata': {'type': 'mqtt', 'topic': 'nx/dls_vision/<device-uuid>'}},
         'parameters': {'detection-properties': {'device': 'GPU'}}}
-[info] nx_dls_pipeline_started  device=GPU  device_id=<device-uuid>
-        pipeline_name=loitering_detection_vms_mqtt
-        run_id=<hex-instance-id>
+[info]  od_run_started  pipeline=user_defined_pipelines/loitering_detection_vms_mqtt run_id=<hex-instance-id>
+[info]  nx_pipeline_started app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id>
 ```
 
 #### 6.2.4 Stop the Pipeline
 
-1. Re-open **Camera Settings → Integrations → DLStreamerAnalyticsIntegrationVMS**.
+1. Re-open **Camera Settings → Integrations → VAP Analytics Integration**.
 2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
 3. Click **Apply** and then click **OK**.
 
@@ -563,8 +522,10 @@ VAP stops the run on the next poll.
 Expected log output:
 
 ```
-[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+[info] nx_pipeline_stopped     app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id> success=True
 ```
+
+> To run Loitering Detection and Live Video Captioning simultaneously, see [Running Both Apps Simultaneously](#running-both-apps-simultaneously) at the end of this guide.
 
 ---
 
@@ -654,7 +615,6 @@ When VAP starts a pipeline run, it executes the following:
      "destination": {
        "metadata": {
          "type": "mqtt",
-         "host": "<PIPELINE_SERVER_MQTT_HOST>:1883",
          "topic": "nx/dls_vision/<device-uuid>"
        }
      },
@@ -714,7 +674,7 @@ docker compose down
 **Cause:** The Nx integration and the VAP database are out of sync (for example, the integration was manually deleted from Nx, or the VAP database was cleared).
 
 **Fix:**
-1. In the Nx Witness client, delete the `DLStreamerAnalyticsIntegrationVMS` integration from **System Administration** → **Analytics**.
+1. In the Nx Witness client, delete the `VAP Analytics Integration` integration from **System Administration** → **Analytics**.
 2. Drop the VAP integration record from the database:
 
    ```bash
@@ -742,21 +702,7 @@ docker compose down
 
 2. Confirm the MQTT topic matches. VAP subscribes to `+/dls_vision/+`. dls_vision publishes to the topic VAP sends in the pipeline start payload (`nx/dls_vision/<device-uuid>`). Both must match.
 
-3. Check `PIPELINE_SERVER_MQTT_HOST` in `.env`. This must be the **host machine's LAN IP**, not a Docker container name or `host.docker.internal`. The GStreamer Paho C MQTT client inside the Pipeline Server container cannot resolve Docker service names, and `172.18.0.1` (the default Docker bridge gateway) is only valid if the dls_vision containers happen to be on that exact subnet.
-
-   Find the correct value:
-   ```bash
-   hostname -I | awk '{print $1}'
-   ```
-
-   Update `.env` and restart VAP:
-   ```bash
-  # In metro-ai-suite/vms-adapter-plugin/.env
-   PIPELINE_SERVER_MQTT_HOST=<output of hostname -I | awk '{print $1}'>
-   docker compose restart vms-backend
-   ```
-
-4. Verify MQTT connectivity from the VAP side:
+3. Verify MQTT connectivity from the VAP side:
 
    ```bash
    # Install mosquitto-clients if not present
@@ -765,9 +711,9 @@ docker compose down
    ```
    Start a pipeline run and check if messages appear.
 
-5. Confirm the analytics integration is enabled for the camera in Nx Witness (see [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
+4. Confirm the analytics integration is enabled for the camera in Nx Witness (see [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
 
-6. Check the Nx push in VAP logs:
+5. Check the Nx push in VAP logs:
 
    ```bash
    docker compose logs vms-backend | grep "nx_push\|push_analytics\|device_agent"
@@ -797,17 +743,71 @@ docker compose down
 
 ---
 
+## Additional Steps
+
+### Running Both Apps Simultaneously
+
+Both Loitering Detection and Live Video Captioning can run in parallel on the same camera from the same Nx Witness integration.
+
+**Prerequisite — avoid container name and port conflicts:**
+
+The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and host ports by default. The Loitering Detection `docker-compose.yml` needs to be updated with the following changes to avoid clashes:
+
+| Service | Change |
+|---|---|
+| `broker` | Host port changed from `1883` to `1884` (`"1884:1883"`) |
+| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld` |
+| `coturn` | Container name changed to `coturn-ld`; host port changed to `3479` |
+| `metrics-manager` | Container name changed to `metrics-manager-ld` |
+
+**Steps to run both simultaneously:**
+
+1. Start the LVC stack (its broker occupies host port `1883`):
+   ```bash
+   cd metro-ai-suite/live-video-analysis/live-video-captioning
+   docker compose up -d
+   ```
+2. Start the LD stack (its broker now occupies host port `1884`):
+   ```bash
+   cd metro-ai-suite/metro-vision-ai-app-recipe
+   docker compose up -d
+   ```
+3. Update `.env` in the VAP directory so the LD MQTT subscriber uses the LD broker on port `1884`:
+   ```bash
+   # metro-ai-suite/vms-adapter-plugin/.env
+   MQTT_PORT=1884
+   ```
+4. Start VAP (already configured with both apps in `config.yaml`):
+   ```bash
+   cd metro-ai-suite/vms-adapter-plugin
+   docker compose up -d
+   ```
+5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics Integration**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
+
+VAP starts both pipelines independently within 5 seconds.
+
+**Viewing results in Nx Witness — one output at a time:**
+
+Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a time:
+
+- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`, `vap.vehicle`, …) overlaid on the live feed.
+- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
+
+This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks simultaneously in the same camera panel, even though both pipelines are producing results concurrently.
+
+---
+
 ## Summary
 
-| **Step**                                     | **Where**                              |
-|----------------------------------------------|----------------------------------------|
-| Start dls_vision with MQTT exposed on port 1883      | dls_vision `docker compose up -d`            |
-| Configure Nx Witness connection in VAP `.env` | `metro-ai-suite/vms-adapter-plugin/.env`     |
-| Configure `label_type_map` in `config.yaml`   | `config/config.yaml`                  |
-| Start VAP (integration auto-registers)        | `docker compose up -d --build`        |
-| Enable integration for cameras in Nx          | Nx Witness client → Camera Settings   |
-| Discover cameras in VAP dashboard             | Dashboard → Discover Cameras          |
-| Enable cameras in VAP dashboard               | Dashboard → Camera toggle             |
-| Start a pipeline run                          | Dashboard → Analytics Engine → Start  |
-| View detection overlays                       | Nx Witness client → live camera feed  |
-| Stop the run                                  | Dashboard → Analytics Engine → Stop   |
+| **Step** | **Where** |
+|---|---|
+| Start dls_vision with MQTT broker exposed to host | `metro-vision-ai-app-recipe/loitering-detection/` → `docker compose up -d` |
+| **Nx Witness:** install Server + Client, add cameras, enable digest auth, enable API Integrations | Nx Witness Desktop Client |
+| Configure Nx Witness connection and MQTT settings in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
+| Configure `app_id`, `display_name`, `label_type_map` in `config.yaml` | `config/config.yaml` |
+| Start VAP (integration auto-registers on startup) | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
+| Discover cameras | Dashboard → Discover Cameras |
+| Enable cameras for analytics | Dashboard → Camera toggle |
+| **Nx Witness:** Start pipeline | Camera Settings → Integrations → VAP Analytics Integration → Enable checkbox |
+| View detection overlays | Nx Witness client → live camera feed (Objects panel) |
+| **Nx Witness:** Stop the run | Camera Settings → Integrations → VAP Analytics Integration → Uncheck the checkbox |

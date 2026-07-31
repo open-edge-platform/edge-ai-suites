@@ -82,6 +82,9 @@ class VideoAnalyticsPipelineService:
         self.pipeline_retry_counts: Dict[str, int] = {}
         self.max_retries = 10
 
+        # "eos" (normal), "failed" (gave up after max retries), or "stopped" (manual stop).
+        self.pipeline_final_status: Dict[str, str] = {}
+
         # Pipeline error events for status reporting (consumed by monitor_pipeline_status)
         self.pipeline_errors: Dict[str, List[str]] = {}
 
@@ -297,6 +300,7 @@ class VideoAnalyticsPipelineService:
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
+                    self.pipeline_final_status[pipeline_name] = "eos"
                     self._fire_done_callback_if_all_finished()
                     break
                 else:
@@ -344,6 +348,7 @@ class VideoAnalyticsPipelineService:
                             f"Pipeline '{pipeline_name}' reached maximum retry limit ({self.max_retries}). "
                             f"Giving up."
                         )
+                        self.pipeline_final_status[pipeline_name] = "failed"
                         self._fire_done_callback_if_all_finished()
                         break
 
@@ -746,6 +751,8 @@ class VideoAnalyticsPipelineService:
 
             # Initialize retry count
             self.pipeline_retry_counts[pipeline_name] = 0
+            # Clear any prior final status for a fresh launch
+            self.pipeline_final_status.pop(pipeline_name, None)
 
             # Launch pipeline
             success = self._launch_pipeline_internal(pipeline_name, options, command)
@@ -846,6 +853,7 @@ class VideoAnalyticsPipelineService:
                 self.logger.info(f"Pipeline '{pipeline_name}' killed")
 
             del self.pipelines[pipeline_name]
+            self.pipeline_final_status[pipeline_name] = "stopped"
             self._fire_done_callback_if_all_finished()
 
             # Stop monitoring thread

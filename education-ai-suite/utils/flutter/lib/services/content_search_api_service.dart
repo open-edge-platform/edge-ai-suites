@@ -8,6 +8,7 @@ import '../entities/ingest_task_result.dart';
 import '../entities/qa_models.dart';
 import '../entities/health_status.dart';
 import '../entities/file_asset.dart';
+import 'ui_keepalive_interceptor.dart';
 
 /// Result of POST /api/v1/object/upload-ingest
 class UploadIngestResult {
@@ -40,6 +41,9 @@ class ContentSearchApiService {
         headers: {'Accept': 'application/json'},
       ),
     );
+
+    // Keep UI responsive during long VLM operations (2-3 minutes)
+    _dio.interceptors.add(UiKeepAliveInterceptor());
 
      assert(() {
        _dio.interceptors.add(
@@ -119,9 +123,10 @@ class ContentSearchApiService {
     final data = body['data'] as Map<String, dynamic>? ?? {};
 
     if (code == 40901) {
+      // Duplicate detected - use actual backend status from existing task
       return UploadIngestResult(
         taskId: data['task_id'] as String? ?? '',
-        status: 'ALREADY_EXISTS',
+        status: data['status'] as String? ?? 'UNKNOWN',
         fileKey: data['file_key'] as String?,
         isDuplicate: true,
       );

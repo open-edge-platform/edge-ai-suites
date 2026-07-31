@@ -5,7 +5,7 @@ import faiss
 import numpy as np
 from pathlib import Path
 from utils.transcript_parser import parse_transcript_lines, build_topic_text
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 from utils.config_loader import config
 
 # -----------------------------
@@ -24,7 +24,7 @@ class TopicFaissIndexer:
         self.index_path = self.index_dir / "topics.faiss"
         self.meta_path = self.index_dir / "topics_meta.json"
 
-        self.embedder = SentenceTransformer(EMBEDDING_MODEL)
+        # self.embedder = SentenceTransformer(EMBEDDING_MODEL)
         self.dim = self.embedder.get_sentence_embedding_dimension()
 
         self.index = faiss.IndexFlatIP(self.dim)

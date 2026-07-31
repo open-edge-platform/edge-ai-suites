@@ -46,18 +46,27 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
-### E. Enable OCR Features (Optional)
-
-If you need OCR functionality for document text extraction, enable OCR in `config.yaml`:
-
-```yaml
-ocr:
-  enabled: true
-```
-
 ## Step 2: Configuration
 
-### A. Default Configuration
+### A. Enable Feature Configuration
+
+The application is built using a modular feature architecture, allowing users to enable or disable individual features through the `features:` block in `smart-classroom/config.yaml`. Only enabled features are initialized at startup—they load their required models, register their API routes, and start their associated services.
+
+```yaml
+features:
+  asr:                { enabled: true }   # Speech-to-text transcription
+  summary:            { enabled: true }   # AI class summary / report
+  mindmap:            { enabled: true }   # Mind map generation
+  topic_segmentation: { enabled: true }   
+  video_analytics:    { enabled: true }   # Video ingestion / analytics
+  content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
+  qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
+```
+
+
+**Important: After updating the configuration, reload the application for changes to take effect.**
+
+### B. Default Configuration
 
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
@@ -76,7 +85,7 @@ summarizer:
   max_new_tokens: 1024        # Maximum tokens to generate in summaries
 ```
 
-### B. Chinese Audio Transcription
+### C. Chinese Audio Transcription
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 
@@ -92,7 +101,7 @@ app:
   language: zh
 ```
 
-### C. Content Search Configuration
+### D. Content Search Configuration
 
 **Upload Size Limits** can be adjusted under the `content_search` section:
 
@@ -102,6 +111,28 @@ content_search:
     document_max_mb: 100    # maximum upload size for documents (MB)
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
+
+### E. Enable OCR Features (Optional)
+
+If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
+
+```yaml
+models:
+  ocr:
+    enabled: true
+```
+
+Board OCR is supported to extract text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report.
+
+```yaml
+board_ocr:
+  enabled: true        # requires ocr.enabled: true
+  frame_rate: "1/3"    # frames per second sampled from the board video
+```
+
+> **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
+>
+> **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -139,14 +170,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### B. Launch Content Search Services
-
-```PowerShell
-.\venv_content_search\Scripts\activate
-python .\start_services.py
-```
-
-> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup.
 
 When all services are ready:
 
@@ -161,7 +185,9 @@ Verify the service status:
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
 
-### C. Network Requirements for Content Search
+> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+
+### B. Network Requirements for Content Search
 
 - **Proxy**: If behind a proxy, ensure `HTTP_PROXY` and `HTTPS_PROXY` environment variables are configured.
 - **Model Downloads**: Stable access to `huggingface.co` is required for downloading pre-trained models.
@@ -172,7 +198,45 @@ Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
   -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
   ```
 
-## Step 5: Bring Up the Frontend
+## Step 5: Set Up Grading (Optional)
+
+> **Note:** Skip this step if `grading.enabled: false` in `config.yaml`.
+
+Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO IR. This step creates a dedicated conversion environment.
+
+### A. Create the Model Conversion Environment
+
+```PowerShell
+cd smart-classroom\components\grading\providers\layout_detection_service
+python -m venv venv_convert
+.\venv_convert\Scripts\pip install -r requirements_convert.txt
+```
+
+### B. Convert and Download the Layout Detection Model
+
+```PowerShell
+.\venv_convert\Scripts\python ensure_layout_model.py
+```
+
+> **Note:** This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO IR. Subsequent runs detect the existing model and skip this step automatically.
+
+### C. Launch Grading Services
+
+Open two new terminal windows (the Backend terminal must remain running):
+
+**Terminal — Layout Detection (port 9902):**
+```PowerShell
+cd smart-classroom\components\grading\providers
+python .\layout_detection_service\layout_detection_server.py
+```
+
+**Terminal — Grading Service (port 9012):**
+```PowerShell
+cd smart-classroom\components\grading
+python grading_service.py
+```
+
+## Step 6: Bring Up the Frontend
 
 > **Note:** Open a new Command Prompt / terminal window for the frontend.
 > The backend and Content Search terminals stay busy serving requests.
@@ -183,9 +247,39 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+### Optional: Run as an Electron Desktop App
+
+The UI can run as a Windows desktop app instead of a browser tab.
+This is an additive layer: it connects to the same backend services,
+so those must be running as in the previous steps.
+
+```bash
+cd <path-to>\edge-ai-suites\education-ai-suite\smart-classroom\ui
+npm install
+
+# Development: opens the desktop window and starts the dev server on 5173
+npm run electron:dev
+
+# Production preview: builds the UI and runs the packaged launch path, no dev server.
+npm run electron:preview
+
+# Package a standalone Windows portable executable:
+#   release\SmartClassroom-<version>-portable.exe
+npm run electron:build
+```
+
+> **Note** The Electron runtime binary is fetched lazily the **first time Electron runs**
+> (`npm run electron:dev` / `electron:preview`). Behind a proxy, the first launch
+> needs the proxy variables `ELECTRON_GET_USE_PROXY=true` and
+> `GLOBAL_AGENT_HTTPS_PROXY=<proxy>` in addition to the usual
+> `HTTP_PROXY` / `HTTPS_PROXY`. The `npm run electron:build` downloads
+> its own copy via electron-builder and honors the standard `HTTPS_PROXY`.
+
 ## Step 6: Access the UI
 
-After starting the frontend you can open the Smart Classroom UI in a browser:
+After starting the frontend you can open the Smart Classroom UI in a browser
+(or, if you used `npm run electron:dev`, in the Electron desktop window
+that opens automatically):
 
 Local machine:
 
@@ -301,9 +395,13 @@ models:
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   ```
 
+- **Error: `CL_OUT_OF_RESOURCES`** during summarization of longer audio inputs
+  Summarization of longer transcripts may require additional GPU memory. If this error occurs, increase the GPU memory allocation in the **Intel® Graphics Software** application under the **Graphics** tab before rerunning the workflow.
+  ![GPU Troubleshooting](./_assets/troubleshooting-gpu.png)
+
 ### Known Issues
 
-- **Manual Video File Path Input**: Users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to keep all video files in the same directory for seamless operation.
+- **Manual Video File Path Input**: In web browser, users are required to manually specify the path to video files from their local system in the base directory input. It is recommended to use Electron desktop app for seamless operation.
 - **Live Video Monitoring Timeout**: Live video monitoring sessions will automatically stop after 45 minutes if the user does not reload the page to start a new session.
 - **Stream End Notification**: Once the video streaming ends, the user will see a "Stream not found" message on the screen, indicating that the stream has concluded.
 - **Do Not Reload During Active Streaming**: Users should not reload the page while the stream is active. Reloading the page will terminate the session, and the user will lose the current stream. Wait until the "Stream not found" notification appears on the screen before reloading.
@@ -317,7 +415,8 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove \
   For base environment : *education-ai-suite/smartclassroom*. \
   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
-  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*.
+  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*. \
+  For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.
 3. **Remove the content search database:**

@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "alert-agent-service.fullname" . }}
+  labels:
+    {{- include "alert-agent-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: alert-agent-service
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ include "alert-agent-service.fullname" . }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP

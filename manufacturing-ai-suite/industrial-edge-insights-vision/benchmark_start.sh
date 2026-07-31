@@ -83,8 +83,6 @@ function check_and_loop_video() {
       local search_paths=(
       "./resources/pallet-defect-detection/videos"
       "./resources/pcb-anomaly-detection/videos"
-      "./resources/weld-porosity/videos"
-      "./resources/worker-safety-gear-detection/videos"
     )
     
     for search_path in "${search_paths[@]}"; do
