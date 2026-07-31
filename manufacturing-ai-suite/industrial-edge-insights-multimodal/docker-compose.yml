@@ -299,8 +299,6 @@ services:
       PYTHONUNBUFFERED: 1
       FUSION_MODE: ${FUSION_MODE}
       LOG_LEVEL: ${LOG_LEVEL}
-    ports:
-      - 8088:8080
     depends_on:
       - ia-mqtt-broker
     networks:
