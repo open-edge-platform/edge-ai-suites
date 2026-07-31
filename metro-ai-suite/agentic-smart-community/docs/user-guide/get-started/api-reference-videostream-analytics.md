@@ -11,7 +11,7 @@ The videostream-analytics microservice (VSA) is the standalone RTSP-processing s
 | Service name | `videostream-analytics` |
 | Framework | FastAPI (served by uvicorn) |
 | Default bind | `0.0.0.0:8999` (`server.host` / `server.port` in `config.yaml`) |
-| Default webhook target | `http://localhost:18800/events`, overridable by the `WEBHOOK_URL` environment variable or by the `webhook_url` field in each `register_source` request |
+| Default webhook target | `http://localhost:3101/events`, overridable by the `WEBHOOK_URL` environment variable or by the `webhook_url` field in each `register_source` request |
 | Content-Type | `application/json` for all requests and responses |
 | Character encoding | UTF-8 |
 | Auth | None. VSA is expected to run in a trusted network segment (loopback / private LAN / reverse proxy). |
@@ -144,12 +144,19 @@ Unknown top-level fields (including the legacy `rtsp_url`, top-level `motion`, a
 
 #### `PipelineConfig`
 
-The nested pipeline object (`extra="forbid"`). Every sub-block is optional; when a sub-block is omitted it is filled by the corresponding `defaults.<sub_block>`. Fall-back is **whole-block replacement**, not field-level merge — supply a full sub-block whenever a single field needs to differ from the defaults.
+The nested pipeline object (`extra="forbid"`). Every sub-block is optional. Explicit fields in a
+supplied sub-block are merged onto the corresponding `defaults.<sub_block>`; omitted fields retain
+their defaults, so a request may override only the values that need to differ.
+
+The values below are the defaults in the shipped `videostream-analytics/config/config.yaml` used
+by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` inherits the
+`defaults` blocks from that file instead.
 
 | Sub-block | Model | Purpose |
 |-----------|-------|---------|
 | `motion` | `MotionConfig` | Frame-difference motion detector parameters. |
 | `segment` | `SegmentConfig` | Motion-clip segmentation parameters. |
+| `static` | `StaticConfig` | Quiet-period close-out event parameters. |
 | `prefilter` | `PrefilterConfig` | Optional NPU / OpenVINO YOLO prefilter. |
 | `roi` | `RoiConfig` | Phase 9 ROI crop and trajectory-region emission. |
 | `recording` | `RecordingConfig` | Fixed-cadence continuous recording branch. |
@@ -161,9 +168,9 @@ The nested pipeline object (`extra="forbid"`). Every sub-block is optional; when
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `true` | When `false`, the motion detection path is skipped entirely. |
-| `diff_threshold` | `int` | `25` | Per-pixel frame-difference threshold. |
-| `area_ratio` | `float` | `0.015` | Minimum fraction of frame area required to declare motion. |
-| `stable_frames` | `int` | `30` | Consecutive static frames required to end a motion event. |
+| `diff_threshold` | `int` | `15` | Per-pixel frame-difference threshold. |
+| `area_ratio` | `float` | `0.005` | Minimum fraction of frame area required to declare motion. |
+| `stable_frames` | `int` | `45` | Consecutive static frames required to end a motion event. |
 
 ##### `SegmentConfig`
 
@@ -172,17 +179,25 @@ The nested pipeline object (`extra="forbid"`). Every sub-block is optional; when
 | `max_duration` | `float` | `10.0` | Hard ceiling on segment length, in seconds. |
 | `min_duration` | `float` | `1.0` | Minimum clip duration; shorter clips are discarded. |
 
+##### `StaticConfig`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `true` | Emit a `static` event when a qualifying quiet period closes. |
+| `min_duration` | `float` | `3.0` | Suppress quiet periods shorter than this many seconds. |
+
 ##### `PrefilterConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enabled` | `bool` | `false` | Enable OpenVINO YOLO prefilter on motion clips. |
-| `model_path` | `string` | `""` | Absolute path to the OpenVINO `.xml` model. |
+| `enabled` | `bool` | `true` | Enable OpenVINO YOLO prefilter on motion clips. |
+| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO `.xml` model. |
 | `target_classes` | `array<string>` | `["person"]` | Class labels that count as a hit. |
 | `min_confidence` | `float` | `0.4` | Minimum detection confidence. |
-| `min_frames_hit` | `int` | `2` | Number of hits within a clip required for PASS. |
+| `min_frames_hit` | `int` | `1` | Number of hits within a clip required for PASS. |
 | `detect_fps` | `float` | `2.0` | YOLO inference rate; inference does not run on every frame. |
-| `device` | `string` | `"CPU"` | OpenVINO device (`CPU`, `GPU`, `NPU`). |
+| `device` | `string` | `"NPU"` | OpenVINO device (`CPU`, `GPU`, `NPU`). |
+| `long_side` | `int` | `0` | Resize the frame's longest side before inference; `0` disables resizing. |
 
 ##### `RoiConfig` (Phase 9)
 
@@ -336,7 +351,7 @@ The `status` field returned by §3.3 evolves according to the following state ma
 
 2. **`paused` is terminal.** The state persists across RTSP idle-disconnect and silent reconnects. If a source appears to leave `paused` on its own, an external `/resume` call is the cause (a lingering test script, another orchestrator, or a re-`register_source` teardown-and-rebuild).
 
-3. **`failure_count` resets to zero on a successful reconnect** ([rtsp_monitor.py:231](../../videostream-analytics/stream_monitor/rtsp_monitor.py#L231)). Recovery from a transient RTSP glitch therefore restarts the failure budget from scratch.
+3. **`failure_count` resets to zero on a successful reconnect** ([rtsp_monitor.py:254](../../../videostream-analytics/stream_monitor/rtsp_monitor.py#L254)). Recovery from a transient RTSP glitch therefore restarts the failure budget from scratch.
 
 To shorten the reproduction window for the `paused` transition during verification, hot-update the health block via §3.9:
 
@@ -348,7 +363,7 @@ curl -X PUT http://localhost:8999/sources/cam_demo/pipeline \
 
 Kill the upstream RTSP producer afterwards; the source transitions to `paused` within roughly seven seconds and remains there.
 
-State-machine source: [rtsp_monitor.py:222-259 `_run()`](../../videostream-analytics/stream_monitor/rtsp_monitor.py#L222-L259) and [rtsp_monitor.py:194-220 `_handle_unhealthy()`](../../videostream-analytics/stream_monitor/rtsp_monitor.py#L194-L220).
+State-machine source: [rtsp_monitor.py:238-277 `_run()`](../../../videostream-analytics/stream_monitor/rtsp_monitor.py#L238-L277) and [rtsp_monitor.py:211-235 `_handle_unhealthy()`](../../../videostream-analytics/stream_monitor/rtsp_monitor.py#L211-L235).
 
 ### 3.8 `POST /sources/{source_id}/keepalive` (Phase 8)
 
@@ -370,7 +385,7 @@ The MCP server calls this endpoint at a regular cadence (typically every 30 seco
 
 Watchdog behaviour:
 
-- The watchdog reuses the standard `pause_source()` path, which emits a `type=status, payload={status:paused}` webhook event.
+- The watchdog reuses the standard `pause_source()` path. The source becomes `paused` in the VSA control plane and is visible through `GET /sources/{source_id}/status`; VSA does not emit status webhook events.
 - Watchdog-triggered pauses are terminal for the same reason `/pause` is; the MCP server must explicitly `/resume` the source. See §3.7.1.
 - At registration, if `keepalive.enabled=true`, `last_keepalive_at` is initialised to the current time, granting a `timeout_seconds` grace period before the first heartbeat is required.
 
@@ -389,7 +404,10 @@ The request body wraps a `PipelineConfig` object (§3.4):
 }
 ```
 
-Semantics are whole-sub-block replacement: any sub-block supplied is applied verbatim; omitted sub-blocks retain their current values. A change to `recording.enabled` creates or destroys the `ContinuousRecorder`; other changes are applied by stopping and restarting the pipeline.
+Explicit fields in each supplied sub-block are merged onto the source's current configuration;
+omitted fields and sub-blocks retain their current values. A change to `recording.enabled` creates
+or destroys the `ContinuousRecorder`; other changes are applied by stopping and restarting the
+pipeline.
 
 **Response 200**:
 
@@ -410,7 +428,7 @@ Every event produced by a running source is delivered as an HTTP POST to the con
 ```json
 {
   "sourceId":  "cam_child",
-  "type":      "motion | recording | status",
+  "type":      "motion | static | recording",
   "timestamp": "2026-06-30T14:30:15",
   "payload":   { ... }
 }
@@ -419,15 +437,13 @@ Every event produced by a running source is delivered as an HTTP POST to the con
 | Field | Type | Description |
 |-------|------|-------------|
 | `sourceId` | `string` | The `source_id` used at registration (camelCase in the envelope). |
-| `type` | `"motion" \| "recording" \| "status"` | Event category; determines the payload schema. |
+| `type` | `"motion" \| "static" \| "recording"` | Event category; determines the payload schema. |
 | `timestamp` | `string` (ISO 8601, second precision, local timezone) | Time the event was emitted on VSA. |
 | `payload` | `object` | Body specific to the `type`. |
 
-> The system design (§9.2) references a `static` event type. The current VSA implementation does not emit it; motion / recording / status are the three types produced. `status` events are informational — MCP currently ignores unrecognized types.
-
 ### 4.2 `type=motion` payload
 
-Emitted by [`_emit_segment`](../../videostream-analytics/stream_monitor/rtsp_monitor.py#L429-L488). A motion segment is only emitted after the underlying MP4 has been written; when prefilter is enabled, only clips with `prefilter_passed=1` are emitted (the file for a SKIP clip is deleted, no event is produced).
+Emitted by [`_emit_segment`](../../../videostream-analytics/stream_monitor/rtsp_monitor.py#L487-L544). A motion segment is only emitted after the underlying MP4 has been written; when prefilter is enabled, only clips with `prefilter_passed=1` are emitted (the file for a SKIP clip is deleted, no event is produced).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -441,9 +457,19 @@ Emitted by [`_emit_segment`](../../videostream-analytics/stream_monitor/rtsp_mon
 | `prefilter_confidence` | `float` | Optional | Maximum detection confidence within the clip. |
 | `trajectory_region` | `string` (`"[x0,y0,x1,y1]"`, normalized to [0,1]) | Optional | Phase 9. The union bbox accumulated by prefilter, serialised as a JSON string of four floats. |
 
-### 4.3 `type=recording` payload
+### 4.3 `type=static` payload
 
-Emitted by [`ContinuousRecorder._record_loop`](../../videostream-analytics/stream_monitor/continuous_recorder.py#L157-L169) after each fixed-cadence recording segment is written to disk.
+Emitted by [`_emit_static`](../../../videostream-analytics/stream_monitor/rtsp_monitor.py#L547-L581) when a quiet period closes and its duration meets `pipeline.static.min_duration`. Static events record activity timing but do not create a video-summary task.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `start_time` | `string` (ISO 8601) | ✅ | Quiet-period start time. |
+| `end_time` | `string` (ISO 8601) | Optional | Quiet-period end time. |
+| `duration_seconds` | `float` | ✅ | Quiet-period duration in seconds. |
+
+### 4.4 `type=recording` payload
+
+Emitted by [`ContinuousRecorder._record_loop`](../../../videostream-analytics/stream_monitor/continuous_recorder.py#L123) after each fixed-cadence recording segment is written to disk.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -452,29 +478,6 @@ Emitted by [`ContinuousRecorder._record_loop`](../../videostream-analytics/strea
 | `recording_end` | `string` (ISO 8601) | ✅ | Segment end time. |
 | `duration_seconds` | `float` | Optional | Actual segment duration; may differ slightly from `interval_seconds`. |
 | `file_size_bytes` | `int` | Optional | File size in bytes. |
-
-### 4.4 `type=status` payload
-
-Emitted by [`_emit_status`](../../videostream-analytics/stream_monitor/rtsp_monitor.py#L490-L492) and various inline `_emit_envelope("status", ...)` call sites. The `payload.status` field takes one of the following values:
-
-| Value | Emitted when | Additional fields |
-|-------|--------------|-------------------|
-| `paused` | `/pause`, watchdog auto-pause, or `recovery_strategy=pause`. | — |
-| `online` | `/resume`, or successful reconnect. | — |
-| `unhealthy` | Consecutive failures reach `max_failures`. | `reason`, e.g. `"rtsp_timeout"`. |
-| `reconnecting` | Backoff retry between failures. | — |
-| `stopped` | Source unregistered / shutdown. | — |
-
-Example:
-
-```json
-{
-  "sourceId":  "cam_child",
-  "type":      "status",
-  "timestamp": "2026-06-30T14:31:00",
-  "payload":   { "status": "unhealthy", "reason": "rtsp_timeout" }
-}
-```
 
 ---
 
@@ -490,7 +493,7 @@ Standard FastAPI `HTTPException(404)` used whenever the referenced source is not
 
 ### 5.2 `422 Unprocessable Entity`
 
-The custom [`RequestValidationError` handler](../../videostream-analytics/service.py#L107-L128) translates pydantic errors into a machine-readable form. `extra="forbid"` rejects unknown fields on all request models; the offending field names are collected into an `unknown_fields` array to help clients pinpoint the drift.
+The custom [`RequestValidationError` handler](../../../videostream-analytics/service.py#L111-L139) translates pydantic errors into a machine-readable form. `extra="forbid"` rejects unknown fields on all request models; the offending field names are collected into an `unknown_fields` array to help clients pinpoint the drift.
 
 ```json
 {
@@ -513,7 +516,7 @@ VSA writes all per-source outputs under the resolved `data_dir`. The layout is s
 
 ```
 <data_dir>/
-├── latest.jpg                          # Periodically overwritten snapshot; read by the MCP latest-frame resource.
+├── latest.jpg                          # Periodically overwritten snapshot; read by smartbuilding_scene_query.
 ├── motion_events/<YYYY-MM-DD>/
 │   ├── <source_id>_HHMMSS.mp4          # Original motion clip (payload.event_file_path).
 │   └── <source_id>_HHMMSS_input.mp4    # ROI-cropped clip (Phase 9; payload.summary_clip_input).
@@ -534,14 +537,15 @@ Retention responsibilities:
 | Env / Config | Default | Purpose |
 |--------------|---------|---------|
 | `server.host` / `server.port` | `0.0.0.0:8999` | HTTP bind address. |
-| `webhook.url` (or env `WEBHOOK_URL`) | `http://localhost:18800/events` | Default webhook target; the per-source `webhook_url` field takes precedence. |
-| `data_dir` (or env `RECORDINGS_DIR`) | `~/.smartbuilding/data` | Global root; the `data_dir` field in the register request takes precedence. |
+| `webhook.url` (or env `WEBHOOK_URL`) | `http://localhost:3101/events` | Default webhook target; the per-source `webhook_url` field takes precedence. |
+| `data_dir` | `~/.mcp-smartbuilding/segments` | Global segment root; the `data_dir` field in the register request takes precedence. |
+| `SMARTBUILDING_DATA_DIR` | `~/.mcp-smartbuilding` | Overrides the platform data root; VSA writes under its `segments/` subdirectory. |
 | `VIDEOSTREAM_CONFIG` | `config/config.yaml` | Alternate configuration file path. |
 | `PREFILTER_MODEL` | `~/models/openvino/yolo11s/FP16/yolo11s.xml` | OpenVINO prefilter XML. `setup_docker.sh` validates the XML/BIN pair before startup and prepares the static YOLO11s IR automatically when it is missing. The model must be under `MODEL_DIR`, which is mounted read-only into the container. |
 | `VIDEOSTREAM_CONFIG_FILE` | Generated by `setup_docker.sh` | Host-side runtime configuration mounted at `/app/config/config.yaml` by Docker Compose. It is generated from the tracked default with `defaults.prefilter.model_path` set to the absolute `PREFILTER_MODEL` path. |
 | `OV_CACHE_DIR` | `/tmp/ov_cache` | OpenVINO model cache used by the YOLO prefilter. |
 
-Ports used by the integration test harness and local verification recipes (see [vsa-gsg.md](../vsa-gsg.md)):
+Ports used by the [integration test harness](../../../videostream-analytics/scripts/test-videostream-analytics.sh) and local verification recipes:
 
 - `:8554` — MediaMTX RTSP server (upstream).
 - `:8999` — VSA service (this document).
@@ -562,7 +566,7 @@ Ports used by the integration test harness and local verification recipes (see [
 
 ## 9. Verification
 
-End-to-end verification recipes, including manual `V1`–`V12` `curl` walkthroughs, unit-test invocation, and integration-test invocation, live in [vsa-gsg.md](../vsa-gsg.md). Summary:
+Run the [videostream-analytics test harness](../../../videostream-analytics/scripts/test-videostream-analytics.sh) for unit and integration verification. Summary:
 
 - Unit tests: `pytest tests/unit/ --timeout=60` — expected `185 passed`.
 - Integration tests: `pytest tests/integration/ -m integration --timeout=300` — expected `27 passed` (requires MediaMTX, mock webhook, and ffmpeg producer).

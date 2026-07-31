@@ -3,32 +3,20 @@
 import asyncio
 import json
 import logging
-import threading
-import ssl
 import time
-import paho.mqtt.client as mqtt
+import aiomqtt
 from service.rule_engine import process_event
 from datetime import datetime
-from datetime import timedelta
 from config import (
     MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_USER, MQTT_PASSWORD,
-    SCENESCAPE_MQTT_BROKER, SCENESCAPE_MQTT_PORT, SCENESCAPE_MQTT_TOPIC,
-    SCENESCAPE_MQTT_USER, SCENESCAPE_MQTT_PASSWORD,
-    NVR_SCENESCAPE_ENABLED, SCENESCAPE_THROTTLE_INTERVAL
+    SCENESCAPE_THROTTLE_INTERVAL, BROKER_RECONNECT_DELAY,
 )
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mqtt-listener")
 
-event_loop = asyncio.new_event_loop()
 
-def start_event_loop(loop):
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
-
-threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
-
-def process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, msg_topic):
+async def process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, msg_topic):
     """Process scenescape objects and trigger events for each object type."""
     for obj_type, obj_list in objects.items():
         if isinstance(obj_list, list) and obj_list:
@@ -41,21 +29,11 @@ def process_scenescape_objects(objects, scenescape_camera, start_time, end_time,
                 "num_pedestrians": num_pedestrians,
             }
             logger.info(f" Scenescape generated event: {event_data}")
-
-            future = asyncio.run_coroutine_threadsafe(
-                process_event(event_data, context={"source": "scenescape", "topic": msg_topic}),
-                event_loop,
-            )
-            future.add_done_callback(
-                lambda fut: (
-                    logger.info(f" process_event completed for {obj_type}: {fut.result()}")
-                    if not fut.exception()
-                    else logger.error(
-                        f" process_event failed for {obj_type}: {fut.exception()}",
-                        exc_info=True,
-                    )
-                )
-            )
+            try:
+                result = await process_event(event_data, context={"source": "scenescape", "topic": msg_topic})
+                logger.info(f" process_event completed for {obj_type}: {result}")
+            except Exception as e:
+                logger.error(f" process_event failed for {obj_type}: {e}", exc_info=True)
 
 # Convert ISO 8601 timestamp to float seconds since epoch
 def iso_to_frigate_timestamp(iso_timestamp: str) -> str:
@@ -66,122 +44,85 @@ def iso_to_frigate_timestamp(iso_timestamp: str) -> str:
         logger.warning(f"Failed to parse timestamp {iso_timestamp}: {e}")
         return iso_timestamp  
 
-# Store last processed time for scenescape throttling
 throttle_state = {"last_processed": 0}
 
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        if userdata == "frigate":
-            client.subscribe(MQTT_TOPIC)
-            logger.info(f" Subscribed to Frigate topic: {MQTT_TOPIC}")
-        elif userdata == "scenescape":
-            client.subscribe(SCENESCAPE_MQTT_TOPIC, qos=1)  # QoS 1 subscription
-            logger.info(f" Subscribed to Scenescape topic: {SCENESCAPE_MQTT_TOPIC}")
-    else:
-        logger.error(f" Failed to connect to MQTT broker ({userdata}), code: {rc}")
 
-def on_message(client, userdata, msg):
-    try:
-        payload = json.loads(msg.payload.decode("utf-8", errors="ignore"))
+async def handle_frigate_message(payload, topic):
+    event_data = payload.get("after") or payload.get("before") or {}
+    logger.info(f" Message received on topic: {topic} at {event_data.get('frame_time')}")
+    label = event_data.get("label")
+    camera_name = event_data.get("camera")
+    start_time = event_data.get("start_time")
+    end_time = event_data.get("end_time")
 
-        if msg.topic.startswith("frigate/"):
-            event_data = payload.get("after") or payload.get("before") or {}
-            logger.info(f" Message received on topic: {msg.topic} at {event_data.get('frame_time')}")
-            label = event_data.get("label")
-            camera_name = event_data.get("camera")
-            start_time = event_data.get("start_time")
-            end_time = event_data.get("end_time")
-
-            if label and camera_name and start_time and end_time and (end_time - start_time) >= 10:
-                logger.info(
-                    f" Event label: {label} |  Camera: {camera_name} |  Start: {start_time} |  End: {end_time}"
-                )
-                future = asyncio.run_coroutine_threadsafe(
-                    process_event(event_data, context={"source": "frigate", "topic": msg.topic}),
-                    event_loop,
-                )
-                future.add_done_callback(
-                    lambda fut: (
-                        logger.info(f" process_event completed: {fut.result()}")
-                        if not fut.exception()
-                        else logger.error(f" process_event failed: {fut.exception()}", exc_info=True)
-                    )
-                )
-            else:
-                return
-                #logger.warning(
-                    #" Skipping Frigate summary due to missing fields or short duration (<10s)."
-                #)
-
-        elif msg.topic.startswith("scenescape/"):
-            now = time.time()
-            if now - throttle_state["last_processed"] < SCENESCAPE_THROTTLE_INTERVAL:
-                return
-            throttle_state["last_processed"] = now
-
-            objects = payload.get("objects", {})
-            vehicle_list = []
-            pedestrian_list = []
-            if isinstance(objects, dict):
-                vehicle_list = objects.get("vehicle", [])
-                pedestrian_list = objects.get("pedestrian", [])
-            num_vehicles = len(vehicle_list)
-            num_pedestrians = len(pedestrian_list)
-            if num_vehicles <= 0 and num_pedestrians <= 0:
-                return
-            
-            iso_timestamp = payload.get("timestamp", "")
-            logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
-            formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
-            scenescape_camera = payload.get("id")
-            
-            start_time = float(formatted_timestamp) - 15
-            end_time = float(formatted_timestamp) - 5
-
-            logger.info(f" Scenescape event: {msg.topic} | Camera: {scenescape_camera} | Vehicles: {num_vehicles} | Pedestrians: {num_pedestrians} | Timestamp: {formatted_timestamp} | Clip: {start_time}-{end_time} | Throttle: {SCENESCAPE_THROTTLE_INTERVAL}s")
-            process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, msg.topic)
-
-        else:
-            logger.warning(f" Unknown topic: {msg.topic}")
-
-    except json.JSONDecodeError as e:
-        logger.error(f" Failed to decode MQTT message: {e}")
-    except Exception as e:
-        logger.error(f" Exception processing MQTT message: {e}", exc_info=True)
-
-def start_mqtt(broker, port, user, password, userdata, use_tls=False):
-    client = mqtt.Client(userdata=userdata)
-    if user and password:
-        client.username_pw_set(user, password)
-    if use_tls:
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        client.tls_set_context(ctx)
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect_async(broker, port)
-    client.loop_start()
-    logger.info(f" Connecting to MQTT broker {userdata} at {broker}:{port}")
-
-async def start_mqtt_clients():
-    await asyncio.to_thread(
-        start_mqtt,
-        MQTT_BROKER,
-        MQTT_PORT,
-        MQTT_USER,
-        MQTT_PASSWORD,
-        "frigate"
-    )
-    logger.info(f" Scenescape is enabled {NVR_SCENESCAPE_ENABLED}, starting Scenescape MQTT client")
-    if NVR_SCENESCAPE_ENABLED:
-        await asyncio.to_thread(
-            start_mqtt,
-            SCENESCAPE_MQTT_BROKER,
-            SCENESCAPE_MQTT_PORT,
-            SCENESCAPE_MQTT_USER,
-            SCENESCAPE_MQTT_PASSWORD,
-            "scenescape",
-            use_tls=True,
+    if label and camera_name and start_time and end_time and (end_time - start_time) >= 10:
+        logger.info(
+            f" Event label: {label} |  Camera: {camera_name} |  Start: {start_time} |  End: {end_time}"
         )
+        try:
+            result = await process_event(event_data, context={"source": "frigate", "topic": topic})
+            logger.info(f" process_event completed: {result}")
+        except Exception as e:
+            logger.error(f" process_event failed: {e}", exc_info=True)
+
+
+async def handle_scenescape_message(payload, topic, state=None, broker_id=None):
+    if state is None:
+        state = throttle_state
+    interval = state.get("interval", SCENESCAPE_THROTTLE_INTERVAL)
+    now = time.time()
+    if now - state["last_processed"] < interval:
+        return
+    state["last_processed"] = now
+
+    objects = payload.get("objects", {})
+    vehicle_list = []
+    pedestrian_list = []
+    if isinstance(objects, dict):
+        vehicle_list = objects.get("vehicle", [])
+        pedestrian_list = objects.get("pedestrian", [])
+    num_vehicles = len(vehicle_list)
+    num_pedestrians = len(pedestrian_list)
+    if num_vehicles <= 0 and num_pedestrians <= 0:
+        return
+
+    iso_timestamp = payload.get("timestamp", "")
+    logger.info(f" Scenescape raw timestamp: {iso_timestamp}")
+    formatted_timestamp = iso_to_frigate_timestamp(iso_timestamp)
+    raw_camera = payload.get("id")
+    scenescape_camera = f"{broker_id}-{raw_camera}" if broker_id else raw_camera
+
+    start_time = float(formatted_timestamp) - 15
+    end_time = float(formatted_timestamp) - 5
+
+    logger.info(f" Scenescape event: {topic} | Camera: {scenescape_camera} | Vehicles: {num_vehicles} | Pedestrians: {num_pedestrians} | Timestamp: {formatted_timestamp} | Clip: {start_time}-{end_time} | Throttle: {SCENESCAPE_THROTTLE_INTERVAL}s")
+    await process_scenescape_objects(objects, scenescape_camera, start_time, end_time, num_vehicles, num_pedestrians, topic)
+
+
+async def start_frigate_client():
+    while True:
+        try:
+            async with aiomqtt.Client(
+                hostname=MQTT_BROKER,
+                port=MQTT_PORT,
+                username=MQTT_USER or None,
+                password=MQTT_PASSWORD or None,
+            ) as client:
+                await client.subscribe(MQTT_TOPIC)
+                logger.info(f" Subscribed to Frigate topic: {MQTT_TOPIC} at {MQTT_BROKER}:{MQTT_PORT}")
+                async for message in client.messages:
+                    topic = str(message.topic)
+                    try:
+                        payload = json.loads(message.payload.decode("utf-8", errors="ignore"))
+                        if topic.startswith("frigate/"):
+                            await handle_frigate_message(payload, topic)
+                        else:
+                            logger.warning(f" Unknown topic: {topic}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f" Failed to decode MQTT message: {e}")
+                    except Exception as e:
+                        logger.error(f" Exception processing MQTT message: {e}", exc_info=True)
+        except aiomqtt.MqttError as e:
+            logger.error(f" Frigate MQTT connection error: {e}; reconnecting in {BROKER_RECONNECT_DELAY}s")
+            await asyncio.sleep(BROKER_RECONNECT_DELAY)
 
