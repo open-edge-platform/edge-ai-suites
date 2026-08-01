@@ -43,22 +43,46 @@ FpsCounter(average 3.69sec): total=13.00 fps, number-streams=1, per-stream=13.00
 
 ### What we measured (isolation tests, on the client machine)
 
+Grouped by what each stage isolates. `→ fakesink` rows have **no inference**;
+`→ gvadetect` rows add inference.
+
+**Source & VA path (no inference):**
+
 | Pipeline | FPS | Notes |
 | --- | ---: | --- |
 | `gencamsrc → fakesink` | ~82 | Camera acquisition is healthy |
 | `gencamsrc → vapostproc → system NV12 → fakesink` | ~82 | VA convert to system memory is fine |
 | `gencamsrc → vapostproc → VAMemory NV12 → fakesink` | ~10 | VAMemory export stalls (without normalize) |
 | `gencamsrc → videoconvert(passthrough) → vapostproc → VAMemory → fakesink` | ~83 | Normalize fixes the VAMemory export |
+| `gencamsrc → vapostproc → DMABuf → fakesink` | — | **Errors**: `DMABuf caps negotiated without mandatory VideoMeta` (not viable) |
+
+**Inference alone (no camera):**
+
+| Pipeline | FPS | Notes |
+| --- | ---: | --- |
 | `videotestsrc → gvadetect` (GPU, customer) | ~160 | GPU inference alone is fast |
 | `videotestsrc (is-live=true) → vapostproc → VAMemory → gvadetect` (GPU) | ~82 | Live source + GPU inference is fine |
-| **`gencamsrc → … → gvadetect` (GPU, va-surface-sharing)** | **~11** | Stalls |
-| **`gencamsrc → … → gvadetect` (GPU, opencv, no VA)** | **~11** | Stalls — not VA, not backend |
-| `gencamsrc → vapostproc → system NV12 → vapostproc → VAMemory → gvadetect` (GPU) | ~9 | Full GPU copy in between — still stalls |
-| `gencamsrc → … → gvadetect` (GPU, `pre-process-backend=va`) | ~13 | Still stalls |
-| `gencamsrc → … → gvadetect` (GPU) + `taskset -c 0-7 chrt -f 80` | ~13 | CPU pinning / RT priority does **not** help |
-| `gencamsrc → … → gvadetect` (GPU) + `GPU_QUEUE_THROTTLE=LOW` | ~8 | No software lever helps |
+
+**Camera + GPU inference (the stall) — every variant tried:**
+
+| Pipeline | FPS | Notes |
+| --- | ---: | --- |
+| **`gencamsrc → vapostproc → VAMemory → gvadetect` (va-surface-sharing)** | **~11** | Stalls |
+| `gencamsrc → normalize → vapostproc → VAMemory → gvadetect` (va-surface-sharing) | ~11 | Normalize (that fixed `→ fakesink`) does **not** help inference |
+| **`gencamsrc → videoconvert → gvadetect` (opencv, no VA)** | **~11** | Stalls — not VA, not backend |
+| `gencamsrc → videoconvert(system NV12) → gvadetect` (va-surface-sharing) | — | **Errors**: va-surface-sharing requires VA memory, not system memory |
+| `gencamsrc → vapostproc → system NV12 → vapostproc → VAMemory → gvadetect` | ~9 | Full GPU copy in between — still stalls |
+| `gencamsrc → vapostproc → VAMemory → gvadetect` (`pre-process-backend=va`) | ~13 | Still stalls |
+| `gencamsrc → … → gvadetect` + `taskset -c 0-7 chrt -f 80` | ~13 | CPU pinning / RT priority does **not** help |
+| `gencamsrc → … → gvadetect` + `GPU_QUEUE_THROTTLE=LOW` | ~8 | No software lever helps |
+
+**What actually works:**
+
+| Pipeline | FPS | Notes |
+| --- | ---: | --- |
 | **`gencamsrc → videoconvert → gvadetect` (`device=CPU`)** | **~37** | **CPU inference does NOT stall** |
-| **`basler_reader.py \| fdsrc → … → gvadetect` (GPU)** | **~45** | **Decoupled reader removes the stall** |
+| **`basler_reader.py \| fdsrc → … → gvadetect` (GPU) @60** | **~45** | **Decoupled reader removes the stall** |
+| `basler_reader.py \| fdsrc → … → gvadetect` (GPU) @120 | ~43 | Same as @60 → reader (Python) is now the ceiling, not inference |
 
 ### Root cause
 
