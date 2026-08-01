@@ -2,19 +2,29 @@
 
 ## Summary
 
-On some Basler cameras / iGPU hosts, the direct `gencamsrc` live pipeline
-collapses to **~11–13 FPS** the moment `gvadetect` (GPU inference) is added,
-while the CPU and iGPU sit **mostly idle**. The camera alone and inference
-alone are both fast; only the *combination* stalls.
+On the client host, the direct `gencamsrc` live pipeline collapses to
+**~11–13 FPS** the moment `gvadetect` runs inference **on the GPU**, while the
+CPU and GPU sit **mostly idle**. The camera alone is fast (~82 FPS), inference
+alone is fast (~160 FPS on `videotestsrc`), and inference on the **CPU** with
+the same camera is fast (~37 FPS) — only **`gencamsrc` + GPU inference in the
+same process** stalls.
 
-The fix is to **decouple camera acquisition from the GStreamer pipeline** by
-reading frames through `basler_reader.py` and piping them into `fdsrc`. This
-copies each frame into clean system memory before it reaches `gvadetect`,
-which removes the stall and restores full inference throughput
-(**~11 FPS → ~45 FPS**, a 4x improvement, on the affected machine).
+The root cause is an **in-process interaction between pylon (`gencamsrc`) and
+the OpenVINO GPU runtime** on this specific host stack (Intel Arrow Lake-P
+iGPU with **outdated GuC scheduler firmware**). Two fixes:
 
-- Affected camera in this investigation: **Basler daA1920-160uc** (dart, USB3).
-- Host: Intel iGPU (`iHD` VA driver, Gen Graphics), DL Streamer container.
+1. **Host fix (preferred):** update the client's GPU firmware/driver stack to
+   match the working reference host — in particular the **GuC firmware**
+   (`linux-firmware`), which the kernel itself reports as outdated.
+2. **Application fix (host-independent):** **decouple camera acquisition** via
+   `basler_reader.py | fdsrc`, which moves pylon into a separate process and
+   sidesteps the contention (**~11 → ~45 FPS**).
+
+- Affected camera in this investigation: **Basler daA1920-160uc** (dart, USB3),
+  serial `40715749`.
+- Client host: Intel **Arrow Lake-P** iGPU (`i915`), kernel `7.0.0-28-generic`.
+- Working reference host: Intel **Arrow Lake-U** iGPU (`i915`), kernel
+  `6.17.0-22-generic` — same pipeline runs at 120+ FPS.
 
 ---
 
@@ -27,13 +37,11 @@ FpsCounter(average 3.69sec): total=13.00 fps, number-streams=1, per-stream=13.00
 ```
 
 - Reported FPS is stuck at ~11–13.
-- `intel_gpu_top` / CPU usage show the system **underutilized** — it is not
-  compute-bound, it is **blocking** (~77 ms per frame with idle silicon).
+- CPU **and** GPU are **underutilized** — it is not compute-bound, it is
+  **blocking** (~77 ms per frame with idle silicon).
 - Happens on the same git branch that runs at 120+ FPS on the reference host.
 
-### What we measured (isolation tests)
-
-Each stage was benchmarked independently on the affected machine:
+### What we measured (isolation tests, on the client machine)
 
 | Pipeline | FPS | Notes |
 | --- | ---: | --- |
@@ -41,46 +49,117 @@ Each stage was benchmarked independently on the affected machine:
 | `gencamsrc → vapostproc → system NV12 → fakesink` | ~82 | VA convert to system memory is fine |
 | `gencamsrc → vapostproc → VAMemory NV12 → fakesink` | ~10 | VAMemory export stalls (without normalize) |
 | `gencamsrc → videoconvert(passthrough) → vapostproc → VAMemory → fakesink` | ~83 | Normalize fixes the VAMemory export |
-| **`gencamsrc → … → gvadetect` (va-surface-sharing)** | **~11** | Stall re-appears with inference |
-| **`gencamsrc → … → gvadetect` (opencv)** | **~11** | Also stalls — not backend-specific |
-| `videotestsrc (is-live=true) → vapostproc → VAMemory → gvadetect` | ~82 | Live source + inference is fine |
-| `videotestsrc → gvadetect` (customer) | ~160 | Inference alone is fast |
-| **`basler_reader.py \| fdsrc → … → gvadetect`** | **~45** | **Decoupled reader removes the stall** |
+| `videotestsrc → gvadetect` (GPU, customer) | ~160 | GPU inference alone is fast |
+| `videotestsrc (is-live=true) → vapostproc → VAMemory → gvadetect` (GPU) | ~82 | Live source + GPU inference is fine |
+| **`gencamsrc → … → gvadetect` (GPU, va-surface-sharing)** | **~11** | Stalls |
+| **`gencamsrc → … → gvadetect` (GPU, opencv, no VA)** | **~11** | Stalls — not VA, not backend |
+| `gencamsrc → vapostproc → system NV12 → vapostproc → VAMemory → gvadetect` (GPU) | ~9 | Full GPU copy in between — still stalls |
+| `gencamsrc → … → gvadetect` (GPU, `pre-process-backend=va`) | ~13 | Still stalls |
+| `gencamsrc → … → gvadetect` (GPU) + `taskset -c 0-7 chrt -f 80` | ~13 | CPU pinning / RT priority does **not** help |
+| `gencamsrc → … → gvadetect` (GPU) + `GPU_QUEUE_THROTTLE=LOW` | ~8 | No software lever helps |
+| **`gencamsrc → videoconvert → gvadetect` (`device=CPU`)** | **~37** | **CPU inference does NOT stall** |
+| **`basler_reader.py \| fdsrc → … → gvadetect` (GPU)** | **~45** | **Decoupled reader removes the stall** |
 
 ### Root cause
 
-The stall is specific to **`gencamsrc`-originated buffers reaching
-`gvadetect`**. It is **not**:
+The stall is triggered **only** when **OpenVINO GPU inference runs in the same
+process as pylon (`gencamsrc`)**. The tests above rule out every other
+candidate:
 
-- the camera (raw capture hits 82 FPS),
-- the preprocessing backend (both `va-surface-sharing` and `opencv` stall),
-- VAMemory vs system memory (both stall once inference consumes the frame),
-- source liveness (`videotestsrc is-live=true` + inference runs full speed).
+- **Not the camera** — raw capture is 82 FPS.
+- **Not the preprocessing backend** — `va-surface-sharing`, `opencv`, and `va`
+  all stall.
+- **Not VA / VAMemory** — the `opencv` path (no `vapostproc`) also stalls; a
+  full GPU download-and-reupload in between still stalls (~9 FPS).
+- **Not buffer memory / lifetime** — copying the frame into fresh
+  GPU-produced system memory before inference does not help.
+- **Not source liveness** — `videotestsrc is-live=true` + GPU inference = 82 FPS.
+- **Not CPU scheduling** — `taskset` + `chrt -f 80` across all cores = 13 FPS.
+- **`device=CPU` does NOT stall (~37 FPS)** — this is the decisive test: same
+  `gencamsrc`, only the inference device changed. The problem is specific to
+  the **GPU** compute path.
 
-`gencamsrc` delivers buffers backed by the camera's USB/GenTL DMA memory.
-Any stage that makes a real consumer **fully read the pixels** of such a
-buffer — CPU color-convert, `opencv` preprocessing, or GPU inference via an
-imported VA surface — runs at ~11 FPS. Stages that do **not** fully read the
-pixels (`fakesink`, a same-format `videoconvert` passthrough) stay fast. The
-per-frame read of that camera-backed memory blocks for ~77 ms with the
-compute engines idle, which is the classic signature of reading from
-non-cached / write-combined device memory rather than a compute limit.
+So the pylon USB/GenTL acquisition thread is **starved/serialized by the
+OpenVINO GPU runtime** when both run in one process, blocking ~77 ms/frame
+with the hardware idle. This is **host-specific** — the reference host does
+not show it — which points to a **driver / GPU-firmware level** issue on the
+client's stack (see machine comparison below). The decoupled reader works
+because it isolates pylon in a **separate process** from the GPU runtime.
 
-The reference host does not exhibit this because its camera/driver/iGPU
-combination imports those buffers cheaply; the affected daA1920-160uc + iGPU
-combination does not.
+---
+
+## Machine comparison (working vs client)
+
+Both are Intel **Arrow Lake** iGPUs using the **`i915`** kernel driver, so the
+DRM driver is not the difference. The deltas are the kernel, the host media
+driver, and — most tellingly — the **GuC firmware**:
+
+| | Working host (120+ FPS) | Client host (~11 FPS) |
+| --- | --- | --- |
+| GPU | Arrow Lake-**U** `Intel Graphics`, `i915` | Arrow Lake-**P** `Arc Graphics`, `i915` |
+| Kernel | `6.17.0-22-generic` | `7.0.0-28-generic` |
+| **GuC firmware** | recommended `70.53.0` | **`70.36.0` — outdated** ⚠️ |
+| Host media VA driver | `intel-media-va-driver-non-free` `26.1.4` | `intel-media-va-driver` `24.1.0` (stock, upgradable to `26.2.2`) |
+| OpenCL ICD | `26.05.37020.3` | `26.22.38646.6` |
+
+The client's own kernel log flags the firmware gap directly:
+
+```text
+i915 GT0: GuC firmware i915/mtl_guc_70.bin (70.53.0) is recommended,
+          but only i915/mtl_guc_70.bin (70.36.0) was found
+          Consider updating your linux-firmware pkg
+```
+
+**GuC is the GPU's workload-scheduling firmware.** A stale GuC on Arrow Lake
+is a strong candidate for GPU-submission stalls that starve the in-process
+pylon acquisition thread — exactly the observed symptom.
 
 ---
 
 ## Solution
 
-### Decouple acquisition with `basler_reader.py | fdsrc`
+There are two independent fixes. Prefer the host fix if the client can update
+their GPU stack; otherwise ship the application fix, which is
+host-independent.
+
+### Fix A (preferred) — update the client's GPU firmware / driver stack
+
+The client's kernel reports outdated GuC scheduler firmware, and the host
+media driver is older than the working reference host. Align them:
+
+```bash
+# on the client HOST (not the container)
+
+# 1) PRIME SUSPECT — update GPU firmware (GuC 70.36.0 -> recommended 70.53.0)
+sudo apt update
+sudo apt install --only-upgrade linux-firmware
+sudo reboot
+# after reboot, confirm the newer GuC actually loaded:
+sudo dmesg | grep -iE "GuC firmware .*version"
+
+# 2) match the working host's media driver (non-free 26.1.4)
+sudo apt install intel-media-va-driver-non-free
+```
+
+If firmware still lags after the package update, pull the blob directly from
+[linux-firmware](https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/i915),
+copy `i915/mtl_guc_70.bin`, `sudo update-initramfs -u`, and reboot.
+
+Then re-run the direct `gencamsrc + GPU` test (see Diagnose step 3). If it
+jumps from ~11 toward full FPS, the stale firmware/driver was the root cause
+and no application change is needed.
+
+> The container bundles its own `iHD` `26.1.4` for VA, but the OpenVINO GPU
+> plugin uses the **host** Level Zero / compute runtime — so the host update
+> (and reboot) is what matters.
+
+### Fix B (host-independent) — decouple acquisition with `basler_reader.py | fdsrc`
 
 Instead of `gencamsrc` feeding the pipeline directly, run the existing
 [`pipeline/basler_reader.py`](../../pipeline/basler_reader.py) bridge. It
-grabs frames with pypylon and writes raw bytes to stdout; `fdsrc` then feeds
-the pipeline. The stdout copy lands each frame in **normal, cacheable system
-memory**, severing the camera's slow DMA memory before `gvadetect` reads it.
+grabs frames with pypylon in a **separate process** and writes raw bytes to
+stdout; `fdsrc` then feeds the pipeline. Moving pylon out of the inference
+process removes the in-process GPU contention entirely.
 
 This is the same decoupled shape the project used previously (before the
 switch to direct `gencamsrc`) and is proven to deliver full inference FPS.
@@ -110,10 +189,12 @@ python3 /opt/basler_reader.py <SERIAL> --geometry 1280x720@60 --pixel-format uyv
 
 | Configuration | FPS with inference |
 | --- | ---: |
-| Direct `gencamsrc → gvadetect` | ~11 |
-| `basler_reader.py \| fdsrc → gvadetect` | ~45 |
+| Direct `gencamsrc → gvadetect` (GPU) | ~11 |
+| Direct `gencamsrc → gvadetect` (**CPU**) | ~37 |
+| `basler_reader.py \| fdsrc → gvadetect` (GPU) | ~45 |
 
-The stall is eliminated. `gvadetect` is no longer the bottleneck.
+The stall is eliminated with the reader. `gvadetect` is no longer the
+bottleneck.
 
 ---
 
@@ -173,11 +254,37 @@ Add a source-ingest knob so the app selects the working path automatically:
        ! gvafpscounter interval=1 ! fakesink sync=false async=false'
    ```
 
-3. **Reproduce the stall** — add `gvadetect` after direct `gencamsrc`; if it
-   drops to ~11 FPS with the system idle, this is the issue.
+3. **Reproduce the stall** — add `gvadetect device=GPU` after direct
+   `gencamsrc`; if it drops to ~11 FPS with CPU **and** GPU idle, this is the
+   issue:
+   ```bash
+   docker exec surgical-pipeline sh -lc '
+     timeout 20s gst-launch-1.0 \
+       gencamsrc serial=<SERIAL> pixel-format=ycbcr422_8 width=1280 height=720 \
+       ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+       ! queue max-size-buffers=2 leaky=downstream \
+       ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
+           device=GPU pre-process-backend=va-surface-sharing nireq=1 batch-size=1 \
+       ! gvafpscounter interval=1 ! fakesink sync=false async=false'
+   ```
 
-4. **Apply the fix** — run the `basler_reader.py | fdsrc` command above; if it
-   jumps to ~45 FPS, the decoupled reader is the solution for that host.
+4. **Confirm it is GPU-specific** — repeat with `device=CPU`
+   (`pre-process-backend=opencv`, `video/x-raw,format=BGRx`). If CPU runs
+   ~37 FPS while GPU is ~11, the stall is the in-process GPU/pylon contention.
+
+5. **Compare the GPU stack vs a working host** — the key deltas are kernel,
+   GuC firmware, and media driver:
+   ```bash
+   # on the HOST
+   uname -r
+   sudo lspci -k | grep -A3 -iE "VGA|Display"          # confirm i915 vs xe
+   sudo dmesg | grep -iE "GuC firmware"                # look for "outdated"/version
+   apt list --installed 2>/dev/null | grep -iE "intel-media|intel-opencl|level-zero"
+   ```
+
+6. **Apply a fix** — either update the host GPU stack (Fix A) and re-run
+   step 3, or run the `basler_reader.py | fdsrc` command (Fix B); if the
+   reader jumps to ~45 FPS, it is the solution for that host.
 
 ---
 
