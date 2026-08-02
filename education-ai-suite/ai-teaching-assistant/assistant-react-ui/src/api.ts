@@ -28,6 +28,70 @@ async function asJson<T>(res: Response): Promise<T> {
 
 // ── kiosk-core session API ──────────────────────────────────────────────────
 
+export interface CaptureModeInfo {
+  host_mic_available: boolean;
+  recommended: "host" | "browser";
+  host_devices: { id: number; name: string; default_samplerate: number }[];
+}
+
+export async function getCaptureMode(): Promise<CaptureModeInfo> {
+  return asJson<CaptureModeInfo>(await fetch(`${API.kiosk}/api/v1/capture-mode`));
+}
+
+/** Encode a UI-selected device for the host-capture endpoints. Browser
+ * MediaDevices IDs are opaque hashes that do not map to host `sounddevice`
+ * identifiers, so only numeric indices or human-readable names are forwarded;
+ * anything else is dropped so kiosk-core uses its default host input device. */
+function hostDevicePayload(device: string | undefined): number | string | undefined {
+  if (!device) return undefined;
+  const maybeNumber = Number(device);
+  if (Number.isFinite(maybeNumber)) return maybeNumber;
+  const looksOpaqueBrowserId = /^[a-f0-9]{32,}$/i.test(device);
+  return looksOpaqueBrowserId ? undefined : device;
+}
+
+export async function startHostSession(
+  sampleRate: number,
+  history: { role: string; content: string }[],
+  opts: {
+    chunkSeconds: number;
+    silenceTimeoutSeconds: number;
+    maxSessionSeconds: number;
+    silenceThreshold: number;
+    device?: string;
+  }
+): Promise<SessionSnapshot> {
+  const payload: Record<string, unknown> = {
+    sample_rate: sampleRate,
+    chunk_seconds: opts.chunkSeconds,
+    silence_timeout_seconds: opts.silenceTimeoutSeconds,
+    max_session_seconds: opts.maxSessionSeconds,
+    silence_threshold: opts.silenceThreshold,
+    language: "en",
+    temperature: 0.0,
+    tts_model: "speecht5",
+    tts_language: "English",
+    history,
+    include_performance_metrics: true,
+    include_llm_metrics: true,
+  };
+  const device = hostDevicePayload(opts.device);
+  if (device !== undefined) payload.device = device;
+  const res = await fetch(`${API.kiosk}/api/v1/sessions/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return asJson<SessionSnapshot>(res);
+}
+
+export async function stopHostSession(sessionId: string): Promise<void> {
+  const res = await fetch(`${API.kiosk}/api/v1/sessions/${sessionId}/stop`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`stop session failed: HTTP ${res.status}`);
+}
+
 export async function startStreamSession(
   sampleRate: number,
   history: { role: string; content: string }[],

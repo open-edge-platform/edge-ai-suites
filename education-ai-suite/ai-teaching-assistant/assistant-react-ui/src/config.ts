@@ -31,9 +31,13 @@ export const AUDIO = {
 export const WAKEWORD = {
   enabledByDefault: false,
   model: "hey jarvis",
-  threshold: 0.5,
-  vadThreshold: 0.4,
-  patienceFrames: 2,
+  // Lower threshold + single-frame patience make "hey jarvis" easier to trigger
+  // (fewer retries). A lower VAD threshold lets quieter speech through instead
+  // of being gated as non-speech. Raise these back toward 0.5 / 2 / 0.4 if you
+  // start getting false triggers.
+  threshold: 0.35,
+  vadThreshold: 0.2,
+  patienceFrames: 1,
   timeoutSeconds: 0,
   inferenceFramework: "onnx",
 } as const;

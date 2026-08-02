@@ -2,11 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AUDIO, INACTIVITY_RESET_MS, POLL_INTERVAL_MS, WAKEWORD } from "../config";
 import {
   endAudioStream,
+  getCaptureMode,
   getSession,
   pushBrowserWakewordAudio,
   pushAudioChunk,
   responseAudioUrl,
   startBrowserWakewordSession,
+  startHostSession,
   startStreamSession,
   stopBrowserWakewordSession,
 } from "../api";
@@ -16,6 +18,8 @@ import type { ChatMessage, SessionPerfSnapshot } from "../types";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const MAX_SESSION_POINTS = 90;
+
+type CaptureMode = "host" | "browser";
 
 function keepLast(values: number[], next: number): number[] {
   const updated = [...values, next];
@@ -47,6 +51,9 @@ export function useVoiceSession(deviceId?: string) {
   });
   const [wakewordEnabled, setWakewordEnabled] = useState<boolean>(WAKEWORD.enabledByDefault);
   const [wakewordListening, setWakewordListening] = useState(false);
+  // Preferred audio capture source. Resolved once on mount from kiosk-core:
+  // "host" when HOST_MIC is enabled on the backend, otherwise "browser".
+  // Tracked via captureModeRef; no state needed since only the ref is read.
 
   const recorderRef = useRef<MicRecorder | null>(null);
   const playerRef = useRef<ResponsePlayer | null>(null);
@@ -70,11 +77,43 @@ export function useVoiceSession(deviceId?: string) {
   const autoStoppingRef = useRef(false);
   const recordingRef = useRef(false);
   const stopRef = useRef<() => Promise<void>>(async () => undefined);
+  const captureModeRef = useRef<CaptureMode>("browser");
+  // Track the selected device in a ref so wake-word callbacks can read the
+  // latest value WITHOUT depending on it. Depending on `deviceId` would
+  // recreate runWakewordTurn on every device change, tearing down and
+  // restarting the wake-word effect — which could let a stale in-flight turn
+  // fall through into start() and auto-record. The ref avoids that restart.
+  const deviceIdRef = useRef<string | undefined>(deviceId);
+  deviceIdRef.current = deviceId;
   messagesRef.current = messages;
 
   const setWakewordEnabledSafe = useCallback((enabled: boolean) => {
     wakewordEnabledRef.current = enabled;
     setWakewordEnabled(enabled);
+  }, []);
+
+  // Probe kiosk-core once to decide host-mic vs browser-mic capture.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const info = await getCaptureMode();
+        const mode: CaptureMode = info.recommended === "host" ? "host" : "browser";
+        if (cancelled) return;
+        captureModeRef.current = mode;
+        setStatus(
+          mode === "host"
+            ? "Idle — tap the mic to ask a question (host mic)."
+            : "Idle — tap the mic to ask a question (browser mic)."
+        );
+      } catch {
+        // Probe failed — keep the safe browser-streaming default.
+        captureModeRef.current = "browser";
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const ensurePlayer = useCallback(() => {
@@ -138,7 +177,147 @@ export function useVoiceSession(deviceId?: string) {
     [flushPending]
   );
 
+  // Polls a kiosk-core session to completion, streaming TTS segments to the
+  // player and committing the final transcript/response. Shared by both the
+  // browser-stream stop() path and the host-capture turn driver. `startedAt`
+  // anchors the latency measurements (time-to-first-speech / end-to-end).
+  const pollSessionToCompletion = useCallback(
+    async (sid: string, startedAt: number) => {
+      const player = ensurePlayer();
+      let seenSegments = 0;
+      let ttstMs: number | null = null;
+
+      while (true) {
+        let snap;
+        try {
+          snap = await getSession(sid);
+        } catch (err) {
+          setProcessing(false);
+          setStatus(`❌ ${err instanceof Error ? err.message : "Polling failed"}`);
+          return;
+        }
+
+        const transcript = (snap.transcript ?? "").trim();
+        const response = (snap.response ?? "").trim();
+        const segments = snap.tts_audio_segments ?? [];
+        const running = snap.status === "running" || snap.status === "stopping";
+
+        setPartialUser(transcript);
+        setPartialAssistant(response);
+
+        if (segments.length > seenSegments) {
+          if (ttstMs === null) {
+            ttstMs = Math.max(0, Math.round(performance.now() - startedAt));
+            setSessionPerf((prev) => ({ ...prev, ttstMs }));
+            setSessionPerfSeries((prev) => ({ ...prev, ttstMs: keepLast(prev.ttstMs, ttstMs!) }));
+          }
+          for (let i = seenSegments; i < segments.length; i++) {
+            player.enqueue(responseAudioUrl(sid, segments[i].index));
+          }
+          seenSegments = segments.length;
+        }
+
+        if (segments.length > 0) setStatus(`🔊 Speaking… (${seenSegments})`);
+        else if (response) setStatus("💬 Generating response…");
+        else if (transcript) setStatus("📝 Searching the knowledge base…");
+        else setStatus("⏳ Processing speech…");
+
+        if (!running) {
+          const endToEndMs = Math.max(0, Math.round(performance.now() - startedAt));
+          const capturedMs = Math.max(0, (snap.captured_audio_seconds ?? 0) * 1000);
+          const rtf = capturedMs > 0 ? Number((endToEndMs / capturedMs).toFixed(3)) : null;
+
+          setSessionPerf({ ttstMs, endToEndMs, rtf });
+          setSessionPerfSeries((prev) => ({
+            ttstMs: ttstMs !== null ? keepLast(prev.ttstMs, ttstMs) : prev.ttstMs,
+            endToEndMs: keepLast(prev.endToEndMs, endToEndMs),
+            rtf: rtf !== null ? keepLast(prev.rtf, rtf) : prev.rtf,
+          }));
+
+          const committed: ChatMessage[] = [...messagesRef.current];
+          if (transcript) committed.push({ role: "user", text: transcript });
+          if (response) committed.push({ role: "assistant", text: response });
+          setMessages(committed);
+          setPartialUser("");
+          setPartialAssistant("");
+          sessionIdRef.current = null;
+          setProcessing(false);
+          setStatus(
+            snap.tts_errors && snap.tts_errors.length > 0
+              ? `⚠ Answered, but speech failed: ${snap.tts_errors.join("; ")}`
+              : "✓ Done"
+          );
+          // Avoid instantly re-arming wake-word detection on residual room/TTS audio.
+          wakewordSuppressUntilRef.current = Date.now() + 1200;
+          return;
+        }
+
+        await sleep(POLL_INTERVAL_MS);
+      }
+    },
+    [ensurePlayer]
+  );
+
+  // Drives a host-captured turn to completion. kiosk-core records from the host
+  // mic (with server-side silence detection) and runs RAG+TTS; we just poll and
+  // reset the recording flags when it finishes.
+  const driveHostTurn = useCallback(
+    async (sid: string, startedAt: number) => {
+      try {
+        await pollSessionToCompletion(sid, startedAt);
+      } finally {
+        recordingRef.current = false;
+        setRecording(false);
+        setProcessing(false);
+      }
+    },
+    [pollSessionToCompletion]
+  );
+
+  // Host-mic capture: kiosk-core opens the host input device and records the
+  // whole turn itself, so the browser never requests microphone access.
+  const startHostTurn = useCallback(
+    async (deviceId?: string) => {
+      setPartialUser("");
+      setPartialAssistant("");
+      sessionIdRef.current = null;
+      sessionStartErrorRef.current = null;
+      ensurePlayer();
+      const startedAt = performance.now();
+      setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
+      recordingRef.current = true;
+      setRecording(true);
+      setProcessing(false);
+      setStatus("🎙 Listening — speak now (host mic).");
+
+      let snap;
+      try {
+        const history = messagesRef.current.map((m) => ({ role: m.role, content: m.text }));
+        snap = await startHostSession(AUDIO.sampleRate, history, {
+          chunkSeconds: AUDIO.sessionChunkSeconds,
+          silenceTimeoutSeconds: AUDIO.silenceTimeoutSeconds,
+          maxSessionSeconds: AUDIO.maxSessionSeconds,
+          silenceThreshold: AUDIO.silenceThreshold,
+          device: deviceId,
+        });
+      } catch (err) {
+        recordingRef.current = false;
+        setRecording(false);
+        setStatus(`❌ ${err instanceof Error ? err.message : "Could not start host session"}`);
+        return;
+      }
+
+      sessionIdRef.current = snap.session_id;
+      await driveHostTurn(snap.session_id, startedAt);
+    },
+    [ensurePlayer, driveHostTurn]
+  );
+
   const start = useCallback(async (deviceId?: string) => {
+    if (captureModeRef.current === "host") {
+      await startHostTurn(deviceId);
+      return;
+    }
     setPartialUser("");
     setPartialAssistant("");
     sessionIdRef.current = null;
@@ -158,7 +337,7 @@ export function useVoiceSession(deviceId?: string) {
     } catch (err) {
       setStatus(`❌ ${err instanceof Error ? err.message : "Microphone error"}`);
     }
-  }, [ensurePlayer, onChunk]);
+  }, [ensurePlayer, onChunk, startHostTurn]);
 
   const stop = useCallback(async () => {
     if (!recordingRef.current) {
@@ -403,7 +582,7 @@ export function useVoiceSession(deviceId?: string) {
       });
       wakewordRecorderRef.current = recorder;
       recorder
-        .start(deviceId)
+        .start(deviceIdRef.current)
         .catch((err) => settleOnce(() => reject(err)));
     });
 
@@ -448,8 +627,8 @@ export function useVoiceSession(deviceId?: string) {
       `${detectedScore ? ` score ${detectedScore.toFixed(2)}` : ""}. Speak now.`
     );
     setProcessing(false);
-    await start(deviceId);
-  }, [deviceId, start]);
+    await start(deviceIdRef.current);
+  }, [start]);
 
   useEffect(() => {
     wakewordEnabledRef.current = wakewordEnabled;

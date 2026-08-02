@@ -156,7 +156,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={reset}
-                    disabled={recording || wakewordListening}
+                    disabled={recording}
                     title="Start a new conversation"
                     className="shrink-0 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-intel-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
