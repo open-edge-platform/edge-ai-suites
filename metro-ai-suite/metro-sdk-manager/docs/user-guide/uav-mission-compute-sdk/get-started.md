@@ -1,14 +1,14 @@
-# Getting Started Guide - Drone Mission Compute SDK
+# Getting Started Guide - UAV Mission Compute SDK
 
 ## Overview
 
-The Drone Mission Compute SDK provides a comprehensive development environment for drone applications using Intel's optimized compute tools and frameworks.
+The UAV Mission Compute SDK provides a comprehensive development environment for UAV applications using Intel's optimized compute tools and frameworks.
 
 ## Learning Objectives
 
 Upon completion of this guide, you will be able to:
 
-- Install and configure the Drone Mission Compute SDK
+- Install and configure the UAV Mission Compute SDK
 
 ## System Requirements
 
@@ -25,7 +25,7 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash
+curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash
 ```
 
 ## Next Steps

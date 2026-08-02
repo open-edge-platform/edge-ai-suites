@@ -37,8 +37,8 @@ const CONFIG = {
           value: "VISUAL_AI_DEMO"
         },
         {
-          label: "Drone Mission Compute SDK",
-          value: "DRONE_MISSION_COMPUTE",
+          label: "UAV Mission Compute SDK",
+          value: "UAV_MISSION_COMPUTE",
           // Limit which options in other categories are compatible with this SDK.
           // Buttons for values not listed here will be greyed out when this SDK is selected.
           supports: {
@@ -227,7 +227,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "DRONE_MISSION_COMPUTE",
+            SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
@@ -323,11 +323,11 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "DRONE_MISSION_COMPUTE",
+            SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
-          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash`
         }
 
       ]
@@ -420,12 +420,12 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "DRONE_MISSION_COMPUTE",
+            SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/drone-mission-compute-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/uav-mission-compute-sdk/get-started.html`
         }
       ]
     },
@@ -576,7 +576,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "DRONE_MISSION_COMPUTE",
+            SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
