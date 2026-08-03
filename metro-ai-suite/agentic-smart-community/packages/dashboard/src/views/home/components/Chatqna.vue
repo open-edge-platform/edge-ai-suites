@@ -507,7 +507,7 @@ import {
   configureAgentFramework,
   getDashboardConfig,
   type AgentFrameworkOption,
-} from "@/api/smartHome";
+} from "@/api/smartBuilding";
 
 const sessionStore = sessionAppStore();
 const { t } = useI18n();

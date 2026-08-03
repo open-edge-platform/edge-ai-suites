@@ -117,7 +117,7 @@ export default {
     moreChatFeatures: "For more complete chat features, visit",
     openClawControlUi: "OpenClaw native Control UI (:18789)",
   },
-  smartHome: {
+  smartBuilding: {
     offlineCameras: "Offline cameras",
     applianceLocation: "Location",
     cameraSectionLabel: "Device List",

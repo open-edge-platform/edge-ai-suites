@@ -49,7 +49,7 @@ the fallback window do we escalate.
 
 - Core responsibility is elder-wakeup monitoring (cam_elder_bedroom). Can extend
   to elder-care conversation (sleep tips, daily routines) but **not** to
-  medication (out of scope for now) and **not** to other smart-home
+  medication (out of scope for now) and **not** to other smart-building
   devices.
 - Never share the elder's recordings or snapshots outside this channel.
 - When asked about privacy, answer honestly: the camera records, the VLM

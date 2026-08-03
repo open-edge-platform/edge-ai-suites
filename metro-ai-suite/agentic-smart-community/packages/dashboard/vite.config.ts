@@ -19,11 +19,13 @@ const alias: Record<string, string> = {
 };
 
 const viteConfig = defineConfig(({ mode }) => {
+  // Dev-only: read solely by the dev server's /api proxy below. Target defaults to
+  // the mcp-server backend on :3100; override with SERVER_HOST / VITE_DEV_SMARTBUILDING_API_TARGET.
   const env = loadEnv(mode, process.cwd(), "");
   const serverHost = process.env.SERVER_HOST || env.SERVER_HOST || "127.0.0.1";
-  const smartHome =
-    process.env.VITE_DEV_SMARTHOME_API_TARGET ||
-    env.VITE_DEV_SMARTHOME_API_TARGET ||
+  const smartBuilding =
+    process.env.VITE_DEV_SMARTBUILDING_API_TARGET ||
+    env.VITE_DEV_SMARTBUILDING_API_TARGET ||
     `http://${serverHost}:3100`;
   return {
     plugins: [
@@ -44,13 +46,18 @@ const viteConfig = defineConfig(({ mode }) => {
     ],
     root: process.cwd(),
     resolve: { alias },
+    // Dev server — TEMPORARY, for frontend development only (HMR / hot reload via `npm run dev`).
+    // It runs on its OWN port (8100), NOT the product port. It proxies /api to the real
+    // mcp-server backend on :3100. The shipped UI is always `vite build` → dist/ hosted by
+    // mcp-server on :3100 — do NOT treat :8100 as the product entry point.
     server: {
       host: "0.0.0.0",
       port: 8100,
       hmr: true,
       proxy: {
+        // Forward API + websocket calls to the mcp-server backend on :3100.
         "/api": {
-          target: smartHome,
+          target: smartBuilding,
           changeOrigin: true,
           ws: true,
         },

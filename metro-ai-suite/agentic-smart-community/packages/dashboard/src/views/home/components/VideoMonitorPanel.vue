@@ -3,7 +3,7 @@
 <template>
   <div class="monitor-panel">
     <div class="panel-header flex-between">
-      <div class="panel-title">{{ $t("smartHome.cameraMonitorTitle") }}</div>
+      <div class="panel-title">{{ $t("smartBuilding.cameraMonitorTitle") }}</div>
       <div class="panel-controls flex-left">
         <div class="date-switcher flex-left">
           <a-date-picker
@@ -20,7 +20,7 @@
             <template #icon>
               <FileTextOutlined />
             </template>
-            {{ $t("smartHome.viewReport") }}
+            {{ $t("smartBuilding.viewReport") }}
           </a-button>
           <a-button
             class="export-btn"
@@ -30,7 +30,7 @@
             <template #icon>
               <DownloadOutlined />
             </template>
-            {{ $t("smartHome.exportReport") }}
+            {{ $t("smartBuilding.exportReport") }}
           </a-button>
         </template>
         <a-button
@@ -43,7 +43,7 @@
           <template #icon>
             <FileTextOutlined />
           </template>
-          {{ $t("smartHome.generateReport") }}
+          {{ $t("smartBuilding.generateReport") }}
         </a-button>
       </div>
     </div>
@@ -85,15 +85,15 @@
           :control-btns="mainControlButtons"
         />
         <div v-else class="main-empty-state vertical-center">
-          {{ $t("smartHome.reportNoContent") }}
+          {{ $t("smartBuilding.reportNoContent") }}
         </div>
 
         <div class="video-topbar flex-between">
           <div class="video-mode-tag" :class="{ live: isLiveMode }">
             {{
               isLiveMode
-                ? $t("smartHome.liveVideo")
-                : $t("smartHome.historyVideo")
+                ? $t("smartBuilding.liveVideo")
+                : $t("smartBuilding.historyVideo")
             }}
           </div>
           <div class="video-topbar-actions flex-end">
@@ -110,7 +110,7 @@
               <template #icon>
                 <RollbackOutlined />
               </template>
-              {{ $t("smartHome.backToNow") }}
+              {{ $t("smartBuilding.backToNow") }}
             </a-button>
           </div>
         </div>
@@ -119,7 +119,7 @@
           <div class="video-kicker">{{ activeRecord.camera }}</div>
           <div class="video-title">{{ activeRecord.title }}</div>
           <div class="video-time">
-            {{ isLiveMode ? $t("smartHome.liveNow") : activeRecord.time }}
+            {{ isLiveMode ? $t("smartBuilding.liveNow") : activeRecord.time }}
           </div>
         </div>
       </div>
@@ -164,8 +164,8 @@ import {
   getCameraActivityList,
   getCamReport,
   requestGenerateReport,
-} from "@/api/smartHome";
-import { getSmartHomeSourceMeta } from "../deviceMeta";
+} from "@/api/smartBuilding";
+import { getSmartBuildingSourceMeta } from "../deviceMeta";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -211,7 +211,7 @@ const selectedSourceId = computed(() => {
 });
 
 const currentSourceMeta = computed(() => {
-  return getSmartHomeSourceMeta(selectedSourceId.value, t);
+  return getSmartBuildingSourceMeta(selectedSourceId.value, t);
 });
 
 const liveVideoSrc = computed(() => {
@@ -242,7 +242,7 @@ const buildFallbackActiveRecord = (
   isoDate: targetDate.format("YYYY-MM-DD"),
   mediaType: "video",
   recordKind: "static",
-  statusLabel: t("smartHome.realtimeStatus"),
+  statusLabel: t("smartBuilding.realtimeStatus"),
   durationLabel: "",
   durationSecondsLabel: "0s",
   timestampLabel: `${targetDate.format("YYYY-MM-DD")} ${dayjs().format("HH:mm:ss")}`,
@@ -276,31 +276,31 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartHome.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
 };
 
 const buildReportExportContent = (reports: CameraReport[]) => {
   const exportTimestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const lines = [
-    `# ${t("smartHome.reportExportTitle")}`,
+    `# ${t("smartBuilding.reportExportTitle")}`,
     "",
-    `${t("smartHome.reportGeneratedAt")}: ${exportTimestamp}`,
-    `${t("smartHome.reportSelectedDate")}: ${selectedDateLabel.value}`,
-    `${t("smartHome.reportCountLabel")}: ${reports.length}`,
+    `${t("smartBuilding.reportGeneratedAt")}: ${exportTimestamp}`,
+    `${t("smartBuilding.reportSelectedDate")}: ${selectedDateLabel.value}`,
+    `${t("smartBuilding.reportCountLabel")}: ${reports.length}`,
     "",
   ];
 
   reports.forEach((report, index) => {
     lines.push(`## ${index + 1}. ${report.report_date}`);
-    lines.push(`${t("smartHome.reportCreatedAtLabel")}: ${report.created_at}`);
+    lines.push(`${t("smartBuilding.reportCreatedAtLabel")}: ${report.created_at}`);
     lines.push(
-      `${t("smartHome.reportStatusLabel")}: ${buildRecordStatus(report.status)}`,
+      `${t("smartBuilding.reportStatusLabel")}: ${buildRecordStatus(report.status)}`,
     );
-    lines.push(`${t("smartHome.reportEventCount")}: ${report.event_count}`);
-    lines.push(`${t("smartHome.reportMotionCount")}: ${report.motion_count}`);
-    lines.push(`${t("smartHome.reportPromptTokens")}: ${report.prompt_tokens}`);
+    lines.push(`${t("smartBuilding.reportEventCount")}: ${report.event_count}`);
+    lines.push(`${t("smartBuilding.reportMotionCount")}: ${report.motion_count}`);
+    lines.push(`${t("smartBuilding.reportPromptTokens")}: ${report.prompt_tokens}`);
     lines.push("");
-    lines.push(`### ${t("smartHome.reportDetailSection")}`);
+    lines.push(`### ${t("smartBuilding.reportDetailSection")}`);
     lines.push(report.report_text?.trim() || "");
     lines.push("");
   });
@@ -380,7 +380,7 @@ const queryCamReport = async (silent = true) => {
     reportList.value = [];
 
     if (!silent) {
-      message.error(t("smartHome.reportLoadFailed"));
+      message.error(t("smartBuilding.reportLoadFailed"));
     }
   } finally {
     if (requestId === latestReportRequestId) {
@@ -443,7 +443,7 @@ const handleGenerateReport = async () => {
     await requestGenerateReport(params);
     await queryCamReport(false);
   } catch {
-    message.error(t("smartHome.generateReportFailed"));
+    message.error(t("smartBuilding.generateReportFailed"));
   } finally {
     generatingReport.value = false;
   }
@@ -456,7 +456,7 @@ const handleExportReport = async (reports?: CameraReport[]) => {
     }
 
     if (!reportList.value.length) {
-      message.warning(t("smartHome.reportNoContent"));
+      message.warning(t("smartBuilding.reportNoContent"));
       return;
     }
 
@@ -467,9 +467,9 @@ const handleExportReport = async (reports?: CameraReport[]) => {
       buildReportExportContent(reportsToExport),
       dayjs().format("YYYYMMDD-HHmmss"),
     );
-    message.success(t("smartHome.exportSuccess"));
+    message.success(t("smartBuilding.exportSuccess"));
   } catch {
-    message.error(t("smartHome.exportFailed"));
+    message.error(t("smartBuilding.exportFailed"));
   }
 };
 

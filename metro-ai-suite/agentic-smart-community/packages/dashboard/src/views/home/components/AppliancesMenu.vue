@@ -6,7 +6,7 @@
       <template v-if="applianceList.length">
         <div class="menu-section flex-column">
           <div class="section-kicker">
-            {{ $t("smartHome.cameraSectionLabel") }}
+            {{ $t("smartBuilding.cameraSectionLabel") }}
           </div>
 
           <div
@@ -59,7 +59,7 @@
               :aria-expanded="showOfflineAppliances"
               @click="showOfflineAppliances = !showOfflineAppliances"
             >
-              <span>{{ $t("smartHome.offlineCameras") }} ({{ offlineAppliances.length }})</span>
+              <span>{{ $t("smartBuilding.offlineCameras") }} ({{ offlineAppliances.length }})</span>
               <DownOutlined :class="{ open: showOfflineAppliances }" />
             </button>
             <div v-if="showOfflineAppliances" class="appliance-tabs flex-column">
@@ -94,7 +94,7 @@
       </template>
 
       <div v-else class="menu-empty-state vertical-center">
-        <a-empty :description="$t('smartHome.noCameraData')" />
+        <a-empty :description="$t('smartBuilding.noCameraData')" />
       </div>
 
       <div class="menu-monitor-pane" :class="{ open: isMonitorOpen }">
@@ -130,9 +130,9 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { BarChartOutlined, DownOutlined } from "@ant-design/icons-vue";
-import { getMonitors } from "@/api/smartHome";
+import { getMonitors } from "@/api/smartBuilding";
 import TokenSaving from "@/components/TokenSaving.vue";
-import { getSmartHomeSourceMeta } from "../deviceMeta";
+import { getSmartBuildingSourceMeta } from "../deviceMeta";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -163,18 +163,18 @@ const closeMonitor = () => {
 };
 
 const getAppliancePreset = (sourceId: string): Partial<ApplianceInfo> => {
-  const meta = getSmartHomeSourceMeta(sourceId, t);
+  const meta = getSmartBuildingSourceMeta(sourceId, t);
 
   return {
     location: meta.location,
-    status: t("smartHome.deviceOnline"),
+    status: t("smartBuilding.deviceOnline"),
   };
 };
 
 const formatLocation = (value: unknown) => {
   return typeof value === "string" && value.trim()
     ? value.trim()
-    : t("smartHome.applianceLocationFallback");
+    : t("smartBuilding.applianceLocationFallback");
 };
 
 const formatName = (monitor: ApplianceInfo) => {
@@ -185,7 +185,7 @@ const formatName = (monitor: ApplianceInfo) => {
   }
 
   const preset = getAppliancePreset(monitor.id);
-  return preset?.name || `${t("smartHome.applianceGenericName")} ${monitor.id}`;
+  return preset?.name || `${t("smartBuilding.applianceGenericName")} ${monitor.id}`;
 };
 
 const buildApplianceInfo = (monitor: ApplianceInfo): ApplianceInfo => {
@@ -197,7 +197,7 @@ const buildApplianceInfo = (monitor: ApplianceInfo): ApplianceInfo => {
     ...monitor,
     name: formatName(monitor),
     location,
-    status: monitor.status || preset?.status || t("smartHome.deviceOnline"),
+    status: monitor.status || preset?.status || t("smartBuilding.deviceOnline"),
   };
 };
 
