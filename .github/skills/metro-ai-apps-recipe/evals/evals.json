@@ -1,0 +1,68 @@
+{
+  "skill_name": "metro-ai-apps-recipe",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a full end-to-end CV analytics stack in ./person-detect-stack/ for person detection on CPU with 4 sample-video sources; alert when count>2 in 10s per-source; publish detections to object_detection_N/<pipeline>, alerts to alerts/person, count to stats/person_count.",
+      "expected_output": "A flat stack directory with docker-compose.yml, DLSPS config.json, mosquitto.conf, Node-RED flows.json, nginx.conf with TLS, a Grafana dashboard, install/validate scripts, and a pytest suite, all with template variables substituted and pinned image tags.",
+      "should_trigger": true,
+      "files": ["../example-prompts/01-person-detection-smart-city.md"],
+      "expectations": [
+        "Generates the six-container topology (DLSPS, Mosquitto, Node-RED, Grafana, Nginx, ffmpeg/HLS) on a single compose network",
+        "Uses pinned image tags and never ':latest'",
+        "Wires per-source MQTT topics object_detection_N/<pipeline> and a scalar stats/person_count",
+        "Substitutes all {{VAR}} template placeholders with concrete values before writing files"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build a PPE-compliance stack in ./ppe-compliance-stack/ for hardhat detection on Intel GPU with a secondary gvaclassify classifier; alert when count<1 in 15s aggregate; add video/render group_add.",
+      "expected_output": "A stack using the _gpu pipeline variant, a detector plus classifier, Node-RED class filtering, group_add for video/render GIDs, and validated .env.",
+      "should_trigger": true,
+      "files": ["../example-prompts/02-ppe-compliance-gpu-classifier.md"],
+      "expectations": [
+        "Uses the _gpu pipeline variant and adds group_add for video/render GIDs",
+        "Configures a secondary classifier (gvaclassify) alongside the detector",
+        "Filters to the relevant class IDs in Node-RED",
+        "Runs validate_env.sh as step 0 of install.sh before proceeding"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build a smart-parking occupancy stack in ./smart-parking-stack/ for vehicle detection from 4 live RTSP cameras; rule count>10 in 30s per-source; dashboard slug smart-parking.",
+      "expected_output": "A stack whose inputs are RTSP URLs, HLS video embedded via iframe + player.html with locally bundled hls.js, SAN in the self-signed cert, and curl calls using --noproxy '*' -k.",
+      "should_trigger": true,
+      "files": ["../example-prompts/03-smart-parking-rtsp.md"],
+      "expectations": [
+        "Accepts RTSP URLs as sources instead of sample videos",
+        "Embeds HLS video via iframe + player.html with locally bundled hls.js",
+        "Generates a self-signed TLS cert that includes a SAN",
+        "Uses --noproxy '*' and -k on localhost/LAN curl calls"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I'm new to this and want a working demo that watches a shop entrance and alerts when the checkout queue gets long. Build it in ./retail-queue-stack/ with defaults and sample videos.",
+      "expected_output": "The six batched setup questions with defaults in brackets, acceptance of 'defaults' to proceed, then a built and verified retail-queue stack.",
+      "should_trigger": true,
+      "files": ["../example-prompts/04-retail-queue-beginner.md"],
+      "expectations": [
+        "Asks the six setup questions in one batched message with defaults in brackets",
+        "Accepts 'defaults'/'go'/empty to proceed",
+        "Uses bundled sample videos on CPU by default",
+        "Verifies the result against the completion criteria"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Write just a single DL Streamer gvadetect pipeline string that reads an RTSP stream and prints detections to stdout. I don't need a dashboard, MQTT, or any containers.",
+      "expected_output": "The skill should not activate; this is a single-pipeline authoring task, not a full end-to-end stack.",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Does not scaffold a full multi-container stack",
+        "Recognizes the request as single-pipeline authoring outside this skill's scope"
+      ]
+    }
+  ]
+}
