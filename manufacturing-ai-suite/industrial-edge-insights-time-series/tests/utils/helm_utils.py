@@ -13,6 +13,8 @@ import shutil
 import tempfile
 import copy
 import random
+import glob
+import tarfile
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
 import yaml
@@ -161,7 +163,13 @@ def _build_udf_payload(sample_app, device_value, alert_mode):
     return payload
 
 def _resolve_chart_path(raw_path):
-    """Return an absolute chart path regardless of current working directory."""
+    """Return an absolute chart path regardless of current working directory.
+
+    chart_path is expected to already be an extracted chart directory (Chart.yaml,
+    values.yaml, templates/) by the time tests run: the CI workflow extracts the
+    .tgz right after generating/pulling it, and generate_helm_chart_targz() does
+    the same for local/direct test runs. No extraction happens here.
+    """
     if not raw_path:
         return raw_path
 
@@ -185,21 +193,35 @@ def get_env_values():
     wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "90"))  # Default sleep time if not set
     target = os.getenv("target", None)
     if not all([FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, chart_path, namespace, grafana_url, wait_time, target]):
-        raise EnvironmentError("One or more environment variables are not set.")
+        # Don't hard-fail here: this module is shared by both the Time Series and
+        # Multimodal test suites, and the Multimodal suite's pytest.ini only defines
+        # the _multi-suffixed variables (see get_multimodal_env_values()), not these
+        # plain ones. Raising would break collection for Multimodal-only test runs
+        # even though they never use these values.
+        logger.warning(
+            "Time Series Helm env vars (release_name/chart_path/namespace/grafana_url/target) "
+            "are not fully set; this is expected when running only Multimodal tests."
+        )
     return FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL
 
 def _resolve_chart_path_from_cwd(raw_path):
-    """Resolve a chart path relative to the current working directory (pytest invocation dir)."""
+    """Resolve a chart path relative to the current working directory (pytest invocation dir).
+
+    Note: this deliberately does NOT fall back to _resolve_path_under_repo(), which is
+    rooted at helm_utils.py's own location (the Time Series repo). That fallback used to
+    kick in whenever the cwd-relative multimodal helm-packages dir didn't exist yet
+    (e.g. before test_gen_chart() has run), and it would silently resolve to the Time
+    Series repo's own helm-packages directory instead, causing the wrong chart to be
+    installed under the multimodal release name. The cwd-relative path is authoritative
+    here since the workflow always cd's into the correct suite's directory before
+    invoking pytest, even if that directory doesn't exist yet.
+    """
     if not raw_path:
         return raw_path
     expanded = os.path.expandvars(raw_path)
-    if os.path.isabs(expanded) and os.path.exists(expanded):
+    if os.path.isabs(expanded):
         return expanded
-    resolved = os.path.normpath(os.path.join(os.getcwd(), expanded))
-    if os.path.exists(resolved):
-        return resolved
-    # Fall back to the repo-root strategy as a last resort
-    return _resolve_path_under_repo(raw_path)
+    return os.path.normpath(os.path.join(os.getcwd(), expanded))
 
 
 def get_multimodal_env_values():
@@ -1554,15 +1576,26 @@ def verify_influxdb_retention(namespace, chart_path, response):
 
 def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     """Run `make gen_helm_charts_targz app=<sample_app>` in the parent directory.
-    
-    This generates the helm chart AND packages it into a .tgz file in helm-packages/.
-    This matches the workflow behavior which uses gen_helm_charts_targz.
-    
-    For multimodal, uses `make gen_helm_charts` + manual packaging since
-    multimodal Makefile doesn't have gen_helm_charts_targz target.
+
+    Generates the helm chart AND packages it into a .tgz file in helm-packages/,
+    then extracts that .tgz directly into chart_path so tests can read/edit
+    chart_path/values.yaml etc. without any further indirection.
+
+    If chart_path already contains an extracted chart (Chart.yaml present --
+    e.g. generated/pulled and extracted by the CI workflow before tests
+    started), generation is skipped entirely.
     """
+    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
+        logger.info(
+            "Chart already extracted in '%s' (generated/pulled by CI workflow); skipping regeneration.",
+            chart_path,
+        )
+        list_directory_contents()
+        return True
+
     original_dir = os.getcwd()
     try:
+        os.makedirs(chart_path, exist_ok=True)
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
@@ -1598,6 +1631,18 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
 
+        # Extract the freshly packaged .tgz directly into chart_path so tests
+        # can read/edit chart_path/values.yaml etc. with no further indirection
+        # (mirrors the extraction the CI workflow does right after generate/pull).
+        tgz_files = glob.glob(os.path.join(chart_path, "*.tgz"))
+        if tgz_files:
+            latest_tgz = max(tgz_files, key=os.path.getmtime)
+            logger.info("Extracting '%s' into '%s' for direct use by tests...", latest_tgz, chart_path)
+            subprocess.run(
+                ["tar", "-xzf", latest_tgz, "-C", chart_path, "--strip-components=1"],
+                check=True,
+            )
+
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to generate Helm chart targz: {e.stderr}")
@@ -1610,7 +1655,13 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
     try:
-        # Construct the Helm install command
+        # Install from chart_path, the already-extracted chart directory.
+        # The CI workflow extracts the .tgz (generated or pulled) into
+        # chart_path right after generating/pulling it, and
+        # generate_helm_chart_targz() does the same for local/direct test runs.
+        # Test fixtures (e.g. update_values_yaml) edit chart_path/values.yaml
+        # directly, so installing from this same directory picks up those
+        # edits with no extra -f override needed.
         helm_command = [
             "helm", "install", release_name, chart_path,
             "--set", f"env.privileged_access_required={val}",
@@ -1618,21 +1669,15 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",
             "-n", namespace, "--create-namespace"
         ]
-        
-        # Add SAMPLE_APP if provided (critical for matching UDF package name)
+
+        # SAMPLE_APP must match the UDF package name
         if sample_app:
             helm_command.extend(["--set", f"env.SAMPLE_APP={sample_app}"])
 
-        # Execute the Helm install command and capture output
         logger.info(f"Installing Helm chart with {telegraf_input_plugin}...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
-
-        # Print the output for debugging purposes
         logger.info(result.stdout)
-        
-        # Configuration will be handled by setup_sample_app_udf_deployment_package() using TS API
-        # as recommended in the documentation instead of directly updating ConfigMaps
-        
+
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to install Helm chart: Error: INSTALLATION FAILED: values don't meet the specifications of the schema(s) in the following chart(s): {e.stderr}")
@@ -1641,19 +1686,15 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
 def helm_uninstall(release_name, namespace):
     """Uninstall a Helm release with specified parameters."""
     try:
-        # Construct the Helm uninstall command
         helm_command = [
             "helm", "uninstall", release_name,
             "-n", namespace
         ]
 
-        # Execute the Helm uninstall command and capture output
         logger.info(f"Uninstalling Helm release '{release_name}' from namespace '{namespace}'...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
-
-        # Print the output for debugging purposes
         logger.info(result.stdout)
-        
+
         return True
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to uninstall Helm release: Error: uninstall: Release not loaded: ts-wind-turbine-anomaly: release: not found: {e.stderr}")
@@ -1662,14 +1703,14 @@ def helm_uninstall(release_name, namespace):
 def helm_upgrade(release_name, chart_path, namespace, telegraf_input_plugin1):
     """Upgrade a Helm release with specified parameters."""
     try:
-        # Construct the Helm upgrade command
+        # Same already-extracted chart_path directory as helm_install() -- see
+        # the comment there for why no .tgz/-f override is needed here.
         helm_command = [
             "helm", "upgrade", release_name, chart_path,
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin1}",
             "-n", namespace
         ]
 
-        # Execute the Helm upgrade command and capture output
         logger.info(f"Upgrading Helm release '{release_name}'...")
         result = subprocess.run(helm_command, capture_output=True, text=True, check=True)
 

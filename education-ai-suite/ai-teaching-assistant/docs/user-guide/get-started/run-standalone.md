@@ -1,91 +1,134 @@
-# Run On The Host
+# Run Services Manually on Windows
 
-Use this path to run `kiosk-core` and the Gradio UI directly on the host
-instead of inside the top-level Compose stack. The microphone is still
-captured by the browser and uploaded to `kiosk-core`.
+Use this guide when you want to run services individually for debugging or
+custom development. For normal usage, prefer `start_kiosk.ps1`.
 
-## Clone
+## Scope
 
-```bash
-git clone https://github.com/intel-retail/voice-enabled-interactions.git
-cd voice-enabled-interactions/smart-kiosk-assistant
+This is a Windows-native workflow.
+
+## Prerequisite
+
+Clone and enter the application directory as shown in
+[Get Started](../get-started.md), then run:
+
+```powershell
+.\setup_windows.ps1
 ```
 
-## Start Downstream Services
+`setup_windows.ps1` prepares required submodules, virtual environments, and dependencies.
 
-Before starting `kiosk-core` and the UI on the host, make sure these downstream services are available:
+## Service Startup Order
 
-- `audio-analyzer` at `http://127.0.0.1:8010/v1/audio/transcriptions`
-- `text-to-speech` at `http://127.0.0.1:8011/v1/audio/speech`
-- `rag-service` at `http://127.0.0.1:8020/api/v1/query`
+Start each service in a dedicated PowerShell terminal.
 
-The simplest way is to pull the prebuilt images for `audio-analyzer`
-and `text-to-speech` from Docker Hub, build `rag-service` locally, and
-run `kiosk-core` plus the UI on the host. The kiosk compose file in
-`smart-kiosk-assistant/` already wires these three services together;
-start only those three:
+### 1) metrics-collector (Port 9000)
 
-```bash
-docker compose pull audio-analyzer text-to-speech
-docker compose up -d audio-analyzer text-to-speech rag-service
+```powershell
+cd metrics_collector\windows
+.\metrics_collector.ps1
 ```
 
-`rag-service` builds locally because it ships in this repository under
-[../rag-service/](https://github.com/intel-retail/voice-enabled-interactions/tree/main/smart-kiosk-assistant/rag-service).
-The other two are pulled from `intel/audio-analyzer` and `intel/text-to-speech` on Docker Hub.
-
-## Python Setup
-
-From the `smart-kiosk-assistant/` directory:
-
-```bash
-sudo apt-get install -y --no-install-recommends libportaudio2
-
-python -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+Health check:
+```powershell
+curl http://127.0.0.1:9000/health
 ```
 
-## Start kiosk-core
+### 2) text-to-speech (Port 8011)
 
-Run the API on the host:
-
-```bash
-source .venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8012
+```powershell
+cd edge-ai-libraries\microservices\text-to-speech
+.\venv\Scripts\python.exe main.py
 ```
 
-Default URLs used by `kiosk-core` in this host-run mode:
-
-- `KIOSK_CORE_ANALYZER_URL=http://127.0.0.1:8010/v1/audio/transcriptions`
-- `KIOSK_CORE_RAG_URL=http://127.0.0.1:8020/api/v1/query`
-- `KIOSK_CORE_TTS_URL=http://127.0.0.1:8011/v1/audio/speech`
-
-## Start The Gradio UI
-
-In a second terminal, from the same `smart-kiosk-assistant/` directory:
-
-```bash
-source .venv/bin/activate
-python gradio_app.py
+Health check:
+```powershell
+curl http://127.0.0.1:8011/health
 ```
 
-Default UI URL:
+### 3) audio-analyzer (Port 8010)
 
+```powershell
+cd edge-ai-libraries\microservices\audio-analyzer
+.\venv\Scripts\python.exe main.py
+```
+
+Health check:
+```powershell
+curl http://127.0.0.1:8010/health
+```
+
+### 4) rag-service (Port 8020)
+
+```powershell
+cd voice-enabled-interactions\smart-kiosk-assistant\rag-service
+.\venv\Scripts\python.exe main.py
+```
+
+Health check:
+```powershell
+curl http://127.0.0.1:8020/health
+```
+
+### 5) kiosk-core (Port 8012)
+
+```powershell
+cd voice-enabled-interactions\smart-kiosk-assistant
+.\venv\Scripts\python.exe main.py
+```
+
+Health check:
+```powershell
+curl http://127.0.0.1:8012/health
+```
+
+### 6) ai-teaching-assistant ui proxy server (Port 7860)
+
+```powershell
+cd .
+voice-enabled-interactions\smart-kiosk-assistant\venv\Scripts\python.exe kiosk_ui_server.py
+```
+
+Health check:
+```powershell
+curl http://127.0.0.1:7860/healthz
+```
+
+Open:
 ```text
 http://127.0.0.1:7860
 ```
 
-Open that address in a browser, allow microphone access, and use the same browser-based voice flow as the Compose deployment.
+## Build React UI (if needed)
 
-## Verify
+If `kiosk_ui_server.py` reports that React assets are missing:
 
-```bash
-curl --noproxy '*' http://127.0.0.1:8012/health   # {"status":"ok"}
+```powershell
+cd assistant-react-ui
+npm install
+npm run build
+```
+
+Then restart `kiosk_ui_server.py`.
+
+## Verify End-to-End
+
+1. Upload one or more documents in the Knowledge Base panel.
+2. Click mic, ask a question.
+3. Confirm transcript, answer text, and spoken response.
+
+## Stop Services
+
+Press `Ctrl+C` in each terminal.
+
+Or use:
+
+```powershell
+.\stop_kiosk.ps1
 ```
 
 ## Notes
 
-- TTS audio clips are written under `generated_audio/` in the project directory.
-- For endpoint details, see [API Reference](../api-reference.md).
+- The launcher flow (`start_kiosk.ps1`) is the supported default.
+- Manual mode is primarily for debugging service-level behavior.
+- Response audio clips are written under `generated_audio/` in the kiosk-core area.

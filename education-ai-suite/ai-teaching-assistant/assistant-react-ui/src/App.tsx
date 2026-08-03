@@ -19,6 +19,8 @@ export default function App() {
 
   const {
     recording,
+    wakewordEnabled,
+    wakewordListening,
     status,
     messages,
     partialUser,
@@ -26,10 +28,13 @@ export default function App() {
     micAnalyser,
     responseAnalyser,
     responseActive,
+    resetIn,
     sessionPerf,
     start,
     stop,
-  } = useVoiceSession();
+    setWakewordEnabled,
+    reset,
+  } = useVoiceSession(deviceId);
   const micLevel = useAudioLevel(micAnalyser, recording);
   const perfMetrics = usePerformanceMetrics();
 
@@ -80,6 +85,26 @@ export default function App() {
 
           <section className="rounded-xl border border-blue-200 bg-white p-4">
             <DeviceSelector value={deviceId} onChange={setDeviceId} disabled={recording} />
+            <div className="mt-3 border-t border-blue-100 pt-3">
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-black">Wake-word mode</p>
+                  <p className="text-xs text-black/60">Continuously listen for "Hey Jarvis" from this browser microphone.</p>
+                  <p className="text-xs text-black/50">Works cross-machine by streaming browser audio to kiosk-core.</p>
+                  <p className="text-xs text-black/50">After you speak, recording auto-stops after ~3s silence.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={wakewordEnabled}
+                  onChange={(e) => setWakewordEnabled(e.target.checked)}
+                  disabled={recording}
+                  className="h-4 w-4 accent-intel-blue"
+                />
+              </label>
+              {wakewordListening && (
+                <p className="mt-2 text-xs font-medium text-intel-blue">Listening for wake word...</p>
+              )}
+            </div>
           </section>
 
           <section className="min-h-[240px] flex-1">
@@ -114,16 +139,38 @@ export default function App() {
                 inputLevel={micLevel}
                 onStart={() => start(deviceId)}
                 onStop={stop}
+                disabled={wakewordListening || (wakewordEnabled && !recording)}
               />
               <div className="flex-1 space-y-2">
                 <p className="text-sm text-black/80">{status}</p>
-                <Visualizer
-                  analyser={micAnalyser}
-                  active={recording}
-                  color="#0068B5"
-                  label="Your voice"
-                  compact
-                />
+                <div className="flex items-end gap-4">
+                  <div className="flex-1">
+                    <Visualizer
+                      analyser={micAnalyser}
+                      active={recording}
+                      color="#0068B5"
+                      label="Your voice"
+                      compact
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={reset}
+                    disabled={recording}
+                    title="Start a new conversation"
+                    className="shrink-0 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-intel-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Reset
+                  </button>
+                  {resetIn !== null && (
+                    <span
+                      title="Conversation auto-resets when the timer reaches zero"
+                      className="shrink-0 tabular-nums text-sm font-medium text-black/60"
+                    >
+                      Auto-reset in {resetIn}s
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </section>
