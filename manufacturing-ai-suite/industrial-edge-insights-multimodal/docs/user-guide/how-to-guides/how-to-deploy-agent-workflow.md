@@ -50,6 +50,8 @@ Vision(DLStreamer Pipeline Server)──┐
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`, `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `S3_STORAGE_USERNAME`, `S3_STORAGE_PASSWORD`
 
+2. Download vLLM model by following this [Guide](./how-to-deploy-vllm-service.md#download-models)
+
 ## Deploying the Agentic Workflow
 
 Run the full agentic stack (downloads the LLM model first, then starts all containers):
@@ -156,26 +158,25 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
    docker logs -f apm-agent
    ```
 
-## Access the Agent Dashboard
+4. Check the output in Grafana.
 
-The agent UI is served at: `https://localhost:3000/agentic-ui/`
+   - Use the link `https://localhost:3000` to open Grafana in a browser (preferably Chrome).
 
-Steps:
+   > **Note:** Use the link `https://localhost:30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
+   - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
 
-1. Open the URL in a browser (Chrome recommended).
-    
-    ![Dashboard](../_assets/agentic_dashboard.png)
+     ![Grafana login](../_assets/login_wt.png)
 
-2. Select the **Time Range** and **Device** from the dropdowns.
-3. Click **Run Agentic Analysis** to trigger a new run.
+   - After logging in, click **Dashboard**.
+     ![Menu view](../_assets/grafana_agentic_dashboard.png)
 
-4. The dashboard polls for status automatically. Once complete, click **View Results** to see:
-   - Policy violations and priorities
-   - Root-cause analysis
-   - Evidence audit trail with per-record fusion fields
-   - Structured maintenance ticket (JSON)
-   
-   ![Results](../_assets/agentic_results.png)
+   - Select **Multimodal Weld Defect Detection Explainability Dashboard**.
+     ![Multimodal Weld Defect Detection Agentic Dashboard](../_assets/agentic_dashboard_view.png)
+
+   - You should see the following output:
+
+     ![Agentic Results for weld data](../_assets/agentic_results.png)
 
 ## Stop the Stack
 

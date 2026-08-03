@@ -257,7 +257,7 @@ up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 download_model:
 	@echo "Starting Model Download Service..."; \
 	mkdir -p configs/agentic/models; \
-	$shell chmod 755 configs/agentic/models; \
+	$(shell chmod -R 755 configs/agentic/models) \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d model-download; \
 	echo "Waiting for model-download service to become healthy on port 8200..."; \
 	i=0; \
