@@ -20,7 +20,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
     ![CRB Setup](../../../images/gmsl/CRB-setup.png)
     ![CRB Advanced](../../../images/gmsl/CRB-Advanced.png)
     ![System Agent](../../../images/gmsl/System-agent-selection.png)
-    ![MIPI Configuration](../../..images/gmsl/MIPI-Configuration.png)
+    ![MIPI Configuration](../../../images/gmsl/MIPI-Configuration.png)
 
 
     Select Camera1 and `Enabled`, this should enable another option underneath called `Link options`.
