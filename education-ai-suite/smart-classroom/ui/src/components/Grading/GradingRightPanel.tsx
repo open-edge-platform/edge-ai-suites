@@ -2,26 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import Accordion from '../common/Accordion';
-import ResourceUtilizationAccordion from '../RightPanel/ResourceUtilizationAccordion';
 import { getPlatformInfo, gradingGetConfig, gradingUpdateConfig } from '../../services/api';
 import type { GradingConfig } from '../../services/api';
 import '../../assets/css/RightPanel.css';
-import { useAppDispatch } from '../../redux/hooks';
-import { setSessionId } from '../../redux/slices/uiSlice';
-
-const GRADING_MONITOR_SESSION_ID = 'grading-monitor';
 
 const dash = '-';
 
 const GradingRightPanel: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
   const [platformData, setPlatformData] = useState<any>(null);
   const [config, setConfig] = useState<GradingConfig | null>(null);
-
-  useEffect(() => {
-    dispatch(setSessionId(GRADING_MONITOR_SESSION_ID));
-  }, [dispatch]);
 
   const numKeys = ['dpi', 'page_columns', 'column_split_ratio', 'contrast_factor', 'max_tokens', 'vlm_temperature', 'max_image_pixels',
     'poll_interval', 'stable_checks', 'idle_timeout', 'min_score', 'expand_margin', 'iou_threshold'] as const;
@@ -193,8 +183,6 @@ const GradingRightPanel: React.FC = () => {
           </div>
         </div>
       </Accordion>
-
-      <ResourceUtilizationAccordion activeScreen="grading" />
 
       <Accordion title={t('grading.config.title', 'Grading Configuration')}>
         <div className="grading-config-form">
