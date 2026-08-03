@@ -14,14 +14,12 @@ the OpenVINO GPU runtime** on this specific host stack (Intel Arrow Lake-P
 iGPU, kernel `7.0.0-28-generic`). **Update:** updating the GuC scheduler
 firmware to `70.53.0` (matching the working host) did **not** resolve it —
 still ~8–9 FPS — so the firmware version is not the cause. The reliable fix
-is therefore the application-level one:
+is to **isolate the camera into its own process**, of which the fastest is:
 
-1. **Application fix (shipping solution, host-independent):** **decouple
-   camera acquisition** via `basler_reader.py | fdsrc`, which moves pylon into
-   a separate process and sidesteps the contention (**~11 → ~45 FPS**).
-2. **Host fix (inconclusive):** aligning the client's GPU firmware/driver
-   stack to the working host — GuC firmware update tried, did not help; media
-   driver / kernel alignment still untested as a full set.
+1. **Fix B (recommended, ~53 fps):** two-process `gencamsrc ! fdsink | fdsrc
+   ! gvadetect` — keeps `gencamsrc`, no pypylon.
+2. **Fix C (alternative, ~46 fps):** the pypylon `basler_reader.py | fdsrc`
+   bridge.
 
 - Affected camera in this investigation: **Basler daA1920-160uc** (dart, USB3),
   serial `40715749`.
@@ -295,10 +293,41 @@ Full readouts:
 
 ## Solution
 
-The **decoupled reader (Fix B)** is the shipping solution — it is
-host-independent and proven. Fix A (host driver/firmware alignment) was
-attempted (GuC firmware update) and did **not** resolve the stall, so it is
-kept only as an in-progress investigation track.
+Two things run at full speed, and both **isolate the camera into a separate
+process** from GPU inference:
+
+- **Fix B (recommended):** two-process `gencamsrc ! fdsink | fdsrc ! gvadetect`
+  — keeps the `gencamsrc` element, no pypylon, **fastest (~53 fps)**.
+- **Fix C (alternative):** the pypylon `basler_reader.py | fdsrc` bridge (~46 fps).
+
+Both work because the camera runs in its own OS process, so pylon and the
+OpenVINO-GPU runtime no longer coexist in one address space. Fix A (host
+driver/firmware alignment) was attempted and did **not** help, so it is kept
+only as an investigation track.
+
+### Reference — the pipeline that works on the HOST (direct `gencamsrc`)
+
+On the **working host** (Arrow Lake-U + acA camera) the direct, single-process
+`gencamsrc` pipeline runs at **~140 fps** — this is the exact shape that stalls
+to ~6–11 fps on the client:
+
+```bash
+# HOST — direct gencamsrc, single process, ~140 fps (STALLS to ~11 on client)
+exec taskset -c 3-5 chrt -f 70 gst-launch-1.0 \
+  gencamsrc serial=40067928 pixel-format=ycbcr422_8 width=1280 height=720 \
+  ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+  ! queue max-size-buffers=1 leaky=downstream \
+  ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
+      device=GPU threshold=0.5 pre-process-backend=va-surface-sharing \
+      nireq=1 ie-config=PERFORMANCE_HINT=LATENCY scheduling-policy=latency batch-size=1 \
+  ! queue max-size-buffers=1 leaky=downstream \
+  ! gvawatermark ! gvafpscounter interval=1 \
+  ! vapostproc ! xvimagesink sync=true
+```
+
+The **same command with the dart serial on the client stalls** — that is the
+whole bug. The camera-swap test (dart onto the host) is still pending to
+confirm camera-vs-platform.
 
 ### Fix A (attempted, inconclusive) — align the client's GPU firmware / driver stack
 
@@ -324,7 +353,43 @@ sudo apt install intel-media-va-driver-non-free intel-level-zero-gpu level-zero 
 > plugin uses the **host** Level Zero / compute runtime — so host media driver
 > + Level Zero + kernel remain the only unverified variables.
 
-### Fix B (shipping solution, host-independent) — decouple acquisition with `basler_reader.py | fdsrc`
+### Fix B (recommended shipping fix) — two-process `gencamsrc` split
+
+Split the pipeline into a **camera process** (`gencamsrc ! fdsink`) piped into
+an **inference process** (`fdsrc ! … ! gvadetect`). This keeps the `gencamsrc`
+element, needs no pypylon, and is the **fastest** option measured on the
+client (**~53 fps**). Validated headless command:
+
+```bash
+# CLIENT — two-process gencamsrc split, ~53 fps with GPU inference
+gst-launch-1.0 -q \
+  gencamsrc serial=40715749 pixel-format=ycbcr422_8 width=1280 height=720 \
+  ! fdsink fd=1 \
+| exec taskset -c 3-5 chrt -f 70 gst-launch-1.0 \
+    fdsrc fd=0 blocksize=1843200 do-timestamp=true \
+    ! rawvideoparse format=uyvy width=1280 height=720 framerate=82/1 \
+    ! vapostproc ! "video/x-raw(memory:VAMemory),format=NV12" \
+    ! queue max-size-buffers=1 leaky=downstream \
+    ! gvadetect model=/models/yolo11n_polyp/best_openvino_model/best.xml \
+        device=GPU threshold=0.5 pre-process-backend=va-surface-sharing \
+        nireq=1 ie-config=PERFORMANCE_HINT=LATENCY scheduling-policy=latency batch-size=1 \
+    ! queue max-size-buffers=1 leaky=downstream \
+    ! gvafpscounter interval=1 \
+    ! fakesink sync=false async=false
+```
+
+Notes:
+- **Do NOT pin a caps format on the `gencamsrc` side.** `! video/x-raw,format=UYVY`
+  fails (`gencamsrc can't handle caps ... UYVY`) and `format=YUY2` also fails to
+  negotiate. Leave it as `gencamsrc ! fdsink` (native bytes) and let the
+  receiving `rawvideoparse format=uyvy` frame them.
+- `blocksize = width × height × 2 = 1 843 200` for the 2 B/px YCbCr422.
+- Verify colours once with a display / JPEG grab; if wrong, switch
+  `rawvideoparse format=uyvy` → `format=yuy2` (FPS unaffected).
+- When pasting into `docker exec ... sh -lc '…'`, keep it one line with a real
+  `|` (no `\|`, no line-continuation `\`).
+
+### Fix C (alternative) — decouple acquisition with `basler_reader.py | fdsrc`
 
 Instead of `gencamsrc` feeding the pipeline directly, run the existing
 [`pipeline/basler_reader.py`](../../pipeline/basler_reader.py) bridge. It
@@ -358,14 +423,45 @@ python3 /opt/basler_reader.py <SERIAL> --geometry 1280x720@60 --pixel-format uyv
 
 ### Result
 
-| Configuration | FPS with inference |
-| --- | ---: |
-| Direct `gencamsrc → gvadetect` (GPU) | ~11 |
-| Direct `gencamsrc → gvadetect` (**CPU**) | ~37 |
-| `basler_reader.py \| fdsrc → gvadetect` (GPU) | ~45 |
+| Configuration | Process model | FPS with inference |
+| --- | --- | ---: |
+| Direct `gencamsrc → gvadetect` (GPU) — **client** | single | **~6–11** |
+| Direct `gencamsrc → gvadetect` (GPU) — **host** | single | ~140 |
+| Direct `gencamsrc → gvadetect` (**CPU**) — client | single | ~26–37 |
+| **`gencamsrc ! fdsink \| fdsrc → gvadetect`** (GPU) — client | **two** | **~53** |
+| `basler_reader.py \| fdsrc → gvadetect` (GPU) — client | two | ~46 |
 
-The stall is eliminated with the reader. `gvadetect` is no longer the
-bottleneck.
+The stall is eliminated by **process isolation** (Fix B or C). `gvadetect` is
+no longer the bottleneck.
+
+---
+
+## Confidence: what is proven vs inferred
+
+**Proven (directly measured on the client, repeatable):**
+
+- Single-process `gencamsrc + gvadetect device=GPU` = ~6–11 fps.
+- Camera alone = 82 fps; GPU inference alone (`videotestsrc`) = 160 fps.
+- `device=CPU` does not stall (~26–37 fps).
+- Two-process split (either variant) = ~46–53 fps.
+- CPU **and** GPU idle during the stall (blocking, not compute).
+- No in-process lever helped: preprocessing backends, VAMemory, `taskset`/`chrt`,
+  `GPU_QUEUE_THROTTLE`, GuC firmware `70.53.0`, driver alignment, kernel `7.0.0-28`.
+- Host on the client's exact kernel + acA camera = 140 fps.
+
+**Inferred (best explanation, not yet mechanically confirmed):**
+
+- *Mechanism:* pylon (GenTL) acquisition and the OpenVINO-GPU runtime
+  **contend inside a single process**. Strongly supported (a process split
+  reliably fixes it) but not proven at the lock/syscall level — no
+  `strace`/`perf` capture yet.
+- *Camera vs platform:* unresolved. The host differs from the client in **both**
+  GPU (Arrow Lake-U vs -P) **and** camera (acA vs daA dart), so it cannot
+  isolate which one triggers the stall. The **camera-swap test** (dart on the
+  host) is the pending experiment.
+
+**Bottom line:** the symptom and the fix are proven; the exact root-cause
+mechanism and the camera-vs-platform question remain open.
 
 ---
 
@@ -397,10 +493,14 @@ Proposed follow-up (raises the reader toward 60–82 FPS):
 
 Add a source-ingest knob so the app selects the working path automatically:
 
-- `BASLER_INGEST=reader|gencamsrc` (default `reader` for affected cameras) in
+- `BASLER_INGEST=split|reader|gencamsrc` in
   [`pipeline/pipeline_string.py`](../../pipeline/pipeline_string.py) and
-  [`pipeline/launcher.py`](../../pipeline/launcher.py).
-- Keep direct `gencamsrc` available for hosts where it already runs fast.
+  [`pipeline/launcher.py`](../../pipeline/launcher.py):
+  - `split` — two-process `gencamsrc ! fdsink | fdsrc` (recommended default
+    for affected cameras; fastest, no pypylon).
+  - `reader` — pypylon `basler_reader.py | fdsrc` (alternative).
+  - `gencamsrc` — direct single-process (only where it already runs fast, e.g.
+    the reference host).
 
 ---
 
