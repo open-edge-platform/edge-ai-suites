@@ -24,9 +24,9 @@ diff --git a/tmp/requirements-runtime.txt b/tmp/requirements-runtime.txt
 --- a/tmp/requirements-runtime.txt
 +++ b/tmp/requirements-runtime.txt
 @@ -24,4 +24,5 @@
- scipy==1.16.3
- trimesh==4.11.2
- urllib3==2.6.3
+ scipy==1.17.1
+ trimesh==4.11.5
+ urllib3==2.7.0
  websockets==15.0.1
 +django-archive
 diff --git a/home/scenescape/SceneScape/manager/settings.py b/home/scenescape/SceneScape/manager/settings.py
@@ -72,8 +72,6 @@ Expected output should include both files being patched. See example below:
 root@7e6d608f1613:/# patch -p1 < /tmp/save_db.patch
 patching file tmp/requirements-runtime.txt
 patching file home/scenescape/SceneScape/manager/settings.py
-patch unexpectedly ends in middle of line
-Hunk #1 succeeded at 31 with fuzz 1.
 ```
 
 ## 4) Run Archive Command From Correct Directory

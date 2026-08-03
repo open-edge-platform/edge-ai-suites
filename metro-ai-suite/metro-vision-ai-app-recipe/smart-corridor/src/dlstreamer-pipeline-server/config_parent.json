@@ -632,7 +632,7 @@
                 }
             },
             {
-            "name": "intersection2-cam5-gpu",
+                "name": "intersection2-cam5-gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": false,

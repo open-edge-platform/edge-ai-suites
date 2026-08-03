@@ -57,6 +57,7 @@ class PostDecodeTimestampCapture:
     self.frame_cnt = 0
 
   def processFrame(self, frame):
+    t_start = time.perf_counter()
     now = time.time()
     self.frame_cnt += 1
     if not self.last_calculated_fps_ts:
@@ -75,6 +76,9 @@ class PostDecodeTimestampCapture:
 
     now += self.timeOffset
     self.timestamp_for_next_block = now
+    t_end = time.perf_counter()
+    duration_ms = (t_end - t_start) * 1000.0
+    self.log.info(f"[PERF] 1st Call (timesync) execution time: {duration_ms:.3f} ms")
     frame.add_message(json.dumps({
       'postdecode_timestamp': f"{datetime.fromtimestamp(now, tz=timezone(TIMEZONE)).strftime(DATETIME_FORMAT)[:-3]}Z",
       'timestamp_for_next_block': now,
@@ -138,6 +142,7 @@ metadatapolicies = {
 class PostInferenceDataPublish:
   def __init__(self, cameraid, metadatagenpolicy='detectionPolicy', publish_image=False):
     self.cameraid = cameraid
+    self.log = logging.getLogger('SSCAPE_ADAPTER')
 
     self.is_publish_image = publish_image
     self.is_publish_calibration_image = False
@@ -226,54 +231,56 @@ class PostInferenceDataPublish:
       'rate': float(gvadata['fps'])
     })
 
-    # Efficiently encode plain clean full camera frame once per frame (downsampled to 640px)
-    full_frame_b64 = None
-    if frame is not None:
-      try:
-        with frame.data() as image:
-          fh, fw = image.shape[:2]
-          target_w = 640
-          target_h = int(fh * (target_w / fw))
-          small_frame = cv2.resize(image, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
-          _, full_buf = cv2.imencode('.jpg', small_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
-          full_frame_b64 = base64.b64encode(full_buf).decode('utf-8')
-      except Exception:
-        pass
-
     objects = defaultdict(list)
     if 'objects' in gvadata and len(gvadata['objects']) > 0:
       framewidth, frameheight = gvadata['resolution']['width'], gvadata['resolution']['height']
+      
+      # Downscale full frame ONCE for fast snapshot/event encoding (640p)
+      small_img = None
+      scale_x, scale_y = 1.0, 1.0
+      if frame is not None:
+        try:
+          with frame.data() as image:
+            fh, fw = image.shape[:2]
+            target_w = 640
+            target_h = int(fh * (target_w / fw))
+            scale_x = target_w / fw
+            scale_y = target_h / fh
+            small_img = cv2.resize(image, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
+        except Exception:
+          pass
+
       for det in gvadata['objects']:
         vaobj = {}
         self.metadatagenpolicy(vaobj, det, framewidth, frameheight)
         otype = vaobj['category']
         vaobj['id'] = len(objects[otype]) + 1
         
-        # Attach crop image and highlighted full frame image directly inside the vehicle object (vaobj)
+        # Attach crop image and highlighted event frame directly inside vehicle object (vaobj)
         if otype == 'vehicle' and frame is not None:
           bbox = vaobj.get('bounding_box_px')
           if bbox:
             bx, by, bw, bh = int(bbox['x']), int(bbox['y']), int(bbox['width']), int(bbox['height'])
             if bw > 0 and bh > 0 and bx >= 0 and by >= 0:
               try:
+                # 1. Cropped vehicle image directly from original frame
                 with frame.data() as image:
-                  # 1. Cropped vehicle image
                   crop = image[by:by+bh, bx:bx+bw]
                   if crop.size > 0:
                     _, buf = cv2.imencode('.jpg', crop)
                     vaobj['image_b64'] = base64.b64encode(buf).decode('utf-8')
 
-                  # 2. Draw red bounding box ONLY around target vehicle (Ultra-fast, zero-overhead)
-                  highlighted = image.copy()
-                  cv2.rectangle(highlighted, (bx, by), (bx + bw, by + bh), (0, 0, 255), 3) # Red Box
-                  cv2.putText(highlighted, f"TARGET VEHICLE #{vaobj['id']}", (bx, max(20, by - 8)),
-                              cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                # 2. Draw target bounding box on a clean 640p copy for THIS vehicle only
+                if small_img is not None:
+                  target_img = small_img.copy()
+                  sbx, sby = int(bx * scale_x), int(by * scale_y)
+                  sbw, sbh = int(bw * scale_x), int(bh * scale_y)
 
-                  fh, fw = highlighted.shape[:2]
-                  target_w = 640
-                  target_h = int(fh * (target_w / fw))
-                  small_frame = cv2.resize(highlighted, (target_w, target_h), interpolation=cv2.INTER_NEAREST)
-                  _, full_buf = cv2.imencode('.jpg', small_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                  cv2.rectangle(target_img, (sbx, sby), (sbx + sbw, sby + sbh), (0, 0, 255), 2)
+                  cv2.putText(target_img, "TARGET VEHICLE", (sbx, max(15, sby - 5)),
+                              cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                  _, full_buf = cv2.imencode('.jpg', target_img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
                   vaobj['frame_b64'] = base64.b64encode(full_buf).decode('utf-8')
               except Exception:
                 pass
@@ -282,6 +289,7 @@ class PostInferenceDataPublish:
     self.frame_level_data['objects'] = objects
 
   def processFrame(self, frame):
+    t_start = time.perf_counter()
     if self.client.is_connected():
       gvametadata, imgdatadict = {}, {}
 
@@ -303,4 +311,8 @@ class PostInferenceDataPublish:
 
       self.client.publish(f"scenescape/data/camera/{self.cameraid}", json.dumps(self.frame_level_data))
       frame.add_message(json.dumps(self.frame_level_data))
+    t_end = time.perf_counter()
+    duration_ms = (t_end - t_start) * 1000.0
+    num_vehicles = len(self.frame_level_data.get('objects', {}).get('vehicle', []))
+    print(f"[PERF] 2nd Call (datapublisher) execution time: {duration_ms:.3f} ms (vehicles: {num_vehicles})", flush=True)
     return True

@@ -45,30 +45,15 @@ The Smart Corridor application supports multi-machine deployments where one **pa
 aggregates scene data from one or more **child** machines. Each child runs its own set of
 camera pipelines and sends tracking data to the parent's scene controller.
 
-### Deployment Architecture
 
-```
-Parent Machine
-├── SceneScape Controller (aggregates all scenes)
-├── SceneScape Manager (Web UI)
-├── DLStreamer (local cameras: camera1–camera4)
-├── MQTT Broker (port 1883 TLS, 1882 internal)
-└── CA Server (port 8888, serves CA cert to parent)
-
-Child Machine
-├── DLStreamer (child cameras: camera401–camera404)
-├── MQTT Broker (port 1883 TLS)
-└── CA Server (port 8888, serves CA cert to parent)
-```
-
-### Important Notes for Multi-Machine Deployments
+### Important Notes for Multi-Node Deployments
 
 - **Deploy child nodes first**: The parent's `ca-bundle.sh` fetches CA certificates from
   child nodes via HTTP (port 8888). **Child nodes must be installed and running before the parent node installation.**
 - **Network access**: Port 8888 (CA server) and port 1883 (MQTT TLS) must be accessible
   between machines.
-- **Scene configuration**: After deployment, add the remote child scene in the SceneScape
-  Web UI under the parent scene's settings (using the child's broker IP and port 1883).
+- **Scene configuration**: After deployment, update the remote linked child scene in the SceneScape
+  Web UI under the Smart Corridor scene's settings.
 - **Time synchronization**: Ensure NTP is synchronized across all machines to avoid a delayed or no tracking behaviour in Smart-Corridor Scene.
 
 > **Note:** For a single-node deployment (no remote child), skip this below section and go
@@ -80,7 +65,7 @@ If there are multiple child nodes to be deployed, then number each node deployme
 
 1. Clone and enter the directory (same as [Setup and First Use](#setup-and-first-use) above).
 
-2. The Smart-Corridor needs to know which Child node this deployment is. So, configure `REMOTE_CHILD_DEPLOY` as `1` or `2` or `3` in the [.env](../../../.env) file to select a specific child scene data and pipeline configuration:
+2. The Smart-Corridor needs to know which Child node this deployment is. So, configure `REMOTE_CHILD_DEPLOY` as `1` or `2` in the [.env](../../../.env) file to select a specific child scene data and pipeline configuration:
 
    ```bash
    REMOTE_CHILD_DEPLOY=1
@@ -138,15 +123,15 @@ On the parent machine, configure the [.env](../../../.env) file to declare how m
 
    ```bash
    TOTAL_REMOTE_CHILD=1
-   REMOTE_IP_1=<CHILD_MACHINE_IP>
+   REMOTE_IP_1=<CHILD_NODE_HOST_IP>
    ```
 
    For multiple child nodes:
 
    ```bash
    TOTAL_REMOTE_CHILD=2
-   REMOTE_IP_1=10.223.22.20
-   REMOTE_IP_2=10.223.22.30
+   REMOTE_IP_1=<CHILD_NODE_HOST_IP>
+   REMOTE_IP_2=<CHILD_NODE_HOST_IP>
    ```
 
 3. Run the install script:
@@ -202,37 +187,39 @@ On the parent machine, configure the [.env](../../../.env) file to declare how m
 
    </details>
 
-2. **View the Application Output**:
-   - Open a browser and go to `https://localhost/grafana/` to access the Grafana dashboard.
-     - Change the localhost to your host IP if you are accessing it remotely.
-   - Log in with the following credentials:
-     - **Username**: `admin`
-     - **Password**: `admin`
-   - Check under the Dashboards section for the application-specific preloaded dashboard.
-   - **Expected Results**: The dashboard displays real-time video streams with AI overlays
-     and detection metrics.
+5. **Update Remote Scene COnfigurations**:
+   ### Application UI
 
-## Access the Application and Components
+  - Open a browser and go to the following endpoints to access the application. Use `<actual_ip>` instead of `localhost` for external access:
 
-### Application UI
+    > **Note:**
+    >
+    > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
+    > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
+    > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
 
-Open a browser and go to the following endpoints to access the application. Use `<actual_ip>`
-instead of `localhost` for external access:
+    - **URL**: [https://localhost](https://localhost)
+    - **Log in with credentials**:
+      - **Username**: `admin`
+      - **Password**: Stored in `supass`. (Check `./smart-corridor/src/secrets/supass`)
 
-> **Note:**
->
-> - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
-> - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
-> - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
+    > **Note**:
+    >
+    > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
+  
+  - Go to on "Smart-Corridor" Scene, scroll down and click on "Children" Section. This shows multple Child Scenes, both Local and Remote Linked with their respective Scene names.
+  - Click on each Remote Linked Child Scene and in the "Hostname or IP" field, replace the IP address with your respective Remote Child Node Host IP. In the "MQTT Password" field, enter the password of your respective Remote Child Node, which you can retrieve from the by running the below command in the Child Node:
 
-- **URL**: [https://localhost](https://localhost)
-- **Log in with credentials**:
-  - **Username**: `admin`
-  - **Password**: Stored in `supass`. (Check `./smart-corridor/src/secrets/supass`)
+   ```bash
+     echo $SCCRED
+   ```
 
-> **Note**:
->
-> - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
+  - Scroll to the bottom and click "Update Child Link".
+  - Repeat the same steps for all the Remote Linked Child scenes in the "Children" section and once done, make sure MQTT is Green for all those Remote Linked Child scenes.
+
+
+## Access the Grafana and other Components
+
 
 ### Grafana UI
 
@@ -240,6 +227,7 @@ instead of `localhost` for external access:
 - **Log in with credentials**:
   - **Username**: `admin`
   - **Password**: `admin` (You will be prompted to change it on first login.)
+- You can go to Vehicle Events Dashboard to view the differnet Events that are being tracked.
 
 ### InfluxDB UI
 
@@ -260,22 +248,6 @@ instead of `localhost` for external access:
     ```bash
     curl -k https://localhost/api/pipelines/status
     ```
-
-## Verify the Application
-
-- **Fused object tracks**: in Scene Management UI, click on the Intersection-Demo card to
-  navigate to the Scene. On the Scene page, you will see fused tracks moving on the map. You
-  will also see greyed out frames from each camera. Toggle the "Live View" button to see the
-  incoming camera frames. The object detections in the camera feeds will correlate to the
-  tracks on the map.
-
-  ![Intersection Scene Homepage](./_assets/scenescape.png "intersection scene homepage")
-
-- **Grafana Dashboard**: In Grafana UI, observe aggregated analytics of different regions of
-  interests in the grafana dashboard. After navigating to Grafana home page, click on
-  "Dashboards" and click on item "Anthem-ITS-Data".
-
-  ![Intersection Grafana Dashboard](./_assets/grafana.png "intersection grafana dashboard")
 
 ## **Stop the Application**
 
@@ -347,12 +319,6 @@ docker compose down
 
 To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
-## Other Deployment Options
-
-Choose one of the following methods to deploy the Smart Corridor Sample Application:
-
-- **[Deploy Using Helm](./get-started/deploy-with-helm.md)**: Use Helm to deploy the
-  application to a Kubernetes cluster for scalable and production-ready deployments.
 
 ## Security Enablement
 
