@@ -70,7 +70,7 @@ logging:
 # Segment data retention. videostream-analytics writes recordings/motion_events/queries
 # under $SMARTBUILDING_DATA_DIR/segments/<monitor_id>/<subdir>/<YYYY-MM-DD>/;
 # MCP server keeps this many calendar days (today + N-1 previous) and purges older day-dirs.
-# Cleanup runs at server startup and hourly thereafter.
+# Cleanup runs at server startup and then daily at approximately 00:05 local time.
 storage:
   retention_days: 2
   cleanup_subdirs: [ motion_events, recordings, queries ]

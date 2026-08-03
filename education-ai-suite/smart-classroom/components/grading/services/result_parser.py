@@ -7,36 +7,83 @@ from typing import Any
 
 import yaml
 
-# "Question 1 | choice | student: A | 4/4 points"
 _LINE_FULL = re.compile(
-    r"Question\s*([0-9]+)\s*\|\s*([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)",
+    r"Question\s*([0-9]+)\s*\|\s*((?:part_\d+\s+\d+\s*\|\s*)+)([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)\s*points",
     re.IGNORECASE,
 )
-# Fallback: "Question 1: 4/10 points"
-_LINE_SIMPLE = re.compile(
-    r"Question\s*([0-9]+)\s*[:：]\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE
-)
+_PART_TOKEN = re.compile(r"part_(\d+)\s+(\d+)", re.IGNORECASE)
+_REASON_LINE = re.compile(r"^\s*Reason\s*[:：]\s*(.*)$", re.IGNORECASE)
+
+
+def _accumulate(scores: dict[str, dict], qid: str, part: dict) -> None:
+    existing = scores.get(qid)
+    if existing is None:
+        scores[qid] = part
+        return
+    existing["score"] += part["score"]
+    existing["max"] += part["max"]
+    if part.get("student"):
+        existing["student"] = f'{existing["student"]} {part["student"]}'.strip()
+    if not existing.get("type") and part.get("type"):
+        existing["type"] = part["type"]
 
 
 def parse_scores(text: str) -> dict[str, dict]:
-    """Return {qid: {type, student, score, max}} parsed from model output."""
+    """Return parsed scores keyed by "<question_no>|<part_1>|<part_2>|...".
+
+    Record shape:
+    {type, student, score, max, question_no, part_path, part_depth, part_key}
+    """
     scores: dict[str, dict] = {}
-    for m in _LINE_FULL.finditer(text):
-        scores[m.group(1)] = {
-            "type": m.group(2).lower(),
-            "student": m.group(3).strip(),
-            "score": int(m.group(4)),
-            "max": int(m.group(5)),
-        }
-    for m in _LINE_SIMPLE.finditer(text):
-        qid = m.group(1)
-        if qid not in scores:
-            scores[qid] = {
-                "type": "",
-                "student": "",
-                "score": int(m.group(2)),
-                "max": int(m.group(3)),
-            }
+    seen_parts: set[tuple[str, tuple[int, ...]]] = set()
+    pending_reason_qids: list[str] = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        m = _LINE_FULL.match(line)
+        if m:
+            qid = m.group(1)
+            parts_block = m.group(2)
+
+            indexed_parts: list[tuple[int, int]] = []
+            for part_match in _PART_TOKEN.finditer(parts_block):
+                indexed_parts.append((int(part_match.group(1)), int(part_match.group(2))))
+            if not indexed_parts:
+                continue
+
+            indexed_parts.sort(key=lambda p: p[0])
+            part_path = [value for _, value in indexed_parts]
+            part_tuple = tuple(part_path)
+            key = (qid, part_tuple)
+            if key in seen_parts:
+                continue
+            seen_parts.add(key)
+
+            composite_qid = f"{qid}|{'|'.join(str(v) for v in part_path)}"
+            _accumulate(scores, composite_qid, {
+                "type": m.group(3).lower(),
+                "student": m.group(4).strip(),
+                "score": int(m.group(5)),
+                "max": int(m.group(6)),
+                "question_no": int(qid),
+                "part_path": part_path,
+                "part_depth": len(part_path),
+                "part_key": composite_qid,
+            })
+            pending_reason_qids.append(composite_qid)
+            continue
+
+        reason_match = _REASON_LINE.match(line)
+        if reason_match and pending_reason_qids:
+            reason_text = reason_match.group(1).strip()
+            for pqid in pending_reason_qids:
+                if pqid in scores and reason_text:
+                    scores[pqid]["reason"] = reason_text
+            pending_reason_qids = []
+
     return scores
 
 
@@ -125,8 +172,9 @@ def parse_header_info(text: str) -> dict[str, Any]:
 
 
 def merge_page_scores(pages: list[dict[str, dict]]) -> dict[str, dict]:
-    """Merge per-page score dicts into one; later pages win on duplicate qids."""
+    """Merge per-page score dicts into one; duplicate qids are accumulated."""
     merged: dict[str, dict] = {}
     for page_scores in pages:
-        merged.update(page_scores)
+        for qid, part in page_scores.items():
+            _accumulate(merged, qid, dict(part))
     return merged

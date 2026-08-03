@@ -7,6 +7,7 @@ The platform exposes MCP capabilities through Streamable HTTP and two RESTful HT
 | [MCP Tools and Resources API Reference](get-started/api-reference-mcp.md) | MCP Server | `http://<mcp-host>:3100/mcp` | Complete JSON-RPC reference for session setup, all MCP tool calls, resource reads, subscriptions, and SSE notifications. |
 | [MCP Subscription Reference](get-started/api-reference-mcp-subscription.md) | MCP Server | `http://<mcp-host>:3100/mcp` | MCP session initialization, alert-resource subscriptions, SSE update notifications, cursor-based reads, and proactive-delivery integration. |
 | [MCP Webhook Event API](get-started/api-reference-mcp-webhook-event.md) | MCP Server | `http://<mcp-host>:3101` | The `POST /events` ingest contract — envelope, per-`type` payloads (`motion` / `static` / `recording`), response codes, and the resulting DB writes. |
+| [Dashboard API Reference](get-started/api-reference-dashboard.md) | MCP Server | `http://<mcp-host>:3100/api` | Monitor discovery, activity, reports, stats, snapshot/clip media, RTSP live preview, Router status, and optional OpenClaw chat proxy. |
 | [Videostream Analytics HTTP API](get-started/api-reference-videostream-analytics.md) | videostream-analytics (VSA) | `http://<vsa-host>:8999` | The VSA control plane — register / start / stop / pause / restart sources, hot-update pipeline config, the source lifecycle state machine, and the events VSA emits. |
 
 ## Data flow

@@ -1,5 +1,15 @@
 import Database from "better-sqlite3";
-import type { Monitor, Alert, AlertWithTask, Event, Recording, VideoSummaryTask, Report } from "./types.js";
+import type {
+  Monitor,
+  Alert,
+  AlertWithTask,
+  Event,
+  Recording,
+  VideoSummaryTask,
+  Report,
+  MonitorActivity,
+  TokenUsageAggregate,
+} from "./types.js";
 
 function rowToAlert(row: any): Alert {
   return {
@@ -53,9 +63,6 @@ function rowToTask(row: any): VideoSummaryTask {
     id: row.id,
     monitorId: row.monitor_id,
     eventId: row.event_id ?? undefined,
-    clipStartTime: row.clip_start_time ?? undefined,
-    clipEndTime: row.clip_end_time ?? undefined,
-    clipDuration: row.clip_duration ?? undefined,
     summaryClipInput: row.summary_clip_input ?? undefined,
     summaryText: row.summary_text ?? undefined,
     status: row.status,
@@ -64,8 +71,27 @@ function rowToTask(row: any): VideoSummaryTask {
     promptTokens: row.prompt_tokens ?? undefined,
     imageTokens: row.image_tokens ?? undefined,
     completionTokens: row.completion_tokens ?? undefined,
-    startedAt: row.started_at ?? undefined,
     completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+function rowToReport(row: any): Report {
+  return {
+    id: row.id,
+    monitorId: row.monitor_id,
+    useCase: row.use_case ?? "",
+    periodStart: row.period_start,
+    periodEnd: row.period_end,
+    reportText: row.report_text ?? undefined,
+    eventCount: row.event_count ?? undefined,
+    motionCount: row.motion_count ?? undefined,
+    latencySeconds: row.latency_seconds ?? undefined,
+    promptTokens: row.prompt_tokens ?? undefined,
+    imageTokens: row.image_tokens ?? undefined,
+    completionTokens: row.completion_tokens ?? undefined,
+    status: row.status,
+    reportType: row.report_type,
     createdAt: row.created_at,
   };
 }
@@ -113,9 +139,6 @@ CREATE TABLE IF NOT EXISTS video_summary_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   monitor_id TEXT NOT NULL,
   event_id INTEGER REFERENCES events(id),
-  clip_start_time TEXT,
-  clip_end_time TEXT,
-  clip_duration REAL,
   summary_clip_input TEXT,
   summary_text TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
@@ -124,7 +147,6 @@ CREATE TABLE IF NOT EXISTS video_summary_tasks (
   prompt_tokens INTEGER,
   image_tokens INTEGER,
   completion_tokens INTEGER,
-  started_at TEXT,
   completed_at TEXT,
   created_at TEXT DEFAULT (datetime('now', 'localtime'))
 );
@@ -574,15 +596,13 @@ export class SmartBuildingDB {
 
   // --- Video Summary Tasks ---
 
-  createTask(task: Pick<VideoSummaryTask, "monitorId" | "eventId" | "clipStartTime" | "clipEndTime" | "summaryClipInput" | "status">): VideoSummaryTask {
+  createTask(task: Pick<VideoSummaryTask, "monitorId" | "eventId" | "summaryClipInput" | "status">): VideoSummaryTask {
     const result = this.db.prepare(`
-      INSERT INTO video_summary_tasks (monitor_id, event_id, clip_start_time, clip_end_time, summary_clip_input, status)
-      VALUES (@monitorId, @eventId, @clipStartTime, @clipEndTime, @summaryClipInput, @status)
+      INSERT INTO video_summary_tasks (monitor_id, event_id, summary_clip_input, status)
+      VALUES (@monitorId, @eventId, @summaryClipInput, @status)
     `).run({
       monitorId: task.monitorId,
       eventId: task.eventId ?? null,
-      clipStartTime: task.clipStartTime ?? null,
-      clipEndTime: task.clipEndTime ?? null,
       summaryClipInput: task.summaryClipInput ?? null,
       status: task.status,
     });
@@ -623,6 +643,83 @@ export class SmartBuildingDB {
       params.push(options.limit);
     }
     return (this.db.prepare(sql).all(...params) as any[]).map(rowToTask);
+  }
+
+  queryMonitorActivities(options: {
+    monitorId: string;
+    startTime: string;
+    endTime: string;
+    limit: number;
+  }): MonitorActivity[] {
+    const rows = this.db.prepare(`
+      SELECT
+        t.*,
+        e.id AS activity_event_id,
+        e.monitor_id AS activity_event_monitor_id,
+        e.motion_type AS activity_event_motion_type,
+        e.start_time AS activity_event_start_time,
+        e.end_time AS activity_event_end_time,
+        e.duration_seconds AS activity_event_duration_seconds,
+        e.event_file_path AS activity_event_file_path,
+        e.prefilter_passed AS activity_event_prefilter_passed,
+        e.prefilter_classes AS activity_event_prefilter_classes,
+        e.prefilter_confidence AS activity_event_prefilter_confidence,
+        e.trajectory_region AS activity_event_trajectory_region,
+        e.created_at AS activity_event_created_at,
+        a.id AS activity_alert_id,
+        a.monitor_id AS activity_alert_monitor_id,
+        a.task_id AS activity_alert_task_id,
+        a.event_id AS activity_alert_event_id,
+        a.use_case AS activity_alert_use_case,
+        a.description AS activity_alert_description,
+        a.notified AS activity_alert_notified,
+        a.created_at AS activity_alert_created_at,
+        a.ack_at AS activity_alert_ack_at,
+        a.ack_by AS activity_alert_ack_by
+      FROM video_summary_tasks t
+      LEFT JOIN events e ON e.id = t.event_id
+      LEFT JOIN alerts a ON a.id = (
+        SELECT MAX(a2.id) FROM alerts a2 WHERE a2.task_id = t.id
+      )
+      WHERE t.monitor_id = ? AND t.created_at >= ? AND t.created_at < ?
+      ORDER BY t.created_at DESC
+      LIMIT ?
+    `).all(options.monitorId, options.startTime, options.endTime, options.limit) as any[];
+
+    return rows.map((row): MonitorActivity => {
+      const activity: MonitorActivity = { task: rowToTask(row) };
+      if (row.activity_event_id !== null) {
+        activity.event = rowToEvent({
+          id: row.activity_event_id,
+          monitor_id: row.activity_event_monitor_id,
+          motion_type: row.activity_event_motion_type,
+          start_time: row.activity_event_start_time,
+          end_time: row.activity_event_end_time,
+          duration_seconds: row.activity_event_duration_seconds,
+          event_file_path: row.activity_event_file_path,
+          prefilter_passed: row.activity_event_prefilter_passed,
+          prefilter_classes: row.activity_event_prefilter_classes,
+          prefilter_confidence: row.activity_event_prefilter_confidence,
+          trajectory_region: row.activity_event_trajectory_region,
+          created_at: row.activity_event_created_at,
+        });
+      }
+      if (row.activity_alert_id !== null) {
+        activity.alert = rowToAlert({
+          id: row.activity_alert_id,
+          monitor_id: row.activity_alert_monitor_id,
+          task_id: row.activity_alert_task_id,
+          event_id: row.activity_alert_event_id,
+          use_case: row.activity_alert_use_case,
+          description: row.activity_alert_description,
+          notified: row.activity_alert_notified,
+          created_at: row.activity_alert_created_at,
+          ack_at: row.activity_alert_ack_at,
+          ack_by: row.activity_alert_ack_by,
+        });
+      }
+      return activity;
+    });
   }
 
   updateTaskStatus(
@@ -720,23 +817,46 @@ export class SmartBuildingDB {
   getReports(monitorId: string, limit: number = 10): Report[] {
     return (this.db.prepare(
       "SELECT * FROM reports WHERE monitor_id = ? ORDER BY period_start DESC, created_at DESC LIMIT ?"
-    ).all(monitorId, limit) as any[]).map((row): Report => ({
-      id: row.id,
-      monitorId: row.monitor_id,
-      useCase: row.use_case ?? "",
-      periodStart: row.period_start,
-      periodEnd: row.period_end,
-      reportText: row.report_text ?? undefined,
-      eventCount: row.event_count ?? undefined,
-      motionCount: row.motion_count ?? undefined,
-      latencySeconds: row.latency_seconds ?? undefined,
-      promptTokens: row.prompt_tokens ?? undefined,
-      imageTokens: row.image_tokens ?? undefined,
-      completionTokens: row.completion_tokens ?? undefined,
-      status: row.status,
-      reportType: row.report_type,
-      createdAt: row.created_at,
-    }));
+    ).all(monitorId, limit) as any[]).map(rowToReport);
+  }
+
+  getReportsByPeriod(monitorId: string, startTime: string, endTime: string): Report[] {
+    return (this.db.prepare(`
+      SELECT * FROM reports
+      WHERE monitor_id = ? AND period_start < ? AND period_end >= ?
+      ORDER BY period_start DESC, created_at DESC
+    `).all(monitorId, endTime, startTime) as any[]).map(rowToReport);
+  }
+
+  getTokenUsageAggregate(monitorId: string, startTime: string, endTime: string): TokenUsageAggregate {
+    const row = this.db.prepare(`
+      SELECT
+        COALESCE(SUM(prompt_tokens), 0) AS prompt_tokens,
+        COALESCE(SUM(image_tokens), 0) AS image_tokens,
+        COALESCE(SUM(completion_tokens), 0) AS completion_tokens
+      FROM (
+        SELECT prompt_tokens, image_tokens, completion_tokens
+        FROM video_summary_tasks
+        WHERE monitor_id = ? AND created_at >= ? AND created_at < ?
+        UNION ALL
+        SELECT prompt_tokens, image_tokens, completion_tokens
+        FROM reports
+        WHERE monitor_id = ? AND created_at >= ? AND created_at < ?
+      )
+    `).get(monitorId, startTime, endTime, monitorId, startTime, endTime) as {
+      prompt_tokens: number;
+      image_tokens: number;
+      completion_tokens: number;
+    };
+    const promptTokens = Number(row.prompt_tokens);
+    const imageTokens = Number(row.image_tokens);
+    const completionTokens = Number(row.completion_tokens);
+    return {
+      promptTokens,
+      imageTokens,
+      completionTokens,
+      totalTokens: promptTokens + imageTokens + completionTokens,
+    };
   }
 
   // --- Plans ---

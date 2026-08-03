@@ -35,6 +35,15 @@ _AGENT_URL     = os.environ.get("AGENT_SERVICE_URL",     "http://apm-agent:5002"
 _DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5004")
 _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:5001")
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
+_API_KEY       = os.environ.get("APM_API_KEY",           "")
+_STORAGE_MUTATION_HEADERS = {"X-API-Key": _API_KEY} if _API_KEY else {}
+_AVAILABLE_DEVICES = [
+    device.strip().upper()
+    for device in os.environ.get("AVAILABLE_DEVICES", "CPU").split(",")
+    if device.strip().upper() in {"CPU", "GPU", "NPU"}
+]
+if not _AVAILABLE_DEVICES:
+    _AVAILABLE_DEVICES = ["CPU"]
 _TIMEOUT       = 15.0
 
 app = FastAPI(title="APM UI", docs_url=None, redoc_url=None)
@@ -160,7 +169,7 @@ async def index(request: Request):
             "runs": runs,
             "active_run": active_run,
             "videos": videos,
-            "devices": ["CPU", "GPU", "NPU"],
+            "devices": _AVAILABLE_DEVICES,
         },
     )
 
@@ -287,7 +296,8 @@ async def trigger_run(
 async def clear_detections():
     """Clear all detections from storage."""
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        await client.delete(f"{_STORAGE_URL}/detections")
+        r = await client.delete(f"{_STORAGE_URL}/detections", headers=_STORAGE_MUTATION_HEADERS)
+        r.raise_for_status()
     return RedirectResponse(url="/", status_code=303)
 
 

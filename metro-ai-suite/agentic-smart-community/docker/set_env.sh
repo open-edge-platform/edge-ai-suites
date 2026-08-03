@@ -21,6 +21,8 @@ export RENDER_GROUP_ID=$(getent group render | awk -F: '{print $3}')
 # Host directory that caches downloaded Hugging Face weights.
 HF_HOME=${HF_HOME:=~/models/huggingface}
 export HF_HOME
+# Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
+mkdir -p "${HF_HOME}"
 
 # llm-scaler image
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
@@ -97,3 +99,9 @@ export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 # OpenVINO prefilter model, e.g., yolo11s. Preserve an explicitly supplied
 # path so setup_docker.sh can validate or prepare that model at runtime.
 export PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}
+
+# Run the container as the host user so segment/clip files written into the
+# bind-mounted SMARTBUILDING_DATA_DIR are owned by that user — the MCP server's
+# storage cleaner (a host process) can then purge them without root.
+export VSA_UID=$(id -u)
+export VSA_GID=$(id -g)

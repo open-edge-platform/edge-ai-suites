@@ -1395,12 +1395,32 @@ export interface GradingQuestionScore {
   max_score?: number | null;
 }
 
+export interface GradingQuestionMeta {
+  sub_question?: boolean;
+  max_score?: number | null;
+  grading_score?: number | null;
+  part_path?: number[];
+  part_key?: string;
+  catalog?: string;
+  type?: string;
+}
+
+export interface GradingQuestionNode {
+  question_no?: number | null;
+  sub_question_no?: number | null;
+  meta?: GradingQuestionMeta;
+  student_answer?: string | null;
+  reason?: string | null;
+  questions?: GradingQuestionNode[];
+}
+
 export interface GradingStudentResult {
   student_id?: string | null;
   student_name?: string | null;
   class_name?: string | null;
   exam_number?: string | null;
   paper_path?: string | null;
+  result_path?: string | null;
   total_score?: number | null;
   total_max?: number | null;
   objective_score?: number | null;
@@ -1408,7 +1428,22 @@ export interface GradingStudentResult {
   subjective_score?: number | null;
   subjective_max?: number | null;
   processing_seconds?: number | null;
-  questions?: Record<string, GradingQuestionScore>;
+  questions_hierarchy?: GradingQuestionNode[];
+}
+
+export interface GradingStudentResultDetail {
+  summary?: {
+    total_score?: number | null;
+    total_max?: number | null;
+    objective_score?: number | null;
+    objective_max?: number | null;
+    subjective_score?: number | null;
+    subjective_max?: number | null;
+  };
+  questions_hierarchy?: GradingQuestionNode[];
+  paper_meta?: Record<string, unknown>;
+  student_meta?: Record<string, unknown>;
+  input?: Record<string, unknown>;
 }
 
 export interface GradingSummary {
@@ -1428,6 +1463,9 @@ async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       throw new Error(json.detail || `Grading request failed (${res.status})`);
+    }
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      return undefined as T;
     }
     return (await res.json()) as T;
   });
@@ -1468,12 +1506,12 @@ export async function gradingListTasks(status?: string): Promise<{
   return gradingFetch(`/grading/tasks${q}`);
 }
 
-export async function gradingGetTask(taskId: string): Promise<GradingTask> {
-  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`);
-}
-
 export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
   return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/summary`);
+}
+
+export async function gradingGetStudentResult(taskId: string, slot: string): Promise<GradingStudentResultDetail> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/students/${encodeURIComponent(slot)}/result`);
 }
 
 export async function gradingPauseTask(taskId: string): Promise<GradingTask> {
@@ -1538,10 +1576,21 @@ export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<Grad
 
 export interface GradingConfig {
   dpi: number | null;
+  page_columns: number | null;
+  column_split_ratio: number | null;
+  contrast_enhance: boolean | null;
+  contrast_factor: number | null;
+  max_tokens: number | null;
   vlm_temperature: number | null;
+  max_image_pixels: number | null;
   poll_interval: number | null;
   stable_checks: number | null;
   idle_timeout: number | null;
+  min_score: number | null;
+  sort_boxes: boolean | null;
+  expand_margin: number | null;
+  merge_overlapping: boolean | null;
+  iou_threshold: number | null;
   vlm_model: string | null;
   ocr_model: string | null;
   layout_model: string | null;
@@ -1551,7 +1600,12 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
   return gradingFetch('/grading/config');
 }
 
-export async function gradingUpdateConfig(updates: { dpi?: number | null; vlm_temperature?: number | null; poll_interval?: number | null; stable_checks?: number | null; idle_timeout?: number | null }): Promise<GradingConfig> {
+export type GradingConfigUpdate = Partial<Pick<GradingConfig,
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'poll_interval' | 'stable_checks' | 'idle_timeout' |
+  'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
+
+export async function gradingUpdateConfig(updates: GradingConfigUpdate): Promise<GradingConfig> {
   return gradingFetch('/grading/config', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

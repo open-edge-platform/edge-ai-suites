@@ -17,6 +17,12 @@ export interface SessionSnapshot {
   response: string;
   tts_audio_segments: TtsSegment[];
   tts_errors: string[];
+  wakeword?: {
+    model: string;
+    detected_label: string;
+    score: number;
+    elapsed_seconds: number;
+  };
   performance_metrics?: Record<string, unknown>;
   llm_metrics?: Record<string, unknown>;
 }
