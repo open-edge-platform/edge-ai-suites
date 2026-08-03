@@ -256,6 +256,8 @@ up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 
 download_model:
 	@echo "Starting Model Download Service..."; \
+	mkdir -p configs/agentic/models; \
+	$shell chmod 755 configs/agentic/models; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) up -d model-download; \
 	echo "Waiting for model-download service to become healthy on port 8200..."; \
 	i=0; \
@@ -317,6 +319,7 @@ up_agentic: check_env_variables validate_host_ip down
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(MAKE) download_model; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) up -d; \
 	$(MAKE) upload_tar_file

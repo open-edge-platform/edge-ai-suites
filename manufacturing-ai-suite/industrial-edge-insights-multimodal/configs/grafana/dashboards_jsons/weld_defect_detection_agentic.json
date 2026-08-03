@@ -2,11 +2,22 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "adc9jx7",
-    "generation": 1,
-    "creationTimestamp": "2026-06-30T08:32:49Z",
-    "labels": {},
-    "annotations": {}
+    "name": "adswjmr",
+    "namespace": "default",
+    "uid": "1e7c0a85-418f-4cd0-ba08-019ce5366f1e",
+    "resourceVersion": "1785739226390017",
+    "generation": 8,
+    "creationTimestamp": "2026-08-03T06:31:35Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "3502235737997312"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "user:efu1i6hmvzoxsc",
+      "grafana.app/folder": "",
+      "grafana.app/saved-from-ui": "Grafana v13.0.1+security-01 (9bbe672d)",
+      "grafana.app/updatedBy": "user:efu1i6hmvzoxsc",
+      "grafana.app/updatedTimestamp": "2026-08-03T06:40:26Z"
+    }
   },
   "spec": {
     "annotations": [
@@ -17,6 +28,9 @@
             "kind": "DataQuery",
             "group": "grafana",
             "version": "v0",
+            "datasource": {
+              "name": "-- Grafana --"
+            },
             "spec": {}
           },
           "enable": true,
@@ -28,14 +42,13 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "",
     "editable": true,
     "elements": {
-      "panel-15": {
+      "panel-1": {
         "kind": "Panel",
         "spec": {
-          "id": 15,
-          "title": "Vision Analytics Result",
+          "id": 1,
+          "title": "Agentic Dashboard",
           "description": "",
           "links": [],
           "data": {
@@ -57,296 +70,12 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "<iframe id=\"myframe\" style=\"width:100%; height:500px;\" \n  allow=\"autoplay; encrypted-media\"\n  sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups\">\n</iframe>\n\n<script>\n  const host = window.location.hostname;\n  const port = window.location.port || \"443\";   // default if none present\n\n  // Build iframe URL INCLUDING PORT\n  const iframeUrl = `https://${host}:${port}/samplestream/`;\n\n  document.getElementById(\"myframe\").src = iframeUrl;\n</script>",
+                "content": "<div style=\"width:100%; height:100%;\">\n  <iframe\n    id=\"agentic-frame\"\n    style=\"width:100%; height:100%; border:none;\"\n    allow=\"autoplay; encrypted-media\"\n    sandbox=\"allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads\">\n  </iframe>\n</div>\n\n<script>\n(function () {\n    const iframe = document.getElementById(\"agentic-frame\");\n\n    // Build URL from current Grafana origin\n    const iframeUrl = window.location.origin + \"/agentic-ui/\";\n\n    console.log(\"Loading:\", iframeUrl);\n\n    iframe.src = iframeUrl;\n})();\n</script>",
                 "mode": "html"
               },
               "fieldConfig": {
                 "defaults": {},
                 "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-17": {
-        "kind": "Panel",
-        "spec": {
-          "id": 17,
-          "title": "VLLM Reasoning",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "text",
-            "version": "13.0.1+security-01",
-            "spec": {
-              "options": {
-                "code": {
-                  "language": "plaintext",
-                  "showLineNumbers": false,
-                  "showMiniMap": false
-                },
-                "content": "<iframe\n  src=\"/insights-ui/\"\n  width=\"100%\"\n  height=\"100%\"\n  frameborder=\"0\"\n  style=\"border:none;\"\n</iframe>",
-                "mode": "html"
-              },
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-5": {
-        "kind": "Panel",
-        "spec": {
-          "id": 5,
-          "title": "Timeseries Analytics Result (Primary Weld Current vs Time)",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "",
-                      "version": "v0",
-                      "spec": {
-                        "alias": "Non Anomalous ",
-                        "groupBy": [
-                          {
-                            "params": [
-                              "$__interval"
-                            ],
-                            "type": "time"
-                          },
-                          {
-                            "params": [
-                              "null"
-                            ],
-                            "type": "fill"
-                          }
-                        ],
-                        "measurement": "weld-sensor-anomaly-data",
-                        "orderByTime": "ASC",
-                        "policy": "default",
-                        "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 0) AND $timeFilter",
-                        "rawQuery": true,
-                        "resultFormat": "time_series",
-                        "select": [
-                          [
-                            {
-                              "params": [
-                                "Primary Weld Current"
-                              ],
-                              "type": "field"
-                            },
-                            {
-                              "params": [],
-                              "type": "mean"
-                            }
-                          ]
-                        ],
-                        "tags": [
-                          {
-                            "key": "anomaly_status::field",
-                            "operator": "=",
-                            "value": "0"
-                          }
-                        ]
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "",
-                      "version": "v0",
-                      "spec": {
-                        "alias": " Anomalous",
-                        "columns": [],
-                        "filters": [],
-                        "format": "table",
-                        "global_query_id": "",
-                        "groupBy": [
-                          {
-                            "params": [
-                              "host::tag"
-                            ],
-                            "type": "tag"
-                          }
-                        ],
-                        "measurement": "weld-sensor-anomaly-data",
-                        "orderByTime": "ASC",
-                        "policy": "autogen",
-                        "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1) AND $timeFilter",
-                        "rawQuery": true,
-                        "resultFormat": "time_series",
-                        "root_selector": "",
-                        "select": [
-                          [
-                            {
-                              "params": [
-                                "Primary Weld Current"
-                              ],
-                              "type": "field"
-                            }
-                          ]
-                        ],
-                        "source": "url",
-                        "tags": [
-                          {
-                            "key": "anomaly_status::field",
-                            "operator": "=",
-                            "value": "1"
-                          }
-                        ],
-                        "type": "json",
-                        "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.json",
-                        "url_options": {
-                          "data": "",
-                          "method": "GET"
-                        }
-                      }
-                    },
-                    "refId": "B",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "timeseries",
-            "version": "13.0.1+security-01",
-            "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "timezone": [
-                  "Asia/Kolkata"
-                ],
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "max": 400,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisGridShow": true,
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "barWidthFactor": 0.6,
-                    "drawStyle": "points",
-                    "fillOpacity": 0,
-                    "gradientMode": "none",
-                    "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
-                    },
-                    "insertNulls": false,
-                    "lineInterpolation": "stepBefore",
-                    "lineStyle": {
-                      "fill": "solid"
-                    },
-                    "lineWidth": 1,
-                    "pointSize": 5,
-                    "scaleDistribution": {
-                      "type": "linear"
-                    },
-                    "showPoints": "never",
-                    "showValues": false,
-                    "spanNulls": false,
-                    "stacking": {
-                      "group": "A",
-                      "mode": "none"
-                    },
-                    "thresholdsStyle": {
-                      "mode": "off"
-                    }
-                  },
-                  "fieldMinMax": false
-                },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": " Anomaly 1"
-                    },
-                    "properties": [
-                      {
-                        "id": "color",
-                        "value": {
-                          "fixedColor": "dark-red",
-                          "mode": "fixed"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": " Anomalous"
-                    },
-                    "properties": [
-                      {
-                        "id": "color",
-                        "value": {
-                          "fixedColor": "semi-dark-red",
-                          "mode": "fixed"
-                        }
-                      }
-                    ]
-                  }
-                ]
               }
             }
           }
@@ -362,37 +91,11 @@
             "spec": {
               "x": 0,
               "y": 0,
-              "width": 9,
-              "height": 17,
+              "width": 24,
+              "height": 34,
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-15"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 9,
-              "y": 0,
-              "width": 15,
-              "height": 32,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-17"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 17,
-              "width": 9,
-              "height": 15,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-5"
+                "name": "panel-1"
               }
             }
           }
@@ -405,9 +108,9 @@
     "tags": [],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-5m",
+      "from": "now-6h",
       "to": "now",
-      "autoRefresh": "5s",
+      "autoRefresh": "",
       "autoRefreshIntervals": [
         "5s",
         "10s",
@@ -423,7 +126,18 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Multimodal Weld Defect Detection Explainability Dashboard",
-    "variables": []
+    "title": "Multimodal Weld Defect Detection - Agentic Dashboard",
+    "variables": [],
+    "preferences": {
+      "layout": {
+        "kind": "AutoGridLayout",
+        "spec": {
+          "maxColumnCount": 3,
+          "columnWidthMode": "standard",
+          "rowHeightMode": "standard",
+          "items": []
+        }
+      }
+    }
   }
 }
