@@ -43,6 +43,8 @@ configuration files.
 
 - **Development**
   - [Build from Source](./build-from-source.md): Build the application images from source code.
+  - [Training with Intel Geti](./training-with-geti.md): Train and export a custom defect
+    detection model for use with the DL Streamer pipeline.
 
 - **API Reference**
   - [API Reference](./api-reference.md): Representational State Transfer (REST) API endpoints for
@@ -58,6 +60,7 @@ configuration files.
 get-started
 how-it-works
 build-from-source
+training-with-geti
 api-reference
 troubleshooting
 release-notes

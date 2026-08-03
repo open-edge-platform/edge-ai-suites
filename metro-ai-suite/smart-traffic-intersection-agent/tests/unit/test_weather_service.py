@@ -4,7 +4,7 @@
 
 import pytest
 import asyncio
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from unittest.mock import Mock, patch, AsyncMock, mock_open
 from datetime import datetime, timedelta, timezone
 import json
 import os
@@ -869,7 +869,7 @@ class TestWeatherServiceMockDataExtended:
         service = WeatherService(mock_config)
         mock_exists.return_value = True
         
-        with patch('builtins.open', mock_open_json_error()):
+        with patch('builtins.open', mock_open(read_data="not valid json")):
             result = service._load_mock_weather_from_file()
             
             # Should return default weather on error
@@ -877,8 +877,7 @@ class TestWeatherServiceMockDataExtended:
             assert result.name == "Unknown"
 
     @patch('os.path.exists')
-    @patch('builtins.open')
-    def test_load_mock_weather_with_string_fetched_at(self, mock_open, mock_exists):
+    def test_load_mock_weather_with_string_fetched_at(self, mock_exists):
         """Test loading mock weather with string fetched_at timestamp."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_weather_config.return_value = {}
@@ -894,22 +893,16 @@ class TestWeatherServiceMockDataExtended:
                 "is_precipitation": False
             }
         }
-        
-        mock_file = MagicMock()
-        mock_file.__enter__ = Mock(return_value=mock_file)
-        mock_file.__exit__ = Mock(return_value=False)
-        mock_open.return_value = mock_file
-        
-        with patch('json.load', return_value=mock_weather_data):
+
+        with patch('builtins.open', mock_open(read_data=json.dumps(mock_weather_data))):
             service = WeatherService(mock_config)
             result = service._load_mock_weather_from_file(WeatherType.CLEAR)
             
-            assert result.is_mock is True
-            assert result.temperature == 65
+        assert result.is_mock is True
+        assert result.temperature == 65
 
     @patch('os.path.exists')
-    @patch('builtins.open')
-    def test_load_mock_weather_with_invalid_fetched_at(self, mock_open, mock_exists):
+    def test_load_mock_weather_with_invalid_fetched_at(self, mock_exists):
         """Test loading mock weather with invalid fetched_at timestamp."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_weather_config.return_value = {}
@@ -925,23 +918,17 @@ class TestWeatherServiceMockDataExtended:
                 "is_precipitation": False
             }
         }
-        
-        mock_file = MagicMock()
-        mock_file.__enter__ = Mock(return_value=mock_file)
-        mock_file.__exit__ = Mock(return_value=False)
-        mock_open.return_value = mock_file
-        
-        with patch('json.load', return_value=mock_weather_data):
+
+        with patch('builtins.open', mock_open(read_data=json.dumps(mock_weather_data))):
             service = WeatherService(mock_config)
             result = service._load_mock_weather_from_file(WeatherType.CLEAR)
-            
-            # Should use current time for invalid date
-            assert result.is_mock is True
-            assert result.fetched_at is not None
+
+        # Should use current time for invalid date
+        assert result.is_mock is True
+        assert result.fetched_at is not None
 
     @patch('os.path.exists')
-    @patch('builtins.open')
-    def test_load_mock_weather_missing_weather_type(self, mock_open, mock_exists):
+    def test_load_mock_weather_missing_weather_type(self, mock_exists):
         """Test loading mock weather when requested type is missing."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_weather_config.return_value = {}
@@ -954,18 +941,13 @@ class TestWeatherServiceMockDataExtended:
             }
             # Missing other weather types
         }
-        
-        mock_file = MagicMock()
-        mock_file.__enter__ = Mock(return_value=mock_file)
-        mock_file.__exit__ = Mock(return_value=False)
-        mock_open.return_value = mock_file
-        
-        with patch('json.load', return_value=mock_weather_data):
+
+        with patch('builtins.open', mock_open(read_data=json.dumps(mock_weather_data))):
             service = WeatherService(mock_config)
             # Request a type that doesn't exist in mock data
             result = service._load_mock_weather_from_file(WeatherType.CLEAR)
-            
-            assert result.is_mock is True
+
+        assert result.is_mock is True
 
 
 class TestWeatherServiceProcessingExtended:
@@ -1135,11 +1117,3 @@ class TestWeatherServiceFetchDataExtended:
             assert result.short_forecast == "Current"
 
 
-# Helper function for mock JSON error
-def mock_open_json_error():
-    """Create a mock that raises JSON decode error."""
-    mock = MagicMock()
-    mock.__enter__ = Mock(return_value=mock)
-    mock.__exit__ = Mock(return_value=False)
-    mock.read = Mock(side_effect=json.JSONDecodeError("Error", "doc", 0))
-    return Mock(return_value=mock)
