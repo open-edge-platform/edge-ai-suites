@@ -17,10 +17,10 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
     Images are provided to guide you to the MIPI configuration.
 
-    ![CRB Setup](../../images/gmsl/CRB-setup.png)
-    ![CRB Advanced](../../images/gmsl/CRB-Advanced.png)
-    ![System Agent](../../images/gmsl/System-agent-selection.png)
-    ![MIPI Configuration](../../images/gmsl/MIPI-Configuration.png)
+    ![CRB Setup](../../../images/gmsl/CRB-setup.png)
+    ![CRB Advanced](../../../images/gmsl/CRB-Advanced.png)
+    ![System Agent](../../..images/gmsl/System-agent-selection.png)
+    ![MIPI Configuration](../../..images/gmsl/MIPI-Configuration.png)
 
 
     Select Camera1 and `Enabled`, this should enable another option underneath called `Link options`.
@@ -38,8 +38,10 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Custom HID          | `INTC10CD` | `INTC10CD` | `INTC10CD` | `INTC10CD` |
    | PPR Value           | 2          | 2          | 2          | 2          |
    | PPR Unit            | 1          | 1          | 1          | 1          |
+   | Position            | Back       | Back       | Front      | Front      |
+   | Rotation            | 0          | 180        | 0          | 180        |
    | Camera module label | `d4xx`     | `d4xx`     | `d4xx`     | `d4xx`     |
-   | MIPI Port (Index)   | 0          | 0          | 4          | 4          |
+   | MIPI Port (Index)   | 0          | 0          | 2          | 2          |
    | LaneUsed            | x2         | x2         | x2         | x2         |
    | Number of I2C       | 3          | 3          | 3          | 3          |
    | I2C Channel         | I2C0       | I2C0       | I2C1       | I2C1       |
