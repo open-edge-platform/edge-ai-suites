@@ -227,8 +227,8 @@ In the Nx Witness desktop client:
 
 1. Go to **Main Menu** → **System Administration**.
 2. In the window, click **Integrations**.
-3. In the **Manage Integrations** window, go to the **Settings** tab, and check **Accept API
-   Integrations registration requests** to enable REST-based API integration.
+3. In the **Manage Integrations** window, go to the **Settings** tab, and check *Accept API
+   Integrations registration requests* to enable REST-based API integration.
 4. Click **OK**.
 
 ![Enable API integration registration requests in Nx Witness system administration](../_assets/nx-enable_api_integration.png "enable api integration registration requests in nx witness system administration")
@@ -652,7 +652,7 @@ curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_
 This sends `DELETE /pipelines/<instance_id>` to the DL Streamer Pipeline Server, stopping the
 GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
 
-<!--hide_directive--
+<!--hide_directive
 </details>hide_directive-->
 
 ### 6.4 What Happens When VAP Starts a Pipeline

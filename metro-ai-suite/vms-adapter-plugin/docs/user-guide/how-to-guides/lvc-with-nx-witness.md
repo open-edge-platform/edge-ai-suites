@@ -241,8 +241,8 @@ In the Nx Witness desktop client:
 
 1. Go to **Main Menu** → **System Administration**.
 2. In the window, click **Integrations**.
-3. In the **Manage Integrations** window, go to **Settings** tab and check _Accept API
-   Integrations registration requests_ to enable REST based API integration.
+3. In the **Manage Integrations** window, go to the **Settings** tab and check *Accept API
+   Integrations registration requests* to enable REST-based API integration.
 4. Click **OK**
 
 ![Accept API Integrations registration requests setting in Nx Witness](../_assets/nx-enable_api_integration.png "accept api integrations registration requests in nx witness")
@@ -485,7 +485,7 @@ shows:
 
 Captions appear within a few seconds of the pipeline starting.
 
-<!--hide_directive--
+<!--hide_directive
 </details>hide_directive-->
 
 ## Troubleshooting
