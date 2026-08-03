@@ -16,6 +16,7 @@ sample_pipelines/llm_robotics
 sample_pipelines/robotics_diffusion_transformer
 sample_pipelines/pi05_with_rtc
 sample_pipelines/openclaw_agenticros_demo
+sample_pipelines/fast_lio2_demo
 
 :::
 hide_directive-->
