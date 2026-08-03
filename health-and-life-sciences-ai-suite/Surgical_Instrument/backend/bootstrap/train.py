@@ -32,7 +32,7 @@ def train_model(
 ) -> dict:
     """Train a single model. Returns {name, best_pt, elapsed_s, project}."""
     artifacts_dir = Path(artifacts_dir)
-    project = artifacts_dir / f"{name}_xpu"
+    project = (artifacts_dir / f"{name}_xpu").resolve()
     project.mkdir(parents=True, exist_ok=True)
 
     dev_kind = train_cfg.get("device", "xpu")
@@ -110,9 +110,22 @@ def train_model(
     )
     elapsed = time.time() - t0
 
-    best_pt = project / "run" / "weights" / "best.pt"
-    if not best_pt.exists():
-        raise RuntimeError(f"training finished but {best_pt} missing")
+    trainer = getattr(model, "trainer", None)
+    candidates: list[Path] = []
+    if trainer is not None:
+        trainer_best = getattr(trainer, "best", None)
+        if trainer_best:
+            candidates.append(Path(str(trainer_best)).expanduser())
+        trainer_save_dir = getattr(trainer, "save_dir", None)
+        if trainer_save_dir:
+            candidates.append(Path(str(trainer_save_dir)).expanduser() / "weights" / "best.pt")
+
+    candidates.append(project / "run" / "weights" / "best.pt")
+
+    best_pt = next((p.resolve() for p in candidates if p.exists()), None)
+    if best_pt is None:
+        tried = ", ".join(str(p) for p in candidates)
+        raise RuntimeError(f"training finished but best.pt missing; tried: {tried}")
 
     result = {
         "name": name,

@@ -5,7 +5,7 @@ image:
 
 vlm:
   max_tokens: 4096
-  temperature: 0.1
+  temperature: 0.2
   max_image_pixels: 4000000
 
 grading:
@@ -14,7 +14,7 @@ grading:
 
 watch:
   poll_interval: 5
-  stable_checks: 2      # consecutive unchanged polls before a PDF is graded
+  stable_checks: 2
   idle_timeout: 100
 
 detection_service:
@@ -24,23 +24,39 @@ detection_service:
                   "aside_text", "vertical_text",
                   "formula_number"
                  ]
-  min_score: 0.5               # Minimum confidence score (0-1)
-  sort_boxes: true             # Sort boxes top-to-bottom
-  expand_margin: 10            # Expand box margins in pixels
-  merge_overlapping: false     # Merge overlapping boxes
-  iou_threshold: 0.7           # IoU threshold for merging (if enabled)
+  min_score: 0.5
+  sort_boxes: true
+  expand_margin: 10
+  merge_overlapping: false
+  iou_threshold: 0.7
 section_split:
   title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
   title_patterns:
-    - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"     # 一、  二、  三.
-    - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
-    - "^\\s*SECTION\\s+[IVXLCDM]+"                  # SECTION I / SECTION II / SECTION IV
+    zh:
+      - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"        # 一、  二、  三.
+      # - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
+    en:
+      - "^\\s*SECTION\\s+[IVXLCDM]+"                    # SECTION I / SECTION II
   stitch_direction: "vertical"                  # how to join cross-page section pieces
 
   compress_whitespace: true
   gap_threshold: 120        # only gaps larger than this are compressed
   keep_margin: 50           # margin left between content blocks after compression
   content_pad: 20           # padding added above/below each content block
+
+  rubric_markers:
+    zh:
+      section: "^\\s*\\[章节\\]"
+      context: "^\\s*\\[场景\\]"
+      exam_info: "^\\s*\\[考试信息\\]"
+      output: "^\\s*\\[输出格式\\]"
+      ignore: "^\\s*\\[填写注意事项\\]"
+    en:
+      section: "^\\s*\\[SECTION\\]"
+      context: "^\\s*\\[CONTEXT\\]"
+      exam_info: "^\\s*\\[EXAM_INFO\\]"
+      output: "^\\s*\\[OUTPUT_FORMAT\\]"
+      ignore: "^\\s*\\[INSTRUCTIONS\\]"
 
   prompt_slicing:
     enabled: true
@@ -49,11 +65,13 @@ section_split:
     keep_last_block: true          # output-format block
     # regex to pull the leading ordinal from a heading (section title & rubric
     # block heading share this); group 1 is the ordinal used for matching.
-    ordinal_pattern: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"
+    ordinal_pattern:
+      zh: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"
+      en: "^\\s*(?:Part|Section|SECTION)?\\s*([IVXLCDM]+)\\b"
 
   header_extract:
     enabled: true
-    marker_pattern: "^\\s*(?:\\[HEADER\\]|【卷头信息】)"   # rubric block marker
+    marker_pattern: "^\\s*(?:\\[考试信息\\]|\\[EXAM_INFO\\]|\\[HEADER\\]|【卷头信息】)"   # rubric block marker
     # separator defaults to prompt_slicing.separator when omitted
 
   header_aliases:

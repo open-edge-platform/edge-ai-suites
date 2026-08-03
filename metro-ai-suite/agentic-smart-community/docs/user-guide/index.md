@@ -101,7 +101,7 @@ The server exposes a standardized, use-case-agnostic tool surface (every id pref
 | **Use-case authoring** | `use_case_validate` · `use_case_register` | Validate a use case is wired end-to-end, register/unregister one at runtime |
 | **Rules & plans** | `plan_ctl` · `rule_eval` | Per-monitor JSON plans; manual replay of the rule evaluator (alerts normally fire automatically) |
 
-See the full reference — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Reference](./get-started/mcp_tools_list.md)**.
+See the full guide — parameters, `action` enums, return shapes, the SQLite data model, and the data directory layout — in **[MCP Tools Guide](./get-started/mcp-tools.md)**.
 
 ### Agent Skills
 
@@ -109,8 +109,8 @@ Skills are portable Markdown guides (framework-agnostic; usable by any MCP clien
 
 | Skill | Purpose | Anchored on |
 |---|---|---|
-| **[`smartbuilding-toolkit`](../../skills/smartbuilding-toolkit/SKILL.md)** | Operate the platform: the full `smartbuilding_*` tool catalog, the SQLite data model, how to discover which monitor to act on, how reports are generated, how pushed alerts reach a session, and which actions are destructive (two-phase confirm). | the MCP tools + resources |
-| **[`video-summary-prompt-studio`](../../skills/video-summary-prompt-studio/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
+| **[`smartbuilding-toolkit`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-toolkit/SKILL.md)** | Operate the platform: the full `smartbuilding_*` tool catalog, the SQLite data model, how to discover which monitor to act on, how reports are generated, how pushed alerts reach a session, and which actions are destructive (two-phase confirm). | the MCP tools + resources |
+| **[`video-summary-prompt-studio`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
 
 Together they close the loop: `video-summary-prompt-studio` **creates** a use case, then `smartbuilding-toolkit` **runs** it — no core-component changes in between.
 
@@ -123,4 +123,4 @@ Together they close the loop: `video-summary-prompt-studio` **creates** a use ca
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/LICENSE).

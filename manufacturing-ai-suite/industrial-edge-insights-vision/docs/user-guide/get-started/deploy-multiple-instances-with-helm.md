@@ -715,7 +715,7 @@ configured Kubernetes cluster.
 
 Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
-## Storing frames to S3 storage
+## Store frames to S3 storage
 
 Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 

@@ -10,6 +10,7 @@ For full setup, usage, and contribution guide, see:
 
 - [**Multi-Modal Patient Monitoring Documentation**](./multi_modal_patient_monitoring/README.md).
 - [**NICU Warmer Documentation**](./NICU-Warmer/README.md).
+- [**Surgical Instrument Documentation**](./Surgical_Instrument/README.md).
 
 ## Disclaimers
 

@@ -1,7 +1,7 @@
 ---
 name: smartbuilding-toolkit
 description: >-
-  Generic, use-case-agnostic guide to the smart-community MCP server and its
+  Generic, use-case-agnostic guide to the smart-building MCP server and its
   smartbuilding_* video tool set. Read this before touching any smartbuilding_* tool.
   IMPORTANT: this toolkit must not create/register new use cases directly; for any new
   use case request, first load video-summary-prompt-studio and follow its Q1/Q2 schema
@@ -12,7 +12,7 @@ description: >-
   Cursor, …) with no persona required.
 ---
 
-# smart-community Toolkit
+# Smart-Building Toolkit
 
 Every tool is keyed on **`monitor_id`** (the camera id, e.g. `cam_child`). There is no
 global `source_id`; ids are per-monitor and never assume they are unique across use cases.
@@ -29,7 +29,7 @@ This toolkit resumes only after the use case exists, or for ordinary monitor/rep
 
 ## 1. Tool catalog
 
-All tool ids are defined in MCP server: `smart-community`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
+All tool ids are defined in MCP server: `smart-building`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
 
 ### smartbuilding_alert_query — read/ack the important alerts
 Every row in `alerts` is already rule-engine-filtered, so you do **not** re-filter by
@@ -175,6 +175,17 @@ say it's unclear rather than guessing.
 
 **Two-phase confirmation for destructive actions.** These change or tear down state —
 first explain what will happen and get explicit user confirmation, then execute:
+- `smartbuilding_use_case_register action=unregister` — the heaviest teardown: deletes the
+  VLM task, removes the `use_case_dict` entry, cascades to every monitor on the use case
+  via `monitor_ctl action=unregister` (stop worker + delete analytics source + delete the
+  monitors row; if the row delete fails — e.g. FK constraint from existing alerts history —
+  it falls back to stop: the row is kept offline and a warning is logged), and with
+  `persist=true` strips config.yaml/monitors.yaml and archives `use-cases/<uc>/` to
+  `use-cases/.backup/` — for a kept-offline monitor the monitors.yaml entry is kept but
+  flipped to `enabled: false`, so a restart cleanly skips it while its pipeline_config
+  survives for a later re-enable; inspect `degraded` and `warnings` for any cleanup that did
+  not complete, and `cascaded_monitors[].db_row` ("deleted" | "kept_offline") for
+  per-monitor outcomes
 - `smartbuilding_monitor_ctl action=stop | unregister`
 - `smartbuilding_monitors_compose action=down | restart`
 - `smartbuilding_plan_ctl action=delete`

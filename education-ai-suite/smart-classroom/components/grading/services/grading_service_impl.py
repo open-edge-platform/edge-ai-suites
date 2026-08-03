@@ -838,10 +838,19 @@ def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
 
 def update_grading_config(
     dpi: int | None = None,
+    contrast_enhance: bool | None = None,
+    contrast_factor: float | None = None,
+    max_tokens: int | None = None,
     vlm_temperature: float | None = None,
+    max_image_pixels: int | None = None,
     poll_interval: int | None = None,
     stable_checks: int | None = None,
     idle_timeout: int | None = None,
+    min_score: float | None = None,
+    sort_boxes: bool | None = None,
+    expand_margin: int | None = None,
+    merge_overlapping: bool | None = None,
+    iou_threshold: float | None = None,
 ) -> dict[str, Any]:
     import re
     from services.vlm_grading_pipeline import _component_root
@@ -856,16 +865,37 @@ def update_grading_config(
             flags=re.MULTILINE,
         )
 
+    def yaml_bool(v: bool) -> str:
+        return "true" if v else "false"
+
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
+    if contrast_enhance is not None:
+        text = replace_scalar(text, "contrast_enhance", yaml_bool(contrast_enhance))
+    if contrast_factor is not None:
+        text = replace_scalar(text, "contrast_factor", str(float(contrast_factor)))
+    if max_tokens is not None:
+        text = replace_scalar(text, "max_tokens", str(int(max_tokens)))
     if vlm_temperature is not None:
         text = replace_scalar(text, "temperature", str(float(vlm_temperature)))
+    if max_image_pixels is not None:
+        text = replace_scalar(text, "max_image_pixels", str(int(max_image_pixels)))
     if poll_interval is not None:
         text = replace_scalar(text, "poll_interval", str(int(poll_interval)))
     if stable_checks is not None:
         text = replace_scalar(text, "stable_checks", str(int(stable_checks)))
     if idle_timeout is not None:
         text = replace_scalar(text, "idle_timeout", str(int(idle_timeout)))
+    if min_score is not None:
+        text = replace_scalar(text, "min_score", str(float(min_score)))
+    if sort_boxes is not None:
+        text = replace_scalar(text, "sort_boxes", yaml_bool(sort_boxes))
+    if expand_margin is not None:
+        text = replace_scalar(text, "expand_margin", str(int(expand_margin)))
+    if merge_overlapping is not None:
+        text = replace_scalar(text, "merge_overlapping", yaml_bool(merge_overlapping))
+    if iou_threshold is not None:
+        text = replace_scalar(text, "iou_threshold", str(float(iou_threshold)))
 
     path.write_text(text, encoding="utf-8")
     return get_grading_config()
@@ -883,6 +913,7 @@ def get_grading_config() -> dict[str, Any]:
     image = cfg.get("image") if isinstance(cfg.get("image"), dict) else {}
     vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
     watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
+    detection = cfg.get("detection_service") if isinstance(cfg.get("detection_service"), dict) else {}
 
     sc_config_path = _component_root().parents[1] / "config.yaml"
     try:
@@ -903,10 +934,19 @@ def get_grading_config() -> dict[str, Any]:
 
     return {
         "dpi": image.get("dpi"),
+        "contrast_enhance": image.get("contrast_enhance"),
+        "contrast_factor": image.get("contrast_factor"),
+        "max_tokens": vlm.get("max_tokens"),
         "vlm_temperature": vlm.get("temperature"),
+        "max_image_pixels": vlm.get("max_image_pixels"),
         "poll_interval": watch.get("poll_interval"),
         "stable_checks": watch.get("stable_checks"),
         "idle_timeout": watch.get("idle_timeout"),
+        "min_score": detection.get("min_score"),
+        "sort_boxes": detection.get("sort_boxes"),
+        "expand_margin": detection.get("expand_margin"),
+        "merge_overlapping": detection.get("merge_overlapping"),
+        "iou_threshold": detection.get("iou_threshold"),
         "vlm_model": sc_text_gen.get("vlm_name"),
         "ocr_model": sc_ocr.get("rec_model"),
         "layout_model": layout_model,

@@ -1,46 +1,25 @@
-# Kiosk service configs
+# Configuration References
 
-This folder holds **kiosk-pinned** configuration for the upstream services we
-spin up from `docker-compose.yml`:
+This folder stores reference configuration for the upstream services used by
+AI Teaching Assistant:
 
-- `audio-analyzer/config.yaml` — mounted into the `audio-analyzer`
-  container at `/app/audio_analyzer/config.yaml`. Pins the ASR model,
-  device, denoise/chunking settings, allowed audio formats, and sentiment
-  options.
-- `text-to-speech/config.yaml` — mounted into the `text-to-speech`
-  container at `/app/text-to-speech/config.yaml`. Pins the TTS model,
-  voice, language, device, dtype, and output format.
+- [configs/audio-analyzer/config.yaml](configs/audio-analyzer/config.yaml)
+- [configs/text-to-speech/config.yaml](configs/text-to-speech/config.yaml)
 
-> Note: The `rag-service` reads its settings directly from its own
-> `rag-service/config.yaml` (no override layer), so it does not need the
-> `configs/` indirection — only the two services that come from the
-> upstream [edge-ai-libraries](https://github.com/open-edge-platform/edge-ai-libraries) project do.
+## Important Runtime Note
 
-## Why this exists
+In this Windows-native application flow, services run directly from the
+submodule source trees. The active runtime configs are read from:
 
-Both services are published as `intel/audio-analyzer` and
-`intel/text-to-speech` on Docker Hub and ship their own default
-`config.yaml`. Those defaults can change over time, and the
-kiosk needs reproducible behaviour (specific ASR model, specific TTS voice,
-denoise off, etc.).
+- [edge-ai-libraries/microservices/audio-analyzer/config.yaml](edge-ai-libraries/microservices/audio-analyzer/config.yaml)
+- [edge-ai-libraries/microservices/text-to-speech/config.yaml](edge-ai-libraries/microservices/text-to-speech/config.yaml)
+- [voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml](voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml)
 
-By keeping a pinned copy here and mounting it as the service config, we get:
+If you change values here under `configs/`, copy those values to the runtime
+config files above before restarting services.
 
-1. The kiosk always boots the exact service configuration it was tested with,
-   regardless of upstream image updates.
-2. **No fork / no patches** of the upstream services — they're consumed as-is.
-3. Anyone tweaking kiosk behaviour edits files in this folder, not in the
-   upstream repository.
+## Why Keep This Folder
 
-## How it works
-
-`docker-compose.yml` mounts these files read-only into each container as
-`config.yaml`, so the upstream services read them as their primary
-configuration with no service code changes.
-
-## Updating
-
-1. Edit the YAML here.
-2. `docker compose up -d --build --force-recreate audio-analyzer` (or
-   `text-to-speech`).
-3. The service restarts with the new pinned config.
+- Maintains a project-owned baseline for ASR and TTS behavior.
+- Helps track intentional config choices separately from upstream defaults.
+- Makes it easier to compare and review config changes.

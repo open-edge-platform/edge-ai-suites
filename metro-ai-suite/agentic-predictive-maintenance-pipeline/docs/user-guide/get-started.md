@@ -32,7 +32,7 @@ agentic-predictive-maintenance/
 │       │   └── pipeline-defect-detection.txt  # LLM prompt sections per agent
 │       ├── models/                    # Model artifacts directory
 │       ├── resources/
-│       │   └── videos/                # Input video files (place sample.mp4 here)
+│       │   └── videos/                # Input video files (place datastream.mp4 here)
 │       └── .env_pipeline-defect-detection  # Environment configuration for this use case
 ├── docker/                            # Docker Compose files
 │   ├── compose.base.yaml              # Core services (nginx, storage, DL Streamer, MQTT)
@@ -81,6 +81,7 @@ The most important variables are:
 | `LLM_MODEL_NAME` | `microsoft/Phi-4-mini-instruct` | Language model used by the agent pipeline |
 | `LLM_DEVICE` | `CPU` | Inference device: `CPU`, `GPU`, or `NPU` |
 | `LLM_WEIGHT_FORMAT` | `int4` | Model quantization format: `fp32`, `fp16`, `int8`, or `int4` |
+| `DL_DEVICE` | `CPU` | Default DL Streamer mode. The UI device list is hardware-detected: `CPU` is always available, `GPU` appears when `/dev/dri/render*` exists, and `NPU` appears when `/dev/accel` exists. |
 
 If you are using a gated Hugging Face model, set your API token:
 
@@ -111,7 +112,12 @@ python scripts/download_and_prep_data.py \
 This script:
 - Downloads and extracts the dataset, which is around 300 MB.
 - Splits it into training and validation sets.
-- Builds `apps/pipeline-defect-detection/resources/videos/sample.mp4` for use by DL Streamer.
+- Builds `apps/pipeline-defect-detection/resources/videos/datastream.mp4` for use by DL Streamer.
+
+> **Training note**: This release does not include a production-trained defect detection model
+> because a representative, properly licensed, and sufficiently labeled dataset is not available
+> for release validation. To train a detector for your own inspection scenario, see
+> [Training a Defect Detection Model with Intel Geti](./training-with-geti.md).
 
 > **Note**: Skip this step if you have your own video, or if you plan to run in
 > `LLM_MODE=fallback` where no video or DL Streamer inference is required.

@@ -9,7 +9,7 @@ import yaml
 
 # "Question 1 | choice | student: A | 4/4 points"
 _LINE_FULL = re.compile(
-    r"Question\s*([0-9]+)\s*\|\s*([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)",
+    r"Question\s*([0-9]+)\s*([（(]\s*\d+\s*[）)])?\s*\|\s*([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)",
     re.IGNORECASE,
 )
 # Fallback: "Question 1: 4/10 points"
@@ -18,16 +18,36 @@ _LINE_SIMPLE = re.compile(
 )
 
 
+def _accumulate(scores: dict[str, dict], qid: str, part: dict) -> None:
+    existing = scores.get(qid)
+    if existing is None:
+        scores[qid] = part
+        return
+    existing["score"] += part["score"]
+    existing["max"] += part["max"]
+    if part.get("student"):
+        existing["student"] = f'{existing["student"]} {part["student"]}'.strip()
+    if not existing.get("type") and part.get("type"):
+        existing["type"] = part["type"]
+
+
 def parse_scores(text: str) -> dict[str, dict]:
     """Return {qid: {type, student, score, max}} parsed from model output."""
     scores: dict[str, dict] = {}
+    seen_subparts: set[tuple[str, str]] = set()
     for m in _LINE_FULL.finditer(text):
-        scores[m.group(1)] = {
-            "type": m.group(2).lower(),
-            "student": m.group(3).strip(),
-            "score": int(m.group(4)),
-            "max": int(m.group(5)),
-        }
+        qid = m.group(1)
+        subq = (m.group(2) or "").strip()
+        key = (qid, subq)
+        if subq and key in seen_subparts:
+            continue
+        seen_subparts.add(key)
+        _accumulate(scores, qid, {
+            "type": m.group(3).lower(),
+            "student": m.group(4).strip(),
+            "score": int(m.group(5)),
+            "max": int(m.group(6)),
+        })
     for m in _LINE_SIMPLE.finditer(text):
         qid = m.group(1)
         if qid not in scores:
@@ -125,8 +145,9 @@ def parse_header_info(text: str) -> dict[str, Any]:
 
 
 def merge_page_scores(pages: list[dict[str, dict]]) -> dict[str, dict]:
-    """Merge per-page score dicts into one; later pages win on duplicate qids."""
+    """Merge per-page score dicts into one; duplicate qids are accumulated."""
     merged: dict[str, dict] = {}
     for page_scores in pages:
-        merged.update(page_scores)
+        for qid, part in page_scores.items():
+            _accumulate(merged, qid, dict(part))
     return merged
