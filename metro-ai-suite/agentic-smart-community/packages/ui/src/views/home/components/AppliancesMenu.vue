@@ -238,6 +238,11 @@ const updateSelection = async (appliance: ApplianceInfo) => {
   });
 };
 
+const clearSelection = async () => {
+  const { source_id: _sourceId, ...query } = route.query;
+  await router.replace({ query });
+};
+
 const handleSelectAppliance = (applianceId: string) => {
   const appliance = applianceList.value.find((item) => item.id === applianceId);
   if (!appliance) {
@@ -265,6 +270,11 @@ const queryMonitors = async () => {
     );
     if (!matchedMonitor && (firstOnlineMonitor || monitors.value[0])) {
       await updateSelection(firstOnlineMonitor || monitors.value[0]);
+      return;
+    }
+
+    if (selectedSourceId.value) {
+      await clearSelection();
     }
   } catch {
     monitors.value = [];

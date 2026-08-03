@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #######################################
-# Drone Mission Compute SDK System Resource Checker and Installation Script
+# UAV Mission Compute SDK System Resource Checker and Installation Script
 # Checks CPU, Memory, Storage, and Intel GPU resources
 # Installs Docker, Docker Compose, and required container images
 # Globals:
@@ -27,7 +27,7 @@ repositories=(
 images=(
 )
 
-NAME="Drone Mission Compute SDK"
+NAME="UAV Mission Compute SDK"
 
 set -euo pipefail
 
@@ -469,7 +469,7 @@ verify_repos() {
 # Show help message
 #######################################
 show_help() {
-  echo -e "${BOLD}${CYAN}Drone Mission Compute SDK Installation Script${NC}"
+  echo -e "${BOLD}${CYAN}UAV Mission Compute SDK Installation Script${NC}"
   echo ""
   echo -e "${BOLD}Usage:${NC} $0 [OPTIONS]"
   echo ""
@@ -524,7 +524,7 @@ main() {
         ;;
     esac
   done
-  info "Drone Mission Compute SDK Installation Script"
+  info "UAV Mission Compute SDK Installation Script"
   echo -e "${BOLD}${BLUE}==================================================${NC}"
   
   # System Requirements Check

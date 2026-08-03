@@ -59,7 +59,7 @@ VMS Adapter Plugin (VAP)                                                │
 ## Part 1 — Set Up Loitering Detection application
 
 ### 1.1 Configure the Lotiering Detection Environment
-Clone the edge-ai-suites repo as instructed in the setup document and install loitering detection as mentioned [here](../../../../metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/get-started.md#set-up-and-first-use).
+Clone the edge-ai-suites repo as instructed in the setup document and install loitering detection as mentioned [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
 Do not bring up the application yet.
 
 > The above setup generates a docker-compose.yml file
