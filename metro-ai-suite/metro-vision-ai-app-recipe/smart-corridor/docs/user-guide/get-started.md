@@ -188,38 +188,36 @@ On the parent machine, configure the [.env](../../../.env) file to declare how m
    </details>
 
 5. **Update Remote Scene COnfigurations**:
-   ### Application UI
-
-  - Open a browser and go to the following endpoints to access the application. Use `<actual_ip>` instead of `localhost` for external access:
-
-    > **Note:**
-    >
-    > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
-    > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
-    > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
-
-    - **URL**: [https://localhost](https://localhost)
-    - **Log in with credentials**:
-      - **Username**: `admin`
-      - **Password**: Stored in `supass`. (Check `./smart-corridor/src/secrets/supass`)
-
-    > **Note**:
-    >
-    > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
+   
+    - Open a browser and go to the following endpoints to access the application. Use `<actual_ip>` instead of `localhost` for external access:
   
-  - Go to on "Smart-Corridor" Scene, scroll down and click on "Children" Section. This shows multple Child Scenes, both Local and Remote Linked with their respective Scene names.
-  - Click on each Remote Linked Child Scene and in the "Hostname or IP" field, replace the IP address with your respective Remote Child Node Host IP. In the "MQTT Password" field, enter the password of your respective Remote Child Node, which you can retrieve from the by running the below command in the Child Node:
-
-   ```bash
-     echo $SCCRED
-   ```
-
-  - Scroll to the bottom and click "Update Child Link".
-  - Repeat the same steps for all the Remote Linked Child scenes in the "Children" section and once done, make sure MQTT is Green for all those Remote Linked Child scenes.
+      > **Note:**
+      >
+      > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
+      > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
+      > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
+  
+      - **URL**: [https://localhost](https://localhost)
+      - **Log in with credentials**:
+        - **Username**: `admin`
+        - **Password**: Stored in `supass`. (Check `./smart-corridor/src/secrets/supass`)
+  
+      > **Note**:
+      >
+      > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
+    
+    - Go to on "Smart-Corridor" Scene, scroll down and click on "Children" Section. This shows multple Child Scenes, both Local and Remote Linked with their respective Scene names.
+    - Click on each Remote Linked Child Scene and in the "Hostname or IP" field, replace the IP address with your respective Remote Child Node Host IP. In the "MQTT Password" field, enter the password of your respective Remote Child Node, which you can retrieve from the by running the below command in the Child Node:
+  
+     ```bash
+       echo $SCCRED
+     ```
+  
+    - Scroll to the bottom and click "Update Child Link".
+    - Repeat the same steps for all the Remote Linked Child scenes in the "Children" section and once done, make sure MQTT is Green for all those Remote Linked Child scenes.
 
 
 ## Access the Grafana and other Components
-
 
 ### Grafana UI
 
