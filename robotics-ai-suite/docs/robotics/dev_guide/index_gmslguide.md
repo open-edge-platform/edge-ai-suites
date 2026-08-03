@@ -25,7 +25,8 @@ It is crucial to understand the SerDes I2C connectivity specific to each ODM/OEM
 :hidden:
 
 GMSL Add-in-Card Overview <./gmsl-guide/gmsl-aic-overview.md>
-Configure GMSL SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-dev-kit.md>
+Configure GMSL Dev Kit SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-dev-kit.md>
+Configure GMSl AIC SerDes ACPI Devicec <./gmsl-guide/configure-gmsl-serdes-acpi.md>
 
 :::
 hide_directive-->
