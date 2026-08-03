@@ -37,6 +37,7 @@ class Summarizer(BaseSummarizer):
             self.model_path,
             device=self.device,
             use_cache=True,
+            ov_config={"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"},
         )
 
     def _destroy_model(self, model):

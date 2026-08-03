@@ -68,7 +68,11 @@ class Summarizer(BaseSummarizer):
             
     def _load_model(self):
         logger.info("Loading model instance...")
-        return ov_genai.LLMPipeline(ensure_model.get_model_path(), device=self.device)
+        return ov_genai.LLMPipeline(
+            ensure_model.get_model_path(),
+            device=self.device,
+            **{"GPU_ENABLE_LARGE_ALLOCATIONS": "YES"},
+        )
 
     def _destroy_model(self, model):
         try:
