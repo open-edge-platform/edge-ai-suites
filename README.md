@@ -5,12 +5,10 @@
 
 # Edge-AI-Suites
 
-## Overview
-
 **Edge AI Suites** are collections of open, industry-specific AI software development kits (SDKs), microservices, and sample applications for independent software vendors (ISVs), system integrators and solutions builders.
 
 These suites accelerate the development of custom AI solutions by offering:
-* Curated sample applications
+* Curated sample applications to use as reference for production-ready solutions
 * Optimized code for AI, media, and end-to-end workloads
 * Benchmarks and deployment guides
 

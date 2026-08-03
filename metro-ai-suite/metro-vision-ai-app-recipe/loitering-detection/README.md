@@ -1,17 +1,21 @@
 # Loitering Detection
-Effortlessly monitor and manage areas with AI-driven video analytics for real-time insights and enhanced security.
 
-## Overview
+> This application is for **reference and evaluation purposes**. It is
+  **not intended for direct use in security systems** and is not
+  validated as such.
 
-Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. By proactively detecting suspicious behavior, this system helps to address potential security threats effectively.
+Loitering Detection leverages advanced AI algorithms for monitoring and analyzing real-time
+video feeds. It enables security system engineers evaluate the efficiency of Intel hardware
+in identifying individuals lingering in specified areas and detecting their behavior.
 
 By utilizing cutting-edge technologies and pre-trained deep learning models, this application enables real-time processing and analysis of video streams, making it an ideal solution. Its modular architecture and integration capabilities ensure that users can easily customize and extend its functionalities to meet their specific needs.
 
-### Key Features
+## Key Features
 
 - **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models. Customize parameters such as thresholds and object types without requiring additional coding.
 - **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling, real-time monitoring, and insightful data visualization.
 - **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and configuration files.
+
 
 ## How It Works
 
