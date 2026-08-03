@@ -41,7 +41,7 @@ Provider dashboard
     │  caption overlay on WebRTC video player
 ```
 
-### DLStreamer Vision (dls_vision e.g. Loitering Detection) Flow
+### DL Streamer Vision (dls_vision e.g. Loitering Detection) Flow
 
 ```
 Provider dashboard
@@ -109,7 +109,7 @@ The `LvcSchemaManager` fetches the `StartRunRequest` JSON Schema from LVC's `/op
 
 ### MQTT Subscriber (dls_vision)
 
-`MqttSubscriber` runs as an asyncio background task. It subscribes to `+/dls_vision/+` on the MQTT broker and receives DLStreamer GVA JSON metadata per frame. The `translate_dls_metadata()` function converts normalized bounding boxes and labels to Nx analytics object format, then `NxWitnessVmsShim.push_analytics_objects()` posts them to Nx.
+`MqttSubscriber` runs as an asyncio background task. It subscribes to `+/dls_vision/+` on the MQTT broker and receives DL Streamer GVA JSON metadata per frame. The `translate_dls_metadata()` function converts normalized bounding boxes and labels to Nx analytics object format, then `NxWitnessVmsShim.push_analytics_objects()` posts them to Nx.
 
 ### React Analytics Provider Dashboard (`ui/`)
 

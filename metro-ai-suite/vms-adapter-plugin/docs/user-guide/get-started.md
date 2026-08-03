@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **VMS Adapter Plugin (VAP)** bridges VMS systems (Nx Witness, Genetec, Milestone, etc.) with AI Analytics Apps (Live Video Captioning (LVC), DLStreamer vision analytics app like Loitering Detection) and provides a unified React based provider dashboard for managing cameras and analytics runs. This guide shows how to deploy the full stack with Docker Compose and run your first analytics session.
+The **VMS Adapter Plugin (VAP)** bridges VMS systems (Nx Witness, Genetec, Milestone, etc.) with AI Analytics Apps (Live Video Captioning (LVC), DL Streamer vision analytics app like Loitering Detection) and provides a unified React based provider dashboard for managing cameras and analytics runs. This guide shows how to deploy the full stack with Docker Compose and run your first analytics session.
 
 This guide shows how to:
 
@@ -57,14 +57,14 @@ curl http://localhost:4173/health
 
 > Skip this step if you are only using Live Video Captioning.
 
-Loitering Detection is a user-provided application based on the Intel DLStreamer Pipeline Server. Follow the [Loitering detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
+Loitering Detection is a user-provided application based on the Intel DL Streamer Pipeline Server. Follow the [Loitering detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
 | **Service**              | **Default Port** | **Purpose**                            |
 |--------------------------|------------------|----------------------------------------|
-| DLStreamer Pipeline Server | `8080`         | Receive pipeline start/stop commands   |
+| DL Streamer Pipeline Server | `8080`         | Receive pipeline start/stop commands   |
 | MQTT Broker              | `1883`           | Publish inference metadata to VAP      |
 
-Verify the DLStreamer Pipeline Server is reachable:
+Verify the DL Streamer Pipeline Server is reachable:
 
 ```bash
 curl http://<LOITERING_DETECTION_HOST>:8080/pipelines
@@ -98,13 +98,13 @@ Open `.env` and update the variables for your environment. Variables are grouped
 | `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`         | Mandatory     |
 | `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber | Optional |
 
-**DLStreamer Vision (dls_vision — Loitering Detection):**
+**DL Streamer Vision (dls_vision — Loitering Detection):**
 
 | **Variable**                         | **Description**                                                          | **Required?** |
 |--------------------------------------|--------------------------------------------------------------------------|---------------|
-| `DLS_VISION_HOST` / `DLS_VISION_PORT` | DLStreamer Pipeline Server host and port for Loitering Detection app (default port: `443`) | Mandatory |
+| `DLS_VISION_HOST` / `DLS_VISION_PORT` | DL Streamer Pipeline Server host and port for Loitering Detection app (default port: `443`) | Mandatory |
 | `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for dls_vision metadata (default: `1883`)             | Mandatory     |
-| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
+| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DL Streamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
 | `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber | Optional |
 
 > If LVC or Loitering Detectopm is running on the same host as VAP, use `host.docker.internal` (Linux/Mac). Otherwise, use the actual IP address.
@@ -186,7 +186,7 @@ Configure the following fields in the dashboard:
 | Enter Prompt      | VLM prompt for captioning                           | "Describe what you see in one sentence." |
 | Select Model      | VLM model from LVC                                  | OpenGVLab/InternVL2-2B                   |
 | Max New Tokens    | Maximum caption length                              | 70                                       |
-| Select Pipeline   | DLStreamer pipeline configuration                   | —                                        |
+| Select Pipeline   | DL Streamer pipeline configuration                   | —                                        |
 | Run Name          | Display name for this run                           | —                                        |
 | Frame Rate        | Frames per second sent for inference                | 1                                        |
 | Chunk Size        | Number of frames per inference chunk                | 1                                        |
@@ -194,14 +194,14 @@ Configure the following fields in the dashboard:
 
 Live captions are streamed via SSE and displayed in the dashboard caption overlay on the WebRTC video player.
 
-### Loitering Detection (DLStreamer vision based app)
+### Loitering Detection (DL Streamer vision based app)
 
 Configure the following fields in the dashboard:
 
 | **Field**         | **Description**                                     |
 |-------------------|-----------------------------------------------------|
 | Camera            | Dropdown of enabled cameras (Nx Witness cameras)    |
-| Pipeline Name     | DLStreamer pipeline template to use                 |
+| Pipeline Name     | DL Streamer pipeline template to use                 |
 | Pipeline Version  | Version of the pipeline template                    |
 
 Detection results are pushed directly back to Nx Witness as analytics objects (bounding boxes with labels). Use the Nx Witness client to view detections overlaid on the camera feed.

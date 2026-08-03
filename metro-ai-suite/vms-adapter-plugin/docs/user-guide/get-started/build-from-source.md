@@ -42,7 +42,7 @@ Set at minimum the following variables before building:
 | `MEDIAMTX_URL`                                | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`        |
 | `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx Witness)                       |
 | `NX_TLS_VERIFY` / `NX_CA_BUNDLE`              | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
-| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
+| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DL Streamer TLS verification toggle and optional CA bundle path (default: `false`) |
 | `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
 | `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
 | `PG_PASSWORD`                                 | PostgreSQL password (change from default)                               |

@@ -52,7 +52,7 @@ The following external services must be reachable from the VAP backend container
 | Live Video Captioning (LVC)     | LVC Analytics App integration     | `4173`           |
 | MediaMTX (WebRTC signaling)     | Live stream relay to UI       | `8889`           |
 | Nx Witness                      | Nx VMS camera discovery       | `7001` (HTTPS)   |
-| DLStreamer Pipeline Server (dls_vision)| DLStreamer Vision       | `8080`           |
+| DL Streamer Pipeline Server (dls_vision)| DL Streamer Vision       | `8080`           |
 | MQTT Broker                     | dls_vision metadata streaming        | `1883`           |
 
 ## Validation

@@ -12,9 +12,9 @@ Details about the changes and known issues in each release of the VMS Adapter Pl
 
 **New Features**:
 
-- **Live Video Captioning Integration**: Stream RTSP feeds from any connected camera to the Intel Live Video Captioning application (DLStreamer + VLM). Captions are streamed back to the operator dashboard via SSE and overlaid on the WebRTC video player.
+- **Live Video Captioning Integration**: Stream RTSP feeds from any connected camera to the Intel Live Video Captioning application (DL Streamer + VLM). Captions are streamed back to the operator dashboard via SSE and overlaid on the WebRTC video player.
 
-- **DLStreamer Vision Integration**: Route camera feeds to a DLStreamer Pipeline Server for warehouse defect detection. Bounding-box detections are translated from DLStreamer GVA JSON format and pushed back to Nx Witness as analytics objects via the Nx REST v4 analytics API.
+- **DL Streamer Vision Integration**: Route camera feeds to a DL Streamer Pipeline Server for warehouse defect detection. Bounding-box detections are translated from DL Streamer GVA JSON format and pushed back to Nx Witness as analytics objects via the Nx REST v4 analytics API.
 
 - **Dynamic Schema Forms**: The operator dashboard renders analytics configuration forms directly from each Analytics App's live OpenAPI schema. No frontend changes are required when Analytics App parameters change.
 
@@ -28,6 +28,6 @@ Details about the changes and known issues in each release of the VMS Adapter Pl
 
 **Known Issues**:
 
-- If the Nx Witness analytics integration is reused from a previous database record (not freshly registered), the integration user password is not available from the Nx API. In this case, DLStreamer Vision detections cannot be pushed to Nx until the integration is deleted from Nx Witness and VAP is restarted to recreate it.
+- If the Nx Witness analytics integration is reused from a previous database record (not freshly registered), the integration user password is not available from the Nx API. In this case, DL Streamer Vision detections cannot be pushed to Nx until the integration is deleted from Nx Witness and VAP is restarted to recreate it.
 
 - Helm deployment is not available in this version.

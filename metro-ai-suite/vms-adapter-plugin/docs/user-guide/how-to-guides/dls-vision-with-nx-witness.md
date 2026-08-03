@@ -1,7 +1,7 @@
 # Tutorial: Loitering Detection with Nx Witness
 
-This tutorial walks through the complete end-to-end setup of Loitering Detection (a DLStreamer based vision app in general) as a Analytics App in VMS Adapter Plugin, with Nx Witness as the VMS. At the end of this tutorial you will have:
-> Although the guide demonstrates Loitering Detection as an analytics application, the same instructions are applicable to any other DLStreamer based vision applications.
+This tutorial walks through the complete end-to-end setup of Loitering Detection (a DL Streamer based vision app in general) as a Analytics App in VMS Adapter Plugin, with Nx Witness as the VMS. At the end of this tutorial you will have:
+> Although the guide demonstrates Loitering Detection as an analytics application, the same instructions are applicable to any other DL Streamer based vision applications.
 
 - Loitering detection app running with its MQTT broker exposed to the host
 - Nx Witness connected to VAP and auto-registered as an analytics integration
@@ -49,9 +49,9 @@ VMS Adapter Plugin (VAP)                                                │
 
 **Key data flows:**
 
-1. VAP sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DLStreamer Pipeline Server, specifying the camera RTSP URL as source and an MQTT topic as destination.
-2. dls_vision's DLStreamer Pipeline Server processes the RTSP stream, runs detection, and publishes inference metadata to the MQTT broker on topic `nx/dls_vision/{device_uuid}`.
-3. VAP's `MqttSubscriber` receives the MQTT messages, translates DLStreamer GVA JSON to Nx analytics object format, and calls `NxWitnessVmsShim.push_analytics_objects()`.
+1. VAP sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DL Streamer Pipeline Server, specifying the camera RTSP URL as source and an MQTT topic as destination.
+2. dls_vision's DL Streamer Pipeline Server processes the RTSP stream, runs detection, and publishes inference metadata to the MQTT broker on topic `nx/dls_vision/{device_uuid}`.
+3. VAP's `MqttSubscriber` receives the MQTT messages, translates DL Streamer GVA JSON to Nx analytics object format, and calls `NxWitnessVmsShim.push_analytics_objects()`.
 4. Nx Witness receives the push and overlays bounding boxes on the camera feed.
 
 ---
@@ -64,7 +64,7 @@ Do not bring up the application yet.
 
 > The above setup generates a docker-compose.yml file
 
-### 1.2 Verify MQTT Port Exposure and set MQTT host for DLStreamer Pipeline Server to publish
+### 1.2 Verify MQTT Port Exposure and set MQTT host for DL Streamer Pipeline Server to publish
 
 The Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`. Also set the `MQTT_HOST` for dlstreamer pipeline server to publish
 
@@ -80,7 +80,7 @@ dlstreamer-pipeline-server:
     - MQTT_PORT=1883
 ```
 
-This is the default configuration. The Mosquitto broker uses an anonymous-access configuration (`allow_anonymous true`), which is required for VMS Analytics plugin and the DLStreamer Pipeline Server to publish and subscribe without credentials.
+This is the default configuration. The Mosquitto broker uses an anonymous-access configuration (`allow_anonymous true`), which is required for VMS Analytics plugin and the DL Streamer Pipeline Server to publish and subscribe without credentials.
 
 > **Important:** The plugin connects to this MQTT broker from outside the dls_vision Docker network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP runs on the same host, `host.docker.internal` resolves to the host from inside the plugin container.
 
@@ -107,7 +107,7 @@ curl -k -s https://<NX_HOST>:7001/rest/v4/info | python3 -m json.tool | grep '"n
 
 ### 2.2 Enable Digest Authentication for RTSP
 
-VAP constructs RTSP URLs in the following format and passes them directly to the DLStreamer Pipeline Server:
+VAP constructs RTSP URLs in the following format and passes them directly to the DL Streamer Pipeline Server:
 
 ```
 rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true
@@ -115,7 +115,7 @@ rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=tru
 
 The Nx Witness RTSP server is exposed on the **same port as the REST API** (default `7001`). It uses **digest authentication**, meaning the username and password embedded in the URL are verified with an MD5 challenge-response — credentials are never sent in plaintext over the wire.
 
-For analytics applications such as DLStreamer to successfully connect to these RTSP URLs, two things must be confirmed in Nx Witness:
+For analytics applications such as DL Streamer to successfully connect to these RTSP URLs, two things must be confirmed in Nx Witness:
 
 #### 2.2.1 Enable "Digest Authentication for RTSP" in System Settings
 
@@ -129,7 +129,7 @@ By default, newer Nx Witness versions restrict legacy RTSP clients to bearer-tok
 
 <img src="../_assets/enable_digest_auth.png" alt="Enable Digest Auth" style="width: 600px; max-width: 100%;" />
 
-> **Why this is needed:** GStreamer's `rtspsrc` element (used by DLStreamer) negotiates authentication via the standard RTSP `DESCRIBE` challenge. If Nx only accepts bearer tokens (HTTP Authorization header), the GStreamer client cannot authenticate and the pipeline immediately fails with `401 Unauthorized`.
+> **Why this is needed:** GStreamer's `rtspsrc` element (used by DL Streamer) negotiates authentication via the standard RTSP `DESCRIBE` challenge. If Nx only accepts bearer tokens (HTTP Authorization header), the GStreamer client cannot authenticate and the pipeline immediately fails with `401 Unauthorized`.
 
 #### 2.2.2 Confirm the User Has "View Live Video" Permission
 
@@ -145,13 +145,13 @@ To verify or assign the role in the Nx Witness client:
 
 #### 2.2.3 Verify RTSP Access from the Analytics Host
 
-Before starting the full pipeline, verify the RTSP URL is reachable from the machine that will run the DLStreamer Pipeline Server:
+Before starting the full pipeline, verify the RTSP URL is reachable from the machine that will run the DL Streamer Pipeline Server:
 
 You can test with GStreamer directly:
 
 The device-uuid can be found from the Nx Witness client. Right click a camera from the list, choose **Camera Settings**. In the camera settings window, under **General** tab, look for the **Camera ID**
 
-To run this test in a DLStreamer Pipeline Server container:
+To run this test in a DL Streamer Pipeline Server container:
 
 ```bash
 docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:latest
@@ -219,7 +219,7 @@ NX_PASSWORD=<nx_admin_password>
 NX_TLS_VERIFY=false
 NX_CA_BUNDLE=
 
-# dls_vision / DLStreamer Pipeline Server
+# dls_vision / DL Streamer Pipeline Server
 # Hostname as seen from inside the VAP container.
 # If dls_vision runs on the same host: use host.docker.internal
 DLS_VISION_HOST=host.docker.internal
@@ -300,7 +300,7 @@ the corresponding configured pipeline with the same device in `detection-propert
 
 ### 3.3 Configure the `label_type_map`
 
-The `label_type_map` translates DLStreamer detection labels (from the model) into Nx Witness object typeIds. These typeIds are automatically added to the Nx analytics manifest at startup, so Nx knows which object types to expect.
+The `label_type_map` translates DL Streamer detection labels (from the model) into Nx Witness object typeIds. These typeIds are automatically added to the Nx analytics manifest at startup, so Nx knows which object types to expect.
 
 **How it works:**
 - When dls_vision detects a `"pedestrian"`, VAP pushes it to Nx as typeId `"vap.pedestrian"`.
@@ -517,7 +517,7 @@ Expected log output:
 2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
 3. Click **Apply** and then click **OK**.
 
-VAP stops the run on the next poll. 
+VAP stops the run on the next poll.
 
 Expected log output:
 
@@ -583,7 +583,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 #### Stop the Run
 
-When you want to stop the detection, go back to the VAP dashboard **Analytics Engine Conguration** panel for **DLStreamer Vision** and click **Stop Analysis** on the active run.
+When you want to stop the detection, go back to the VAP dashboard **Analytics Engine Conguration** panel for **DL Streamer Vision** and click **Stop Analysis** on the active run.
 
 Or via the API:
 
@@ -591,7 +591,7 @@ Or via the API:
 curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_id>
 ```
 
-This sends `DELETE /pipelines/<instance_id>` to the DLStreamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
+This sends `DELETE /pipelines/<instance_id>` to the DL Streamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
 
 </details>
 
@@ -603,7 +603,7 @@ When VAP starts a pipeline run, it executes the following:
 
 1. Resolves the selected `camera_id` (`nx:<uuid>`) to an RTSP URL via `NxWitnessVmsShim.get_live_stream_url()`.
 2. Builds an MQTT publish topic: `nx/dls_vision/<device-uuid>` (the topic where dls_vision publishes and VAP subscribes).
-3. Sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DLStreamer Pipeline Server with the payload:
+3. Sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DL Streamer Pipeline Server with the payload:
 
    ```json
    {
@@ -654,12 +654,12 @@ If detections do not appear, see the [Troubleshooting](#troubleshooting) section
 
 ### 7.3 Stop the plugin
 
-To stop the VAP, 
+To stop the VAP,
 
 ```bash
 docker compose down
 ```
- 
+
 
 > **CAUTION**: Be careful not to remove the volume, by `docker compose down -v` as this will delete the DB, as well as any integration info, credentials you created. If done, then the integration in Nx would be stale. Either delete from the Nx Witness, or use a different VMS integration name in `vms_shim/nxwitness/nx_integration.json` file.
 
@@ -734,11 +734,11 @@ docker compose down
 
 ### RTSP Stream Not Reachable from dls_vision
 
-**Symptom:** Pipeline starts but immediately fails; DLStreamer logs show RTSP connection errors.
+**Symptom:** Pipeline starts but immediately fails; DL Streamer logs show RTSP connection errors.
 
 **Checks:**
 - The Nx RTSP URL includes credentials and is formed as `rtsp://admin:<password>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`. Confirm this URL is reachable from the dls_vision Docker network.
-- If DLStreamer logs show `401 Unauthorized`, digest authentication is not enabled in Nx Witness. Enable it in **System Administration** → **Security** → **Allow digest authentication for cameras** and retry. See [Part 2.2](#22-enable-digest-authentication-for-rtsp) for details.
+- If DL Streamer logs show `401 Unauthorized`, digest authentication is not enabled in Nx Witness. Enable it in **System Administration** → **Security** → **Allow digest authentication for cameras** and retry. See [Part 2.2](#22-enable-digest-authentication-for-rtsp) for details.
 - Add `<NX_HOST>` to `no_proxy` in the dls_vision environment if a proxy is configured.
 
 ---

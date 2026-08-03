@@ -3,7 +3,7 @@
 This guide explains how to configure certificate verification for these external connections used by the VMS Adapter Plugin (VAP):
 
 - Nx Witness HTTPS
-- DLStreamer Vision HTTPS
+- DL Streamer Vision HTTPS
 - MQTT subscribing for dls_vision metadata
 - MQTT subscribing for the Live Video Captioning (LVC) broker
 
