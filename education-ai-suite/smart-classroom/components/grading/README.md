@@ -12,7 +12,7 @@
 
 ## Usage Guide
 
-1. Prepare a rubric file for the target exam and place it under [rubrics](c:/Users/user/jianfeng/EDU-AI/PR/edu-ai-pr/education-ai-suite/smart-classroom/components/grading/rubrics).
+1. Prepare a rubric file for the target exam and place it under [rubrics].
 2. The grading panel on the right side provides adjustable parameters.
 3. Before starting grading, confirm whether the exam page layout is single-column or two-column.
-4. For the rest of the configuration options, see [doc/config-reference.md](c:/Users/user/jianfeng/EDU-AI/PR/edu-ai-pr/education-ai-suite/smart-classroom/components/grading/doc/config-reference.md).
+4. For the rest of the configuration options, see [doc/config-reference.md].
