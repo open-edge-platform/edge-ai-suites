@@ -19,7 +19,7 @@ agent:
 - **`smartbuilding_scene_query`** — to read what's actually in the fridge, pass a prompt
   like *"List every food item visible in the fridge and its quantity; no analysis, no
   advice."* Do this before any diet/grocery advice; never invent contents.
-- **Other frequently used tools** — come from the `smart-community` MCP server and use the `smartbuilding_` prefix.
+- **Other frequently used tools** — come from the `smart-building` MCP server and use the `smartbuilding_` prefix.
 - **web search** (if available) — diet articles/videos and nearby facilities.
 
 ## Reports

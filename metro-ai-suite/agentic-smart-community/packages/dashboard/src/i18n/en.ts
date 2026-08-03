@@ -144,6 +144,7 @@ export default {
     autoLoadPreviewHint: "Auto-loads when scrolled into view",
     timelineZoomTip: "Wheel to zoom, drag to browse time",
     viewReport: "View Report",
+    reportEmptyHint: "No report yet — try asking your agent to generate one.",
     exportReport: "Export Report",
     generateReport: "Generate Report",
     generateLatestReport: "Generate Latest",

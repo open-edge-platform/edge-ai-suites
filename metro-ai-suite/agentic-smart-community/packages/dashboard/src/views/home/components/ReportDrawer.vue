@@ -17,17 +17,6 @@
         </div>
         <div class="drawer-actions flex-left">
           <a-button
-            class="drawer-generate-btn"
-            size="small"
-            :loading="generatingReport"
-            @click="handleGenerate"
-          >
-            <template #icon>
-              <ReloadOutlined />
-            </template>
-            {{ $t("smartBuilding.generateLatestReport") }}
-          </a-button>
-          <a-button
             class="drawer-export-btn"
             type="primary"
             size="small"
@@ -140,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons-vue";
+import { DownloadOutlined } from "@ant-design/icons-vue";
 import CustomRenderer from "@/utils/customRenderer";
 import type { CameraReport } from "../type";
 import { marked } from "marked";
@@ -150,13 +139,11 @@ import { useI18n } from "vue-i18n";
 const props = defineProps<{
   selectedDate: string;
   drawerData: CameraReport[];
-  generatingReport?: boolean;
 }>();
 
 const emit = defineEmits<{
   close: [];
   export: [reports: CameraReport[]];
-  generate: [];
 }>();
 
 const { t } = useI18n();
@@ -240,10 +227,6 @@ const handleExport = () => {
   emit("export", props.drawerData);
 };
 
-const handleGenerate = () => {
-  emit("generate");
-};
-
 watch(
   () => props.drawerData,
   () => {
@@ -273,9 +256,6 @@ watch(
   border-radius: 12px;
 }
 
-.drawer-generate-btn {
-  border-radius: 12px;
-}
 
 .report-drawer-body {
   .flex-column;

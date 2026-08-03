@@ -15,35 +15,27 @@
             @change="handleDateChange"
           />
         </div>
-        <template v-if="hasReports">
-          <a-button class="report-btn" size="small" @click="handleOpenReport">
-            <template #icon>
-              <FileTextOutlined />
-            </template>
-            {{ $t("smartBuilding.viewReport") }}
-          </a-button>
-          <a-button
-            class="export-btn"
-            size="small"
-            @click="handleExportReport()"
-          >
-            <template #icon>
-              <DownloadOutlined />
-            </template>
-            {{ $t("smartBuilding.exportReport") }}
-          </a-button>
-        </template>
         <a-button
-          v-else-if="!reportLoading"
-          class="generate-report-btn"
+          class="report-btn"
           size="small"
-          :loading="generatingReport"
-          @click="handleGenerateReport"
+          :loading="reportLoading"
+          @click="handleOpenReport"
         >
           <template #icon>
             <FileTextOutlined />
           </template>
-          {{ $t("smartBuilding.generateReport") }}
+          {{ $t("smartBuilding.viewReport") }}
+        </a-button>
+        <a-button
+          v-if="hasReports"
+          class="export-btn"
+          size="small"
+          @click="handleExportReport()"
+        >
+          <template #icon>
+            <DownloadOutlined />
+          </template>
+          {{ $t("smartBuilding.exportReport") }}
         </a-button>
       </div>
     </div>
@@ -137,10 +129,8 @@
       v-if="reportDrawerVisible"
       :selected-date="selectedDateLabel"
       :drawer-data="reportList"
-      :generating-report="generatingReport"
       @close="reportDrawerVisible = false"
       @export="handleExportReport"
-      @generate="handleGenerateReport"
     />
   </div>
 </template>
@@ -163,7 +153,6 @@ import "vue3-video-play/dist/style.css";
 import {
   getCameraActivityList,
   getCamReport,
-  requestGenerateReport,
 } from "@/api/smartBuilding";
 import { getSmartBuildingSourceMeta } from "../deviceMeta";
 
@@ -196,7 +185,6 @@ const reportDrawerVisible = ref(false);
 const isLiveMode = ref(true);
 const activityLoading = ref(false);
 const reportLoading = ref(false);
-const generatingReport = ref(false);
 const liveNow = ref(dayjs());
 const liveVideoRef = ref<HTMLVideoElement | null>(null);
 
@@ -424,29 +412,15 @@ const downloadReportFile = (content: string, reportDate: string) => {
 };
 
 const handleOpenReport = async () => {
+  // Re-check in case a report was generated since the last load.
+  if (!hasReports.value) {
+    await queryCamReport(false);
+  }
+  if (!hasReports.value) {
+    message.info(t("smartBuilding.reportEmptyHint"));
+    return;
+  }
   reportDrawerVisible.value = true;
-
-  if (!reportList.value.length) {
-    await queryCamReport(false);
-  }
-};
-
-const handleGenerateReport = async () => {
-  generatingReport.value = true;
-
-  try {
-    const params = {
-      date: selectedDate.value.format("YYYY-MM-DD"),
-      source_id: selectedSourceId.value,
-    };
-
-    await requestGenerateReport(params);
-    await queryCamReport(false);
-  } catch {
-    message.error(t("smartBuilding.generateReportFailed"));
-  } finally {
-    generatingReport.value = false;
-  }
 };
 
 const handleExportReport = async (reports?: CameraReport[]) => {
@@ -780,24 +754,6 @@ onUnmounted(() => {
   }
 }
 
-.generate-report-btn {
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--color-primary);
-  border-radius: 14px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 10px 20px var(--bg-box-shadow);
-
-  &:hover,
-  &:focus {
-    color: var(--color-white) !important;
-    border-color: var(--color-primary) !important;
-    background: var(--color-primary-hover) !important;
-  }
-}
 
 .panel-title {
   font-size: 22px;

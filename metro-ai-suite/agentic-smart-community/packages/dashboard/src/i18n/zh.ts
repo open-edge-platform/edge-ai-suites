@@ -142,6 +142,7 @@ export default {
     autoLoadPreviewHint: "滚动到此处会自动加载",
     timelineZoomTip: "滚轮缩放，拖动查看时间段",
     viewReport: "在线查看报告",
+    reportEmptyHint: "暂无报告 —— 可以让你的 agent 生成一份试试。",
     exportReport: "导出报告",
     generateReport: "生成报告",
     generateLatestReport: "生成最新报告",
