@@ -11,14 +11,17 @@ same process** stalls.
 
 The root cause is an **in-process interaction between pylon (`gencamsrc`) and
 the OpenVINO GPU runtime** on this specific host stack (Intel Arrow Lake-P
-iGPU with **outdated GuC scheduler firmware**). Two fixes:
+iGPU, kernel `7.0.0-28-generic`). **Update:** updating the GuC scheduler
+firmware to `70.53.0` (matching the working host) did **not** resolve it —
+still ~8–9 FPS — so the firmware version is not the cause. The reliable fix
+is therefore the application-level one:
 
-1. **Host fix (preferred):** update the client's GPU firmware/driver stack to
-   match the working reference host — in particular the **GuC firmware**
-   (`linux-firmware`), which the kernel itself reports as outdated.
-2. **Application fix (host-independent):** **decouple camera acquisition** via
-   `basler_reader.py | fdsrc`, which moves pylon into a separate process and
-   sidesteps the contention (**~11 → ~45 FPS**).
+1. **Application fix (shipping solution, host-independent):** **decouple
+   camera acquisition** via `basler_reader.py | fdsrc`, which moves pylon into
+   a separate process and sidesteps the contention (**~11 → ~45 FPS**).
+2. **Host fix (inconclusive):** aligning the client's GPU firmware/driver
+   stack to the working host — GuC firmware update tried, did not help; media
+   driver / kernel alignment still untested as a full set.
 
 - Affected camera in this investigation: **Basler daA1920-160uc** (dart, USB3),
   serial `40715749`.
@@ -106,9 +109,11 @@ candidate:
 So the pylon USB/GenTL acquisition thread is **starved/serialized by the
 OpenVINO GPU runtime** when both run in one process, blocking ~77 ms/frame
 with the hardware idle. This is **host-specific** — the reference host does
-not show it — which points to a **driver / GPU-firmware level** issue on the
-client's stack (see machine comparison below). The decoupled reader works
-because it isolates pylon in a **separate process** from the GPU runtime.
+not show it. Matching the reference host to the client's full software stack
+(kernel, driver, firmware) did **not** reproduce it (see below), so the
+trigger is **hardware** — specifically the **daA (dart) camera** interacting
+with in-process GPU inference. The decoupled reader works because it isolates
+pylon in a **separate process** from the GPU runtime.
 
 ---
 
@@ -135,49 +140,191 @@ i915 GT0: GuC firmware i915/mtl_guc_70.bin (70.53.0) is recommended,
 ```
 
 **GuC is the GPU's workload-scheduling firmware.** A stale GuC on Arrow Lake
-is a strong candidate for GPU-submission stalls that starve the in-process
-pylon acquisition thread — exactly the observed symptom.
+was the strongest initial suspect — **however, updating it to `70.53.0`
+(matching the working host) did NOT resolve the stall (still ~8–9 FPS).** So
+the GuC firmware version is ruled out.
+
+### Software fully ruled out — matched-host reproduction
+
+To eliminate every software variable, the **working host was upgraded to the
+client's exact kernel** (`7.0.0-28-generic`) and its GPU stack was compared
+component-by-component. After matching, both machines are identical on every
+software layer that OpenVINO-GPU touches — yet only the client stalls:
+
+| Component | Working host | Client host | Match |
+| --- | --- | --- | --- |
+| Kernel | `7.0.0-28-generic` (upgraded to match) | `7.0.0-28-generic` | ✅ |
+| DRM driver | `i915` | `i915` | ✅ |
+| Level Zero GPU `.so` | `1.14.37020` | `1.14.37020` | ✅ |
+| GuC firmware | `70.53.0` | `70.53.0` | ✅ |
+| **`gencamsrc` + GPU inference** | **~140 FPS** | **~11 FPS** | ❌ |
+
+With kernel, DRM driver, Level Zero GPU driver, and firmware all identical and
+the working host still hitting ~140 FPS, **software is eliminated.** The only
+remaining differences are **hardware**:
+
+1. **GPU SKU** — Arrow Lake-**U** (works) vs Arrow Lake-**P** (stalls).
+2. **Camera model** — acA (ace, works) vs **daA1920-160uc (dart)** (stalls).
+
+The decisive clue is on the client itself: **GPU inference alone**
+(`videotestsrc`) = ~160 FPS and **camera alone** = ~82 FPS, but the two
+**together** = ~11 FPS. The one factor present in every broken case and absent
+from every working case is the **dart (daA) camera**. Dart cameras use a
+different USB/pylon acquisition path than ace (acA) cameras, and that path
+appears to contend with the in-process OpenVINO GPU runtime on the client.
+
+**Prime suspect: the daA1920-160uc dart camera's pylon/USB acquisition
+contending with in-process GPU inference.** Decisive confirmation = swap the
+dart camera onto the working (Arrow Lake-U) host; if it stalls there too, the
+camera is confirmed and the issue reproduces locally. Either way, the
+**decoupled reader (which moves pylon out of the inference process) is the
+definitive fix.**
+
+---
+
+## Camera comparison (dart vs ace)
+
+Captured with `pypylon` (see `basler_probe.py`). The client's **daA (dart)**
+vs the working host's **acA (ace)**:
+
+| Property | Client — daA1920-160uc (dart) | Host — acA1920-150uc (ace) |
+| --- | --- | --- |
+| Transport layer | `BaslerUsb` (USB3) | `BaslerUsb` (USB3) |
+| Sensor / firmware | `imx392c`, `v=2.6.0` | `V1.4-4` |
+| `DeviceLinkThroughput` | **160,000,000** (160 MB/s) | **300,000,000** (300 MB/s) |
+| `DeviceLinkCurrentThroughput` | `<n/a>` (node absent) | `299,964,850` |
+| Max resolution | 1936 × 1216 | 1984 × 1264 |
+| `ResultingFrameRate` @1280×720 | **82.5 fps** | 162.8 fps |
+| Frame-rate node | `AcquisitionFrameRate` (+`Enable`) | `AcquisitionFrameRate` (+`Enable`) |
+| `AcquisitionFrameRateAbs` | absent (`LogicalErrorException`) | absent (`LogicalErrorException`) |
+| Pixel formats | Mono8/12, RGB8, BGR8, **YCbCr422_8**, BayerRG8/12 | Mono8, BayerBG8/10, RGB8, BGR8, **YCbCr422_8** |
+
+Two takeaways:
+
+1. **Frame-rate node (reader fix):** *both* cameras expose
+   `AcquisitionFrameRate` + `AcquisitionFrameRateEnable`, and **neither** has
+   `AcquisitionFrameRateAbs` under the current pylon SDK. `basler_reader.py`
+   hardcodes the `...Abs` node, so its frame-rate set fails on both — this is
+   why the reader is capped at ~45 fps. Fix: set `AcquisitionFrameRateEnable=true`
+   + `AcquisitionFrameRate`, with `...Abs` only as a legacy fallback.
+2. **Throughput:** the dart is limited to **160 MB/s** vs the ace's 300 MB/s,
+   and its `ResultingFrameRate` is 82.5 fps (matching the observed ~82 fps
+   camera-only). This is a hardware/transport difference between the models,
+   but it does **not** by itself explain the stall — the dart hits its full
+   82 fps when the camera runs alone; the collapse to ~11 fps only appears
+   once in-process GPU inference is added.
+
+Full readouts:
+
+```text
+# ================= Client — daA1920-160uc (dart), serial 40715749 =================
+=== Enumerated devices ===
+  model=daA1920-160uc  serial=40715749  tl=BaslerUsb
+
+=== Selected camera ===
+  Model                : daA1920-160uc
+  Serial               : 40715749
+  Firmware             : p=du1b_imx392c/s=r/v=2.6.0/i=10405.6/h=232ba9e
+  DeviceLinkSpeed Bps  : <n/a: LogicalErrorException>
+  DeviceLinkThroughput : 160000000
+  DeviceLinkCurrentThr : <n/a: LogicalErrorException>
+
+=== Geometry ===
+  Width               : 1280
+  Height              : 720
+  WidthMax            : 1936
+  HeightMax           : 1216
+  PixelFormat         : YCbCr422_8
+
+=== Frame-rate nodes (which one this model uses) ===
+  AcquisitionFrameRateEnable  : False
+  AcquisitionFrameRate        : 100.0
+  AcquisitionFrameRateAbs     : <n/a: LogicalErrorException>
+  ResultingFrameRate          : 82.5218682950982
+  ResultingFrameRateAbs       : <n/a: LogicalErrorException>
+
+=== Exposure / gain ===
+  ExposureAuto        : Off
+  ExposureTime        : 5000.0
+  ExposureTimeAbs     : <n/a: LogicalErrorException>
+  GainAuto            : Off
+  Gain                : 0.0
+
+=== Available pixel formats ===
+  Mono8, Mono12, Mono12p, RGB8, BGR8, YCbCr422_8, BayerRG8, BayerRG12, BayerRG12p
+
+
+# ================= Host — acA1920-150uc (ace), serial 40067928 =================
+=== Enumerated devices ===
+  model=acA1920-150uc  serial=40067928  tl=BaslerUsb
+
+=== Selected camera ===
+  Model                : acA1920-150uc
+  Serial               : 40067928
+  Firmware             : 107262-14;U;acA1920_150uc;V1.4-4;1
+  DeviceLinkSpeed Bps  : <n/a: LogicalErrorException>
+  DeviceLinkThroughput : 300000000
+  DeviceLinkCurrentThr : 299964850
+
+=== Geometry ===
+  Width               : 1280
+  Height              : 720
+  WidthMax            : 1984
+  HeightMax           : 1264
+  PixelFormat         : YCbCr422_8
+
+=== Frame-rate nodes (which one this model uses) ===
+  AcquisitionFrameRateEnable  : False
+  AcquisitionFrameRate        : 222.22222222222223
+  AcquisitionFrameRateAbs     : <n/a: LogicalErrorException>
+  ResultingFrameRate          : 162.76041666666666
+  ResultingFrameRateAbs       : <n/a: LogicalErrorException>
+
+=== Exposure / gain ===
+  ExposureAuto        : Off
+  ExposureTime        : 5000.0
+  ExposureTimeAbs     : <n/a: LogicalErrorException>
+  GainAuto            : Off
+  Gain                : 0.0
+
+=== Available pixel formats ===
+  Mono8, BayerBG8, BayerBG10, BayerBG10p, RGB8, BGR8, YCbCr422_8
+```
 
 ---
 
 ## Solution
 
-There are two independent fixes. Prefer the host fix if the client can update
-their GPU stack; otherwise ship the application fix, which is
-host-independent.
+The **decoupled reader (Fix B)** is the shipping solution — it is
+host-independent and proven. Fix A (host driver/firmware alignment) was
+attempted (GuC firmware update) and did **not** resolve the stall, so it is
+kept only as an in-progress investigation track.
 
-### Fix A (preferred) — update the client's GPU firmware / driver stack
+### Fix A (attempted, inconclusive) — align the client's GPU firmware / driver stack
 
-The client's kernel reports outdated GuC scheduler firmware, and the host
-media driver is older than the working reference host. Align them:
+The client's kernel originally reported outdated GuC scheduler firmware, and
+the host media driver is older than the working reference host. Alignment
+steps:
 
 ```bash
 # on the client HOST (not the container)
 
-# 1) PRIME SUSPECT — update GPU firmware (GuC 70.36.0 -> recommended 70.53.0)
+# 1) GuC firmware 70.36.0 -> 70.53.0  (DONE — confirmed loaded, but did NOT fix it)
 sudo apt update
 sudo apt install --only-upgrade linux-firmware
 sudo reboot
-# after reboot, confirm the newer GuC actually loaded:
-sudo dmesg | grep -iE "GuC firmware .*version"
+sudo dmesg | grep -iE "GuC firmware .*version"   # now reports 70.53.0
 
-# 2) match the working host's media driver (non-free 26.1.4)
-sudo apt install intel-media-va-driver-non-free
+# 2) still to try as a full set: media driver + Level Zero + kernel
+sudo apt install intel-media-va-driver-non-free intel-level-zero-gpu level-zero libze1
 ```
 
-If firmware still lags after the package update, pull the blob directly from
-[linux-firmware](https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/i915),
-copy `i915/mtl_guc_70.bin`, `sudo update-initramfs -u`, and reboot.
-
-Then re-run the direct `gencamsrc + GPU` test (see Diagnose step 3). If it
-jumps from ~11 toward full FPS, the stale firmware/driver was the root cause
-and no application change is needed.
-
+> Result so far: **GuC firmware `70.53.0` did not change the ~8–9 FPS stall.**
 > The container bundles its own `iHD` `26.1.4` for VA, but the OpenVINO GPU
-> plugin uses the **host** Level Zero / compute runtime — so the host update
-> (and reboot) is what matters.
+> plugin uses the **host** Level Zero / compute runtime — so host media driver
+> + Level Zero + kernel remain the only unverified variables.
 
-### Fix B (host-independent) — decouple acquisition with `basler_reader.py | fdsrc`
+### Fix B (shipping solution, host-independent) — decouple acquisition with `basler_reader.py | fdsrc`
 
 Instead of `gencamsrc` feeding the pipeline directly, run the existing
 [`pipeline/basler_reader.py`](../../pipeline/basler_reader.py) bridge. It
