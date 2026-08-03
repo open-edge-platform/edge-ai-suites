@@ -1,71 +1,50 @@
+# Smart Intersection
+
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md">
      Readme
+  </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md">
+     Installation guide
   </a>
 </div>
 hide_directive-->
 
-# Smart Tolling Application
+The Smart Intersection sample application uses edge AI to improve the traffic flow.
+It combines feeds from multiple cameras to track vehicles from different angles, analyze their
+speed and direction, and understand interactions in real space. The system can be implemented
+with existing cameras and deliver real-time, coordinated insights for smarter traffic monitoring.
 
-The **Metro Smart Tolling Application** is a high-precision Edge AI solution
-designed to revolutionize automated tolling. By fusing multi-camera inputs
-(Front, Rear, and Side profiles), the system delivers accurate vehicle detection
-and classification, license plate detection, color classification,
-axle counting and tariffing.
+**Example Use Cases**
 
-Enabling such use cases across multiple viewpoints helps in understanding the
-object interaction with the real world in 3-D space. All the components used
-run on a single system enabling low latency, simplified deployment and cost
-efficiency.
+- **Pedestrian Safety**: enhance safety for people crossing the street. The system tracks
+  pedestrians at crosswalks and generates alerts when people walk outside safe crossing areas.
+- **Traffic Flow Monitoring**: count vehicles and measure dwell time in each lane, detecting
+  when vehicles stay in their lanes for too long. This identifies stalled cars, accidents,
+  and traffic jams.
 
-## Key Features
+**Key Benefits**
 
-**Multi vision**: Scene-based analytics allow insights beyond single sensor views.
-
-- **Vehicle axle detection**:
-
-  Vehicle class is determined based on axle and wheel count. Intended for toll
-  classification, as well as revenue calculation and protection.
-
-- **Lift axle detection**:
-
-  The type of axle is determined based on camera feed. Ensures accurate tariffing,
-  as lift axles may affect toll classification even when raised.
-
-- **License plate detection**:
-
-  The application identifies vehicles uniquely by their license plates, which are
-  read from both front and rear views. The image evidence is included in every
-  transaction for simplified auditing.
-
-**Visualization & analytics**: Provides real-time and historical insights for
-toll operators.
-
-**Modularity**: Architecture based on modular microservices enables composability
-and reconfiguration.
-
-**High-throughput processing**: [Optimized video pipelines](./how-it-works/optimization.md#zero-copy-video-pipeline)
-for Intel edge devices.
-
-## How it Works
-
-The system uses the **Metro Edge Architecture** based on three key layers:
-
-- **Perception**: Deep Learning Streamer (DL Streamer) [processes 3/4 camera feeds](./how-it-works/perception-layer.md).
-- **Control**: Scenescape Controller [aggregates metadata](./how-it-works/analytics-pipeline.md).
-- **Analytics**: Node-RED [transforms events into traffic insights](./how-it-works/analytics-pipeline.md#node-red-transformation)
-  (Traffic Volume, Flow Efficiency, Tariffing).
+- **Multi-camera multi-object tracking**: enables tracking of objects across multiple camera
+  views.
+- **Scene-based analytics**: regions of interest that span multiple views can be easily
+  defined on the map rather than independently on each camera view. This greatly simplifies
+  business logic, enables more flexibility in defining regions, and enables additional sensors
+  such as lidar and radar to be used to track vehicles and people.
+- **Improved Urban Management**: object tracking and analytics are available near-real-time on
+  MQTT broker to enable actionable insights for traffic monitoring and safety applications.
+- **Reduced TCO**: works with the existing cameras, and makes scaling with additional sensors
+  and cameras easy. This simplifies business logic development, and future-proofs the solution.
 
 ## Learn More
 
-- [System Requirements](./get-started/system-requirements.md)
-- [Get Started](./get-started.md)
-- [How it works](./how-it-works.md)
-- [Troubleshooting](./troubleshooting.md)
+- [Security Enablement](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
+- [Scenescape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive
 :::{toctree}
@@ -73,8 +52,12 @@ The system uses the **Metro Edge Architecture** based on three key layers:
 
 get-started
 how-it-works
-api-reference
+how-to-use-gpu-for-inference
+how-to-use-npu-for-inference
+how-to-setup-rtsp
+export-and-optimize-geti-model
 troubleshooting
+release-notes
 
 :::
 hide_directive-->

@@ -76,8 +76,8 @@ services:
       - MTX_HLS=no
       - MTX_SRT=no
       - MTX_WEBRTCICESERVERS2_0_URL=turn:$HOST_IP:3478
-      - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
-      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=myusername
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
       - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
       - MTX_WEBRTCLOCALTCPADDRESS=:8189
     networks:
@@ -125,7 +125,7 @@ services:
     networks:
       - app_network
     environment:
-      - GF_INSTALL_PLUGINS=grafana-mqtt-datasource 1.3.3
+      - GF_INSTALL_PLUGINS=grafana-mqtt-datasource
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP},nginx-reverse-proxy

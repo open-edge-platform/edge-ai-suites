@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-broker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-broker
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-broker
+    spec:
+      containers:
+        - name: broker
+          image: "{{ .Values.broker.repository }}:{{ .Values.broker.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: http_proxy
+              value: {{ .Values.http_proxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.https_proxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+          ports:
+            - containerPort: 1883
+            - containerPort: 1884
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mosquitto/config
+            - name: secrets-volume
+              mountPath: /mosquitto/secrets
+          command: ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto-secure.conf"]
+          securityContext:
+            runAsUser: {{ .Values.broker.uid }}
+            runAsGroup: {{ .Values.broker.gid }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-broker
+            items:
+              - key: mosquitto-secure.conf
+                path: mosquitto-secure.conf
+        - name: secrets-volume
+          projected:
+            sources:
+            - secret:
+                name: {{ .Release.Name }}-broker-tls
+                items:
+                - key: tls.crt
+                  path: broker-cert
+                - key: tls.key
+                  path: broker-key
+            - secret:
+                name: {{ .Release.Name }}-ca-secret
+                items:
+                - key: tls.crt
+                  path: root-cert

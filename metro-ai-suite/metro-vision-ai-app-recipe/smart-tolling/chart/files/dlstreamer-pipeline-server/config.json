@@ -1,0 +1,414 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "toll-front-l",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": true,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_front_l"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.005",
+                            "metadatagenpolicy": "lprPolicy",
+                            "view_angle": "front"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/FrontView_L_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=timesync ! gvaattachroi roi=1,2,1919,1078 ! gvadetect model=/home/pipeline-server/models/vehicle_front_rear_june/model.xml device=CPU nireq=4 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/licenseplate_cropped/model.xml device=CPU inference-region=roi-list object-class=vehicle inference-interval=1 ! queue ! gvaclassify model=/home/pipeline-server/models/paddle_ocr_v4/ch_PP-OCRv4_rec_infer.xml device=CPU ! gvametaconvert name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=datapublisher ! gvametapublish ! appsink name=sink sync=true"
+            },
+            {
+                "name": "toll-front-r",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": false,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_front_r"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.015",
+                            "metadatagenpolicy": "lprPolicy",
+                            "view_angle": "front"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/FrontView_R_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=timesync ! gvaattachroi roi=1,2,1919,1078 ! gvadetect model=/home/pipeline-server/models/vehicle_front_rear_june/model.xml device=CPU nireq=4 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/licenseplate_cropped/model.xml device=CPU inference-region=roi-list object-class=vehicle inference-interval=1 ! queue ! gvaclassify model=/home/pipeline-server/models/paddle_ocr_v4/ch_PP-OCRv4_rec_infer.xml device=CPU ! gvametaconvert name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=datapublisher ! gvametapublish ! appsink name=sink sync=true"
+            },
+            {
+                "name": "toll-rear-l",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": true,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_rear_l"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.003",
+                            "metadatagenpolicy": "lprPolicy",
+                            "view_angle": "rear"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/RearView_L_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=timesync ! gvaattachroi roi=1,2,1919,1078 ! gvadetect model=/home/pipeline-server/models/vehicle_front_rear_june/model.xml device=CPU nireq=4 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/licenseplate_cropped/model.xml device=CPU inference-region=roi-list object-class=vehicle inference-interval=1 ! queue ! gvaclassify model=/home/pipeline-server/models/paddle_ocr_v4/ch_PP-OCRv4_rec_infer.xml device=CPU ! gvametaconvert name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=datapublisher ! gvametapublish ! appsink name=sink sync=true"
+            },
+            {
+                "name": "toll-rear-r",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": false,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_rear_r"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.001",
+                            "metadatagenpolicy": "lprPolicy",
+                            "view_angle": "rear"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/RearView_R_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=timesync ! gvaattachroi roi=1,2,1919,1078 ! gvadetect model=/home/pipeline-server/models/vehicle_front_rear_june/model.xml device=CPU nireq=4 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/licenseplate_cropped/model.xml device=CPU inference-region=roi-list object-class=vehicle inference-interval=1 ! queue ! gvaclassify model=/home/pipeline-server/models/paddle_ocr_v4/ch_PP-OCRv4_rec_infer.xml device=CPU ! gvametaconvert name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_lpr_max_tracking.py name=datapublisher ! gvametapublish ! appsink name=sink sync=true"
+            },
+            {
+                "name": "toll-side-l1",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": true,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_side_l1"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.013",
+                            "metadatagenpolicy": "vehicleAttributePolicy",
+                            "view_angle": "left"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/SideAxle_Lane_1_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_side_max_tracking.py name=timesync ! gvaattachroi roi=5,400,1915,960 ! gvadetect model=/home/pipeline-server/models/vehicle_type_june/model.xml device=CPU nireq=4 threshold=0.6 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/axle_june/model.xml device=CPU threshold=0.6 inference-region=roi-list object-class=car,truck,bus,van,suv,vehicle ! queue ! gvaclassify model=/home/pipeline-server/models/color_int8_latest/model.xml device=CPU object-class=car,truck,bus,van,suv,vehicle ! gvametaconvert add-tensor-data=true name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_side_max_tracking.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true"
+            },
+            {
+                "name": "toll-side-l2",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": true,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy": {
+                                    "type": "string",
+                                    "description": "Meta data generation policy, one of detectionPolicy,reidPolicy,classificationPolicy,lprPolicy,vehicleAttributePolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                },
+                                "view_angle": {
+                                    "type": "string",
+                                    "description": "Camera view angle: front | rear | left | right. Used to namespace image fields in the published payload so SceneScape can merge data from multiple cameras without field collisions."
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination": {
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "toll_side_l2"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "CameraComponent.011",
+                            "metadatagenpolicy": "vehicleAttributePolicy",
+                            "view_angle": "left"
+                        }
+                    }
+                },
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/SideAxle_Lane_2_10min.ts name=source ! decodebin3 ! videorate drop-only=true max-rate=10 ! video/x-raw,framerate=10/1 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_side_max_tracking.py name=timesync ! gvaattachroi roi=5,265,1909,1070 ! gvadetect model=/home/pipeline-server/models/vehicle_type_june/model.xml device=CPU nireq=4 threshold=0.6 inference-interval=1 inference-region=1 ! queue ! gvatrack tracking-type=short-term-imageless ! queue ! gvadetect model=/home/pipeline-server/models/axle_june/model.xml device=CPU threshold=0.6 inference-region=roi-list object-class=car,truck,bus,van,suv,vehicle ! queue ! gvaclassify model=/home/pipeline-server/models/color_int8_latest/model.xml device=CPU object-class=car,truck,bus,van,suv,vehicle ! gvametaconvert add-tensor-data=true name=metaconvert ! gvawatermark ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter_side_max_tracking.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true"
+            }
+        ]
+    }
+}
