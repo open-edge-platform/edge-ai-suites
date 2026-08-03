@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Wandering Sample Agent Guidance
 
 Use this folder only for the Wandering Sample under `components/wandering`.

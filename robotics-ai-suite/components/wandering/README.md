@@ -10,6 +10,12 @@ SPDX-License-Identifier: Apache-2.0
 
 Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
 
+## Agent Workflow
+
+For AI-assisted edits in VS Code, start with the local skill file in this folder: [skills.md](skills.md).
+
+That file contains the review-first prompt template, the expected ASCII pipeline diagram, and the simulation and real-robot workflow guidance used to validate Wandering Sample changes.
+
 ## Overview
 
 The Wandering mobile robot application is a Robot Operating System 2 (ROS 2) sample application that moves the robot around the room avoiding hitting obstacles, updating a map in real time that is exposed as the ROS topic.

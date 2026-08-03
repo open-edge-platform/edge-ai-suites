@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Wandering Sample Agent Skills
 
 This file defines the review-first agent workflow for the Wandering Sample.
