@@ -83,3 +83,7 @@
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2"]
+	path = robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2
+	url = https://github.com/hku-mars/FAST-LIVO2.git
+	shallow = true
