@@ -25,8 +25,6 @@ services:
       no_proxy: ${no_proxy:-},localhost
       HUGGINGFACE_TOKEN: ${HUGGINGFACEHUB_API_TOKEN:-}
     restart: unless-stopped
-    devices:
-      - /dev/dri:/dev/dri
     group_add:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}

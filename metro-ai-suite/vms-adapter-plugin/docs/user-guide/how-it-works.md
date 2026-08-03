@@ -14,8 +14,7 @@ The VMS Adapter Plugin (VAP) is a modular orchestration service that routes vide
 1. Operator triggers **Discover Cameras** from the dashboard or `POST /v1/cameras/discover`.
 2. The **Orchestrator** calls each registered VMS shim:
    - **NxWitnessVmsShim** queries Nx Witness `GET /rest/v4/devices` for all camera devices.
-   - **FrigateVmsShim** reads camera definitions directly from `vms_shim/frigate/config/config.yml`.
-3. Discovered cameras are persisted to PostgreSQL with vendor-prefixed IDs (`nx:abc123-uuid`, `frigate:front-door`).
+3. Discovered cameras are persisted to PostgreSQL with vendor-prefixed IDs (`nx:abc123-uuid`).
 4. The dashboard displays the full camera list. Operators enable specific cameras for analytics.
 
 ### Live Video Captioning (LVC) Flow
@@ -28,7 +27,7 @@ FastAPI route (analytics_apps.py)
     │  IAnalyticsAppShim.start(params)
     ▼
 LiveCaptioningAnalyticsAppShim
-    │  resolves camera_id → RTSP URL via NxWitnessVmsShim / FrigateVmsShim
+    │  resolves camera_id → RTSP URL via NxWitnessVmsShim
     │  POST /api/runs  →  LVC backend (FastAPI)
     ▼
 LVC DLStreamer Pipeline Server
@@ -78,9 +77,8 @@ Each VMS vendor is represented by a class implementing the `IVmsShim` interface:
 | **Shim**            | **Source**           | **Camera Discovery**                        |
 |---------------------|----------------------|---------------------------------------------|
 | `NxWitnessVmsShim`  | Nx Witness REST v4   | Queries `/rest/v4/devices`                  |
-| `FrigateVmsShim`    | Frigate 0.15         | Reads local `config/config.yml` directly    |
 
-Camera IDs are vendor-prefixed strings (`frigate:front-door`, `nx:abc123`). The orchestrator uses the prefix to dispatch RTSP URL lookups and write-backs to the correct shim.
+Camera IDs are vendor-prefixed strings (`nx:abc123`). The orchestrator uses the prefix to dispatch RTSP URL lookups and write-backs to the correct shim.
 
 ### Analytics App Shims (`analytics_app_shim/`)
 
