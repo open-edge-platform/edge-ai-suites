@@ -23,6 +23,9 @@ http {
         server web.scenescape.intel.com:443;
     }
 
+    # Maximum allowed size for client request body (e.g. GLB 3D map file uploads)
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
+
 
     # HTTP server - redirect to HTTPS
     server {
