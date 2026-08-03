@@ -83,6 +83,8 @@ export default {
     toolOutputTitle: "Tool output",
     thinkingTitle: "Thinking",
     followupWait: "Please wait for the current reply to finish.",
+    collapsePanel: "Collapse chat",
+    expandPanel: "Open chat",
     frameworkSettings: "Agent framework settings",
     frameworkTitle: "Connect an Agent Framework",
     frameworkUnconfiguredTitle: "Chat backend is not configured",

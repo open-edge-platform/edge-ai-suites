@@ -81,6 +81,8 @@ export default {
     toolOutputTitle: "Tool output",
     thinkingTitle: "思考过程",
     followupWait: "请等待当前回复完成。",
+    collapsePanel: "收起对话",
+    expandPanel: "展开对话",
     frameworkSettings: "Agent 框架设置",
     frameworkTitle: "连接 Agent 框架",
     frameworkUnconfiguredTitle: "当前未配置聊天后端",
