@@ -335,7 +335,7 @@ export function registerTools(
     description:
       "Manage use_case lifecycle at runtime without restarting the MCP server. Four actions. " +
       "For NEW use cases, do not call this tool until the user has answered the " +
-      "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
+      "smartbuilding-use-case-manager Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
       "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +

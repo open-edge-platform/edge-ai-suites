@@ -1,5 +1,5 @@
 ---
-name: video-summary-prompt-studio
+name: smartbuilding-use-case-manager
 description: "MANDATORY for creating, previewing, refining, registering, or deleting any Smart Building video analytics use case. Requires two cross-turn gates before drafting or registration: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract. Requires an explicit cross-turn confirmation before any use-case deletion."
 homepage: https://github.com/open-edge-platform/edge-ai-libraries
 metadata:
@@ -11,7 +11,7 @@ metadata:
   }
 ---
 
-# Video Summary Prompt Studio
+# Smart Building Use Case Manager
 
 Creates and registers Smart Building video-analysis use cases. This Skill owns
 capability negotiation, output mode, Final Schema, rule path, registration, and
