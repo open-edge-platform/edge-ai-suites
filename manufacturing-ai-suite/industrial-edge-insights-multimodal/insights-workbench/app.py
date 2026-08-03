@@ -146,8 +146,9 @@ def api_measurements() -> Any:
         measurement = get_fusion_measurement_name()
         measurements = [measurement]
         return jsonify({"measurements": measurements})
-    except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": str(exc), "measurements": []}), 500
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to resolve fusion measurement")
+        return jsonify({"error": "Unable to load measurements", "measurements": []}), 500
 
 
 @app.route("/api/data", methods=["GET"])
@@ -170,8 +171,9 @@ def api_data() -> Any:
                 "rows": rows,
             }
         )
-    except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": str(exc), "rows": []}), 500
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to fetch fusion rows for measurement=%s", measurement)
+        return jsonify({"error": "Unable to load data", "rows": []}), 500
 
 
 @app.route("/api/vllm/health", methods=["GET"])
@@ -332,9 +334,9 @@ def api_explain() -> Any:
     
         except ValueError:
             return jsonify({"error": f"Invalid time format: {time_str}"}), 400
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception("Explain processing failed for time=%s", time_str)
-            return jsonify({"error": str(exc)}), 500
+            return jsonify({"error": "Unable to process explain request"}), 500
 
     # Simulate a short model/API processing time for the UI spinner.
     
