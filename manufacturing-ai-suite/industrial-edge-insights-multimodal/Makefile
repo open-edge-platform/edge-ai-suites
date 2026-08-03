@@ -313,7 +313,7 @@ download_model:
 
 
 .PHONY: up_agentic
-up_agentic: check_env_variables validate_host_ip down
+up_agentic: check_hardware check_models check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
 	echo "Starting Docker containers..."; \
