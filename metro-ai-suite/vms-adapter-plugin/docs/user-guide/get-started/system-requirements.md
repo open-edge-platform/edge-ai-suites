@@ -51,13 +51,13 @@ Default ports (configurable via `.env`):
 
 The following external services must be reachable from the VAP backend container at startup:
 
-| **Service**                              | **Required For**              | **Default Port** |
-| ---------------------------------------- | ----------------------------- | ---------------- |
-| Live Video Captioning (LVC)              | LVC Analytics App integration | `4173`           |
-| MediaMTX (WebRTC signaling)              | Live stream relay to UI       | `8889`           |
-| Nx Witness                               | Nx VMS camera discovery       | `7001` (HTTPS)   |
-| DL Streamer Pipeline Server (dls_vision) | DL Streamer Vision            | `8080`           |
-| MQTT Broker                              | dls_vision metadata streaming | `1883`           |
+| **Service**                              | **Required For**                | **Default Port** |
+| ---------------------------------------- | ------------------------------- | ---------------- |
+| Live Video Captioning (LVC)              | LVC Analytics App integration   | `4173`           |
+| MediaMTX (WebRTC signaling)              | Live stream relay to UI         | `8889`           |
+| Nx Witness                               | Nx VMS camera discovery         | `7001` (HTTPS)   |
+| DL Streamer Pipeline Server (dls_vision) | DL Streamer Vision              | `8080`           |
+| MQTT Broker                              | `dls_vision` metadata streaming | `1883`           |
 
 ## Validation
 

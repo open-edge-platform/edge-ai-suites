@@ -25,9 +25,9 @@ proxy. Interactive API documentation (Swagger UI) is available at
 | `GET`      | `/v1/cameras/{camera_id}/live-stream` | Get live RTSP stream URL        |
 | `GET`      | `/v1/cameras/{camera_id}/clip`        | Get clip URL for a time range   |
 
-## Analytics Apps
+## Analytics Applications
 
-The generic Analytics App API handles all AI analytics integrations with a consistent
+The generic Analytics Application API handles all AI analytics integrations with a consistent
 lifecycle: discover, start, list, stop, and stream results.
 
 | **Method** | **Path**                                            | **Description**                                |

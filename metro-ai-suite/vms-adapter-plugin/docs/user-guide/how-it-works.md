@@ -1,7 +1,7 @@
 # How It Works
 
 The VMS Adapter Plugin (VAP) is a modular orchestration service that routes video streams from
-supported Video Management System (VMS) providers to AI Analytics Apps and relays results back
+supported Video Management System (VMS) providers to AI Analytics Applications and relays results back
 to the provider dashboard or VMS.
 
 ## Architecture
@@ -126,7 +126,7 @@ Witness.
 
 ### React Analytics Provider Dashboard (`ui/`)
 
-The nginx server serves the dashboard (React 19 + Vite + Tailwind CSS) and reverse-proxies:
+The nginx server serves the dashboard (React 19 with Vite and Tailwind CSS) and reverse-proxies:
 
 - `/v1/*` → FastAPI backend
 - `/whep/*` → MediaMTX (WebRTC video relay)

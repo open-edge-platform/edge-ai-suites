@@ -12,7 +12,7 @@ At the end of this tutorial, you will have:
 ## Prerequisites
 
 - A host machine running the Ubuntu OS (version 22.04 or 24.04) with Docker and Docker Compose
-installed.
+  installed.
 - The `edge-ai-suites` repository cloned:
 
   ```bash
@@ -37,7 +37,7 @@ VMS Adapter Plugin (VAP)
   ┌─────────────────────────────────────────────────────┐
   │  LiveCaptioningAnalyticsAppShim                     │
   │  POST /api/runs  ──────────────────────────────────►│ LVC Backend (:4173)
-  │                                                     │ DLStreamer + VLM
+  │                                                     │ DL Streamer with VLM
   │  GET .../results/stream  ◄──────────────────────────│ SSE captions
   │  (SSE proxy to dashboard)                           │
   │            MediaMTX (:8889)                         |
@@ -45,7 +45,7 @@ VMS Adapter Plugin (VAP)
            │
   ┌────────▼─────────────────────┐
   │  Provider Dashboard (:3100)  │
-  │  WebRTC player + captions    │
+  │  WebRTC player with captions │
   └──────────────────────────────┘
 ```
 
@@ -153,7 +153,7 @@ rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST_IP>:7001/<device-uuid>?onvif_replay=
 For DL Streamer (used internally by LVC) to authenticate against Nx Witness, digest
 authentication must be enabled:
 
-1. In the Desktop Client, go to **Main Menu** (hamburger icon) → **User Management**.
+1. In the Nx Witness desktop client, go to **Main Menu** (hamburger icon) → **User Management**.
 2. Select the user account that VAP will use (`NX_USERNAME`).
 3. Under **Info**, check **Allow insecure (digest) authentication**. Re-enter the password and
    click **OK**.
@@ -172,9 +172,7 @@ gst-launch-1.0 rtspsrc \
   ! fakesink
 ```
 
-A pipeline that runs for a few seconds without errors confirms connectivity.
-
----
+A pipeline that runs for a few seconds without errors confirms the RTSP connection is working.
 
 ## Part 3 — Configure VAP
 
@@ -207,11 +205,12 @@ NX_PASSWORD=<nx_admin_password>
 UI_HTTPS_PORT=3443
 ```
 
-> **Note:**Replace `host.docker.internal` with the actual IP address if LVC runs on a different host.
+> **Note:** Replace `host.docker.internal` with the actual IP address if LVC runs on a different host.
 
 ### 3.2 Verify `config/config.yaml`
 
-Open `config/config.yaml` and confirm the sections match your setup.
+Open `config/config.yaml`, and confirm the following sections match your setup. The file
+uses `${ENV_VAR}` placeholders resolved from `.env` at startup.
 
 **LVC Analytics App (always required):**
 
@@ -242,8 +241,8 @@ In the Nx Witness desktop client:
 
 1. Go to **Main Menu** → **System Administration**.
 2. In the window, click **Integrations**.
-3. In the **Manage Integrations** window, go to **Settings** tab and check *Accept API
-   Integrations registration requests* to enable REST based API integration.
+3. In the **Manage Integrations** window, go to **Settings** tab and check _Accept API
+   Integrations registration requests_ to enable REST based API integration.
 4. Click **OK**
 
 ![Accept API Integrations registration requests setting in Nx Witness](../_assets/nx-enable_api_integration.png "accept api integrations registration requests in nx witness")
@@ -268,10 +267,10 @@ docker compose ps
 Expected output:
 
 ```text
-NAME              STATUS
-vms-backend       Up (healthy)
-vms-ui            Up
-postgres          Up (healthy)
+NAME                          STATUS
+vms-adapter-backend           Up (healthy)
+vms-adapter-ui                Up
+vms-adapter-postgres          Up (healthy)
 ```
 
 ### 4.2 Verify the LVC schema
@@ -287,7 +286,7 @@ integration is working correctly.
 Check VAP logs for startup issues:
 
 ```bash
-docker compose logs vms-backend | grep -i "lvc\|schema\|analytics_app\|error"
+docker compose logs vms-adapter-backend | grep -i "lvc\|schema\|analytics_app\|error"
 ```
 
 ## Part 5 — Discover Cameras and Start a Captioning Run
@@ -320,10 +319,10 @@ You will see a **Live Video Captioning** group with the following fields:
 3. Check the **Enable Live Video Captioning Pipeline** checkbox.
 4. Click **Apply**, and then **OK**.
 
-VAP detects the change within 5 seconds and starts the captioning pipeline. Check the VAP logs:
+VAP detects the change within 5 seconds, and starts the captioning pipeline. Check the VAP logs to confirm:
 
 ```bash
-docker compose logs -f vms-backend
+docker compose logs -f vms-adapter-backend
 ```
 
 Expected output:
@@ -339,6 +338,8 @@ Expected output:
 2. Uncheck the **Enable Live Video Captioning Pipeline** checkbox.
 3. Click **Apply**, and then **OK**.
 
+Expected log output:
+
 ```text
 [info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
@@ -348,8 +349,11 @@ Expected output:
 
 ### 5.2 Start a Captioning Run from the VAP Dashboard (Optional)
 
+<!--hide_directive
 <details>
-<summary>Click to expand — how to start a captioning run from the provider dashboard</summary>
+<summary>hide_directive-->Click to expand — how to start a captioning run from the provider dashboard
+<!--hide_directive</summary>
+hide_directive-->
 
 #### Open the Dashboard
 
@@ -376,7 +380,7 @@ enabled cameras appear in the analytics form.
 # Nx Witness camera
 curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -H "Content-Type: application/json" \
-  -d '{"camera_id": "nx:<device-uuid>", "enabled": true}'
+  -d '{"camera_ids": ["nx:<device-uuid>"], "enabled": true}'
 ```
 
 #### Configure and start a captioning run
@@ -385,17 +389,17 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 2. Fill in the configuration form:
 
-   | **Field** | **Description** | **Default** |
-   |---|---|---|
-   | **Camera** | Dropdown of enabled cameras (Nx Witness) | — |
-   | **Enter Prompt** | Instruction sent to the VLM for each frame | `"Describe what you see in one sentence."` |
-   | **Select Model** | VLM model to use (fetched live from LVC) | `OpenGVLab/InternVL2-2B` |
-   | **Max New Tokens** | Maximum caption length in tokens | `70` |
-   | **Select Pipeline** | DLStreamer pipeline (fetched live from LVC) | — |
-   | **Run Name** | Display name for this run | — |
-   | **Frame Rate** | Frames per second sent to the VLM | `1` |
-   | **Chunk Size** | Frames grouped per inference call | `1` |
-   | **Frame Resolution** | Resolution: `default`, `1280×720`, `640×480`, `480×360` | `default` |
+   | **Field**            | **Description**                                         | **Default**                                |
+   | -------------------- | ------------------------------------------------------- | ------------------------------------------ |
+   | **Camera**           | Dropdown of enabled cameras (Nx Witness)                | —                                          |
+   | **Enter Prompt**     | Instruction sent to the VLM for each frame              | `"Describe what you see in one sentence."` |
+   | **Select Model**     | VLM model to use (fetched live from LVC)                | `OpenGVLab/InternVL2-2B`                   |
+   | **Max New Tokens**   | Maximum caption length in tokens                        | `70`                                       |
+   | **Select Pipeline**  | DL Streamer pipeline (fetched live from LVC)            | —                                          |
+   | **Run Name**         | Display name for this run                               | —                                          |
+   | **Frame Rate**       | Frames per second sent to the VLM                       | `1`                                        |
+   | **Chunk Size**       | Frames grouped per inference call                       | `1`                                        |
+   | **Frame Resolution** | Resolution: `default`, `1280×720`, `640×480`, `480×360` | `default`                                  |
 
 3. Example prompts:
    - `"Describe what you see in one sentence."`
@@ -404,7 +408,8 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 4. Click **Start Run**.
 
-</details>
+<!--hide_directive
+</details>hide_directive-->
 
 ### 5.3 What Happens When You Click Start
 
@@ -425,8 +430,6 @@ Via the API:
 ```bash
 curl -k https://localhost:3443/v1/analytics-apps/live_captioning/runs | python3 -m json.tool
 ```
-
----
 
 ## Part 6 — View Live Captions in Nx Witness
 
@@ -468,8 +471,11 @@ curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/
 
 ### 6.3 View Live Captions in the VAP Dashboard (Optional)
 
+<!--hide_directive
 <details>
-<summary>Click to expand — how to view captions in the provider dashboard</summary>
+<summary>hide_directive-->Click to expand — how to view captions in the provider dashboard
+<!--hide_directive</summary>
+hide_directive-->
 
 Open a browser and navigate to `https://localhost:3443`, then open the **Live Stream** tab. It
 shows:
@@ -479,7 +485,8 @@ shows:
 
 Captions appear within a few seconds of the pipeline starting.
 
-</details>
+<!--hide_directive--
+</details>hide_directive-->
 
 ## Troubleshooting
 
@@ -493,8 +500,8 @@ Apps**.
 **Fix:**
 
 1. Verify LVC is running: `curl http://localhost:4173/health`
-2. Check connectivity from inside VAP: `docker compose exec vms-backend curl http://host.docker.internal:4173/health`
-3. Restart VAP: `docker compose restart vms-backend`
+2. Check connectivity from inside VAP: `docker compose exec vms-adapter-backend curl http://host.docker.internal:4173/health`
+3. Restart VAP: `docker compose restart vms-adapter-backend`
 
 ### No Cameras After Discovery
 
@@ -503,8 +510,8 @@ Apps**.
 **Nx Witness checks:**
 
 1. Verify `NX_HOST`, `NX_USERNAME`, `NX_PASSWORD` are correct in `.env`.
-2. Check VAP can reach Nx: `docker compose exec vms-backend curl -k https://<NX_HOST_IP>:7001/rest/v4/info`
-3. Check logs: `docker compose logs vms-backend | grep -i "nx\|discover"`
+2. Check VAP can reach Nx: `docker compose exec vms-adapter-backend curl -k https://<NX_HOST_IP>:7001/rest/v4/info`
+3. Check logs: `docker compose logs vms-adapter-backend | grep -i "nx\|discover"`
 
 ### No Captions Appearing
 
@@ -543,7 +550,7 @@ Apps**.
 3. Verify nginx `/whep/` proxy:
 
    ```bash
-   docker compose exec vms-ui cat /etc/nginx/conf.d/default.conf | grep whep
+   docker compose exec vms-adapter-ui cat /etc/nginx/conf.d/default.conf | grep whep
    ```
 
 ### Run Start Fails with Nx Witness Camera
@@ -561,86 +568,13 @@ Apps**.
      ! fakesink
    ```
 
-3. Check VAP logs: `docker compose logs vms-backend | grep -i "error\|start_run\|rtsp"`
-
----
-
-## Additional Steps
-
-### Run Both Applications Simultaneously
-
-Both Live Video Captioning and Loitering Detection can run in parallel on the same camera from
-the same Nx Witness integration.
-
-**Prerequisite — avoid container name and port conflicts:**
-
-The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and
-host ports by default. Update the Loitering Detection `docker-compose.yml` file with the
-following changes to avoid clashes:
-
-| Service                      | Change                                                             |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `broker`                     | Host port changed from `1883` to `1884` (`"1884:1883"`)            |
-| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld`          |
-| `coturn`                     | Container name changed to `coturn-ld`; host port changed to `3479` |
-| `metrics-manager`            | Container name changed to `metrics-manager-ld`                     |
-
-**Steps to run both simultaneously:**
-
-1. Start the LVC stack (its broker occupies host port `1883`):
-
-   ```bash
-   cd metro-ai-suite/live-video-analysis/live-video-captioning
-   docker compose up -d
-   ```
-
-2. Start the LD stack (its broker now occupies host port `1884`):
-
-   ```bash
-   cd metro-ai-suite/metro-vision-ai-app-recipe
-   docker compose up -d
-   ```
-
-3. Update `.env` in the VAP directory so the LD MQTT subscriber uses the LD broker on port `1884`:
-
-   ```bash
-   # metro-ai-suite/vms-adapter-plugin/.env
-   MQTT_PORT=1884
-   ```
-
-4. Start VAP (already configured with both apps in `config.yaml`):
-
-   ```bash
-   cd metro-ai-suite/vms-adapter-plugin
-   docker compose up -d
-   ```
-
-5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics
-   Integration**. There are two checkboxes: **Live Video Captioning** and **Loitering
-   Detection**. Enable the checkboxes for both.
-
-VAP starts both pipelines independently within 5 seconds.
-
-**Viewing results in Nx Witness — one output at a time:**
-
-Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a
-time:
-
-- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
-- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`,
-  `vap.vehicle`, …) overlaid on the live feed.
-
-This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks
-simultaneously in the same camera panel, even though both pipelines produce results
-concurrently.
-
----
+3. Check VAP logs: `docker compose logs vms-adapter-backend | grep -i "error\|start_run\|rtsp"`
 
 ## Summary
 
 | **Step** | **Where** |
-|---|---|
-| Install and start LVC + MediaMTX | `metro-ai-suite/live-video-analysis/live-video-captioning/` → `docker compose up -d` |
+| -------- | --------- |
+| Install and start LVC and MediaMTX | `metro-ai-suite/live-video-analysis/live-video-captioning/` → `docker compose up -d` |
 | **Nx Witness:** install Client & Server, add cameras, enable digest auth, enable API Integrations | Nx Witness Desktop Client |
 | Set `LVC_BASE_URL`, `MEDIAMTX_URL`, and VMS credentials in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
 | Configure VMS instance(s) in `config.yaml` | `config/config.yaml` |

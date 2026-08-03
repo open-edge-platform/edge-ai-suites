@@ -27,14 +27,15 @@ Details about the changes and known issues in each release of the VMS Adapter Pl
   handles all AI analytics integrations with a consistent lifecycle: start, list, stop, and
   stream results.
 
-- **Provider Dashboard**: React 19 + Vite + Tailwind CSS dashboard served by nginx. Includes
+- **Provider Dashboard**: React 19 with Vite and Tailwind CSS dashboard served by nginx. Includes
   camera discovery and enable/disable controls, analytics run management, WebRTC live stream
   with caption overlay, and analysis results timeline.
 
 - **PostgreSQL Persistence**: Camera registrations, analytics sessions, and metadata events are
   stored in a PostgreSQL 15 database via async SQLAlchemy 2.
 
-- **Docker Compose Deployment**: Full stack in three services — `vms-backend`, `vms-ui` (nginx), and `postgres`.
+- **Docker Compose Deployment**: Full stack in three services — `vms-adapter-backend`,
+  `vms-adapter-ui` (nginx), and `vms-adapter-postgres`.
 
 **Known Issues**:
 

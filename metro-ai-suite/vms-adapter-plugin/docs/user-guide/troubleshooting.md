@@ -31,12 +31,12 @@ docker compose up -d
 
 ### Backend Not Healthy
 
-**Symptoms**: `docker compose ps` shows `vms-backend` as unhealthy or restarting.
+**Symptoms**: `docker compose ps` shows `vms-adapter-backend` as unhealthy or restarting.
 
 **Solution**:
 
 ```bash
-docker compose logs vms-backend
+docker compose logs vms-adapter-backend
 ```
 
 Common causes:
@@ -73,7 +73,7 @@ Common causes:
 **Solution**: Start LVC before starting VAP, then restart the VAP backend:
 
 ```bash
-docker compose restart vms-backend
+docker compose restart vms-adapter-backend
 ```
 
 ### Captions Not Appearing in the Dashboard
@@ -130,7 +130,7 @@ docker compose restart vms-backend
 - Verify that the DL Streamer Pipeline Server is publishing inference results to MQTT on the
   expected topic (`/{vms_name}/dls_vision/{camera_id}`).
 - Check that the Nx Witness analytics integration was registered successfully: look for
-  `register_analytics` in the `vms-backend` logs.
+  `register_analytics` in the `vms-adapter-backend` logs.
 - Verify integration credentials: if the integration was reused from a previous run, the
   password may not be available. In that case, remove the integration from Nx Witness and
   restart VAP to recreate it.
@@ -160,7 +160,7 @@ docker compose restart vms-backend
 
 **Checks**:
 
-- Verify the `postgres` container is healthy: `docker compose ps postgres`.
+- Verify the `vms-adapter-postgres` container is healthy: `docker compose ps vms-adapter-postgres`.
 - Check `PG_PASSWORD` in `.env` matches the value used to initialize the database.
 - If you changed the password after the volume was created, remove the volume and restart:
 

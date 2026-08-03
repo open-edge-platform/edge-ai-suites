@@ -5,7 +5,7 @@ used by the VMS Adapter Plugin (VAP):
 
 - Nx Witness HTTPS
 - DL Streamer Vision HTTPS
-- MQTT subscribing for dls_vision metadata
+- MQTT subscribing for `dls_vision` metadata
 - MQTT subscribing for the Live Video Captioning (LVC) broker
 
 This page covers client-side TLS only. Server-side broker hardening, topic ACLs, and certificate
@@ -102,7 +102,7 @@ DLS_VISION_TLS_VERIFY=true
 DLS_VISION_CA_BUNDLE=/app/config/certs/dls-vision-ca.crt
 ```
 
-## MQTT Subscribing for dls_vision
+## MQTT Subscribing for `dls_vision`
 
 These variables control the MQTT client used by the object detection subscriber:
 
@@ -163,7 +163,7 @@ MQTT_BROKER_CLIENT_CERT=
 MQTT_BROKER_CLIENT_KEY=
 ```
 
-Behavior is the same as for the dls_vision MQTT subscriber:
+Behavior is the same as for the `dls_vision` MQTT subscriber:
 
 - `MQTT_BROKER_TLS_ENABLED=false`: plain MQTT is used.
 - `MQTT_BROKER_TLS_ENABLED=true` with `MQTT_BROKER_CA_BUNDLE` empty: VAP uses the default system CA store.

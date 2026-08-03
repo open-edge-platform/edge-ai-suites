@@ -26,7 +26,7 @@ Check the [folder layout](#folder-layout) to familiarize yourself with the code 
 - Install the Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install the Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 - **Nx Witness** VMS with an accessible REST API (`NX_HOST`,
-    `NX_USERNAME`, `NX_PASSWORD`). This document does not cover Nx Witness or Nx Cloud setup.
+  `NX_USERNAME`, `NX_PASSWORD`). This document does not cover Nx Witness or Nx Cloud setup.
 - At least one Analytics Application running before VAP starts:
   - **Live Video Captioning (LVC)** — for Vision-Language Model (VLM) based AI captioning.
   - **Loitering Detection (DL Streamer Vision based)** — for real-time detection of loitering behavior in
@@ -67,7 +67,7 @@ curl http://localhost:4173/health
 Loitering Detection is a user-provided application based on the DL Streamer Pipeline Server. Follow the [Loitering Detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
 | **Service**                 | **Default Port** | **Purpose**                          |
-|-----------------------------|------------------|--------------------------------------|
+| --------------------------- | ---------------- | ------------------------------------ |
 | DL Streamer Pipeline Server | `8080`           | Receive pipeline start/stop commands |
 | MQTT Broker                 | `1883`           | Publish inference metadata to VAP    |
 
@@ -86,21 +86,21 @@ cp .env.example .env
 
 Open `.env` and update the variables for your environment. Variables are grouped by scope. Within each analytics app group, **Mandatory** applies only if you are using that app.
 
-**Common (VAP + Nx Witness):**
+**Common (VAP with Nx Witness):**
 
-| **Variable**                         | **Description**                                                          | **Required?** |
-|--------------------------------------|--------------------------------------------------------------------------|---------------|
-| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials                                     | Mandatory     |
-| `NX_TLS_VERIFY` / `NX_CA_BUNDLE` | Nx TLS verification toggle and optional CA bundle path (default: `false`) | Optional      |
-| `PG_PASSWORD`                        | PostgreSQL password (change from default)                                | Optional     |
-| `UI_HTTPS_PORT`                      | Host port for the dashboard HTTPS (default: `3443`)                      | Optional      |
+| **Variable**                              | **Description**                                                           | **Required?** |
+| ----------------------------------------- | ------------------------------------------------------------------------- | ------------- |
+| `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials                                           | Mandatory     |
+| `NX_TLS_VERIFY` / `NX_CA_BUNDLE`          | Nx TLS verification toggle and optional CA bundle path (default: `false`) | Optional      |
+| `PG_PASSWORD`                             | PostgreSQL password (change from default)                                 | Optional      |
+| `UI_HTTPS_PORT`                           | Host port for the dashboard HTTPS (default: `3443`)                       | Optional      |
 
 **Live Video Captioning (LVC):**
 
 | **Variable**                         | **Description**                                                          | **Required?** |
 |--------------------------------------|--------------------------------------------------------------------------|---------------|
-| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g., `http://<lvc-host>:4173`            | Mandatory     |
-| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g., `http://<lvc-host>:8889`         | Mandatory     |
+| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g., `http://<lvc-host>:4173`           | Mandatory     |
+| `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g., `http://<lvc-host>:8889`        | Mandatory     |
 | `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber | Optional |
 
 **DL Streamer Vision (`dls_vision` — Loitering Detection):**
@@ -133,10 +133,10 @@ docker compose ps
 Expected output — all services should show **healthy** or **running**:
 
 ```text
-NAME              STATUS
-vms-backend       Up (healthy)
-vms-ui            Up
-postgres          Up (healthy)
+NAME                          STATUS
+vms-adapter-backend           Up (healthy)
+vms-adapter-ui                Up
+vms-adapter-postgres          Up (healthy)
 ```
 
 Verify the backend is up:
@@ -148,12 +148,12 @@ curl -k https://localhost:3443/v1/health
 ## Step 5 — Open the Provider Dashboard
 
 | **Service**                | **URL**                               |
-|----------------------------|---------------------------------------|
+| -------------------------- | ------------------------------------- |
 | Provider Dashboard (HTTPS) | `https://localhost:3443`              |
 | API Docs (Swagger UI)      | `https://localhost:3443/docs`         |
 | OpenAPI JSON               | `https://localhost:3443/openapi.json` |
 
-> **Note**: The dashboard uses HTTPS by default with a self-signed certificate. Your browser
+> **Note:** The dashboard uses HTTPS by default with a self-signed certificate. Your browser
 > will show a security warning on first access — this is expected. To use your own certificate,
 > copy `docker-compose.tls.yml` to `docker-compose.override.yml` and place `cert.pem` and
 > `key.pem` in `./certs/ui/`.
@@ -188,12 +188,12 @@ The backend queries all configured VMS shims (Nx Witness in our case) and persis
 Configure the following fields in the dashboard:
 
 | **Field**        | **Description**                      | **Default**                              |
-|------------------|--------------------------------------|------------------------------------------|
+| ---------------- | ------------------------------------ | ---------------------------------------- |
 | Camera           | Dropdown of enabled cameras          | —                                        |
 | Enter Prompt     | VLM prompt for captioning            | "Describe what you see in one sentence." |
 | Select Model     | VLM model from LVC                   | OpenGVLab/InternVL2-2B                   |
 | Max New Tokens   | Maximum caption length               | 70                                       |
-| Select Pipeline  | DLStreamer pipeline configuration    | —                                        |
+| Select Pipeline  | DL Streamer pipeline configuration   | —                                        |
 | Run Name         | Display name for this run            | —                                        |
 | Frame Rate       | Frames per second sent for inference | 1                                        |
 | Chunk Size       | Number of frames per inference chunk | 1                                        |
@@ -207,7 +207,7 @@ overlay on the WebRTC video player.
 Configure the following fields in the dashboard:
 
 | **Field**        | **Description**                                  |
-|------------------|--------------------------------------------------|
+| ---------------- | ------------------------------------------------ |
 | Camera           | Dropdown of enabled cameras (Nx Witness cameras) |
 | Pipeline Name    | DL Streamer pipeline template to use             |
 | Pipeline Version | Version of the pipeline template                 |
