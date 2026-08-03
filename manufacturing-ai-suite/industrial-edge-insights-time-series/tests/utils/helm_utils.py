@@ -290,7 +290,7 @@ password_test_cases = {
         "MTX_WEBRTCICESERVERS2_0_USERNAME": common_utils.generate_username(8),
         "MTX_WEBRTCICESERVERS2_0_PASSWORD": common_utils.generate_password(12),
     },
-    
+
         "test_case_4": {
             "INFLUXDB_USERNAME": common_utils.generate_username(5),
             "INFLUXDB_PASSWORD": common_utils.generate_password(10),
@@ -475,10 +475,10 @@ def _dump_unhealthy_pods(namespace):
 
 def dump_pod_diagnostics(namespace):
     """Public wrapper to dump diagnostic info for unhealthy pods.
-    
+
     This function is called by test fixtures when Helm install or pod verification
     fails, to provide debugging information in CI/CD logs.
-    
+
     Args:
         namespace: Kubernetes namespace to check for unhealthy pods
     """
@@ -509,7 +509,7 @@ def verify_pods(namespace, timeout=300, interval=5):
 
             # Parse the output to check pod statuses
             lines = result.stdout.strip().split('\n')
-            
+
             # Check if there are any pods (more than just the header)
             if len(lines) <= 1:
                 logger.warning(f"No pods found in namespace '{namespace}'")
@@ -522,7 +522,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                     return False
                 time.sleep(interval)
                 continue
-            
+
             # Print the header
             logger.info("NAME\t\t\t\t\t\tREADY\tSTATUS\tRESTARTS\tAGE")
 
@@ -530,17 +530,17 @@ def verify_pods(namespace, timeout=300, interval=5):
             pod_lines = lines[1:]
             all_healthy = True
             pod_count = 0
-            
+
             for line in pod_lines:
                 line = line.strip()
                 if not line:  # Skip empty lines
                     continue
-                    
+
                 columns = line.split()
                 if len(columns) < 5:  # Ensure we have enough columns
                     logger.warning(f"Unexpected kubectl output format: {line}")
                     continue
-                    
+
                 pod_name = columns[0]
                 pod_ready = columns[1]
                 pod_status = columns[2]
@@ -566,7 +566,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                 return True
             elif pod_count > 0 and not all_healthy:
                 logger.info(f"Some pods are not yet in a healthy state. Waiting...")
-            
+
             # Check if timeout has been reached
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
@@ -644,7 +644,7 @@ def _init_resource_result(cpu_threshold_millicores, memory_threshold_gb):
 
 def validate_helm_deployment_resources(namespace, cpu_threshold_millicores=2000, memory_threshold_gb=8):
     """Aggregate CPU and memory usage for pods in a namespace and compare to thresholds.
-    
+
     Args:
         namespace: Kubernetes namespace to check
         cpu_threshold_millicores: CPU threshold in millicores (e.g., 2000 = 2 CPU cores)
@@ -852,7 +852,7 @@ def fetch_influxdb_credentials(chart_path):
             values_yaml_path = os.path.join(expanded_chart_path, 'values.yaml')
 
         logger.info(f"Fetching InfluxDB credentials from: {values_yaml_path}")
-    
+
         # Open and read the YAML file
         with open(values_yaml_path, 'r') as file:
             values = yaml.safe_load(file)
@@ -1022,7 +1022,7 @@ def verify_mqtt_alerts_via_subscription(namespace, alert_type, timeout=180, inte
 
         result = subprocess.run(command, capture_output=True, text=True, timeout=interval + 5)
         stdout = result.stdout.strip()
-        
+
         if result.returncode == 0 and stdout:
             # Alert received
             logger.info("✓ MQTT alert received on topic '%s': %s", alert_topic, stdout[:200])
@@ -1035,10 +1035,10 @@ def verify_mqtt_alerts_via_subscription(namespace, alert_type, timeout=180, inte
             result.returncode,
             remaining,
         )
-        
+
         if remaining <= 0:
             break
-            
+
         time.sleep(min(interval, remaining))
 
     logger.error(
@@ -1076,19 +1076,19 @@ def verify_influxdb_connectivity(namespace, chart_path):
             "kubectl", "exec", "-n", namespace, pod_name, "--",
             "influx",
             "-username", influxdb_username,
-            "-password", influxdb_password, 
+            "-password", influxdb_password,
             "-database", constants.INFLUXDB_DATABASE,
             "-execute", "SHOW MEASUREMENTS"
         ]
-        
+
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"InfluxDB connectivity test failed: {result.stderr}")
             return False
-            
+
         logger.info("InfluxDB connectivity verified successfully")
         return True
-        
+
     except Exception as e:
         logger.error(f"InfluxDB connectivity verification failed: {e}")
         return False
@@ -1144,27 +1144,27 @@ def execute_influxdb_commands(namespace, chart_path, sample_app=constants.WIND_S
         measurement_retry_delay = 15
         measurements_output = ""
         measurement_names = set()
-        
+
         logger.info(f"Waiting for measurements to appear in InfluxDB (timeout: {max_measurement_attempts * measurement_retry_delay}s)...")
         for attempt in range(1, max_measurement_attempts + 1):
             try:
                 measurements_output = _run_influx("SHOW MEASUREMENTS")
                 measurement_names = set(_parse_measurement_names(measurements_output))
                 missing = [name for name in measurements if name not in measurement_names]
-                
+
                 if not missing:
                     logger.info(f"All expected measurements found in InfluxDB on attempt {attempt}/{max_measurement_attempts}")
                     break
-                    
+
                 logger.info(
                     f"Measurement check attempt {attempt}/{max_measurement_attempts}: "
                     f"Found {len(measurement_names)} measurements, missing: {', '.join(missing)}"
                 )
-                
+
                 if attempt < max_measurement_attempts:
                     logger.info(f"Waiting {measurement_retry_delay}s for data pipeline to populate measurements...")
                     time.sleep(measurement_retry_delay)
-                    
+
             except subprocess.CalledProcessError as exc:
                 stderr = exc.stderr.strip() if exc.stderr else str(exc)
                 logger.warning(f"Failed to query measurements (attempt {attempt}/{max_measurement_attempts}): {stderr}")
@@ -1601,7 +1601,7 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         list_directory_contents()
 
         is_multimodal = (sample_app == constants.MULTIMODAL_SAMPLE_APP)
-        
+
         if is_multimodal:
             # Multimodal Makefile doesn't have gen_helm_charts_targz or app= parameter
             logger.info("Generating Helm chart for multimodal (no app parameter)...")
@@ -1611,7 +1611,7 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
             )
             logger.info(result.stdout)
             logger.info("Helm chart generated. Now packaging...")
-            
+
             # Package the helm chart manually
             subprocess.run(["mkdir", "-p", "helm-packages"], check=True)
             pkg_result = subprocess.run(
@@ -1627,7 +1627,7 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
                 capture_output=True, text=True, check=True,
             )
             logger.info(result.stdout)
-        
+
         logger.info("Helm chart generated and packaged successfully.")
         list_directory_contents()
 
@@ -1728,7 +1728,7 @@ def get_pod_names(namespace):
             ["kubectl", "get", "pods", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name}"],
             capture_output=True, text=True, check=True
         )
-        
+
         #pod_name = next((name for name in pod_names if 'timeseries' in name or 'telegraf' in name), None)
         pod_names = result.stdout.strip().split()
         return pod_names
@@ -1744,7 +1744,7 @@ def check_pod_logs_for_errors(namespace, pod_name):
             capture_output=True, text=True, check=True
         )
         logs = result.stdout.strip()
-       
+
         # Filter out benign warnings that should not be treated as errors
         benign_patterns = [
             "WARNING: Retrying",  # PyPI connection retry warnings
@@ -1756,13 +1756,13 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "failed to write points to InfluxDB",  # Transient error during InfluxDB restart
             "connection refused",  # Transient connection refused during pod restarts
         ]
-        
+
         # Check if "error" exists in logs (case-insensitive)
         logs_lower = logs.lower()
         if "error" in logs_lower:
             # Check if it's a benign warning that should be ignored (case-insensitive)
             is_benign = any(pattern.lower() in logs_lower for pattern in benign_patterns)
-            
+
             if is_benign:
                 logger.info(f"Benign transient errors found in logs for pod {pod_name} (expected during restarts). Logs:\n{logs}")
                 return True
@@ -1820,7 +1820,7 @@ def verify_pods_logs(namespace, log_type):
         logger.error("No pods found or failed to fetch pod names.")
         return False
 
-        
+
     # Filter pod names to include only those containing 'timeseries' or 'telegraf'
     relevant_pod_names = [name for name in pod_names if 'time-series' in name or 'telegraf' in name or 'influxdb' in name]
 
@@ -1865,11 +1865,11 @@ def verify_ts_logs(namespace, log_type):
     else:
         logger.error("Errors found in pod logs.")
         return False
-    
-     
+
+
 def verify_ts_logs_alerts(namespace, alert_type):
     """Verify alerts by subscribing to MQTT broker or checking logs."""
-    
+
     # For MQTT alerts, try subscribing to the MQTT broker directly first
     if alert_type.lower() in ["mqtt", "mqtt_weld"]:
         logger.info("Attempting to verify MQTT alerts via broker subscription...")
@@ -1877,7 +1877,7 @@ def verify_ts_logs_alerts(namespace, alert_type):
             logger.info("MQTT alerts verified via broker subscription.")
             return True
         logger.warning("Direct MQTT subscription check failed, falling back to log verification...")
-    
+
     # Fall back to log checking
     pod_names = get_pod_names(namespace)
     if not pod_names:
@@ -2014,7 +2014,7 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
         logger.warning("Configuration restart failed, waiting 15 seconds before continuing...")
         time.sleep(15)
     return result
-        
+
 
 def _wait_for_ts_api_ready(timeout=180, interval=5,
                            probe_url="https://localhost:30001/ts-api/config"):
@@ -2349,7 +2349,7 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         }
         json_payload = json.dumps(payload)
         logger.info(f"Time Series UDF payload: {json_payload}")
-        
+
         if not _post_ts_api_config(json_payload, target_namespace=namespace, pod_name=ts_pod):
             logger.error("Failed to post Time Series UDF configuration")
             return False
@@ -2358,7 +2358,7 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         if not _restart_ts_api_config(target_namespace=namespace, pod_name=ts_pod):
             logger.error("Failed to restart ts-api configuration after UDF update.")
             return False
-        
+
         logger.info("Time Series UDF activated successfully via external nginx proxy")
 
         logger.info("Step 4: Activating DL Streamer Pipeline")
@@ -2522,7 +2522,7 @@ def activate_multimodal_tsa_udf_config(namespace, device_value="cpu"):
 
 def cleanup_failed_dlstreamer_pipelines(namespace):
     """Clean up any failed or error-state DL Streamer pipeline instances.
-    
+
     Returns:
         int: Number of failed instances cleaned up, or -1 on error.
     """
@@ -2530,7 +2530,7 @@ def cleanup_failed_dlstreamer_pipelines(namespace):
     if not dlstreamer_pod:
         logger.warning("DL Streamer pod not found for cleanup")
         return -1
-    
+
     try:
         # Get pipeline status
         status_command = [
@@ -2539,23 +2539,23 @@ def cleanup_failed_dlstreamer_pipelines(namespace):
             "curl", "-s", "http://localhost:8080/pipelines/status"
         ]
         result = subprocess.run(status_command, capture_output=True, text=True, timeout=10)
-        
+
         if result.returncode != 0:
             logger.warning(f"Failed to get pipeline status: {result.stderr}")
             return -1
-        
+
         # Parse status JSON
         try:
             status_list = json.loads(result.stdout)
         except json.JSONDecodeError:
             logger.warning("Could not parse pipeline status JSON")
             return 0
-        
+
         cleaned_count = 0
         for instance in status_list:
             state = instance.get("state", "")
             instance_id = instance.get("id", "")
-            
+
             if state in ["ERROR", "ABORTED"] and instance_id:
                 logger.info(f"Cleaning up failed pipeline instance {instance_id} (state={state})")
                 delete_command = [
@@ -2570,12 +2570,12 @@ def cleanup_failed_dlstreamer_pipelines(namespace):
                     cleaned_count += 1
                 else:
                     logger.warning(f"Failed to delete instance {instance_id}: {delete_result.stderr}")
-        
+
         if cleaned_count > 0:
             logger.info(f"Cleaned up {cleaned_count} failed pipeline instance(s)")
-        
+
         return cleaned_count
-        
+
     except subprocess.SubprocessError as exc:
         logger.error(f"Error during pipeline cleanup: {exc}")
         return -1
@@ -2611,27 +2611,27 @@ def activate_multimodal_dlstreamer_pipeline(
     # Use the pipeline request file from configs (same as user documentation)
     if pipeline_request_file is None:
         pipeline_request_file = constants.MULTIMODAL_DLSTREAMER_PIPELINE_REQUEST_FILE
-    
+
     # Resolve path relative to helm_utils directory
     utils_dir = os.path.dirname(os.path.abspath(__file__))
     json_file_path = os.path.join(utils_dir, pipeline_request_file)
-    
+
     if not os.path.exists(json_file_path):
         logger.error(f"Pipeline request file not found: {json_file_path}")
         return False
-    
+
     try:
         # Read the base pipeline request JSON file
         with open(json_file_path, 'r') as f:
             dlstreamer_payload = json.load(f)
-        
+
         # Modify only the device parameter (mimics sed 's/"device": "CPU"/"device": "GPU"/')
         if "parameters" in dlstreamer_payload and "classification-properties" in dlstreamer_payload["parameters"]:
             dlstreamer_payload["parameters"]["classification-properties"]["device"] = device_upper
         else:
             logger.error("Invalid pipeline request JSON structure")
             return False
-    
+
     except FileNotFoundError:
         logger.error(f"Pipeline request file not found: {json_file_path}")
         return False
@@ -2697,7 +2697,7 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     try:
         # Navigate to the specified directory
         os.chdir(chart_path)
-        
+
         if sample_app == constants.WIND_SAMPLE_APP:
             os.chdir('../' + constants.HELM_TIMESERIES)
             logger.debug(f"Current working directory: {os.getcwd()}")
@@ -2725,7 +2725,7 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     finally:
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
-    
+
 def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
     """Configure OPC-UA alert in the TICK script (Step 1 of the OPC-UA activation workflow)."""
     try:
@@ -2753,11 +2753,11 @@ def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
         return False
     except Exception as e:
         logger.error("OPC UA alert configuration failed due to an unexpected error: %s", e)
-        return False        
-    
+        return False
+
 def pod_restart(target_namespace, deployment_name="deployment-influxdb"):
     """Restart a deployment and wait for it to become ready again.
-    
+
     Args:
         target_namespace: Kubernetes namespace where the deployment exists
         deployment_name: Name of the deployment to restart (default: "deployment-influxdb")
@@ -2797,10 +2797,10 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     logger.info("Validating pod logs with respect to log level : debug")
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
-    
+
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" 
-    
+    sample_app = "wind-turbine-anomaly-detection"
+
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):
         logger.info(f"\n=== Test Iteration {i+1}/{iterations} ===")
@@ -2866,7 +2866,7 @@ def check_pods(namespace, timeout=180, interval=5):
     :return: True if no resources are found within the timeout, False otherwise.
     """
     start_time = time.time()
-    
+
     while True:
         elapsed_time = time.time() - start_time
         if elapsed_time > timeout:
@@ -2939,7 +2939,7 @@ def check_services(namespace, timeout=30, interval=5):
     """
     Checks if services (especially NodePort) have been deleted in the specified namespace.
     Returns True if no services are found within the timeout period, otherwise returns False.
-    
+
     This is important to avoid NodePort allocation conflicts when reinstalling Helm charts.
 
     :param namespace: The Kubernetes namespace to check.
@@ -2948,7 +2948,7 @@ def check_services(namespace, timeout=30, interval=5):
     :return: True if no services are found within the timeout, False otherwise.
     """
     start_time = time.time()
-    
+
     while True:
         elapsed_time = time.time() - start_time
         if elapsed_time > timeout:
@@ -2990,7 +2990,7 @@ def execute_gpu_config_curl_helm(
     sample_app=constants.WIND_SAMPLE_APP,
 ):
     """Execute curl command to post GPU configuration to the time-series analytics API in Helm environment.
-    
+
     Args:
         device (str): Device to use for configuration ('gpu', 'cpu', etc.)
         namespace (str): Kubernetes namespace for the deployment
@@ -3007,30 +3007,30 @@ def execute_gpu_config_curl_helm(
         if not gpu_config:
             logger.error(f"Failed to build GPU payload for sample app '{sample_app}'")
             return False
-        
+
         # Convert config to JSON string for curl command
         gpu_config_json = json.dumps(gpu_config)
-        
+
         # Get the time-series analytics pod name without using shell
         get_pod_cmd = ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-time-series-analytics-microservice", "-o", "jsonpath={.items[0].metadata.name}"]
         result = subprocess.run(get_pod_cmd, capture_output=True, text=True, timeout=30)
-        
+
         if result.returncode != 0 or not result.stdout.strip():
             logger.error(f"Failed to get time-series analytics pod name: {result.stderr}")
             return False
-            
+
         pod_name = result.stdout.strip()
         logger.info(f"Found time-series analytics pod: {pod_name}")
-        
-        # Use kubectl exec to avoid port forwarding dependency  
+
+        # Use kubectl exec to avoid port forwarding dependency
         # Post configuration to the time-series analytics API via kubectl exec
         success = _post_ts_api_config(
-            payload=gpu_config_json, 
+            payload=gpu_config_json,
             method="POST",
             target_namespace=namespace,
             pod_name=pod_name
         )
-        
+
         if success:
             logger.info(
                 f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
@@ -3041,7 +3041,7 @@ def execute_gpu_config_curl_helm(
                 f"kubectl exec command failed for {device.upper()} configuration (app '{sample_app}')"
             )
             return False
-            
+
     except subprocess.TimeoutExpired:
         logger.error(
             f"Timeout executing {device.upper()} configuration curl command for app '{sample_app}'"
@@ -3057,35 +3057,35 @@ def execute_gpu_config_curl_helm(
 def check_log_gpu_helm(namespace, timeout=300, interval=10):
     """
     Check Kubernetes pod logs for GPU-related messages with a timeout.
-    
+
     Args:
         namespace (str): Kubernetes namespace to check pods in
         timeout (int): Maximum time to wait in seconds
         interval (int): Time between checks in seconds
-        
+
     Returns:
         bool: True if GPU keywords found, False otherwise
     """
     try:
         logger.info(f"Checking for GPU keywords in {namespace} namespace logs...")
-        
+
         # Get time-series analytics pod name
         result = subprocess.run(
             ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-time-series-analytics-microservice",
              "-o", "jsonpath={.items[0].metadata.name}"],
             capture_output=True, text=True, timeout=30
         )
-        
+
         if result.returncode != 0 or not result.stdout.strip():
             logger.error(f"Failed to get time-series analytics pod name: {result.stderr}")
             return False
-            
+
         pod_name = result.stdout.strip()
         logger.info(f"Checking logs for pod: {pod_name}")
-        
+
         start_time = time.time()
         gpu_pattern = re.compile(r'gpu|GPU', re.IGNORECASE)
-        
+
         while time.time() - start_time < timeout:
             try:
                 # Get recent logs from the pod
@@ -3093,13 +3093,13 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
                     ["kubectl", "logs", "-n", namespace, pod_name, "--tail=1000"],
                     capture_output=True, text=True, timeout=10
                 )
-                
+
                 if result.returncode == 0:
                     logs = result.stdout
-                    
+
                     # Search for GPU keywords
                     gpu_matches = gpu_pattern.findall(logs)
-                    
+
                     if gpu_matches:
                         gpu_count = len(gpu_matches)
                         logger.info(f"✓ Found 'GPU' in pod logs ({gpu_count} occurrences)")
@@ -3107,18 +3107,18 @@ def check_log_gpu_helm(namespace, timeout=300, interval=10):
                         return True
                 else:
                     logger.warning(f"Failed to get logs from pod {pod_name}: {result.stderr}")
-                    
+
             except subprocess.TimeoutExpired:
                 logger.warning("Timeout getting pod logs, retrying...")
             except Exception as e:
                 logger.warning(f"Error getting logs: {str(e)}")
-            
+
             # Wait before next check
             time.sleep(interval)
-        
+
         logger.warning(f"GPU keywords not found in pod logs after {timeout} seconds")
         return False
-        
+
     except Exception as e:
         logger.error(f"Exception during GPU log check: {str(e)}")
         return False
@@ -3132,7 +3132,7 @@ def verify_seaweed_essential_pods(namespace):
     """
     try:
         essential_components = [
-            "dlstreamer",  # DLStreamer pod
+            "dlstreamer",  # DL Streamer pod
             "influxdb",    # InfluxDB pod
             "seaweedfs"    # SeaweedFS pods (master, filer, s3)
         ]
@@ -3205,38 +3205,38 @@ def get_vision_img_handles_from_influxdb_helm(credentials, namespace, database="
         # Get InfluxDB pod name
         influxdb_pods = get_pod_names(namespace)
         influxdb_pod = None
-        
+
         for pod in influxdb_pods:
             if "influxdb" in pod:
                 influxdb_pod = pod
                 break
-                
+
         if not influxdb_pod:
             return {"success": False, "error": "InfluxDB pod not found"}
-        
+
         # Use LIMIT query to get alphanumeric handles (matches Docker approach)
         query = f"SELECT img_handle FROM \"{measurement}\" LIMIT 10"
-        
+
         kubectl_cmd = [
-            "kubectl", "exec", "-n", namespace, influxdb_pod, "--", 
-            "influx", "-username", credentials["INFLUXDB_USERNAME"], 
-            "-password", credentials["INFLUXDB_PASSWORD"], 
+            "kubectl", "exec", "-n", namespace, influxdb_pod, "--",
+            "influx", "-username", credentials["INFLUXDB_USERNAME"],
+            "-password", credentials["INFLUXDB_PASSWORD"],
             "-database", database, "-execute", query, "-format", "csv"
         ]
-        
+
         result = subprocess.run(kubectl_cmd, capture_output=True, text=True, timeout=30)
-        
+
         if result.returncode != 0:
             return {"success": False, "error": f"InfluxDB query failed: {result.stderr}"}
-        
+
         # Parse CSV output to extract alphanumeric img_handle values
         img_handles = []
         lines = result.stdout.strip().split('\n')
-        
+
         logger.info("InfluxDB query CSV output (first 5 lines):")
         for i, line in enumerate(lines[:5]):
             logger.info(f"  Line {i}: {line}")
-        
+
         # Parse CSV - format: time,field2,img_handle (extract 3rd column like Docker does)
         for line in lines[1:]:  # Skip header
             if line and ',' in line:
@@ -3244,33 +3244,33 @@ def get_vision_img_handles_from_influxdb_helm(credentials, namespace, database="
                 if len(parts) >= 3:  # Ensure we have at least 3 columns
                     img_handle = parts[2].strip()  # Extract 3rd value (after 2nd comma)
                     # Only accept alphanumeric handles (like OXCV8C89KF, 2QX98C4Y18)
-                    if (img_handle and 
-                        img_handle != 'img_handle' and 
+                    if (img_handle and
+                        img_handle != 'img_handle' and
                         not img_handle.isdigit() and
-                        len(img_handle) >= 6 and 
+                        len(img_handle) >= 6 and
                         len(img_handle) <= 15):
                         # Check if it contains both letters and numbers (alphanumeric)
                         if any(c.isalpha() for c in img_handle) and any(c.isdigit() for c in img_handle):
                             img_handles.append(img_handle)
-        
+
         # Remove duplicates
         img_handles = list(set(img_handles))
-        
+
         if not img_handles:
             return {"success": False, "error": "No alphanumeric img_handle values found"}
-            
+
         selected_handle = random.choice(img_handles)
-        
+
         logger.info(f"Found {len(img_handles)} alphanumeric img_handle values")
         logger.info(f"Selected img_handle for testing: {selected_handle}")
-        
+
         return {
             "success": True,
             "handles": img_handles,
             "total_handles": len(img_handles),
             "selected_handle": selected_handle
         }
-        
+
     except Exception as e:
         logger.error(f"Error querying InfluxDB in helm: {e}")
         return {"success": False, "error": str(e)}
@@ -3292,28 +3292,28 @@ def execute_seaweedfs_bucket_query_helm(namespace):
         logger.info(f"Executing SeaweedFS bucket query: {' '.join(curl_cmd)}")
 
         result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=45)
-        
+
         logger.info(f"Curl result - Return code: {result.returncode}")
         logger.info(f"Curl stdout: {result.stdout[:500]}")  # Log first 500 chars
-        logger.info(f"Curl stderr: {result.stderr[:500]}")  # Log first 500 chars  
-        
+        logger.info(f"Curl stderr: {result.stderr[:500]}")  # Log first 500 chars
+
         if result.returncode != 0:
             return {"success": False, "error": f"Curl command failed (code {result.returncode}): {result.stderr}"}
-        
+
         # Parse JSON response
         try:
             bucket_data = json.loads(result.stdout)
-            
+
             if "Entries" in bucket_data:
                 entries = bucket_data["Entries"]
                 jpg_files = []
-                
+
                 for entry in entries:
                     # SeaweedFS API returns "FullPath" not "Name"
                     full_path = entry.get("FullPath", "")
                     if full_path.endswith('.jpg'):
                         jpg_files.append(full_path)
-                
+
                 return {
                     "success": True,
                     "jpg_files": jpg_files,
@@ -3322,10 +3322,10 @@ def execute_seaweedfs_bucket_query_helm(namespace):
                 }
             else:
                 return {"success": False, "error": "Invalid bucket response format"}
-                
+
         except json.JSONDecodeError as e:
             return {"success": False, "error": f"Failed to parse JSON response: {e}"}
-                
+
     except Exception as e:
         logger.error(f"Error executing SeaweedFS query in helm: {e}")
         return {"success": False, "error": str(e)}
@@ -3338,29 +3338,29 @@ def validate_s3_images_content_helm(namespace, matched_files, max_files_to_check
     try:
         files_to_check = matched_files[:max_files_to_check]
         logger.info(f"Validating content of {len(files_to_check)} image files (max: {max_files_to_check})")
-        
+
         checked_files = []
         non_empty_count = 0
         empty_count = 0
-        
+
         for file_path in files_to_check:
             filename = file_path.split('/')[-1]
             file_url = f"https://localhost:30001/image-store/{file_path.lstrip('/')}"
-            
+
             logger.info(f"Checking file size for: {file_url}")
-            
+
             # Use curl -skI to get headers only (file size check)
             curl_cmd = [
                 "curl", "-skI", "--connect-timeout", "10", "--max-time", "15",
                 file_url
             ]
             result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=20)
-            
+
             file_check = {"filename": filename, "success": False, "is_empty": True, "size_human": "0 bytes"}
-            
+
             if result.returncode == 0:
                 headers = result.stdout
-                
+
                 # Extract Content-Length from headers
                 for line in headers.split('\n'):
                     if line.lower().startswith('content-length:'):
@@ -3386,11 +3386,11 @@ def validate_s3_images_content_helm(namespace, matched_files, max_files_to_check
             else:
                 logger.error(f"Curl failed for {filename}: {result.stderr}")
                 empty_count += 1
-            
+
             checked_files.append(file_check)
-        
+
         success = non_empty_count > 0
-        
+
         return {
             "success": success,
             "checked_files": checked_files,
@@ -3398,7 +3398,7 @@ def validate_s3_images_content_helm(namespace, matched_files, max_files_to_check
             "non_empty_count": non_empty_count,
             "empty_count": empty_count
         }
-            
+
     except Exception as e:
         logger.error(f"Error validating S3 content in helm: {e}")
         return {"success": False, "error": str(e)}
