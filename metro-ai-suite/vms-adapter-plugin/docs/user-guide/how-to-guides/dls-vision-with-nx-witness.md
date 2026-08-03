@@ -660,6 +660,7 @@ To stop the VAP,
 docker compose down
 ```
 
+
 > **CAUTION**: Be careful not to remove the volume, by `docker compose down -v` as this will delete the DB, as well as any integration info, credentials you created. If done, then the integration in Nx would be stale. Either delete from the Nx Witness, or use a different VMS integration name in `vms_shim/nxwitness/nx_integration.json` file.
 
 ---
