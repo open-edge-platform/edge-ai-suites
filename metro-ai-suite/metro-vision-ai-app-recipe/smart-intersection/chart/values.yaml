@@ -38,6 +38,7 @@ trustedCompute:
     - npu.intel.com/npu=tc
   tcvm_default_memory: "6144"
   tcvm_pcie_root_port: "1"
+  tcvm_npu_pcie_root_port: "3"
   tcvm_hot_plug_vfio: "root-port"
   resources:
     requests:
