@@ -395,6 +395,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "class_name": student_meta.get("class_name"),
             "exam_number": student_meta.get("exam_number"),
             "paper_path": source_input.get("paper_path"),
+            "result_path": str(result_path),
             "total_score": source_summary.get("total_score"),
             "total_max": source_summary.get("total_max"),
             "objective_score": source_summary.get("objective_score"),
@@ -464,6 +465,27 @@ def get_task_summary(task_id: str) -> dict[str, Any]:
     if summary_path.exists():
         return json.loads(summary_path.read_text(encoding="utf-8"))
     return _empty_summary(name)
+
+
+def get_student_result(task_id: str, slot: str) -> dict[str, Any]:
+    name = _validate_task_id(task_id)
+    task_root = (_outputs_root() / name).resolve()
+    summary_path = task_root / "summary.json"
+    if not summary_path.exists():
+        raise ValueError(f"summary not found for task {name}")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    student = (summary.get("students") or {}).get(str(slot))
+    if not student:
+        raise ValueError(f"student slot {slot} not found")
+    result_path = student.get("result_path")
+    if not result_path:
+        raise ValueError(f"result_path missing for slot {slot}")
+    result_path = Path(str(result_path)).resolve()
+    if task_root not in result_path.parents:
+        raise ValueError("result path outside task output directory")
+    if not result_path.exists():
+        raise ValueError(f"result file not found: {result_path}")
+    return json.loads(result_path.read_text(encoding="utf-8"))
 
 
 def _build_submission_key(paper_path: str, student_id: str | None) -> str:

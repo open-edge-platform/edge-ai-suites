@@ -30,6 +30,7 @@ A task is created by `POST /grading/tasks`. `paper_path` may be a single PDF or 
 | GET | `/grading/tasks` | List tasks |
 | GET | `/grading/tasks/{id}` | Get task status |
 | GET | `/grading/tasks/{id}/summary` | Score summary (live) |
+| GET | `/grading/tasks/{id}/students/{slot}/result` | Full per-student `grading_result.json` |
 | GET | `/grading/tasks/{id}/log` | Tail task log |
 | DELETE | `/grading/tasks/{id}` | Delete task and outputs |
 | POST | `/grading/tasks/{id}/pause` | Pause task |
@@ -91,23 +92,46 @@ Errors: `400`, `404`, `500`.
 
 ### GET `/grading/config`
 
+Returns the UI-editable config subset plus the read-only model names resolved from the smart-classroom config.
+
 ```json
-{ "dpi": 150, "vlm_temperature": 0.1, "poll_interval": 5, "stable_checks": 2, "idle_timeout": 180 }
+{
+  "dpi": 50, "page_columns": 1, "column_split_ratio": 0.55,
+  "contrast_enhance": true, "contrast_factor": 1.5,
+  "max_tokens": 4096, "vlm_temperature": 0.2, "max_image_pixels": 4000000,
+  "poll_interval": 5, "stable_checks": 2, "idle_timeout": 100,
+  "min_score": 0.5, "sort_boxes": true, "expand_margin": 10,
+  "merge_overlapping": false, "iou_threshold": 0.7,
+  "vlm_model": "Qwen/Qwen3.5-9B", "ocr_model": "...", "layout_model": "..."
+}
 ```
+
+`vlm_model` / `ocr_model` / `layout_model` are read-only (resolved from the smart-classroom config, not writable through this endpoint).
 
 ---
 
 ### PUT `/grading/config`
 
-All fields optional. Changes apply to the next task only.
+All fields optional. Changes apply to the next task only. The three model-name fields are read-only and ignored if sent.
 
 | Field | Type | Description |
 |---|---|---|
 | `dpi` | integer | PDF render DPI |
+| `page_columns` | integer | Page layout: `1` single column, `2` two columns (left/right) |
+| `column_split_ratio` | float | For `page_columns=2`, left-column width fraction (`0.5` = middle) |
+| `contrast_enhance` | bool | Apply contrast enhancement to rendered pages |
+| `contrast_factor` | float | Contrast multiplier when `contrast_enhance` is on |
+| `max_tokens` | integer | Max completion tokens per VLM request |
 | `vlm_temperature` | float | VLM temperature (0–2) |
+| `max_image_pixels` | integer | Section images larger than this are downscaled before the VLM call |
 | `poll_interval` | integer | Directory scan interval (s) |
 | `stable_checks` | integer | Polls before a PDF is considered stable |
 | `idle_timeout` | integer | Idle seconds before directory task auto-completes |
+| `min_score` | float | Min layout-detection confidence to keep a box (0–1) |
+| `sort_boxes` | bool | Sort detected boxes top-to-bottom |
+| `expand_margin` | integer | Expand each kept box by this many px |
+| `merge_overlapping` | bool | Merge overlapping boxes |
+| `iou_threshold` | float | IoU cutoff for merging — only applied when `merge_overlapping` is true |
 
 Returns the updated config. Errors: `400`, `500`.
 
@@ -186,6 +210,7 @@ Live score summary. Readable at any time — does not require `COMPLETED`. Retur
       "student_id": "student1", "student_name": "Alice",
       "total_score": 70, "total_max": 102,
       "objective_score": 50, "subjective_score": 20,
+      "result_path": "outputs/<task_id>/student1/grading_result.json",
       "questions": { "1": { "catalog": "objective", "type": "choice", "score": 4, "max_score": 4 } }
     }
   },
@@ -193,7 +218,27 @@ Live score summary. Readable at any time — does not require `COMPLETED`. Retur
 }
 ```
 
+The map key (`"1"` above) is the student **slot** — pass it to the student-result endpoint below. `result_path` is the absolute path stored so a table row can be traced back to its `grading_result.json`.
+
 Errors: `400` (invalid id), `500`. Never `404`.
+
+---
+
+### GET `/grading/tasks/{id}/students/{slot}/result`
+
+Returns the full `grading_result.json` for one student. `slot` is the key from the summary `students` map. Resolves the file via the `result_path` recorded in `summary.json` and guards against paths outside the task output directory.
+
+```json
+{
+  "summary": { "total_score": 70, "total_max": 102, "objective_score": 50, "subjective_score": 20 },
+  "questions": { "1": { "catalog": "objective", "type": "choice", "student_answer": "A", "vlm_score": 4, "max_score": 4 } },
+  "graded_count": 22,
+  "paper_meta": { "paper_title": "Exam 2025", "subject": "Math" },
+  "student_meta": { "student_name": "Alice", "exam_number": "20250101" }
+}
+```
+
+Errors: `404` (task/slot/result not found, or `result_path` missing/outside task dir), `500`.
 
 ---
 

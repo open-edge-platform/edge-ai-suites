@@ -40,6 +40,7 @@ def _build_hierarchy(questions: dict[str, dict], grouped: dict[int, list[tuple[s
                 "type": item.get("type"),
             },
             "student_answer": item.get("student_answer", ""),
+            "reason": item.get("reason", ""),
         }
 
     hierarchy: list[dict[str, Any]] = []
@@ -61,6 +62,7 @@ def _build_hierarchy(questions: dict[str, dict], grouped: dict[int, list[tuple[s
                         "part_path": [],
                     },
                     "student_answer": only.get("student_answer", ""),
+                    "reason": only.get("reason", ""),
                 })
                 continue
 
@@ -155,6 +157,7 @@ def build_result(scores: dict[str, dict]) -> dict[str, Any]:
             "catalog": catalog,
             "type": vlm.get("type", ""),
             "student_answer": vlm.get("student", ""),
+            "reason": vlm.get("reason", ""),
             "vlm_score": got,
             "max_score": mx,
         }

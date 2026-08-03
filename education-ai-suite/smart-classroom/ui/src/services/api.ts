@@ -1410,6 +1410,7 @@ export interface GradingQuestionNode {
   sub_question_no?: number | null;
   meta?: GradingQuestionMeta;
   student_answer?: string | null;
+  reason?: string | null;
   questions?: GradingQuestionNode[];
 }
 
@@ -1419,6 +1420,7 @@ export interface GradingStudentResult {
   class_name?: string | null;
   exam_number?: string | null;
   paper_path?: string | null;
+  result_path?: string | null;
   total_score?: number | null;
   total_max?: number | null;
   objective_score?: number | null;
@@ -1427,6 +1429,21 @@ export interface GradingStudentResult {
   subjective_max?: number | null;
   processing_seconds?: number | null;
   questions_hierarchy?: GradingQuestionNode[];
+}
+
+export interface GradingStudentResultDetail {
+  summary?: {
+    total_score?: number | null;
+    total_max?: number | null;
+    objective_score?: number | null;
+    objective_max?: number | null;
+    subjective_score?: number | null;
+    subjective_max?: number | null;
+  };
+  questions_hierarchy?: GradingQuestionNode[];
+  paper_meta?: Record<string, unknown>;
+  student_meta?: Record<string, unknown>;
+  input?: Record<string, unknown>;
 }
 
 export interface GradingSummary {
@@ -1491,6 +1508,10 @@ export async function gradingListTasks(status?: string): Promise<{
 
 export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
   return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/summary`);
+}
+
+export async function gradingGetStudentResult(taskId: string, slot: string): Promise<GradingStudentResultDetail> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/students/${encodeURIComponent(slot)}/result`);
 }
 
 export async function gradingPauseTask(taskId: string): Promise<GradingTask> {

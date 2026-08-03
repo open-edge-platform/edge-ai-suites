@@ -12,6 +12,7 @@ _LINE_FULL = re.compile(
     re.IGNORECASE,
 )
 _PART_TOKEN = re.compile(r"part_(\d+)\s+(\d+)", re.IGNORECASE)
+_REASON_LINE = re.compile(r"^\s*Reason\s*[:：]\s*(.*)$", re.IGNORECASE)
 
 
 def _accumulate(scores: dict[str, dict], qid: str, part: dict) -> None:
@@ -35,35 +36,54 @@ def parse_scores(text: str) -> dict[str, dict]:
     """
     scores: dict[str, dict] = {}
     seen_parts: set[tuple[str, tuple[int, ...]]] = set()
-    for m in _LINE_FULL.finditer(text):
-        qid = m.group(1)
-        parts_block = m.group(2)
+    pending_reason_qids: list[str] = []
 
-        indexed_parts: list[tuple[int, int]] = []
-        for part_match in _PART_TOKEN.finditer(parts_block):
-            indexed_parts.append((int(part_match.group(1)), int(part_match.group(2))))
-        if not indexed_parts:
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
             continue
 
-        indexed_parts.sort(key=lambda p: p[0])
-        part_path = [value for _, value in indexed_parts]
-        part_tuple = tuple(part_path)
-        key = (qid, part_tuple)
-        if key in seen_parts:
-            continue
-        seen_parts.add(key)
+        m = _LINE_FULL.match(line)
+        if m:
+            qid = m.group(1)
+            parts_block = m.group(2)
 
-        composite_qid = f"{qid}|{'|'.join(str(v) for v in part_path)}"
-        _accumulate(scores, composite_qid, {
-            "type": m.group(3).lower(),
-            "student": m.group(4).strip(),
-            "score": int(m.group(5)),
-            "max": int(m.group(6)),
-            "question_no": int(qid),
-            "part_path": part_path,
-            "part_depth": len(part_path),
-            "part_key": composite_qid,
-        })
+            indexed_parts: list[tuple[int, int]] = []
+            for part_match in _PART_TOKEN.finditer(parts_block):
+                indexed_parts.append((int(part_match.group(1)), int(part_match.group(2))))
+            if not indexed_parts:
+                continue
+
+            indexed_parts.sort(key=lambda p: p[0])
+            part_path = [value for _, value in indexed_parts]
+            part_tuple = tuple(part_path)
+            key = (qid, part_tuple)
+            if key in seen_parts:
+                continue
+            seen_parts.add(key)
+
+            composite_qid = f"{qid}|{'|'.join(str(v) for v in part_path)}"
+            _accumulate(scores, composite_qid, {
+                "type": m.group(3).lower(),
+                "student": m.group(4).strip(),
+                "score": int(m.group(5)),
+                "max": int(m.group(6)),
+                "question_no": int(qid),
+                "part_path": part_path,
+                "part_depth": len(part_path),
+                "part_key": composite_qid,
+            })
+            pending_reason_qids.append(composite_qid)
+            continue
+
+        reason_match = _REASON_LINE.match(line)
+        if reason_match and pending_reason_qids:
+            reason_text = reason_match.group(1).strip()
+            for pqid in pending_reason_qids:
+                if pqid in scores and reason_text:
+                    scores[pqid]["reason"] = reason_text
+            pending_reason_qids = []
+
     return scores
 
 
