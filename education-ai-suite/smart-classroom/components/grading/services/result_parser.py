@@ -7,15 +7,12 @@ from typing import Any
 
 import yaml
 
-# "Question 1 | choice | student: A | 4/4 points"
 _LINE_FULL = re.compile(
-    r"Question\s*([0-9]+)\s*([（(]\s*\d+\s*[）)])?\s*\|\s*([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)",
+    r"Question\s*([0-9]+)\s*\|\s*((?:part_\d+\s+\d+\s*\|\s*)+)([A-Za-z]+)\s*\|\s*student:\s*(.*?)\s*\|\s*(\d+)\s*/\s*(\d+)\s*points",
     re.IGNORECASE,
 )
-# Fallback: "Question 1: 4/10 points"
-_LINE_SIMPLE = re.compile(
-    r"Question\s*([0-9]+)\s*[:：]\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE
-)
+_PART_TOKEN = re.compile(r"part_(\d+)\s+(\d+)", re.IGNORECASE)
+_REASON_LINE = re.compile(r"^\s*Reason\s*[:：]\s*(.*)$", re.IGNORECASE)
 
 
 def _accumulate(scores: dict[str, dict], qid: str, part: dict) -> None:
@@ -32,31 +29,61 @@ def _accumulate(scores: dict[str, dict], qid: str, part: dict) -> None:
 
 
 def parse_scores(text: str) -> dict[str, dict]:
-    """Return {qid: {type, student, score, max}} parsed from model output."""
+    """Return parsed scores keyed by "<question_no>|<part_1>|<part_2>|...".
+
+    Record shape:
+    {type, student, score, max, question_no, part_path, part_depth, part_key}
+    """
     scores: dict[str, dict] = {}
-    seen_subparts: set[tuple[str, str]] = set()
-    for m in _LINE_FULL.finditer(text):
-        qid = m.group(1)
-        subq = (m.group(2) or "").strip()
-        key = (qid, subq)
-        if subq and key in seen_subparts:
+    seen_parts: set[tuple[str, tuple[int, ...]]] = set()
+    pending_reason_qids: list[str] = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
             continue
-        seen_subparts.add(key)
-        _accumulate(scores, qid, {
-            "type": m.group(3).lower(),
-            "student": m.group(4).strip(),
-            "score": int(m.group(5)),
-            "max": int(m.group(6)),
-        })
-    for m in _LINE_SIMPLE.finditer(text):
-        qid = m.group(1)
-        if qid not in scores:
-            scores[qid] = {
-                "type": "",
-                "student": "",
-                "score": int(m.group(2)),
-                "max": int(m.group(3)),
-            }
+
+        m = _LINE_FULL.match(line)
+        if m:
+            qid = m.group(1)
+            parts_block = m.group(2)
+
+            indexed_parts: list[tuple[int, int]] = []
+            for part_match in _PART_TOKEN.finditer(parts_block):
+                indexed_parts.append((int(part_match.group(1)), int(part_match.group(2))))
+            if not indexed_parts:
+                continue
+
+            indexed_parts.sort(key=lambda p: p[0])
+            part_path = [value for _, value in indexed_parts]
+            part_tuple = tuple(part_path)
+            key = (qid, part_tuple)
+            if key in seen_parts:
+                continue
+            seen_parts.add(key)
+
+            composite_qid = f"{qid}|{'|'.join(str(v) for v in part_path)}"
+            _accumulate(scores, composite_qid, {
+                "type": m.group(3).lower(),
+                "student": m.group(4).strip(),
+                "score": int(m.group(5)),
+                "max": int(m.group(6)),
+                "question_no": int(qid),
+                "part_path": part_path,
+                "part_depth": len(part_path),
+                "part_key": composite_qid,
+            })
+            pending_reason_qids.append(composite_qid)
+            continue
+
+        reason_match = _REASON_LINE.match(line)
+        if reason_match and pending_reason_qids:
+            reason_text = reason_match.group(1).strip()
+            for pqid in pending_reason_qids:
+                if pqid in scores and reason_text:
+                    scores[pqid]["reason"] = reason_text
+            pending_reason_qids = []
+
     return scores
 
 

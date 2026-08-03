@@ -64,7 +64,7 @@ services:
       retries: 5
 
   apm-storage:
-    image: ${REGISTRY:-intel/}apm-storage-service:${TAG:-1.0.0}
+    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-1.0.0}
     container_name: apm-storage
     hostname: apm-storage
     build:
@@ -122,8 +122,6 @@ services:
       - "109"
       - "110"
       - "992"
-    devices:
-      - /dev/dri:/dev/dri
     depends_on:
       mqtt-broker:
         condition: service_healthy

@@ -21,6 +21,23 @@ from config import Config
 logger = logging.getLogger(__name__)
 ui_update_queue = asyncio.Queue()
 
+# Cache of the most recently received monitoring data, kept so a live clock
+# timer can re-render the system-info panel with a fresh "Current Time" on
+# every tick, independent of how often new MQTT/WebSocket data actually
+# arrives (fixes ITEP-92089: UI clock appearing frozen between data pushes).
+latest_monitoring_data: Optional[MonitoringData] = None
+
+
+async def get_latest_system_info_html(debug_mode=False) -> str:
+    """Synchronously build a fresh system-info panel using the last known
+    monitoring data, with an always-current "Current Time" value.
+
+    Intended to be called from a gr.Timer tick (which requires a sync
+    callback) so the clock keeps advancing even while waiting for new data.
+    """
+    return UIComponents.build_system_info_html(latest_monitoring_data)
+
+
 async def fetch_intersection_data(api_url: str = Config.get_api_url()) -> None:
     """
     Fetch data from the Traffic Intersection Agent API
@@ -70,6 +87,11 @@ async def update_components(debug_mode=False):
                 error_msg = "<div style='color: red; text-align: center; padding: 20px;'> 🤖 Waiting for Agent. This might take several seconds...</div>"
                 yield error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
                 continue
+
+            # Cache the latest data so the live clock timer can keep the
+            # system-info panel's "Current Time" fresh between updates.
+            global latest_monitoring_data
+            latest_monitoring_data = data
 
             header = await UIComponents.create_header(data)
             camera_gallery = await UIComponents.create_camera_images(data)
@@ -149,18 +171,33 @@ async def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
         # Parse camera data - handle the new API structure
         camera_images = {}
         camera_data = raw_data.get("camera_images", {})
+
+        if not isinstance(camera_data, dict):
+            logger.warning(
+                "Unexpected camera_images payload type: %s",
+                type(camera_data).__name__,
+            )
+            camera_data = {}
    
         # Handle the new API format where cameras are named like "west_camera", "north_camera", etc.
         for camera_key, camera_info in sorted(camera_data.items()):
             if isinstance(camera_info, dict):
                 camera_images[camera_key] = camera_info  # Store as dict for UI compatibility
-            else:
-                # Fallback: create CameraData object if needed for old format
+            elif isinstance(camera_info, CameraData):
+                camera_images[camera_key] = camera_info
+            elif isinstance(camera_info, str):
+                # Legacy fallback where payload may be raw base64 image data.
                 camera_images[camera_key] = CameraData(
-                    camera_id=camera_info.get("camera_id", camera_key),
-                    direction=camera_info.get("direction", "unknown"),
-                    timestamp=camera_info.get("timestamp", ""),
-                    image_base64=camera_info.get("image_base64")
+                    camera_id=camera_key,
+                    direction="unknown",
+                    timestamp="",
+                    image_base64=camera_info,
+                )
+            else:
+                logger.warning(
+                    "Skipping camera %s due to unsupported payload type: %s",
+                    camera_key,
+                    type(camera_info).__name__,
                 )
         # Parse VLM analysis
         vlm_data = raw_data.get("vlm_analysis", {})

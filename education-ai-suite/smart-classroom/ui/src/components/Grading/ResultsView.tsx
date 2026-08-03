@@ -9,8 +9,8 @@ const formatDateTime = (iso: string): string => {
   } catch { return iso; }
 };
 import { useTranslation } from 'react-i18next';
-import { gradingGetTaskSummary } from '../../services/api';
-import type { GradingSummary, GradingStudentResult } from '../../services/api';
+import { gradingGetTaskSummary, gradingGetStudentResult } from '../../services/api';
+import type { GradingSummary, GradingStudentResult, GradingStudentResultDetail, GradingQuestionNode } from '../../services/api';
 
 interface ResultsViewProps {
   taskId: string | null;
@@ -35,11 +35,31 @@ const sortQuestionIds = (ids: string[]): string[] =>
     return a.localeCompare(b);
   });
 
+const toRootQuestionMap = (student: GradingStudentResult): Record<string, { score: number | null; max_score: number | null }> => {
+  const roots = student.questions_hierarchy || [];
+  const out: Record<string, { score: number | null; max_score: number | null }> = {};
+  for (const node of roots) {
+    const qn = node.question_no;
+    if (qn === null || qn === undefined) continue;
+    const key = String(qn);
+    out[key] = {
+      score: node.meta?.grading_score ?? null,
+      max_score: node.meta?.max_score ?? null,
+    };
+  }
+  return out;
+};
+
 const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   const { t } = useTranslation();
   const [summary, setSummary] = useState<GradingSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [detailOpen, setDetailOpen] = useState<boolean>(false);
+  const [detailData, setDetailData] = useState<GradingStudentResultDetail | null>(null);
+  const [detailError, setDetailError] = useState<string>('');
+  const [detailTitle, setDetailTitle] = useState<string>('');
+  const [detailLoading, setDetailLoading] = useState<boolean>(false);
 
   const load = useCallback(async () => {
     if (!taskId) return;
@@ -104,12 +124,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
     });
   }, [summary, sortField, sortDir]);
 
-  // Union of every question id across all students, plus each question's max.
+  // Union of every first-level question id across all students, plus each question's max.
   const { questionIds, questionMax } = useMemo(() => {
     const maxMap: Record<string, number | null | undefined> = {};
     const idSet = new Set<string>();
     for (const { student } of rows) {
-      const questions = student.questions || {};
+      const questions = toRootQuestionMap(student);
       for (const [qid, q] of Object.entries(questions)) {
         idSet.add(qid);
         if (!(qid in maxMap)) maxMap[qid] = q.max_score;
@@ -126,9 +146,90 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   const studentName = (s: GradingStudentResult): string =>
     s.student_name || s.student_id || dash;
 
+  const renderDetail = (detail: GradingStudentResultDetail): React.ReactNode => {
+    const s = detail.summary || {};
+    const meta = detail.student_meta || {};
+    const name = (meta.student_name as string) || (detail.input?.student_id as string) || '';
+    const rows: Array<{
+      label: string;
+      answer: string;
+      score: string;
+      reason: string;
+      scoreClass: string;
+    }> = [];
+
+    const walk = (node: GradingQuestionNode, parentNo?: number | null) => {
+      const qno = node.question_no ?? parentNo;
+      const children = node.questions;
+      if (children && children.length > 0) {
+        for (const child of children) walk(child, qno);
+        return;
+      }
+      const partPath = node.meta?.part_path && node.meta.part_path.length > 0
+        ? `(${node.meta.part_path.join('.')})`
+        : '';
+      const label = `Q${qno ?? ''}${partPath}`;
+      const answer = (node.student_answer ?? '').toString().trim() || dash;
+      const rawScore = node.meta?.grading_score;
+      const rawMax = node.meta?.max_score;
+      const score = `${numOrDash(rawScore)}/${numOrDash(rawMax)}`;
+      const reason = (node.reason ?? '').toString().trim() || dash;
+      let scoreClass = '';
+      if (typeof rawScore === 'number' && typeof rawMax === 'number') {
+        if (rawScore === 0) {
+          scoreClass = 'grading-detail-score-zero';
+        } else if (rawScore < rawMax) {
+          scoreClass = 'grading-detail-score-partial';
+        }
+      }
+      rows.push({ label, answer, score, reason, scoreClass });
+    };
+
+    for (const root of detail.questions_hierarchy || []) walk(root);
+
+    return (
+      <div className="grading-detail-viewer">
+        <div className="grading-detail-summary-line">{t('grading.results.name', 'Student')}: {name || dash}</div>
+        <div className="grading-detail-summary-line">{t('grading.results.total', 'Total')}: {numOrDash(s.total_score)} / {numOrDash(s.total_max)}</div>
+        <div className="grading-detail-sep">-----</div>
+        <div className="grading-detail-list">
+          {rows.map((row, idx) => (
+            <div className="grading-detail-question" key={`${row.label}-${idx}`}>
+              <div className="grading-detail-q-title">{row.label}</div>
+              <div className="grading-detail-q-line"><strong>studentanswer:</strong> {row.answer}</div>
+              <div className="grading-detail-q-line">
+                <strong>score:</strong>{' '}
+                <span className={row.scoreClass}>{row.score}</span>
+              </div>
+              <div className="grading-detail-q-line"><strong>Reason:</strong> {row.reason}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const openDetail = async (slot: string, student: GradingStudentResult) => {
+    if (!taskId) return;
+    setDetailTitle(studentName(student));
+    setDetailData(null);
+    setDetailError('');
+    setDetailOpen(true);
+    setDetailLoading(true);
+    try {
+      const detail = await gradingGetStudentResult(taskId, slot);
+      setDetailData(detail);
+    } catch (e) {
+      setDetailError(toErrorMessage(e));
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   const exportCsv = () => {
     const header = [
       '#',
+      t('grading.results.studentId', 'Student ID'),
       t('grading.results.name', 'Student'),
       t('grading.results.total', 'Total'),
       t('grading.results.objective', 'Objective'),
@@ -139,11 +240,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
     rows.forEach(({ student }, idx) => {
       const cells: string[] = [
         String(idx + 1),
+        `"${(student.student_id || '').replace(/"/g, '""')}"`,
         `"${studentName(student).replace(/"/g, '""')}"`,
         numOrDash(student.total_score),
         numOrDash(student.objective_score),
         numOrDash(student.subjective_score),
-        ...questionIds.map((qid) => numOrDash(student.questions?.[qid]?.score)),
+        ...questionIds.map((qid) => numOrDash(toRootQuestionMap(student)[qid]?.score)),
       ];
       lines.push(cells.join(','));
     });
@@ -217,7 +319,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
             <thead>
               <tr>
                 <th className="sticky-col">#</th>
-                <th className="sticky-col sticky-col-2">{t('grading.results.name', 'Student')}</th>
+                <th className="sticky-col sticky-col-2">{t('grading.results.studentId', 'Student ID')}</th>
+                <th className="sticky-col sticky-col-3">{t('grading.results.name', 'Student')}</th>
+                <th className="grading-results-detail-col"></th>
                 <th className="grading-results-sortable" onClick={() => toggleSort('total_score')}>
                   {t('grading.results.total', 'Total')}{sortArrow('total_score')}
                 </th>
@@ -238,7 +342,23 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
               {rows.map(({ key, student }, idx) => (
                 <tr key={key}>
                   <td className="sticky-col">{idx + 1}</td>
-                  <td className="sticky-col sticky-col-2">{studentName(student)}</td>
+                  <td className="sticky-col sticky-col-2">{student.student_id || dash}</td>
+                  <td className="sticky-col sticky-col-3">{studentName(student)}</td>
+                  <td className="grading-results-detail-col">
+                    <button
+                      className="grading-results-detail-btn"
+                      onClick={() => openDetail(key, student)}
+                      title={t('grading.results.viewDetail', 'View grading detail')}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                        <line x1="8" y1="13" x2="16" y2="13" />
+                        <line x1="8" y1="17" x2="16" y2="17" />
+                        <line x1="8" y1="9" x2="10" y2="9" />
+                      </svg>
+                    </button>
+                  </td>
                   <td className="grading-results-total">
                     {numOrDash(student.total_score)}
                     <span className="grading-results-max">/{numOrDash(student.total_max)}</span>
@@ -246,7 +366,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
                   <td>{numOrDash(student.objective_score)}</td>
                   <td>{numOrDash(student.subjective_score)}</td>
                   {questionIds.map((qid) => {
-                    const q = student.questions?.[qid];
+                    const q = toRootQuestionMap(student)[qid];
                     return (
                       <td key={qid} className="grading-results-q">
                         {q ? numOrDash(q.score) : dash}
@@ -259,6 +379,26 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
           </table>
         </div>
         </>
+      )}
+
+      {detailOpen && (
+        <div className="grading-picker-overlay" onClick={() => setDetailOpen(false)}>
+          <div className="grading-log-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="grading-picker-header">
+              <span className="grading-picker-title">{t('grading.results.detailTitle', 'Grading Detail')} — {detailTitle}</span>
+              <button className="grading-picker-close" onClick={() => setDetailOpen(false)}>×</button>
+            </div>
+            <div className="grading-log-modal-box">
+              {detailLoading
+                ? t('grading.results.detailLoading', 'Loading…')
+                : detailError
+                  ? detailError
+                  : detailData
+                    ? renderDetail(detailData)
+                    : dash}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
