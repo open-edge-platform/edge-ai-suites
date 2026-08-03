@@ -83,3 +83,7 @@
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/point-lio-demo/Point-LIO"]
+	path = robotics-ai-suite/pipelines/point-lio-demo/Point-LIO
+	url = https://github.com/hku-mars/Point-LIO.git
+	branch = point-lio-with-grid-map
