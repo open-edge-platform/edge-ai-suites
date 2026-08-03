@@ -50,7 +50,7 @@ Vision(DLStreamer Pipeline Server)──┐
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`, `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `S3_STORAGE_USERNAME`, `S3_STORAGE_PASSWORD`
 
-## Deploy the Agentic Workflow
+## Deploying the Agentic Workflow
 
 Run the full agentic stack (downloads the LLM model first, then starts all containers):
 
