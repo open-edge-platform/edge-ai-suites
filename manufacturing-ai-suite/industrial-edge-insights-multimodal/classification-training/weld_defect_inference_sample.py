@@ -94,9 +94,9 @@ def configure_device(device: str):
                 "(no DPC backend). Falling back to host CPU."
             )
             return "host-cpu"
-    except Exception:
-        # If backend introspection fails, continue and let set_config decide.
-        pass
+    except Exception as exc:  # noqa: BLE001
+        # Backend introspection failed; continue and let set_config decide.
+        print(f"oneDAL backend introspection failed ({exc}); continuing with default target.")
 
     from sklearnex import set_config
     target = "cpu" if device == "cpu" else "gpu:0"

@@ -387,7 +387,7 @@ if __name__ == "__main__":
     # All inputs to ffmpeg_cmd are either hardcoded literals, come from
     # _validated_env/_validated_port above, or are numeric values derived
     # from SIMULATION_TARGET_FPS via int() (safe against injection).
-    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)  # nosec B603
     check_and_load_simulation_files(target_fps)
 
     if 'ffmpeg_proc' in locals():
