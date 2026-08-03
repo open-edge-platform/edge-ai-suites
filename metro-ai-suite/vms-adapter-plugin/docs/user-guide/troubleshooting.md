@@ -100,15 +100,15 @@ docker compose restart vms-backend
 
 ---
 
-## DL Streamer Vision (dls_vision) based app like Loitering Detection
+## DLStreamer Vision (dls_vision) based app like Loitering Detection
 
-### VAP Cannot Reach the DL Streamer Pipeline Server
+### VAP Cannot Reach the DLStreamer Pipeline Server
 
 **Symptoms**: Starting a dls_vision run fails; backend logs show a connection error to `DLS_VISION_HOST`.
 
 **Checks**:
 - Verify `DLS_VISION_HOST` and `DLS_VISION_PORT` in `.env` are correct.
-- Confirm the DL Streamer Pipeline Server is running: `curl http://<DLS_VISION_HOST>:8080/pipelines`.
+- Confirm the DLStreamer Pipeline Server is running: `curl http://<DLS_VISION_HOST>:8080/pipelines`.
 - If dls_vision runs on the same host as VAP, use `host.docker.internal` for `DLS_VISION_HOST`.
 
 ### No Bounding Boxes Appear in Nx Witness
@@ -117,7 +117,7 @@ docker compose restart vms-backend
 
 **Checks**:
 - Confirm the MQTT broker is running and reachable at `MQTT_HOST:MQTT_PORT`.
-- Verify that the DL Streamer Pipeline Server is publishing inference results to MQTT on the expected topic (`/{vms_name}/dls_vision/{camera_id}`).
+- Verify that the DLStreamer Pipeline Server is publishing inference results to MQTT on the expected topic (`/{vms_name}/dls_vision/{camera_id}`).
 - Check that the Nx Witness analytics integration was registered successfully: look for `register_analytics` in the `vms-backend` logs.
 - Verify integration credentials: if the integration was reused from a previous run, the password may not be available. In that case, remove the integration from Nx Witness and restart VAP to recreate it.
 

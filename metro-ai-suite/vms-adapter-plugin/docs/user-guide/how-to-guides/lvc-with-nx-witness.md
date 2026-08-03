@@ -54,7 +54,7 @@ VMS Adapter Plugin (VAP)
 
 1. VAP discovers cameras from Nx Witness (queries REST API).
 2. On run start, VAP resolves the selected `camera_id` to an RTSP URL and sends `POST /api/runs` to the LVC backend.
-3. LVC processes the stream with DL Streamer + VLM and emits captions as an SSE stream.
+3. LVC processes the stream with DLStreamer + VLM and emits captions as an SSE stream.
 4. VAP proxies the SSE stream to the dashboard at `/v1/analytics-apps/live_captioning/results/stream`.
 5. The WebRTC video feed is served by MediaMTX (in the LVC stack), proxied by nginx at `/whep/`.
 
@@ -150,7 +150,7 @@ VAP constructs RTSP URLs in this format and passes them to LVC:
 rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST_IP>:7001/<device-uuid>?onvif_replay=true
 ```
 
-For DL Streamer (used internally by LVC) to authenticate against Nx Witness, digest authentication must be enabled:
+For DLStreamer (used internally by LVC) to authenticate against Nx Witness, digest authentication must be enabled:
 
 1. In the Desktop Client, go to **Main Menu** (hamburger icon) → **User Management**.
 2. Select the user account that VAP will use (`NX_USERNAME`).
@@ -384,7 +384,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
    | **Enter Prompt** | Instruction sent to the VLM for each frame | `"Describe what you see in one sentence."` |
    | **Select Model** | VLM model to use (fetched live from LVC) | `OpenGVLab/InternVL2-2B` |
    | **Max New Tokens** | Maximum caption length in tokens | `70` |
-   | **Select Pipeline** | DL Streamer pipeline (fetched live from LVC) | — |
+   | **Select Pipeline** | DLStreamer pipeline (fetched live from LVC) | — |
    | **Run Name** | Display name for this run | — |
    | **Frame Rate** | Frames per second sent to the VLM | `1` |
    | **Chunk Size** | Frames grouped per inference call | `1` |
@@ -405,7 +405,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
    - **Nx Witness camera**: calls `GET /rest/v4/devices` on Nx; RTSP URL is `rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`.
 2. Frame Resolution is mapped to `frameWidth`/`frameHeight` if not `default` (for example, `1280×720` → `{frameWidth: 1280, frameHeight: 720}`).
 3. VAP sends `POST /api/runs` to the LVC backend with all parameters.
-4. LVC's DL Streamer pipeline starts consuming the RTSP stream at the configured frame rate.
+4. LVC's DLStreamer pipeline starts consuming the RTSP stream at the configured frame rate.
 5. The VLM generates captions and publishes them to an MQTT broker → LVC SSE stream.
 6. VAP proxies the SSE stream at `/v1/analytics-apps/live_captioning/results/stream`.
 
