@@ -55,7 +55,7 @@ class ReportGenerator:
     # Selection coupling rules: when ``primary`` is unchecked, all ``hide``
     # fields are force-hidden (can override always_on).
     _SELECTION_HIDE_RULES = (
-        {"primary": "keywords", "hide": ("keywords_count",)},
+        {"primary": "keywords", "hide": ("keywords_count_note",)},
     )
 
     def __init__(self, session_id: str, model=None, template_name: str = None,

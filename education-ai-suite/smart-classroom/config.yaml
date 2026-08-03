@@ -69,7 +69,7 @@ models:
           - Preserve the flow of discussion.
           - Include both teacher explanations and questions.
           - Ignore filler or repetition.
-          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - List 5-8 of the main subject-matter keywords (only technical terms and concepts actually taught; do NOT include story characters, plot elements, or generic character-education words).
           - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
@@ -106,7 +106,7 @@ models:
           - Focus strictly on teacher explanations.
           - Do not invent missing content.
           - If a section has no content, write "None".
-          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - List 5-8 of the main subject-matter keywords (only technical terms and concepts actually taught; do NOT include story characters, plot elements, or generic character-education words).
           - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
@@ -144,7 +144,7 @@ models:
           - Include student questions only when they clarify context.
           - Do not invent content.
           - Ignore filler.
-          - List the main subject-matter keywords (technical terms and concepts actually taught).
+          - List 5-8 of the main subject-matter keywords (only technical terms and concepts actually taught; do NOT include story characters, plot elements, or generic character-education words).
           - Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
 
           Output valid Markdown using exactly these sections:
@@ -184,7 +184,7 @@ models:
           - 保持讨论的整体流程。
           - 包含教师讲解和学生提问。
           - 忽略无意义的填充语或重复内容。
-          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 列出 5-8 个主要的学科关键词（仅限实际讲授的专业术语和概念，不要包含故事人物、情节或泛化的品格教育词）。
           - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
@@ -220,7 +220,7 @@ models:
           - 严格聚焦教师的解释内容。
           - 不要编造缺失的内容。
           - 如果某个章节没有内容，写 "None"。
-          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 列出 5-8 个主要的学科关键词（仅限实际讲授的专业术语和概念，不要包含故事人物、情节或泛化的品格教育词）。
           - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
@@ -258,7 +258,7 @@ models:
           - 仅在学生问题能帮助理解上下文时才包含。
           - 不要编造内容。
           - 忽略填充语或重复内容。
-          - 列出主要的学科关键词（实际讲授的专业术语和概念）。
+          - 列出 5-8 个主要的学科关键词（仅限实际讲授的专业术语和概念，不要包含故事人物、情节或泛化的品格教育词）。
           - 提炼重难点（词语）——教师最强调或最不易掌握的知识点。聚焦学科知识，而非课堂管理。
 
           使用以下固定章节标题输出有效 Markdown:
