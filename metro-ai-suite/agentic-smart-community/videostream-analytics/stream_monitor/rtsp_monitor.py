@@ -519,8 +519,7 @@ class StreamPipeline(BaseMonitor):
             if os.path.exists(crop_path):
                 summary_clip_input = crop_path
 
-        if summary_clip_input == clip_path:
-            transcode_h264_in_place(clip_path)
+        transcode_h264_in_place(clip_path)
 
         payload: dict[str, Any] = {
             "event_file_path": clip_path,

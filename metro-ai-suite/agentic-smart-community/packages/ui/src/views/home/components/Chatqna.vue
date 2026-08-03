@@ -209,6 +209,16 @@
               />
             </div>
           </div>
+          <div class="openclaw-control-ui-note">
+            {{ $t("chat.moreChatFeatures") }}
+            <a
+              href="http://127.0.0.1:18789/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ $t("chat.openClawControlUi") }}
+            </a>
+          </div>
         </div>
       </div>
 
@@ -245,24 +255,61 @@
             v-if="showScrollToBottomBtn && hasMessages"
             class="bottom-wrap vertical-center"
           >
-            <div class="to-bottom vertical-center" @click="scrollToBottom">
+            <div class="to-bottom vertical-center" @click="scrollToBottom(true)">
               <ArrowDownOutlined />
             </div>
           </div>
 
           <div class="input-container flex-column">
+            <div v-if="attachments.length" class="attachment-list flex-left">
+              <div
+                v-for="attachment in attachments"
+                :key="`${attachment.fileName}-${attachment.size}`"
+                class="attachment-chip flex-left"
+                :title="attachment.fileName"
+              >
+                <PaperClipOutlined />
+                <span class="single-ellipsis">{{ attachment.fileName }}</span>
+                <button
+                  type="button"
+                  class="attachment-remove"
+                  :title="$t('chat.removeAttachment')"
+                  @click="removeAttachment(attachment)"
+                >
+                  <CloseOutlined />
+                </button>
+              </div>
+            </div>
             <a-textarea
               v-model:value.trim="inputKeywords"
-              :placeholder="
-                selectedSessionKey ? $t('chat.tip4') : $t('chat.noSessions')
-              "
+              :placeholder="inputPlaceholder"
               :auto-size="{ minRows: 1, maxRows: 4 }"
               :bordered="false"
               :disabled="!selectedSessionKey || isHistoryLoading"
               class="input-area"
               @keydown.enter.prevent="handleEnterPress"
             />
-            <div class="input-footer flex-end">
+            <input
+              ref="attachmentInputRef"
+              class="attachment-input"
+              type="file"
+              multiple
+              accept="image/*,.pdf,.txt,.md,.csv,.json"
+              @change="handleAttachmentSelect"
+            />
+            <div class="input-footer flex-between">
+              <div class="footer-left flex-left">
+                <a-tooltip :title="$t('chat.addAttachment')">
+                  <button
+                    type="button"
+                    class="common-btn toolbar-icon-btn"
+                    :disabled="!selectedSessionKey || isStreaming"
+                    @click="attachmentInputRef?.click()"
+                  >
+                    <PaperClipOutlined />
+                  </button>
+                </a-tooltip>
+              </div>
               <div class="footer-right flex-left">
                 <a-tooltip
                   placement="top"
@@ -298,13 +345,100 @@
                   </span>
                 </a-tooltip>
                 <div class="divider"></div>
+                <a-popover
+                  v-model:open="modelSettingsOpen"
+                  placement="topRight"
+                  trigger="click"
+                  overlay-class-name="model-settings-popover"
+                >
+                  <template #content>
+                    <div class="model-settings-panel flex-column">
+                      <div class="control-panel-title">{{ $t("chat.model") }}</div>
+                      <div v-if="models.length" class="model-groups flex-column">
+                        <div
+                          v-for="group in modelGroups"
+                          :key="group.provider"
+                          class="model-group flex-column"
+                        >
+                          <div class="model-provider">{{ group.provider }}</div>
+                          <button
+                            v-for="model in group.models"
+                            :key="`${model.provider}/${model.id}`"
+                            type="button"
+                            class="model-option flex-between"
+                            :class="{
+                              active: draftModel === `${model.provider}/${model.id}`,
+                              unavailable: !model.available,
+                            }"
+                            :disabled="!model.available"
+                            @click="draftModel = `${model.provider}/${model.id}`"
+                          >
+                            <span class="model-option-copy flex-column">
+                              <strong>{{ model.name }}</strong>
+                              <small>{{ model.id }}</small>
+                            </span>
+                            <CheckOutlined
+                              v-if="draftModel === `${model.provider}/${model.id}`"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                      <div v-else class="control-empty">
+                        {{ $t("chat.noModels") }}
+                      </div>
+                      <div class="settings-field flex-column">
+                        <span>{{ $t("chat.reasoning") }}</span>
+                        <a-select v-model:value="draftThinkingLevel" size="small">
+                          <a-select-option
+                            v-for="level in thinkingLevelOptions"
+                            :key="level"
+                            :value="level"
+                          >
+                            {{ formatThinkingLevel(level) }}
+                          </a-select-option>
+                        </a-select>
+                      </div>
+                      <div class="settings-field flex-column">
+                        <span>{{ $t("chat.speed") }}</span>
+                        <a-segmented
+                          v-model:value="draftFastMode"
+                          :options="fastModeOptions"
+                          size="small"
+                        />
+                      </div>
+                      <div class="model-actions flex-between">
+                        <a-button size="small" @click="handleUseDefaultModel">
+                          {{ $t("chat.useDefaultModel") }}
+                        </a-button>
+                        <a-button
+                          type="primary"
+                          size="small"
+                          :loading="isSessionSettingsChanging"
+                          :disabled="!draftModel"
+                          @click="handleSaveModelSettings"
+                        >
+                          {{ $t("common.save") }}
+                        </a-button>
+                      </div>
+                    </div>
+                  </template>
+                  <button
+                    type="button"
+                    class="model-trigger flex-left"
+                    :disabled="!selectedSession || isStreaming"
+                    :title="currentModelLabel"
+                  >
+                    <span class="single-ellipsis">{{ currentModelLabel }}</span>
+                    <DownOutlined />
+                  </button>
+                </a-popover>
                 <a-button
                   type="primary"
                   class="action-btn"
                   shape="circle"
                   size="large"
                   :disabled="
-                    (!isStreaming && !inputKeywords.trim()) ||
+                    (!isStreaming && !inputKeywords.trim() && !attachments.length) ||
                     (!isStreaming && (!selectedSessionKey || isHistoryLoading))
                   "
                   @click="isStreaming ? handleStopChat() : handleSendMessage()"
@@ -345,7 +479,11 @@
 <script setup lang="ts">
 import {
   ArrowDownOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  DownOutlined,
   HistoryOutlined,
+  PaperClipOutlined,
   ReloadOutlined,
   SettingOutlined,
 } from "@ant-design/icons-vue";
@@ -356,7 +494,9 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { MessageItem } from "./index";
 import {
+  type ChatAttachment,
   type ChatMessageView,
+  type ChatModelSummary,
   type ChatSessionGroup,
   type ChatSessionSummary,
   type ConnectionStatus,
@@ -377,8 +517,11 @@ const router = useRouter();
 const messagesList = ref<ChatMessageView[]>([]);
 const sessions = ref<ChatSessionSummary[]>([]);
 const sessionGroups = ref<ChatSessionGroup[]>([]);
+const models = ref<ChatModelSummary[]>([]);
 const selectedSessionKey = ref("");
 const inputKeywords = ref("");
+const attachments = ref<ChatAttachment[]>([]);
+const attachmentInputRef = ref<HTMLInputElement | null>(null);
 const scrollContainer = ref<HTMLElement | null>(null);
 const messageComponent = ref<HTMLElement | null>(null);
 const showScrollToBottomBtn = ref(false);
@@ -394,6 +537,11 @@ const agentFrameworks = ref<AgentFrameworkOption[]>([]);
 const selectedFrameworkId = ref<AgentFrameworkOption["id"]>("openclaw");
 const frameworkUrl = ref("http://127.0.0.1:18789/");
 const frameworkToken = ref("");
+const modelSettingsOpen = ref(false);
+const draftModel = ref("");
+const draftThinkingLevel = ref("off");
+const draftFastMode = ref<"default" | "fast" | "auto">("default");
+const isSessionSettingsChanging = ref(false);
 
 const imgVisible = ref(false);
 const imageSrc = ref("");
@@ -401,6 +549,8 @@ const isUserScrolling = ref(false);
 const resizeObserverRef = ref<ResizeObserver | null>(null);
 
 const SCROLL_THRESHOLD = 80;
+const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
+const MAX_TOTAL_ATTACHMENT_BYTES = 12 * 1024 * 1024;
 const SOURCE_AGENT_NAME_MAP: Record<string, string> = {
   cam_fridge: "fridge-agent-en",
   cam_child: "child-safety-agent",
@@ -455,6 +605,12 @@ const connectChat = () => {
     ) => {
       sessions.value = nextSessions;
       sessionGroups.value = nextSessionGroups;
+    },
+    onModelsChange: (nextModels: ChatModelSummary[]) => {
+      models.value = nextModels;
+    },
+    onSessionSettingsChangingChange: (changing: boolean) => {
+      isSessionSettingsChanging.value = changing;
     },
     onHistoryLoadingChange: (loading: boolean) => {
       isHistoryLoading.value = loading;
@@ -538,6 +694,62 @@ const selectedSessionLabel = computed(() => {
 
   return matchedSession?.key || "";
 });
+const selectedSession = computed(() =>
+  sessions.value.find((session) => session.key === selectedSessionKey.value),
+);
+const selectedAgentDisplayName = computed(() => {
+  const agentId = selectedSession.value?.agentId;
+  if (!agentId) {
+    return "";
+  }
+
+  return (
+    sessionGroups.value.find((group) => group.agentId === agentId)?.displayName ||
+    agentId
+  );
+});
+const inputPlaceholder = computed(() => {
+  if (!selectedSessionKey.value) {
+    return t("chat.noSessions");
+  }
+
+  return selectedAgentDisplayName.value
+    ? t("chat.messageAgent", { agent: selectedAgentDisplayName.value })
+    : t("chat.tip4");
+});
+const currentModelLabel = computed(() => {
+  const session = selectedSession.value;
+  if (!session) {
+    return t("chat.model");
+  }
+
+  const model = [session.modelProvider, session.model].filter(Boolean).join("/");
+  return `${model || t("chat.defaultModel")} · ${formatThinkingLevel(
+    session.thinkingLevel || "off",
+  )}`;
+});
+const modelGroups = computed(() => {
+  const grouped = new Map<string, ChatModelSummary[]>();
+  models.value.forEach((model) => {
+    const entries = grouped.get(model.provider) || [];
+    entries.push(model);
+    grouped.set(model.provider, entries);
+  });
+
+  return [...grouped.entries()].map(([provider, groupedModels]) => ({
+    provider,
+    models: groupedModels,
+  }));
+});
+const thinkingLevelOptions = computed(() => {
+  const levels = selectedSession.value?.thinkingLevels || [];
+  return levels.length ? levels : ["off", "low", "medium", "high"];
+});
+const fastModeOptions = computed(() => [
+  { label: t("chat.defaultSpeed"), value: "default" },
+  { label: t("chat.fastSpeed"), value: "fast" },
+  { label: t("chat.autoSpeed"), value: "auto" },
+]);
 const displaySessionGroups = computed<ChatSessionGroup[]>(() => {
   if (sessionGroups.value.length) {
     return sessionGroups.value;
@@ -745,7 +957,7 @@ const bindScrollListener = () => {
 };
 
 const handleEnterPress = () => {
-  handleSendMessage();
+  void handleSendMessage();
 };
 
 const handleSendFollowup = (question?: string) => {
@@ -767,9 +979,16 @@ const handleQuickAction = (question: string) => {
   handleSendFollowup(question);
 };
 
-const submitQuestion = async (question: string) => {
+const submitQuestion = async (
+  question: string,
+  outgoingAttachments: ChatAttachment[] = [],
+) => {
   const normalizedQuestion = question.trim();
-  if (!normalizedQuestion || !chatService || !selectedSessionKey.value) {
+  if (
+    (!normalizedQuestion && !outgoingAttachments.length) ||
+    !chatService ||
+    !selectedSessionKey.value
+  ) {
     return;
   }
 
@@ -790,7 +1009,10 @@ const submitQuestion = async (question: string) => {
 
   try {
     isUserScrolling.value = false;
-    const nextSessionKey = await chatService.sendChat(normalizedQuestion);
+    const nextSessionKey = await chatService.sendChat(
+      normalizedQuestion,
+      outgoingAttachments,
+    );
     if (!isNewSessionCommand) {
       scrollToBottom();
       return;
@@ -815,7 +1037,7 @@ const handleCreateSession = async () => {
 
 const handleSendMessage = async () => {
   if (
-    !inputKeywords.value.trim() ||
+    (!inputKeywords.value.trim() && !attachments.value.length) ||
     isStreaming.value ||
     !selectedSessionKey.value
   ) {
@@ -823,8 +1045,106 @@ const handleSendMessage = async () => {
   }
 
   const question = inputKeywords.value.trim();
+  const outgoingAttachments = [...attachments.value];
   inputKeywords.value = "";
-  await submitQuestion(question);
+  attachments.value = [];
+  await submitQuestion(question, outgoingAttachments);
+};
+
+const fileToBase64 = async (file: File) => {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const chunkSize = 32 * 1024;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return window.btoa(binary);
+};
+
+const handleAttachmentSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const selectedFiles = [...(input.files || [])];
+  input.value = "";
+  if (!selectedFiles.length) {
+    return;
+  }
+
+  let totalSize = attachments.value.reduce((sum, item) => sum + item.size, 0);
+  for (const file of selectedFiles) {
+    if (!file.size || file.size > MAX_ATTACHMENT_BYTES) {
+      message.warning(t("chat.attachmentTooLarge", { name: file.name }));
+      continue;
+    }
+    if (totalSize + file.size > MAX_TOTAL_ATTACHMENT_BYTES) {
+      message.warning(t("chat.attachmentsTooLarge"));
+      break;
+    }
+
+    attachments.value.push({
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      content: await fileToBase64(file),
+      size: file.size,
+    });
+    totalSize += file.size;
+  }
+};
+
+const removeAttachment = (target: ChatAttachment) => {
+  attachments.value = attachments.value.filter((item) => item !== target);
+};
+
+const formatThinkingLevel = (level: string) => {
+  return level
+    ? level.charAt(0).toUpperCase() + level.slice(1)
+    : t("chat.off");
+};
+
+const syncModelSettingsDraft = () => {
+  const session = selectedSession.value;
+  draftModel.value = session
+    ? [session.modelProvider, session.model].filter(Boolean).join("/")
+    : "";
+  draftThinkingLevel.value = session?.thinkingLevel || "off";
+  draftFastMode.value =
+    session?.fastMode === "auto"
+      ? "auto"
+      : session?.fastMode
+        ? "fast"
+        : "default";
+};
+
+const handleSaveModelSettings = async () => {
+  if (!chatService || !selectedSessionKey.value || !draftModel.value) {
+    return;
+  }
+
+  const saved = await chatService.updateSessionSettings(selectedSessionKey.value, {
+    model: draftModel.value,
+    thinkingLevel: draftThinkingLevel.value,
+    fastMode:
+      draftFastMode.value === "auto" ? "auto" : draftFastMode.value === "fast",
+  });
+  if (saved) {
+    modelSettingsOpen.value = false;
+    message.success(t("chat.modelSettingsSaved"));
+  }
+};
+
+const handleUseDefaultModel = async () => {
+  if (!chatService || !selectedSessionKey.value) {
+    return;
+  }
+
+  const saved = await chatService.updateSessionSettings(selectedSessionKey.value, {
+    model: null,
+    thinkingLevel: null,
+    fastMode: null,
+  });
+  if (saved) {
+    modelSettingsOpen.value = false;
+    message.success(t("chat.defaultModelRestored"));
+  }
 };
 
 const handleStopChat = () => {
@@ -905,6 +1225,10 @@ watch(
   },
   { deep: true },
 );
+
+watch([selectedSession, modelSettingsOpen], syncModelSettingsDraft, {
+  immediate: true,
+});
 
 onUnmounted(() => {
   chatService?.disconnect();
@@ -1403,6 +1727,22 @@ onMounted(async () => {
   }
 }
 
+.openclaw-control-ui-note {
+  padding: 7px 4px 0;
+  color: var(--font-tip-color);
+  font-size: var(--font-size-12);
+  line-height: 1.4;
+  text-align: center;
+
+  a {
+    color: var(--font-info-color);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
 .input-area {
   width: 100%;
   padding: 0;
@@ -1424,6 +1764,36 @@ onMounted(async () => {
   }
 }
 
+.attachment-input {
+  display: none;
+}
+
+.attachment-list {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.attachment-chip {
+  max-width: 240px;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--surface-panel-bg);
+  color: var(--font-text-color);
+  font-size: var(--font-size-12);
+}
+
+.attachment-remove {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--font-tip-color);
+  cursor: pointer;
+}
+
 .input-footer {
   width: 100%;
   gap: 8px;
@@ -1433,6 +1803,118 @@ onMounted(async () => {
 .footer-right {
   gap: 12px;
   flex-shrink: 0;
+}
+
+.footer-left {
+  gap: 8px;
+}
+
+.model-trigger {
+  min-width: 0;
+  max-width: 290px;
+  height: 32px;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  background: var(--color-primaryBg);
+  color: var(--font-main-color);
+  cursor: pointer;
+  font-size: var(--font-size-12);
+  transition: all 0.2s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--surface-card-bg-hover);
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+
+    &:hover {
+      border-color: var(--border-primary);
+      background: var(--color-primaryBg);
+    }
+  }
+}
+
+.model-settings-panel {
+  gap: 14px;
+  width: min(360px, calc(100vw - 48px));
+}
+
+.control-panel-title,
+.model-provider {
+  color: var(--font-main-color);
+  font-weight: 700;
+}
+
+.settings-field {
+  gap: 8px;
+  color: var(--font-text-color);
+  font-size: var(--font-size-12);
+}
+
+.model-groups {
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.model-group {
+  gap: 6px;
+}
+
+.model-provider {
+  font-size: var(--font-size-12);
+  text-transform: capitalize;
+}
+
+.model-option {
+  width: 100%;
+  gap: 12px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--surface-panel-bg);
+  color: var(--font-text-color);
+  cursor: pointer;
+  text-align: left;
+
+  &.active {
+    border-color: var(--color-primary);
+    background: var(--color-primaryBg);
+    color: var(--color-primary);
+  }
+
+  &.unavailable {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.model-option-copy {
+  min-width: 0;
+
+  small {
+    color: var(--font-tip-color);
+    overflow-wrap: anywhere;
+  }
+}
+
+.model-actions {
+  gap: 12px;
+}
+
+.control-empty {
+  padding: 16px;
+  border: 1px dashed var(--border-primary);
+  border-radius: 6px;
+  color: var(--font-tip-color);
+  text-align: center;
 }
 
 .new-session-btn {
@@ -1522,6 +2004,14 @@ onMounted(async () => {
 
   .input-wrap {
     padding: 0 12px;
+  }
+
+  .input-footer {
+    align-items: flex-end;
+  }
+
+  .model-trigger {
+    max-width: 180px;
   }
 }
 .selected-session-pill {

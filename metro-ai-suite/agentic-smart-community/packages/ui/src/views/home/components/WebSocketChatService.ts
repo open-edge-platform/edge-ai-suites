@@ -47,6 +47,30 @@ export interface ChatSessionSummary {
   updatedAt: number;
   modelProvider: string;
   model: string;
+  thinkingLevel: string;
+  thinkingLevels: string[];
+  fastMode: boolean | "auto";
+}
+
+export interface ChatModelSummary {
+  provider: string;
+  id: string;
+  name: string;
+  available: boolean;
+  reasoning: boolean;
+}
+
+export interface ChatAttachment {
+  fileName: string;
+  mimeType: string;
+  content: string;
+  size: number;
+}
+
+export interface ChatSessionSettingsPatch {
+  model?: string | null;
+  thinkingLevel?: string | null;
+  fastMode?: boolean | "auto" | null;
 }
 
 export interface ChatSessionGroup {
@@ -109,6 +133,8 @@ interface WebSocketChatServiceOptions {
     sessionGroups: ChatSessionGroup[],
     selectedSessionKey: string,
   ) => void;
+  onModelsChange?: (models: ChatModelSummary[]) => void;
+  onSessionSettingsChangingChange?: (changing: boolean) => void;
   onHistoryLoadingChange?: (loading: boolean) => void;
   onStreamingChange?: (streaming: boolean) => void;
   onError?: (message: string) => void;
@@ -151,8 +177,10 @@ export class WebSocketChatService {
   private agents: ChatAgentSummary[] = [];
   private sessions: ChatSessionSummary[] = [];
   private sessionGroups: ChatSessionGroup[] = [];
+  private models: ChatModelSummary[] = [];
   private selectedSessionKey = "";
   private pendingQuestion = "";
+  private pendingAttachments: ChatAttachment[] = [];
   private isLoadingCatalog = false;
   private isLoadingHistory = false;
   private currentAssistantMessageId: string | null = null;
@@ -213,6 +241,7 @@ export class WebSocketChatService {
 
   cancel() {
     this.pendingQuestion = "";
+    this.pendingAttachments = [];
     this.awaitingResponse = false;
     this.markActiveAssistantComplete();
     this.publishMessages();
@@ -220,15 +249,16 @@ export class WebSocketChatService {
     this.disconnect();
   }
 
-  sendChat(question: string) {
+  sendChat(question: string, attachments: ChatAttachment[] = []) {
     const normalizedQuestion = question.trim();
-    if (!normalizedQuestion) {
+    if (!normalizedQuestion && attachments.length === 0) {
       return Promise.resolve("");
     }
 
     const selectedSessionKey = this.getSelectedSessionKey();
 
     this.pendingQuestion = normalizedQuestion;
+    this.pendingAttachments = attachments;
 
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       this.connect();
@@ -244,6 +274,36 @@ export class WebSocketChatService {
     }
 
     return this.dispatchPendingQuestion();
+  }
+
+  async updateSessionSettings(
+    sessionKey: string,
+    patch: ChatSessionSettingsPatch,
+  ) {
+    if (!sessionKey || this.awaitingResponse || this.isLoadingHistory) {
+      return false;
+    }
+
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN ||
+      !this.isHandshakeComplete
+    ) {
+      this.options.onError?.("Gateway not connected");
+      return false;
+    }
+
+    this.options.onSessionSettingsChangingChange?.(true);
+    try {
+      await this.request("sessions.patch", { key: sessionKey, ...patch });
+      await this.loadCatalog();
+      return true;
+    } catch (error) {
+      this.options.onError?.(this.getErrorMessage(error));
+      return false;
+    } finally {
+      this.options.onSessionSettingsChangingChange?.(false);
+    }
   }
 
   private async createNewSession(command: string) {
@@ -299,12 +359,14 @@ export class WebSocketChatService {
   }
 
   selectSession(sessionKey: string) {
-    if (!sessionKey || sessionKey === this.selectedSessionKey) {
+    if (!sessionKey) {
       return;
     }
 
-    this.selectedSessionKey = sessionKey;
-    this.publishSessions();
+    if (sessionKey !== this.selectedSessionKey) {
+      this.selectedSessionKey = sessionKey;
+      this.publishSessions();
+    }
 
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       this.connect();
@@ -409,6 +471,12 @@ export class WebSocketChatService {
       this.sessions = this.normalizeSessions(sessionsPayload);
       this.sessionGroups = this.buildSessionGroups(this.agents, this.sessions);
       this.publishSessions();
+
+      const modelsPayload = (await this.request("models.list", {
+        view: "configured",
+      })) as GenericRecord;
+      this.models = this.normalizeModels(modelsPayload);
+      this.options.onModelsChange?.([...this.models]);
     } catch (error) {
       this.options.onError?.(this.getErrorMessage(error));
     } finally {
@@ -457,12 +525,18 @@ export class WebSocketChatService {
   private async dispatchPendingQuestion() {
     const selectedSessionKey = this.getSelectedSessionKey();
 
-    if (!this.pendingQuestion || this.awaitingResponse || !selectedSessionKey) {
+    if (
+      (!this.pendingQuestion && this.pendingAttachments.length === 0) ||
+      this.awaitingResponse ||
+      !selectedSessionKey
+    ) {
       return "";
     }
 
     const question = this.pendingQuestion;
+    const attachments = this.pendingAttachments;
     this.pendingQuestion = "";
+    this.pendingAttachments = [];
     const responseSessionKey = selectedSessionKey;
 
     if (question === "/new") {
@@ -471,12 +545,22 @@ export class WebSocketChatService {
 
     this.awaitingResponse = true;
     this.options.onStreamingChange?.(true);
-    this.appendOutgoingQuestion(question);
+    this.appendOutgoingQuestion(
+      question ||
+        attachments
+          .map((attachment) => `[Attachment: ${attachment.fileName}]`)
+          .join("\n"),
+    );
 
     try {
       await this.request("chat.send", {
         sessionKey: responseSessionKey,
         message: question,
+        attachments: attachments.map(({ fileName, mimeType, content }) => ({
+          fileName,
+          mimeType,
+          content,
+        })),
         deliver: false,
         idempotencyKey: this.makeId(),
       });
@@ -952,9 +1036,54 @@ export class WebSocketChatService {
           updatedAt: this.resolveNumber(record.updatedAt),
           modelProvider: this.resolveString(record.modelProvider),
           model: this.resolveString(record.model),
+          thinkingLevel: this.resolveString(record.thinkingLevel),
+          thinkingLevels: Array.isArray(record.thinkingLevels)
+            ? record.thinkingLevels
+                .map((level: unknown) => this.resolveString(level))
+                .filter(Boolean)
+            : [],
+          fastMode:
+            record.fastMode === "auto" ? "auto" : record.fastMode === true,
         } satisfies ChatSessionSummary;
       })
       .filter(Boolean) as ChatSessionSummary[];
+  }
+
+  private normalizeModels(payload: GenericRecord | null | undefined) {
+    const rawModels = this.resolveCollection(payload, [
+      "models",
+      "items",
+      "results",
+      "data",
+      "list",
+      "entries",
+    ]);
+
+    return rawModels
+      .map((model) => {
+        const record = this.toRecord(model);
+        if (!record) {
+          return null;
+        }
+
+        const provider = this.resolveString(record.provider);
+        const id = this.resolveString(record.id || record.model);
+        if (!provider || !id) {
+          return null;
+        }
+
+        return {
+          provider,
+          id,
+          name:
+            this.resolveString(record.name) ||
+            this.resolveString(record.label) ||
+            id,
+          available: record.available !== false,
+          reasoning: record.reasoning === true,
+        } satisfies ChatModelSummary;
+      })
+      .filter(Boolean) as ChatModelSummary[];
   }
 
   private resolveCreatedSessionKey(payload: GenericRecord | null | undefined) {

@@ -21,6 +21,8 @@ export RENDER_GROUP_ID=$(getent group render | awk -F: '{print $3}')
 # Host directory that caches downloaded Hugging Face weights.
 HF_HOME=${HF_HOME:=~/models/huggingface}
 export HF_HOME
+# Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
+mkdir -p "${HF_HOME}"
 
 # llm-scaler image
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2

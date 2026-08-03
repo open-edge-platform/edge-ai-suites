@@ -1,8 +1,6 @@
 # MCP Webhook Event API Reference
 
-The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline events pushed by any upstream video-analytics client. This document is the **server-side contract**: as long as a client follows it, the MCP server applies the same parsing, DB writes, and downstream pipeline rules regardless of who the sender is. The production sender is `videostream-analytics`, but the same protocol applies equally to third-party analytics services, replay tools, unit-test mocks, and integration fixtures.
-
-Implementation entry point: [packages/mcp-server/src/events-endpoint.ts](../../../packages/mcp-server/src/events-endpoint.ts).
+The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline events pushed by any upstream video-analytics client. This document is the **server-side contract**: as long as a client follows it, the MCP server applies the same parsing, DB writes, and downstream pipeline rules regardless of who the sender is. The production sender is `videostream-analytics`, but the same protocol applies equally to third-party analytics services and replay tools.
 
 ---
 
@@ -12,7 +10,7 @@ Implementation entry point: [packages/mcp-server/src/events-endpoint.ts](../../.
 |------|-------|
 | Method | `POST` |
 | URL | `http://<mcp-host>:<events_port>/events` |
-| Default port | `3101` (configurable in `config.yaml`, passed to `EventsEndpoint.start(port)`) |
+| Default port | `3101` (configurable in `config.yaml`) |
 | Content-Type | `application/json` |
 | Auth | None (loopback / intranet deployment) |
 | Client | Any process that can issue an HTTP POST; the production client is `videostream-analytics`, but the protocol is not tied to any implementation |
@@ -46,8 +44,6 @@ All non-2xx responses are **errors** the client must handle. We split client err
 > - **No event must ever stall the pipeline.** A `4xx` is logged, dropped, and the client moves on to the next event. The server never blocks the upstream stream on a single bad event.
 
 Why `422` not `400` for the missing-field / unknown-type cases? They are **business-rule** failures, not transport failures — the JSON parsed cleanly, the envelope is well-formed, but the body cannot be applied to a known table. Splitting them into a distinct status code lets the client tell "my serializer is broken" (`400`) from "my pipeline emitted a stale or new event type the server doesn't know about" (`422`) without string-matching the error message. A stable `code` field is included in every error body for the same reason.
-
-This matrix is enforced end-to-end by [packages/mcp-server/src/events-endpoint.ts](../../../packages/mcp-server/src/events-endpoint.ts) and pinned by [tests/test_api/test_webhook_api.py](../../../tests/test_api/test_webhook_api.py).
 
 ### 1.3 Request constraints
 
