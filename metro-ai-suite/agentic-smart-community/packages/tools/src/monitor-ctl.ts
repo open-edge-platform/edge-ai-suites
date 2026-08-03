@@ -43,7 +43,8 @@ export interface MonitorCtlParams {
   /**
    * When true, mirror the mutation to `monitors_path` on disk (comment-preserving
    * via yaml.Document): register_source → write the monitor's declaration block,
-   * unregister → delete it. Requires `monitors_path` to be set. Failure writing
+   * unregister → delete it, stop → flip its `enabled` to false, start → flip it
+   * back to true. Requires `monitors_path` to be set. Failure writing
    * does NOT fail the whole call — it is surfaced as `monitors_yaml: "skipped"`
    * plus a warning, so the in-memory + DB registration still stands. Mirrors the
    * `persist` semantics of use_case_register writing back to config.yaml.
@@ -59,7 +60,7 @@ export interface MonitorCtlParams {
 
 /** Fields mirrored back to monitors.yaml — matches MonitorDeclaration in monitors-compose.ts. */
 interface PersistOutcome {
-  monitors_yaml?: "written" | "removed" | "skipped";
+  monitors_yaml?: "written" | "removed" | "enabled" | "disabled" | "skipped";
   persist_warnings?: string[];
 }
 
@@ -102,6 +103,44 @@ function persistMonitorEntry(
     }
     writeFileSync(monitorsPath, doc.toString(), "utf-8");
     return { monitors_yaml: decl === null ? "removed" : "written" };
+  } catch (err: any) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: [`persist to ${monitorsPath} failed: ${err.message}`],
+    };
+  }
+}
+
+/**
+ * Flip the `enabled` field of an existing monitors.yaml entry (comment-preserving).
+ * Used by stop/start with persist=true: stop → enabled: false, start → enabled: true.
+ * No new schema field is introduced — if the entry has no explicit `enabled` key
+ * (absent means enabled at bootstrap), the key is added with the new value.
+ * Entry absent from the file → "skipped" + warning, never creates an entry.
+ */
+function persistMonitorEnabled(
+  monitorsPath: string | undefined,
+  monitorId: string,
+  enabled: boolean,
+): PersistOutcome {
+  if (!monitorsPath) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: ["persist requested but monitors_path is unset (server booted without --monitors?); skipped"],
+    };
+  }
+  try {
+    const raw = readFileSync(monitorsPath, "utf-8");
+    const doc = parseDocument(raw);
+    if (!doc.hasIn(["monitors", monitorId])) {
+      return {
+        monitors_yaml: "skipped",
+        persist_warnings: [`monitor "${monitorId}" has no entry in ${monitorsPath}; nothing to flip`],
+      };
+    }
+    doc.setIn(["monitors", monitorId, "enabled"], enabled);
+    writeFileSync(monitorsPath, doc.toString(), "utf-8");
+    return { monitors_yaml: enabled ? "enabled" : "disabled" };
   } catch (err: any) {
     return {
       monitors_yaml: "skipped",
@@ -340,7 +379,12 @@ export async function monitorCtl(
       }).catch(() => {});
       db.updateMonitorStatus(monitorId, "online");
       workerService.start(monitorId);
-      return { success: true, monitor_id: monitorId, status: "online" };
+
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEnabled(params.monitors_path, monitorId, true);
+      }
+      return { success: true, monitor_id: monitorId, status: "online", ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -353,7 +397,12 @@ export async function monitorCtl(
         signal: AbortSignal.timeout(10_000),
       }).catch(() => {});
       db.updateMonitorStatus(monitorId, "offline");
-      return { success: true, monitor_id: monitorId, status: "offline" };
+
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEnabled(params.monitors_path, monitorId, false);
+      }
+      return { success: true, monitor_id: monitorId, status: "offline", ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -378,25 +427,30 @@ export async function monitorCtl(
 
 /**
  * Detach a single monitor WITHOUT deleting its DB history — the "stop stream +
- * strip from monitors.yaml, keep history" primitive used by the
- * use_case_register unregister cascade. Steps: stop worker → delete VSA source
- * (non-fatal) → mark the DB row offline (row + alerts/tasks/events/recordings
- * kept) → strip the monitor from monitors.yaml when `persist`. Unlike
- * `monitorCtl action=unregister`, it never calls db.deleteMonitor, so it won't
- * trip FK constraints or destroy history.
+ * strip from monitors.yaml, keep history" primitive. Steps: stop worker →
+ * delete VSA source (non-fatal) → mark the DB row offline (row +
+ * alerts/tasks/events/recordings kept) → strip the monitor from monitors.yaml
+ * when `persist`. Unlike `monitorCtl action=unregister`, it never calls
+ * db.deleteMonitor, so it won't trip FK constraints or destroy history.
  */
 export async function detachMonitor(
   db: SmartBuildingDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: { monitor_id: string; monitors_path?: string; persist?: boolean },
-): Promise<{ monitor_id: string; detached: boolean } & PersistOutcome> {
+): Promise<{
+  monitor_id: string;
+  detached: boolean;
+  analytics_source: "deleted_or_absent" | "failed";
+  analytics_error?: string;
+} & PersistOutcome> {
   const monitorId = params.monitor_id;
   if (workerService.workers.has(monitorId)) {
     await workerService.stop(monitorId);
   }
-  await analyticsDelete(analyticsBaseUrl, monitorId).catch(() => {
-    /* non-fatal: VSA unreachable / already gone — cleanup still proceeds */
+  let analyticsError: string | undefined;
+  await analyticsDelete(analyticsBaseUrl, monitorId).catch((err: unknown) => {
+    analyticsError = err instanceof Error ? err.message : String(err);
   });
   if (db.getMonitor(monitorId)) {
     db.updateMonitorStatus(monitorId, "offline");
@@ -405,5 +459,11 @@ export async function detachMonitor(
   if (params.persist) {
     persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, null);
   }
-  return { monitor_id: monitorId, detached: true, ...persistOutcome };
+  return {
+    monitor_id: monitorId,
+    detached: true,
+    analytics_source: analyticsError ? "failed" : "deleted_or_absent",
+    ...(analyticsError ? { analytics_error: analyticsError } : {}),
+    ...persistOutcome,
+  };
 }

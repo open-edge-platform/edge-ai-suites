@@ -2,6 +2,10 @@ image:
   dpi: 50
   contrast_enhance: true
   contrast_factor: 1.5
+  # page layout: 1 = single column, 2 = two columns (left/right)
+  page_columns: 1
+  # for page_columns=2: left column width fraction (0.5 = middle, 0.4 = left 40% / right 60%)
+  column_split_ratio: 0.55
 
 vlm:
   max_tokens: 4096

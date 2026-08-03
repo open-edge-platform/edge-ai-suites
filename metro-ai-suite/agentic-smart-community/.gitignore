@@ -46,7 +46,8 @@ logs/
 
 # Node.js & TypeScript
 node_modules/
-package-lock.json
+**/package-lock.json
+!/package-lock.json
 *.tsbuildinfo
 dist/
 *.js.map
@@ -72,6 +73,7 @@ CLAUDE.md
 
 # Copilot generated files
 untitled*plan*.md
+plan*.md
 
 # External source cloned on demand by setup_docker.sh (edge-ai-libraries, etc.)
 .external/

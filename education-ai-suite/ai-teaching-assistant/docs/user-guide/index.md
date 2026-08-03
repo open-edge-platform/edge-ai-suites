@@ -1,42 +1,60 @@
-# Smart Kiosk Assistant
+# AI Teaching Assistant
 
-<!--hide_directive
-<div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/intel-retail/voice-enabled-interactions/tree/main/smart-kiosk-assistant">
-     GitHub
-  </a>
-  <a class="icon_document" href="https://github.com/intel-retail/voice-enabled-interactions/blob/main/smart-kiosk-assistant/README.md">
-     Readme
-  </a>
-</div>
-hide_directive-->
+An intelligent voice-enabled teaching assistant for educational environments. This application provides interactive Q&A capabilities powered by local AI models, allowing users to ask questions about uploaded course materials and receive instant, grounded answers via voice and text.
 
-This application is part of the Voice Enabled Interactions reference architecture for retail.
+All inference runs locally on Intel CPU/GPU via OpenVINO — **no cloud dependencies, no external APIs**.
 
-Smart Kiosk Assistant is a voice-first, retrieval-augmented kiosk stack
-for retail, Quick Service Restaurant (QSR), and similar customer-facing deployments. The browser
-captures microphone audio, the stack transcribes it, retrieves a grounded
-answer from a local knowledge base, and plays a synthesized reply. All
-inference runs locally on Intel CPU or GPU via OpenVINO.
+## Key Features
+
+- **Voice-First Interface** — Ask questions naturally using your microphone
+- **Multi-Format Support** — Ingest `.txt`, `.md`, `.docx`, and `.pdf` course materials
+- **Local AI Processing** — All speech-to-text, retrieval, and synthesis run on-device
+- **Real-Time Responses** — Streamed answers with synthesized voice output
+- **Persistent Knowledge Base** — Course materials persist across sessions
 
 ## Services
 
 | Service          | Port | Role                                           |
 | ---------------- | ---- | ---------------------------------------------- |
 | `audio-analyzer` | 8010 | Speech-to-text (Whisper)                       |
-| `text-to-speech` | 8011 | Speech synthesis (SpeechT5 / Qwen-TTS)         |
-| `rag-service`    | 8020 | Knowledge-base retrieval and answer generation |
-| `kiosk-core`     | 8012 | FastAPI session orchestrator                   |
-| `kiosk-ui`       | 7860 | Gradio browser interface                       |
+| `text-to-speech` | 8011 | Speech synthesis (SpeechT5 / Qwen-TTS)          |
+| `rag-service`    | 8020 | Knowledge ingestion & retrieval-augmented generation |
+| `kiosk-core`     | 8012 | Session management & service orchestration     |
+| `ai-teaching-assistant ui` | 7860 | React browser interface              |
 
-`audio-analyzer`, `text-to-speech`, and `rag-service` host the inference
-models. `kiosk-core` and `kiosk-ui` are I/O-only.
+Model inference is distributed across `audio-analyzer`, `text-to-speech`, and `rag-service`. The `kiosk-core` and `ai-teaching-assistant ui` services handle I/O and orchestration only.
+
+## Quick Start
+
+For full setup steps, use [Get Started](./get-started.md).
+
+Note: If PowerShell blocks local scripts on your machine, run this command in the current terminal session before setup:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+High-level flow:
+
+```powershell
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git;
+cd edge-ai-suites;
+git sparse-checkout set education-ai-suite/ai-teaching-assistant;
+cd education-ai-suite/ai-teaching-assistant;
+.\setup_windows.ps1;
+.\start_kiosk.ps1
+```
+
+Open `http://127.0.0.1:7860` in your browser.
 
 ## Next Steps
 
-- [Get Started](./get-started.md)
-- [How It Works](./how-it-works.md)
-- [Release Notes](./release-notes.md)
+- [Get Started](./get-started.md) — Full setup guide
+- [How It Works](./how-it-works.md) — Architecture and data flow
+- [System Requirements](./get-started/system-requirements.md) — Hardware and OS requirements
+- [Configuration](./get-started/configuration.md) — Model selection and tuning
+- [Troubleshooting](./troubleshooting.md) — Common issues and solutions
+- [Release Notes](./release-notes.md) — Version history
 
 <!--hide_directive
 :::{toctree}

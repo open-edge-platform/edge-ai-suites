@@ -5,7 +5,7 @@
 
 services:
   apm-ui:
-    image: ${REGISTRY:-intel/}apm-ui-service:${TAG:-1.0.0}
+    image: ${REGISTRY-intel/}apm-ui-service:${TAG:-1.0.0}
     container_name: apm-ui
     hostname: apm-ui
     build:
@@ -20,6 +20,7 @@ services:
       DETECTION_SERVICE_URL: http://apm-detection:5004
       STORAGE_SERVICE_URL: http://apm-storage:5001
       USE_CASE_ID: ${USE_CASE}
+      AVAILABLE_DEVICES: ${AVAILABLE_DEVICES:-CPU}
       HOST: 0.0.0.0
       PORT: 5003
       LOG_LEVEL: ${LOG_LEVEL:-INFO}

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { dirname, resolve } from "node:path";
+import { logger } from "./logger.js";
 import type { ServerConfig } from "./config.js";
 import type { SmartBuildingDB } from "@smartbuilding-video/db";
 import type { VideoSummaryClient } from "@smartbuilding-video/tools";
@@ -138,10 +138,11 @@ export function registerTools(
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
       webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
       persist: z.boolean().default(true).describe(
-        "register_source/unregister only (default true): mirror the change back to the monitors.yaml the server " +
-        "was booted from (--monitors), comment-preserving. Lets a restart auto-recover this monitor " +
-        "(incl. pipeline_config, which is not stored in the DB). Skipped with a warning if the server " +
-        "was started without --monitors.",
+        "Mirror the change back to the monitors.yaml the server was booted from (--monitors), " +
+        "comment-preserving (default true): register_source writes the entry (lets a restart " +
+        "auto-recover this monitor incl. pipeline_config, which is not stored in the DB), " +
+        "unregister deletes it, stop flips its enabled to false, start flips it back to true. " +
+        "Skipped with a warning if the server was started without --monitors.",
       ),
     },
   }, async (params) => {
@@ -332,21 +333,23 @@ export function registerTools(
   // --- smartbuilding_use_case_register ---
   server.registerTool("smartbuilding_use_case_register", {
     description:
-      "Manage use_case lifecycle at runtime without restarting the MCP server. Three actions. " +
+      "Manage use_case lifecycle at runtime without restarting the MCP server. Four actions. " +
       "For NEW use cases, do not call this tool until the user has answered the " +
       "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
-      "(step 1) action=register_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
+      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
-      "on 409), and ON SUCCESS writes use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
-      "evaluate_rules.py is staged to use-cases/<use_case>/evaluate_rules.py). " +
+      "on 409), and ON SUCCESS writes <data_dir>/use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
+      "evaluate_rules.py is staged to <data_dir>/use-cases/<use_case>/evaluate_rules.py). " +
       "It does NOT touch the DB schema, use_case_dict, or config.yaml. " +
       "(step 2) action=register WITHOUT prompt_text — auto-reads the files step 1 wrote, applies " +
       "the schema via ALTER TABLE, injects use_case_dict, and (persist=true) writes config.yaml. " +
       "schema_extensions is OPTIONAL in both steps: when omitted, the final schema is inferred from " +
       "the prompt's LOCAL_PROMPT `KEY:` output lines (all text columns); pass it only to declare a " +
       "non-text column type or override the inferred required flags. " +
+      "Any final schema field beyond severity/event/desc REQUIRES evaluate_rules.py; the consistency " +
+      "gate rejects an extended schema without one before DB, VLM, config, or artifact side effects. " +
       "action=register: treats schema_extensions as caller-confirmed extra fields and normalizes " +
       "the final schema to severity/event/desc + extras before validation. HARD GATE first — if any final schema field is absent from " +
       "the prompt's LOCAL_PROMPT output contract, the call is REJECTED with zero side effects " +
@@ -355,38 +358,56 @@ export function registerTools(
       "(2) POST /v1/tasks to multilevel-video-understanding (auto-PATCH on 409), " +
       "(3) inject the entry into in-memory use_case_dict so task-poller / other tools see it, " +
       "(4) re-run use_case_validate. prompt_text may be omitted; it is then auto-read from " +
-      "use-cases/<use_case>/prompt.md (e.g. the file register_task wrote). When persist=true, also " +
+      "<data_dir>/use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote). When persist=true, also " +
       "writes the entry back to config.yaml (comment-preserving via yaml.Document). " +
-      "action=register_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
+      "action=generate_task: VLM-task registration + prompt.md/evaluate_rules.py persistence only " +
       "(step 1 above); prompt_text is REQUIRED and is never auto-read. " +
       "action=unregister: DELETE /v1/tasks/<name> and remove " +
-      "from use_case_dict; also deletes the yaml entry if persist=true. When persist=true, " +
-      "unregister additionally CASCADES to every monitor referencing this use case: stops its " +
-      "worker, deletes its videostream-analytics source, and strips it from monitors.yaml — DB " +
-      "history (alerts/tasks/events/recordings) is kept and the monitor row is left offline. " +
+      "from use_case_dict; also deletes the yaml entry if persist=true. Skipped (with a warning) " +
+      "when another use case still references the same VLM task. Any incomplete cleanup (VLM " +
+      "delete, config update, artifact archive, or monitor detach) sets degraded=true with " +
+      "details in warnings. Unregister always CASCADES to every monitor referencing " +
+      "this use case via monitor_ctl action=unregister: stops its worker, deletes its " +
+      "videostream-analytics source, and deletes the monitors row. If the row delete " +
+      "fails (e.g. FK constraint from existing alerts history), it falls back to stop " +
+      "semantics — the row is kept, marked offline — with a warning in the MCP log and " +
+      "in warnings (degraded=true); with persist=true " +
+      "the monitor is additionally stripped from monitors.yaml, and the use case's on-disk " +
+      "artifacts (<data_dir>/use-cases/<uc>/prompt.md, evaluate_rules.py) are archived by moving them to " +
+      "<data_dir>/use-cases/.backup/<uc>/ so a later re-register does not auto-read stale files. " +
       "For action=register, if prompt_text is provided with persist=true it is saved to " +
-      "use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
-      "use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
-      "conventional absolute path is stored in config.yaml for runtime rule execution.",
+      "<data_dir>/use-cases/<use_case>/prompt.md. evaluate_rules_path, when provided, is staged to " +
+      "<data_dir>/use-cases/<use_case>/evaluate_rules.py (auto-discovered when already there) and that " +
+      "conventional absolute path is stored in config.yaml for runtime rule execution. " +
+      "action=list: READ-ONLY inventory of the LIVE in-memory use_case_dict — no other arguments " +
+      "needed. Returns one entry per use case with video_summary_task, schema_fields, rule_path " +
+      "(defaultRuleEvaluator | evaluate_rules.py | none), and report_source. This reflects what the " +
+      "running server actually uses, including entries registered with persist=false, so prefer it " +
+      "over parsing config.yaml from disk. Call it after a successful register/unregister to report " +
+      "the system's current use cases.",
     inputSchema: {
-      action: z.enum(["register", "register_task", "unregister"]).describe("register | register_task | unregister"),
-      use_case: z.string().describe("Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/)"),
+      action: z.enum(["register", "generate_task", "unregister", "list"]).describe("register | generate_task | unregister | list"),
+      use_case: z.string().optional().describe(
+        "Use case key (lowercase ascii, matches /^[a-z][a-z0-9_]{1,63}$/). " +
+        "Required for register/generate_task/unregister; omit for list."
+      ),
       video_summary_task: z.string().optional().describe(
         "VLM task name (default: <use_case>_monitor). Must not collide with VLM builtins."
       ),
       description: z.string().optional().describe("Human description shown by /v1/tasks"),
       evaluate_rules_path: z.string().optional().describe(
         "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
-        "stages it to use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
-        "persists the conventional absolute path into config.yaml."
+        "stages it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
+        "persists the conventional absolute path into config.yaml. Required whenever the Final Schema " +
+        "contains fields beyond severity/event/desc, and for custom alert behavior."
       ),
       reports: z.record(z.unknown()).optional().describe("Report config: {data_source, default_type, filter}"),
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
       prompt_text: z.string().optional().describe(
         "Full prompt text (Markdown with ## LOCAL_PROMPT sections, OR a raw 4-const Python source). " +
-        "REQUIRED for action=register_task (it is POSTed to the VLM task and written to " +
-        "use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
-        "auto-read from use-cases/<use_case>/prompt.md (e.g. the file register_task wrote); when " +
+        "REQUIRED for action=generate_task (it is POSTed to the VLM task and written to " +
+        "<data_dir>/use-cases/<use_case>/prompt.md). For action=register it is OPTIONAL: when omitted it is " +
+        "auto-read from <data_dir>/use-cases/<use_case>/prompt.md (e.g. the file generate_task wrote); when " +
         "provided with persist=true it is (re)saved there. " +
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
@@ -402,49 +423,94 @@ export function registerTools(
         "(e.g. motion_direction, parking_zone). Do not put detection goals/events such as escape, trapped, " +
         "aggressive_behavior, risk_level, *_detected, or *_count here. The tool automatically adds " +
         "severity/event/desc to form the final schema when any structured fields are present. " +
+        "Any resulting extension requires evaluate_rules_path (or a staged conventional rule file). " +
         "Applied via ALTER TABLE ADD COLUMN if missing (idempotent). Stored under this use_case's own " +
         "schema (use_case_dict.<uc>.schema) — never a global shared schema."
       ),
       overwrite: z.boolean().optional().describe(
         "When true, replace an existing use_case entry. Default false."
       ),
-      persist: z.boolean().optional().describe(
-        "When true, mirror the mutation to the config.yaml the server was booted from " +
-        "(comment-preserving via yaml.Document). Requires MCP server to have been started " +
+      persist: z.boolean().default(true).describe(
+        "Mirror the mutation to the config.yaml the server was booted from " +
+        "(comment-preserving via yaml.Document), default true. On unregister it also " +
+        "strips bound monitors from monitors.yaml and archives the use case's on-disk " +
+        "artifacts to <data_dir>/use-cases/.backup/. Requires MCP server to have been started " +
         "with --config <path>. Failure to write only produces a warning; in-memory " +
         "registration still stands."
       ),
     },
   }, async (params) => {
     try {
-      const { useCaseRegister, detachMonitor } = await import("@smartbuilding-video/tools");
+      const { useCaseRegister, monitorCtl } = await import("@smartbuilding-video/tools");
       const result = await useCaseRegister(params as any, {
         useCaseDict: config.useCaseDict,
         summaryServiceUrl: config.summaryService.url,
         db: (db as any).db,
         configPath: config.configPath,
-        baseDir: config.configPath ? dirname(resolve(config.configPath)) : process.cwd(),
+        baseDir: config.dataDir,
       });
 
-      // Cascade on unregister+persist: detach every monitor referencing this use
-      // case (stop worker + delete VSA source + strip from monitors.yaml), keeping
-      // DB history. Mirrors register_source persist which writes monitors.yaml —
-      // without this, unregistering a use case would leave orphan monitors whose
-      // use_case no longer exists (task-poller then errors on the next poll).
-      if (params.action === "unregister" && params.persist && result.ok) {
+      // Cascade on unregister: for every monitor referencing this use case, run
+      // monitorCtl action=unregister (stop worker + delete VSA source + delete
+      // the monitors row). If the row delete fails (e.g. FK constraint from
+      // existing alerts history), fall back to monitorCtl action=stop — the row
+      // is kept, marked offline — and log a warning to the MCP log.
+      // This is independent of persist — without it, an in-memory unregister would
+      // leave orphan monitors whose use_case no longer exists (task-poller then
+      // errors on the next poll). persist only controls whether the mutation is
+      // mirrored to monitors.yaml: unregister removes the entry; the stop fallback
+      // instead flips the entry's `enabled` to false so a restart cleanly skips it
+      // (entry + pipeline_config survive for a later re-enable).
+      if (params.action === "unregister" && result.ok) {
         const affected = db.listMonitors().filter((m) => m.useCase === params.use_case);
         const cascaded: unknown[] = [];
         for (const m of affected) {
           try {
-            cascaded.push(
-              await detachMonitor(db, config.videostreamAnalytics.url, workerService, {
+            const unreg = (await monitorCtl(db, config.videostreamAnalytics.url, workerService, {
+              action: "unregister",
+              monitor_id: m.id,
+              monitors_path: config.monitorsPath,
+              persist: params.persist === true,
+            })) as Record<string, unknown>;
+            cascaded.push({ ...unreg, db_row: "deleted" });
+          } catch (e: any) {
+            const error = e?.message ?? String(e);
+            logger.warn(
+              `use_case_register cascade: failed to delete monitor "${m.id}" row ` +
+              `(${error}); falling back to stop — monitors row kept offline`,
+            );
+            try {
+              const stopped = (await monitorCtl(db, config.videostreamAnalytics.url, workerService, {
+                action: "stop",
                 monitor_id: m.id,
                 monitors_path: config.monitorsPath,
-                persist: true,
-              }),
-            );
-          } catch (e: any) {
-            cascaded.push({ monitor_id: m.id, detached: false, error: e?.message ?? String(e) });
+                persist: params.persist === true,
+              })) as Record<string, unknown>;
+              cascaded.push({
+                ...stopped,
+                db_row: "kept_offline",
+                fallback: "stop",
+                unregister_error: error,
+              });
+              result.degraded = true;
+              result.warnings.push(
+                `monitor "${m.id}": unregister failed (${error}); fell back to stop, ` +
+                `monitors row kept offline` +
+                (params.persist === true
+                  ? stopped.monitors_yaml === "disabled"
+                    ? `; monitors.yaml entry kept with enabled: false — set it back to true to re-enable`
+                    : `; monitors.yaml entry unchanged` +
+                      (Array.isArray(stopped.persist_warnings) && stopped.persist_warnings.length
+                        ? ` (${(stopped.persist_warnings as string[]).join("; ")})`
+                        : ` — set enabled: false manually or it will fail/revive on restart`)
+                  : ``),
+              );
+            } catch (e2: any) {
+              const stopError = e2?.message ?? String(e2);
+              cascaded.push({ monitor_id: m.id, stopped: false, error: stopError, unregister_error: error });
+              result.degraded = true;
+              result.warnings.push(`monitor "${m.id}" cascade stop fallback failed: ${stopError}`);
+            }
           }
         }
         (result as any).cascaded_monitors = cascaded;
