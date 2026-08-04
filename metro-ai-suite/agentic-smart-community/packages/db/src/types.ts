@@ -89,6 +89,19 @@ export interface Report {
   createdAt: string;
 }
 
+export interface MonitorActivity {
+  task: VideoSummaryTask;
+  event?: Event;
+  alert?: Alert;
+}
+
+export interface TokenUsageAggregate {
+  promptTokens: number;
+  imageTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 // Alert with JOIN'd task and event details
 export interface AlertWithTask extends Alert {
   taskDetails?: {

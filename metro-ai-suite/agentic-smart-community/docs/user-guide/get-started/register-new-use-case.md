@@ -1,6 +1,6 @@
 # Register a New Use Case
 
-A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`video-summary-prompt-studio`](../../../skills/video-summary-prompt-studio/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
+A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`video-summary-prompt-studio`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
 
 By the end of this guide you will know how to:
 
@@ -215,4 +215,4 @@ Check the monitor outcome in the response's `cascaded_monitors`:
 
 ---
 
-For the full authoring rules the agent follows (prompt anchors, schema invariants, retry behavior), see the [`video-summary-prompt-studio` skill](../../../skills/video-summary-prompt-studio/SKILL.md) and the [`use_case_register` tool guide](./mcp-tools.md#8-smartbuilding_use_case_register).
+For the full authoring rules the agent follows (prompt anchors, schema invariants, retry behavior), see the [`video-summary-prompt-studio` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md) and the [`use_case_register` tool guide](./mcp-tools.md#8-smartbuilding_use_case_register).

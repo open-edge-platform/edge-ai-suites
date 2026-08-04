@@ -309,16 +309,22 @@ completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by de
 
 `smartbuilding_video_db` reads these tables (SELECT only):
 
-- **monitors** — registered cameras: `id` (= monitor_id), `name`, `use_case`, `status`.
-- **events** — pipeline events. `motion_type` ∈ `motion | static | recording | status`;
-  `start_time`, `end_time`, `prefilter_classes` (YOLO hits).
-- **video_summary_tasks** — one per event clip: `id`, `event_id`, `clip_file_path`,
-  `status` (`pending → completed`), `summary_text` (raw VLM output), plus **user-defined
-  extension columns** declared in `config.schema` (commonly `event`, `severity`, `desc`,
-  `confidence`).
-- **alerts** — rule-engine output: `id`, `monitor_id`, `task_id`, `event_id`, `use_case`,
-  `alert_type`, `description`, `created_at`, `acked_at`, `acked_by`.
-- **recordings** — `file_path`, `start_time`, `end_time`, `duration`.
+- **monitors** — registered cameras: `id` (= monitor_id), `name`, `source_url`, `use_case`,
+  `video_summary_task`, `status`.
+- **events** — `motion` and `static` pipeline events: `motion_type`, `start_time`, `end_time`,
+  `duration_seconds`, optional clip/prefilter fields, and `trajectory_region`. Continuous
+  `recording` payloads are stored in the separate `recordings` table; VSA connection status is
+  exposed by its control API and is not inserted here.
+- **video_summary_tasks** — one per motion clip: `id`, `monitor_id`, `event_id`,
+  `summary_clip_input`, `status` (`pending | processing | completed | failed | ignored`),
+  `summary_text` (raw VLM output), error/latency/token fields, plus **user-defined extension
+  columns** declared by that use case under
+  `use_case_dict.<use_case>.schema.video_summary_tasks.extensions` (commonly `event`,
+  `severity`, and `desc`).
+- **alerts** — use-case-agnostic rule-engine output: `id`, `monitor_id`, `task_id`, `event_id`,
+  `use_case`, `description`, `notified`, `created_at`, `ack_at`, `ack_by`. Read structured fields
+  such as `severity` or `event` by joining `task_id` to `video_summary_tasks`.
+- **recordings** — `file_path`, `start_time`, `end_time`, `duration_seconds`, `file_size_bytes`.
 - **reports** — generated report rows (from `generate_report`).
 - **plans** — per-monitor JSON plans (`plan_ctl`).
 - **monitor_state** — per-monitor runtime state as JSON (e.g. `last_alert_at`, use-case keys such

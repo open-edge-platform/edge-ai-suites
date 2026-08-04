@@ -1,6 +1,6 @@
 # How it Works
 
-The stack ingests an RTSP stream, runs a DLStreamer pipeline that samples frames for VLM inference, and sends results to the dashboard.
+The stack ingests an RTSP stream, runs a DL Streamer pipeline that samples frames for VLM inference, and sends results to the dashboard.
 
 ![System Architecture Diagram](./_assets/architecture.jpg "system architecture")
 
@@ -19,7 +19,7 @@ flowchart LR
 
 ## System Components
 
-- **dlstreamer-pipeline-server**: Intel DLStreamer Pipeline Server processing RTSP sources with GStreamer pipelines and `gvagenai` for VLM inference
+- **dlstreamer-pipeline-server**: Intel DL Streamer Pipeline Server processing RTSP sources with GStreamer pipelines and `gvagenai` for VLM inference
 - **mediamtx**: WebRTC/WHIP signaling server for video streaming
 - **coturn**: TURN server for NAT traversal in WebRTC connections
 - **app**: Python FastAPI backend serving REST APIs, SSE metadata streams, and WebSocket caption streams

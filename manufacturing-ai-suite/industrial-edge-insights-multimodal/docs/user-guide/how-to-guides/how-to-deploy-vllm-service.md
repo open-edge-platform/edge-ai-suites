@@ -1,4 +1,4 @@
-# Deploy vLLM Service
+# Deploy vLLM Service For Defect Explanation
 
 This guide explains how to deploy the multimodal sample app with the vLLM service enabled using the Makefile targets.
 
@@ -21,9 +21,9 @@ This guide explains how to deploy the multimodal sample app with the vLLM servic
 
 ## Download Models
 
-**Download `Qwen3.5 2B` model and `Qwen 3.5 2B fine tuned LoRA adapter`**
+**Download `Unsloth Qwen3.5 2B` model and `Unsloth Qwen 3.5 2B fine tuned LoRA adapter`**
 
-> Please review and accept the [Qwen3.5 2B license](https://huggingface.co/Qwen/Qwen3.5-2B/blob/main/LICENSE) before downloading.
+> Please review and accept the [Unsloth Qwen3.5 2B license](https://huggingface.co/unsloth/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 >
 > The LoRA adapter was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
 
@@ -35,7 +35,7 @@ python3 -m venv .modelenv && \
 source .modelenv/bin/activate && \
 pip3 install huggingface_hub==1.23.0 && \
 rm -rf huggingface models && \
-hf download Qwen/Qwen3.5-2B \
+hf download unsloth/Qwen3.5-2B \
     --local-dir ./huggingface/Qwen3.5-2B && \
 hf download Intel/qwen3.5-2b-vlm-weld-explainability-lora \
     --local-dir ./models/qwen3.5-2b-vlm-weld-explainability-lora && \
@@ -89,9 +89,9 @@ make up_vllm
 
 4. Check the output in Grafana.
 
-   - Use the link `https://localhost :3000` to open Grafana in a browser (preferably Chrome).
+   - Use the link `https://localhost:3000` to open Grafana in a browser (preferably Chrome).
 
-   > **Note:** Use the link `https://localhost :30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
+   > **Note:** Use the link `https://localhost:30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
    - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
 
@@ -106,6 +106,7 @@ make up_vllm
    - You should see the following output:
 
      ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
+
 ## Stop the Deployment
 
 To bring down the full stack:

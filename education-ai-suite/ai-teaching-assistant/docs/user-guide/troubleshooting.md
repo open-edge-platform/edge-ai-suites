@@ -1,155 +1,163 @@
 # Troubleshooting
 
-## Stack Will Not Start
+## Startup Fails
 
-- Confirm the published host ports are free:
+### Symptom
+`start_kiosk.ps1` exits early or one or more services never become ready.
 
-  ```bash
-  ss -ltnp | grep -E "7860|8010|8011|8012|8020"
-  ```
+### Checks
 
-- Confirm Docker Compose can build:
+```powershell
+# Verify required files exist
+Test-Path .\setup_windows.ps1
+Test-Path .\start_kiosk.ps1
 
-  ```bash
-  docker compose config
-  docker compose build
-  ```
-
-- Tail individual services to find the first failure:
-
-  ```bash
-  docker compose logs -f audio-analyzer
-  docker compose logs -f text-to-speech
-  docker compose logs -f rag-service
-  docker compose logs -f kiosk-core
-  docker compose logs -f kiosk-ui
-  ```
-
-## First Startup Is Slow
-
-This is expected. On first run each model-hosting service downloads or
-exports model assets to its `models/` directory and Hugging Face cache.
-Subsequent starts reuse the cached artifacts. The default
-`audio-analyzer` healthcheck allows up to ~240 seconds for warmup; the
-RAG LLM compile on GPU can also take a few minutes the first time.
-
-## A `health` Endpoint Fails
-
-- Run `docker compose ps` and check the `STATUS` column for `unhealthy`.
-- If you are behind a corporate proxy, pass `--noproxy '*'` to `curl`
-  when hitting `127.0.0.1`.
-- Confirm the service container actually started:
-
-  ```bash
-  docker compose logs <service-name>
-  ```
-
-## Selected Device Is Not Used
-
-The device field lives in the per-service pinned config (see
-[Configuration](./get-started/configuration.md#inference-device)). If the device
-does not appear in the logs:
-
-- Check the value is supported for that model (e.g. `audio-analyzer`
-  ASR supports `CPU` and `GPU` only).
-- For `GPU`: confirm `/dev/dri` exists and the Intel OpenVINO GPU
-  runtime is installed.
-- Restart the affected service after the change:
-
-  ```bash
-  docker compose up -d --build --force-recreate <service-name>
-  ```
-
-- Confirm OpenVINO picked the device:
-
-  ```bash
-  docker compose logs <service-name> | grep -i -E "device|compiling|GPU|CPU"
-  ```
-
-## Permission Errors on Mounted Folders
-
-Every container runs as UID/GID `1000:1000` (baked into each image).
-Model files and caches for `audio-analyzer` and `text-to-speech` live
-in Docker named volumes (`audio_analyzer_models`,
-`audio_analyzer_cache`, `text_to_speech_models`, etc.) initialized with
-that ownership, so the usual host-side ownership errors do not apply.
-If you still see:
-
-```
-PermissionError: [Errno 13] Permission denied: '...'
+# Verify submodule paths
+Test-Path .\edge-ai-libraries\microservices\audio-analyzer\main.py
+Test-Path .\edge-ai-libraries\microservices\text-to-speech\main.py
+Test-Path .\voice-enabled-interactions\smart-kiosk-assistant\main.py
+Test-Path .\voice-enabled-interactions\smart-kiosk-assistant\rag-service\main.py
 ```
 
-on a path inside the container, a named volume was likely created
-earlier with the wrong ownership (for example by an older root-only
-run). Reset it:
+If missing, rerun:
 
-```bash
-docker compose down
-docker volume rm \
-  smart-kiosk-assistant_audio_analyzer_models \
-  smart-kiosk-assistant_audio_analyzer_cache \
-  smart-kiosk-assistant_text_to_speech_models \
-  smart-kiosk-assistant_text_to_speech_cache
-docker compose up -d
+```powershell
+.\setup_windows.ps1
 ```
-Replace `smart-kiosk-assistant_` with whatever Compose project prefix
-`docker volume ls` shows on your host. Resetting a volume forces the
-services to re-download model assets on next startup.
 
-## Browser UI Does Not Capture Audio
+## Port Conflicts
 
-- Confirm the browser granted microphone permission for
-  `http://127.0.0.1:7860`. Reset the permission and reload if needed.
-- Modern browsers restrict microphone access on insecure origins. Use
-  `http://127.0.0.1` (loopback) or serve the UI behind HTTPS.
-- Check the `kiosk-ui` logs for upload errors:
+### Symptom
+Launcher reports an existing process on required ports.
 
-  ```bash
-  docker compose logs -f kiosk-ui
-  ```
+### Checks
 
-## Answer Is Empty or Off-Topic
+```powershell
+netstat -ano | findstr :7860
+netstat -ano | findstr :8012
+netstat -ano | findstr :8020
+netstat -ano | findstr :8011
+netstat -ano | findstr :8010
+netstat -ano | findstr :9000
+```
 
-- Confirm the knowledge base was ingested. The Gradio UI exposes an
-  ingestion panel; see also
-  [rag-service/README.md](https://github.com/intel-retail/voice-enabled-interactions/blob/main/smart-kiosk-assistant/rag-service/README.md).
-- Check `rag-service` logs for retrieval scores and reranker output.
-- Try the same question from the API to rule out the UI:
+Stop conflicting PIDs or run:
 
-  ```bash
-  curl --noproxy '*' -X POST http://127.0.0.1:8020/api/v1/query \
-    -H 'Content-Type: application/json' \
-    -d '{"query":"What are the store hours?"}'
-  ```
+```powershell
+.\stop_kiosk.ps1 -Force
+```
 
-## TTS Plays No Audio in the Browser
+## Models Download Slowly or First Run Is Long
 
-- Confirm the session snapshot has non-empty `tts_audio_segments` and
-  no `tts_errors`. See [API Reference](./api-reference.md).
-- The `kiosk-core` container and the `kiosk-ui` container share the
-  `generated_audio` Docker volume. If you removed the volume, recreate
-  the stack:
+First startup can take significant time due to model downloads and OpenVINO
+compilation.
 
-  ```bash
-  docker compose down
-  docker compose up -d --build
-  ```
+Useful checks:
 
-## kiosk-core Cannot Reach a Downstream Service
+```powershell
+ping huggingface.co
+```
 
-The compose defaults wire `kiosk-core` and `kiosk-ui` to the internal
-service names (`audio-analyzer`, `text-to-speech`, `rag-service`). If
-you override these URLs for a host-run setup, confirm:
+If interrupted, rerun `start_kiosk.ps1` after connectivity is stable.
 
-- The downstream service is reachable from `kiosk-core` (try `curl`
-  against the override URL from inside the `kiosk-core` container or
-  from the host).
-- For host-run downstreams reached from a container, use
-  `host.docker.internal` (see the alternative compose snippets in
-  [Run With Docker Compose](./get-started/run-container.md)).
+## UI Not Loading on 7860
 
-## See Also
+### Symptom
+`http://127.0.0.1:7860` is unavailable.
 
-- [Configuration](./get-started/configuration.md)
-- [Get Started](./get-started.md)
-- [Run On The Host](./get-started/run-standalone.md)
+### Checks
+
+```powershell
+curl http://127.0.0.1:7860/healthz
+```
+
+If health fails:
+- Verify `kiosk_ui_server.py` is running.
+- Ensure React build assets exist under `assistant-react-ui/dist`.
+
+Rebuild UI assets if needed:
+
+```powershell
+cd assistant-react-ui
+npm install
+npm run build
+```
+
+## Microphone Permission Issues
+
+### Symptom
+Mic button does nothing or browser shows permission errors.
+
+### Fixes
+- Allow microphone for `http://127.0.0.1:7860` in browser site settings.
+- Verify Windows microphone privacy settings allow the browser.
+- Test with another input device in Windows sound settings.
+
+## Upload or Ingestion Failures
+
+### Symptom
+File uploads fail or context stats do not increase.
+
+### Checks
+- Supported formats: `.txt`, `.md`, `.docx`, `.pdf`
+- Verify file size is within configured limits.
+- Clear context and retry upload.
+
+Service checks:
+
+```powershell
+curl http://127.0.0.1:8020/health
+curl http://127.0.0.1:8020/api/v1/context/stats
+```
+
+## Clear Context Fails
+
+The UI now surfaces clear-context errors. If clear fails, inspect `rag-service`
+output and verify storage paths are writable.
+
+## Slow or Low-Quality Answers
+
+### Speed tuning
+- Use a smaller LLM in `rag-service/config.yaml`
+- Lower retrieval complexity (`top_k`, `fetch_k`)
+- Use GPU for LLM where available
+
+### Relevance tuning
+- Improve document quality and structure
+- Re-ingest after changing chunking settings
+- Adjust reranker usage in `rag-service/config.yaml`
+
+## No Audio Playback
+
+### Symptom
+Transcript/answer text appears but no spoken audio.
+
+### Checks
+- Verify `text-to-speech` health: `curl http://127.0.0.1:8011/health`
+- Verify browser/tab volume and output device
+- Verify session snapshot contains `tts_audio_segments`
+
+## Metrics Panel Errors
+
+### Symptom
+Metrics cards show errors or blank values.
+
+### Checks
+
+```powershell
+curl http://127.0.0.1:9000/health
+curl http://127.0.0.1:8012/api/v1/metrics
+curl http://127.0.0.1:8012/api/v1/platform-info
+```
+
+## Collect Useful Debug Data
+
+```powershell
+systeminfo > system_info.txt
+python --version > python_version.txt
+
+# Record running processes/ports
+netstat -ano > netstat_ports.txt
+```
+
+Then include launcher and service terminal logs when reporting issues.

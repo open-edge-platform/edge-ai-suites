@@ -189,4 +189,4 @@ For an automated client, persist the cursor only after the alerts have been proc
 
 ## Proactive User Delivery
 
-The subscription mechanism delivers updates to the connected MCP client. To proactively deliver those updates to an agent session or external user channel, add routing and delivery logic in the client environment. The [Smart Community MCP x OpenClaw adapter](../../../packages/framework-adapter-sdk/examples/openclaw/README.md) is a reference implementation that subscribes, keeps cursors, reconnects, and injects alerts into configured OpenClaw sessions.
+The subscription mechanism delivers updates to the connected MCP client. To proactively deliver those updates to an agent session or external user channel, add routing and delivery logic in the client environment. The [Smart Community MCP x OpenClaw adapter](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md) is a reference implementation that subscribes, keeps cursors, reconnects, and injects alerts into configured OpenClaw sessions.

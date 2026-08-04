@@ -183,6 +183,8 @@ class FsListResponse(BaseModel):
 
 class GradingConfigResponse(BaseModel):
     dpi: int | None = None
+    page_columns: int | None = None
+    column_split_ratio: float | None = None
     contrast_enhance: bool | None = None
     contrast_factor: float | None = None
     max_tokens: int | None = None
@@ -203,6 +205,8 @@ class GradingConfigResponse(BaseModel):
 
 class GradingConfigUpdateRequest(BaseModel):
     dpi: int | None = None
+    page_columns: int | None = None
+    column_split_ratio: float | None = None
     contrast_enhance: bool | None = None
     contrast_factor: float | None = None
     max_tokens: int | None = None

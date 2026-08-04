@@ -2,28 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import Accordion from '../common/Accordion';
-import ResourceUtilizationAccordion from '../RightPanel/ResourceUtilizationAccordion';
 import { getPlatformInfo, gradingGetConfig, gradingUpdateConfig } from '../../services/api';
 import type { GradingConfig } from '../../services/api';
 import '../../assets/css/RightPanel.css';
-import { useAppDispatch } from '../../redux/hooks';
-import { setSessionId } from '../../redux/slices/uiSlice';
-
-const GRADING_MONITOR_SESSION_ID = 'grading-monitor';
 
 const dash = '-';
 
 const GradingRightPanel: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
   const [platformData, setPlatformData] = useState<any>(null);
   const [config, setConfig] = useState<GradingConfig | null>(null);
 
-  useEffect(() => {
-    dispatch(setSessionId(GRADING_MONITOR_SESSION_ID));
-  }, [dispatch]);
-
-  const numKeys = ['dpi', 'contrast_factor', 'max_tokens', 'vlm_temperature', 'max_image_pixels',
+  const numKeys = ['dpi', 'page_columns', 'column_split_ratio', 'contrast_factor', 'max_tokens', 'vlm_temperature', 'max_image_pixels',
     'poll_interval', 'stable_checks', 'idle_timeout', 'min_score', 'expand_margin', 'iou_threshold'] as const;
   const boolKeys = ['contrast_enhance', 'sort_boxes', 'merge_overlapping'] as const;
   type NumKey = typeof numKeys[number];
@@ -53,6 +43,9 @@ const GradingRightPanel: React.FC = () => {
     setSaveMsg('');
   };
 
+  const pageColumnsValue = parseInt(numInputs.page_columns || '', 10);
+  const isTwoColumnLayout = pageColumnsValue === 2;
+
   useEffect(() => {
     (async () => {
       try { setPlatformData(await getPlatformInfo()); } catch {}
@@ -69,11 +62,21 @@ const GradingRightPanel: React.FC = () => {
       const num = (k: NumKey, parser: (s: string) => number) =>
         numInputs[k] !== '' ? parser(numInputs[k]) : null;
       const dpi = num('dpi', (s) => parseInt(s, 10));
+      const page_columns = num('page_columns', (s) => parseInt(s, 10));
+      const column_split_ratio = num('column_split_ratio', parseFloat);
       const vlm_temperature = num('vlm_temperature', parseFloat);
       const min_score = num('min_score', parseFloat);
       const iou_threshold = num('iou_threshold', parseFloat);
       if (dpi != null && (isNaN(dpi) || dpi <= 0)) {
         setSaveMsg(t('grading.config.invalidDpi', 'DPI must be a positive integer'));
+        return;
+      }
+      if (page_columns != null && ![1, 2].includes(page_columns)) {
+        setSaveMsg(t('grading.config.invalidPageColumns', 'Page columns must be 1 or 2'));
+        return;
+      }
+      if (isTwoColumnLayout && column_split_ratio != null && (isNaN(column_split_ratio) || column_split_ratio <= 0 || column_split_ratio >= 1)) {
+        setSaveMsg(t('grading.config.invalidColumnSplitRatio', 'Column split ratio must be between 0 and 1'));
         return;
       }
       if (vlm_temperature != null && (isNaN(vlm_temperature) || vlm_temperature < 0 || vlm_temperature > 2)) {
@@ -90,6 +93,8 @@ const GradingRightPanel: React.FC = () => {
       }
       const updated = await gradingUpdateConfig({
         dpi,
+        page_columns,
+        column_split_ratio,
         contrast_enhance: boolInputs.contrast_enhance,
         contrast_factor: num('contrast_factor', parseFloat),
         max_tokens: num('max_tokens', (s) => parseInt(s, 10)),
@@ -144,6 +149,20 @@ const GradingRightPanel: React.FC = () => {
     </label>
   );
 
+  const pageColumnsCell = () => (
+    <div className="grading-config-cell">
+      <label className="grading-config-label">{t('grading.config.pageColumns', 'Page Columns')}</label>
+      <select
+        className="grading-config-input"
+        value={numInputs.page_columns}
+        onChange={(e) => setNum('page_columns', e.target.value)}
+      >
+        <option value="1">1</option>
+        <option value="2">2</option>
+      </select>
+    </div>
+  );
+
   return (
     <div className="right-panel">
       <Accordion title={t('accordion.configuration', 'Configuration & Metrics')}>
@@ -165,16 +184,18 @@ const GradingRightPanel: React.FC = () => {
         </div>
       </Accordion>
 
-      <ResourceUtilizationAccordion activeScreen="grading" />
-
       <Accordion title={t('grading.config.title', 'Grading Configuration')}>
         <div className="grading-config-form">
           <div className="grading-config-group">
             <h4 className="grading-config-group-title">{t('grading.config.imageGroup', 'Image Rendering')}</h4>
             <div className="grading-config-grid">
+              {pageColumnsCell()}
+              {numCell('column_split_ratio', t('grading.config.columnSplitRatio', 'Column Split Ratio'), { min: 0.1, max: 0.9, step: 0.01, disabled: !isTwoColumnLayout })}
               {numCell('dpi', t('grading.config.dpi', 'Render DPI'), { min: 1 })}
               {numCell('contrast_factor', t('grading.config.contrastFactor', 'Contrast Factor'), { min: 0, step: 0.1 })}
-              {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
+              <div className="grading-config-cell grading-config-cell-full">
+                {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
+              </div>
             </div>
           </div>
 
