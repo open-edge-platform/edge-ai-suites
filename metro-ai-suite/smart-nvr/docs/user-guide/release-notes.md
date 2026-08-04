@@ -12,32 +12,24 @@
 
 **New**
 
-- Distributed, multi-broker deployment: Smart NVR can now connect to multiple independent
-  MQTT brokers at once, running side-by-side with SceneScape (Smart Intersection) in a
-  dual-mode configuration. Adds `brokers` and `vss` REST API endpoints for managing this.
-- Single-command startup: `setup.sh` now brings up the full stack (RTSP streamer,
-  SceneScape, NVR event-router) in one command, including automatic network joining.
+- Distributed, multi-broker deployment: Smart NVR can now connect to multiple independent MQTT brokers at once, running side-by-side with SceneScape (Smart Intersection) in a dual-mode configuration. Adds `brokers` and `vss` REST API endpoints for managing this.
+- Single-command startup: `setup.sh` now brings up the full stack (RTSP streamer, SceneScape, NVR event-router) in one command, including automatic network joining.
 - Migrated Python dependency management from Poetry to `uv`.
 - Added multi-broker SceneScape integration and advanced configuration guides.
 
 **Improved**
 
-- Event-processing pipeline no longer blocks the UI during high event volume: summarization
-  and search-embedding calls now run on background threads, and rule summaries are fetched
-  concurrently instead of serially.
+- Event-processing pipeline no longer blocks the UI during high event volume: summarization and search-embedding calls now run on background threads, and rule summaries are fetched concurrently instead of serially.
 
 **Fixed**
 
-- Fixed MQTT broker TLS/certificate handling in SceneScape dual-mode by migrating the
-  MQTT client to `aiomqtt`, removing an unnecessary client-certificate requirement.
+- Fixed MQTT broker TLS/certificate handling in SceneScape dual-mode by migrating the MQTT client to `aiomqtt`, removing an unnecessary client-certificate requirement.
 
 **Known Issues**
 
 - Scenescape integration is currently not supported when deploying with Helm charts.
-- Smart NVR will not work on either Standalone or Developer Node versions of
-  Edge Microvisor Toolkit due to its incompatibility with Frigate.
-- The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit
-  instability or bugs, impacting event data processing reliability.
+- Smart NVR will not work on either Standalone or Developer Node versions of Edge Microvisor Toolkit due to its incompatibility with Frigate.
+- The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
 ### Version 2026.1.0
 
