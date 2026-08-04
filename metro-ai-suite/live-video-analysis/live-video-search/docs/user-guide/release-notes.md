@@ -35,6 +35,8 @@
 - Fixed Docker Compose backend selection so Milvus deployments do not start or depend on the VDMS service, and stale backend containers are removed when switching backends.
 - Corrected the Helm multimodal DataPrep completion-queue default to satisfy the service's minimum queue size and prevent pod startup validation failures.
 - Aligned the Helm Multimodal Embedding Serving probe timeout with its Compose healthcheck to avoid one-second startup probe timeouts during model loading.
+- Fixed configuration rollouts so a Helm upgrade that changes only ConfigMap values restarts the affected pods; environment variables injected through `envFrom` previously stayed stale until a manual `kubectl rollout restart`.
+- Fixed Milvus data persistence so `global.keepPvc=true` also retains the etcd metadata volume; etcd previously used an ephemeral `emptyDir`, which orphaned the retained segment data on pod rescheduling or reinstall.
 - Fixed the `nvr-event-router` container healthcheck, which now bypasses proxy settings instead of relying on `curl`.
 - Miscellaneous documentation corrections.
 
