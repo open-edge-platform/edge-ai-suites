@@ -46,6 +46,22 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### E. Install LibreOffice (optional, feature-dependent)
+
+LibreOffice (the `soffice` executable) is an **optional** dependency used by two features. Install it only if you enable a feature that needs it:
+
+- **`report` — PDF report export:** The class report is generated as a `.docx` file. When you download it as **PDF**, the server converts the `.docx` using LibreOffice in headless mode (`soffice --convert-to pdf`). If LibreOffice is **not** installed, `.docx` download still works normally and only the PDF download returns `501 (PDF export unavailable)`.
+- **`content_search` — legacy document parsing:** Ingesting legacy Office formats (`.doc`, `.ppt`, `.xls`) requires LibreOffice to convert them. Modern formats (`.docx`, `.pptx`, `.xlsx`) do not need it. If LibreOffice is missing, uploading a legacy format is rejected with a message asking you to install it or convert to a modern format.
+
+If you enable either use case, download and install LibreOffice from [https://www.libreoffice.org/download/](https://www.libreoffice.org/download/), then make sure the `soffice` executable is available on your system `PATH`.
+
+Verify the executable is discoverable:
+
+```python
+import shutil
+shutil.which("soffice") is not None   # should return True
+```
+
 ## Step 2: Configuration
 
 ### A. Enable Feature Configuration
