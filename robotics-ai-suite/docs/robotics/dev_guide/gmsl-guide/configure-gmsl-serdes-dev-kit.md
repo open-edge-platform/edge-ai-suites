@@ -61,6 +61,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | ------------------- | ------------------ | ------------------ |
    | GMSL Camera suffix   | a                  | e                  |
    | Custom HID          | `INTC031M`         | `INTC031M`         |
+   | Position            | Back               |  Front             |
+   | Rotation            | 0                  | 0                  |
    | PPR Value           | 2                  | 2                  |
    | PPR Unit            | 2                  | 2                  |
    | Camera module label | `MAX92764`         | `MAX92764`         |
