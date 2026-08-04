@@ -21,6 +21,7 @@ from components.report_generator.prompts import (
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.artifacts.manifest import write_manifest
 from utils.locks import audio_pipeline_lock
 from components.report_generator.template_manager import (
     get_template_path,
@@ -280,6 +281,8 @@ class ReportGenerator:
                 "performance.report_ttft": f"{round(ttft, 4)}s",
             },
         )
+
+        write_manifest(self.session_id)
 
     def reapply_selection(self, selected_fields) -> dict:
         """Re-render the report for a new field selection — NO LLM, NO data read.
