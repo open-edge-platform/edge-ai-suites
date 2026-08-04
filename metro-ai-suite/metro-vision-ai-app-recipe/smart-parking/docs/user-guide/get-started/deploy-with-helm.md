@@ -169,6 +169,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_1"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -191,6 +195,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_2"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -213,6 +221,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_3"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -235,6 +247,10 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            "frame": {
                "type": "webrtc",
                "peer-id": "object_detection_4"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {

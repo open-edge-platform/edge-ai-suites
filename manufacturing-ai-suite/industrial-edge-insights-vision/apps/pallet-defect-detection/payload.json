@@ -10,6 +10,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -31,6 +35,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -52,6 +60,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {

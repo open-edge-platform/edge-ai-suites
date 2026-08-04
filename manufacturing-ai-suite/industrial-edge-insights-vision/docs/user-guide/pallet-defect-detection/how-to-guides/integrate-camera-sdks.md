@@ -305,6 +305,10 @@ Edit `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/apps
                     "type": "webrtc",
                     "peer-id": "pdd",
                     "overlay": false
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {

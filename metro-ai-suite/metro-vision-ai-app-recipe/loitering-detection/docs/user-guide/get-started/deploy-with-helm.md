@@ -176,6 +176,10 @@ the Node IP. (Total 8 places)
            "frame": {
                "type": "webrtc",
                "peer-id": "object_tracking_1"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -198,6 +202,10 @@ the Node IP. (Total 8 places)
            "frame": {
                "type": "webrtc",
                "peer-id": "object_tracking_2"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -220,6 +228,10 @@ the Node IP. (Total 8 places)
            "frame": {
                "type": "webrtc",
                "peer-id": "object_tracking_3"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -242,6 +254,10 @@ the Node IP. (Total 8 places)
            "frame": {
                "type": "webrtc",
                "peer-id": "object_tracking_4"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {

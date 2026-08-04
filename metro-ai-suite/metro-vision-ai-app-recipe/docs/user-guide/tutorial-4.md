@@ -946,6 +946,10 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
              "frame": {
                  "type": "webrtc",
                  "peer-id": "object_detection_1"
+             },
+             "overlay-properties": {
+                 "font-scale": 1.0,
+                 "draw-txt-bg": false
              }
          },
          "parameters": {
@@ -1011,6 +1015,10 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
              "frame": {
                  "type": "webrtc",
                  "peer-id": "object_detection_1"
+             },
+             "overlay-properties": {
+                 "font-scale": 1.0,
+                 "draw-txt-bg": false
              }
          },
          "parameters": {

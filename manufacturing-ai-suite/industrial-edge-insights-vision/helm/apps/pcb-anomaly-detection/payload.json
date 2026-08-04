@@ -1,7 +1,7 @@
 [
     {
         "pipeline": "pcb_anomaly_detection",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
                 "type": "uri"
@@ -10,6 +10,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "anomaly"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -22,7 +26,7 @@
     },
     {
         "pipeline": "pcb_anomaly_detection_gpu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
                 "type": "uri"
@@ -31,6 +35,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "anomaly"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -43,7 +51,7 @@
     },
     {
         "pipeline": "pcb_anomaly_detection_npu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
                 "type": "uri"
@@ -52,6 +60,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "anomaly"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {

@@ -290,6 +290,10 @@ curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_reco
         "frame": {
             "type": "webrtc",
             "peer-id": "object_detection_1"
+        },
+        "overlay-properties": {
+            "font-scale": 1.0,
+            "draw-txt-bg": false
         }
     },
     "parameters": {

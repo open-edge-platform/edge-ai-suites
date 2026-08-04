@@ -32,6 +32,10 @@ function run_sample() {
         "frame": {
             "type": "webrtc",
             "peer-id": "object_detection_$x"
+        },
+        "overlay-properties": {
+            "font-scale": 1.0,
+            "draw-txt-bg": false
         }
     }
   }

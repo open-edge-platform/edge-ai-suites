@@ -86,6 +86,10 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
                "type": "webrtc",
                "peer-id": "pddopcua",
                "overlay": false
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -119,6 +123,10 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
                "type": "webrtc",
                "peer-id": "anomaly_opcua",
                "overlay": false
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {

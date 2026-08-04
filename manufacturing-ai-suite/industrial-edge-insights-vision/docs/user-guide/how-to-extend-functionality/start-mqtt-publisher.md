@@ -36,6 +36,10 @@ curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_det
             "type": "webrtc",
             "peer-id": "mqttstream",
             "overlay": false
+        },
+        "overlay-properties": {
+            "font-scale": 1.0,
+            "draw-txt-bg": false
         }
     },
     "parameters": {
@@ -67,6 +71,10 @@ curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detec
             "type": "webrtc",
             "peer-id": "mqttstream",
             "overlay": false
+        },
+        "overlay-properties": {
+            "font-scale": 1.0,
+            "draw-txt-bg": false
         }
     },
     "parameters": {

@@ -1,7 +1,7 @@
 [
     {
         "pipeline": "pallet_defect_detection",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
                 "type": "uri"
@@ -10,6 +10,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -22,7 +26,7 @@
     },
     {
         "pipeline": "pallet_defect_detection_gpu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
                 "type": "uri"
@@ -31,6 +35,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {
@@ -43,7 +51,7 @@
     },
     {
         "pipeline": "pallet_defect_detection_npu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
                 "type": "uri"
@@ -52,6 +60,10 @@
                 "frame": {
                     "type": "webrtc",
                     "peer-id": "pdd"
+                },
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
                 }
             },
             "parameters": {

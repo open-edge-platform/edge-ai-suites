@@ -401,7 +401,11 @@ configured Kubernetes cluster.
     Launching pipeline: pallet_defect_detection
     Extracting payload for pipeline: pallet_defect_detection
     Found 1 payload(s) for pipeline: pallet_defect_detection
-    Payload for pipeline 'pallet_defect_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/warehouse.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"pdd"}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/models/pallet-defect-detection/model.xml","device":"CPU"}}}
+    Payload for pipeline 'pallet_defect_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/warehouse.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"pdd"},
+"overlay-properties": {
+    "font-scale": 1.0,
+    "draw-txt-bg": false
+}},"parameters":{"detection-properties":{"model":"/home/pipeline-server/resources/models/models/pallet-defect-detection/model.xml","device":"CPU"}}}
     Posting payload to REST server at http://<host_IP>:30107/pipelines/user_defined_pipelines/pallet_defect_detection
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```
@@ -421,7 +425,11 @@ configured Kubernetes cluster.
     Launching pipeline: pcb_anomaly_detection
     Extracting payload for pipeline: pcb_anomaly_detection
     Found 1 payload(s) for pipeline: pcb_anomaly_detection
-    Payload for pipeline 'pcb_anomaly_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"anomaly"}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml","device":"CPU"}}}
+    Payload for pipeline 'pcb_anomaly_detection' {"source":{"uri":"file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi","type":"uri"},"destination":{"frame":{"type":"webrtc","peer-id":"anomaly"},
+"overlay-properties": {
+    "font-scale": 1.0,
+    "draw-txt-bg": false
+}},"parameters":{"classification-properties":{"model":"/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml","device":"CPU"}}}
     Posting payload to REST server at http://<host_IP>:8080/pipelines/user_defined_pipelines/pcb_anomaly_detection
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
@@ -709,6 +717,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
            "frame": {
                "type": "webrtc",
                "peer-id": "pdds3"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -734,6 +746,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
            "frame": {
                "type": "webrtc",
                "peer-id": "anomaly_s3"
+           },
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
            }
        },
        "parameters": {
@@ -822,6 +838,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "frame": {
                    "type": "webrtc",
                    "peer-id": "pdd"
+               },
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
                }
                },
                "parameters": {
@@ -852,6 +872,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "frame": {
                    "type": "webrtc",
                    "peer-id": "anomaly"
+               },
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
                }
                },
                "parameters": {
@@ -964,6 +988,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "frame": {
                    "type": "webrtc",
                    "peer-id": "pdd"
+               },
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
                }
                },
                "parameters": {
@@ -994,6 +1022,10 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "frame": {
                    "type": "webrtc",
                    "peer-id": "anomaly"
+               },
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
                }
                },
                "parameters": {
