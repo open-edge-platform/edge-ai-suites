@@ -65,8 +65,6 @@ SOURCE_ARG  = os.environ.get("SOURCE_ARG", VIDEO)
 RESPAWN_MAX     = int(os.environ.get("RESPAWN_MAX", "6"))
 RESPAWN_WINDOW  = float(os.environ.get("RESPAWN_WINDOW_S", "10"))
 # ---- Case 4: core-pinning + Basler fixed-camera tuning --------------------
-_CAM_CORES = os.environ.get("PIPELINE_CAMERA_CORES", "").strip()
-_CAM_PRIO  = os.environ.get("PIPELINE_CAMERA_RT_PRIORITY", "").strip()
 _GST_CORES = os.environ.get("PIPELINE_GST_CORES", "").strip()
 _GST_PRIO  = os.environ.get("PIPELINE_GST_RT_PRIORITY", "").strip()
 BASLER_FIXED_CAMERA = os.environ.get("BASLER_FIXED_CAMERA", "0").strip() not in {"0", "false", "no"}
@@ -162,14 +160,9 @@ def _spawn(
             parts.append(f"chrt -f {prio}")
         return " ".join(parts)
 
-    cam_prefix = _pinning_prefix(_CAM_CORES, _CAM_PRIO)
     gst_prefix = _pinning_prefix(_GST_CORES, _GST_PRIO)
-    if _CAM_PRIO and not _CAM_CORES:
-        log.warning("[case4] PIPELINE_CAMERA_RT_PRIORITY set but PIPELINE_CAMERA_CORES is empty; chrt will apply without cpu affinity")
     if _GST_PRIO and not _GST_CORES:
         log.warning("[case4] PIPELINE_GST_RT_PRIORITY set but PIPELINE_GST_CORES is empty; chrt will apply without cpu affinity")
-    if int(_CAM_PRIO) > 90 if _CAM_PRIO.isdigit() else False:
-        log.warning("[case4] PIPELINE_CAMERA_RT_PRIORITY=%s > 90; may starve host critical threads", _CAM_PRIO)
     if int(_GST_PRIO) > 90 if _GST_PRIO.isdigit() else False:
         log.warning("[case4] PIPELINE_GST_RT_PRIORITY=%s > 90; may starve host critical threads", _GST_PRIO)
 
@@ -194,10 +187,8 @@ def _spawn(
 
     log.info("[pipeline] generated cmd: %s", cmd)
     log.info(
-        "[pipeline] knobs: cam_cores=%s cam_prio=%s gst_cores=%s gst_prio=%s "
+        "[pipeline] knobs: gst_cores=%s gst_prio=%s "
         "basler_fixed=%s basler_exposure_us=%s basler_gain=%s basler_pixel_format=%s",
-        _CAM_CORES or "<unset>",
-        _CAM_PRIO  or "<unset>",
         _GST_CORES or "<unset>",
         _GST_PRIO  or "<unset>",
         BASLER_FIXED_CAMERA,

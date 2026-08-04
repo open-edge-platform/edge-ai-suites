@@ -52,10 +52,40 @@ The presence of `models/yolo11n_polyp/best_openvino_model/best.xml` **and** `mod
 ## 3. Bring the stack up
 
 ```bash
+# Live Basler camera (P-core pinned, free-running sink).
+# - SOURCE_ARG: the camera serial (run `make list-cameras` to find it).
+# - PIPELINE_GST_CORES: P-core set for gst-launch — use 3-5 for Core Ultra
+#   Series 2, 0-3 for Core Ultra Series 3.
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        PIPELINE_GST_CORES=3-5 PIPELINE_SINK_SYNC=false
+
+# or the default recorded-video file source
 make up
 ```
 
-This runs `docker compose up -d --build` with `RENDER_GID` and `VIDEO_GID` auto-detected from the host. Compose builds the backend image (torch+xpu wheels + OpenVINO + Ultralytics) and the UI image (Vite build → nginx).
+By default `make up` runs in **registry mode** (`REGISTRY=true`): it pulls the
+prebuilt images at `TAG` (default `2026.1.0`) and starts them with `RENDER_GID`
+and `VIDEO_GID` auto-detected from the host.
+
+To **build every image from source** instead (backend = torch+xpu wheels +
+OpenVINO + Ultralytics, UI = Vite build → nginx, pipeline = DL Streamer +
+gencamsrc), pass `REGISTRY=false`:
+
+```bash
+make up REGISTRY=false
+```
+
+Other useful overrides:
+
+```bash
+# Pull from a specific registry / namespace and tag
+make up REGISTRY_URL=intel/ TAG=2026.1.0
+
+# Live Basler camera, build from source
+# (PIPELINE_GST_CORES: 3-5 for Core Ultra Series 2, 0-3 for Core Ultra Series 3)
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        PIPELINE_GST_CORES=3-5 PIPELINE_SINK_SYNC=false REGISTRY=false
+```
 
 The `surgical-ui` service declares `depends_on: surgical-backend: condition: service_healthy`, so it will not start listening on `:8080` until the backend passes its `/api/readiness` HEALTHCHECK. The backend healthcheck uses a **45-minute `start_period`** to absorb first-boot training.
 

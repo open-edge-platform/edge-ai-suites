@@ -39,7 +39,7 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
-    image: surgical-pipeline:dev
+    image: intel/surgical-pipeline:${TAG}
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
@@ -68,7 +68,7 @@ services:
 
     # SYS_NICE is required for `chrt -f` (SCHED_FIFO) inside the container.
     # Without it, chrt fails with EPERM and the pipeline exits immediately
-    # when PIPELINE_CAMERA_RT_PRIORITY or PIPELINE_GST_RT_PRIORITY are set.
+    # when PIPELINE_GST_RT_PRIORITY is set.
     cap_add:
       - SYS_NICE
 
@@ -104,9 +104,7 @@ services:
       SOURCE_KIND: ${SOURCE_KIND:-file}
       SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}
       # Case 4 — core-pinning + Basler fixed-camera tuning (all unset by default).
-      PIPELINE_CAMERA_CORES:       ${PIPELINE_CAMERA_CORES:-}
       PIPELINE_GST_CORES:          ${PIPELINE_GST_CORES:-}
-      PIPELINE_CAMERA_RT_PRIORITY: ${PIPELINE_CAMERA_RT_PRIORITY:-}
       PIPELINE_GST_RT_PRIORITY:    ${PIPELINE_GST_RT_PRIORITY:-}
       BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
       BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
@@ -164,7 +162,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: surgical-backend:dev
+    image: intel/surgical-backend:${TAG}
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
@@ -245,7 +243,7 @@ services:
     build:
       context: ./ui
       dockerfile: Dockerfile
-    image: surgical-ui:dev
+    image: intel/surgical-ui:${TAG}
     container_name: surgical-ui
     restart: unless-stopped
     networks: [surgical-internal]

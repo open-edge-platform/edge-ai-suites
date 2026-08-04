@@ -369,8 +369,8 @@ curl -X POST http://localhost:8080/api/start
 ### Resulting spawned command (from container INFO log)
 
 > **Note:** The Basler source is driven by `gencamsrc` directly inside a single
-> `gst-launch-1.0` process. `PIPELINE_CAMERA_CORES` / `PIPELINE_CAMERA_RT_PRIORITY`
-> are accepted but are no-ops with `gencamsrc`.
+> `gst-launch-1.0` process, so only the `PIPELINE_GST_CORES` /
+> `PIPELINE_GST_RT_PRIORITY` pinning knobs apply.
 
 ```text
 taskset -c 3-4 chrt -f 70 gst-launch-1.0 \
@@ -408,9 +408,7 @@ Container INFO log knobs lines:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `PIPELINE_CAMERA_CORES` | *(unset)* | *(no-op with gencamsrc; kept for backward compat)* |
 | `PIPELINE_GST_CORES` | *(unset)* | `taskset -c` core list for `gst-launch-1.0` (e.g. `3-4`) |
-| `PIPELINE_CAMERA_RT_PRIORITY` | *(unset)* | *(no-op with gencamsrc; kept for backward compat)* |
 | `PIPELINE_GST_RT_PRIORITY` | *(unset)* | `chrt -f` SCHED_FIFO priority for gst-launch, 1–99 (e.g. `70`) |
 | `PIPELINE_IDENTITY` | `0` | `1` inserts `identity` in the chain (bench scripts require it when `frame_limit>0`) |
 | `BASLER_FIXED_CAMERA` | `0` | `1` disables ExposureAuto/GainAuto and applies the fixed values below |
@@ -418,8 +416,8 @@ Container INFO log knobs lines:
 | `BASLER_GAIN` | *(unset)* | Fixed sensor gain in dB (only when `BASLER_FIXED_CAMERA=1`) |
 
 Notes
-- `PIPELINE_CAMERA_CORES` / `PIPELINE_CAMERA_RT_PRIORITY` are no-ops because with
-  `gencamsrc` there is no separate camera process — the sensor runs inside `gst-launch-1.0`.
+- With `gencamsrc` there is no separate camera process — the sensor runs inside
+  `gst-launch-1.0`, so only `PIPELINE_GST_CORES` / `PIPELINE_GST_RT_PRIORITY` apply.
 - `BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=8000` is the **only reliable way** to
   guarantee 60 fps across varying room lighting. Auto-exposure with `ExposureAutoUpperLimit`
   at camera maximum will silently reduce frame rate to ~7 fps in dim environments.

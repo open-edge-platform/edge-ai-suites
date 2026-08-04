@@ -8,6 +8,24 @@ SHELL := /bin/bash
 UI_HOST_PORT       ?= 8080
 DETECTION_DEVICE   ?= GPU
 COMPOSE            ?= docker compose
+
+# ---- Image source: registry pull vs build-from-source ---------------------
+# REGISTRY=true  (default) runs prebuilt images (pulled from the registry).
+# REGISTRY=false builds every image locally from its Dockerfile.
+#   make up                   # pull prebuilt images at $(TAG)
+#   make up REGISTRY=false     # build all images from source
+REGISTRY      ?= true
+# Optional registry / namespace prefix (include the trailing slash), e.g.
+#   REGISTRY_URL=intel/   or   REGISTRY_URL=myreg.example.com:5000/intel/
+REGISTRY_URL  ?=
+TAG           ?= latest
+export TAG
+# Image references shared with docker-compose.yaml. Same names in both modes;
+# only the build-vs-pull action differs. Override individually if needed.
+
+# Registry mode lets `docker compose up` pull the images; source mode adds
+# `--build` so compose builds them from the Dockerfiles.
+_BUILD_FLAG := $(if $(filter true,$(REGISTRY)),,--build)
 # Runtime pipeline knobs (overridable via `make up VAR=...`).
 SOURCE_KIND           ?= file
 SOURCE_ARG            ?=
@@ -88,9 +106,7 @@ endif
 # CPU affinity (taskset -c) and RT priority (chrt -f) for each leg of the pipe.
 # Both parts of each pair must be set for the wrapper to apply; setting only
 # one of the pair is silently ignored (prevents half-configured taskset runs).
-PIPELINE_CAMERA_CORES         ?=
 PIPELINE_GST_CORES            ?=
-PIPELINE_CAMERA_RT_PRIORITY   ?=
 PIPELINE_GST_RT_PRIORITY      ?=
 # Basler fixed-camera tuning. BASLER_FIXED_CAMERA=1 disables auto-exposure /
 # auto-gain; the specific values below are then applied. Default (0) keeps the
@@ -153,7 +169,7 @@ config:  ## Validate docker-compose configuration
 	@$(COMPOSE) config >/dev/null && echo "[config] docker-compose.yaml is valid"
 
 .PHONY: build
-build:  ## Build all service images
+build:  ## Build all service images from source (tags them at $(TAG))
 	$(COMPOSE) build
 
 # Print the URLs the user can hit. `docker compose up -d` already blocks on
@@ -184,15 +200,16 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) \
 	PIPELINE_IDENTITY=$(PIPELINE_IDENTITY) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
-	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
-	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
 	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
+		$(COMPOSE) $(_COMPOSE_FILES) up -d $(_BUILD_FLAG)
+	@echo "[up] image mode: $(if $(filter true,$(REGISTRY)),REGISTRY (prebuilt images @ $(TAG)),SOURCE (built from Dockerfiles))"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
 	$(_print_urls)
@@ -212,8 +229,8 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) \
 	PIPELINE_IDENTITY=$(PIPELINE_IDENTITY) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
 	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
-	PIPELINE_CAMERA_CORES=$(PIPELINE_CAMERA_CORES) PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
-	PIPELINE_CAMERA_RT_PRIORITY=$(PIPELINE_CAMERA_RT_PRIORITY) PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
 	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
@@ -231,14 +248,14 @@ show-cores:  ## Show P-core / E-core CPU sets for optimal core-pinning (Case 4)
 	N=$$(nproc 2>/dev/null || echo '?'); \
 	printf '\n[cores] all CPUs        : %s  (nproc=%s)\n' "$$ALL" "$$N"; \
 	if [ -n "$$PCORE" ]; then \
-	  printf '[cores] P-cores (perf)  : %s  <-- use for PIPELINE_CAMERA_CORES / PIPELINE_GST_CORES\n' "$$PCORE"; \
+	  printf '[cores] P-cores (perf)  : %s  <-- use for PIPELINE_GST_CORES\n' "$$PCORE"; \
 	  printf '[cores] E-cores (effic) : %s\n' "$$ECORE"; \
 	  FIRST=$$(echo "$$PCORE" | grep -oE '^[0-9]+'); \
 	  REST=$$(echo "$$PCORE" | sed "s/^[0-9]*-*[0-9]*$$/&/" | \
 	          awk -F'-' -v f="$$FIRST" \
 	          '{if($$1==f && $$2!="") printf "%d-%s",$$1+1,$$2; else printf "%d",$$1+1}'); \
-	  printf '[cores] hint: PIPELINE_CAMERA_CORES=%s PIPELINE_GST_CORES=%s\n' "$$FIRST" "$$REST"; \
-	  printf '              PIPELINE_CAMERA_RT_PRIORITY=80 PIPELINE_GST_RT_PRIORITY=70\n'; \
+	  printf '[cores] hint: PIPELINE_GST_CORES=%s\n' "$$PCORE"; \
+	  printf '              PIPELINE_GST_RT_PRIORITY=70\n'; \
 	else \
 	  printf '[cores] no P/E core split detected (non-hybrid CPU or older kernel)\n'; \
 	  printf '[cores] all cores are equivalent; use taskset freely.\n'; \
