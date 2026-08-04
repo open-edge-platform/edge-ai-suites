@@ -16,7 +16,7 @@ export interface IWorkerService {
 }
 
 export interface MonitorCtlParams {
-  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list";
+  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list" | "prefilter_options";
   monitor_id?: string;
   source_url?: string;
   name?: string;
@@ -163,6 +163,24 @@ async function analyticsSourceExists(analyticsUrl: string, monitorId: string): P
     if (err.message?.includes("returned HTTP")) throw err;
     throw new Error(`videostream-analytics (${analyticsUrl}) unreachable: ${err.message}`);
   }
+}
+
+/**
+ * Fetch the prefilter model's capabilities (selectable `target_classes`) from
+ * videostream-analytics. Returns the raw JSON: `{ enabled, model_path,
+ * class_names, labels_source, available_devices }`. `labels_source` is
+ * `embedded | fallback_coco | unavailable` — only `embedded` names are
+ * authoritative; otherwise the list is a COCO guess the caller must confirm.
+ */
+async function analyticsPrefilterOptions(analyticsUrl: string): Promise<unknown> {
+  const resp = await fetch(`${analyticsUrl}/capabilities/prefilter`, {
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => "");
+    throw new Error(`analytics GET /capabilities/prefilter failed HTTP ${resp.status}: ${t.slice(0, 200)}`);
+  }
+  return resp.json();
 }
 
 async function analyticsDelete(analyticsUrl: string, monitorId: string): Promise<void> {
@@ -417,6 +435,12 @@ export async function monitorCtl(
       } catch (err: any) {
         return { ...monitor, analyticsReachable: false, analyticsStatus: null, analyticsError: err?.message ?? "unreachable" };
       }
+    }
+
+    // -----------------------------------------------------------------------
+    case "prefilter_options": {
+      // Read-only capability query — no monitor_id / DB / worker involvement.
+      return await analyticsPrefilterOptions(analyticsUrl);
     }
 
     // -----------------------------------------------------------------------
