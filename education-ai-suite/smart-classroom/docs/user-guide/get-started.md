@@ -44,6 +44,10 @@ The setup script will:
 
 4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
 
+> **Note:** Speaker diarization (identifying who is speaking) is optional and requires a one-time
+> Hugging Face access token setup — see
+> [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
+
 ## Step 3: Access the Application
 
 Once all services are running, open your browser:
@@ -111,9 +115,8 @@ The startup script performs:
 Advanced Setup guide covers:
 
 - **Step 1:** Install Dependencies (FFmpeg, DL Streamer, Python, Content Search)
-- **Step 2:** Configuration (config.yaml settings)
+- **Step 2:** Configuration (config.yaml settings, including optional [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional))
 - **Step 3-6:** Run Services & Access UI
-- **Step 7:** Speaker Diarization Setup (Optional)
 - **[Troubleshooting](advance-setup-guide.md#troubleshooting)** — solutions for common setup and runtime issues
 - **[Known Issues](advance-setup-guide.md#known-issues)** — current limitations and workarounds
 - **[Uninstall the Application](advance-setup-guide.md#uninstall-the-application)** — steps to cleanly remove the environment and models
