@@ -15,6 +15,10 @@ offloading in the [Smart Parking](https://github.com/open-edge-platform/edge-ai-
 
 All three parts use [Benchmark Performance](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/how-to-guides/benchmark.md) as the common source for environment preparation, script execution, and KPI interpretation. Refer to that guide before running any part of this experiment.
 
+- CPU telemetry in this document is captured using the `htop` utility.
+- GPU telemetry tool used in this document: [qmassa](https://github.com/ulissesf/qmassa/tree/main/qmassa)
+- NPU telemetry tool used in this document: [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/npu-monitor-tool)
+
 ---
 
 ## Part 1: GPU Baseline - Peak Stream Density (SD)
@@ -28,16 +32,6 @@ Use the `yolov11s_gpu` pipeline as defined in
 [smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
 The pipeline uses the original configuration; note that metro pipelines are latency-focused by default.
 
-
-
-<!-- | Parameter | Value | Purpose |
-|---|---|---|
-| `device` | `GPU` | Runs inference on GPU via OpenVINO |
-| `batch-size` | `8` | Improves frame processing parallelism |
-| `nireq` | `2` | Keeps multiple inference requests in flight |
-| `ie-config` | `GPU_THROUGHPUT_STREAMS=2` | Enables parallel GPU execution streams |
-| `pre-process-backend` | `va-surface-sharing` | Reduces copy overhead between decode and inference |
-| `inference-interval` | `3` | Balances compute demand and detection cadence | -->
 
 ### Run the GPU Stream Density Benchmark
 
@@ -60,7 +54,7 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ### Hardware Behavior Notes (GPU Only)
 
 - **Observation at achieved stream density**: At 9 streams, the benchmark remained stable above target FPS while GPU engines showed sustained high activity in the inference and media path.
-- **Observed GPU telemetry from qmassa at achieved stream density**: `CCS: 99.6%`, `VCS: 24.1%`, `VECS: 28.9%`.
+- **Observed GPU telemetry from [qmassa](https://github.com/ulissesf/qmassa/tree/main/qmassa) at achieved stream density**: `CCS: 99.6%`, `VCS: 24.1%`, `VECS: 28.9%`.
 - **Metric relevance for the GPU pipeline**:
 	- `CCS` reflects compute engine pressure and is most directly tied to inference-stage execution.
 	- `VCS` reflects media codec engine activity and maps to video decode stages feeding the pipeline.
@@ -109,8 +103,8 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ### Hardware Behavior Notes (NPU Only)
 
 - **Observation at achieved stream density**: At 7 streams, the NPU run remained stable above target FPS while the accelerator showed sustained activity.
-- **Observed NPU telemetry from the monitor at achieved stream density**: `NPU Utilization: 86%`.
-- **Observed GPU telemetry from qmassa during the NPU run**: `VCS: 18.5%`, `VECS: 22.2%`.
+- **Observed NPU telemetry from [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/npu-monitor-tool) at achieved stream density**: `NPU Utilization: 86%`.
+- **Observed GPU telemetry from [qmassa](https://github.com/ulissesf/qmassa/tree/main/qmassa) during the NPU run**: `VCS: 18.5%`, `VECS: 22.2%`.
 - **Metric relevance for the NPU pipeline**:
 	- `NPU Utilization` reflects how heavily the NPU execution path is loaded during **inference**.
 	- `VCS: 18.5%` and `VECS: 22.2%` are the GPU-side **decode** and **frame-handling** signals visible during the same run.
@@ -118,7 +112,7 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ![NPU telemetry monitor at 7 streams](../_assets/npu-val-add/npu_7_monitor_focus.png)	
 
-*NPU telemetry monitor at 7 streams*
+*NPU telemetry (npu-monitor-tool) at 7 streams*
 
 ![GPU/qmassa telemetry during NPU baseline run](../_assets/npu-val-add/npu_7_qmassa_focus.png)
 
@@ -132,6 +126,8 @@ This section evaluates the best performance when **GPU and NPU pipelines run sim
 
 - For the combined run, reserve 2 streams of headroom from each standalone ceiling (referred to as **backoff**) so both pipelines can run in parallel without forcing either path to its isolated limit. Applying this backoff keeps system power within the same range observed in the standalone runs.
 
+- In this document, `GPU!NPU` is shorthand for the combined run (GPU and NPU together), not logical negation.
+ 
 ### Run the Combined Stream Density Benchmark
 
 Run the combined workflow with 7 GPU streams and 5 NPU streams:
@@ -170,13 +166,13 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ### Supporting Screenshots
 
-![Combined GPU telemetry at 7 GPU streams](<../_assets/npu-val-add/gpu_npu_7_5(gpu)_focus.png>)
+![Combined GPU telemetry at 7 GPU streams](<../_assets/npu-val-add/gpu_npu_7_5(qmassa).png>)
 
 *Combined run, GPU telemetry (qmassa) at 7 GPU streams*
 
 ![Combined NPU telemetry at 5 NPU streams](<../_assets/npu-val-add/gpu_npu_7_5(npu).v3.png>)
 
-*Combined NPU telemetry at 5 NPU streams*
+*Combined NPU telemetry (npu-monitor-tool) at 5 NPU streams*
 
 ---
 

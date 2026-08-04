@@ -358,7 +358,7 @@ run_workload_with_retries () {
   echo "$throughput_max"
 }
 
-# Starts multiple pipeline types concurrently (no binary search; stream counts are fixed).
+# Starts one or more pipeline types in nstreams mode (no binary search; stream counts are fixed).
 function run_concurrent_workload() {
   local pipelines_csv=$1
   local nstreams_csv=$2
@@ -414,9 +414,6 @@ function run_concurrent_workload() {
       local response_body
       response_body=$(echo "$response" | sed '/HTTP_CODE:/d')
 
-      echo "DEBUG - HTTP Code: $http_code" >&2
-      echo "DEBUG - Response: $response_body" >&2
-
       if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
         echo >&2
         echo "Error: Failed to start '$pname' stream $x (HTTP $http_code): $response_body" >&2
@@ -446,7 +443,7 @@ function run_concurrent_workload() {
   fi
   echo " All $total_streams pipeline(s) running." >&2
 
-  echo ">>>>> Monitoring all $total_streams concurrent stream(s) for $MAX_DURATION seconds..." >&2
+  echo ">>>>> Monitoring all $total_streams nstreams-mode stream(s) for $MAX_DURATION seconds..." >&2
   local start_time=$SECONDS
   while (( SECONDS - start_time < MAX_DURATION )); do
     local elapsed_time=$((SECONDS - start_time))
@@ -502,28 +499,29 @@ function usage() {
     echo "Usage (stream-density mode):"
     echo "  $0 -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
     echo
-    echo "Usage (concurrent multi-pipeline mode):"
+    echo "Usage (nstreams mode):"
     echo "  $0 -p <p1> [p2 ...] -nstreams <N1> [N2 ...] [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
     echo "  Example: $0 -p yolov11s_gpu yolov11s_npu -nstreams 9 7"
     echo
     echo "Arguments:"
-    echo "  -p <pipeline_name>   : (Required) Pipeline name(s). Provide multiple names for concurrent mode."
+    echo "  -p <pipeline_name>   : (Required) Pipeline name(s). Provide one or more names for nstreams mode."
     echo "  -l <lower_bound>     : (Required for stream-density mode) Starting lower bound for stream count."
     echo "  -u <upper_bound>     : (Required for stream-density mode) Starting upper bound for stream count."
-    echo "  -nstreams <N1> [N2.] : (Required for concurrent mode) Fixed stream count per pipeline, in the same order as -p."
-    echo "  -t <target_fps>      : Target FPS for stream-density mode (default: 14.95)."
+    echo "  -nstreams <N1> [N2 ...] : (Required for nstreams mode) Fixed stream count per pipeline, in the same order as -p."
+    echo "  -t <target_fps>      : Target FPS threshold (default: 14.95); used for stream-density mode and accepted in nstreams mode for CLI consistency."
     echo "  -i <interval>        : Monitoring duration in seconds for each test run (default: 60)."
     echo "  -c <throughput_percentile> : Throughput percentile for KPI calculation (default: 0.9)."
     exit 1
 }
 
 # ---------------------------------------------------------------------------
-# Concurrent multi-pipeline mode: triggered by the presence of -nstreams flag.
-# Parses args manually, runs all pipeline types simultaneously, then exits.
+# Nstreams mode: triggered by the presence of -nstreams flag.
+# Parses args manually, runs one or more pipeline types simultaneously, then exits.
 # ---------------------------------------------------------------------------
 if [[ " $* " == *" -nstreams "* ]]; then
   _multi_pipelines=()
   _multi_nstreams=()
+  _multi_target_fps="14.95"
   MAX_DURATION=60
   THROUGHPUT_PERCENTILE="0.9"
 
@@ -543,7 +541,7 @@ if [[ " $* " == *" -nstreams "* ]]; then
           _multi_nstreams+=("${!_idx}")
           _idx=$((_idx + 1))
         done ;;
-      -t) _idx=$((_idx + 1)); _idx=$((_idx + 1)) ;;
+      -t) _idx=$((_idx + 1)); _multi_target_fps="${!_idx}"; _idx=$((_idx + 1)) ;;
       -i) _idx=$((_idx + 1)); MAX_DURATION="${!_idx}"; _idx=$((_idx + 1)) ;;
       -c) _idx=$((_idx + 1)); THROUGHPUT_PERCENTILE="${!_idx}"; _idx=$((_idx + 1)) ;;
       *)  _idx=$((_idx + 1)) ;;
@@ -589,7 +587,7 @@ if [[ " $* " == *" -nstreams "* ]]; then
     _total_concurrent=$((_total_concurrent + _n))
   done
 
-  echo ">>>>> Starting concurrent pipeline workload:" >&2
+  echo ">>>>> Starting nstreams-mode pipeline workload:" >&2
   for _i in "${!_multi_pipelines[@]}"; do
     echo "       ${_multi_pipelines[$_i]}: ${_multi_nstreams[$_i]} stream(s)" >&2
   done
@@ -600,7 +598,7 @@ if [[ " $* " == *" -nstreams "* ]]; then
       "$payload_file"; then
     echo >&2
     echo "======================================================" >&2
-    echo "✅ FINAL RESULT: Concurrent Pipeline Run Completed!" >&2
+    echo "✅ FINAL RESULT: Nstreams-mode Pipeline Run Completed!" >&2
     echo "   Pipelines : ${_multi_pipelines[*]}" >&2
     echo "   Streams   : ${_multi_nstreams[*]}" >&2
     echo "   Total     : $_total_concurrent streams" >&2
@@ -609,7 +607,7 @@ if [[ " $* " == *" -nstreams "* ]]; then
     echo "KPIs (all $_total_concurrent streams combined):"
     cat "benchmark-multi/kpi.txt" 2>/dev/null
   else
-    echo "❌ FINAL RESULT: Concurrent pipeline run failed." >&2
+    echo "❌ FINAL RESULT: Nstreams-mode pipeline run failed." >&2
     exit 1
   fi
   exit 0
