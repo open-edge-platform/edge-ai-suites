@@ -1,4 +1,3 @@
-# apps/weld-quality-monitoring/configs/agents.yaml
 use_case_id: weld-quality-monitoring
 
 analysis:

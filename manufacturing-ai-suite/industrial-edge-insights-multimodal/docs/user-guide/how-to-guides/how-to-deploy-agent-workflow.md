@@ -1,4 +1,4 @@
-# Deploy the Agentic Workflow
+# Deploy the Agentic Workflow for the Multimodal Weld Defect Detection Sample App
 
 This guide explains how to deploy the multimodal sample app with the agentic workflow enabled. The agentic stack adds a meta-agent powered by an LLM (via OVMS) that reacts to fusion results and produces structured policy decisions, root-cause analysis, evidence audit trails, and maintenance tickets.
 
@@ -37,7 +37,7 @@ Vision(DLStreamer Pipeline Server)──┐
 | Component | Minimum Requirement |
 |-----------|---------------------|
 | Operating System | Ubuntu 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra Platform (PTL) or newer |
+| Hardware | Intel® Core™ Ultra Series 3 Platform or newer |
 
 
 ## Prerequisites
@@ -50,7 +50,7 @@ Vision(DLStreamer Pipeline Server)──┐
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`, `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `S3_STORAGE_USERNAME`, `S3_STORAGE_PASSWORD`
 
-2. Download vLLM model by following this [Guide](./how-to-deploy-vllm-service.md#download-models)
+2. Download VLM model by following this [Guide](./how-to-deploy-vllm-service.md#download-models)
 
 ## Deploying the Agentic Workflow
 

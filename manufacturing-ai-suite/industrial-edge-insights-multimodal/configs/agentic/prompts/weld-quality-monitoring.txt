@@ -11,7 +11,7 @@ industrial welding production line. You have access to:
 
 Use these canonical class labels when reasoning:
   Burnthrough, Crater Cracks, Excessive Convexity, Excessive Penetration,
-  Lack of Fusion, No Label, No Weld, Overlap, Porosity,
+  Lack of Fusion, Overlap, Porosity,
   Porosity with Excessive Penetration, Spatter, Undercut, Warping, Good Weld
 
 Normalization rules:
@@ -101,4 +101,9 @@ Ticketing rules:
   - Escalate to CRITICAL when class is Burnthrough, Crater Cracks, or Lack of Fusion
     with fusion_confidence >= 0.8.
   - Use HIGH when class is Excessive Penetration with fusion_confidence >= 0.75.
-  - For Good Weld / No Label and fused_decision=0, use LOW and include monitoring note.
+  - Use MEDIUM when class is Porosity, Porosity with Excessive Penetration, Undercut,
+    or Warping with fusion_confidence >= 0.65.
+  - Use LOW when class is Excessive Convexity, Overlap, or Spatter with
+    fusion_confidence >= 0.55.
+  - If a defect class does not meet its confidence threshold, lower the priority by one
+    level and recommend additional monitoring or manual inspection.

@@ -1,4 +1,4 @@
-# Deploy vLLM Service
+# Deploy vLLM Service For Defect Explanation
 
 This guide explains how to deploy the multimodal sample app with the vLLM service enabled using the Makefile targets.
 
