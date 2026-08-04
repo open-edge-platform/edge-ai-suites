@@ -10,7 +10,7 @@ the blueprint-specific changes are:
 
   1. ``--use-case`` flag selects the use case (default: pipeline-defect-detection)
   2. The generated sample video is placed at
-     ``apps/<use-case>/resources/videos/sample.mp4`` so DL Streamer can read
+     ``apps/<use-case>/resources/videos/datastream.mp4`` so DL Streamer can read
      it immediately after running this script.
   3. Training data is written to ``datasets/<use_case>/`` (YOLO format).
 
@@ -21,7 +21,7 @@ Supported use cases
         datasets/pipeline_defect_detection/images/{train,val}/
         datasets/pipeline_defect_detection/labels/{train,val}/
       Creates the inference video at:
-        apps/pipeline-defect-detection/resources/videos/sample.mp4
+        apps/pipeline-defect-detection/resources/videos/datastream.mp4
 
   gas-detection
       Stratified 80/20 split per gas class (Mixture, NoGas, Perfume, Smoke):
@@ -359,7 +359,7 @@ def main():
     download_dir = output_dir / "_raw_download"
 
     # Blueprint: video output goes directly into the DL Streamer resources dir
-    video_output_path = Path("apps") / args.use_case / "resources" / "videos" / "sample.mp4"
+    video_output_path = Path("apps") / args.use_case / "resources" / "videos" / "datastream.mp4"
 
     print(DISCLAIMER)
     print("=" * 70)

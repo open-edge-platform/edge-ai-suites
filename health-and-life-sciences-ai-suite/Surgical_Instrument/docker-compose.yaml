@@ -39,7 +39,7 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
-    image: surgical-pipeline:dev
+    image: intel/surgical-pipeline:${TAG}
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
@@ -66,6 +66,12 @@ services:
       - 'c 81:* rmw'
       - 'c 189:* rmw'
 
+    # SYS_NICE is required for `chrt -f` (SCHED_FIFO) inside the container.
+    # Without it, chrt fails with EPERM and the pipeline exits immediately
+    # when PIPELINE_GST_RT_PRIORITY is set.
+    cap_add:
+      - SYS_NICE
+
     volumes:
       - ./models:/models:ro
       - ./videos:/videos:ro
@@ -73,6 +79,7 @@ services:
       - ${XAUTHORITY:-/dev/null}:/root/.Xauthority:ro
 
     environment:
+      CORE_PINNING: p-cores
       VIDEO:       /videos/polyp_test.mp4
       IR_XML:      /models/yolo11n_polyp/best_openvino_model/best.xml
       # Customer requirement: 1080p @ 60 fps camera-to-screen.
@@ -84,6 +91,30 @@ services:
       # PIPELINE_DISPLAY_VIEW=1 to re-enable popup rendering on desktop hosts.
       PIPELINE_DISPLAY_VIEW: ${PIPELINE_DISPLAY_VIEW:-0}
       PIPELINE_VIDEO_SINK: ${PIPELINE_VIDEO_SINK:-autovideosink}
+      PIPELINE_SINK_SYNC: ${PIPELINE_SINK_SYNC:-}
+      PIPELINE_PREPROC_BACKEND: ${PIPELINE_PREPROC_BACKEND:-}
+      PIPELINE_IE_CONFIG: ${PIPELINE_IE_CONFIG:-PERFORMANCE_HINT=LATENCY}
+      PIPELINE_FPSCOUNTER: ${PIPELINE_FPSCOUNTER:-1}
+      SCHEDULING_POLICY: ${SCHEDULING_POLICY:-}
+      BATCH_SIZE: ${BATCH_SIZE:-}
+      DETECT: ${DETECT:-1}
+      WATERMARK: ${WATERMARK:-1}
+      PIPELINE_IDENTITY: ${PIPELINE_IDENTITY:-0}
+      MINIMAL: ${MINIMAL:-0}
+      SOURCE_KIND: ${SOURCE_KIND:-file}
+      SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}
+      # Case 4 — core-pinning + Basler fixed-camera tuning (all unset by default).
+      PIPELINE_GST_CORES:          ${PIPELINE_GST_CORES:-}
+      PIPELINE_GST_RT_PRIORITY:    ${PIPELINE_GST_RT_PRIORITY:-}
+      BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
+      BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
+      BASLER_GAIN:                 ${BASLER_GAIN:-}
+      BASLER_PIXEL_FORMAT:         ${BASLER_PIXEL_FORMAT:-bayerbggr}
+      # Startup GPU warmup: pre-warms OpenVINO/GPU state so the first /start
+      # after a container (re)create runs at full fps instead of a cold ~16 fps.
+      DETECTION_DEVICE:            ${DETECTION_DEVICE:-GPU}
+      PIPELINE_WARMUP:             ${PIPELINE_WARMUP:-1}
+      PIPELINE_WARMUP_SECONDS:     ${PIPELINE_WARMUP_SECONDS:-8}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health >/dev/null || exit 1"]
@@ -131,7 +162,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: surgical-backend:dev
+    image: intel/surgical-backend:${TAG}
     container_name: surgical-backend
     restart: unless-stopped
     networks: [surgical-internal]
@@ -212,7 +243,7 @@ services:
     build:
       context: ./ui
       dockerfile: Dockerfile
-    image: surgical-ui:dev
+    image: intel/surgical-ui:${TAG}
     container_name: surgical-ui
     restart: unless-stopped
     networks: [surgical-internal]

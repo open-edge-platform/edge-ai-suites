@@ -51,11 +51,44 @@ The presence of `models/yolo11n_polyp/best_openvino_model/best.xml` **and** `mod
 
 ## 3. Bring the stack up
 
+First discover the camera serial and the P-core set for your CPU:
+
 ```bash
-make up
+make list-cameras   # prints Basler serial(s) -> SOURCE_ARG
+make show-cores     # prints the P-core set    -> PIPELINE_GST_CORES
 ```
 
-This runs `docker compose up -d --build` with `RENDER_GID` and `VIDEO_GID` auto-detected from the host. Compose builds the backend image (torch+xpu wheels + OpenVINO + Ultralytics) and the UI image (Vite build → nginx).
+`make up` supports two image sources, controlled by the `REGISTRY` flag.
+
+### 3a. Pull from registry (default)
+
+`REGISTRY=true` (the default) pulls the prebuilt images at `TAG`
+(default `latest`) and starts them with `RENDER_GID` / `VIDEO_GID`
+auto-detected from the host — no local build needed.
+
+```bash
+# Live Basler camera (P-core pinned, free-running sink).
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false
+
+# Default file source
+make up        
+```
+
+### 3b. Build from source
+
+`REGISTRY=false` builds every image locally from its Dockerfile (backend =
+torch+xpu wheels + OpenVINO + Ultralytics, UI = Vite build → nginx,
+pipeline = DL Streamer + gencamsrc).
+
+```bash
+# Live Basler camera, built from source
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false REGISTRY=false
+
+# Default file source, built from source
+make up REGISTRY=false        
+```
 
 The `surgical-ui` service declares `depends_on: surgical-backend: condition: service_healthy`, so it will not start listening on `:8080` until the backend passes its `/api/readiness` HEALTHCHECK. The backend healthcheck uses a **45-minute `start_period`** to absorb first-boot training.
 

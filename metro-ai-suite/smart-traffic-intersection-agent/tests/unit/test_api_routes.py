@@ -5,9 +5,9 @@
 import pytest
 import os
 import sys
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
+from unittest.mock import Mock, AsyncMock
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 # Add src to path for imports
@@ -525,8 +525,71 @@ class TestGetCurrentTrafficDataValidation:
         data = response.json()
         
         # Verify timestamp can be parsed as ISO format
-        from datetime import datetime
         try:
             datetime.fromisoformat(data["data"]["timestamp"].replace('Z', '+00:00'))
         except ValueError:
             pytest.fail("Timestamp is not in valid ISO format")
+
+
+class TestWebSocketCurrentTrafficIntelligence:
+    """Test cases for WebSocket /traffic/current/ws endpoint."""
+
+    def test_websocket_current_traffic_sends_payload(
+        self, client, mock_data_aggregator, mock_weather_service,
+        sample_traffic_response, sample_weather_data
+    ):
+        """Test websocket sends traffic payload when data is available."""
+        mock_data_aggregator.get_current_traffic_intelligence = AsyncMock(
+            return_value=sample_traffic_response
+        )
+        mock_weather_service.get_current_weather = AsyncMock(
+            return_value=sample_weather_data
+        )
+
+        mock_event = Mock()
+        mock_event.wait = AsyncMock(side_effect=WebSocketDisconnect())
+        mock_data_aggregator.new_data_event = mock_event
+
+        with client.websocket_connect("/api/v1/traffic/current/ws") as websocket:
+            data = websocket.receive_json()
+
+        assert data["intersection_id"] == "INT-001"
+        assert "camera_images" in data
+        assert data["vlm_analysis"]["traffic_summary"] == sample_traffic_response.vlm_analysis.traffic_summary
+
+    def test_websocket_current_traffic_waiting_message_when_no_data(
+        self, client, mock_data_aggregator
+    ):
+        """Test websocket returns waiting message when no analysis is available."""
+        mock_data_aggregator.get_current_traffic_intelligence = AsyncMock(return_value=None)
+
+        mock_event = Mock()
+        mock_event.wait = AsyncMock(side_effect=WebSocketDisconnect())
+        mock_data_aggregator.new_data_event = mock_event
+
+        with client.websocket_connect("/api/v1/traffic/current/ws") as websocket:
+            data = websocket.receive_json()
+
+        assert data["status"] == "waiting"
+        assert data["message"] == "VLM analysis not yet available."
+
+    def test_websocket_current_traffic_honors_images_query_false(
+        self, client, mock_data_aggregator, mock_weather_service,
+        sample_traffic_response, sample_weather_data
+    ):
+        """Test websocket excludes camera images when images=false."""
+        mock_data_aggregator.get_current_traffic_intelligence = AsyncMock(
+            return_value=sample_traffic_response
+        )
+        mock_weather_service.get_current_weather = AsyncMock(
+            return_value=sample_weather_data
+        )
+
+        mock_event = Mock()
+        mock_event.wait = AsyncMock(side_effect=WebSocketDisconnect())
+        mock_data_aggregator.new_data_event = mock_event
+
+        with client.websocket_connect("/api/v1/traffic/current/ws?images=false") as websocket:
+            data = websocket.receive_json()
+
+        assert "camera_images" not in data

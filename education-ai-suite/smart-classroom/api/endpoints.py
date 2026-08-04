@@ -215,6 +215,15 @@ def start_video_analytics_pipeline(
                         _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
                         # Use the same engine as the /class-statistics UI endpoint
                         va_stats, _ = _svc.get_pose_stats(_front_posture)
+
+                        # Persist the video duration alongside the pose stats so
+                        # video-only sessions have a reliable, on-disk duration
+                        # source for report generation (SessionState is in-memory
+                        # only and is lost on restart / async re-generation).
+                        _video_dur = SessionState.get_video_duration(session_id)
+                        if isinstance(_video_dur, (int, float)) and _video_dur > 0:
+                            va_stats["duration_sec"] = round(float(_video_dur), 1)
+
                         logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
 
                         try:
