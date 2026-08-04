@@ -126,6 +126,40 @@ RUN pip install \
       "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
       "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl"
 
+# Ultralytics transitive resolution can pull CUDA/NVIDIA Python packages.
+# Remove them so the final runtime image stays Intel XPU-only.
+RUN python3 - <<'PY'
+import importlib.metadata as md
+import subprocess
+import sys
+
+installed = {dist.metadata.get("Name", "").strip() for dist in md.distributions()}
+targets = sorted(
+  n for n in installed if n and n.lower().startswith(("nvidia-", "cuda-"))
+)
+
+if targets:
+  print("Removing CUDA/NVIDIA packages:", ", ".join(targets))
+  subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", *targets])
+else:
+  print("No CUDA/NVIDIA Python packages found to remove")
+PY
+
+# Hard gate: fail build if any CUDA/NVIDIA package still remains.
+RUN python3 - <<'PY'
+import importlib.metadata as md
+
+left = sorted(
+  n
+  for n in {dist.metadata.get("Name", "").strip() for dist in md.distributions()}
+  if n and n.lower().startswith(("nvidia-", "cuda-"))
+)
+
+if left:
+  raise SystemExit(f"ERROR: prohibited CUDA/NVIDIA packages still installed: {left}")
+print("CUDA/NVIDIA Python package check passed")
+PY
+
 # Application code.
 COPY backend/ /app/backend/
 
