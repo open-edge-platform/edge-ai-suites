@@ -43,7 +43,7 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ./benchmark_start.sh -p yolov11s_gpu -l 1 -u 16 -t 28.5
 ```
 
-### Exemplary Results (GPU Only)
+### Example Results (GPU Only)
 
 - **Achieved Stream density (GPU only)**: `Stream Density(GPU) = 9` streams at >= 28.5 FPS
 - **Throughput min** at achieved stream density: `29.9427`
@@ -98,7 +98,7 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ./benchmark_start.sh -p yolov11s_npu -l 1 -u 16 -t 28.5
 ```
 
-### Exemplary Results (NPU Only)
+### Example Results (NPU Only)
 
 - **Achieved Stream density (NPU only)**: `Stream Density(NPU) = 7` streams at >= 28.5 FPS
 - **Throughput min** at achieved stream density: `29.5329`
