@@ -1,13 +1,12 @@
 {
-  "name": "@smartbuilding-video/ui",
+  "name": "@smartbuilding-video/dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "typecheck": "vue-tsc --noEmit",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "build": "vue-tsc --noEmit && vite build"
   },
   "dependencies": {
     "@videojs-player/vue": "^1.0.0",

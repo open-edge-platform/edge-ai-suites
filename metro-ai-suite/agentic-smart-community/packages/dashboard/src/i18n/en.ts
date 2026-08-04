@@ -83,6 +83,8 @@ export default {
     toolOutputTitle: "Tool output",
     thinkingTitle: "Thinking",
     followupWait: "Please wait for the current reply to finish.",
+    collapsePanel: "Collapse chat",
+    expandPanel: "Open chat",
     frameworkSettings: "Agent framework settings",
     frameworkTitle: "Connect an Agent Framework",
     frameworkUnconfiguredTitle: "Chat backend is not configured",
@@ -117,7 +119,7 @@ export default {
     moreChatFeatures: "For more complete chat features, visit",
     openClawControlUi: "OpenClaw native Control UI (:18789)",
   },
-  smartHome: {
+  smartBuilding: {
     offlineCameras: "Offline cameras",
     applianceLocation: "Location",
     cameraSectionLabel: "Device List",
@@ -142,6 +144,7 @@ export default {
     autoLoadPreviewHint: "Auto-loads when scrolled into view",
     timelineZoomTip: "Wheel to zoom, drag to browse time",
     viewReport: "View Report",
+    reportEmptyHint: "No report yet — try asking your agent to generate one.",
     exportReport: "Export Report",
     generateReport: "Generate Report",
     generateLatestReport: "Generate Latest",

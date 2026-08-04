@@ -81,6 +81,8 @@ export default {
     toolOutputTitle: "Tool output",
     thinkingTitle: "思考过程",
     followupWait: "请等待当前回复完成。",
+    collapsePanel: "收起对话",
+    expandPanel: "展开对话",
     frameworkSettings: "Agent 框架设置",
     frameworkTitle: "连接 Agent 框架",
     frameworkUnconfiguredTitle: "当前未配置聊天后端",
@@ -115,7 +117,7 @@ export default {
     moreChatFeatures: "更多完整的聊天功能请查看",
     openClawControlUi: "OpenClaw 原生 Control UI (:18789)",
   },
-  smartHome: {
+  smartBuilding: {
     offlineCameras: "离线摄像头",
     applianceLocation: "位置",
     cameraSectionLabel: "设备列表",
@@ -140,6 +142,7 @@ export default {
     autoLoadPreviewHint: "滚动到此处会自动加载",
     timelineZoomTip: "滚轮缩放，拖动查看时间段",
     viewReport: "在线查看报告",
+    reportEmptyHint: "暂无报告 —— 可以让你的 agent 生成一份试试。",
     exportReport: "导出报告",
     generateReport: "生成报告",
     generateLatestReport: "生成最新报告",

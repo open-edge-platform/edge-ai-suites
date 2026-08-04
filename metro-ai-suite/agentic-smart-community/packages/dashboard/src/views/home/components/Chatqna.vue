@@ -105,6 +105,16 @@
             <HistoryOutlined />
           </button>
         </a-popover>
+        <a-tooltip :title="$t('chat.collapsePanel')">
+          <button
+            type="button"
+            class="header-status"
+            :title="$t('chat.collapsePanel')"
+            @click="emit('collapse')"
+          >
+            <CloseOutlined />
+          </button>
+        </a-tooltip>
       </div>
     </div>
 
@@ -507,7 +517,11 @@ import {
   configureAgentFramework,
   getDashboardConfig,
   type AgentFrameworkOption,
-} from "@/api/smartHome";
+} from "@/api/smartBuilding";
+
+const emit = defineEmits<{
+  collapse: [];
+}>();
 
 const sessionStore = sessionAppStore();
 const { t } = useI18n();

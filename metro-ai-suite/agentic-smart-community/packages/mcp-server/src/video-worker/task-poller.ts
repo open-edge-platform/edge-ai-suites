@@ -74,8 +74,7 @@ export class TaskPoller {
       const videoPath = task.summaryClipInput ?? "";
       const t0 = Date.now();
       // Per-clip summarize tuning is configurable via use_case_dict.<useCase>.summarize.
-      // Defaults below match the legacy smarthome stream_monitor config: LOCAL_PROMPT
-      // only (levels=1), no T-1 dependency (method=SIMPLE), 2 fps sampling.
+      // Defaults below: LOCAL_PROMPT only (levels=1), no T-1 dependency (method=SIMPLE), 2 fps sampling.
       const summarizeCfg = useCaseCfg?.summarize ?? {};
       const result = await this.videoSummaryClient.summarize({
         video: videoPath,
