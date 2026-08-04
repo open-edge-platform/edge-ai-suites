@@ -3,6 +3,7 @@ from components.board_ocr.board_ocr_service import read_board_ocr_text_only
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir
 from utils.markdown_cleaner import StreamThinkFilter
 from model_manager import ModelManager
 import logging, os
@@ -49,12 +50,7 @@ class SummarizerComponent(PipelineComponent):
     # ---------------- INPUT SELECTOR ----------------
 
     def _load_input_text(self):
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        project_path = get_session_dir(self.session_id)
 
         if self.mode == "teacher":
             path = os.path.join(project_path, "teacher_transcription.txt")
@@ -105,12 +101,7 @@ class SummarizerComponent(PipelineComponent):
         if board_text:
             logger.info(f"Board OCR content found for session {self.session_id} ({len(board_text)} chars); including in summary.")
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        project_path = get_session_dir(self.session_id)
 
         summary_path = os.path.join(project_path, "summary.md")
         StorageManager.save(summary_path, "", append=False)

@@ -14,6 +14,7 @@ import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir, get_artifact_path
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
@@ -119,16 +120,14 @@ def update_project_config(payload: ProjectSettings):
 
 @router.post("/start-monitoring")
 def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
-    project_config = RuntimeConfig.get_section("Project")
-    start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
+    start_monitoring(get_artifact_path(x_session_id, "utilization_logs"))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")
 def get_metrics_endpoint(x_session_id: Optional[str] = Header(None)):
     if x_session_id is None or "":
         return ""
-    project_config = RuntimeConfig.get_section("Project")
-    return get_metrics(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
+    return get_metrics(get_artifact_path(x_session_id, "utilization_logs"))
 
 @router.get("/platform-info")
 def get_platform_info():
@@ -192,11 +191,7 @@ def start_video_analytics_pipeline(
             ensure_media_service_running()
 
             if x_session_id not in va_services:
-                project_config = RuntimeConfig.get_section("Project")
-                location = project_config.get("location", "outputs")
-                name = project_config.get("name", "default")
-
-                output_dir = os.path.join(location, name, x_session_id, "va")
+                output_dir = get_artifact_path(x_session_id, "va")
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
@@ -204,15 +199,12 @@ def start_video_analytics_pipeline(
 
                 # ── Register callback: fires when ALL pipelines finish (EOS or manual stop) ──
                 _sid      = x_session_id
-                _location = location
-                _pname    = name
-                def _on_all_pipelines_done(session_id, _svc=va_services[x_session_id],
-                                           _loc=_location, _n=_pname):
+                def _on_all_pipelines_done(session_id, _svc=va_services[x_session_id]):
                     from utils.scp_sender import write_engagement_reports, get_scp_sender
                     from utils.telegram_sender import get_sender
                     try:
-                        _session_dir     = os.path.join(_loc, _n, session_id)
-                        _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
+                        _session_dir     = get_session_dir(session_id)
+                        _front_posture   = get_artifact_path(session_id, "va", "front_posture.txt")
                         # Use the same engine as the /class-statistics UI endpoint
                         va_stats, _ = _svc.get_pose_stats(_front_posture)
                         logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
@@ -262,10 +254,7 @@ def start_video_analytics_pipeline(
 
             # Prepare pipeline options
             from utils.config_loader import config
-            project_config = RuntimeConfig.get_section("Project")
-            location = project_config.get("location", "outputs")
-            name = project_config.get("name", "default")
-            output_dir = os.path.join(location, name, x_session_id, "va")
+            output_dir = get_artifact_path(x_session_id, "va")
 
             options = PipelineOptions(
                 output_dir=output_dir,
@@ -464,11 +453,8 @@ def stop_video_analytics_pipeline(
             # ── Telegram: Package B+C (Q2 engagement + Q4 participation) ────
             # Triggered once all stop requests for this session are processed.
             # Uses front_posture.txt for video stats; transcription.txt for audio.
-            project_config = RuntimeConfig.get_section("Project")
-            location = project_config.get("location", "outputs")
-            name     = project_config.get("name", "default")
-            session_dir     = os.path.join(location, name, x_session_id)
-            va_posture_file = os.path.join(location, name, x_session_id, "va", "front_posture.txt")
+            session_dir     = get_session_dir(x_session_id)
+            va_posture_file = get_artifact_path(x_session_id, "va", "front_posture.txt")
             sender = get_sender()
             if sender:
                 sender.send_engagement_package_async(
@@ -547,10 +533,7 @@ async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
     service = va_services[x_session_id]
 
     # Get the front_posture.txt file path
-    project_config = RuntimeConfig.get_section("Project")
-    location = project_config.get("location", "outputs")
-    name = project_config.get("name", "default")
-    output_dir = os.path.join(location, name, x_session_id, "va")
+    output_dir = get_artifact_path(x_session_id, "va")
     front_posture_file = os.path.join(output_dir, "front_posture.txt")
 
     async def stream_statistics():
@@ -733,13 +716,8 @@ def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
         )
     
     try:
-        project_config = RuntimeConfig.get_section("Project")
-        base_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            x_session_id
-        )
-        
+        base_path = get_session_dir(x_session_id)
+
         if not os.path.exists(base_path):
             logger.warn(f"Session path does not exist: {base_path}")
             return JSONResponse(
@@ -818,13 +796,7 @@ def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None
     try:
         backend_video_type = "content" if videoType == "board" else videoType
         
-        project_config = RuntimeConfig.get_section("Project")
-        video_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            actual_session_id,
-            f"{backend_video_type}.mp4"
-        )
+        video_path = get_artifact_path(actual_session_id, f"{backend_video_type}.mp4")
         
         if not os.path.exists(video_path):
             raise HTTPException(

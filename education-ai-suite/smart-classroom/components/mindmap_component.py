@@ -2,6 +2,7 @@ from components.base_component import PipelineComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir
 from utils.markdown_cleaner import strip_think_tokens
 import logging, os
 
@@ -24,12 +25,7 @@ class MindmapComponent(PipelineComponent):
         ]
 
     def generate_mindmap(self, summary_text):
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        project_path = get_session_dir(self.session_id)
         mindmap_path = os.path.join(project_path, "mindmap.mmd")
 
         try:

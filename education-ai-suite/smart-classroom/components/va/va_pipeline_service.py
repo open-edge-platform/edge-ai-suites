@@ -19,6 +19,7 @@ from utils.rtsp_recorder import (
     is_rtsp_recording_running,
 )
 from utils.runtime_config_loader import RuntimeConfig
+from utils.artifacts.path import get_artifact_path
 from utils.system_checker import check_dlstreamer_installation
 
 class PipelineName(Enum):
@@ -764,13 +765,7 @@ class VideoAnalyticsPipelineService:
             if options.record:
                 recorder_name = f"{pipeline_name}_recorder"
 
-                project_config = RuntimeConfig.get_section("Project")
-                output_video_path = os.path.join(
-                    project_config.get("location"),
-                    project_config.get("name"),
-                    self.x_session_id,
-                    f"{pipeline_name}.mp4"
-                )
+                output_video_path = get_artifact_path(self.x_session_id, f"{pipeline_name}.mp4")
 
                 start_rtsp_recording(
                     name=recorder_name,

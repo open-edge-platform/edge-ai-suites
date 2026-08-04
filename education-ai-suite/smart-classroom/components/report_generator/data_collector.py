@@ -13,6 +13,7 @@ from typing import Optional
 
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir
 from utils.config_loader import config
 
 logger = logging.getLogger(__name__)
@@ -23,12 +24,7 @@ MAX_DIFFICULTY_POINTS = 4
 
 
 def _get_session_dir(session_id: str) -> str:
-    project_config = RuntimeConfig.get_section("Project")
-    return os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
+    return get_session_dir(session_id)
 
 
 class DataCollector:

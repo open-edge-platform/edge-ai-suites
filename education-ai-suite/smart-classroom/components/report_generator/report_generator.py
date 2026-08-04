@@ -22,6 +22,7 @@ from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.artifacts.manifest import write_manifest
+from utils.artifacts.path import get_session_dir
 from utils.locks import audio_pipeline_lock
 from components.report_generator.template_manager import (
     get_template_path,
@@ -72,12 +73,7 @@ class ReportGenerator:
         self.collected_by_source = {}
 
     def _get_session_dir(self) -> str:
-        project_config = RuntimeConfig.get_section("Project")
-        return os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        return get_session_dir(self.session_id)
 
     def _collect_all_data(self):
         """Deterministically collect all available session data."""

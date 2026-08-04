@@ -6,6 +6,7 @@ import unicodedata
 
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir
 from utils.runtime_config_loader import RuntimeConfig
 from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
 from model_manager import ModelManager
@@ -159,12 +160,7 @@ class ASRComponent(PipelineComponent):
     
     def process(self, input_generator):
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        project_path = get_session_dir(self.session_id)
 
         transcript_path = os.path.join(project_path, "transcription.txt")
         StorageManager.save(transcript_path, "", append=False)

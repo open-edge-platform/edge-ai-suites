@@ -12,6 +12,7 @@ from model_manager import ModelManager
 from components.report_generator.report_generator import ReportGenerator
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir, get_artifact_path
 from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
 from pathlib import Path
@@ -72,8 +73,7 @@ class Pipeline:
     
     def run_summarizer(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        transcription_path = os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "transcription.txt")
+        transcription_path = get_artifact_path(self.session_id, "transcription.txt")
 
         try:
             input = StorageManager.read_text_file(transcription_path)
@@ -98,12 +98,7 @@ class Pipeline:
 
     def run_mindmap(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        session_dir = get_session_dir(self.session_id)
         summary_path = os.path.join(session_dir, "summary.md")
         min_tokens = config.mindmap.min_token
 
@@ -189,12 +184,7 @@ class Pipeline:
 
     def run_content_segmentation(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
+        session_dir = get_session_dir(self.session_id)
 
         transcription_path = os.path.join(session_dir, "content_segmentation_transcription.txt")
 
@@ -291,12 +281,7 @@ class Pipeline:
         the whole catalog); ``manual_fields`` are teacher-typed basic-info values.
         Template filling lives entirely inside ReportGenerator.
         """
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        session_dir = get_session_dir(self.session_id)
 
         if not os.path.exists(session_dir):
             raise HTTPException(
@@ -331,12 +316,7 @@ class Pipeline:
         applying any updated ``manual_fields`` (basic info). See
         ReportGenerator.reapply_selection. Returns {session_id, report}.
         """
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        session_dir = get_session_dir(self.session_id)
         if not os.path.exists(session_dir):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

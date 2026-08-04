@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from pipeline import Pipeline
 from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
+from utils.artifacts.path import get_session_dir, get_artifact_path
 from utils.storage_manager import StorageManager
 
 logger = logging.getLogger(__name__)
@@ -40,12 +41,7 @@ def _ensure_docx_report(session_id: str) -> tuple[str, str]:
     """
     from components.report_generator.docx_export import markdown_to_docx
 
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
+    session_dir = get_session_dir(session_id)
 
     docx_path = os.path.join(session_dir, "class_report.docx")
     if os.path.exists(docx_path):
@@ -127,12 +123,7 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
     ``mindmap_report.png`` in the session dir — the exact path
     ReportGenerator picks up as the ``mindmap`` image field.
     """
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
+    session_dir = get_session_dir(session_id)
     os.makedirs(session_dir, exist_ok=True)
     out_path = os.path.join(session_dir, "mindmap_report.png")
 
@@ -155,13 +146,7 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
 @router.get("/report/{session_id}/mindmap-image")
 def get_mindmap_image(session_id: str):
     """Return the previously uploaded mind-map PNG for inline report preview."""
-    project_config = RuntimeConfig.get_section("Project")
-    image_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "mindmap_report.png",
-    )
+    image_path = get_artifact_path(session_id, "mindmap_report.png")
 
     if not os.path.exists(image_path):
         raise HTTPException(
@@ -181,13 +166,7 @@ def get_mindmap_image(session_id: str):
 @router.get("/report/{session_id}")
 def get_report(session_id: str):
     """Retrieve a previously generated class report for a session."""
-    project_config = RuntimeConfig.get_section("Project")
-    report_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "class_report.md",
-    )
+    report_path = get_artifact_path(session_id, "class_report.md")
 
     if not os.path.exists(report_path):
         raise HTTPException(
