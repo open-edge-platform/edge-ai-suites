@@ -1529,6 +1529,80 @@ function Get-FeatureState {
     if ($match.Success) { return $match.Groups[1].Value } else { return "true" }
 }
 
+# Resolves the diarization model's local cache location (mirrors utils/ensure_model.py::get_diarization_model_path)
+function Get-DiarizationModelInfo {
+    param(
+        [string]$Content,
+        [string]$BaseDir
+    )
+    $diarBlockMatch = [regex]::Match($Content, "(?ms)^  diarization:.*?(?=^  \S)")
+    $diarBlock = if ($diarBlockMatch.Success) { $diarBlockMatch.Value } else { "" }
+
+    $providerMatch = [regex]::Match($diarBlock, 'provider:\s*"?([\w-]+)"?')
+    $provider = if ($providerMatch.Success) { $providerMatch.Groups[1].Value } else { "huggingface" }
+
+    $nameMatch = [regex]::Match($diarBlock, 'name:\s*"?([\w\-/]+)"?')
+    $name = if ($nameMatch.Success) { $nameMatch.Groups[1].Value } else { "pyannote/speaker-diarization-community-1" }
+
+    $basePathMatch = [regex]::Match($diarBlock, 'models_base_path:\s*"?([\w./\\-]+)"?')
+    $basePath = if ($basePathMatch.Success) { $basePathMatch.Groups[1].Value } else { "models" }
+
+    $modelDirName = $name.Replace('/', '_')
+    $path = Join-Path (Join-Path $BaseDir $basePath) (Join-Path $provider $modelDirName)
+
+    return [PSCustomObject]@{
+        Provider = $provider
+        Name     = $name
+        BasePath = $basePath
+        Path     = $path
+    }
+}
+
+# Returns the raw models.asr.hf_token value from config.yaml ("None" if unset)
+function Get-HfTokenRaw {
+    param([string]$Content)
+    $m = [regex]::Match($Content, "(hf_token:\s*)(\S+)")
+    if ($m.Success) { return $m.Groups[2].Value } else { return "None" }
+}
+
+# Returns $true if a real (non-empty, non-"None") hf_token is configured
+function Test-HfTokenSet {
+    param([string]$Content)
+    $token = Get-HfTokenRaw -Content $Content
+    return -not ([string]::IsNullOrWhiteSpace($token) -or $token -eq "None")
+}
+
+# ============================================================================
+# Current Configuration Overview (shown before asking to configure config.yaml)
+# ============================================================================
+Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $state = Get-FeatureState -Content $configContent -Id $fid
+    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
+}
+Write-Host ""
+
+# Speaker diarization lives under models.asr.diarization, shown alongside the feature list
+$diarEnabledMatch = [regex]::Match($configContent, "asr:\s*\n(?:.*\n)*?\s*diarization:\s*(True|False)")
+$currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.Groups[1].Value } else { "False" }
+$diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+Write-Host "  models.asr:" -ForegroundColor White
+Write-Host ("    {0,-20} enabled: {1}" -f "diarization:", $currentDiarizationEnabled) -ForegroundColor Gray
+Write-Host ""
+
+if ($diarizationWasEnabled -and -not (Test-HfTokenSet -Content $configContent)) {
+    Write-Host "  [WARNING] Diarization is enabled but hf_token is None. It needs to be filled in." -ForegroundColor Red
+    Write-Host "            See the setup guide:" -ForegroundColor Red
+    Write-Host "            https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Red
+    Write-Host ""
+}
+
+Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
+Write-Host ""
+
 if ($Silent) {
     Write-Host "Silent mode: keeping existing config.yaml values" -ForegroundColor Gray
     $doConfigChanges = "N"
@@ -1547,22 +1621,11 @@ Write-Host "[3.1] Feature Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  features:" -ForegroundColor White
-foreach ($fid in $featureIds) {
-    $state = Get-FeatureState -Content $configContent -Id $fid
-    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
-}
-Write-Host ""
-Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
-Write-Host ""
-
 if ($Silent) {
     Write-Host "Silent mode: keeping existing feature configuration" -ForegroundColor Gray
     $changeFeatures = "N"
 } else {
-    $changeFeatures = Read-Host "Do you want to change feature configuration? (Y/N)"
+    $changeFeatures = Read-Host "Do you want to change features configuration? (Y/N)"
 }
 
 if ($changeFeatures -match "^[Yy]") {
@@ -1732,6 +1795,130 @@ if ($changeAsr -match "^[Yy]") {
     Write-Host "  Device:   $currentAsrDevice" -ForegroundColor Gray
 } else {
     Write-Host "ASR settings unchanged." -ForegroundColor Gray
+}
+
+Write-Host ""
+
+# ============================================================================
+# Speaker Diarization Setup
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "Speaker Diarization Setup" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Extract current diarization enabled value (models.asr.diarization)
+$diarEnabledMatch = [regex]::Match($configContent, "asr:\s*\n(?:.*\n)*?\s*diarization:\s*(True|False)")
+$currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.Groups[1].Value } else { "False" }
+$diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+Write-Host "Current Speaker Diarization configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  models.asr:" -ForegroundColor White
+Write-Host "    diarization: $currentDiarizationEnabled   # labels TEACHER/STUDENT_XX speakers in ASR transcripts" -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing Speaker Diarization setting" -ForegroundColor Gray
+    $changeDiarization = "N"
+} else {
+    $changeDiarization = Read-Host "Do you want to change Speaker Diarization setting? (Y/N)"
+}
+
+$diarizationIsEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+if ($changeDiarization.ToUpper() -eq "Y") {
+    Write-Host ""
+    $newDiarization = Read-Host "Enable diarization? (true/false, blank = $($currentDiarizationEnabled.ToLower()))"
+
+    if ($newDiarization.ToLower() -eq "true") {
+        $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*diarization:\s*)(True|False)", "`${1}True"
+        $currentDiarizationEnabled = "True"
+        $diarizationIsEnabled = $true
+        Write-Host "  [OK] Speaker diarization ENABLED" -ForegroundColor Green
+    } elseif ($newDiarization.ToLower() -eq "false") {
+        $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*diarization:\s*)(True|False)", "`${1}False"
+        $currentDiarizationEnabled = "False"
+        $diarizationIsEnabled = $false
+        Write-Host "  [OK] Speaker diarization DISABLED" -ForegroundColor Green
+    } else {
+        Write-Host "  Keeping current Speaker Diarization setting." -ForegroundColor Gray
+    }
+} else {
+    Write-Host "Keeping current Speaker Diarization setting." -ForegroundColor Gray
+}
+
+$diarizationJustEnabled = $diarizationIsEnabled -and (-not $diarizationWasEnabled)
+
+if ($diarizationIsEnabled) {
+    Write-Host ""
+
+    # Resolve the diarization model's local cache path (mirrors utils/ensure_model.py::get_diarization_model_path)
+    $diarInfo = Get-DiarizationModelInfo -Content $configContent -BaseDir $ScriptDir
+    $diarizationModelName = $diarInfo.Name
+    $diarModelPath = $diarInfo.Path
+    $diarModelConfigFile = Join-Path $diarModelPath "config.yaml"
+    $diarModelDownloaded = Test-Path $diarModelConfigFile
+
+    if ($diarModelDownloaded) {
+        Write-Host "  [OK] Diarization model already downloaded:" -ForegroundColor Green
+        Write-Host "       $diarModelPath" -ForegroundColor Gray
+    } else {
+        Write-Host "  Diarization model not found locally at:" -ForegroundColor Yellow
+        Write-Host "    $diarModelPath" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  [NOTE] Before Speaker Diarization will work, you must request model access on" -ForegroundColor Yellow
+        Write-Host "         Hugging Face and create an access token. Please read the setup guide:" -ForegroundColor Yellow
+        Write-Host "         https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
+        Write-Host ""
+
+        # ------------------------------------------------------------------
+        # Request Model Access
+        # ------------------------------------------------------------------
+        Write-Host "Request Model Access" -ForegroundColor Yellow
+        Write-Host "  This model is gated on Hugging Face. Please request access here:" -ForegroundColor Gray
+        Write-Host "    https://huggingface.co/$diarizationModelName" -ForegroundColor White
+        Write-Host ""
+        if (-not $Silent) {
+            Read-Host "  Press Enter once you have submitted/been granted the access request"
+        }
+        Write-Host ""
+    }
+
+    # ------------------------------------------------------------------
+    # Hugging Face Token (needed whenever hf_token is None, or diarization was just enabled)
+    # ------------------------------------------------------------------
+    $hfTokenIsSet = Test-HfTokenSet -Content $configContent
+    if ($diarizationJustEnabled -or -not $hfTokenIsSet) {
+        if (-not $hfTokenIsSet) {
+            Write-Host ""
+            Write-Host "  [WARNING] hf_token is None. It needs to be filled in." -ForegroundColor Yellow
+        }
+        Write-Host ""
+        Write-Host "Hugging Face Token" -ForegroundColor Yellow
+        Write-Host "  Current token: $(if ($hfTokenIsSet) { 'Set' } else { 'Not set' })" -ForegroundColor Gray
+
+        if (-not $Silent) {
+            $secureHfToken = Read-Host "  Enter your Hugging Face access token (leave blank to keep current)" -AsSecureString
+            $newHfToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+                [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureHfToken)
+            )
+            if ($newHfToken) {
+                $configContent = $configContent -replace "(hf_token:\s*)\S+", "`${1}$newHfToken"
+                Write-Host "  [OK] Hugging Face token updated" -ForegroundColor Green
+            } else {
+                Write-Host "  Keeping existing Hugging Face token." -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "  Silent mode: keeping existing Hugging Face token." -ForegroundColor Gray
+        }
+
+        if (-not (Test-HfTokenSet -Content $configContent)) {
+            Write-Host ""
+            Write-Host "  [WARNING] No Hugging Face token is set. If the model ever needs to be" -ForegroundColor Red
+            Write-Host "            (re)downloaded, it will fail until a valid hf_token is provided." -ForegroundColor Red
+        }
+    }
 }
 
 Write-Host ""
@@ -1913,6 +2100,7 @@ $finalLang = if ($finalConfig -match "language:\s*(\S+)") { $Matches[1] } else {
 $finalProvider = if ($finalConfig -match "asr:[\s\S]*?provider:\s*(\S+)") { $Matches[1] } else { "unknown" }
 $finalAsrName = if ($finalConfig -match "asr:[\s\S]*?name:\s*(\S+)") { $Matches[1] } else { "unknown" }
 $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matches[1] } else { "CPU" }
+$finalDiarization = if ($finalConfig -match "asr:[\s\S]*?diarization:\s*(True|False)") { $Matches[1] } else { "False" }
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
 $finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
@@ -1935,6 +2123,10 @@ Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
 Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
+Write-Host "  Diarization:     $finalDiarization" -ForegroundColor White
+if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $finalConfig)) {
+    Write-Host "                   [WARNING] hf_token is None - diarization will not work until it is filled in" -ForegroundColor Red
+}
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White

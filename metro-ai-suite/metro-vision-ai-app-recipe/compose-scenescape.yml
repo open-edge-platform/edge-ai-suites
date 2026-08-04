@@ -340,7 +340,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./${SAMPLE_APP}/src/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro"
       - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
     networks:
       - scenescape
@@ -355,6 +355,9 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP}
       - NO_PROXY=${no_proxy},${HOST_IP}
+      - NGINX_CLIENT_MAX_BODY_SIZE=${NGINX_CLIENT_MAX_BODY_SIZE}
+      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
     restart: on-failure:5
 
 networks:
