@@ -1,6 +1,6 @@
 # Gigabit Multimedia Serial Link Sensor Guide
 
-- **Prerequisite:** Follow the instructions in [Getting Started Guide](../gsg_robot/index.md).
+- **Prerequisite:** Follow the instructions in [Getting Started Guide](../gsg_robot/index.md). To use GMSL cameras, The minimum required setup to get GMSL working is setting up `amrdocs` APT repository, and `kobuk` APT repository.
 
 **GMSL (Gigabit Multimedia Serial Link)** is a high-speed serial interface designed for transmitting uncompressed video, audio, and control data over long distances. It is commonly used in automotive applications for connecting cameras and other multimedia devices to the central processing unit.
 
@@ -10,9 +10,7 @@ In the context of robotics and autonomous mobile robots, GMSL sensors are often 
 
 When integrating GMSL sensors into a robotics system, it is important to consider factors such as compatibility with the processing unit, power requirements, and the physical layout of the system. Proper configuration and calibration of GMSL sensors are also crucial to ensure optimal performance and accurate data capture.
 
-Intel® GMSL cameras use the Image Processor Unit (IPU) to process the video data captured by the camera. The IPU is responsible for tasks such as image enhancement, noise reduction, and color correction, which are essential for improving the quality of the video feed before it is used for further processing in the autonomous mobile robot's perception system.
-
-It is crucial to understand the SerDes I2C connectivity specific to each ODM/OEM motherboard, Add-in-Card (AIC), and GMSL2 camera module. Illustrated below are the details a user needs to learn about I2C communication between a BDF (Bit-Definition File) Linux I2C adapter and GMSL2 I2C devices for Intel® Core™ Ultra Series 1 and 2 (Arrow Lake-U/H) and 12th/13th/14th Gen Intel® Core™ platforms to detect and configure GMSL capability. See [SerDes I2C mapping](./gmsl-guide/gmsl-aic-overview.md#how-to-detect-in-i2c-bus-to-gmsl2-deserializer-and-serializer-acpi-devices-mapping) for more details.
+Intel® GMSL cameras use the Intel® Image Processor Unit (IPU) to process the video data captured by the camera. The IPU is responsible for tasks such as image enhancement, noise reduction, and color correction, which are essential for improving the quality of the video feed before it is used for further processing in the autonomous mobile robot's perception system.
 
 ![GMSL overview](../images/gmsl/GMSL-overview2.png "gmsl overview")
 
@@ -24,9 +22,7 @@ It is crucial to understand the SerDes I2C connectivity specific to each ODM/OEM
 :::{toctree}
 :hidden:
 
-GMSL Add-in-Card Overview <./gmsl-guide/gmsl-aic-overview.md>
 Configure GMSL Dev Kit SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-dev-kit.md>
-Configure GMSl AIC SerDes ACPI Devicec <./gmsl-guide/configure-gmsl-serdes-acpi.md>
 
 :::
 hide_directive-->
