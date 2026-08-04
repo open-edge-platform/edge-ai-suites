@@ -1,0 +1,177 @@
+{
+  "skill_name": "onboarding-validation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt_file": "example-prompts/01-validate-onboarding.md",
+      "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: live-video-captioning\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/metro-ai-suite/live-video-analysis/live-video-captioning\n- **Deployment method**: docker-compose\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
+      "expected_output": "Structured markdown report with 76 rule verdicts, UX score, and overall PASS/CONDITIONAL PASS/FAIL result saved to validation-reports/",
+      "should_trigger": true,
+      "suite": "metro-ai-suite",
+      "files": [],
+      "assertions": [
+        {
+          "type": "file_exists",
+          "pattern": "validation-reports/live-video-captioning-*.md"
+        },
+        {
+          "type": "file_exists",
+          "pattern": "validation-logs/live-video-captioning-*.log"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| Total Rules |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "**Overall Result**:"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "/ 10"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| Deployment method | docker-compose"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/live-video-captioning-*.md",
+          "text": "| Model |"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt_file": "example-prompts/01-validate-onboarding.md",
+      "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: smart-nvr\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/metro-ai-suite/smart-nvr\n- **Deployment method**: helm\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
+      "expected_output": "Structured markdown report evaluating Helm/Kubernetes deployment path with 76 rule verdicts",
+      "should_trigger": true,
+      "suite": "metro-ai-suite",
+      "files": [],
+      "assertions": [
+        {
+          "type": "file_exists",
+          "pattern": "validation-reports/smart-nvr-*.md"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| Deployment method | helm"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| Total Rules |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "**Overall Result**:"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "/ 10"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/smart-nvr-*.md",
+          "text": "| Model |"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt_file": null,
+      "prompt": "Debug and fix the deployment of live-video-captioning — the containers keep crashing.",
+      "expected_output": "Agent should NOT trigger onboarding-validation skill. This is a debugging request, not a validation request.",
+      "should_trigger": false,
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 4,
+      "prompt_file": "example-prompts/01-validate-onboarding.md",
+      "prompt": "You are a QA validation agent. Validate the get-started experience of the application below by following the `onboarding-validation` skill exactly, as a first-time user would.\n\n**Application Under Test**\n\n- **Name**: automated-self-checkout\n- **GitHub URL**: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1/retail-ai-suite/automated-self-checkout\n- **Deployment method**: docker-compose\n\n**Instructions**\n\nFollow the `onboarding-validation` skill. It declares which rules to evaluate and defines the complete procedure. Do not deviate from it.",
+      "expected_output": "Structured markdown report for a submodule-based app with both base and submodule commit SHAs recorded",
+      "should_trigger": true,
+      "suite": "retail-ai-suite",
+      "files": [],
+      "assertions": [
+        {
+          "type": "file_exists",
+          "pattern": "validation-reports/automated-self-checkout-*.md"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "**Overall Result**:"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "| Commit (submodule) |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "/ 10"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "| AI agent |"
+        },
+        {
+          "type": "content_contains",
+          "file_pattern": "validation-reports/automated-self-checkout-*.md",
+          "text": "| Model |"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "prompt_file": null,
+      "prompt": "Review the code quality of the metro-ai-suite smart-nvr application and suggest improvements.",
+      "expected_output": "Agent should NOT trigger onboarding-validation skill. This is a code review request, not a validation request.",
+      "should_trigger": false,
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 6,
+      "prompt_file": null,
+      "prompt": "Run the skill integrity check script scripts/self-test.sh and confirm it finishes successfully.",
+      "expected_output": "Agent should NOT trigger onboarding-validation skill and should return that scripts/self-test.sh exits with code 0 and prints OK. The script verifies the golden fixture, the mutation tests, the generated skeleton, the format contract, and the reference links.",
+      "should_trigger": false,
+      "files": [],
+      "assertions": [
+        {
+          "type": "command_exit_code",
+          "command": ".github/skills/onboarding-validation/scripts/self-test.sh",
+          "expected": 0
+        },
+        {
+          "type": "command_output_contains",
+          "command": ".github/skills/onboarding-validation/scripts/self-test.sh",
+          "text": "OK"
+        }
+      ]
+    }
+  ]
+}
