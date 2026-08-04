@@ -123,11 +123,15 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: 2026.1.0
+  tag: 2026.2.0-dev
 
   service:
     type: ClusterIP
     port: 80
+
+analytics:
+  repository: scenescape-analytics
+  tag: 2026.2.0-dev
 
 pgserver:
   repository: postgres
@@ -143,7 +147,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: 2026.1.0
+    tag: 2026.2.0-dev
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
