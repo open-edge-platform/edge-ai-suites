@@ -13,11 +13,23 @@ from services.job_store import JsonJobStore
 from services.vlm_grading_pipeline import run_vlm_grading_pipeline
 
 
-def _check_url(url: str, timeout: float = 3.0) -> str:
+def _check_vlm(url: str) -> str:
+    if not url:
+        return "unavailable"
     try:
-        import urllib.request
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return "healthy" if r.status < 400 else "unavailable"
+        from services.vlm_client import check_health
+        check_health(url)
+        return "healthy"
+    except Exception:
+        return "unavailable"
+
+
+def _check_layout(url: str) -> str:
+    if not url:
+        return "unavailable"
+    try:
+        from services.detection_client import check_service_health
+        return "healthy" if check_service_health(url) else "unavailable"
     except Exception:
         return "unavailable"
 
@@ -31,8 +43,8 @@ def get_health(language: str) -> dict[str, Any]:
         "service": "grading",
         "language": language,
         "dependencies": {
-            "vlm": _check_url(f"{vlm_url}/health") if vlm_url else "unavailable",
-            "layout_detection": _check_url(f"{layout_url}/health") if layout_url else "unavailable",
+            "vlm": _check_vlm(vlm_url),
+            "layout_detection": _check_layout(layout_url),
         },
     }
 

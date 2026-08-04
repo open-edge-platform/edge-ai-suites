@@ -517,7 +517,7 @@ Expected log output:
 2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
 3. Click **Apply** and then click **OK**.
 
-VAP stops the run on the next poll. 
+VAP stops the run on the next poll.
 
 Expected log output:
 
@@ -654,12 +654,12 @@ If detections do not appear, see the [Troubleshooting](#troubleshooting) section
 
 ### 7.3 Stop the plugin
 
-To stop the VAP, 
+To stop the VAP,
 
 ```bash
 docker compose down
 ```
- 
+
 
 > **CAUTION**: Be careful not to remove the volume, by `docker compose down -v` as this will delete the DB, as well as any integration info, credentials you created. If done, then the integration in Nx would be stale. Either delete from the Nx Witness, or use a different VMS integration name in `vms_shim/nxwitness/nx_integration.json` file.
 
