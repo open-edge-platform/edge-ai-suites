@@ -515,6 +515,7 @@
     }
   },
   "reportPanel": {
+    "title": "View Report",
     "classReport": "Class Report",
     "noSessionActive": "No session active",
     "reportFields": "Report Fields",
@@ -548,7 +549,9 @@
     "updatingFields": "Updating fields...",
     "reportReady": "Report ready",
     "downloadDocx": "📥 Download .docx",
-    "downloadPdf": "📄 Download .pdf"
+    "downloadPdf": "📄 Download .pdf",
+    "preparingDownload": "⏳ Preparing...",
+    "convertingPdf": "⏳ Converting to PDF..."
   },
   "resultSection": {
     "title": "Results",

@@ -12,7 +12,7 @@
       <div class="drawer-title-wrap flex-between">
         <div>
           <div class="drawer-title">
-            {{ $t("smartHome.reportDrawerTitle") }}
+            {{ $t("smartBuilding.reportDrawerTitle") }}
           </div>
         </div>
         <div class="drawer-actions flex-left">
@@ -25,7 +25,7 @@
             <template #icon>
               <ReloadOutlined />
             </template>
-            {{ $t("smartHome.generateLatestReport") }}
+            {{ $t("smartBuilding.generateLatestReport") }}
           </a-button>
           <a-button
             class="drawer-export-btn"
@@ -36,7 +36,7 @@
             <template #icon>
               <DownloadOutlined />
             </template>
-            {{ $t("smartHome.exportReport") }}
+            {{ $t("smartBuilding.exportReport") }}
           </a-button>
         </div>
       </div>
@@ -45,21 +45,21 @@
     <div class="report-drawer-body">
       <a-empty
         v-if="!drawerData.length"
-        :description="$t('smartHome.reportNoContent')"
+        :description="$t('smartBuilding.reportNoContent')"
       />
 
       <template v-else>
         <div class="report-summary-bar flex-left">
           <div class="report-summary-chip">
-            <span>{{ $t("smartHome.reportSelectedDate") }}:</span>
+            <span>{{ $t("smartBuilding.reportSelectedDate") }}:</span>
             <strong>{{ selectedDateDisplay }}</strong>
           </div>
           <div class="report-summary-chip">
-            <span>{{ $t("smartHome.reportCountLabel") }}:</span>
+            <span>{{ $t("smartBuilding.reportCountLabel") }}:</span>
             <strong>{{ drawerData.length }}</strong>
           </div>
           <div class="report-summary-chip" v-if="activeReport">
-            <span>{{ $t("smartHome.reportCreatedAtLabel") }}:</span>
+            <span>{{ $t("smartBuilding.reportCreatedAtLabel") }}:</span>
             <strong>{{ activeReport.created_at }}</strong>
           </div>
         </div>
@@ -67,7 +67,7 @@
         <div class="report-layout">
           <div class="report-list-panel">
             <div class="report-list-title">
-              {{ $t("smartHome.reportListTitle") }}
+              {{ $t("smartBuilding.reportListTitle") }}
             </div>
             <button
               v-for="report in drawerData"
@@ -86,11 +86,11 @@
               <div class="report-list-meta">{{ report.created_at }}</div>
               <div class="report-list-counters">
                 <span>
-                  {{ $t("smartHome.reportEventCount") }}:
+                  {{ $t("smartBuilding.reportEventCount") }}:
                   {{ report.event_count }}
                 </span>
                 <span>
-                  {{ $t("smartHome.reportMotionCount") }}:
+                  {{ $t("smartBuilding.reportMotionCount") }}:
                   {{ report.motion_count }}
                 </span>
               </div>
@@ -104,7 +104,7 @@
                   {{ activeReport.report_date }}
                 </div>
                 <div class="report-hero-subtitle">
-                  {{ $t("smartHome.reportModalSubtitle") }}
+                  {{ $t("smartBuilding.reportModalSubtitle") }}
                 </div>
               </div>
               <div class="report-hero-status">
@@ -125,7 +125,7 @@
 
             <div class="report-markdown-panel">
               <div class="report-detail-title">
-                {{ $t("smartHome.reportDetailSection") }}
+                {{ $t("smartBuilding.reportDetailSection") }}
               </div>
               <div
                 class="intel-markdown report-markdown"
@@ -163,7 +163,7 @@ const { t } = useI18n();
 const internalActiveReportId = ref<number | null>(null);
 
 const selectedDateDisplay = computed(() => {
-  return `${t("smartHome.reportSelectedDate")} ${props.selectedDate}`;
+  return `${t("smartBuilding.reportSelectedDate")} ${props.selectedDate}`;
 });
 
 const activeReport = computed(() => {
@@ -198,27 +198,27 @@ const activeMetrics = computed(() => {
 
   return [
     {
-      label: t("smartHome.reportSelectedDate"),
+      label: t("smartBuilding.reportSelectedDate"),
       value: activeReport.value.report_date,
     },
     {
-      label: t("smartHome.reportStatusLabel"),
+      label: t("smartBuilding.reportStatusLabel"),
       value: buildRecordStatus(activeReport.value.status),
     },
     {
-      label: t("smartHome.reportEventCount"),
+      label: t("smartBuilding.reportEventCount"),
       value: String(activeReport.value.event_count),
     },
     {
-      label: t("smartHome.reportMotionCount"),
+      label: t("smartBuilding.reportMotionCount"),
       value: String(activeReport.value.motion_count),
     },
     {
-      label: t("smartHome.reportPromptTokens"),
+      label: t("smartBuilding.reportPromptTokens"),
       value: String(activeReport.value.prompt_tokens),
     },
     {
-      label: t("smartHome.reportCreatedAtLabel"),
+      label: t("smartBuilding.reportCreatedAtLabel"),
       value: activeReport.value.created_at,
     },
   ];
@@ -229,7 +229,7 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartHome.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
 };
 
 const handleSelectReport = (reportId: number) => {
