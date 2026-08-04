@@ -46,8 +46,8 @@ function sparkAreaPath(line: string, width: number, height: number): string {
 function Sparkline({ values, color }: { values: number[]; color: string }) {
   const width = 160;
   const height = 80;
-  // Left gutter reserved for the axis labels so they sit before the plot.
-  const gutter = 14;
+  // No axis labels, so the plot uses the full width.
+  const gutter = 0;
   const plotW = width - gutter;
   const d = sparkPath(values, plotW, height);
   const areaD = sparkAreaPath(d, plotW, height);
@@ -63,26 +63,15 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
       {ticks.map((t) => {
         const y = height - (t / 100) * height;
         return (
-          <g key={t}>
-            <line
-              x1={gutter}
-              y1={y}
-              x2={width}
-              y2={y}
-              stroke="#e5e7eb"
-              strokeWidth={t === 0 || t === 100 ? 1 : 0.5}
-            />
-            <text
-              x={0}
-              y={y}
-              fontSize={5}
-              fontFamily="ui-sans-serif, system-ui, sans-serif"
-              fill="#9ca3af"
-              dominantBaseline="middle"
-            >
-              {t}
-            </text>
-          </g>
+          <line
+            key={t}
+            x1={gutter}
+            y1={y}
+            x2={width}
+            y2={y}
+            stroke="#e5e7eb"
+            strokeWidth={t === 0 || t === 100 ? 1 : 0.5}
+          />
         );
       })}
       <g transform={`translate(${gutter},0)`}>
@@ -105,7 +94,7 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="space-y-1 rounded-lg border border-blue-200 bg-slate-50 p-2 shadow-sm">
+    <div className="space-y-1 rounded-lg border border-blue-200 bg-white p-2 shadow-sm">
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="text-black/70">{label}</span>
         <span className="font-semibold text-black">{value}</span>
