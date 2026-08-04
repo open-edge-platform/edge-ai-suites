@@ -21,7 +21,24 @@ export default function MicButton({ recording, inputLevel = 0, disabled, onStart
       style={{ transform: `scale(${scale.toFixed(3)})` }}
       title={recording ? "Stop recording" : "Start recording"}
     >
-      {recording ? "■" : "🎤"}
+      {recording ? (
+        <span className="block h-5 w-5 rounded-sm bg-white" />
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-7 w-7"
+          aria-hidden="true"
+        >
+          <rect x="9" y="2" width="6" height="12" rx="3" />
+          <path d="M5 11a7 7 0 0 0 14 0" />
+          <line x1="12" y1="18" x2="12" y2="22" />
+        </svg>
+      )}
     </button>
   );
 }
