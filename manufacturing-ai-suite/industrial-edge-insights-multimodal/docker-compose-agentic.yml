@@ -166,10 +166,10 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
 
-  apm-ui:
+  multimodal-agentic-ui:
     image: ${DOCKER_REGISTRY}${APM_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
-    container_name: apm-ui
-    hostname: apm-ui
+    container_name: multimodal-agentic-ui
+    hostname: multimodal-agentic-ui
     build:
       context: ui-service
       dockerfile: Dockerfile
