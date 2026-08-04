@@ -15,6 +15,7 @@ milvus:
   resources: {}
 persistence:
   size: 20Gi
+  etcdSize: 5Gi
 securityContext:
   allowPrivilegeEscalation: false
   seccompProfile:
