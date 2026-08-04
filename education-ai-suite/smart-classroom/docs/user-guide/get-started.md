@@ -15,6 +15,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   git sparse-checkout set education-ai-suite
   cd education-ai-suite\smart-classroom
 ```
+
 ## Step 2: Run the Setup Script (First-Time Only)
 
 ```powershell
@@ -42,37 +43,11 @@ The setup script will:
    - [3.5] Board OCR Configuration
    - [3.6] Grading Configuration (enable/disable Smart Grading)
 
-4. **Complete Setup** (to start services, run `start-smart-classroom.ps1` separately)
+> **Note:** Speaker diarization (identifying who is speaking) is optional and requires a one-time
+> Hugging Face access token setup if enabled — see
+> [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
 
-## Step 3: Access the Application
-
-Once all services are running, open your browser:
-
-- **Local:** http://localhost:5173
-- **Network:** http://YOUR_IP:5173
-
-> **Prefer a desktop app?** Start the script with `.\start-smart-classroom.ps1 -Electron`
-> to open the UI in an Electron desktop window instead of a browser tab. See
-> [Optional Parameters](#starting-smart-classroom) below.
-
----
-
-## Automated Setup - Troubleshooting
-
-If you encounter issues during automated setup, refer to the manual steps below:
-
-| Issue | Solution |
-|-------|----------|
-| `PSSecurityException` when running `.ps1` scripts | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in PowerShell |
-| FFmpeg installation fails | See [Manual Step 1A](advance-setup-guide.md#a-install-ffmpeg-required-for-audio-processing) |
-| DL Streamer download fails | See [Manual Step 1B](advance-setup-guide.md#b-install-dl-streamer) |
-| Python dependencies fail | See [Manual Step 1D](advance-setup-guide.md#d-install-python-dependencies) |
-| Content Search fails | See [Manual Step 4](advance-setup-guide.md#step-4-set-up-content-search) |
-| Frontend fails to start | See [Manual Step 5](advance-setup-guide.md#step-5-bring-up-the-frontend) |
-
----
-
-## Starting Smart Classroom
+## Step 3: Start Smart Classroom
 
 After initial setup is complete, use the start script for subsequent runs or after modifying `config.yaml`:
 
@@ -81,6 +56,7 @@ After initial setup is complete, use the start script for subsequent runs or aft
 ```
 
 **Optional Parameters:**
+
 - `-Electron` - Launch the UI as an Electron desktop app instead of a browser tab (the UI dev server still runs on port 5173)
 - `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
 - `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
@@ -102,6 +78,32 @@ The startup script performs:
 - **Sequential Launch** - Backend -> Content Search -> Grading (if enabled) -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
+## Step 4: Access the Application
+
+Once all services are running, open your browser:
+
+- **Local:** <http://localhost:5173>
+- **Network:** <http://YOUR_IP:5173>
+
+> **Prefer a desktop app?** Start the script with `.\start-smart-classroom.ps1 -Electron`
+> to open the UI in an Electron desktop window instead of a browser tab. See
+> [Optional Parameters](#step-3-start-smart-classroom).
+
+---
+
+## Automated Setup - Troubleshooting
+
+If you encounter issues during automated setup, refer to the manual steps below:
+
+| Issue | Solution |
+|-------|----------|
+| `PSSecurityException` when running `.ps1` scripts | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in PowerShell |
+| FFmpeg installation fails | See [Manual Step 1A](advance-setup-guide.md#a-install-ffmpeg-required-for-audio-processing) |
+| DL Streamer download fails | See [Manual Step 1B](advance-setup-guide.md#b-install-dl-streamer) |
+| Python dependencies fail | See [Manual Step 1D](advance-setup-guide.md#d-install-python-dependencies) |
+| Content Search fails | See [Manual Step 4](advance-setup-guide.md#step-4-set-up-content-search) |
+| Frontend fails to start | See [Manual Step 5](advance-setup-guide.md#step-5-bring-up-the-frontend) |
+
 ---
 
 ## Manual Setup
@@ -111,9 +113,8 @@ The startup script performs:
 Advanced Setup guide covers:
 
 - **Step 1:** Install Dependencies (FFmpeg, DL Streamer, Python, Content Search)
-- **Step 2:** Configuration (config.yaml settings)
+- **Step 2:** Configuration (config.yaml settings, including optional [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional))
 - **Step 3-6:** Run Services & Access UI
-- **Step 7:** Speaker Diarization Setup (Optional)
 - **[Troubleshooting](advance-setup-guide.md#troubleshooting)** — solutions for common setup and runtime issues
 - **[Known Issues](advance-setup-guide.md#known-issues)** — current limitations and workarounds
 - **[Uninstall the Application](advance-setup-guide.md#uninstall-the-application)** — steps to cleanly remove the environment and models
@@ -124,11 +125,11 @@ Advanced Setup guide covers:
 
 | Service | Port | Health Check |
 |---------|------|--------------|
-| Backend | 8000 | http://localhost:8000/health |
-| Content Search | 9011 | http://localhost:9011/api/v1/system/health |
-| Layout Detection | 9902 | http://localhost:9902/health |
-| Grading | 9012 | http://localhost:9012/api/v1/health |
-| Frontend | 5173 | http://localhost:5173 |
+| Backend | 8000 | <http://localhost:8000/health> |
+| Content Search | 9011 | <http://localhost:9011/api/v1/system/health> |
+| Layout Detection | 9902 | <http://localhost:9902/health> |
+| Grading | 9012 | <http://localhost:9012/api/v1/health> |
+| Frontend | 5173 | <http://localhost:5173> |
 
 > **Note:** Layout Detection and Grading services only start when `grading.enabled: true` in `config.yaml`.
 

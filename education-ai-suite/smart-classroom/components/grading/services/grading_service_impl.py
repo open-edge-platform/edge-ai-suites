@@ -13,11 +13,23 @@ from services.job_store import JsonJobStore
 from services.vlm_grading_pipeline import run_vlm_grading_pipeline
 
 
-def _check_url(url: str, timeout: float = 3.0) -> str:
+def _check_vlm(url: str) -> str:
+    if not url:
+        return "unavailable"
     try:
-        import urllib.request
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return "healthy" if r.status < 400 else "unavailable"
+        from services.vlm_client import check_health
+        check_health(url)
+        return "healthy"
+    except Exception:
+        return "unavailable"
+
+
+def _check_layout(url: str) -> str:
+    if not url:
+        return "unavailable"
+    try:
+        from services.detection_client import check_service_health
+        return "healthy" if check_service_health(url) else "unavailable"
     except Exception:
         return "unavailable"
 
@@ -31,8 +43,8 @@ def get_health(language: str) -> dict[str, Any]:
         "service": "grading",
         "language": language,
         "dependencies": {
-            "vlm": _check_url(f"{vlm_url}/health") if vlm_url else "unavailable",
-            "layout_detection": _check_url(f"{layout_url}/health") if layout_url else "unavailable",
+            "vlm": _check_vlm(vlm_url),
+            "layout_detection": _check_layout(layout_url),
         },
     }
 
@@ -387,14 +399,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         if slot is None:
             slot = str(len(students) + 1)
 
-        questions = {}
-        for qid, q in (data.get("questions") or {}).items():
-            questions[qid] = {
-                "catalog": q.get("catalog"),
-                "type": q.get("type"),
-                "score": q.get("vlm_score"),
-                "max_score": q.get("max_score"),
-            }
+        questions_hierarchy = data.get("questions_hierarchy") or []
 
         students[slot] = {
             "student_id": student_id,
@@ -402,6 +407,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "class_name": student_meta.get("class_name"),
             "exam_number": student_meta.get("exam_number"),
             "paper_path": source_input.get("paper_path"),
+            "result_path": str(result_path),
             "total_score": source_summary.get("total_score"),
             "total_max": source_summary.get("total_max"),
             "objective_score": source_summary.get("objective_score"),
@@ -409,7 +415,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "subjective_score": source_summary.get("subjective_score"),
             "subjective_max": source_summary.get("subjective_max"),
             "processing_seconds": data.get("processing_seconds"),
-            "questions": questions,
+            "questions_hierarchy": questions_hierarchy,
         }
         summary["updated_at"] = _now_utc_iso()
         summary["student_count"] = len(students)
@@ -471,6 +477,27 @@ def get_task_summary(task_id: str) -> dict[str, Any]:
     if summary_path.exists():
         return json.loads(summary_path.read_text(encoding="utf-8"))
     return _empty_summary(name)
+
+
+def get_student_result(task_id: str, slot: str) -> dict[str, Any]:
+    name = _validate_task_id(task_id)
+    task_root = (_outputs_root() / name).resolve()
+    summary_path = task_root / "summary.json"
+    if not summary_path.exists():
+        raise ValueError(f"summary not found for task {name}")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    student = (summary.get("students") or {}).get(str(slot))
+    if not student:
+        raise ValueError(f"student slot {slot} not found")
+    result_path = student.get("result_path")
+    if not result_path:
+        raise ValueError(f"result_path missing for slot {slot}")
+    result_path = Path(str(result_path)).resolve()
+    if task_root not in result_path.parents:
+        raise ValueError("result path outside task output directory")
+    if not result_path.exists():
+        raise ValueError(f"result file not found: {result_path}")
+    return json.loads(result_path.read_text(encoding="utf-8"))
 
 
 def _build_submission_key(paper_path: str, student_id: str | None) -> str:
@@ -838,10 +865,21 @@ def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
 
 def update_grading_config(
     dpi: int | None = None,
+    page_columns: int | None = None,
+    column_split_ratio: float | None = None,
+    contrast_enhance: bool | None = None,
+    contrast_factor: float | None = None,
+    max_tokens: int | None = None,
     vlm_temperature: float | None = None,
+    max_image_pixels: int | None = None,
     poll_interval: int | None = None,
     stable_checks: int | None = None,
     idle_timeout: int | None = None,
+    min_score: float | None = None,
+    sort_boxes: bool | None = None,
+    expand_margin: int | None = None,
+    merge_overlapping: bool | None = None,
+    iou_threshold: float | None = None,
 ) -> dict[str, Any]:
     import re
     from services.vlm_grading_pipeline import _component_root
@@ -856,16 +894,41 @@ def update_grading_config(
             flags=re.MULTILINE,
         )
 
+    def yaml_bool(v: bool) -> str:
+        return "true" if v else "false"
+
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
+    if page_columns is not None:
+        text = replace_scalar(text, "page_columns", str(int(page_columns)))
+    if column_split_ratio is not None:
+        text = replace_scalar(text, "column_split_ratio", str(float(column_split_ratio)))
+    if contrast_enhance is not None:
+        text = replace_scalar(text, "contrast_enhance", yaml_bool(contrast_enhance))
+    if contrast_factor is not None:
+        text = replace_scalar(text, "contrast_factor", str(float(contrast_factor)))
+    if max_tokens is not None:
+        text = replace_scalar(text, "max_tokens", str(int(max_tokens)))
     if vlm_temperature is not None:
         text = replace_scalar(text, "temperature", str(float(vlm_temperature)))
+    if max_image_pixels is not None:
+        text = replace_scalar(text, "max_image_pixels", str(int(max_image_pixels)))
     if poll_interval is not None:
         text = replace_scalar(text, "poll_interval", str(int(poll_interval)))
     if stable_checks is not None:
         text = replace_scalar(text, "stable_checks", str(int(stable_checks)))
     if idle_timeout is not None:
         text = replace_scalar(text, "idle_timeout", str(int(idle_timeout)))
+    if min_score is not None:
+        text = replace_scalar(text, "min_score", str(float(min_score)))
+    if sort_boxes is not None:
+        text = replace_scalar(text, "sort_boxes", yaml_bool(sort_boxes))
+    if expand_margin is not None:
+        text = replace_scalar(text, "expand_margin", str(int(expand_margin)))
+    if merge_overlapping is not None:
+        text = replace_scalar(text, "merge_overlapping", yaml_bool(merge_overlapping))
+    if iou_threshold is not None:
+        text = replace_scalar(text, "iou_threshold", str(float(iou_threshold)))
 
     path.write_text(text, encoding="utf-8")
     return get_grading_config()
@@ -883,6 +946,7 @@ def get_grading_config() -> dict[str, Any]:
     image = cfg.get("image") if isinstance(cfg.get("image"), dict) else {}
     vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
     watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
+    detection = cfg.get("detection_service") if isinstance(cfg.get("detection_service"), dict) else {}
 
     sc_config_path = _component_root().parents[1] / "config.yaml"
     try:
@@ -903,10 +967,21 @@ def get_grading_config() -> dict[str, Any]:
 
     return {
         "dpi": image.get("dpi"),
+        "page_columns": image.get("page_columns"),
+        "column_split_ratio": image.get("column_split_ratio"),
+        "contrast_enhance": image.get("contrast_enhance"),
+        "contrast_factor": image.get("contrast_factor"),
+        "max_tokens": vlm.get("max_tokens"),
         "vlm_temperature": vlm.get("temperature"),
+        "max_image_pixels": vlm.get("max_image_pixels"),
         "poll_interval": watch.get("poll_interval"),
         "stable_checks": watch.get("stable_checks"),
         "idle_timeout": watch.get("idle_timeout"),
+        "min_score": detection.get("min_score"),
+        "sort_boxes": detection.get("sort_boxes"),
+        "expand_margin": detection.get("expand_margin"),
+        "merge_overlapping": detection.get("merge_overlapping"),
+        "iou_threshold": detection.get("iou_threshold"),
         "vlm_model": sc_text_gen.get("vlm_name"),
         "ocr_model": sc_ocr.get("rec_model"),
         "layout_model": layout_model,

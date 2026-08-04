@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi import Query
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 
 from api.schemas import (
     FsListResponse,
@@ -31,6 +31,7 @@ from services.grading_service_impl import (
     get_rubric_content as get_rubric_content_impl,
     update_rubric_content as update_rubric_content_impl,
     get_task_summary as get_task_summary_impl,
+    get_student_result as get_student_result_impl,
     get_health,
     get_task_status as get_task_status_impl,
     list_directory as list_directory_impl,
@@ -73,10 +74,21 @@ def create_router(language: str) -> APIRouter:
         try:
             return GradingConfigResponse(**update_grading_config_impl(
                 dpi=req.dpi,
+                page_columns=req.page_columns,
+                column_split_ratio=req.column_split_ratio,
+                contrast_enhance=req.contrast_enhance,
+                contrast_factor=req.contrast_factor,
+                max_tokens=req.max_tokens,
                 vlm_temperature=req.vlm_temperature,
+                max_image_pixels=req.max_image_pixels,
                 poll_interval=req.poll_interval,
                 stable_checks=req.stable_checks,
                 idle_timeout=req.idle_timeout,
+                min_score=req.min_score,
+                sort_boxes=req.sort_boxes,
+                expand_margin=req.expand_margin,
+                merge_overlapping=req.merge_overlapping,
+                iou_threshold=req.iou_threshold,
             ))
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -145,6 +157,15 @@ def create_router(language: str) -> APIRouter:
             return TaskSummaryJsonResponse(**get_task_summary_impl(task_id))
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
+
+    @router.get("/grading/tasks/{task_id}/students/{slot}/result")
+    async def get_student_result(task_id: str, slot: str) -> JSONResponse:
+        try:
+            return JSONResponse(content=get_student_result_impl(task_id, slot))
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"unexpected error: {exc}") from exc
 

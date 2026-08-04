@@ -170,11 +170,10 @@ jobs:
       
       - name: Install dependencies and pylint
         run: |
-          pip install pylint
-          # Install project dependencies if requirements.txt exists
-          if [ -f "metro-ai-suite/smart-nvr/requirements.txt" ]; then
-            pip install -r metro-ai-suite/smart-nvr/requirements.txt || true
-          fi
+          pip install pylint uv==0.8.12
+          # Resolve project runtime dependencies from the uv lockfile (replaces requirements.txt)
+          uv export --directory metro-ai-suite/smart-nvr --frozen --no-dev --format requirements-txt -o /tmp/smart-nvr-requirements.txt
+          pip install -r /tmp/smart-nvr-requirements.txt || true
       
       - name: Run pylint
         run: |

@@ -4,23 +4,24 @@ Quick reference for developers contributing to Smart NVR.
 
 ## Setup
 
-Install development dependencies:
+Install [uv](https://docs.astral.sh/uv/), then create the development environment
+(runtime + test dependencies) from the lockfile:
 
 ```bash
-poetry install --with test
+uv sync
 ```
 
 ## Running Tests
 
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run with coverage report
-poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
+uv run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
 
 # Generate HTML coverage report (optional)
-poetry run coverage html
+uv run coverage html
 ```
 
 Open `htmlcov/index.html` to view coverage details.
