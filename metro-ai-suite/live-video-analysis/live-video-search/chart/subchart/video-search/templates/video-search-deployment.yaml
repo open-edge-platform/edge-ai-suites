@@ -11,6 +11,8 @@ spec:
       app: video-search
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/video-search-configmap.yaml") . | sha256sum }}
       labels:
         app: video-search
         {{- include "lvs.videosearch.selectorLabels" . | nindent 8 }}

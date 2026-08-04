@@ -21,6 +21,8 @@ spec:
       app: multimodal-embedding-serving
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/multimodal-embedding-serving-configmap.yaml") . | sha256sum }}
       labels:
         app: multimodal-embedding-serving
         {{- include "lvs.mmes.selectorLabels" . | nindent 8 }}

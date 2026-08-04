@@ -11,6 +11,8 @@ spec:
       app: nvr-event-router
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/nvr-event-router-configmap.yaml") . | sha256sum }}
       labels:
         app: nvr-event-router
         {{- include "lvs.nvrrouter.selectorLabels" . | nindent 8 }}

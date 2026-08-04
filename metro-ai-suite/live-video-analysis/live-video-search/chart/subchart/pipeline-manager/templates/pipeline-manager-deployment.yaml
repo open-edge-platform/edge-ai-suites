@@ -11,6 +11,8 @@ spec:
       app: pipeline-manager
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/pipeline-manager-configmap.yaml") . | sha256sum }}
       labels:
         app: pipeline-manager
         {{- include "lvs.pipeline.selectorLabels" . | nindent 8 }}
