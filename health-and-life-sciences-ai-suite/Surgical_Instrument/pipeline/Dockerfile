@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Surgical Instrument — DL Streamer pipeline container.
 #
 # Base: Intel DL Streamer Pipeline Server 2026.1.0 (contains gstreamer 1.28,

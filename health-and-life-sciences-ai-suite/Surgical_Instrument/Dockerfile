@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Surgical Instrument — backend image.
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
