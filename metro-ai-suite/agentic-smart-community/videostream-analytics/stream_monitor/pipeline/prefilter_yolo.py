@@ -324,8 +324,12 @@ class FramePrefilter:
 
             if dets:
                 self._consecutive_misses = 0
-                if not self._pass_decided:
-                    self._frame_hits += 1
+                # Count hits unconditionally: reset_for_next_segment() zeroes
+                # _frame_hits while preserving _pass_decided, so gating this on
+                # `not _pass_decided` would leave every segment after the first
+                # with hits=0 — result() then discards them as "tail" segments
+                # even though the person is still visible.
+                self._frame_hits += 1
                 for d in dets:
                     self._hit_classes.add(d["name"])
                     if d["conf"] > self._max_conf:
