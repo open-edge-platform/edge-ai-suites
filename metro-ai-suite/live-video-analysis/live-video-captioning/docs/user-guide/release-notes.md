@@ -29,7 +29,7 @@
 
 **April 01, 2026**
 
-Live Video Captioning is a new sample application, using DLStreamer and VLMs to produce captions
+Live Video Captioning is a new sample application, using DL Streamer and VLMs to produce captions
 on live camera feed. It enables you to configure the VLM model used, prompt, frame selection,
 the rate at which the captions are generated, frame resolution, and more. It also presents
 usage metrics of CPU, iGPU, and memory. A rich UI displays all the configuration options, live
@@ -40,7 +40,7 @@ generation delay. Docker-based deployment is supported currently.
 
 **New**
 
-- Docker Compose stack integrating DLStreamer pipeline server, WebRTC signaling (mediamtx),
+- Docker Compose stack integrating DL Streamer pipeline server, WebRTC signaling (mediamtx),
   TURN (coturn), and FastAPI dashboard.
 - Multi-model discovery from `ov_models/`.
 - Live captions via SSE and live metrics via WebSockets.

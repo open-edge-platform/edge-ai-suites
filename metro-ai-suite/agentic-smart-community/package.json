@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=packages/ui && tsc -b",
+    "build": "npm run build --workspace=packages/dashboard && tsc -b",
     "clean": "tsc -b --clean",
     "dev": "npm run dev --workspace=packages/mcp-server",
     "test:sdk": "node --import tsx --test tests/framework-adapter-sdk/*.test.ts",
