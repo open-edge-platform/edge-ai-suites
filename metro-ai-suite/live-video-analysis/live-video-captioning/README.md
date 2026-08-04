@@ -13,7 +13,7 @@ To see the system requirements and other installations, see the following guides
 
 ## How It Works
 
-The overall infrastructure involves ingesting an RTSP stream, processing it through a DLStreamer pipeline that samples frames for VLM inference, and delivering the resulting insights to the dashboard.
+The overall infrastructure involves ingesting an RTSP stream, processing it through a DL Streamer pipeline that samples frames for VLM inference, and delivering the resulting insights to the dashboard.
 
 ![System Architecture Diagram](./docs/user-guide/_assets/architecture.jpg)
 
