@@ -111,11 +111,11 @@ hide_directive-->
          "destination": {
            "frame": {
              "type": "webrtc",
-             "peer-id": "pdd"
-           },
-           "overlay-properties": {
-               "font-scale": 1.0,
-               "draw-txt-bg": false
+             "peer-id": "pdd",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
          },
          "parameters": {
@@ -147,11 +147,11 @@ hide_directive-->
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
-               },
-               "overlay-properties": {
-                   "font-scale": 1.0,
-                   "draw-txt-bg": false
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -249,11 +249,11 @@ hide_directive-->
           "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "pdd"
-            },
-            "overlay-properties": {
-                "font-scale": 1.0,
-                "draw-txt-bg": false
+              "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
           },
           "parameters": {
@@ -291,11 +291,11 @@ hide_directive-->
                 "destination": {
                 "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
-                },
-                "overlay-properties": {
-                    "font-scale": 1.0,
-                    "draw-txt-bg": false
+                   "peer-id": "anomaly",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
                 },
                 "parameters": {

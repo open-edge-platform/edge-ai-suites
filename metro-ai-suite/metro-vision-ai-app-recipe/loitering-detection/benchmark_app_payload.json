@@ -14,11 +14,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
-                },
-                "overlay-properties": {
-                    "font-scale": 1.0,
-                    "draw-txt-bg": false
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -44,11 +44,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
-                },
-                "overlay-properties": {
-                    "font-scale": 1.0,
-                    "draw-txt-bg": false
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -74,11 +74,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
-                },
-                "overlay-properties": {
-                    "font-scale": 1.0,
-                    "draw-txt-bg": false
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {

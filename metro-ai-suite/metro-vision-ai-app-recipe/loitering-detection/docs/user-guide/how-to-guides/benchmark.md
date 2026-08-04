@@ -140,11 +140,11 @@ and `classification-properties` with additional parameters:
             },
             "frame": {
                 "type": "webrtc",
-                "peer-id": "object_detection_$x"
-            },
-            "overlay-properties": {
-                "font-scale": 1.0,
-                "draw-txt-bg": false
+                "peer-id": "object_detection_$x",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
         },
         "parameters": {
