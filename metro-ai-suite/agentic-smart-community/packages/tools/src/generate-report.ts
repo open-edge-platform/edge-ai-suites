@@ -22,6 +22,14 @@ export interface ReportConfig {
 // Time range helpers
 // ---------------------------------------------------------------------------
 
+/** Local calendar date as YYYY-MM-DD (not UTC — reports are about the local day). */
+function localYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function calcPeriod(
   type: string,
   period_start?: string,
@@ -33,17 +41,20 @@ function calcPeriod(
     }
     return { periodStart: period_start, periodEnd: period_end };
   }
+  // Bounds are local-time, space-separated (`YYYY-MM-DD HH:MM:SS`) to match the
+  // canonical format stored in start_time / created_at. A `T`-separated or UTC
+  // bound would mis-sort against space-separated column values in SQLite's
+  // lexicographic string comparison and silently drop same-day rows.
   const now = new Date();
-  const todayStart = now.toISOString().slice(0, 10) + " 00:00";
-  const todayEnd   = now.toISOString().slice(0, 10) + " 23:59";
-  if (type === "daily") return { periodStart: todayStart, periodEnd: todayEnd };
+  const todayEnd = localYmd(now) + " 23:59:59";
+  if (type === "daily") return { periodStart: localYmd(now) + " 00:00:00", periodEnd: todayEnd };
   if (type === "weekly") {
     const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return { periodStart: d.toISOString().slice(0, 10) + " 00:00", periodEnd: todayEnd };
+    return { periodStart: localYmd(d) + " 00:00:00", periodEnd: todayEnd };
   }
   if (type === "monthly") {
     const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    return { periodStart: d.toISOString().slice(0, 10) + " 00:00", periodEnd: todayEnd };
+    return { periodStart: localYmd(d) + " 00:00:00", periodEnd: todayEnd };
   }
   throw new Error(`Unknown report type: ${type}`);
 }

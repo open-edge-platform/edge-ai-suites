@@ -152,7 +152,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    {
      "mcp": {
        "servers": {
-         "smart-building": {
+         "smartbuilding": {
            "transport": "streamable-http",
            "url": "http://localhost:3100/mcp"
          }
