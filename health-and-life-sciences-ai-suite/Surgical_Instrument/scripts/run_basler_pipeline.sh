@@ -13,7 +13,7 @@ set -euo pipefail
 #   DISPLAY_VIEW=1     : ... ! gvawatermark ! (download) ! autovideosink
 #                        -> live window with detection boxes (needs X11 / RDP GUI)
 #
-# NOTE on the source: your DLStreamer 2026.1 image does NOT ship `gencamsrc`
+# NOTE on the source: your DL Streamer 2026.1 image does NOT ship `gencamsrc`
 # or `pylonsrc` (verified), so we cannot use the reference `gencamsrc ...`
 # line. Instead we bridge the camera with pypylon (basler_reader.py) into
 # `fdsrc`, then run the GPU-optimized path (vapostproc -> VAMemory/NV12 ->
