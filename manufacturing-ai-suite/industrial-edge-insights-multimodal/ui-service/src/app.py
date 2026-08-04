@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""UI service — FastAPI web application for the agentic predictive maintenance blueprint.
+"""UI service — FastAPI web application for the Agentic Weld Quality Analysis blueprint.
 
 Talks to the detection layer and the agent (reasoning) layer as two
 independent backends, correlated only by a shared ``run_id``:
