@@ -49,15 +49,35 @@ ROI helps scenes where the subject occupies a small, low-motion part of the
 frame — e.g. child-safety, where a child covers little of the image and moves
 subtly, so full-frame observation risks misdetection.
 
-When enabled, required/default fields:
+ROI is **trajectory-driven, not geometry-driven**: the prefilter's YOLO hits
+accumulate a union bbox per segment, and the ROI crop is that trajectory region
+expanded by `expand`. There is no geometry to collect from the user.
 
-- `mode: crop` (default)
-- `expand: 0.25` (default)
-- `auto_split_area` and other tuning — advanced manual config only; leave unset
-  unless the user explicitly asks.
+When the user answers `P2=yes`, apply the template defaults verbatim — no
+further ROI questions:
 
-Do not infer ROI geometry from the use-case description — collect it from the
-user. Assemble as `roi: { enabled: true, mode: crop, expand: 0.25, ... }`.
+```yaml
+roi:
+  enabled: true
+  mode: crop            # zoomed-in view of the trajectory region
+  expand: 0.25          # expand the trajectory bbox by 25% on each side
+  auto_split_area: 0.35 # early-split the segment when the union bbox exceeds 35% of the frame
+```
+
+- `mode: crop` (default) — crop to the trajectory region only. Other modes
+  (`highlight`, `crop_and_concat`) are advanced manual config; switch only when
+  the user explicitly asks (e.g. the alert semantics depend on scene context
+  that a crop would cut away).
+- `expand` / `auto_split_area` tuning — advanced manual config only; change
+  only when the user explicitly asks.
+
+**Dependency:** the trajectory comes from prefilter hits, so ROI silently
+no-ops when prefilter is disabled. If the user answers `P1=no, P2=yes`, warn
+that ROI has no trajectory source without prefilter, and ask them to either
+enable prefilter (recommended) or drop ROI. Never ship `roi.enabled=true` with
+`prefilter.enabled=false`.
+
+Assemble as `roi: { enabled: true, mode: crop, expand: 0.25, auto_split_area: 0.35 }`.
 
 ## Assemble the exact config
 
@@ -74,6 +94,7 @@ pipeline_config:
     enabled: true
     mode: crop
     expand: 0.25
+    auto_split_area: 0.35
 ```
 
 **Explicit-off** (user answered `P1=no, P2=no`) — assemble and display the
@@ -98,7 +119,7 @@ Monitor Pipeline Decision
   Target Classes: <classes> | not applicable
   Labels Source: <source> | not applicable
   ROI Focus: enabled | disabled
-  ROI Parameters: <parameters> | not applicable
+  ROI Parameters: defaults (mode=crop, expand=0.25, auto_split_area=0.35) | <custom parameters> | not applicable
 ```
 
 ## Monitor report template
