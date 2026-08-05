@@ -4,7 +4,7 @@
 
 **August 4, 2026**
 
-**Dependency Updates**
+**Improved**
 
 - Updated dependency specifications to use compatible-release (`~=`) versioning based on PEP 440 standard.
 - Updated all dependencies to latest compatible versions.
