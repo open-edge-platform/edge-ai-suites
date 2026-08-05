@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Surgical Instrument — backend image.
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
@@ -10,76 +13,40 @@
 # these, torch.xpu.device_count() returns 0 even when /dev/dri is mounted
 # and the process is in the render group.
 
-FROM ubuntu:24.04
-
-WORKDIR /app
+# ==========================================================================
+# Stage 1 (builder): install every Python package, then hand only the
+# resulting /usr/local tree to the runtime stage. Build-only tooling
+# (compilers, dev headers, pip caches) and the transient CUDA payload
+# Ultralytics pulls never reach the final image.
+# ==========================================================================
+FROM ubuntu:24.04 AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
     DEBIAN_FRONTEND=noninteractive
 
-# Base runtime: Python + OpenCV shared libs + curl for HEALTHCHECK.
-# The Intel graphics userspace (libze-intel-gpu, intel-opencl-icd, level-zero
-# NPU driver) is installed from Intel's compute-runtime repo below — this is
-# what the DL Streamer pipeline container also uses.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 \
       python3-pip \
-      python3-venv \
-      libglib2.0-0 \
-      libgl1 \
-      libsm6 \
-      libxext6 \
-      libxrender1 \
-      libxcb1 \
-      curl \
+      python3-dev \
+      build-essential \
       wget \
-      gnupg \
-      gpg-agent \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
-      | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" \
-      > /etc/apt/sources.list.d/intel-gpu-noble.list \
-    && apt-get update && apt-get install -y --no-install-recommends \
-      libze1 \
-      libze-intel-gpu1 \
-      intel-opencl-icd \
-      intel-media-va-driver-non-free \
-    && rm -rf /var/lib/apt/lists/*
-
-# torch + torchvision XPU wheels (Intel iGPU / Arc / Xe) — installed from
-# Intel's PyPI index BEFORE the rest of the requirements so ultralytics
-# doesn't pull the CPU-only torch as a dependency.
+# Intel oneAPI Python runtime that torch+xpu links against at run time
+# (SYCL, oneMKL, TBB, OpenMP, compiler runtimes). torch itself is installed
+# in a single later layer (with the app requirements) so the ~2 GB wheel is
+# not duplicated across layers and the transient CUDA payload Ultralytics
+# pulls can be purged in that same layer.
 #
 # Version pin matches the poc/gabriel_test/.venv setup that trained YOLO11n
 # on MTL's Arc iGPU end-to-end in ~21 minutes for 50 epochs. torch 2.7.x
 # had immature SYCL kernels for YOLO's loss / target-assignment ops and
 # stalls indefinitely inside get_assigned_targets_and_loss on Xe3.
-#
-# We install the torch/torchvision wheels by direct URL from
-# download.pytorch.org (rather than from --index-url) because pip's index
-# resolution redirects wheel downloads through the Cloudflare R2 mirror
-# (download-r2.pytorch.org), whose TLS handshake is rejected by our
-# corporate proxy. The two large wheels are still served from S3 by the
-# primary host directly and succeed via the proxy.
-#
-# --no-deps + explicit dep install below because triton-xpu==3.7.1 is
-# ONLY served from the R2 mirror (S3 direct returns AccessDenied). We
-# skip triton-xpu entirely — it's used exclusively by torch.compile,
-# which Ultralytics YOLO training does not invoke.
 RUN pip install \
-      --retries 8 \
-      --timeout 120 \
-      --no-deps \
-      "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
-      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl" \
- && pip install \
       --retries 8 \
       --timeout 120 \
       "filelock>=3.13" \
@@ -108,40 +75,123 @@ RUN pip install \
       "tcmlib==1.4.1" \
       "umf==1.0.3" \
       "oneccl==2021.17.2" \
-      "oneccl-devel==2021.17.2" \
       "impi-rt==2021.17.2"
 
-COPY backend/requirements.txt /app/backend/requirements.txt
-RUN pip install -r /app/backend/requirements.txt
-
-# Re-pin torch+xpu after requirements.txt runs. Ultralytics 8.4.75's
-# transitive resolution pulls torch 2.12.1+cu130 from PyPI (CUDA build)
-# and silently replaces our XPU wheel. We force-reinstall the XPU wheel
-# by direct URL, --no-deps so no other package gets touched.
-RUN pip install \
-      --retries 8 \
-      --timeout 120 \
-      --no-deps \
-      --force-reinstall \
+COPY backend/requirements.txt /tmp/requirements.txt
+# Single layer: install the app requirements (Ultralytics transiently pulls a
+# CUDA torch build + multi-GB nvidia-* CUDA wheels), force the XPU torch/vision
+# wheels back by direct URL (--no-deps so nothing else is touched), then purge
+# the now-unused CUDA/triton payload. Doing all of this in one RUN means none
+# of the transient CUDA download persists in an intermediate image layer.
+#
+# Direct download.pytorch.org URLs are used (not --index-url) because pip's
+# index resolution redirects wheels through the Cloudflare R2 mirror whose TLS
+# handshake is rejected by our corporate proxy; the primary S3 host works.
+RUN pip install -r /tmp/requirements.txt \
+ && pip install --retries 8 --timeout 120 --no-deps --force-reinstall \
       "https://download.pytorch.org/whl/xpu/torch-2.12.1%2Bxpu-cp312-cp312-linux_x86_64.whl" \
-      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl"
+      "https://download.pytorch.org/whl/xpu/torchvision-0.27.1%2Bxpu-cp312-cp312-manylinux_2_28_x86_64.whl" \
+ && pip freeze | grep -iE "^nvidia-|^triton" | cut -d'=' -f1 | xargs -r pip uninstall -y
+
+# Ultralytics transitive resolution can pull CUDA/NVIDIA Python packages.
+# Remove them so the final runtime image stays Intel XPU-only.
+RUN python3 - <<'PY'
+import importlib.metadata as md
+import subprocess
+import sys
+
+installed = {dist.metadata.get("Name", "").strip() for dist in md.distributions()}
+targets = sorted(
+  n for n in installed if n and n.lower().startswith(("nvidia-", "cuda-"))
+)
+
+if targets:
+  print("Removing CUDA/NVIDIA packages:", ", ".join(targets))
+  subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", *targets])
+else:
+  print("No CUDA/NVIDIA Python packages found to remove")
+PY
+
+# Hard gate: fail build if any CUDA/NVIDIA package still remains.
+RUN python3 - <<'PY'
+import importlib.metadata as md
+
+left = sorted(
+  n
+  for n in {dist.metadata.get("Name", "").strip() for dist in md.distributions()}
+  if n and n.lower().startswith(("nvidia-", "cuda-"))
+)
+
+if left:
+  raise SystemExit(f"ERROR: prohibited CUDA/NVIDIA packages still installed: {left}")
+print("CUDA/NVIDIA Python package check passed")
+PY
 
 # Application code.
 COPY backend/ /app/backend/
 
 # ---------------------------------------------------------------------------
-# Slice E: Basler USB3 camera enumeration.
-# Intentionally placed AFTER the (expensive) torch+xpu install and the
-# `COPY backend/` step so tweaks to this layer never invalidate the multi-
-# gigabyte torch cache. `pypylon` bundles the pylon USB3 runtime; libusb
-# is the only apt dep the wheel needs. Actual USB access is granted at
-# `docker run` time via the /dev/bus/usb passthrough that `make up` wires
+# Slice E: Basler USB3 camera enumeration. `pypylon` bundles the pylon USB3
+# runtime (self-contained wheel); `libusb` is a runtime-only shared lib,
+# installed via apt in the runtime stage below. Actual USB access is granted
+# at `docker run` time via the /dev/bus/usb passthrough that `make up` wires
 # in when it detects a Basler vendor ID 2676 on the host.
 # ---------------------------------------------------------------------------
+RUN pip install --retries 4 --timeout 60 pypylon==4.0.0
+
+
+# ==========================================================================
+# Stage 2 (runtime): fresh base + only the runtime apt libraries + the
+# Python packages copied from the builder. No compilers, no pip build
+# caches, no transient CUDA payload — just what the server needs to run.
+# ==========================================================================
+FROM ubuntu:24.04
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Runtime apt: Python, OpenCV/X shared libs, libusb (pylon), curl for the
+# HEALTHCHECK, plus the Intel graphics compute runtime (Level Zero GPU +
+# OpenCL ICD + media driver) that torch.xpu needs at run time. Without these
+# torch.xpu.device_count() returns 0 even with /dev/dri mounted.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 \
+      python3-pip \
+      libglib2.0-0 \
+      libgl1 \
+      libsm6 \
+      libxext6 \
+      libxrender1 \
+      libxcb1 \
       libusb-1.0-0 \
- && rm -rf /var/lib/apt/lists/* \
- && pip install --retries 4 --timeout 60 pypylon==4.0.0
+      curl \
+      wget \
+      gnupg \
+      gpg-agent \
+      ca-certificates \
+    && wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
+         | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" \
+         > /etc/apt/sources.list.d/intel-gpu-noble.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      libze1 \
+      libze-intel-gpu1 \
+      intel-opencl-icd \
+      intel-media-va-driver-non-free \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bring over every Python package installed in the builder (torch+xpu, the
+# Intel oneAPI runtime, ultralytics, pypylon, Flask, ...) plus console
+# entry-point scripts and any bundled .so under /usr/local/lib. Both stages
+# are ubuntu:24.04 -> Python 3.12, so the dist-packages path matches exactly.
+COPY --from=builder /usr/local /usr/local
+
+# Application code.
+COPY backend/ /app/backend/
 
 # Container-side paths. Override from compose to bind-mount host dirs.
 ENV BACKEND_CONFIG=/app/backend/config/model.yaml \

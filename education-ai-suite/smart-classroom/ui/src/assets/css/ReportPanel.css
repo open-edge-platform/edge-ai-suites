@@ -344,6 +344,15 @@
   background: var(--intel-blue-dark);
 }
 
+.report-download-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.report-download-btn:disabled:hover {
+  background: var(--intel-blue);
+}
+
 /* Done-state action row */
 .report-done-actions {
   display: flex;

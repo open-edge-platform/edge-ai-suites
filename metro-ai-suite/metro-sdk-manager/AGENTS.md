@@ -13,9 +13,9 @@ OEP SDK Manager is a comprehensive development tool that streamlines discovering
 
 | SDK | Install Script | Tutorials | Description |
 |:----|:---------------|:----------|:------------|
-| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DLStreamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
+| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DL Streamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
 | OEP Gen AI SDK | `scripts/oep-gen-ai-sdk.sh` | `docs/user-guide/oep-gen-ai-sdk/` | Audio Analyzer, VLM serving, embedding, document ingestion |
-| Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DLStreamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
+| Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DL Streamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
 | UAV Mission Compute SDK | `scripts/uav-mission-compute-sdk.sh` | `docs/user-guide/uav-mission-compute-sdk/` |  |
 
 Each SDK installs Docker container images and clones GitHub repositories (`edge-ai-libraries`, `edge-ai-suites`).

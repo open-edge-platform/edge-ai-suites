@@ -22,23 +22,9 @@ pip install -r requirements.txt
 
 #### LibreOffice (Optional)
 
-This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
+Required only if you need to ingest legacy **.doc/.ppt/.xls** documents; modern formats (`.docx`, `.pptx`, `.xlsx`) do not need it.
 
-1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
-3. Add to PATH:
-
-   ```powershell
-   # Open PowerShell as Administrator:
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
-   ```
-
-4. Verify installation:
-
-   ```python
-   import shutil
-   shutil.which("soffice") is not None
-   ```
+LibreOffice setup (install, add `soffice` to `PATH`, and verify) is documented once in the user guide — see [Install LibreOffice](../../../user-guide/advance-setup-guide.md#e-install-libreoffice-optional-feature-dependent). The same `soffice` executable also powers PDF report export.
 
 ## Start service
 

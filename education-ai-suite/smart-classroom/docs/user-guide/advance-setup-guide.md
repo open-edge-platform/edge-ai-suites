@@ -46,6 +46,22 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### E. Install LibreOffice (optional, feature-dependent)
+
+LibreOffice (the `soffice` executable) is an **optional** dependency used by two features. Install it only if you enable a feature that needs it:
+
+- **`report` — PDF report export:** The class report is generated as a `.docx` file. When you download it as **PDF**, the server converts the `.docx` using LibreOffice in headless mode (`soffice --convert-to pdf`). If LibreOffice is **not** installed, `.docx` download still works normally and only the PDF download returns `501 (PDF export unavailable)`.
+- **`content_search` — legacy document parsing:** Ingesting legacy Office formats (`.doc`, `.ppt`, `.xls`) requires LibreOffice to convert them. Modern formats (`.docx`, `.pptx`, `.xlsx`) do not need it. If LibreOffice is missing, uploading a legacy format is rejected with a message asking you to install it or convert to a modern format.
+
+If you enable either use case, download and install LibreOffice from [https://www.libreoffice.org/download/](https://www.libreoffice.org/download/), then make sure the `soffice` executable is available on your system `PATH`.
+
+Verify the executable is discoverable:
+
+```python
+import shutil
+shutil.which("soffice") is not None   # should return True
+```
+
 ## Step 2: Configuration
 
 ### A. Enable Feature Configuration
@@ -133,6 +149,44 @@ board_ocr:
 > **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
 >
 > **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
+
+### F. Speaker Diarization Setup (Optional)
+
+Speaker diarization is supported using Pyannote Audio models.
+To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+
+#### a. Request Model Access on Hugging Face
+
+Pyannote diarization models require gated access.
+
+Request access here:
+
+[Pyannote Speaker Diarization Community v1](https://huggingface.co/pyannote/speaker-diarization-community-1)
+
+Click "Request Access" on the model page and wait for approval.
+
+#### b. Create a Hugging Face Access Token
+
+After approval:
+
+Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
+
+Create a Read access token
+
+Copy the generated token
+
+#### c. Configure Hugging Face Token in Project Config
+
+Open `smart-classroom/config.yaml` and set `diarization: true` under `models.asr`, then add your Hugging Face token:
+
+```yaml
+models:
+  asr:
+    diarization: true
+    hf_token: "hf_your_access_token_here"
+```
+
+> **Note:** The diarization model downloads automatically on next startup once `diarization: true` is set.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -299,43 +353,6 @@ ipconfig
 Use the IPv4 Address from your active network adapter.
 
 If you changed the port, adjust the URL accordingly.
-
-## Step 7: Speaker Diarization Setup (Pyannote)
-
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
-
-### a. Request Model Access on Hugging Face
-
-Pyannote diarization models require gated access.
-
-Request access here:
-
-[Pyannote Speaker Diarization Community v1](https://huggingface.co/pyannote/speaker-diarization-community-1)
-
-
-Click "Request Access" on the model page and wait for approval.
-
-### b. Create a Hugging Face Access Token
-
-After approval:
-
-Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
-
-Create a Read access token
-
-Copy the generated token
-
-### c. Configure Hugging Face Token in Project Config
-
-Open your model configuration file `config/models.yaml` Add your Hugging Face token:
-
-```yaml
-models:
-  asr:
-    diarization: true
-    hf_token: "hf_your_access_token_here"
-```
 
 ## Troubleshooting
 
