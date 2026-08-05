@@ -300,10 +300,18 @@ class StreamPipeline(BaseMonitor):
     def _should_exit_motion(self, detector: MotionDetector, motion_frames: int) -> bool:
         """Cascaded exit logic: motion detector + prefilter collaboration.
 
+        Motion gate disabled (motion.enabled=false): the stream is treated as
+        one continuous motion — exit only when an enabled prefilter has passed
+        and then decides the person left (exit_decided). With no prefilter
+        there is no semantic exit; segments are cut on max_duration alone.
         Without prefilter: exit when detector says static.
         With prefilter, before pass: exit when static AND min_dur reached AND decided.
         With prefilter, after pass: exit ONLY when exit_decided (YOLO no longer sees person).
         """
+        if not self._motion_cfg.enabled:
+            if self._prefilter is None:
+                return False
+            return self._prefilter.pass_decided and self._prefilter.exit_decided
         if self._prefilter is None:
             return detector.is_static
         if self._prefilter.pass_decided:
@@ -315,6 +323,14 @@ class StreamPipeline(BaseMonitor):
     def _process_loop(self):
         """Read frames, detect motion, extract segments with fixed interval."""
         detector = MotionDetector(self._motion_cfg)
+        if not self._motion_cfg.enabled:
+            logger.info("[%s] Motion gate disabled (motion.enabled=false)", self.source_id)
+            if self._prefilter is None:
+                logger.warning(
+                    "[%s] motion.enabled=false with prefilter disabled: every "
+                    "%ss segment will be emitted as a motion event",
+                    self.source_id, self._segment_cfg.max_duration,
+                )
         motion_dir = os.path.join(self._data_dir, "motion_events")
         extractor = SegmentExtractor(
             config=self._segment_cfg,
@@ -372,8 +388,11 @@ class StreamPipeline(BaseMonitor):
                     static_start_wall = time.time()
                     static_start_iso = datetime.now().isoformat(timespec="seconds")
 
-            # Motion detection
-            motion_detected = detector.detect(frame)
+            # Motion detection. When the gate is disabled (motion.enabled=false)
+            # every frame counts as motion — the prefilter (or, without one, the
+            # max_duration segment interval) becomes the only emit gate, and the
+            # frame-diff detector is skipped entirely to save CPU.
+            motion_detected = True if not self._motion_cfg.enabled else detector.detect(frame)
 
             # State: enter motion
             if motion_detected and not in_motion:

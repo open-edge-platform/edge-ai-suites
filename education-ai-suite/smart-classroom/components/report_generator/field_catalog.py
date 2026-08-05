@@ -31,7 +31,8 @@ REPORT_TEMPLATE_FIELD_GROUPS = [
         # Auto metadata: always present, not a user-toggleable checkbox.
         {"code": "report_time", "kind": "raw", "always_on": True, "label_key": "report_time"},
         {"code": "report_delay_after_class", "kind": "raw", "always_on": True, "label_key": "report_delay_after_class"},
-        {"code": "keywords_count", "kind": "raw", "always_on": True, "label_key": "keywords_count"},
+        # Pre-formatted keyword-count note (e.g. "（共8个）"), empty when none. See resolve_raw_fields.
+        {"code": "keywords_count_note", "kind": "raw", "always_on": True, "label_key": "keywords_count"},
         # Number of camera feeds recorded, counted from the VA output markers.
         # Always-on: filled directly and shown via a template placeholder, never a
         # user-toggleable checkbox.
