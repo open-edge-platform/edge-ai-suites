@@ -89,18 +89,17 @@ For the first run, create the runtime data directory and copy the configuration 
 export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
 mkdir -p "$SMARTBUILDING_DATA_DIR"
 cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
-
-# Optional: start with an existing monitor configuration.
-# cp <your-monitors.yaml> "$SMARTBUILDING_DATA_DIR/monitors.yaml"
+# The launcher starts with an empty monitors.yaml
+cp monitors.yaml.example "$SMARTBUILDING_DATA_DIR/monitors.yaml"
 ```
 
-Customize `$SMARTBUILDING_DATA_DIR/config.yaml` as needed, then start the server:
+Customize `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` as needed, then start the server:
 
 ```bash
 bash scripts/mcp-server/start.sh
 ```
 
-The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. If `monitors.yaml` does not exist on the first run, the launcher creates an empty one. For later configuration changes, update these two files and restart the server.
+The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. For later configuration changes, update these two files and restart the server.
 
 The server runs as a host process and exposes:
 
@@ -152,7 +151,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    {
      "mcp": {
        "servers": {
-         "smart-building": {
+         "smartbuilding": {
            "transport": "streamable-http",
            "url": "http://localhost:3100/mcp"
          }
@@ -216,8 +215,8 @@ You can publish a local video as a looping RTSP stream. Keep this command runnin
   ```text
   "Register a camera source at rtsp://localhost:8555/live using the child_safety use case."
   ```
-
-  When no monitor ID is specified, the MCP server assigns `cam_child_safety`. You can also provide a monitor ID explicitly.
+  > - Follow the agents' guidance and answer the required questions to complete the monitor registration and bring it online.
+  > - When no monitor ID is specified, the MCP server assigns `cam_child_safety`. You can also provide a monitor ID explicitly.
 
 **C. Generate a report**
 

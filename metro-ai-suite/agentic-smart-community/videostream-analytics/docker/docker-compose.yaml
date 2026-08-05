@@ -26,7 +26,10 @@ services:
       - no_proxy=localhost,127.0.0.1
       # Writable home for the non-root container user (see `user:` below).
       - HOME=/tmp
+      # Timezone align with host
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       # Identity bind mount (host X -> container X): the absolute data_dir MCP sends
       # (<root>/segments/<id>) resolves to the SAME real host directory inside the
       # container, so recordings/motion_events land on the host where the MCP clip
