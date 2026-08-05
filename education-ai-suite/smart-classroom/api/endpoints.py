@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.artifacts.path import get_session_dir, get_artifact_path
+from utils.artifacts import backup_status
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
@@ -46,6 +47,26 @@ def health():
     from model_manager import ModelManager
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
+
+
+@router.get("/session-status")
+def list_session_status(ready: bool = False):
+    sessions = backup_status.list_sessions(ready_only=ready)
+    return JSONResponse(
+        content={
+            "checked_at": backup_status.now_iso(),
+            "total": len(sessions),
+            "sessions": sessions,
+        },
+        status_code=200,
+    )
+
+
+@router.get("/session-status/{session_id}")
+def get_session_status(session_id: str):
+    status = backup_status.evaluate_session(session_id)
+    status["checked_at"] = backup_status.now_iso()
+    return JSONResponse(content=status, status_code=200)
 
 
 @router.get("/features")
