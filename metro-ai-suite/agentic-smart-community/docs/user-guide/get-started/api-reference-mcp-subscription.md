@@ -168,6 +168,8 @@ curl -fsS -N -X GET "$MCP_URL" \
   -H "mcp-session-id: $SID"
 ```
 
+> The idle stream prints periodic `keepalive` heartbeats to hold the connection open; this is expected. `curl` is not an SSE client, so it echoes every byte, including heartbeats. A real SSE/MCP client ignores them.
+
 When an alert is created, the stream receives a notification like this:
 
 ```text
