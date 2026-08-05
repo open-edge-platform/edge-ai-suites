@@ -98,8 +98,7 @@ class Pipeline:
 
     def run_mindmap(self):
 
-        session_dir = get_session_dir(self.session_id)
-        summary_path = os.path.join(session_dir, "summary.md")
+        summary_path = get_artifact_path(self.session_id, "summary.md")
         min_tokens = config.mindmap.min_token
 
         try:
@@ -164,7 +163,7 @@ class Pipeline:
             import json
             insufficient_mindmap_json = json.dumps(insufficient_mindmap, indent=2)
             
-            mindmap_path = os.path.join(session_dir, "mindmap.mmd")
+            mindmap_path = get_artifact_path(self.session_id, "mindmap.mmd")
             StorageManager.save(mindmap_path, insufficient_mindmap_json, append=False)
             return insufficient_mindmap_json
 
@@ -183,10 +182,7 @@ class Pipeline:
             pass
 
     def run_content_segmentation(self):
-
-        session_dir = get_session_dir(self.session_id)
-
-        transcription_path = os.path.join(session_dir, "content_segmentation_transcription.txt")
+        transcription_path = get_artifact_path(self.session_id, "content_segmentation_transcription.txt")
 
         session_state = SessionState.get_session_state(self.session_id)
         # VALIDATION: Check media duration match before processing
@@ -236,7 +232,7 @@ class Pipeline:
             )
 
             # 🔹 Save raw JSON string
-            topic_path = os.path.join(session_dir, "topics.json")
+            topic_path = get_artifact_path(self.session_id, "topics.json")
             StorageManager.save(topic_path, topic_json_str, append=False)
 
             # 🔥 Convert to Python object (CRITICAL FIX)

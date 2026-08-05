@@ -393,8 +393,8 @@ class VideoAnalyticsPipelineService:
         """
         try:
             # Create log file for pipeline output
-            log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir = Path(get_artifact_path(self.x_session_id, "va", "logs"))
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 

@@ -210,7 +210,7 @@ def start_video_analytics_pipeline(
                         logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
 
                         try:
-                            _stats_path = os.path.join(_session_dir, "va", "class_statistics.json")
+                            _stats_path = get_artifact_path(session_id, "va", "class_statistics.json")
                             os.makedirs(os.path.dirname(_stats_path), exist_ok=True)
                             with open(_stats_path, "w", encoding="utf-8") as _fh:
                                 json.dump(va_stats, _fh, indent=2, ensure_ascii=False)
@@ -716,10 +716,10 @@ def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
         )
     
     try:
-        base_path = get_session_dir(x_session_id)
+        session_root = get_session_dir(x_session_id)
 
-        if not os.path.exists(base_path):
-            logger.warn(f"Session path does not exist: {base_path}")
+        if not os.path.exists(session_root):
+            logger.warn(f"Session path does not exist: {session_root}")
             return JSONResponse(
                 content={
                     "session_id": x_session_id,
@@ -739,9 +739,9 @@ def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
             "front": None,
         }
         
-        back_path = os.path.join(base_path, "back.mp4")
-        content_path = os.path.join(base_path, "content.mp4") 
-        front_path = os.path.join(base_path, "front.mp4")
+        back_path = get_artifact_path(x_session_id, "back.mp4")
+        content_path = get_artifact_path(x_session_id, "content.mp4")
+        front_path = get_artifact_path(x_session_id, "front.mp4")
         
         if os.path.exists(back_path):
             videos["back"] = back_path

@@ -16,6 +16,11 @@ features:
   grading:            { enabled: true }
   report:             { enabled: true }
 
+output_layout:
+  result_dir: result
+  raw_dir: raw
+  logs_dir: logs
+
 monitoring:
   logs_dir: ./monitoring/logs
   interval: 2
