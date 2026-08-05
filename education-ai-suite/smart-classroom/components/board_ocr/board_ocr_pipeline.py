@@ -30,19 +30,6 @@ def _board_ocr_debug() -> bool:
     return bool(getattr(board_cfg, "debug", False)) if board_cfg else False
 
 
-def va_pipeline_enabled() -> bool:
-    """Whether the VA pipeline is enabled.
-
-    Board OCR sources its video from the VA content pipeline, so it can only run
-    when the VA pipeline is enabled. There is no `va_pipeline.enabled` flag today;
-    it defaults to True for forward compatibility with a future on/off switch.
-    """
-    va_cfg = getattr(config, "va_pipeline", None)
-    if va_cfg is None:
-        return True
-    return bool(getattr(va_cfg, "enabled", True))
-
-
 # ---------------------------------------------------------------------------
 # Frame Extractor (FFmpeg + Intel QSV)
 # ---------------------------------------------------------------------------
@@ -712,17 +699,9 @@ def start_board_ocr(session_id: str, content_source: Optional[str]) -> bool:
     """Start the board OCR twin pipeline for a content pipeline.
 
     Called from endpoints.py when the VA content pipeline starts, and only when
-    the board_ocr feature is enabled. Idempotent. No-op (with a log line) when
-    the VA pipeline is disabled.
+    Per the feature resolver, video_analytics is auto-enabled.
     """
     global _active_pipeline
-
-    if not va_pipeline_enabled():
-        logger.warning(
-            "The VA pipeline is not enabled; the content source is unavailable, "
-            "so board OCR will NOT start."
-        )
-        return False
 
     if not session_id:
         logger.error("Board OCR needs a session_id to start; skipping")
