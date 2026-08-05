@@ -78,7 +78,7 @@ An end-of-week report summarizes get-up times and on-time vs. late days.
 
 **Pipeline.**
 Motion detection plus an NPU YOLO pre-filter (person class) feed the Video Summary service, which reports whether the elder is up and at what time.
-This is a time-based use case: a custom rule adapter (`use-cases/elder_wakeup/evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](config.demo.yaml)).
+This is a time-based use case: a custom rule adapter (`demo/prompts/elder_wakeup_evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](config.demo.yaml)).
 
 **Two-camera design (optional second channel).**
 A second monitor, `cam_elder_bedroom_2` (disabled by default in [monitors.demo.yaml](monitors.demo.yaml)), reuses the same use case on a separate RTSP path, SQLite scope, and notification channel.
