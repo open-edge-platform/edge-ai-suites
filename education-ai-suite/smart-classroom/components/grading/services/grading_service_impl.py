@@ -925,6 +925,16 @@ def update_grading_config(
 
             out = lines[:i] + new_lines + lines[j:]
             return "\n".join(out) + ("\n" if t.endswith("\n") else "")
+
+        for i, line in enumerate(lines):
+            if re.match(r"^section_split\s*:\s*$", line):
+                if pairs:
+                    new_lines = ["  force_split_pairs:"]
+                    new_lines.extend(f"  - [{int(p[0])}, {int(p[1])}]" for p in pairs)
+                else:
+                    new_lines = ["  force_split_pairs: []"]
+                out = lines[: i + 1] + new_lines + lines[i + 1:]
+                return "\n".join(out) + ("\n" if t.endswith("\n") else "")
         return t
 
     if dpi is not None:

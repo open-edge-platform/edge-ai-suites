@@ -834,6 +834,42 @@
   margin: 0;
 }
 
+.grading-config-pair-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grading-config-pair-row .grading-config-input {
+  flex: 1;
+}
+
+.grading-config-row-remove {
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.grading-config-row-remove:hover:not(:disabled) {
+  color: #d9534f;
+}
+
+.grading-config-row-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.grading-config-row-add {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
 .grading-config-save {
   align-self: flex-start;
 }
