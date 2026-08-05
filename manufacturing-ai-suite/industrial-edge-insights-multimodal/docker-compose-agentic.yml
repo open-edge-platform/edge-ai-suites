@@ -74,7 +74,7 @@ services:
     # is rejected with "unsupported model settings" by OVMS for graph-based
     # models).
     command: >
-      --model_path /model/llm_model_agentic/openvino_models/cpu/int4/microsoft/Phi-4-mini-instruct
+      --model_path ${MODEL_PATH:?MODEL_PATH must be set}
       --model_name ${LLM_MODEL_NAME:?LLM_MODEL_NAME must be set}
       --rest_port 8000
     environment:

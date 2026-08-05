@@ -88,14 +88,6 @@
             <option value="30m">Last 30 minutes</option>
           </select>
         </label>
-        <label class="config-field">
-          <span>Device</span>
-          <select name="device">
-            <option value="CPU" selected>CPU</option>
-            <option value="GPU">GPU</option>
-            <option value="NPU">NPU</option>
-          </select>
-        </label>
         <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>
           &#9654; {{ 'Running…' if active_run else 'Run Agentic Analysis' }}
         </button>
