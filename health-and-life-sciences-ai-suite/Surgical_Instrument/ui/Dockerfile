@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Surgical Instrument — UI image.
 #
 # Stage 1 builds the Vite React app; stage 2 serves the static bundle via

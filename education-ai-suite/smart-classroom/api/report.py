@@ -34,6 +34,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _pdf_export_available() -> bool:
+    """True when server-side PDF conversion is possible (LibreOffice on PATH)."""
+    return shutil.which("soffice") is not None
+
+
+_PDF_UNAVAILABLE_DETAIL = (
+    "PDF export is unavailable because LibreOffice is not installed or "
+    "'soffice' is not on PATH. Install LibreOffice from "
+    "https://www.libreoffice.org/download/, add 'soffice' to PATH, "
+    "then restart services."
+)
+
+
 def _ensure_docx_report(session_id: str) -> tuple[str, str]:
     """Return ``(session_dir, docx_path)`` for a session report, creating .docx
     from markdown when needed.
@@ -115,6 +128,17 @@ def get_report_template_fields():
     """Return the report field catalog (grouped, bilingual) for the checkboxes."""
     from components.report_generator.field_catalog import REPORT_TEMPLATE_FIELD_GROUPS
     return {"groups": REPORT_TEMPLATE_FIELD_GROUPS}
+
+
+@router.get("/report/capabilities")
+def get_report_capabilities():
+    """Report which download formats the server can produce.
+
+    ``pdf_export`` is False when LibreOffice ('soffice') is not on PATH, so the
+    UI can disable the PDF option up front (with an install hint) instead of
+    letting the teacher click and hit a 501.
+    """
+    return {"pdf_export": _pdf_export_available()}
 
 
 @router.post("/report/{session_id}/mindmap-image")
@@ -234,10 +258,7 @@ def download_report(
 
     soffice = shutil.which("soffice")
     if not soffice:
-        raise HTTPException(
-            status_code=501,
-            detail="PDF export is unavailable on server: LibreOffice (soffice) is not installed.",
-        )
+        raise HTTPException(status_code=501, detail=_PDF_UNAVAILABLE_DETAIL)
 
     try:
         subprocess.run(

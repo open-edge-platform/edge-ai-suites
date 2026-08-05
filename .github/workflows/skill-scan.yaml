@@ -96,8 +96,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      # v0.2.0 adds support for non-standard directories and root-level files inside a skill.
+      # The default `allow-dirs` is "evals,example-prompts", which together with the standard
+      # scripts/references/assets layout covers every skill in this repository, so the input is
+      # not overridden here. Add it (e.g. allow-dirs: "evals,example-prompts,my_custom_folder")
+      # only when a skill introduces another directory.
       - name: Run skill-validator
-        uses: open-edge-platform/geti-ci/actions/skill-validator@ac8d35f5bb94a135ec778498cf5082bc70babffe # skill-validator/v0.1.0
+        uses: open-edge-platform/geti-ci/actions/skill-validator@c64543e05e9f84c7c4ef212666c3ea5fc869e55a # skill-validator/v0.2.0
         with:
           skills-path: ${{ matrix.skills-path }}
           strict: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
