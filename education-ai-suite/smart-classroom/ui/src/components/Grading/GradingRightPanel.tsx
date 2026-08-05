@@ -15,7 +15,7 @@ const GradingRightPanel: React.FC = () => {
 
   const numKeys = ['dpi', 'page_columns', 'column_split_ratio', 'contrast_factor', 'max_tokens', 'vlm_temperature', 'max_image_pixels',
     'poll_interval', 'stable_checks', 'idle_timeout', 'min_score', 'expand_margin', 'iou_threshold'] as const;
-  const boolKeys = ['contrast_enhance', 'sort_boxes', 'merge_overlapping'] as const;
+  const boolKeys = ['force_split', 'contrast_enhance', 'sort_boxes', 'merge_overlapping'] as const;
   type NumKey = typeof numKeys[number];
   type BoolKey = typeof boolKeys[number];
 
@@ -23,6 +23,7 @@ const GradingRightPanel: React.FC = () => {
     Object.fromEntries(numKeys.map((k) => [k, ''])) as Record<NumKey, string>);
   const [boolInputs, setBoolInputs] = useState<Record<BoolKey, boolean>>(() =>
     Object.fromEntries(boolKeys.map((k) => [k, false])) as Record<BoolKey, boolean>);
+  const [forceSplitPairsInput, setForceSplitPairsInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string>('');
 
@@ -32,6 +33,7 @@ const GradingRightPanel: React.FC = () => {
       [k, cfg[k] != null ? String(cfg[k]) : ''])) as Record<NumKey, string>);
     setBoolInputs(Object.fromEntries(boolKeys.map((k) =>
       [k, Boolean(cfg[k])])) as Record<BoolKey, boolean>);
+    setForceSplitPairsInput(Array.isArray(cfg.force_split_pairs) ? JSON.stringify(cfg.force_split_pairs) : '[]');
   };
 
   const setNum = (k: NumKey, v: string) => {
@@ -41,6 +43,30 @@ const GradingRightPanel: React.FC = () => {
   const setBool = (k: BoolKey, v: boolean) => {
     setBoolInputs((prev) => ({ ...prev, [k]: v }));
     setSaveMsg('');
+  };
+
+  const parseForceSplitPairs = (raw: string): number[][] => {
+    const text = raw.trim();
+    if (!text) {
+      return [];
+    }
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) {
+      throw new Error('invalid');
+    }
+    const normalized: number[][] = [];
+    for (const item of parsed) {
+      if (!Array.isArray(item) || item.length !== 2) {
+        throw new Error('invalid');
+      }
+      const a = Number(item[0]);
+      const b = Number(item[1]);
+      if (!Number.isInteger(a) || !Number.isInteger(b) || a <= 0 || b <= 0 || b !== a + 1) {
+        throw new Error('invalid');
+      }
+      normalized.push([a, b]);
+    }
+    return normalized;
   };
 
   const pageColumnsValue = parseInt(numInputs.page_columns || '', 10);
@@ -64,6 +90,8 @@ const GradingRightPanel: React.FC = () => {
       const dpi = num('dpi', (s) => parseInt(s, 10));
       const page_columns = num('page_columns', (s) => parseInt(s, 10));
       const column_split_ratio = num('column_split_ratio', parseFloat);
+      const force_split = boolInputs.force_split;
+      let force_split_pairs: number[][] = [];
       const vlm_temperature = num('vlm_temperature', parseFloat);
       const min_score = num('min_score', parseFloat);
       const iou_threshold = num('iou_threshold', parseFloat);
@@ -77,6 +105,12 @@ const GradingRightPanel: React.FC = () => {
       }
       if (isTwoColumnLayout && column_split_ratio != null && (isNaN(column_split_ratio) || column_split_ratio <= 0 || column_split_ratio >= 1)) {
         setSaveMsg(t('grading.config.invalidColumnSplitRatio', 'Column split ratio must be between 0 and 1'));
+        return;
+      }
+      try {
+        force_split_pairs = parseForceSplitPairs(forceSplitPairsInput);
+      } catch {
+        setSaveMsg(t('grading.config.invalidForceSplitPairs', 'Split pairs must be JSON like [[4,5],[6,7]] and each pair must be adjacent pages.'));
         return;
       }
       if (vlm_temperature != null && (isNaN(vlm_temperature) || vlm_temperature < 0 || vlm_temperature > 2)) {
@@ -95,6 +129,8 @@ const GradingRightPanel: React.FC = () => {
         dpi,
         page_columns,
         column_split_ratio,
+        force_split,
+        force_split_pairs,
         contrast_enhance: boolInputs.contrast_enhance,
         contrast_factor: num('contrast_factor', parseFloat),
         max_tokens: num('max_tokens', (s) => parseInt(s, 10)),
@@ -163,6 +199,23 @@ const GradingRightPanel: React.FC = () => {
     </div>
   );
 
+  const splitPairsCell = () => (
+    <div className="grading-config-cell">
+      <label className="grading-config-label">{t('grading.config.forceSplitPairs', 'Split Pairs')}</label>
+      <input
+        className="grading-config-input"
+        type="text"
+        placeholder={t('grading.config.forceSplitPairsPlaceholder', '[[4,5],[6,7]]')}
+        disabled={!boolInputs.force_split}
+        value={forceSplitPairsInput}
+        onChange={(e) => {
+          setForceSplitPairsInput(e.target.value);
+          setSaveMsg('');
+        }}
+      />
+    </div>
+  );
+
   return (
     <div className="right-panel">
       <Accordion title={t('accordion.configuration', 'Configuration & Metrics')}>
@@ -193,9 +246,10 @@ const GradingRightPanel: React.FC = () => {
               {numCell('column_split_ratio', t('grading.config.columnSplitRatio', 'Column Split Ratio'), { min: 0.1, max: 0.9, step: 0.01, disabled: !isTwoColumnLayout })}
               {numCell('dpi', t('grading.config.dpi', 'Render DPI'), { min: 1 })}
               {numCell('contrast_factor', t('grading.config.contrastFactor', 'Contrast Factor'), { min: 0, step: 0.1 })}
-              <div className="grading-config-cell grading-config-cell-full">
-                {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
-              </div>
+              {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
+              {boolCell('force_split', t('grading.config.forceSplit', 'Force Split'))}
+              {splitPairsCell()}
+              <div className="grading-config-cell" />
             </div>
           </div>
 

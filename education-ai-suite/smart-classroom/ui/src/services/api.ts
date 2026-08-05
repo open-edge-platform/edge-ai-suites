@@ -1573,6 +1573,8 @@ export interface GradingConfig {
   dpi: number | null;
   page_columns: number | null;
   column_split_ratio: number | null;
+  force_split: boolean | null;
+  force_split_pairs: number[][] | null;
   contrast_enhance: boolean | null;
   contrast_factor: number | null;
   max_tokens: number | null;
@@ -1596,7 +1598,7 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
 }
 
 export type GradingConfigUpdate = Partial<Pick<GradingConfig,
-  'dpi' | 'page_columns' | 'column_split_ratio' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'force_split' | 'force_split_pairs' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
   'poll_interval' | 'stable_checks' | 'idle_timeout' |
   'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
 
