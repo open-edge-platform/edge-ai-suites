@@ -384,7 +384,7 @@ If you changed the port, adjust the URL accordingly.
      edge-ai-suites/education-ai-suite/smart-classroom/models
      ```
 
-  2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
+  2. Rerun only Step 1, option D. If the virtual environment already exists, rerun the required pip commands.
 
 - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
