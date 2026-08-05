@@ -1,6 +1,6 @@
 # Release Notes: Live Video Captioning RAG
 
-## Version 2026.2.0-0-rc1
+## Version 2026.2.0-0
 
 **Aug 4, 2026**
 
