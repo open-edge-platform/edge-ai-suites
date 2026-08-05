@@ -42,7 +42,7 @@ Vision (DL Streamer Pipeline Server)──┐
 
 ## Prerequisites
 
-1. Ensure the `.env` files has valid values for:
+1. Ensure the `.env` file has valid values for:
 
    - `HOST_IP`
    - `INFLUXDB_USERNAME`, `INFLUXDB_PASSWORD`
@@ -112,19 +112,19 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 | Section | Controls |
 |---------|----------|
 | `[SYSTEM]` | Canonical class labels, label normalization rules (`No_Weld` → `No Weld`, `Good_Weld` → `Good Weld`, and `Porosity_w_Excessive_Penetration` → `Porosity with Excessive Penetration`), and available fusion fields |
-| `[POLICY]` | How violations are identified: `fusion_confidence` as primary signal, `fused_decision and both anomalies` escalates severity, and `vision_rtsp_ts_diff_ms` thresholds classify time-sync quality (`≤50 ms` GOOD, `50–100 ms` WARN, `>100 ms` BAD) |
+| `[POLICY]` | How violations are identified: `fusion_confidence` as the primary signal, `fused_decision and both anomalies` escalate the severity, and `vision_rtsp_ts_diff_ms` thresholds classify the time-sync quality (`≤ 50 ms` GOOD, `50–100 ms` WARN, and `> 100 ms` BAD) |
 | `[ANALYSIS]` | Root-cause correlation between `vision_classification` and `timeseries_classification`, and resolution of modality conflicts using confidence evidence |
 | `[EVIDENCE]` | Three-section output: Summary → Table (all 15 schema fields) → Conclusion, and rows annotated with `AGREED`/`DISAGREED` and `GOOD`/`WARN`/`BAD` time-sync status |
 | `[TICKETING]` | escalation rules tied to the class and `fusion_confidence` threshold (`CRITICAL` for critical classes at ≥ 0.8 fusion_confidence, `HIGH` for the Excessive Penetration class at ≥ 0.75 fusion_confidence) |
 
 ### Fallback Policy
 
-`configs/agentic/policy_fallback.json` defines per-class thresholds and actions used when `LLM_MODE=fallback`. Available actions:
+`configs/agentic/policy_fallback.json` defines per-class thresholds and actions used by apm-agent when `LLM_MODE=fallback`. Available actions:
 
 | Action | Description |
 |--------|-------------|
 | `HALT_LINE` | Stop the production line immediately |
-| `REDUCE_HEAT_INPUT` | Reduce welding current and/or power |
+| `REDUCE_HEAT_INPUT` | Reduce welding current or power |
 | `SCHEDULE_INSPECTION` | Flag for next-shift inspection |
 | `ADJUST_PARAMETERS` | Adjust process parameters |
 | `CHECK_FIXTURING` | Check part fixturing and alignment |
@@ -160,9 +160,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
 4. Check the output in Grafana dashboard:
 
-   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser.
-
-   > **Note:** Use the link `https://localhost:30001` to open Grafana dashboard in a browser, preferably the Chrome browser, for the Helm deployment.
+   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
    
    - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD` values
      from the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
