@@ -421,7 +421,7 @@ models-license:
 	fi; \
 	printf "\n\n"; \
 	echo "  By proceeding, you agree to license agreements for following models:  $$(cat $(MODELS_SUPPORTED_FILE)|yq '[.[].display_name] |join (",")')"; \
-	printf "  Do you accept the license agreements? [y/N] "; \
+	printf "  Do you accept the license agreements? [Y/N] "; \
 	read ans; \
 	case "$$ans" in \
 		[Yy]|[Yy][Ee][Ss]) \
