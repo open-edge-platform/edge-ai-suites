@@ -135,11 +135,9 @@ If you installed the OpenClaw adapter in Step 4, open the Control UI and select 
 
 Select `fridge-agent` to discuss the current fridge contents, reports, nutrition, and related lifestyle goals. For example:
 
-- "What is currently visible in my fridge?"
-- "Generate today's fridge report and summarize anything I should restock."
-- "Based on my health goals, is the food in my fridge reasonable?"
-- "Can you turn that into a practical meal plan for tomorrow?"
-- "What else could help with weight loss, and where can I exercise nearby?"
+- "Generate today's fridge daily report."
+- "Based on my health goals, is the food in my fridge reasonable? Give me some diet advice."
+- "Any other slimming tips? And where can I go to exercise nearby?"
 
 Try following up with questions such as "Why did you recommend that?", "What changed since yesterday?", or "Give me a shorter shopping list."
 

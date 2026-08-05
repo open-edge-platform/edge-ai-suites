@@ -20,11 +20,16 @@ graph TD
   A[Camera Streams] -->|RTSP/Video Feeds| B[Frigate NVR]
   B -->|Event Clips + Metadata| C[NVR Event Router]
   C -->|Watched camera ingestion| H[Pipeline Manager]
+  H --> D[Multimodal DataPrep]
+  D --> G[VDMS or Milvus VectorDB]
   H --> E[VSS Search‑MS]
-  E --> F[VDMS DataPrep]
-  F --> G[VDMS VectorDB]
+  E --> R[Vector Retriever]
+  R --> G
+  R --> M[Multimodal Embedding Serving]
   H --> I[VSS UI Configure Cameras and Search]
-  K[Telemetry Collector] --> H
+  L[Host CPU RAM GPU NPU] --> K[Metrics Manager]
+  D -->|Throughput metrics| K[Metrics Manager]
+  K -->|SSE through NGINX| I
 ```
 
 ## Learn More
@@ -37,6 +42,7 @@ graph TD
 
 ## Notes
 
-- Telemetry is **enabled** for this app and shown in the VSS UI when connected.
+- Metrics Manager is **enabled by default** and streams live system and DataPrep throughput metrics to the VSS UI.
 - Use VSS UI **Configure Cameras** to enable camera feeds for search ingestion.
 - Use `source setup.sh --start-usb-camera` to run Frigate with a USB camera input.
+- Set `VECTORDB_BACKEND=milvus` before startup to use Milvus instead of the default VDMS backend.

@@ -89,18 +89,17 @@ For the first run, create the runtime data directory and copy the configuration 
 export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
 mkdir -p "$SMARTBUILDING_DATA_DIR"
 cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
-
-# Optional: start with an existing monitor configuration.
-# cp <your-monitors.yaml> "$SMARTBUILDING_DATA_DIR/monitors.yaml"
+# The launcher starts with an empty monitors.yaml
+cp monitors.yaml.example "$SMARTBUILDING_DATA_DIR/monitors.yaml"
 ```
 
-Customize `$SMARTBUILDING_DATA_DIR/config.yaml` as needed, then start the server:
+Customize `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` as needed, then start the server:
 
 ```bash
 bash scripts/mcp-server/start.sh
 ```
 
-The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. If `monitors.yaml` does not exist on the first run, the launcher creates an empty one. For later configuration changes, update these two files and restart the server.
+The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. For later configuration changes, update these two files and restart the server.
 
 The server runs as a host process and exposes:
 
@@ -129,12 +128,12 @@ ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
 
 The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smartbuilding_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
 
-**Agentic Smart Community WebUI**
+**Agentic Smart Community Dashboard**
 Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It provides live camera views, activity timelines, alert records, and report generation for registered monitors. The chat panel can also connect to a supported agent framework.
 
 
-![Agentic Smart Community WebUI](_assets/agentic-smart-community-webui.png)
-**Figure: Agentic Smart Community WebUI**
+![Agentic Smart Community Dashboard](_assets/agentic-smart-community-webui.png)
+**Figure: Agentic Smart Community Dashboard**
 
 #### OpenClaw
 
@@ -152,7 +151,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    {
      "mcp": {
        "servers": {
-         "smart-building": {
+         "smartbuilding": {
            "transport": "streamable-http",
            "url": "http://localhost:3100/mcp"
          }
@@ -184,8 +183,8 @@ Agents can now use the MCP tools when you ask them to create a use case, analyze
 To use OpenClaw from the Agentic Smart Community Web UI, open `http://localhost:3100/`, select **OpenClaw** in the chat panel (as the figure shows below), and enter the gateway URL and token. After connecting, select an OpenClaw session to chat alongside the live video and activity views. You can alternatively use the standalone OpenClaw Control UI at `http://localhost:18789/`.
 
 
-![Configure the Agent Chat Session from WebUI](_assets/configure-openclaw-session-from-webui.png)
-**Figure: Configure the Agent Chat Session from WebUI**
+![Configure the Agent Chat Session from Dashboard](_assets/configure-openclaw-session-from-webui.png)
+**Figure: Configure the Agent Chat Session from Dashboard**
 
 **A. Inspect the Smart Building tools**
 
@@ -216,8 +215,8 @@ You can publish a local video as a looping RTSP stream. Keep this command runnin
   ```text
   "Register a camera source at rtsp://localhost:8555/live using the child_safety use case."
   ```
-
-  When no monitor ID is specified, the MCP server assigns `cam_child_safety`. You can also provide a monitor ID explicitly.
+  > - Follow the agents' guidance and answer the required questions to complete the monitor registration and bring it online.
+  > - When no monitor ID is specified, the MCP server assigns `cam_child_safety`. You can also provide a monitor ID explicitly.
 
 **C. Generate a report**
 

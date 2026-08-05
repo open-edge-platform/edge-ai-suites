@@ -336,6 +336,49 @@ class TestUpdatePipelineEndpoint:
         assert resp.status_code == 200
 
 
+class TestUpdatePipelineTargetClassesValidation:
+    def test_update_rejects_unknown_target_class(self, api_client, monkeypatch, tmp_path):
+        """PUT /pipeline must 422 on a target_class absent from embedded labels."""
+        import stream_monitor.pipeline.prefilter_yolo as pf
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person", "knife"], "embedded"))
+        model = tmp_path / "model.xml"
+        model.write_text("<net/>")
+        api_client.post("/register_source", json=_REG_BODY)
+        resp = api_client.put("/sources/cam1/pipeline", json={
+            "pipeline": {
+                "prefilter": {
+                    "enabled": True,
+                    "model_path": str(model),
+                    "target_classes": ["person", "helmets"],
+                },
+            },
+        })
+        assert resp.status_code == 422
+        detail = resp.json()["detail"]
+        assert detail["error"] == "unknown target_classes"
+        assert detail["unknown"] == ["helmets"]
+
+    def test_update_accepts_valid_target_class(self, api_client, monkeypatch, tmp_path):
+        import stream_monitor.pipeline.prefilter_yolo as pf
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person", "knife"], "embedded"))
+        model = tmp_path / "model.xml"
+        model.write_text("<net/>")
+        api_client.post("/register_source", json=_REG_BODY)
+        resp = api_client.put("/sources/cam1/pipeline", json={
+            "pipeline": {
+                "prefilter": {
+                    "enabled": True,
+                    "model_path": str(model),
+                    "target_classes": ["knife"],
+                },
+            },
+        })
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "updated"
+
+
 class TestDeleteSourceEndpoint:
     def test_delete_source_success(self, api_client):
         api_client.post("/register_source", json=_REG_BODY)

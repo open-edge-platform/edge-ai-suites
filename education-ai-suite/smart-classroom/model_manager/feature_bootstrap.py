@@ -58,14 +58,6 @@ def startup(app: FastAPI) -> None:
 
     ModelManager.instance().warmup(list(eff.capabilities))
 
-    if eff.is_enabled("video_analytics"):
-        from components.va.media_service import ensure_media_service_running
-        ensure_media_service_running()  # health-polled, idempotent
-        logger.info("MediaMTX ensured running for video_analytics.")
-
-    if eff.is_enabled("content_search"):
-        logger.info("content_search enabled; will start via feature build().")
-
     for feature in in_dependency_order():
         if not eff.is_enabled(feature.id):
             continue

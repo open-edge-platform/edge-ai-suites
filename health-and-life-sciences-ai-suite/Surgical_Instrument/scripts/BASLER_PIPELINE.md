@@ -1,13 +1,13 @@
 # Basler Live Pipeline — How It Works
 
 Live polyp detection from a Basler USB3 camera, running on the Intel iGPU via
-DLStreamer + OpenVINO. Driven by [`run_basler_pipeline.sh`](run_basler_pipeline.sh).
+DL Streamer with OpenVINO™. Driven by [`run_basler_pipeline.sh`](run_basler_pipeline.sh).
 
 ---
 
 ## 1. Why a Python bridge (no `gencamsrc`)
 
-The DLStreamer 2026.1 image does **not** ship the Basler GStreamer plugins
+The DL Streamer 2026.1 image does **not** ship the Basler GStreamer plugins
 (`gencamsrc` / `pylonsrc`) — verified with `gst-inspect-1.0`. Installing
 Basler's Debian SDK bloats the image ~150 MB behind a registration wall.
 

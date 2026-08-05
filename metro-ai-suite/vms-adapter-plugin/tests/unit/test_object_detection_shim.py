@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit tests for ObjectDetectionAnalyticsAppShim."""
@@ -21,7 +21,7 @@ def _make_config(**kwargs) -> ObjectDetectionAnalyticsAppConfig:
     defaults = {
         "type": "object_detection",
         "app_id": "dls_vision",
-        "display_name": "DLStreamer Vision",
+        "display_name": "DL Streamer Vision",
         "base_url": "https://localhost:443/api",
         "mqtt_host": "localhost",
         "mqtt_port": 1883,
@@ -43,8 +43,8 @@ def test_shim_app_id():
 
 
 def test_shim_display_name():
-    shim = _make_shim(display_name="My DLStreamer Vision App")
-    assert shim.display_name == "My DLStreamer Vision App"
+    shim = _make_shim(display_name="My DL Streamer Vision App")
+    assert shim.display_name == "My DL Streamer Vision App"
 
 
 def test_shim_implements_interface():
@@ -111,7 +111,7 @@ def test_config_requires_at_least_one_pipeline():
         ObjectDetectionAnalyticsAppConfig(
             type="object_detection",
             app_id="dls_vision",
-            display_name="DLStreamer Vision",
+            display_name="DL Streamer Vision",
             base_url="https://localhost:443/api",
             pipeline={},
         )

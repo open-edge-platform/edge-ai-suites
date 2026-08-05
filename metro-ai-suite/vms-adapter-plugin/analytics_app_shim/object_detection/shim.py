@@ -1,13 +1,13 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Object Detection Analytics App shim.
 
-Integrates a DLStreamer Pipeline Server–based object detection application
-(e.g. DLStreamer Vision) as a VAP analytics app.
+Integrates a DL Streamer Pipeline Server–based object detection application
+(e.g. DL Streamer Vision) as a VAP analytics app.
 
 Data flow:
-  Camera RTSP ──► DLStreamer Pipeline Server
+  Camera RTSP ──► DL Streamer Pipeline Server
                   └─► inference metadata via MQTT → MqttSubscriber
                                                       └─► Nx analytics push
 
@@ -54,7 +54,7 @@ def _make_tls_context(cfg) -> ssl.SSLContext | None:
 
 
 class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
-    """IAnalyticsAppShim implementation for DLStreamer Pipeline Server–based apps."""
+    """IAnalyticsAppShim implementation for DL Streamer Pipeline Server–based apps."""
 
     def __init__(self, config: ObjectDetectionAnalyticsAppConfig) -> None:
         self._config = config
@@ -296,7 +296,7 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
         return self._config.control_params()
 
     async def start_for_camera(self, camera_id: str, stream_url: str, controls: dict) -> str | None:
-        """Start a DLStreamer pipeline for one camera from VMS control values."""
+        """Start a DL Streamer pipeline for one camera from VMS control values."""
         configured_devices = self._config.configured_pipeline_devices()
         if not configured_devices:
             logger.error("od_pipeline_not_configured", app_id=self.app_id)
