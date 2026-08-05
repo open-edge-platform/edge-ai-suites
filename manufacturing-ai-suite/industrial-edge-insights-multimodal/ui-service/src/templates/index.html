@@ -16,7 +16,11 @@
       <span class="use-case-badge">{{ use_case_id }}</span>
       <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
         <span class="live-dot"></span>
-        <span id="pipeline-live-text">{{ 'Pipeline: RUNNING (' ~ active_run.phase ~ ')' if active_run else 'Pipeline: IDLE' }}</span>
+        <span id="pipeline-live-text">
+          {% if active_run %}
+            {{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run.phase else 'Inspection: RUNNING' }}
+          {% else %}Inspection: IDLE{% endif %}
+        </span>
       </span>
     </div>
   </header>
@@ -162,6 +166,11 @@
         </div>
       </div>
       <canvas id="metrics-chart" height="160"></canvas>
+      <section class="system-info-section">
+        <h2>System Info</h2>
+        <div id="systemCapabilityCards" class="system-capability-cards" role="list"
+          aria-label="System compute devices" aria-live="polite" hidden></div>
+      </section>
     </div>
   </aside>
   </div>
@@ -173,5 +182,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="{{ root }}/static/js/live-status.js"></script>
   <script src="{{ root }}/static/js/metrics.js"></script>
+  <script src="{{ root }}/static/js/system-capabilities.js"></script>
 </body>
 </html>
