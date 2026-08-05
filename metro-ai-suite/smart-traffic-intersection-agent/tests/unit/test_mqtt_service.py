@@ -7,7 +7,7 @@ import asyncio
 import json
 import os
 import sys
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, PropertyMock
+from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from datetime import datetime, timezone
 
 # Add src to path for imports

@@ -538,40 +538,88 @@
 }
 
 .grading-log-modal {
-  width: 80vw;
-  height: 80vh;
-  background: #1e1e1e;
-  border-radius: 8px;
+  width: 76vw;
+  height: 72vh;
+  margin-top: 64px;
+  max-height: calc(100vh - 140px);
+  background: #ffffff;
+  border: 1px solid #e2e6ea;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;
 }
 
 .grading-log-modal .grading-picker-header {
-  background: #2d2d2d;
-  border-bottom: 1px solid #444;
+  background: #f7f9fb;
+  border-bottom: 1px solid #e2e6ea;
 }
 
 .grading-log-modal .grading-picker-title {
-  color: #d4d4d4;
+  color: #1f2933;
 }
 
 .grading-log-modal .grading-picker-close {
-  color: #aaa;
+  color: #8a94a0;
+}
+
+.grading-log-modal .grading-picker-close:hover {
+  color: #1f2933;
 }
 
 .grading-log-modal-box {
   flex: 1;
   margin: 0;
-  padding: 14px 16px;
-  color: #d4d4d4;
-  font-family: monospace;
+  padding: 16px 18px;
+  color: #2b3440;
+  background: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
   line-height: 1.6;
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.grading-detail-viewer {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.grading-detail-summary-line {
+  margin-bottom: 6px;
+}
+
+.grading-detail-sep {
+  margin: 8px 0 10px;
+}
+
+.grading-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grading-detail-question {
+  padding-left: 6px;
+}
+
+.grading-detail-q-title {
+  margin-bottom: 4px;
+}
+
+.grading-detail-q-line {
+  padding-left: 16px;
+  margin-bottom: 2px;
+}
+
+.grading-detail-score-zero {
+  color: #ff6b6b;
+}
+
+.grading-detail-score-partial {
+  color: #ffb347;
 }
 
 .grading-log-title {
@@ -601,7 +649,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  padding: 48px 24px;
+  z-index: 10000;
 }
 
 .grading-picker {
@@ -757,6 +806,7 @@
 }
 
 .grading-config-checkbox {
+  display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
@@ -977,7 +1027,7 @@
   background: #f5f9fd;
 }
 
-/* Sticky first two columns (index + name) so they stay while scrolling right. */
+/* Sticky first three columns (index + student id + name) so they stay while scrolling right. */
 .grading-results-table .sticky-col {
   position: sticky;
   left: 0;
@@ -991,8 +1041,33 @@
   color: #555;
 }
 
+.grading-results-detail-col {
+  text-align: center;
+  width: 32px;
+}
+
+.grading-results-detail-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #888;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grading-results-detail-btn:hover {
+  color: #0071c5;
+}
+
 .grading-results-table .sticky-col-2 {
   left: 44px;
+  min-width: 96px;
+}
+
+.grading-results-table .sticky-col-3 {
+  left: 140px;
   min-width: 96px;
 }
 

@@ -33,7 +33,7 @@ def publish_batch_complete(event: dict) -> None:
             "run_id": "...",
             "status": "completed" | "error",
             "device": "CPU" | "GPU" | "NPU",
-            "video_filename": "sample.mp4" | None,
+            "video_filename": "datastream.mp4" | None,
             "start_id": int,           # detection watermark before this run
             "end_id": int | None,      # detection watermark after this run (None on error)
             "pipeline_status": {...},  # raw DL Streamer terminal status (completed only)

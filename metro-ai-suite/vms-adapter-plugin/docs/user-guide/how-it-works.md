@@ -1,11 +1,12 @@
 # How It Works
 
-The VMS Adapter Plugin (VAP) is a modular orchestration service that routes video streams from supported VMS systems to AI analytics Analytics Apps, and relays results back to the provider dashboard or VMS.
+The VMS Adapter Plugin (VAP) is a modular orchestration service that routes video streams from
+supported Video Management System (VMS) providers to AI Analytics Applications and relays results back
+to the provider dashboard or VMS.
 
 ## Architecture
 
-<img src="_assets/VAP_architecture.png" alt="VAP Analytics Integration architecture" style="width: 600px; max-width: 100%;" />
-
+![VAP Analytics Integration architecture](_assets/VAP_architecture.png "vap analytics integration architecture")
 
 ## Data Flow
 
@@ -14,12 +15,13 @@ The VMS Adapter Plugin (VAP) is a modular orchestration service that routes vide
 1. Operator triggers **Discover Cameras** from the dashboard or `POST /v1/cameras/discover`.
 2. The **Orchestrator** calls each registered VMS shim:
    - **NxWitnessVmsShim** queries Nx Witness `GET /rest/v4/devices` for all camera devices.
-3. Discovered cameras are persisted to PostgreSQL with vendor-prefixed IDs (`nx:abc123-uuid`).
+3. The system persists discovered cameras to PostgreSQL with vendor-prefixed identifiers (IDs),
+   such as `nx:abc123-uuid`.
 4. The dashboard displays the full camera list. Operators enable specific cameras for analytics.
 
 ### Live Video Captioning (LVC) Flow
 
-```
+```text
 Provider dashboard
     │  POST /v1/analytics-apps/live_captioning/runs  { camera_id, prompt, model, … }
     ▼
@@ -30,7 +32,7 @@ LiveCaptioningAnalyticsAppShim
     │  resolves camera_id → RTSP URL via NxWitnessVmsShim
     │  POST /api/runs  →  LVC backend (FastAPI)
     ▼
-LVC DLStreamer Pipeline Server
+LVC DL Streamer Pipeline Server
     │  processes RTSP stream at configured frame rate
     ├─► VLM inference → captions → MQTT broker → LVC SSE stream
     └─► preview frames → MediaMTX (WebRTC)
@@ -41,9 +43,9 @@ Provider dashboard
     │  caption overlay on WebRTC video player
 ```
 
-### DLStreamer Vision (dls_vision e.g. Loitering Detection) Flow
+### DL Streamer Vision (e.g., Loitering Detection) Flow
 
-```
+```text
 Provider dashboard
     │  POST /v1/analytics-apps/dls_vision/runs  { camera_id, pipeline_name, pipeline_version }
     ▼
@@ -52,9 +54,9 @@ FastAPI route (analytics_apps.py)
     ▼
 ObjectDetectionAnalyticsAppShim
     │  resolves camera_id → RTSP URL via NxWitnessVmsShim
-    │  POST /pipelines/{name}/{version}  →  DLStreamer Pipeline Server
+    │  POST /pipelines/{name}/{version}  →  DL Streamer Pipeline Server
     ▼
-DLStreamer Pipeline Server (dls_vision)
+DL Streamer Pipeline Server (dls_vision)
     │  processes RTSP stream
     └─► inference results → MQTT broker  topic: /{vms_name}/dls_vision/{camera_id}
     ▼
@@ -72,7 +74,7 @@ Nx Witness VMS
 
 ### VMS Shims (`vms_shim/`)
 
-Each VMS vendor is represented by a class implementing the `IVmsShim` interface:
+A class implementing the `IVmsShim` interface represents each VMS vendor:
 
 | **Shim**            | **Source**           | **Camera Discovery**                        |
 |---------------------|----------------------|---------------------------------------------|
@@ -82,53 +84,68 @@ Camera IDs are vendor-prefixed strings (`nx:abc123`). The orchestrator uses the 
 
 ### Analytics App Shims (`analytics_app_shim/`)
 
-Each AI analytics application is represented by a class implementing the `IAnalyticsAppShim` interface:
+A class implementing the `IAnalyticsAppShim` interface represents each AI analytics application:
 
 | **Shim**                          | **App ID**          | **Result Delivery**                    |
 |-----------------------------------|---------------------|----------------------------------------|
-| `LiveCaptioningAnalyticsAppShim`       | `live_captioning`   | SSE proxy to dashboard caption overlay |
-| `ObjectDetectionAnalyticsAppShim`      | `dls_vision`               | MQTT → Nx Witness analytics objects    |
+| `LiveCaptioningAnalyticsAppShim`  | `live_captioning`   | SSE proxy to dashboard caption overlay |
+| `ObjectDetectionAnalyticsAppShim` | `dls_vision`        | MQTT → Nx Witness analytics objects    |
 
-Adding a new Analytics App requires only a new shim class registered in `plugin/core/factory.py`. No route changes are needed.
+Adding a new Analytics App requires only a new shim class registered in `plugin/core/factory.py`.
+You do not need to change any routes.
 
 ### FastAPI Backend (`plugin/`)
 
-The backend exposes a generic Analytics App API at `/v1/analytics-apps/{app_id}/…` for all integrations, plus camera management, event timeline, and health endpoints. Dependency injection via `plugin/core/api/deps.py` provides shim instances to all routes.
+The backend exposes a generic Analytics App API at `/v1/analytics-apps/{app_id}/…` for all
+integrations, plus camera management, event timeline, and health endpoints. Dependency injection
+via `plugin/core/api/deps.py` provides shim instances to all routes.
 
 ### Orchestrator (`plugin/core/pipeline/orchestrator.py`)
 
 The orchestrator runs at startup to:
+
 - Construct and connect all VMS shims.
 - Register analytics manifests with Nx Witness.
-- Fetch Analytics App schemas (LVC OpenAPI, dls_vision pipeline list).
-- Start background tasks: camera sync loop, MQTT subscriber (for dls_vision).
+- Fetch Analytics App schemas (LVC OpenAPI, `dls_vision` pipeline list).
+- Start background tasks: camera sync loop, MQTT subscriber (for `dls_vision`).
 
 ### Dynamic Schema (LVC)
 
-The `LvcSchemaManager` fetches the `StartRunRequest` JSON Schema from LVC's `/openapi.json` at startup, resolves all `$ref` references, adds UI annotations, and builds a live Pydantic model. The dashboard renders analytics forms directly from this schema — no frontend changes are needed when LVC parameters change.
+The `LvcSchemaManager` fetches the `StartRunRequest` JSON Schema from LVC's `/openapi.json` at
+startup, resolves all `$ref` references, adds UI annotations, and builds a live Pydantic model.
+The dashboard renders analytics forms directly from this schema — the frontend does not need
+changes when LVC parameters change.
 
-### MQTT Subscriber (dls_vision)
+### MQTT Subscriber (`dls_vision`)
 
-`MqttSubscriber` runs as an asyncio background task. It subscribes to `+/dls_vision/+` on the MQTT broker and receives DLStreamer GVA JSON metadata per frame. The `translate_dls_metadata()` function converts normalized bounding boxes and labels to Nx analytics object format, then `NxWitnessVmsShim.push_analytics_objects()` posts them to Nx.
+`MqttSubscriber` runs as an asyncio background task. It subscribes to `+/dls_vision/+` on the
+MQTT broker and receives DL Streamer GStreamer Video Analytics (GVA) JSON metadata per frame.
+The `translate_dls_metadata()` function converts normalized bounding boxes and labels to Nx
+analytics object format, then `NxWitnessVmsShim.push_analytics_objects()` posts them to Nx
+Witness.
 
 ### React Analytics Provider Dashboard (`ui/`)
 
-The dashboard (React 19 + Vite + Tailwind CSS) is served by nginx, which reverse-proxies:
+The nginx server serves the dashboard (React 19 with Vite and Tailwind CSS) and reverse-proxies:
+
 - `/v1/*` → FastAPI backend
 - `/whep/*` → MediaMTX (WebRTC video relay)
 
 Key panels:
+
 - **Camera Discovery**: discover, enable, and disable cameras.
-- **Analytics Engine**: select a Analytics App, fill the dynamically rendered schema form, start/stop runs.
+- **Analytics Engine**: select an Analytics App, fill the dynamically rendered schema form, and
+  start or stop runs.
 - **Live Stream**: WebRTC video player with caption overlay (LVC).
 - **Analysis Results**: timeline of metadata events.
 
 ## Extensibility
 
-VAP is designed for extension:
+VAP supports extension:
 
 - **Add a new VMS**: implement `IVmsShim` in `vms_shim/<vendor>/shim.py`, register in `factory.py`.
-- **Add a new Analytics App**: implement `IAnalyticsAppShim` in `analytics_app_shim/<name>/shim.py`, register in `factory.py`. No route changes needed.
+- **Add a new Analytics App**: implement `IAnalyticsAppShim` in `analytics_app_shim/<name>/shim.py`,
+  register in `factory.py`. You do not need to change any routes.
 
 ## Learn More
 

@@ -44,7 +44,6 @@ def _download(source: str, repo_id: str, download_dir: Path) -> None:
     download_dir.mkdir(parents=True, exist_ok=True)
 
     if source == "huggingface":
-        os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
         import huggingface_hub as hf_hub
         hf_hub.snapshot_download(
             repo_id=repo_id,

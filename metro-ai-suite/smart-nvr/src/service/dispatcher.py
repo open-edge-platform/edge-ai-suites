@@ -4,6 +4,7 @@ from service.vms_service import VmsService
 from service.redis_store import save_summary_id, save_summary_result, save_search
 from api.endpoints.summarization_api import SummarizationService
 from api.endpoints.frigate_api import FrigateService
+import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,8 +38,9 @@ async def dispatch_action(action: str, event: dict):
             # Save summary_id under the rule
             await save_summary_id(event["rule_id"], summary_id)
 
-            # Retrieve actual summary result (synchronously)
-            summary_result = vms_service.summary(summary_id)["summary"]
+            summary_result = (
+                await asyncio.to_thread(vms_service.summary, summary_id)
+            )["summary"]
 
             logger.info(
                 f"Saving summary result  {summary_result} for summary id {summary_id}"
