@@ -1,7 +1,17 @@
 ---
 name: metro-ai-apps-recipe
 description: >-
-  Build an end-to-end computer-vision analytics stack on Intel hardware in the spirit of the open-edge-platform Metro Vision AI App Recipe, in a streamlined single-compose form that   streams live annotated video over WebRTC via MediaMTX + Coturn (as in the upstream smart-parking recipe) but drops Prometheus and OpenTelemetry; SceneScape is off by default but available as an opt-in multi-camera spatial-analysis path (smart-intersection style). The **architecture is vertical-agnostic**: the same DLSPS + MediaMTX/WebRTC + Mosquitto + Node-RED + Grafana + Nginx stack serves any DL Streamer / OpenVINO computer-vision pipeline. Only the invoking prompt changes — model, class filter, alert rule, dashboard slug, and topic names differ per use-case. Reference verticals include (non-exhaustive) smart-city / ITS (person detection, vehicle detection & ANPR, smart-parking occupancy, pedestrian safety, traffic-flow counting, wrong-way detection), retail (customer counting, queue-length, shelf-out-of-stock, loss-prevention, dwell-time heatmaps), industrial / manufacturing (defect detection, PPE compliance, worker-safety zone intrusion, conveyor object counting, forklift tracking, thermal anomaly), logistics / warehouse (pallet counting, forklift-pedestrian proximity, dock-door status, package damage), healthcare (patient fall detection, hand-hygiene compliance, bed occupancy, PPE/mask compliance), agriculture (livestock counting, crop-disease detection, pest identification, weed detection), energy & utilities (substation intrusion, transformer thermal, meter reading, PPE at height), building / facilities (occupancy counting, tailgating detection, mask/badge compliance, elevator crowding), sports & media (player tracking, ball tracking, crowd density), and any custom OpenVINO/ONNX detector or classifier. Detection metadata flows DLSPS→MQTT→Node-RED→Grafana; video is decoupled: DLSPS overlays detections and streams WebRTC to MediaMTX (WHIP), signalled through Coturn, and is embedded in Grafana as `<iframe>` panels pointing at MediaMTX's built-in WHEP player. Encodes hard-won rules (proxy blanking, per-pipeline MQTT topics, cgroup rules for GPU/NPU, pinned image tags, SAN in self-signed cert, class-filter in Node-RED, Grafana Text-panel sanitizer stripping `<script>`, WebRTC via iframe→MediaMTX WHEP with `GF_SECURITY_ALLOW_EMBEDDING`, Nginx WHEP/WHIP + WebRTC-TCP proxying, DLSPS `frame.type=webrtc peer-id` destination). Invoke this whenever a prompt asks for a full end-to-end *stack* / *recipe* / *solution* for **any** CV analytics use-case. The invoking prompt supplies the vertical/use-case, object(s) of interest, model list, class-filter rules, alert rule default, MQTT topic names, and stack directory name.
+  Build an end-to-end, vertical-agnostic computer-vision analytics stack on
+  Intel hardware from a single streamlined Docker Compose deployment: DL Streamer
+  Pipeline Server plus MediaMTX/WebRTC, Coturn, Mosquitto, Node-RED, Grafana, and
+  Nginx. It streams live annotated video over WebRTC and flows detection metadata
+  DLSPS->MQTT->Node-RED->Grafana, with an optional SceneScape multi-camera
+  spatial-analysis path. USE FOR standing up an object-detection, classification,
+  counting, or zone-alerting pipeline for any vertical (smart city/ITS, retail,
+  industrial, logistics, healthcare, or a custom OpenVINO/ONNX model) where only
+  the model, class filter, alert rule, and dashboard change. DO NOT USE FOR
+  non-Intel or cloud-only deployments, Prometheus/OpenTelemetry metrics stacks,
+  or training and exporting models.
 license: Apache-2.0
 compatibility: >-
   Requires Docker + Docker Compose v2, host with Intel CPU (and optionally
@@ -19,38 +29,34 @@ Build an end-to-end `{{OBJECT}}`-analytics stack on Intel hardware in
 `./{{STACK_DIR}}/` with Docker Compose. The **architecture is
 vertical-agnostic** — the same seven-container topology below serves any
 DL Streamer / OpenVINO CV pipeline; only the invoking prompt's model,
-class filter, alert rule, dashboard, and topic names differ. Inspired
-by the open-edge-platform
+class filter, alert rule, dashboard, and topic names differ. It follows the
+open-edge-platform
 [Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
-and using its **MediaMTX + Coturn + WebRTC** video path, but streamlined:
-**no Prometheus, no OTel**. SceneScape is **off by default** but available
-as an **opt-in multi-camera spatial-analysis path** (smart-intersection
-style — see
-[`references/SCENESCAPE.md`](references/SCENESCAPE.md)). Detection metadata (counts,
-alerts) flows DLSPS→MQTT→Node-RED→Grafana. Video is decoupled: DLSPS
-overlays detections (`gvawatermark`) and pushes each source as a WebRTC
-stream to MediaMTX via WHIP (`ENABLE_WEBRTC=true`,
-`WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, per-source
-`peer-id`); Coturn provides ICE/TURN; Grafana panels are `<iframe>` tags
-pointing at MediaMTX's built-in WHEP player at `/mediamtx/<peer-id>/`
-(proxied by Nginx).
+**MediaMTX + Coturn + WebRTC** video path but is streamlined:
+**no Prometheus, no OTel**. SceneScape is **off by default**, available
+as an **opt-in multi-camera spatial-analysis path** (see
+[`references/SCENESCAPE.md`](references/SCENESCAPE.md)). Detection metadata
+flows DLSPS→MQTT→Node-RED→Grafana; video is decoupled — DLSPS overlays
+detections (`gvawatermark`) and pushes each source to MediaMTX via WHIP
+(`ENABLE_WEBRTC=true`, per-source `peer-id`), Coturn provides ICE/TURN, and
+Grafana embeds MediaMTX's built-in WHEP player as `<iframe>` panels at
+`/mediamtx/<peer-id>/` (proxied by Nginx).
 
-## Supported verticals & use-cases (illustrative, not exhaustive)
+## Supported verticals & use-cases
 
-The same stack has been / can be instantiated for — among others:
+The same stack can be instantiated for, among others:
 
 | Vertical | Example use-cases (each = one invoking prompt) |
 |---|---|
-| Smart city / ITS | person detection, vehicle detection, ANPR / LPR, smart-parking occupancy, pedestrian-safety zone, traffic-flow counting, wrong-way / red-light violation |
-| Retail | customer counting, queue-length monitoring, shelf out-of-stock, loss-prevention, dwell-time heatmap, age/gender demographics |
-| Industrial / manufacturing | surface-defect detection, PPE compliance (hardhat/vest/glove), worker-safety zone intrusion, conveyor object counting, forklift tracking, thermal anomaly |
-| Logistics / warehouse | pallet counting, forklift-pedestrian proximity, dock-door status, package damage detection, barcode / label read |
-| Healthcare | patient fall detection, hand-hygiene compliance, bed occupancy, mask / PPE compliance, waiting-room count |
-| Agriculture | livestock counting & health, crop-disease detection, pest / weed identification, fruit counting |
-| Energy & utilities | substation perimeter intrusion, transformer thermal anomaly, meter reading, PPE at height |
-| Building & facilities | occupancy counting, tailgating detection, badge / mask compliance, elevator crowding |
-| Sports & media | player / ball tracking, crowd density estimation, event highlight tagging |
-| Custom | any OpenVINO IR / ONNX detector + optional classifier registered with DL Streamer |
+| Smart city / ITS | person/vehicle detection, ANPR, smart-parking occupancy, wrong-way |
+| Retail | customer counting, queue-length, shelf out-of-stock, dwell-time |
+| Industrial | surface-defect detection, PPE compliance, zone intrusion, forklift tracking |
+| Logistics | pallet counting, forklift-pedestrian proximity, package damage |
+| Healthcare | patient fall detection, hand-hygiene, bed occupancy, mask compliance |
+| Agriculture | livestock counting, crop-disease, pest/weed identification |
+| Energy & utilities | perimeter intrusion, transformer thermal, meter reading |
+| Building & facilities | occupancy counting, tailgating, badge/mask compliance |
+| Custom | any OpenVINO IR / ONNX detector + optional classifier |
 
 The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 `{{PIPELINE_NAME}}`, `{{DEFAULT_MODEL}}`, `{{CLASS_FILTER_IDS}}`,
@@ -65,11 +71,11 @@ skeleton changes across verticals.
    `go` / `defaults` / empty to proceed. Question 7 selects the **SceneScape**
    opt-in spatial-analysis path.
 3. Run parameter validation (see below). Refuse to proceed on any failure.
-4. Load the relevant references file(s) on demand when authoring each
-   component. **Do not load all references up front.** Load
-   [`references/SCENESCAPE.md`](references/SCENESCAPE.md) only when
-   `{{SCENESCAPE}}=yes`.
-5. Verify against the completion criteria before declaring success.
+4. Load reference file(s) on demand per component — **do not load all up
+   front**. Load [`references/SCENESCAPE.md`](references/SCENESCAPE.md) only
+   when `{{SCENESCAPE}}=yes`.
+5. Verify against the completion criteria before declaring success, and
+   record measured throughput/latency against the baselines in `benchmark.md`.
 
 ## Reference files (load on demand)
 
@@ -86,7 +92,7 @@ skeleton changes across verticals.
 
 | Param | Purpose |
 |---|---|
-| `{{OBJECT}}` | class label surfaced in dashboard/alerts, e.g. `person`, `vehicle`, `hardhat`, `pallet`, `defect`, `cow`, `queue`, `mask`, `fall`, `plate` — any string valid for MQTT topics and Grafana titles |
+| `{{OBJECT}}` | class label in dashboard/alerts (e.g. `person`, `vehicle`, `hardhat`, `defect`, `fall`) — any string valid for MQTT topics and Grafana titles |
 | `{{STACK_DIR}}` | e.g. `person-detect-stack`, `ppe-compliance-stack`, `retail-queue-stack`, `anpr-stack` |
 | `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options |
 | `{{PIPELINE_NAME}}` | canonical DLSPS pipeline `name` (e.g. `yolov11s`). Variants: `<name>`, `<name>_gpu`, `<name>_npu`. MQTT topic: `{{DETECTIONS_TOPIC_PREFIX}}_X/<name>` |
@@ -114,9 +120,8 @@ skeleton changes across verticals.
 5. Node-RED rule [`{{DEFAULT_RULE}}`, `{{RULE_SCOPE}}`]
 6. Alert channel [MQTT `{{ALERT_TOPIC}}`]
 7. SceneScape multi-camera spatial analysis? [`{{SCENESCAPE}}`, default `no`]
-   (smart-intersection style: Scene Controller fusion + InfluxDB + Grafana Flux
-   + Scene Management UI; if `yes`, also collect `{{SCENE_NAME}}` and one unique
-   `{{CAMERA_IDS}}` per input stream, then follow
+   (if `yes`, also collect `{{SCENE_NAME}}` and one unique `{{CAMERA_IDS}}`
+   per input stream, then follow
    [`references/SCENESCAPE.md`](references/SCENESCAPE.md))
 
 ## Parameter validation (enforce BEFORE `install.sh` runs)
@@ -164,27 +169,22 @@ DLSPS ─WebRTC/WHIP───────▶ MediaMTX (peer-id={{DETECTIONS_TOPI
 ## SceneScape spatial-analysis path (optional, `{{SCENESCAPE}}=yes`)
 
 When Question 7 selects SceneScape, **branch** off the default recipe: keep the
-DLSPS detection pipeline, but replace the MediaMTX/WebRTC + Node-RED-alert +
-Grafana-MQTT tail with an Intel® SceneScape multi-camera **scene-fusion** stack
-(Scene Controller + InfluxDB + Grafana Flux + Scene Management UI + NTP),
-modeled on the open-edge-platform **smart-intersection** reference. **Do not
-re-implement SceneScape by hand** — delegate to the external
-[`scenescape-setup`](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup)
-skill, passing `{{SCENE_NAME}}`, `{{CAMERA_IDS}}`, and the per-camera input
-streams. Full architecture, pinned images, validation, run steps, and
-completion criteria live in
+DLSPS detection pipeline but replace the MediaMTX/WebRTC + Node-RED + Grafana-MQTT
+tail with an Intel® SceneScape multi-camera scene-fusion stack (smart-intersection
+style). **Do not re-implement it by hand** — delegate to the external
+`scenescape-setup` skill, passing `{{SCENE_NAME}}` and `{{CAMERA_IDS}}`. Full
+architecture, images, validation, and completion criteria live in
 [`references/SCENESCAPE.md`](references/SCENESCAPE.md); load it only on this
-branch. The default (`{{SCENESCAPE}}=no`) path and every other reference in
-this skill are unchanged.
+branch. The default (`{{SCENESCAPE}}=no`) path is unchanged.
 
 ## Images — pin to the latest available tag (never `:latest`)
 
-Always resolve each image to the **newest published tag on Docker Hub** before
+Resolve each image to the **newest published tag on Docker Hub** before
 generating the stack (e.g. `curl -s "https://hub.docker.com/v2/repositories/<repo>/tags?page_size=25&ordering=last_updated"`),
-then pin that concrete version — do not reference the floating `:latest` tag.
-The versions below are the current latest and should be refreshed if newer ones
-exist. **Grafana is the one exception:** it MUST stay pinned to `11.5.4`
-because the MQTT datasource plugin only works on that tag — do not bump it.
+then pin that concrete version — never the floating `:latest`. Refresh the
+versions below if newer stable ones exist. **Grafana is the one exception:** it
+MUST stay pinned to `11.5.4` because the MQTT datasource plugin only works on
+that tag.
 
 - `intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24` (latest **stable** DL Streamer release; check Docker Hub for a newer stable — ignore `*-weekly` pre-releases)
 - `eclipse-mosquitto:2.1.2-alpine`
@@ -205,11 +205,11 @@ because the MQTT datasource plugin only works on that tag — do not bump it.
 ├── .env
 ├── validate_env.sh
 ├── install.sh                     # HOST_IP, GIDs, model dl+INT8, videos, cert
-├── sample_start.sh                # POST N pipelines for chosen device + start watchdog
-├── sample_stop.sh                 # kill watchdog + DELETE all pipelines
+├── sample_start.sh                # POST N pipelines + start watchdog
+├── sample_stop.sh                 # kill watchdog + DELETE pipelines
 ├── sample_status.sh               # GET /api/pipelines/status
 ├── sample_watchdog.sh             # respawn COMPLETED file-source pipelines
-├── update_dashboard.sh            # rewrite WEBRTC_URL placeholder → https://<HOST>/mediamtx/
+├── update_dashboard.sh            # rewrite WEBRTC_URL → https://<HOST>/mediamtx/
 ├── src/
 │   ├── dlstreamer-pipeline-server/{config.json, models/, videos/}
 │   ├── mosquitto/config/mosquitto.conf
@@ -229,10 +229,10 @@ because the MQTT datasource plugin only works on that tag — do not bump it.
 
 ## Template variable substitution
 
-Every `{{VAR}}` in code blocks (JSON/YAML/shell/Python/HTML/nginx) MUST
-be substituted with the concrete value BEFORE writing the file. The test
-files, `nginx.conf`, `config.json`, `flows.json`, and the dashboard JSON
-are the usual culprits — literal `{{...}}` in Python = syntax error.
+Every `{{VAR}}` in code blocks (JSON/YAML/shell/Python/HTML/nginx) MUST be
+substituted with its concrete value BEFORE writing the file — literal
+`{{...}}` left in `nginx.conf`, `config.json`, `flows.json`, the dashboard
+JSON, or the test files is a syntax error.
 
 ## Execution guardrails
 
@@ -242,42 +242,38 @@ are the usual culprits — literal `{{...}}` in Python = syntax error.
   failing container. Never loop.
 - Before `compose up`: `ss -ltn` must show `:80` and `:443` free, and
   `ss -lun` must show `:3478` free (Coturn TURN).
-- **Bypass host proxy for all localhost/LAN curl.** Corporate hosts
-  export `http_proxy`/`https_proxy` that route `https://localhost/...`
-  through an unreachable external proxy → `Could not resolve host` / 502.
-  Every curl in `sample_*.sh` MUST include `--noproxy '*'` (and `-k` for
-  the self-signed cert). Tests set `NO_PROXY=*` in `conftest.py`.
-- Test WebRTC signalling: `curl -k --noproxy '*' -sf -o /dev/null -w '%{http_code}' https://<HOST>/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_1/` (expect `200`; the WHEP player page). The stream only exists after `sample_start.sh` launches the pipelines.
+- **Bypass host proxy for all localhost/LAN curl** — corporate
+  `http_proxy`/`https_proxy` routes `https://localhost/...` through an
+  unreachable proxy (→ `Could not resolve host` / 502). Every curl in
+  `sample_*.sh` MUST use `--noproxy '*'` (and `-k` for the self-signed
+  cert); tests set `NO_PROXY=*` in `conftest.py`.
+- Test WebRTC signalling: `curl -k --noproxy '*' -sf -o /dev/null -w '%{http_code}' https://<HOST>/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_1/` (expect `200`, the WHEP player page; the stream exists only after `sample_start.sh` runs).
 - Test MQTT: `docker run --rm --network <project>_app_network eclipse-mosquitto:2.1.2-alpine mosquitto_sub -h broker -t '#' -v`.
 - pytest venv at `./.venv` inside stack dir (`python -m venv .venv`) —
   system pip is PEP-668 blocked; `/tmp` may be `noexec`.
 
 ## Optional external skills
 
-If available in the session, invoke; otherwise write files directly using
-the reference templates.
+If available in the session, invoke; otherwise write files from the reference
+templates.
 - `dlstreamer-coding-agent` — pipeline JSON authoring
 - `model-download` (open-edge-platform/edge-ai-libraries) — OMZ model IR
 - `scenescape-setup` (open-edge-platform/skills) — **only when `{{SCENESCAPE}}=yes`**; orchestrates the multi-camera SceneScape deploy (see [`references/SCENESCAPE.md`](references/SCENESCAPE.md))
 
 ## Reference implementation
 
-The upstream `smart-parking` recipe uses the same MediaMTX + Coturn +
-WebRTC video path this skill adopts, plus Prometheus + OTel + SceneScape
-which this skill drops. Consult it for `config.json`, `mosquitto.conf`,
-`nginx.conf`, `datasources.yml`, `dashboards.yml`, `flows.json`, and the
-`compose-without-scenescape.yml` MediaMTX/Coturn service shapes, then
-apply the streamlining (remove `prometheus`, `otel-collector`,
-`metrics-manager`, and their env) from the references:
-[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src).
+The upstream
+[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
+recipe uses the same MediaMTX + Coturn + WebRTC path. Consult it for
+`config.json`, `mosquitto.conf`, `nginx.conf`, `datasources.yml`,
+`dashboards.yml`, and `flows.json` shapes; drop `prometheus`,
+`otel-collector`, and `metrics-manager` when streamlining.
 
 ## Completion criteria (all must pass)
 
-> When `{{SCENESCAPE}}=yes`, criteria 3–11 below are **superseded** by the
-> SceneScape-branch completion criteria in
-> [`references/SCENESCAPE.md`](references/SCENESCAPE.md) (scene created,
-> multi-camera fused tracking, InfluxDB/Grafana-Flux, Scene Management UI,
-> `DEPLOY COMPLETE` + `scene_uid`). Criteria 1–2 (install + `.env`) still apply.
+> When `{{SCENESCAPE}}=yes`, criteria 3–11 are **superseded** by the
+> SceneScape-branch criteria in
+> [`references/SCENESCAPE.md`](references/SCENESCAPE.md); criteria 1–2 still apply.
 
 1. `./install.sh` succeeds: `.env` populated; INT8 model + optional
    classifier IR under `src/dlstreamer-pipeline-server/models/…`; videos
@@ -301,20 +297,18 @@ apply the streamlining (remove `prometheus`, `otel-collector`,
    `{{RULE_SCOPE}}`. `mosquitto_sub -t '{{COUNT_TOPIC}}/#' -C 1` MUST
    parse as `int()` — JSON here silently breaks Grafana plotting.
 9. Grafana at `https://localhost/grafana` (admin/admin) shows live
-   {{OBJECT}} counts + alert data (MQTT datasource) and `{{NUM_SOURCES}}`
-   `<iframe>` WebRTC video panels playing the annotated streams
-   (requires `GF_SECURITY_ALLOW_EMBEDDING=true`). Dashboard root
-   URL MUST NOT redirect-loop (if it does, `/grafana/` `proxy_pass` has a
-   trailing slash — remove it). The MQTT datasource health endpoint
+   {{OBJECT}} counts + alert data and `{{NUM_SOURCES}}` `<iframe>` WebRTC
+   panels playing the annotated streams (needs
+   `GF_SECURITY_ALLOW_EMBEDDING=true`). The MQTT datasource health endpoint
    (`/grafana/api/datasources/uid/mqtt_ds/health`) MUST return
    `"MQTT Connected"` — the broker address goes in **`jsonData.uri`**
-   (`tcp://broker:1883`), NOT the top-level `url:` or `jsonData.host/port`
-   (those are ignored → "dial tcp: missing address", blank panels).
+   (`tcp://broker:1883`), NOT `url:` or `jsonData.host/port` (ignored →
+   blank panels). If the dashboard root redirect-loops, drop the trailing
+   slash from the `/grafana/` `proxy_pass`.
 10. `pytest -q tests/` passes. `pytest --collect-only -q tests/ | tail -1`
     reports ≥ 9 tests collected (no empty stub files).
 11. **Watchdog continuity** (file:// sources): after `video-length + 30 s`,
-    `/api/pipelines/status` shows `{{NUM_SOURCES}}` in `RUNNING`
-    (`COMPLETED` history entries are fine — DLSPS retains them). WebRTC
-    streams re-establish (same `peer-id`), MQTT still flowing. Any
-    duplicate spawn (>`{{NUM_SOURCES}}` `RUNNING`) indicates the watchdog
-    dedup guard is missing.
+    `/api/pipelines/status` shows `{{NUM_SOURCES}}` `RUNNING` (`COMPLETED`
+    history entries are fine), WebRTC re-establishes (same `peer-id`), MQTT
+    still flowing. >`{{NUM_SOURCES}}` `RUNNING` means the watchdog dedup
+    guard is missing.
