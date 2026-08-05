@@ -549,8 +549,10 @@
     "reportGenerationFailed": "报告生成失败",
     "updatingFields": "正在更新字段...",
     "reportReady": "报告已就绪",
-    "downloadDocx": "📥 下载 .docx",
-    "downloadPdf": "📄 下载 .pdf",
+    "download": "下载",
+    "downloadDocxItem": "Word 文档 (.docx)",
+    "downloadPdfItem": "PDF 文档 (.pdf)",
+    "pdfUnavailableTooltip": "PDF 导出需要服务器安装 LibreOffice。请安装后确认 'soffice' 在服务器的 PATH 中，然后重新打开此面板（若修改了 PATH，请重启服务）。",
     "preparingDownload": "⏳ 正在准备...",
     "convertingPdf": "⏳ 正在转换为 PDF..."
   },

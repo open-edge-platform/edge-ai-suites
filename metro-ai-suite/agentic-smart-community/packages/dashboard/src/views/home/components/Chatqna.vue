@@ -565,12 +565,34 @@ const resizeObserverRef = ref<ResizeObserver | null>(null);
 const SCROLL_THRESHOLD = 80;
 const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
 const MAX_TOTAL_ATTACHMENT_BYTES = 12 * 1024 * 1024;
-const SOURCE_AGENT_NAME_MAP: Record<string, string> = {
-  cam_fridge: "fridge-agent-en",
-  cam_child: "child-safety-agent",
-  cam_elder_bedroom: "elder-wakeup-agent",
-  cam_elder_bedroom_2: "elder-wakeup-agent",
-};
+// Generic tokens shared across every camera / agent id — ignored so they can never
+// drive a match on their own (otherwise "agent" or "cam" would match everything).
+const SESSION_MATCH_STOPWORDS = new Set([
+  "cam",
+  "camera",
+  "agent",
+  "agents",
+  "monitor",
+  "en",
+  "zh",
+  "cn",
+  "us",
+]);
+
+// Split an id/label into meaningful lowercase word tokens (drops separators,
+// pure-numeric suffixes, and the generic stopwords above).
+const tokenizeForSessionMatch = (value: string): Set<string> =>
+  new Set(
+    value
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(
+        (token) =>
+          token.length > 1 &&
+          !/^\d+$/.test(token) &&
+          !SESSION_MATCH_STOPWORDS.has(token),
+      ),
+  );
 const AUTH_TOKEN = "";
 
 const resolveSocketUrl = () => {
@@ -818,22 +840,41 @@ const buildSessionDropdownLabel = (session: ChatSessionSummary) => {
     : label;
 };
 
+// Fuzzy-match the selected camera to an agent session group by shared word tokens
+// (e.g. cam_child ↔ child-safety-agent via "child"). No hardcoded agent names — the
+// tokens come from whatever agent id / label the backend supplies. If nothing overlaps,
+// degrade to the default (first) session.
 const resolvePreferredSessionKeyForSource = () => {
-  const mappedAgentName = SOURCE_AGENT_NAME_MAP[routeSourceId.value];
+  const fallbackKey = sessions.value[0]?.key || "";
+  const sourceTokens = tokenizeForSessionMatch(routeSourceId.value);
+  if (!sourceTokens.size) {
+    return fallbackKey;
+  }
 
-  if (mappedAgentName) {
-    const matchedGroup = displaySessionGroups.value.find(
-      (group) =>
-        group.agentId === mappedAgentName ||
-        group.displayName === mappedAgentName,
-    );
-
-    if (matchedGroup?.sessions[0]?.key) {
-      return matchedGroup.sessions[0].key;
+  let bestKey = "";
+  let bestScore = 0;
+  for (const group of displaySessionGroups.value) {
+    const groupKey = group.sessions[0]?.key;
+    if (!groupKey) {
+      continue;
+    }
+    const groupTokens = new Set([
+      ...tokenizeForSessionMatch(group.agentId),
+      ...tokenizeForSessionMatch(group.displayName),
+    ]);
+    let score = 0;
+    for (const token of sourceTokens) {
+      if (groupTokens.has(token)) {
+        score += 1;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestKey = groupKey;
     }
   }
 
-  return sessions.value[0]?.key || "";
+  return bestKey || fallbackKey;
 };
 
 const updateRouteSession = async (sessionKey: string) => {

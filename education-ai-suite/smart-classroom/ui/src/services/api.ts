@@ -1756,6 +1756,17 @@ export async function downloadReportPdf(sessionId: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+// Which download formats the server can produce (GET /report/capabilities).
+// pdf_export is false when LibreOffice ('soffice') is missing, so the UI can
+// disable the PDF option up front instead of failing on click. Defaults to
+// pdf_export:false if the endpoint is unreachable, so we never offer a format
+// that can't be produced.
+export async function getReportCapabilities(): Promise<{ pdf_export: boolean }> {
+  const res = await fetch(`${BASE_URL}/report/capabilities`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load report capabilities (${res.status})`);
+  return res.json();
+}
+
 // Fetch a previously generated report's markdown (GET /report/{id}).
 // Returns '' when no report exists yet (404), so callers can render an empty state.
 export async function getReport(sessionId: string): Promise<string> {

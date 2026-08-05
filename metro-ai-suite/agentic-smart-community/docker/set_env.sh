@@ -87,6 +87,7 @@ mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 # multilevel itself doesn't know about SmartBuilding's layout — MCP server's
 # summary_service.path_remap rewrites paths from this host prefix to /data.
 export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+mkdir -p "${SMARTBUILDING_DATA_DIR}"
 
 # =========================================================================
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
