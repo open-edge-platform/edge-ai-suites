@@ -1,7 +1,7 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for the DLStreamer → Nx metadata translator."""
+"""Unit tests for the DL Streamer → Nx metadata translator."""
 
 from __future__ import annotations
 

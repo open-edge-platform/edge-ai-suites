@@ -1,7 +1,7 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""DLStreamer Pipeline Server REST API client.
+"""DL Streamer Pipeline Server REST API client.
 
 Wraps all HTTP calls to the Pipeline Server REST API.
 
@@ -24,7 +24,7 @@ logger = structlog.get_logger(__name__)
 
 
 class ObjectDetectionApiClient:
-    """Async HTTP client for the DLStreamer Pipeline Server REST API."""
+    """Async HTTP client for the DL Streamer Pipeline Server REST API."""
 
     def __init__(
         self,

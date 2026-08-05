@@ -22,7 +22,7 @@ The platform is built around MCP, letting AI agents (OpenClaw, Hermes, etc.) orc
 
 It uses a layered design with clearly separated, decoupled responsibilities — top to bottom: the **Agent Workspace** (personas + skills), the **MCP Server** (tool surface, rule engine, alert resources), the dependent **video services** (stream analytics, video understanding, VLM), and the underlying **client** that feeds and consumes the stream.
 
-![Smart Building Overall Architecture](./_assets/smartbuilding-overall-arch.png)
+![Smart Building Overall Architecture](./_assets/smartbuilding-arch-2026.2.png)
 
 **Figure: Smart Building Video Analytics — Overall Architecture**
 

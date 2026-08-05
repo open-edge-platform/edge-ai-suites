@@ -81,6 +81,11 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [reportText, setReportText] = useState<string>('');
   const [reapplying, setReapplying] = useState(false);
+  // Which download is in flight, if any. PDF conversion (server-side LibreOffice)
+  // can take several seconds; without this the buttons look idle and teachers
+  // click repeatedly, firing a fresh conversion each time. Disabling + showing a
+  // progress label makes the wait visible and blocks duplicate requests.
+  const [downloading, setDownloading] = useState<null | 'docx' | 'pdf'>(null);
   const [reportAvailable, setReportAvailable] = useState(true);
   const [reportUnavailableReason, setReportUnavailableReason] = useState('');
   // After a report exists, changing fields/inputs marks the view dirty; the
@@ -255,11 +260,14 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
       alert(reportUnavailableReason || disabledMsg);
       return;
     }
-    if (!sessionId) return;
+    if (!sessionId || downloading) return;
+    setDownloading('docx');
     try {
       await downloadReport(sessionId);
     } catch (err: any) {
       alert(err.message || t('reportPanel.downloadDocxFailed', 'Download failed'));
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -268,11 +276,14 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
       alert(reportUnavailableReason || disabledMsg);
       return;
     }
-    if (!sessionId) return;
+    if (!sessionId || downloading) return;
+    setDownloading('pdf');
     try {
       await downloadReportPdf(sessionId);
     } catch (err: any) {
       alert(err.message || t('reportPanel.downloadPdfFailed', 'PDF download failed'));
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -552,11 +563,23 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
                 </div>
               )}
               <div className="report-done-actions">
-                <button className="report-download-btn" onClick={handleDownload}>
-                  {t('reportPanel.downloadDocx', '📥 Download .docx')}
+                <button
+                  className="report-download-btn"
+                  onClick={handleDownload}
+                  disabled={downloading !== null}
+                >
+                  {downloading === 'docx'
+                    ? t('reportPanel.preparingDownload', '⏳ Preparing...')
+                    : t('reportPanel.downloadDocx', '📥 Download .docx')}
                 </button>
-                <button className="report-download-btn" onClick={handleDownloadPdf}>
-                  {t('reportPanel.downloadPdf', '📄 Download .pdf')}
+                <button
+                  className="report-download-btn"
+                  onClick={handleDownloadPdf}
+                  disabled={downloading !== null}
+                >
+                  {downloading === 'pdf'
+                    ? t('reportPanel.convertingPdf', '⏳ Converting to PDF...')
+                    : t('reportPanel.downloadPdf', '📄 Download .pdf')}
                 </button>
               </div>
             </div>

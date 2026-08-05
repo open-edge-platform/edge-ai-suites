@@ -108,7 +108,7 @@ function buildTasksSrt(rows: any[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Token estimation & level planning (ported from smarthome reference impl)
+// Token estimation & level planning
 // ---------------------------------------------------------------------------
 
 function estimateTokens(text: string): number {
