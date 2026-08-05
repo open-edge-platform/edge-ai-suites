@@ -32,17 +32,22 @@ def api():
     return s
 ```
 
-## `tests/test_frames_served.py`
+## `tests/test_webrtc_stream.py`
 
 ```python
-import time
-def test_frame_updates(api):
-    url = f"{api.base}/frames/{{DETECTIONS_TOPIC_PREFIX}}_1.jpg"
-    r1 = api.get(url + f"?t={time.time()}", timeout=10); assert r1.status_code == 200
-    assert r1.headers.get("Content-Type","").startswith("image/")
-    time.sleep(2 / {{MJPEG_FPS}})
-    r2 = api.get(url + f"?t={time.time()}", timeout=10); assert r2.status_code == 200
-    assert r1.content != r2.content, "frame did not update"
+def test_webrtc_player_served(api):
+    # MediaMTX serves a WHEP reader page at the stream path root once the
+    # DLSPS WHIP publisher (peer-id) is connected.
+    url = f"{api.base}/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_1/"
+    r = api.get(url, timeout=10)
+    assert r.status_code == 200, f"WHEP player not served: {r.status_code}"
+    assert "text/html" in r.headers.get("Content-Type", "")
+
+def test_whep_endpoint(api):
+    # WHEP signalling endpoint should exist (405/415/201 depending on method),
+    # never 404 (which means the stream path / nginx regex is wrong).
+    r = api.post(f"{api.base}/{{DETECTIONS_TOPIC_PREFIX}}_1/whep", timeout=10)
+    assert r.status_code != 404, "WHEP endpoint missing (check nginx regex / peer-id)"
 ```
 
 ## Assertion contract for the other test files
@@ -52,7 +57,8 @@ tests/ | tail -1` MUST report `≥ 8 tests collected`.
 
 **`test_stack_up.py`**
 - `docker compose ps --format json` returns exactly the expected service
-  set `{nginx, dlstreamer-pipeline-server, broker, node-red, grafana}`.
+  set `{nginx, dlstreamer-pipeline-server, broker, node-red, grafana,
+  mediamtx, coturn}`.
 - Every service `State=="running"` and (if present) `Health=="healthy"`.
 - `https://{HOST}/` returns 200.
 
@@ -86,3 +92,28 @@ tests/ | tail -1` MUST report `≥ 8 tests collected`.
   (`/grafana/api/search?query={{DASHBOARD_SLUG}}` ≥1 hit).
 - Query datasource proxy for count topic over 60 s window: ≥1 datapoint
   arrives (guards against the 1.2.1 "invalid orgId" regression).
+
+**`test_grafana_dashboard_content.py`** — verifies the dashboard actually
+*displays* both video and MQTT (end-user acceptance, not just wiring).
+Guards the two most common "everything's green but the dashboard is
+empty/black" regressions.
+- **MQTT connected:** `GET
+  /grafana/api/datasources/uid/mqtt_ds/health` (admin/admin) returns
+  `status=="OK"` and a message containing `connected`. This directly
+  catches the `jsonData.uri` mistake — if the broker address is in the
+  wrong json key the datasource provisions "successfully" but health
+  reports `"Network error dial tcp: missing address"` and every panel is
+  blank.
+- **Video panels present:** fetch the dashboard
+  (`/grafana/api/dashboards/uid/<uid>`) and assert exactly
+  `{{NUM_SOURCES}}` `type=="text"` panels whose `options.content` is an
+  `<iframe>` referencing `WEBRTC_URL` / `mediamtx`, each with a distinct
+  `{{DETECTIONS_TOPIC_PREFIX}}_N` peer-id.
+- **Video playable:** resolve the `WEBRTC_URL` templating variable to its
+  concrete value and assert each
+  `<WEBRTC_URL>/{{DETECTIONS_TOPIC_PREFIX}}_N/` returns 200 HTML (the WHEP
+  player is actually served — requires pipelines running).
+- **MQTT panels bound:** at least one panel's `datasource` resolves to
+  `uid=="mqtt_ds"` (or type contains `mqtt`), proving the count/alert
+  panels are wired to the live broker.
+

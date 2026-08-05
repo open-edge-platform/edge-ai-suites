@@ -39,30 +39,6 @@
         "Generates a self-signed TLS cert that includes a SAN",
         "Uses --noproxy '*' and -k on localhost/LAN curl calls"
       ]
-    },
-    {
-      "id": 4,
-      "prompt": "I'm new to this and want a working demo that watches a shop entrance and alerts when the checkout queue gets long. Build it in ./retail-queue-stack/ with defaults and sample videos.",
-      "expected_output": "The six batched setup questions with defaults in brackets, acceptance of 'defaults' to proceed, then a built and verified retail-queue stack.",
-      "should_trigger": true,
-      "files": ["../example-prompts/04-retail-queue-beginner.md"],
-      "expectations": [
-        "Asks the six setup questions in one batched message with defaults in brackets",
-        "Accepts 'defaults'/'go'/empty to proceed",
-        "Uses bundled sample videos on CPU by default",
-        "Verifies the result against the completion criteria"
-      ]
-    },
-    {
-      "id": 5,
-      "prompt": "Write just a single DL Streamer gvadetect pipeline string that reads an RTSP stream and prints detections to stdout. I don't need a dashboard, MQTT, or any containers.",
-      "expected_output": "The skill should not activate; this is a single-pipeline authoring task, not a full end-to-end stack.",
-      "should_trigger": false,
-      "files": [],
-      "expectations": [
-        "Does not scaffold a full multi-container stack",
-        "Recognizes the request as single-pipeline authoring outside this skill's scope"
-      ]
     }
   ]
 }

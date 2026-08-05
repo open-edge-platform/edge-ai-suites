@@ -6,18 +6,23 @@
   `APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true`,
   `EMIT_SOURCE_AND_DESTINATION=true`, `SERVICE_NAME=dlstreamer-pipeline-server`,
   `MQTT_HOST=broker`, `MQTT_PORT=1883`.
+- **WebRTC (required):** `ENABLE_WEBRTC=true`,
+  `WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`. DLSPS pushes each
+  annotated stream to MediaMTX via WHIP using the per-launch `peer-id`.
 - NPU also: `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so`.
-- Do NOT set `ENABLE_WEBRTC` / `WEBRTC_SIGNALING_SERVER` / `ENABLE_OPEN_TELEMETRY`.
+- Do NOT set `ENABLE_OPEN_TELEMETRY` (this stack drops OTel/Prometheus).
 - Blank proxy: `http_proxy=`, `https_proxy=`, `HTTP_PROXY=`, `HTTPS_PROXY=`;
-  `no_proxy=${no_proxy},${HOST_IP}`.
+  `no_proxy=${no_proxy},${HOST_IP},mediamtx-server` (MUST include
+  `mediamtx-server` or WHIP signalling routes through the corporate proxy
+  and the WebRTC publish silently fails).
 
 ## Volumes and permissions
 
 - Pipeline root: tmpfs named volume `uid=1999,gid=1999`
   (`dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root`).
   Do NOT run the container as root.
-- Frames volume: shared tmpfs named volume `frames`, mounted `/tmp/frames`
-  in DLSPS (rw) and `/usr/share/nginx/html/frames` in Nginx (ro).
+- No shared frames volume is needed — video leaves DLSPS over WebRTC, not
+  as JPEG files.
 - Device access needs ALL of: `devices: ["/dev:/dev"]`,
   `volumes: ["/run/udev:/run/udev:ro","/dev:/dev","/tmp:/tmp"]`,
   `device_cgroup_rules: ["c 189:* rmw", "c 209:* rmw", "a 189:* rwm"]`,
@@ -32,14 +37,38 @@ named `{{PIPELINE_NAME}}`, `{{PIPELINE_NAME}}_gpu`,
 `{{PIPELINE_NAME}}_npu`. These names are load-bearing — REST path + MQTT
 topic suffix use them.
 
-## Pipeline shape (with per-REST frame-path injection)
+**CRITICAL — `name`/`version` schema (verified 2026.1.0):** in each
+`config.json` pipeline object set the variant as the **`name`** field and
+DO NOT add a `version` field. DLSPS reinterprets that `name` as the
+pipeline **version** and ALWAYS groups every pipeline under the fixed
+group name `user_defined_pipelines`. So:
 
-Pipeline ends in a `tee`: one branch → `appsink` (metadata → MQTT), the
-other → `gvawatermark` → throttle to `{{MJPEG_FPS}}` → `jpegenc` →
-`multifilesink name=frame_sink`. Expose `multifilesink.location` as a
-top-level `parameters.frame-sink-location`. **One config entry serves
-all sources** — path is set per REST launch, no per-source config
-duplication, no `{peer-id}` UUID mystery.
+- `GET /api/pipelines` returns objects shaped
+  `{"name":"user_defined_pipelines", "version":"{{PIPELINE_NAME}}", ...}`
+  — the variant lives in **`version`**, not `name`.
+- Launch/DELETE path stays
+  `/api/pipelines/user_defined_pipelines/<variant>`.
+- **Mistake that silently collapses all three variants into one:** giving
+  the config objects `name: user_defined_pipelines` + `version: <variant>`.
+  DLSPS ignores the input `version`, so all three become
+  `user_defined_pipelines/user_defined_pipelines` and every launch returns
+  HTTP 400 `"Pipeline not found"`. Always author config `name: <variant>`
+  with no `version` key.
+- After editing `config.json` you MUST `docker compose up -d
+  --force-recreate dlstreamer-pipeline-server` (NOT `restart`) — the
+  pipeline definitions are copied into the `pipeline_root` tmpfs at
+  startup, and a plain `restart` keeps the stale tmpfs and reloads the old
+  pipelines.
+
+## Pipeline shape (WebRTC frame branch handled by DLSPS)
+
+The pipeline ends in `appsink name=destination` (metadata → MQTT). The
+annotated **video is emitted over WebRTC by DLSPS itself** when the REST
+launch supplies a `frame` destination of `type: webrtc` — DLSPS taps the
+watermarked frames internally and WHIP-publishes them to MediaMTX. There
+is NO `tee`, NO `jpegenc`, NO `multifilesink`, and no `frame-sink-location`
+parameter. Add `gvawatermark` before `gvametaconvert` so bounding boxes
+are burned into the WebRTC stream.
 
 ```
 {auto_source} name=source ! decodebin3 !
@@ -49,22 +78,17 @@ duplication, no `{peer-id}` UUID mystery.
   queue ! gvaclassify model=/home/pipeline-server/models/<classify>.xml device=CPU
             inference-interval=1 model-instance-id=inst1 inference-region=1
             name=classification !                              # omit if CLASSIFIER=none
+  queue ! gvawatermark !
   queue ! gvametaconvert add-empty-results=true name=metaconvert !
   queue ! gvafpscounter !
-  tee name=t
-    t. ! queue leaky=downstream max-size-buffers=1 ! appsink name=destination
-    t. ! queue leaky=downstream max-size-buffers=2 !
-         gvawatermark ! videorate ! video/x-raw,framerate={{MJPEG_FPS}}/1 !
-         videoconvert ! jpegenc quality=75 !
-         multifilesink name=frame_sink location=/tmp/frames/default.jpg post-messages=false
+  appsink name=destination
 ```
 
-Parameter mapping (same entry):
+Parameter mapping (same entry — no frame-sink property):
 ```json
 "parameters": {
   "type": "object",
   "properties": {
-    "frame-sink-location":       { "element": { "name": "frame_sink",     "property": "location", "format": "string" } },
     "detection-properties":      { "element": { "name": "detection",      "format": "element-properties" } },
     "classification-properties": { "element": { "name": "classification", "format": "element-properties" } }
   }
@@ -75,12 +99,11 @@ Notes:
 - `threshold` is a knob. YOLO11 rescales to 640×640; on the 640×480
   reference video vehicles score 0.3–0.45. `threshold≥0.5` → empty stream.
   Ship `0.3`, raise for higher-res feeds.
-- `multifilesink` (no `%d` in `location`) overwrites in place — NOT atomic.
-  A very fast poll can occasionally see a partial JPEG. The Grafana
-  `<img onerror>` handler retries after 1 s; at `MJPEG_FPS=5` and ~50 KB
-  frames the race window is <1 ms, artifacts are rare.
-- `leaky=downstream` on both branches: MQTT slowdown doesn't stall
-  inference, frame branch doesn't back-pressure detection.
+- The WebRTC branch is internal to DLSPS — you do NOT wire it in the
+  GStreamer string. Just include `gvawatermark` so overlays are visible,
+  and supply the `frame.type=webrtc` destination at REST launch.
+- Keep `appsink` non-blocking: DLSPS drops frames rather than stalling
+  inference under back-pressure.
 
 ## GPU/NPU variants
 
@@ -90,9 +113,9 @@ parsebin ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrott
 ```
 Codec-agnostic (H.264/H.265/AV1 via VAAPI). Do NOT hardcode `vah264dec`.
 Set `device=GPU`/`NPU` on `gvadetect`/`gvaclassify` with `nireq>=1` (NPU:
-`nireq=4`) and `ie-config="GPU_THROUGHPUT_STREAMS=1"` on GPU. On the
-JPEG branch, add `vapostproc ! video/x-raw` before `jpegenc` to pull
-frames back to system memory.
+`nireq=4`) and `ie-config="GPU_THROUGHPUT_STREAMS=1"` on GPU. Add
+`vapostproc ! video/x-raw` before `gvawatermark` to pull frames back to
+system memory for the overlay + WebRTC encode.
 
 ## Class filtering — where and how
 
@@ -109,12 +132,16 @@ For `X in 1..{{NUM_SOURCES}}` POST to
 ```json
 {
   "source":      { "uri": "file:///home/pipeline-server/videos/new_video_X.mp4", "type": "uri" },
-  "destination": { "metadata": { "type": "mqtt",
-                                 "topic": "{{DETECTIONS_TOPIC_PREFIX}}_X",
-                                 "publish_frame": false } },
-  "parameters":  { "frame-sink-location": "/tmp/frames/{{DETECTIONS_TOPIC_PREFIX}}_X.jpg" }
+  "destination": {
+    "metadata": { "type": "mqtt", "topic": "{{DETECTIONS_TOPIC_PREFIX}}_X", "publish_frame": false },
+    "frame":    { "type": "webrtc", "peer-id": "{{DETECTIONS_TOPIC_PREFIX}}_X" }
+  }
 }
 ```
+- The `frame` block makes DLSPS WHIP-publish the annotated stream to
+  MediaMTX under path `= peer-id`. Grafana's iframe reads it back from
+  `/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_X/` (WHEP). Keep `peer-id`
+  identical to the MQTT `topic` so panels/streams line up per source.
 - `<pipeline_name>` = one of the three variants; all N POSTs use the same
   variant per device flag.
 - Use `curl -k --noproxy '*'`. Poll `GET /api/pipelines/status` until no
@@ -124,7 +151,7 @@ For `X in 1..{{NUM_SOURCES}}` POST to
 
 ## File-source watchdog (required when `source.uri` is `file://`)
 
-DLSPS with `file://` is one-shot: EOS → `COMPLETED` → MQTT/frame output
+DLSPS with `file://` is one-shot: EOS → `COMPLETED` → MQTT/WebRTC output
 stops. `multifilesrc loop=true` / `urisourcebin` do NOT provide a working
 loop past `qtdemux`/MP4 — do not attempt.
 
@@ -164,7 +191,7 @@ while :; do
     [ -z "$idx" ] && continue
     curl --noproxy '*' -sk -X DELETE "https://${HOST}/api/pipelines/${id}" >/dev/null || true
     curl --noproxy '*' -sk -X POST -H 'Content-Type: application/json' \
-      -d '{"source":{"uri":"file:///home/pipeline-server/videos/new_video_'"$idx"'.mp4","type":"uri"},"destination":{"metadata":{"type":"mqtt","topic":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'","publish_frame":false}},"parameters":{"frame-sink-location":"/tmp/frames/{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'.jpg"}}' \
+      -d '{"source":{"uri":"file:///home/pipeline-server/videos/new_video_'"$idx"'.mp4","type":"uri"},"destination":{"metadata":{"type":"mqtt","topic":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'","publish_frame":false},"frame":{"type":"webrtc","peer-id":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'"}}}' \
       "$BASE" >/dev/null || true
   done
   sleep 3
