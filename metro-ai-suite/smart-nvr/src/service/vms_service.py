@@ -229,7 +229,7 @@ class VmsService:
         logger.info(f"Calling search-embeddings API: {url}")
 
         try:
-            response = await asyncio.to_thread(requests.post, url)
+            response = await asyncio.to_thread(requests.post, url,timeout=30)
             response.raise_for_status()
             message = response.json().get("message", "No message in response.")
             logger.info(f"Embedding search response: {message}")
