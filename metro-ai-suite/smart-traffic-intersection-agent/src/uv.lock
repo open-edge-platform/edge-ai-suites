@@ -2416,7 +2416,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = "~=3.13" },
     { name = "black", marker = "extra == 'dev'", specifier = "~=26.3" },
-    { name = "fastapi", specifier = "~=0.140" },
+    { name = "fastapi", specifier = "~=0.128" },
     { name = "flake8", marker = "extra == 'dev'", specifier = "~=6.1" },
     { name = "gradio", specifier = "~=6.13" },
     { name = "httpx", marker = "extra == 'dev'", specifier = "~=0.25" },
