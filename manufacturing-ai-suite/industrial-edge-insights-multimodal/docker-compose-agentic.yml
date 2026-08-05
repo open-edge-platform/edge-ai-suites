@@ -143,10 +143,7 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},localhost,apm-metrics,apm-agent,apm-storage
-      HTTP_PROXY: ${http_proxy:-}
-      HTTPS_PROXY: ${https_proxy:-}
-      NO_PROXY: ${no_proxy:-},localhost,apm-metrics,apm-agent,apm-storage
+      no_proxy: ${no_proxy:-},localhost,apm-metrics,apm-agent
       METRICS_PORT: "9090"
       TELEGRAF_PORT: "9273"
       TELEGRAF_HTTP_PORT: "8186"
