@@ -17,7 +17,7 @@ HOST    = os.environ.get("HOST_IP", "localhost")
 def mqtt_sub():
     def _next(topic, timeout=10):
         out = subprocess.check_output([
-            "docker","run","--rm","--network",NET,"eclipse-mosquitto:2.0.22",
+            "docker","run","--rm","--network",NET,"eclipse-mosquitto:2.1.2-alpine",
             "mosquitto_sub","-h","broker","-t",topic,"-C","1","-W",str(timeout)
         ], text=True, timeout=timeout+5)
         try:    return json.loads(out)

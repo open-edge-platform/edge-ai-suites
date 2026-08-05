@@ -129,7 +129,7 @@ No `frames` volume — video leaves DLSPS over WebRTC.
 
 ```yaml
   mediamtx:
-    image: bluenviron/mediamtx:1.11.3
+    image: bluenviron/mediamtx:1.20.0
     container_name: mediamtx-server
     environment:
       - MTX_RTSP=no
@@ -144,7 +144,7 @@ No `frames` volume — video leaves DLSPS over WebRTC.
     networks: [app_network]
 
   coturn:
-    image: coturn/coturn:4.12.0
+    image: coturn/coturn:4.17.0
     container_name: coturn
     command: ["-v","--external-ip=${HOST_IP}","--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}","--realm=turn.local","--no-tls","--no-dtls","--lt-cred-mech"]
     ports:

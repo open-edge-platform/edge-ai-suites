@@ -177,17 +177,24 @@ completion criteria live in
 branch. The default (`{{SCENESCAPE}}=no`) path and every other reference in
 this skill are unchanged.
 
-## Pinned images (no `:latest`)
+## Images — pin to the latest available tag (never `:latest`)
 
-- `intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24`
-- `eclipse-mosquitto:2.0.22`
-- `nodered/node-red:4.1`
-- `nginx:1.30.2-alpine`
-- `bluenviron/mediamtx:1.11.3` (WebRTC server; WHIP in from DLSPS, WHEP out to browser)
-- `coturn/coturn:4.12.0` (ICE/TURN signalling for WebRTC)
-- `grafana/grafana:11.5.4` with `GF_INSTALL_PLUGINS="grafana-mqtt-datasource 1.3.3,yesoreyeram-infinity-datasource 3.11.1"`
-  (verify each version exists via `curl -s https://grafana.com/api/plugins/<slug>/versions | jq '.items[].version'` — `plugin.versionNotFound` kills the container and Nginx returns 502)
-- `intel/dlstreamer:2026.1.0-ubuntu24` (one-shot in `install.sh` for model download + INT8 quantize + TLS cert)
+Always resolve each image to the **newest published tag on Docker Hub** before
+generating the stack (e.g. `curl -s "https://hub.docker.com/v2/repositories/<repo>/tags?page_size=25&ordering=last_updated"`),
+then pin that concrete version — do not reference the floating `:latest` tag.
+The versions below are the current latest and should be refreshed if newer ones
+exist. **Grafana is the one exception:** it MUST stay pinned to `11.5.4`
+because the MQTT datasource plugin only works on that tag — do not bump it.
+
+- `intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24` (latest **stable** DL Streamer release; check Docker Hub for a newer stable — ignore `*-weekly` pre-releases)
+- `eclipse-mosquitto:2.1.2-alpine`
+- `nodered/node-red:5.0.4`
+- `nginx:1.31.3-alpine`
+- `bluenviron/mediamtx:1.20.0` (WebRTC server; WHIP in from DLSPS, WHEP out to browser)
+- `coturn/coturn:4.17.0` (ICE/TURN signalling for WebRTC)
+- `grafana/grafana:11.5.4` (**pinned — do not upgrade**, MQTT plugin only works on this tag) with `GF_INSTALL_PLUGINS="grafana-mqtt-datasource 1.3.3,yesoreyeram-infinity-datasource 3.11.1"`
+  (verify each plugin version exists via `curl -s https://grafana.com/api/plugins/<slug>/versions | jq '.items[].version'` — `plugin.versionNotFound` kills the container and Nginx returns 502)
+- `intel/dlstreamer:2026.1.0-ubuntu24` (latest **stable**; one-shot in `install.sh` for model download + INT8 quantize + TLS cert)
 
 ## Layout (flat)
 
@@ -241,7 +248,7 @@ are the usual culprits — literal `{{...}}` in Python = syntax error.
   Every curl in `sample_*.sh` MUST include `--noproxy '*'` (and `-k` for
   the self-signed cert). Tests set `NO_PROXY=*` in `conftest.py`.
 - Test WebRTC signalling: `curl -k --noproxy '*' -sf -o /dev/null -w '%{http_code}' https://<HOST>/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_1/` (expect `200`; the WHEP player page). The stream only exists after `sample_start.sh` launches the pipelines.
-- Test MQTT: `docker run --rm --network <project>_app_network eclipse-mosquitto:2.0.22 mosquitto_sub -h broker -t '#' -v`.
+- Test MQTT: `docker run --rm --network <project>_app_network eclipse-mosquitto:2.1.2-alpine mosquitto_sub -h broker -t '#' -v`.
 - pytest venv at `./.venv` inside stack dir (`python -m venv .venv`) —
   system pip is PEP-668 blocked; `/tmp` may be `noexec`.
 

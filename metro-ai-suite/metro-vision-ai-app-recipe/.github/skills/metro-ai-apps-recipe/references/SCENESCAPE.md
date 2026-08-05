@@ -65,10 +65,10 @@ scene API and owns scene calibration, camera poses, and regions of interest.
 - `postgres:17.6` — **pgserver** (scene database)
 - `influxdb:2.7.11` — **influxdb2** (time-series ROI analytics; Flux queries)
 - `grafana/grafana:11.6.0` — Grafana with the **InfluxDB** datasource (not the MQTT datasource)
-- `nodered/node-red:4.1` — MQTT → InfluxDB bridge
-- `eclipse-mosquitto:2.0.22` — **broker** (secured with TLS certs)
+- `nodered/node-red:5.0.4` — MQTT → InfluxDB bridge
+- `eclipse-mosquitto:2.1.2-alpine` — **broker** (secured with TLS certs)
 - `dockurr/chrony:4.6.1` — **ntpserver** (synchronized timestamps for fusion)
-- `nginx:1.30.2-alpine` — TLS reverse proxy (80/443)
+- `nginx:1.31.3-alpine` — TLS reverse proxy (80/443)
 - `${DLSTREAMER_PIPELINE_SERVER_IMAGE}` — DLSPS object detection → MQTT
 
 No MediaMTX, Coturn, or WebRTC in this branch; no Prometheus/OpenTelemetry.
