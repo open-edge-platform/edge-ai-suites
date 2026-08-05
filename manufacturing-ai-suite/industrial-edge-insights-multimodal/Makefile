@@ -31,12 +31,15 @@ $(shell chmod 600 .env helm/values.yaml)
 KEY_LENGTH=3072
 DAYS=365
 SHA_ALGO="sha384"
+LLM_DEVICE_LOWER := $(shell printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lower:]')
+LLM_WEIGHT_FORMAT_LOWER := $(shell printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]')
+MODEL_PATH ?= /model/llm_model_agentic/openvino_models/$(LLM_DEVICE_LOWER)/$(LLM_WEIGHT_FORMAT_LOWER)/$(LLM_MODEL_NAME)
+export MODEL_PATH
 
 # Build Docker containers
 .PHONY: build
 build:
-	@echo "Building Docker containers..."
-	export MODEL_PATH="test" 
+	@echo "Building Docker containers...";
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) build --pull;
 
 .PHONY: build_copyleft_sources
@@ -321,9 +324,6 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection_agentic.json || exit 1; \
-	export LLM_DEVICE_LOWER=$$(printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lower:]'); \
-	export LLM_WEIGHT_FORMAT_LOWER=$$(printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]'); \
-	export MODEL_PATH=/model/llm_model_agentic/openvino_models/$${LLM_DEVICE_LOWER}/$${LLM_WEIGHT_FORMAT_LOWER}/${LLM_MODEL_NAME}; \
 	$(MAKE) download_model; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
 	$(MAKE) upload_tar_file
