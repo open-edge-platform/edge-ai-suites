@@ -57,16 +57,8 @@ export interface FeatureDescriptor {
   id: string;
   dependency: string[];
   requires: string[];
-  type?: string;
-  panel?: string;
-  title?: string;
   endpoints?: Record<string, string>;
   mode?: string;
-  cameras?: {
-    front?: boolean;
-    back?: boolean;
-    board?: boolean;
-  };
 }
 
 /**
