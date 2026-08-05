@@ -1,8 +1,15 @@
 # Release Notes: Smart Route Planning Agent
 
-<!--## Version 2026.2.0-->
+## Version 2026.2.0
 
-<!--date TBD-->
+**August 4, 2026**
+
+**Dependency Updates**
+
+- Updated dependency specifications to use compatible-release (`~=`) versioning based on PEP 440 standard.
+- Updated all dependencies to latest compatible versions.
+- Pinned uv installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible builds in the docker image.
+- Removal of unused and some transitive dependencies for cleaner dependency tree.
 
 ## Version 2026.1.0
 
