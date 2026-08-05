@@ -23,7 +23,7 @@ const GradingRightPanel: React.FC = () => {
     Object.fromEntries(numKeys.map((k) => [k, ''])) as Record<NumKey, string>);
   const [boolInputs, setBoolInputs] = useState<Record<BoolKey, boolean>>(() =>
     Object.fromEntries(boolKeys.map((k) => [k, false])) as Record<BoolKey, boolean>);
-  const [forceSplitPairsInput, setForceSplitPairsInput] = useState('');
+  const [splitPagesInput, setSplitPagesInput] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string>('');
 
@@ -33,7 +33,7 @@ const GradingRightPanel: React.FC = () => {
       [k, cfg[k] != null ? String(cfg[k]) : ''])) as Record<NumKey, string>);
     setBoolInputs(Object.fromEntries(boolKeys.map((k) =>
       [k, Boolean(cfg[k])])) as Record<BoolKey, boolean>);
-    setForceSplitPairsInput(Array.isArray(cfg.force_split_pairs) ? JSON.stringify(cfg.force_split_pairs) : '[]');
+    setSplitPagesInput(Array.isArray(cfg.force_split_pairs) ? cfg.force_split_pairs.map((p) => String(p[0])) : []);
   };
 
   const setNum = (k: NumKey, v: string) => {
@@ -43,30 +43,6 @@ const GradingRightPanel: React.FC = () => {
   const setBool = (k: BoolKey, v: boolean) => {
     setBoolInputs((prev) => ({ ...prev, [k]: v }));
     setSaveMsg('');
-  };
-
-  const parseForceSplitPairs = (raw: string): number[][] => {
-    const text = raw.trim();
-    if (!text) {
-      return [];
-    }
-    const parsed = JSON.parse(text);
-    if (!Array.isArray(parsed)) {
-      throw new Error('invalid');
-    }
-    const normalized: number[][] = [];
-    for (const item of parsed) {
-      if (!Array.isArray(item) || item.length !== 2) {
-        throw new Error('invalid');
-      }
-      const a = Number(item[0]);
-      const b = Number(item[1]);
-      if (!Number.isInteger(a) || !Number.isInteger(b) || a <= 0 || b <= 0 || b !== a + 1) {
-        throw new Error('invalid');
-      }
-      normalized.push([a, b]);
-    }
-    return normalized;
   };
 
   const pageColumnsValue = parseInt(numInputs.page_columns || '', 10);
@@ -107,11 +83,17 @@ const GradingRightPanel: React.FC = () => {
         setSaveMsg(t('grading.config.invalidColumnSplitRatio', 'Column split ratio must be between 0 and 1'));
         return;
       }
-      try {
-        force_split_pairs = parseForceSplitPairs(forceSplitPairsInput);
-      } catch {
-        setSaveMsg(t('grading.config.invalidForceSplitPairs', 'Split pairs must be JSON like [[4,5],[6,7]] and each pair must be adjacent pages.'));
-        return;
+      if (force_split) {
+        for (const raw of splitPagesInput) {
+          const text = raw.trim();
+          if (!text) continue;
+          const n = Number(text);
+          if (!Number.isInteger(n) || n <= 0) {
+            setSaveMsg(t('grading.config.invalidForceSplitPairs', 'Split pages must be positive integers.'));
+            return;
+          }
+          force_split_pairs.push([n, n + 1]);
+        }
       }
       if (vlm_temperature != null && (isNaN(vlm_temperature) || vlm_temperature < 0 || vlm_temperature > 2)) {
         setSaveMsg(t('grading.config.invalidTemp', 'Temperature must be between 0 and 2'));
@@ -199,20 +181,48 @@ const GradingRightPanel: React.FC = () => {
     </div>
   );
 
-  const splitPairsCell = () => (
+  const splitPagesCell = () => (
     <div className="grading-config-cell">
-      <label className="grading-config-label">{t('grading.config.forceSplitPairs', 'Split Pairs')}</label>
-      <input
-        className="grading-config-input"
-        type="text"
-        placeholder={t('grading.config.forceSplitPairsPlaceholder', '[[4,5],[6,7]]')}
+      <label className="grading-config-label">{t('grading.config.forceSplitPairs', 'Split After Pages')}</label>
+      {splitPagesInput.map((value, idx) => (
+        <div key={idx} className="grading-config-pair-row">
+          <input
+            className="grading-config-input"
+            type="number"
+            min={1}
+            step={1}
+            placeholder="3"
+            disabled={!boolInputs.force_split}
+            value={value}
+            onChange={(e) => {
+              setSplitPagesInput((prev) => prev.map((v, i) => (i === idx ? e.target.value : v)));
+              setSaveMsg('');
+            }}
+          />
+          <button
+            type="button"
+            className="grading-config-row-remove"
+            disabled={!boolInputs.force_split}
+            onClick={() => {
+              setSplitPagesInput((prev) => prev.filter((_, i) => i !== idx));
+              setSaveMsg('');
+            }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="grading-btn grading-btn-secondary grading-config-row-add"
         disabled={!boolInputs.force_split}
-        value={forceSplitPairsInput}
-        onChange={(e) => {
-          setForceSplitPairsInput(e.target.value);
+        onClick={() => {
+          setSplitPagesInput((prev) => [...prev, '']);
           setSaveMsg('');
         }}
-      />
+      >
+        {t('grading.config.forceSplitAdd', '+ Add page')}
+      </button>
     </div>
   );
 
@@ -248,7 +258,7 @@ const GradingRightPanel: React.FC = () => {
               {numCell('contrast_factor', t('grading.config.contrastFactor', 'Contrast Factor'), { min: 0, step: 0.1 })}
               {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
               {boolCell('force_split', t('grading.config.forceSplit', 'Force Split'))}
-              {splitPairsCell()}
+              {splitPagesCell()}
             </div>
           </div>
 
