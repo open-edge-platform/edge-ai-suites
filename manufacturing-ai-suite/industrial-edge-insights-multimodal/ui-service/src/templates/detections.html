@@ -43,7 +43,7 @@
       </h2>
       {% if detections %}
       <table>
-        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th><th>BBox (x,y,w,h)</th><th>Timestamp</th></tr></thead>
+        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th></tr></thead>
         <tbody>
           {% for d in detections %}
           <tr>
@@ -56,8 +56,6 @@
               </span>
               {{ "%.3f"|format(d.confidence) }}
             </td>
-            <td>({{ d.x }}, {{ d.y }}, {{ d.width }}, {{ d.height }})</td>
-            <td class="timestamp">{{ d.timestamp or "—" }}</td>
           </tr>
           {% endfor %}
         </tbody>
