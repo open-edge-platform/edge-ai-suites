@@ -4,7 +4,7 @@ description: >-
   Generic, use-case-agnostic guide to the smart-building MCP server and its
   smartbuilding_* video tool set. Read this before touching any smartbuilding_* tool.
   IMPORTANT: this toolkit must not create/register new use cases directly; for any new
-  use case request, first load video-summary-prompt-studio and follow its Q1/Q2 schema
+  use case request, first load smartbuilding-use-case-manager and follow its Q1/Q2 schema
   confirmation gate before any smartbuilding_use_case_register call.
   Teaches the full tool catalog, the SQLite data model, how to discover which monitor to
   act on, how to generate reports, and how pushed alerts reach a session.
@@ -21,7 +21,7 @@ global `source_id`; ids are per-monitor and never assume they are unique across 
 
 If the user asks to create/register a new use case, do not draft a prompt and do not call
 `smartbuilding_use_case_register` from this toolkit. First load the
-`video-summary-prompt-studio` skill. That skill owns the Q1/Q2 customer interaction,
+`smartbuilding-use-case-manager` skill. That skill owns the Q1/Q2 customer interaction,
 final schema confirmation, prompt authoring, use-case registration, and monitor registration.
 This toolkit resumes only after the use case exists, or for ordinary monitor/report/query work.
 
@@ -103,7 +103,7 @@ user-defined (the tool doesn't interpret it).
   `{ valid, checks, required_fields, missing_required_in_prompt, suggestion, … }`.
 
 > Creating/authoring new use cases (drafting prompts, choosing schema, registering video summary service tasks)
-> is handled by `video-summary-prompt-studio`, not this toolkit. Do not call
+> is handled by `smartbuilding-use-case-manager`, not this toolkit. Do not call
 > `smartbuilding_use_case_register` until that skill has asked Q1/Q2 and the user has confirmed
 > Final Schema + Rule Path.
 

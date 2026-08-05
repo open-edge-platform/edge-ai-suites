@@ -41,14 +41,14 @@ def test_gen_chart():
     logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Current directory2 %s", os.getcwd())
-    
+
 def test_blank_values():
     logger.info("TC_002: Testing blank values, checking helm install and uninstall with blank values in values.yaml for multimodal")
     # Use multimodal-specific configuration
     multimodal_release_name = release_name_multi
     multimodal_chart_path = chart_path_multi
     multimodal_namespace = namespace_multi
-    
+
     # Access the test cases dictionary
     case = helm_utils.password_test_cases["test_case_1"]
     uninstall_result = helm_utils.uninstall_helm_charts(multimodal_release_name, multimodal_namespace)
@@ -64,21 +64,21 @@ def test_blank_values():
     logger.info(f"helm_install result for blank values: {install_result}")
     assert install_result == False  # nosec B101
     logger.info("Helm is not installed for Case 1: blank yaml values")
-    
+
 def test_invalid_values():
     logger.info("TC_003: Testing invalid values, checking helm install and uninstall with invalid values in values.yaml for multimodal")
     # Use multimodal-specific configuration
     multimodal_release_name = release_name_multi
     multimodal_chart_path = chart_path_multi
     multimodal_namespace = namespace_multi
-    
+
     # Access the test cases dictionary
     case = helm_utils.password_test_cases["test_case_2"]
     values_yaml_path = os.path.expandvars(multimodal_chart_path + '/values.yaml')
     update_result = helm_utils.update_values_yaml(values_yaml_path, case)
     logger.info(f"update_values_yaml result: {update_result}")
     assert update_result == True, "Failed to update values.yaml."  # nosec B101
-    
+
     logger.info(f"Case 2 - Release Name: {multimodal_release_name}, Chart Path: {multimodal_chart_path}, Namespace: {multimodal_namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
     install_result = helm_utils.helm_install(multimodal_release_name, multimodal_chart_path, multimodal_namespace, constants.TELEGRAF_MQTT_PLUGIN)
     logger.info(f"helm_install result for invalid values: {install_result}")
@@ -98,14 +98,14 @@ def test_helm_install(setup_multimodal_helm_environment, request):
     logger.info(f"verify_pods result: {pods_result}")
     assert pods_result is True, "Failed to verify pods."  # nosec B101
     logger.info("All pods are running for multimodal")
-    
+
 def test_multimodal_helm_install_uninstall():
     logger.info("TC_007: Testing multimodal helm install and uninstall functionality, checking helm install and uninstall with valid values in values.yaml")
     # Use multimodal-specific configuration
     multimodal_release_name = release_name_multi
     multimodal_chart_path = chart_path_multi
     multimodal_namespace = namespace_multi
-    
+
     uninstall_result = helm_utils.uninstall_helm_charts(multimodal_release_name, multimodal_namespace)
     logger.info(f"uninstall_helm_charts result: {uninstall_result}")
     assert uninstall_result == True, "Failed to uninstall Helm release."  # nosec B101
@@ -120,7 +120,7 @@ def test_multimodal_helm_install_uninstall():
     logger.info(f"check_services result: {check_services_result}")
     if not check_services_result:
         logger.warning("Some services may still be terminating — this could cause NodePort allocation conflicts.")
-    
+
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(multimodal_chart_path + '/values.yaml')
     update_result = helm_utils.update_values_yaml(values_yaml_path, case)
@@ -169,7 +169,7 @@ def test_verify_pods_stability_after_udf_activation(setup_multimodal_helm_enviro
 
 def test_verify_pods_stability_after_influxdb_restart(setup_multimodal_helm_environment, request):
     logger.info("TC_010: Testing pods stability after InfluxDB restart for multimodal, checking helm install, pod logs and uninstall with valid values in values.yaml")
-    
+
     time.sleep(3)  # Wait for the pods to stabilize
     pods_result = helm_utils.verify_pods(namespace_multi)
     logger.info(f"verify_pods result: {pods_result}")
@@ -185,7 +185,7 @@ def test_verify_pods_stability_after_influxdb_restart(setup_multimodal_helm_envi
     logger.info(f"verify_ts_logs DEBUG result: {ts_logs_result}")
     assert ts_logs_result is True, "Failed to verify pod logs."  # nosec B101
     logger.info("Pod logs are verified")
-    
+
     pod_restart_result = helm_utils.pod_restart(namespace_multi)
     logger.info(f"pod_restart result: {pod_restart_result}")
     assert pod_restart_result == True, "Failed to restart pod."  # nosec B101
@@ -330,11 +330,11 @@ def test_system_resources_multimodal_helm(setup_multimodal_helm_environment, req
     logger.info("TC_012: Testing overall system resource usage for multimodal Helm deployment")
     logger.info("Waiting %s seconds for multimodal pods to stabilize before collecting resource metrics", wait_time_multi)
     time.sleep(wait_time_multi)
-    
-    # Validate overall deployment resources  
+
+    # Validate overall deployment resources
     resource_results = helm_utils.validate_helm_deployment_resources(
         namespace=namespace_multi,
-        cpu_threshold_millicores=2000,  # Allow up to 2 CPU cores (2000 millicores)  
+        cpu_threshold_millicores=2000,  # Allow up to 2 CPU cores (2000 millicores)
         memory_threshold_gb=8  # Allow up to 8 GB memory
     )
 
@@ -352,35 +352,35 @@ def test_system_resources_multimodal_helm(setup_multimodal_helm_environment, req
         )
         logger.info("Fallback validation succeeded. Core multimodal components are running.")
         return
-    
+
     # Print summary results
     print("\n" + "="*80)
     print("HELM DEPLOYMENT RESOURCE VALIDATION RESULTS")
     print("="*80)
     print(f"Overall Success: {resource_results['success']}")
     print(f"Total Pods Monitored: {resource_results['pod_count']}")
-    
+
     # Handle case where no pods are running (keys might not exist)
     if resource_results.get('total_cpu_millicores') is not None:
         print(f"Total CPU Usage: {resource_results['total_cpu_millicores']:.1f}m")
         print(f"Total Memory Usage: {resource_results['total_memory_mb']:.1f} MB")
         print(f"CPU Threshold: {resource_results['cpu_threshold_millicores']}m")
         print(f"Memory Threshold: {resource_results['memory_threshold_gb']} GB ({resource_results['memory_threshold_gb'] * 1024} MB)")
-        
+
         if resource_results.get('cpu_exceeded'):
             print("CPU usage exceeded threshold")
         else:
             print("CPU usage within acceptable limits")
-            
+
         if resource_results.get('memory_exceeded'):
             print("Memory usage exceeded threshold")
         else:
             print("Memory usage within acceptable limits")
     else:
         print(f"No resource data available: {resource_results.get('error', 'Unknown error')}")
-        
+
     print("="*80)
-    
+
     # Assert the actual test result - only check if pods are actually running
     if resource_results['pod_count'] > 0:
         logger.info(f"Resource validation: success={resource_results['success']}, pod_count={resource_results['pod_count']}, cpu={resource_results.get('total_cpu_millicores')}, memory_mb={resource_results.get('total_memory_mb')}")
@@ -388,17 +388,17 @@ def test_system_resources_multimodal_helm(setup_multimodal_helm_environment, req
     else:
         error_message = resource_results.get('error', 'Unknown error')
         pytest.fail(f"Resource metrics unavailable after successful query: {error_message}")
-    
+
     logger.info("✓ Overall system resource usage is within acceptable limits for multimodal Helm deployment")
 
 def test_verify_multimodal_influxdb_data(setup_multimodal_helm_environment, request):
     """TC_013: Verify vision and time series data in InfluxDB for multimodal deployment"""
     logger.info("TC_013: Verifying vision and time series data in InfluxDB for multimodal deployment")
-    
+
     # Wait for data to be generated and ingested
     logger.info("Waiting %s seconds for data pipeline to generate data...", wait_time_multi)
     time.sleep(wait_time_multi)
-    
+
     # Run the common verification helper to keep InfluxDB checks centralized
     multimodal_chart_path = chart_path_multi
     result = helm_utils.verify_multimodal_influxdb_data(multimodal_chart_path, namespace=namespace_multi)
@@ -523,7 +523,7 @@ def test_seaweed_s3_stored_images_access_multimodal():
         logger.info("=====================================================")
 
         s3_wait_time = 90  # Additional 90 seconds for S3 image writes
-        logger.info("Waiting %ss for DLStreamer to process video and write images to S3 storage...", s3_wait_time)
+        logger.info("Waiting %ss for DL Streamer to process video and write images to S3 storage...", s3_wait_time)
         common_utils.wait_for_stability(s3_wait_time)
 
         logger.info("S3 Step 1: Verifying required pods for S3 image storage")
@@ -607,7 +607,7 @@ def test_seaweed_s3_stored_images_access_multimodal():
 
         logger.info("=====================================================")
         logger.info("✓ SEAWEEDFS S3 VALIDATION COMPLETED SUCCESSFULLY")
-        logger.info("✓ SeaweedFS S3 storage integration with DLStreamer verified")
+        logger.info("✓ SeaweedFS S3 storage integration with DL Streamer verified")
         logger.info("=====================================================")
 
     except Exception as exc:
