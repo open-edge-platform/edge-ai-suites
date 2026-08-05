@@ -10,6 +10,7 @@ from typing import Optional
 import cv2
 
 from shared.config import SegmentConfig
+from shared.time_utils import now_local_str
 
 
 class SegmentResult:
@@ -56,7 +57,7 @@ class SegmentExtractor:
 
         filename = f"{self.source_id}_{now.strftime('%H%M%S')}.mp4"
         self._current_path = os.path.join(date_dir, filename)
-        self._start_time = now.isoformat(timespec="seconds")
+        self._start_time = now_local_str()
         self._frame_count = 0
 
         fourcc = cv2.VideoWriter.fourcc(*"mp4v")
@@ -86,7 +87,7 @@ class SegmentExtractor:
         self._writer = None
 
         duration = self._frame_count / self.fps
-        end_time = datetime.now().isoformat(timespec="seconds")
+        end_time = now_local_str()
 
         if duration < self.min_duration:
             try:

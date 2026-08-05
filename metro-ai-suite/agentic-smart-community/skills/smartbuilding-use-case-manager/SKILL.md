@@ -1,7 +1,7 @@
 ---
 name: smartbuilding-use-case-manager
 description: "MANDATORY for creating, previewing, refining, registering, or deleting any Smart Building video analytics use case, and for creating, rebinding, or updating any monitor. Use-case creation requires two cross-turn gates: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract. Monitor binding requires two additional cross-turn gates: explicit prefilter/ROI decisions (P2=yes applies ROI template defaults: mode=crop, expand=0.25, auto_split_area=0.35), then explicit approval of the exact assembled pipeline_config before register_source. Never infer, recommend-and-apply, or silently default any gated answer."
-homepage: https://github.com/open-edge-platform/edge-ai-libraries
+homepage: https://github.com/open-edge-platform/edge-ai-suites
 metadata:
   {
     "openclaw":

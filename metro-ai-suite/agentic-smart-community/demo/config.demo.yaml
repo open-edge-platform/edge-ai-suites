@@ -86,7 +86,10 @@ events_webhook:
 # use-case extension; you never configure it here.)
 #
 # Alert decisions use the built-in defaultRuleEvaluator unless a use case sets
-# evaluate_rules_path to an adapter under `use-cases/<name>/evaluate_rules.py`.
+# evaluate_rules_path (resolved relative to the MCP server process cwd — the
+# repo root when started via scripts/mcp-server/start.sh). The bundled
+# elder_wakeup adapter ships at demo/prompts/elder_wakeup_evaluate_rules.py;
+# use cases registered at runtime are staged to <data_dir>/use-cases/<name>/evaluate_rules.py.
 use_case_dict:
   fridge:
     description: "Fridge content tracking"
@@ -135,7 +138,7 @@ use_case_dict:
   elder_wakeup:
     description: "Elder wakeup monitoring"
     video_summary_task: elder_wakeup_monitor
-    evaluate_rules_path: ./use-cases/elder_wakeup/evaluate_rules.py
+    evaluate_rules_path: ./demo/prompts/elder_wakeup_evaluate_rules.py
     # Time-based UC: evaluate_rules.py judges by event + wakeup_time (no severity).
     schema:
       video_summary_tasks:

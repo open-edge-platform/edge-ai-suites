@@ -1,7 +1,7 @@
 ---
 name: smartbuilding-toolkit
 description: >-
-  Generic, use-case-agnostic guide to the smart-building MCP server and its
+  Generic, use-case-agnostic guide to the smartbuilding MCP server and its
   smartbuilding_* video tool set. Read this before touching any smartbuilding_* tool.
   IMPORTANT: this toolkit must not create/register new use cases directly; for any new
   use case request, first load smartbuilding-use-case-manager and follow its Q1/Q2 schema
@@ -29,7 +29,7 @@ This toolkit resumes only after the use case exists, or for ordinary monitor/rep
 
 ## 1. Tool catalog
 
-All tool ids are defined in MCP server: `smart-building`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
+All tool ids are defined in MCP server: `smartbuilding`, with prefixed `smartbuilding_`. Times are ISO-8601; show users `HH:MM`/`HH:MM:SS`.
 
 ### smartbuilding_alert_query — read/ack the important alerts
 Every row in `alerts` is already rule-engine-filtered, so you do **not** re-filter by
