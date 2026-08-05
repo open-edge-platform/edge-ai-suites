@@ -12,6 +12,17 @@
 
 .summary-loading { display: none; }
 
+.summary-board-warning {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid #f0a202;
+  border-radius: 4px;
+  background: #fff8e6;
+  color: #7a5200;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .tab-spinner {
   width: 16px;
   height: 16px;

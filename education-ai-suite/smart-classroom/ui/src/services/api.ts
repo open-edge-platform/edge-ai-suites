@@ -449,6 +449,9 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       if (!trimmed) continue;
       let chunk: any;
       try { chunk = JSON.parse(trimmed); } catch { continue; }
+      if (chunk.board_ocr_partial) {
+        yield { type: 'board_ocr_partial' };
+      }
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };
