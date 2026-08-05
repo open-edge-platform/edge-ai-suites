@@ -11,15 +11,15 @@ The agentic workflow is implemented as a **LangGraph framework-based, sequential
 Vision ( DLStreamer Pipeline Server)──┐
                                       ├─► Fusion Analytics ──► MQTT (Trigger batch request)
         Time-Series Analytics       ──┘                           │
-                                                                ▼
-                                                        agent (LangGraph)
-                                                                │
-                                                   ┌────────────┼────────────┐
-                                                Policy     Analysis      Evidence
-                                                                │
-                                                        Maintenance Ticket
-                                                                │
-                                                        UI (Dashboard)
+                                                                  ▼
+                                                          agent (LangGraph)
+                                                                  │
+                                                     ┌────────────┼────────────┐
+                                                   Policy     Analysis      Evidence
+                                                                  │
+                                                          Maintenance Ticket
+                                                                  │
+                                                            UI (Dashboard)
 ```
 
 | Agent | Input | Output |
