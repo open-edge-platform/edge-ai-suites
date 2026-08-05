@@ -10,6 +10,12 @@ services:
         NO_PROXY: ${NO_PROXY:-}
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
+      # Absolute, container-visible prefilter model path. Overrides the (possibly
+      # placeholder) model_path in the mounted config.yaml so prefilter works even
+      # on a plain `docker compose up`. Interpolated on the host; MODEL_DIR is
+      # bind-mounted at the same host path (below) so this resolves in-container.
+      # Default matches docker/set_env.sh and setup_docker.sh's DEFAULT_PREFILTER_MODEL.
+      - PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}
       # MCP server's data root. Defaults to ~/.mcp-smartbuilding (the MCP default);
       # override by exporting SMARTBUILDING_DATA_DIR before `docker compose up`.
       # VSA derives its default output root as <SMARTBUILDING_DATA_DIR>/segments; the
@@ -20,7 +26,10 @@ services:
       - no_proxy=localhost,127.0.0.1
       # Writable home for the non-root container user (see `user:` below).
       - HOME=/tmp
+      # Timezone align with host
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       # Identity bind mount (host X -> container X): the absolute data_dir MCP sends
       # (<root>/segments/<id>) resolves to the SAME real host directory inside the
       # container, so recordings/motion_events land on the host where the MCP clip

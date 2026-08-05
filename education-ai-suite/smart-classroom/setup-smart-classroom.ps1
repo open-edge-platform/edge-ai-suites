@@ -74,7 +74,7 @@ This script will:
   1. Configure proxy for downloads (if needed)
   2. Check system requirements (OS, RAM, Python, Node.js, etc.)
   3. Check application dependencies (FFmpeg, DL Streamer)
-  4. Configure smart-classroom settings (language, upload limits, OCR, board OCR)
+  4. Configure smart-classroom settings (features, language, upload limits, document OCR)
   5. Launch the startup script
 
 "@ -ForegroundColor Cyan
@@ -1975,97 +1975,51 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.4] OCR Configuration
+# [3.4] Document OCR Configuration (Content Search)
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.4] OCR Configuration" -ForegroundColor Cyan
+Write-Host "[3.4] Document OCR Configuration (Content Search)" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-# Extract current OCR enabled value
-$ocrMatch = [regex]::Match($configContent, "ocr:\s*\n\s*enabled:\s*(true|false)")
+# Extract current content_search.ocr_enabled value
+$ocrMatch = [regex]::Match($configContent, "ocr_enabled:\s*(true|false)")
 $currentOcr = if ($ocrMatch.Success) { $ocrMatch.Groups[1].Value } else { "true" }
 
-Write-Host "Current OCR configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host "Current document OCR configuration in config.yaml:" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentOcr" -ForegroundColor Gray
+Write-Host "  content_search:" -ForegroundColor White
+Write-Host "    ocr_enabled: $currentOcr" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: this only affects text extraction from images inside uploaded documents." -ForegroundColor Gray
+Write-Host "      Board OCR is switched on/off in the features block above." -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
-    Write-Host "Silent mode: keeping existing OCR setting" -ForegroundColor Gray
+    Write-Host "Silent mode: keeping existing document OCR setting" -ForegroundColor Gray
     $changeOcr = "N"
 } else {
-    $changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+    $changeOcr = Read-Host "Do you want to change document OCR setting? (Y/N)"
 }
 
 if ($changeOcr.ToUpper() -eq "Y") {
     Write-Host ""
-    Write-Host "OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable OCR (extracts text from images/PDFs)" -ForegroundColor Gray
+    Write-Host "Document OCR Options:" -ForegroundColor Yellow
+    Write-Host "  true  - Enable OCR (extracts text from images inside documents/PDFs)" -ForegroundColor Gray
     Write-Host "  false - Disable OCR" -ForegroundColor Gray
     Write-Host ""
-    
-    $newOcr = Read-Host "Enable OCR? (true/false, blank = $currentOcr)"
-    
+
+    $newOcr = Read-Host "Enable document OCR? (true/false, blank = $currentOcr)"
+
     if ($newOcr.ToLower() -eq "true" -or $newOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
-        Write-Host "  OCR enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "OCR configuration updated." -ForegroundColor Green
+        $configContent = $configContent -replace "(ocr_enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
+        Write-Host "  content_search.ocr_enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
+        Write-Host "Document OCR configuration updated." -ForegroundColor Green
     } else {
-        Write-Host "Keeping current OCR setting." -ForegroundColor Gray
+        Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
     }
 } else {
-    Write-Host "Keeping current OCR setting." -ForegroundColor Gray
-}
-
-Write-Host ""
-
-# ============================================================================
-# [3.5] Board OCR Configuration
-# ============================================================================
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.5] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host ""
-
-# Extract current Board OCR enabled value
-$boardOcrMatch = [regex]::Match($configContent, "board_ocr:\s*\n\s*enabled:\s*(true|false)")
-$currentBoardOcr = if ($boardOcrMatch.Success) { $boardOcrMatch.Groups[1].Value } else { "false" }
-
-Write-Host "Current Board OCR configuration in config.yaml:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  board_ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentBoardOcr" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Note: Board OCR requires OCR to be enabled (ocr.enabled: true)." -ForegroundColor Gray
-Write-Host ""
-
-if ($Silent) {
-    Write-Host "Silent mode: keeping existing Board OCR setting" -ForegroundColor Gray
-    $changeBoardOcr = "N"
-} else {
-    $changeBoardOcr = Read-Host "Do you want to change Board OCR setting? (Y/N)"
-}
-
-if ($changeBoardOcr.ToUpper() -eq "Y") {
-    Write-Host ""
-    Write-Host "Board OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable Board OCR (extracts text from the teacher's display for summary)" -ForegroundColor Gray
-    Write-Host "  false - Disable Board OCR" -ForegroundColor Gray
-    Write-Host ""
-
-    $newBoardOcr = Read-Host "Enable Board OCR? (true/false, blank = $currentBoardOcr)"
-
-    if ($newBoardOcr.ToLower() -eq "true" -or $newBoardOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(board_ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newBoardOcr.ToLower())"
-        Write-Host "  Board OCR enabled set to $($newBoardOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "Board OCR configuration updated." -ForegroundColor Green
-    } else {
-        Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
-    }
-} else {
-    Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+    Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
 }
 
 Write-Host ""
@@ -2103,8 +2057,8 @@ $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matc
 $finalDiarization = if ($finalConfig -match "asr:[\s\S]*?diarization:\s*(True|False)") { $Matches[1] } else { "False" }
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
-$finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
-$finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
+$finalOcr = if ($finalConfig -match "ocr_enabled:\s*(true|false)") { $Matches[1] } else { "true" }
+$finalBoardOcr = Get-FeatureState -Content $finalConfig -Id "board_ocr"
 
 
 $csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
@@ -2129,7 +2083,7 @@ if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $f
 }
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
-Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host "  Document OCR:    $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
 Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""

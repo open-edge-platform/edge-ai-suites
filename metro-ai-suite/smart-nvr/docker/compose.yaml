@@ -74,6 +74,9 @@ services:
       FRIGATE_BASE_URL: "http://frigate-vms:5000"
       VSS_SEARCH_URL: "http://${VSS_IP}:${VSS_PORT:-12345}"
       VSS_SUMMARY_URL: "http://${VSS_IP}:${VSS_PORT:-12345}"
+      WATCH_BATCH_SIZE: ${WATCH_BATCH_SIZE:-10}
+      BATCH_JOB_POLL_INTERVAL_SECONDS: ${BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
+      BATCH_JOB_TIMEOUT_SECONDS: ${BATCH_JOB_TIMEOUT_SECONDS:-3600}
       no_proxy: ${no_proxy}, frigate-vms, ${VSS_IP}, ${VLM_SERVING_IP}
       MQTT_USER: ${MQTT_USER}
       MQTT_PASSWORD: ${MQTT_PASSWORD} 
@@ -170,4 +173,3 @@ volumes:
   mosquitto_data:
   mosquitto_log:
   redis_data:
-
