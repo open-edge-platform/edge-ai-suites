@@ -72,6 +72,22 @@ function formatSrtTs(iso: string): string {
   return `${hh}:${mm}:${ss},${ms}`;
 }
 
+/**
+ * Wall-clock `HH:MM:SS` (local) for embedding INTO each cue's text line.
+ *
+ * multilevel-video-understanding parses the SRT `-->` timestamps as video
+ * playback offsets and strips them — only the cue *text* reaches the summarizer.
+ * Our cue times are real wall-clock event times, so we inline them in the text
+ * (the one channel the model sees) or the model has no temporal grounding and
+ * fabricates "activity periods". Returns "" for unparseable input.
+ */
+function clockLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 function buildAlertsSrt(rows: any[]): string {
   if (rows.length === 0) return "";
   return rows
@@ -81,8 +97,9 @@ function buildAlertsSrt(rows: any[]): string {
         new Date(new Date(row.created_at).getTime() + 1000).toISOString()
       );
       const tag = `[alert:${row.severity ?? "info"}:${row.event ?? row.alert_type ?? "event"}]`;
+      const clock = clockLabel(row.created_at);
       const desc = (row.description ?? row.desc ?? "").trim() || "(no description)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
@@ -95,8 +112,9 @@ function buildEventsSrt(rows: any[]): string {
       const endTime = row.end_time ?? row.start_time ?? new Date().toISOString();
       const endTs = formatSrtTs(endTime);
       const tag = `[${row.motion_type ?? row.event_type ?? "event"}]`;
+      const clock = clockLabel(row.start_time ?? row.created_at);
       const desc = (row.summary ?? row.description ?? row.desc ?? "").trim() || "(no description)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
@@ -112,8 +130,9 @@ function buildTasksSrt(rows: any[]): string {
       const event = row.event ?? "task";
       const severity = row.severity ?? "info";
       const tag = `[task:${event}:${severity}]`;
+      const clock = clockLabel(row.created_at);
       const desc = (row.summary_text ?? row.desc ?? "").trim() || "(no summary)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
@@ -195,7 +214,20 @@ function queryData(
   }
 
   const orderCol = dataSource === "events" ? "start_time" : "created_at";
-  const sql = `SELECT * FROM ${table} WHERE ${whereClauses.join(" AND ")} ORDER BY ${orderCol} ASC`;
+
+  // `events` rows carry no description — the VLM narration for each detection lives
+  // in the linked video_summary_tasks.summary_text. Pull the latest non-null summary
+  // per event (correlated subquery, so no row multiplication) and expose it as
+  // `summary`, which buildEventsSrt reads; otherwise every cue is "(no description)"
+  // and the summarizer sees an empty timeline. Other data sources are unaffected.
+  const selectClause =
+    dataSource === "events"
+      ? `*, (SELECT vst.summary_text FROM video_summary_tasks vst ` +
+        `WHERE vst.event_id = events.id AND vst.summary_text IS NOT NULL ` +
+        `ORDER BY vst.id DESC LIMIT 1) AS summary`
+      : "*";
+
+  const sql = `SELECT ${selectClause} FROM ${table} WHERE ${whereClauses.join(" AND ")} ORDER BY ${orderCol} ASC`;
   return db.rawQuery(sql, bindings) as any[];
 }
 
