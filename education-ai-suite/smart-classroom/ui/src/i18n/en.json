@@ -548,8 +548,10 @@
     "reportGenerationFailed": "Report generation failed",
     "updatingFields": "Updating fields...",
     "reportReady": "Report ready",
-    "downloadDocx": "📥 Download .docx",
-    "downloadPdf": "📄 Download .pdf",
+    "download": "Download",
+    "downloadDocxItem": "Word document (.docx)",
+    "downloadPdfItem": "PDF document (.pdf)",
+    "pdfUnavailableTooltip": "PDF export requires LibreOffice on the server. Install it and make sure 'soffice' is on the PATH, then reopen this panel (restart services if you changed PATH).",
     "preparingDownload": "⏳ Preparing...",
     "convertingPdf": "⏳ Converting to PDF..."
   },

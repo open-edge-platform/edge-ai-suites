@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const skillDir = join(repoRoot, "skills", "video-summary-prompt-studio");
+const skillDir = join(repoRoot, "skills", "smartbuilding-use-case-manager");
 
 async function readSkillFile(relativePath: string): Promise<string> {
   return readFile(join(skillDir, relativePath), "utf-8");
@@ -20,7 +20,7 @@ function outputKeys(text: string): string[] {
 
 test("main Skill stays slim and links every conditional reference", async () => {
   const skill = await readSkillFile("SKILL.md");
-  assert.match(skill, /^---\n[\s\S]*?name: video-summary-prompt-studio[\s\S]*?\n---\n/);
+  assert.match(skill, /^---\n[\s\S]*?name: smartbuilding-use-case-manager[\s\S]*?\n---\n/);
   assert.ok(skill.split("\n").length <= 360, "SKILL.md should remain decision-oriented");
 
   for (const relativePath of [

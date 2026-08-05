@@ -34,9 +34,20 @@ export class TaskPoller {
     if (this.intervals.has(monitorId)) return;
 
     const interval = setInterval(() => {
-      const promise = this.poll(monitorId).then(() => {
-        this.activePoll.delete(monitorId);
-      });
+      // Skip this tick if the previous poll for this monitor is still in
+      // flight. Otherwise, while a poll waits on yieldManager.acquire() (which
+      // can take minutes under backlog), every subsequent tick re-reads the
+      // same still-"pending" task and the clip gets summarized multiple times.
+      if (this.activePoll.has(monitorId)) return;
+      const promise = this.poll(monitorId)
+        .catch((err) => {
+          // poll() handles per-task errors internally; this catches failures
+          // outside that path (e.g. DB errors) so polling never stalls.
+          logger.error(`[task-poller] poll cycle failed for ${monitorId}: ${err?.message ?? err}`);
+        })
+        .then(() => {
+          this.activePoll.delete(monitorId);
+        });
       this.activePoll.set(monitorId, promise);
     }, this.config.pollIntervalMs);
 
