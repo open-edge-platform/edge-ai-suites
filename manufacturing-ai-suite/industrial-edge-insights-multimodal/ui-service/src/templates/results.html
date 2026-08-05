@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Results — {{ run_id[:8] }} — {{ use_case_id }}</title>
+  <title>Results — {{ run_id[:8] }}</title>
   {% set root = request.scope.get("root_path", "") %}
   <link rel="stylesheet" href="{{ root }}/static/css/style.css">
   {% if result.get("status") == "running" %}
@@ -14,7 +14,6 @@
     <div class="header-inner">
       <span class="logo">&#9632; Intel</span>
       <h1>Agentic Weld Quality Analysis</h1>
-      <span class="use-case-badge">{{ use_case_id }}</span>
     </div>
   </header>
   <nav>

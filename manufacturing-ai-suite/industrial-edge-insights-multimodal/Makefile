@@ -321,6 +321,9 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection_agentic.json || exit 1; \
 	$(MAKE) download_model; \
+	export LLM_DEVICE_LOWER=$$(printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lower:]'); \
+	export LLM_WEIGHT_FORMAT_LOWER=$$(printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]'); \
+	export MODEL_PATH=/model/llm_model_agentic/openvino_models/$${LLM_DEVICE_LOWER}/$${LLM_WEIGHT_FORMAT_LOWER}/${LLM_MODEL_NAME}; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
 	$(MAKE) upload_tar_file
 
