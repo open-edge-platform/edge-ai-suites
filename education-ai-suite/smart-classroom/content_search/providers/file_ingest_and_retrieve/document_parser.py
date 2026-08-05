@@ -423,7 +423,7 @@ class DocumentParser:
 
     @staticmethod
     def _is_ocr_enabled() -> bool:
-        enabled = os.getenv("OCR_ENABLED", "false").lower() in ("true", "1", "yes")
+        enabled = os.getenv("OCR_ENABLED", "true").lower() in ("true", "1", "yes")
         if not enabled:
             logger.info("OCR is disabled (OCR_ENABLED env var). Skipping image text extraction.")
         return enabled
@@ -491,7 +491,7 @@ class DocumentParser:
         if not nodes and image_files:
             logger.warning(
                 f"Found {len(image_files)} image(s) in {file_path} but OCR service returned no text. "
-                f"Check that OCR is enabled (ocr.enabled: true in config.yaml) and the service is running at {self.ocr_service_url}"
+                f"Check that OCR is enabled (content_search.ocr_enabled: true in config.yaml) and the service is running at {self.ocr_service_url}"
             )
         return nodes
 

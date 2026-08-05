@@ -22,7 +22,7 @@ The platform is built around MCP, letting AI agents (OpenClaw, Hermes, etc.) orc
 
 It uses a layered design with clearly separated, decoupled responsibilities — top to bottom: the **Agent Workspace** (personas + skills), the **MCP Server** (tool surface, rule engine, alert resources), the dependent **video services** (stream analytics, video understanding, VLM), and the underlying **client** that feeds and consumes the stream.
 
-![Smart Building Overall Architecture](./_assets/smartbuilding-overall-arch.png)
+![Smart Building Overall Architecture](./_assets/smartbuilding-arch-2026.2.png)
 
 **Figure: Smart Building Video Analytics — Overall Architecture**
 
@@ -110,9 +110,9 @@ Skills are portable Markdown guides (framework-agnostic; usable by any MCP clien
 | Skill | Purpose | Anchored on |
 |---|---|---|
 | **[`smartbuilding-toolkit`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-toolkit/SKILL.md)** | Operate the platform: the full `smartbuilding_*` tool catalog, the SQLite data model, how to discover which monitor to act on, how reports are generated, how pushed alerts reach a session, and which actions are destructive (two-phase confirm). | the MCP tools + resources |
-| **[`video-summary-prompt-studio`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
+| **[`smartbuilding-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
 
-Together they close the loop: `video-summary-prompt-studio` **creates** a use case, then `smartbuilding-toolkit` **runs** it — no core-component changes in between.
+Together they close the loop: `smartbuilding-use-case-manager` **creates** a use case, then `smartbuilding-toolkit` **runs** it — no core-component changes in between.
 
 ## Supporting Resources
 

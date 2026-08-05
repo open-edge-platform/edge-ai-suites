@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
 import signal
 import subprocess
 import sys
@@ -37,6 +38,20 @@ TARGET_FPS  = int(os.environ.get("TARGET_FPS", "60"))
 HTTP_PORT   = int(os.environ.get("PIPELINE_HTTP_PORT", "8000"))
 DISPLAY_VIEW = os.environ.get("PIPELINE_DISPLAY_VIEW", "1") == "1"
 VIDEO_SINK   = os.environ.get("PIPELINE_VIDEO_SINK", "autovideosink")
+PIPELINE_SINK_SYNC = os.environ.get("PIPELINE_SINK_SYNC", "").strip().lower()
+SCHEDULING_POLICY = os.environ.get("SCHEDULING_POLICY", "").strip()
+_batch_size_raw = os.environ.get("BATCH_SIZE", "").strip()
+try:
+    BATCH_SIZE = int(_batch_size_raw) if _batch_size_raw else None
+except ValueError:
+    BATCH_SIZE = None
+DETECT_ENABLED = os.environ.get("DETECT", "1").strip().lower() not in {"0", "false", "no"}
+WATERMARK_ENABLED = os.environ.get("WATERMARK", "1").strip().lower() not in {"0", "false", "no"}
+FPSCOUNTER_ENABLED = os.environ.get("PIPELINE_FPSCOUNTER", "1").strip().lower() not in {"0", "false", "no"}
+IDENTITY_ENABLED = os.environ.get("PIPELINE_IDENTITY", "0").strip().lower() not in {"0", "false", "no"}
+MINIMAL = os.environ.get("MINIMAL", "0").strip().lower() not in {"0", "false", "no"}
+PIPELINE_PREPROC_BACKEND = os.environ.get("PIPELINE_PREPROC_BACKEND", "").strip() or None
+PIPELINE_IE_CONFIG = os.environ.get("PIPELINE_IE_CONFIG", "PERFORMANCE_HINT=LATENCY").strip() or None
 # 0 = unlimited (default for live demo). Set PIPELINE_FRAME_LIMIT=N to cap
 # at N frames — useful for benchmarking runs that should auto-terminate.
 FRAME_LIMIT  = int(os.environ.get("PIPELINE_FRAME_LIMIT", "0"))
@@ -49,6 +64,22 @@ SOURCE_ARG  = os.environ.get("SOURCE_ARG", VIDEO)
 # seconds we give up (protects against a config error that instant-crashes).
 RESPAWN_MAX     = int(os.environ.get("RESPAWN_MAX", "6"))
 RESPAWN_WINDOW  = float(os.environ.get("RESPAWN_WINDOW_S", "10"))
+# ---- Case 4: core-pinning + Basler fixed-camera tuning --------------------
+_GST_CORES = os.environ.get("PIPELINE_GST_CORES", "").strip()
+_GST_PRIO  = os.environ.get("PIPELINE_GST_RT_PRIORITY", "").strip()
+BASLER_FIXED_CAMERA = os.environ.get("BASLER_FIXED_CAMERA", "0").strip() not in {"0", "false", "no"}
+BASLER_EXPOSURE_US  = os.environ.get("BASLER_EXPOSURE_US", "").strip()
+BASLER_GAIN         = os.environ.get("BASLER_GAIN", "").strip()
+BASLER_PIXEL_FORMAT = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
+# ---- GPU warmup -----------------------------------------------------------
+# The first GPU-inference process in a freshly (re)created container pays a
+# one-time OpenVINO/GPU init cost that throttles it to ~16 fps until the GPU
+# driver/compiler state is warm; every later process in the SAME container then
+# runs at full speed. Run a short throwaway inference at startup so the user's
+# first /start is already warm. videotestsrc is used so the camera is not held.
+WARMUP_ENABLED = os.environ.get("PIPELINE_WARMUP", "1").strip().lower() not in {"0", "false", "no"}
+WARMUP_SECONDS = os.environ.get("PIPELINE_WARMUP_SECONDS", "8").strip() or "8"
+WARMUP_DEVICE  = os.environ.get("DETECTION_DEVICE", "GPU").strip().upper() or "GPU"
 
 # ------------------------------------------------------------ state --------
 _proc: subprocess.Popen | None = None
@@ -77,6 +108,9 @@ def _spawn(
 ) -> subprocess.Popen:
     _latency.reset()
     use_display = DISPLAY_VIEW if display_view is None else display_view
+    sink_sync: bool | None = None
+    if PIPELINE_SINK_SYNC:
+        sink_sync = PIPELINE_SINK_SYNC in {"1", "true", "yes", "on"}
     # FRAME_LIMIT defaults to 0 (unlimited). A file source plays to its own
     # natural EOS; a live Basler source runs until /stop or a genuine failure.
     # Set PIPELINE_FRAME_LIMIT env var to cap frames for benchmarking only.
@@ -90,6 +124,20 @@ def _spawn(
         frame_limit=FRAME_LIMIT,
         display_view=use_display,
         video_sink=VIDEO_SINK,
+        scheduling_policy=SCHEDULING_POLICY or None,
+        batch_size=BATCH_SIZE,
+        sink_sync=sink_sync,
+        pre_proc_backend=PIPELINE_PREPROC_BACKEND,
+        ie_config=PIPELINE_IE_CONFIG,
+        enable_detect=DETECT_ENABLED,
+        enable_watermark=WATERMARK_ENABLED,
+        enable_fpscounter=FPSCOUNTER_ENABLED,
+        enable_identity=IDENTITY_ENABLED,
+        minimal=MINIMAL,
+        basler_pixel_format=BASLER_PIXEL_FORMAT,
+        basler_fixed_camera=BASLER_FIXED_CAMERA,
+        basler_exposure_us=BASLER_EXPOSURE_US or None,
+        basler_gain=BASLER_GAIN or None,
     )
 
     env = os.environ.copy()
@@ -101,6 +149,24 @@ def _spawn(
         }
     )
 
+    # ---- Build optional taskset / chrt prefix strings ----
+    # Each leg requires BOTH cores and priority to be set; partial config is
+    # skipped silently to avoid a half-configured subprocess.
+    def _pinning_prefix(cores: str, prio: str) -> str:
+        parts: list[str] = []
+        if cores:
+            parts.append(f"taskset -c {cores}")
+        if prio:
+            parts.append(f"chrt -f {prio}")
+        return " ".join(parts)
+
+    gst_prefix = _pinning_prefix(_GST_CORES, _GST_PRIO)
+    if _GST_PRIO and not _GST_CORES:
+        log.warning("[case4] PIPELINE_GST_RT_PRIORITY set but PIPELINE_GST_CORES is empty; chrt will apply without cpu affinity")
+    if int(_GST_PRIO) > 90 if _GST_PRIO.isdigit() else False:
+        log.warning("[case4] PIPELINE_GST_RT_PRIORITY=%s > 90; may starve host critical threads", _GST_PRIO)
+
+    gst_exec = f"{gst_prefix} " if gst_prefix else ""
     if source_kind == "basler":
         # Enumerate Basler cameras visible inside the container before spawning
         # so connectivity problems appear immediately in the logs.
@@ -115,15 +181,34 @@ def _spawn(
             )
         except Exception as _exc:  # noqa: BLE001
             log.warning("[basler] pypylon enumeration failed: %s", _exc)
-        cmd = (
-            f"exec python3 /opt/basler_reader.py {source_arg} "
-            f"--geometry 1920x1080@{TARGET_FPS} --pixel-format uyvy "
-            f"| exec gst-launch-1.0 {pipeline}"
-        )
+        cmd = f"exec {gst_exec}gst-launch-1.0 {pipeline}"
     else:
         cmd = f"exec gst-launch-1.0 {pipeline}"
 
     log.info("[pipeline] generated cmd: %s", cmd)
+    log.info(
+        "[pipeline] knobs: gst_cores=%s gst_prio=%s "
+        "basler_fixed=%s basler_exposure_us=%s basler_gain=%s basler_pixel_format=%s",
+        _GST_CORES or "<unset>",
+        _GST_PRIO  or "<unset>",
+        BASLER_FIXED_CAMERA,
+        BASLER_EXPOSURE_US or "<unset>",
+        BASLER_GAIN        or "<unset>",
+        BASLER_PIXEL_FORMAT,
+    )
+    log.info(
+        "[pipeline] knobs: detect=%s watermark=%s fpscounter=%s identity=%s minimal=%s preproc=%s ie_config=%s scheduling_policy=%s batch_size=%s sink_sync=%s",
+        DETECT_ENABLED,
+        WATERMARK_ENABLED,
+        FPSCOUNTER_ENABLED,
+        IDENTITY_ENABLED,
+        MINIMAL,
+        PIPELINE_PREPROC_BACKEND or "<default>",
+        PIPELINE_IE_CONFIG or "<unset>",
+        SCHEDULING_POLICY or "<unset>",
+        BATCH_SIZE,
+        PIPELINE_SINK_SYNC or "<default>",
+    )
 
     proc = subprocess.Popen(
         cmd,
@@ -333,5 +418,43 @@ def stop():
         return jsonify(status="stopped", pid=pid), 200
 
 
+def _warmup() -> None:
+    """Run a short camera-free GPU inference to pre-warm OpenVINO/GPU state."""
+    dev = WARMUP_DEVICE if WARMUP_DEVICE in VALID_DEVICES else "GPU"
+    model = shlex.quote(IR_XML)
+    if dev == "GPU":
+        chain = (
+            "videotestsrc is-live=true "
+            "! video/x-raw,width=1280,height=720,framerate=60/1 "
+            "! vapostproc ! 'video/x-raw(memory:VAMemory),format=NV12' "
+            f"! gvadetect model={model} device={dev} "
+            "pre-process-backend=va-surface-sharing nireq=1 ie-config=PERFORMANCE_HINT=LATENCY "
+            "! fakesink sync=false async=false"
+        )
+    else:
+        chain = (
+            "videotestsrc is-live=true "
+            "! video/x-raw,width=1280,height=720,framerate=60/1 "
+            "! videoconvert ! video/x-raw,format=NV12 "
+            f"! gvadetect model={model} device={dev} "
+            "pre-process-backend=ie nireq=1 ie-config=PERFORMANCE_HINT=LATENCY "
+            "! fakesink sync=false async=false"
+        )
+    cmd = f"exec timeout {WARMUP_SECONDS} gst-launch-1.0 -q {chain}"
+    log.info("[warmup] pre-warming %s inference for %ss", dev, WARMUP_SECONDS)
+    try:
+        subprocess.run(
+            cmd, shell=True, env=os.environ.copy(),
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            timeout=float(WARMUP_SECONDS) + 15,
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.warning("[warmup] ended: %s", exc)
+    else:
+        log.info("[warmup] done")
+
+
 if __name__ == "__main__":
+    if WARMUP_ENABLED:
+        threading.Thread(target=_warmup, name="gpu-warmup", daemon=True).start()
     app.run(host="0.0.0.0", port=HTTP_PORT, threaded=True)

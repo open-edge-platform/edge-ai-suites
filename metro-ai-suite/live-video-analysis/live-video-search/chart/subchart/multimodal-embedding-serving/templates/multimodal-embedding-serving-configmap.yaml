@@ -35,5 +35,5 @@ data:
   XDG_CACHE_HOME: "/home/appuser/.cache"
   http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
   https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}
-  no_proxy: "{{ .Values.global.proxy.noProxy }},minio-service,vdms-dataprep,localhost"
-  no_proxy_env: "{{ .Values.global.proxy.noProxy }},minio-service,vdms-dataprep,localhost"
+  no_proxy: "{{ .Values.global.proxy.noProxy }},minio-service,multimodal-dataprep,vector-retriever,localhost"
+  no_proxy_env: "{{ .Values.global.proxy.noProxy }},minio-service,multimodal-dataprep,vector-retriever,localhost"

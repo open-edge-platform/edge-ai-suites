@@ -1,4 +1,4 @@
-# Deploy vLLM Service
+# Deploy vLLM Service For Defect Explanation
 
 This guide explains how to deploy the multimodal sample app with the vLLM service enabled using the Makefile targets.
 
@@ -89,9 +89,9 @@ make up_vllm
 
 4. Check the output in Grafana.
 
-   - Use the link `https://localhost :3000` to open Grafana in a browser (preferably Chrome).
+   - Use the link `https://localhost:3000` to open Grafana in a browser (preferably Chrome).
 
-   > **Note:** Use the link `https://localhost :30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
+   > **Note:** Use the link `https://localhost:30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
    - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
 
@@ -106,6 +106,7 @@ make up_vllm
    - You should see the following output:
 
      ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
+
 ## Stop the Deployment
 
 To bring down the full stack:

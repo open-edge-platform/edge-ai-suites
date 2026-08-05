@@ -233,7 +233,7 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   successful register/unregister to report the system's current use cases.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
-`video-summary-prompt-studio` skill, then pass it via `prompt_text` (or let register auto-read
+`smartbuilding-use-case-manager` skill, then pass it via `prompt_text` (or let register auto-read
 `<data_dir>/use-cases/<use_case>/prompt.md`).
 
 | Param | Type | Required | Description |

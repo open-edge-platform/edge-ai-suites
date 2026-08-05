@@ -78,6 +78,10 @@ broker:
   # Enable websocket listener
   enableWebsockets: true
 
+nginx:
+  # Maximum allowed size for client request body (e.g. SceneScape GLB 3D base map file uploads; max 132m)
+  clientMaxBodySize: 132m
+
 influxdb:
   repository: influxdb
   tag: 2.7.11

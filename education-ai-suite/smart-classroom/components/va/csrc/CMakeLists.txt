@@ -3,7 +3,7 @@ project(GvaSmartClassroom VERSION 1.0.0)
 
 include(FetchContent)
 
-# Fetch DLStreamer as an archive
+# Fetch DL Streamer as an archive
 cmake_policy(SET CMP0169 OLD)
 FetchContent_Declare(dlstreamer_headers
     URL "https://github.com/open-edge-platform/dlstreamer/archive/refs/tags/v2026.1.0.zip"
@@ -51,7 +51,7 @@ link_directories(${GSTREAMER_BASE_LIBRARY_DIRS})
 link_directories(${GSTREAMER_VIDEO_LIBRARY_DIRS})
 link_directories(${GSTREAMER_ANALYTICS_LIBRARY_DIRS})
 
-message(STATUS "DLStreamer root: ${DLSTREAMER_ROOT}")
+message(STATUS "DL Streamer root: ${DLSTREAMER_ROOT}")
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 -wd4005 -wd4200 -wd4267 -wd4244 -wd4996")

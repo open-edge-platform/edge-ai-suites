@@ -46,6 +46,22 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### E. Install LibreOffice (optional, feature-dependent)
+
+LibreOffice (the `soffice` executable) is an **optional** dependency used by two features. Install it only if you enable a feature that needs it:
+
+- **`report` — PDF report export:** The class report is generated as a `.docx` file. When you download it as **PDF**, the server converts the `.docx` using LibreOffice in headless mode (`soffice --convert-to pdf`). If LibreOffice is **not** installed, `.docx` download still works normally and only the PDF download returns `501 (PDF export unavailable)`.
+- **`content_search` — legacy document parsing:** Ingesting legacy Office formats (`.doc`, `.ppt`, `.xls`) requires LibreOffice to convert them. Modern formats (`.docx`, `.pptx`, `.xlsx`) do not need it. If LibreOffice is missing, uploading a legacy format is rejected with a message asking you to install it or convert to a modern format.
+
+If you enable either use case, download and install LibreOffice from [https://www.libreoffice.org/download/](https://www.libreoffice.org/download/), then make sure the `soffice` executable is available on your system `PATH`.
+
+Verify the executable is discoverable:
+
+```python
+import shutil
+shutil.which("soffice") is not None   # should return True
+```
+
 ## Step 2: Configuration
 
 ### A. Enable Feature Configuration
@@ -59,10 +75,10 @@ features:
   mindmap:            { enabled: true }   # Mind map generation
   topic_segmentation: { enabled: true }   
   video_analytics:    { enabled: true }   # Video ingestion / analytics
+  board_ocr:          { enabled: true }   # OCR of the teacher's display (IFPD)
   content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
   qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
 ```
-
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -112,27 +128,64 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
 
-### E. Enable OCR Features (Optional)
-
-If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
+**Document OCR** To also extract text from images embedded in uploaded documents, turn on OCR for content search:
 
 ```yaml
-models:
-  ocr:
-    enabled: true
+content_search:
+  ocr_enabled: true
 ```
 
-Board OCR is supported to extract text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report.
+> **Note:** This only affects document ingestion. Board OCR has its own OCR usage and is unaffected by this flag.
+
+### E. Board OCR Configuration
+
+Board OCR extracts text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report. It has below configurations:
 
 ```yaml
 board_ocr:
-  enabled: true        # requires ocr.enabled: true
   frame_rate: "1/3"    # frames per second sampled from the board video
+  debug: false         # keep the uncleaned board_ocr_raw.txt alongside the output
 ```
 
-> **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
->
 > **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
+
+### F. Speaker Diarization Setup (Optional)
+
+Speaker diarization is supported using Pyannote Audio models.
+To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+
+#### a. Request Model Access on Hugging Face
+
+Pyannote diarization models require gated access.
+
+Request access here:
+
+[Pyannote Speaker Diarization Community v1](https://huggingface.co/pyannote/speaker-diarization-community-1)
+
+Click "Request Access" on the model page and wait for approval.
+
+#### b. Create a Hugging Face Access Token
+
+After approval:
+
+Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
+
+Create a Read access token
+
+Copy the generated token
+
+#### c. Configure Hugging Face Token in Project Config
+
+Open `smart-classroom/config.yaml` and set `diarization: true` under `models.asr`, then add your Hugging Face token:
+
+```yaml
+models:
+  asr:
+    diarization: true
+    hf_token: "hf_your_access_token_here"
+```
+
+> **Note:** The diarization model downloads automatically on next startup once `diarization: true` is set.
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -143,6 +196,7 @@ Run the backend:
 ```bash
 python main.py
 ```
+
 You should see backend logs similar to this:
 
 ```text
@@ -300,43 +354,6 @@ Use the IPv4 Address from your active network adapter.
 
 If you changed the port, adjust the URL accordingly.
 
-## Step 7: Speaker Diarization Setup (Pyannote)
-
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
-
-### a. Request Model Access on Hugging Face
-
-Pyannote diarization models require gated access.
-
-Request access here:
-
-[Pyannote Speaker Diarization Community v1](https://huggingface.co/pyannote/speaker-diarization-community-1)
-
-
-Click "Request Access" on the model page and wait for approval.
-
-### b. Create a Hugging Face Access Token
-
-After approval:
-
-Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
-
-Create a Read access token
-
-Copy the generated token
-
-### c. Configure Hugging Face Token in Project Config
-
-Open your model configuration file `config/models.yaml` Add your Hugging Face token:
-
-```yaml
-models:
-  asr:
-    diarization: true
-    hf_token: "hf_your_access_token_here"
-```
-
 ## Troubleshooting
 
 - **Frontend not opening:**
@@ -367,7 +384,7 @@ models:
      edge-ai-suites/education-ai-suite/smart-classroom/models
      ```
 
-  2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
+  2. Rerun only Step 1, option D. If the virtual environment already exists, rerun the required pip commands.
 
 - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
