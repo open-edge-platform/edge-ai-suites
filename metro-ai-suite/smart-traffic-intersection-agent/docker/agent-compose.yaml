@@ -123,7 +123,7 @@ services:
 
   # Metrics Manager - unified service for host telemetry and custom STIA metrics
   metrics-manager:
-    image: ${METRICS_MANAGER_IMAGE:-intel/metrics-manager}:${METRICS_MANAGER_TAG:-2026.1.0}
+    image: ${METRICS_MANAGER_IMAGE:-intel/metrics-manager}:${METRICS_MANAGER_TAG:-2026.2.0-20260715-weekly}
     environment:
       no_proxy: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${no_proxy:-${NO_PROXY:-}}
       NO_PROXY: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${NO_PROXY:-${no_proxy:-}}
@@ -141,12 +141,17 @@ services:
       TELEGRAF_CONFIG_PATH: /etc/telegraf/telegraf.conf
       METRICS_RETENTION_SECONDS: ${METRICS_RETENTION_SECONDS:-300}
       MAX_METRICS_BATCH_SIZE: ${MAX_METRICS_BATCH_SIZE:-1000}
+      # Interval (ms) at which the SSE stream pushes metrics to the dashboard.
+      PROMETHEUS_POLLER_INTERVAL_MS: ${METRICS_POLL_INTERVAL_MS:-1000}
     expose:
       - "9090"
       - "9273"
       - "8186"
-    # Set METRICS_MANAGER_PRIVILEGED=true only when NPU telemetry requires privileged sysfs access.
-    privileged: ${METRICS_MANAGER_PRIVILEGED:-false}
+    # qmassa GPU telemetry and NPU telemetry require host-level sysfs/proc access.
+    # Keep this service on trusted development/edge nodes only.
+    privileged: ${METRICS_MANAGER_PRIVILEGED:-true}
+    security_opt:
+      - apparmor:unconfined
     devices:
       - /dev/dri:/dev/dri
     pid: host
