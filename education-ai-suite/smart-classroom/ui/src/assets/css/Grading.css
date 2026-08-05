@@ -115,8 +115,7 @@
   background: #fafafa;
 }
 
-.grading-form-row,
-.grading-form-actions {
+.grading-form-row {
   display: grid;
   grid-template-columns: 96px 1fr 152px;
   align-items: center;
@@ -801,10 +800,6 @@
   min-width: 0;
 }
 
-.grading-config-cell-full {
-  grid-column: 1 / -1;
-}
-
 .grading-config-checkbox {
   display: flex;
   flex-direction: row;
@@ -913,11 +908,6 @@
 .grading-results-subject {
   color: #777;
   font-weight: 400;
-}
-
-.grading-results-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .grading-results-back {

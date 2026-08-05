@@ -157,9 +157,9 @@ const GradingRightPanel: React.FC = () => {
   const numCell = (
     key: NumKey,
     label: string,
-    opts: { min?: number; max?: number; step?: number; full?: boolean; disabled?: boolean } = {},
+    opts: { min?: number; max?: number; step?: number; disabled?: boolean } = {},
   ) => (
-    <div className={`grading-config-cell${opts.full ? ' grading-config-cell-full' : ''}`}>
+    <div className="grading-config-cell">
       <label className="grading-config-label">{label}</label>
       <input
         className="grading-config-input"
@@ -249,7 +249,6 @@ const GradingRightPanel: React.FC = () => {
               {boolCell('contrast_enhance', t('grading.config.contrastEnhance', 'Contrast Enhance'))}
               {boolCell('force_split', t('grading.config.forceSplit', 'Force Split'))}
               {splitPairsCell()}
-              <div className="grading-config-cell" />
             </div>
           </div>
 
