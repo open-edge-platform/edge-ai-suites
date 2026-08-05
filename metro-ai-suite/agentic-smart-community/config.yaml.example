@@ -93,9 +93,11 @@ events_webhook:
 #
 # Each entry owns its own `schema:` (extension columns parsed on the shared
 # video_summary_tasks table, applied via idempotent ALTER TABLE at startup),
-# its `summarize:` tuning, an optional `evaluate_rules_path:` adapter under
-# use-cases/<name>/evaluate_rules.py, and its `reports:` defaults. The `alerts`
-# table stays use-case-agnostic — no extensions.
+# its `summarize:` tuning, an optional `evaluate_rules_path:` adapter (resolved
+# relative to the MCP server process cwd — the repo root when started via
+# scripts/mcp-server/start.sh; the bundled elder_wakeup adapter ships at
+# demo/prompts/elder_wakeup_evaluate_rules.py), and its `reports:` defaults.
+# The `alerts` table stays use-case-agnostic — no extensions.
 #
 use_case_dict:
   fridge:
@@ -139,7 +141,7 @@ use_case_dict:
   elder_wakeup:
     description: "Elder wakeup monitoring"
     video_summary_task: elder_wakeup_monitor
-    evaluate_rules_path: ./use-cases/elder_wakeup/evaluate_rules.py
+    evaluate_rules_path: ./demo/prompts/elder_wakeup_evaluate_rules.py
     schema:
       video_summary_tasks:
         extensions:

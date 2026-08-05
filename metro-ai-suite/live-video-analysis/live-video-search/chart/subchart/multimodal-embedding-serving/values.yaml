@@ -30,6 +30,7 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
+  pullPolicy: ''
 images:
   multimodalEmbeddingServing:
     repository: multimodal-embedding-serving
@@ -83,6 +84,7 @@ livenessProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 20
+  timeoutSeconds: 10
   failureThreshold: 3
 
 readinessProbe:
@@ -91,6 +93,7 @@ readinessProbe:
     port: http
   initialDelaySeconds: 5
   periodSeconds: 10
+  timeoutSeconds: 10
   failureThreshold: 6
 
 startupProbe:
@@ -99,6 +102,7 @@ startupProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10
+  timeoutSeconds: 10
   failureThreshold: 180
 
 nodeSelector: {}

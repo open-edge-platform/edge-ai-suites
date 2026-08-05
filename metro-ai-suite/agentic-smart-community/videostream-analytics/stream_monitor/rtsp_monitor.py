@@ -32,6 +32,7 @@ from shared.config import (
     DefaultsConfig,
     merge_config,
 )
+from shared.time_utils import now_local_str
 from sinks import EventSink
 from stream_monitor.base_monitor import BaseMonitor
 from stream_monitor.pipeline.motion_detector import MotionDetector
@@ -386,7 +387,7 @@ class StreamPipeline(BaseMonitor):
                 # idle time. Keep `None` as `None` (no open period to reset).
                 if static_start_wall is not None:
                     static_start_wall = time.time()
-                    static_start_iso = datetime.now().isoformat(timespec="seconds")
+                    static_start_iso = now_local_str()
 
             # Motion detection. When the gate is disabled (motion.enabled=false)
             # every frame counts as motion — the prefilter (or, without one, the
@@ -447,7 +448,7 @@ class StreamPipeline(BaseMonitor):
                     # This is the ONLY place static_start is armed (close-out
                     # model: static is always bracketed by two motions).
                     static_start_wall = time.time()
-                    static_start_iso = datetime.now().isoformat(timespec="seconds")
+                    static_start_iso = now_local_str()
                     logger.info("[%s] Motion ended", self.source_id)
 
         # Drain remaining segment on shutdown
@@ -582,7 +583,7 @@ class StreamPipeline(BaseMonitor):
                 self.source_id, duration, self._static_cfg.min_duration,
             )
             return
-        end_iso = datetime.now().isoformat(timespec="seconds")
+        end_iso = now_local_str()
         self._emit_static(start_iso, end_iso, duration)
 
     def _emit_static(self, start_iso: str | None, end_iso: str, duration: float) -> None:

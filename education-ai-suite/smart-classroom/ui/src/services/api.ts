@@ -57,16 +57,8 @@ export interface FeatureDescriptor {
   id: string;
   dependency: string[];
   requires: string[];
-  type?: string;
-  panel?: string;
-  title?: string;
   endpoints?: Record<string, string>;
   mode?: string;
-  cameras?: {
-    front?: boolean;
-    back?: boolean;
-    board?: boolean;
-  };
 }
 
 /**
@@ -449,6 +441,9 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       if (!trimmed) continue;
       let chunk: any;
       try { chunk = JSON.parse(trimmed); } catch { continue; }
+      if (chunk.board_ocr_partial) {
+        yield { type: 'board_ocr_partial' };
+      }
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };

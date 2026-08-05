@@ -36,9 +36,3 @@ nvr-event-router:
   service:
     nvrEventRouter:
       nodePort: null
-
-vss-collector:
-  telemetry:
-    enabled: true
-  collectorSignals:
-    usePvc: true
