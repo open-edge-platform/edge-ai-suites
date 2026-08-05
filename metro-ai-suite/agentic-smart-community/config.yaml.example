@@ -3,7 +3,7 @@
 # ─────────────────────────────────────────────────────────────
 # This reference config wires the dependent services, runtime knobs, and bundled
 # use cases. It does not declare monitors; add monitors at runtime by chatting
-# with the agent (video-summary-prompt-studio → use_case_register → monitor_ctl).
+# with the agent (smartbuilding-use-case-manager → use_case_register → monitor_ctl).
 #
 # To run the optional Fridge, Child Safety, and Elder Wakeup reference demo, see
 # docs/user-guide/get-started/ready-to-run-demo.md. The demo launcher uses a
@@ -89,7 +89,7 @@ events_webhook:
 # Monitors reference use cases by their `use_case` key. The bundled entries are
 # ready to use as starting points; register additional use cases at runtime via
 # the smartbuilding_use_case_register tool (draft the prompt with the
-# video-summary-prompt-studio skill).
+# smartbuilding-use-case-manager skill).
 #
 # Each entry owns its own `schema:` (extension columns parsed on the shared
 # video_summary_tasks table, applied via idempotent ALTER TABLE at startup),

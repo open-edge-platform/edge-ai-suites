@@ -30,6 +30,7 @@ class ReportFeature:
             "endpoints": {
                 "generate": "/report/generate",
                 "template_fields": "/report/template-fields",
+                "capabilities": "/report/capabilities",
                 "get_report": "/report/{session_id}",
                 "download": "/report/{session_id}/download",
                 "reselect": "/report/{session_id}/reselect",
