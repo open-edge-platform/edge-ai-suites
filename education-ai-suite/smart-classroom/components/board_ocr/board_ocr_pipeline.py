@@ -23,29 +23,6 @@ STATUS_FRAME_EXTRACTION = "frame_extraction_in_progress"  # extracting frames
 STATUS_OCR = "ocr_in_progress"                         # extraction done, OCR draining
 STATUS_DONE = "done"                                   # all frames extracted and OCR'd
 
-_board_ocr_warned = False
-
-
-def board_ocr_enabled() -> bool:
-    """Whether board OCR is enabled in config."""
-    global _board_ocr_warned
-
-    board_cfg = getattr(config, "board_ocr", None)
-    if not board_cfg or not bool(getattr(board_cfg, "enabled", False)):
-        return False
-
-    ocr_cfg = getattr(config.models, "ocr", None)
-    if ocr_cfg and bool(getattr(ocr_cfg, "enabled", False)):
-        return True
-
-    if not _board_ocr_warned:
-        logger.warning(
-            "board_ocr.enabled is true but models.ocr.enabled is false; "
-            "board OCR will be SKIPPED. Set models.ocr.enabled: true to use it."
-        )
-        _board_ocr_warned = True
-    return False
-
 
 def _board_ocr_debug() -> bool:
     """Whether board OCR debug mode is enabled (keeps intermediate artifacts)."""
@@ -711,19 +688,16 @@ def get_active_session_id() -> Optional[str]:
 def start_board_ocr(session_id: str, content_source: Optional[str]) -> bool:
     """Start the board OCR twin pipeline for a content pipeline.
 
-    Called from endpoints.py when the VA content pipeline starts. Idempotent.
-    No-op (with a log line) when board OCR or the VA pipeline is disabled.
+    Called from endpoints.py when the VA content pipeline starts, and only when
+    the board_ocr feature is enabled. Idempotent. No-op (with a log line) when
+    the VA pipeline is disabled.
     """
-    if not board_ocr_enabled():
-        logger.info("Board OCR disabled in config; not starting")
-        return False
-
     global _active_pipeline
 
     if not va_pipeline_enabled():
         logger.warning(
-            "board_ocr.enabled is true but the VA pipeline is not enabled; "
-            "the content source is unavailable, so board OCR will NOT start."
+            "The VA pipeline is not enabled; the content source is unavailable, "
+            "so board OCR will NOT start."
         )
         return False
 
