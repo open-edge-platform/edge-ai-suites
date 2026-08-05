@@ -14,12 +14,14 @@ from typing import Optional
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.config_loader import config
+from utils.session_state_manager import SessionState
 
 logger = logging.getLogger(__name__)
 
 
 MAX_KEYWORDS = 8
 MAX_DIFFICULTY_POINTS = 4
+MIN_SPEECH_SAMPLE_SEC = 30
 
 
 def _get_session_dir(session_id: str) -> str:
@@ -42,7 +44,7 @@ class DataCollector:
 
     @staticmethod
     def _load_report_limits() -> tuple[int, int]:
-        """Read report keyword/difficulty caps from config with safe fallbacks."""
+        """Read report limits from config with safe fallbacks."""
         section = getattr(config, "report", None)
         kw = getattr(section, "max_keywords", MAX_KEYWORDS) if section else MAX_KEYWORDS
         diff = getattr(section, "max_difficulty_points", MAX_DIFFICULTY_POINTS) if section else MAX_DIFFICULTY_POINTS
@@ -61,6 +63,16 @@ class DataCollector:
         diff_i = diff_i if diff_i > 0 else MAX_DIFFICULTY_POINTS
 
         return kw_i, diff_i
+
+    def get_total_duration_sec(self) -> float:
+        """Total class duration in seconds (0.0 when no source is available)."""
+        cached = self.raw_metrics.get("duration_sec")
+        if isinstance(cached, (int, float)):
+            return float(cached)
+
+        duration_sec = self._resolve_total_duration_sec()
+        self.raw_metrics["duration_sec"] = duration_sec
+        return duration_sec
 
     def read(self, source_name: str) -> Optional[str]:
         """Read a data source by name. Returns None if data is unavailable or empty."""
@@ -100,6 +112,8 @@ class DataCollector:
             for key in ("student_count", "stand_count", "raise_up_count"):
                 if isinstance(stats.get(key), (int, float)):
                     self.raw_metrics[key] = stats[key]
+            # Video duration (if VA persisted it) is consumed by the single
+            # duration resolver — see _resolve_total_duration_sec().
         except (ValueError, TypeError):
             logger.warning("[DataCollector] class_statistics.json is not valid JSON; "
                            "skipping structured extraction.")
@@ -120,6 +134,80 @@ class DataCollector:
         markers = ("front_posture.txt", "back_posture.txt", "content_results.txt")
         return sum(1 for m in markers if os.path.exists(os.path.join(va_dir, m)))
 
+    def _has_audio(self) -> bool:
+        """True when this session produced an audio transcript."""
+        for fname in ("teacher_transcription.txt", "content_segmentation_transcription.txt"):
+            if os.path.exists(os.path.join(self.session_dir, fname)):
+                return True
+        return bool(SessionState.get_session_state(self.session_id).get("has_audio"))
+
+    def _audio_duration_sec(self) -> float:
+        """Audio timeline length from the transcript's last end timestamp (seconds)."""
+        for fname in ("content_segmentation_transcription.txt", "teacher_transcription.txt"):
+            path = os.path.join(self.session_dir, fname)
+            if not os.path.exists(path):
+                continue
+            content = StorageManager.read_text_file(path)
+            if not content:
+                continue
+            for line in reversed(content.strip().split("\n")):
+                match = re.match(r'\[(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\]', line.strip())
+                if match:
+                    return float(match.group(2))
+        return 0.0
+
+    def _video_duration_sec(self) -> float:
+        """Video length persisted by VA into class_statistics.json (seconds)."""
+        stats_file = os.path.join(self.session_dir, "va", "class_statistics.json")
+        if not os.path.exists(stats_file):
+            return 0.0
+        content = StorageManager.read_text_file(stats_file)
+        if not content:
+            return 0.0
+        try:
+            stats = json.loads(content)
+        except (ValueError, TypeError):
+            return 0.0
+        sec = stats.get("duration_sec")
+        if isinstance(sec, (int, float)) and sec > 0:
+            return float(sec)
+        minutes = stats.get("duration_min")
+        if isinstance(minutes, (int, float)) and minutes > 0:
+            return float(minutes) * 60.0
+        return 0.0
+
+    def _resolve_total_duration_sec(self) -> float:
+        """Resolve total class duration in seconds using audio/video priority."""
+        if self._has_audio():
+            sec = self._audio_duration_sec()
+            if sec > 0:
+                return sec
+            fallback = SessionState.get_audio_duration(self.session_id)
+            if isinstance(fallback, (int, float)) and fallback > 0:
+                return float(fallback)
+
+        sec = self._video_duration_sec()
+        if sec > 0:
+            return sec
+        fallback = SessionState.get_video_duration(self.session_id)
+        if isinstance(fallback, (int, float)) and fallback > 0:
+            return float(fallback)
+        return 0.0
+
+    def get_total_duration_min(self) -> float:
+        """Total class duration in minutes (0.0 when no source is available).
+
+        Resolved once and cached in ``raw_metrics['duration_min']`` so raw-field
+        mapping and any other consumer see a single, consistent value.
+        """
+        cached = self.raw_metrics.get("duration_min")
+        if isinstance(cached, (int, float)):
+            return float(cached)
+
+        duration_min = round(self.get_total_duration_sec() / 60.0, 2)
+        self.raw_metrics["duration_min"] = duration_min
+        return duration_min
+
     def _read_class_summary(self) -> Optional[str]:
         summary_path = os.path.join(self.session_dir, "summary.md")
         if not os.path.exists(summary_path):
@@ -131,6 +219,7 @@ class DataCollector:
 
         keyword_items = self._extract_summary_items(content, ("Keywords", "关键词"))
         if keyword_items:
+            keyword_items = self._split_delimited_items(keyword_items)
             keyword_items = self._normalize_items(keyword_items, self.max_keywords)
             self.raw_metrics["keywords"] = self._join_items(keyword_items)
             self.raw_metrics["keywords_count"] = len(keyword_items)
@@ -140,7 +229,7 @@ class DataCollector:
         )
         if difficulty_items:
             difficulty_items = self._normalize_items(difficulty_items, self.max_difficulty_points)
-            self.raw_metrics["key_difficulty"] = self._join_items(difficulty_items)
+            self.raw_metrics["key_difficulty"] = self._join_items(difficulty_items, phrase_level=True)
             summary = self._build_mentions_summary(difficulty_items)
             if summary:
                 self.raw_metrics["difficulty_mentions_summary"] = summary
@@ -224,12 +313,30 @@ class DataCollector:
         return []
 
     @staticmethod
+    def _split_delimited_items(items: list) -> list:
+        """Flatten list-style bullets into individual entries.
+
+        Splits each item on common CJK/Latin list delimiters (、，,；;/｜|) so a
+        single bullet holding many comma-joined keywords becomes one entry per
+        keyword. Intended for keyword extraction only — difficulty points are
+        phrases that may legitimately contain these delimiters and must not be
+        split.
+        """
+        out = []
+        for item in items:
+            for part in re.split(r'[、，,；;/｜|]+', item or ""):
+                part = part.strip()
+                if part:
+                    out.append(part)
+        return out
+
+    @staticmethod
     def _normalize_items(items: list, limit: int) -> list:
         """Trim, de-duplicate while preserving order, and cap item count."""
         seen = set()
         out = []
         for item in items:
-            text = (item or "").strip().strip(";；,，")
+            text = (item or "").strip().strip(";；,，。.")
             if not text:
                 continue
             key = text.lower()
@@ -255,7 +362,7 @@ class DataCollector:
         if re.search(r"[\u4e00-\u9fff]", text):
             tokens = [
                 t.strip()
-                for t in re.split(r"[，,；;。\s()（）]+", text)
+                for t in re.split(r"[，,、；;。：:！？!?\s()（）【】「」]+", text)
                 if t and len(t.strip()) >= 2
             ]
             return tokens[:4]
@@ -274,11 +381,21 @@ class DataCollector:
         return anchors[:4]
 
     @staticmethod
-    def _join_items(items: list) -> str:
-        """Join extracted items with a language-appropriate separator (Chinese list
-        separator when the app language is Chinese, comma+space otherwise)."""
+    def _join_items(items: list, phrase_level: bool = False) -> str:
+        """Join extracted items with a language-appropriate separator.
+
+        Word-level (default) uses the list separator (、 for Chinese, ", "
+        otherwise) — right for short keyword terms. Phrase-level uses a stronger
+        separator (；/"; ") for items that are full phrases and may themselves
+        contain the list separator (e.g. difficulty points), keeping list
+        boundaries unambiguous.
+        """
         from utils.config_loader import config
-        sep = "、" if getattr(config.app, "language", "en") == "zh" else ", "
+        is_zh = getattr(config.app, "language", "en") == "zh"
+        if phrase_level:
+            sep = "；" if is_zh else "; "
+        else:
+            sep = "、" if is_zh else ", "
         return sep.join(items)
 
     def _read_mindmap(self) -> Optional[str]:
@@ -337,29 +454,29 @@ class DataCollector:
 
         teacher_speaking_min = teacher_speaking_sec / 60.0 if teacher_speaking_sec > 0 else 0
 
-        total_duration_sec = 0
-        cs_path = os.path.join(self.session_dir, "content_segmentation_transcription.txt")
-        if os.path.exists(cs_path):
-            cs_content = StorageManager.read_text_file(cs_path)
-            if cs_content:
-                cs_lines = cs_content.strip().split('\n')
-                for cs_line in reversed(cs_lines):
-                    match = re.match(r'\[(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\]', cs_line.strip())
-                    if match:
-                        total_duration_sec = float(match.group(2))
-                        break
-
+        total_duration_sec = self.get_total_duration_sec()
         total_duration_min = total_duration_sec / 60.0 if total_duration_sec > 0 else 0
-        speaking_speed = round(total_chars / teacher_speaking_min) if teacher_speaking_min > 0 else 0
+        speaking_speed = None
+        if teacher_speaking_sec >= MIN_SPEECH_SAMPLE_SEC and teacher_speaking_min > 0:
+            speaking_speed = round(total_chars / teacher_speaking_min)
         speaking_ratio = round(teacher_speaking_sec / total_duration_sec * 100, 1) if total_duration_sec > 0 else 0
 
         # Stash structured audio-derived metrics for direct (non-LLM) raw-field filling.
+        # Total duration is owned by the single resolver (get_total_duration_min).
         self.raw_metrics.update({
             "question_count": question_count,
             "speaking_speed": speaking_speed,
+            "teaching_duration_sec": round(teacher_speaking_sec, 1),
             "teaching_duration_min": round(teacher_speaking_min, 1),
-            "duration_min": round(total_duration_min, 1),
         })
+
+        if speaking_speed is None:
+            speed_line = (
+                f"Speaking speed: N/A (teacher speaking window {teacher_speaking_sec:.1f}s "
+                f"is below minimum sample {MIN_SPEECH_SAMPLE_SEC}s)\n"
+            )
+        else:
+            speed_line = f"Speaking speed: {speaking_speed} chars/min (based on teacher speaking time)\n"
 
         stats = (
             f"--- Teacher Speech Statistics ---\n"
@@ -369,7 +486,7 @@ class DataCollector:
             f"Teacher speaking duration: {teacher_speaking_sec:.0f}s ({teacher_speaking_min:.1f} min)\n"
             f"Total class duration: {total_duration_sec:.0f}s ({total_duration_min:.1f} min)\n"
             f"Teacher speaking ratio: {speaking_ratio}%\n"
-            f"Speaking speed: {speaking_speed} chars/min (based on teacher speaking time)\n"
+            f"{speed_line}"
             f"---\n"
         )
 

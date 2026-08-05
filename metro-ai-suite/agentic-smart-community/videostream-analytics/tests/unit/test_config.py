@@ -102,6 +102,38 @@ class TestLoadConfig:
         config = load_config(str(cfg_file))
         assert config.defaults.prefilter.model_path == ""
 
+    def test_prefilter_model_path_env_override(self, tmp_path):
+        # PREFILTER_MODEL overrides the config-file model_path (even a placeholder)
+        # and is expanded like the config value.
+        cfg_file = tmp_path / "mp_override.yaml"
+        cfg_file.write_text(
+            "defaults:\n"
+            "  prefilter:\n"
+            "    enabled: true\n"
+            "    model_path: /path/to/placeholder.xml\n"
+        )
+        with patch.dict(
+            os.environ, {"PREFILTER_MODEL": "${HOME}/models/real.xml"}, clear=False
+        ):
+            config = load_config(str(cfg_file))
+        assert config.defaults.prefilter.model_path == os.path.expanduser(
+            "~/models/real.xml"
+        )
+
+    def test_prefilter_model_path_no_env_keeps_config(self, tmp_path):
+        # Without PREFILTER_MODEL, the config-file model_path is preserved.
+        cfg_file = tmp_path / "mp_no_override.yaml"
+        cfg_file.write_text(
+            "defaults:\n"
+            "  prefilter:\n"
+            "    enabled: true\n"
+            "    model_path: /models/from_config.xml\n"
+        )
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("PREFILTER_MODEL", None)
+            config = load_config(str(cfg_file))
+        assert config.defaults.prefilter.model_path == "/models/from_config.xml"
+
 
 class TestConfigModels:
     def test_motion_config_defaults(self):
