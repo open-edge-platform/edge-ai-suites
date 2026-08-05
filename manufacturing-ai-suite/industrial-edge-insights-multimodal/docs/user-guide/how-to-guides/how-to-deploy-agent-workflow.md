@@ -124,7 +124,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 | Action | Description |
 |--------|-------------|
 | `HALT_LINE` | Stop the production line immediately |
-| `REDUCE_HEAT_INPUT` | Reduce welding current/power |
+| `REDUCE_HEAT_INPUT` | Reduce welding current and/or power |
 | `SCHEDULE_INSPECTION` | Flag for next-shift inspection |
 | `ADJUST_PARAMETERS` | Adjust process parameters |
 | `CHECK_FIXTURING` | Check part fixturing and alignment |
