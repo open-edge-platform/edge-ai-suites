@@ -13,28 +13,28 @@
 hide_directive-->
 
 > Note!
-> This application is for **reference and evaluation purposes**. It is
-  **not intended for direct use in traffic control systems** and is not validated as such.
+> This is a sample application **intended for evaluation and development purposes only**.
+  For more information, refer to
+  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
 ::::
 
 
+The Smart Traffic Intersection Agent demonstrates how Intel hardware performs in AI solutions
+for urban traffic management. It presents the use case of a comprehensive traffic analysis
+service that provides real-time intersection monitoring, analyzes directional traffic density,
+and provides traffic insights powered by a Vision Language Model (VLM).
 
-The Smart Traffic Intersection Agent is a comprehensive traffic analysis service that provides
-real-time intersection monitoring, directional traffic density analysis, and Vision Language
-Model (VLM) powered traffic insights.
-It processes MQTT traffic data, manages camera images, and delivers intelligent traffic
-analysis through RESTful APIs.
+The agent processes MQTT traffic data, manages camera images, and delivers intelligent traffic
+analysis through RESTful APIs. It supports sliding-window analysis, sustained traffic detection,
+and intelligent management of camera images to enhance traffic insights.
 
-The agent supports sliding-window analysis, sustained traffic detection, and intelligent
-management of camera images to enhance traffic insights.
-
-The following figure shows the high-level architecture of the Smart Traffic Intersection Agent,
-showcasing its core components and their interactions with external systems.
+Here is its high-level architecture diagram, showcasing its core components and their
+interactions with external systems:
 
 ![ITT architecture](./_assets/ITT_architecture.png)
 
 The Smart Traffic UI below shows how traffic and weather data is analyzed, and how summary
-and alerts are shown to the user.
+and alerts are shown to the user:
 
 ![traffic intersection agent UI](./_assets/traffic_agent_ui.png)
 

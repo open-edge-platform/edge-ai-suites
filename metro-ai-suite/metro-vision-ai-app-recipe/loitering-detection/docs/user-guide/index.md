@@ -16,13 +16,14 @@
 hide_directive-->
 
 > Note!
-> This application is for **reference and evaluation purposes**. It is
-  **not intended for direct use in security systems** and is not validated as such.
+> This is a sample application **intended for evaluation and development purposes only**.
+  For more information, refer to
+  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
 ::::
 
 Loitering Detection leverages advanced AI algorithms for monitoring and analyzing real-time
-video feeds. It enables security system engineers evaluate the efficiency of Intel hardware
-in identifying individuals lingering in specified areas and detecting their behavior.
+video feeds to demonstrate the efficiency of Intel hardware in AI systems for detecting
+individuals lingering in specified areas and recognizing their activity.
 
 By utilizing cutting-edge technologies and pre-trained deep learning models, this application
 enables real-time processing and analysis of video streams, making it an ideal solution. Its
@@ -31,11 +32,12 @@ extend its functionalities to meet their specific needs.
 
 ## Key features
 
-The key features are as follows:
-
-- **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models. Customize parameters such as thresholds and object types without requiring additional coding.
-- **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling, real-time monitoring, and insightful data visualization.
-- **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and configuration files.
+- **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models.
+  Customize parameters such as thresholds and object types without requiring additional coding.
+- **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling,
+  real-time monitoring, and insightful data visualization.
+- **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and
+  configuration files.
 
 ## How it works
 
