@@ -19,8 +19,6 @@ DL Streamer pipeline in isolation or for model download alone.
 | 1 | Person detection, CPU, sample videos | Yes | Core six-container topology, per-source MQTT, pinned tags |
 | 2 | PPE compliance, GPU + classifier | Yes | `_gpu` variant, `group_add`, secondary classifier |
 | 3 | Smart parking, RTSP sources | Yes | RTSP inputs, HLS iframe, SAN cert, `--noproxy` curl |
-| 4 | Retail queue, beginner, defaults | Yes | Batched questions, defaults, verify criteria |
-| 5 | Single gvadetect pipeline string | No | Negative case — single-pipeline authoring |
 
 ## What "pass" means
 
