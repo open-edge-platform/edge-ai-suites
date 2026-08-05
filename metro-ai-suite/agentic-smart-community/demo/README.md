@@ -6,7 +6,7 @@ This bundle provides reference configurations for three Agentic Smart Community 
 
 | Item | Value |
 |---|---|
-| Purpose | Multi-camera, local-first smart-home video-understanding reference implementation |
+| Purpose | Multi-camera, local-first smart-building video-understanding reference implementation |
 | Compute platform | Intel Core Ultra (XPU runs the VLM, NPU runs YOLO pre-filtering) |
 | Inference path | Fully local — no cloud dependency |
 | Implemented use cases | Fridge Manager / Child Safety / Elder Get-Up |

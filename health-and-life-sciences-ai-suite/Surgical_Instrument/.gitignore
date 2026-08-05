@@ -44,6 +44,9 @@ runs/
 logs/
 *.log
 
+# Collected performance metrics (generated at runtime)
+metrics/
+
 # Task / progress scratch (per user preference — never commit these)
 TASK_*.md
 PROGRESS_*.md

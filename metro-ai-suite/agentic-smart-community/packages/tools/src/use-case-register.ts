@@ -533,7 +533,7 @@ export async function useCaseRegister(
   // prompt_text resolution — convention over configuration. When the caller
   // doesn't pass prompt_text explicitly, auto-read the conventional prompt file
   // use-cases/<use_case>/prompt.md so agents only need to drop the file (via the
-  // video-summary-prompt-studio skill) rather than re-cat it into the call.
+  // smartbuilding-use-case-manager skill) rather than re-cat it into the call.
   //
   // Resolved up-front, BEFORE any side effect (ALTER / VLM POST / config write),
   // so both the "no prompt" and the "schema↔prompt mismatch" gates below can

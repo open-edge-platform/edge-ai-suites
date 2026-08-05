@@ -213,6 +213,15 @@ def load_config(config_path: str | None = None) -> AppConfig:
     if webhook_url := os.environ.get("WEBHOOK_URL"):
         config.webhook.url = webhook_url
 
+    # PREFILTER_MODEL is the absolute, container-visible OpenVINO IR path that
+    # Docker injects (config.yaml may only carry a placeholder). It overrides the
+    # prefilter model_path so /capabilities/prefilter and the runtime prefilter
+    # read the real model, even on a plain `docker compose up` that mounts the
+    # placeholder config instead of the one setup_docker.sh generates. Expanded
+    # like the config-file value above (${HOME}/~ supported).
+    if prefilter_model := os.environ.get("PREFILTER_MODEL"):
+        config.defaults.prefilter.model_path = expand_path(prefilter_model)
+
     # SMARTBUILDING_DATA_DIR is the MCP server's data root. VSA writes under its
     # `segments/` subdir so the DEFAULT output root lines up with the per-monitor
     # data_dir MCP sends in register_source bodies (<SMARTBUILDING_DATA_DIR>/

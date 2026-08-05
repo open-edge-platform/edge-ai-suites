@@ -129,12 +129,12 @@ ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
 
 The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smartbuilding_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
 
-**Agentic Smart Community WebUI**
+**Agentic Smart Community Dashboard**
 Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It provides live camera views, activity timelines, alert records, and report generation for registered monitors. The chat panel can also connect to a supported agent framework.
 
 
-![Agentic Smart Community WebUI](_assets/agentic-smart-community-webui.png)
-**Figure: Agentic Smart Community WebUI**
+![Agentic Smart Community Dashboard](_assets/agentic-smart-community-webui.png)
+**Figure: Agentic Smart Community Dashboard**
 
 #### OpenClaw
 
@@ -184,8 +184,8 @@ Agents can now use the MCP tools when you ask them to create a use case, analyze
 To use OpenClaw from the Agentic Smart Community Web UI, open `http://localhost:3100/`, select **OpenClaw** in the chat panel (as the figure shows below), and enter the gateway URL and token. After connecting, select an OpenClaw session to chat alongside the live video and activity views. You can alternatively use the standalone OpenClaw Control UI at `http://localhost:18789/`.
 
 
-![Configure the Agent Chat Session from WebUI](_assets/configure-openclaw-session-from-webui.png)
-**Figure: Configure the Agent Chat Session from WebUI**
+![Configure the Agent Chat Session from Dashboard](_assets/configure-openclaw-session-from-webui.png)
+**Figure: Configure the Agent Chat Session from Dashboard**
 
 **A. Inspect the Smart Building tools**
 

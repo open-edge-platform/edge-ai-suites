@@ -186,14 +186,14 @@ All notable changes to this project are documented in this file.
 - Added "How to Deploy with Helm" section to documentation. ([#837])
 - Added comprehensive troubleshooting guides covering Grafana data visibility, InfluxDB retention policies, microservice startup delays, and deployment issues. ([#1130])
 - Added configurable session timeout settings for Grafana to control inactive user logout duration. ([#1000])
-- Added DLStreamer pipeline server references and detailed pipeline configuration documentation. ([#1002], [#1010])
+- Added DL Streamer pipeline server references and detailed pipeline configuration documentation. ([#1002], [#1010])
 
 ### Changed
 - Updated fusion logic default mode from "AND" to "OR" for anomaly detection, improving detection flexibility. ([#794])
 - Enhanced fusion analytics with additional metadata tracking, including vision classification labels.
 - Redesigned Grafana dashboard layout with new fusion analytics results table and reorganized panels.
 - Renamed resource folder from "weld-porosity" to "models" and updated model path to "weld-defect-classification-f16-DeiT". ([#840])
-- Updated DLStreamer pipeline server image from Ubuntu 22 to Ubuntu 24.
+- Updated DL Streamer pipeline server image from Ubuntu 22 to Ubuntu 24.
 - Modular refactoring of time series documentation for improved maintainability. ([#899])
 - Multimodal apps documentation updated to use tile layout for better navigation. ([#908])
 - Fixed references and broken links in documentation and toctree. ([#934], [#820])
@@ -204,7 +204,7 @@ All notable changes to this project are documented in this file.
 - Fixed dashboard name references in documentation. ([#881])
 - Updated documentation for multimodal weld defect detection, transitioning from wind turbine anomaly detection theme. ([#838])
 - Improved documentation clarity and consistency across files.
-- Updated documentation to include DLStreamer pipeline server references and modernized system requirements. ([#1002], [#1010])
+- Updated documentation to include DL Streamer pipeline server references and modernized system requirements. ([#1002], [#1010])
 - Improved formatting and organization of multimodal documentation. ([#1035], [#1036], [#1037])
 - Updated README with proper links and references. ([#1042])
 - Fixed documentation issues including spelling errors, incorrect URLs, and content organization. ([#1099])
