@@ -423,7 +423,7 @@ class DocumentParser:
 
     @staticmethod
     def _is_ocr_enabled() -> bool:
-        enabled = os.getenv("OCR_ENABLED", "false").lower() in ("true", "1", "yes")
+        enabled = os.getenv("OCR_ENABLED", "true").lower() in ("true", "1", "yes")
         if not enabled:
             logger.info("OCR is disabled (OCR_ENABLED env var). Skipping image text extraction.")
         return enabled
