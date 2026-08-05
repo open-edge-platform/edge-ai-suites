@@ -413,6 +413,7 @@ async def trigger_run(
     trigger_payload = {
         "run_id": run_id,
         "status": "completed",
+        "device": "dummy",
         "video_filename": "welding",
         "start_id": time_start,
         "end_id": time_end,
