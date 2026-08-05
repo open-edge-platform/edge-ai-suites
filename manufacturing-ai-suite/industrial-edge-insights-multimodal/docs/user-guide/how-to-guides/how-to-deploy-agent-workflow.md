@@ -42,7 +42,7 @@ Vision (DL Streamer Pipeline Server)──┐
 
 ## Prerequisites
 
-1. Ensure the `.env` file has valid values for:
+1. Ensure the `.env` file is configured with valid values for:
 
    - `HOST_IP`
    - `INFLUXDB_USERNAME`, `INFLUXDB_PASSWORD`
