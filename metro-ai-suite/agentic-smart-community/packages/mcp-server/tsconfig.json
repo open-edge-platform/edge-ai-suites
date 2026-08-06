@@ -9,11 +9,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "composite": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@smartbuilding-video/db": ["../db/src/index.ts"],
-      "@smartbuilding-video/tools": ["../tools/src/index.ts"]
-    }
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "references": [

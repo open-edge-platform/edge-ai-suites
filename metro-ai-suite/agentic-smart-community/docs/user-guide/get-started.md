@@ -11,25 +11,25 @@ Before you begin, ensure the following:
 - **System Requirements:** Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
 - **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
-- **Required command-line tools:** Install Node.js `>=22.22.3 <23` (the commands below use the supported 22.x line) and npm to build the MCP server and run OpenClaw 2026.7.1. Node.js `>=24.15.0 <25` and `>=25.9.0` are also supported. Install Python 3 with virtual-environment support for the demo launcher, `curl`, `wget`, `git`, and `jq` for service setup, `ffmpeg` and `ffprobe` for video processing, and MediaMTX for local RTSP streaming:
+- **Core command-line tools:** All services — including the MCP server — run as containers, so the host only needs `git` to clone the repo and `curl` / `jq` for the setup script and health checks:
 
   ```bash
   sudo apt-get update
-  sudo apt-get install -y curl wget git jq ffmpeg python3 python3-venv python3-pip
-
-  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-
-  mkdir -p "$HOME/.npm-global" "$HOME/.local/bin"
-  npm config set prefix "$HOME/.npm-global"
-  export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"
-  grep -qxF 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' "$HOME/.bashrc" || \
-    echo 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-
-  curl -fL --retry 3 \
-    https://github.com/bluenviron/mediamtx/releases/download/v1.12.2/mediamtx_v1.12.2_linux_amd64.tar.gz \
-    | tar xz -C "$HOME/.local/bin" mediamtx
+  sudo apt-get install -y git curl jq
   ```
+
+Publishing local videos as RTSP (the [Ready-to-Run Demo](./get-started/ready-to-run-demo.md) and the local-video monitor example in [Step 3](#step-3---connect-an-agent-host)) additionally needs `ffmpeg`, Python 3 with venv, and MediaMTX on the host:
+
+```bash
+sudo apt-get install -y ffmpeg python3 python3-venv python3-pip
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc" || \
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+curl -fL --retry 3 \
+  https://github.com/bluenviron/mediamtx/releases/download/v1.12.2/mediamtx_v1.12.2_linux_amd64.tar.gz \
+  | tar xz -C "$HOME/.local/bin" mediamtx
+```
 
 This guide assumes basic familiarity with Docker commands and terminal usage. For an introduction, see the [Docker Documentation](https://docs.docker.com/).
 
@@ -49,28 +49,41 @@ git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites 
 cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 ```
 
-### Step 1 - Start dependent services
+### Step 1 - Start all services
 
-The on-device stack is defined in [docker/compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/compose.yaml) and managed by [setup_docker.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/setup_docker.sh):
+The on-device stack is defined in [docker/compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/compose.yaml) and managed by [setup_docker.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/setup_docker.sh). All four services — including the MCP server — come up together:
 
 | Service | Port | Role |
 |---|---|---|
 | `vllm-ipex-serving` | `:41091` | On-device model serving for VLM and LLM requests |
 | `multilevel-video-understanding` | `:8192` | Video-summary microservice |
-| `videostream-analytics` | host network | Video capture and optional detector-as-prefilter; posts events to the MCP webhook |
+| `videostream-analytics` | `:8999` | Video capture and optional detector-as-prefilter; posts events to the MCP webhook |
+| `smartbuilding-mcp-server` | `:3100` (+`:3101` webhook) | MCP server: Streamable-HTTP + Web UI, and the events webhook |
+
+First, create the runtime data directory and copy the configuration templates into it. The MCP server reads these at startup (if you skip this, it auto-seeds the same templates on first start):
+
+```bash
+export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
+mkdir -p "$SMARTBUILDING_DATA_DIR"
+cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
+# Starts with an empty monitors.yaml; add monitors at runtime by chatting with the agent.
+cp monitors.yaml.example "$SMARTBUILDING_DATA_DIR/monitors.yaml"
+```
+
+Customize `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
 
 ```bash
 source docker/set_env.sh
 
-# First time only: build the two local images.
+# First time only: build the local images (multilevel + videostream-analytics + MCP server).
 bash setup_docker.sh --build
 
-# Start the on-device services.
+# Start all four on-device services.
 bash setup_docker.sh
 ```
 
-> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding` and `videostream-analytics`.
-> - Use `bash setup_docker.sh --down` to stop all three services.
+> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smartbuilding-mcp-server`.
+> - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 
 Confirm the model serving is ready before continuing:
@@ -81,33 +94,21 @@ curl -fsS http://localhost:8192/v1/health
 curl -fsS http://localhost:8999/health
 ```
 
-### Step 2 - Start the MCP server
+### Step 2 - Verify the MCP server
 
-For the first run, create the runtime data directory and copy the configuration template into it:
-
-```bash
-export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
-mkdir -p "$SMARTBUILDING_DATA_DIR"
-cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
-# The launcher starts with an empty monitors.yaml
-cp monitors.yaml.example "$SMARTBUILDING_DATA_DIR/monitors.yaml"
-```
-
-Customize `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` as needed, then start the server:
-
-```bash
-bash scripts/mcp-server/start.sh
-```
-
-The server always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml`. For later configuration changes, update these two files and restart the server.
-
-The server runs as a host process and exposes:
+The MCP server starts as part of the stack in Step 1 (the `smartbuilding-mcp-server` container). It uses host networking, so it exposes the same endpoints as before:
 
 ```text
 UI:     http://localhost:3100/
 MCP:    http://localhost:3100/mcp
 Events: http://localhost:3101/events
-Logs:   /tmp/smartbuilding-<uid>/mcp-server.log
+Logs:   docker logs -f smartbuilding-mcp-server
+```
+
+It always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` (bind-mounted at the same absolute path inside the container). For later configuration changes, update these two files and reload the server:
+
+```bash
+docker compose -f docker/compose.yaml up -d --force-recreate smartbuilding-mcp-server
 ```
 
 Verify that the MCP endpoint, events webhook, and data root are available:
@@ -122,7 +123,7 @@ ls ~/.mcp-smartbuilding/smartbuilding.db
 ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
 ```
 
-> Use `bash scripts/mcp-server/stop.sh` to stop the MCP server.
+> Use `bash setup_docker.sh --light-down` to stop the MCP server (and the rest of the app tier) while keeping the model serving warm, or `bash setup_docker.sh --down` for a full teardown.
 
 ### Step 3 - Connect an agent host
 

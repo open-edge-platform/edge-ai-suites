@@ -89,20 +89,18 @@ mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
 mkdir -p "${SMARTBUILDING_DATA_DIR}"
 
+# Run smartBuilding-mcp-server and videostream-analytics as the host user
+export HOST_UID=$(id -u)
+export HOST_GID=$(id -g)
+
 # =========================================================================
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
 # =========================================================================
-# Runs on the host network, so it reaches the MCP server's EventsEndpoint (a host
-# process on localhost:3101 — see scripts/mcp-server/). Override only if the MCP
-# server listens elsewhere.
+# Runs on the host network, so it reaches the MCP server's EventsEndpoint (the
+# smartbuilding-mcp-server container, also on the host network, at localhost:3101 —
+# see docker/mcp-server/). Override only if the MCP server listens elsewhere.
 export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 
 # OpenVINO prefilter model, e.g., yolo11s. Preserve an explicitly supplied
 # path so setup_docker.sh can validate or prepare that model at runtime.
 export PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}
-
-# Run the container as the host user so segment/clip files written into the
-# bind-mounted SMARTBUILDING_DATA_DIR are owned by that user — the MCP server's
-# storage cleaner (a host process) can then purge them without root.
-export VSA_UID=$(id -u)
-export VSA_GID=$(id -g)
