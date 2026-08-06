@@ -149,7 +149,9 @@ va_services = {}  # {session_id: VideoAnalyticsPipelineService}
 
 @router.post("/start-video-analytics-pipeline")
 def start_video_analytics_pipeline(
-    requests: list[VideoAnalyticsRequest], x_session_id: Optional[str] = Header(None)
+    http_request: Request,
+    requests: list[VideoAnalyticsRequest],
+    x_session_id: Optional[str] = Header(None),
 ):
     """
     Start one or more video analytics pipelines
@@ -360,7 +362,8 @@ def start_video_analytics_pipeline(
                 content_req = next(
                     (r for r in requests if r.pipeline_name == "content"), None
                 )
-                if content_req:
+                eff = getattr(http_request.app.state, "features", None)
+                if content_req and eff is not None and eff.is_enabled("board_ocr"):
                     from components.board_ocr.board_ocr_pipeline import (
                         start_board_ocr,
                     )

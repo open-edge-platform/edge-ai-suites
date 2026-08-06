@@ -113,6 +113,9 @@ Update or edit the values in YAML file as follows:
 | `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
 | `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `http://<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
+| `nvr-event-router.env.WATCH_BATCH_SIZE` | Maximum videos in each continuous-ingestion embedding job | `10` |
+| `nvr-event-router.env.BATCH_JOB_POLL_INTERVAL_SECONDS` | Seconds between embedding-job status checks | `0.5` |
+| `nvr-event-router.env.BATCH_JOB_TIMEOUT_SECONDS` | Maximum seconds to wait for an embedding job | `3600` |
 | `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR | `true/false` |
 
 ### 3. Build Helm Dependencies

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+global:
+  vectordbBackend: milvus
+
+vdms-vector-db:
+  enabled: false
+
+milvus-standalone:
+  enabled: true

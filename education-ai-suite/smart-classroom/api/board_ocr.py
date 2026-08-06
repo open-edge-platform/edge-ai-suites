@@ -8,7 +8,7 @@ from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse
 
 from components.board_ocr.board_ocr_service import (
-    _normalize_board_text,
+    combined_board_text,
     read_board_ocr,
 )
 from utils.config_loader import config
@@ -67,7 +67,7 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
     from model_manager import ModelManager
 
     board = read_board_ocr(session_id)
-    board_text = _normalize_board_text(board.get("text") or "")
+    board_text = combined_board_text(board)
 
     if not board_text:
         logger.info(

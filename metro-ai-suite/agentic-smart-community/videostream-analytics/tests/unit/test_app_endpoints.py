@@ -1,7 +1,7 @@
 """Tests for FastAPI endpoints with mocked SourceManager.
 
-Phase 7 hard cutover: the request schemas in service.py now use the nested
-`pipeline` wrapper and reject the old flat format with HTTP 422.
+The request schemas in service.py use the nested `pipeline` wrapper and
+reject the old flat format with HTTP 422.
 """
 
 from unittest.mock import MagicMock
@@ -66,7 +66,7 @@ class TestListSources:
         mock_mgr.get_sources.return_value = []
         resp = client.get("/sources")
         assert resp.status_code == 200
-        # /sources returns a bare array (Phase 7 contract)
+        # /sources returns a bare array, not {"sources": [...]}
         assert resp.json() == []
 
     def test_with_sources(self, client, mock_mgr):
@@ -138,7 +138,7 @@ class TestRegisterSource:
         assert resp.json()["status"] == "started"
 
     def test_register_accepts_roi_block(self, client, mock_mgr):
-        """Phase 9: pipeline.roi top-level block must be accepted."""
+        """pipeline.roi top-level block must be accepted."""
         mock_mgr.register_source.return_value = {
             "status": "started",
             "source_id": "cam_child",
@@ -182,7 +182,7 @@ class TestRegisterSource:
         assert resp.json()["status"] == "already_running"
 
     def test_register_rejects_old_flat_body(self, client, mock_mgr):
-        """Phase 7 hard cutover: old rtsp_url / top-level motion must 422."""
+        """Old rtsp_url / top-level motion must 422."""
         resp = client.post("/register_source", json={
             "source_id": "cam1",
             "rtsp_url": "rtsp://localhost:8554/live/cam1",
@@ -208,9 +208,7 @@ class TestUnregisterSource:
             "status": "stopped",
             "source_id": "cam1",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "cam1",
-        })
+        resp = client.delete("/sources/cam1")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 
@@ -219,9 +217,7 @@ class TestUnregisterSource:
             "status": "not_found",
             "source_id": "nonexistent",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "nonexistent",
-        })
+        resp = client.delete("/sources/nonexistent")
         assert resp.status_code == 404
 
 
@@ -302,3 +298,95 @@ class TestResumeSource:
         }
         resp = client.post("/sources/cam1/resume")
         assert resp.status_code == 404
+
+
+class TestPrefilterCapabilities:
+    def test_capabilities_unavailable_without_model(self, client):
+        """Default AppConfig ships an empty prefilter.model_path → unavailable."""
+        resp = client.get("/capabilities/prefilter")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["labels_source"] == "unavailable"
+        assert data["class_names"] == []
+        assert data["available_devices"]  # non-empty (at least ["CPU"])
+
+    def test_capabilities_embedded_labels(self, client, monkeypatch, tmp_path):
+        model = tmp_path / "model.xml"
+        model.write_text("<net/>")
+        import stream_monitor.pipeline.prefilter_yolo as pf
+
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person", "knife"], "embedded"))
+        # The endpoint reads config.defaults.prefilter from the create_app
+        # closure, which is the same object as app.state.config.
+        client.app.state.config.defaults.prefilter.model_path = str(model)
+        resp = client.get("/capabilities/prefilter")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["labels_source"] == "embedded"
+        assert data["class_names"] == ["person", "knife"]
+
+
+class TestTargetClassesValidation:
+    def _model(self, tmp_path):
+        model = tmp_path / "model.xml"
+        model.write_text("<net/>")
+        return str(model)
+
+    def test_register_rejects_unknown_target_class(self, client, mock_mgr, monkeypatch, tmp_path):
+        import stream_monitor.pipeline.prefilter_yolo as pf
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person", "knife"], "embedded"))
+        resp = client.post("/register_source", json={
+            "source_id": "cam1",
+            "source_url": "rtsp://localhost:8554/live/cam1",
+            "pipeline": {
+                "prefilter": {
+                    "enabled": True,
+                    "model_path": self._model(tmp_path),
+                    "target_classes": ["person", "helmets"],
+                },
+            },
+        })
+        assert resp.status_code == 422
+        detail = resp.json()["detail"]
+        assert detail["error"] == "unknown target_classes"
+        assert detail["unknown"] == ["helmets"]
+        assert "knife" in detail["class_names"]
+
+    def test_register_accepts_valid_target_class(self, client, mock_mgr, monkeypatch, tmp_path):
+        import stream_monitor.pipeline.prefilter_yolo as pf
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person", "knife"], "embedded"))
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = client.post("/register_source", json={
+            "source_id": "cam1",
+            "source_url": "rtsp://localhost:8554/live/cam1",
+            "pipeline": {
+                "prefilter": {
+                    "enabled": True,
+                    "model_path": self._model(tmp_path),
+                    "target_classes": ["person", "knife"],
+                },
+            },
+        })
+        assert resp.status_code == 200
+
+    def test_register_skips_validation_when_labels_untrusted(self, client, mock_mgr, monkeypatch, tmp_path):
+        """A fallback_coco/unavailable label set is a guess — don't hard-fail."""
+        import stream_monitor.pipeline.prefilter_yolo as pf
+        monkeypatch.setattr(pf, "read_model_labels",
+                            lambda p: (["person"], "fallback_coco"))
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = client.post("/register_source", json={
+            "source_id": "cam1",
+            "source_url": "rtsp://localhost:8554/live/cam1",
+            "pipeline": {
+                "prefilter": {
+                    "enabled": True,
+                    "model_path": self._model(tmp_path),
+                    "target_classes": ["anything_goes"],
+                },
+            },
+        })
+        assert resp.status_code == 200

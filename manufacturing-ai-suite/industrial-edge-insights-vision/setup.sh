@@ -2,7 +2,7 @@
 # Download artifacts for a specific sample application 
 #   by calling respective app's setup.sh script
 
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 CONFIG_FILE="$SCRIPT_DIR/config.yml"      # Config file path for multiple instances
 
 err() {
@@ -35,7 +35,7 @@ init() {
                 ((instance_count++))
                 instance_names+=("$instance_name")
                 # Add to sample_app_names if not already present
-                if [[ ! " ${sample_app_names[@]} " =~ " ${sample_app} " ]]; then
+                if [[ ! " ${sample_app_names[*]} " =~ " ${sample_app} " ]]; then
                     sample_app_names+=("$sample_app")
                 fi
             else
@@ -558,7 +558,7 @@ init_helm() {
                 ((instance_count++))
                 instance_names+=("$instance_name")
                 # Add to sample_app_names if not already present
-                if [[ ! " ${sample_app_names[@]} " =~ " ${sample_app} " ]]; then
+                if [[ ! " ${sample_app_names[*]} " =~ " ${sample_app} " ]]; then
                     sample_app_names+=("$sample_app")
                 fi
             else

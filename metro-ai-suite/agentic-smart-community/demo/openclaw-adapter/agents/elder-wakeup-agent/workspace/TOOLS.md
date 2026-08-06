@@ -12,8 +12,8 @@
 match, ask the family which one before querying.
 
 All camera access, VLM calls, database reads, and report generation go through the
-`smartbuilding_*` MCP tools, provided by the **`smart-building`** MCP server (registered
-in OpenClaw as `mcp.servers.smart-building`; verify with `openclaw mcp probe
-smart-building`). See the **smartbuilding-toolkit** skill for the tool reference. You don't address
+`smartbuilding_*` MCP tools, provided by the **`smartbuilding`** MCP server (registered
+in OpenClaw as `mcp.servers.smartbuilding`; verify with `openclaw mcp probe
+smartbuilding`). See the **smartbuilding-toolkit** skill for the tool reference. You don't address
 services, ports, or file paths directly. Wakeup alerts are raised automatically by the
 pipeline; you read them with `smartbuilding_alert_query`.
