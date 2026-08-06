@@ -94,7 +94,7 @@ services:
       start_period: 10s
 
   dlstreamer-pipeline-server:
-    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc2}
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1}
     container_name: apm-dlstreamer
     hostname: dlstreamer-pipeline-server
     environment:

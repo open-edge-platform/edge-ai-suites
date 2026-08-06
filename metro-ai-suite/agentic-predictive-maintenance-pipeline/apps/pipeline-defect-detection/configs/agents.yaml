@@ -15,7 +15,7 @@ policy:
   alert_threshold: 0.7     # confidence above which a detection is a violation
   critical_classes:         # these always trigger HIGH priority ticket
     - Rupture
-    - Shipping Label
+    - Disconnect
 
 evidence:
   retention_frames: 1000    # keep evidence for last N frames
