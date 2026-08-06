@@ -102,10 +102,7 @@ class TestSourceLifecycle:
         )
         time.sleep(1)
 
-        resp = http_client.request(
-            "DELETE", f"{analytics_url}/unregister_source",
-            json={"source_id": "test_child_unreg"},
-        )
+        resp = http_client.delete(f"{analytics_url}/sources/test_child_unreg")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 

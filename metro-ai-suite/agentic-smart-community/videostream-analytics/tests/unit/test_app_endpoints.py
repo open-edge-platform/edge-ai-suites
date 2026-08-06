@@ -208,9 +208,7 @@ class TestUnregisterSource:
             "status": "stopped",
             "source_id": "cam1",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "cam1",
-        })
+        resp = client.delete("/sources/cam1")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 
@@ -219,9 +217,7 @@ class TestUnregisterSource:
             "status": "not_found",
             "source_id": "nonexistent",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "nonexistent",
-        })
+        resp = client.delete("/sources/nonexistent")
         assert resp.status_code == 404
 
 

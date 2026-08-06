@@ -130,7 +130,8 @@ def _normalize_event(e: dict) -> dict:
     """Flatten the nested webhook envelope so downstream stays simple.
 
     Returns a dict with keys: event_type, source_id, start_time, end_time,
-    clip_path — regardless of which schema the input file used.
+    clip_path. Events without a nested payload are returned as-is and get
+    filtered out by the caller's event_type check.
     """
     if "payload" in e and isinstance(e["payload"], dict):
         p = e["payload"]
@@ -141,7 +142,6 @@ def _normalize_event(e: dict) -> dict:
             "end_time": p.get("end_time"),
             "clip_path": p.get("event_file_path") or p.get("recording_path", ""),
         }
-    # Legacy flat schema fallthrough.
     return e
 
 

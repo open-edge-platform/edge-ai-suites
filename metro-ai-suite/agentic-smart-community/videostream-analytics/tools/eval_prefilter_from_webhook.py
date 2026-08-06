@@ -176,15 +176,15 @@ def _load_motion_events_from_payload(payload: dict, source_id: Optional[str]) ->
     events = []
     for ev in raw:
         # Nested envelope {sourceId, type, timestamp, payload}.
-        # Tolerate legacy flat schema for backwards compatibility.
         nested = isinstance(ev.get("payload"), dict)
-        ev_type = ev.get("type") if nested else ev.get("event_type")
-        if ev_type != "motion":
+        if not nested:
             continue
-        sid = ev.get("sourceId") if nested else ev.get("source_id")
+        if ev.get("type") != "motion":
+            continue
+        sid = ev.get("sourceId")
         if source_id and sid != source_id:
             continue
-        body = ev["payload"] if nested else ev
+        body = ev["payload"]
         clip = body.get("event_file_path") or body.get("clip_path", "")
         events.append(MotionEvent(
             source_id=sid or "?",

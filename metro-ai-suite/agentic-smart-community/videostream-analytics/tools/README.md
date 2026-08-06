@@ -15,7 +15,6 @@ Current video corpus layout (relative to repo root):
 | Tool | Use when |
 |---|---|
 | `run_eval.sh` | run a scenario end-to-end and print prefilter Recall/Precision |
-| `run_child_eval.sh` | thin wrapper for `run_eval.sh --scenario child` (kept for muscle memory) |
 | `eval_prefilter_from_webhook.py` | re-evaluate a saved events dump (offline replay) |
 | `render_eval_timeline.py` | eyeball *why* a cue was MISS or an event was FP — ASCII timeline |
 

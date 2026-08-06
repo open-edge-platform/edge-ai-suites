@@ -155,11 +155,6 @@ class SourceConfig(BaseModel):
     health: Optional[HealthConfig] = None
     keepalive: Optional[KeepaliveConfig] = None
 
-    @property
-    def rtsp_url(self) -> str:
-        """Backwards-compatible accessor — internals still call this."""
-        return self.source_url
-
 
 class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
