@@ -1,13 +1,13 @@
 # Deploy the vLLM Service for Defect Explanation
 
-This section shows how to deploy the multimodal sample application with the virtual Large Language Model (vLLM) service enabled using the Makefile targets.
+This section shows how to deploy the multimodal sample application with the [vLLM service](https://vllm.ai/) enabled using the Makefile targets.
 
 ## System Requirements
 
 | Component | Minimum Requirement |
 |-----------|---------------------|
 | Operating System | Ubuntu OS version 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra processor (codenamed Panther Lake) or newer |
+| Hardware | Intel® Core™ Ultra Series 3 processor or newer |
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ cd ../..
  make up_vllm
 ```
 
-2. Run the following for a fresh build before deployment:
+2. (Optional) To build from source instead of deploying the pre-built artifacts, run the following for a fresh build before deployment:
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -91,7 +91,7 @@ make up_vllm
    
    - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
    
-   - Log in to Grafana dashboard using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+   - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      values from the `.env` file:
 
      ![Grafana login](../_assets/login_wt.png)

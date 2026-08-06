@@ -37,7 +37,7 @@ Vision (DL Streamer Pipeline Server)──┐
 | Component | Minimum Requirement |
 |-----------|---------------------|
 | Operating System | Ubuntu OS version 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra processor Series 3 or newer |
+| Hardware | Intel® Core™ Ultra Series 3 processor or newer |
 
 
 ## Prerequisites
