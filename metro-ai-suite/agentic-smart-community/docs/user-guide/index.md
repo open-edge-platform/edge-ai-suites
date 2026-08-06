@@ -53,7 +53,7 @@ See [LICENSE](https://github.com/open-edge-platform/edge-ai-suites/blob/main/met
 
 Get Started <./get-started.md>
 How It Works <./how-it-works.md>
-How-To Guides <./how-to-guides/index.md>
+How-To Guides <./how-to-guides.md>
 API Reference <./api-reference.md>
 Release Notes <./release-notes.md>
 

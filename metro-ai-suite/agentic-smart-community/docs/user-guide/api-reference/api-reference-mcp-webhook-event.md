@@ -60,7 +60,7 @@ Why `422` not `400` for the missing-field / unknown-type cases? They are **busin
 
 ## 2. Envelope (shared by all events)
 
-```jsonc
+```json
 {
   "sourceId":  "cam_child",                          // string, required
   "type":      "motion" | "static" | "recording",    // string enum, required
@@ -491,5 +491,3 @@ Content-Type: application/json
 | `motion` (prefilter `passed=0`)  | ✅ motion | ✅ `ignored` | — | ❌ |
 | `static`                         | ✅ static | — | — | ❌ |
 | `recording`                      | — | — | ✅ | ❌ |
-
----
