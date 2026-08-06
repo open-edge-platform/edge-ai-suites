@@ -355,7 +355,6 @@ models:
     cls_model: PP-LCNet_x1_0_doc_ori
 
   text_gen:
-    enabled: true 
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
     device: GPU # GPU or CPU
