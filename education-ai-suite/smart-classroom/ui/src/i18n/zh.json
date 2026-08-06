@@ -188,6 +188,9 @@
     "failedToCopyPath": "复制路径失败",
     "anErrorOccurred": "发生了错误"
   },
+  "summary": {
+    "boardOcrPartial": "板书 OCR 仍在进行中。本次摘要仅包含目前已识别的板书内容，可能不完整。"
+  },
   "app": {
     "checkingBackendTitle": "正在检查后端状态",
     "checkingBackendMessage": "请稍候，正在连接后端服务…",

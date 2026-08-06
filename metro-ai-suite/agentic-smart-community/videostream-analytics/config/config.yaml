@@ -22,7 +22,7 @@ defaults:
     stable_frames: 45
   segment:
     max_duration: 10
-    min_duration: 1.0
+    min_duration: 3.0
   # Static "close-out" emission: when a motion segment ends and a new motion
   # begins, the intervening quiet span is emitted as a `type=static` event so
   # MCP's state_query sees the alternating motion → static → motion sequence.
