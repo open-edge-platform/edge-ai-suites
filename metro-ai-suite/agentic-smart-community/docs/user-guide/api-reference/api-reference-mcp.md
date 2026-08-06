@@ -4,7 +4,7 @@ The MCP server exposes Smart Community operations as MCP tools and read-only dat
 resources over Streamable HTTP.
 
 | Item | Value |
-|---|---|
+| ---- | ----- |
 | Endpoint | `http://<mcp-host>:3100/mcp` |
 | Protocol | MCP over Streamable HTTP with JSON-RPC 2.0 |
 | Authentication | None; restrict the endpoint to loopback or a trusted private network |
@@ -87,7 +87,7 @@ mcp_tool_call() {
 Query or acknowledge alerts for one monitor.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `monitor_id` | string | Yes | Monitor ID |
 | `action` | enum | Yes | `latest`, `by_date`, `ack`, or `stats` |
 | `limit` | number | No | Maximum rows for `latest`; default 20 |
@@ -104,7 +104,7 @@ mcp_tool_call smartbuilding_alert_query \
 Manage arbitrary per-monitor JSON plans used by rule evaluators.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `monitor_id` | string | Yes | Monitor ID |
 | `action` | enum | Yes | `list`, `upsert`, or `delete` |
 | `name` | string | For `upsert`, `delete` | Unique plan name within the monitor |
@@ -122,7 +122,7 @@ mcp_tool_call smartbuilding_plan_ctl \
 Analyze the monitor's current `latest.jpg` frame with the configured VLM.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `monitor_id` | string | Yes | Monitor ID |
 | `prompt` | string | No | Overrides the default scene-description prompt |
 | `vlm_url` | string | No | Overrides `vlmService.url` |
@@ -139,7 +139,7 @@ mcp_tool_call smartbuilding_scene_query \
 Generate and store a report using the monitor's use-case report configuration.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `monitor_id` | string | Yes | Monitor ID |
 | `type` | enum | No | `daily`, `weekly`, `monthly`, or `custom` |
 | `period_start`, `period_end` | string | For `custom` | Inclusive `YYYY-MM-DD` or `YYYY-MM-DD HH:MM` values |
@@ -156,7 +156,7 @@ mcp_tool_call smartbuilding_generate_report \
 Manage one monitor across the database, videostream-analytics, and video worker.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `action` | enum | Yes | `list`, `status`, `start`, `stop`, `register_source`, or `unregister` |
 | `monitor_id` | string | Except `list` | Defaults to `cam_<use_case>` only for `register_source` |
 | `source_url` | string | For `register_source` | Any source protocol supported by videostream-analytics |
@@ -184,7 +184,7 @@ mcp_tool_call smartbuilding_monitor_ctl \
 Validate or apply all monitor declarations in a `monitors.yaml` file.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `action` | enum | Yes | `validate`, `up`, `down`, `restart`, or `ps` |
 | `file` | string | Yes | Absolute path or path relative to the MCP server working directory |
 | `monitor_id` | string | No | Restrict the action to one declared monitor |
@@ -199,7 +199,7 @@ mcp_tool_call smartbuilding_monitors_compose \
 Run a parameterized, read-only SQLite query. Only `SELECT` statements are accepted.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `query` | string | Yes | A `SELECT` statement |
 | `params` | array | No | Values for positional `?` placeholders |
 
@@ -213,7 +213,7 @@ mcp_tool_call smartbuilding_video_db \
 Validate the config entry, VLM task registration, and prompt/schema consistency for a use case.
 
 | Argument | Type | Required |
-|---|---|---|
+| -------- | ---- | -------- |
 | `use_case` | string | Yes |
 
 ```bash
@@ -226,7 +226,7 @@ Manage a use case at runtime. New use cases normally use `generate_task` first,
 then `register` after the prompt and final schema have been confirmed.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `action` | enum | Yes | `generate_task`, `register`, `unregister`, or `list` |
 | `use_case` | string | Except for `list` | Must match `^[a-z][a-z0-9_]{1,63}$` |
 | `video_summary_task` | string | No | Defaults to `<use_case>_monitor` |
@@ -257,7 +257,7 @@ mcp_tool_call smartbuilding_use_case_register \
 Re-run a rule against a completed summary task. The default is a dry run.
 
 | Argument | Type | Required | Notes |
-|---|---|---|---|
+| -------- | ---- | -------- | ----- |
 | `monitor_id` | string | Yes | Monitor ID |
 | `task_id` | number | No | Defaults to the monitor's latest completed task |
 | `create_alert` | boolean | No | Persist an alert when the rule fires; default false |
@@ -299,7 +299,7 @@ mcp_resource_read() {
 ```
 
 | Resource URI | Content |
-|---|---|
+| ------------ | ------- |
 | `smartbuilding://monitors` | `{ monitors }`: every registered monitor and its database status |
 | `smartbuilding://monitor/{id}/latest-frame` | Placeholder frame response; currently returns `frame: null` until analytics frame integration is implemented |
 | `smartbuilding://monitor/{id}/stats` | `{ monitorId, events, alerts }`: today's event and alert counts |
@@ -366,6 +366,6 @@ curl -fsS -X POST "$MCP_URL" \
 
 ## See also
 
-- [MCP Tools Guide](mcp-tools.md)
-- [MCP Subscription Reference](api-reference-mcp-subscription.md)
-- [MCP Webhook Event API](api-reference-mcp-webhook-event.md)
+- [MCP Tools Guide](../how-to-guides/mcp-tools.md)
+- [MCP Subscription Reference](./api-reference-mcp-subscription.md)
+- [MCP Webhook Event API](./api-reference-mcp-webhook-event.md)

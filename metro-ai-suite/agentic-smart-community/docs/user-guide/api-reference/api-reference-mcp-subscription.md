@@ -9,10 +9,10 @@ Use MCP resource subscriptions to receive alert-update notifications from a moni
 
 ## Alert resource URIs
 
-| Purpose | URI |
-|---|---|
-| Subscribe or perform an initial read | `smartbuilding://monitor/<monitor_id>/alerts` |
-| Read alerts after a cursor | `smartbuilding://monitor/<monitor_id>/alerts?since=<latestId>` |
+| Purpose                              | URI                                                            |
+| ------------------------------------ | -------------------------------------------------------------- |
+| Subscribe or perform an initial read | `smartbuilding://monitor/<monitor_id>/alerts`                  |
+| Read alerts after a cursor           | `smartbuilding://monitor/<monitor_id>/alerts?since=<latestId>` |
 
 Only delivered alerts are returned. Use `smartbuilding_alert_query` when you need the full audit trail, including cooled-down alerts.
 
@@ -20,13 +20,13 @@ Only delivered alerts are returned. Use `smartbuilding_alert_query` when you nee
 
 The MCP endpoint is `http://<mcp-host>:3100/mcp`. Use `POST /mcp` for JSON-RPC requests and `GET /mcp` for the SSE notification stream. Send `Accept: application/json, text/event-stream` on POST requests. After `initialize`, send the returned `mcp-session-id` header on every request for that session.
 
-| Operation | HTTP request | JSON-RPC request | Result |
-|---|---|---|---|
-| Initialize a session | `POST /mcp` | `initialize` | `200` response with an `mcp-session-id` header. |
-| Complete initialization | `POST /mcp` | `notifications/initialized` | Notification; no result body is required. |
-| Subscribe | `POST /mcp` | `resources/subscribe` | Empty JSON-RPC result; future changes generate notifications. |
-| Read alerts | `POST /mcp` | `resources/read` | Resource content containing `monitorId`, `latestId`, and `alerts`. |
-| Receive updates | `GET /mcp` | None; use SSE | `notifications/resources/updated` notification for each changed subscribed resource. |
+| Operation               | HTTP request | JSON-RPC request            | Result                                                                               |
+| ----------------------- | ------------ | --------------------------- | ------------------------------------------------------------------------------------ |
+| Initialize a session    | `POST /mcp`  | `initialize`                | `200` response with an `mcp-session-id` header.                                      |
+| Complete initialization | `POST /mcp`  | `notifications/initialized` | Notification; no result body is required.                                            |
+| Subscribe               | `POST /mcp`  | `resources/subscribe`       | Empty JSON-RPC result; future changes generate notifications.                        |
+| Read alerts             | `POST /mcp`  | `resources/read`            | Resource content containing `monitorId`, `latestId`, and `alerts`.                   |
+| Receive updates         | `GET /mcp`   | None; use SSE               | `notifications/resources/updated` notification for each changed subscribed resource. |
 
 ### `resources/subscribe`
 
@@ -168,7 +168,7 @@ curl -fsS -N -X GET "$MCP_URL" \
   -H "mcp-session-id: $SID"
 ```
 
-> The idle stream prints periodic `keepalive` heartbeats to hold the connection open; this is expected. `curl` is not an SSE client, so it echoes every byte, including heartbeats. A real SSE/MCP client ignores them.
+> **Note:** The idle stream prints periodic `keepalive` heartbeats to hold the connection open; this is expected. `curl` is not an SSE client, so it echoes every byte, including heartbeats. A real SSE/MCP client ignores them.
 
 When an alert is created, the stream receives a notification like this:
 

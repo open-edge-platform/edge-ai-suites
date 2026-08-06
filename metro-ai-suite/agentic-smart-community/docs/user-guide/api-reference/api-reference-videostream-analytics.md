@@ -1,6 +1,6 @@
-# videostream-analytics HTTP API Reference
+# Videostream Analytics HTTP API Reference
 
-The videostream-analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server). 
+The Videostream Analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server).
 
 ---
 
@@ -86,7 +86,7 @@ List all registered sources.
 ]
 ```
 
-> The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
+> **Note:** The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
 
 ### 3.3 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
 
@@ -335,7 +335,7 @@ The `status` field returned by §3.3 evolves according to the following state ma
 
 1. **`reconnecting` is not terminal.** `recovery_strategy=pause` does not pause the source on the first failure; VSA accumulates `failure_count` failures with exponential backoff, and only when `failure_count` reaches `max_failures` does the strategy fire. With defaults `max_failures=30, backoff_base=2.0, backoff_max=120.0` the backoff schedule is:
 
-   ```
+   ```text
    failure_count   delay (s)   cumulative (s)
    1               2           2
    2               4           6
@@ -510,7 +510,7 @@ Validation errors use a machine-readable response format. Unknown fields are rej
 
 VSA writes all per-source outputs under the resolved `data_dir`. The layout is stable and forms an implicit contract with the MCP server's cleanup job.
 
-```
+```text
 <data_dir>/
 ├── latest.jpg                          # Periodically overwritten snapshot; read by smartbuilding_scene_query.
 ├── motion_events/<YYYY-MM-DD>/

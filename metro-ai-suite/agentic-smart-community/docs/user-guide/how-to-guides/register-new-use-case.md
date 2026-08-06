@@ -13,7 +13,7 @@ By the end of this guide you will know how to:
 
 > **Tip — use a capable cloud model for registration.** Registering a use case is the most model-demanding flow on the platform: the agent must infer events and schema, draft a four-section VLM prompt, and pass the server-side consistency gate. We recommend switching the agent to a strong cloud model for this conversation — e.g. in OpenClaw, pick a MiniMax model from the model selector — rather than a small local model. This only affects the **authoring** step; once the use case is registered, day-to-day detection runs on the on-device VLM/LLM stack (for example a local Qwen model), independent of which model the agent used to register it.
 
-## How it works
+## Use case registration flow
 
 Registering a use case is a short conversation with the agent, with **two mandatory confirmation gates** — the agent pauses and waits for your explicit reply at each one:
 
@@ -27,7 +27,7 @@ Registering a use case is a short conversation with the agent, with **two mandat
 
 4. **The agent registers it.** After approval it drafts the four-section VLM prompt (plus `evaluate_rules.py` for every extended schema or custom alert policy), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema ↔ rules and rejects mismatches before side effects.
 
-5. **Bind a camera (optional, either timing).** If you supplied a stream URL in the description, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the registration flow. If you didn't, just provide the RTSP stream later in the same conversation — the agent binds a monitor to that stream for the registered use case then, e.g. *"bind `rtsp://localhost:8554/live/pet` to pet_safety"*. Either way the result is the same: a monitor (default ID `cam_<use_case>`) bound to the use case and streaming.
+5. **Bind a camera (optional, either timing).** If you supplied a stream URL in the description, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the registration flow. If you didn't, just provide the RTSP stream later in the same conversation — the agent binds a monitor to that stream for the registered use case then, e.g., *"bind `rtsp://localhost:8554/live/pet` to pet_safety"*. Either way the result is the same: a monitor (default ID `cam_<use_case>`) bound to the use case and streaming.
 
 When registration finishes, the agent reports a **New Use Case** summary — use case, VLM task, mode, events/findings, final schema, rule path, report source, bound monitor, and validation status — followed by a grouped **System Inventory**: each registered use case (from `smartbuilding_use_case_register action=list`, which reads the server's live in-memory `use_case_dict`) with its bound monitors nested underneath (from `smartbuilding_monitor_ctl action=list`), so a use case with no camera yet shows up explicitly as `(no camera bound yet)` instead of disappearing from a monitors-only list — expected when you plan to supply the RTSP stream after registration. The use case is live immediately — alerts start flowing to any client subscribed to `smartbuilding://monitor/<monitor_id>/alerts`.
 
@@ -49,7 +49,7 @@ Tell OpenClaw the use-case name, what to detect, and what an alert should mean. 
 
 > *Register a Pet Safety use case to monitor pets for escape attempts, entrapment incidents, and aggressive behavior. The RTSP stream address is `rtsp://localhost:8554/live/pet`.*
 
-<img src="../_assets/openclaw-uc-register-describe.png" alt="Describing the new use case to OpenClaw" width="720">
+![Describing the new use case to OpenClaw](../_assets/openclaw-uc-register-describe.png)
 
 ### Step 2 — Answer Q1/Q2 (gate 1)
 
@@ -60,13 +60,13 @@ OpenClaw does not draft anything yet. It reads the `smartbuilding-use-case-manag
 
 OpenClaw also flags the **primary-event** constraint: structured realtime persists one primary `EVENT` per clip, so with several named behaviors only one becomes the persisted event and the others can still surface in `desc`.
 
-<img src="../_assets/openclaw-uc-register-q1q2.png" alt="OpenClaw asks the Q1/Q2 gating questions" width="720">
+![OpenClaw asks the Q1/Q2 gating questions](../_assets/openclaw-uc-register-q1q2.png)
 
 Reply explicitly — Q1 and, when Q1 is yes, Q2 — naming any extension fields you need persisted and queryable. Here we add a `pet_zone` field so every alert carries which zone of the room the event happened in:
 
 > *Q1 = yes, Q2 = yes: pet_zone (text, optional)*
 
-<img src="../_assets/openclaw-uc-register-q1q2-confirm.png" alt="Replying to Q1/Q2" width="720">
+![Replying to Q1/Q2](../_assets/openclaw-uc-register-q1q2-confirm.png)
 
 ### Step 3 — Confirm the proposed design (gate 2)
 
@@ -90,15 +90,15 @@ Nothing is written until you approve it — this is the second gate, and the tur
 
 > *confirm*
 
-<img src="../_assets/openclaw-uc-register-q1q2-confirm-request.png" alt="OpenClaw shows the proposed design and detection contract" width="720">
+![OpenClaw shows the proposed design and detection contract](../_assets/openclaw-uc-register-q1q2-confirm-request.png)
 
-<img src="../_assets/openclaw-uc-register-q1q2-confirm-results.png" alt="Confirming the proposed design" width="720">
+![Confirming the proposed design](../_assets/openclaw-uc-register-q1q2-confirm-results.png)
 
 ### Step 4 — Registration and artifacts
 
 Only after your explicit approval does OpenClaw start authoring: it reads the prompt-authoring reference, drafts the four-section VLM prompt and — because the schema is extended — generates `evaluate_rules.py` from the final schema. It then registers the use case in two server-side steps (`generate_task` → `register` with `persist=true`) and binds the stream as monitor `cam_pet_safety`.
 
-<img src="../_assets/openclaw-uc-register-approved.png" alt="OpenClaw starts drafting and registering after approval" width="720">
+![OpenClaw starts drafting and registering after approval](../_assets/openclaw-uc-register-approved.png)
 
 Both artifacts are archived under the data directory — `$SMARTBUILDING_DATA_DIR/use-cases/<use_case>/` (default `~/.mcp-smartbuilding`):
 
@@ -122,8 +122,7 @@ The final chat report has two parts:
 
 Note the **validation status**: *registered but behaviorally unvalidated* — registration only confirms structural alignment of prompt ↔ schema ↔ rules. When you have representative footage, compare the persisted `event / severity / desc / pet_zone` values against ground truth and re-register with `overwrite=true` to refine. From this point the use case is live: pet-safety events start producing alerts on `smartbuilding://monitor/cam_pet_safety/alerts`.
 
-<img src="../_assets/openclaw-uc-register-final-inventory.png" alt="OpenClaw reports the new use case and the system inventory" width="720">
-
+![OpenClaw reports the new use case and the system inventory](../_assets/openclaw-uc-register-final-inventory.png)
 
 ## View detection results in the database
 
@@ -144,13 +143,13 @@ You don't need to open the database by hand — just ask OpenClaw in the same ch
 
 > *check monitors in smartbuilding.db*
 
-<img src="../_assets/db-monitos.png" alt="OpenClaw lists the monitors table" width="720">
+![OpenClaw lists the monitors table](../_assets/db-monitos.png)
 
 Here the `cam_pet_safety` row is still present but **offline** — the use case has been unregistered, and the row persists only because existing alerts history blocks the delete (see [Delete a use case by conversation](#delete-a-use-case-by-conversation)).
 
 > *check video-summary-tasks in smartbuilding.db*
 
-<img src="../_assets/db-summary.png" alt="OpenClaw summarizes the video_summary_tasks table" width="720">
+![OpenClaw summarizes the video_summary_tasks table](../_assets/db-summary.png)
 
 Here OpenClaw summarizes the detection results: 31 completed tasks in ~5 minutes, 30 classified as `escape_attempt` (critical) — a cat repeatedly trying to climb the balcony railing — all in the same `pet_zone`. This is exactly the place to verify detection quality after registration: if the persisted `event` / `severity` / `pet_zone` values don't match what the camera actually saw, refine the description and re-register with `overwrite=true`.
 
@@ -188,17 +187,17 @@ Deleting is also a conversation — ask OpenClaw to remove the use case by name:
 
 > *delete pet safety use case*
 
-<img src="../_assets/openclaw-uc-unregister-request.png" alt="Asking OpenClaw to delete the use case" width="720">
+![Asking OpenClaw to delete the use case](../_assets/openclaw-uc-unregister-request.png)
 
 Because deletion is destructive, OpenClaw does **not** delete on this request. It first fetches the live inventory (`smartbuilding_use_case_register action=list` and `smartbuilding_monitor_ctl action=list`), then shows the exact cascade impact — what will be removed, archived, and stopped, and which other use cases and monitors are *not* affected — and asks for explicit confirmation. The turn ends there; `action=unregister` is never called in the same turn that displays the impact:
 
-<img src="../_assets/openclaw-uc-unregister-confirm.png" alt="OpenClaw shows the deletion impact and asks for confirmation" width="720">
+![OpenClaw shows the deletion impact and asks for confirmation](../_assets/openclaw-uc-unregister-confirm.png)
 
 Reply with an explicit confirmation (e.g. `yes, confirm` or `confirm delete pet_safety`) in a later message, and OpenClaw calls `smartbuilding_use_case_register` with `action=unregister`, `persist=true`:
 
 > *yes, confirm*
 
-<img src="../_assets/openclaw-uc-unregister-confirm-result.png" alt="Confirming the deletion" width="720">
+![Confirming the deletion](../_assets/openclaw-uc-unregister-confirm-result.png)
 
 The unregister cascade then runs:
 
@@ -206,7 +205,7 @@ The unregister cascade then runs:
 - **Archived:** the `prompt.md` / `evaluate_rules.py` artifacts are moved from `~/.mcp-smartbuilding/use-cases/pet_safety/` to `use-cases/.backup/pet_safety/`, so they are recoverable on disk (re-registering the use case later needs fresh prompt and rule files).
 - **Preserved:** historical alert rows in the `alerts` table and recorded clip/event rows linked to `pet_safety` are kept as audit history and are not part of the unregister cascade.
 
-<img src="../_assets/openclaw-uc-unregister-results.png" alt="OpenClaw reports the deletion result" width="720">
+![OpenClaw reports the deletion result](../_assets/openclaw-uc-unregister-results.png)
 
 Check the monitor outcome in the response's `cascaded_monitors`:
 
