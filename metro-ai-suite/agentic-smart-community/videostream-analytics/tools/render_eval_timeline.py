@@ -5,16 +5,8 @@ README
 Eyeball-debug companion to `eval_prefilter_from_webhook.py`. Reads the same
 events JSON + GT SRT (+ optional status JSON for accurate anchor) and prints
 a side-by-side timeline of GT cues and motion events so you can see, at a
-glance, *why* a particular cue was MISS or why an event was FP.
-
-Why this exists
-~~~~~~~~~~~~~~~
-The fridge scenario in §24 came back with Recall 75% — a single MISS at
-cue 1 (00:35-00:37) plus an FP at 00:32-00:34. Reading raw logs to figure
-out the segment/cue overlap took ~15 minutes. With this view it would have
-been one glance: cue 1's blue bar and event 1's green bar are clearly
-adjacent but not overlapping — root cause is segment-edge misalignment,
-not detection failure.
+glance, *why* a particular cue was MISS or why an event was FP (e.g.
+segment-edge misalignment vs. detection failure).
 
 Output is pure ASCII, no matplotlib dependency.
 
@@ -22,7 +14,7 @@ Usage
 -----
   # Use status JSON as anchor (most accurate; matches eval_prefilter_from_webhook --anchor-mode wallclock)
   python tools/render_eval_timeline.py \
-    --srt ../videos/phase2/child-care/composed/child_safety_demo_groundtruth.srt \
+    --srt ../demo/videos/cam_child/child_safety_demo_groundtruth.srt \
     --events-json /tmp/child_events_92627.json \
     --status-json /tmp/child_status_92627.json \
     --source-id cam_child \
@@ -135,10 +127,11 @@ def parse_srt(path: str, exclude_pattern: Optional[str]) -> List[GTCue]:
 
 
 def _normalize_event(e: dict) -> dict:
-    """Phase 7: webhook envelope is nested. Flatten so downstream stays simple.
+    """Flatten the nested webhook envelope so downstream stays simple.
 
     Returns a dict with keys: event_type, source_id, start_time, end_time,
-    clip_path — regardless of which schema the input file used.
+    clip_path. Events without a nested payload are returned as-is and get
+    filtered out by the caller's event_type check.
     """
     if "payload" in e and isinstance(e["payload"], dict):
         p = e["payload"]
@@ -149,7 +142,6 @@ def _normalize_event(e: dict) -> dict:
             "end_time": p.get("end_time"),
             "clip_path": p.get("event_file_path") or p.get("recording_path", ""),
         }
-    # Legacy flat schema fallthrough.
     return e
 
 

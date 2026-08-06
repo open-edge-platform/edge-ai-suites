@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-analytics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-analytics
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-analytics
+    spec:
+      initContainers:
+      - name: wait-for-web-initcontainer
+        image: {{ .Values.images.busybox.repository }}:{{ .Values.images.busybox.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        command: ["/bin/sh", "-c", "until wget -q --spider http://{{ .Release.Name }}-web; do sleep 1; done"]
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+      containers:
+      - name: analytics
+        image: {{ .Values.analytics.repository }}:{{ .Values.analytics.tag }}
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2,ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web,.scenescape.intel.com"
+        command: ["/bin/bash", "-e", "-c"]
+        args:
+        - >
+          {{- tpl (include "analytics.startup-script" .) . | nindent 10 }}
+        volumeMounts:
+        - name: pgserver-media
+          mountPath: /home/scenescape/Scenescape/media
+          readOnly: true
+        - mountPath: /tmp/secrets_
+          name: secrets
+          readOnly: true
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          readOnlyRootFilesystem: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: pgserver-media
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pgserver-media
+      - name: secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-django-secrets
+          - secret:
+              name: {{ .Release.Name }}-mqtt-auth-secrets
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: scenescape-ca.pem

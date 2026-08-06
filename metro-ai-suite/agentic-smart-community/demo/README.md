@@ -20,11 +20,14 @@ Two configuration files drive the bundle:
 - [config.demo.yaml](config.demo.yaml) — service endpoints plus the `use_case_dict` (each use case declares its Video Summary task, DB schema extensions, summarize tuning, and report policy).
 - [monitors.demo.yaml](monitors.demo.yaml) — the per-camera monitors that reference those use cases, with their RTSP source and pipeline config (motion / prefilter / ROI / recording).
 
-Start and stop everything with the bundled scripts:
+Start and stop the demo with the bundled scripts (the MCP server itself now runs
+as a container in [docker/compose.yaml](../docker/compose.yaml); `start-demo.sh`
+pushes the RTSP streams, writes the demo config/monitors, then brings the stack up
+via `setup_docker.sh --light`):
 
 ```bash
-demo/scripts/start-demo.sh   # push RTSP streams + start MCP server with the demo bundle
-demo/scripts/stop-demo.sh    # stop both
+demo/scripts/start-demo.sh   # push RTSP streams + write demo config, then start the stack
+demo/scripts/stop-demo.sh    # stop streams + app tier (vllm stays warm)
 ```
 
 For video-path variables, automatic stream skipping, and the full installation sequence, see [Ready-to-Run Demo](../docs/user-guide/get-started/ready-to-run-demo.md).

@@ -26,7 +26,7 @@ async def health():
 
 
 def _ev_type(event: dict) -> str:
-    """Phase 7 envelope reads `type`; tolerate legacy `event_type` for safety."""
+    """Envelope reads `type`; tolerate legacy `event_type` for safety."""
     return event.get("type") or event.get("event_type") or "?"
 
 

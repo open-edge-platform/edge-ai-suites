@@ -1,4 +1,4 @@
-"""Phase 9 — ROI crop helper (`prepare_roi_segment`) tests.
+"""ROI crop helper (`prepare_roi_segment`) tests.
 
 `prepare_roi_segment` is the worker that turns a finished motion clip into
 `<stem>_input.mp4` — a zoomed-in / highlighted version VLM consumes. The
