@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# TC overlay for when SI target device (GPU/NPU) is bound via VFIO passthrough
+# and VLM runs on CPU — /dev/dri is unavailable on the host.
+
+services:
+  # SI device is passed through via VFIO; drop /dev/dri from metrics-manager.
+  metrics-manager:
+    devices: !override []

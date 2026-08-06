@@ -17,7 +17,7 @@ optimal stream density and performance characteristics.
 Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision` directory and use the benchmark script:
 
 ```bash
-./benchmark_start.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>]
+./calc_stream_density.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>]
 ```
 
 **Arguments:**
@@ -70,13 +70,13 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 2. **Test CPU performance**:
 
    ```bash
-   ./benchmark_start.sh -p pallet_defect_detection -l 1 -u 10 -t 25.0 -i 30
+   ./calc_stream_density.sh -p pallet_defect_detection -l 1 -u 10 -t 25.0 -i 30
    ```
 
 3. **Test GPU performance** (if available):
 
    ```bash
-   ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
+   ./calc_stream_density.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
    > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
@@ -90,13 +90,13 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 2. **Test CPU performance**:
 
    ```bash
-   ./benchmark_start.sh -p pcb_anomaly_classification -l 1 -u 10 -t 25.0 -i 30
+   ./calc_stream_density.sh -p pcb_anomaly_classification -l 1 -u 10 -t 25.0 -i 30
    ```
 
 3. **Test GPU performance** (if available):
 
    ```bash
-   ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
+   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
    > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
@@ -162,7 +162,7 @@ throughput cumulative: 173.8
    <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
-   ./benchmark_start.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
+   ./calc_stream_density.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
    ```
 
    <!--hide_directive ::: hide_directive-->
@@ -170,7 +170,7 @@ throughput cumulative: 173.8
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```bash
-   ./benchmark_start.sh -p pcb_anomaly_classification_gpu -l 1 -u 10 --trace
+   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -l 1 -u 10 --trace
    ```
 
    <!--hide_directive

@@ -36,7 +36,7 @@ data:
   config.json: |
 {{- if or .Values.dlstreamerPipelineServer.gpu.enabled (and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled) }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_gpu.json") | indent 4 }}
-{{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
+{{- else if or .Values.dlstreamerPipelineServer.npu.enabled (and .Values.trustedCompute.enabled .Values.trustedCompute.tc_npu_enabled) }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config_npu.json") | indent 4 }}
 {{- else }}
 {{ include "requiredFile" (list . "files/dlstreamer-pipeline-server/config.json") | indent 4 }}
