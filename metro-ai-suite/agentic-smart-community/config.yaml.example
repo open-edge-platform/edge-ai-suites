@@ -38,9 +38,6 @@
 # before POSTing /v1/summary. Drop the block entirely when both sides see the same paths.
 summary_service:
   url: http://localhost:8192
-  path_remap:
-    host_prefix: ${HOME}/.mcp-smartbuilding # host's SMARTBUILDING_DATA_DIR
-    container_prefix: /data # container mount point
 
 # vllm-serving-ipex (VLM for scene_query — single-frame queries)
 vlm_service:

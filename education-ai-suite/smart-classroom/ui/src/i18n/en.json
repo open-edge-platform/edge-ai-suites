@@ -188,6 +188,9 @@
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
     },
+    "summary": {
+      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete."
+    },
     "app": {
       "checkingBackendTitle": "Checking backend status",
       "checkingBackendMessage": "Please wait while we connect to the backend…",

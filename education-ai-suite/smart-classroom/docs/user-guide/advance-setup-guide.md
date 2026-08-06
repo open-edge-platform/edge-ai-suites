@@ -75,10 +75,10 @@ features:
   mindmap:            { enabled: true }   # Mind map generation
   topic_segmentation: { enabled: true }   
   video_analytics:    { enabled: true }   # Video ingestion / analytics
+  board_ocr:          { enabled: true }   # OCR of the teacher's display (IFPD)
   content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
   qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
 ```
-
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
@@ -128,26 +128,25 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 ```
 
-### E. Enable OCR Features (Optional)
-
-If you need OCR functionality for document text extraction during content search, enable OCR under the `models` section (`smart-classroom/config.yaml`):
+**Document OCR** To also extract text from images embedded in uploaded documents, turn on OCR for content search:
 
 ```yaml
-models:
-  ocr:
-    enabled: true
+content_search:
+  ocr_enabled: true
 ```
 
-Board OCR is supported to extract text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report.
+> **Note:** This only affects document ingestion. Board OCR has its own OCR usage and is unaffected by this flag.
+
+### E. Board OCR Configuration
+
+Board OCR extracts text from the teacher's interactive display (IFPD) during a session, feeding the board summary and class report. It has below configurations:
 
 ```yaml
 board_ocr:
-  enabled: true        # requires ocr.enabled: true
   frame_rate: "1/3"    # frames per second sampled from the board video
+  debug: false         # keep the uncleaned board_ocr_raw.txt alongside the output
 ```
 
-> **Note:** OCR is a prerequisite for Board OCR. Board OCR only runs when `models.ocr.enabled: true`.
->
 > **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
 
 ### F. Speaker Diarization Setup (Optional)
@@ -197,6 +196,7 @@ Run the backend:
 ```bash
 python main.py
 ```
+
 You should see backend logs similar to this:
 
 ```text

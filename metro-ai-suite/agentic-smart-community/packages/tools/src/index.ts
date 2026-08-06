@@ -46,12 +46,13 @@ export type {
   UseCaseValidateDeps,
   UseCaseValidateResult,
 } from "./use-case-validate.js";
-export { useCaseRegister } from "./use-case-register.js";
+export { useCaseRegister, checkUseCaseConsistency } from "./use-case-register.js";
 export type {
   UseCaseRegisterParams,
   UseCaseRegisterDeps,
   UseCaseRegisterResult,
   UseCaseListEntry,
+  ConsistencyReport,
 } from "./use-case-register.js";
 export { ruleEval } from "./rule-eval.js";
 export type { RuleEvalParams, RuleEvalDeps, RuleEvalResult } from "./rule-eval.js";

@@ -1,25 +1,25 @@
-# Deploy the Agentic Workflow for the Multimodal Weld Defect Detection Sample App
+# Deploy the Agentic Workflow for the Multimodal Weld Defect Detection Sample Application
 
-This guide explains how to deploy the multimodal sample app with the agentic workflow enabled. The agentic stack adds a meta-agent powered by an LLM (via OVMS) that reacts to fusion results and produces structured policy decisions, root-cause analysis, evidence audit trails, and maintenance tickets.
+This section shows how to deploy the multimodal sample application with the agentic workflow enabled. The multimodal application produces fusion results, and when new fusion results arrive, the meta-agent in the agentic stack is triggered. The meta-agent, powered by an LLM served through OpenVINO™ model server, produces structured policy decisions, root-cause analysis, evidence audit trails, and maintenance tickets.
 
 ## Architecture Overview
 
-The agentic workflow is implemented as a **LangGraph-based sequential multi-agent pipeline**. The `apm-agent` acts as the workflow orchestrator, triggering the workflow when new fusion results are received. It coordinates the execution of specialized agents, each responsible for a distinct stage of reasoning. Each agent consumes the shared execution context together with outputs from previous stages, producing traceable intermediate artifacts and a final maintenance recommendation.
+The agentic workflow is implemented as a **LangGraph framework-based, sequential multi-agent pipeline**. The `apm-agent`, which is the meta-agent, acts as the orchestrator that triggers the workflow when new fusion results arrive and coordinates the execution of specialized agents, each responsible for a distinct stage of reasoning. Each agent consumes the shared execution context together with outputs from previous stages and produces traceable intermediate artifacts and a final maintenance recommendation.
 
 
 ```
-Vision(DLStreamer Pipeline Server)──┐
-                                    ├─► Fusion Analytics ──► MQTT (Trigger batch request)
-        Time-Series Analytics     ──┘                           │
-                                                                ▼
-                                                        agent (LangGraph)
-                                                                │
-                                                   ┌────────────┼────────────┐
-                                                Policy     Analysis      Evidence
-                                                                │
-                                                        Maintenance Ticket
-                                                                │
-                                                        UI (Dashboard)
+Vision (DL Streamer Pipeline Server)──┐
+                                      ├─► Fusion Analytics ──► MQTT (Trigger batch request)
+        Time-Series Analytics       ──┘                           │
+                                                                  ▼
+                                                          agent (LangGraph)
+                                                                  │
+                                                     ┌────────────┼────────────┐
+                                                   Policy     Analysis      Evidence
+                                                                  │
+                                                          Maintenance Ticket
+                                                                  │
+                                                            UI (Dashboard)
 ```
 
 | Agent | Input | Output |
@@ -36,13 +36,13 @@ Vision(DLStreamer Pipeline Server)──┐
 
 | Component | Minimum Requirement |
 |-----------|---------------------|
-| Operating System | Ubuntu 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra Series 3 Platform or newer |
+| Operating System | Ubuntu OS version 24.04 LTS or later |
+| Hardware | Intel® Core™ Ultra processor Series 3 or newer |
 
 
 ## Prerequisites
 
-1. Ensure `.env` is configured with valid values for:
+1. Ensure the `.env` file is configured with valid values for:
 
    - `HOST_IP`
    - `INFLUXDB_USERNAME`, `INFLUXDB_PASSWORD`
@@ -50,9 +50,9 @@ Vision(DLStreamer Pipeline Server)──┐
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`, `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `S3_STORAGE_USERNAME`, `S3_STORAGE_PASSWORD`
 
-2. Download VLM model by following this [Guide](./how-to-deploy-vllm-service.md#download-models)
+2. Download the Vision-Language Model (VLM) model by following the [guide](./how-to-deploy-vllm-service.md#download-models).
 
-## Deploying the Agentic Workflow
+## Deploy the Agentic Workflow
 
 Run the full agentic stack (downloads the LLM model first, then starts all containers):
 
@@ -75,7 +75,7 @@ make up_agentic
 
 ## Configure the Agent
 
-### Use-Case Config
+### Use-Case Configuration
 
 The agent behavior is controlled by `configs/agentic/agents.yaml`:
 
@@ -85,11 +85,11 @@ The agent behavior is controlled by `configs/agentic/agents.yaml`:
 | `analysis.min_confidence` | `0.5` | Minimum `fusion_confidence` to include a record in the analysis window |
 | `analysis.max_detections_per_run` | `1000` | Maximum number of `fusion_result` records fetched per run |
 | `policy.alert_threshold` | `0.75` | `fusion_confidence` threshold to raise a policy violation |
-| `policy.fusion_mode` | `OR` | `AND` requires both modalities anomalous; `OR` triggers on either |
-| `policy.critical_classes` | `Burnthrough, Lack of Fusion, Crater Cracks` | Classes that produce `CRITICAL` severity regardless of threshold |
-| `evidence.source_measurement` | `fusion_result` | InfluxDB measurement to query for evidence records |
+| `policy.fusion_mode` | `OR` | `AND` requires both modalities to be anomalous; `OR` triggers on either |
+| `policy.critical_classes` | `Burnthrough, Lack of Fusion, and Crater Cracks` | Classes that produce `CRITICAL` severity regardless of threshold |
+| `evidence.source_measurement` | `fusion_result` | InfluxDB database measurement to query for evidence records |
 | `evidence.min_fusion_confidence` | `0.6` | Minimum `fusion_confidence` for a record to appear in the evidence table |
-| `evidence.max_records_per_evidence` | `100` | Cap on rows included in a single evidence bundle |
+| `evidence.max_records_per_evidence` | `100` | The cap on rows included in a single evidence bundle |
 | `evidence.evidence_sort` | `time_desc` | Evidence rows are ordered newest-first |
 | `ticketing.backend` | `jira` | Ticket destination: `jira`, `servicenow`, or `none` |
 | `ticketing.auto_create` | `true` | Submit tickets automatically after each completed run |
@@ -100,10 +100,10 @@ The policy and ticketing agents operate on the following class hierarchy:
 
 | Priority | Classes |
 |----------|---------|
-| **CRITICAL** | Burnthrough, Lack of Fusion, Crater Cracks |
+| **CRITICAL** | Burnthrough, Lack of Fusion, and Crater Cracks |
 | **HIGH** | Excessive Penetration |
-| **MEDIUM** | Porosity, Porosity with Excessive Penetration, Undercut, Spatter, Warping, Overlap, Excessive Convexity |
-| **LOW** | No Weld, Good Weld, No Label |
+| **MEDIUM** | Porosity, Porosity with Excessive Penetration, Undercut, Spatter, and Warping, Overlap, Excessive Convexity |
+| **LOW** | No Weld, Good Weld, and No Label |
 
 ### Prompts
 
@@ -111,20 +111,20 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
 | Section | Controls |
 |---------|----------|
-| `[SYSTEM]` | Canonical class labels, label normalization rules (`No_Weld` → `No Weld`, `Good_Weld` → `Good Weld`, `Porosity_w_Excessive_Penetration` → `Porosity with Excessive Penetration`), and available fusion fields |
-| `[POLICY]` | How violations are identified: `fusion_confidence` as primary signal; `fused_decision + both anomalies` escalates severity; `vision_rtsp_ts_diff_ms` thresholds classify time-sync quality (`≤50 ms` GOOD, `50–100 ms` WARN, `>100 ms` BAD) |
-| `[ANALYSIS]` | Root-cause correlation between `vision_classification` and `timeseries_classification`; resolution of modality conflicts using confidence evidence |
-| `[EVIDENCE]` | Three-section output: Summary → Table (all 15 schema fields) → Conclusion; rows annotated with `AGREED`/`DISAGREED` and `GOOD`/`WARN`/`BAD` time-sync status |
-| `[TICKETING]` | escalation rules tied to class + `fusion_confidence` threshold (`CRITICAL` at ≥0.8 for critical classes, `HIGH` for Excessive Penetration at ≥0.75) |
+| `[SYSTEM]` | Canonical class labels, label normalization rules (`No_Weld` → `No Weld`, `Good_Weld` → `Good Weld`, and `Porosity_w_Excessive_Penetration` → `Porosity with Excessive Penetration`), and available fusion fields |
+| `[POLICY]` | How violations are identified: `fusion_confidence` as the primary signal, `fused_decision and both anomalies` escalate the severity, and `vision_rtsp_ts_diff_ms` thresholds classify the time-sync quality (`≤ 50 ms` GOOD, `50–100 ms` WARN, and `> 100 ms` BAD) |
+| `[ANALYSIS]` | Root-cause correlation between `vision_classification` and `timeseries_classification`, and resolution of modality conflicts using confidence evidence |
+| `[EVIDENCE]` | Three-section output: Summary → Table (all 15 schema fields) → Conclusion, and rows annotated with `AGREED`/`DISAGREED` and `GOOD`/`WARN`/`BAD` time-sync status |
+| `[TICKETING]` | escalation rules tied to the class and `fusion_confidence` threshold (`CRITICAL` for critical classes at ≥ 0.8 fusion_confidence, `HIGH` for the Excessive Penetration class at ≥ 0.75 fusion_confidence) |
 
 ### Fallback Policy
 
-`configs/agentic/policy_fallback.json` defines per-class thresholds and actions used when `LLM_MODE=fallback`. Available actions:
+`configs/agentic/policy_fallback.json` defines per-class thresholds and actions used by apm-agent when `LLM_MODE=fallback`. Available actions:
 
 | Action | Description |
 |--------|-------------|
 | `HALT_LINE` | Stop the production line immediately |
-| `REDUCE_HEAT_INPUT` | Reduce welding current/power |
+| `REDUCE_HEAT_INPUT` | Reduce welding current or power |
 | `SCHEDULE_INSPECTION` | Flag for next-shift inspection |
 | `ADJUST_PARAMETERS` | Adjust process parameters |
 | `CHECK_FIXTURING` | Check part fixturing and alignment |
@@ -140,7 +140,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
    make status
    ```
 
-2. Confirm the agentic containers are running:
+2. Confirm that the agentic containers are running:
 
    ```bash
    docker ps --filter "name=apm-"
@@ -148,8 +148,8 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
    Expected containers:
    - `apm-agent` — LangGraph meta-agent
-   - `apm-llm` — OVMS LLM server
-   - `apm-ui` — web dashboard
+   - `apm-llm` — LLM service provided by OpenVINO model server
+   - `apm-ui` — UI (Dashboard)
    - `apm-metrics` — Prometheus metrics collector (if enabled)
 
 3. Inspect agent logs:
@@ -158,24 +158,22 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
    docker logs -f apm-agent
    ```
 
-4. Check the output in Grafana.
+4. Check the output in Grafana dashboard:
 
-   - Use the link `https://localhost:3000` to open Grafana in a browser (preferably Chrome).
+   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
+   
+   - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD` values
+     from the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
 
-   > **Note:** Use the link `https://localhost:30001` to open Grafana in a browser (preferably Chrome) for the Helm deployment.
-   - Log in to Grafana using the values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-     in the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
+     ![Grafana dashboard login](../_assets/login_wt.png)
 
-     ![Grafana login](../_assets/login_wt.png)
-
-   - After logging in, click **Dashboard**.
+   - After logging in, click **Dashboard**:
      ![Menu view](../_assets/grafana_agentic_dashboard.png)
 
-   - Select **Multimodal Weld Defect Detection Explainability Dashboard**.
+   - Select **Multimodal Weld Defect Detection Explainability Dashboard**:
      ![Multimodal Weld Defect Detection Agentic Dashboard](../_assets/agentic_dashboard_view.png)
 
-   - You should see the following output:
-
+   - The following output appears:
      ![Agentic Results for weld data](../_assets/agentic_results.png)
 
 ## Stop the Stack

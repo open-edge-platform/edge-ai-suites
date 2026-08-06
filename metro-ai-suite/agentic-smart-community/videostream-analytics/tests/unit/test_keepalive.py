@@ -1,4 +1,4 @@
-"""Phase 8 — keepalive protocol & watchdog auto-pause.
+"""Keepalive protocol & watchdog auto-pause.
 
 Tests cover three layers:
 1. SourceBundle / SourceManager state plumbing (init, refresh, describe).
