@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import asyncio
 import requests
 import os
 import tempfile
@@ -39,8 +40,12 @@ class VmsService:
     ) -> dict:
         """Fetches clip from Frigate, writes to temp file, uploads it, and returns videoId."""
         try:
-            stream_response = self.frigate_service.get_clip_from_timestamps(
-                camera_name, start_time, end_time, download=True
+            stream_response = await asyncio.to_thread(
+                self.frigate_service.get_clip_from_timestamps,
+                camera_name,
+                start_time,
+                end_time,
+                download=True,
             )
             logger.info("Clip retrieved from Frigate.")
         except Exception as e:
@@ -83,12 +88,18 @@ class VmsService:
         # Upload file
         try:
             if is_search:
-                upload_result = self.summarization_service.video_upload(
-                    tmp_path, self.vss_search_url, camera_name
+                upload_result = await asyncio.to_thread(
+                    self.summarization_service.video_upload,
+                    tmp_path,
+                    self.vss_search_url,
+                    camera_name,
                 )
             else:
-                upload_result = self.summarization_service.video_upload(
-                    tmp_path, self.vss_summary_url, camera_name
+                upload_result = await asyncio.to_thread(
+                    self.summarization_service.video_upload,
+                    tmp_path,
+                    self.vss_summary_url,
+                    camera_name,
                 )
 
             if not upload_result or "videoId" not in upload_result:
@@ -131,8 +142,10 @@ class VmsService:
                 sampling=Sampling(chunkDuration=8, samplingFrame=8),
                 evam=Evam(evamPipeline="object_detection"),
             )
-            pipeline = self.summarization_service.create_summary(
-                payload, self.vss_summary_url
+            pipeline = await asyncio.to_thread(
+                self.summarization_service.create_summary,
+                payload,
+                self.vss_summary_url,
             )
 
             if not pipeline or "summaryPipelineId" not in pipeline:
@@ -216,7 +229,7 @@ class VmsService:
         logger.info(f"Calling search-embeddings API: {url}")
 
         try:
-            response = requests.post(url)
+            response = await asyncio.to_thread(requests.post, url,timeout=30)
             response.raise_for_status()
             message = response.json().get("message", "No message in response.")
             logger.info(f"Embedding search response: {message}")

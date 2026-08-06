@@ -3,6 +3,7 @@ export type StreamEvent =
   | { type: 'transcript_chunk'; data: TranscriptChunk }
   | { type: 'final'; data: FinalEvent }
   | { type: 'summary_token'; token: string }
+  | { type: 'board_ocr_partial' }
   | { type: 'mindmap_complete'; token: string }
   | { type: 'error'; message: string }
   | { type: 'done' };

@@ -1,7 +1,7 @@
 [
     {
         "pipeline": "yolov11s",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/new_video_1_looped.mp4",
                 "type": "uri"
@@ -14,7 +14,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_detection_$x"
+                    "peer-id": "object_detection_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -29,7 +33,7 @@
             }
         }
     },
-        {
+    {
         "pipeline": "yolov11s_gpu",
         "payload": {
             "source": {
@@ -44,7 +48,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_detection_$x"
+                    "peer-id": "object_detection_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -59,7 +67,7 @@
             }
         }
     },
-        {
+    {
         "pipeline": "yolov11s_npu",
         "payload": {
             "source": {
@@ -74,7 +82,11 @@
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_detection_$x"
+                    "peer-id": "object_detection_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -89,4 +101,4 @@
             }
         }
     }
-]  
+]

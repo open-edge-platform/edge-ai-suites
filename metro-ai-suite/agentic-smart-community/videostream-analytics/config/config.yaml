@@ -22,7 +22,7 @@ defaults:
     stable_frames: 45
   segment:
     max_duration: 10
-    min_duration: 1.0
+    min_duration: 3.0
   # Static "close-out" emission: when a motion segment ends and a new motion
   # begins, the intervening quiet span is emitted as a `type=static` event so
   # MCP's state_query sees the alternating motion → static → motion sequence.
@@ -44,7 +44,7 @@ defaults:
     detect_fps: 2.0
     device: "NPU"
     long_side: 0             # 0 disables pre-inference resize
-  # Phase 9: ROI crop for child_safety / elder_wakeup. Top-level block, at the
+  # ROI crop for child_safety / elder_wakeup. Top-level block, at the
   # same nesting depth as prefilter. Default OFF so other use cases (which want
   # full-frame VLM input) aren't disturbed. MCP sends this block per-use-case
   # in the register payload.
@@ -58,7 +58,7 @@ defaults:
     recovery_strategy: "retry"
     backoff_base: 2.0
     backoff_max: 120.0
-  # Phase 8: keepalive protocol — MCP server pings POST /sources/{id}/keepalive
+  # Keepalive protocol — MCP server pings POST /sources/{id}/keepalive
   # while monitor is online. If no keepalive arrives within timeout_seconds,
   # the watchdog auto-pauses the source. Default OFF to keep existing scripts
   # (and the V1-V10 integration drills) unaffected; MCP enables it per-source.

@@ -55,7 +55,7 @@ class ReportGenerator:
     # Selection coupling rules: when ``primary`` is unchecked, all ``hide``
     # fields are force-hidden (can override always_on).
     _SELECTION_HIDE_RULES = (
-        {"primary": "keywords", "hide": ("keywords_count",)},
+        {"primary": "keywords", "hide": ("keywords_count_note",)},
     )
 
     def __init__(self, session_id: str, model=None, template_name: str = None,
@@ -224,25 +224,38 @@ class ReportGenerator:
             yield {"type": "partial_report", "content": interim_md}
 
         llm_values = {}
+        # Fallback for AI-generated fields we can't fill: when the LLM errors out
+        # or returns unparseable/partial JSON, mark ONLY those fields as
+        # unavailable instead of discarding the whole report. The measured raw
+        # fields (statistics, mindmap, transcription, manual inputs) are already
+        # resolved and stay intact, so the teacher keeps a usable report.
+        na_placeholder = "无数据" if self.language == "zh" else "N/A"
         if gen_codes:
             gen_prompt = self._build_generated_fill_prompt(structure, gen_codes, raw_values)
+            llm_failed = False
+            json_response = None
             try:
                 json_response = self.model.generate(gen_prompt, stream=False)
                 if isinstance(json_response, str) and json_response.startswith("[ERROR]:"):
                     raise RuntimeError(json_response)
             except RuntimeError as e:
-                logger.error(f"[ReportGenerator] LLM failed during template fill: {e}")
-                err_msg = (
-                    "报告生成失败：LLM服务超时或出错，请稍后重试。"
-                    if self.language == "zh"
-                    else "Report generation failed. Please try again."
-                )
-                yield {"type": "token", "content": f"[ERROR]: {err_msg}"}
-                return
+                logger.error(f"[ReportGenerator] LLM failed during template fill: {e}. "
+                             f"Marking {len(gen_codes)} generated fields as '{na_placeholder}'.")
+                llm_failed = True
 
             first_token_time = time.perf_counter()
-            llm_values = parse_llm_json_response(json_response)
-            logger.info(f"[ReportGenerator] Parsed {len(llm_values)} generated fields from LLM.")
+            llm_values = {} if llm_failed else parse_llm_json_response(json_response)
+            # Any generated field the LLM omitted (or all of them, on failure /
+            # parse error) defaults to N/A so no interim "Generating…" or raw
+            # {{placeholder}} leaks into the finished report.
+            missing = 0
+            for c in gen_codes:
+                v = llm_values.get(c)
+                if v is None or (isinstance(v, str) and not v.strip()):
+                    llm_values[c] = na_placeholder
+                    missing += 1
+            logger.info(f"[ReportGenerator] Filled {len(gen_codes) - missing} generated fields "
+                        f"from LLM, {missing} defaulted to '{na_placeholder}'.")
         else:
             first_token_time = time.perf_counter()
             logger.info("[ReportGenerator] No generated fields; skipping LLM.")

@@ -5,6 +5,7 @@
 import os
 import sys
 import importlib
+import types
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -21,8 +22,54 @@ def ui_app_module():
         for name in ("app", "config", "data_loader", "models")
         if name in sys.modules
     }
-    for name in ("app", "config", "data_loader", "models"):
+    saved_ws_modules = {
+        name: sys.modules.get(name)
+        for name in (
+            "websockets",
+            "websockets.exceptions",
+            "websockets.asyncio",
+            "websockets.asyncio.client",
+        )
+        if name in sys.modules
+    }
+
+    for name in (
+        "app",
+        "config",
+        "data_loader",
+        "models",
+        "websockets",
+        "websockets.exceptions",
+        "websockets.asyncio",
+        "websockets.asyncio.client",
+    ):
         sys.modules.pop(name, None)
+
+    # Stub websockets imports used by ui/data_loader.py so this test file
+    # does not depend on optional runtime websocket packages.
+    ws_module = types.ModuleType("websockets")
+    ws_exceptions = types.ModuleType("websockets.exceptions")
+    ws_asyncio = types.ModuleType("websockets.asyncio")
+    ws_asyncio_client = types.ModuleType("websockets.asyncio.client")
+
+    class _WebSocketException(Exception):
+        pass
+
+    class _ConnectionClosed(Exception):
+        pass
+
+    async def _connect_stub(*args, **kwargs):
+        if False:
+            yield None
+
+    ws_exceptions.WebSocketException = _WebSocketException
+    ws_exceptions.ConnectionClosed = _ConnectionClosed
+    ws_asyncio_client.connect = _connect_stub
+
+    sys.modules["websockets"] = ws_module
+    sys.modules["websockets.exceptions"] = ws_exceptions
+    sys.modules["websockets.asyncio"] = ws_asyncio
+    sys.modules["websockets.asyncio.client"] = ws_asyncio_client
 
     sys.path.insert(0, ui_path)
     try:
@@ -31,76 +78,85 @@ def ui_app_module():
     finally:
         if ui_path in sys.path:
             sys.path.remove(ui_path)
-        for name in ("app", "config", "data_loader", "models"):
+        for name in (
+            "app",
+            "config",
+            "data_loader",
+            "models",
+            "websockets",
+            "websockets.exceptions",
+            "websockets.asyncio",
+            "websockets.asyncio.client",
+        ):
             sys.modules.pop(name, None)
         sys.modules.update(saved_modules)
+        sys.modules.update(saved_ws_modules)
 
 
-def test_metrics_panel_mentions_metrics_manager_and_npu(ui_app_module):
-    html = ui_app_module._metrics_panel_html()
+class TestUIMetricsManager:
+    def test_metrics_panel_mentions_metrics_manager_and_npu(self, ui_app_module):
+        html = ui_app_module._metrics_panel_html()
 
-    assert "System Telemetry" in html
-    assert "Metrics Manager" in html
-    assert "NPU" in html
+        assert "System Telemetry" in html
+        assert "Metrics Manager" in html
+        assert "NPU" in html
 
+    def test_metrics_js_uses_sse_and_metrics_manager_metric_names(self, ui_app_module):
+        js = ui_app_module._metrics_js()
 
-def test_metrics_js_uses_sse_and_metrics_manager_metric_names(ui_app_module):
-    js = ui_app_module._metrics_js()
+        assert "new EventSource(STREAM_URL)" in js
+        assert "STREAM_URL = '/metrics/stream'" in js
+        assert "new WebSocket" not in js
+        assert "cpu_usage_user" in js
+        assert "mem_used_percent" in js
+        assert "gpu_engine_usage_usage" in js
+        assert "npu_utilization" in js
 
-    assert "new EventSource(STREAM_URL)" in js
-    assert "STREAM_URL = '/metrics/stream'" in js
-    assert "new WebSocket" not in js
-    assert "cpu_usage_user" in js
-    assert "mem_used_percent" in js
-    assert "gpu_engine_usage_usage" in js
-    assert "npu_utilization" in js
+    def test_metrics_stream_proxy_forwards_sse_frame(self, monkeypatch, ui_app_module):
+        captured = {}
 
+        class FakeContent:
+            async def iter_any(self):
+                yield b'data: {"metrics":[]}\n\n'
 
-def test_metrics_stream_proxy_forwards_sse_frame(monkeypatch, ui_app_module):
-    captured = {}
+        class FakeResponse:
+            content = FakeContent()
 
-    class FakeContent:
-        async def iter_any(self):
-            yield b'data: {"metrics":[]}\n\n'
+            async def __aenter__(self):
+                return self
 
-    class FakeResponse:
-        content = FakeContent()
+            async def __aexit__(self, exc_type, exc, tb):
+                return None
 
-        async def __aenter__(self):
-            return self
+            def raise_for_status(self):
+                return None
 
-        async def __aexit__(self, exc_type, exc, tb):
-            return None
+        class FakeSession:
+            def __init__(self, *args, **kwargs):
+                pass
 
-        def raise_for_status(self):
-            return None
+            async def __aenter__(self):
+                return self
 
-    class FakeSession:
-        def __init__(self, *args, **kwargs):
-            pass
+            async def __aexit__(self, exc_type, exc, tb):
+                return None
 
-        async def __aenter__(self):
-            return self
+            def get(self, url, headers):
+                captured["url"] = url
+                captured["headers"] = headers
+                return FakeResponse()
 
-        async def __aexit__(self, exc_type, exc, tb):
-            return None
+        monkeypatch.setenv("METRICS_STREAM_URL", "http://metrics-manager:9090/metrics/stream")
+        monkeypatch.setattr(ui_app_module.aiohttp, "ClientSession", FakeSession)
 
-        def get(self, url, headers):
-            captured["url"] = url
-            captured["headers"] = headers
-            return FakeResponse()
+        app = FastAPI()
+        ui_app_module._mount_metrics_stream_proxy(app)
 
-    monkeypatch.setenv("METRICS_STREAM_URL", "http://metrics-manager:9090/metrics/stream")
-    monkeypatch.setattr(ui_app_module.aiohttp, "ClientSession", FakeSession)
+        with TestClient(app) as client:
+            response = client.get("/metrics/stream")
 
-    app = FastAPI()
-    ui_app_module._mount_metrics_stream_proxy(app)
-
-    with TestClient(app) as client:
-        response = client.get("/metrics/stream")
-
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/event-stream")
-    assert response.text == 'data: {"metrics":[]}\n\n'
-    assert captured["url"] == "http://metrics-manager:9090/metrics/stream"
-    assert captured["headers"] == {"Accept": "text/event-stream"}
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        assert response.text == 'data: {"metrics":[]}\n\n'
+        assert captured["url"] == "http://metrics-manager:9090/metrics/stream"
+        assert captured["headers"] == {"Accept": "text/event-stream"}

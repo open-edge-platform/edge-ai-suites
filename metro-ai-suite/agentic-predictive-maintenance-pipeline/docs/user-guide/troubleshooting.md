@@ -15,7 +15,7 @@
    Look for log lines showing inference results. If the container exited, the video file may be
    missing.
 
-2. Confirm that `sample.mp4` exists in the expected location:
+2. Confirm that `datastream.mp4` exists in the expected location:
 
    ```bash
    ls apps/pipeline-defect-detection/resources/videos/
@@ -167,7 +167,7 @@ curl http://localhost:8080/api/agents/runs/$RUN_ID | python3 -m json.tool
 
 | Symptom | Likely Cause | Action |
 |---------|-------------|--------|
-| No detections in storage | `sample.mp4` is missing or pipeline is not triggered | Prepare data and trigger the DL Streamer pipeline |
+| No detections in storage | `datastream.mp4` is missing or pipeline is not triggered | Prepare data and trigger the DL Streamer pipeline |
 | Agent run is stuck in `in_progress` | OpenVINO model server service is unhealthy or is still loading | Check `docker logs apm-llm` or switch to the fallback mode |
 | UI shows no runs | NGINX proxy issue or agent service is down | Check `docker logs apm-nginx` and `docker logs apm-agent` |
 | `apm-storage` is unhealthy | Port conflict or volume permission issue | Check port 5001 or run `./setup.sh --clean-data` |

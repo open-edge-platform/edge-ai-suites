@@ -4,19 +4,14 @@ README
 ------
 Evaluates the motion + YOLO prefilter pipeline of `videostream-analytics` against
 a ground-truth SRT file, by reading motion events from the integration test's
-mock webhook server (tests/integration/mock_webhook_server.py) instead of from a
-phase-2 prototype `pipeline.db`.
+mock webhook server (tests/integration/mock_webhook_server.py).
 
 Background
 ~~~~~~~~~~
-The phase-2 prototype shipped two evaluators in
-`phase2-prototype-demo/tools/eval_prefilter_coverage.py` and
-`eval_alert_accuracy.py`. Both read `pipeline.db.tasks`, which only existed in
-the prototype's in-process pipeline. In the new architecture, this microservice
-posts events to an external webhook (e.g. the MCP Server `/events` endpoint)
-and never persists tasks locally — the prefilter does not even emit a
-`prefilter_skip` event upstream; it just stays silent. So this script only
-reports the metrics that are observable from outside:
+This microservice posts events to an external webhook (e.g. the MCP Server
+`/events` endpoint) and never persists tasks locally — the prefilter does not
+emit a `prefilter_skip` event upstream; it just stays silent. So this script
+only reports the metrics that are observable from outside:
 
   Per GT cue
     HIT     – ≥1 motion webhook event overlaps the GT window
@@ -27,10 +22,8 @@ reports the metrics that are observable from outside:
     Precision – fraction of motion events that overlap ≥1 GT window
                 (false positives = motion event with NO GT overlap)
 
-The metrics that need DB-level visibility (`prefilter_skip` count, skip_rate,
-PARTIAL outcome) are NOT computable from webhook output; the original
-`eval_prefilter_coverage.py` is still the right tool for that and runs on the
-prototype's `pipeline.db`.
+Metrics that need in-process visibility (`prefilter_skip` count, skip_rate,
+PARTIAL outcome) are NOT computable from webhook output.
 
 Webhook source
 ~~~~~~~~~~~~~~
@@ -72,7 +65,7 @@ Usage
   # Recommended: stream-start anchor (service must still be up).
   # --ss matches the ffmpeg `-ss N` seek used to push the demo video.
   python tools/eval_prefilter_from_webhook.py \\
-      --srt ../videos/phase2/child-care/composed/child_safety_demo_groundtruth.srt \\
+      --srt ../demo/videos/cam_child/child_safety_demo_groundtruth.srt \\
       --source-id cam_child --anchor-mode stream-start --ss 40
 
   # Offline: against an exported events dump. Anchor drifts; only OK if
@@ -103,7 +96,7 @@ from urllib.request import urlopen
 
 
 # ---------------------------------------------------------------------------
-# SRT parsing (same shape as phase2 eval_prefilter_coverage.py)
+# SRT parsing
 # ---------------------------------------------------------------------------
 
 _TS_RE = re.compile(r"(\d{2}):(\d{2}):(\d{2})[,.](\d{3})")
@@ -182,16 +175,16 @@ def _load_motion_events_from_payload(payload: dict, source_id: Optional[str]) ->
     raw = payload.get("events", payload) if isinstance(payload, dict) else payload
     events = []
     for ev in raw:
-        # Phase 7: nested envelope {sourceId, type, timestamp, payload}.
-        # Tolerate legacy flat schema for backwards compatibility.
+        # Nested envelope {sourceId, type, timestamp, payload}.
         nested = isinstance(ev.get("payload"), dict)
-        ev_type = ev.get("type") if nested else ev.get("event_type")
-        if ev_type != "motion":
+        if not nested:
             continue
-        sid = ev.get("sourceId") if nested else ev.get("source_id")
+        if ev.get("type") != "motion":
+            continue
+        sid = ev.get("sourceId")
         if source_id and sid != source_id:
             continue
-        body = ev["payload"] if nested else ev
+        body = ev["payload"]
         clip = body.get("event_file_path") or body.get("clip_path", "")
         events.append(MotionEvent(
             source_id=sid or "?",

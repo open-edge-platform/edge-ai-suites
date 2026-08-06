@@ -344,6 +344,148 @@
   background: var(--intel-blue-dark);
 }
 
+.report-download-btn:disabled {
+  /* This button is only disabled while a download/convert is in progress, so
+     keep full blue-on-white contrast (the "⏳ Converting…" label must stay
+     legible) and just signal the busy state via the cursor. Must override the
+     global `button:disabled` rule (index.css) that greys the button out. */
+  background: var(--intel-blue);
+  color: #fff;
+  opacity: 1;
+  cursor: progress;
+}
+
+.report-download-btn:disabled:hover {
+  background: var(--intel-blue);
+}
+
+/* Download control: a single button that opens a format menu (DOCX / PDF). */
+.report-download {
+  position: relative;
+  display: inline-block;
+}
+
+.report-download-caret {
+  margin-left: 8px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.report-download-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #dfe3e8;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+}
+
+.report-download-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.report-download-item:hover {
+  background: var(--surface-hover, #f1f4f8);
+}
+
+.report-download-item:disabled {
+  color: var(--text-secondary, #8a94a6);
+  cursor: not-allowed;
+}
+
+.report-download-item:disabled:hover {
+  background: transparent;
+}
+
+.report-download-item-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* PDF row: disabled item + an info icon carrying the install hint. */
+.report-download-item-row {
+  display: flex;
+  align-items: center;
+}
+
+.report-download-item-row .report-download-item {
+  flex: 1;
+}
+
+.report-pdf-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 6px 0 2px;
+}
+
+.report-pdf-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-secondary, #8a94a6);
+  font-size: 14px;
+  line-height: 1;
+  cursor: help;
+}
+
+.report-pdf-hint-icon:hover {
+  color: var(--intel-blue, #0071c5);
+}
+
+.report-pdf-hint-bubble {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 240px;
+  padding: 8px 10px;
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.report-pdf-hint:hover .report-pdf-hint-bubble,
+.report-pdf-hint-bubble.open {
+  visibility: visible;
+  opacity: 1;
+}
+
 /* Done-state action row */
 .report-done-actions {
   display: flex;

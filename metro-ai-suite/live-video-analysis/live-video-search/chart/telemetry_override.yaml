@@ -1,3 +1,0 @@
-telemetry:
-  enabled: true
-  hostPathMounts: true

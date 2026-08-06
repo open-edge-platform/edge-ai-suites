@@ -11,6 +11,7 @@ os.environ["AGENT_SERVICE_URL"]     = "http://mock-agent"
 os.environ["DETECTION_SERVICE_URL"] = "http://mock-detection"
 os.environ["STORAGE_SERVICE_URL"]   = "http://mock-storage"
 os.environ["USE_CASE_ID"]           = "test-case"
+os.environ["APM_API_KEY"]           = "test-key"
 
 import respx
 import httpx
@@ -68,6 +69,23 @@ def test_index_merges_detection_and_agent_runs(client):
 
 
 @respx.mock
+def test_index_running_without_phase_does_not_render_null(client):
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+    respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
+    respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[
+        {"run_id": "r1", "status": "running", "phase": None, "result": None},
+    ]))
+    respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[]))
+
+    r = client.get("/")
+
+    assert r.status_code == 200
+    assert "Inspection: RUNNING" in r.text
+    assert "RUNNING (None)" not in r.text
+    assert "RUNNING (null)" not in r.text
+
+
+@respx.mock
 def test_detections_page(client):
     detections = [
         {"frame_id": 1, "label": "Rupture", "confidence": 0.9, "x": 10, "y": 10, "width": 50, "height": 40, "timestamp": "2026-01-01T00:00:00"}
@@ -76,6 +94,17 @@ def test_detections_page(client):
     r = client.get("/detections")
     assert r.status_code == 200
     assert "Rupture" in r.text
+
+
+@respx.mock
+def test_clear_detections_sends_api_key(client):
+    route = respx.delete("http://mock-storage/detections").mock(return_value=httpx.Response(204))
+
+    r = client.post("/clear-detections", follow_redirects=False)
+
+    assert r.status_code == 303
+    assert route.called
+    assert route.calls.last.request.headers["X-API-Key"] == "test-key"
 
 
 def test_health(client):

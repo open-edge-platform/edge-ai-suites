@@ -73,6 +73,12 @@ class Config:
     def get_moderate_density_threshold(cls) -> int:
         return int(cls.get_value_from_env("MODERATE_DENSITY_THRESHOLD", 5))
 
+    @classmethod
+    def get_camera_stale_threshold_seconds(cls) -> float:
+        """Seconds since a camera image was captured before it is flagged
+        as stale/frozen in the UI (ITEP-92089 mitigation)."""
+        return float(cls.get_value_from_env("CAMERA_STALE_THRESHOLD_SECONDS", 30.0))
+
     @staticmethod
     def get_metrics_stream_url() -> str:
         metrics_manager_url = os.getenv("METRICS_MANAGER_URL", "http://localhost:9090").rstrip("/")
