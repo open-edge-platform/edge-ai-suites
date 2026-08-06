@@ -31,8 +31,8 @@ class ContentSearchFeature:
 
     def __init__(self) -> None:
         self._process: Optional[subprocess.Popen] = None
-        ocr_cfg = getattr(config.models, "ocr", None)
-        if ocr_cfg is not None and bool(getattr(ocr_cfg, "enabled", False)):
+        cs_cfg = getattr(config, "content_search", None)
+        if cs_cfg is not None and bool(getattr(cs_cfg, "ocr_enabled", True)):
             self.requires = ["ocr", "text_gen"]
 
     def build(self) -> None:

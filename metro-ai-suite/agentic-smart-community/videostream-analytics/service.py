@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -88,6 +89,16 @@ def get_manager() -> SourceManager:
     return _manager
 
 
+def _available_devices() -> list[str]:
+    """Best-effort list of OpenVINO inference devices; ``["CPU"]`` on failure."""
+    try:
+        import openvino as ov
+
+        return list(ov.Core().available_devices) or ["CPU"]
+    except Exception:
+        return ["CPU"]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _manager
@@ -137,6 +148,64 @@ def create_app(config: AppConfig) -> FastAPI:
     async def health() -> dict[str, str]:
         return {"status": "ok", "service": "videostream-analytics"}
 
+    @app.get("/capabilities/prefilter")
+    async def prefilter_capabilities() -> dict[str, Any]:
+        """Advertise the prefilter model's selectable ``target_classes``.
+
+        The valid class set is whatever the deployed OpenVINO model embeds in
+        its ``rt_info`` labels, so it can only be known at runtime. When
+        ``labels_source`` is not ``embedded`` the returned ``class_names`` are
+        an untrustworthy COCO fallback and callers should confirm names rather
+        than treat the list as authoritative.
+        """
+        pf = config.defaults.prefilter
+        if not pf.model_path or not Path(pf.model_path).exists():
+            return {
+                "enabled": pf.enabled,
+                "model_path": pf.model_path,
+                "class_names": [],
+                "labels_source": "unavailable",
+                "available_devices": _available_devices(),
+            }
+        from stream_monitor.pipeline.prefilter_yolo import read_model_labels
+
+        class_names, labels_source = read_model_labels(pf.model_path)
+        return {
+            "enabled": pf.enabled,
+            "model_path": pf.model_path,
+            "class_names": class_names,
+            "labels_source": labels_source,
+            "available_devices": _available_devices(),
+        }
+
+    def _validate_target_classes(prefilter: PrefilterConfig | None) -> None:
+        """Reject ``target_classes`` not in the model's embedded label set.
+
+        Only hard-fails when labels are trustworthy (``embedded``); a
+        ``fallback_coco``/``unavailable`` label set is a guess, so we let the
+        request through rather than block on an untrusted list.
+        """
+        if not prefilter or not prefilter.enabled or not prefilter.target_classes:
+            return
+        model_path = prefilter.model_path or config.defaults.prefilter.model_path
+        if not model_path or not Path(model_path).exists():
+            return
+        from stream_monitor.pipeline.prefilter_yolo import read_model_labels
+
+        class_names, labels_source = read_model_labels(model_path)
+        if labels_source != "embedded":
+            return
+        unknown = [c for c in prefilter.target_classes if c not in class_names]
+        if unknown:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "unknown target_classes",
+                    "unknown": unknown,
+                    "class_names": class_names,
+                },
+            )
+
     @app.get("/sources")
     async def list_sources() -> list[dict[str, Any]]:
         """Return a bare array — MCP `monitor-ctl.ts` indexes by `s.source_id`."""
@@ -162,6 +231,7 @@ def create_app(config: AppConfig) -> FastAPI:
     @app.post("/register_source")
     async def register_source(req: RegisterSourceRequest) -> dict[str, Any]:
         mgr = get_manager()
+        _validate_target_classes(req.pipeline.prefilter)
         source = SourceConfig(
             source_id=req.source_id,
             source_url=req.source_url,
@@ -244,6 +314,7 @@ def create_app(config: AppConfig) -> FastAPI:
     @app.put("/sources/{source_id}/pipeline")
     async def update_pipeline(source_id: str, req: UpdatePipelineRequest) -> dict[str, Any]:
         mgr = get_manager()
+        _validate_target_classes(req.pipeline.prefilter)
         result = mgr.update_pipeline_config(
             source_id=source_id,
             motion=req.pipeline.motion,
