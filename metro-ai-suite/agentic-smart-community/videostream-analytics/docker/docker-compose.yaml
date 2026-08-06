@@ -40,13 +40,15 @@ services:
       # absolute PREFILTER_MODEL path before starting the service.
       - ${VIDEOSTREAM_CONFIG_FILE:-../config/config.yaml}:/app/config/config.yaml:ro
     entrypoint: ["videostream-analytics", "serve", "--config", "/app/config/config.yaml"]
-    # NPU passthrough: expose the host's Intel NPU device node so the containerised
-    # OpenVINO NPU plugin can reach it. The host node is /dev/accel/accel0 (crw-rw----
-    # root render). group_add adds the host 'render' gid (992) so a non-root container
-    # user could still open it; the default root user can open it regardless. If the
-    # host render gid differs, run `getent group render` and update the value below.
+    # Device passthrough: /dev/accel/accel0 is the Intel NPU, /dev/dri is the iGPU
+    # (renderD128 used by the OpenVINO GPU plugin). The host NPU node is
+    # crw-rw---- root render; group_add adds the host 'render' gid (992) so a
+    # non-root container user can still open both; the default root user can open
+    # them regardless. If the host render gid differs, run `getent group render`
+    # and update the value below.
     devices:
       - /dev/accel/accel0:/dev/accel/accel0
+      - /dev/dri:/dev/dri
     group_add:
       - ${RENDER_GROUP_ID:-992}
     # Run as the host user (VSA_UID/VSA_GID exported by docker/set_env.sh, falling
