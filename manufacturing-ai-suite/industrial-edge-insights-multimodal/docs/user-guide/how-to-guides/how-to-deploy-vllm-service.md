@@ -23,7 +23,7 @@ This section shows how to deploy the multimodal sample application with the virt
 
 This section shows how to download the **`Unsloth Qwen3.5-2B` model and `Unsloth Qwen3.5-2B fine-tuned LoRA` adapter**.
 
-1. Review and accept the [Unsloth Qwen3.5-2B          license](https://huggingface.co/unsloth/Qwen3.5-2B/blob/main/LICENSE) before downloading.
+1. Review and accept the [Unsloth Qwen3.5-2B license](https://huggingface.co/unsloth/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 
    > **Note:** The [Low-Rank Adaptation (LoRA) adapter](https://huggingface.co/Intel/qwen3.5-2b-vlm-weld-explainability-lora) was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
 
