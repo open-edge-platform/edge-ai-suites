@@ -73,6 +73,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ## Commands
 - `/start-stack` — Start UAV + apps
+- `/switch-camera-mode` — Switch between `sim` and `usb` camera profiles
 - `/validate-infra` — Check PX4, MQTT, cameras
 - `/capture-camera` — Grab frames for debug
 

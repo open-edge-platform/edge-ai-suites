@@ -11,13 +11,22 @@ Capture a single frame from any UAV camera for debugging/verification.
 To revert to MQTT mode, set `USE_RTSP=false` in docker-compose.yml.
 
 ## Usage
-Specify which camera to capture: `nadir`, `forward`, or `rear`
+Specify which camera to capture:
+- Sim mode: `nadir`, `forward`, `rear`
+- USB mode: usually `nadir`
+
+## Prerequisite (RTSP mode)
+RTSP paths are published only while UAV is armed.
+```bash
+curl -X POST http://localhost:8080/action/arm
+sleep 2
+```
 
 ## Capture from RTSP (Default Mode)
 
 ### Quick capture single frame (requires ffmpeg)
 ```bash
-# Replace <camera> with: nadir, forward, or rear
+# Replace <camera> with: nadir (usb mode) or nadir/forward/rear (sim mode)
 ffmpeg -i rtsp://localhost:8554/uav-1/<camera> -frames:v 1 /tmp/<camera>_frame.jpg -y
 
 # Verify it's a valid JPEG
@@ -26,6 +35,7 @@ file /tmp/<camera>_frame.jpg
 
 ### Capture all 3 cameras at once
 ```bash
+# Sim mode only
 for cam in nadir forward rear; do
   ffmpeg -i rtsp://localhost:8554/uav-1/${cam} -frames:v 1 /tmp/${cam}_frame.jpg -y 2>&1 | grep -q "frame=" && echo "✓ ${cam} captured" || echo "✗ ${cam} failed" &
 done
@@ -41,6 +51,12 @@ ffmpeg -i rtsp://localhost:8554/uav-1/nadir -t 5 -c copy /tmp/nadir_clip.mp4
 ### View live stream (requires ffplay)
 ```bash
 ffplay rtsp://localhost:8554/uav-1/nadir
+```
+
+If you still get 404, camera publisher is not active yet:
+```bash
+docker logs camera-bridge --tail 20      # sim mode
+docker logs usb-camera-bridge --tail 20  # usb mode
 ```
 
 ## Capture from MQTT (Legacy Mode)

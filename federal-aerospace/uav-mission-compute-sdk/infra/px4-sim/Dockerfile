@@ -48,30 +48,25 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
        libigdgmm12
 
 # PX4 build toolchain via PX4's own ubuntu.sh
+ARG PX4_VERSION=v1.17.0
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      git curl jq sudo lsb-release \
+      git curl sudo lsb-release \
     && if [ -n "${http_proxy}" ]; then \
          git config --system http.proxy  "${http_proxy}"; \
          git config --system https.proxy "${https_proxy}"; \
        fi
 
-# Resolve the latest PX4-Autopilot release tag from GitHub (no hardcoded version).
-# Cached in /px4_version so subsequent steps reuse the same resolved tag.
-ARG http_proxy
-ARG https_proxy
-ARG no_proxy
-RUN curl -fsSL https://api.github.com/repos/PX4/PX4-Autopilot/releases/latest \
-      | jq -r '.tag_name' > /px4_version \
-    && echo "Resolved PX4 version: $(cat /px4_version)"
+# PX4 version is pinned for deterministic builds.
+RUN echo "Using pinned PX4 version: ${PX4_VERSION}"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    git clone --depth 1 --branch "$(cat /px4_version)" \
+  git clone --depth 1 --branch "${PX4_VERSION}" \
          https://github.com/PX4/PX4-Autopilot.git /tmp/px4-setup \
     && bash /tmp/px4-setup/Tools/setup/ubuntu.sh --no-nuttx \
     && rm -rf /tmp/px4-setup
@@ -101,11 +96,11 @@ RUN gz fuel download -u "https://fuel.gazebosim.org/1.0/OpenRobotics/models/bayl
     && gz fuel download -u "https://fuel.gazebosim.org/1.0/OpenRobotics/models/Construction Barrel" \
     && gz fuel download -u "https://fuel.gazebosim.org/1.0/OpenRobotics/models/Rescue Randy"
 
-# PX4 source + submodules — uses the release tag resolved earlier in /px4_version
+# PX4 source + submodules — uses pinned PX4 version
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
-RUN git clone --depth 1 --branch "$(cat /px4_version)" \
+RUN git clone --depth 1 --branch "${PX4_VERSION}" \
       https://github.com/PX4/PX4-Autopilot.git /px4 \
     && cd /px4 \
     && git submodule update --init --recursive --depth 1 --jobs "$(nproc)"

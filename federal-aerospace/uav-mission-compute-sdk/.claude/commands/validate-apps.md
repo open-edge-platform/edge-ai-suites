@@ -16,7 +16,7 @@ Validate that the sample applications are running and connected to the UAV infra
 ### edge-ai-showcase (port 5002) — PRIMARY DEMO
 - Location: `sample-apps/edge-ai-showcase/`
 - Container: `edge-ai-showcase`
-- Subscribes to: All 3 camera detection feeds (`nadir`, `forward`, `rear`) + telemetry
+- Subscribes to: camera detection feeds configured by `VISION_CAMERA_IDS` + telemetry
 - Intel Edge AI Stack demo with multi-camera analytics
 
 ## Validation Steps
@@ -31,6 +31,14 @@ docker ps --filter name=edge-ai-showcase --filter name=vision-processor --format
 curl -s http://localhost:5002/health
 ```
 Expected: `{"cameras_active": [...], "mqtt_connected": true, "status": "healthy"}`
+
+### 2b. Verify active camera set matches mode
+```bash
+docker logs vision-processor-multicam 2>&1 | grep "Cameras:" | tail -1
+```
+Expected:
+- Sim mode: `Cameras: ['nadir', 'forward', 'rear']`
+- USB mode: `Cameras: ['nadir']`
 
 ### 3. Verify showcase is receiving frames (count should increase)
 ```bash
@@ -72,6 +80,9 @@ make apps
 | "Failed to resolve 'px4-gazebo'" | Wrong hostname in env. Must be `px4-gazebo` |
 | App can't connect to MQTT | Check it's on `uav-mission-compute-sdk_default` network |
 | Processed feed not showing | Check `vision-processor-multicam` is running |
+| Only one camera visible in sim mode | Set `.env` `VISION_CAMERA_IDS=nadir,forward,rear`, then restart apps |
+| Forward/rear errors in USB mode | Set `.env` `VISION_CAMERA_IDS=nadir`, then restart apps |
+| RTSP 404 from app | Arm UAV: `curl -X POST http://localhost:8080/action/arm` |
 
 ## Rebuild After Code Changes
 ```bash

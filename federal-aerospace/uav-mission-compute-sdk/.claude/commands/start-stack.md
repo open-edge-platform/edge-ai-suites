@@ -7,13 +7,33 @@ SPDX-License-Identifier: Apache-2.0
 
 Start the full UAV infrastructure and sample applications.
 
+## Modes
+- `sim` (default): Gazebo 3-camera bridge (`make up-sim-camera`)
+- `usb`: USB camera bridge (`make up-usb-camera`)
+
+When using `usb` mode, set in `.env` first:
+```env
+USB_VIDEO_DEVICE=/dev/video32
+USB_CAMERA_ID=nadir
+VISION_CAMERA_IDS=nadir
+```
+
+When using `sim` mode, set in `.env`:
+```env
+VISION_CAMERA_IDS=nadir,forward,rear
+```
+
 ## Start Order (dependencies matter)
 
 ### Step 1: Start core infrastructure
 ```bash
-make up
+# Sim mode
+make up-sim-camera
+
+# USB mode
+make up-usb-camera
 ```
-This starts: mosquitto → mediamtx → px4 → companion-bridge + camera-bridge + observability
+This starts: mosquitto -> mediamtx -> px4 -> companion-bridge + one camera bridge + observability
 
 ### Step 2: Wait for PX4 to become healthy (~60-90 seconds)
 ```bash
@@ -24,9 +44,14 @@ Wait until status shows "(healthy)". The bridges depend on this.
 ### Step 3: Verify bridges connected
 ```bash
 docker logs companion-bridge --tail 3
+
+# Sim mode
 docker logs camera-bridge --tail 3
+
+# USB mode
+docker logs usb-camera-bridge --tail 3
 ```
-Look for "Connected to PX4" and "First frame published"
+Look for "Connected to PX4" and camera frame push logs.
 
 ### Step 4: Start AI helpers + sample apps
 ```bash
@@ -38,6 +63,7 @@ This starts: vision-processor (AI helper) + edge-ai-showcase (demo dashboard).
 - **Edge AI Showcase**: http://localhost:5002
 - MQTT broker: localhost:1884
 - Companion REST API: localhost:8080
+- RTSP raw stream: rtsp://localhost:8554/uav-1/nadir
 
 ## Stop Everything
 ```bash
@@ -52,12 +78,25 @@ make down
 | CAMERA_IDS | nadir,forward,rear | Cameras to stream |
 | GZ_WORLD | baylands_multicam | Gazebo world name |
 | UAV_ID | uav-1 | UAV identifier used in all MQTT topics |
+| USB_VIDEO_DEVICE | /dev/video32 | Host camera device for usb mode |
+| USB_CAMERA_ID | nadir | RTSP camera path published by usb bridge |
+| VISION_CAMERA_IDS | nadir,forward,rear | Camera list consumed by vision processor |
 | INFERENCE_DEVICE | GPU | OpenVINO device (GPU/CPU/NPU) |
 | CONF_THRESH | 0.4 | Detection confidence threshold |
 
 ## After PX4 Restart
 Bridges lose connection when PX4 restarts. Fix:
 ```bash
+# Sim mode
 docker compose restart companion-bridge camera-bridge
+
+# USB mode
+docker compose restart companion-bridge usb-camera-bridge
 ```
 Wait 5 seconds, then verify with `/validate-infra`.
+
+## RTSP 404 Note
+RTSP paths exist only while UAV is armed. If stream returns 404:
+```bash
+curl -X POST http://localhost:8080/action/arm
+```

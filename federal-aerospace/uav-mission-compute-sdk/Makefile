@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean deps clean-venv bench bench-sweep bench-bridge-sweep help
+.PHONY: init up-sim-camera up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-sweep bench-bridge-sweep help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -10,18 +10,37 @@ FC_IP ?=
 
 COMPOSE_LOCAL   := docker compose -f docker-compose.yml
 COMPOSE_ETH     := docker compose -f docker-compose.yml -f docker-compose.ethernet.yml
-COMPOSE_APPS    := docker compose -f sample-apps/docker-compose.yml
+COMPOSE_APPS    := docker compose --env-file .env -f sample-apps/docker-compose.yml
 
 # ── Environment file ──────────────────────────────────────────────────────
 init:
-	@# Help: Create .env from .env.example if it does not already exist
-	@test -f .env && echo ".env already exists — skipping" || (cp .env.example .env && echo ".env created — edit it to set your own credentials before starting the stack")
+	@# Help: Create .env from .env.example and auto-detect GPU devices
+	@if test -f .env; then \
+		echo ".env already exists — skipping"; \
+	else \
+		cp .env.example .env; \
+		echo ".env created"; \
+		if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
+			GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
+			if [ -n "$$GPU_RENDER" ]; then \
+				echo "✅ GPU devices detected. Adding to .env:"; \
+				echo "   GPU_DEVICE=$$GPU_CARD"; \
+				echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+				echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
+				echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
+			fi; \
+		fi; \
+	fi
 
 # ── Local simulation mode (default) ───────────────────────────────────────
 # Camera mode is controlled via .env (multi-cam default, single-cam by switching vars)
-up:
-	@# Help: Start core infra (PX4 Gazebo sim + bridges + MQTT + RTSP + observability)
-	$(COMPOSE_LOCAL) up -d --build
+up-sim-camera:
+	@# Help: Start core infra with PX4 Gazebo sim cameras (sim-camera profile)
+	$(COMPOSE_LOCAL) --profile sim-camera up -d --build
+
+up-usb-camera:
+	@# Help: Start core infra with real USB camera + lightweight PX4 SIH + companion telemetry services
+	PX4_NETWORK_SERVICE=px4-sih PX4_ADDRESS=udpin://0.0.0.0:14550 $(COMPOSE_LOCAL) --profile usb-camera up -d --build
 
 build:
 	@# Help: Build all images (core infra + apps), using Docker layer cache
@@ -34,8 +53,8 @@ build-nc:
 	$(COMPOSE_APPS) build --no-cache
 
 down:
-	@# Help: Stop core infra
-	$(COMPOSE_LOCAL) down
+	@# Help: Stop core infra (works for both sim-camera and usb-camera profiles)
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down
 
 logs:
 	@# Help: Tail logs for core infra
@@ -83,8 +102,13 @@ deploy-remote:
 # ── Misc ──────────────────────────────────────────────────────────────────
 clean:
 	@# Help: Remove stopped containers and dangling images
-	docker compose -f docker-compose.yml down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans
 	docker image prune -f
+
+clean-all:
+	@# Help: Remove containers, compose volumes, and all unused images
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans --volumes
+	docker image prune -a -f
 
 help:
 	@printf "%-20s %s\n" "Target" "Description"
@@ -139,7 +163,7 @@ bench-sweep:  ## Broker-only stress: synthetic publisher at increasing Hz measur
 
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200
-bench-bridge-sweep:  ## End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency. Requires `make up` and uav armed. Tune with BRIDGE_SWEEP_RATES="20,50,100,200" SWEEP_DURATION=15
+bench-bridge-sweep:  ## End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency. Requires `make up-sim-camera` and uav armed. Tune with BRIDGE_SWEEP_RATES="20,50,100,200" SWEEP_DURATION=15
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
 
 clean-venv:  ## Remove the local .venv

@@ -11,7 +11,7 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 
 ```bash
 # 1. Start core infra (sim + bridges + MQTT + RTSP + observability)
-make up
+make up-sim-camera
 
 # 2. Wait for PX4 healthy (~60-90 sec)
 docker compose ps px4
@@ -57,7 +57,7 @@ flowchart LR
 ## Structure
 
 ```
-Makefile         Shortcuts: make up / make apps / make down / make apps-down
+Makefile         Shortcuts: make up-sim-camera / make apps / make down / make apps-down
 infra/           PX4 + Gazebo + MQTT bridges + observability (InfluxDB/Grafana)
   px4-sim/       Single PX4 image (local + remote); includes mavlink-router
   scripts/       deploy_remote.sh, test_api.sh

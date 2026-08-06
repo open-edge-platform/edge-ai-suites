@@ -320,7 +320,7 @@ Direct invocation:
 
 ### Bridge stress sweep (`--bridge-sweep`)
 
-Requires the full stack (`make up`), the UAV providing telemetry (armed or
+Requires the full stack (`make up-sim-camera`), the UAV providing telemetry (armed or
 producing at least one telemetry message), and `docker compose` on `PATH`.
 
 ```bash

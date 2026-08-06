@@ -5,67 +5,94 @@ SPDX-License-Identifier: Apache-2.0
 
 # Architecture
 
+## Camera Modes Overview
+
+This system supports **two mutually exclusive camera input modes**:
+
+| Mode | Profile | Command | Camera Source | Streams | Use Case |
+|------|---------|---------|---|---|---|
+| **Sim** | `sim-camera` | `make up-sim-camera` | Gazebo world (3 cameras) | `/uav-1/{nadir,forward,rear}` | Development, testing, no hardware |
+| **USB** | `usb-camera` | `make up-usb-camera` | Real V4L2 device (1 camera) | `/uav-1/nadir` | Real hardware field deployment |
+
+**See [CAMERA-MODES.md](CAMERA-MODES.md)** for detailed configuration, switching procedures, and troubleshooting.
+
+---
+
 ## System Overview
 
 ```mermaid
 flowchart TD
-    subgraph SIM["PX4 SITL + Gazebo Harmonic"]
-        PX4["PX4 Autopilot<br/>MAVLink :14540"]
-        CAM1["Nadir Camera<br/>416x416 @20fps"]
-        CAM2["Forward Camera<br/>416x416 @20fps"]
-        CAM3["Rear Camera<br/>416x416 @20fps"]
+    subgraph PX4_SHARED["🚁 PX4 Autopilot + Companion Bridge (Both Profiles)"]
+        PX4["PX4 SITL<br/>MAVLink :14540"]
+        CPAN["companion-bridge<br/>→ MQTT + REST"]
     end
     
-    subgraph BRIDGE["Bridges"]
-        CB["companion-bridge<br/>MAVLink → MQTT<br/>REST API :8080"]
-        MCB["camera-bridge<br/>Gazebo → RTSP<br/>H264 encoding"]
+    subgraph SIM["🟦 SIM-CAMERA Profile Only"]
+        GAZ["Gazebo<br/>3 cameras"]
+        CAM1["Nadir @20fps"]
+        CAM2["Forward @20fps"]
+        CAM3["Rear @20fps"]
+        CB["camera-bridge<br/>→ RTSP"]
     end
     
-    PX4 -->|MAVLink UDP| CB
-    CAM1 & CAM2 & CAM3 -->|gz-transport JSON| MCB
-    
-    CB -->|telemetry + status| MQTT["MQTT Broker<br/>mosquitto :1884"]
-    CB -->|"REST API<br/>(arm, takeoff, land)"| REST[REST :8080]
-    MCB -->|"H264/RTSP<br/>(3x streams)"| RTSP["MediaMTX<br/>RTSP :8554"]
-    
-    subgraph AI["Intel Edge AI"]
-        VP["vision-processor<br/>YOLOv2-tiny<br/>OpenVINO GPU"]
+    subgraph USB["🟩 USB-CAMERA Profile Only"]
+        USB_CAM["V4L2 Device<br/>/dev/video32"]
+        UCB["usb-camera-bridge<br/>→ RTSP"]
     end
     
-    RTSP -->|"rtsp://mediamtx/uav-1/{cam}<br/>(H264 decode)"| VP
-    MQTT -->|"armed state<br/>(pause/resume)"| VP
-    VP -->|"3x camera/detections<br/>(JSON only)"| MQTT
-    VP -->|"annotated H264/RTMP<br/>uav-1/{cam}/processed"| RTSP
-
-    subgraph OBS["Observability"]
-        TE["topic-extractor<br/>MQTT→InfluxDB"]
-        MM["metrics-manager<br/>Telegraf+qmassa+PMT<br/>:9090 / :9273"]
+    subgraph COMMON["✓ Shared Infrastructure (Both Profiles)"]
+        MQTT["MQTT Broker<br/>:1884"]
+        RTSP["MediaMTX<br/>:8554"]
+        AI["vision-processor<br/>YOLOv2-tiny"]
+        APP["edge-ai-showcase<br/>:5002"]
+    end
+    
+    subgraph OBS["📊 Observability (Both Profiles)"]
+        TE["topic-extractor<br/>MQTT → InfluxDB"]
+        MM["metrics-manager<br/>Telegraf<br/>:9090 :9273"]
         INFLUX["InfluxDB 2.7<br/>:8086"]
         GRAF["Grafana 11<br/>:3000"]
     end
 
-    MQTT -->|flight telemetry| TE
-    TE -->|flight_* measurements| INFLUX
-    MM -->|cpu/mem/gpu/npu/power/disk/net| INFLUX
-    INFLUX -->|Flux queries| GRAF
+    PX4 -->|MAVLink UDP| CPAN
+    CPAN -->|telemetry + commands| MQTT
 
-    subgraph APPS["Sample Applications"]
-        APP1["edge-ai-showcase<br/>:5002 PRIMARY"]
-        APP4["mission-simulation<br/>Python scripts"]
-    end
+    GAZ --> CAM1 & CAM2 & CAM3
+    CAM1 & CAM2 & CAM3 -->|gz-transport| CB
+    CB -->|H264/RTSP| RTSP
+
+    USB_CAM -->|V4L2 MJPEG| UCB
+    UCB -->|H264/RTSP| RTSP
+
+    MQTT -->|armed state| AI
+    RTSP -->|H264 stream| AI
+    AI -->|detections JSON| MQTT
+    AI -->|annotated video| RTSP
+
+    MQTT -->|data| APP
+    RTSP -->|feeds| APP
+    CPAN -->|REST :8080| APP
+
+    MQTT -->|flight telemetry| TE
+    TE -->|measurements| INFLUX
+    MM -->|host metrics| INFLUX
+    INFLUX -->|Flux queries| GRAF
     
-    MQTT -.->|detections + telemetry| APP1 & APP4
-    RTSP -.->|"annotated video<br/>(/processed paths)"| APP1
-    REST -.->|commands| APP4
-    
+    style PX4_SHARED fill:#fff3e0,stroke:#e65100,stroke-width:3px
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
-    style BRIDGE fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
-    style MQTT fill:#fff4e1,stroke:#f57c00,stroke-width:2px
-    style RTSP fill:#ffe0b2,stroke:#e65100,stroke-width:3px
-    style AI fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style USB fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style COMMON fill:#f5f5f5,stroke:#666,stroke-width:2px
     style OBS fill:#fff8e1,stroke:#f9a825,stroke-width:2px
-    style APPS fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
+
+**Legend**:
+- **PX4_SHARED** (orange): Runs in both `sim-camera` and `usb-camera` profiles
+- **SIM** (blue): Only active with `make up-sim-camera` (--profile sim-camera)
+- **USB** (green): Only active with `make up-usb-camera` (--profile usb-camera)
+- **COMMON** (gray): Always active, regardless of profile
+- **OBS** (yellow): Observability stack — telemetry storage & visualization
+
+---
 
 ## Data Flow (RTSP Architecture)
 
@@ -110,12 +137,19 @@ sequenceDiagram
 ## Data Flow Summary
 
 1. **Telemetry**: PX4 Autopilot → companion-bridge (MAVLink→MQTT) → MQTT → Applications
-2. **Camera Streams (RTSP)**: 
-   - Gazebo (3 cameras) → camera-bridge (gz-transport → ffmpeg H264 → RTSP) → MediaMTX → vision-processor (RTSP decode)
+2. **Camera Streams (RTSP)** — **Mutually Exclusive**:
+   - **Sim mode**: Gazebo (3 cameras) → camera-bridge (gz-transport → ffmpeg H264 → RTSP) → MediaMTX → vision-processor (RTSP decode)
+   - **USB mode**: V4L2 device (1 camera) → usb-camera-bridge (GStreamer+ffmpeg H264 → RTSP) → MediaMTX → vision-processor (RTSP decode)
    - Only detections published to MQTT (not raw frames)
 3. **AI Processing**: vision-processor (YOLOv2-tiny on GPU, RTSP input) → detections JSON → MQTT; annotated video (with bboxes) → MediaMTX `/uav-1/{cam}/processed`
 4. **Commands**: Applications/missions → REST API :8080 → companion-bridge → PX4 Autopilot (MAVLink)
 5. **Observability**: MQTT telemetry → topic-extractor → InfluxDB; host platform metrics → metrics-manager (Telegraf) → InfluxDB; InfluxDB → Grafana dashboards. metrics-manager also exposes a Prometheus endpoint at `:9273` (not scraped by this stack — available for external Prometheus integration)
+
+**Camera Mode Selection via Docker Compose Profiles**:
+- Sim mode: `docker compose --profile sim-camera up` (camera-bridge runs, usb-camera-bridge skipped)
+- USB mode: `docker compose --profile usb-camera up` (usb-camera-bridge runs, camera-bridge skipped)
+- Both modes: PX4, companion-bridge, MediaMTX, MQTT, and vision-processor run identically
+- Only the camera input source changes
 
 ## System Components
 
@@ -137,18 +171,53 @@ sequenceDiagram
 - **Output**: RTSP push to MediaMTX via RTSP ANNOUNCE (TCP)
 - **Behavior**: ffmpeg subprocess lifecycle tied to armed state — kill on disarm, spawn on arm
 - Shares PX4 IPC namespace for gz-transport
+- **Profile**: `sim-camera` (gated by Docker Compose profile)
 
 **ffmpeg pipeline** (per camera):
 ```
 rawvideo pipe → libx264 → RTSP push to rtsp://mediamtx:8554/uav-1/{cam}
 ```
 
+### USB Camera Bridge (`usb-camera-bridge`)
+- **Profile**: `usb-camera` (mutually exclusive with camera-bridge via Docker Compose profiles)
+- **Input**: Real V4L2 device via GStreamer `v4l2src` plugin
+- **Supported Formats**: MJPEG (most USB webcams) or raw YUY2
+- **Processing**:
+  - Decode MJPEG → BGR via jpegdec
+  - Pipe to ffmpeg for H264 encoding
+- **Encoding**: ffmpeg libx264 (2000 kbps, ultrafast, zerolatency)
+- **Output**: RTSP push to MediaMTX via RTSP ANNOUNCE (TCP) at single path (default `/uav-1/nadir`)
+- **Device Mapping**: Host `/dev/videoX` device passed into container as `/dev/video0`
+- **Configuration**: `USB_VIDEO_DEVICE`, `USB_CAMERA_ID`, `USB_CAPTURE_WIDTH/HEIGHT/FPS/FORMAT` in `.env`
+
+**GStreamer Pipeline** (single camera):
+```
+v4l2src device=/dev/video0 io-mode=2
+  → image/jpeg,format=MJPG → jpegdec
+  → videoconvert → video/x-raw,format=BGR
+  → appsink (push to ffmpeg stdin)
+
+ffmpeg -f rawvideo -pix_fmt bgr24 -s {width}x{height} -r {fps}
+  -i pipe:0
+  -c:v libx264 -preset ultrafast -b:v 2000k
+  -f rtsp rtsp://mediamtx:8554/uav-1/{USB_CAMERA_ID}
+```
+
+**Device Discovery**:
+```bash
+v4l2-ctl --list-devices
+# Example output: C922 Pro Stream Webcam: /dev/video32, /dev/video33, /dev/media1
+# Use: /dev/video32 (main), skip /dev/video33 (metadata), /dev/media1 (topology)
+```
+
 ### MediaMTX (RTSP Server)
 - **Port**: 8554 (RTSP), 8888 (HLS), 8889 (WebRTC), 9997 (API), 9998 (Metrics)
-- **Paths**: 
+- **Paths** (Sim mode, 3 cameras):
   - `rtsp://mediamtx:8554/uav-1/nadir` (raw, from camera-bridge)
   - `rtsp://mediamtx:8554/uav-1/forward` (raw, from camera-bridge)
   - `rtsp://mediamtx:8554/uav-1/rear` (raw, from camera-bridge)
+- **Paths** (USB mode, 1 camera):
+  - `rtsp://mediamtx:8554/uav-1/nadir` (raw, from usb-camera-bridge)
   - `rtsp://mediamtx:8554/uav-1/nadir/processed` (annotated, from vision-processor)
   - `rtsp://mediamtx:8554/uav-1/forward/processed` (annotated, from vision-processor)
   - `rtsp://mediamtx:8554/uav-1/rear/processed` (annotated, from vision-processor)

@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # cleanup-stack
 
-Stop and clean up all running Docker containers and volumes for the UAV simulation stack.
+Stop and clean up running Docker resources for the UAV stack.
 
 ## Implementation
 
@@ -20,29 +20,21 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
 # Stop sample apps + helpers first (they hold the shared network open)
 if [ -f sample-apps/docker-compose.yml ]; then
     echo "Stopping sample apps + helpers..."
-    docker compose -f sample-apps/docker-compose.yml down -v --remove-orphans 2>/dev/null || true
+    docker compose --env-file .env -f sample-apps/docker-compose.yml down --remove-orphans 2>/dev/null || true
 fi
 
-# Stop core infra
+# Stop core infra (both camera profiles)
 if [ -f docker-compose.yml ]; then
     echo "Stopping core infra..."
-    docker compose -f docker-compose.yml down -v --remove-orphans
+    docker compose -f docker-compose.yml --profile sim-camera --profile usb-camera down --remove-orphans
 fi
 
-# Clean up any remaining containers
-echo "Removing any remaining fedaero containers..."
-docker ps -a --filter "name=uav-mission-compute-sdk" --format "{{.Names}}" | xargs -r docker rm -f
-
-# Clean up networks
-echo "Removing Docker networks..."
-docker network rm uav-mission-compute-sdk_default 2>/dev/null || true
-
-# Prune stopped containers and dangling images
-echo "Pruning stopped containers..."
-docker container prune -f
+echo "Running Makefile cleanup target..."
+make clean
 
 echo "Cleanup complete!"
 echo ""
+echo "For deeper cleanup (compose volumes + all unused images), run: make clean-all"
 echo "To start fresh, run: /start-stack"
 ```
 
@@ -55,6 +47,6 @@ echo "To start fresh, run: /start-stack"
 ## Notes
 
 - Stops sample-apps layer first, then core infra
-- Removes volumes with `-v` flag
-- Removes orphaned containers
+- Uses `make clean` by default (safe cleanup)
+- Use `make clean-all` when you explicitly want to remove compose volumes + all unused images
 - Safe to run even if services are already stopped

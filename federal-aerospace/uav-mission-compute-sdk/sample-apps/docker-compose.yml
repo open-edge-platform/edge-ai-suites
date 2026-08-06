@@ -24,7 +24,7 @@ services:
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=1883
       - UAV_ID=${UAV_ID:-uav-1}
-      - CAMERA_IDS=nadir,forward,rear
+      - CAMERA_IDS=${VISION_CAMERA_IDS:-nadir,forward,rear}
       - INFERENCE_DEVICE=GPU
       - CONF_THRESH=0.4
       - STREAM_FPS=30
@@ -36,7 +36,8 @@ services:
       - no_proxy=mediamtx,mosquitto,localhost,127.0.0.1
       - NO_PROXY=mediamtx,mosquitto,localhost,127.0.0.1
     devices:
-      - intel.com/gpu=card0
+      - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
+      - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
     group_add:
       - "992"
     volumes:

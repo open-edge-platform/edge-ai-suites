@@ -7,9 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 
 Validate the UAV infrastructure (PX4 + Gazebo stack) is healthy and streaming.
 
+## Camera Profile Awareness
+- Sim profile: `camera-bridge` should run, `usb-camera-bridge` should not.
+- USB profile: `usb-camera-bridge` should run, `camera-bridge` should not.
+- In both profiles, PX4 + companion-bridge + mediamtx + mosquitto must be up.
+
 ## Context
 - Compose file: `docker-compose.yml` at repo root
-- Core services: mosquitto, mediamtx, px4, companion-bridge, camera-bridge
+- Core services: mosquitto, mediamtx, px4, companion-bridge, one camera bridge
 - AI helpers (vision-processor): `sample-apps/docker-compose.yml`
 - MQTT broker exposed on host port 1884 (telemetry + detections only)
 - MediaMTX RTSP server on host port 8554 (camera streams)
@@ -22,7 +27,13 @@ Validate the UAV infrastructure (PX4 + Gazebo stack) is healthy and streaming.
 ```bash
 docker compose ps
 ```
-Expected: All services "Up", px4 shows "(healthy)"
+Expected: Services "Up", px4 shows "(healthy)", and only one camera bridge active.
+
+### 1b. Confirm active camera bridge
+```bash
+docker compose ps --services --filter status=running | grep -E 'camera-bridge|usb-camera-bridge'
+```
+Expected: exactly one result.
 
 ### 2. Check MQTT broker is accepting connections
 ```bash
@@ -50,12 +61,20 @@ curl -sf http://localhost:9997/v3/paths/list | jq -r '.items[] | select(.name | 
 Expected: Shows "MediaMTX API OK" and lists uav-1 camera paths
 
 ### 6. Verify RTSP camera streams are available
+Arm first (required for stream publication):
+```bash
+curl -X POST http://localhost:8080/action/arm
+sleep 2
+```
+
 ```bash
 ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/nadir 2>&1 | grep -q '"codec_name":"h264"' && echo "Nadir stream OK" || echo "Nadir stream missing"
+
+# Sim profile only
 ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/forward 2>&1 | grep -q '"codec_name":"h264"' && echo "Forward stream OK" || echo "Forward stream missing"
 ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/rear 2>&1 | grep -q '"codec_name":"h264"' && echo "Rear stream OK" || echo "Rear stream missing"
 ```
-Expected: Streams show "OK" (requires UAV to be armed for frames to flow)
+Expected: `nadir` always present when armed; `forward/rear` present only in sim profile.
 
 ### 7. Verify vision processor detections (requires `make apps` running)
 ```bash
@@ -82,7 +101,8 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 | px4 unhealthy | `docker compose restart px4` then wait 60s |
 | mediamtx unhealthy | `docker compose restart mediamtx` |
 | companion-bridge "Connection refused" or "heartbeats timed out" | `docker compose restart companion-bridge` |
-| camera-bridge no RTSP streams | Check logs: `docker logs camera-bridge` (look for "RTSP pipeline started") |
+| camera-bridge no RTSP streams | Check logs: `docker logs camera-bridge` (sim profile - look for "RTSP pipeline started") |
+| usb-camera-bridge no RTSP streams | Check logs: `docker logs usb-camera-bridge` and verify `USB_VIDEO_DEVICE` |
 | camera-bridge GStreamer errors | Verify MediaMTX is healthy, check RTSP_HOST/RTSP_PORT env vars |
 | vision-processor no detections | Check RTSP consumption: `docker logs vision-processor-multicam` (look for "RTSP DL Streamer pipeline started") |
 | vision-processor "Could not connect to RTSP" | Verify MediaMTX has streams: `curl http://localhost:9997/v3/paths/list` |
@@ -92,7 +112,7 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 ## Restart Order (full stack)
 ```bash
 make down
-make up
+make up-sim-camera
 # Wait ~60s for PX4 healthcheck to pass, then bridges auto-connect
 make apps   # if you need AI helpers
 ```
