@@ -17,7 +17,8 @@ FROM node:22-bookworm
 #   python3         — evaluate_rules.py use-case overrides
 #   ca-certificates — HTTPS requests made by the entrypoint
 # Build deps are removed after npm ci: make/g++ build better-sqlite3 and dpkg-dev
-# unpacks the corresponding FFmpeg source package for license compliance.
+# unpacks the corresponding FFmpeg and ca-certificates source packages for license
+# compliance.
 RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -30,7 +31,7 @@ RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.s
         python3 \
     && mkdir -p /copyleft_sources/deb \
     && cd /copyleft_sources/deb \
-    && apt-get source -q ffmpeg
+    && apt-get source -q ca-certificates ffmpeg
 
 WORKDIR /app
 
