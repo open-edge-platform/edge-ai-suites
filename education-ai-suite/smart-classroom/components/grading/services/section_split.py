@@ -106,7 +106,8 @@ def _find_section_starts(
             if not bbox:
                 continue
             text = (ocr_region(png, bbox) or "").strip()
-            matched = any(p.match(text) for p in patterns)
+            lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+            matched = any(p.match(ln) for ln in lines for p in patterns)
 
             if debug_dir is not None:
                 crop_index += 1
