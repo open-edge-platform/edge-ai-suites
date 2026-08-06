@@ -421,7 +421,7 @@ Every event produced by a running source is delivered as an HTTP POST to the con
 
 ### 4.1 Envelope
 
-```json
+```
 {
   "sourceId":  "cam_child",
   "type":      "motion | static | recording",
