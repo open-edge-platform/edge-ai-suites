@@ -23,7 +23,7 @@ repositories=(
 )
 
 images=(
-  "intel/audio-analyzer:1.3.3"
+  "intel/audio-analyzer:2026.1.0"
   "intel/document-ingestion:2026.1.0"
   "intel/multimodal-embedding-serving:2026.1.0"
   "intel/vdms-dataprep:2026.1.0"
