@@ -1,6 +1,6 @@
 services:
   videostream-analytics:
-    image: videostream-analytics:latest
+    image: ${REGISTRY:-}videostream-analytics:${TAG:-latest}
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -51,12 +51,19 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - ${RENDER_GROUP_ID:-992}
-    # Run as the host user (VSA_UID/VSA_GID exported by docker/set_env.sh, falling
+    # Run as the host user (HOST_UID/HOST_GID exported by docker/set_env.sh, falling
     # back to 1000) so clip/segment files written to the bind-mounted data dir are
     # owned by the host user and the MCP storage cleaner can purge them. The uid
     # has no passwd entry in the image, so point HOME at /tmp for tools that need
     # a writable home (Python/OpenVINO caches). NPU access still works via
     # group_add on the host render gid above.
-    user: "${VSA_UID:-1000}:${VSA_GID:-1000}"
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     network_mode: host
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8999/health"]
+      start_period: 600s
+      start_interval: 10s
+      interval: 24h
+      timeout: 5s
+      retries: 3
