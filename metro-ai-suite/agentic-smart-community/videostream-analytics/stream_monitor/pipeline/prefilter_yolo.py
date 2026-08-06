@@ -36,6 +36,41 @@ _COCO_CLASSES = [
     "scissors", "teddy bear", "hair drier", "toothbrush",
 ]
 
+
+def labels_from_ov_model(ov_model) -> tuple[list[str], str]:
+    """Parse class labels from an already-read OpenVINO model's rt_info.
+
+    Returns ``(class_names, labels_source)`` where ``labels_source`` is one of
+    ``embedded`` (labels came from the model's ``rt_info``) or ``fallback_coco``
+    (no usable labels found — the COCO-80 guess is returned instead).
+    """
+    try:
+        labels = ov_model.get_rt_info(["model_info", "labels"]).astype(str)
+        names = labels.split()
+        if names:
+            return names, "embedded"
+    except Exception:
+        pass
+    return list(_COCO_CLASSES), "fallback_coco"
+
+
+def read_model_labels(model_path: str) -> tuple[list[str], str]:
+    """Read class labels from an OpenVINO IR model WITHOUT compiling it.
+
+    ``read_model`` alone is enough to reach ``rt_info`` — it does not touch the
+    inference device (no NPU/GPU compile), so this is cheap enough for a
+    capability query. Returns ``(class_names, labels_source)``; ``labels_source``
+    is ``unavailable`` when the model cannot be read at all.
+    """
+    import openvino as ov
+
+    try:
+        ov_model = ov.Core().read_model(model_path)
+    except Exception:
+        return list(_COCO_CLASSES), "unavailable"
+    return labels_from_ov_model(ov_model)
+
+
 _NMS_IOU_THRESH = 0.45
 
 # NPU runtime power-management (autosuspend ~100ms) can leave the device in D3
@@ -160,11 +195,7 @@ class YoloPrefilter:
         core.set_property({"CACHE_DIR": cache_dir})
         ov_model = core.read_model(model_path)
 
-        try:
-            labels = ov_model.get_rt_info(["model_info", "labels"]).astype(str)
-            self._class_names = labels.split() or list(_COCO_CLASSES)
-        except Exception:
-            self._class_names = list(_COCO_CLASSES)
+        self._class_names, _ = labels_from_ov_model(ov_model)
 
         in_shape = ov_model.input(0).partial_shape
         self._is_dynamic = in_shape.is_dynamic
@@ -293,8 +324,12 @@ class FramePrefilter:
 
             if dets:
                 self._consecutive_misses = 0
-                if not self._pass_decided:
-                    self._frame_hits += 1
+                # Count hits unconditionally: reset_for_next_segment() zeroes
+                # _frame_hits while preserving _pass_decided, so gating this on
+                # `not _pass_decided` would leave every segment after the first
+                # with hits=0 — result() then discards them as "tail" segments
+                # even though the person is still visible.
+                self._frame_hits += 1
                 for d in dets:
                     self._hit_classes.add(d["name"])
                     if d["conf"] > self._max_conf:

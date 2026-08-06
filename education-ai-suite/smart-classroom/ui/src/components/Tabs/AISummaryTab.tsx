@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 import "../../assets/css/AISummaryTab.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { firstSummaryToken, summaryDone, clearSummaryStartRequest, summaryStreamComplete } from "../../redux/slices/uiSlice";
@@ -11,11 +12,13 @@ const activeSummarySessions = new Set<string>();
 
 const AISummaryTab: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const summaryEnabled = useAppSelector(s => s.ui.summaryEnabled);
   const isLoading = useAppSelector(s => s.ui.summaryLoading);
   const { streamingText, finalText } = useAppSelector(s => s.summary);
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const shouldStartSummary = useAppSelector(s => s.ui.shouldStartSummary);
+  const [boardOcrPartial, setBoardOcrPartial] = useState(false);
   
   // Check if mindmap feature is enabled in backend
   const { guard, loaded: featuresLoaded } = useFeatureConfig();
@@ -40,6 +43,7 @@ const AISummaryTab: React.FC = () => {
     activeSummarySessions.add(sessionId);
     dispatch(clearSummaryStartRequest());
     dispatch(startSummary());
+    setBoardOcrPartial(false);
 
     (async () => {
       try {
@@ -51,6 +55,8 @@ const AISummaryTab: React.FC = () => {
               sentFirst = true; 
             }
             dispatch(appendSummary(ev.token));
+          } else if (ev.type === "board_ocr_partial") {
+            setBoardOcrPartial(true);
           } else if (ev.type === "error") {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
             dispatch(finishSummary());
@@ -79,6 +85,11 @@ const AISummaryTab: React.FC = () => {
 
   return (
     <div className="summary-tab">
+      {boardOcrPartial && (
+        <div className="summary-board-warning" role="status">
+          {t("summary.boardOcrPartial")}
+        </div>
+      )}
       {typed && (
         <div className="summary-content">
           <ReactMarkdown>{typed}</ReactMarkdown>

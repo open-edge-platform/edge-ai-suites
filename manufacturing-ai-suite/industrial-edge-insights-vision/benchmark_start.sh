@@ -59,19 +59,19 @@ awk_utils='
 DLSPS_NODE_IP="localhost"
 
 function get_pipeline_status() {
-    curl -k -s "https://$DLSPS_NODE_IP/api/pipelines/status" "$@"
+    curl -k -s "https://$DLSPS_NODE_IP/api/pipelines/status"
 }
 
 function check_and_loop_video() {
   local payload=$1
-  local source_uri=$(echo "$payload" | jq -r '.source.uri // empty')
+  local source_uri; source_uri=$(echo "$payload" | jq -r '.source.uri // empty')
   
   if [ -z "$source_uri" ]; then
     return 0
   fi
   
   # Extract just the filename from the URI (handle file:// prefix and paths)
-  local filename=$(basename "$source_uri")
+  local filename; filename=$(basename "$source_uri")
   
   # Check if filename ends with _looped.mp4
   if [[ "$filename" =~ _looped\.mp4$ ]]; then
@@ -98,7 +98,7 @@ function check_and_loop_video() {
     fi
     
     # Determine output path (same directory as base file)
-    local output_file="$(dirname "$base_file")/$filename"
+    local output_file; output_file="$(dirname "$base_file")/$filename"
     
     # Skip if looped file already exists
     if [ -f "$output_file" ]; then
@@ -417,7 +417,7 @@ if [ -z "$SAMPLE_APP" ]; then
 fi
 
 # Set APP_DIR using the same logic as sample_start.sh
-APP_DIR="$(dirname $(readlink -f "$0"))/apps/$SAMPLE_APP"
+APP_DIR="$(dirname "$(readlink -f "$0")")/apps/$SAMPLE_APP"
 
 # Check if APP_DIR directory exists
 if [ ! -d "$APP_DIR" ]; then
@@ -450,7 +450,7 @@ tns=0
 lns=$lower_bound
 uns=$upper_bound
 
-[[ "$@" = *"--trace"* && $lns -lt $uns ]] || echo "Start-Trace:"
+[[ "$*" = *"--trace"* && $lns -lt $uns ]] || echo "Start-Trace:"
 while [ $((uns - lns)) -gt 1 ] || [[ "$records" != *" $lns:"* ]] || [[ "$records" != *" $uns:"* ]]; do
   if [[ "$records" = *" $ns:"* ]]; then
     throughput=${records##* $ns:}
@@ -473,7 +473,7 @@ while [ $((uns - lns)) -gt 1 ] || [[ "$records" != *" $lns:"* ]] || [[ "$records
 done
 tns=$lns
 
-if [[ "$@" = *"--trace"* && $lns -lt $uns ]]; then
+if [[ "$*" = *"--trace"* && $lns -lt $uns ]]; then
   echo "Start-Trace:"
   throughput=$(run_workload_with_retries "$tns" "$pipeline_name_arg" "$payload_file")
 fi

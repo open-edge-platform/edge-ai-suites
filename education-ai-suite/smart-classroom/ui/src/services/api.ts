@@ -57,16 +57,8 @@ export interface FeatureDescriptor {
   id: string;
   dependency: string[];
   requires: string[];
-  type?: string;
-  panel?: string;
-  title?: string;
   endpoints?: Record<string, string>;
   mode?: string;
-  cameras?: {
-    front?: boolean;
-    back?: boolean;
-    board?: boolean;
-  };
 }
 
 /**
@@ -449,6 +441,9 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       if (!trimmed) continue;
       let chunk: any;
       try { chunk = JSON.parse(trimmed); } catch { continue; }
+      if (chunk.board_ocr_partial) {
+        yield { type: 'board_ocr_partial' };
+      }
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };
@@ -1754,6 +1749,17 @@ export async function downloadReportPdf(sessionId: string): Promise<void> {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// Which download formats the server can produce (GET /report/capabilities).
+// pdf_export is false when LibreOffice ('soffice') is missing, so the UI can
+// disable the PDF option up front instead of failing on click. Defaults to
+// pdf_export:false if the endpoint is unreachable, so we never offer a format
+// that can't be produced.
+export async function getReportCapabilities(): Promise<{ pdf_export: boolean }> {
+  const res = await fetch(`${BASE_URL}/report/capabilities`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load report capabilities (${res.status})`);
+  return res.json();
 }
 
 // Fetch a previously generated report's markdown (GET /report/{id}).

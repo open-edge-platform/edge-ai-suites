@@ -1,8 +1,21 @@
 # Release Notes: Live Video Captioning
 
-<!--## Version 2026.2.0-->
+## Version 2026.2.0
 
-<!--date TBD-->
+**Aug 4, 2026**
+
+**New**
+
+- Added NPU device inference compute support to captioning pipelines.
+- Added system capability information in the Live Video Captioning UI through metrics-manager updates.
+- Decoupled RAG-related changes (charts, Docker Compose, and documentation) from Live Video Captioning.
+- Updated documentation, including a workflow diagram and GIFs, to reflect all applied changes.
+- Bumped dependency package versions to address reported vulnerabilities.
+
+**Known Issues**
+
+- The sample application is not validated either on the Standalone or Developer Node
+  versions of Edge Microvisor Toolkit.
 
 ## Version 2026.1.0
 

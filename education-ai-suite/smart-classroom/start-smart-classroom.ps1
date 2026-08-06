@@ -878,10 +878,16 @@ Write-Host "----------------------------" -ForegroundColor Green
 
 # $configPath and $contentSearchEnabled were computed earlier (near script start).
 if (Test-Path $configPath) {
-    if ($configContent -match "ocr:\s*\n\s*enabled:\s*true") {
-        Write-Host "  OCR: Enabled" -ForegroundColor Yellow
+    if ($configContent -match "ocr_enabled:\s*true") {
+        Write-Host "  Document OCR: Enabled" -ForegroundColor Yellow
     } else {
-        Write-Host "  OCR: Disabled" -ForegroundColor Gray
+        Write-Host "  Document OCR: Disabled" -ForegroundColor Gray
+    }
+
+    if ($configContent -match "board_ocr\s*:\s*\{\s*enabled\s*:\s*true\s*\}") {
+        Write-Host "  Board OCR: Enabled" -ForegroundColor Yellow
+    } else {
+        Write-Host "  Board OCR: Disabled" -ForegroundColor Gray
     }
 
     if ($contentSearchEnabled) {

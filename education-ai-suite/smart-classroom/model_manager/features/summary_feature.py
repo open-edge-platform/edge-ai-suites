@@ -24,7 +24,13 @@ async def summarize_audio(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
+        warned_partial_board = False
         for token in pipeline.run_summarizer():
+            if not warned_partial_board and pipeline.board_ocr_partial:
+                warned_partial_board = True
+                yield json.dumps(
+                    {"token": "", "error": "", "board_ocr_partial": True}
+                ) + "\n"
             if token.startswith("[ERROR]:"):
                 logger.error(f"Error while summarizing: {token}")
                 yield json.dumps({"token": "", "error": token}) + "\n"

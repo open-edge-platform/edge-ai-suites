@@ -6,9 +6,7 @@
 # ------------------------------------------------------------------
 
 # Default values
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
-PIPELINE_ROOT="user_defined_pipelines" # Default root directory for pipelines
-PIPELINE="all"                         # Default to running all pipelines
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 DEPLOYMENT_TYPE=""                     # Default deployment type (empty for existing flow)
 CONFIG_FILE="$SCRIPT_DIR/config.yml"   # Config file path (For multiple instances)
 
