@@ -21,7 +21,7 @@ sudo swapon /swapfile_temp
 
 # Verify
 swapon --show
-# e.g. an existing /swap.img (8G) + /swapfile_temp (32G) = 40G total swap
+# e.g., an existing /swap.img (8G) + /swapfile_temp (32G) = 40G total swap
 ```
 
 ## Step 3. Lower swappiness

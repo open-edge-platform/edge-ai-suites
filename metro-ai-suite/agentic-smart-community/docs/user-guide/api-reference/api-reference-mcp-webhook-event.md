@@ -29,9 +29,9 @@ All non-2xx responses are **errors** the client must handle. We split client err
 | Status | When | Body | DB write |
 | ------ | ---- | ---- | -------- |
 | `200 OK` | Envelope + payload valid, required fields present, DB writes succeeded. | `{"status":"ok","event_id":<int>,"task_id":<int?>,"recording_id":<int?>}` — the relevant id(s) for the rows just inserted. | ✅ |
-| `400 Bad Request` | Body is not valid JSON, **or** the envelope is structurally broken: missing/empty `sourceId`, missing `type`, missing `payload`, or any of those fields has the wrong JSON type (e.g. `sourceId` is a number, `payload` is a string). | `{"error":"<reason>","code":"invalid_json"\|"invalid_envelope"}` — e.g. `"invalid JSON"`, `"envelope.sourceId is required"`, `"envelope.payload must be an object"`. | ❌ |
+| `400 Bad Request` | Body is not valid JSON, **or** the envelope is structurally broken: missing/empty `sourceId`, missing `type`, missing `payload`, or any of those fields has the wrong JSON type (e.g., `sourceId` is a number, `payload` is a string). | `{"error":"<reason>","code":"invalid_json"\|"invalid_envelope"}` — e.g., `"invalid JSON"`, `"envelope.sourceId is required"`, `"envelope.payload must be an object"`. | ❌ |
 | `404 Not Found` | Path does not match `/events` or `/health`. | empty | — |
-| `405 Method Not Allowed` | Wrong HTTP method on a known path (e.g. `GET /events`, `POST /health`). Sets `Allow` response header. | empty | — |
+| `405 Method Not Allowed` | Wrong HTTP method on a known path (e.g., `GET /events`, `POST /health`). Sets `Allow` response header. | empty | — |
 | `413 Payload Too Large` | Request body exceeds the configured size limit (default **1 MiB**, controlled by `events.max_body_bytes` in `config.yaml`). The connection is closed without buffering the rest of the body. | `{"error":"payload too large","code":"body_too_large","limit_bytes":1048576}` | — |
 | `415 Unsupported Media Type` | `Content-Type` is not `application/json` (also rejected when the header is missing entirely). | `{"error":"content-type must be application/json","code":"unsupported_media_type"}` | — |
 | `422 Unprocessable Entity` | Envelope parses and is structurally valid, but the event is semantically unprocessable: required payload fields missing for the given `type`, **or** `type` not in the enum `{motion, static, recording}`. Logged at `warn`. | `{"error":"missing required fields","code":"missing_required_fields","missing":["start_time","duration_seconds"]}` or `{"error":"unknown event type","code":"unknown_event_type","type":"foo"}` | ❌ |
@@ -91,8 +91,8 @@ A motion segment event. The clip has already been cut into a standalone MP4 file
 | `start_time`           | `string` (ISO 8601) | ✅ | Clip start time. Written to `events.start_time`. |
 | `end_time`             | `string` (ISO 8601) |  Optional | Clip end time. Written to `events.end_time`. |
 | `duration_seconds`     | `number` | ✅ | Clip duration in seconds (may be fractional). Written to `events.duration_seconds`. |
-| `prefilter_passed`     | `0 \| 1` |  Optional | Whether the client-side prefilter (e.g. NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
-| `prefilter_classes`    | `string` (JSON-encoded array) |  Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g. `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
+| `prefilter_passed`     | `0 \| 1` |  Optional | Whether the client-side prefilter (e.g., NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
+| `prefilter_classes`    | `string` (JSON-encoded array) |  Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g., `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
 | `prefilter_confidence` | `number` (0 – 1) |  Optional | Maximum confidence among hit classes. Written to `events.prefilter_confidence`. |
 | `trajectory_region`    | `string` (`"x1,y1,x2,y2"`) |  Optional | Bounding-box trajectory region for downstream ROI re-crop. Written to `events.trajectory_region`. The production client does not currently emit this — reserved for extension. |
 

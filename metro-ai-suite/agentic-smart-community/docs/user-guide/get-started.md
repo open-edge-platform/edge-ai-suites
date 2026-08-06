@@ -86,7 +86,7 @@ bash setup_docker.sh
 >
 > - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smartbuilding-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
-> - If the YOLO11s OpenVINO IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
+> - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 
 Confirm the model serving is ready before continuing:
 
