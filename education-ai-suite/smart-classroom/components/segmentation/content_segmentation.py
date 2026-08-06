@@ -1,11 +1,40 @@
 from components.base_component import PipelineComponent
 import openvino_genai as ov_genai
+import json
 import logging
 import re
+import json_repair
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.config_loader import config
 from utils.markdown_cleaner import strip_think_tokens
 
 logger = logging.getLogger(__name__)
+
+MIN_TOPICS = 15
+MAX_TOPICS = 25
+
+
+class Topic(BaseModel):
+    """One segmentation topic. Backs both the decoding grammar and output validation."""
+    model_config = ConfigDict(extra="ignore")
+
+    topic: str = Field(min_length=1)
+    start_time: float = Field(ge=0)
+    end_time: float = Field(gt=0)
+
+
+def _topics_json_schema() -> str:
+    """Schema for the topic array, passed to the decoder as a grammar."""
+    item = Topic.model_json_schema()
+    # Restrict generation to the three declared keys.
+    item["additionalProperties"] = False
+    return json.dumps({
+        "type": "array",
+        "items": item,
+        "minItems": MIN_TOPICS,
+        "maxItems": MAX_TOPICS,
+    })
+
 
 class ContentSegmentationComponent(PipelineComponent):
     def __init__(self, session_id, temperature=0.2):
@@ -104,79 +133,122 @@ class ContentSegmentationComponent(PipelineComponent):
         return None
 
     @staticmethod
-    def _repair_truncated_array(text: str) -> str | None:
-        """Attempt to recover a valid JSON array from truncated LLM output by
-        truncating at the last complete object and closing the array."""
-        start = text.find("[")
-        if start == -1:
-            return None
-        last_brace = text.rfind("},")
-        if last_brace == -1:
-            last_brace = text.rfind("}")
-        if last_brace == -1:
-            return None
-        return text[start:last_brace + 1] + "]"
+    def _sanitize_json(text: str) -> str:
+        """Restore corrupted keys ('end背景') and separators ('"end_time">2.0')."""
+        for prefix, canonical in (("end", "end_time"), ("start", "start_time"), ("topic", "topic")):
+            # Key name corrupted mid-token, separator mistyped, or both.
+            text = re.sub(rf'"{prefix}[^"]*"\s*[:>=;：＝]\s*', f'"{canonical}": ', text)
+            # Separator missing: a string value is never followed directly by a
+            # string or a number, so only a key can match here.
+            text = re.sub(rf'"{prefix}[^"]*"(?=\s*["\d-])', f'"{canonical}":', text)
+        # Trailing commas before a closing bracket.
+        text = re.sub(r',\s*([\]}])', r'\1', text)
+        return text
 
     @staticmethod
-    def _sanitize_json(text: str) -> str:
-        """Fix corrupted JSON keys (e.g., 'end背景' or 'end_背景' → 'end_time')."""
-        # Replace malformed keys with correct ones (matches any chars after the
-        # prefix, with or without an underscore, to handle token-corrupted output).
-        text = re.sub(r'"end[^"]*"\s*:', '"end_time":', text)
-        text = re.sub(r'"start[^"]*"\s*:', '"start_time":', text)
-        text = re.sub(r'"topic[^"]*"\s*:', '"topic":', text)
-        return text
+    def _validate_topics(objs: list) -> str | None:
+        """Drop entries that fail the Topic schema, sort by time, and dump the rest.
+
+        Returns None when nothing survives, which sends the caller to the next
+        recovery step.
+        """
+        kept, dropped = [], 0
+        for obj in objs:
+            if not isinstance(obj, dict):
+                dropped += 1
+                continue
+            try:
+                topic = Topic.model_validate(obj)
+            except ValidationError:
+                dropped += 1
+                continue
+            if topic.end_time <= topic.start_time:
+                dropped += 1
+                continue
+            kept.append(topic)
+
+        if not kept:
+            return None
+        if dropped:
+            logger.warning("Topic validation: kept %d, dropped %d invalid.", len(kept), dropped)
+
+        kept.sort(key=lambda t: t.start_time)
+        if not MIN_TOPICS <= len(kept) <= MAX_TOPICS:
+            logger.warning(
+                "Topic count %d is outside the requested %d-%d range.",
+                len(kept), MIN_TOPICS, MAX_TOPICS
+            )
+        return json.dumps([t.model_dump() for t in kept], ensure_ascii=False)
+
+    @staticmethod
+    def _parse_topics(text: str, tolerant: bool) -> str | None:
+        """Run one sanitize → parse → validate pass.
+
+        ``tolerant`` selects json_repair, which absorbs fences, surrounding
+        prose, truncation, single quotes, unescaped inner quotes and missing
+        punctuation.
+        """
+        text = ContentSegmentationComponent._sanitize_json(text)
+        try:
+            parsed = json_repair.loads(text) if tolerant else json.loads(text)
+        except Exception:
+            return None
+        # json_repair returns "" rather than raising on unrecoverable input.
+        if not isinstance(parsed, list):
+            return None
+        return ContentSegmentationComponent._validate_topics(parsed)
 
     @staticmethod
     def _clean_topics_output(raw: str) -> str:
         """
         Clean the raw output from the model to extract a valid JSON array string.
+
+        Escalating recovery: strict parse, fence-stripped parse, tolerant parse,
+        tolerant parse of the extracted array. Raises when none of them yields a
+        topic that passes validation.
         """
-        import json
-
-        def try_parse(s: str):
-            try:
-                s = ContentSegmentationComponent._sanitize_json(s)
-                parsed = json.loads(s)
-                if isinstance(parsed, list):
-                    return s
-            except Exception:
-                pass
-            return None
-
         text = raw.strip()
 
-        result = try_parse(text)
+        result = ContentSegmentationComponent._parse_topics(text, tolerant=False)
         if result:
             return result
 
+        # Fenced output is common enough to stay on the quiet path.
         stripped = re.sub(r"```[a-zA-Z]*\n?([\s\S]*?)```", r"\1", text).strip()
-        result = try_parse(stripped)
-        if result:
-            return result
-
-        extracted = ContentSegmentationComponent._extract_json_array(stripped)
-        if extracted:
-            result = try_parse(extracted)
+        if stripped != text:
+            result = ContentSegmentationComponent._parse_topics(stripped, tolerant=False)
             if result:
                 return result
 
+        result = ContentSegmentationComponent._parse_topics(text, tolerant=True)
+        if result:
+            logger.warning("_clean_topics_output: recovered malformed JSON via json_repair.")
+            return result
+
+        # Prose containing braces can derail the tolerant parser; retry on just
+        # the first balanced [...] block.
         extracted = ContentSegmentationComponent._extract_json_array(text)
         if extracted:
-            result = try_parse(extracted)
+            result = ContentSegmentationComponent._parse_topics(extracted, tolerant=True)
             if result:
-                return result
-
-        # Strategy 5: repair truncated array by truncating at last complete object
-        repaired = ContentSegmentationComponent._repair_truncated_array(text)
-        if repaired:
-            result = try_parse(repaired)
-            if result:
-                logger.warning("_clean_topics_output: recovered from truncated LLM output.")
+                logger.warning("_clean_topics_output: recovered array from surrounding text.")
                 return result
 
         logger.error("_clean_topics_output: all strategies failed. Preview: %s", raw[:200])
         raise ValueError("INVALID_TOPICS_FORMAT")
+
+    def _generate(self, prompt: str) -> str:
+        try:
+            return self.model.generate(
+                prompt, stream=False, json_schema=_topics_json_schema()
+            )
+        except TypeError:
+            logger.info("Backend does not accept json_schema; generating unconstrained.")
+        except Exception as exc:
+            logger.warning(
+                "Constrained generation failed (%s); retrying unconstrained.", exc
+            )
+        return self.model.generate(prompt, stream=False)
 
     def generate_topics(self, transcript_text, language=None):
         try:
@@ -189,7 +261,7 @@ class ContentSegmentationComponent(PipelineComponent):
                 enable_thinking=False
             )
 
-            full_output = strip_think_tokens(self.model.generate(prompt, stream=False))
+            full_output = strip_think_tokens(self._generate(prompt))
             clean_output = self._clean_topics_output(full_output)
             logger.info("Topic segmentation completed.")
             return clean_output

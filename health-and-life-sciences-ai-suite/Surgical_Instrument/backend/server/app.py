@@ -167,7 +167,10 @@ def _snapshot_full() -> dict[str, Any]:
     infer_p95 = float(inf.get("infer_p95_ms", 0.0))
     infer_p99 = float(inf.get("infer_p99_ms", 0.0))
     source_kind = str(inf.get("source_kind") or STATE.source_kind or "file")
-    input_source = "Basler live camera" if source_kind == "basler" else "Recorded file"
+    if source_kind == "basler":
+        input_source = "Basler live camera"
+    else:
+        input_source = "Recorded file"
 
     cfg = _cfg or {}
     model_cfg = cfg.get("model", {}) or {}

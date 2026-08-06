@@ -8,6 +8,114 @@ SHELL := /bin/bash
 UI_HOST_PORT       ?= 8080
 DETECTION_DEVICE   ?= GPU
 COMPOSE            ?= docker compose
+
+# ---- Image source: registry pull vs build-from-source ---------------------
+# REGISTRY=true  (default) runs prebuilt images (pulled from the registry).
+# REGISTRY=false builds every image locally from its Dockerfile.
+#   make up                   # pull prebuilt images at $(TAG)
+#   make up REGISTRY=false     # build all images from source
+REGISTRY      ?= true
+# Optional registry / namespace prefix (include the trailing slash), e.g.
+#   REGISTRY_URL=intel/   or   REGISTRY_URL=myreg.example.com:5000/intel/
+REGISTRY_URL  ?=
+TAG           ?= latest
+export TAG
+# Image references shared with docker-compose.yaml. Same names in both modes;
+# only the build-vs-pull action differs. Override individually if needed.
+
+# Registry mode lets `docker compose up` pull the images; source mode adds
+# `--build` so compose builds them from the Dockerfiles.
+_BUILD_FLAG := $(if $(filter true,$(REGISTRY)),,--build)
+# Runtime pipeline knobs (overridable via `make up VAR=...`).
+SOURCE_KIND           ?= file
+SOURCE_ARG            ?=
+
+# ---- Finalized Basler live pipeline defaults ------------------------------
+# When SOURCE_KIND=basler, `make up` activates the tuned production Basler
+# pipeline documented in docs/user-guide/basler-final-pipeline.md:
+#
+#   gencamsrc(ycbcr422_8,1280x720) ! vapostproc !
+#     video/x-raw(memory:VAMemory),format=NV12 ! queue !
+#     gvadetect(va-surface-sharing, GPU, latency) ! queue !
+#     gvawatermark ! gvafpscounter ! vapostproc ! xvimagesink sync=true
+#
+# with `taskset -c 3-5 chrt -f 70` core pinning applied by the launcher.
+#
+# Any knob can still be overridden on the CLI (e.g. `make up SOURCE_KIND=basler
+# SOURCE_ARG=40067928 BASLER_PIXEL_FORMAT=bayerbggr`).
+ifeq ($(strip $(SOURCE_KIND)),basler)
+  BASLER_PIXEL_FORMAT           ?= ycbcr422_8
+  PIPELINE_PREPROC_BACKEND      ?= va-surface-sharing
+  SCHEDULING_POLICY             ?= latency
+  BATCH_SIZE                    ?= 1
+  PIPELINE_GST_CORES            ?= 3-5
+  PIPELINE_GST_RT_PRIORITY      ?= 70
+  PIPELINE_DISPLAY_VIEW         ?= 1
+  # autovideosink is avoided here: in-container it auto-selects kmssink, which
+  # fails with a DRM resource error and crash-loops. xvimagesink is the
+  # reliable X sink for this stack.
+  PIPELINE_VIDEO_SINK           ?= xvimagesink
+  PIPELINE_SINK_SYNC            ?= true
+endif
+
+SCHEDULING_POLICY     ?=
+BATCH_SIZE            ?=
+PIPELINE_PREPROC_BACKEND ?=
+PIPELINE_IE_CONFIG    ?= PERFORMANCE_HINT=LATENCY
+PIPELINE_FPSCOUNTER   ?= 1
+DETECT                ?= 1
+WATERMARK             ?= 1
+# PIPELINE_IDENTITY controls the passthrough `identity` element in the main
+# chain. Default is 0 (dropped) for the production live path. Set to 1 to
+# insert it explicitly (e.g. for A/B testing or for external tooling that
+# hooks into it). NOTE: When PIPELINE_FRAME_LIMIT > 0, `identity eos-after=N`
+# is always kept regardless of this flag because it is structurally required
+# for clean EOS termination in bench runs.
+PIPELINE_IDENTITY     ?= 0
+MINIMAL               ?= 0
+# PIPELINE_SINK_SYNC=true|false forces the video sink's `sync=` property
+# (aka clock-sync). Empty (default) picks sync=true for file sources and
+# sync=false for live basler sources.
+PIPELINE_SINK_SYNC    ?=
+PIPELINE_DISPLAY_VIEW ?= 0
+PIPELINE_VIDEO_SINK   ?= autovideosink
+PIPELINE_X_DISPLAY    ?= $(or $(DISPLAY),$(if $(wildcard /tmp/.X11-unix/X0),:0,))
+
+# Friendly alias: `make up AUTOVIDEOSINK=true` -> DISPLAY_VIEW=1 + SINK_SYNC=true
+#                 `make up AUTOVIDEOSINK=false` -> DISPLAY_VIEW=0 + SINK_SYNC=false
+AUTOVIDEOSINK ?=
+ifneq ($(strip $(AUTOVIDEOSINK)),)
+  ifeq ($(strip $(AUTOVIDEOSINK)),true)
+    PIPELINE_DISPLAY_VIEW := 1
+    PIPELINE_SINK_SYNC    := true
+  else
+    PIPELINE_DISPLAY_VIEW := 0
+    PIPELINE_SINK_SYNC    := false
+  endif
+endif
+
+# PIPELINE_MINIMAL_DISPLAY=1 is a short alias for AUTOVIDEOSINK=true that
+# matches the user-facing Case 4 command style.
+PIPELINE_MINIMAL_DISPLAY ?=
+ifeq ($(strip $(PIPELINE_MINIMAL_DISPLAY)),1)
+  PIPELINE_DISPLAY_VIEW := 1
+  PIPELINE_SINK_SYNC    := false
+endif
+
+# ---- Case 4: core-pinning + Basler fixed-camera tuning knobs ---------------
+# CPU affinity (taskset -c) and RT priority (chrt -f) for each leg of the pipe.
+# Both parts of each pair must be set for the wrapper to apply; setting only
+# one of the pair is silently ignored (prevents half-configured taskset runs).
+PIPELINE_GST_CORES            ?=
+PIPELINE_GST_RT_PRIORITY      ?=
+# Basler fixed-camera tuning. BASLER_FIXED_CAMERA=1 disables auto-exposure /
+# auto-gain; the specific values below are then applied. Default (0) keeps the
+# existing auto-exposure + upper-limit cap from Cases 1-3 unchanged.
+BASLER_FIXED_CAMERA  ?= 0
+BASLER_EXPOSURE_US   ?=
+BASLER_GAIN          ?=
+BASLER_PIXEL_FORMAT  ?= bayerbggr
+
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
 # works without editing this file. Override on the CLI if needed.
 RENDER_GID         ?= $(shell getent group render 2>/dev/null | cut -d: -f3)
@@ -61,7 +169,7 @@ config:  ## Validate docker-compose configuration
 	@$(COMPOSE) config >/dev/null && echo "[config] docker-compose.yaml is valid"
 
 .PHONY: build
-build:  ## Build all service images
+build:  ## Build all service images from source (tags them at $(TAG))
 	$(COMPOSE) build
 
 # Print the URLs the user can hit. `docker compose up -d` already blocks on
@@ -83,12 +191,25 @@ endef
 
 .PHONY: up
 up:  ## First-boot: build images + start stack. May take 20-35 min if no cached IR.
-	@xhost +local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
-	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	DISPLAY=$(PIPELINE_X_DISPLAY) UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
+	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
+	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) \
+	PIPELINE_IDENTITY=$(PIPELINE_IDENTITY) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
+	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
+	PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
+	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
+	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
+	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d --build
+		$(COMPOSE) $(_COMPOSE_FILES) up -d $(_BUILD_FLAG)
+	@echo "[up] image mode: $(if $(filter true,$(REGISTRY)),REGISTRY (prebuilt images @ $(TAG)),SOURCE (built from Dockerfiles))"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
 	$(_print_urls)
@@ -99,13 +220,49 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 		echo "[run] No cached IR at $(IR_DIR)/ — run 'make up' first for first-boot train,"; \
 		echo "[run] or 'make assets' to seed IR from POC."; \
 		exit 1)
-	@xhost +local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost +local:root >/dev/null 2>&1 || true
 	@$(MAKE) --no-print-directory _camera-override
 	@$(MAKE) --no-print-directory port-audit
-	UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	DISPLAY=$(PIPELINE_X_DISPLAY) UI_HOST_PORT=$(UI_HOST_PORT) DETECTION_DEVICE=$(DETECTION_DEVICE) \
+	SOURCE_KIND=$(SOURCE_KIND) SOURCE_ARG=$(SOURCE_ARG) \
+	SCHEDULING_POLICY=$(SCHEDULING_POLICY) BATCH_SIZE=$(BATCH_SIZE) \
+	DETECT=$(DETECT) MINIMAL=$(MINIMAL) WATERMARK=$(WATERMARK) \
+	PIPELINE_IDENTITY=$(PIPELINE_IDENTITY) PIPELINE_SINK_SYNC=$(PIPELINE_SINK_SYNC) \
+	PIPELINE_DISPLAY_VIEW=$(PIPELINE_DISPLAY_VIEW) PIPELINE_VIDEO_SINK=$(PIPELINE_VIDEO_SINK) \
+	PIPELINE_GST_CORES=$(PIPELINE_GST_CORES) \
+	PIPELINE_GST_RT_PRIORITY=$(PIPELINE_GST_RT_PRIORITY) \
+	PIPELINE_PREPROC_BACKEND=$(PIPELINE_PREPROC_BACKEND) \
+	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
+	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
+	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
 		$(COMPOSE) $(_COMPOSE_FILES) up -d
 	$(_print_urls)
+
+.PHONY: show-cores
+show-cores:  ## Show P-core / E-core CPU sets for optimal core-pinning (Case 4)
+	@ALL=$$(cat /sys/devices/system/cpu/present 2>/dev/null || echo 'unknown'); \
+	PCORE=$$(cat /sys/devices/cpu_core/cpus 2>/dev/null); \
+	ECORE=$$(cat /sys/devices/cpu_atom/cpus 2>/dev/null); \
+	N=$$(nproc 2>/dev/null || echo '?'); \
+	printf '\n[cores] all CPUs        : %s  (nproc=%s)\n' "$$ALL" "$$N"; \
+	if [ -n "$$PCORE" ]; then \
+	  printf '[cores] P-cores (perf)  : %s  <-- use for PIPELINE_GST_CORES\n' "$$PCORE"; \
+	  printf '[cores] E-cores (effic) : %s\n' "$$ECORE"; \
+	  FIRST=$$(echo "$$PCORE" | grep -oE '^[0-9]+'); \
+	  REST=$$(echo "$$PCORE" | sed "s/^[0-9]*-*[0-9]*$$/&/" | \
+	          awk -F'-' -v f="$$FIRST" \
+	          '{if($$1==f && $$2!="") printf "%d-%s",$$1+1,$$2; else printf "%d",$$1+1}'); \
+	  printf '[cores] hint: PIPELINE_GST_CORES=%s\n' "$$PCORE"; \
+	  printf '              PIPELINE_GST_RT_PRIORITY=70\n'; \
+	else \
+	  printf '[cores] no P/E core split detected (non-hybrid CPU or older kernel)\n'; \
+	  printf '[cores] all cores are equivalent; use taskset freely.\n'; \
+	fi; \
+	printf '\n[cores] lscpu sample (top 6 rows):\n'; \
+	lscpu -e 2>/dev/null | head -7 || lscpu | head -10; \
+	printf '\n'
 
 # ---- Camera passthrough (auto-detected by `up` / `run`) ---------------------
 # Hardcoding /dev/videoN in docker-compose.yaml would break `make up` on
@@ -120,10 +277,29 @@ CAMERA_OVERRIDE ?= docker-compose.camera.override.yaml
 _COMPOSE_FILES   = -f docker-compose.yaml $(if $(wildcard $(CAMERA_OVERRIDE)),-f $(CAMERA_OVERRIDE),)
 
 .PHONY: list-cameras
-list-cameras:  ## List /dev/video* devices visible on this host
+list-cameras:  ## List /dev/video* + Basler serials (SOURCE_ARG values)
 	@ls -la /dev/video* 2>/dev/null || echo "[list-cameras] no /dev/video* present"
 	@echo ""
 	@lsusb -d 2676: 2>/dev/null || echo "[list-cameras] no Basler USB device present"
+	@echo ""
+	@echo "[list-cameras] Basler serials (SOURCE_ARG candidates):"
+	@if python3 -c "import pypylon" >/dev/null 2>&1; then \
+		python3 scripts/list_basler.py; \
+	elif docker ps --format '{{.Names}}' 2>/dev/null | grep -qx surgical-pipeline; then \
+		docker exec surgical-pipeline python3 -c "from pypylon import pylon;\
+ devs = pylon.TlFactory.GetInstance().EnumerateDevices();\
+ print('  (none)') if not devs else [print(f'  serial={d.GetSerialNumber()}  model={d.GetModelName()}') for d in devs]" \
+			2>/dev/null || echo "  (pypylon query failed inside surgical-pipeline)"; \
+	elif docker image inspect surgical-pipeline:dev >/dev/null 2>&1; then \
+		docker run --rm --entrypoint python3 \
+			--device /dev/bus/usb:/dev/bus/usb \
+			-v $(PWD)/scripts/list_basler.py:/opt/list_basler.py:ro \
+			surgical-pipeline:dev /opt/list_basler.py \
+			2>/dev/null || echo "  (pypylon query failed in one-shot container)"; \
+	else \
+		echo "  (host pypylon missing; install with 'python3 -m pip install pypylon'"; \
+		echo "   or run 'make up' once to build the pipeline image and re-run this target)"; \
+	fi
 
 # Internal: (re)generate the camera override if any /dev/video* exist, else
 # remove any stale override so `_COMPOSE_FILES` stays base-only. Idempotent.
@@ -176,7 +352,7 @@ logs:  ## Tail logs for all services
 .PHONY: down
 down:  ## Stop and remove containers
 	$(COMPOSE) down
-	@xhost -local:root >/dev/null 2>&1 || true
+	@DISPLAY=$(PIPELINE_X_DISPLAY) xhost -local:root >/dev/null 2>&1 || true
 
 .PHONY: clean
 clean: down  ## Remove containers, named volumes, and built images

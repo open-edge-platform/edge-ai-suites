@@ -9,6 +9,9 @@ data:
   FRIGATE_BASE_URL: {{ .Values.smartNvr.frigateBaseUrl | quote }}
   VSS_SEARCH_URL: "http://{{ .Values.smartNvr.vssSearchIp }}:{{ .Values.smartNvr.vssSearchPort }}"
   VSS_SUMMARY_URL: "http://{{ .Values.smartNvr.vssSummaryIp }}:{{ .Values.smartNvr.vssSummaryPort }}"
+  WATCH_BATCH_SIZE: {{ .Values.global.env.watchBatchSize | quote }}
+  BATCH_JOB_POLL_INTERVAL_SECONDS: {{ .Values.global.env.batchJobPollIntervalSeconds | quote }}
+  BATCH_JOB_TIMEOUT_SECONDS: {{ .Values.global.env.batchJobTimeoutSeconds | quote }}
   no_proxy: "{{ .Values.global.proxy.noProxy }},frigate-vms,pipeline-manager,{{ .Values.smartNvr.vlmServingIp }},mqtt-broker,redis,nginx,localhost"
   MQTT_BROKER: "mqtt-broker"
   MQTT_PORT: "1883"

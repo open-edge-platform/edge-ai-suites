@@ -8,4 +8,4 @@
 
 `cam_child` is your default. To see what's actually registered right now, call `smartbuilding_monitor_ctl action=list` and filter by `use_case: child_safety`.
 
-All camera access, VLM calls, database reads, and report generation go through the `smartbuilding_*` MCP tools, provided by the **`smart-building`** MCP server (registered in OpenClaw as `mcp.servers.smart-building`; verify with `openclaw mcp probe smart-building`). See the **smartbuilding-toolkit** skill for the tool reference. You don't address services, ports, or file paths directly. Alerts are raised automatically by the pipeline; you read them with `smartbuilding_alert_query`.
+All camera access, VLM calls, database reads, and report generation go through the `smartbuilding_*` MCP tools, provided by the **`smartbuilding`** MCP server (registered in OpenClaw as `mcp.servers.smartbuilding`; verify with `openclaw mcp probe smartbuilding`). See the **smartbuilding-toolkit** skill for the tool reference. You don't address services, ports, or file paths directly. Alerts are raised automatically by the pipeline; you read them with `smartbuilding_alert_query`.

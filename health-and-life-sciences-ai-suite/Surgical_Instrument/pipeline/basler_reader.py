@@ -104,6 +104,15 @@ def main() -> int:
                         "YUY2 modes were removed \u2014 pylon's converter can "
                         "only output RGB/BGR/Mono for Bayer-native models "
                         "like acA1920-150uc.")
+    p.add_argument("--fixed-camera", action="store_true", default=False,
+                   help="Disable auto-exposure and auto-gain and apply the values "
+                        "given by --exposure-us and --gain directly. When omitted "
+                        "(default) the existing auto-exposure + upper-limit cap "
+                        "logic runs unchanged (Cases 1-3 behaviour).")
+    p.add_argument("--exposure-us", type=int, default=None,
+                   help="Fixed ExposureTime in microseconds (only when --fixed-camera).")
+    p.add_argument("--gain", type=float, default=None,
+                   help="Fixed sensor gain in dB (only when --fixed-camera).")
     args = p.parse_args()
     w, h, fps = args.geometry if isinstance(args.geometry, tuple) \
         else _parse_geometry(args.geometry)
@@ -137,13 +146,33 @@ def main() -> int:
     # exposure will always be short (µs range) — this cap only matters for
     # bench/demo use where the camera is pointed at ambient office lighting.
     max_exposure_us = max(1000, int(1_000_000 / (fps * 2)))  # ≈ 8 333 µs @60 fps
-    _try_set("ExposureAuto", "Continuous")
-    _try_set("AutoExposureTimeUpperLimit",     max_exposure_us)  # SFNC 2.x
-    _try_set("AutoExposureTimeAbsUpperLimit",  max_exposure_us)  # legacy alias
-    sys.stderr.write(
-        f"[basler_reader] target fps={fps} → AutoExposureTimeUpperLimit "
-        f"capped at {max_exposure_us} µs (≈ 1/{1_000_000 // max_exposure_us} s)\n"
-    )
+
+    if args.fixed_camera:
+        # ---- Fixed-camera mode (Case 4) ------------------------------------
+        # Disable auto-exposure and auto-gain; apply the user-supplied values
+        # so that the scene is deterministic and the latency distribution is
+        # not perturbed by the Basler AE/AGC control loop.
+        _try_set("ExposureAuto", "Off")
+        _try_set("GainAuto", "Off")
+        if args.exposure_us is not None:
+            _try_set("ExposureTime",    float(args.exposure_us))  # SFNC 2.x
+            _try_set("ExposureTimeAbs", float(args.exposure_us))  # legacy alias
+        if args.gain is not None:
+            _try_set("Gain",    args.gain)           # SFNC 2.x (dB)
+            _try_set("GainRaw", int(args.gain))      # legacy alias (raw counts)
+        sys.stderr.write(
+            f"[basler_reader] fixed mode: ExposureAuto=Off GainAuto=Off "
+            f"ExposureTime={args.exposure_us} µs  Gain={args.gain} dB\n"
+        )
+    else:
+        # ---- Auto-exposure mode (Cases 1-3, unchanged) ---------------------
+        _try_set("ExposureAuto", "Continuous")
+        _try_set("AutoExposureTimeUpperLimit",     max_exposure_us)  # SFNC 2.x
+        _try_set("AutoExposureTimeAbsUpperLimit",  max_exposure_us)  # legacy alias
+        sys.stderr.write(
+            f"[basler_reader] target fps={fps} → AutoExposureTimeUpperLimit "
+            f"capped at {max_exposure_us} µs (≈ 1/{1_000_000 // max_exposure_us} s)\n"
+        )
 
     # Output pixel format. Two paths:
     #
