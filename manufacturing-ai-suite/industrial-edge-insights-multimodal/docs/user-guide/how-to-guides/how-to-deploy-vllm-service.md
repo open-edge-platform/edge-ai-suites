@@ -1,6 +1,6 @@
 # Deploy the vLLM Service for Defect Explanation
 
-This section shows how to deploy the multimodal sample application with the [vLLM service](https://vllm.ai/) enabled using the Makefile targets.
+This section shows how to deploy the multimodal sample application with the vLLM service enabled using the Makefile targets.
 
 ## System Requirements
 
