@@ -44,7 +44,7 @@ default.
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 # Run GPU-only stream density benchmark: test 1–16 streams, target >= 28.5 FPS
-./benchmark_start.sh -p yolov11s_gpu -l 1 -u 16 -t 28.5
+./calc_stream_density.sh -p yolov11s_gpu -l 1 -u 16 -t 28.5
 ```
 
 ### Example Results (GPU Only)
@@ -111,7 +111,7 @@ default.
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 # Run NPU-only stream density benchmark: test 1–16 streams, target >= 28.5 FPS
-./benchmark_start.sh -p yolov11s_npu -l 1 -u 16 -t 28.5
+./calc_stream_density.sh -p yolov11s_npu -l 1 -u 16 -t 28.5
 ```
 
 ### Example Results (NPU Only)
@@ -183,7 +183,7 @@ Run the combined workflow with 7 GPU streams and 5 NPU streams, using **nstreams
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 # Run GPU and NPU pipelines simultaneously with fixed stream counts: 7 GPU streams and 5 NPU streams, target >= 28.5 FPS
-./benchmark_start.sh -p yolov11s_gpu yolov11s_npu -nstreams 7 5 -t 28.5
+./calc_stream_density.sh -p yolov11s_gpu yolov11s_npu -nstreams 7 5 -t 28.5
 ```
 
 ### Example Results (GPU!NPU)
