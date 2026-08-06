@@ -54,6 +54,7 @@ def test_chat_page_has_accessible_controls(client, respx_mock):
     assert 'aria-label="Generating response"' in response.text
     assert 'id="chat-error"' in response.text
     assert 'id="chat-message"' in response.text
+    assert 'id="chat-clear"' in response.text
     assert '<option value="completed-run-id"' in response.text
     assert "active-run-id" not in response.text
     assert 'src="/static/js/chat.js"' in response.text
@@ -109,6 +110,12 @@ def test_chat_script_uses_safe_dom_rendering():
     assert "thinkingIndicator.hidden = !value" in script
     assert "transcript.appendChild(thinkingIndicator)" in script
     assert "sendRequest(lastRequest, false)" in script
+    assert 'sessionStorage.setItem(historyStorageKey(), JSON.stringify(chatHistory))' in script
+    assert 'runIdInput.addEventListener("change", showSelectedRunHistory)' in script
+    assert 'encodeURIComponent(runId || "default")' in script
+    assert "restoreHistory();" in script
+    assert 'sessionStorage.removeItem(historyStorageKey())' in script
+    assert "innerHTML" not in script
 
     live_script = (
         Path(__file__).parents[1] / "src" / "static" / "js" / "live-status.js"

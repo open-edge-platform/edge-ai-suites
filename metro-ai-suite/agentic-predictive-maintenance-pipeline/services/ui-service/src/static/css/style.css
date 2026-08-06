@@ -465,7 +465,14 @@ footer {
   padding: 0.65rem 0.75rem;
   font: inherit;
 }
-.prompt-suggestions h3 { font-size: 0.82rem; color: #555; margin-bottom: 0.5rem; }
+.prompt-suggestions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.prompt-suggestions h3 { font-size: 0.82rem; color: #555; margin-bottom: 0; }
 .prompt-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .prompt-chip {
   border: 1px solid #b9d8ee;

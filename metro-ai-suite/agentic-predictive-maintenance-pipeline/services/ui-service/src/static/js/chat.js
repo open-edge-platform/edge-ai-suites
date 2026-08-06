@@ -16,9 +16,13 @@
   const errorBox = document.getElementById("chat-error");
   const errorText = document.getElementById("chat-error-text");
   const retryButton = document.getElementById("chat-retry");
+  const clearButton = document.getElementById("chat-clear");
   const defaultRunOption = document.getElementById("chat-default-run-option");
+  const STORAGE_KEY_PREFIX = "apm.chat.history.v2";
+  const MAX_STORED_MESSAGES = 100;
   let lastRequest = null;
   let pending = false;
+  let chatHistory = [];
 
   function selectedMode() {
     return document.querySelector('input[name="chat-mode"]:checked').value;
@@ -30,7 +34,36 @@
       : "Latest completed run";
   }
 
-  function appendMessage(kind, text, options = {}) {
+  function historyStorageKey() {
+    const runId = runIdInput.value.trim();
+    return `${STORAGE_KEY_PREFIX}:${encodeURIComponent(runId || "default")}`;
+  }
+
+  function persistHistory() {
+    try {
+      sessionStorage.setItem(historyStorageKey(), JSON.stringify(chatHistory));
+    } catch (error) {
+      console.debug("Unable to save chat history for this browser session:", error);
+    }
+  }
+
+  function removeStoredHistory() {
+    try {
+      sessionStorage.removeItem(historyStorageKey());
+    } catch (error) {
+      console.debug("Unable to remove chat history for this browser session:", error);
+    }
+  }
+
+  function storedMessage(kind, text, options) {
+    const message = { kind, text };
+    if (typeof options.mode === "string") message.mode = options.mode;
+    if (options.query !== undefined && options.query !== null) message.query = options.query;
+    if (options.data !== undefined && options.data !== null) message.data = options.data;
+    return message;
+  }
+
+  function appendMessage(kind, text, options = {}, save = true) {
     emptyState.hidden = true;
     const article = document.createElement("article");
     article.className = `chat-message chat-message-${kind}`;
@@ -69,6 +102,73 @@
 
     transcript.appendChild(article);
     transcript.scrollTop = transcript.scrollHeight;
+
+    if (save) {
+      chatHistory.push(storedMessage(kind, text, options));
+      if (chatHistory.length > MAX_STORED_MESSAGES) {
+        chatHistory = chatHistory.slice(-MAX_STORED_MESSAGES);
+      }
+      persistHistory();
+    }
+  }
+
+  function restoreHistory() {
+    let stored;
+    try {
+      stored = JSON.parse(sessionStorage.getItem(historyStorageKey()) || "[]");
+    } catch (error) {
+      console.debug("Unable to restore chat history for this browser session:", error);
+      removeStoredHistory();
+      return;
+    }
+
+    if (!Array.isArray(stored)) {
+      removeStoredHistory();
+      return;
+    }
+
+    chatHistory = stored.filter((message) => (
+      message
+      && (message.kind === "user" || message.kind === "assistant")
+      && typeof message.text === "string"
+      && message.text.length <= 100000
+      && (message.mode === undefined || (
+        typeof message.mode === "string" && message.mode.length <= 50
+      ))
+    )).slice(-MAX_STORED_MESSAGES);
+
+    chatHistory.forEach((message) => {
+      appendMessage(message.kind, message.text, {
+        mode: message.mode,
+        query: message.query,
+        data: message.data,
+      }, false);
+    });
+
+    if (chatHistory.length !== stored.length) persistHistory();
+  }
+
+  function showSelectedRunHistory() {
+    transcript.querySelectorAll(".chat-message").forEach((message) => message.remove());
+    chatHistory = [];
+    lastRequest = null;
+    errorBox.hidden = true;
+    emptyState.hidden = false;
+    restoreHistory();
+    status.textContent = chatHistory.length
+      ? "Chat history loaded for the selected run."
+      : "No chat history for the selected run.";
+  }
+
+  function clearHistory() {
+    transcript.querySelectorAll(".chat-message").forEach((message) => message.remove());
+    chatHistory = [];
+    removeStoredHistory();
+    emptyState.hidden = false;
+    lastRequest = null;
+    errorBox.hidden = true;
+    status.textContent = "Chat history cleared.";
+    messageInput.focus();
   }
 
   function setPending(value) {
@@ -76,6 +176,7 @@
     submitButton.disabled = value;
     messageInput.disabled = value;
     runIdInput.disabled = value;
+    clearButton.disabled = value;
     document.querySelectorAll('input[name="chat-mode"]').forEach((input) => {
       input.disabled = value;
     });
@@ -172,9 +273,12 @@
   retryButton.addEventListener("click", () => {
     if (lastRequest) sendRequest(lastRequest, false);
   });
+  clearButton.addEventListener("click", clearHistory);
+  runIdInput.addEventListener("change", showSelectedRunHistory);
 
   document.querySelectorAll('input[name="chat-mode"]').forEach((input) => {
     input.addEventListener("change", updateRunScopeLabel);
   });
+  restoreHistory();
   updateRunScopeLabel();
 })();
