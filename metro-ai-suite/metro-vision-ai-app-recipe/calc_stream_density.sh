@@ -358,20 +358,260 @@ run_workload_with_retries () {
   echo "$throughput_max"
 }
 
+# Starts one or more pipeline types in nstreams mode (no binary search; stream counts are fixed).
+function run_concurrent_workload() {
+  local pipelines_csv=$1
+  local nstreams_csv=$2
+  local payload_file=$3
+
+  IFS=',' read -ra pipeline_names <<< "$pipelines_csv"
+  IFS=',' read -ra nstreams_list <<< "$nstreams_csv"
+
+  local total_streams=0
+  for n in "${nstreams_list[@]}"; do
+    total_streams=$((total_streams + n))
+  done
+
+  local outdir="benchmark-multi"
+  rm -rf "$outdir" && mkdir -p "$outdir"
+
+  for i in "${!pipeline_names[@]}"; do
+    local pname="${pipeline_names[$i]}"
+    local nstreams="${nstreams_list[$i]}"
+
+    local payload_body
+    payload_body=$(jq -r --arg name "$pname" '.[] | select(.pipeline == $name) | .payload' "$payload_file")
+    if [ -z "$payload_body" ]; then
+      echo "Error: Pipeline '$pname' not found in $payload_file" >&2
+      return 1
+    fi
+
+    check_and_loop_video "$payload_body"
+    if [ $? -ne 0 ]; then
+      echo "Error: Video preparation failed for '$pname'." >&2
+      return 1
+    fi
+
+    echo >&2
+    echo -n ">>>>> Starting $nstreams stream(s) for pipeline '$pname'..." >&2
+    for (( x=1; x<=nstreams; x++ )); do
+      local current_payload="$payload_body"
+      if echo "$payload_body" | jq -e '.destination' > /dev/null; then
+        current_payload=$(echo "$payload_body" | jq \
+          --arg topic "${pname}_${x}" \
+          --arg peer_id "${pname}_${x}" \
+          '.destination.metadata.topic = $topic |
+           .destination.frame."peer-id" = $peer_id')
+      fi
+
+      local response
+      response=$(curl -k -s -w "\nHTTP_CODE:%{http_code}" \
+        "https://$DLSPS_NODE_IP/api/pipelines/user_defined_pipelines/${pname}" \
+        -X POST -H "Content-Type: application/json" -d "$current_payload")
+
+      local http_code
+      http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+      local response_body
+      response_body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+      if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
+        echo >&2
+        echo "Error: Failed to start '$pname' stream $x (HTTP $http_code): $response_body" >&2
+        return 1
+      fi
+      sleep 1
+    done
+    echo " done." >&2
+  done
+
+  echo -n ">>>>> Waiting for all $total_streams pipeline(s) to reach RUNNING state..." >&2
+  local running_count=0
+  local attempts=0
+  while [ "$running_count" -lt "$total_streams" ] && [ "$attempts" -lt 120 ]; do
+    local status_output
+    status_output=$(get_pipeline_status)
+    running_count=$(echo "$status_output" | jq '[.[] | select(.state=="RUNNING")] | length')
+    echo -n "." >&2
+    attempts=$((attempts + 1))
+    sleep 2
+  done
+
+  if [ "$running_count" -lt "$total_streams" ]; then
+    echo " Error: Only $running_count / $total_streams pipelines reached RUNNING state." >&2
+    get_pipeline_status | jq . >&2
+    return 1
+  fi
+  echo " All $total_streams pipeline(s) running." >&2
+
+  echo ">>>>> Monitoring all $total_streams nstreams-mode stream(s) for $MAX_DURATION seconds..." >&2
+  local start_time=$SECONDS
+  while (( SECONDS - start_time < MAX_DURATION )); do
+    local elapsed_time=$((SECONDS - start_time))
+    echo -ne "Monitoring... ${elapsed_time}s / ${MAX_DURATION}s\r" >&2
+    get_pipeline_status >> "$outdir/sample.logs" 2>/dev/null
+    sleep 1
+  done
+  echo -ne "\n" >&2
+
+  stop_all_pipelines
+
+  gawk -v ns=$total_streams -v percentile="${THROUGHPUT_PERCENTILE:-0.9}" "$awk_utils"'
+  /^\[/ {
+    split("",fps_running)
+    ns_running=0
+  }
+  /"avg_fps":/ {
+    fps=$2*1
+  }
+  /"state": "RUNNING"/ {
+    fps_running[++ns_running]=fps
+  }
+  /^\]/ && ns_running==ns {
+    for (i=1;i<=ns;i++)
+      throughput[i][++throughput_ct[i]]=fps_running[i]
+  }
+  END {
+    ns=length(throughput)
+    if (ns>0) {
+      ns1=0
+      for (i=1;i<=ns;i++) {
+        throughput_p[i]=calc_percentile(throughput[i],percentile)
+        if (throughput_p[i]>0) {
+          throughput_std[i]=calc_stdev(throughput[i])
+          print "throughput #"i": "throughput_p[i]
+          ns1++
+        }
+      }
+      print "throughput median: "calc_median(throughput_p)
+      print "throughput average: "calc_avg(throughput_p)
+      print "throughput stdev: "calc_max(throughput_std)
+      print "throughput cumulative: "calc_sum(throughput_p)
+      mm=(ns1<ns)?0:calc_min(throughput_p)
+      print "throughput min: "mm
+    }
+  }
+  ' "$outdir/sample.logs" > "$outdir/kpi.txt"
+}
+
 # --- Main Script ---
 
 function usage() {
-    echo "Usage: $0 -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "Usage (stream-density mode):"
+    echo "  $0 -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo
+    echo "Usage (nstreams mode):"
+    echo "  $0 -p <p1> [p2 ...] -nstreams <N1> [N2 ...] [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "  Example: $0 -p yolov11s_gpu yolov11s_npu -nstreams 9 7"
     echo
     echo "Arguments:"
-    echo "  -p <pipeline_name>   : (Required) The name of the pipeline to benchmark (e.g., object_tracking_cpu)."
-    echo "  -l <lower_bound>     : (Required) The starting lower bound for the number of streams."
-    echo "  -u <upper_bound>     : (Required) The starting upper bound for the number of streams."
-    echo "  -t <target_fps>      : Target FPS for stream-density mode (default: 14.95)."
+    echo "  -p <pipeline_name>   : (Required) Pipeline name(s). Provide one or more names for nstreams mode."
+    echo "  -l <lower_bound>     : (Required for stream-density mode) Starting lower bound for stream count."
+    echo "  -u <upper_bound>     : (Required for stream-density mode) Starting upper bound for stream count."
+    echo "  -nstreams <N1> [N2 ...] : (Required for nstreams mode) Fixed stream count per pipeline, in the same order as -p."
+    echo "  -t <target_fps>      : Target FPS threshold (default: 14.95); used for stream-density mode and accepted in nstreams mode for CLI consistency."
     echo "  -i <interval>        : Monitoring duration in seconds for each test run (default: 60)."
     echo "  -c <throughput_percentile> : Throughput percentile for KPI calculation (default: 0.9)."
     exit 1
 }
+
+# ---------------------------------------------------------------------------
+# Nstreams mode: triggered by the presence of -nstreams flag.
+# Parses args manually, runs one or more pipeline types simultaneously, then exits.
+# ---------------------------------------------------------------------------
+if [[ " $* " == *" -nstreams "* ]]; then
+  _multi_pipelines=()
+  _multi_nstreams=()
+  _multi_target_fps="14.95"
+  MAX_DURATION=60
+  THROUGHPUT_PERCENTILE="0.9"
+
+  _idx=1
+  while (( _idx <= $# )); do
+    _arg="${!_idx}"
+    case "$_arg" in
+      -p)
+        _idx=$((_idx + 1))
+        while (( _idx <= $# )) && [[ "${!_idx}" != -* ]]; do
+          _multi_pipelines+=("${!_idx}")
+          _idx=$((_idx + 1))
+        done ;;
+      -nstreams)
+        _idx=$((_idx + 1))
+        while (( _idx <= $# )) && [[ "${!_idx}" != -* ]]; do
+          _multi_nstreams+=("${!_idx}")
+          _idx=$((_idx + 1))
+        done ;;
+      -t) _idx=$((_idx + 1)); _multi_target_fps="${!_idx}"; _idx=$((_idx + 1)) ;;
+      -i) _idx=$((_idx + 1)); MAX_DURATION="${!_idx}"; _idx=$((_idx + 1)) ;;
+      -c) _idx=$((_idx + 1)); THROUGHPUT_PERCENTILE="${!_idx}"; _idx=$((_idx + 1)) ;;
+      *)  _idx=$((_idx + 1)) ;;
+    esac
+  done
+
+  if [ ${#_multi_pipelines[@]} -eq 0 ] || [ ${#_multi_nstreams[@]} -eq 0 ]; then
+    echo "Error: -nstreams mode requires at least one -p name and one stream count." >&2
+    usage
+  fi
+  if [ ${#_multi_pipelines[@]} -ne ${#_multi_nstreams[@]} ]; then
+    echo "Error: Number of pipeline names (${#_multi_pipelines[@]}) must match number of -nstreams values (${#_multi_nstreams[@]})." >&2
+    usage
+  fi
+
+  ENV_FILE="./.env"
+  if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: .env file not found."
+    exit 1
+  fi
+  SAMPLE_APP=$(grep -E "^SAMPLE_APP=" "$ENV_FILE" | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+  if [ -z "$SAMPLE_APP" ]; then
+    echo "Error: SAMPLE_APP variable not found in .env file." >&2
+    exit 1
+  fi
+  payload_file="./${SAMPLE_APP}/benchmark_app_payload.json"
+  if [ ! -f "$payload_file" ]; then
+    echo "Error: Benchmark payload file not found: $payload_file" >&2
+    exit 1
+  fi
+
+  echo ">>>>> Performing pre-flight checks..." >&2
+  if ! curl -k -s --fail "https://$DLSPS_NODE_IP/api/pipelines/status" > /dev/null; then
+    echo "Error: DL Streamer Pipeline Server is not running or not reachable at https://$DLSPS_NODE_IP" >&2
+    exit 1
+  fi
+  echo "DLSPS is reachable." >&2
+
+  stop_all_pipelines || exit 1
+
+  _total_concurrent=0
+  for _n in "${_multi_nstreams[@]}"; do
+    _total_concurrent=$((_total_concurrent + _n))
+  done
+
+  echo ">>>>> Starting nstreams-mode pipeline workload:" >&2
+  for _i in "${!_multi_pipelines[@]}"; do
+    echo "       ${_multi_pipelines[$_i]}: ${_multi_nstreams[$_i]} stream(s)" >&2
+  done
+
+  if run_concurrent_workload \
+      "$(IFS=,; echo "${_multi_pipelines[*]}")" \
+      "$(IFS=,; echo "${_multi_nstreams[*]}")" \
+      "$payload_file"; then
+    echo >&2
+    echo "======================================================" >&2
+    echo "✅ FINAL RESULT: Nstreams-mode Pipeline Run Completed!" >&2
+    echo "   Pipelines : ${_multi_pipelines[*]}" >&2
+    echo "   Streams   : ${_multi_nstreams[*]}" >&2
+    echo "   Total     : $_total_concurrent streams" >&2
+    echo "======================================================" >&2
+    echo >&2
+    echo "KPIs (all $_total_concurrent streams combined):"
+    cat "benchmark-multi/kpi.txt" 2>/dev/null
+  else
+    echo "❌ FINAL RESULT: Nstreams-mode pipeline run failed." >&2
+    exit 1
+  fi
+  exit 0
+fi
 
 pipeline_name_arg=""
 target_fps="14.95"
