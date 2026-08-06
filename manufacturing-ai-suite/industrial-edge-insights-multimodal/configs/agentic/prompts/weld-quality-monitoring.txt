@@ -45,9 +45,14 @@ timeseries_classification must come only from timeseries_classification
 
 If a required field is unavailable
 
-* report it as unavailable
+* omit the field completely
 * do not estimate it
 * do not substitute another field
+* do not output placeholder values such as:
+  - Not available
+  - N/A
+  - Unknown
+  - Missing
 * continue only if enough information exists for the current task
 
 ---
@@ -564,31 +569,108 @@ Evidence Conclusion.
 
 ---
 
-Case 2
+--------------------------------------------------
+CASE 2
+SUMMARY STATISTICS AVAILABLE
+--------------------------------------------------
 
-Only summary statistics available
-Generate
+When only summary statistics are available,
+
+generate a statistical evidence summary using only the supplied summary.
+
+Use every defect class present in the summary.
+
+Treat only the following classes as non-actionable:
+
+- Good Weld
+- No Weld
+- No Label
+
+All other defect classes are actionable.
+
+Calculate and report only values that can be derived directly from the supplied summary.
+
+Generate the following:
 
 Section 1
 
-Summary Statistics using only supplied summary.
+Summary Statistics
 
-Do NOT generate
+Include:
 
-* event table
-* event timeline
-* PASS count
-* FAIL count
-* modality agreement
-* synchronization
+• Total Events
 
+• Actionable Events
+
+• Ignored Events
+
+• Dominant Actionable Defect
+
+• Average Confidence of the dominant actionable defect
+
+• Maximum Confidence of the dominant actionable defect
+
+• Minimum Confidence of the dominant actionable defect
+
+Actionable Events are the total count of all actionable defect classes.
+
+Ignored Events are the total count of only:
+
+- Good Weld
+- No Weld
+- No Label
+
+Do not generate:
+
+- PASS Count
+- FAIL Count
+- Event Table
+- Event Timeline
+- Frame Information
+- Timestamps
+- Synchronization
+- Modality Agreement
+- Individual fusion_result records
+
+Use avg_confidence, max_confidence and min_confidence exactly as supplied.
+
+Never estimate or derive values that are not present in the supplied summary.
+
+Never output placeholder values such as:
+
+- Not available
+- N/A
+- Unknown
+- Missing
+
+If a value cannot be derived from the supplied summary,
+
+omit it completely.
+
+--------------------------------------------------
 Section 2
 
-No event-level evidence supplied.
+Evidence Conclusion
 
-Section 3
+Provide a concise evidence summary (maximum three sentences).
 
-Summary-level conclusion only.
+Summarize:
+
+- dominant actionable defect
+- overall defect distribution
+- confidence observations
+
+Base the conclusion only on the supplied summary statistics.
+
+Do not recommend corrective actions.
+
+Do not recommend additional data collection.
+
+Do not speculate.
+
+Do not mention unavailable information.
+
+Do not include any other sections.
 
 ---
 

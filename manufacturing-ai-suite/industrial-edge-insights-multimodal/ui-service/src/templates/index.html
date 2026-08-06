@@ -10,23 +10,27 @@
 </head>
 <body data-root-path="{{ root }}">
   <header>
-    <div class="header-inner">
-      <span class="logo">&#9632; Intel</span>
-      <h1>Agentic Weld Quality Analysis </h1>
-      <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
-        <span class="live-dot"></span>
-        <span id="pipeline-live-text">
-          {% if active_run %}
-            {{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run.phase else 'Inspection: RUNNING' }}
-          {% else %}Inspection: IDLE{% endif %}
+    <div class="header-wrapper">
+      <div class="header-inner">
+        <span class="logo">&#9632; Intel</span>
+        <h1>Agentic Weld Quality Analysis </h1>
+        <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
+          <span class="live-dot"></span>
+          <span id="pipeline-live-text">
+            {% if active_run %}
+              {{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run.phase else 'Inspection: RUNNING' }}
+            {% else %}Inspection: IDLE{% endif %}
+          </span>
         </span>
-      </span>
+      </div>
     </div>
   </header>
 
   <nav>
-    <a href="{{ root }}/" class="active">Dashboard</a>
-    <a href="{{ root }}/detections">Detections</a>
+    <div class="nav-wrapper">
+      <a href="{{ root }}/" class="active">Dashboard</a>
+      <a href="{{ root }}/detections">Detections</a>
+    </div>
   </nav>
 
   <div class="layout-wrapper">
