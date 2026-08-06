@@ -48,6 +48,7 @@ class TextGenHandler:
         temperature: Optional[float] = None,
         enable_thinking: Optional[bool] = None,
         json_schema: Optional[str] = None,
+        pre_templated: bool = False,
     ) -> Union[Iterator[str], str]:
         return self._get_runner().submit(
             prompt,
@@ -57,6 +58,7 @@ class TextGenHandler:
             temperature=temperature,
             enable_thinking=enable_thinking,
             json_schema=json_schema,
+            pre_templated=pre_templated,
         )
 
     def load(self) -> None:

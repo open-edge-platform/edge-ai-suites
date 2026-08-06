@@ -7,6 +7,7 @@ import json_repair
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.config_loader import config
 from utils.markdown_cleaner import strip_think_tokens
+from utils.prompt_budget import render_summarizer_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -238,9 +239,15 @@ class ContentSegmentationComponent(PipelineComponent):
         raise ValueError("INVALID_TOPICS_FORMAT")
 
     def _generate(self, prompt: str) -> str:
+        # ``prompt`` is already rendered by render_summarizer_prompt, so
+        # pre_templated=True keeps the pipeline from templating it a second time
+        # (which re-enables thinking and triggers repetition loops).
         try:
             return self.model.generate(
-                prompt, stream=False, json_schema=_topics_json_schema()
+                prompt,
+                stream=False,
+                json_schema=_topics_json_schema(),
+                pre_templated=True,
             )
         except TypeError:
             logger.info("Backend does not accept json_schema; generating unconstrained.")
@@ -248,17 +255,15 @@ class ContentSegmentationComponent(PipelineComponent):
             logger.warning(
                 "Constrained generation failed (%s); retrying unconstrained.", exc
             )
-        return self.model.generate(prompt, stream=False)
+        return self.model.generate(prompt, stream=False, pre_templated=True)
 
     def generate_topics(self, transcript_text, language=None):
         try:
             logger.info("Generating topic segmentation...")
 
-            prompt = self.model.tokenizer.apply_chat_template(
-                self._build_messages(transcript_text, language=language),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False
+            prompt = render_summarizer_prompt(
+                self.model.tokenizer,
+                self._build_messages(transcript_text, language=language)
             )
 
             full_output = strip_think_tokens(self._generate(prompt))

@@ -2,11 +2,15 @@ fastapi==0.116.1
 funasr==1.2.7
 
 # OpenVINO stack
-openvino==2026.2.1
-openvino-genai==2026.2.1.0
-openvino-tokenizers==2026.2.1
-optimum==2.2.0
-optimum-intel==2.0.0
+openvino==2026.3.0
+openvino-genai==2026.3.0.0
+openvino-tokenizers==2026.3.0.0
+# optimum-intel 2.1.0 is the first release whose qwen3_5 / qwen3_5_moe export
+# configs are actually reachable: 2.0.0 ships them but pins transformers<5.1,
+# while Qwen3_5TextOpenVINOConfig requires >=5.2.0. 2.1.0 relaxes the pin to
+# <5.6 and requires optimum ~=2.3.0.
+optimum==2.3.0
+optimum-intel==2.1.0
 nncf==2.19.0
 
 # Core runtime
@@ -33,12 +37,15 @@ torchaudio==2.8.0
 torchvision==0.23.0
 
 # HuggingFace ecosystem
-transformers==5.0.0
+# transformers 5.5.3: needed for transformers.models.qwen3_5_moe, which the
+# OpenVINO export patchers for Qwen3.5/3.6 import. Highest CVE-clean release
+# inside optimum-intel 2.1.0's transformers<5.6 range.
+transformers==5.5.3
 tokenizers==0.22.2
 datasets==3.6.0
 accelerate==1.10.1
-huggingface-hub==1.3.0
-safetensors==0.6.2
+huggingface-hub==1.5.0 # transformers needs >=1.5.0; optimum-intel caps at <1.22
+safetensors==0.7.0 # optimum-intel caps at <0.8.0
 
 # Whisper / audio
 openai-whisper==20250625
@@ -58,6 +65,12 @@ fsspec>=2023.1.0,<=2025.3.0
 psutil==7.1.3
 py-cpuinfo==9.0.0
 hf_xet==1.4.3
+
+# Qwen3.5 / Qwen3.6 MoE VLM export and runtime extras
+qwen-vl-utils
+einops
+timm
+sentencepiece
 
 # Vision / detection
 ultralytics==8.4.39

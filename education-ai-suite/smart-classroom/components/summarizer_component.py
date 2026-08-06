@@ -5,6 +5,8 @@ from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.artifacts.path import get_artifact_path
 from utils.markdown_cleaner import StreamThinkFilter
+from utils.model_family import is_qwen3_dense
+from utils.prompt_budget import render_summarizer_prompt
 from model_manager import ModelManager
 import logging, os
 import time
@@ -90,7 +92,7 @@ class SummarizerComponent(PipelineComponent):
             body = input_text
 
         user_content = body
-        if "qwen3" in str(self.model_name).lower() and not body.lstrip().startswith("/no_think"):
+        if is_qwen3_dense(self.model_name) and not body.lstrip().startswith("/no_think"):
             user_content = "/no_think\n" + body
 
         return [
@@ -110,11 +112,9 @@ class SummarizerComponent(PipelineComponent):
         summary_path = get_artifact_path(self.session_id, "summary.md")
         StorageManager.save(summary_path, "", append=False)
 
-        prompt = self.summarizer.tokenizer.apply_chat_template(
-            self._get_message(input_text, board_text),
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False
+        prompt = render_summarizer_prompt(
+            self.summarizer.tokenizer,
+            self._get_message(input_text, board_text)
         )
 
         start = time.perf_counter()
@@ -123,7 +123,7 @@ class SummarizerComponent(PipelineComponent):
         think_filter = StreamThinkFilter()
 
         try:
-            streamer = self.summarizer.generate(prompt)
+            streamer = self.summarizer.generate(prompt, pre_templated=True)
             for token in streamer:
                 if first_token_time is None:
                     first_token_time = time.perf_counter()

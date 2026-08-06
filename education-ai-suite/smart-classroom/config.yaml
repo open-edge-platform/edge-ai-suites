@@ -363,12 +363,15 @@ models:
     cls_model: PP-LCNet_x1_0_doc_ori
 
   text_gen:
-    enabled: true 
+    enabled: true
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
+    # Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also supported; both are
+    # validated only on device: GPU with weight_format: int8.
     device: GPU # GPU or CPU
     weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
+    context_length: 160000 # input token budget; prompts trim to context_length - max_new_tokens
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
 
