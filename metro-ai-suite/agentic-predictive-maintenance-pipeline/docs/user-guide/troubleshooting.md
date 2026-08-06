@@ -90,6 +90,53 @@ Also confirm that the agent service itself is healthy:
 curl http://localhost:5002/health
 ```
 
+## Ask & Analyze Is Unavailable or Returns an Error
+
+**Symptom**: The chat page reports that LLM-backed analysis is disabled, cannot reach the model, or
+cannot gather supporting data.
+
+1. Confirm the deployment mode:
+
+   ```bash
+   docker inspect apm-ui --format '{{range .Config.Env}}{{println .}}{{end}}' \
+     | grep -E '^(LLM_BASE_URL|LLM_MODEL_NAME)='
+   ```
+
+   `LLM_MODE=fallback` omits `apm-llm`, leaving Ask & Analyze unavailable while preserving the
+   dashboard and rule-based detect-then-reason workflow.
+
+2. In LLM mode, verify that the shared OVMS service is healthy:
+
+   ```bash
+   curl http://localhost:8010/v1/config
+   docker logs apm-llm
+   ```
+
+3. Verify internal DNS/connectivity from the UI container:
+
+   ```bash
+   docker exec apm-ui python3 -c \
+     "import urllib.request; print(urllib.request.urlopen('http://apm-llm:8000/v1/config').status)"
+   ```
+
+   `apm-llm` must remain in the UI's `no_proxy` list. Do not replace the internal URL with
+   `localhost`; inside `apm-ui`, `localhost` refers to the UI container itself.
+
+4. If an answer cannot be grounded, check the relevant source:
+
+   ```bash
+   curl http://localhost:8080/api/agents/runs
+   curl http://localhost:8080/api/storage/detections/summary
+   ```
+
+   Analysis mode needs completed agent output. Detection mode needs stored detections. A specified
+   run ID must exist, have completed, and include a valid detection ID window.
+
+Questions longer than 4,000 characters, malformed run IDs, unsupported modes/control characters,
+extra request fields, and invalid structured-query plans are rejected. Each upstream request has a
+15-second timeout. On constrained hardware, wait until `apm-llm` is healthy, shorten the question,
+and retry.
+
 ## OpenVINO Model Server Service is Unhealthy after Startup
 
 **Symptom**: `apm-llm` shows as unhealthy in `docker ps` even after several minutes.
@@ -170,5 +217,8 @@ curl http://localhost:8080/api/agents/runs/$RUN_ID | python3 -m json.tool
 | No detections in storage | `datastream.mp4` is missing or pipeline is not triggered | Prepare data and trigger the DL Streamer pipeline |
 | Agent run is stuck in `in_progress` | OpenVINO model server service is unhealthy or is still loading | Check `docker logs apm-llm` or switch to the fallback mode |
 | UI shows no runs | NGINX proxy issue or agent service is down | Check `docker logs apm-nginx` and `docker logs apm-agent` |
+| Ask & Analyze is disabled | `LLM_MODE=fallback` | Restart in LLM mode after preparing the configured model |
+| Ask & Analyze cannot reach the model | `apm-llm` is unhealthy, still loading, or incorrectly proxied | Check `apm-llm`, `LLM_BASE_URL`, and the UI `no_proxy` value |
+| Ask & Analyze has no grounding data | Requested run is incomplete/missing or storage has no detections | Check agent runs and the detection summary |
 | `apm-storage` is unhealthy | Port conflict or volume permission issue | Check port 5001 or run `./setup.sh --clean-data` |
 | OpenVINO model server container restarts repeatedly | GPU out of memory or the model is not supported | Switch to CPU inference or use a smaller model |

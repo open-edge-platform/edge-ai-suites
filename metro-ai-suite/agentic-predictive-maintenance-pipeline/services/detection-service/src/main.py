@@ -52,6 +52,10 @@ _active_run_id: str | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if os.environ.get("CLEAR_DETECTIONS_ON_STARTUP", "false").lower() == "true":
+        storage_client.clear_detections()
+        log.info("Cleared detections from the previous application session")
+
     # Start MQTT subscriber (non-blocking background thread) so raw detection
     # events are persisted to storage whenever the DL Streamer pipeline runs.
     if os.environ.get("MQTT_DISABLED", "false").lower() != "true":
