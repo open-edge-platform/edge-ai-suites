@@ -105,7 +105,9 @@ COPY cli.py service.py source_worker.py __init__.py __main__.py ./
 RUN pip install --no-cache-dir ".[npu]"
 
 # ---------------------------------------------------------------------------
-# ffmpeg from the official upstream tarball (dlstreamer fedora41 pattern).
+# ffmpeg from the official GitHub mirror tag tarball (dlstreamer fedora41
+# pattern; ffmpeg.org itself is unreachable through some corporate proxies, so
+# the mirror is used unconditionally — same source, tag n<version>).
 # Debian's stock ffmpeg deb drags in ~35 unused libraries, each a trivy finding
 # with no Debian patch. The tarball doubles as the copyleft source shipped in
 # the final image. Build tools never leave this stage.
@@ -113,11 +115,12 @@ FROM python-base AS ffmpeg-builder
 ARG FFMPEG_VERSION=7.1.5
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         build-essential pkg-config nasm libx264-dev curl ca-certificates \
-    && mkdir -p /src/ffmpeg /copyleft_sources/deb \
+    && mkdir -p "/src/ffmpeg/ffmpeg-${FFMPEG_VERSION}" /copyleft_sources/deb \
     && curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
         -o "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
-        "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
-    && tar -xf "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" -C /src/ffmpeg \
+        "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n${FFMPEG_VERSION}.tar.gz" \
+    && tar -xf "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
+        -C "/src/ffmpeg/ffmpeg-${FFMPEG_VERSION}" --strip-components=1 \
     && sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update -y \
     && cd /copyleft_sources/deb \
