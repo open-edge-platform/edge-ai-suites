@@ -43,9 +43,9 @@ From the component root (`metro-ai-suite/agentic-smart-community`), run:
 bash demo/scripts/start-demo.sh
 ```
 
-> If an MCP server is already running on port `3100`, stop it with `bash scripts/mcp-server/stop.sh` before starting the demo.
+This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMARTBUILDING_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smartbuilding-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The demo launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
 If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMARTBUILDING_DATA_DIR`; the files under `demo/` remain unchanged.
 
@@ -56,7 +56,7 @@ cat demo/videos/.run/active-streams.txt
 cat "${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
-tail -f /tmp/smartbuilding-$(id -u)/mcp-server.log
+docker logs -f smartbuilding-mcp-server
 ```
 
 Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. Press `Ctrl-C` to stop following the log. Open `http://localhost:3100/` to verify that active monitors appear automatically and that selecting one starts its RTSP live preview. Multiple browser windows viewing the same monitor share one ffmpeg process. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
@@ -169,10 +169,10 @@ These are conversation starters, not a required script. Try your own wording, co
 
 ## Step 6 - Stop the demo
 
-Stop the MCP server and RTSP pushers together:
+Stop the demo RTSP pushers and the app tier (MCP server + analytics + video-summary) together, leaving `vllm-ipex-serving` running so its multi-minute recompile is not repaid on the next start:
 
 ```bash
 bash demo/scripts/stop-demo.sh
 ```
 
-To stop the dependent containers as well, run `bash setup_docker.sh --down`.
+To tear the whole stack down, including `vllm-ipex-serving`, run `bash setup_docker.sh --down`.
