@@ -300,7 +300,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/sources/{source_id}/keepalive")
     async def keepalive_source(source_id: str) -> dict[str, Any]:
-        """Phase 8: MCP server pings this every ~30s while monitor is online.
+        """MCP server pings this every ~30s while monitor is online.
 
         Body is ignored (may be empty). Watchdog auto-pauses the source if no
         keepalive arrives within `pipeline.keepalive.timeout_seconds`.

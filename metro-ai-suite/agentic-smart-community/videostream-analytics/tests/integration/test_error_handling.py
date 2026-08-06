@@ -1,6 +1,6 @@
 """Integration tests: error handling scenarios.
 
-Phase 7: register body uses nested `pipeline` wrapper and `source_url`.
+Register body uses the nested `pipeline` wrapper and `source_url`.
 """
 
 import time
