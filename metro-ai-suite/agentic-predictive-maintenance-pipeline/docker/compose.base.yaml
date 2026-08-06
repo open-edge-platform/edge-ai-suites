@@ -64,7 +64,7 @@ services:
       retries: 5
 
   apm-storage:
-    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-1.0.0}
+    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-latest}
     container_name: apm-storage
     hostname: apm-storage
     build:

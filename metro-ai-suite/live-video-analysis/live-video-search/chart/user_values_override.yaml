@@ -7,8 +7,17 @@ global:
   tag: 'latest'
   vssStackTag: ''
   smartNvrStackTag: ''
+  # Single pull-policy override for the LVS, VSS, and Smart NVR application
+  # images selected by the tags above. Leave empty to retain each image's
+  # subchart default; set to Always, IfNotPresent, or Never to override all
+  # (values are case-insensitive).
+  pullPolicy: ''
   usePvc: true
   keepPvc: true
+
+  # Enable live CPU, RAM, accelerator, and DataPrep throughput metrics.
+  metricsManager:
+    enabled: true
 
   # Storage mode
   # false = RWO: pods sharing PVCs are co-located on the same node (default, works with any storage class)
@@ -47,7 +56,7 @@ global:
     - 992
 
   # Per-service accelerator selection. This is the single source of truth for
-  # device placement of multimodal-embedding-serving and vdms-dataprep.
+  # device placement of multimodal-embedding-serving and multimodal-dataprep.
   # Set device to CPU | GPU | NPU. When GPU/NPU, key is required and must match
   # the cluster device-plugin resource key (e.g. gpu.intel.com/i915,
   # npu.intel.com/accel).
@@ -55,13 +64,14 @@ global:
     multimodalEmbedding:
       device: CPU # CPU | GPU | NPU
       key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
-    vdmsDataprep:
+    multimodalDataprep:
       embedding:
         device: CPU # CPU | GPU | NPU
         key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
       detection:
         device: CPU # CPU | GPU | NPU
         key: "" # Required when device=GPU/NPU (e.g., gpu.intel.com/i915, npu.intel.com/accel)
+
 # Optional USB camera override (used with usb_camera_override.yaml profile)
 frigate:
   usbCameraDevice: '/dev/video0'

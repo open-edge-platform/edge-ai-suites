@@ -1,9 +1,9 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""DLStreamer metadata → Nx analytics object push payload translator.
+"""DL Streamer metadata → Nx analytics object push payload translator.
 
-Converts the inference metadata published by DLStreamer Pipeline Server
+Converts the inference metadata published by DL Streamer Pipeline Server
 to MQTT into the list of Nx object-push dicts expected by
 ``POST /rest/v4/analytics/engines/{engineId}/deviceAgents/{deviceId}/metadata/object``.
 
@@ -51,10 +51,10 @@ def translate_dls_metadata(
     label_type_map: dict[str, str] | None = None,
     timestamp_offset_ms: int = 0,
 ) -> tuple[list[dict[str, Any]], int]:
-    """Convert a DLS inference metadata payload to Nx push format.
+    """Convert a DL Streamer inference metadata payload to Nx push format.
 
     Args:
-        payload: Raw DLStreamer MQTT metadata dict.
+        payload: Raw DL Streamer MQTT metadata dict.
         label_type_map: Optional mapping of detection label (lower-cased) to Nx
             typeId.  Labels absent from the map resolve to
             ``python.detected.object``.  Typically comes from

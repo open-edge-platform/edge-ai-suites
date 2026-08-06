@@ -32,6 +32,7 @@ from shared.config import (
     DefaultsConfig,
     merge_config,
 )
+from shared.time_utils import now_local_str
 from sinks import EventSink
 from stream_monitor.base_monitor import BaseMonitor
 from stream_monitor.pipeline.motion_detector import MotionDetector
@@ -300,10 +301,18 @@ class StreamPipeline(BaseMonitor):
     def _should_exit_motion(self, detector: MotionDetector, motion_frames: int) -> bool:
         """Cascaded exit logic: motion detector + prefilter collaboration.
 
+        Motion gate disabled (motion.enabled=false): the stream is treated as
+        one continuous motion — exit only when an enabled prefilter has passed
+        and then decides the person left (exit_decided). With no prefilter
+        there is no semantic exit; segments are cut on max_duration alone.
         Without prefilter: exit when detector says static.
         With prefilter, before pass: exit when static AND min_dur reached AND decided.
         With prefilter, after pass: exit ONLY when exit_decided (YOLO no longer sees person).
         """
+        if not self._motion_cfg.enabled:
+            if self._prefilter is None:
+                return False
+            return self._prefilter.pass_decided and self._prefilter.exit_decided
         if self._prefilter is None:
             return detector.is_static
         if self._prefilter.pass_decided:
@@ -315,6 +324,14 @@ class StreamPipeline(BaseMonitor):
     def _process_loop(self):
         """Read frames, detect motion, extract segments with fixed interval."""
         detector = MotionDetector(self._motion_cfg)
+        if not self._motion_cfg.enabled:
+            logger.info("[%s] Motion gate disabled (motion.enabled=false)", self.source_id)
+            if self._prefilter is None:
+                logger.warning(
+                    "[%s] motion.enabled=false with prefilter disabled: every "
+                    "%ss segment will be emitted as a motion event",
+                    self.source_id, self._segment_cfg.max_duration,
+                )
         motion_dir = os.path.join(self._data_dir, "motion_events")
         extractor = SegmentExtractor(
             config=self._segment_cfg,
@@ -370,10 +387,13 @@ class StreamPipeline(BaseMonitor):
                 # idle time. Keep `None` as `None` (no open period to reset).
                 if static_start_wall is not None:
                     static_start_wall = time.time()
-                    static_start_iso = datetime.now().isoformat(timespec="seconds")
+                    static_start_iso = now_local_str()
 
-            # Motion detection
-            motion_detected = detector.detect(frame)
+            # Motion detection. When the gate is disabled (motion.enabled=false)
+            # every frame counts as motion — the prefilter (or, without one, the
+            # max_duration segment interval) becomes the only emit gate, and the
+            # frame-diff detector is skipped entirely to save CPU.
+            motion_detected = True if not self._motion_cfg.enabled else detector.detect(frame)
 
             # State: enter motion
             if motion_detected and not in_motion:
@@ -406,7 +426,7 @@ class StreamPipeline(BaseMonitor):
                     if self._prefilter:
                         self._prefilter.reset_for_next_segment()
                 elif self._prefilter and self._should_split_segment():
-                    # Phase 9: trajectory union grew past auto_split_area;
+                    # Trajectory union grew past auto_split_area;
                     # finish current segment early so the ROI crop stays tight.
                     early = extractor.finish()
                     if early:
@@ -428,7 +448,7 @@ class StreamPipeline(BaseMonitor):
                     # This is the ONLY place static_start is armed (close-out
                     # model: static is always bracketed by two motions).
                     static_start_wall = time.time()
-                    static_start_iso = datetime.now().isoformat(timespec="seconds")
+                    static_start_iso = now_local_str()
                     logger.info("[%s] Motion ended", self.source_id)
 
         # Drain remaining segment on shutdown
@@ -489,7 +509,7 @@ class StreamPipeline(BaseMonitor):
         clip_path = result.path
         summary_clip_input = clip_path  # default: original clip
 
-        # Phase 9: optionally produce <clip>_input.mp4 via ROI crop. Only when
+        # Optionally produce <clip>_input.mp4 via ROI crop. Only when
         # prefilter passed AND roi is enabled AND we have a trajectory region.
         # Failure falls back to the original clip — never raises.
         roi_cfg = self._roi_cfg
@@ -563,7 +583,7 @@ class StreamPipeline(BaseMonitor):
                 self.source_id, duration, self._static_cfg.min_duration,
             )
             return
-        end_iso = datetime.now().isoformat(timespec="seconds")
+        end_iso = now_local_str()
         self._emit_static(start_iso, end_iso, duration)
 
     def _emit_static(self, start_iso: str | None, end_iso: str, duration: float) -> None:
@@ -586,7 +606,7 @@ class StreamPipeline(BaseMonitor):
         """No-op. RTSP connection status is NOT a clip-segment event and must not be
         pushed to the MCP /events webhook — MCP only accepts motion/static/recording
         and 422s anything else, which used to trigger a retry storm that also slowed
-        reconnection (see smarthome_arch2_dev.md §32). Health is still exposed via the
+        reconnection. Health is still exposed via the
         internal `self._status` field, which MCP reads through GET /sources/{id}/status.
         Kept as a method (rather than deleting all call sites) so callers stay readable."""
         return

@@ -1,17 +1,23 @@
 # Tutorial: Loitering Detection with Nx Witness
 
-This tutorial walks through the complete end-to-end setup of Loitering Detection (a DLStreamer based vision app in general) as a Analytics App in VMS Adapter Plugin, with Nx Witness as the VMS. At the end of this tutorial you will have:
-> Although the guide demonstrates Loitering Detection as an analytics application, the same instructions are applicable to any other DLStreamer based vision applications.
+This tutorial walks through the end-to-end setup of Loitering Detection (a general
+DL Streamer-based vision application) as an Analytics Application in VMS Adapter Plugin (VAP),
+with Nx Witness as the VMS. At the end of this tutorial, you will have:
 
-- Loitering detection app running with its MQTT broker exposed to the host
-- Nx Witness connected to VAP and auto-registered as an analytics integration
-- Detection bounding boxes pushed from the app to Nx Witness in real time
+- Loitering Detection application running with its MQTT broker exposed to the host
+- Nx Witness connected to VAP and automatically registered as an analytics integration
+- Detection bounding boxes pushed from the application to Nx Witness in real time
 - Pipeline runs managed from the VAP provider dashboard
+
+> **Note:** Although this tutorial demonstrates Loitering Detection as an analytics application,
+> the same instructions apply to any other DL Streamer-based vision application.
 
 ## Prerequisites
 
-- A host machine running Ubuntu 22.04 or 24.04 with Docker and Docker Compose installed.
-- An Nx Witness server (version 5.x or above) accessible over the network from the VAP host. The Nx Witness admin credentials are required.
+- A host machine running the Ubuntu OS (version 22.04 or 24.04) with Docker and Docker Compose
+  installed.
+- An Nx Witness server (version 5.x or above) accessible over the network from the VAP host.
+  Nx Witness admin credentials are required.
 - The `edge-ai-suites` repository cloned (sparse or full):
 
   ```bash
@@ -20,11 +26,9 @@ This tutorial walks through the complete end-to-end setup of Loitering Detection
   git sparse-checkout set metro-ai-suite manufacturing-ai-suite
   ```
 
----
-
 ## Architecture Overview
 
-```
+```text
 Nx Witness VMS
   Camera device ─── RTSP stream ───────────────────────────────────────►┐
   (receives analytics       ◄─── REST push (bounding boxes) ────────────┤
@@ -35,7 +39,7 @@ VMS Adapter Plugin (VAP)                                                │
   │  ObjectDetectionAnalyticsAppShim     │                              │
   │  ┌─────────────────────────────┐     │                              │
   │  │  POST /pipelines/{name}     ├───────────────────────────────────►│
-  │  └─────────────────────────────┘     │   DLStreamer Pipeline Server │
+  │  └─────────────────────────────┘     │  DL Streamer Pipeline Server │
   │                                      │   (Loitering Det application)│
   │  ┌─────────────────────────────┐     │       │                      │
   │  │  MqttSubscriber             │◄────────────┘  MQTT inference      │
@@ -44,29 +48,38 @@ VMS Adapter Plugin (VAP)                                                │
   │  └─────────────────────────────┘     │
   └──────────────────────────────────────┘
                                          MQTT Broker (port 1883)
-                                         (part of dls_vision stack)
+                                         (part of `dls_vision` stack)
 ```
 
 **Key data flows:**
 
-1. VAP sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DLStreamer Pipeline Server, specifying the camera RTSP URL as source and an MQTT topic as destination.
-2. dls_vision's DLStreamer Pipeline Server processes the RTSP stream, runs detection, and publishes inference metadata to the MQTT broker on topic `nx/dls_vision/{device_uuid}`.
-3. VAP's `MqttSubscriber` receives the MQTT messages, translates DLStreamer GVA JSON to Nx analytics object format, and calls `NxWitnessVmsShim.push_analytics_objects()`.
+1. VAP sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the
+   DL Streamer Pipeline Server, specifying the camera RTSP URL as source and an MQTT topic as
+   destination.
+2. `dls_vision`'s DL Streamer Pipeline Server processes the RTSP stream, runs detection, and
+   publishes inference metadata to the MQTT broker on topic `nx/dls_vision/{device_uuid}`.
+3. VAP's `MqttSubscriber` receives the MQTT messages, translates DL Streamer GStreamer Video
+   Analytics (GVA) JSON to Nx analytics object format, and calls
+   `NxWitnessVmsShim.push_analytics_objects()`.
 4. Nx Witness receives the push and overlays bounding boxes on the camera feed.
 
----
+## Part 1 — Set Up the Loitering Detection Application
 
-## Part 1 — Set Up Loitering Detection application
+### 1.1 Configure the Loitering Detection Environment
 
-### 1.1 Configure the Lotiering Detection Environment
-Clone the edge-ai-suites repo as instructed in the setup document and install loitering detection as mentioned [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
+Clone the `edge-ai-suites` repository as instructed in the setup document, and install Loitering
+Detection according to the Loitering Detection
+[Get Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
+
 Do not bring up the application yet.
 
-> The above setup generates a docker-compose.yml file
+> **Note:** The setup generates a `docker-compose.yml` file.
 
-### 1.2 Verify MQTT Port Exposure and set MQTT host for DLStreamer Pipeline Server to publish
+### 1.2 Verify the MQTT Port Exposure and Set the MQTT Host for the DL Streamer Pipeline Server
 
-The Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883` is published to the host in the `docker-compose.yml`. Also set the `MQTT_HOST` for dlstreamer pipeline server to publish
+The Docker Compose stack includes an Eclipse Mosquitto MQTT broker. Confirm that port `1883`
+is published to the host in `docker-compose.yml`, and set `MQTT_HOST` so the DL Streamer Pipeline
+Server can publish to it:
 
 ```yaml
 broker:
@@ -76,82 +89,105 @@ broker:
 
 dlstreamer-pipeline-server:
   environment:
-    - MQTT_HOST=${HOST_IP}  # we set to HOST_IP as broker is running in the same host
+    - MQTT_HOST=${HOST_IP} # we set to HOST_IP as broker is running in the same host
     - MQTT_PORT=1883
 ```
 
-This is the default configuration. The Mosquitto broker uses an anonymous-access configuration (`allow_anonymous true`), which is required for VMS Analytics plugin and the DLStreamer Pipeline Server to publish and subscribe without credentials.
+This is the default configuration. The Mosquitto broker uses an anonymous-access configuration
+(`allow_anonymous true`), which is required for the VMS Analytics Plugin and the DL Streamer
+Pipeline Server to publish and subscribe without credentials.
 
-> **Important:** The plugin connects to this MQTT broker from outside the dls_vision Docker network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP runs on the same host, `host.docker.internal` resolves to the host from inside the plugin container.
+> **Important:** The plugin connects to this MQTT broker from outside the `dls_vision` Docker
+> network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP
+> runs on the same host, `host.docker.internal` resolves to the host from inside the plugin
+> container.
 
-### 1.3 Start Loitering Detection Application
+### 1.3 Start the Loitering Detection Application
 
-Start the application
+Start the application:
+
 ```bash
 docker compose up -d
 ```
-
----
 
 ## Part 2 — Set Up Nx Witness
 
 ### 2.1 Install and Start Nx Witness Server
 
-Install or start Nx Witness Server on a machine reachable from the VAP host. Refer to the [Nx Witness documentation](https://www.networkoptix.com/nx-witness/) for installation instructions.
+Install or start Nx Witness Server on a machine reachable from the VAP host. Refer to the
+[Nx Witness documentation](https://www.networkoptix.com/nx-witness/) for installation
+instructions.
 
 After installation, verify the Nx Witness REST API is accessible:
 
 ```bash
-curl -k -s https://<NX_HOST>:7001/rest/v4/info | python3 -m json.tool | grep '"name"\|"version"'
+curl -k -s https://<NX_HOST_IP>:7001/rest/v4/info | python3 -m json.tool | grep '"name"\|"version"'
 ```
 
 ### 2.2 Enable Digest Authentication for RTSP
 
-VAP constructs RTSP URLs in the following format and passes them directly to the DLStreamer Pipeline Server:
+VAP constructs RTSP URLs in the following format and passes them directly to the DL Streamer
+Pipeline Server:
 
 ```
-rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true
+rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST_IP>:7001/<device-uuid>?onvif_replay=true
 ```
 
-The Nx Witness RTSP server is exposed on the **same port as the REST API** (default `7001`). It uses **digest authentication**, meaning the username and password embedded in the URL are verified with an MD5 challenge-response — credentials are never sent in plaintext over the wire.
+The Nx Witness RTSP server is exposed on the **same port as the REST API** (default `7001`). It
+uses **digest authentication**, meaning the username and password embedded in the URL are
+verified with an MD5 challenge-response — credentials are never sent in plaintext over the wire.
 
-For analytics applications such as DLStreamer to successfully connect to these RTSP URLs, two things must be confirmed in Nx Witness:
+For analytics applications such as DL Streamer to successfully connect to these RTSP URLs, two
+things must be confirmed in Nx Witness:
 
 #### 2.2.1 Enable "Digest Authentication for RTSP" in System Settings
 
-By default, newer Nx Witness versions restrict legacy RTSP clients to bearer-token auth only. To allow digest auth (which GStreamer's `rtspsrc` and most analytics frameworks require):
+By default, newer Nx Witness versions restrict legacy RTSP clients to bearer-token authentication
+only. To allow digest authentication (which GStreamer's `rtspsrc` element and most analytics
+frameworks require):
 
 1. Open the **Nx Witness desktop client** and connect to your server.
-2. Go to **Main Menu** (hamburger icon) → **User Managerment**. This opens the Site Administration window.
-3. Select the user you would like the VAP to connect to. This should open the User window.
-4. Under Info, check **Allow insecure (digest) authentication**. Re-enter you current password, click **OK**.
+2. Go to **Main Menu** (hamburger icon) → **User Management**. This opens the Site Administration
+   window.
+3. Select the user account VAP will use to connect. This opens the User window.
+4. Under **Info**, check **Allow insecure (digest) authentication**. Re-enter the
+   password, and click **OK**.
 5. Click **Apply**.
 
-<img src="../_assets/enable_digest_auth.png" alt="Enable Digest Auth" style="width: 600px; max-width: 100%;" />
+![Enable digest authentication for RTSP in the Nx Witness user settings](../_assets/enable_digest_auth.png "enable digest authentication for rtsp in the nx witness user settings")
 
-> **Why this is needed:** GStreamer's `rtspsrc` element (used by DLStreamer) negotiates authentication via the standard RTSP `DESCRIBE` challenge. If Nx only accepts bearer tokens (HTTP Authorization header), the GStreamer client cannot authenticate and the pipeline immediately fails with `401 Unauthorized`.
+> **Why this is needed:** GStreamer's `rtspsrc` element (used by DL Streamer) negotiates
+> authentication via the standard RTSP `DESCRIBE` challenge. If Nx only accepts bearer tokens
+> (HTTP Authorization header), the GStreamer client cannot authenticate, and the pipeline
+> immediately fails with `401 Unauthorized`.
 
 #### 2.2.2 Confirm the User Has "View Live Video" Permission
 
->NOTE: Ignore the following if the `NX_USERNAME` is an administrator
+> **Note:** Ignore the following if `NX_USERNAME` is an administrator.
 
-The credentials embedded in the RTSP URL (`NX_USERNAME` / `NX_PASSWORD`) must belong to a user with at least **Live Viewer** role on all cameras used for analytics.
+The credentials embedded in the RTSP URL (`NX_USERNAME` / `NX_PASSWORD`) must belong to a user
+with at least the **Live Viewer** role on all cameras used for analytics.
 
 To verify or assign the role in the Nx Witness client:
+
 1. Go to **Main Menu** → **User Management** (or **System Administration** → **Users**).
 2. Find the user account matching `NX_USERNAME`.
 3. Confirm the role is **Live Viewer**, **Advanced Viewer**, or **Administrator**.
-4. If you are using a dedicated service account (recommended over using the `admin` account directly), ensure the account is assigned to all relevant camera groups.
+4. If you are using a dedicated service account (recommended over using the `admin` account
+   directly), ensure the account is assigned to all relevant camera groups.
 
 #### 2.2.3 Verify RTSP Access from the Analytics Host
 
-Before starting the full pipeline, verify the RTSP URL is reachable from the machine that will run the DLStreamer Pipeline Server:
+Before starting the full pipeline, verify the RTSP URL is reachable from the machine that will
+run the DL Streamer Pipeline Server:
 
 You can test with GStreamer directly:
 
-The device-uuid can be found from the Nx Witness client. Right click a camera from the list, choose **Camera Settings**. In the camera settings window, under **General** tab, look for the **Camera ID**
+The `<device-uuid>` value can be found in the Nx Witness client. Right-click a camera in the
+list, and choose **Camera Settings**. In the camera settings window, under the **General** tab,
+look for the **Camera ID**.
 
-To run this test in a DLStreamer Pipeline Server container:
+To run this test in a DL Streamer Pipeline Server container:
 
 ```bash
 docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:latest
@@ -161,7 +197,7 @@ Then run the GStreamer command:
 
 ```bash
 gst-launch-1.0 rtspsrc \
-  location="rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true" \
+  location="rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST_IP>:7001/<device-uuid>?onvif_replay=true" \
   ! fakesink
 ```
 
@@ -170,32 +206,34 @@ A pipeline that runs for a few seconds without errors confirms the RTSP connecti
 ### 2.3 Add Cameras to Nx Witness
 
 In the Nx Witness desktop client:
+
 1. Open **Server** → **Add Device** (or right-click the server in the resource tree).
-2. Add cameras by entering their RTSP URLs or by using auto-discovery on the network.
+2. Add cameras by entering their RTSP URLs or by using automatic discovery on the network.
 3. Confirm each camera appears in the resource tree and shows a live feed.
 
-Note the **Device ID** (UUID) of each camera you intend to use. You can find this in:
+Note the **Device ID**, a Universally Unique Identifier (UUID), of each camera you intend to
+use. You can find this in:
+
 - Nx Witness desktop client: right-click a camera → **Camera Settings** → **Information** tab.
 - Or via the REST API:
 
   ```bash
-  curl -k -u admin:<password> https://<NX_HOST>:7001/rest/v4/devices | python3 -m json.tool | grep '"id"\|"name"'
+  curl -k -u admin:<password> https://<NX_HOST_IP>:7001/rest/v4/devices | python3 -m json.tool | grep '"id"\|"name"'
   ```
 
-### 2.4 Allow API Integrations registration requests
+### 2.4 Allow API Integration Registration Requests
 
 In the Nx Witness desktop client:
+
 1. Go to **Main Menu** → **System Administration**.
 2. In the window, click **Integrations**.
-3. In the **Manage Integrations** window, go to **Settings** tab and check *Accept API Integrations registration requests* to enable REST based API integration.
-4. Click **OK**
+3. In the **Manage Integrations** window, go to the **Settings** tab, and check *Accept API
+   Integrations registration requests* to enable REST-based API integration.
+4. Click **OK**.
 
-<img src="../_assets/nx-enable_api_integration.png" alt="Enable Digest Auth" style="width: 600px; max-width: 100%;" />
+![Enable API integration registration requests in Nx Witness system administration](../_assets/nx-enable_api_integration.png "enable api integration registration requests in nx witness system administration")
 
----
-
-
-## Part 3 — Configure VAP for dls_vision + Nx Witness
+## Part 3 — Configure VAP for `dls_vision` and Nx Witness
 
 ### 3.1 Prepare the VAP Environment File
 
@@ -206,7 +244,7 @@ cd metro-ai-suite/vms-adapter-plugin
 cp .env.example .env
 ```
 
-Edit `.env` with the following values for the dls_vision + Nx Witness scenario:
+Edit `.env` with the following values for the `dls_vision` and Nx Witness scenario:
 
 ```bash
 # PostgreSQL
@@ -219,7 +257,7 @@ NX_PASSWORD=<nx_admin_password>
 NX_TLS_VERIFY=false
 NX_CA_BUNDLE=
 
-# dls_vision / DLStreamer Pipeline Server
+# dls_vision / DL Streamer Pipeline Server
 # Hostname as seen from inside the VAP container.
 # If dls_vision runs on the same host: use host.docker.internal
 DLS_VISION_HOST=host.docker.internal
@@ -247,13 +285,15 @@ MQTT_BROKER_HOST=
 MQTT_BROKER_PORT=1883
 ```
 
-`NX_TLS_VERIFY` and `DLS_VISION_TLS_VERIFY` are `false` by default for compatibility with self-signed certificates.
-Set either value to `true` to enforce certificate verification. When enabled, set the matching `*_CA_BUNDLE`
-to a CA certificate path that exists inside the `vms-backend` container.
+`NX_TLS_VERIFY` and `DLS_VISION_TLS_VERIFY` are `false` by default for compatibility with
+self-signed certificates. Set either value to `true` to enforce certificate verification. When
+enabled, set the matching `*_CA_BUNDLE` to a Certificate Authority (CA) certificate path that
+exists inside the `vms-adapter-backend` container.
 
 ### 3.2 Configure VAP `config.yaml`
 
-Open `config/config.yaml` and ensure the following sections are correctly configured. The file uses `${ENV_VAR}` placeholders resolved from `.env` at startup.
+Open `config/config.yaml`, and confirm the following sections match your setup. The file
+uses `${ENV_VAR}` placeholders resolved from `.env` at startup.
 
 **Nx Witness VMS instance:**
 
@@ -270,9 +310,11 @@ vms_instances:
       auth_type: digest
 ```
 
-The `analytics_manifest_path` is **optional**. VAP automatically uses the bundled manifest at `vms_shim/nxwitness/nx_integration.json` when this field is absent. Set it only if you need to supply a custom manifest.
+The `analytics_manifest_path` is **optional**. VAP automatically uses the bundled manifest at
+`vms_shim/nxwitness/nx_integration.json` when this field is absent. Set it only if you need to
+supply a custom manifest.
 
-**dls_vision Analytics App:**
+**`dls_vision` Analytics App:**
 
 ```yaml
 analytics_apps:
@@ -295,41 +337,45 @@ analytics_apps:
 ```
 
 At least one of `DLS_PIPELINE_CPU`, `DLS_PIPELINE_GPU`, or `DLS_PIPELINE_NPU` must be set.
-In Nx UI, the **Device** dropdown only shows configured devices, and selecting one starts
+In the Nx UI, the **Device** dropdown only shows configured devices, and selecting one starts
 the corresponding configured pipeline with the same device in `detection-properties.device`.
 
 ### 3.3 Configure the `label_type_map`
 
-The `label_type_map` translates DLStreamer detection labels (from the model) into Nx Witness object typeIds. These typeIds are automatically added to the Nx analytics manifest at startup, so Nx knows which object types to expect.
+The `label_type_map` translates DL Streamer detection labels (from the model) into Nx Witness
+object typeIds. These typeIds are automatically added to the Nx analytics manifest at startup,
+so Nx knows which object types to expect.
 
 **How it works:**
-- When dls_vision detects a `"pedestrian"`, VAP pushes it to Nx as typeId `"vap.pedestrian"`.
+
+- When `dls_vision` detects a `"pedestrian"`, VAP pushes it to Nx as typeId `"vap.pedestrian"`.
 - Nx renders this as an object overlay on the camera feed with the label `"vap.pedestrian"`.
 - Labels not listed in the map fall back to `"python.detected.object"`.
 
-**Customize for your model:** If your model detects labels different from the the ones listed above (for example, `"car"`,`"person"`, etc.), add them to the map.
+**Customize for your model:** If your model detects labels different from the ones listed above
+(for example, `"car"`, `"person"`, etc.), add them to the map.
 
 ```yaml
 label_type_map:
-      car: vap.vehicle
-      truck: vap.vehicle
-      bus: vap.vehicle
-      motorcycle: vap.vehicle
-      bicycle: vap.vehicle
-      van: vap.vehicle
-      person: vap.person
-      pedestrian: vap.person
+  car: vap.vehicle
+  truck: vap.vehicle
+  bus: vap.vehicle
+  motorcycle: vap.vehicle
+  bicycle: vap.vehicle
+  van: vap.vehicle
+  person: vap.person
+  pedestrian: vap.person
 ```
 
-Any `vap.*` typeId you add here is automatically registered in the Nx manifest. You do not need to manually edit `vms_shim/nxwitness/nx_integration.json`.
-
----
+Any `vap.*` typeId you add here is automatically registered in the Nx manifest. You do not need
+to manually edit `vms_shim/nxwitness/nx_integration.json`.
 
 ## Part 4 — Start VAP and Verify Nx Integration Registration
 
 ### 4.1 Build and Start VAP
 
 ```bash
+cd metro-ai-suite/vms-adapter-plugin
 docker compose up -d --build
 ```
 
@@ -339,40 +385,47 @@ Check that all VAP services are healthy:
 docker compose ps
 ```
 
-Expected:
+Expected output:
 
-```
-NAME              STATUS
-vms-backend       Up (healthy)
-vms-ui            Up
-postgres          Up (healthy)
+```text
+NAME                          STATUS
+vms-adapter-backend           Up (healthy)
+vms-adapter-ui                Up
+vms-adapter-postgres          Up (healthy)
 ```
 
 ### 4.2 Understand Automatic Integration Registration
 
-When VAP starts, the Orchestrator automatically registers the analytics integration with Nx Witness. You do not need to register it manually. The process is:
+When VAP starts, the Orchestrator automatically registers the analytics integration with Nx
+Witness. You do not need to register it manually. The process is:
 
-1. VAP reads the integration manifest — the bundled `vms_shim/nxwitness/nx_integration.json` by default, or a custom path if `analytics_manifest_path` is set in `config.yaml`.
-2. Any `label_type_map` entries from `config.yaml` are merged into the manifest automatically (so Nx knows all typeIds without manual edits).
+1. VAP reads the integration manifest — the bundled `vms_shim/nxwitness/nx_integration.json`
+   by default, or a custom path if `analytics_manifest_path` is set in `config.yaml`.
+2. Any `label_type_map` entries from `config.yaml` are merged into the manifest automatically
+   (so Nx knows all typeIds without manual edits).
 3. VAP calls `POST /rest/v4/analytics/integrations/*/requests` on the Nx API.
 4. VAP immediately approves the request via `POST .../requests/{requestId}/approve`.
-5. Nx returns integration user credentials (`username`, `password`), which VAP stores in PostgreSQL and uses for subsequent metadata pushes.
+5. Nx returns integration user credentials (`username`, `password`), which VAP stores in
+   PostgreSQL and uses for subsequent metadata pushes.
 
 Verify in the VAP logs:
 
 ```bash
-docker compose logs vms-backend | grep -i "nx_integration\|autoregist"
+docker compose logs vms-adapter-backend | grep -i "nx_integration\|autoregist"
 ```
 
 You should see entries like:
 
-```
+```text
 nx_integration_approved username=VAP Analytics Integration request_id=...
 nx_integration_autoregistered vms=nx-main analytics_app_id=VAP Analytics Integration status=approved
 ```
 
-> **If VAP has already registered before** (database record exists and integration exists in Nx), VAP restores the integration credentials from its database and skips re-registration. You will see:
-> ```
+> **If VAP has already registered before** (database record exists and integration exists in
+> Nx), VAP restores the integration credentials from its database and skips re-registration. You
+> will see:
+>
+> ```text
 > nx_integration_already_registered vms=nx-main analytics_app_id=VAP Analytics Integration
 > nx_integration_credentials_restored vms=nx-main username=VAP Analytics Integration
 > ```
@@ -382,30 +435,33 @@ nx_integration_autoregistered vms=nx-main analytics_app_id=VAP Analytics Integra
 To confirm the integration was registered, check via the Nx Witness REST API:
 
 ```bash
-curl -k -u admin:<password> https://<NX_HOST>:7001/rest/v4/analytics/integrations \
+curl -k -u admin:<password> https://<NX_HOST_IP>:7001/rest/v4/analytics/integrations \
   | python3 -m json.tool | grep '"name"\|"id"\|"status"'
 ```
 
-You should see an integration named `VAP Analytics Integration` with `"status": "active"` or equivalent.
+You should see an integration named `VAP Analytics Integration` with `"status": "active"` or
+equivalent.
 
-In the Nx Witness desktop client, navigate to **System Administration** → **Analytics** (or **Plugins**) to see the integration listed.
-
----
+In the Nx Witness desktop client, navigate to **System Administration** → **Analytics** (or
+**Plugins**) to see the integration listed.
 
 ## Part 5 — Enable the Analytics Integration for a Camera
 
-Before VAP can push detection overlays to a specific camera, the analytics integration must be enabled for that camera device in Nx Witness. VAP does this automatically on the first metadata push for a device (by calling `PATCH /rest/v4/analytics/engines/{engineId}/deviceAgents/{deviceId}` with `{"isEnabled": true}`), but you can also enable it manually in advance.
+Before VAP can push detection overlays to a specific camera, the analytics integration must be
+enabled for that camera device in Nx Witness. VAP does this automatically on the first metadata
+push for a device (by calling `PATCH /rest/v4/analytics/engines/{engineId}/deviceAgents/{deviceId}`
+with `{"isEnabled": true}`), but you can also enable it manually in advance.
 
 ### 5.1 Enable via the Nx Witness Desktop Client
 
-1. In the Nx Witness client, right-click the camera in the resource tree.
+1. In the Nx Witness desktop client, right-click the camera in the resource tree.
 2. Select **Camera Settings**.
 3. Go to the **Integrations** tab.
 4. Find **VAP Analytics Integration** in the list.
 5. Toggle the switch to **Enable**.
 6. Click **Apply** or **OK**.
 
-Repeat for each camera you plan to use with dls_vision.
+Repeat for each camera you plan to use with `dls_vision`.
 
 ### 5.2 Enable via the Nx Witness REST API (Optional)
 
@@ -413,7 +469,7 @@ First, get the analytics engine ID:
 
 ```bash
 ENGINE_ID=$(curl -k -u admin:<password> \
-  https://<NX_HOST>:7001/rest/v4/analytics/engines \
+  https://<NX_HOST_IP>:7001/rest/v4/analytics/engines \
   | python3 -c "
 import json, sys
 engines = json.load(sys.stdin)
@@ -433,37 +489,32 @@ curl -k -u admin:<password> \
   -X PATCH \
   -H "Content-Type: application/json" \
   -d '{"isEnabled": true}' \
-  "https://<NX_HOST>:7001/rest/v4/analytics/engines/${ENGINE_ID}/deviceAgents/${DEVICE_ID}"
+  "https://<NX_HOST_IP>:7001/rest/v4/analytics/engines/${ENGINE_ID}/deviceAgents/${DEVICE_ID}"
 ```
 
 A `200 OK` response confirms the device agent is enabled.
 
-> **Note:** VAP also performs this step automatically on the first push for a device (lazy enablement). If you start a pipeline run before enabling manually, VAP will enable the device agent and push the manifest on the first detection.
-
----
+> **Note:** VAP also performs this step automatically on the first push for a device ("lazy
+> enablement"). If you start a pipeline run before enabling manually, VAP enables the device
+> agent and pushes the manifest on the first detection.
 
 ## Part 6 — Start a Pipeline Run
 
-The recommended way to start and stop a pipeline is directly from the **Nx Witness
-desktop client**. VAP polls the Nx Witness API every 5 seconds and reacts to
-per-camera settings changes automatically — no dashboard interaction is needed.
-
----
+The recommended way to start and stop a pipeline is directly from the **Nx Witness desktop
+client**. VAP polls the Nx Witness API every 5 seconds and reacts to per-camera settings changes
+automatically — no dashboard interaction is needed.
 
 ### 6.1 Discover Cameras
 
-Before starting a pipeline, VAP must know about your cameras. Trigger discovery
-once after VAP starts:
+Before starting a pipeline, VAP must know about your cameras. Trigger discovery once after VAP
+starts:
 
 ```bash
 curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
-Or open the dashboard at `https://localhost:3443` and click **Discover Cameras**
-in the Camera Discovery panel. Cameras are stored in PostgreSQL and reused across
-restarts.
-
----
+Or open the dashboard at `https://localhost:3443`, and click **Discover Cameras** in the Camera
+Discovery panel. Cameras are stored in PostgreSQL and reused across restarts.
 
 ### 6.2 Start the Pipeline from the Nx Witness Client (Recommended)
 
@@ -480,29 +531,29 @@ restarts.
 
 You will see:
 
-| Field | Type | Description |
-|---|---|---|
+| Field                                   | Type     | Description                                  |
+| --------------------------------------- | -------- | -------------------------------------------- |
 | **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera |
-| **Device** | Dropdown | Inference device: `CPU`, `GPU`, or `NPU` |
+| **Device**                              | Dropdown | Inference device: `CPU`, `GPU`, or `NPU`     |
 
-<img src="../_assets/VAP_Analytics_Integration_LD_pipeline_enable_UI.png" alt="VAP Analytics Integration settings panel showing the Enable Pipeline checkbox and Device dropdown" style="width: 600px; max-width: 100%;" />
+![VAP Analytics Integration settings panel showing the Enable Pipeline checkbox and Device dropdown](../_assets/VAP_Analytics_Integration_LD_pipeline_enable_UI.png "vap analytics integration settings panel showing the enable pipeline checkbox and device dropdown")
 
 #### 6.2.3 Enable the Pipeline
 
-1. Select the **Device** from the dropdown (e.g. `GPU`).
+1. Select the **Device** from the dropdown (e.g., `GPU`).
 2. Check the **Enable Loitering Detection Pipeline** checkbox.
-3. Click **Apply** and then click **OK**.
+3. Click **Apply**, and then **OK**.
 
-VAP detects the change within 5 seconds and starts the pipeline automatically.
-Watch the VAP logs to confirm:
+VAP detects the change within 5 seconds, and starts the pipeline. Check the VAP
+logs to confirm:
 
 ```bash
-docker compose logs -f vms-backend
+docker compose logs -f vms-adapter-backend
 ```
 
-Expected log output:
+Expected output:
 
-```
+```text
 [info] {'source': {'uri': '<rtsp_url>', 'type': 'uri', 'properties': {'protocols': 'tcp',
         'add-reference-timestamp-meta': True, 'latency': 100}},
   'destination': {'metadata': {'type': 'mqtt', 'topic': 'nx/dls_vision/<device-uuid>'}},
@@ -515,24 +566,26 @@ Expected log output:
 
 1. Re-open **Camera Settings → Integrations → VAP Analytics Integration**.
 2. Uncheck the **Enable Loitering Detection Pipeline** checkbox.
-3. Click **Apply** and then click **OK**.
+3. Click **Apply**, and then **OK**.
 
 VAP stops the run on the next poll.
 
 Expected log output:
 
-```
+```text
 [info] nx_pipeline_stopped     app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id> success=True
 ```
 
-> To run Loitering Detection and Live Video Captioning simultaneously, see [Running Both Apps Simultaneously](#running-both-apps-simultaneously) at the end of this guide.
-
----
+> **Note:** To run Loitering Detection and Live Video Captioning simultaneously, see the
+> [Run Both Applications Simultaneously](./run-simultaneous-apps.md) guide.
 
 ### 6.3 Start the Pipeline from the VAP Dashboard (Optional)
 
+<!--hide_directive
 <details>
-<summary>Click to expand — starting a pipeline from the provider dashboard</summary>
+<summary>hide_directive-->Click to expand — start a pipeline from the provider dashboard
+<!--hide_directive</summary>
+hide_directive-->
 
 #### Open the Dashboard
 
@@ -540,8 +593,8 @@ Open a browser and navigate to `https://localhost:3443`.
 
 #### Enable a Camera for Analytics
 
-In the **Camera Discovery** panel, find the camera and click the toggle to mark
-it as **enabled**.
+In the **Camera Discovery** panel, find the camera, and click the toggle to mark it as
+**enabled**.
 
 ```bash
 # Or via API:
@@ -550,67 +603,79 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
   -d '{"camera_ids": ["nx:<device-uuid>"], "enabled": true}'
 ```
 
-#### Configure and start the loitering detection pipeline run
+#### Configure and start a loitering detection pipeline run
 
-1. In the **Analytics Engine** panel, click **Discover Apps**. Depending upon your configuration you should see **Loitering Detection** in the Analytics App section. Click the radio button.
+1. In the **Analytics Engine** panel, click **Discover Apps**. Depending on your configuration,
+   you should see **Loitering Detection** in the Analytics App section. Click the radio button.
 
 2. The configuration form appears with the following fields:
 
-   | **Field**          | **Description**                                               |
-   |--------------------|---------------------------------------------------------------|
-   | **Pipeline**       | Dropdown listing available pipeline templates from dls_vision        |
-   | **Camera**         | Dropdown listing enabled cameras discovered from Nx Witness   |
-   | **Pipeline parameters** | Optional JSON object forwarded to the Pipeline Server    |
+   | **Field**               | **Description**                                                 |
+   | ----------------------- | --------------------------------------------------------------- |
+   | **Pipeline**            | Dropdown listing available pipeline templates from `dls_vision` |
+   | **Camera**              | Dropdown listing enabled cameras discovered from Nx Witness     |
+   | **Pipeline parameters** | Optional JSON object forwarded to the Pipeline Server           |
 
 3. Select the target camera from the **Camera** dropdown (for example, `Bus stop camera 1`).
 
 4. Select `loitering_detection_vms_mqtt` from the **Pipeline** dropdown.
 
-   > This is the pipeline template that uses `gvametapublish` to forward inference metadata to the MQTT broker. Other templates (for example, `loitering_detection_vms_mqtt`) are for internal dls_vision use only and do not forward metadata to VAP.
+   > This is the pipeline template that uses `gvametapublish` to forward inference metadata to
+   > the MQTT broker. Other templates (for example, `loitering_detection_vms_mqtt`) are for
+   > internal `dls_vision` use only, and do not forward metadata to VAP.
 
-5. Optionally, set **Pipeline parameters** as a JSON object to override detection properties, for example:
+5. Optionally, set **Pipeline parameters** as a JSON object to override detection properties,
+   for example:
 
    ```json
-    {
-        "detection-properties": {
-        "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
-            "device": "GPU"
-        }
-    }
+   {
+     "detection-properties": {
+       "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
+       "device": "GPU"
+     }
+   }
    ```
 
 6. Click **Start Analysis**.
 
 #### Stop the Run
 
-When you want to stop the detection, go back to the VAP dashboard **Analytics Engine Conguration** panel for **DLStreamer Vision** and click **Stop Analysis** on the active run.
+When you want to stop the detection, go back to the VAP dashboard **Analytics Engine
+Configuration** panel for **DL Streamer Vision**, and click **Stop Analysis** on the active run.
 
-Or via the API:
+Or, via the API:
 
 ```bash
 curl -k -X DELETE https://localhost:3443/v1/analytics-apps/dls_vision/runs/<run_id>
 ```
 
-This sends `DELETE /pipelines/<instance_id>` to the DLStreamer Pipeline Server, stopping the GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
+This sends `DELETE /pipelines/<instance_id>` to the DL Streamer Pipeline Server, stopping the
+GStreamer pipeline. The MQTT subscriber remains running (it reconnects on the next run start).
 
-</details>
-
----
+<!--hide_directive
+</details>hide_directive-->
 
 ### 6.4 What Happens When VAP Starts a Pipeline
 
 When VAP starts a pipeline run, it executes the following:
 
-1. Resolves the selected `camera_id` (`nx:<uuid>`) to an RTSP URL via `NxWitnessVmsShim.get_live_stream_url()`.
-2. Builds an MQTT publish topic: `nx/dls_vision/<device-uuid>` (the topic where dls_vision publishes and VAP subscribes).
-3. Sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DLStreamer Pipeline Server with the payload:
+1. Resolves the selected `camera_id` (`nx:<uuid>`) to an RTSP URL using
+   `NxWitnessVmsShim.get_live_stream_url()`.
+2. Builds an MQTT publish topic: `nx/dls_vision/<device-uuid>` (the topic where `dls_vision`
+   publishes, and VAP subscribes).
+3. Sends `POST /pipelines/user_defined_pipelines/loitering_detection_vms_mqtt` to the DL Streamer
+   Pipeline Server with the payload:
 
    ```json
    {
      "source": {
-       "uri": "rtsp://admin:<password>@<NX_HOST>:7001/<device-uuid>",
+       "uri": "rtsp://admin:<password>@<NX_HOST_IP>:7001/<device-uuid>",
        "type": "uri",
-       "properties": {"protocols": "tcp", "add-reference-timestamp-meta": true, "latency": 100}
+       "properties": {
+         "protocols": "tcp",
+         "add-reference-timestamp-meta": true,
+         "latency": 100
+       }
      },
      "destination": {
        "metadata": {
@@ -619,18 +684,18 @@ When VAP starts a pipeline run, it executes the following:
        }
      },
      "parameters": {
-        "detection-properties": {
-          "model": "<model-path>",
-          "device": "<selected-device>"
-      }
+       "detection-properties": {
+         "model": "<model-path>",
+         "device": "<selected-device>"
+       }
      }
    }
    ```
 
-4. The Pipeline Server starts the GStreamer pipeline, consuming the RTSP stream and publishing inference results to the MQTT broker.
-5. VAP's `MqttSubscriber` (running as a background task since startup) receives messages on the wildcard topic `+/dls_vision/+`.
-
----
+4. The Pipeline Server starts the GStreamer pipeline, consuming the RTSP stream and publishing
+   inference results to the MQTT broker.
+5. VAP's `MqttSubscriber` (running as a background task since startup) receives messages on
+   the wildcard topic `+/dls_vision/+`.
 
 ## Part 7 — Observe Detection Overlays in Nx Witness
 
@@ -639,68 +704,78 @@ When VAP starts a pipeline run, it executes the following:
 1. Open the Nx Witness desktop client and connect to your server.
 2. Double-click the camera that you started the pipeline for.
 3. The live video feed opens in a layout panel.
-4. Click the Object Search(Alt+O) button
+4. Click the **Object Search** button (or press **Alt+O**).
 
 ### 7.2 Verify Detections Are Appearing
 
-Within a few seconds of starting the run, detection bounding boxes should appear overlaid on the video feed:
+Within a few seconds of starting the run, detection bounding boxes should appear overlaid on the
+video feed:
 
-- Each detected object (for example, `pedestrian`, `vehicle`, `background`) is shown as a colored rectangle.
-- The label shows the Nx `typeId` (for example, `vap.pedestrian`, `vap.vehicle`, or `python.detected.object` for unmapped labels).
+- Each detected object (for example, `pedestrian`, `vehicle`, `background`) is shown as a colored
+  rectangle.
+- The label shows the Nx `typeId` (for example, `vap.pedestrian`, `vap.vehicle`, or
+  `python.detected.object` for unmapped labels).
 
-<img src="../_assets/view_detection_overlay.png" alt="Enable Digest Auth" style="width: 600px; max-width: 100%;" />
+![Detection overlays shown on the live camera feed in Nx Witness](../_assets/view_detection_overlay.png "detection overlays shown on the live camera feed in nx witness")
 
 If detections do not appear, see the [Troubleshooting](#troubleshooting) section.
 
-### 7.3 Stop the plugin
+### 7.3 Stop the Plugin
 
-To stop the VAP,
+To stop VAP, run:
 
 ```bash
 docker compose down
 ```
 
-
-> **CAUTION**: Be careful not to remove the volume, by `docker compose down -v` as this will delete the DB, as well as any integration info, credentials you created. If done, then the integration in Nx would be stale. Either delete from the Nx Witness, or use a different VMS integration name in `vms_shim/nxwitness/nx_integration.json` file.
-
----
+> **Caution:** Be careful not to remove the volume with the `docker compose down -v` command,
+> as this deletes the database, as well as any integration information and credentials you
+> created. If this happens, the integration in Nx becomes stale. Either delete it from Nx Witness,
+> or use a different VMS integration name in the `vms_shim/nxwitness/nx_integration.json` file.
 
 ## Troubleshooting
 
 ### Nx Integration Not Registered
 
-**Symptom:** VAP logs show `nx_integration_exists_in_vms_not_in_db` or `nx_integration_exists_in_db_not_in_vms`.
+**Symptom:** VAP logs show `nx_integration_exists_in_vms_not_in_db` or
+`nx_integration_exists_in_db_not_in_vms`.
 
-**Cause:** The Nx integration and the VAP database are out of sync (for example, the integration was manually deleted from Nx, or the VAP database was cleared).
+**Cause:** The Nx integration and the VAP database are out of sync (for example, the integration
+was manually deleted from Nx, or the VAP database was cleared).
 
 **Fix:**
-1. In the Nx Witness client, delete the `VAP Analytics Integration` integration from **System Administration** → **Analytics**.
+
+1. In the Nx Witness client, delete the `VAP Analytics Integration` integration from **System
+   Administration** → **Analytics**.
 2. Drop the VAP integration record from the database:
 
    ```bash
-   docker compose exec postgres psql -U vms -d vms_plugin \
+   docker compose exec vms-adapter-postgres psql -U vms -d vms_plugin \
      -c "DELETE FROM nx_integrations WHERE vms_name = 'nx-main';"
    ```
 
 3. Restart VAP to trigger fresh registration:
 
    ```bash
-   docker compose restart vms-backend
+   docker compose restart vms-adapter-backend
    ```
 
 ### Detections Not Appearing in Nx
 
-**Symptom:** Pipeline run is active, dls_vision logs show detections, but no overlays appear in Nx.
+**Symptom:** Pipeline run is active, `dls_vision` logs show detections, but no overlays appear in
+Nx.
 
 **Checks:**
 
 1. Verify VAP's MQTT subscriber is receiving messages:
 
    ```bash
-   docker compose logs vms-backend | grep "mqtt_pushed_objects\|mqtt_no_objects\|mqtt_push_failed"
+   docker compose logs vms-adapter-backend | grep "mqtt_pushed_objects\|mqtt_no_objects\|mqtt_push_failed"
    ```
 
-2. Confirm the MQTT topic matches. VAP subscribes to `+/dls_vision/+`. dls_vision publishes to the topic VAP sends in the pipeline start payload (`nx/dls_vision/<device-uuid>`). Both must match.
+2. Confirm the MQTT topic matches. VAP subscribes to `+/dls_vision/+`. `dls_vision` publishes to
+   the topic VAP sends in the pipeline start payload (`nx/dls_vision/<device-uuid>`). Both must
+   match.
 
 3. Verify MQTT connectivity from the VAP side:
 
@@ -709,99 +784,55 @@ docker compose down
    sudo apt-get install -y mosquitto-clients
    mosquitto_sub -h <HOST_IP> -p 1883 -t '#' -v
    ```
-   Start a pipeline run and check if messages appear.
 
-4. Confirm the analytics integration is enabled for the camera in Nx Witness (see [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
+   Start a pipeline run, and check whether messages appear.
+
+4. Confirm the analytics integration is enabled for the camera in Nx Witness (see
+   [Part 5](#part-5--enable-the-analytics-integration-for-a-camera)).
 
 5. Check the Nx push in VAP logs:
 
    ```bash
-   docker compose logs vms-backend | grep "nx_push\|push_analytics\|device_agent"
+   docker compose logs vms-adapter-backend | grep "nx_push\|push_analytics\|device_agent"
    ```
 
-### Pipeline Server Returns Error on Start
+### DL Streamer Pipeline Server Returns Error on Start
 
-**Symptom:** Clicking **Start Run** shows an error; VAP logs show a non-2xx from the Pipeline Server.
+**Symptom:** Clicking **Start Run** shows an error; VAP logs show a non-2xx from the Pipeline
+Server.
 
 **Checks:**
-- Confirm `DLS_VISION_HOST` and `DLS_VISION_PORT` in `.env` are reachable from inside the `vms-backend` container:
+
+- Confirm `DLS_VISION_HOST` and `DLS_VISION_PORT` in `.env` are reachable from inside the
+  `vms-adapter-backend` container:
 
   ```bash
-  docker compose exec vms-backend curl http://${DLS_VISION_HOST}:${DLS_VISION_PORT}/pipelines
+  docker compose exec vms-adapter-backend curl http://${DLS_VISION_HOST}:${DLS_VISION_PORT}/pipelines
   ```
-- If dls_vision uses HTTPS (for example, via nginx on port 443), update `base_url` in `config.yaml` accordingly.
+
+- If `dls_vision` uses HTTPS (for example, via nginx on port 443), update `base_url` in
+  `config.yaml` accordingly.
 - Verify `loitering_` appears in the pipeline list returned by `GET /pipelines`.
 
-### RTSP Stream Not Reachable from dls_vision
+### RTSP Stream Not Reachable from `dls_vision`
 
-**Symptom:** Pipeline starts but immediately fails; DLStreamer logs show RTSP connection errors.
+**Symptom:** Pipeline starts but immediately fails; DL Streamer logs show RTSP connection errors.
 
 **Checks:**
-- The Nx RTSP URL includes credentials and is formed as `rtsp://admin:<password>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`. Confirm this URL is reachable from the dls_vision Docker network.
-- If DLStreamer logs show `401 Unauthorized`, digest authentication is not enabled in Nx Witness. Enable it in **System Administration** → **Security** → **Allow digest authentication for cameras** and retry. See [Part 2.2](#22-enable-digest-authentication-for-rtsp) for details.
-- Add `<NX_HOST>` to `no_proxy` in the dls_vision environment if a proxy is configured.
 
----
-
-## Additional Steps
-
-### Running Both Apps Simultaneously
-
-Both Loitering Detection and Live Video Captioning can run in parallel on the same camera from the same Nx Witness integration.
-
-**Prerequisite — avoid container name and port conflicts:**
-
-The Loitering Detection (LD) and Live Video Captioning (LVC) stacks share some service names and host ports by default. The Loitering Detection `docker-compose.yml` needs to be updated with the following changes to avoid clashes:
-
-| Service | Change |
-|---|---|
-| `broker` | Host port changed from `1883` to `1884` (`"1884:1883"`) |
-| `dlstreamer-pipeline-server` | Container name changed to `dlstreamer-pipeline-server-ld` |
-| `coturn` | Container name changed to `coturn-ld`; host port changed to `3479` |
-| `metrics-manager` | Container name changed to `metrics-manager-ld` |
-
-**Steps to run both simultaneously:**
-
-1. Start the LVC stack (its broker occupies host port `1883`):
-   ```bash
-   cd metro-ai-suite/live-video-analysis/live-video-captioning
-   docker compose up -d
-   ```
-2. Start the LD stack (its broker now occupies host port `1884`):
-   ```bash
-   cd metro-ai-suite/metro-vision-ai-app-recipe
-   docker compose up -d
-   ```
-3. Update `.env` in the VAP directory so the LD MQTT subscriber uses the LD broker on port `1884`:
-   ```bash
-   # metro-ai-suite/vms-adapter-plugin/.env
-   MQTT_PORT=1884
-   ```
-4. Start VAP (already configured with both apps in `config.yaml`):
-   ```bash
-   cd metro-ai-suite/vms-adapter-plugin
-   docker compose up -d
-   ```
-5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics Integration**. You will see two GroupBoxes: **Loitering Detection** and **Live Video Captioning**. Enable the checkboxes for both.
-
-VAP starts both pipelines independently within 5 seconds.
-
-**Viewing results in Nx Witness — one output at a time:**
-
-Both pipelines run in parallel, but Nx Witness displays only one type of analytics output at a time:
-
-- **Object Search** (Alt+O) — shows Loitering Detection bounding boxes (`vap.pedestrian`, `vap.vehicle`, …) overlaid on the live feed.
-- **Bookmarks tab** (Ctrl+B) — shows LVC captions, each pushed as a timestamped bookmark.
-
-This is an Nx Witness limitation: the client cannot overlay detection boxes and bookmarks simultaneously in the same camera panel, even though both pipelines are producing results concurrently.
-
----
+- The Nx RTSP URL includes credentials and is formed as
+  `rtsp://admin:<password>@<NX_HOST_IP>:7001/<device-uuid>?onvif_replay=true`. Confirm this URL is
+  reachable from the `dls_vision` Docker network.
+- If DL Streamer logs show `401 Unauthorized`, digest authentication is not enabled in Nx Witness.
+  Enable it in **System Administration** → **Security** → **Allow digest authentication for
+  cameras**, and retry. See [Part 2.2](#22-enable-digest-authentication-for-rtsp) for details.
+- Add `<NX_HOST_IP>` to `no_proxy` in the `dls_vision` environment if a proxy is configured.
 
 ## Summary
 
 | **Step** | **Where** |
-|---|---|
-| Start dls_vision with MQTT broker exposed to host | `metro-vision-ai-app-recipe/loitering-detection/` → `docker compose up -d` |
+| -------- | --------- |
+| Start `dls_vision` with MQTT broker exposed to host | `metro-vision-ai-app-recipe/loitering-detection/` → `docker compose up -d` |
 | **Nx Witness:** install Server + Client, add cameras, enable digest auth, enable API Integrations | Nx Witness Desktop Client |
 | Configure Nx Witness connection and MQTT settings in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
 | Configure `app_id`, `display_name`, `label_type_map` in `config.yaml` | `config/config.yaml` |

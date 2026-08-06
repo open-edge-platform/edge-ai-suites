@@ -55,6 +55,11 @@ class Pipeline:
 
         self.content_component.model = text_gen_handler
 
+    @property
+    def board_ocr_partial(self) -> bool:
+        """True once run_summarizer() has read a board OCR extraction that was
+        still being produced. Only meaningful after the first token."""
+        return any(getattr(c, "board_ocr_partial", False) for c in self.summarizer_pipeline)
 
     def run_transcription(self, input):
         project_config = RuntimeConfig.get_section("Project")

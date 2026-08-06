@@ -1,6 +1,6 @@
 """Integration tests: source registration, listing, stop, restart lifecycle.
 
-Phase 7: register body uses nested `pipeline` wrapper and `source_url`
+Register body uses the nested `pipeline` wrapper and `source_url`
 (not `rtsp_url`); `/sources` returns a bare array.
 """
 
@@ -40,7 +40,7 @@ class TestSourceLifecycle:
         resp = http_client.get(f"{analytics_url}/sources")
         assert resp.status_code == 200
         sources = resp.json()
-        # Phase 7: bare array, not {"sources": [...]}
+        # Bare array, not {"sources": [...]}
         assert isinstance(sources, list)
         source_ids = [s["source_id"] for s in sources]
         assert "test_child_list" in source_ids
@@ -102,15 +102,12 @@ class TestSourceLifecycle:
         )
         time.sleep(1)
 
-        resp = http_client.request(
-            "DELETE", f"{analytics_url}/unregister_source",
-            json={"source_id": "test_child_unreg"},
-        )
+        resp = http_client.delete(f"{analytics_url}/sources/test_child_unreg")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 
     def test_register_old_flat_body_rejected(self, http_client, analytics_url, rtsp_url):
-        """Phase 7: hard cutover — old flat body must return 422."""
+        """Old flat body must return 422."""
         resp = http_client.post(f"{analytics_url}/register_source", json={
             "source_id": "test_flat_reject",
             "rtsp_url": rtsp_url,  # renamed → unknown field
