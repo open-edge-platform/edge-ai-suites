@@ -33,7 +33,7 @@ services:
       # Identity bind mount (host X -> container X): the absolute data_dir MCP sends
       # (<root>/segments/<id>) resolves to the SAME real host directory inside the
       # container, so recordings/motion_events land on the host where the MCP clip
-      # extractor / VLM can read them. See smarthome_arch2_dev.md §32.
+      # extractor / VLM can read them.
       - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
       - ${MODEL_DIR:-${HOME}/models}:${MODEL_DIR:-${HOME}/models}:ro
       # setup_docker.sh generates this host-side runtime configuration with the

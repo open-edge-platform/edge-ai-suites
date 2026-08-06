@@ -173,8 +173,7 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=builder-base /opt/venv /opt/venv
 
-# Optionally download copyleft sources for ALL installed copyleft packages
-# (company policy hook, vlm-openvino-serving pattern). The self-built ffmpeg +
+# Optionally download copyleft sources for ALL installed copyleft packages. The self-built ffmpeg +
 # x264 sources are ALWAYS shipped (see ffmpeg-builder) because ffmpeg is not a
 # deb here and this scan would miss it. Build with:
 #   docker build --build-arg COPYLEFT_SOURCES=true ...

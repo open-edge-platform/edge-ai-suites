@@ -29,13 +29,12 @@ The service is a long-running single process. Each registered source spawns back
 | `GET`    | `/sources/{source_id}` | Get source status. | §3.3 |
 | `GET`    | `/sources/{source_id}/status` | Alias of `/sources/{source_id}`; the MCP server calls this to check for existence. | §3.3 |
 | `POST`   | `/register_source` | Register and start a new source. | §3.4 |
-| `DELETE` | `/unregister_source` | Unregister a source (body form). | §3.5 |
-| `DELETE` | `/sources/{source_id}` | Unregister a source (path form; equivalent to `/unregister_source`). | §3.5 |
+| `DELETE` | `/sources/{source_id}` | Unregister a source. | §3.5 |
 | `POST`   | `/sources/{source_id}/stop` | Stop and unregister (equivalent to `DELETE`). | §3.5 |
 | `POST`   | `/sources/{source_id}/restart` | Stop and start the pipeline while preserving the bundle. | §3.6 |
 | `POST`   | `/sources/{source_id}/pause` | Pause the pipeline; keep the source registered. | §3.7 |
 | `POST`   | `/sources/{source_id}/resume` | Resume a paused pipeline. | §3.7 |
-| `POST`   | `/sources/{source_id}/keepalive` | Refresh the keepalive timestamp (Phase 8). | §3.8 |
+| `POST`   | `/sources/{source_id}/keepalive` | Refresh the keepalive timestamp. | §3.8 |
 | `PUT`    | `/sources/{source_id}/pipeline` | Hot-update pipeline configuration. | §3.9 |
 
 ---
@@ -87,7 +86,7 @@ List all registered sources.
 ]
 ```
 
-> The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`. This is a Phase 7 contract.
+> The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
 
 ### 3.3 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
 
@@ -106,7 +105,7 @@ Return the status of a single source. Both paths dispatch to the same handler an
 | `running` | `boolean` | Whether the pipeline background thread is alive. |
 | `recording_enabled` | `boolean` | Whether the continuous recorder is enabled for this source. |
 | `health` | `object` | Health sub-object; see below. |
-| `keepalive_enabled` | `boolean` | Whether keepalive watchdog is enabled for this source (Phase 8). |
+| `keepalive_enabled` | `boolean` | Whether keepalive watchdog is enabled for this source. |
 | `last_keepalive_at` | `string \| null` | ISO 8601 UTC timestamp of the most recent keepalive; `null` when keepalive is disabled. |
 
 **`health` sub-object**:
@@ -140,7 +139,7 @@ Register a new source and start its pipeline. Idempotent: re-registering an id t
 | `data_dir` | `string \| null` | Optional | Absolute path for this source's outputs. Falls back to `<config.data_dir>/<source_id>/` when omitted. |
 | `pipeline` | `PipelineConfig` | Optional | Nested pipeline configuration; see below. |
 
-Unknown top-level fields (including the legacy `rtsp_url`, top-level `motion`, and `use_case` that pre-date Phase 7) are rejected with `422` and their names appear in the `unknown_fields` array of the error body.
+The schema is `extra="forbid"`: any field not listed above is rejected with `422`, and its name appears in the `unknown_fields` array of the error body (see §5.2).
 
 #### `PipelineConfig`
 
@@ -158,10 +157,10 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | `segment` | `SegmentConfig` | Motion-clip segmentation parameters. |
 | `static` | `StaticConfig` | Quiet-period close-out event parameters. |
 | `prefilter` | `PrefilterConfig` | Optional NPU / OpenVINO YOLO prefilter. |
-| `roi` | `RoiConfig` | Phase 9 ROI crop and trajectory-region emission. |
+| `roi` | `RoiConfig` | ROI crop and trajectory-region emission. |
 | `recording` | `RecordingConfig` | Fixed-cadence continuous recording branch. |
 | `health` | `HealthConfig` | RTSP failure-handling policy. |
-| `keepalive` | `KeepaliveConfig` | Phase 8 keepalive protocol. |
+| `keepalive` | `KeepaliveConfig` | Keepalive protocol. |
 
 ##### `MotionConfig`
 
@@ -199,7 +198,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | `device` | `string` | `"NPU"` | OpenVINO device (`CPU`, `GPU`, `NPU`). |
 | `long_side` | `int` | `0` | Resize the frame's longest side before inference; `0` disables resizing. |
 
-##### `RoiConfig` (Phase 9)
+##### `RoiConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -226,7 +225,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | `backoff_base` | `float` | `2.0` | Base of the exponential backoff sequence, in seconds. |
 | `backoff_max` | `float` | `120.0` | Upper bound on backoff delay. |
 
-##### `KeepaliveConfig` (Phase 8)
+##### `KeepaliveConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -270,11 +269,10 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 
 Validation failures return `422` with the shape described in §5.2.
 
-### 3.5 `DELETE /unregister_source`, `DELETE /sources/{source_id}`, `POST /sources/{source_id}/stop`
+### 3.5 `DELETE /sources/{source_id}`, `POST /sources/{source_id}/stop`
 
-The three endpoints are semantically equivalent: stop the pipeline and the recorder, close the per-source webhook sink, and remove the bundle from the in-memory registry. **The source's `data_dir` is not deleted** — file retention is the MCP server's responsibility.
+The two endpoints are semantically equivalent: stop the pipeline and the recorder, close the per-source webhook sink, and remove the bundle from the in-memory registry. **The source's `data_dir` is not deleted** — file retention is the MCP server's responsibility.
 
-- `DELETE /unregister_source` — body form, `{"source_id": "..."}`.
 - `DELETE /sources/{source_id}` — RESTful path form; used by the MCP server's startup reconciliation.
 - `POST /sources/{source_id}/stop` — convenience form for clients that cannot issue `DELETE`.
 
@@ -329,7 +327,7 @@ The `status` field returned by §3.3 evolves according to the following state ma
 | `error` | A single RTSP read failed. | No (transient) | Enters the `reconnecting` backoff path. |
 | `reconnecting` | Failure with `failure_count < max_failures`; backoff retry in progress. | No | Successful reconnect → `online`; failures reach `max_failures` → `unhealthy` → `recovery_strategy` branch. |
 | `unhealthy` | Cumulative failures ≥ `max_failures`. | No (transient) | Depending on `recovery_strategy`: `retry` (continue backoff), `pause` → `paused`, `remove` → `removed`. |
-| `paused` | `POST /pause`, `recovery_strategy=pause` triggered, or Phase 8 keepalive watchdog timeout. | **Yes** | Only `POST /resume` returns to `online`; the watchdog and health machinery do not auto-resume. |
+| `paused` | `POST /pause`, `recovery_strategy=pause` triggered, or keepalive watchdog timeout. | **Yes** | Only `POST /resume` returns to `online`; the watchdog and health machinery do not auto-resume. |
 | `removed` | `recovery_strategy=remove` triggered, or the source was unregistered. | Yes | The source is no longer in the registry; a fresh `POST /register_source` is required. |
 | `stopped` | Graceful shutdown / `/stop`. | Yes | Same as `removed`. |
 
@@ -363,7 +361,7 @@ curl -X PUT http://localhost:8999/sources/cam_demo/pipeline \
 
 Kill the upstream RTSP producer afterwards; the source transitions to `paused` within roughly seven seconds and remains there.
 
-### 3.8 `POST /sources/{source_id}/keepalive` (Phase 8)
+### 3.8 `POST /sources/{source_id}/keepalive`
 
 The MCP server calls this endpoint at a regular cadence (typically every 30 seconds) to prove liveness. VSA refreshes `last_keepalive_at` on the source; a background watchdog polls every `check_interval_seconds` and auto-pauses the source when the timestamp is older than `timeout_seconds`. Keepalive is disabled by default; the MCP server must set `pipeline.keepalive.enabled=true` at registration to activate it.
 
@@ -419,7 +417,7 @@ pipeline.
 
 ## 4. Event Plane — VSA → Downstream Webhook
 
-Every event produced by a running source is delivered as an HTTP POST to the configured webhook URL. The envelope shape has been aligned with the MCP `events-endpoint` since Phase 7 (see [MCP Webhook Event API Reference](./api-reference-mcp-webhook-event.md) for the receiving contract).
+Every event produced by a running source is delivered as an HTTP POST to the configured webhook URL. The envelope shape is aligned with the MCP `events-endpoint` (see [MCP Webhook Event API Reference](./api-reference-mcp-webhook-event.md) for the receiving contract).
 
 ### 4.1 Envelope
 
@@ -453,7 +451,7 @@ A motion segment is emitted only after the underlying MP4 has been written. When
 | `prefilter_passed` | `0` or `1` | Optional | Present only when prefilter is enabled on this source. `0` clips are never emitted; see above. |
 | `prefilter_classes` | `string` (JSON-encoded array) | Optional | Hit class names as a JSON string. |
 | `prefilter_confidence` | `float` | Optional | Maximum detection confidence within the clip. |
-| `trajectory_region` | `string` (`"[x0,y0,x1,y1]"`, normalized to [0,1]) | Optional | Phase 9. The union bbox accumulated by prefilter, serialised as a JSON string of four floats. |
+| `trajectory_region` | `string` (`"[x0,y0,x1,y1]"`, normalized to [0,1]) | Optional | The union bbox accumulated by prefilter, serialised as a JSON string of four floats. |
 
 ### 4.3 `type=static` payload
 
@@ -517,7 +515,7 @@ VSA writes all per-source outputs under the resolved `data_dir`. The layout is s
 ├── latest.jpg                          # Periodically overwritten snapshot; read by smartbuilding_scene_query.
 ├── motion_events/<YYYY-MM-DD>/
 │   ├── <source_id>_HHMMSS.mp4          # Original motion clip (payload.event_file_path).
-│   └── <source_id>_HHMMSS_input.mp4    # ROI-cropped clip (Phase 9; payload.summary_clip_input).
+│   └── <source_id>_HHMMSS_input.mp4    # ROI-cropped clip (payload.summary_clip_input).
 └── recordings/<YYYY-MM-DD>/
     └── <source_id>_HHMMSS.mp4          # Fixed-cadence recording segment (payload.recording_path).
 ```
@@ -552,21 +550,11 @@ Ports used by the service and local verification recipes:
 
 ---
 
-## 8. Version History
-
-| Phase | Highlights | Introduced |
-|-------|------------|------------|
-| Phase 7 | Nested `pipeline` request schema; renamed `rtsp_url` → `source_url`; dropped `use_case`; `/sources` returns a bare array; added `/sources/{id}/status`; nested webhook envelope. | §3.3, §3.4, §4 |
-| Phase 8 | Keepalive endpoint and watchdog; `SourceStatus` gains `keepalive_enabled` and `last_keepalive_at`. | §3.8 |
-| Phase 9 | `pipeline.roi` sub-block; `trajectory_region` in the motion payload; automatic `<clip>_input.mp4` production; `summary_clip_input` retargeting; `auto_split_area` early-split. | §3.4 (RoiConfig), §4.2 |
-
----
-
-## 9. Verification
+## 8. Verification
 
 Use the following test suites for unit and integration verification:
 
-- Unit tests: `pytest tests/unit/ --timeout=60` — expected `185 passed`.
+- Unit tests: `pytest tests/unit/ --timeout=60` — expected `210 passed`.
 - Integration tests: `pytest tests/integration/ -m integration --timeout=300` — expected `27 passed` (requires MediaMTX, mock webhook, and ffmpeg producer).
 - Manual verification (`V1`–`V12`) covers the `/health` probe, source registration, lifecycle transitions, motion / recording event delivery, health strategies, CLI, real MCP integration, keepalive, and trajectory + ROI crop.
 

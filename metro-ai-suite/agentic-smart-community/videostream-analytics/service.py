@@ -69,12 +69,6 @@ class RegisterSourceRequest(BaseModel):
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
 
 
-class UnregisterSourceRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    source_id: str
-
-
 class UpdatePipelineRequest(BaseModel):
     """`PUT /sources/{id}/pipeline` body — nested form, no flat fallback."""
 
@@ -248,16 +242,6 @@ def create_app(config: AppConfig) -> FastAPI:
         )
         return mgr.register_source(source)
 
-    @app.delete("/unregister_source")
-    async def unregister_source(req: UnregisterSourceRequest) -> dict[str, Any]:
-        mgr = get_manager()
-        result = mgr.unregister_source(req.source_id)
-        if result["status"] == "not_found":
-            raise HTTPException(
-                status_code=404, detail=f"Source not found: {req.source_id}"
-            )
-        return result
-
     @app.post("/sources/{source_id}/stop")
     async def stop_source(source_id: str) -> dict[str, Any]:
         mgr = get_manager()
@@ -300,7 +284,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/sources/{source_id}/keepalive")
     async def keepalive_source(source_id: str) -> dict[str, Any]:
-        """Phase 8: MCP server pings this every ~30s while monitor is online.
+        """MCP server pings this every ~30s while monitor is online.
 
         Body is ignored (may be empty). Watchdog auto-pauses the source if no
         keepalive arrives within `pipeline.keepalive.timeout_seconds`.
