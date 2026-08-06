@@ -19,7 +19,8 @@
 #                  finding with no Debian patch. The tarball doubles as the
 #                  copyleft source shipped in /copyleft_sources.
 #   runtime        final image: Debian runtime libs + copyleft sources + NPU/ZE/
-#                  GPU debs + venv + app config. No curl, no add-apt-repository.
+#                  GPU debs + venv + app config. curl is kept for the compose
+#                  healthcheck and in-container debugging.
 #
 # Firmware (NPU) is loaded by the host kernel, so intel-fw-npu is intentionally
 # NOT installed here.
@@ -41,7 +42,8 @@ FROM python-base AS builder-base
 
 WORKDIR /app
 
-# curl exists only in this throwaway stage.
+# curl here is for the downloads below; the runtime stage installs its own
+# copy for the compose healthcheck.
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -143,11 +145,13 @@ FROM python-base AS runtime
 # of the usual opencv-era X/glib libs (verified via ldd), so libglib2.0/libsm6/
 # libxext6/libxrender1/libgl1 are NOT installed. libx264-164: ffmpeg's only dep.
 # libnuma1 + ocl-icd-libopencl1: iGPU compute runtime deps.
+# curl: used by the compose healthcheck and for in-container debugging.
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         libx264-164 \
         libnuma1 \
         ocl-icd-libopencl1 \
-        ca-certificates
+        ca-certificates \
+        curl
 
 # ffmpeg binary + its copyleft sources (upstream tarball + x264 source).
 COPY --from=ffmpeg-builder /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
