@@ -14,9 +14,16 @@ spec:
       labels:
         app: {{ .Values.multimodalembeddingServing.name }}
     spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       hostIPC: true
       securityContext:
         fsGroup: {{ .Values.multimodalembeddingServing.videoGroupId }}
+        supplementalGroups:
+          - {{ .Values.multimodalembeddingServing.videoGroupId }}
+          - {{ .Values.multimodalembeddingServing.renderGroupId }}
       containers:
         - name: {{ .Values.multimodalembeddingServing.name }}
           image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.multimodalembeddingServing.image.repository }}:{{ .Values.multimodalembeddingServing.image.tag }}"
@@ -27,7 +34,7 @@ spec:
             - name: HF_ENDPOINT
               value: {{ .Values.multimodalembeddingServing.env.HF_ENDPOINT | quote }}
             - name: EMBEDDING_BASE_URL
-              value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
+              value: {{ tpl .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL $ | quote }}
             - name: EMBEDDING_MODEL_NAME
               value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
             - name: EMBEDDING_DEVICE
@@ -46,6 +53,10 @@ spec:
               value: {{ .Values.global.proxy.http_proxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.https_proxy | quote }}
+          {{- with .Values.multimodalembeddingServing.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: workspace
               mountPath: /app/ov_models

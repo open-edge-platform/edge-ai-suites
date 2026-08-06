@@ -14,6 +14,10 @@ spec:
       labels:
         app: {{ .Values.retrieverMilvus.name }}
     spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       hostIPC: true
       securityContext:
         runAsUser: 1000
@@ -33,11 +37,9 @@ spec:
         - name: EMBEDDING_MODEL_NAME
           value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
         - name: EMBEDDINGS_ENDPOINT
-          value: "{{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL }}/embeddings"
+          value: "{{ tpl .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL $ }}/embeddings"
         - name: INDEX_NAME
           value: {{ .Values.retrieverMilvus.env.INDEX_NAME | quote }}
-        - name: MILVUS_METADATA_FIELD
-          value: {{ .Values.retrieverMilvus.env.MILVUS_METADATA_FIELD | quote }}
         - name: DEFAULT_TOP_K
           value: {{ .Values.retrieverMilvus.env.DEFAULT_TOP_K | quote }}
         - name: MAX_TOP_K

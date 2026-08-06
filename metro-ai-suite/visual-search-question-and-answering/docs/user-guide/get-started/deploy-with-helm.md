@@ -67,6 +67,73 @@ Edit the `values.yaml` file to set the necessary environment variables. At minim
 | `global.EMBEDDING_MODEL_NAME` | Embedding model to be used for feature extraction by multimodal-embedding-serving  | `CLIP/clip-vit-h-14` |
 | `global.registry` | Remote registry to pull images from. Default as blank | `intel/` |
 | `global.env.keeppvc` | Set to true to persist the storage. Default is false | false |
+| `MILVUS_HOST` | Milvus service address. Change this if Milvus is not installed in the `milvus` namespace | `my-milvus.milvus.svc.cluster.local` |
+
+The chart is namespace-agnostic: in-cluster service URLs are derived from the
+release namespace, so it can be installed into any namespace.
+
+#### Selecting the inference device
+
+Each service picks its own device. `CPU` works everywhere and is the default.
+
+| Key | Description | Example Value |
+| --- | ----------- | ------------- |
+| `vlmOpenvinoServing.env.VLM_DEVICE` | Device for the VLM | `CPU`, `GPU` |
+| `multimodalembeddingServing.env.EMBEDDING_DEVICE` | Device for query embedding | `CPU`, `GPU`, `NPU` |
+| `multimodalDataprep.env.MM_DATAPREP_EMBEDDING_DEVICE` | Device for ingest embedding | `CPU`, `GPU`, `NPU` |
+| `multimodalDataprep.env.MM_DATAPREP_DETECTION_DEVICE` | Device for object detection | `CPU`, `GPU`, `NPU` |
+
+When a service is set to `GPU` or `NPU` you must also request the matching
+device-plugin resource for it, otherwise OpenVINO fails at startup with
+`[GPU] Can't get PERFORMANCE_HINT property as no supported devices found`.
+This requires the [Intel Device Plugins for
+Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes) to be
+installed on the cluster:
+
+```yaml
+multimodalembeddingServing:
+  resources:
+    limits:
+      gpu.intel.com/i915: 1   # or npu.intel.com/accel: 1 for NPU
+```
+
+The same `resources` key is available on `vlmOpenvinoServing` and
+`multimodalDataprep`.
+
+The container user must also belong to the groups owning the device nodes.
+Check the group ids on the target node and set them accordingly, as they differ
+between hosts:
+
+```bash
+ls -ln /dev/dri     # 3rd column is the gid: card* -> videoGroupId, renderD* -> renderGroupId
+```
+
+```yaml
+multimodalembeddingServing:
+  videoGroupId: 44
+  renderGroupId: 110   # frequently 992 or 993 on newer distributions
+```
+
+#### Pinning the pods to a node
+
+`volumes.hostDataPath` is a host path and the accelerator device nodes are
+node-local, so on a multi-node cluster the pods must land on the node that
+actually holds the data and the devices:
+
+```yaml
+global:
+  nodeSelector:
+    kubernetes.io/hostname: <node-name>
+```
+
+#### Optional settings
+
+| Key | Description | Default |
+| --- | ----------- | ------- |
+| `multimodalDataprep.env.MM_DATAPREP_ENABLE_OBJECT_DETECTION` | Also embed detected object crops in addition to full frames | `"false"` |
+| `visualSearchQaApp.env.DATA_INGEST_WITH_DETECT` | App-side request for the above. Keep both in sync | `false` |
+| `visualSearchQaApp.env.DATAPREP_PUBLIC_BASE_URL` | Browser-reachable dataprep address used to stream search results. Leave blank when the browser can reach the cluster service directly | `""` |
+| `*.env.HF_ENDPOINT` | Hugging Face mirror used to download models. Set to `https://huggingface.co` outside mainland China | `https://hf-mirror.com` |
 
 ### Step 3: Build Helm Dependencies
 
@@ -108,6 +175,10 @@ mkdir -p $HOME/data
 ```
 
 Make sure the host directories are available to the cluster nodes, and the host-paths under the `volumes.hostDataPath` section in `values.yaml` file match the correct directories. Particularly, the default path in `values.yaml` is `/home/user/data`, which corresponds to a host username `user`.
+
+This directory is mounted from the node, not from your workstation, so the media
+to be ingested must be placed on the node the pods are scheduled on (see
+`global.nodeSelector` above).
 
 Note: supported media types: jpg, png, mp4
 
@@ -168,6 +239,16 @@ helm uninstall my-milvus -n milvus
   ```
 
 - If the data preparation pod shows error while loading a large dataset, it might be caused by too large of the dataset size. Try breaking the dataset into smaller subsets and ingest each of them instead.
+
+- If a pod using a GPU or NPU crash-loops with `[GPU] Can't get PERFORMANCE_HINT
+  property as no supported devices found`, the container can see the device node
+  but cannot use it. Check that the device-plugin resource is requested under
+  that service's `resources.limits`, and that `renderGroupId`/`videoGroupId`
+  match the gids reported by `ls -ln /dev/dri` on the node.
+
+- If requests between the services time out with `504 Gateway Timeout`, the
+  in-cluster traffic is being sent through an HTTP proxy. Add
+  `.svc.cluster.local` to `global.proxy.no_proxy`.
 
 ## Related links
 

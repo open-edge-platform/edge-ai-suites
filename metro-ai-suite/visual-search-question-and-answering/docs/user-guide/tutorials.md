@@ -49,14 +49,23 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
 
 1. When processing data files in `file directory on host` (for simplicity, noted as `<host_data_path>` in the following steps), the dataprep microservice automatically looks for a json file in `<host_data_path>/meta` with the same basename with the file that is being processing. For example, when processing file ``<host_data_path>/image123.png`, it looks for a `<host_data_path>/meta/image123.json`. If found, the fields in the json file would be recorded into the vector DB along with the media file as its metadata.
 
-2. In the web UI, two example fields are supported: `camera` and `timestamp`. An example json is like:
+2. In the web UI, two example fields are supported: `camera` and `capture_date`. An example json is like:
 
    ```bash
    {
        "camera": "camera_1",
-       "timestamp": 20250101
+       "capture_date": 20250101
    }
    ```
+
+   > **Note**
+   >
+   > `timestamp` is reserved by the dataprep metadata contract (it holds the frame
+   > time within a video, in seconds), so the capture date uses the distinct name
+   > `capture_date`. A sidecar key that collides with a reserved field is rejected
+   > with an error instead of being silently dropped. The field names the UI
+   > filters on can be changed with the `METADATA_CAMERA_FIELD` and
+   > `METADATA_DATE_FIELD` environment variables.
 
 3. Here is an example python function to generate fake metadata json files given the file directory
 
@@ -86,10 +95,10 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
                    json_file_path = os.path.join(meta_dir, f"{base_name}.json")
                    fake_label = f"camera_{cnt}"
                    timestamp = datetime.date(2025, month, cnt % 30 + 1)  # Increment day, reset to 1 if exceeds 30
-                   fake_timestamp = int(timestamp.strftime("%Y%m%d"))
+                   fake_capture_date = int(timestamp.strftime("%Y%m%d"))
                    fake_meta = {
                        "camera": fake_label,
-                       "timestamp": fake_timestamp
+                       "capture_date": fake_capture_date
                    }
                    cnt += 1
                    if cnt > month*30:
@@ -99,20 +108,43 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
                        json.dump(fake_meta, json_file, indent=4)
    ```
 
-4. Also, you may try using the dateprep microservice API to manually ingest a single data file with given metadata, for example:
+4. Also, you may call the dataprep microservice API directly to ingest a
+   directory with metadata that applies to every file in it. Per-file sidecars
+   take precedence over this request-level metadata:
 
     ```bash
-    # if it is already ingested, delete first
-    curl -X DELETE "http://10.67.106.227:9990/v1/dataprep/delete?file_path=<path_to_your_file.mp4>"
-
-    # re-ingest with metadata
-    curl -X POST "http://${host_ip}:${DATAPREP_SERVICE_PORT}/v1/dataprep/ingest" \
+    # ingest <host_data_path>/<sub_dir> with shared metadata
+    curl -X POST "http://${host_ip}:${DATAPREP_SERVICE_PORT}/v1/dataprep/media/ingest-dir" \
     -H "Content-Type: application/json" \
     -d '{
-        "file_path": <path_to_your_file.mp4>,
-        "meta": {"camera": "camera_7"}
+        "dir_path": "<sub_dir>",
+        "bucket_name": "vsqa",
+        "store_copy": false,
+        "metadata": {"camera": "camera_7"}
     }'
+
+    # the response returns a job_id; poll it until it reaches a terminal state
+    curl "http://${host_ip}:${DATAPREP_SERVICE_PORT}/v1/dataprep/media/jobs/<job_id>"
+
+    # remove everything ingested into the bucket
+    curl -X DELETE "http://${host_ip}:${DATAPREP_SERVICE_PORT}/v1/dataprep/media/vsqa"
     ```
+
+   `dir_path` is resolved under the directory the service has mounted as its
+   ingest root (the same `HOST_DATA_PATH` the UI uses), and `store_copy: false`
+   embeds the files in place instead of duplicating them into the service's
+   storage.
+
+   > **Note on how results are displayed:** the UI renders each search hit
+   > straight from the dataprep streaming endpoint
+   > (`GET /v1/dataprep/media/download`), which advertises `Accept-Ranges: bytes`
+   > and answers `Range` requests with `206 Partial Content`. The browser
+   > therefore seeks within a video without the application ever loading the
+   > whole file. That URL is built from `DATAPREP_PUBLIC_BASE_URL`, so it must be
+   > reachable **from the browser**; it defaults to
+   > `http://${host_ip}:${DATAPREP_SERVICE_PORT}` in the compose deployments.
+   > Set it explicitly when the browser reaches dataprep through a different
+   > address (for example an ingress or NodePort in Kubernetes).
 
 ### Step 2: Use metadata as filter on web UI
 
