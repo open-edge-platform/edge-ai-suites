@@ -113,7 +113,11 @@ hide_directive-->
            "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "samplestream"
+                   "peer-id": "samplestream",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
            },
            "parameters": {
@@ -138,7 +142,11 @@ hide_directive-->
            "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
            },
            "parameters": {
@@ -244,7 +252,11 @@ hide_directive-->
            "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "samplestream"
+                   "peer-id": "samplestream",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
            },
            "parameters": {
@@ -269,7 +281,11 @@ hide_directive-->
            "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
            },
            "parameters": {
