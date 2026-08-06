@@ -151,22 +151,22 @@ class RouteCandidate(BaseModel):
         Field(description="Live conditions observed along this route"),
     ] = []
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
-    @computed_field
     def has_severe_incident(self) -> bool:
         severe = {incident.value for incident in SEVERE_INCIDENTS}
         return any(condition.incident_status in severe for condition in self.conditions)
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
-    @computed_field
     def has_hazardous_weather(self) -> bool:
         hazardous = {weather.value for weather in HAZARDOUS_WEATHER}
         return any(
             condition.weather_status in hazardous for condition in self.conditions
         )
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
-    @computed_field
     def max_traffic_density(self) -> int:
         return max(
             (condition.traffic_density for condition in self.conditions), default=0
