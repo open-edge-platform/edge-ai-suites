@@ -128,7 +128,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:13.0.2-ubuntu
+    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -521,7 +521,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.16.0
+    image: coturn/coturn:4.12.0
     container_name: coturn
     read_only: true
     security_opt:
