@@ -90,6 +90,19 @@ services:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}
       - ${RENDER_GROUP_ID:-1002}
+      # render group ID for ubuntu 20.04 host OS
+      - "109"
+      # render group ID for ubuntu 22.04 host OS
+      - "110"
+      # render group ID for ubuntu 24.04 host OS
+      - "992"
+      - "993"
+    device_cgroup_rules:
+      # Default run - device-cgroup-rule='c 189:* rmw'
+      # Selective rules can be applied for deployment
+      - 'c 189:* rmw'
+      - 'c 209:* rmw'
+      - 'a 189:* rwm'
     volumes:
       - ./configs/agentic/models:/model:ro
     ports:
