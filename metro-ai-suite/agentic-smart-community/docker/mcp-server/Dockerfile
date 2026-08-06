@@ -11,14 +11,26 @@
 
 FROM node:22-bookworm
 
-# Runtime + native-build deps:
-#   ffmpeg           — scene_query frame resize (see scripts/mcp-server/start.sh)
-#   jq               — bundled use-case registration in the entrypoint
-#   python3 make g++ — node-gyp fallback for the better-sqlite3 native module
-# curl is already present in the base image.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg jq python3 make g++ ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Runtime deps:
+#   ffmpeg          — scene_query frame resize (see scripts/mcp-server/start.sh)
+#   jq              — bundled use-case registration in the entrypoint
+#   python3         — evaluate_rules.py use-case overrides
+#   ca-certificates — HTTPS requests made by the entrypoint
+# Build deps are removed after npm ci: make/g++ build better-sqlite3 and dpkg-dev
+# unpacks the corresponding FFmpeg source package for license compliance.
+RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        dpkg-dev \
+        ffmpeg \
+        g++ \
+        jq \
+        make \
+        python3 \
+    && mkdir -p /copyleft_sources/deb \
+    && cd /copyleft_sources/deb \
+    && apt-get source -q ffmpeg
 
 WORKDIR /app
 
@@ -27,7 +39,10 @@ WORKDIR /app
 # NOT copy the host's node_modules (it is built for the host toolchain).
 COPY package.json package-lock.json tsconfig.json ./
 COPY packages ./packages
-RUN npm ci
+RUN npm ci \
+    && apt-get purge -y --auto-remove dpkg-dev g++ make \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Build the workspace: dashboard (vite) + all TS packages (tsc -b) → dist/.
 # Delete any stray *.tsbuildinfo first: `tsc -b` treats a buildinfo without its dist
