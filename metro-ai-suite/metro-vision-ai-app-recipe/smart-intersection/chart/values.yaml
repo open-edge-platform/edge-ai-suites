@@ -33,8 +33,12 @@ trustedCompute:
   tc_gpu_enabled: false
   tc_gpu_cdiAnnotations:
     - gpu.intel.com/igpu=tc
+  tc_npu_enabled: false
+  tc_npu_cdiAnnotations:
+    - npu.intel.com/npu=tc
   tcvm_default_memory: "6144"
   tcvm_pcie_root_port: "1"
+  tcvm_npu_pcie_root_port: "3"
   tcvm_hot_plug_vfio: "root-port"
   resources:
     requests:
