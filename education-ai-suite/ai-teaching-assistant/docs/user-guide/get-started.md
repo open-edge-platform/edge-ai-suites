@@ -41,45 +41,6 @@ The script will:
 
 **First run may take 10-30 minutes** while models are downloaded and cached.
 
-## Step 3.5: Install Wake-Word Models (Optional)
-
-The optional host-microphone wake-word feature ("Hey Jarvis") uses
-[openWakeWord](https://github.com/dscripka/openWakeWord). These 
-models are **not** downloaded automatically.
-
-To enable the wake-word feature, download the following 4 model files and copy them into the openWakeWord `models` folder manually.
-
-Skip this step if you do not wish to use wake-word activation.
-
-**1. Download these files:**
-
-- [melspectrogram.onnx](https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/melspectrogram.onnx)
-- [embedding_model.onnx](https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/embedding_model.onnx)
-- [silero_vad.onnx](https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/silero_vad.onnx)
-- [hey_jarvis_v0.1.onnx](https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/hey_jarvis_v0.1.onnx)
-
-**2. Create the destination folder (if it does not already exist):**
-
-```powershell
-$ModelsDir = ".\voice-enabled-interactions\smart-kiosk-assistant\venv\Lib\site-packages\openwakeword\resources\models"
-New-Item -ItemType Directory -Force -Path $ModelsDir | Out-Null
-```
-
-**3. Copy the 4 downloaded files into that folder:**
-
-```
-voice-enabled-interactions\smart-kiosk-assistant\venv\Lib\site-packages\openwakeword\resources\models
-```
-
-**4. Verify the files are in place:**
-
-```powershell
-Get-ChildItem $ModelsDir
-```
-
-You should see the 4 `.onnx` files listed.
-
-
 ## Step 4: Start the Application
 
 ```powershell

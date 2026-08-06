@@ -18,10 +18,6 @@ Clone and enter the application directory as shown in
 
 `setup_windows.ps1` prepares required submodules, virtual environments, and dependencies.
 
-> **Optional — Wake-word models:** If you plan to use host-microphone wake-word
-> activation ("Hey Jarvis"), you must install the openWakeWord models manually.
-> Follow [Step 3.5: Install Wake-Word Models](../get-started.md#step-35-install-wake-word-models-optional).
-
 ## Service Startup Order
 
 Start each service in a dedicated PowerShell terminal.

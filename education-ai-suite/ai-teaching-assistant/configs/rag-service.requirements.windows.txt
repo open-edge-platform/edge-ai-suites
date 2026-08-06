@@ -24,7 +24,7 @@ python-multipart==0.0.27
 
 # Document ingestion (PDF/DOCX support for RAG context upload)
 python-docx==1.1.2
-pypdf==4.3.1
+pypdf>=6.14.2
 
 openvino==2026.1.0
 openvino-tokenizers
