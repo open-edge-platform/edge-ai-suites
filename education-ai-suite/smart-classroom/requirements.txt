@@ -45,9 +45,6 @@ openai-whisper==20250625
 speechbrain>=1.0.4
 pyannote.audio==4.0.4
 
-# Vector search
-faiss-cpu==1.11.0
-
 # Telegram userbot transport
 telethon==1.39.0
 pysocks==1.7.1
