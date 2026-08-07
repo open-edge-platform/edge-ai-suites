@@ -19,7 +19,8 @@
 #                  finding with no Debian patch. The tarball doubles as the
 #                  copyleft source shipped in /copyleft_sources.
 #   runtime        final image: Debian runtime libs + copyleft sources + NPU/ZE/
-#                  GPU debs + venv + app config. No curl, no add-apt-repository.
+#                  GPU debs + venv + app config. curl is kept for the compose
+#                  healthcheck and in-container debugging.
 #
 # Firmware (NPU) is loaded by the host kernel, so intel-fw-npu is intentionally
 # NOT installed here.
@@ -41,7 +42,8 @@ FROM python-base AS builder-base
 
 WORKDIR /app
 
-# curl exists only in this throwaway stage.
+# curl here is for the downloads below; the runtime stage installs its own
+# copy for the compose healthcheck.
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -103,7 +105,9 @@ COPY cli.py service.py source_worker.py __init__.py __main__.py ./
 RUN pip install --no-cache-dir ".[npu]"
 
 # ---------------------------------------------------------------------------
-# ffmpeg from the official upstream tarball (dlstreamer fedora41 pattern).
+# ffmpeg from the official GitHub mirror tag tarball (dlstreamer fedora41
+# pattern; ffmpeg.org itself is unreachable through some corporate proxies, so
+# the mirror is used unconditionally — same source, tag n<version>).
 # Debian's stock ffmpeg deb drags in ~35 unused libraries, each a trivy finding
 # with no Debian patch. The tarball doubles as the copyleft source shipped in
 # the final image. Build tools never leave this stage.
@@ -111,11 +115,12 @@ FROM python-base AS ffmpeg-builder
 ARG FFMPEG_VERSION=7.1.5
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         build-essential pkg-config nasm libx264-dev curl ca-certificates \
-    && mkdir -p /src/ffmpeg /copyleft_sources/deb \
+    && mkdir -p "/src/ffmpeg/ffmpeg-${FFMPEG_VERSION}" /copyleft_sources/deb \
     && curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
         -o "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
-        "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
-    && tar -xf "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" -C /src/ffmpeg \
+        "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n${FFMPEG_VERSION}.tar.gz" \
+    && tar -xf "/copyleft_sources/ffmpeg-${FFMPEG_VERSION}.tar.gz" \
+        -C "/src/ffmpeg/ffmpeg-${FFMPEG_VERSION}" --strip-components=1 \
     && sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update -y \
     && cd /copyleft_sources/deb \
@@ -143,11 +148,13 @@ FROM python-base AS runtime
 # of the usual opencv-era X/glib libs (verified via ldd), so libglib2.0/libsm6/
 # libxext6/libxrender1/libgl1 are NOT installed. libx264-164: ffmpeg's only dep.
 # libnuma1 + ocl-icd-libopencl1: iGPU compute runtime deps.
+# curl: used by the compose healthcheck and for in-container debugging.
 RUN apt-get update -y && apt-get install --no-install-recommends -y \
         libx264-164 \
         libnuma1 \
         ocl-icd-libopencl1 \
-        ca-certificates
+        ca-certificates \
+        curl
 
 # ffmpeg binary + its copyleft sources (upstream tarball + x264 source).
 COPY --from=ffmpeg-builder /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg

@@ -5,9 +5,7 @@ import Accordion from '../common/Accordion';
 import '../../assets/css/RightPanel.css'
 import '../../assets/css/MonitoringPausedBanner.css';
 import { useTranslation } from 'react-i18next';
-import { setMetrics } from '../../redux/slices/resourceSlice'; 
-import { getResourceMetrics } from '../../services/api'; 
-import { useAppSelector, useAppDispatch } from '../../redux/hooks';
+import { useAppSelector } from '../../redux/hooks';
 import { useResourceMetricTimer } from '../../hooks/useResourceMetricTimer';
 import MonitoringPausedBanner from '../common/MonitoringPausedBanner';
 Chart.register(...registerables);
@@ -29,7 +27,6 @@ interface ResourceUtilizationAccordionProps {
 
 const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> = ({ activeScreen = 'main' }) => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const monitoringPaused = useAppSelector(s => s.ui.monitoringPaused);
   const resourceMetrics = useAppSelector(s => s.resource?.metrics);
@@ -49,25 +46,6 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
       setResourceData(resourceMetrics);
     }
   }, [resourceMetrics, lastUpdated]);
-
-  useEffect(() => {
-    if (!sessionId || monitoringPaused) return;
-
-    const fetchResourceMetrics = async () => {
-      try {
-        console.log('🔄 Fetching resource metrics for session:', sessionId);
-        const metrics = await getResourceMetrics(sessionId);
-        console.log('📊 Received resource metrics:', metrics);
-        dispatch(setMetrics(metrics));
-      } catch (error) {
-        console.error('❌ Failed to fetch resource metrics:', error);
-      }
-    };
-    fetchResourceMetrics();
-    const interval = setInterval(fetchResourceMetrics, 5000);
-
-    return () => clearInterval(interval);
-  }, [sessionId, monitoringPaused, dispatch]);
 
   const gpuMetricsConfig: GPUMetricsConfig = {
     shared_memory_mb: { 

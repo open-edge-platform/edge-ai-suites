@@ -138,7 +138,6 @@ export function registerTools(
       name: z.string().optional().describe("Display name (for register_source)"),
       use_case: z.string().optional().describe("Use case key from config.yaml use_case_dict (required for register_source)"),
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
-      webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
       persist: z.boolean().default(true).describe(
         "Mirror the change back to the monitors.yaml the server was booted from (--monitors), " +
         "comment-preserving (default true): register_source writes the entry (lets a restart " +
@@ -174,7 +173,8 @@ export function registerTools(
       const { join } = await import("node:path");
       // Inject derived fields the tool layer can compute from server config:
       // - data_dir: per-monitor segment root for analytics to write into
-      // - webhook_url: this server's /events endpoint (caller may override)
+      // - webhook_url: always this server's /events endpoint (not caller-settable;
+      //   a wrong port here silently drops every event — see monitor-bootstrap.ts:79)
       // - video_summary_task: derived from use_case_dict[use_case]
       const enriched: any = { ...params };
       // Path used by persist:true to mirror register_source/unregister back to disk.
@@ -186,7 +186,9 @@ export function registerTools(
         const monitorId = params.monitor_id ?? `cam_${params.use_case}`;
         enriched.monitor_id = monitorId;
         enriched.data_dir ??= join(config.segmentsDir, monitorId);
-        enriched.webhook_url ??= `http://localhost:${config.eventsWebhook!.port}/events`;
+        // Falsy check (not ??=) so an empty string from an internal caller is also
+        // treated as unset — otherwise "" leaks through to the "required" throw below.
+        if (!enriched.webhook_url) enriched.webhook_url = `http://localhost:${config.eventsWebhook!.port}/events`;
         enriched.video_summary_task = videoSummaryTask;
         // Arm the analytics keepalive watchdog; the server drives the heartbeat loop.
         enriched.keepalive = {
