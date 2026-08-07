@@ -7,14 +7,13 @@ import sys
 import time
 import uuid
 import warnings
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 
 import openvino_genai as ov_genai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi_utils.tasks import repeat_every
 from .utils.common import ErrorMessages, logger, settings
 from .utils.data_models import (
     ChatCompletionChoice,
@@ -45,6 +44,25 @@ queued_requests = manager.Value("i", 0)
 request_lock = manager.Lock()
 
 
+async def log_request_counts(interval: float = 2.0):
+    """
+    Log queue depth every `interval` seconds until the task is cancelled.
+
+    Args:
+        interval (float): Seconds to wait between samples.
+    """
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            if active_requests.value > 0 or queued_requests.value > 0:
+                logger.info(
+                    f"Active requests: {active_requests.value}, Queued requests: {queued_requests.value}"
+                )
+        except Exception:
+            # Never let a bad sample kill the ticker.
+            logger.exception("Failed to log request counts")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -56,17 +74,13 @@ async def lifespan(app: FastAPI):
     Yields:
         None
     """
-
-    @repeat_every(seconds=2)
-    async def log_request_counts():
-        if active_requests.value > 0 or queued_requests.value > 0:
-            logger.info(
-                f"Active requests: {active_requests.value}, Queued requests: {queued_requests.value}"
-            )
-
     log_task = asyncio.create_task(log_request_counts())
-    yield
-    log_task.cancel()
+    try:
+        yield
+    finally:
+        log_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await log_task
 
 
 app = FastAPI(lifespan=lifespan)

@@ -56,13 +56,13 @@ def parse_scores(text: str) -> dict[str, dict]:
 
             indexed_parts.sort(key=lambda p: p[0])
             part_path = [value for _, value in indexed_parts]
-            part_tuple = tuple(part_path)
+            part_tuple = tuple(indexed_parts)
             key = (qid, part_tuple)
             if key in seen_parts:
                 continue
             seen_parts.add(key)
 
-            composite_qid = f"{qid}|{'|'.join(str(v) for v in part_path)}"
+            composite_qid = f"{qid}|{'|'.join(f'{lvl}.{val}' for lvl, val in indexed_parts)}"
             _accumulate(scores, composite_qid, {
                 "type": m.group(3).lower(),
                 "student": m.group(4).strip(),

@@ -6,7 +6,7 @@ import TaskList from './TaskList';
 import ResultsView from './ResultsView';
 import GradingRightPanel from './GradingRightPanel';
 import { gradingHealth } from '../../services/api';
-import type { GradingTask, GradingHealth } from '../../services/api';
+import type { GradingHealth } from '../../services/api';
 
 type GradingView = 'main' | 'results';
 
@@ -27,7 +27,7 @@ const GradingScreen: React.FC = () => {
     return () => clearInterval(id);
   }, []);
 
-  const handleTaskCreated = (_task: GradingTask) => {
+  const handleTaskCreated = () => {
     setRefreshSignal((n) => n + 1);
   };
 

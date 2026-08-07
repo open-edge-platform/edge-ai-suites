@@ -130,7 +130,6 @@ passed here.
 | `name` | string | — | Display name (for `register_source`) |
 | `use_case` | string | — | `use_case_dict` key (**required** for `register_source`) |
 | `pipeline_config` | object | — | Analytics pipeline config (default: motion + recording) |
-| `webhook_url` | string | — | Events webhook (default: derived from `config.eventsWebhook.port`) |
 
 **Actions**
 

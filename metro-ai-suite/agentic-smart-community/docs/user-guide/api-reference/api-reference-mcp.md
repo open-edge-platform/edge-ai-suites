@@ -163,7 +163,6 @@ Manage one monitor across the database, videostream-analytics, and video worker.
 | `use_case` | string | For `register_source` | Key in `config.yaml` `use_case_dict` |
 | `name` | string | No | Display name |
 | `pipeline_config` | object | No | Overrides the default analytics pipeline configuration |
-| `webhook_url` | string | No | Overrides the derived MCP event webhook URL |
 | `persist` | boolean | No | Mirrors lifecycle changes into the booted `monitors.yaml`; default true |
 
 List all monitors:
