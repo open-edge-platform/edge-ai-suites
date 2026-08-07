@@ -2098,14 +2098,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
-$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 $venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
 
 $gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
+if ((Test-Path $venvBackend) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
@@ -2152,33 +2151,6 @@ if (-not (Test-Path $venvBackend)) {
 }
 Write-Host ""
 
-Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if (-not $contentSearchEnabled) {
-    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
-} else {
-    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-        Remove-Item $venvContentSearch -Recurse -Force
-    }
-    if (-not (Test-Path $venvContentSearch)) {
-        python -m venv $venvContentSearch
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
-    } elseif ($upgradeVenvs) {
-        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
-    } else {
-        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
-    }
-}
-Write-Host ""
 
 if ($gradingEnabled -eq "true") {
     Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow

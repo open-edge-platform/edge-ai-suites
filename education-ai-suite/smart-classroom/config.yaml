@@ -543,7 +543,6 @@ content_search:
   port: 9011
   video_summarization_enabled: true
   ocr_enabled: true # extract text from images inside uploaded documents
-  python_executable: "content_search/venv_content_search/Scripts/python.exe"
 
   chromadb:
     host: "127.0.0.1"

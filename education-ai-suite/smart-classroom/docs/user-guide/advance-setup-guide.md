@@ -214,17 +214,11 @@ This means your pipeline server has started successfully and is ready to accept 
 
 Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
 
-### A. Create Content Search Virtual Environment
+### A. Content Search Dependencies
 
-```PowerShell
-cd smart-classroom\content_search
-python -m venv venv_content_search
-.\venv_content_search\Scripts\activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
+Content Search runs in the same `smartclassroom` environment as the backend.
 
-> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup.
+> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits.
 
 When all services are ready:
 
@@ -432,7 +426,6 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove \
   For base environment : *education-ai-suite/smartclassroom*. \
   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
-  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*. \
   For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.

@@ -1,4 +1,4 @@
-fastapi==0.116.1
+fastapi==0.121.3
 funasr==1.2.7
 
 # OpenVINO stack
@@ -17,7 +17,7 @@ pydub==0.25.1
 python-multipart>=0.0.27
 pywin32==311
 PyYAML==6.0.2
-uvicorn==0.35.0
+uvicorn==0.38.0
 WMI==1.5.1
 
 # Scientific stack (stability-critical)
@@ -31,6 +31,7 @@ scipy==1.15.3
 torch==2.8.0
 torchaudio==2.8.0
 torchvision==0.23.0
+onnxscript>=0.5.0
 
 # HuggingFace ecosystem
 transformers==5.5.0
@@ -47,6 +48,22 @@ pyannote.audio==4.0.4
 
 # Vector search
 faiss-cpu==1.11.0
+chromadb==1.5.5
+
+# Content search: RAG / multimodal embedding
+llama-index==0.14.23
+llama-index-readers-file>=0.4.0
+open-clip-torch>=3.1.0
+
+# Content search: media decoding
+moviepy>=2.0
+decord>=0.6.0
+opencv-python-headless==4.10.0.84
+pillow>=11.0.0
+
+# Content search: persistence
+SQLAlchemy==2.0.46
+psycopg2==2.9.11
 
 # Telegram userbot transport
 telethon==1.39.0
@@ -62,7 +79,7 @@ hf_xet==1.6.0
 # Vision / detection
 ultralytics==8.4.39
 
-# OCR dependencies
+# OCR / document parsing
 paddleocr==3.7.0
 pyclipper
 PyMuPDF==1.26.3
@@ -70,6 +87,9 @@ beautifulsoup4==4.13.4
 fire==0.7.1
 rapidfuzz==3.13.0
 python-docx==1.2.0
+docx2txt==0.9
+python-magic==0.4.27
+unstructured[all-docs]==0.18.32
 lmdb==1.7.3
 attrdict==2.0.1
 lxml>=6.1.0
