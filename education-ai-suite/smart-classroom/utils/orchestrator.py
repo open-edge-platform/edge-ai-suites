@@ -157,6 +157,8 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
     if not _any_success(final_status, wanted):
         raise _OrchestrationError("all va pipelines failed")
 
+    session_state.SessionStateManager.set_stage(session_id, "va", "done")
+
 
 def _any_success(final_status: dict, wanted: dict) -> bool:
     for name in wanted:
