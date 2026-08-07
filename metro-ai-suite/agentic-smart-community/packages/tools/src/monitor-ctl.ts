@@ -290,7 +290,7 @@ export async function monitorCtl(
           `Use the cam_<use_case> convention (e.g. cam_${params.use_case ?? "<use_case>"}).`,
         );
       }
-      if (!params.webhook_url) throw new Error("webhook_url is required for register_source");
+      if (!params.webhook_url) throw new Error("webhook_url missing for register_source — it must be derived from config eventsWebhook.port by the caller (not supplied by the agent)");
       const webhookUrl = params.webhook_url;
       const dataDir = params.data_dir;
 
