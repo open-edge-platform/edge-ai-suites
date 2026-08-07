@@ -6,7 +6,6 @@
 
 - Fixed coturn server configuration for webrtc relay.
 - Fixed Grafana MQTT datasource version to avoid errors with latest version.
-- Removed Weld and Worker Safety apps.
 
 **Improved:**
 
