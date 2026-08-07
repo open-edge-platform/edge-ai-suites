@@ -188,6 +188,9 @@
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
     },
+    "summary": {
+      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete."
+    },
     "app": {
       "checkingBackendTitle": "Checking backend status",
       "checkingBackendMessage": "Please wait while we connect to the backend…",
@@ -267,6 +270,9 @@
       "detectionGroup": "Layout Detection",
       "contrastFactor": "Contrast Factor",
       "contrastEnhance": "Contrast Enhance",
+      "forceSplit": "Force Split",
+      "forceSplitPairs": "Split After Pages",
+      "forceSplitAdd": "+ Add page",
       "maxTokens": "Max Tokens",
       "maxImagePixels": "Max Image Pixels",
       "sortBoxes": "Sort Boxes",
@@ -276,6 +282,7 @@
       "iouThreshold": "IoU Threshold",
       "invalidMinScore": "Min score must be between 0 and 1",
       "invalidIou": "IoU threshold must be between 0 and 1",
+      "pageColumns": "Page Columns",
       "dpi": "Render DPI",
       "vlmModel": "VLM Model",
       "ocrModel": "OCR Model",
@@ -285,6 +292,9 @@
       "saving": "Saving…",
       "saved": "Saved. Takes effect on next task.",
       "invalidDpi": "DPI must be a positive integer",
+      "invalidPageColumns": "Page columns must be 1 or 2",
+      "invalidColumnSplitRatio": "Column split ratio must be between 0 and 1",
+      "invalidForceSplitPairs": "Split pages must be positive integers.",
       "invalidTemp": "Temperature must be between 0 and 2",
       "pollInterval": "Poll Interval (s)",
       "stableChecks": "Stable Checks",
@@ -515,6 +525,7 @@
     }
   },
   "reportPanel": {
+    "title": "View Report",
     "classReport": "Class Report",
     "noSessionActive": "No session active",
     "reportFields": "Report Fields",
@@ -547,8 +558,12 @@
     "reportGenerationFailed": "Report generation failed",
     "updatingFields": "Updating fields...",
     "reportReady": "Report ready",
-    "downloadDocx": "📥 Download .docx",
-    "downloadPdf": "📄 Download .pdf"
+    "download": "Download",
+    "downloadDocxItem": "Word document (.docx)",
+    "downloadPdfItem": "PDF document (.pdf)",
+    "pdfUnavailableTooltip": "PDF export requires LibreOffice on the server. Install it and make sure 'soffice' is on the PATH, then reopen this panel (restart services if you changed PATH).",
+    "preparingDownload": "⏳ Preparing...",
+    "convertingPdf": "⏳ Converting to PDF..."
   },
   "resultSection": {
     "title": "Results",

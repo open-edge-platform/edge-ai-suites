@@ -1,5 +1,5 @@
 {
-  "name": "smart-community-ai-automation",
+  "name": "agentic-smart-community",
   "version": "0.1.0",
   "private": true,
   "description": "AI Agent-native video analysis platform with MCP integration",
@@ -7,11 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=packages/ui && tsc -b",
+    "build": "npm run build --workspace=packages/dashboard && tsc -b",
     "clean": "tsc -b --clean",
     "dev": "npm run dev --workspace=packages/mcp-server",
     "test:sdk": "node --import tsx --test tests/framework-adapter-sdk/*.test.ts",
-    "test:tools": "node --import tsx --test tests/tools/*.test.ts"
+    "test:tools": "node --import tsx --test tests/tools/*.test.ts",
+    "test:mcp-server": "node --import tsx --test tests/mcp-server/*.test.ts"
   },
   "engines": {
     "node": ">=18.0.0"

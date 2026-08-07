@@ -5,7 +5,6 @@ from fastapi import APIRouter, HTTPException
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
-from utils.config_loader import config
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +34,10 @@ class MindmapFeature:
     depends_on: List[str] = ["summary"]
     router: APIRouter = router
 
-    def __init__(self) -> None:
-        self.system_prompt = None
-
     def build(self) -> None:
-        mindmap_cfg = getattr(config, "mindmap", None)
-        self.system_prompt = getattr(mindmap_cfg, "system_prompt", None)
         logger.info("MindmapFeature built.")
 
     def teardown(self) -> None:
-        self.system_prompt = None
         logger.info("MindmapFeature torn down.")
 
     def ui_descriptor(self) -> Dict:

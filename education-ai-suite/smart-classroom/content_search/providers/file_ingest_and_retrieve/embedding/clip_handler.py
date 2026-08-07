@@ -46,8 +46,18 @@ class CLIPHandler:
             self._export_to_openvino(model_dir)
 
         core = ov.Core()
-        self._visual_model = core.compile_model(str(visual_path), self.device)
-        self._text_model = core.compile_model(str(text_path), self.device)
+        try:
+            self._visual_model = core.compile_model(str(visual_path), self.device)
+            self._text_model = core.compile_model(str(text_path), self.device)
+        except RuntimeError:
+            # The text tower's GatherND has no GPU/NPU kernel, so CPU is the only
+            # device that can run both towers.
+            if self.device.upper() == "CPU":
+                raise
+            logger.warning(f"CLIP cannot be compiled on {self.device}, falling back to CPU")
+            self.device = "CPU"
+            self._visual_model = core.compile_model(str(visual_path), self.device)
+            self._text_model = core.compile_model(str(text_path), self.device)
 
         tokenizer_dir = model_dir / "tokenizer"
         if tokenizer_dir.exists():
@@ -74,7 +84,9 @@ class CLIPHandler:
         model.eval()
 
         # Export visual encoder
-        dummy_image = torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE)
+        # Batch dims are exported with a size-2 dummy: torch.export specializes a
+        # dim of size 1 to a constant, which would bake batch=1 into the IR.
+        dummy_image = torch.randn(2, 3, IMAGE_SIZE, IMAGE_SIZE)
         onnx_visual = str(model_dir / "visual.onnx")
         torch.onnx.export(
             model.visual, dummy_image, onnx_visual,
@@ -86,7 +98,7 @@ class CLIPHandler:
         )
 
         # Export text encoder
-        dummy_text = torch.randint(0, 250002, (1, MAX_SEQ_LEN), dtype=torch.long)
+        dummy_text = torch.randint(0, 250002, (2, MAX_SEQ_LEN), dtype=torch.long)
         onnx_text = str(model_dir / "text.onnx")
         torch.onnx.export(
             model.text, dummy_text, onnx_text,

@@ -54,7 +54,7 @@ To address the challenges associated with robotics pick and place in industrial 
 
 The Stationary Robot (RVC) reference application performs vision-guided pick-and-place on a Universal Robots UR5e. The `rvc_vision` package detects objects and estimates 6-DoF pose with OpenVINO™; `rvc_control` runs the real-time motion controllers — covering both the dynamic AI-detection tracking and static CV-detection use cases — together with grasp planning, driving the UR5e through MoveIt with a Robotiq gripper. Vision runs on the iGPU / NPU while motion control runs deterministically on the CPU. Supporting packages (`rvc_vision_messages`, `rvc_profiler`) and the operator plane (`rvc_api`, `rvc_panel` RViz2 plugin) sit outside the runtime data path.
 
-![RVC reference application: pick-and-place with a UR5e](../images/architecture/RVC-Reference-Application.png)
+![RVC reference application: pick-and-place with a UR5e](../images/architecture/RVC-Reference-Application.svg)
 
 For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
 

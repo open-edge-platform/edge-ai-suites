@@ -3,6 +3,7 @@ import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import { gradingListDir } from '../../services/api';
 import type { GradingFsEntry } from '../../services/api';
+import GradingModal from './GradingModal';
 
 interface DirectoryPickerProps {
   initialPath?: string;
@@ -41,18 +42,12 @@ const DirectoryPicker: React.FC<DirectoryPickerProps> = ({ initialPath, onSelect
   const atRoots = path === '';
 
   return (
-    <div className="grading-picker-overlay" onClick={onClose}>
-      <div className="grading-picker" onClick={(e) => e.stopPropagation()}>
-        <div className="grading-picker-header">
-          <span className="grading-picker-title">
-            {t('grading.picker.title', 'Select a directory')}
-          </span>
-          <button className="grading-picker-close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-
-        <div className="grading-picker-path">
+    <GradingModal
+      title={t('grading.picker.title', 'Select a directory')}
+      onClose={onClose}
+      className="grading-picker"
+    >
+      <div className="grading-picker-path">
           <button
             className="grading-btn grading-btn-secondary grading-picker-up"
             disabled={loading || (atRoots && parent === null)}
@@ -97,8 +92,7 @@ const DirectoryPicker: React.FC<DirectoryPickerProps> = ({ initialPath, onSelect
             {t('grading.picker.select', 'Select this directory')}
           </button>
         </div>
-      </div>
-    </div>
+    </GradingModal>
   );
 };
 

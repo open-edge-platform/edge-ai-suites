@@ -75,7 +75,7 @@ class TestContinuousRecorderLifecycle:
         assert recorder.status == "stopped"
 
     def test_output_dir_created(self, recorder, tmp_path):
-        # Phase 7: data_dir is the per-source root (already resolved by caller);
+        # data_dir is the per-source root (already resolved by caller);
         # recorder appends "recordings/" without re-prepending source_id.
         expected = os.path.join(str(tmp_path), "recordings")
         assert os.path.isdir(expected)
@@ -158,7 +158,7 @@ class TestContinuousRecorderWithVideo:
     def test_recorder_produces_segments(self, recorder, mock_sink, tmp_path):
         """Recorder should produce at least 1 segment from a real video.
 
-        Phase 7: events are nested envelope `{sourceId, type, timestamp, payload}`,
+        Events use the nested envelope `{sourceId, type, timestamp, payload}`;
         recording payload uses `recording_path` (not `clip_path`).
         """
         recorder.start()

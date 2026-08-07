@@ -147,6 +147,8 @@ helm install stia . -n <your-namespace> --create-namespace \
   --set ovms.gpu.enabled=false
 ```
 
+> **Note:** If the prerequisite **Smart Intersection** deployment is using the GPU or NPU, the GPU is not available for Metrics Manager telemetry in this deployment. Disable GPU telemetry by adding `--set metricsManager.hardware.gpu.enabled=false` to the command above.
+
 ---
 
 ### Option B: GPU Deployment

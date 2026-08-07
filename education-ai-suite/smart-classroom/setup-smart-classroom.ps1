@@ -74,7 +74,7 @@ This script will:
   1. Configure proxy for downloads (if needed)
   2. Check system requirements (OS, RAM, Python, Node.js, etc.)
   3. Check application dependencies (FFmpeg, DL Streamer)
-  4. Configure smart-classroom settings (language, upload limits, OCR, board OCR)
+  4. Configure smart-classroom settings (features, language, upload limits, document OCR)
   5. Launch the startup script
 
 "@ -ForegroundColor Cyan
@@ -1529,6 +1529,80 @@ function Get-FeatureState {
     if ($match.Success) { return $match.Groups[1].Value } else { return "true" }
 }
 
+# Resolves the diarization model's local cache location (mirrors utils/ensure_model.py::get_diarization_model_path)
+function Get-DiarizationModelInfo {
+    param(
+        [string]$Content,
+        [string]$BaseDir
+    )
+    $diarBlockMatch = [regex]::Match($Content, "(?ms)^  diarization:.*?(?=^  \S)")
+    $diarBlock = if ($diarBlockMatch.Success) { $diarBlockMatch.Value } else { "" }
+
+    $providerMatch = [regex]::Match($diarBlock, 'provider:\s*"?([\w-]+)"?')
+    $provider = if ($providerMatch.Success) { $providerMatch.Groups[1].Value } else { "huggingface" }
+
+    $nameMatch = [regex]::Match($diarBlock, 'name:\s*"?([\w\-/]+)"?')
+    $name = if ($nameMatch.Success) { $nameMatch.Groups[1].Value } else { "pyannote/speaker-diarization-community-1" }
+
+    $basePathMatch = [regex]::Match($diarBlock, 'models_base_path:\s*"?([\w./\\-]+)"?')
+    $basePath = if ($basePathMatch.Success) { $basePathMatch.Groups[1].Value } else { "models" }
+
+    $modelDirName = $name.Replace('/', '_')
+    $path = Join-Path (Join-Path $BaseDir $basePath) (Join-Path $provider $modelDirName)
+
+    return [PSCustomObject]@{
+        Provider = $provider
+        Name     = $name
+        BasePath = $basePath
+        Path     = $path
+    }
+}
+
+# Returns the raw models.asr.hf_token value from config.yaml ("None" if unset)
+function Get-HfTokenRaw {
+    param([string]$Content)
+    $m = [regex]::Match($Content, "(hf_token:\s*)(\S+)")
+    if ($m.Success) { return $m.Groups[2].Value } else { return "None" }
+}
+
+# Returns $true if a real (non-empty, non-"None") hf_token is configured
+function Test-HfTokenSet {
+    param([string]$Content)
+    $token = Get-HfTokenRaw -Content $Content
+    return -not ([string]::IsNullOrWhiteSpace($token) -or $token -eq "None")
+}
+
+# ============================================================================
+# Current Configuration Overview (shown before asking to configure config.yaml)
+# ============================================================================
+Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  features:" -ForegroundColor White
+foreach ($fid in $featureIds) {
+    $state = Get-FeatureState -Content $configContent -Id $fid
+    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
+}
+Write-Host ""
+
+# Speaker diarization lives under models.asr.diarization, shown alongside the feature list
+$diarEnabledMatch = [regex]::Match($configContent, "asr:\s*\n(?:.*\n)*?\s*diarization:\s*(True|False)")
+$currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.Groups[1].Value } else { "False" }
+$diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+Write-Host "  models.asr:" -ForegroundColor White
+Write-Host ("    {0,-20} enabled: {1}" -f "diarization:", $currentDiarizationEnabled) -ForegroundColor Gray
+Write-Host ""
+
+if ($diarizationWasEnabled -and -not (Test-HfTokenSet -Content $configContent)) {
+    Write-Host "  [WARNING] Diarization is enabled but hf_token is None. It needs to be filled in." -ForegroundColor Red
+    Write-Host "            See the setup guide:" -ForegroundColor Red
+    Write-Host "            https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Red
+    Write-Host ""
+}
+
+Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
+Write-Host ""
+
 if ($Silent) {
     Write-Host "Silent mode: keeping existing config.yaml values" -ForegroundColor Gray
     $doConfigChanges = "N"
@@ -1547,22 +1621,11 @@ Write-Host "[3.1] Feature Configuration" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-Write-Host "Current feature configuration in config.yaml:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  features:" -ForegroundColor White
-foreach ($fid in $featureIds) {
-    $state = Get-FeatureState -Content $configContent -Id $fid
-    Write-Host ("    {0,-20} enabled: {1}" -f "${fid}:", $state) -ForegroundColor Gray
-}
-Write-Host ""
-Write-Host "Note: disabling a feature skips loading its models, mounting its API routes, and starting its services." -ForegroundColor Gray
-Write-Host ""
-
 if ($Silent) {
     Write-Host "Silent mode: keeping existing feature configuration" -ForegroundColor Gray
     $changeFeatures = "N"
 } else {
-    $changeFeatures = Read-Host "Do you want to change feature configuration? (Y/N)"
+    $changeFeatures = Read-Host "Do you want to change features configuration? (Y/N)"
 }
 
 if ($changeFeatures -match "^[Yy]") {
@@ -1737,6 +1800,130 @@ if ($changeAsr -match "^[Yy]") {
 Write-Host ""
 
 # ============================================================================
+# Speaker Diarization Setup
+# ============================================================================
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host "Speaker Diarization Setup" -ForegroundColor Cyan
+Write-Host "----------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Extract current diarization enabled value (models.asr.diarization)
+$diarEnabledMatch = [regex]::Match($configContent, "asr:\s*\n(?:.*\n)*?\s*diarization:\s*(True|False)")
+$currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.Groups[1].Value } else { "False" }
+$diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+Write-Host "Current Speaker Diarization configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  models.asr:" -ForegroundColor White
+Write-Host "    diarization: $currentDiarizationEnabled   # labels TEACHER/STUDENT_XX speakers in ASR transcripts" -ForegroundColor Gray
+Write-Host ""
+
+if ($Silent) {
+    Write-Host "Silent mode: keeping existing Speaker Diarization setting" -ForegroundColor Gray
+    $changeDiarization = "N"
+} else {
+    $changeDiarization = Read-Host "Do you want to change Speaker Diarization setting? (Y/N)"
+}
+
+$diarizationIsEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
+
+if ($changeDiarization.ToUpper() -eq "Y") {
+    Write-Host ""
+    $newDiarization = Read-Host "Enable diarization? (true/false, blank = $($currentDiarizationEnabled.ToLower()))"
+
+    if ($newDiarization.ToLower() -eq "true") {
+        $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*diarization:\s*)(True|False)", "`${1}True"
+        $currentDiarizationEnabled = "True"
+        $diarizationIsEnabled = $true
+        Write-Host "  [OK] Speaker diarization ENABLED" -ForegroundColor Green
+    } elseif ($newDiarization.ToLower() -eq "false") {
+        $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*diarization:\s*)(True|False)", "`${1}False"
+        $currentDiarizationEnabled = "False"
+        $diarizationIsEnabled = $false
+        Write-Host "  [OK] Speaker diarization DISABLED" -ForegroundColor Green
+    } else {
+        Write-Host "  Keeping current Speaker Diarization setting." -ForegroundColor Gray
+    }
+} else {
+    Write-Host "Keeping current Speaker Diarization setting." -ForegroundColor Gray
+}
+
+$diarizationJustEnabled = $diarizationIsEnabled -and (-not $diarizationWasEnabled)
+
+if ($diarizationIsEnabled) {
+    Write-Host ""
+
+    # Resolve the diarization model's local cache path (mirrors utils/ensure_model.py::get_diarization_model_path)
+    $diarInfo = Get-DiarizationModelInfo -Content $configContent -BaseDir $ScriptDir
+    $diarizationModelName = $diarInfo.Name
+    $diarModelPath = $diarInfo.Path
+    $diarModelConfigFile = Join-Path $diarModelPath "config.yaml"
+    $diarModelDownloaded = Test-Path $diarModelConfigFile
+
+    if ($diarModelDownloaded) {
+        Write-Host "  [OK] Diarization model already downloaded:" -ForegroundColor Green
+        Write-Host "       $diarModelPath" -ForegroundColor Gray
+    } else {
+        Write-Host "  Diarization model not found locally at:" -ForegroundColor Yellow
+        Write-Host "    $diarModelPath" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  [NOTE] Before Speaker Diarization will work, you must request model access on" -ForegroundColor Yellow
+        Write-Host "         Hugging Face and create an access token. Please read the setup guide:" -ForegroundColor Yellow
+        Write-Host "         https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
+        Write-Host ""
+
+        # ------------------------------------------------------------------
+        # Request Model Access
+        # ------------------------------------------------------------------
+        Write-Host "Request Model Access" -ForegroundColor Yellow
+        Write-Host "  This model is gated on Hugging Face. Please request access here:" -ForegroundColor Gray
+        Write-Host "    https://huggingface.co/$diarizationModelName" -ForegroundColor White
+        Write-Host ""
+        if (-not $Silent) {
+            Read-Host "  Press Enter once you have submitted/been granted the access request"
+        }
+        Write-Host ""
+    }
+
+    # ------------------------------------------------------------------
+    # Hugging Face Token (needed whenever hf_token is None, or diarization was just enabled)
+    # ------------------------------------------------------------------
+    $hfTokenIsSet = Test-HfTokenSet -Content $configContent
+    if ($diarizationJustEnabled -or -not $hfTokenIsSet) {
+        if (-not $hfTokenIsSet) {
+            Write-Host ""
+            Write-Host "  [WARNING] hf_token is None. It needs to be filled in." -ForegroundColor Yellow
+        }
+        Write-Host ""
+        Write-Host "Hugging Face Token" -ForegroundColor Yellow
+        Write-Host "  Current token: $(if ($hfTokenIsSet) { 'Set' } else { 'Not set' })" -ForegroundColor Gray
+
+        if (-not $Silent) {
+            $secureHfToken = Read-Host "  Enter your Hugging Face access token (leave blank to keep current)" -AsSecureString
+            $newHfToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+                [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureHfToken)
+            )
+            if ($newHfToken) {
+                $configContent = $configContent -replace "(hf_token:\s*)\S+", "`${1}$newHfToken"
+                Write-Host "  [OK] Hugging Face token updated" -ForegroundColor Green
+            } else {
+                Write-Host "  Keeping existing Hugging Face token." -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "  Silent mode: keeping existing Hugging Face token." -ForegroundColor Gray
+        }
+
+        if (-not (Test-HfTokenSet -Content $configContent)) {
+            Write-Host ""
+            Write-Host "  [WARNING] No Hugging Face token is set. If the model ever needs to be" -ForegroundColor Red
+            Write-Host "            (re)downloaded, it will fail until a valid hf_token is provided." -ForegroundColor Red
+        }
+    }
+}
+
+Write-Host ""
+
+# ============================================================================
 # [3.3] Upload Size Limits
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
@@ -1788,97 +1975,51 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.4] OCR Configuration
+# [3.4] Document OCR Configuration (Content Search)
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.4] OCR Configuration" -ForegroundColor Cyan
+Write-Host "[3.4] Document OCR Configuration (Content Search)" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-# Extract current OCR enabled value
-$ocrMatch = [regex]::Match($configContent, "ocr:\s*\n\s*enabled:\s*(true|false)")
+# Extract current content_search.ocr_enabled value
+$ocrMatch = [regex]::Match($configContent, "ocr_enabled:\s*(true|false)")
 $currentOcr = if ($ocrMatch.Success) { $ocrMatch.Groups[1].Value } else { "true" }
 
-Write-Host "Current OCR configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host "Current document OCR configuration in config.yaml:" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentOcr" -ForegroundColor Gray
+Write-Host "  content_search:" -ForegroundColor White
+Write-Host "    ocr_enabled: $currentOcr" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: this only affects text extraction from images inside uploaded documents." -ForegroundColor Gray
+Write-Host "      Board OCR is switched on/off in the features block above." -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
-    Write-Host "Silent mode: keeping existing OCR setting" -ForegroundColor Gray
+    Write-Host "Silent mode: keeping existing document OCR setting" -ForegroundColor Gray
     $changeOcr = "N"
 } else {
-    $changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+    $changeOcr = Read-Host "Do you want to change document OCR setting? (Y/N)"
 }
 
 if ($changeOcr.ToUpper() -eq "Y") {
     Write-Host ""
-    Write-Host "OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable OCR (extracts text from images/PDFs)" -ForegroundColor Gray
+    Write-Host "Document OCR Options:" -ForegroundColor Yellow
+    Write-Host "  true  - Enable OCR (extracts text from images inside documents/PDFs)" -ForegroundColor Gray
     Write-Host "  false - Disable OCR" -ForegroundColor Gray
     Write-Host ""
-    
-    $newOcr = Read-Host "Enable OCR? (true/false, blank = $currentOcr)"
-    
+
+    $newOcr = Read-Host "Enable document OCR? (true/false, blank = $currentOcr)"
+
     if ($newOcr.ToLower() -eq "true" -or $newOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
-        Write-Host "  OCR enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "OCR configuration updated." -ForegroundColor Green
+        $configContent = $configContent -replace "(ocr_enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
+        Write-Host "  content_search.ocr_enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
+        Write-Host "Document OCR configuration updated." -ForegroundColor Green
     } else {
-        Write-Host "Keeping current OCR setting." -ForegroundColor Gray
+        Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
     }
 } else {
-    Write-Host "Keeping current OCR setting." -ForegroundColor Gray
-}
-
-Write-Host ""
-
-# ============================================================================
-# [3.5] Board OCR Configuration
-# ============================================================================
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.5] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host ""
-
-# Extract current Board OCR enabled value
-$boardOcrMatch = [regex]::Match($configContent, "board_ocr:\s*\n\s*enabled:\s*(true|false)")
-$currentBoardOcr = if ($boardOcrMatch.Success) { $boardOcrMatch.Groups[1].Value } else { "false" }
-
-Write-Host "Current Board OCR configuration in config.yaml:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  board_ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentBoardOcr" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Note: Board OCR requires OCR to be enabled (ocr.enabled: true)." -ForegroundColor Gray
-Write-Host ""
-
-if ($Silent) {
-    Write-Host "Silent mode: keeping existing Board OCR setting" -ForegroundColor Gray
-    $changeBoardOcr = "N"
-} else {
-    $changeBoardOcr = Read-Host "Do you want to change Board OCR setting? (Y/N)"
-}
-
-if ($changeBoardOcr.ToUpper() -eq "Y") {
-    Write-Host ""
-    Write-Host "Board OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable Board OCR (extracts text from the teacher's display for summary)" -ForegroundColor Gray
-    Write-Host "  false - Disable Board OCR" -ForegroundColor Gray
-    Write-Host ""
-
-    $newBoardOcr = Read-Host "Enable Board OCR? (true/false, blank = $currentBoardOcr)"
-
-    if ($newBoardOcr.ToLower() -eq "true" -or $newBoardOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(board_ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newBoardOcr.ToLower())"
-        Write-Host "  Board OCR enabled set to $($newBoardOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "Board OCR configuration updated." -ForegroundColor Green
-    } else {
-        Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
-    }
-} else {
-    Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+    Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
 }
 
 Write-Host ""
@@ -1913,10 +2054,11 @@ $finalLang = if ($finalConfig -match "language:\s*(\S+)") { $Matches[1] } else {
 $finalProvider = if ($finalConfig -match "asr:[\s\S]*?provider:\s*(\S+)") { $Matches[1] } else { "unknown" }
 $finalAsrName = if ($finalConfig -match "asr:[\s\S]*?name:\s*(\S+)") { $Matches[1] } else { "unknown" }
 $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matches[1] } else { "CPU" }
+$finalDiarization = if ($finalConfig -match "asr:[\s\S]*?diarization:\s*(True|False)") { $Matches[1] } else { "False" }
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
-$finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
-$finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
+$finalOcr = if ($finalConfig -match "ocr_enabled:\s*(true|false)") { $Matches[1] } else { "true" }
+$finalBoardOcr = Get-FeatureState -Content $finalConfig -Id "board_ocr"
 
 
 $csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
@@ -1935,9 +2077,13 @@ Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
 Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
+Write-Host "  Diarization:     $finalDiarization" -ForegroundColor White
+if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $finalConfig)) {
+    Write-Host "                   [WARNING] hf_token is None - diarization will not work until it is filled in" -ForegroundColor Red
+}
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
-Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host "  Document OCR:    $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
 Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
 Write-Host ""
@@ -1952,14 +2098,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
-$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 $venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
 
 $gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
+if ((Test-Path $venvBackend) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
@@ -2006,33 +2151,6 @@ if (-not (Test-Path $venvBackend)) {
 }
 Write-Host ""
 
-Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if (-not $contentSearchEnabled) {
-    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
-} else {
-    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-        Remove-Item $venvContentSearch -Recurse -Force
-    }
-    if (-not (Test-Path $venvContentSearch)) {
-        python -m venv $venvContentSearch
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
-    } elseif ($upgradeVenvs) {
-        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
-    } else {
-        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
-    }
-}
-Write-Host ""
 
 if ($gradingEnabled -eq "true") {
     Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow

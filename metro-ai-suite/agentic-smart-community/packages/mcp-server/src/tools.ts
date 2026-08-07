@@ -125,18 +125,19 @@ export function registerTools(
 
   // --- smartbuilding_monitor_ctl ---
   server.registerTool("smartbuilding_monitor_ctl", {
-    description: "Manage monitor lifecycle: register_source | unregister | start | stop | status | list. " +
+    description: "Manage monitor lifecycle: register_source | unregister | start | stop | status | list | prefilter_options. " +
       "For register_source, use_case must be a key in config.yaml's use_case_dict; the tool runs " +
-      "smartbuilding_use_case_validate as a pre-check (rejecting if missing fields or summary service issues).",
+      "smartbuilding_use_case_validate as a pre-check (rejecting if missing fields or summary service issues). " +
+      "prefilter_options is a read-only query returning the prefilter model's selectable target_classes " +
+      "(class_names + labels_source) so a caller can build pipeline_config.prefilter before register_source.",
     inputSchema: {
-      action: z.enum(["start", "stop", "register_source", "unregister", "status", "list"])
+      action: z.enum(["start", "stop", "register_source", "unregister", "status", "list", "prefilter_options"])
         .describe("Control action"),
       monitor_id: z.string().optional().describe("Monitor ID (required for all except list)"),
       source_url: z.string().optional().describe("Source URL — any protocol videostream-analytics supports (for register_source)"),
       name: z.string().optional().describe("Display name (for register_source)"),
       use_case: z.string().optional().describe("Use case key from config.yaml use_case_dict (required for register_source)"),
       pipeline_config: z.record(z.unknown()).optional().describe("Pipeline config object (for register_source)"),
-      webhook_url: z.string().optional().describe("Events webhook URL (default: derived from config eventsWebhook.port)"),
       persist: z.boolean().default(true).describe(
         "Mirror the change back to the monitors.yaml the server was booted from (--monitors), " +
         "comment-preserving (default true): register_source writes the entry (lets a restart " +
@@ -172,7 +173,8 @@ export function registerTools(
       const { join } = await import("node:path");
       // Inject derived fields the tool layer can compute from server config:
       // - data_dir: per-monitor segment root for analytics to write into
-      // - webhook_url: this server's /events endpoint (caller may override)
+      // - webhook_url: always this server's /events endpoint (not caller-settable;
+      //   a wrong port here silently drops every event — see monitor-bootstrap.ts:79)
       // - video_summary_task: derived from use_case_dict[use_case]
       const enriched: any = { ...params };
       // Path used by persist:true to mirror register_source/unregister back to disk.
@@ -184,7 +186,9 @@ export function registerTools(
         const monitorId = params.monitor_id ?? `cam_${params.use_case}`;
         enriched.monitor_id = monitorId;
         enriched.data_dir ??= join(config.segmentsDir, monitorId);
-        enriched.webhook_url ??= `http://localhost:${config.eventsWebhook!.port}/events`;
+        // Falsy check (not ??=) so an empty string from an internal caller is also
+        // treated as unset — otherwise "" leaks through to the "required" throw below.
+        if (!enriched.webhook_url) enriched.webhook_url = `http://localhost:${config.eventsWebhook!.port}/events`;
         enriched.video_summary_task = videoSummaryTask;
         // Arm the analytics keepalive watchdog; the server drives the heartbeat loop.
         enriched.keepalive = {
@@ -335,7 +339,7 @@ export function registerTools(
     description:
       "Manage use_case lifecycle at runtime without restarting the MCP server. Four actions. " +
       "For NEW use cases, do not call this tool until the user has answered the " +
-      "video-summary-prompt-studio Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
+      "smartbuilding-use-case-manager Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
       "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +

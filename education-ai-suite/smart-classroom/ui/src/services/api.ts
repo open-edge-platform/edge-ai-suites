@@ -57,16 +57,8 @@ export interface FeatureDescriptor {
   id: string;
   dependency: string[];
   requires: string[];
-  type?: string;
-  panel?: string;
-  title?: string;
   endpoints?: Record<string, string>;
   mode?: string;
-  cameras?: {
-    front?: boolean;
-    back?: boolean;
-    board?: boolean;
-  };
 }
 
 /**
@@ -449,6 +441,9 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       if (!trimmed) continue;
       let chunk: any;
       try { chunk = JSON.parse(trimmed); } catch { continue; }
+      if (chunk.board_ocr_partial) {
+        yield { type: 'board_ocr_partial' };
+      }
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };
@@ -1578,6 +1573,8 @@ export interface GradingConfig {
   dpi: number | null;
   page_columns: number | null;
   column_split_ratio: number | null;
+  force_split: boolean | null;
+  force_split_pairs: number[][] | null;
   contrast_enhance: boolean | null;
   contrast_factor: number | null;
   max_tokens: number | null;
@@ -1601,7 +1598,7 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
 }
 
 export type GradingConfigUpdate = Partial<Pick<GradingConfig,
-  'dpi' | 'page_columns' | 'column_split_ratio' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'force_split' | 'force_split_pairs' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
   'poll_interval' | 'stable_checks' | 'idle_timeout' |
   'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
 
@@ -1754,6 +1751,17 @@ export async function downloadReportPdf(sessionId: string): Promise<void> {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// Which download formats the server can produce (GET /report/capabilities).
+// pdf_export is false when LibreOffice ('soffice') is missing, so the UI can
+// disable the PDF option up front instead of failing on click. Defaults to
+// pdf_export:false if the endpoint is unreachable, so we never offer a format
+// that can't be produced.
+export async function getReportCapabilities(): Promise<{ pdf_export: boolean }> {
+  const res = await fetch(`${BASE_URL}/report/capabilities`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load report capabilities (${res.status})`);
+  return res.json();
 }
 
 // Fetch a previously generated report's markdown (GET /report/{id}).
