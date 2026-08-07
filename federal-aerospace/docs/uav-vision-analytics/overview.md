@@ -37,8 +37,7 @@ flowchart LR
     end
 
     VIDEO["Video Source\n(RTSP / Camera)"] -->|"RTSP"| DLSPS
-    DLSPS -->|"RTSP :8554"| CLIENT["Browser"]
-    CLIENT -->|"WebRTC :8889"| MTX
+    DLSPS -->|"RTSP :8554/WebRTC :8889"| CLIENT["Browser"]
 ```
 
 **Telemetry flow (pymavlink):**
