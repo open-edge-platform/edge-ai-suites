@@ -5,7 +5,7 @@
 
 services:
   apm-metrics:
-    image: docker.io/intel/metrics-manager:${METRICS_TAG:-release-2026.2.0-rc1}
+    image: docker.io/intel/metrics-manager:${METRICS_TAG:-2026.2.0-rc1}
     container_name: apm-metrics
     hostname: apm-metrics
     environment:
