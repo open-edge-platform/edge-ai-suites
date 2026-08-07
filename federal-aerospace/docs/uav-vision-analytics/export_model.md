@@ -7,7 +7,7 @@ from the command line and skip distributing the `.py` file entirely.
 ## 1. Create and activate a virtual environment, then install dependencies
 
 ```bash
-cd federal-aerospace/apps/uav-vision-telemetry/resources
+cd federal-aerospace/apps/uav-vision-analytics/resources
 python3 -m venv venv
 source venv/bin/activate   # on Windows: venv\Scripts\activate
 

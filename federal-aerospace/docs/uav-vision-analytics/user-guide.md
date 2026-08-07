@@ -3,9 +3,9 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# User Guide — Drone Vision Telemetry
+# User Guide — UAV Vision Analytics Application
 
-This guide covers deployment, configuration, architecture, and design of the Drone Vision Telemetry application.
+This guide covers deployment, configuration, architecture, and design of the UAV Vision Analytics Application.
 
 ---
 
@@ -147,7 +147,7 @@ WebRTC output is provided by MediaMTX (pymavlink mode) acting as a WebRTC signal
 
 ```bash
 git clone <repo-url>
-cd apps/uav-vision-telemetry
+cd apps/uav-vision-analytics
 cp .env.example .env
 ```
 
@@ -228,7 +228,7 @@ docker compose ps px4
 ### Step 2: Configure and start this application
 
 ```bash
-cd apps/uav-vision-telemetry
+cd apps/uav-vision-analytics
 cp .env.example .env
 # Set HOST_IP
 nano .env
@@ -355,7 +355,7 @@ docker compose -f docker-compose-mavsdk.yml down
 To remove the cached pipeline volume:
 
 ```bash
-docker volume rm uav-vision-telemetry_dlstreamer-pipeline-server-pipeline-root
+docker volume rm uav-vision-analytics_dlstreamer-pipeline-server-pipeline-root
 ```
 
 ---

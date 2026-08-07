@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Drone Vision Telemetry
+# UAV Vision Analytics Application
 
 AI-powered drone object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
 
