@@ -89,6 +89,34 @@ services:
         condition: on-failure
         max_attempts: 5
 
+  mediamtx:
+    image: bluenviron/mediamtx:1.11.3
+    container_name: mediamtx-server
+    environment:
+      - MTX_LOGLEVEL=debug
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:$HOST_IP:3478
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
+      - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
+      - MTX_WEBRTCLOCALTCPADDRESS=:8189
+    networks:
+      - app_network
+    ports:
+      - "8889:8889"
+
+  coturn:
+    image: coturn/coturn:4.12.0
+    container_name: coturn
+    command: ["-v", "--external-ip=$HOST_IP", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
+    ports:
+      - "3478:3478/udp"
+    networks:
+      - app_network
+
   metrics-manager:
     image: intel/metrics-manager:2026.1.0-20260508-weekly
     container_name: metrics-manager
