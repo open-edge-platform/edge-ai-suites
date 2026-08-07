@@ -8,10 +8,11 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@smartbuilding-video/db": "*"
+    "@smartbuilding-video/db": "*",
+    "undici": "^7.29.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
   }
 }

@@ -37,7 +37,7 @@ Vision (DL Streamer Pipeline Server)──┐
 | Component | Minimum Requirement |
 |-----------|---------------------|
 | Operating System | Ubuntu OS version 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra processor Series 3 or newer |
+| Hardware | Intel® Core™ Ultra Series 3 processor or newer |
 
 
 ## Prerequisites
@@ -163,17 +163,15 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
    - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
    
    - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD` values
-     from the `.env` file, then select **Multimodal Weld Defect Detection Explainability Dashboard**.
+     from the `.env` file:
 
      ![Grafana dashboard login](../_assets/login_wt.png)
 
-   - After logging in, click **Dashboard**:
+   - After logging in, click **Dashboards** and then select **Multimodal Weld Defect Detection Explainability Dashboard**:
      ![Menu view](../_assets/grafana_agentic_dashboard.png)
 
-   - Select **Multimodal Weld Defect Detection Explainability Dashboard**:
+   - The following pages appear:
      ![Multimodal Weld Defect Detection Agentic Dashboard](../_assets/agentic_dashboard_view.png)
-
-   - The following output appears:
      ![Agentic Results for weld data](../_assets/agentic_results.png)
 
 ## Stop the Stack

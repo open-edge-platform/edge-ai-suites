@@ -40,16 +40,15 @@ class ContentSearchFeature:
             logger.info("ContentSearchFeature already running; skipping launch.")
             return
 
-        python_exe = _resolve_python_executable()
         self._process = subprocess.Popen(
-            [python_exe, str(_LAUNCHER)],
+            [sys.executable, str(_LAUNCHER)],
             cwd=str(_CONTENT_SEARCH_DIR),
             start_new_session=True,
         )
         logger.info(
             "ContentSearchFeature launched process group (pid=%s) using %s.",
             self._process.pid,
-            python_exe,
+            sys.executable,
         )
 
         # Observe readiness off the startup path so the main app can finish its
@@ -107,21 +106,6 @@ class ContentSearchFeature:
             "ContentSearchFeature health-gate timed out (chromadb=%s, ingest=%s).",
             chroma_ok, ingest_ok,
         )
-
-
-def _resolve_python_executable() -> str:
-    configured = getattr(config.content_search, "python_executable", None)
-    if configured:
-        candidate = Path(configured)
-        if not candidate.is_absolute():
-            candidate = (_SC_ROOT / candidate).resolve()
-        if candidate.exists():
-            return str(candidate)
-        logger.warning(
-            "content_search.python_executable %r not found; falling back to %s.",
-            configured, sys.executable,
-        )
-    return sys.executable
 
 
 def _tcp_up(host: str, port: int) -> bool:

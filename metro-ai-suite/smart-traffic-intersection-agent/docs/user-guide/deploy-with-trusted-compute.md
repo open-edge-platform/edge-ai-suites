@@ -16,7 +16,6 @@ Before you begin, ensure the following:
 - **System requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
   - **Minimum RAM**: 32GB RAM is required for Trusted Compute deployments.
 - **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-  - **Important**: Trusted Compute is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
 - **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for traffic data streaming, or use the included broker.
 - **Docker commands and terminal usage**: You are familiar with Docker commands and using the terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
 - **Hugging Face token**: Set your token using `export HUGGINGFACE_TOKEN="<your-huggingface-token>"`

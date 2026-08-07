@@ -22,7 +22,6 @@ Before You Begin, ensure the following:
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
 - **Storage Provisioner**: A default storage class is required for persistent volumes.
-- **Important:** Trusted Compute is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
 
 **Additional Prerequisites for GPU Deployment:**
 
@@ -30,6 +29,13 @@ Before You Begin, ensure the following:
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
 > **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
+
+**Additional Prerequisites for NPU Deployment:**
+
+- Intel CPU with VT-x, VT-d, integrated GPU, and NPU (e.g. Meteor Lake or later), with IOMMU enabled in BIOS/UEFI
+- Linux kernel with IOMMU, VFIO, DRM/i915 or xe driver support, and Intel NPU driver
+
+> **Note**: When NPU passthrough is enabled with Trusted Compute, both the iGPU and the NPU are exclusively bound to the Trusted Compute VM and are unavailable to the host or other workloads. The GPU is required alongside the NPU for video decoding.
 
 ## 1. Install Trusted Compute
 
@@ -61,10 +67,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.19.0
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.20.0-rc1
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.19.0.tgz
+tar -xvf smart-intersection-1.20.0-rc1.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart
@@ -206,6 +212,60 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 ---
 
+### Option C: NPU Deployment
+
+#### Step 1: Bind GPU to vfio-pci
+
+> **Warning:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+
+Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver:
+
+```bash
+sudo ./tools/intel-igpu-vfio-bind.sh bind
+```
+
+Verify the GPU is bound correctly:
+
+```bash
+lspci -nnk -d 8086: | grep -A 3 "VGA\|Display"
+```
+
+The output should show `Kernel driver in use: vfio-pci` for your Intel GPU.
+
+#### Step 2: Bind NPU to vfio-pci
+
+Use the `intel-npu-vfio-bind.sh` script from the `tools/` directory to bind the Intel NPU to the `vfio-pci` driver:
+
+```bash
+sudo ./tools/intel-npu-vfio-bind.sh bind
+```
+
+Verify the NPU is bound correctly:
+
+```bash
+lspci -nnk -d 8086: | grep -A 3 "Processing accelerators"
+```
+
+The output should show `Kernel driver in use: vfio-pci` for your Intel NPU.
+
+#### Step 3: Deploy with NPU Enabled
+
+```bash
+helm upgrade --install smart-intersection ./smart-intersection/chart \
+  --create-namespace \
+  --set global.storageClassName="" \
+  --set trustedCompute.enabled=true \
+  --set trustedCompute.tc_npu_enabled=true \
+  -n smart-intersection
+
+# Wait for all pods to be ready
+kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
+```
+
+> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
+
+---
+
 ## 4. Verify Deployment
 
 Verify that the pods are running with the Trusted Compute:
@@ -266,11 +326,18 @@ helm uninstall smart-intersection -n smart-intersection
 kubectl delete namespace smart-intersection
 ```
 
-**Step 2. Revert GPU Binding** (if deployed with GPU):
+**Step 2. Revert Device Binding** (if deployed with GPU or NPU):
 
-On each k3s host where the GPU was bound, unbind it from vfio-pci:
+If deployed with **GPU**, unbind the GPU from vfio-pci on each k3s host:
 
 ```bash
+sudo ./tools/intel-igpu-vfio-bind.sh unbind
+```
+
+If deployed with **NPU**, unbind both the NPU and the GPU:
+
+```bash
+sudo ./tools/intel-npu-vfio-bind.sh unbind
 sudo ./tools/intel-igpu-vfio-bind.sh unbind
 ```
 

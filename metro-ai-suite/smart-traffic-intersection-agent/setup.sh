@@ -67,6 +67,9 @@ if [ "$ENABLE_TC" = "true" ]; then
             fi
         fi
         TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-gpu-overlay-agent.yaml"
+    elif [[ "${TC_SI_TARGET_DEVICE:-CPU}" == "GPU" || "${TC_SI_TARGET_DEVICE:-CPU}" == "NPU" ]] && [ "${VLM_TARGET_DEVICE:-CPU}" = "CPU" ]; then
+        # SI device is passed through via VFIO; /dev/dri is unavailable on the host.
+        TC_OVERLAY_AGENT="${TC_OVERLAY_AGENT} -f ${APP_DIR}/docker/tc-si-device-overlay-agent.yaml"
     fi
 else
     TC_OVERLAY_AGENT="";

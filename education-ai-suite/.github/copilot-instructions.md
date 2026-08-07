@@ -83,7 +83,7 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 | `utils/flutter/setup.ps1` | Setup script for Flutter integration |
 | `utils/flutter/start.ps1` | Startup script for Flutter app and backend |
 | `smart-classroom/ui/` | React frontend |
-| `smart-classroom/content_search/venv_content_search/` | Python virtual environment (created during setup) |
+| `smartclassroom/` | Python virtual environment, shared by the backend and Content Search (created during setup) |
 
 ---
 

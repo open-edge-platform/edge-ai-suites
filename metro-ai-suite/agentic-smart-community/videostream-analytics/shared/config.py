@@ -62,7 +62,7 @@ class RecordingConfig(BaseModel):
 
 
 class RoiConfig(BaseModel):
-    """ROI crop configuration (Phase 9, child_safety).
+    """ROI crop configuration (child_safety).
 
     Top-level pipeline block, at the same nesting depth as `prefilter`.
     When enabled and prefilter accumulates a `trajectory_region_xyxy`, the
@@ -100,7 +100,7 @@ class HealthConfig(BaseModel):
 
 
 class KeepaliveConfig(BaseModel):
-    """Keepalive protocol configuration (Phase 8).
+    """Keepalive protocol configuration.
 
     When `enabled`, the source must receive `POST /sources/{id}/keepalive`
     within `timeout_seconds` or the watchdog auto-pauses it. Default OFF so
@@ -138,8 +138,8 @@ class DefaultsConfig(BaseModel):
 class SourceConfig(BaseModel):
     """Per-source configuration provided at registration time.
 
-    Renamed `rtsp_url` → `source_url` and dropped `use_case` as part of the
-    Phase 7 hard cutover to match MCP's `analyticsRegister` body.
+    Field names (`source_url`, nested pipeline blocks) match MCP's
+    `analyticsRegister` body exactly.
     """
 
     source_id: str
@@ -154,11 +154,6 @@ class SourceConfig(BaseModel):
     roi: Optional[RoiConfig] = None
     health: Optional[HealthConfig] = None
     keepalive: Optional[KeepaliveConfig] = None
-
-    @property
-    def rtsp_url(self) -> str:
-        """Backwards-compatible accessor — internals still call this."""
-        return self.source_url
 
 
 class AppConfig(BaseModel):

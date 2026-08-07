@@ -248,7 +248,7 @@ class SourceManager:
         return {"status": "online", "source_id": source_id}
 
     def keepalive_source(self, source_id: str) -> dict[str, Any]:
-        """Refresh `last_keepalive_at` for a source (Phase 8).
+        """Refresh `last_keepalive_at` for a source.
 
         Returns `{"status": "not_found"}` if the source isn't registered, else
         `{"status": "ok", "source_id": ..., "last_keepalive_at": <iso>}`.

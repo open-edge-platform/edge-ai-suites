@@ -22,14 +22,11 @@
 # ─────────────────────────────────────────────────────────────
 
 # multilevel-video-understanding service (video segment analysis).
-# Optional path_remap: when multilevel runs in a container that mounts the host's data
-# dir at a different path, the client rewrites the host prefix to the container prefix
-# before POSTing /v1/summary. Drop the block entirely when both sides see the same paths.
+# No path_remap: multilevel bind-mounts the data dir at the same absolute path as the
+# host (identity mount in docker/compose.yaml), so the client POSTs raw host clip
+# paths and they resolve unchanged inside the container.
 summary_service:
   url: http://localhost:8192
-  path_remap:
-    host_prefix: ${HOME}/.mcp-smartbuilding # host's SMARTBUILDING_DATA_DIR
-    container_prefix: /data # container mount point
 
 # vllm-serving-ipex (VLM for scene_query — single-frame queries)
 vlm_service:
@@ -86,8 +83,8 @@ events_webhook:
 # use-case extension; you never configure it here.)
 #
 # Alert decisions use the built-in defaultRuleEvaluator unless a use case sets
-# evaluate_rules_path (resolved relative to the MCP server process cwd — the
-# repo root when started via scripts/mcp-server/start.sh). The bundled
+# evaluate_rules_path (resolved relative to the MCP server process cwd — /app in
+# the container, where demo/prompts is copied). The bundled
 # elder_wakeup adapter ships at demo/prompts/elder_wakeup_evaluate_rules.py;
 # use cases registered at runtime are staged to <data_dir>/use-cases/<name>/evaluate_rules.py.
 use_case_dict:

@@ -426,7 +426,7 @@ class StreamPipeline(BaseMonitor):
                     if self._prefilter:
                         self._prefilter.reset_for_next_segment()
                 elif self._prefilter and self._should_split_segment():
-                    # Phase 9: trajectory union grew past auto_split_area;
+                    # Trajectory union grew past auto_split_area;
                     # finish current segment early so the ROI crop stays tight.
                     early = extractor.finish()
                     if early:
@@ -509,7 +509,7 @@ class StreamPipeline(BaseMonitor):
         clip_path = result.path
         summary_clip_input = clip_path  # default: original clip
 
-        # Phase 9: optionally produce <clip>_input.mp4 via ROI crop. Only when
+        # Optionally produce <clip>_input.mp4 via ROI crop. Only when
         # prefilter passed AND roi is enabled AND we have a trajectory region.
         # Failure falls back to the original clip — never raises.
         roi_cfg = self._roi_cfg
@@ -606,7 +606,7 @@ class StreamPipeline(BaseMonitor):
         """No-op. RTSP connection status is NOT a clip-segment event and must not be
         pushed to the MCP /events webhook — MCP only accepts motion/static/recording
         and 422s anything else, which used to trigger a retry storm that also slowed
-        reconnection (see smarthome_arch2_dev.md §32). Health is still exposed via the
+        reconnection. Health is still exposed via the
         internal `self._status` field, which MCP reads through GET /sources/{id}/status.
         Kept as a method (rather than deleting all call sites) so callers stay readable."""
         return

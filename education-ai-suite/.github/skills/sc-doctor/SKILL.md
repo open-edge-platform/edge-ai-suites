@@ -55,16 +55,18 @@ sub-services: vector store, LLM endpoint, object storage.
 
 ## 3. Is the Python venv intact?
 
+The backend and Content Search share one venv (`smartclassroom/`).
+
 ```powershell
 # venv exists?
-Test-Path "smart-classroom\content_search\venv_content_search\Scripts\python.exe"
+Test-Path "smartclassroom\Scripts\python.exe"
 
 # Python version
-& "smart-classroom\content_search\venv_content_search\Scripts\python.exe" --version
+& "smartclassroom\Scripts\python.exe" --version
 
 # Key packages installed?
-& "smart-classroom\content_search\venv_content_search\Scripts\pip.exe" list |
-    Select-String "fastapi|langchain|uvicorn|chromadb|faiss"
+& "smartclassroom\Scripts\pip.exe" list |
+    Select-String "fastapi|llama-index|uvicorn|chromadb|faiss"
 ```
 
 If packages are missing, run [`sc-setup`](../sc-setup/SKILL.md) to reinstall.
