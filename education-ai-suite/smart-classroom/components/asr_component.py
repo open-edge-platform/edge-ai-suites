@@ -6,6 +6,7 @@ import unicodedata
 
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_artifact_path
 from utils.runtime_config_loader import RuntimeConfig
 from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
 from model_manager import ModelManager
@@ -159,14 +160,7 @@ class ASRComponent(PipelineComponent):
     
     def process(self, input_generator):
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        transcript_path = os.path.join(project_path, "transcription.txt")
+        transcript_path = get_artifact_path(self.session_id, "transcription.txt")
         StorageManager.save(transcript_path, "", append=False)
 
         start_time = time.perf_counter()
@@ -341,13 +335,13 @@ class ASRComponent(PipelineComponent):
                 )
 
                 StorageManager.save(
-                    os.path.join(project_path, "content_segmentation_transcription.txt"),
+                    get_artifact_path(self.session_id, "content_segmentation_transcription.txt"),
                     "\n".join(full_timestamped_lines) + "\n",
                     append=False
                 )
 
                 StorageManager.save(
-                    os.path.join(project_path, "teacher_transcription.txt"),
+                    get_artifact_path(self.session_id, "teacher_transcription.txt"),
                     "\n".join(teacher_lines) + "\n",
                     append=False
                 )
@@ -366,7 +360,7 @@ class ASRComponent(PipelineComponent):
             transcription_time = end_time - start_time
 
             StorageManager.update_csv(
-                path=os.path.join(project_path, "performance_metrics.csv"),
+                path=get_artifact_path(self.session_id, "performance_metrics.csv"),
                 new_data={
                     "configuration.asr_model": f"{self.asr_handler.provider}/{self.asr_handler.model_name}",
                     "performance.transcription_time": round(transcription_time, 4)

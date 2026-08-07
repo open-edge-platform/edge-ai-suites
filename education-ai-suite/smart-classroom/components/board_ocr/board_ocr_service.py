@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 
 from fastapi import HTTPException
 from utils.runtime_config_loader import RuntimeConfig
+from utils.artifacts.path import get_artifact_path
 
 logger = logging.getLogger(__name__)
 

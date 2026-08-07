@@ -21,6 +21,7 @@ from components.report_generator.prompts import (
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_session_dir, get_artifact_path
 from utils.locks import audio_pipeline_lock
 from components.report_generator.template_manager import (
     get_template_path,
@@ -71,12 +72,7 @@ class ReportGenerator:
         self.collected_by_source = {}
 
     def _get_session_dir(self) -> str:
-        project_config = RuntimeConfig.get_section("Project")
-        return os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        return get_session_dir(self.session_id)
 
     def _collect_all_data(self):
         """Deterministically collect all available session data."""
@@ -176,7 +172,7 @@ class ReportGenerator:
             return
 
         session_dir = self._get_session_dir()
-        report_path = os.path.join(session_dir, "class_report.md")
+        report_path = get_artifact_path(self.session_id, "class_report.md")
 
         template_path = get_template_path(self.language, self.session_id, self.template_name)
         if template_path is None:
@@ -210,15 +206,17 @@ class ReportGenerator:
 
         from components.report_generator.template_manager import read_docx_as_markdown
 
+        docx_path = get_artifact_path(self.session_id, "class_report.docx")
+
         if gen_codes:
             pending = "⏳ 生成中…" if self.language == "zh" else "⏳ Generating…"
             interim_fields = {**{c: pending for c in gen_codes}, **raw_values}
             fill_template(template_path, interim_fields,
-                          os.path.join(session_dir, "class_report.docx"),
+                          docx_path,
                           drop_codes=drop_codes, image_fields=image_fields,
                           field_codes=frozenset(get_known_field_codes()))
             interim_md = read_docx_as_markdown(
-                os.path.join(session_dir, "class_report.docx"),
+                docx_path,
                 self.session_id,
             )
             yield {"type": "partial_report", "content": interim_md}
@@ -261,9 +259,8 @@ class ReportGenerator:
             logger.info("[ReportGenerator] No generated fields; skipping LLM.")
 
         report_fields = {**llm_values, **raw_values}
-        save_store(session_dir, report_fields)
+        save_store(self.session_id, report_fields)
 
-        docx_path = os.path.join(session_dir, "class_report.docx")
         fill_template(template_path, report_fields, docx_path,
                       drop_codes=drop_codes, image_fields=image_fields,
                       field_codes=frozenset(get_known_field_codes()))
@@ -285,7 +282,7 @@ class ReportGenerator:
         )
 
         StorageManager.update_csv(
-            path=os.path.join(session_dir, "performance_metrics.csv"),
+            path=get_artifact_path(self.session_id, "performance_metrics.csv"),
             new_data={
                 "performance.report_collect_time": round(collect_time, 4),
                 "performance.report_generation_time": round(generation_time, 4),
@@ -312,7 +309,7 @@ class ReportGenerator:
         if template_path is None:
             raise RuntimeError("No report template available to render.")
 
-        fields = dict(load_store(session_dir).get("fields", {}))
+        fields = dict(load_store(self.session_id).get("fields", {}))
         if not fields:
             raise RuntimeError("No cached fields for this session. Generate a report first.")
 
@@ -322,16 +319,16 @@ class ReportGenerator:
         manual = self._manual_values()
         if manual:
             fields.update(manual)
-            save_store(session_dir, fields)
+            save_store(self.session_id, fields)
 
         image_fields = self._build_image_fields(selected)
 
-        docx_path = os.path.join(session_dir, "class_report.docx")
+        docx_path = get_artifact_path(self.session_id, "class_report.docx")
         fill_template(template_path, fields, docx_path,
                       drop_codes=drop_codes, image_fields=image_fields,
                       field_codes=frozenset(get_known_field_codes()))
         markdown_content = read_docx_as_markdown(docx_path, self.session_id)
-        StorageManager.save(os.path.join(session_dir, "class_report.md"),
+        StorageManager.save(get_artifact_path(self.session_id, "class_report.md"),
                             markdown_content, append=False)
 
         logger.info(f"[ReportGenerator] Re-projected selection for session "
@@ -408,8 +405,7 @@ class ReportGenerator:
         """
         image_fields = {}
         if "mindmap" in selected:
-            session_dir = self._get_session_dir()
-            png = os.path.join(session_dir, "mindmap_report.png")
+            png = get_artifact_path(self.session_id, "mindmap_report.png")
             if os.path.exists(png):
                 image_fields["mindmap"] = png
         return image_fields

@@ -28,6 +28,7 @@ from datetime import datetime
 import socks
 from telethon import TelegramClient
 from telethon.sessions import StringSession
+from utils.artifacts.path import get_artifact_path
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ class TelegramSender:
             },
         }
 
-        meta_path = os.path.join(session_dir, "session_meta.json")
+        meta_path = get_artifact_path(session_id, "session_meta.json")
         with open(meta_path, "w", encoding="utf-8") as fh:
             json.dump(meta, fh, indent=2)
 
@@ -145,7 +146,7 @@ class TelegramSender:
                 ("topics.json",       "Q1 / Q3 — Timestamped topic segments"),
                 ("mindmap.mmd",       "Q1     — Mind map of lesson concepts (Mermaid format)"),
             ]:
-                path = os.path.join(session_dir, fname)
+                path = get_artifact_path(session_id, fname)
                 if os.path.exists(path):
                     await self._send_file_async(client, path, caption)
                 else:
@@ -165,8 +166,8 @@ class TelegramSender:
             session_id, date_str, session_dir, va_posture_file
         )
 
-        eng_path  = os.path.join(session_dir, "engagement_report.json")
-        part_path = os.path.join(session_dir, "participation_report.json")
+        eng_path = get_artifact_path(session_id, "engagement_report.json")
+        part_path = get_artifact_path(session_id, "participation_report.json")
 
         with open(eng_path, "w", encoding="utf-8") as fh:
             json.dump(engagement, fh, indent=2)
@@ -201,7 +202,7 @@ class TelegramSender:
 
         # ── Audio stats from transcription.txt ──────────────────────────────
         teacher_pct, student_pct, q_count = 0, 0, 0
-        tx_path = os.path.join(session_dir, "transcription.txt")
+        tx_path = get_artifact_path(session_id, "transcription.txt")
         if os.path.exists(tx_path):
             teacher_chars = 0
             student_chars = 0
