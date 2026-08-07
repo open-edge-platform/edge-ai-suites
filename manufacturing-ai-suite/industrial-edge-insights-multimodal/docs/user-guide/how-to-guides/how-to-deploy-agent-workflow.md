@@ -7,17 +7,20 @@ This section shows how to deploy the multimodal sample application with the agen
 The agentic workflow is implemented as a **LangGraph framework-based, sequential multi-agent pipeline**. The `apm-agent`, which is the meta-agent, acts as the orchestrator that triggers the workflow when new fusion results arrive and coordinates the execution of specialized agents, each responsible for a distinct stage of reasoning. Each agent consumes the shared execution context together with outputs from previous stages and produces traceable intermediate artifacts and a final maintenance recommendation.
 
 
-```
+```text
 Vision (DL Streamer Pipeline Server)──┐
                                       ├─► Fusion Analytics ──► MQTT (Trigger batch request)
         Time-Series Analytics       ──┘                           │
                                                                   ▼
-                                                          agent (LangGraph)
-                                                                  │
-                                                     ┌────────────┼────────────┐
-                                                   Policy     Analysis      Evidence
-                                                                  │
-                                                          Maintenance Ticket
+                                                          Agent service FIFO queue
+                                                                  |
+                                                                  | bounded GET /detections
+                                                                  | bounded GET /detections/stats
+                                                                  v
+                                                      Policy -> Analysis -> Evidence -> Ticketing
+                                                                  |
+                                                                  v
+                                                         In-memory run results
                                                                   │
                                                             UI (Dashboard)
 ```
