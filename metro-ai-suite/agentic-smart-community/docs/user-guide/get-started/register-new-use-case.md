@@ -1,6 +1,6 @@
 # Register a New Use Case
 
-A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`video-summary-prompt-studio`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
+A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`smartbuilding-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
 
 By the end of this guide you will know how to:
 
@@ -53,7 +53,7 @@ Tell OpenClaw the use-case name, what to detect, and what an alert should mean. 
 
 ### Step 2 — Answer Q1/Q2 (gate 1)
 
-OpenClaw does not draft anything yet. It reads the `video-summary-prompt-studio` skill, then asks the two gating questions and **stops** — the turn ends right after the questions:
+OpenClaw does not draft anything yet. It reads the `smartbuilding-use-case-manager` skill, then asks the two gating questions and **stops** — the turn ends right after the questions:
 
 - **Q1 — Alerting?** Does this use case need to raise alerts? *No* → report-only (Final Schema = none, Rule Path = none); *Yes* → structured alerting on the base schema `severity, event, desc`.
 - **Q2 — Schema extension?** *(only if Q1 = Yes)* Persist fields beyond `severity / event / desc`? *No* → base alerting with `defaultRuleEvaluator`; *Yes* → extended alerting — name each extra field and its type (e.g. `zone_id (text)`, `pet_count (integer)`), and a per-use-case `evaluate_rules.py` will be generated.
@@ -215,4 +215,4 @@ Check the monitor outcome in the response's `cascaded_monitors`:
 
 ---
 
-For the full authoring rules the agent follows (prompt anchors, schema invariants, retry behavior), see the [`video-summary-prompt-studio` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/video-summary-prompt-studio/SKILL.md) and the [`use_case_register` tool guide](./mcp-tools.md#8-smartbuilding_use_case_register).
+For the full authoring rules the agent follows (prompt anchors, schema invariants, retry behavior), see the [`smartbuilding-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md) and the [`use_case_register` tool guide](./mcp-tools.md#8-smartbuilding_use_case_register).

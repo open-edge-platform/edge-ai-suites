@@ -1,33 +1,32 @@
 # Release Notes
 
-- [Version 1.0.0](#version-100)
+## Version 1.0.0
 
-Details about the changes and known issues in each release of the VMS Adapter Plugin.
+**New**
 
-## Current Release
+- **Live Video Captioning Integration**: Stream RTSP feeds from any connected camera to the
+  Live Video Captioning application (DL Streamer and a VLM). Captions are streamed back to the
+  operator dashboard via SSE and overlaid on the WebRTC video player.
 
-### Version 1.0.0
+- **Loitering Detection Integration**: Route camera feeds to Loitering Detection application. Bounding-box detections are translated from DL Streamer GStreamer
+  Video Analytics (GVA) JSON format and pushed back to Nx Witness as analytics objects via the
+  Nx REST v4 analytics API.
 
-**Release Date**: *TBD*
+- **Generic Analytics App API**: A single set of REST routes (`/v1/analytics-apps/{app_id}/…`)
+  handles all AI analytics integrations with a consistent lifecycle: start, list, stop, and
+  stream results.
 
-**New Features**:
+- **Provider Dashboard**: React 19 with Vite and Tailwind CSS dashboard served by nginx. Includes
+  camera discovery and enable/disable controls, analytics run management, WebRTC live stream
+  with caption overlay, and analysis results timeline.
 
-- **Live Video Captioning Integration**: Stream RTSP feeds from any connected camera to the Intel Live Video Captioning application (DLStreamer + VLM). Captions are streamed back to the operator dashboard via SSE and overlaid on the WebRTC video player.
+**Known Issues**
 
-- **DLStreamer Vision Integration**: Route camera feeds to a DLStreamer Pipeline Server for warehouse defect detection. Bounding-box detections are translated from DLStreamer GVA JSON format and pushed back to Nx Witness as analytics objects via the Nx REST v4 analytics API.
+- For fresh intergration with Loitering detection application, the bouding boxes may not render. Workaround is available.
 
-- **Dynamic Schema Forms**: The operator dashboard renders analytics configuration forms directly from each Analytics App's live OpenAPI schema. No frontend changes are required when Analytics App parameters change.
-
-- **Generic Analytics App API**: A single set of REST routes (`/v1/analytics-apps/{app_id}/…`) handles all AI analytics integrations with a consistent lifecycle: start, list, stop, and stream results.
-
-- **Provider Dashboard**: React 19 + Vite + Tailwind CSS dashboard served by nginx. Includes camera discovery and enable/disable controls, analytics run management, WebRTC live stream with caption overlay, and analysis results timeline.
-
-- **PostgreSQL Persistence**: Camera registrations, analytics sessions, and metadata events are stored in a PostgreSQL 15 database via async SQLAlchemy 2.
-
-- **Docker Compose Deployment**: Full stack in three services — `vms-backend`, `vms-ui` (nginx), and `postgres`.
-
-**Known Issues**:
-
-- If the Nx Witness analytics integration is reused from a previous database record (not freshly registered), the integration user password is not available from the Nx API. In this case, DLStreamer Vision detections cannot be pushed to Nx until the integration is deleted from Nx Witness and VAP is restarted to recreate it.
+- If the Nx Witness analytics integration is reused from a previous database record (not
+  freshly registered), the integration user password is not available from the Nx API. In this
+  case, DL Streamer Vision detections cannot be pushed to Nx until the integration is deleted
+  from Nx Witness and the VMS Adapter Plugin is restarted to recreate it.
 
 - Helm deployment is not available in this version.

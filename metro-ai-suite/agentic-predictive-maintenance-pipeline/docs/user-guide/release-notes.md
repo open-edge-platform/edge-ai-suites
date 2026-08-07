@@ -1,9 +1,7 @@
-# Release Notes
+# Release Notes: Agentic Predictive Maintenance
 
-## Current Release
-
-**Version**: 1.0.0 \
-**Release Date**: June 2026
+## Version 2026.2.0
+**TBD**
 
 **Features**:
 
@@ -11,7 +9,10 @@
 - Configuration-driven multi-agent pipeline using LangGraph. Adapt to any defect detection use case
   by editing four configuration files — no code changes required.
 - Four-agent reasoning pipeline: Policy Agent, Analysis Agent, Evidence Agent, and Ticketing Agent
-  run sequentially to analyze detections and generate structured maintenance tickets.
+  run sequentially to analyze detections and generate structured maintenance tickets. The reasoning
+  agent (`apm-agent`) is not built from this repo — it is an external image (Intel EAL's
+  `agent-quality-handler` microservice) pulled via `docker/compose.agents.yaml`. See the
+  [agent-service integration guide](agent-service-integration-guide.md) for its contract.
 - Two operating modes: Large Language Model (LLM) mode for AI-generated analysis (using OpenVINO
   Model Server) and fallback mode for rule-based operation without an LLM service.
 - Real-time video inference via Deep Learning Streamer (DL Streamer) with YOLO-based object detection; DL Streamer publishes
@@ -39,4 +40,3 @@
 - Neural Processing Unit (NPU) inference support for the LLM service is experimental and is not validated for all model and configuration combinations.
 - Only the `pipeline-defect-detection` use case is provided as a reference configuration. Additional use cases require manual configuration file setup.
 - This release does not include a Helm chart for Kubernetes deployment.
-- GPU-specific sizing and performance benchmarks are not published yet.

@@ -8,9 +8,10 @@ you through the complete build process.
 
 The VAP application consists of the following components built from source:
 
-- **Backend**: FastAPI Python service (`plugin/`) that manages VMS shims, analytics app shims,
-  camera sync, event processing, and result routing.
-- **UI**: React 19 / Vite frontend (`ui/`) served by nginx, providing the provider dashboard.
+- **Backend**: FastAPI Python service (`plugin/`) that manages VMS shims,
+  analytics app shims, camera sync, event processing, and result routing.
+- **UI**: React 19 / Vite frontend (`ui/`) served by nginx, providing the provider
+  dashboard.
 
 The `Dockerfile` in the repository root builds the backend image. The UI is built inside a
 multi-stage Docker build. Both are orchestrated by Docker Compose.
@@ -42,14 +43,15 @@ Set at minimum the following variables before building:
 | `MEDIAMTX_URL`                                | URL of the MediaMTX WebRTC server, e.g. `http://<lvc-host>:8889`        |
 | `NX_HOST` / `NX_USERNAME` / `NX_PASSWORD` | Nx Witness host and credentials (only if using Nx Witness)                       |
 | `NX_TLS_VERIFY` / `NX_CA_BUNDLE`              | Nx TLS verification toggle and optional CA bundle path (default: `false`) |
-| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DLStreamer TLS verification toggle and optional CA bundle path (default: `false`) |
-| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber |
+| `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DL Streamer TLS verification toggle and optional CA bundle path (default: `false`) |
+| `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the `dls_vision` subscriber |
 | `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber |
 | `PG_PASSWORD`                                 | PostgreSQL password (change from default)                               |
 
 Refer to `.env.example` for all available variables.
 
-For certificate path examples and TLS behavior details, see [TLS and Certificate Configuration](../how-to-guides/tls-and-certificates.md).
+For certificate path examples and TLS behavior details, see
+[TLS and Certificate Configuration](../how-to-guides/tls-and-certificates.md).
 
 ## Step 3: Build and Start with Docker Compose
 
@@ -59,7 +61,7 @@ Build all images and start the full stack:
 docker compose up -d --build
 ```
 
-### Customizing the Build
+### Customize the Build
 
 You can control the image registry and tag by setting environment variables before running
 the build command:
@@ -82,11 +84,11 @@ docker compose ps
 
 Expected output — all services should show **healthy** or **running**:
 
-```
-NAME              STATUS
-vms-backend       Up (healthy)
-vms-ui            Up
-postgres          Up (healthy)
+```text
+NAME                          STATUS
+vms-adapter-backend           Up (healthy)
+vms-adapter-ui                Up
+vms-adapter-postgres          Up (healthy)
 ```
 
 Verify the backend is up:

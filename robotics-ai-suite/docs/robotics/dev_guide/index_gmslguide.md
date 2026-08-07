@@ -18,15 +18,15 @@ It is crucial to understand the SerDes I2C connectivity specific to each ODM/OEM
 
 ## Next Steps
 
-- [GMSL Add-in-Card Design Overview](./gmsl-guide/gmsl-aic-overview.md)
-- [Configure Intel® GMSL `SerDes` ACPI Devices](./gmsl-guide/configure-gmsl-serdes-acpi.md)
+- [Configure Intel® GMSL `SerDes` ACPI Devices](./gmsl-guide/configure-gmsl-serdes-dev-kit.md)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 GMSL Add-in-Card Overview <./gmsl-guide/gmsl-aic-overview.md>
-Configure GMSL SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-acpi.md>
+Configure GMSL Dev Kit SerDes ACPI Devices <./gmsl-guide/configure-gmsl-serdes-dev-kit.md>
+Configure GMSl AIC SerDes ACPI Devicec <./gmsl-guide/configure-gmsl-serdes-acpi.md>
 
 :::
 hide_directive-->
