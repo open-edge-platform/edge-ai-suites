@@ -1,0 +1,7 @@
+# Core CLI + export dependencies
+huggingface_hub[cli]>=0.34
+ultralytics>=8.4
+openvino>=2026.0
+
+# Only needed for INT8 quantized export (yolo export ... int8=True)
+nncf>=3.0

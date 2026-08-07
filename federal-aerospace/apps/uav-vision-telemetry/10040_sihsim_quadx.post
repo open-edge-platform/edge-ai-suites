@@ -1,0 +1,2 @@
+# mavlink start -x -u 14550 -f -p
+mavlink start -u 14541 -t $(getent hosts dlstreamer-pipeline-server | awk '{print $1}')
