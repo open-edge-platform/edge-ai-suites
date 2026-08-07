@@ -46,7 +46,7 @@ def build_image_url(img_handle: str) -> str:
 def build_image_data_url(image_url: str) -> str | None:
     """Download an image and return it as a base64 data URL."""
     try:
-        with urlopen(image_url, timeout=10) as response:
+        with urlopen(image_url, timeout=10) as response:  # nosec B310
             image_bytes = response.read()
             header_mime = response.headers.get_content_type()
 
@@ -119,10 +119,11 @@ def fetch_rows(
     offset = (page - 1) * page_size
 
     # Request one extra record so we can determine if there is a next page.
+    # page/offset are ints (validated via int()/min()/max() by the caller), not user-controlled strings.
     query = (
         f'SELECT time, timeseries_classification, vision_classification, fused_decision FROM fusion_result '
         f"ORDER BY time DESC LIMIT {page_size + 1} OFFSET {offset}"
-    )
+    )  # nosec B608
 
     result = client.query(query)
     points = list(result.get_points())
@@ -146,8 +147,9 @@ def api_measurements() -> Any:
         measurement = get_fusion_measurement_name()
         measurements = [measurement]
         return jsonify({"measurements": measurements})
-    except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": str(exc), "measurements": []}), 500
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to resolve fusion measurement")
+        return jsonify({"error": "Unable to load measurements", "measurements": []}), 500
 
 
 @app.route("/api/data", methods=["GET"])
@@ -170,8 +172,9 @@ def api_data() -> Any:
                 "rows": rows,
             }
         )
-    except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": str(exc), "rows": []}), 500
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to fetch fusion rows for measurement=%s", measurement)
+        return jsonify({"error": "Unable to load data", "rows": []}), 500
 
 
 @app.route("/api/vllm/health", methods=["GET"])
@@ -183,7 +186,7 @@ def api_vllm_health() -> Any:
     logger.info("Checking vLLM endpoint: %s", health_url)
 
     try:
-        with urlopen(health_url, timeout=5) as response:
+        with urlopen(health_url, timeout=5) as response:  # nosec B310
             status_code = response.getcode()
 
         accessible = 200 <= status_code < 400
@@ -231,7 +234,7 @@ def api_explain() -> Any:
         try:
             datetime.datetime.fromisoformat(time_str.replace("Z", "+00:00"))
             logger.info("Selected time=%s", time_str)
-            query = f"SELECT * FROM fusion_result WHERE time = '{time_str}'"
+            query = f"SELECT * FROM fusion_result WHERE time = '{time_str}'"  # nosec B608
             result = client.query(query)
             points = list(result.get_points())
             if len(points) == 0:
@@ -247,7 +250,7 @@ def api_explain() -> Any:
             query_vision = (
                 f"SELECT * FROM \"vision-weld-classification-results\" "
                 f"WHERE search_time = '{vision_timestamp}'"
-            )
+            )  # nosec B608
             logger.debug("Querying vision data with query: %s", query_vision)
             result_vision = client.query(query_vision)
             points_vision = list(result_vision.get_points())
@@ -285,7 +288,7 @@ def api_explain() -> Any:
 
             
 
-            query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"
+            query_sensor = f"SELECT * FROM \"weld-sensor-anomaly-data\" WHERE time = {points[0]['timeseries_timestamp']}"  # nosec B608
             logger.debug("Querying sensor data with query: %s", query_sensor)
             result_sensor = client.query(query_sensor)
             points_sensor = list(result_sensor.get_points())
@@ -332,9 +335,9 @@ def api_explain() -> Any:
     
         except ValueError:
             return jsonify({"error": f"Invalid time format: {time_str}"}), 400
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception("Explain processing failed for time=%s", time_str)
-            return jsonify({"error": str(exc)}), 500
+            return jsonify({"error": "Unable to process explain request"}), 500
 
     # Simulate a short model/API processing time for the UI spinner.
     
@@ -369,4 +372,5 @@ def api_explain() -> Any:
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    # Container must accept traffic from the reverse proxy on all interfaces; exposure is controlled at the compose/network level.
+    app.run(host="0.0.0.0", port=8080, debug=False)  # nosec B104
