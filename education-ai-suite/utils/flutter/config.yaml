@@ -550,7 +550,6 @@ content_search:
   host_addr: "127.0.0.1"
   port: 9011
   video_summarization_enabled: true
-  python_executable: "content_search/venv_content_search/Scripts/python.exe"
 
   chromadb:
     host: "127.0.0.1"
