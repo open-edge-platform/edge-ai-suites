@@ -1,6 +1,7 @@
 from components.base_component import PipelineComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
+from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import strip_think_tokens
 import logging, os
@@ -16,10 +17,10 @@ class MindmapComponent(PipelineComponent):
         self.temperature = temperature
 
     def _get_mindmap_message(self, input_text):
-        lang_prompt = vars(config.mindmap.system_prompt)
-        logger.debug(f"Mindmap System Prompt: {lang_prompt.get(config.app.language)}")
+        system_prompt = load_prompt("mindmap", config.app.language, "system_prompt")
+        logger.debug("Mindmap system prompt loaded for lang=%s", config.app.language)
         return [
-            {"role": "system", "content": f"{lang_prompt.get(config.app.language)}"},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"{input_text}"}
         ]
 

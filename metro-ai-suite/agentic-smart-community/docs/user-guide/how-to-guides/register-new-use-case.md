@@ -5,6 +5,7 @@ A *use case* tells the platform what to watch for in a video stream — for exam
 By the end of this guide you will know how to:
 
 - register a new use case through a conversation, step by step with screenshots;
+- configure the bound monitor's pipeline (object prefilter and ROI focus) through the same conversation;
 - verify the detection results stored in the database;
 - write a use-case description that produces accurate detection;
 - delete a use case, again by conversation.
@@ -15,21 +16,31 @@ By the end of this guide you will know how to:
 
 ## Use case registration flow
 
-Registering a use case is a short conversation with the agent, with **two mandatory confirmation gates** — the agent pauses and waits for your explicit reply at each one:
+Registering a use case is a short conversation with the agent, guarded by **mandatory cross-turn confirmation gates** — two for the use-case design and, whenever a camera stream is bound, two more for the monitor pipeline. The agent pauses and waits for your explicit reply at each gate; it never infers an answer from your description, and never treats its own recommendation as your decision:
 
 1. **Describe the use case in chat.** Give the agent a name (lowercase snake_case) and a short natural-language description of what to watch for. The RTSP stream is optional at this point — you can include it in the description, e.g., *"Create a use case `pet_safety`: monitor the pet camera for escape, trapped, or aggressive behavior. Stream: `rtsp://localhost:8554/live/pet`."*, or leave it out and supply it after the use case is registered. The agent collects only this intake — it does not draft anything yet.
 
 2. **Gate 1 — answer the Q1/Q2 questions.** The agent asks the two gating questions and then **ends its turn immediately** — no prompt drafting, no tool calls, no registration until you reply. It never infers the answers from your description, even if you mention alerts or fields:
    - **Q1 — Alerting?** *No* → a report-only use case (no alert schema, no rules). *Yes* → alerting on the base schema `severity, event, desc`.
-   - **Q2 — Extend the schema?** *(only if Q1 = yes)* *No* → **base alerting**: the schema stays `severity, event, desc` and alerts are decided by the built-in rule evaluator (fires on `severity = warn | critical`), no custom code. *Yes* → **extended alerting**: the extra fields you name (e.g., `pet_zone`, `risk_area`) are added on top of the base schema, and a per-use-case `evaluate_rules.py` is generated to decide alerts from them.
+   - **Q2 — Extend the schema?** *(only if Q1 = yes)* *No* → **base alerting**: the schema stays `severity, event, desc` and alerts are decided by the built-in rule evaluator (fires on `severity = warn | critical`), no custom code. *Yes* → **extended alerting**: the extra fields you name (e.g., `pet_zone`, `risk_area`) are added on top of the base schema, and a per-use-case `evaluate_rules.py` — your custom alert policy — is generated to decide alerts from them.
 
 3. **Gate 2 — confirm the resolved design.** From your Q1/Q2 answers the agent resolves everything else with conservative defaults (event names, severity assignments, evidence minimums, priority) and shows the proposed design for approval: the mode (*report-only* / *base alerting* / *extended alerting*), the **Final Schema**, the **Rule Path**, and a compact **Detection Contract** (event values with severity defaults). Again it ends its turn — registration starts only after a later message explicitly approves, e.g., `confirm`.
 
-4. **The agent registers it.** After approval it drafts the four-section VLM prompt (plus `evaluate_rules.py` for every extended schema or custom alert policy), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema ↔ rules and rejects mismatches before side effects.
+4. **The agent registers the use case.** After approval it drafts the four-section VLM prompt (plus `evaluate_rules.py` for every extended schema or custom alert policy), then calls `smartbuilding_use_case_register` in two steps — `action=generate_task` (POSTs the video-summary task to `multilevel-video-understanding` and writes `use-cases/<name>/prompt.md`), followed by `action=register` with `persist=true` (applies the schema, updates `use_case_dict`, and writes `config.yaml`). A built-in consistency gate validates prompt ↔ schema ↔ rules and rejects mismatches before side effects. Monitor binding does not start until registration returns `ok:true`.
 
-5. **Bind a camera (optional, either timing).** If you supplied a stream URL in the description, the agent registers the monitor (`smartbuilding_monitor_ctl register_source`) as part of the registration flow. If you didn't, just provide the RTSP stream later in the same conversation — the agent binds a monitor to that stream for the registered use case then, e.g., *"bind `rtsp://localhost:8554/live/pet` to pet_safety"*. Either way the result is the same: a monitor (default ID `cam_<use_case>`) bound to the use case and streaming.
+5. **Gate 3 — decide the monitor pipeline (P1/P2).** The monitor gates run whenever a stream URL is involved — supplied at intake or later in the same conversation — whether the use case is new or pre-existing. The agent asks two pipeline decisions and ends its turn:
+   - **P1 — Prefilter?** Enable object-class prefiltering, so motion clips that contain none of the target objects are dropped before they reach the VLM — cutting false positives and VLM cost.
+   - **P2 — ROI focus?** Crop/focus a region of interest. ROI is trajectory-driven off prefilter hits (no geometry to draw), and *yes* applies the template defaults `mode=crop, expand=0.25, auto_split_area=0.35` with no further ROI questions.
 
-When registration finishes, the agent reports a **New Use Case** summary — use case, VLM task, mode, events/findings, final schema, rule path, report source, bound monitor, and validation status — followed by a grouped **System Inventory**: each registered use case (from `smartbuilding_use_case_register action=list`, which reads the server's live in-memory `use_case_dict`) with its bound monitors nested underneath (from `smartbuilding_monitor_ctl action=list`), so a use case with no camera yet shows up explicitly as `(no camera bound yet)` instead of disappearing from a monitors-only list — expected when you plan to supply the RTSP stream after registration. The use case is live immediately — alerts start flowing to any client subscribed to `smartbuilding://monitor/<monitor_id>/alerts`.
+   Reply exactly `P1=yes|no, P2=yes|no`. If you answer `P1=no, P2=yes`, the agent warns that ROI has no trajectory source without prefilter and asks you to enable prefilter or drop ROI.
+
+6. **Pick the prefilter target classes (P1 = yes only).** The agent fetches the selectable classes from the deployed detection model (`smartbuilding_monitor_ctl action=prefilter_options`) and presents the returned class names verbatim for you to pick from — it never selects for you, and a name outside the model's list is rejected server-side at registration.
+
+7. **Gate 4 — confirm the exact `pipeline_config`.** The agent assembles the full `pipeline_config` and displays it in full — no hidden or summarized fields — together with a human-readable decision summary (prefilter on/off, target classes, labels source, ROI on/off and its parameters, monitor ID, persistence). Even a deliberate "both off" is displayed as an explicit disabled config (`prefilter.enabled=false`, `roi.enabled=false`), so an intentional "off" stays distinguishable from "never configured". Only after a later message approves that exact config — reply `confirm pipeline_config` — does the agent call `smartbuilding_monitor_ctl action=register_source` (an upsert; a new monitor gets the default ID `cam_<use_case>`, `persist=true` mirrors it into `monitors.yaml`).
+
+When registration finishes, the agent reports a **New Use Case** summary — use case, VLM task, mode, events/findings, final schema, rule path, report source, bound monitor, and validation status — plus a **Monitor Created** block when a monitor was bound (monitor ID, source URL, prefilter/ROI decisions, and the exact approved `pipeline_config`), followed by a grouped **System Inventory**: each registered use case (from `smartbuilding_use_case_register action=list`, which reads the server's live in-memory `use_case_dict`) with its bound monitors nested underneath (from `smartbuilding_monitor_ctl action=list`), so a use case with no camera yet shows up explicitly as `(no camera bound yet)` instead of disappearing from a monitors-only list — expected when you plan to supply the RTSP stream after registration. Once a monitor is bound, the use case is live immediately — alerts start flowing to any client subscribed to `smartbuilding://monitor/<monitor_id>/alerts`.
+
+If you registered without a stream URL, monitor configuration simply does not start. Provide the RTSP stream later in the same conversation — e.g., *"bind `rtsp://localhost:8554/live/pet` to pet_safety"* — and the agent runs the same P1/P2 and `pipeline_config` gates then, with the same result: a monitor (default ID `cam_<use_case>`) bound to the use case and streaming.
 
 The inventory is printed automatically only when a use case is created. To check the system's use cases at any other time, just ask in the conversation — e.g., *"list all the use cases"* — and the agent returns the same grouped view (each use case with its task, rule path, and bound monitors) on demand.
 
@@ -37,7 +48,7 @@ The inventory is printed automatically only when a use case is created. To check
 
 ## Walkthrough: register a use case with OpenClaw
 
-This section walks through a complete registration conversation in OpenClaw, using a **pet-safety detection** use case as the example. It takes the extended-schema path so you can see how `evaluate_rules.py` is produced.
+This section walks through a complete registration conversation in OpenClaw, using a **pet-safety detection** use case as the example. It takes the extended-schema path so you can see how `evaluate_rules.py` is produced, and binds the stream with both prefilter and ROI enabled so you can see both monitor-pipeline gates.
 
 ### Step 0 — Start a new session with a strong model
 
@@ -45,60 +56,60 @@ Run `openclaw dashboard` to open the OpenClaw chat interface (Control UI) in you
 
 ### Step 1 — Describe the use case
 
-Tell OpenClaw the use-case name, what to detect, and what an alert should mean. Be as concrete as you can — this description is what the VLM prompt is compiled from (see [Write a good use-case description](#write-a-good-use-case-description)):
+Tell OpenClaw the use-case name, what to detect, and — optionally — the RTSP stream to bind. Be as concrete as you can about the detection targets — this description is what the VLM prompt is compiled from (see [Write a good use-case description](#write-a-good-use-case-description)):
 
 > *Register a Pet Safety use case to monitor pets for escape attempts, entrapment incidents, and aggressive behavior. The RTSP stream address is `rtsp://localhost:8554/live/pet`.*
 
-![Describing the new use case to OpenClaw](../_assets/openclaw-uc-register-describe.png)
+<img src="../_assets/openclaw-uc-register-describe.png" alt="Describing the new use case to OpenClaw" width="900">
 
 ### Step 2 — Answer Q1/Q2 (gate 1)
 
-OpenClaw does not draft anything yet. It reads the `smartbuilding-use-case-manager` skill, then asks the two gating questions and **stops** — the turn ends right after the questions:
+OpenClaw does not draft anything yet. It loads the `smartbuilding-use-case-manager` skill, then asks the two gating questions and **stops** — the turn ends right after the questions, with no files changed and no other tool called:
 
-- **Q1 — Alerting?** Does this use case need to raise alerts? *No* → report-only (Final Schema = none, Rule Path = none); *Yes* → structured alerting on the base schema `severity, event, desc`.
-- **Q2 — Schema extension?** *(only if Q1 = Yes)* Persist fields beyond `severity / event / desc`? *No* → base alerting with `defaultRuleEvaluator`; *Yes* → extended alerting — name each extra field and its type (e.g., `zone_id (text)`, `pet_count (integer)`), and a per-use-case `evaluate_rules.py` will be generated.
+- **Q1 — Alerting?** Does this use case need to raise alerts? *No* → report-only mode: no alert rows, no rules; *Yes* → structured alerts with a primary event per clip, on the base schema `severity, event, desc`.
+- **Q2 — Schema extension?** *(only if Q1 = Yes)* Persist fields beyond `severity / event / desc`? *No* → base alerting with `defaultRuleEvaluator`; *Yes* → extended alerting — name each extra field you want persisted (e.g., `pet_type (text)`, `location (text)`), and a per-use-case `evaluate_rules.py` — the custom alert policy — will be generated from the complete final schema.
 
-OpenClaw also flags the **primary-event** constraint: structured realtime persists one primary `EVENT` per clip, so with several named behaviors only one becomes the persisted event and the others can still surface in `desc`.
-
-![OpenClaw asks the Q1/Q2 gating questions](../_assets/openclaw-uc-register-q1q2.png)
+<img src="../_assets/openclaw-uc-register-q1q2-confirm-request.png" alt="OpenClaw asks the Q1/Q2 gating questions" width="900">
 
 Reply explicitly — Q1 and, when Q1 is yes, Q2 — naming any extension fields you need persisted and queryable. Here we add a `pet_zone` field so every alert carries which zone of the room the event happened in:
 
-> *Q1 = yes, Q2 = yes: pet_zone (text, optional)*
+> *Q1=yes, Q2=yes add pet_zone*
 
-![Replying to Q1/Q2](../_assets/openclaw-uc-register-q1q2-confirm.png)
+<img src="../_assets/openclaw-uc-register-q1q2-confirm.png" alt="Replying to Q1/Q2" width="900">
 
 ### Step 3 — Confirm the proposed design (gate 2)
 
-OpenClaw resolves everything else from your description with conservative defaults — event names, severities, evidence minimums, and realtime execution (`SIMPLE`, `levels=1`, so the LOCAL pass decides the persisted fields and immediate alerts) — and shows the proposed design for approval:
+OpenClaw notes that the three named behaviors (escape attempts, entrapment incidents, aggressive behavior) are handled as primary detection **events**, not schema fields, then resolves everything else from your description with conservative defaults — event names, severities, evidence minimums, and realtime execution (`SIMPLE`, `levels=1`, so the LOCAL pass decides the persisted fields and immediate alerts) — and shows the proposed design for approval:
 
-- **Mode:** Extended alerting (single EVENT per clip; other behaviors may surface in `DESC`)
-- **Final Schema:** `severity, event, desc, pet_zone`
-- **Rule Path:** `evaluate_rules.py` (required because of the schema extension)
-- **Report Source:** `alerts`
-- **Detection Contract** — event values with severity defaults:
+- **Use Case:** `pet_safety` · **VLM Task:** `pet_safety_monitor`
+- **Mode:** Extended alerting
+- **Final Schema:** `severity (text), event (text), desc (text), pet_zone (text)`
+- **Rule Path:** `evaluate_rules.py` (built from the complete Final Schema)
+- **Report Source:** `alerts` (daily)
+- **Realtime execution:** `SIMPLE`, `levels=1`, `process_fps=2`
+- **Detection Contract** — event values with severity defaults (primary-event priority `critical > warn > info`):
 
   | EVENT value | Severity | Description |
   |---|---|---|
-  | `escape` | critical | Pet crossing a boundary/door/gap with intent to leave the monitored area, not a transient crossing |
-  | `entrapment` | warn | Pet confined in/under/inside a hazardous enclosure (drawer, appliance, vehicle, container) with distress or no exit path |
-  | `aggressive_behavior` | warn | Pet-directed hostile action toward a person/another pet (bite, sustained attack, raised-threat posture with contact) |
+  | `escape_attempt` | warn | Pet actively trying to get out: pawing/scratching at a door/gate/crack, squeezing under/through a barrier, repeatedly jumping at an exit |
+  | `entrapment` | warn | Pet visibly stuck or unable to free itself: limb/head caught in a gap, leash/door/cage pinning the animal, prolonged distress posture near a hazard |
+  | `aggressive_behavior` | warn | Pet visibly aggressive toward another animal or person: bared teeth, raised hackles, lunging, snapping, sustained chase with hostile posture |
 
-  Plus `info`-level baseline/uncertainty events (`no_incident`, `pet_uncertain`). Extension field: `pet_zone` (text, optional) — the zone where the event was observed, `unknown` when not determinable.
+  Plus an `info`-level uncertainty event (`uncertain`) for behavior that could not be confidently classified. Extension field: `pet_zone` (text) — the zone where the event was observed. Each event also carries a **minimum visible evidence** bar with common look-alikes excluded (e.g., normal door-pawing for attention does not count as `escape_attempt`), and OpenClaw explicitly lists what it did *not* invent: no escalation policy, no critical-only scenarios, no extra business events, no custom alert behavior beyond `pet_zone`.
 
 Nothing is written until you approve it — this is the second gate, and the turn ends with the design on screen:
 
 > *confirm*
 
-![OpenClaw shows the proposed design and detection contract](../_assets/openclaw-uc-register-q1q2-confirm-request.png)
+<img src="../_assets/openclaw-uc-register-q1q2-doubleconfirm-request.png" alt="OpenClaw shows the proposed design and detection contract" width="900">
 
-![Confirming the proposed design](../_assets/openclaw-uc-register-q1q2-confirm-results.png)
+<img src="../_assets/openclaw-uc-register-q1q2-doubleconfirm-results.png" alt="Confirming the proposed design" width="900">
 
 ### Step 4 — Registration and artifacts
 
-Only after your explicit approval does OpenClaw start authoring: it reads the prompt-authoring reference, drafts the four-section VLM prompt and — because the schema is extended — generates `evaluate_rules.py` from the final schema. It then registers the use case in two server-side steps (`generate_task` → `register` with `persist=true`) and binds the stream as monitor `cam_pet_safety`.
+Only after your explicit approval does OpenClaw start authoring: it reads the prompt-authoring reference, drafts the four VLM prompt sections and — because the schema is extended — builds `evaluate_rules.py` from the complete final schema, runs the semantic lint, then registers the use case in two server-side steps (`generate_task` → `register` with `persist=true`).
 
-![OpenClaw starts drafting and registering after approval](../_assets/openclaw-uc-register-approved.png)
+<img src="../_assets/openclaw-uc-register-approved.png" alt="OpenClaw starts drafting and registering after approval" width="900">
 
 Both artifacts are archived under the data directory — `$SMARTBUILDING_DATA_DIR/use-cases/<use_case>/` (default `~/.mcp-smartbuilding`):
 
@@ -115,14 +126,78 @@ Both artifacts are archived under the data directory — `$SMARTBUILDING_DATA_DI
 
 On the **default rule path** (Q2=no) only `prompt.md` is archived — alerts are decided by the built-in evaluator on `severity = warn | critical`. A **report-only** use case (Q1=no) archives `prompt.md` and has no schema and no rule at all.
 
-The final chat report has two parts:
+### Step 5 — Answer P1/P2 (monitor decision gate)
 
-1. **New Use Case** — the use case (`pet_safety`), VLM task (`pet_safety_monitor`), mode (extended alerting), events/findings (`escape` critical, `entrapment` warn, `aggressive_behavior` warn, plus `no_incident` / `pet_uncertain` at info), final schema, rule path, report source, and the bound monitor `cam_pet_safety → rtsp://localhost:8554/live/pet`.
-2. **System Inventory** — a grouped view of every registered use case with its monitors nested underneath (here `child_safety`, `elder_wakeup`, `fridge`, and the new `pet_safety`); use cases without a camera are listed explicitly as `(no camera bound yet)`.
+Registration returned `ok:true`, and because the intake included a stream URL, OpenClaw now runs the **separate monitor pipeline gates** before binding anything — monitor decisions are never inherited from the use-case answers. It first confirms the preconditions (the `register` call returned `ok:true`, so `pet_safety` exists, and the source URL is known), then asks the two pipeline questions and ends its turn:
+
+- **P1 — Prefilter:** enable object-class prefiltering (drop motion clips without pets before the VLM)?
+- **P2 — ROI focus:** crop/focus a region of interest?
+
+Reply exactly `P1=yes|no, P2=yes|no`. OpenClaw also spells out the consequences up front: P1=yes means you will pick target classes from the deployed model's class list next; P2=yes applies the ROI template defaults (`mode=crop`, `expand=0.25`, `auto_split_area=0.35`) automatically, with no further ROI questions; and `P1=no` together with `P2=yes` draws a warning, because the ROI crop is trajectory-driven off prefilter hits and has no trajectory source without prefilter.
+
+<img src="../_assets/openclaw-uc-register-success-monitor-bind-pipeline-config.png" alt="Registration succeeded and OpenClaw asks the P1/P2 pipeline questions" width="900">
+
+Here we enable both — prefilter keeps non-pet motion away from the VLM, and ROI zooms into the pet's trajectory region:
+
+> *P1=yes P2=yes*
+
+<img src="../_assets/openclaw-uc-register-monitor-config-confirm.png" alt="Replying to P1/P2" width="900">
+
+The same two monitor gates apply whenever a monitor is created, rebound, or updated — including binding a camera to a use case that was registered earlier.
+
+### Step 6 — Pick the prefilter target classes (P1 = yes)
+
+Because P1=yes, OpenClaw fetches the selectable classes from the deployed detection model (`smartbuilding_monitor_ctl action=prefilter_options`) and presents them verbatim. The `labels_source: embedded` flag means the list is authoritative — it came from the model itself, and a class outside the list is rejected server-side at registration. For a home pet camera the relevant animal classes are `cat` and `dog` (the model's COCO-80 label set has no general "pet" class); OpenClaw suggests the safe pick for a typical pet household, but never chooses for you:
+
+<img src="../_assets/openclaw-uc-register-monitor-config-prefilter.png" alt="OpenClaw presents the model's prefilter classes to pick from" width="900">
+
+> *target_classes: cat, dog*
+
+<img src="../_assets/openclaw-uc-register-monitor-config-prefilter-classes-confirm.png" alt="Picking the prefilter target classes" width="900">
+
+P2=yes needs no further input: the ROI template defaults apply verbatim. There is no geometry to draw — the ROI crop is **trajectory-driven**: the prefilter's detection hits accumulate a union box per segment, and the crop is that trajectory region expanded by 25%, with an early segment split when the region grows beyond 35% of the frame.
+
+### Step 7 — Confirm the exact pipeline_config (monitor approval gate)
+
+With every decision collected, OpenClaw assembles the exact `pipeline_config` that will be passed verbatim to `register_source`, and displays it in full — no hidden fields — together with a human-readable decision summary:
+
+```yaml
+pipeline_config:
+  prefilter:
+    enabled: true
+    target_classes: [cat, dog]
+  roi:
+    enabled: true
+    mode: crop
+    expand: 0.25
+    auto_split_area: 0.35
+```
+
+- **Prefilter:** enabled · **Target Classes:** `cat`, `dog` · **Labels Source:** embedded (from the deployed YOLO model)
+- **ROI Focus:** enabled · **ROI Parameters:** defaults (`mode=crop`, `expand=0.25`, `auto_split_area=0.35`)
+- **Monitor ID (default):** `cam_pet_safety` · **Persistence:** enabled (mirrors to `monitors.yaml`)
+
+Nothing is written until you approve this exact config — reply with the exact phrase `confirm pipeline_config`. A general acknowledgement (`ok`, `looks good`, `continue`) does not satisfy this gate, and changing any field after approval voids it — the agent must redisplay the config and ask again.
+
+<img src="../_assets/openclaw-uc-register-monitor-config-doubleconfirm.png" alt="OpenClaw displays the exact pipeline config and decision summary" width="900">
+
+<img src="../_assets/openclaw-uc-register-monitor-config-doubleconfirm-results.png" alt="Confirming the displayed pipeline config" width="900">
+
+### Step 8 — Monitor binding and final report
+
+Only after that approval does OpenClaw call `smartbuilding_monitor_ctl action=register_source` with the approved config. `register_source` is an **upsert** — with no `monitor_id` supplied, the new monitor gets the default ID `cam_pet_safety` — and `persist: true` mirrors it into `~/.mcp-smartbuilding/monitors.yaml`.
+
+The final chat report has three parts:
+
+1. **New Use Case** — the use case (`pet_safety`), VLM task (`pet_safety_monitor`), mode (extended alerting), events/findings (`escape_attempt` / `entrapment` / `aggressive_behavior` at warn, plus `pet_uncertain` / `no_safety_incident` at info), final schema (`severity, event, desc, pet_zone`), rule path (`evaluate_rules.py`), report source (`alerts`, daily), the bound monitor `cam_pet_safety → rtsp://localhost:8554/live/pet` (online, analytics online), and the validation status.
+2. **Monitor Created** — monitor ID `cam_pet_safety`, use case, source URL, prefilter enabled (`cat`, `dog`), ROI focus enabled (template defaults), the exact approved `pipeline_config`, and persistence (mirrored to `monitors.yaml` and `config.yaml`).
+3. **System Inventory** — a grouped view of every registered use case with its monitors nested underneath (here `fridge`, `child_safety`, `elder_wakeup`, and the new `pet_safety`); use cases without a camera are listed explicitly as `(no camera bound yet)`.
+
+<img src="../_assets/openclaw-uc-register-inventory-part1.png" alt="OpenClaw reports the new use case and the monitor it bound" width="900">
+
+<img src="../_assets/openclaw-uc-register-inventory-part2.png" alt="The grouped system inventory after registration" width="900">
 
 Note the **validation status**: *registered but behaviorally unvalidated* — registration only confirms structural alignment of prompt ↔ schema ↔ rules. When you have representative footage, compare the persisted `event / severity / desc / pet_zone` values against ground truth and re-register with `overwrite=true` to refine. From this point the use case is live: pet-safety events start producing alerts on `smartbuilding://monitor/cam_pet_safety/alerts`.
-
-![OpenClaw reports the new use case and the system inventory](../_assets/openclaw-uc-register-final-inventory.png)
 
 ## View detection results in the database
 
@@ -130,11 +205,11 @@ Once the use case is live, all detection result data is stored in the server's S
 
 | Table | What it holds |
 |---|---|
-| `monitors` | Registered video sources — monitor ID, name, RTSP `source_url`, bound `use_case`, and `status` (`online` / `offline`). |
+| `monitors` | Registered video sources — monitor ID, name, RTSP `source_url`, bound `use_case`, and `status` (`online` / `offline`). The approved `pipeline_config` is **not** a column here — it lives in the `monitors.yaml` mirror. |
 | `events` | Raw detection events reported by the video-stream analytics (VSA) pipeline — these are what trigger video-summary tasks. |
 | `sqlite_sequence` | Internal SQLite bookkeeping for `AUTOINCREMENT` primary keys — no user data, safe to ignore. |
 | `recordings` | Recorded video clips associated with events/alerts — file paths, time ranges, duration, and file size, so you can review the footage behind any detection. |
-| `video_summary_tasks` | Per-clip video-summary results — the VLM's `summary_text`, the parsed fields (`event`, `severity`, `desc`, plus any extension fields like `pet_zone`), task status, and token/latency stats. |
+| `video_summary_tasks` | Per-clip video-summary results — the VLM's `summary_text`, the parsed fields (`event`, `severity`, `desc`, plus any extension fields like `pet_zone`), task status, and token/latency stats. Extension columns from every use case sit on this one shared table. |
 | `alerts` | Alerts fired by the rule engine (here, by `evaluate_rules.py`) — monitor/task/event/use-case references, a formatted `description`, notification state, and acknowledgement details. To inspect structured fields such as `severity` and `event`, or the source clip path, follow `task_id` / `event_id` to the corresponding `video_summary_tasks` / `events` row. |
 | `reports` | Generated periodic reports per monitor (e.g., daily summaries) — `report_text`, event/motion counts, report type, status, and generation stats. |
 | `plans` | Per-monitor analysis plans (`plan_json`) — named plan definitions that drive scheduled report/summary generation, with an `active` flag. |
@@ -143,15 +218,15 @@ You don't need to open the database by hand — just ask OpenClaw in the same ch
 
 > *check monitors in smartbuilding.db*
 
-![OpenClaw lists the monitors table](../_assets/db-monitos.png)
+<img src="../_assets/db-monitors.png" alt="OpenClaw lists the monitors table" width="900">
 
-Here the `cam_pet_safety` row is still present but **offline** — the use case has been unregistered, and the row persists only because existing alerts history blocks the delete (see [Delete a use case by conversation](#delete-a-use-case-by-conversation)).
+The freshly registered `cam_pet_safety` row is there and **online**. OpenClaw also shows the `monitors.yaml` mirror next to it, because that is where the approved `pipeline_config` (prefilter `cat`/`dog`, ROI crop defaults) is persisted — the DB row itself carries only `id` / `name` / `use_case` / `status` / `source_url` / `created_at`, and the VLM task name lives in the server's `use_case_dict`, not in this table.
 
 > *check video-summary-tasks in smartbuilding.db*
 
-![OpenClaw summarizes the video_summary_tasks table](../_assets/db-summary.png)
+<img src="../_assets/db-summary.png" alt="OpenClaw summarizes the video_summary_tasks table" width="900">
 
-Here OpenClaw summarizes the detection results: 31 completed tasks in ~5 minutes, 30 classified as `escape_attempt` (critical) — a cat repeatedly trying to climb the balcony railing — all in the same `pet_zone`. This is exactly the place to verify detection quality after registration: if the persisted `event` / `severity` / `pet_zone` values don't match what the camera actually saw, refine the description and re-register with `overwrite=true`.
+Here OpenClaw shows the schema extension applied at register time: the `severity`, `event`, `desc`, and `pet_zone` columns were added to the shared `video_summary_tasks` table via `ALTER TABLE` — the same table also carries `wakeup_time` from the `elder_wakeup` use case, since per-use-case extension columns all land on this one table. The detection summary: 41 tasks so far, all from `cam_pet_safety` (40 completed, one in flight) — mostly `no_safety_incident` (info), with a handful of `escape_attempt` and `entrapment` warnings. This is exactly the place to verify detection quality after registration: if the persisted `event` / `severity` / `pet_zone` values don't match what the camera actually saw, refine the description and re-register with `overwrite=true`.
 
 ## Write a good use-case description
 
@@ -187,31 +262,36 @@ Deleting is also a conversation — ask OpenClaw to remove the use case by name:
 
 > *delete pet safety use case*
 
-![Asking OpenClaw to delete the use case](../_assets/openclaw-uc-unregister-request.png)
+<img src="../_assets/openclaw-uc-unregister-request.png" alt="Asking OpenClaw to delete the use case" width="900">
 
-Because deletion is destructive, OpenClaw does **not** delete on this request. It first fetches the live inventory (`smartbuilding_use_case_register action=list` and `smartbuilding_monitor_ctl action=list`), then shows the exact cascade impact — what will be removed, archived, and stopped, and which other use cases and monitors are *not* affected — and asks for explicit confirmation. The turn ends there; `action=unregister` is never called in the same turn that displays the impact:
+Because deletion is destructive, OpenClaw does **not** delete on this request. It first fetches the live inventory (`smartbuilding_use_case_register action=list` and `smartbuilding_monitor_ctl action=list`), then shows the exact cascade impact — what will be removed, archived, and stopped, and what is kept:
 
-![OpenClaw shows the deletion impact and asks for confirmation](../_assets/openclaw-uc-unregister-confirm.png)
+- **Will be removed:** the `pet_safety` entry from the in-memory `use_case_dict` and from `~/.mcp-smartbuilding/config.yaml`; the bound monitor `cam_pet_safety` (stopped and unregistered, its `monitors.yaml` entry stripped); the VLM task `pet_safety_monitor`; and the artifacts under `use-cases/pet_safety/` (`prompt.md`, `evaluate_rules.py`) — **moved to** `use-cases/.backup/pet_safety/`, so they are recoverable.
+- **Will be kept:** the database is not cascaded — the historical `video_summary_tasks` rows produced by `cam_pet_safety` and the `alerts` rows for `pet_safety` remain as audit history, and the shared schema columns (`severity`, `event`, `desc`, `pet_zone`, …) stay on the table because other use cases share them.
 
-Reply with an explicit confirmation (e.g., `yes, confirm` or `confirm delete pet_safety`) in a later message, and OpenClaw calls `smartbuilding_use_case_register` with `action=unregister`, `persist=true`:
+The turn ends there; `action=unregister` is never called in the same turn that displays the impact. OpenClaw also tells you the exact confirmation phrase it needs — anything else (`yes`, `delete it`, `好的`) will not satisfy the gate and it will ask again:
 
-> *yes, confirm*
+<img src="../_assets/openclaw-uc-unregister-doubleconfirm-request.png" alt="OpenClaw shows the deletion impact and asks for confirmation" width="900">
 
-![Confirming the deletion](../_assets/openclaw-uc-unregister-confirm-result.png)
+Reply with that explicit confirmation in a later message, and OpenClaw calls `smartbuilding_use_case_register` with `action=unregister`, `persist=true`:
 
-The unregister cascade then runs:
+> *confirm delete pet_safety*
 
-- **Removed:** the `use_case_dict.pet_safety` entry from `config.yaml`, and the VLM task `pet_safety_monitor`.
+<img src="../_assets/openclaw-uc-unregister-doubleconfirm-request-result.png" alt="Confirming the deletion" width="900">
+
+The unregister cascade then runs, and OpenClaw reports the final state:
+
+- **Removed:** the `use_case_dict.pet_safety` entry from `config.yaml`, and the VLM task `pet_safety_monitor` from the video-summary service.
 - **Archived:** the `prompt.md` / `evaluate_rules.py` artifacts are moved from `~/.mcp-smartbuilding/use-cases/pet_safety/` to `use-cases/.backup/pet_safety/`, so they are recoverable on disk (re-registering the use case later needs fresh prompt and rule files).
-- **Preserved:** historical alert rows in the `alerts` table and recorded clip/event rows linked to `pet_safety` are kept as audit history and are not part of the unregister cascade.
+- **Preserved:** historical `video_summary_tasks` and `alerts` rows linked to `pet_safety` are kept as audit history (the task rows are now orphaned — their `monitor_id` still resolves, but the use case is gone), and the shared extension columns stay on the table for the remaining use cases.
 
-![OpenClaw reports the deletion result](../_assets/openclaw-uc-unregister-results.png)
+<img src="../_assets/openclaw-uc-unregister-final-results.png" alt="OpenClaw reports the deletion result" width="900">
 
 Check the monitor outcome in the response's `cascaded_monitors`:
 
 - `db_row="deleted"` — the monitor was fully unregistered.
-- `db_row="kept_offline"` — the use case was successfully unregistered, but the monitor row could not be deleted because existing alert history still references it. The server stops the monitor, marks it `offline`, and keeps its `monitors.yaml` entry with `enabled: false`. Do not retry the use-case unregister: the use case has already been removed. You can leave the offline row in place to preserve its audit history. To reuse the monitor later, first re-register the use case, then bind the stream again with the same monitor ID; `register_source` updates and restarts the existing row. To permanently delete the monitor, back up `smartbuilding.db`, remove the alert rows that reference it using direct SQLite maintenance (preferably while the MCP server is stopped), then restart the server and call `smartbuilding_monitor_ctl action=unregister` for that monitor. The `smartbuilding_video_db` MCP tool cannot perform this cleanup because it accepts `SELECT` queries only.
+- `db_row="kept_offline"` — the use case was successfully unregistered, but the monitor row could not be deleted because historical detection rows still reference it (here, the `video_summary_tasks` history produced by `cam_pet_safety`; the foreign-key constraint blocked the row delete). The server falls back to stop: the monitor is marked `offline` and its `monitors.yaml` entry is kept with `enabled: false` — a "zombie" row that cannot process anything, and re-enabling it alone does not help because the use case no longer exists. Do not retry the use-case unregister: the use case has already been removed. You can leave the offline row in place to preserve its audit history. To reuse the monitor later, first re-register the use case, then bind the stream again with the same monitor ID; `register_source` updates and restarts the existing row. To permanently delete the monitor, back up `smartbuilding.db`, remove the rows that reference it (in `video_summary_tasks` / `alerts`) using direct SQLite maintenance (preferably while the MCP server is stopped), then restart the server and call `smartbuilding_monitor_ctl action=unregister` for that monitor. The `smartbuilding_video_db` MCP tool cannot perform this cleanup because it accepts `SELECT` queries only.
 
 ---
 
-For the full authoring rules the agent follows (prompt anchors, schema invariants, retry behavior), see the [`smartbuilding-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md) and the [`use_case_register` tool guide](./mcp-tools.md#8-smartbuilding_use_case_register).
+For the full authoring rules the agent follows (prompt anchors, schema invariants, pipeline gates, retry behavior), see the [`smartbuilding-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md) and the [`use_case_register`](./mcp-tools.md#8-smartbuilding_use_case_register) / [`monitor_ctl`](./mcp-tools.md#5-smartbuilding_monitor_ctl) tool guides.

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { toErrorMessage } from './gradingUtils';
 import { useTranslation } from 'react-i18next';
 import { gradingGetRubricContent, gradingUpdateRubricContent } from '../../services/api';
+import GradingModal from './GradingModal';
 
 interface RubricEditorProps {
   filename: string;
@@ -40,16 +41,12 @@ const RubricEditor: React.FC<RubricEditorProps> = ({ filename, onClose }) => {
   };
 
   return (
-    <div className="grading-picker-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="grading-editor">
-        <div className="grading-picker-header">
-          <span className="grading-picker-title">
-            {t('grading.editor.title', 'Edit Rubric')} — {filename}
-          </span>
-          <button className="grading-picker-close" onClick={onClose}>×</button>
-        </div>
-
-        <div className="grading-editor-body">
+    <GradingModal
+      title={`${t('grading.editor.title', 'Edit Rubric')} — ${filename}`}
+      onClose={onClose}
+      className="grading-editor"
+    >
+      <div className="grading-editor-body">
           {loading ? (
             <div className="grading-picker-loading">{t('grading.editor.loading', 'Loading…')}</div>
           ) : (
@@ -79,8 +76,7 @@ const RubricEditor: React.FC<RubricEditorProps> = ({ filename, onClose }) => {
             {saving ? t('grading.editor.saving', 'Saving…') : t('grading.editor.save', 'Save')}
           </button>
         </div>
-      </div>
-    </div>
+    </GradingModal>
   );
 };
 
