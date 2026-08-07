@@ -1,12 +1,19 @@
+---
+name: wandering-sample
+description: "Review-first workflow for changes in components/wandering and tutorial packages. Use when editing Wandering launch files, docs, tests, Nav2 wiring, RTAB-Map, RealSense, or robot bring-up paths."
+argument-hint: "Describe the Wandering change you want and target mode: simulation, real robot, or both"
+user-invocable: true
+---
+
 <!--
 Copyright (C) 2025 Intel Corporation
 
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Wandering Sample Agent Skills
+# Wandering Sample Agent Skill
 
-This file defines the review-first agent workflow for the Wandering Sample.
+This skill defines the review-first workflow for the Wandering Sample.
 
 ## Scope
 
@@ -89,7 +96,7 @@ Use the following steps in your coding companion UI:
 
 1. Enable Chat or Plan mode in your coding assistant window.
 2. Paste the canonical prompt from this file.
-3. Review the assistant’s plan, ASCII diagram, and proposed diff before allowing edits.
+3. Review the assistant's plan, ASCII diagram, and proposed diff before allowing edits.
 4. Once reviewed, enable Agent mode and let the assistant apply the change.
 5. Verify the result in simulation first, then in real-robot mode if the feature supports it.
 
