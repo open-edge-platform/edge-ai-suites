@@ -37,7 +37,7 @@ flowchart LR
     end
 
     VIDEO["Video Source\n(RTSP / Camera)"] -->|"RTSP"| DLSPS
-    CLIENT["QGC / Browser"] -->|"RTSP :8554"| DLSPS
+    DLSPS -->|"RTSP :8554"| CLIENT["Browser"]
     CLIENT -->|"WebRTC :8889"| MTX
 ```
 
@@ -84,7 +84,7 @@ flowchart LR
 
     BROKER_EXT -->|"MQTT telemetry"| DLSPS2
     VIDEO2["Video Source\n(RTSP from SDK)"] -->|"RTSP"| DLSPS2
-    CLIENT2["QGC / Browser"] -->|"RTSP :8555"| DLSPS2
+    DLSPS2 -->|"RTSP :8555"| CLIENT2["Browser"]
 ```
 
 **Telemetry flow (MAVSDK / MQTT):**
