@@ -4,6 +4,7 @@ from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.artifacts.path import get_artifact_path
 from utils.markdown_cleaner import strip_think_tokens
+from utils.prompt_budget import render_summarizer_prompt
 import logging, os
 
 logger = logging.getLogger(__name__)
@@ -29,14 +30,17 @@ class MindmapComponent(PipelineComponent):
 
         try:
             logger.info("Generating mindmap from summary...")
-            mindmap_prompt = self.model.tokenizer.apply_chat_template(
-                self._get_mindmap_message(summary_text),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False
+            mindmap_prompt = render_summarizer_prompt(
+                self.model.tokenizer,
+                self._get_mindmap_message(summary_text)
             )
 
-            full_mindmap = self.model.generate(mindmap_prompt, stream=False)
+            full_mindmap = self.model.generate(
+                mindmap_prompt, stream=False, pre_templated=True
+            )
+            # Non-streaming output bypasses StreamThinkFilter, so strip any
+            # reasoning block here before the JSON is parsed downstream.
+            full_mindmap = strip_think_tokens(full_mindmap)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

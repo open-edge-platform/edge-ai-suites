@@ -15,6 +15,7 @@ from typing import Iterator, Optional, Union
 import openvino_genai as ov_genai
 from transformers import AutoTokenizer
 
+from utils.model_family import is_qwen3_dense
 from utils.ov_genai_util import YieldingTextStreamer
 
 logger = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ class VLMTextGen:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 str(model_dir), extra_special_tokens={}
             )
-            if "qwen3" in self._model_name.lower():
+            if is_qwen3_dense(self._model_name):
                 _think_tokens = ["<think>", "</think>"]
                 _existing = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
                 _missing = [t for t in _think_tokens if t not in _existing]
@@ -153,6 +154,7 @@ class VLMTextGen:
         temperature: Optional[float] = None,
         enable_thinking: Optional[bool] = None,
         json_schema: Optional[str] = None,
+        pre_templated: bool = False,
     ) -> Union[Iterator[str], str]:
         """Generate from ``prompt`` (optionally multimodal) using the warm pipeline.
 
@@ -164,6 +166,13 @@ class VLMTextGen:
         Qwen3 thinking for this request only; ``None`` keeps the model default.
         ``json_schema`` (a JSON-schema string) constrains decoding to output
         matching that schema.
+
+        ``pre_templated=True`` means ``prompt`` is already a fully rendered chat
+        template (see ``utils.prompt_budget.render_summarizer_prompt``), so the
+        pipeline must not apply the template again. Without it ``VLMPipeline``
+        double-wraps the prompt and re-enables thinking, which shows up as
+        reasoning preambles and greedy repetition loops. HTTP callers
+        (``/v1/chat/completions``) pass raw prompts and leave this False.
         """
         if self._pipe is None:
             raise RuntimeError("VLM pipeline is not loaded")
@@ -171,7 +180,9 @@ class VLMTextGen:
             raise ValueError("Invalid prompt provided.")
 
         config = self._generation_config(max_new_tokens, temperature, json_schema)
-        if enable_thinking is False:
+        if pre_templated:
+            config.apply_chat_template = False
+        elif enable_thinking is False:
             prompt = self._apply_no_think_template(prompt, config, bool(images))
         if stream:
             return self._generate_stream(prompt, config, images)
