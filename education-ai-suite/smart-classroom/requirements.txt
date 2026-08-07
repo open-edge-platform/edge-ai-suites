@@ -37,10 +37,20 @@ torchaudio==2.8.0
 torchvision==0.23.0
 
 # HuggingFace ecosystem
-# transformers 5.5.3: needed for transformers.models.qwen3_5_moe, which the
-# OpenVINO export patchers for Qwen3.5/3.6 import. Highest CVE-clean release
-# inside optimum-intel 2.1.0's transformers<5.6 range.
-transformers==5.5.3
+# transformers 5.2.0: pinned exactly, do not bump.
+#
+# optimum-intel 2.1.0 advertises transformers>=4.51,<5.6, but that is the
+# package-wide range. Its per-architecture support table caps Qwen3_5,
+# Qwen3_5Moe, Qwen3_5MoeText and Qwen3_5Text at transformers 5.2.0 -- and
+# Qwen3.5-9B / Qwen3.6-35B-A3B both report model_type qwen3_5_moe, so they are
+# governed by that cap, not by <5.6. Above 5.2.0 the OpenVINO export patcher
+# fails with "cannot import name 'Qwen3_5DynamicCache' from
+# transformers.models.qwen3_5.modeling_qwen3_5" (optimum-intel issue #1786).
+#
+# Tradeoff: this forgoes the CVE fixes in 5.3-5.5. Revisit only when an
+# optimum-intel release raises the qwen3_5* row above 5.2.0; 2.1.0 is the
+# newest release as of this pin.
+transformers==5.2.0
 tokenizers==0.22.2
 datasets==3.6.0
 accelerate==1.10.1
