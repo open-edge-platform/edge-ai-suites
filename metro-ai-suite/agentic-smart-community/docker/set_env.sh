@@ -93,6 +93,20 @@ mkdir -p "${SMARTBUILDING_DATA_DIR}"
 export HOST_UID=$(id -u)
 export HOST_GID=$(id -g)
 
+# Host timezone, passed into the MCP server container so SQLite's
+# datetime('now','localtime') (used for every event/alert created_at) matches host
+# local time instead of defaulting to UTC. Prefer /etc/timezone, fall back to the
+# /etc/localtime symlink target; leave unset if neither is resolvable (the image's
+# ENV TZ default and the /etc/localtime bind mount then apply).
+if [ -z "${TZ:-}" ]; then
+  if [ -r /etc/timezone ]; then
+    TZ=$(cat /etc/timezone)
+  elif [ -L /etc/localtime ]; then
+    TZ=$(readlink -f /etc/localtime | sed 's#.*/zoneinfo/##')
+  fi
+  [ -n "${TZ:-}" ] && export TZ
+fi
+
 # =========================================================================
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
 # =========================================================================
