@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.20.0
+
+**New**
+
+- Configurable NGINX upload limit is now available (e.g. for SceneScape GLB 3D base map files).
+- GPU and NPU support with trusted compute has been integrated.
+
+**Improved**
+
+- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+- Consumed the latest Scenescape version 2026.2.0.
+
 ## v1.19.0
 
 **New**
