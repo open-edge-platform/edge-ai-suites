@@ -37,10 +37,10 @@ Before running the application, you need to set several environment variables:
 
     ```bash
     export REGISTRY_URL=intel
-    export TAG=latest
+    export TAG=2026.2.0-rc1
     ```
 
-    In most cases, `TAG=latest` works out of the box. Set a specific tag only when you need to pin to a particular release/version.
+    Use `TAG=2026.2.0-rc1` for this release workflow.
 
     **Override tags per stack (recommended for mixed release cycles):**
 
@@ -51,9 +51,9 @@ Before running the application, you need to set several environment variables:
     Use stack-specific tag overrides when you need different image versions for each stack:
 
      ```bash
-     export TAG=latest
-     export VSS_STACK_TAG=latest
-     export SMART_NVR_STACK_TAG=latest
+     export TAG=2026.2.0-rc1
+     export VSS_STACK_TAG=2026.2.0-rc1
+     export SMART_NVR_STACK_TAG=2026.2.0-rc1
      ```
 
     Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
