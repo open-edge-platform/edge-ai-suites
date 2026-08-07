@@ -30,6 +30,8 @@ import subprocess
 import threading
 from datetime import datetime
 
+from utils.artifacts.path import get_artifact_path
+
 logger = logging.getLogger(__name__)
 
 # Full paths to OpenSSH executables — avoids PATH lookup failures in subprocess
@@ -62,7 +64,7 @@ def write_engagement_reports(session_id: str, session_dir: str, va_stats: dict) 
 
         # ── Audio stats ───────────────────────────────────────────────────────
         teacher_pct, student_pct, q_count = 0, 0, 0
-        tx_path = os.path.join(session_dir, "transcription.txt")
+        tx_path = get_artifact_path(session_id, "transcription.txt")
         if os.path.exists(tx_path):
             teacher_chars = student_chars = 0
             with open(tx_path, encoding="utf-8") as fh:
@@ -104,7 +106,7 @@ def write_engagement_reports(session_id: str, session_dir: str, va_stats: dict) 
         }
 
         os.makedirs(session_dir, exist_ok=True)
-        eng_path  = os.path.join(session_dir, "engagement_report.json")
+        eng_path = get_artifact_path(session_id, "engagement_report.json")
         with open(eng_path,  "w", encoding="utf-8") as fh:
             json.dump(engagement, fh, indent=2)
 
@@ -245,7 +247,7 @@ class SCPSender:
             },
         }
 
-        meta_path = os.path.join(session_dir, "session_meta.json")
+        meta_path = get_artifact_path(session_id, "session_meta.json")
         with open(meta_path, "w", encoding="utf-8") as fh:
             json.dump(meta, fh, indent=2)
 
@@ -255,8 +257,9 @@ class SCPSender:
             return
 
         files = [
-            os.path.join(session_dir, fname)
-            for fname in ("session_meta.json", "summary.md", "topics.json")
+            get_artifact_path(session_id, "session_meta.json"),
+            get_artifact_path(session_id, "summary.md"),
+            get_artifact_path(session_id, "topics.json"),
         ]
         if self._copy_files(files, remote_dir):
             logger.info(f"[SCP] Package A sent for session {session_id}")
@@ -316,7 +319,7 @@ class SCPSender:
         """
         # ── Audio stats from transcription.txt ────────────────────────────────
         teacher_pct, student_pct, q_count = 0, 0, 0
-        tx_path = os.path.join(session_dir, "transcription.txt")
+        tx_path = get_artifact_path(session_id, "transcription.txt")
         if os.path.exists(tx_path):
             teacher_chars = 0
             student_chars = 0

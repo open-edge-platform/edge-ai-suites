@@ -3,6 +3,7 @@ from components.board_ocr.board_ocr_service import read_board_ocr_text_only
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.artifacts.path import get_artifact_path
 from utils.markdown_cleaner import StreamThinkFilter
 from model_manager import ModelManager
 import logging, os
@@ -49,17 +50,10 @@ class SummarizerComponent(PipelineComponent):
     # ---------------- INPUT SELECTOR ----------------
 
     def _load_input_text(self):
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
         if self.mode == "teacher":
-            path = os.path.join(project_path, "teacher_transcription.txt")
+            path = get_artifact_path(self.session_id, "teacher_transcription.txt")
         else:
-            path = os.path.join(project_path, "transcription.txt")
+            path = get_artifact_path(self.session_id, "transcription.txt")
 
         return StorageManager.read_text_file(path)
 
@@ -105,14 +99,7 @@ class SummarizerComponent(PipelineComponent):
         if board_text:
             logger.info(f"Board OCR content found for session {self.session_id} ({len(board_text)} chars); including in summary.")
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        summary_path = os.path.join(project_path, "summary.md")
+        summary_path = get_artifact_path(self.session_id, "summary.md")
         StorageManager.save(summary_path, "", append=False)
 
         prompt = self.summarizer.tokenizer.apply_chat_template(
@@ -158,7 +145,7 @@ class SummarizerComponent(PipelineComponent):
             tps = ((total_tokens - 1) / decode_time) if decode_time > 0 and total_tokens > 1 else -1
 
             StorageManager.update_csv(
-                path=os.path.join(project_path, "performance_metrics.csv"),
+                path=get_artifact_path(self.session_id, "performance_metrics.csv"),
                 new_data={
                     "configuration.summarizer_model": f"{self.provider}/{self.model_name}",
                     "performance.summarizer_time": round(summarization_time, 4),

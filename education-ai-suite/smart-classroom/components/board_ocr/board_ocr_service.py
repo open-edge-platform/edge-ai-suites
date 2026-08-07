@@ -14,19 +14,13 @@ from typing import Optional
 
 from fastapi import HTTPException
 from utils.runtime_config_loader import RuntimeConfig
+from utils.artifacts.path import get_artifact_path
 
 logger = logging.getLogger(__name__)
 
 
 def _board_ocr_path(session_id: str) -> str:
-    project_config = RuntimeConfig.get_section("Project")
-    return os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "board_ocr",
-        "board_ocr.txt",
-    )
+    return get_artifact_path(session_id, "board_ocr", "board_ocr.txt")
 
 
 def read_board_ocr(session_id: Optional[str]) -> dict:
