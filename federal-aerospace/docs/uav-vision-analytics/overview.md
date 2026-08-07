@@ -60,11 +60,11 @@ sequenceDiagram
 
 ### Mode 2 — MAVSDK / External Stack (`docker-compose-mavsdk.yml`)
 
-A minimal stack that integrates with the `fedaero-drone-sdk-poc` project, which must be running first. Telemetry is received via MQTT topics published by the companion bridge in the SDK project. This mode maps DL Streamer to different host ports (`8081`, `8555`) to avoid conflicts.
+A minimal stack that integrates with the `uav-mission-compute-sdk` project, which must be running first. Telemetry is received via MQTT topics published by the companion bridge in the SDK project. This mode maps DL Streamer to different host ports (`8081`, `8555`) to avoid conflicts.
 
 ```mermaid
 flowchart LR
-    subgraph External["fedaero-drone-sdk-poc (running separately)"]
+    subgraph External["uav-mission-compute-sdk (running separately)"]
         direction TB
         PX4_EXT["PX4 + Gazebo\nSITL Simulation"]
         BRIDGE["companion-bridge\n(MAVLink → MQTT)"]
