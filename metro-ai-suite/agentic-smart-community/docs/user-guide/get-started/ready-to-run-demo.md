@@ -7,22 +7,22 @@ This optional guide configures reference video streams and monitors for the bund
 Before starting the demo, complete both of the following sections in [Get Started](../get-started.md):
 
 1. Complete all [Prerequisites](../get-started.md#prerequisites), including the required system software and command-line tools.
-2. Complete [Step 1 - Start dependent services](../get-started.md#step-1---start-dependent-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
+2. Complete [Step 1 - Start all services](../get-started.md#step-1---start-all-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
 
 The demo supports four independent video-analysis streams with bundled use cases.
 
-| Stream | Purpose |
-|---|---|
-| `cam_fridge` | Tracks fridge door activity and supports inventory-oriented daily reports. |
-| `cam_child` | Detects potentially dangerous child behavior for safety alerts and reports. |
-| `cam_elder_bedroom` | Tracks daily wakeup activity for the elder-wakeup workflow. |
-| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input. |
+| Stream                | Purpose                                                                     |
+| --------------------- | --------------------------------------------------------------------------- |
+| `cam_fridge`          | Tracks fridge door activity and supports inventory-oriented daily reports.  |
+| `cam_child`           | Detects potentially dangerous child behavior for safety alerts and reports. |
+| `cam_elder_bedroom`   | Tracks daily wakeup activity for the elder-wakeup workflow.                 |
+| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input.                       |
 
 Prepare any subset of compatible local MP4 files. The RTSP pusher copies the source stream, so each selected file must be playable by `ffmpeg` and compatible with your MediaMTX deployment.
 
 ## Step 1 - Provide video paths
 
-Video files are not included in release artifacts. All four entries in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml) default to `enabled: true`, but a stream will be automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file.
+Video files are not included in release artifacts. All four entries in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml) default to `enabled: true`, but a stream will be automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file.
 
 Export an absolute path for every stream you want to run. Omit variables for streams you do not have; no YAML edits are required.
 
@@ -33,7 +33,7 @@ export SMARTBUILDING_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
 export SMARTBUILDING_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
 ```
 
-To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml).
+To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml).
 
 ## Step 2 - Start the demo
 
@@ -45,7 +45,7 @@ bash demo/scripts/start-demo.sh
 
 This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMARTBUILDING_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smartbuilding-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
 If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMARTBUILDING_DATA_DIR`; the files under `demo/` remain unchanged.
 
@@ -65,13 +65,13 @@ Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`.
 
 Connect an MCP client as described in [Get Started - Step 3](../get-started.md#step-3---connect-an-agent-host). The demo supports reactive tool use immediately after the MCP server is registered.
 
-## Step 4 - *[Optional]* Enable proactive OpenClaw alerts
+## Step 4 - (Optional) Enable proactive OpenClaw alerts
 
 If you are connecting Smart Building to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
 
 The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Building skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
 
-This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
+This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 Run the installer from the component root:
 
@@ -88,7 +88,7 @@ Open the Control UI at `http://localhost:18789` with `openclaw dashboard`. When 
 The following optional OpenClaw cron jobs provide scheduled reports and a safety fallback for the demo agents:
 
 | Cron job | Schedule | Agent | Session | Behavior |
-|---|---|---|---|---|
+| -------- | -------- | ----- | ------- | -------- |
 | Fridge daily report | Daily at 22:00 | `fridge-agent` | `daily_report` | Generates a daily fridge inventory and dietary report. |
 | Child-safety daily report | Daily at 22:30 | `child-safety-agent` | `daily_report` | Summarizes the day's child-safety alerts and notable events. |
 | Elder-wakeup weekly report | Sunday at 22:00 | `elder-wakeup-agent` | `weekly_report` | Summarizes the week's wakeup activity for `cam_elder_bedroom`. |

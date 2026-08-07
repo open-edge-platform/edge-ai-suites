@@ -1,6 +1,6 @@
-# videostream-analytics HTTP API Reference
+# Videostream Analytics HTTP API Reference
 
-The videostream-analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server). 
+The Videostream Analytics microservice (VSA) is the standalone RTSP-processing service that pulls camera streams, runs motion detection and optional NPU-based YOLO prefiltering, cuts qualifying segments into MP4 clips, and pushes the resulting events to a configured webhook consumer (typically the MCP server).
 
 ---
 
@@ -86,7 +86,7 @@ List all registered sources.
 ]
 ```
 
-> The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
+> **Note:** The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
 
 ### 3.3 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
 
@@ -156,7 +156,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | `motion` | `MotionConfig` | Frame-difference motion detector parameters. |
 | `segment` | `SegmentConfig` | Motion-clip segmentation parameters. |
 | `static` | `StaticConfig` | Quiet-period close-out event parameters. |
-| `prefilter` | `PrefilterConfig` | Optional NPU / OpenVINO YOLO prefilter. |
+| `prefilter` | `PrefilterConfig` | Optional NPU / OpenVINO™ YOLO prefilter. |
 | `roi` | `RoiConfig` | ROI crop and trajectory-region emission. |
 | `recording` | `RecordingConfig` | Fixed-cadence continuous recording branch. |
 | `health` | `HealthConfig` | RTSP failure-handling policy. |
@@ -189,13 +189,13 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enabled` | `bool` | `true` | Enable OpenVINO YOLO prefilter on motion clips. |
-| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO `.xml` model. |
+| `enabled` | `bool` | `true` | Enable OpenVINO™ YOLO prefilter on motion clips. |
+| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO™ `.xml` model. |
 | `target_classes` | `array<string>` | `["person"]` | Class labels that count as a hit. |
 | `min_confidence` | `float` | `0.4` | Minimum detection confidence. |
 | `min_frames_hit` | `int` | `1` | Number of hits within a clip required for PASS. |
 | `detect_fps` | `float` | `2.0` | YOLO inference rate; inference does not run on every frame. |
-| `device` | `string` | `"NPU"` | OpenVINO device (`CPU`, `GPU`, `NPU`). |
+| `device` | `string` | `"NPU"` | OpenVINO™ device (`CPU`, `GPU`, `NPU`). |
 | `long_side` | `int` | `0` | Resize the frame's longest side before inference; `0` disables resizing. |
 
 ##### `RoiConfig`
@@ -335,7 +335,7 @@ The `status` field returned by §3.3 evolves according to the following state ma
 
 1. **`reconnecting` is not terminal.** `recovery_strategy=pause` does not pause the source on the first failure; VSA accumulates `failure_count` failures with exponential backoff, and only when `failure_count` reaches `max_failures` does the strategy fire. With defaults `max_failures=30, backoff_base=2.0, backoff_max=120.0` the backoff schedule is:
 
-   ```
+   ```text
    failure_count   delay (s)   cumulative (s)
    1               2           2
    2               4           6
@@ -421,7 +421,7 @@ Every event produced by a running source is delivered as an HTTP POST to the con
 
 ### 4.1 Envelope
 
-```json
+```
 {
   "sourceId":  "cam_child",
   "type":      "motion | static | recording",
@@ -510,7 +510,7 @@ Validation errors use a machine-readable response format. Unknown fields are rej
 
 VSA writes all per-source outputs under the resolved `data_dir`. The layout is stable and forms an implicit contract with the MCP server's cleanup job.
 
-```
+```text
 <data_dir>/
 ├── latest.jpg                          # Periodically overwritten snapshot; read by smartbuilding_scene_query.
 ├── motion_events/<YYYY-MM-DD>/
@@ -537,9 +537,9 @@ Retention responsibilities:
 | `data_dir` | `~/.mcp-smartbuilding/segments` | Global segment root; the `data_dir` field in the register request takes precedence. |
 | `SMARTBUILDING_DATA_DIR` | `~/.mcp-smartbuilding` | Overrides the platform data root; VSA writes under its `segments/` subdirectory. |
 | `VIDEOSTREAM_CONFIG` | `config/config.yaml` | Alternate configuration file path. |
-| `PREFILTER_MODEL` | `~/models/openvino/yolo11s/FP16/yolo11s.xml` | OpenVINO prefilter XML. `setup_docker.sh` validates the XML/BIN pair before startup and prepares the static YOLO11s IR automatically when it is missing. The model must be under `MODEL_DIR`, which is mounted read-only into the container. |
+| `PREFILTER_MODEL` | `~/models/openvino/yolo11s/FP16/yolo11s.xml` | OpenVINO™ prefilter XML. `setup_docker.sh` validates the XML/BIN pair before startup and prepares the static YOLO11s IR automatically when it is missing. The model must be under `MODEL_DIR`, which is mounted read-only into the container. |
 | `VIDEOSTREAM_CONFIG_FILE` | Generated by `setup_docker.sh` | Host-side runtime configuration mounted at `/app/config/config.yaml` by Docker Compose. It is generated from the tracked default with `defaults.prefilter.model_path` set to the absolute `PREFILTER_MODEL` path. |
-| `OV_CACHE_DIR` | `/tmp/ov_cache` | OpenVINO model cache used by the YOLO prefilter. |
+| `OV_CACHE_DIR` | `/tmp/ov_cache` | OpenVINO™ model cache used by the YOLO prefilter. |
 
 Ports used by the service and local verification recipes:
 

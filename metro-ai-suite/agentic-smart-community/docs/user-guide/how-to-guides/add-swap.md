@@ -1,4 +1,4 @@
-# Adding Swap Space
+# Add Swap Space
 
 `Qwen/Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-hungry on a shared-RAM host. On the on-device PTL profile, provide at least **32 GB of swap** so the weight load and KV cache can spill under peak pressure without the OOM killer stepping in. On an NVMe SSD (~3 GB/s) the model load is slower under swap, but it will not OOM.
 
@@ -21,7 +21,7 @@ sudo swapon /swapfile_temp
 
 # Verify
 swapon --show
-# e.g. an existing /swap.img (8G) + /swapfile_temp (32G) = 40G total swap
+# e.g., an existing /swap.img (8G) + /swapfile_temp (32G) = 40G total swap
 ```
 
 ## Step 3. Lower swappiness
@@ -65,4 +65,4 @@ sudo sysctl vm.swappiness=60
 ## Supporting Resources
 
 - [Get Started](../get-started.md)
-- [System Requirements](./system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)

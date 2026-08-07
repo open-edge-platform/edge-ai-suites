@@ -7,7 +7,7 @@ The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline even
 ## 1. Endpoint
 
 | Item | Value |
-|------|-------|
+| ---- | ----- |
 | Method | `POST` |
 | URL | `http://<mcp-host>:<events_port>/events` |
 | Default port | `3101` (configurable in `config.yaml`) |
@@ -18,8 +18,8 @@ The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline even
 ### 1.1 Health Probe
 
 | Method | URL | Response |
-|--------|-----|----------|
-| `GET`  | `/health` | `200 {"status":"healthy"}` |
+| ------ | --- | -------- |
+| `GET` | `/health` | `200 {"status":"healthy"}` |
 | Other paths / methods | — | `404` |
 
 ### 1.2 Response
@@ -27,17 +27,18 @@ The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline even
 All non-2xx responses are **errors** the client must handle. We split client errors by failure layer — **transport / framing** (`400`, `413`, `415`) vs. **semantic / business-rule** (`422`) — so the client can react differently without parsing error strings.
 
 | Status | When | Body | DB write |
-|--------|------|------|----------|
+| ------ | ---- | ---- | -------- |
 | `200 OK` | Envelope + payload valid, required fields present, DB writes succeeded. | `{"status":"ok","event_id":<int>,"task_id":<int?>,"recording_id":<int?>}` — the relevant id(s) for the rows just inserted. | ✅ |
-| `400 Bad Request` | Body is not valid JSON, **or** the envelope is structurally broken: missing/empty `sourceId`, missing `type`, missing `payload`, or any of those fields has the wrong JSON type (e.g. `sourceId` is a number, `payload` is a string). | `{"error":"<reason>","code":"invalid_json"\|"invalid_envelope"}` — e.g. `"invalid JSON"`, `"envelope.sourceId is required"`, `"envelope.payload must be an object"`. | ❌ |
+| `400 Bad Request` | Body is not valid JSON, **or** the envelope is structurally broken: missing/empty `sourceId`, missing `type`, missing `payload`, or any of those fields has the wrong JSON type (e.g., `sourceId` is a number, `payload` is a string). | `{"error":"<reason>","code":"invalid_json"\|"invalid_envelope"}` — e.g., `"invalid JSON"`, `"envelope.sourceId is required"`, `"envelope.payload must be an object"`. | ❌ |
 | `404 Not Found` | Path does not match `/events` or `/health`. | empty | — |
-| `405 Method Not Allowed` | Wrong HTTP method on a known path (e.g. `GET /events`, `POST /health`). Sets `Allow` response header. | empty | — |
+| `405 Method Not Allowed` | Wrong HTTP method on a known path (e.g., `GET /events`, `POST /health`). Sets `Allow` response header. | empty | — |
 | `413 Payload Too Large` | Request body exceeds the configured size limit (default **1 MiB**, controlled by `events.max_body_bytes` in `config.yaml`). The connection is closed without buffering the rest of the body. | `{"error":"payload too large","code":"body_too_large","limit_bytes":1048576}` | — |
 | `415 Unsupported Media Type` | `Content-Type` is not `application/json` (also rejected when the header is missing entirely). | `{"error":"content-type must be application/json","code":"unsupported_media_type"}` | — |
 | `422 Unprocessable Entity` | Envelope parses and is structurally valid, but the event is semantically unprocessable: required payload fields missing for the given `type`, **or** `type` not in the enum `{motion, static, recording}`. Logged at `warn`. | `{"error":"missing required fields","code":"missing_required_fields","missing":["start_time","duration_seconds"]}` or `{"error":"unknown event type","code":"unknown_event_type","type":"foo"}` | ❌ |
 | `500 Internal Server Error` | Envelope + payload validated, but a DB write threw an unexpected exception (disk full, schema mismatch, etc.). Logged at `error`. **Safe to retry** once the underlying server problem is resolved. | `{"error":"<exception message>","code":"internal_error"}` | partial / none |
 
-> **Retry policy / back-pressure**:
+> **Retry policy / back-pressure:**
+>
 > - `2xx` ⇒ success. Continue.
 > - `4xx` ⇒ **permanent error, do not retry the same body**. The client sent something invalid and must fix it. `400` / `413` / `415` are framing problems; `422` is a payload semantic problem. Whichever it is, retrying the same bytes will produce the same response.
 > - `5xx` ⇒ **transient server-side failure**. Client may retry with the same body after a backoff (exponential with jitter is reasonable; the server keeps no idempotency state, so a successful retry produces a new DB row).
@@ -48,7 +49,7 @@ Why `422` not `400` for the missing-field / unknown-type cases? They are **busin
 ### 1.3 Request constraints
 
 | Constraint | Value (default) | Configurable via | Violation |
-|------------|-----------------|------------------|-----------|
+| ---------- | --------------- | ---------------- | --------- |
 | Max body size | `1 MiB` | `events.max_body_bytes` | `413 Payload Too Large` |
 | Required `Content-Type` | `application/json` (charset optional) | — | `415 Unsupported Media Type` |
 | Allowed methods on `/events` | `POST` only | — | `405 Method Not Allowed` (`Allow: POST`) |
@@ -59,7 +60,7 @@ Why `422` not `400` for the missing-field / unknown-type cases? They are **busin
 
 ## 2. Envelope (shared by all events)
 
-```jsonc
+```
 {
   "sourceId":  "cam_child",                          // string, required
   "type":      "motion" | "static" | "recording",    // string enum, required
@@ -69,7 +70,7 @@ Why `422` not `400` for the missing-field / unknown-type cases? They are **busin
 ```
 
 | Field | Type | Required | Description |
-|-------|------|----------|-------------|
+| ----- | ---- | -------- | ----------- |
 | `sourceId`  | `string` | ✅ | Unique identifier for a camera / source. Must match `monitors.id`. Used as `monitor_id` for every DB write the handler produces. |
 | `type`      | `"motion" \| "static" \| "recording"` | ✅ | Event category. `type` determines payload schema and target tables. Unknown `type` → `logger.warn`, no DB write, server responds `422 Unprocessable Entity` with `code="unknown_event_type"` (do not retry — fix the client). |
 | `timestamp` | `string` (ISO 8601) | ✅ | Time the event was generated on the client side; recorded for diagnostic use only. The MCP server does **not** order DB rows by it — DB ordering uses `start_time` / `recording_start`. |
@@ -84,14 +85,14 @@ A motion segment event. The clip has already been cut into a standalone MP4 file
 ### 3.1 Payload fields
 
 | Field | Type | Required | Description / target DB column |
-|-------|------|----------|--------------------------------|
+| ----- | ---- | -------- | ------------------------------ |
 | `event_file_path`      | `string` | ✅ | Absolute path to the original (uncropped) clip. Written to `events.event_file_path`. |
 | `summary_clip_input`   | `string` | ✅ | Path to the clip fed into the video-summary service. If the client performed ROI crop, this points to `<name>_input.mp4`; otherwise identical to `event_file_path`. Written to `video_summary_tasks.summary_clip_input`. |
 | `start_time`           | `string` (ISO 8601) | ✅ | Clip start time. Written to `events.start_time`. |
 | `end_time`             | `string` (ISO 8601) |  Optional | Clip end time. Written to `events.end_time`. |
 | `duration_seconds`     | `number` | ✅ | Clip duration in seconds (may be fractional). Written to `events.duration_seconds`. |
-| `prefilter_passed`     | `0 \| 1` |  Optional | Whether the client-side prefilter (e.g. NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
-| `prefilter_classes`    | `string` (JSON-encoded array) |  Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g. `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
+| `prefilter_passed`     | `0 \| 1` |  Optional | Whether the client-side prefilter (e.g., NPU YOLO) passed. **This single field directly decides `task.status`** (see §3.2). **Absent** = no prefilter configured on this monitor; task defaults to `pending`. |
+| `prefilter_classes`    | `string` (JSON-encoded array) |  Optional | Hit class list, **must be pre-serialized into a string by the client** (e.g., `"[\"person\"]"`). The MCP server does not parse it — stored as TEXT in `events.prefilter_classes`. |
 | `prefilter_confidence` | `number` (0 – 1) |  Optional | Maximum confidence among hit classes. Written to `events.prefilter_confidence`. |
 | `trajectory_region`    | `string` (`"x1,y1,x2,y2"`) |  Optional | Bounding-box trajectory region for downstream ROI re-crop. Written to `events.trajectory_region`. The production client does not currently emit this — reserved for extension. |
 
@@ -106,12 +107,12 @@ Two tables are written in this order:
 2. **`INSERT INTO video_summary_tasks`** — `status` is decided by `prefilter_passed`:
 
 | `prefilter_passed` value | `video_summary_tasks.status` | video-worker behavior |
-|--------------------------|------------------------------|------------------------|
+| ------------------------ | ---------------------------- | --------------------- |
 | Field absent (no prefilter configured) | `pending` | Normal poll → call Video Summary Service → write summary |
 | `1` | `pending` | Normal poll → call Video Summary Service → write summary |
 | `0` | `ignored` | **Video Summary Service call skipped**, row kept only for audit |
 
-> Design intent: every motion clip lands in `events` (preserving the full motion timeline for `state_query` / `rule_eval`), but clips that prefilter rejects do not waste Video Summary Service compute.
+> **Design intent:** every motion clip lands in `events` (preserving the full motion timeline for `state_query` / `rule_eval`), but clips that prefilter rejects do not waste Video Summary Service compute.
 
 ### 3.3 Downstream chain
 
@@ -126,7 +127,7 @@ A stable segment with no motion. Clients typically emit a `static` event to "clo
 ### 4.1 Payload fields
 
 | Field | Type | Required | Description |
-|-------|------|----------|-------------|
+| ----- | ---- | -------- | ----------- |
 | `start_time`       | `string` (ISO 8601) | ✅ | Static-period start. Written to `events.start_time`. |
 | `end_time`         | `string` (ISO 8601) |  Optional | Static-period end. Written to `events.end_time`. |
 | `duration_seconds` | `number` | ✅ | Static duration in seconds. Written to `events.duration_seconds`. |
@@ -148,7 +149,7 @@ A continuous recording segment (distinct from motion: not tied to motion detecti
 ### 5.1 Payload fields
 
 | Field | Type | Required | Description |
-|-------|------|----------|-------------|
+| ----- | ---- | -------- | ----------- |
 | `recording_path`   | `string` | ✅ | Absolute path of the recorded MP4. Written to `recordings.file_path`. |
 | `recording_start`  | `string` (ISO 8601) | ✅ | Recording start. Written to `recordings.start_time`. |
 | `recording_end`    | `string` (ISO 8601) | ✅ | Recording end. Written to `recordings.end_time`. |
@@ -164,7 +165,7 @@ A continuous recording segment (distinct from motion: not tied to motion detecti
 3. **Does not** trigger rule-engine.
 4. The MCP server's periodic cleanup job deletes expired `<data_dir>/recordings/<YYYY-MM-DD>/` directories according to `storage.retention_days`.
 
-> Use: long-window video retrieval. `scene_query` and similar tools fall back to recordings when looking up a time window (durations are stable), while motion clips drive event-focused queries. `motion` and `recording` are **independent streams** — continuous recording rolls on its own cadence, motion detection slices on its own; the two do not interfere.
+> **Use:** long-window video retrieval. `scene_query` and similar tools fall back to recordings when looking up a time window (durations are stable), while motion clips drive event-focused queries. `motion` and `recording` are **independent streams** — continuous recording rolls on its own cadence, motion detection slices on its own; the two do not interfere.
 
 ---
 
@@ -196,6 +197,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 **MCP-side handling**:
 
 1. Insert into `events`:
+
    ```sql
    INSERT INTO events
      (monitor_id, motion_type, start_time, end_time, duration_seconds,
@@ -206,13 +208,16 @@ The five examples below are paired as "what the client sends → what the MCP se
       '/data/cam_child/motion_events/2026-06-25/seg_00001.mp4',
       NULL, NULL, NULL, NULL);
    ```
+
 2. Insert into `video_summary_tasks` with **`status='pending'`** (prefilter field absent ⇒ no prefilter configured):
+
    ```sql
    INSERT INTO video_summary_tasks
      (monitor_id, event_id, summary_clip_input, status)
    VALUES
      ('cam_child', <ev.id>, '/data/cam_child/motion_events/2026-06-25/seg_00001.mp4', 'pending');
    ```
+
 3. Return `200 {"status":"ok","event_id":<ev.id>,"task_id":<task.id>}`.
 4. On its next tick, task-poller picks up this task → calls the Video Summary Service → writes `summary_text` → forwards to rule-engine.
 
@@ -276,17 +281,19 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 1. Insert into `events` with `prefilter_passed=0` — kept for audit (useful for later analysis of prefilter accuracy).
 2. Insert into `video_summary_tasks` with **`status='ignored'`**:
+
    ```sql
    INSERT INTO video_summary_tasks
      (monitor_id, event_id, summary_clip_input, status)
    VALUES
      ('cam_child', <ev.id>, '/data/cam_child/motion_events/2026-06-25/seg_00003.mp4', 'ignored');
    ```
+
 3. Task-poller's `getPendingTasks` only selects rows with `status='pending'`. **This task is never polled**, so the Video Summary Service is never called.
 4. Rule-engine is not triggered, no alert is generated.
 5. Return `200 {"status":"ok","event_id":<ev.id>,"task_id":<task.id>}` — the row was inserted, just in a terminal state.
 
-> This is the core value of prefilter: a cheap NPU YOLO drops "leaves moving / lighting change / wandering pets" false-motion clips before they reach the Video Summary Service.
+> **Note:** This is the core value of prefilter: a cheap NPU YOLO drops "leaves moving / lighting change / wandering pets" false-motion clips before they reach the Video Summary Service.
 
 ---
 
@@ -310,6 +317,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 **MCP-side handling**:
 
 1. Insert into `events`:
+
    ```sql
    INSERT INTO events
      (monitor_id, motion_type, start_time, end_time, duration_seconds,
@@ -318,11 +326,12 @@ The five examples below are paired as "what the client sends → what the MCP se
      ('cam_child', 'static', '2026-06-25T14:31:10', '2026-06-25T14:31:25', 15.0,
       NULL, NULL, NULL, NULL, NULL);
    ```
+
 2. **Does not** create a `video_summary_tasks` row.
 3. **Does not** trigger rule-engine.
 4. Returns `200 {"status":"ok","event_id":<ev.id>}` (no `task_id` because no task row was created).
 
-> `state_query` reads `events` and sees the alternating `motion → static → motion → static …` sequence to infer "active / idle" timing of the room; elder-wakeup's "still in bed" detection depends on long `static` runs.
+> **Note:** `state_query` reads `events` and sees the alternating `motion → static → motion → static …` sequence to infer "active / idle" timing of the room; elder-wakeup's "still in bed" detection depends on long `static` runs.
 
 ---
 
@@ -348,6 +357,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 **MCP-side handling**:
 
 1. Insert into `recordings`:
+
    ```sql
    INSERT INTO recordings
      (monitor_id, file_path, start_time, end_time, duration_seconds, file_size_bytes)
@@ -357,12 +367,13 @@ The five examples below are paired as "what the client sends → what the MCP se
       '2026-06-25T14:30:00', '2026-06-25T14:31:00',
       60.0, 8192000);
    ```
+
 2. **Does not** write `events`, **does not** write `video_summary_tasks`.
 3. **Does not** trigger rule-engine.
 4. Returns `200 {"status":"ok","recording_id":<rec.id>}`.
 5. The MCP server's periodic cleanup job deletes expired `<data_dir>/recordings/<YYYY-MM-DD>/` directories according to `storage.retention_days`.
 
-> `recording` and `motion` are **two independent streams**: continuous recording rolls on its own cadence; motion detection slices on its own. They do not interact. `scene_query` etc. prefer recording segments for time-window playback (stable durations) and use motion clips for event-focused queries.
+> **Note:** `recording` and `motion` are **two independent streams**: continuous recording rolls on its own cadence; motion detection slices on its own. They do not interact. `scene_query`, etc., prefer recording segments for time-window playback (stable durations) and use motion clips for event-focused queries.
 
 ---
 
@@ -373,6 +384,7 @@ These illustrate the 4xx / 5xx responses a client should be prepared to handle. 
 **Missing required fields → `422 Unprocessable Entity` (semantic error, do not retry):**
 
 Request:
+
 ```json
 {
   "sourceId":  "cam_child",
@@ -386,7 +398,8 @@ Request:
 ```
 
 Response:
-```
+
+```text
 HTTP/1.1 422 Unprocessable Entity
 Content-Type: application/json
 
@@ -396,12 +409,14 @@ Content-Type: application/json
 **Unknown `type` → `422 Unprocessable Entity` (semantic error, do not retry):**
 
 Request:
+
 ```json
 { "sourceId": "cam_child", "type": "audio", "timestamp": "2026-06-25T14:30:45", "payload": {} }
 ```
 
 Response:
-```
+
+```text
 HTTP/1.1 422 Unprocessable Entity
 Content-Type: application/json
 
@@ -413,7 +428,8 @@ Content-Type: application/json
 Request body: `not even { json`
 
 Response:
-```
+
+```text
 HTTP/1.1 400 Bad Request
 Content-Type: application/json
 
@@ -423,12 +439,14 @@ Content-Type: application/json
 **Bad envelope shape → `400 Bad Request` (framing error, fix client):**
 
 Request:
+
 ```json
 { "sourceId": 12345, "type": "motion", "payload": {} }
 ```
 
 Response:
-```
+
+```text
 HTTP/1.1 400 Bad Request
 Content-Type: application/json
 
@@ -437,7 +455,7 @@ Content-Type: application/json
 
 **Body too large → `413 Payload Too Large`:**
 
-```
+```text
 HTTP/1.1 413 Payload Too Large
 Content-Type: application/json
 
@@ -446,7 +464,7 @@ Content-Type: application/json
 
 **Wrong Content-Type → `415 Unsupported Media Type`:**
 
-```
+```text
 HTTP/1.1 415 Unsupported Media Type
 Content-Type: application/json
 
@@ -455,7 +473,7 @@ Content-Type: application/json
 
 **DB write threw → `500 Internal Server Error` (retry after backoff):**
 
-```
+```text
 HTTP/1.1 500 Internal Server Error
 Content-Type: application/json
 
@@ -473,5 +491,3 @@ Content-Type: application/json
 | `motion` (prefilter `passed=0`)  | ✅ motion | ✅ `ignored` | — | ❌ |
 | `static`                         | ✅ static | — | — | ❌ |
 | `recording`                      | — | — | ✅ | ❌ |
-
----

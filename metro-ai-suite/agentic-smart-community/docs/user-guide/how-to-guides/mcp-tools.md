@@ -4,7 +4,7 @@ This document lists every tool exposed by the `smart-community` (`smartbuilding-
 server — its purpose, `action` enum, parameters, and return shape.
 
 Every tool id is prefixed `smartbuilding_`. Every tool is keyed on **`monitor_id`** (the camera
-id, e.g. `cam_child`); ids are per-monitor and are never assumed unique across use cases. Times
+id, e.g., `cam_child`); ids are per-monitor and are never assumed unique across use cases. Times
 are ISO-8601 internally — present `HH:MM` / `HH:MM:SS` to users.
 
 The tools fall into four groups:
@@ -65,7 +65,7 @@ One-shot VLM look at the live frame. Reads the monitor's `latest.jpg` and asks
 
 **Returns** `{ scene }` — the description with `<think>` tags stripped. Use it for any "what is
 happening right now?" question, or to ask targeted questions about the current frame via a
-custom `prompt` (e.g. "list every food item visible in the fridge"). Resized frames are archived
+custom `prompt` (e.g., "list every food item visible in the fridge"). Resized frames are archived
 under `segments/<monitor_id>/queries/<date>/`.
 
 ---
@@ -83,7 +83,7 @@ Data source / filter / default type are **derived from `config.yaml`**
 | `monitor_id` | string | ✅ | Monitor ID |
 | `type` | enum | — | `daily` \| `weekly` \| `monthly` \| `custom` (default: use-case config, else `daily`) |
 | `period_start` | string | — | Inclusive start `YYYY-MM-DD` or `YYYY-MM-DD HH:MM` (for `custom`) |
-| `period_end` | string | — | Inclusive end (for `custom`); supports half-day windows, e.g. `06:00`–`12:00` |
+| `period_end` | string | — | Inclusive end (for `custom`); supports half-day windows, e.g., `06:00`–`12:00` |
 | `data_source` | enum | — | `events` \| `alerts` \| `video_summary_tasks` (default: use-case config, else `alerts`) |
 | `filter` | object | — | Key-value filter on the data-source columns (incl. user extension columns) |
 
@@ -101,7 +101,7 @@ then decides whether and how to push it (rewrite in the user's voice, lead with 
 
 Low-level read-only SQL escape hatch against the SQLite DB. **`SELECT` only** — any
 `INSERT`/`UPDATE`/`DELETE` is rejected. Use it for anything the typed tools don't cover
-(e.g. reading `monitor_state`).
+(e.g., reading `monitor_state`).
 
 | Param | Type | Required | Description |
 |---|---|---|---|
@@ -217,7 +217,7 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   `config.yaml` (comment-preserving). As step 2 of the two-step flow, omit `prompt_text` — it is
   auto-read from the file `generate_task` wrote. If `evaluate_rules_path` is supplied it is staged
   to `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (auto-discovered when the file is already there,
-  e.g. staged by step 1), and that conventional absolute path is stored in `config.yaml` for
+  e.g., staged by step 1), and that conventional absolute path is stored in `config.yaml` for
   runtime rule execution.
 - `action: unregister` — `DELETE /v1/tasks/<name>` and remove from `use_case_dict`. The VLM
   delete is skipped when another use case shares the task. Every referencing monitor is detached
@@ -327,5 +327,5 @@ completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by de
 - **recordings** — `file_path`, `start_time`, `end_time`, `duration_seconds`, `file_size_bytes`.
 - **reports** — generated report rows (from `generate_report`).
 - **plans** — per-monitor JSON plans (`plan_ctl`).
-- **monitor_state** — per-monitor runtime state as JSON (e.g. `last_alert_at`, use-case keys such
+- **monitor_state** — per-monitor runtime state as JSON (e.g., `last_alert_at`, use-case keys such
   as `last_get_up_at`).
