@@ -1,5 +1,6 @@
 # Loitering Detection
 
+::::{container} component_header_row
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection">
@@ -14,9 +15,15 @@
 </div>
 hide_directive-->
 
-Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video
-feeds, identifying individuals lingering in designated areas. By proactively detecting
-suspicious behavior, this system helps to address potential security threats effectively.
+> Note!
+> This is a sample application **intended for evaluation and development purposes only**.
+  For more information, refer to
+  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
+::::
+
+Loitering Detection leverages advanced AI algorithms for monitoring and analyzing real-time
+video feeds to demonstrate the efficiency of Intel hardware in AI systems for detecting
+individuals lingering in specified areas and recognizing their activity.
 
 By utilizing cutting-edge technologies and pre-trained deep learning models, this application
 enables real-time processing and analysis of video streams, making it an ideal solution. Its
@@ -25,11 +32,12 @@ extend its functionalities to meet their specific needs.
 
 ## Key features
 
-The key features are as follows:
-
-- **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models. Customize parameters such as thresholds and object types without requiring additional coding.
-- **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling, real-time monitoring, and insightful data visualization.
-- **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and configuration files.
+- **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models.
+  Customize parameters such as thresholds and object types without requiring additional coding.
+- **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling,
+  real-time monitoring, and insightful data visualization.
+- **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and
+  configuration files.
 
 ## How it works
 

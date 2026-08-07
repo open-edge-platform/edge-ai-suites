@@ -1,5 +1,18 @@
 # Release Notes
 
+## Version 1.6.0
+
+**New**
+
+- Fixed coturn server configuration for webrtc relay.
+- Fixed Grafana MQTT datasource version to avoid errors with latest version.
+
+**Improved**
+
+- Improved the security context of Grafana and nodered containers.
+- Consumed latest DL Streamer version 2026.2.0.
+
+
 ## Version 1.5.0
 
 **New**

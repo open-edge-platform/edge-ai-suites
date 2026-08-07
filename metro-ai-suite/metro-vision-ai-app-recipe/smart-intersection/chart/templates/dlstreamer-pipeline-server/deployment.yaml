@@ -19,12 +19,21 @@ spec:
       {{- if .Values.trustedCompute.enabled }}
       annotations:
         io.katacontainers.config.hypervisor.default_memory: {{ .Values.trustedCompute.tcvm_default_memory | quote }}
-        {{- if .Values.trustedCompute.tc_gpu_enabled }}
+        {{- if or .Values.trustedCompute.tc_gpu_enabled .Values.trustedCompute.tc_npu_enabled }}
+        {{- if .Values.trustedCompute.tc_npu_enabled }}
+        io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_npu_pcie_root_port | quote }}
+        {{- else }}
         io.katacontainers.config.hypervisor.pcie_root_port: {{ .Values.trustedCompute.tcvm_pcie_root_port | quote }}
+        {{- end }}
         io.katacontainers.config.hypervisor.hot_plug_vfio: {{ .Values.trustedCompute.tcvm_hot_plug_vfio | quote }}
         cdi-devices.noderesource.dev/container.{{ .Release.Name }}-dlstreamer-pipeline-server: |
           {{- range .Values.trustedCompute.tc_gpu_cdiAnnotations }}
           - {{ . }}
+          {{- end }}
+          {{- if .Values.trustedCompute.tc_npu_enabled }}
+          {{- range .Values.trustedCompute.tc_npu_cdiAnnotations }}
+          - {{ . }}
+          {{- end }}
           {{- end }}
         {{- end }}
       {{- end }}
