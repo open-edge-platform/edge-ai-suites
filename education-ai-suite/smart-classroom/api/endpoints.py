@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.artifacts.path import get_session_dir, get_artifact_path
-from utils.artifacts import backup_status
+from utils import session_state, orchestrator
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
@@ -49,24 +49,70 @@ def health():
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
 
-@router.get("/session-status")
-def list_session_status(ready: bool = False):
-    sessions = backup_status.list_sessions(ready_only=ready)
+@router.get("/sessions")
+def list_sessions():
+    sessions = []
+    for state in session_state.SessionStateManager.list_all():
+        sessions.append(
+            {
+                "session_id": state.get("session_id"),
+                "state": state.get("state"),
+                "current_stage": state.get("current_stage"),
+                "stages": state.get("stages"),
+                "sources": state.get("sources"),
+                "started_at": state.get("started_at"),
+                "updated_at": state.get("updated_at"),
+            }
+        )
+    return JSONResponse(content={"total": len(sessions), "sessions": sessions}, status_code=200)
+
+
+@router.post("/sessions/process")
+def process_session(payload: dict):
+    stages = payload.get("stages") or []
+    if not stages:
+        raise HTTPException(status_code=400, detail="stages required")
+    _validate_stages(stages)
+    session_id = orchestrator.start_process(payload)
+    state = session_state.SessionStateManager.get(session_id)
     return JSONResponse(
         content={
-            "checked_at": backup_status.now_iso(),
-            "total": len(sessions),
-            "sessions": sessions,
+            "session_id": session_id,
+            "stages": state.get("stages") if state else stages,
+            "output_dir": os.path.abspath(get_session_dir(session_id)),
+            "started_at": state.get("started_at") if state else None,
         },
         status_code=200,
     )
 
 
-@router.get("/session-status/{session_id}")
-def get_session_status(session_id: str):
-    status = backup_status.evaluate_session(session_id)
-    status["checked_at"] = backup_status.now_iso()
-    return JSONResponse(content=status, status_code=200)
+@router.get("/sessions/{session_id}/status")
+def get_session_progress(session_id: str):
+    state = session_state.SessionStateManager.get(session_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    return JSONResponse(content=_status_response(state), status_code=200)
+
+
+def _validate_stages(stages: list) -> None:
+    from utils.session_state import _ALL_STAGES
+    for s in stages:
+        if s not in _ALL_STAGES:
+            raise HTTPException(status_code=400, detail=f"unknown stage: {s}")
+
+
+def _status_response(state: dict) -> dict:
+    return {
+        "session_id": state.get("session_id"),
+        "state": state.get("state"),
+        "current_stage": state.get("current_stage"),
+        "stages": state.get("stages"),
+        "sources": state.get("sources"),
+        "output_dir": os.path.abspath(get_session_dir(state.get("session_id"))),
+        "error": state.get("error"),
+        "started_at": state.get("started_at"),
+        "updated_at": state.get("updated_at"),
+    }
 
 
 @router.get("/features")
