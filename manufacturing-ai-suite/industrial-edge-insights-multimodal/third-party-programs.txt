@@ -18,13 +18,13 @@ Docker images pulled from docker hub:
 ====================================
 
 License-Identifier: MIT
-- telegraf:1.38.4
+- telegraf:1.39.2-alpine
 - influxdb:1.12.4
-- bluenviron/mediamtx:1.18.2
+- bluenviron/mediamtx:1.19.3
 ----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
-- grafana/grafana-oss:13.0.1-security-01-ubuntu
+- grafana/grafana-oss:13.0.2
 ----------------------------------------------------------------------
  
 License-Identifier: EPL-2.0/EPL-1.0
@@ -32,12 +32,12 @@ License-Identifier: EPL-2.0/EPL-1.0
 ----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
-- nginx:1.31.1-trixie-perl
+- nginx:1.31.3
 ----------------------------------------------------------------------
 
 License-Identifier: Apache 2.0
 - intel/dlstreamer-pipeline-server:2026.1.0-20260505-weekly-ubuntu24
-- chrislusf/seaweedfs:4.30
+- chrislusf/seaweedfs:4.40
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
