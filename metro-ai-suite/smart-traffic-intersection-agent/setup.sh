@@ -159,7 +159,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing images for Smart-Traffic-Intersection-Agent ... ${NC}"
-            docker rmi -f "${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-latest}" 2>/dev/null || true
+            docker rmi -f "${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-2026.2.0-rc1}" 2>/dev/null || true
         fi
         echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
         if [ -d "$RI_DIR" ]; then
@@ -193,7 +193,7 @@ check_and_setup_dependencies() {
         # Run git clone to fetch the dependencies (sparse, shallow)
         echo -e "${YELLOW}Dependencies not found. Cloning repository...${NC}"
         git clone --filter=blob:none --sparse --depth 1 \
-            --branch release-2026.0.0 \
+            --branch release-2026.2.0 \
             https://github.com/open-edge-platform/edge-ai-suites.git \
             "$CLONE_PATH"
         git -C "$CLONE_PATH" sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe
@@ -268,7 +268,7 @@ fi
 # ============================================================================
 
 # Export required environment variables (HOST_IP already set above)
-export TAG=${TAG:-latest}
+export TAG=${TAG:-2026.2.0-rc1}
 # Construct registry path properly to avoid double slashes
 if [[ -n "$REGISTRY" ]]; then
     export REGISTRY="${REGISTRY%/}/"
