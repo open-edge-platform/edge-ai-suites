@@ -1,0 +1,157 @@
+{
+  "uid": "uav-platform",
+  "title": "Platform Health",
+  "tags": ["uav-sdk"],
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+
+    {
+      "id": 1, "title": "CPU Utilization %", "type": "gauge",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"cpu\" and r._field == \"usage_idle\" and r[\"cpu\"] == \"cpu-total\")\n  |> map(fn: (r) => ({r with _value: 100.0 - r._value}))\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 70, "color": "yellow" }, { "value": 90, "color": "red" }] } } }
+    },
+
+    {
+      "id": 2, "title": "CPU Temp \u00b0C", "type": "gauge",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"temp\" and r._field == \"temp\")\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "celsius", "min": 0, "max": 110, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "yellow" }, { "value": 95, "color": "red" }] } } }
+    },
+
+    {
+      "id": 3, "title": "Memory Utilization %", "type": "gauge",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"mem\" and r._field == \"used_percent\")\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 70, "color": "yellow" }, { "value": 90, "color": "red" }] } } }
+    },
+
+    {
+      "id": 4, "title": "Package Power (W)", "type": "gauge",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"rapl_power\" and r._field == \"power_w\")\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "watt", "min": 0, "max": 65, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 40, "color": "yellow" }, { "value": 55, "color": "red" }] } } }
+    },
+
+    {
+      "id": 5, "title": "iGPU Render Busy %", "type": "gauge",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"gpu_engine_usage\" and r._field == \"usage\" and r[\"engine\"] == \"rcs\")\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 70, "color": "yellow" }, { "value": 90, "color": "red" }] } } }
+    },
+
+    {
+      "id": 6, "title": "NPU Utilization %", "type": "gauge",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 6 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"npu\" and r._field == \"utilization\")\n  |> last()" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 70, "color": "yellow" }, { "value": 90, "color": "red" }] } } }
+    },
+
+    {
+      "id": 7, "title": "CPU Utilization Over Time", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"cpu\" and r._field == \"usage_user\" and r[\"cpu\"] == \"cpu-total\")\n  |> set(key: \"_field\", value: \"user\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"cpu\" and r._field == \"usage_system\" and r[\"cpu\"] == \"cpu-total\")\n  |> set(key: \"_field\", value: \"system\")" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 } } }
+    },
+
+    {
+      "id": 8, "title": "Memory Over Time", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"mem\" and r._field == \"used_percent\")" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "fillOpacity": 20 } } }
+    },
+
+    {
+      "id": 9, "title": "Package Power & CPU Temp Over Time", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"rapl_power\" and r._field == \"power_w\")\n  |> set(key: \"_field\", value: \"power_w\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"temp\" and r._field == \"temp\")\n  |> set(key: \"_field\", value: \"temp_c\")" }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "power_w" }, "properties": [{ "id": "unit", "value": "watt" }, { "id": "custom.axisPlacement", "value": "left" }] },
+          { "matcher": { "id": "byName", "options": "temp_c" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "custom.axisPlacement", "value": "right" }] }
+        ]
+      }
+    },
+
+    {
+      "id": 10, "title": "CPU Frequency Over Time", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{ "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"cpu_frequency_avg\" and r._field == \"frequency\")\n  |> map(fn: (r) => ({r with _value: r._value / 1000000.0}))" }],
+      "fieldConfig": { "defaults": { "unit": "meghertz", "custom": { "fillOpacity": 10 } } }
+    },
+
+    {
+      "id": 11, "title": "GPU Engine Utilization Over Time", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gpu_engine_usage\" and r._field == \"usage\" and r[\"engine\"] == \"rcs\")\n  |> set(key: \"_field\", value: \"Render (rcs)\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gpu_engine_usage\" and r._field == \"usage\" and r[\"engine\"] == \"ccs\")\n  |> set(key: \"_field\", value: \"Compute (ccs)\")" },
+        { "refId": "C", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gpu_engine_usage\" and r._field == \"usage\" and r[\"engine\"] == \"vcs\")\n  |> set(key: \"_field\", value: \"Video (vcs)\")" },
+        { "refId": "D", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"gpu_engine_usage\" and r._field == \"usage\" and r[\"engine\"] == \"bcs\")\n  |> set(key: \"_field\", value: \"Blitter (bcs)\")" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+
+    {
+      "id": 12, "title": "NPU Over Time", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 22, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"npu\" and r._field == \"utilization\")\n  |> set(key: \"_field\", value: \"utilization_%\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"npu\" and r._field == \"power\")\n  |> set(key: \"_field\", value: \"power_w\")" },
+        { "refId": "C", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"npu\" and r._field == \"temperature\")\n  |> set(key: \"_field\", value: \"temp_c\")" }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "utilization_%" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "custom.axisPlacement", "value": "left" }] },
+          { "matcher": { "id": "byName", "options": "power_w" }, "properties": [{ "id": "unit", "value": "watt" }, { "id": "custom.axisPlacement", "value": "right" }] },
+          { "matcher": { "id": "byName", "options": "temp_c" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "custom.axisPlacement", "value": "right" }] }
+        ]
+      }
+    },
+
+    {
+      "id": 13, "title": "Disk I/O Rate (MB/s)", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 30, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"diskio\" and r._field == \"read_bytes\" and r[\"name\"] !~ /loop/)\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({r with _value: r._value / 1048576.0}))\n  |> set(key: \"_field\", value: \"read\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"diskio\" and r._field == \"write_bytes\" and r[\"name\"] !~ /loop/)\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({r with _value: r._value / 1048576.0}))\n  |> set(key: \"_field\", value: \"write\")" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "MBs", "custom": { "fillOpacity": 10 } } }
+    },
+
+    {
+      "id": 14, "title": "Network I/O Rate (MB/s)", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 30, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [
+        { "refId": "A", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"net\" and r._field == \"bytes_recv\")\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({r with _value: r._value / 1048576.0}))\n  |> set(key: \"_field\", value: \"recv\")" },
+        { "refId": "B", "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"net\" and r._field == \"bytes_sent\")\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({r with _value: r._value / 1048576.0}))\n  |> set(key: \"_field\", value: \"sent\")" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "MBs", "custom": { "fillOpacity": 10 } } }
+    }
+
+  ]
+}
