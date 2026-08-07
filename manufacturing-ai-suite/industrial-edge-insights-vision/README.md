@@ -62,7 +62,7 @@ The following directory structure, consisting of generic deployment code as well
     sample_start.sh
     sample_status.sh
     sample_stop.sh
-    benchmark_start.sh
+    calc_stream_density.sh
 
  - **apps**: containing application specific prerequisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for Docker based deployments.
 
