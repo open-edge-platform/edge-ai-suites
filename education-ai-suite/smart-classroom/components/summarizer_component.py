@@ -2,6 +2,7 @@ from components.base_component import PipelineComponent
 from components.board_ocr.board_ocr_service import read_board_ocr_with_status
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
+from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import StreamThinkFilter
 from model_manager import ModelManager
@@ -32,17 +33,11 @@ class SummarizerComponent(PipelineComponent):
 
     def _get_system_prompt(self, has_board=False):
         lang = config.app.language
-        prompts = vars(config.models.summarizer.system_prompt)[lang]
-
-        if self.mode == "teacher":
-            prompt = prompts.Teacher
-        elif self.mode == "hybrid":
-            prompt = prompts.Hybrid
-        else:
-            prompt = prompts.Dialog
+        mode_name = self.mode if self.mode in ("teacher", "hybrid") else "dialog"
+        prompt = load_prompt("summarizer", lang, mode_name)
 
         if has_board:
-            addendum = vars(config.models.summarizer.board_ocr_prompt)[lang]
+            addendum = load_prompt("summarizer", lang, "board_ocr_addendum")
             prompt = f"{prompt}\n\n{addendum}"
 
         return prompt

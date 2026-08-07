@@ -76,7 +76,8 @@ user-defined (the tool doesn't interpret it).
 - `action` (req): `list | status | start | stop | register_source | unregister`,
   `monitor_id` (req except `list`); for `register_source`: `source_url` (req),
   `use_case` (req, must be a `config.yaml` `use_case_dict` key), `name`,
-  `pipeline_config`, `webhook_url`, `persist`.
+  `pipeline_config`, `persist`. (The events `webhook_url` is derived from server config
+  and is **not** a caller parameter — never pass a URL/port for it.)
 - **Naming conventions for `register_source`** (keep new monitors consistent with the
   built-ins `cam_fridge` / `cam_child` / `cam_elder_bedroom`):
   - `monitor_id`: use `cam_<use_case>` (e.g. `cam_pet_safety`). Do NOT invent ad-hoc
