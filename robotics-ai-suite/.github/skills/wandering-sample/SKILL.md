@@ -15,7 +15,7 @@ SPDX-License-Identifier: Apache-2.0
 
 This skill defines the review-first workflow for the Wandering Sample.
 
-## Scope
+## When to Use
 
 Use this skill only for the Wandering Sample under `components/wandering` and its tutorial packages:
 
