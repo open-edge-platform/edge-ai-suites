@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+namespace: edge_ai_suites
+description: Intel Edge AI Suites — Pre-built manufacturing, metro, and retail AI applications
+version: "1.0"
+
+tools:
+  - id: deploy_app
+    description: >
+      Deploy a pre-built Edge AI application using Docker Compose.
+      Includes manufacturing vision, time-series, multimodal, and worker assistance apps.
+      Actions: info (show README), start, stop, logs.
+    parameters:
+      type: object
+      properties:
+        application:
+          type: string
+          enum:
+            - pcb-anomaly-detection
+            - pallet-defect-detection
+            - weld-porosity
+            - worker-safety-gear-detection
+            - wind-turbine-anomaly-detection
+            - weld-defect-detection
+            - multimodal-weld
+            - hmi-augmented-worker
+          description: Application to deploy
+        action:
+          type: string
+          enum: [info, start, stop, logs, status]
+          description: "Action to perform"
+      required: [application, action]
+    handler: deploy_app
+    timeout: 300
+
+  - id: list_apps
+    description: >
+      List all available Edge AI Suite applications with descriptions,
+      categories, and deployment status.
+    parameters:
+      type: object
+      properties:
+        suite:
+          type: string
+          enum: [manufacturing, metro, retail, all]
+          description: Filter by suite
+      required: []
+    handler: list_apps
+
+  - id: sdk_install
+    description: >
+      Install an Intel Edge AI SDK using the Metro SDK Manager scripts.
+      Available SDKs: OEP Vision AI, OEP Gen AI, Visual AI Demo Kit.
+    parameters:
+      type: object
+      properties:
+        sdk:
+          type: string
+          enum: [oep-vision-ai-sdk, oep-gen-ai-sdk, visual-ai-demo-kit]
+          description: SDK to install
+        skip_images:
+          type: boolean
+          description: Skip Docker image pull (faster, for dev)
+        skip_git_clone:
+          type: boolean
+          description: Skip git repository cloning
+      required: [sdk]
+    handler: sdk_install
+    timeout: 900
