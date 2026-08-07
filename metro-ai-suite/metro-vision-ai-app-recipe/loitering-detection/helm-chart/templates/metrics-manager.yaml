@@ -27,6 +27,19 @@ spec:
   selector:
     app: metrics-manager
 ---
+# The metrics-manager runs the qmmd/qmassa hardware-telemetry daemon, which
+# reads Intel GPU/NPU/CPU metrics directly from host sysfs. These accepted
+# risks cannot be removed without breaking the service's core function:
+#   * KSV-0017 / KSV-0118: privileged root access is required to read
+#     /sys/class/intel_pmt (Intel PMT / NPU telemetry).
+#   * KSV-0121: the /sys and /dev hostPath mounts are the metric data source.
+#   * KSV-0014: the image writes /app/custom-metrics and /app/qmassa.fifo at
+#     startup, so the root filesystem cannot be made read-only without
+#     overlaying (and hiding) the baked-in /app application directory.
+#trivy:ignore:AVD-KSV-0017
+#trivy:ignore:AVD-KSV-0118
+#trivy:ignore:AVD-KSV-0121
+#trivy:ignore:AVD-KSV-0014
 apiVersion: apps/v1
 kind: Deployment
 metadata:

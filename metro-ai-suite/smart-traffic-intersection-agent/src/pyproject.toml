@@ -14,6 +14,7 @@ dependencies = [
     "structlog~=23.2.0",
     "gradio~=6.13",
     "markdown~=3.4",
+    "starlette<1.4.0" # Ceiling on starlette version because of gradio's incompatibility with latest starlette
 ]
 
 [project.optional-dependencies]

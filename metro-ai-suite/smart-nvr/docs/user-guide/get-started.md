@@ -70,6 +70,11 @@ export VSS_PORT=<vss-port>                         # optional, default 12345
 source setup.sh start
 ```
 
+The batch settings control how the NVR Event Router groups videos detected by
+the continuous-ingestion watcher, and how often it polls Pipeline Manager for
+asynchronous embedding-job completion. They do not affect single event-rule
+clips or video summarization.
+
 This launches all required containers:
 
 ![Services overview](./_assets/containers.png "services overview")
