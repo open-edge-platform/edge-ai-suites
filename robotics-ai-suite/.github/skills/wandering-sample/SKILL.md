@@ -1,15 +1,8 @@
 ---
 name: wandering-sample
 description: "Review-first workflow for changes in components/wandering and tutorial packages. Use when editing Wandering launch files, docs, tests, Nav2 wiring, RTAB-Map, RealSense, or robot bring-up paths."
-argument-hint: "Describe the Wandering change you want and target mode: simulation, real robot, or both"
-user-invocable: true
+license: Apache-2.0
 ---
-
-<!--
-Copyright (C) 2025 Intel Corporation
-
-SPDX-License-Identifier: Apache-2.0
--->
 
 # Wandering Sample Agent Skill
 
