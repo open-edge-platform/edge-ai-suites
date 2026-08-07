@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# MAVLink PX4 Control Tools
+namespace: mavlink
+description: Control and monitor PX4 uav simulation via MAVLink bridge
+
+tools:
+  - id: get_telemetry
+    handler: get_telemetry
+    description: |
+      Get current uav telemetry including position, attitude, velocity, battery status, and flight mode.
+      Returns real-time data from the PX4 SITL simulation.
+    parameters:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [full, summary, minimal]
+          default: full
+          description: Level of detail in response (full=all fields, summary=key metrics, minimal=status only)
+      required: []
+
+  - id: get_status
+    handler: get_status
+    description: |
+      Get quick status summary of the uav.
+      Returns: armed state, flight mode, GPS fix, battery level, and connection status.
+    parameters:
+      type: object
+      properties: {}
+      required: []
+
+  - id: get_position
+    handler: get_position
+    description: |
+      Get current GPS position and altitude.
+      Returns latitude, longitude, altitude in meters.
+    parameters:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [decimal, dms]
+          default: decimal
+          description: Coordinate format (decimal degrees or degrees-minutes-seconds)
+      required: []
+
+  - id: get_battery
+    handler: get_battery
+    description: |
+      Get battery status including voltage, remaining percentage, and health estimate.
+    parameters:
+      type: object
+      properties: {}
+      required: []
+
+  - id: get_attitude
+    handler: get_attitude
+    description: |
+      Get uav orientation (roll, pitch, yaw) in radians.
+      Useful for checking stability and flight attitude.
+    parameters:
+      type: object
+      properties:
+        units:
+          type: string
+          enum: [radians, degrees]
+          default: degrees
+          description: Angle units for output
+      required: []
+
+  - id: get_velocity
+    handler: get_velocity
+    description: |
+      Get current velocity vector (vx, vy, vz) in m/s.
+      Also returns ground speed and vertical speed.
+    parameters:
+      type: object
+      properties: {}
+      required: []
+
+  - id: check_health
+    handler: check_health
+    description: |
+      Run health check on uav systems.
+      Checks: GPS fix, battery level, sensor status, connection quality.
+      Returns health score and any warnings.
+    parameters:
+      type: object
+      properties: {}
+      required: []
+
+  - id: monitor_flight
+    handler: monitor_flight
+    description: |
+      Start monitoring flight data for a specified duration.
+      Collects telemetry samples and returns summary statistics.
+    parameters:
+      type: object
+      properties:
+        duration_seconds:
+          type: integer
+          default: 10
+          description: How long to monitor (1-300 seconds)
+        sample_rate_hz:
+          type: integer
+          default: 1
+          description: Samples per second (1-10 Hz)
+      required: []
+
+  - id: collect_flight_data
+    handler: collect_flight_data
+    description: |
+      Collect flight telemetry data to a CSV file for analysis.
+      Useful for training AI models or performance analysis.
+    parameters:
+      type: object
+      properties:
+        output_file:
+          type: string
+          description: "Output CSV filename (default: flight_data_TIMESTAMP.csv)"
+        duration_seconds:
+          type: integer
+          default: 60
+          description: Collection duration in seconds
+        fields:
+          type: array
+          items:
+            type: string
+          description: "Specific fields to collect (default: all)"
+      required: []
+

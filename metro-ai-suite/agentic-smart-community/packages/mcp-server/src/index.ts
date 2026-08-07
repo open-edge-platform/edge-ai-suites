@@ -14,7 +14,7 @@ import { loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
 import { WorkerService } from "./video-worker/index.js";
 import { EventsEndpoint } from "./events-endpoint.js";
 import { logger } from "./logger.js";
-import { autoRegisterMonitors } from "./monitor-bootstrap.js";
+import { autoRegisterMonitors, reregisterUnknownMonitor } from "./monitor-bootstrap.js";
 import { startStorageCleaner } from "./storage-cleaner.js";
 import { startKeepaliveSender } from "./keepalive-sender.js";
 import { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
@@ -271,7 +271,11 @@ async function main() {
 
   // Keepalive heartbeat: POST /sources/{id}/keepalive for online monitors so the
   // videostream-analytics watchdog (armed at register_source) doesn't auto-pause them.
-  const stopKeepalive = startKeepaliveSender(config, db);
+  // A 404 means VSA lost its in-memory registry (container recreate) — re-register
+  // that monitor from monitors.yaml so it self-heals without manual intervention.
+  const stopKeepalive = startKeepaliveSender(config, db, (monitorId) => {
+    void reregisterUnknownMonitor(db, config, workerService, monitorId);
+  });
 
   let shuttingDown = false;
   const shutdown = async () => {

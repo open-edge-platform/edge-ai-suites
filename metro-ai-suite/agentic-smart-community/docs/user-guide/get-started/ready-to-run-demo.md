@@ -7,16 +7,16 @@ This optional guide configures reference video streams and monitors for the bund
 Before starting the demo, complete both of the following sections in [Get Started](../get-started.md):
 
 1. Complete all [Prerequisites](../get-started.md#prerequisites), including the required system software and command-line tools.
-2. Complete [Step 1 - Start dependent services](../get-started.md#step-1---start-dependent-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
+2. Complete [Step 1 - Start all services](../get-started.md#step-1---start-all-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
 
 The demo supports four independent video-analysis streams with bundled use cases.
 
-| Stream | Purpose |
-|---|---|
-| `cam_fridge` | Tracks fridge door activity and supports inventory-oriented daily reports. |
-| `cam_child` | Detects potentially dangerous child behavior for safety alerts and reports. |
-| `cam_elder_bedroom` | Tracks daily wakeup activity for the elder-wakeup workflow. |
-| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input. |
+| Stream                | Purpose                                                                     |
+| --------------------- | --------------------------------------------------------------------------- |
+| `cam_fridge`          | Tracks fridge door activity and supports inventory-oriented daily reports.  |
+| `cam_child`           | Detects potentially dangerous child behavior for safety alerts and reports. |
+| `cam_elder_bedroom`   | Tracks daily wakeup activity for the elder-wakeup workflow.                 |
+| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input.                       |
 
 Prepare any subset of compatible local MP4 files. The RTSP pusher copies the source stream, so each selected file must be playable by `ffmpeg` and compatible with your MediaMTX deployment.
 
@@ -65,7 +65,7 @@ Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`.
 
 Connect an MCP client as described in [Get Started - Step 3](../get-started.md#step-3---connect-an-agent-host). The demo supports reactive tool use immediately after the MCP server is registered.
 
-## Step 4 - *[Optional]* Enable proactive OpenClaw alerts
+## Step 4 - (Optional) Enable proactive OpenClaw alerts
 
 If you are connecting Smart Building to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
 
@@ -88,7 +88,7 @@ Open the Control UI at `http://localhost:18789` with `openclaw dashboard`. When 
 The following optional OpenClaw cron jobs provide scheduled reports and a safety fallback for the demo agents:
 
 | Cron job | Schedule | Agent | Session | Behavior |
-|---|---|---|---|---|
+| -------- | -------- | ----- | ------- | -------- |
 | Fridge daily report | Daily at 22:00 | `fridge-agent` | `daily_report` | Generates a daily fridge inventory and dietary report. |
 | Child-safety daily report | Daily at 22:30 | `child-safety-agent` | `daily_report` | Summarizes the day's child-safety alerts and notable events. |
 | Elder-wakeup weekly report | Sunday at 22:00 | `elder-wakeup-agent` | `weekly_report` | Summarizes the week's wakeup activity for `cam_elder_bedroom`. |

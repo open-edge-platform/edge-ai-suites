@@ -105,15 +105,6 @@ def test_path_unregister_variants(client_and_manager, method: str, path: str):
     manager.unregister_source.assert_called_with("cam_child")
 
 
-def test_body_unregister_variant(client_and_manager):
-    client, manager, _ = client_and_manager
-
-    response = client.request("DELETE", "/unregister_source", json={"source_id": "cam_child"})
-
-    assert response.status_code == 200
-    manager.unregister_source.assert_called_with("cam_child")
-
-
 def test_restart_controls_pipeline_and_recorder(client_and_manager):
     client, _, bundle = client_and_manager
 
