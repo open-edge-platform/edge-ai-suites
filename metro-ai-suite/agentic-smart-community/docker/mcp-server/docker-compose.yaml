@@ -30,12 +30,18 @@ services:
     environment:
       SMARTBUILDING_DATA_DIR: ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Timezone for the container
+      TZ: ${TZ:-Asia/Shanghai}
     volumes:
       # Identity bind mount (host X -> container X): the MCP server sees the data
       # root at the SAME absolute path as the host, so DB clip paths and the paths
       # VSA writes stay unchanged — and the clip paths it POSTs to multilevel need
       # no remapping (multilevel uses the same identity mount).
       - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      # Host timezone (read-only). Makes glibc localtime() — used by SQLite's
+      # 'localtime' modifier — and Node resolve to the host's zone. Only
+      # /etc/localtime is read for time conversion; matches videostream-analytics.
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3101/health"]

@@ -16,6 +16,9 @@ FROM node:22-bookworm
 #   jq              — bundled use-case registration in the entrypoint
 #   python3         — evaluate_rules.py use-case overrides
 #   ca-certificates — HTTPS requests made by the entrypoint
+#   tzdata          — zoneinfo DB so SQLite's datetime('now','localtime') and Node
+#                     resolve TZ correctly; without it a set TZ falls back to UTC,
+#                     writing event timestamps 8h off (see docker-compose.yaml TZ).
 # Build deps are removed after npm ci: make/g++ build better-sqlite3 and dpkg-dev
 # unpacks the corresponding FFmpeg and ca-certificates source packages for license
 # compliance.
@@ -29,9 +32,14 @@ RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.s
         jq \
         make \
         python3 \
+        tzdata \
     && mkdir -p /copyleft_sources/deb \
     && cd /copyleft_sources/deb \
     && apt-get source -q ca-certificates ffmpeg
+
+# Default timezone. compose overrides this with the host's TZ (see set_env.sh); this
+# ENV is the fallback when the image is run without one so timestamps are not UTC.
+ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
