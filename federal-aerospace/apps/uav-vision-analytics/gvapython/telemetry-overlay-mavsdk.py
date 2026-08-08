@@ -3,9 +3,9 @@ import json
 import paho.mqtt.client as mqtt
 from gstgva import VideoFrame
 
-MQTT_BROKER      = 'localhost'
-MQTT_PORT        = 1883
-MQTT_TOPIC_PREFIX = 'mavlink'
+MQTT_BROKER      = 'host.docker.internal'
+MQTT_PORT        = 1884
+MQTT_TOPIC_PREFIX = 'uav/uav-1/telemetry/#'
 
 lock = threading.Lock()
 
@@ -32,13 +32,12 @@ class MqttReceiver(threading.Thread):
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print("Connected to MQTT broker")
-            client.subscribe(f"{MQTT_TOPIC_PREFIX}/GLOBAL_POSITION_INT")
-            client.subscribe(f"{MQTT_TOPIC_PREFIX}/VFR_HUD")
-            client.subscribe(f"{MQTT_TOPIC_PREFIX}/GPS_RAW_INT")
+            client.subscribe(f"{MQTT_TOPIC_PREFIX}")
         else:
             print(f"Failed to connect to MQTT broker, return code {rc}")
 
     def _on_message(self, client, userdata, message):
+
         try:
             topic     = message.topic
             msg_type  = topic.split('/')[-1]
@@ -47,19 +46,24 @@ class MqttReceiver(threading.Thread):
             return
 
         with lock:
-            if msg_type == "GLOBAL_POSITION_INT":
-                latest_data["altitude"] = data.get("relative_alt", 0) / 1000.0
-                latest_data["heading"]  = data.get("hdg", 0) / 100.0
+            if msg_type == "position":
+                latest_data["altitude"] = data.get("relative_altitude_m", 0.0)
+                latest_data["latitude"] = data.get("latitude_deg", 0.0)
+                latest_data["longitude"] = data.get("longitude_deg", 0.0)
+                latest_data["gps_altitude"] = data.get("absolute_altitude_m", 0.0)
+            elif msg_type == "attitude":
+                latest_data["heading"] = data.get("yaw_deg", 0.0)
+            elif msg_type == "velocity":
+                north = data.get("north_m_s", 0.0)
+                east = data.get("east_m_s", 0.0)
+                down = data.get("down_m_s", 0.0)
 
-            elif msg_type == "VFR_HUD":
-                latest_data["speed"] = data.get("groundspeed", 0.0)
-
-            elif msg_type == "GPS_RAW_INT":
-                latest_data["latitude"]     = data.get("lat", 0) / 1e7
-                latest_data["longitude"]    = data.get("lon", 0) / 1e7
-                latest_data["gps_altitude"] = data.get("alt", 0) / 1000.0
-                latest_data["gps_fix"]      = data.get("fix_type", 0)
-                latest_data["satellites"]   = data.get("satellites_visible", 0)
+                latest_data["speed"] = (
+                    north ** 2 + east ** 2 + down ** 2
+                ) ** 0.5
+            elif msg_type == "gps":
+                latest_data["gps_fix"] = data.get("fix_type", "")
+                latest_data["satellites"] = data.get("num_satellites", 0)
 
     def run(self):
         print("Connecting to MQTT broker...")

@@ -10,7 +10,7 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
       - ENABLE_WEBRTC=true
       - ENABLE_RTSP=true
-      - RTSP_PORT=8554
+      - RTSP_PORT=8555
       - WEBRTC_SIGNALING_SERVER=http://${HOST_IP}:8889
       - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
       - RUN_MODE=EVA
@@ -47,13 +47,15 @@ services:
       - "/dev:/dev"
     ports:
       - '8081:8080'
-      - "8555:8554"
+      - "8555:8555"
     networks:
       - app_network
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   coturn:
     image: coturn/coturn:4.12.0
