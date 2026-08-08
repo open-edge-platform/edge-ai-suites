@@ -1,3 +1,4 @@
+import os
 import threading
 import json
 import paho.mqtt.client as mqtt
@@ -5,7 +6,8 @@ from gstgva import VideoFrame
 
 MQTT_BROKER      = 'host.docker.internal'
 MQTT_PORT        = 1884
-MQTT_TOPIC_PREFIX = 'uav/uav-1/telemetry/#'
+UAV_ID           = os.environ.get('UAV_ID', 'uav-1')
+MQTT_TOPIC_PREFIX = f'uav/{UAV_ID}/telemetry/#'
 
 lock = threading.Lock()
 
