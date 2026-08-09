@@ -111,25 +111,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  mediamtx:
-    image: bluenviron/mediamtx:1.11.3
-    container_name: mediamtx-server
-    environment:
-      - MTX_LOGLEVEL=debug
-      - MTX_RTSP=no
-      - MTX_RTMP=no
-      - MTX_HLS=no
-      - MTX_SRT=no
-      - MTX_WEBRTCICESERVERS2_0_URL=turn:$HOST_IP:3478
-      - MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}
-      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
-      - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
-      - MTX_WEBRTCLOCALTCPADDRESS=:8189
-    networks:
-      - app_network
-    ports:
-      - "8889:8889"
-
   metrics-manager:
     image: intel/metrics-manager:2026.1.0-20260508-weekly
     container_name: metrics-manager

@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 AI-powered drone object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
 
-This application processes video from a drone-mounted camera (or simulated RTSP feed), runs YOLOv8n-VisDrone inference to detect objects in eight classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP and WebRTC, making it consumable by QGroundControl (QGC) or any RTSP-capable client.
+This application processes video from a drone-mounted camera (or simulated RTSP feed), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by QGroundControl (QGC) or any RTSP-capable client.
 
 ---
 
@@ -44,12 +44,12 @@ See [export_model.md](export_model.md) for manual step-by-step instructions.
 make pymav-up
 ```
 
-### 3b. MAVSDK mode (depends on fedaero-drone-sdk-poc)
+### 3b. MAVSDK mode (depends on uav-mission-compute-sdk)
 
 Start the SDK project first, then start this application:
 
 ```bash
-# In fedaero-drone-sdk-poc directory
+# In uav-mission-compute-sdk directory
 make up
 
 # In this directory
@@ -93,13 +93,31 @@ The annotated RTSP stream is then available at:
 
 ## Pipelines
 
-Three pipelines are registered, all running YOLOv8n-VisDrone at 640×640 FP16:
+### pymavlink mode (`config-pymavlink.json`)
 
-| Pipeline | Inference device | REST path |
+| Pipeline | Device | Source |
 |---|---|---|
-| `drone_object_detection_cpu` | CPU | `/pipelines/drone_object_detection_cpu` |
-| `drone_object_detection_gpu` | GPU | `/pipelines/drone_object_detection_gpu` |
-| `drone_object_detection_npu` | NPU | `/pipelines/drone_object_detection_npu` |
+| `drone_object_detection_cpu` | CPU | Looped video file |
+| `drone_object_detection_gpu` | GPU | Looped video file |
+| `drone_object_detection_npu` | NPU | Looped video file |
+| `drone_realsense_cpu` | CPU | RealSense camera |
+| `drone_realsense_gpu` | GPU | RealSense camera |
+| `drone_realsense_npu` | NPU | RealSense camera |
+| `drone_udpsink_cpu` | CPU | Looped video → UDP sink |
+| `drone_udpsink_gpu` | GPU | Looped video → UDP sink |
+| `drone_udpsink_npu` | NPU | Looped video → UDP sink |
+
+### MAVSDK mode (`config-mavsdk.json`)
+
+| Pipeline | Device | Source RTSP |
+|---|---|---|
+| `nadir_camera_rtsp_cpu` | CPU | `rtsp://…:8554/uav-1/nadir` |
+| `forward_camera_rtsp_gpu` | GPU | `rtsp://…:8554/uav-1/forward` |
+| `rear_camera_rtsp_npu` | NPU | `rtsp://…:8554/uav-1/rear` |
+
+All pipelines are `auto_start: false` — started explicitly via the REST API or pipeline managers.
+
+REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`
 
 ---
 
@@ -127,7 +145,11 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [overview.md](overview.md) | Architecture overview and component block diagrams |
 | [user-guide.md](user-guide.md) | Full deployment, configuration, architecture, and design guide |
 | [export_model.md](export_model.md) | Model download and OpenVINO export instructions |
+| [mavsdk-guide.md](mavsdk-guide.md) | End-to-end MAVSDK mode walkthrough |
+| [realsense-guide.md](realsense-guide.md) | Intel RealSense camera setup and pipelines |
+| [benchmark.md](benchmark.md) | Performance benchmarking guide |
 | [makefile.md](makefile.md) | Makefile target reference |
+| [troubleshooting.md](troubleshooting.md) | Known issues and resolutions |
 
 ---
 

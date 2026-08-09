@@ -50,11 +50,10 @@ resources/
 
 Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), which includes:
 
-- `dlstreamer-pipeline-server` — AI inference, REST API, RTSP output
-- `broker` — Eclipse Mosquitto MQTT broker
+- `dlstreamer-pipeline-server` — AI inference, REST API (:8081), RTSP output (:8555)
+- `broker` — Eclipse Mosquitto MQTT broker (:1883)
 - `px4` — PX4 SITL flight controller simulator
-- `mediamtx` — WebRTC signalling server
-- `coturn` — TURN/STUN server for WebRTC ICE traversal
+- `mavlink-router` — MAVLink routing sidecar (receives on :14550, broadcasts to :14541)
 - `metrics-manager` — system metrics dashboard
 
 `down` passes `-v` to also remove named volumes (pipeline cache).

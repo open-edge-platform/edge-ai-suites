@@ -16,17 +16,15 @@ Follow the setup instructions in the [README](../../uav-mission-compute-sdk/READ
 
 ## 2. Start the pipeline manager
 
-From the `uav-vision-analytics` directory, bring up the supporting services and start the pipeline manager:
+From the `uav-vision-analytics` directory, bring up the DL Streamer container and start the pipeline manager:
 
 ```bash
 cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
-docker compose -f docker-compose-mavsdk.yml up -d
-python3 scripts/mqtt_pipeline_manager.py
+make mavsdk-up
+make start-rtsp
 ```
 
-The pipeline manager listens for MQTT events and automatically starts the inference pipeline when the drone is armed and stops it when it is disarmed.
-
-Configuration is read from `configs/config-mavsdk.json`, which defines three video streams — **nadir**, **forward**, and **rear** — each running an object detection pipeline with a telemetry overlay.
+The pipeline manager subscribes to `uav/{id}/telemetry/status` on the SDK's MQTT broker. It automatically starts the inference pipelines when the drone is armed and stops them when disarmed. It also probes each RTSP source with `ffprobe` before starting to confirm the stream is live.
 
 ---
 

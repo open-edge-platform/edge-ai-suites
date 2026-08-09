@@ -31,62 +31,56 @@ This guide covers deployment, configuration, architecture, and design of the UAV
 
 ```mermaid
 flowchart TB
-    subgraph Host["Host Machine (Panther Lake, Ubuntu 24)"]
+    subgraph PyMav["Standalone Stack (docker-compose-pymavlink.yml)"]
+        direction LR
+        PX4["PX4 SITL"]
+        ROUTER["mavlink-router\n:14550 → :14541"]
+        BROKER["Mosquitto\nMQTT :1883"]
+        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
+        MM["Metrics Manager"]
 
-        subgraph PyMav["Standalone Stack (docker-compose-pymavlink.yml)"]
-            direction LR
-            PX4["PX4 SITL"]
-            BROKER["Mosquitto\nMQTT :1883"]
-            DLSPS["DL Streamer\nPipeline Server"]
-            MTX["MediaMTX\nWebRTC :8889"]
-            TURN["coturn\n:3478"]
-            MM["Metrics\nManager"]
-
-            PX4 -->|"MAVLink UDP\n:14550"| DLSPS
-            DLSPS -->|"frames"| MTX
-            MTX -->|"ICE"| TURN
-            DLSPS -.->|"MQTT"| BROKER
-            MM -.->|"metrics"| BROKER
-        end
-
-        subgraph SDKStack["MAVSDK Stack (docker-compose-mavsdk.yml)"]
-            direction LR
-            DLSPS2["DL Streamer\nPipeline Server"]
-            TURN2["coturn\n:3478"]
-            DLSPS2 -.-> TURN2
-        end
+        PX4 -->|"MAVLink"| ROUTER
+        ROUTER -->|"UDP :14541"| DLSPS
+        DLSPS -.->|"metrics"| BROKER
+        MM -.->|"system metrics"| BROKER
     end
 
-    subgraph SDK["fedaero-drone-sdk-poc (separate project)"]
+    subgraph SDKStack["MAVSDK Stack (docker-compose-mavsdk.yml)"]
+        direction LR
+        DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
+    end
+
+    subgraph SDK["uav-mission-compute-sdk (separate project)"]
         PX4E["PX4 + Gazebo"]
-        BRIDK["companion-bridge"]
+        BRIDGE["companion-bridge"]
         MQTTE["MQTT Broker :1884"]
-        PX4E --> BRIDK --> MQTTE
+        MEDIAMTX["MediaMTX\nRTSP :8554"]
+        PX4E --> BRIDGE --> MQTTE
+        PX4E --> MEDIAMTX
     end
 
-    MQTTE -->|"mavlink/# MQTT"| DLSPS2
-    VIDEOSRC["Video Source\n(Camera / RTSP)"] --> DLSPS
-    VIDEOSRC --> DLSPS2
-    CLIENT["Client\n(QGC / Browser)"] -->|"RTSP :8554"| DLSPS
+    MQTTE -->|"uav/{id}/telemetry/status"| DLSPS2
+    MEDIAMTX -->|"RTSP nadir/forward/rear"| DLSPS2
+
+    VIDEO["Video Source\n(Camera / file)"] --> DLSPS
+    CLIENT["QGC / ffplay"] -->|"RTSP :8555"| DLSPS
     CLIENT -->|"RTSP :8555"| DLSPS2
-    CLIENT -->|"WebRTC :8889"| MTX
 ```
 
 ### GStreamer inference pipeline
 
 ```mermaid
 flowchart LR
-    SRC["{auto_source}"]
-    DEC["decodebin3\nH264 → raw"]
-    CONV["videoconvert\ncolour norm"]
-    DET["gvadetect\nOpenVINO\nYOLOv8n-VisDrone\n640×640 FP16"]
+    SRC["rtspsrc / multifilesrc"]
+    DEC["h264parse\ndecodebin3"]
+    CONV["videoconvert\nNV12 416×416"]
+    DET["gvadetect\nOpenVINO YOLOv8n-VisDrone\n640×640 FP16"]
     GVAP["gvapython\nDrawDynamicText\ntelemetry overlay"]
     METACONVERT["gvametaconvert\nadd-empty-results=true"]
-    METAPUBLISH["gvametapublish\n→ MQTT JSON"]
-    APPSINK["appsink"]
-    RTSPFACT["GStreamerRtspFactory\nvah264lpenc → H264\nrtph264pay"]
+    METAPUBLISH["gvametapublish → MQTT"]
+    APPSINK["appsink → RTSP :8555"]
 
-    SRC --> DEC --> CONV --> DET --> GVAP --> METACONVERT --> METAPUBLISH --> APPSINK --> RTSPFACT
+    SRC --> DEC --> CONV --> DET --> GVAP --> METACONVERT --> METAPUBLISH --> APPSINK
 ```
 
 ---
@@ -95,39 +89,34 @@ flowchart LR
 
 ### Telemetry integration
 
-The application supports two distinct telemetry integration strategies, selected at deploy time by choosing the appropriate compose file:
+The application supports two telemetry strategies, selected by the compose file used:
 
 **pymavlink (standalone)**
-- A background `MavlinkReceiver` thread connects to `udp:0.0.0.0:14550` and subscribes to MAVLink messages directly.
+- `mavlink-router` runs as a sidecar, receiving MAVLink from PX4 on UDP `:14550` and broadcasting it to `:14541`.
+- A background `MavlinkReceiver` thread inside the DL Streamer container connects to `udpin:0.0.0.0:14541` and reads `GLOBAL_POSITION_INT`, `VFR_HUD`, and `GPS_RAW_INT` messages.
 - Thread-safe access via a `threading.Lock` protecting the shared `latest_data` dict.
-- Runs entirely within the DL Streamer container; no external dependencies.
 
 **MAVSDK / MQTT**
-- A background `MqttReceiver` thread connects to the MQTT broker and subscribes to three topics: `mavlink/GLOBAL_POSITION_INT`, `mavlink/VFR_HUD`, `mavlink/GPS_RAW_INT`.
-- The broker and telemetry publisher are provided by the `fedaero-drone-sdk-poc` companion bridge.
-- Decoupled: the vision stack does not need a direct serial/UDP connection to the flight controller.
+- `mavsdk_pipeline_manager.py` subscribes to `uav/{id}/telemetry/status` on the SDK project's MQTT broker (`:1884`).
+- On ARMED: probes each RTSP source with `ffprobe`, then POSTs the three camera pipelines to the REST API.
+- On DISARMED: DELETEs all running pipeline instances.
+- The DL Streamer `gvapython` overlay (`telemetry-overlay-mavsdk.py`) also reads telemetry via MQTT.
 
 ### Overlay rendering
 
-`gvapython` invokes `DrawDynamicText.process_frame()` on each decoded frame. The method reads the latest telemetry snapshot and calls `frame.add_region()` for each text line, positioning them as 1×1 pixel ROIs with text labels in the upper-left corner. The DL Streamer `gvawatermark` element downstream (in the RTSP factory) renders these regions as visible text on the encoded stream.
+`gvapython` invokes `DrawDynamicText.process_frame()` on each decoded frame. The method reads the latest telemetry snapshot and calls `frame.add_region()` for each text line, positioning them as 1×1 pixel ROIs in the upper-left corner. The DL Streamer `gvawatermark` element renders these as visible text on the encoded RTSP stream.
 
 ### Hardware inference
 
-The `gvadetect` element delegates inference to OpenVINO. The `device=` flag in the pipeline JSON (`CPU`, `GPU`, or `NPU`) is the only change needed to switch hardware targets:
+| Device | `gvadetect` flag | Notes |
+|---|---|---|
+| CPU | `device=CPU` | Works on any x86 host |
+| Intel GPU | `device=GPU` | Requires i915 / render group access |
+| Intel NPU | `device=NPU` | Requires `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` |
 
-| Device | `gvadetect` flag | OpenVINO plugin | Notes |
-|---|---|---|---|
-| CPU | `device=CPU` | `CPU` | Works on any x86 host |
-| Intel GPU | `device=GPU` | `GPU` | Requires i915 driver group access |
-| Intel NPU | `device=NPU` | `NPU` | Requires `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` |
+### RTSP output
 
-The compose files set `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` in the DL Streamer environment to enable the NPU driver.
-
-### RTSP and WebRTC output
-
-The built-in `GStreamerRtspFactory` (from the DL Streamer base image) converts the raw frames from `appsink` back to H264 using `vah264lpenc` (VA-API hardware encoder) and packages them in `rtph264pay`. GPU VA-API buffers (`VAMemory`, `VASurface`, `DMABuf`) are handled transparently by inspecting the GStreamer caps string.
-
-WebRTC output is provided by MediaMTX (pymavlink mode) acting as a WebRTC signalling server. The DL Streamer container pushes the stream to MediaMTX via the `WEBRTC_SIGNALING_SERVER` environment variable, and the coturn TURN server handles ICE traversal.
+Both compose files expose RTSP on port `8555`. The DL Streamer built-in RTSP server encodes frames from `appsink` to H264 using `vah264lpenc` (VA-API hardware encoder). WebRTC is not used in the current deployment.
 
 ---
 
@@ -156,8 +145,6 @@ Edit `.env`:
 ```env
 HOST_IP=192.168.1.100              # your host IP
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-20260728-weekly-ubuntu24
-MTX_WEBRTCICESERVERS2_0_USERNAME=myusername
-MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
 ```
 
 ### Step 2: Prepare the model
@@ -180,42 +167,52 @@ Check that all containers are running:
 docker compose -f docker-compose-pymavlink.yml ps
 ```
 
-Expected services: `broker`, `px4`, `dlstreamer-pipeline-server`, `mediamtx-server`, `coturn`, `metrics-manager`.
+Expected services: `broker`, `mavlink-router`, `px4`, `dlstreamer-pipeline-server`, `metrics-manager`.
 
-### Step 4: Start a pipeline
+### Step 4: Start pipelines
+
+Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the container, which monitors the drone's armed state via MAVLink and starts/stops pipelines automatically:
 
 ```bash
-# CPU pipeline
-curl -X POST http://localhost:8080/pipelines/drone_object_detection_cpu \
+make start-rtsp
+```
+
+Or start a pipeline manually via the REST API:
+
+```bash
+curl -X POST http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
-    "source": {
-      "uri": "file:///home/pipeline-server/resources/videos/visdrone.avi",
-      "type": "uri"
-    },
     "destination": {
-      "type": "rtsp",
-      "path": "/drone-cpu"
+      "metadata": {
+        "type": "file",
+        "path": "/tmp/results.jsonl",
+        "format": "json-lines"
+      },
+      "frame": {
+        "type": "rtsp",
+        "path": "drone-cpu"
+      }
     },
     "parameters": {
       "detection-properties": {
         "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
-        "model-proc": ""
+        "device": "CPU"
       }
     }
   }'
 ```
 
-Replace `uri` with `rtsp://<camera-ip>:<port>/<path>` when using a live camera or RTSP source.
+The annotated RTSP stream is available at `rtsp://<host-ip>:8555/drone-cpu`.
 
 ---
 
 ## Deployment — MAVSDK mode
 
-### Step 1: Start fedaero-drone-sdk-poc
+### Step 1: Start uav-mission-compute-sdk
 
 ```bash
-cd fedaero-drone-sdk-poc
+cd uav-mission-compute-sdk
 make up
 # Wait ~60-90 s for PX4 SITL to become healthy
 docker compose ps px4
@@ -226,35 +223,26 @@ docker compose ps px4
 ```bash
 cd apps/uav-vision-analytics
 cp .env.example .env
-# Set HOST_IP
+# Set HOST_IP and UAV_ID (default: uav-1)
 nano .env
 
 make mavsdk-up
 ```
 
-### Step 3: Start a pipeline
+### Step 3: Start the pipeline manager
 
-MAVSDK mode uses port `8081` for the REST API:
+The `mavsdk_pipeline_manager.py` (mounted into the container as `pipeline_manager.py`) subscribes to MQTT armed state and automatically starts/stops the three camera pipelines:
 
 ```bash
-curl -X POST http://localhost:8081/pipelines/drone_object_detection_cpu \
-  -H "Content-Type: application/json" \
-  -d '{
-    "source": {
-      "uri": "rtsp://<host-ip>:8554/uav-1/nadir",
-      "type": "uri"
-    },
-    "destination": {
-      "type": "rtsp",
-      "path": "/drone-nadir-cpu"
-    },
-    "parameters": {
-      "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
-      }
-    }
-  }'
+make start-rtsp
 ```
+
+Pipelines started automatically on ARMED:
+- `nadir_camera_rtsp_cpu` — nadir camera, CPU
+- `forward_camera_rtsp_gpu` — forward camera, GPU
+- `rear_camera_rtsp_npu` — rear camera, NPU
+
+Annotated streams available at `rtsp://<host-ip>:8555/nadir`, `/forward`, `/rear`.
 
 ---
 
@@ -267,15 +255,13 @@ Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config
 | `name` | Pipeline identifier used in REST API paths |
 | `source` | Always `"gstreamer"` |
 | `queue_maxsize` | Internal frame queue depth (default 50) |
-| `pipeline` | GStreamer launch string with `{auto_source}` placeholder |
-| `parameters` | JSON Schema for runtime parameters passed to the REST API |
-| `auto_start` | `false` — all pipelines require explicit start via REST API |
-
-The `{auto_source}` placeholder is resolved by DL Streamer from the `source.uri` in the REST request.
+| `pipeline` | Full GStreamer launch string (hardcoded sources) |
+| `parameters` | JSON Schema for runtime overrides via REST API |
+| `auto_start` | `false` — all pipelines require explicit start |
 
 ### Switching inference device
 
-To change the inference device without modifying the config file, override `detection-properties.device` in the REST request body, or simply choose the appropriate pipeline name (`cpu` / `gpu` / `npu`).
+Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). Device is encoded in the pipeline name and GStreamer string.
 
 ---
 
@@ -283,10 +269,9 @@ To change the inference device without modifying the config file, override `dete
 
 | Variable | Default | Description |
 |---|---|---|
-| `HOST_IP` | *(required)* | Host machine IP address, used by WebRTC ICE and mediamtx |
+| `HOST_IP` | *(required)* | Host machine IP address |
 | `DLSTREAMER_PIPELINE_SERVER_IMAGE` | `intel/dlstreamer-pipeline-server:2026.2.0-...` | Docker image for DL Streamer |
-| `MTX_WEBRTCICESERVERS2_0_USERNAME` | `myusername` | coturn / TURN server username |
-| `MTX_WEBRTCICESERVERS2_0_PASSWORD` | `mypassword` | coturn / TURN server password |
+| `UAV_ID` | `uav-1` | UAV identifier for MQTT topic subscription (MAVSDK mode) |
 | `http_proxy` / `https_proxy` / `no_proxy` | *(optional)* | Proxy settings forwarded into containers |
 | `ZE_ENABLE_ALT_DRIVERS` | `libze_intel_npu.so` | Enables Intel NPU plugin in OpenVINO (set inside compose) |
 
@@ -294,26 +279,26 @@ To change the inference device without modifying the config file, override `dete
 
 ## REST API Reference
 
-The DL Streamer REST API is available at `http://localhost:8080` (pymavlink) or `http://localhost:8081` (mavsdk).
+The DL Streamer REST API is available at `http://localhost:8081` (both modes).
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/pipelines` | List all registered pipelines |
-| `POST` | `/pipelines/{name}` | Start a pipeline instance |
-| `GET` | `/pipelines/{name}/{instance_id}` | Get status of a running instance |
-| `DELETE` | `/pipelines/{name}/{instance_id}` | Stop a running instance |
+| `POST` | `/pipelines/user_defined_pipelines/{name}` | Start a pipeline instance |
+| `GET` | `/pipelines/{instance_id}/status` | Get status of a running instance |
+| `DELETE` | `/pipelines/{instance_id}` | Stop a running instance |
 | `GET` | `/models` | List loaded models |
 
 **Example — list pipelines:**
 
 ```bash
-curl http://localhost:8080/pipelines
+curl http://localhost:8081/pipelines
 ```
 
 **Example — stop an instance:**
 
 ```bash
-curl -X DELETE http://localhost:8080/pipelines/drone_object_detection_cpu/1
+curl -X DELETE http://localhost:8081/pipelines/drone_object_detection_cpu/1
 ```
 
 ---
@@ -324,7 +309,7 @@ curl -X DELETE http://localhost:8080/pipelines/drone_object_detection_cpu/1
 
 ```bash
 # Install ffplay if needed: sudo apt install ffmpeg
-ffplay rtsp://localhost:8554/drone-cpu
+ffplay rtsp://localhost:8555/drone-cpu
 ```
 
 Or in QGroundControl: **Application Settings → Video** → set the RTSP URL.
@@ -332,7 +317,7 @@ Or in QGroundControl: **Application Settings → Video** → set the RTSP URL.
 ### Record a clip
 
 ```bash
-ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8554/drone-cpu" \
+ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8555/drone-cpu" \
   -c copy -map 0 output.mkv
 ```
 
@@ -354,37 +339,12 @@ Both targets pass `-v` to also remove named Docker volumes (pipeline cache).
 
 ## Troubleshooting
 
-### DL Streamer container keeps restarting
+See [troubleshooting.md](troubleshooting.md) for a complete list of known issues and resolutions, including:
 
-- Check logs: `docker logs dlstreamer-pipeline-server`
-- Verify the model files exist at `resources/models/yolov8n-visdrone/best_openvino_model/best.xml`
-- Confirm `HOST_IP` is set correctly in `.env`
-
-### No telemetry overlay on stream (all zeros)
-
-**pymavlink mode:** Confirm PX4 SITL is running and sending MAVLink on UDP port `14550`:
-```bash
-docker logs px4 | grep MAVLink
-```
-
-**MAVSDK mode:** Confirm the MQTT broker is reachable and publishing telemetry topics:
-```bash
-mosquitto_sub -h localhost -p 1884 -t "mavlink/#" -v
-```
-
-### WebRTC stream not loading in browser
-
-- Verify `HOST_IP` matches the host's reachable IP (not `127.0.0.1`)
-- Confirm coturn is running: `docker logs coturn`
-- Check that UDP port `3478` is open in the host firewall
-
-### NPU inference fails
-
-- Confirm `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` is set (it is by default in the compose files)
-- Check that the NPU device node is available: `ls /dev/accel*`
-- Verify driver version: `dmesg | grep -i npu`
-
-### GPU pipeline falls back to CPU
-
-- Confirm device group IDs are present: `getent group | grep -E '^(video|render)'`
-- The compose files add groups `44`, `109`, `110` for video/render access
+- DL Streamer container keeps restarting
+- No telemetry overlay on stream (all zeros)
+- Pipelines not starting in MAVSDK mode
+- NPU inference fails / GPU pipeline falls back to CPU
+- QGroundControl network warnings
+- PX4 SITL image issues
+- UDP sink pipeline not working
