@@ -177,10 +177,12 @@ Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the con
 make start-rtsp
 ```
 
-Or start a pipeline manually via the REST API:
+Or start a pipeline manually via the REST API. The response body is the `instance_id`
+(an integer) needed for status checks and deletion:
 
 ```bash
-curl -X POST http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
+INSTANCE_ID=$(curl -s -X POST \
+  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -200,10 +202,17 @@ curl -X POST http://localhost:8081/pipelines/user_defined_pipelines/drone_object
         "device": "CPU"
       }
     }
-  }'
+  }' | tr -d '"')
+echo "Started instance: $INSTANCE_ID"
 ```
 
 The annotated RTSP stream is available at `rtsp://<host-ip>:8555/drone-cpu`.
+
+To stop it later:
+
+```bash
+curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+```
 
 ---
 
@@ -279,27 +288,61 @@ Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). De
 
 ## REST API Reference
 
-The DL Streamer REST API is available at `http://localhost:8081` (both modes).
+The DL Streamer Pipeline Server REST API is available at `http://localhost:8081` (both modes).
+
+Pipelines defined with `"source": "gstreamer"` in `config.json` are registered under the
+`/pipelines/user_defined_pipelines/` namespace. A POST returns the integer `instance_id`
+for the running instance; use that ID for status queries and deletion.
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/pipelines` | List all registered pipelines |
-| `POST` | `/pipelines/user_defined_pipelines/{name}` | Start a pipeline instance |
-| `GET` | `/pipelines/{instance_id}/status` | Get status of a running instance |
-| `DELETE` | `/pipelines/{instance_id}` | Stop a running instance |
+| `GET` | `/pipelines` | List all registered pipeline definitions |
+| `POST` | `/pipelines/user_defined_pipelines/{name}` | Start a pipeline instance; returns `instance_id` |
+| `GET` | `/pipelines/{instance_id}/status` | Get FPS, state, and elapsed time for a running instance |
+| `DELETE` | `/pipelines/{instance_id}` | Stop and remove a running instance |
 | `GET` | `/models` | List loaded models |
 
-**Example — list pipelines:**
+**Example — list registered pipelines:**
 
 ```bash
 curl http://localhost:8081/pipelines
 ```
 
-**Example — stop an instance:**
+**Example — start a pipeline and capture its instance ID:**
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/drone_object_detection_cpu/1
+INSTANCE_ID=$(curl -s -X POST \
+  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination": {
+      "metadata": {"type": "file", "path": "/tmp/results.jsonl", "format": "json-lines"},
+      "frame": {"type": "rtsp", "path": "drone-cpu"}
+    },
+    "parameters": {
+      "detection-properties": {
+        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "device": "CPU"
+      }
+    }
+  }' | tr -d '"')
+echo "Instance ID: $INSTANCE_ID"
 ```
+
+**Example — check pipeline status:**
+
+```bash
+curl http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+```
+
+**Example — stop a running instance:**
+
+```bash
+curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+```
+
+> **Note:** The `instance_id` is the integer returned by the POST response body (e.g. `1`).
+> The pipeline name is not part of the DELETE or status URL.
 
 ---
 

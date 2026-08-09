@@ -58,11 +58,13 @@ make mavsdk-up
 
 ### 4. Start an inference pipeline
 
-Use the REST API to start the desired pipeline (CPU / GPU / NPU):
+Use the REST API to start the desired pipeline (CPU / GPU / NPU). The response body is the
+integer `instance_id` — save it to stop the pipeline later:
 
 ```bash
 # CPU pipeline — pymavlink mode
-curl -X POST http://localhost:8081/pipelines/drone_object_detection_cpu \
+INSTANCE_ID=$(curl -s -X POST \
+  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -73,7 +75,7 @@ curl -X POST http://localhost:8081/pipelines/drone_object_detection_cpu \
         },
         "frame": {
             "type": "rtsp",
-            "path": "drone-mavlink-cpu"
+            "path": "drone-cpu"
         }
     },
     "parameters": {
@@ -82,11 +84,18 @@ curl -X POST http://localhost:8081/pipelines/drone_object_detection_cpu \
             "device": "CPU"
         }
     }
-}'
+}' | tr -d '"')
+echo "Instance ID: $INSTANCE_ID"
+```
+
+To stop the pipeline:
+
+```bash
+curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```
 
 The annotated RTSP stream is then available at:
-- `rtsp://<host-ip>:8555/drone-detect-cpu`
+- `rtsp://<host-ip>:8555/drone-cpu`
 
 ---
 

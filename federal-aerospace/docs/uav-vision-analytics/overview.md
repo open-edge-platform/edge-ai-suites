@@ -140,9 +140,9 @@ sequenceDiagram
     SDK->>BROKER: uav/uav-1/telemetry/status {armed: true}
     BROKER->>PM: on_message callback
     PM->>PM: wait_for_rtsp_stream() probe nadir/forward/rear
-    PM->>DLSPS: POST /pipelines/nadir_camera_rtsp_cpu
-    PM->>DLSPS: POST /pipelines/forward_camera_rtsp_gpu
-    PM->>DLSPS: POST /pipelines/rear_camera_rtsp_npu
+    PM->>DLSPS: POST /pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu
+    PM->>DLSPS: POST /pipelines/user_defined_pipelines/forward_camera_rtsp_gpu
+    PM->>DLSPS: POST /pipelines/user_defined_pipelines/rear_camera_rtsp_npu
     Note over DLSPS: Inference running,<br/>annotated RTSP at :8555
     SDK->>BROKER: uav/uav-1/telemetry/status {armed: false}
     BROKER->>PM: on_message callback
