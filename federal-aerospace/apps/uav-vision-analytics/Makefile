@@ -1,6 +1,11 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+ifneq (,$(wildcard .env))
+  include .env
+  export
+endif
+
 COMPOSE_PYMAV  := docker-compose-pymavlink.yml
 COMPOSE_MAVSDK := docker-compose-mavsdk.yml
 DLSPS          := dlstreamer-pipeline-server
@@ -13,8 +18,8 @@ VENV           := resources/venv
         start-rtsp start-udpsink
 
 help: ## Show available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-	  | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / \
+	  {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # ── Model ────────────────────────────────────────────────────────────────────
 
@@ -55,12 +60,12 @@ mavsdk-down: ## Stop and remove MAVSDK stack (includes volumes)
 # ── Pipeline management ───────────────────────────────────────────────────────
 
 start-rtsp: ## Start pipelines with RTSP output (exec into running DLSPS container)
-	docker exec -it $(DLSPS) bash -c \
-	  "python3 /home/pipeline-server/scripts/mavlink_pipeline_manager.py"
+	docker exec -it -e HOST_IP=$(HOST_IP) $(DLSPS) bash -c \
+	  "python3 /home/pipeline-server/scripts/pipeline_manager.py --sink rtsp"
 
 start-udpsink: ## Start pipelines with UDP sink output (exec into running DLSPS container)
-	docker exec -it $(DLSPS) bash -c \
-	  "python3 /home/pipeline-server/scripts/mavlink_pipeline_manager_udpsink.py"
+	docker exec -it -e HOST_IP=$(HOST_IP) $(DLSPS) bash -c \
+	  "python3 /home/pipeline-server/scripts/pipeline_manager.py --sink udp"
 
 # ── Convenience alias ─────────────────────────────────────────────────────────
 

@@ -6,9 +6,11 @@ the three DL Streamer pipelines defined in start_pipelines.sh accordingly:
   - armed == false -> DELETE all pipelines using the stored instance_ids
 """
 
+import argparse
 import json
 import subprocess
 import time
+import os
 
 import paho.mqtt.client as mqtt
 import requests
@@ -150,6 +152,13 @@ def start_pipelines():
         except requests.RequestException as exc:
             print(f"[pipeline] Failed to start '{pipeline['name']}': {exc}")
 
+    stream_urls = "\n".join(f"{p['device']}: {p['rtsp_url']}" for p in PIPELINES)
+    print(f"RTSP streams available at:\n{stream_urls}")
+
+    inputs = " \\\n".join(f"  -rtsp_transport tcp -i {p['rtsp_url']}" for p in PIPELINES)
+    outputs = " \\\n".join(f"  -map {i}:v -c:v copy {p['frame_path']}.mkv" for i, p in enumerate(PIPELINES))
+    print(f"\nTo save all streams to disk, run:\nffmpeg \\\n{inputs} \\\n{outputs}")
+
 
 def stop_pipelines():
     """DELETE all currently tracked pipeline instances."""
@@ -204,6 +213,21 @@ def on_message(client, userdata, msg):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="MQTT-triggered DL Streamer pipeline manager"
+    )
+    parser.add_argument(
+        "--sink",
+        choices=["rtsp", "udp"],
+        default="rtsp",
+        help="Output sink type (default: rtsp). Note: only 'rtsp' is supported by this manager.",
+    )
+    args = parser.parse_args()
+
+    if args.sink == "udp":
+        print("Note: mqtt_pipeline_manager only supports RTSP sink. UDP sink is not supported. "
+              "Continuing with RTSP.")
+
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
