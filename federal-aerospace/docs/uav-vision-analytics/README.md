@@ -33,19 +33,15 @@ nano .env
 Download and export the YOLOv8n-VisDrone model to `resources/models/yolov8n-visdrone/best_openvino_model/`:
 
 ```bash
-# Full instructions in export_model.md
-cd resources
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-hf download mshamrai/yolov8n-visdrone best.pt --local-dir ./yolov8n-visdrone
-yolo export model=./models/yolov8n-visdrone/best.pt format=openvino dynamic=True imgsz=640 quantize=16
+make model
 ```
+
+See [export_model.md](export_model.md) for manual step-by-step instructions.
 
 ### 3a. Standalone mode (pymavlink)
 
-
 ```bash
-docker compose -f docker-compose-pymavlink.yml up -d
+make pymav-up
 ```
 
 ### 3b. MAVSDK mode (depends on fedaero-drone-sdk-poc)
@@ -57,7 +53,7 @@ Start the SDK project first, then start this application:
 make up
 
 # In this directory
-docker compose -f docker-compose-mavsdk.yml up -d
+make mavsdk-up
 ```
 
 ### 4. Start an inference pipeline
@@ -131,6 +127,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [overview.md](overview.md) | Architecture overview and component block diagrams |
 | [user-guide.md](user-guide.md) | Full deployment, configuration, architecture, and design guide |
 | [export_model.md](export_model.md) | Model download and OpenVINO export instructions |
+| [makefile.md](makefile.md) | Makefile target reference |
 
 ---
 

@@ -78,6 +78,7 @@ services:
       - "./configs/config-pymavlink.json:/home/pipeline-server/config.json"
       - "./gvapython/telemetry-overlay-pymavlink.py:/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py"
       - "./scripts/mavlink_pipeline_manager.py:/home/pipeline-server/pipeline_manager.py"
+      - "./scripts/mavlink_pipeline_manager_udpsink.py:/home/pipeline-server/pipeline_manager_udpsink.py"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
       - "/tmp:/tmp"

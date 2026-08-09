@@ -12,7 +12,7 @@ import time
 import requests
 from pymavlink import mavutil
 
-CONNECTION_STRING = 'udpin:0.0.0.0:14540'
+CONNECTION_STRING = 'udpin:0.0.0.0:14541'
 
 PIPELINE_BASE_URL = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"

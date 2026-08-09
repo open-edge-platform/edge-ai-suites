@@ -163,19 +163,15 @@ MTX_WEBRTCICESERVERS2_0_PASSWORD=mypassword
 ### Step 2: Prepare the model
 
 ```bash
-cd resources/models
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-hf download mshamrai/yolov8n-visdrone best.pt --local-dir ./yolov8n-visdrone
-yolo export model=./yolov8n-visdrone/best.pt format=openvino dynamic=True imgsz=640 quantize=16
-# Output: resources/models/yolov8n-visdrone/best_openvino_model/best.xml + best.bin
-cd ../../
+make model
 ```
+
+This creates a virtualenv, installs dependencies, downloads the checkpoint, and exports to OpenVINO FP16. See [export_model.md](export_model.md) for manual steps.
 
 ### Step 3: Start the stack
 
 ```bash
-docker compose -f docker-compose-pymavlink.yml up -d
+make pymav-up
 ```
 
 Check that all containers are running:
@@ -233,7 +229,7 @@ cp .env.example .env
 # Set HOST_IP
 nano .env
 
-docker compose -f docker-compose-mavsdk.yml up -d
+make mavsdk-up
 ```
 
 ### Step 3: Start a pipeline
@@ -346,17 +342,13 @@ ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8554/drone-cpu" \
 
 ```bash
 # Standalone mode
-docker compose -f docker-compose-pymavlink.yml down
+make pymav-down
 
 # MAVSDK mode
-docker compose -f docker-compose-mavsdk.yml down
+make mavsdk-down
 ```
 
-To remove the cached pipeline volume:
-
-```bash
-docker volume rm uav-vision-analytics_dlstreamer-pipeline-server-pipeline-root
-```
+Both targets pass `-v` to also remove named Docker volumes (pipeline cache).
 
 ---
 
