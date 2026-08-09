@@ -62,7 +62,7 @@ Run the full agentic stack (downloads the LLM model first, then starts all conta
 > **Note:** 
 > - Model download time varies depending on network speed and hardware.
 > - The service is polled every 5 seconds for up to 50 minutes. 
-> - Supported devices: `CPU`, `GPU`
+> - Supported devices for Agentic Workflow are : `CPU`, `GPU`
 
 
 ```bash
