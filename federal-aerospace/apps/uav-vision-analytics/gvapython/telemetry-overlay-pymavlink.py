@@ -75,12 +75,11 @@ class MavlinkReceiver(threading.Thread):
 
 class DrawDynamicText:
 
-    def __init__(self):
-
+    def __init__(self,  name="PyMAVLink Telemetry Overlay"):
         self.frame_number = 0
-
         self.receiver = MavlinkReceiver()
         self.receiver.start()
+        self.name = name
 
     def process_frame(self, frame: VideoFrame):
 
@@ -99,7 +98,7 @@ class DrawDynamicText:
             satellites = latest_data["satellites"]
 
             lines = [
-                f"Protocol : pymavlink",
+                f"Name  : {self.name}",
                 f"Frame : {self.frame_number}",
                 f"ALT   : {altitude:.1f} m",
                 f"SPD   : {speed:.1f} m/s",
