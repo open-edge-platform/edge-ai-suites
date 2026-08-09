@@ -4,15 +4,25 @@ DL Streamer pipelines (server) accordingly:
   - ARMED    -> POST to start each pipeline (like pipe.py), keeping track
                 of their instance_ids
   - DISARMED -> DELETE each pipeline using its stored instance_id
+
+Additionally, mirrors /tmp/server.py's behavior: every MAVLink message
+received is re-broadcast as a raw UDP packet on BROADCAST_OUTPUT_PORT so
+other listeners (e.g. QGroundControl, other pipelines) can consume the
+same telemetry stream.
 """
 
 import json
+import socket
 import time
 
 import requests
 from pymavlink import mavutil
 
-CONNECTION_STRING = 'udpin:0.0.0.0:14540'
+CONNECTION_STRING = 'udpin:0.0.0.0:14550'
+
+# UDP broadcast settings (mirrors /tmp/server.py)
+BROADCAST_IP = "255.255.255.255"
+BROADCAST_OUTPUT_PORT = 14541
 
 PIPELINE_BASE_URL = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"
@@ -112,15 +122,33 @@ def monitor_and_control():
     master.wait_heartbeat()
     print(f"Heartbeat received from System {master.target_system} Component {master.target_component}")
 
+    # UDP broadcaster (mirrors /tmp/server.py)
+    broadcast_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    broadcast_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    print(f"Broadcasting MAVLink on {BROADCAST_IP}:{BROADCAST_OUTPUT_PORT}")
+
     current_instance_id = None
     last_armed_state = None  # None = unknown, True/False = last known state
 
     print("Monitoring ARMED/DISARMED status. Press Ctrl+C to stop.\n")
     try:
         while True:
-            msg = master.recv_match(type='HEARTBEAT', blocking=True)
+            # No type filter so every message can be re-broadcast, not
+            # just HEARTBEAT.
+            msg = master.recv_match(blocking=True)
             if not msg:
                 time.sleep(0.01)
+                continue
+
+            # Re-broadcast the raw MAVLink packet to other listeners.
+            packet = msg.get_msgbuf()
+            if packet:
+                try:
+                    broadcast_sock.sendto(packet, (BROADCAST_IP, BROADCAST_OUTPUT_PORT))
+                except OSError as exc:
+                    print(f"[broadcast] Failed to send packet: {exc}")
+
+            if msg.get_type() != 'HEARTBEAT':
                 continue
 
             base_mode = msg.base_mode
@@ -145,6 +173,8 @@ def monitor_and_control():
         if running_instance_ids:
             print("Cleaning up: stopping active pipelines before exit.")
             stop_pipelines()
+    finally:
+        broadcast_sock.close()
 
 
 if __name__ == '__main__':

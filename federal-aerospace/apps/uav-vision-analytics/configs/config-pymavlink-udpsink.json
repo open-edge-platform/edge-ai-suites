@@ -1,0 +1,60 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "drone_object_detection_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/visdrone.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5600",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "drone_object_detection_gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/visdrone.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5601",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "drone_object_detection_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/visdrone.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5602",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

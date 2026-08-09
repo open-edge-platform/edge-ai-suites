@@ -25,7 +25,7 @@ class MavlinkReceiver(threading.Thread):
     def run(self):
 
         master = mavutil.mavlink_connection(
-            "udp:0.0.0.0:14550"
+            "udp:0.0.0.0:14541"
         )
 
         print("Waiting for heartbeat...")
