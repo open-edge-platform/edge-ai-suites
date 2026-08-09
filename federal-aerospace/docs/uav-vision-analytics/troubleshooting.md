@@ -54,3 +54,17 @@
 
 If QGroundControl itself behaves unexpectedly, ensure you are running the latest stable release.
 Installation instructions for Ubuntu: <https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu>
+
+
+---
+
+## UDP sink pipeline not working
+
+**Symptom:** The UDP sink pipeline fails to send or receive data.
+
+**Resolution:** Replace `127.0.0.1` with `0.0.0.0` in the sink address so it binds to all interfaces:
+
+```diff
+-udpsink host=127.0.0.1 port=5600
++udpsink host=0.0.0.0 port=5600
+```

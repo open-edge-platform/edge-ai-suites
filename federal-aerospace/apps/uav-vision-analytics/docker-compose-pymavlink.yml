@@ -25,9 +25,25 @@ services:
     networks:
       - app_network
     depends_on:
-       - dlstreamer-pipeline-server
+       - mavlink-router
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  mavlink-router:
+    build:
+      context: ../../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
+      dockerfile: Dockerfile
+      args:
+        http_proxy:  ${http_proxy:-}
+        https_proxy: ${https_proxy:-}
+        no_proxy:    ${no_proxy:-localhost,127.0.0.0/8}
+        NO_PROXY:    ${NO_PROXY:-localhost,127.0.0.0/8}
+    container_name: mavlink-router
+    restart: unless-stopped
+    volumes:
+      - ./mavlink-router/main.conf:/etc/mavlink-router/main.conf
+    networks:
+      - app_network
 
   dlstreamer-pipeline-server:
     build:
@@ -83,6 +99,9 @@ services:
     ports:
       - '8081:8081'
       - "8555:8555"
+      - "5600:5600"
+      - "5601:5601"
+      - "5602:5602"
     networks:
       - app_network
     deploy:
@@ -110,15 +129,6 @@ services:
       - app_network
     ports:
       - "8889:8889"
-
-  coturn:
-    image: coturn/coturn:4.12.0
-    container_name: coturn
-    command: ["-v", "--external-ip=$HOST_IP", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
-    ports:
-      - "3478:3478/udp"
-    networks:
-      - app_network
 
   metrics-manager:
     image: intel/metrics-manager:2026.1.0-20260508-weekly

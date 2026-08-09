@@ -22,12 +22,12 @@ MODEL_PATH = "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openv
 # All pipelines to start when armed / stop when disarmed.
 PIPELINES = [
     {
-        "name": "drone_object_detection_cpu",
+        "name": "drone_udpsink_cpu",
         "frame_path": "drone-mavlink-cpu",
         "device": "CPU",
     },
     {
-        "name": "drone_object_detection_gpu",
+        "name": "drone_udpsink_gpu",
         "frame_path": "drone-mavlink-gpu",
         "device": "GPU",
     },
@@ -44,10 +44,6 @@ def build_payload(frame_path, device):
                 "type": "file",
                 "path": "/tmp/results.jsonl",
                 "format": "json-lines"
-            },
-            "frame": {
-                "type": "rtsp",
-                "path": frame_path
             }
         },
         "parameters": {
