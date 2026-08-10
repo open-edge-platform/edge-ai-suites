@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "videostream-analytics"
 version = "0.1.0"
-description = "Independent video stream analytics microservice for Smart Building"
+description = "Independent video stream analytics microservice for Smart Community"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.104.0",

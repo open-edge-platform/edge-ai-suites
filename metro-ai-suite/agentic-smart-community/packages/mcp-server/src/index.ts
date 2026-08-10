@@ -6,8 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import { SmartBuildingDB, SchemaManager } from "@smartbuilding-video/db";
-import { VideoSummaryClient } from "@smartbuilding-video/tools";
+import { SmartCommunityDB, SchemaManager } from "@smart-community-video/db";
+import { VideoSummaryClient } from "@smart-community-video/tools";
 import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
 import { loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
@@ -32,14 +32,14 @@ import { loadDashboardIntegrationConfig } from "./dashboard/integration-env.js";
  */
 function createMcpServer(
   config: ServerConfig,
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   workerService: WorkerService,
   summaryClient: VideoSummaryClient,
   subscriberRegistry: McpSubscriberRegistry,
   getSessionId: () => string,
 ): McpServer {
   const server = new McpServer({
-    name: "smartbuilding-video",
+    name: "smart-community-video",
     version: "0.1.0",
   });
 
@@ -93,7 +93,7 @@ async function main() {
   mkdirSync(config.reportsLogsDir, { recursive: true });
   mkdirSync(config.monitorsLogsDir, { recursive: true });
 
-  const db = new SmartBuildingDB(config.dbPath);
+  const db = new SmartCommunityDB(config.dbPath);
   db.initialize();
 
   {
@@ -124,7 +124,7 @@ async function main() {
   // Broadcast `notifications/resources/updated` to every MCP session subscribed to this monitor's
   // alerts uri. See docs/framework-adapters/README.md for the end-to-end contract.
   const onAlert = (monitorId: string) => {
-    const uri = `smartbuilding://monitor/${monitorId}/alerts`;
+    const uri = `smart-community://monitor/${monitorId}/alerts`;
     const subs = subscriberRegistry.findSubscribers(uri);
     if (subs.length === 0) {
       logger.debug(`[worker] alert for ${monitorId} — no subscribers, dropped notification`);
@@ -314,7 +314,7 @@ async function main() {
 }
 
 async function reconcileOnStartup(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsUrl: string,
 ): Promise<void> {
   let analyticsSources: Map<string, unknown>;

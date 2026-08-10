@@ -20,12 +20,12 @@ const alias: Record<string, string> = {
 
 const viteConfig = defineConfig(({ mode }) => {
   // Dev-only: read solely by the dev server's /api proxy below. Target defaults to
-  // the mcp-server backend on :3100; override with SERVER_HOST / VITE_DEV_SMARTBUILDING_API_TARGET.
+  // the mcp-server backend on :3100; override with SERVER_HOST / VITE_DEV_SMART_COMMUNITY_API_TARGET.
   const env = loadEnv(mode, process.cwd(), "");
   const serverHost = process.env.SERVER_HOST || env.SERVER_HOST || "127.0.0.1";
-  const smartBuilding =
-    process.env.VITE_DEV_SMARTBUILDING_API_TARGET ||
-    env.VITE_DEV_SMARTBUILDING_API_TARGET ||
+  const smartCommunity =
+    process.env.VITE_DEV_SMART_COMMUNITY_API_TARGET ||
+    env.VITE_DEV_SMART_COMMUNITY_API_TARGET ||
     `http://${serverHost}:3100`;
   return {
     plugins: [
@@ -57,7 +57,7 @@ const viteConfig = defineConfig(({ mode }) => {
       proxy: {
         // Forward API + websocket calls to the mcp-server backend on :3100.
         "/api": {
-          target: smartBuilding,
+          target: smartCommunity,
           changeOrigin: true,
           ws: true,
         },

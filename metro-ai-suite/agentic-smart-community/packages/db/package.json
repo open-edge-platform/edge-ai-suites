@@ -1,7 +1,7 @@
 {
-  "name": "@smartbuilding-video/db",
+  "name": "@smart-community-video/db",
   "version": "0.1.0",
-  "description": "SmartBuilding Video database layer with schema customization",
+  "description": "Smart Community Video database layer with schema customization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

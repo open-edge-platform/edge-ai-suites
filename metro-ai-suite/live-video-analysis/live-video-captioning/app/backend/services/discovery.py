@@ -22,57 +22,6 @@ def _infer_pipeline_device(name: str) -> str:
     return "any"
 
 
-def _gpu_device_exists() -> bool:
-    """Detect whether a compute-capable GPU render device is available."""
-    dri_dir = Path("/dev/dri")
-    if not dri_dir.exists() or not dri_dir.is_dir():
-        return False
-    # Prefer render nodes for inference-capable device access.
-    # Card nodes alone are display-oriented and can exist on systems
-    # where GPU compute is not usable for this workload.
-    return any(dri_dir.glob("renderD*"))
-
-
-def has_gpu_device() -> bool:
-    """Public helper for GPU capability checks used by API routes."""
-    return _gpu_device_exists()
-
-
-def _npu_device_exists() -> bool:
-    """Detect whether an NPU accelerator device node is available."""
-    accel_dir = Path("/dev/accel")
-    if not accel_dir.exists() or not accel_dir.is_dir():
-        return False
-    return any(accel_dir.glob("accel*"))
-
-
-def has_npu_device() -> bool:
-    """Public helper for NPU capability checks used by API routes."""
-    return _npu_device_exists()
-
-
-def _default_pipeline_names(gpu_available: bool) -> set[str]:
-    """Return preferred default pipeline names for current hardware."""
-    if gpu_available:
-        return {
-            "Video_Captioning_Hardware",
-            "Video_Captioning_RTSP_Hardware",
-            "Video_Captioning_Camera_Hardware",
-        }
-    return {
-        "Video_Captioning_Software",
-        "Video_Captioning_RTSP_Software",
-        "Video_Captioning_Camera_Software",
-    }
-
-
-def _fallback_pipeline_name(gpu_available: bool) -> str:
-    """Return a fallback pipeline name consistent with detected GPU availability."""
-    if not gpu_available and PIPELINE_NAME.endswith("_Hardware"):
-        return PIPELINE_NAME[: -len("_Hardware")] + "_Software"
-    return PIPELINE_NAME
-
-
 def discover_models(root: Path) -> List[ModelInfo]:
     """Discover available models from the models directory.
 
@@ -184,13 +133,12 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
     - Defaults string-only items to 'non-detection' (no metadata to inspect)
     - Optionally filters out detection pipelines when ENABLE_DETECTION_PIPELINE is False
     - Infers device from pipeline name suffix (_Software/_Hardware)
+    - Selects default from configured PIPELINE_NAME, else falls back to the first result
     """
     url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines"
     try:
         raw = http_json("GET", url)
         payload = json.loads(raw)
-
-        gpu_available = _gpu_device_exists()
 
         # Normalize to a List of items
         if isinstance(payload, List):
@@ -201,7 +149,7 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
             items = []
 
         if not isinstance(items, List):
-            fallback_name = _fallback_pipeline_name(gpu_available)
+            fallback_name = PIPELINE_NAME
             # Fallback to a single default pipeline
             # Optional filtering: if detection were disabled, 'non-detection' remains
             return [
@@ -247,6 +195,7 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
                     "pipeline_name": name,
                     "pipeline_display_name": name,
                     "pipeline_type": pipeline_type,
+                    "pipeline_default": False,
                     "device": _infer_pipeline_device(name),
                 }
             )
@@ -255,32 +204,16 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         if not ENABLE_DETECTION_PIPELINE:
             results = [r for r in results if r["pipeline_type"] != "detection"]
 
-        # If GPU is unavailable, keep only software/CPU pipelines.
-        if not gpu_available:
-            results = [r for r in results if r["device"] in {"cpu", "any"}]
-
-        preferred_defaults = _default_pipeline_names(gpu_available)
         for row in results:
-            row["pipeline_default"] = row["pipeline_name"] in preferred_defaults
+            row["pipeline_default"] = row["pipeline_name"] == PIPELINE_NAME
 
         if results and not any(r["pipeline_default"] for r in results):
-            if not gpu_available:
-                # Prefer a non-GPU fallback when GPU is not available.
-                for row in results:
-                    if "_GPU" not in row["pipeline_name"].upper():
-                        row["pipeline_default"] = True
-                        break
-
-        if results and not any(r["pipeline_default"] for r in results):
-            # Fall back to configured default if preferred defaults are not present.
-            for row in results:
-                if row["pipeline_name"] == PIPELINE_NAME:
-                    row["pipeline_default"] = True
-                    break
+            # Use the first discovered pipeline when configured default is absent.
+            results[0]["pipeline_default"] = True
 
         # Fallback if nothing usable left
         if not results:
-            fallback_name = _fallback_pipeline_name(gpu_available)
+            fallback_name = PIPELINE_NAME
             return [
                 {
                     "pipeline_name": fallback_name,
@@ -296,8 +229,7 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
     except HTTPException:
         raise
     except Exception:
-        gpu_available = _gpu_device_exists()
-        fallback_name = _fallback_pipeline_name(gpu_available)
+        fallback_name = PIPELINE_NAME
         # Conservative fallback for parse / unexpected errors
         return [
             {

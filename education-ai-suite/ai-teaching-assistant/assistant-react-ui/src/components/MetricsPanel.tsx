@@ -36,38 +36,48 @@ function sparkPath(values: number[], width: number, height: number): string {
     .join(" ");
 }
 
+// Builds a closed path for the filled area beneath the line by dropping to the
+// baseline at the last x and back to the first x.
+function sparkAreaPath(line: string, width: number, height: number): string {
+  if (!line) return "";
+  return `${line} L ${width.toFixed(2)} ${height.toFixed(2)} L 0 ${height.toFixed(2)} Z`;
+}
+
 function Sparkline({ values, color }: { values: number[]; color: string }) {
   const width = 160;
   const height = 80;
-  const d = sparkPath(values, width, height);
-  // Reference lines at 0, 25, 50, 75, 100 percent.
-  const ticks = [0, 25, 50, 75, 100];
+  // No axis labels, so the plot uses the full width.
+  const gutter = 0;
+  const plotW = width - gutter;
+  const d = sparkPath(values, plotW, height);
+  const areaD = sparkAreaPath(d, plotW, height);
+  // Reference lines at 0, 50, 100 percent.
+  const ticks = [0, 50, 100];
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className="h-20 w-full rounded border border-blue-200 bg-white"
+      className="h-14 w-full rounded bg-white"
     >
       {ticks.map((t) => {
         const y = height - (t / 100) * height;
         return (
-          <g key={t}>
-            <line
-              x1={0}
-              y1={y}
-              x2={width}
-              y2={y}
-              stroke="#e5e7eb"
-              strokeWidth={t === 0 || t === 100 ? 1 : 0.5}
-            />
-            <text x={2} y={y - 1.5} fontSize={7} fill="#9ca3af">
-              {t}
-            </text>
-          </g>
+          <line
+            key={t}
+            x1={gutter}
+            y1={y}
+            x2={width}
+            y2={y}
+            stroke="#e5e7eb"
+            strokeWidth={t === 0 || t === 100 ? 1 : 0.5}
+          />
         );
       })}
-      {d ? <path d={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" /> : null}
+      <g transform={`translate(${gutter},0)`}>
+        {d ? <path d={areaD} fill={color} fillOpacity={0.15} stroke="none" /> : null}
+        {d ? <path d={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" /> : null}
+      </g>
     </svg>
   );
 }
@@ -84,7 +94,7 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="space-y-1 rounded-lg border border-blue-200 bg-white p-2">
+    <div className="space-y-1 rounded-lg border border-blue-200 bg-white p-2 shadow-sm">
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="text-black/70">{label}</span>
         <span className="font-semibold text-black">{value}</span>

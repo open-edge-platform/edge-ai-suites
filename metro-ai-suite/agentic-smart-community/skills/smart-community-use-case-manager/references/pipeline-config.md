@@ -25,7 +25,7 @@ If enabled, fetch the selectable classes from the deployed model — never
 hard-code them:
 
 ```
-smartbuilding_monitor_ctl action=prefilter_options
+smart_community_monitor_ctl action=prefilter_options
 ```
 
 Returns `{ enabled, model_path, class_names, labels_source, available_devices }`.
