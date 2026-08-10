@@ -120,6 +120,8 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+    ports:
+      - "9090:9090"
 
 networks:
   app_network:

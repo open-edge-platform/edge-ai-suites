@@ -9,42 +9,6 @@ This application demonstrates AI-based object detection integrated with drone fl
 
 ---
 
-## System Architecture
-
-```mermaid
-flowchart TB
-    subgraph VideoSource["Video Source"]
-        CAM["RealSense Camera\nor RTSP Feed"]
-    end
-
-    subgraph DLSPS["DL Streamer Pipeline Server"]
-        SRC["auto_source / rtspsrc"]
-        DEC["decodebin3\n(H264 decode)"]
-        CONV["videoconvert"]
-        DET["gvadetect\nOpenVINO YOLOv8n-VisDrone\n640×640 FP16"]
-        OVL["gvapython\nTelemetry Overlay"]
-        META["gvametaconvert\ngvametapublish → MQTT"]
-        SINK["appsink → RTSP :8555"]
-    end
-
-    subgraph Telemetry["Telemetry Source (mode-dependent)"]
-        PYMAV["pymavlink\nMAVLink UDP :14541\n(routed via mavlink-router)"]
-        MQTT_T["MQTT Subscriber\nuav/{id}/telemetry/status\n(MAVSDK mode)"]
-    end
-
-    subgraph Monitor["Observability"]
-        MM["Metrics Manager\n(CPU/GPU/NPU/Power)"]
-    end
-
-    CAM -->|"raw video"| SRC
-    SRC --> DEC --> CONV --> DET --> OVL --> META --> SINK
-    PYMAV -->|"alt, speed, hdg, GPS"| OVL
-    MQTT_T -->|"alt, speed, hdg, GPS"| OVL
-    MM -.->|"system metrics"| DLSPS
-```
-
----
-
 ## Deployment Modes
 
 The application supports two deployment modes that differ in how telemetry is sourced.
@@ -61,12 +25,11 @@ flowchart LR
         ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
         BROKER["Eclipse Mosquitto\nMQTT :1883"]
         DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-        MM["Metrics Manager"]
+        MM["Metrics Manager\n(REST :9090)"]
 
         PX4 -->|"MAVLink"| ROUTER
         ROUTER -->|"UDP :14541"| DLSPS
         DLSPS -.->|"inference metrics"| BROKER
-        MM -.->|"system metrics"| BROKER
     end
 
     VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
@@ -115,14 +78,13 @@ flowchart LR
         DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555 · WebRTC)"]
         MTX["MediaMTX\nWebRTC signaling :8889"]
         COTURN["coturn\nTURN/STUN :3478/udp"]
-        MM["Metrics Manager"]
+        MM["Metrics Manager\n(REST :9090)"]
 
         PX4 -->|"MAVLink"| ROUTER
         ROUTER -->|"UDP :14541"| DLSPS
         DLSPS -->|"WebRTC signaling"| MTX
         MTX -->|"ICE/TURN"| COTURN
         DLSPS -.->|"inference metrics"| BROKER
-        MM -.->|"system metrics"| BROKER
     end
 
     VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
