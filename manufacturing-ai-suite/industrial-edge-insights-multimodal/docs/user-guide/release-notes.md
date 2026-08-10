@@ -1,8 +1,45 @@
 # Release Notes: Industrial Edge Insights Multimodal
 
-<!--## Version 2026.2-->
+## Version 2026.2
 
-<!--date TBD-->
+**September 2026**
+
+This release introduces **Agentic Integration** for autonomous weld quality monitoring,
+a **standalone Qwen VLM fine-tuning toolkit**, a **vLLM-based deployment path for defect
+explainability**, and a new **insight-workbench UI service**, along with various fixes, 
+security updates, and documentation improvements.
+
+**New**
+
+- **Agentic Integration**: The multimodal sample app now supports an agentic deployment mode,
+  with new agent workflow configuration, prompts, policy fallback rules, and a dedicated
+  how-to guide for deploying the agent workflow.
+- **Qwen VLM Fine-Tuning Toolkit**: A standalone toolkit for fine-tuning Qwen vision-language
+  models on weld defect detection has been added, including training, inference, and dataset
+  preparation scripts along with a detailed README.
+- **vLLM Deployment Path for defect explainability**: A new `docker-compose-vllm.yml` deployment and nginx configuration
+  enable running the multimodal sample app with a vLLM-based inference backend, with a
+  corresponding how-to guide.
+- **Insight-Workbench UI Service**: A new UI service has been added for exploring and analyzing
+  weld defect detection results.
+
+**Improved**
+
+- **DL Streamer Pipeline Server Naming**: Naming has been aligned across configs and docs to
+  consistently distinguish DL Streamer from DL Streamer Pipeline Server.
+- **Configuration Cleanup**: Hostip references were replaced with localhost across configuration
+  and docs, and references to the deprecated CatBoost model and the model registry were removed.
+- **Sample App Cleanup**: The standalone weld-defect-detection sample app was removed in favor of
+  the unified multimodal and time-series sample apps.
+- **Architecture and Test Workflow**: The architecture diagram and deployment guide were updated,
+  and the tests workflow now runs on pushed artifacts.
+- **Security**: Addressed SDLe scan findings, applied security-related fixes for vLLM containers,
+  and resolved reported vulnerabilities and security-related test failures.
+- **Documentation**: Editorial, punctuation, and formatting improvements were made throughout the
+  user guide.
+
+
+---
 
 ## Version 2026.1
 
