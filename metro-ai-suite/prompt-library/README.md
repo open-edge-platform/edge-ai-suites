@@ -73,17 +73,3 @@ Copilot or your AI agent tool. Each tile is loaded from a prompt file in the
 </div>
 <script src="../../_static/prompt-library-files/prompt-catalog.js"></script>
 
----
-
-## Related Resources
-
-- [Metro Analytics Catalog](../ai-suite-metro/metro-analytics-catalog.md) — ready-to-deploy AI models and analytics workflows
-- [DL Streamer](../../edge-ai-libraries/dlstreamer/index.md) — GStreamer-based media analytics framework
-- [OpenVINO Toolkit](../../edge-ai-libraries/OpenVINO.md) — model optimization and inference engine
-
-```{toctree}
-:hidden:
-:glob:
-
-.github/skills/**
-```
