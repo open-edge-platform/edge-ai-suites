@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import type { Logger } from "@smartbuilding-video/framework-adapter-sdk";
+import type { Logger } from "@smart-community-video/framework-adapter-sdk";
 import type { AppendResult, InjectParams, SessionAppender } from "./inject-types.js";
 
 function openclawHome(): string {
@@ -126,7 +126,7 @@ export async function createTranscriptInjector(deps: {
       content: [{ type: "text", text: assistantText }],
       api: "openai-completions",
       provider: "router",
-      model: model ?? "smartbuilding-alerts-adapter",
+      model: model ?? "smart-community-alerts-adapter",
       timestamp: nowMs,
       ...(idempotencyKey ? { idempotencyKey: `${idempotencyKey}:body` } : {}),
     };

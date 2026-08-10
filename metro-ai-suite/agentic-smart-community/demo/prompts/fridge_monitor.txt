@@ -11,7 +11,7 @@ Two execution modes share this single task name:
      - No structured SEVERITY/EVENT contract; the fridge plugin parses the
        narrative downstream.
 
-  2. **Daily-report aggregation** (smartbuilding-video plugin daily_report tool
+  2. **Daily-report aggregation** (smart-community-video plugin daily_report tool
      → /v1/summary in caption-only mode with SRT containing the day's
      [motion] / [static] events).
      - LOCAL is skipped (caption-only feeds pre-built SRT).

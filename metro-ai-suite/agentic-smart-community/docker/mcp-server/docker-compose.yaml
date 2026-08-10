@@ -1,14 +1,14 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# SmartBuilding MCP server service definition, pulled into the stack via `extends`
+# Smart Community MCP server service definition, pulled into the stack via `extends`
 # from docker/compose.yaml (same pattern as multilevel-video-understanding, which
 # extends the upstream file). `extends` resolves THIS file's relative paths (the
 # build context below) against its own directory (docker/mcp-server/), so the
 # context still points at the repo root. `extends` does NOT copy depends_on, so the
 # ordering (needs multilevel healthy) is declared in the parent docker/compose.yaml.
 services:
-  # SmartBuilding MCP server (Streamable-HTTP + UI on :3100, events webhook on
+  # Smart Community MCP server (Streamable-HTTP + UI on :3100, events webhook on
   # :3101). The MCP server Node process, containerised and joined to the stack so
   # the whole thing comes up with one `docker compose up`.
   smart-community-mcp-server:
@@ -28,7 +28,7 @@ services:
     network_mode: host
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
-      SMARTBUILDING_DATA_DIR: ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      SMART_COMMUNITY_DATA_DIR: ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # Timezone for the container
       TZ: ${TZ:-Asia/Shanghai}
@@ -37,7 +37,7 @@ services:
       # root at the SAME absolute path as the host, so DB clip paths and the paths
       # VSA writes stay unchanged — and the clip paths it POSTs to multilevel need
       # no remapping (multilevel uses the same identity mount).
-      - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}:${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
       # Host timezone (read-only). Makes glibc localtime() — used by SQLite's
       # 'localtime' modifier — and Node resolve to the host's zone. Only
       # /etc/localtime is read for time conversion; matches videostream-analytics.

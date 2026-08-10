@@ -124,7 +124,7 @@ import {
   getTokenStats,
   getTaskTokens,
   requestTokenRest,
-} from "@/api/smartBuilding";
+} from "@/api/smartCommunity";
 
 const props = withDefaults(
   defineProps<{
