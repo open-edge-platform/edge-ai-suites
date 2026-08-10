@@ -23,6 +23,10 @@ One-shot mode
 ─────────────
     python mic_session.py --one-shot    # single session then exit
 
+Wake-word mode (say "hey jarvis")
+─────────────────────────────────
+    python mic_session.py --wakeword
+
 Other options
 ─────────────
     python mic_session.py --list-devices
@@ -75,6 +79,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--request-timeout", type=float, default=60.0)
     parser.add_argument("--poll-interval", type=float, default=0.5)
     parser.add_argument("--max-polls", type=int, default=360)
+    parser.add_argument("--wakeword", action="store_true",
+                        help="Wait for wake-word detection before opening the mic session")
+    parser.add_argument("--wakeword-model", default="hey jarvis",
+                        help="openwakeword model name or model path")
+    parser.add_argument("--wakeword-threshold", type=float, default=0.5,
+                        help="Wake-word score threshold (0..1)")
+    parser.add_argument("--wakeword-vad-threshold", type=float, default=0.4,
+                        help="Silero VAD threshold for wake-word filtering (0..1)")
+    parser.add_argument("--wakeword-patience-frames", type=int, default=2,
+                        help="Consecutive 80ms frames above threshold required to trigger")
+    parser.add_argument("--wakeword-timeout-seconds", type=float, default=0.0,
+                        help="Timeout while waiting for wake-word (0 means wait forever)")
+    parser.add_argument("--wakeword-inference-framework", default="onnx",
+                        help="openwakeword inference framework (onnx or tflite)")
     return parser
 
 
@@ -123,6 +141,45 @@ def start_session(client: httpx.Client, args: argparse.Namespace) -> dict:
         payload["tts_instructions"] = args.tts_instructions
 
     response = client.post(f"{args.base_url}/api/v1/sessions/start", json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def start_session_after_wakeword(client: httpx.Client, args: argparse.Namespace) -> dict:
+    payload: dict = {
+        "sample_rate": args.sample_rate,
+        "chunk_seconds": args.chunk_seconds,
+        "silence_timeout_seconds": args.silence_timeout_seconds,
+        "max_session_seconds": args.max_session_seconds,
+        "silence_threshold": args.silence_threshold,
+        "language": args.language,
+        "temperature": args.temperature,
+        "tts_model": args.tts_model,
+        "tts_language": args.tts_language,
+        "wakeword_model": args.wakeword_model,
+        "wakeword_threshold": args.wakeword_threshold,
+        "wakeword_vad_threshold": args.wakeword_vad_threshold,
+        "wakeword_patience_frames": args.wakeword_patience_frames,
+        "wakeword_timeout_seconds": args.wakeword_timeout_seconds,
+        "wakeword_inference_framework": args.wakeword_inference_framework,
+    }
+    if args.device is not None:
+        try:
+            payload["device"] = int(args.device)
+        except ValueError:
+            payload["device"] = args.device
+    if args.analyzer_url:
+        payload["analyzer_url"] = args.analyzer_url
+    if args.rag_url:
+        payload["rag_url"] = args.rag_url
+    if args.tts_url:
+        payload["tts_url"] = args.tts_url
+    if args.tts_voice:
+        payload["tts_voice"] = args.tts_voice
+    if args.tts_instructions:
+        payload["tts_instructions"] = args.tts_instructions
+
+    response = client.post(f"{args.base_url}/api/v1/sessions/start-after-wakeword", json=payload)
     response.raise_for_status()
     return response.json()
 
@@ -218,7 +275,20 @@ def run_one_session(client: httpx.Client, args: argparse.Namespace) -> bool:
     Ctrl+C during recording triggers a clean stop of this session only.
     """
     try:
-        started = start_session(client, args)
+        if args.wakeword:
+            print(
+                f"  Listening for wake word '{args.wakeword_model}' "
+                f"(threshold={args.wakeword_threshold})..."
+            )
+            started = start_session_after_wakeword(client, args)
+            ww = started.get("wakeword") or {}
+            if ww:
+                print(
+                    f"  Wake word detected: {ww.get('detected_label', args.wakeword_model)} "
+                    f"(score={ww.get('score', 'n/a')})"
+                )
+        else:
+            started = start_session(client, args)
     except Exception as exc:
         print(f"  Failed to start session: {exc}", file=sys.stderr)
         return False
@@ -288,15 +358,18 @@ def main() -> int:
         print(f"  device     : {device_label}  |  {args.sample_rate}Hz")
         print(f"  silence    : {args.silence_timeout_seconds}s timeout  |  "
               f"threshold {args.silence_threshold}")
+        if args.wakeword:
+            print(f"  wake-word  : {args.wakeword_model}  |  threshold {args.wakeword_threshold}")
         print()
 
         if args.one_shot:
-            print("  Press ENTER to speak...")
-            try:
-                input()
-            except (EOFError, KeyboardInterrupt):
-                print("\nBye.")
-                return 0
+            if not args.wakeword:
+                print("  Press ENTER to speak...")
+                try:
+                    input()
+                except (EOFError, KeyboardInterrupt):
+                    print("\nBye.")
+                    return 0
             run_one_session(client, args)
             return 0
 
@@ -306,7 +379,10 @@ def main() -> int:
             turn += 1
             print(f"\n  ┌─ Turn {turn} " + "─" * max(0, 44 - len(str(turn))) + "┐")
             try:
-                print("  │  Press ENTER to speak  (Ctrl+C to quit)         │")
+                if args.wakeword:
+                    print("  │  Press ENTER to arm wake-word (Ctrl+C to quit)  │")
+                else:
+                    print("  │  Press ENTER to speak  (Ctrl+C to quit)         │")
                 print("  └" + "─" * 50 + "┘")
                 input()
             except (EOFError, KeyboardInterrupt):

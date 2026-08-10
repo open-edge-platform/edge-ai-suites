@@ -2,57 +2,68 @@ apiVersion: v2
 name: live-video-search
 description: Umbrella Helm chart for Live Video Search (VSS Search + Smart NVR)
 type: application
-version: 2026.1.0-rc1-helm
+version: 2026.2.0-helm
 appVersion: "1.0.0"
 dependencies:
   - name: shared
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/shared"
   - name: init-resources
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/init-resources"
   - name: nginx
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/nginx"
   - name: vss-ui
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/vss-ui"
   - name: pipeline-manager
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/pipeline-manager"
   - name: postgres-service
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/postgres-service"
   - name: minio-service
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/minio-service"
   - name: vdms-vector-db
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/vdms-vector-db"
+    condition: vdms-vector-db.enabled
   - name: multimodal-embedding-serving
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/multimodal-embedding-serving"
-  - name: vdms-dataprep
-    version: 1.0.0
-    repository: "file://subchart/vdms-dataprep"
+  - name: multimodal-dataprep
+    version: 2026.2.0-helm
+    repository: "file://subchart/multimodal-dataprep"
+    condition: multimodal-dataprep.enabled
+  - name: vector-retriever
+    version: 2026.2.0-helm
+    repository: "file://subchart/vector-retriever"
+    condition: vector-retriever.enabled
+  - name: milvus-standalone
+    version: 2026.2.0-helm
+    repository: "file://subchart/milvus-standalone"
+    condition: milvus-standalone.enabled
   - name: video-search
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/video-search"
   - name: mqtt-broker
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/mqtt-broker"
   - name: redis
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/redis"
   - name: frigate-vms
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/frigate-vms"
   - name: nvr-event-router
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/nvr-event-router"
   - name: rtsp-test
-    version: 1.0.0
+    version: 2026.2.0-helm
     repository: "file://subchart/rtsp-test"
-  - name: vss-collector
-    version: 1.0.0
-    repository: "file://subchart/vss-collector"
+  - name: metrics-manager
+    version: 2026.2.0-helm
+    repository: "file://subchart/metrics-manager"
+    condition: global.metricsManager.enabled

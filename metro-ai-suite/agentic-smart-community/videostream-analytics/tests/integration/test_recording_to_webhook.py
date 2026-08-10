@@ -1,6 +1,6 @@
 """Integration tests: continuous recording branch → webhook + disk files.
 
-Phase 7 §3 enabled the fixed-duration recording path. This test confirms:
+This test confirms the fixed-duration recording path:
   - `recording: enabled=true` in register body wires up ContinuousRecorder
   - Recording events arrive in the nested envelope with the right payload
   - mp4 files land on disk under `<data_dir>/recordings/<YYYY-MM-DD>/`

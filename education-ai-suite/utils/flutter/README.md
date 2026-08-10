@@ -41,6 +41,15 @@ This application demonstrates a **unique dual-interaction model**:
 1. **Traditional UI**: Graphical Flutter interface for end users
 2. **Agentic Mode**: AI coding companions that autonomously execute workflows via natural language commands
 
+### Configuration
+
+The Flutter app uses its **own dedicated config.yaml** file located at `utils/flutter/config.yaml`. This allows the Flutter application to:
+- Run independently from the main Smart Classroom application
+- Configure Content Search backend settings (VLM, vector DB, storage) specific to its use case
+- Point to the main backend for VLM services while managing its own Content Search instance
+
+The main backend (`smart-classroom/config.yaml`) and Flutter config are separate, allowing flexible deployment scenarios.
+
 ---
 
 ## Architecture
@@ -214,6 +223,46 @@ The setup script installs from [`smart-classroom/components/vlm/vlm_openvino_ser
 
 ### Network
 - **Internet access** for first-time model downloads
+---
+
+## Configuration
+
+The Flutter application uses a **dedicated configuration file** at `utils/flutter/config.yaml`. This file configures:
+
+- **Content Search API** settings (host, port)
+- **VLM (Vision-Language Model)** connection to main backend
+- **ChromaDB** vector database settings
+- **File storage** limits and paths
+- **Q&A parameters** (context size, token limits, retrieval thresholds)
+- **Document processing** (chunking, embedding models, reranker)
+
+**Key Configuration Sections**:
+
+```yaml
+content_search:
+  host_addr: "127.0.0.1"
+  port: 9011
+  
+  vlm:
+    model_name: "Qwen/Qwen3-VL-8B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 8000  # Main backend VLM service
+    device: "GPU"
+    
+  qa:
+    max_context: 5          # Top chunks for RAG
+    max_tokens: 1024        # Max answer length
+    max_history_turns: 3    # Conversation history
+```
+
+**When to Modify**:
+- Change VLM model or device (CPU/GPU)
+- Adjust file upload limits
+- Tune RAG parameters (retrieval threshold, context size)
+- Configure custom storage paths
+
+**Note**: The Flutter config is **independent** from `smart-classroom/config.yaml`. The main backend uses its own config for the full Smart Classroom application, while Flutter uses this simplified config focused on Content Search and VLM integration only.
+
 ---
 
 ## Quick Start

@@ -74,7 +74,7 @@ class TestStreamPipelinePauseResume:
         pipeline._running = True
         pipeline._status = "online"
         pipeline.pause()
-        # §32: RTSP status is no longer pushed to the /events webhook. Internal
+        # RTSP status is not pushed to the /events webhook. Internal
         # status is still updated (MCP reads it via GET /sources/{id}/status), but
         # no `status` envelope is emitted to the sink.
         assert pipeline.status == "paused"

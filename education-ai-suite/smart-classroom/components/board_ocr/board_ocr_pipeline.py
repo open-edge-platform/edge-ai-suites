@@ -23,47 +23,11 @@ STATUS_FRAME_EXTRACTION = "frame_extraction_in_progress"  # extracting frames
 STATUS_OCR = "ocr_in_progress"                         # extraction done, OCR draining
 STATUS_DONE = "done"                                   # all frames extracted and OCR'd
 
-_board_ocr_warned = False
-
-
-def board_ocr_enabled() -> bool:
-    """Whether board OCR is enabled in config."""
-    global _board_ocr_warned
-
-    board_cfg = getattr(config, "board_ocr", None)
-    if not board_cfg or not bool(getattr(board_cfg, "enabled", False)):
-        return False
-
-    ocr_cfg = getattr(config.models, "ocr", None)
-    if ocr_cfg and bool(getattr(ocr_cfg, "enabled", False)):
-        return True
-
-    if not _board_ocr_warned:
-        logger.warning(
-            "board_ocr.enabled is true but models.ocr.enabled is false; "
-            "board OCR will be SKIPPED. Set models.ocr.enabled: true to use it."
-        )
-        _board_ocr_warned = True
-    return False
-
 
 def _board_ocr_debug() -> bool:
     """Whether board OCR debug mode is enabled (keeps intermediate artifacts)."""
     board_cfg = getattr(config, "board_ocr", None)
     return bool(getattr(board_cfg, "debug", False)) if board_cfg else False
-
-
-def va_pipeline_enabled() -> bool:
-    """Whether the VA pipeline is enabled.
-
-    Board OCR sources its video from the VA content pipeline, so it can only run
-    when the VA pipeline is enabled. There is no `va_pipeline.enabled` flag today;
-    it defaults to True for forward compatibility with a future on/off switch.
-    """
-    va_cfg = getattr(config, "va_pipeline", None)
-    if va_cfg is None:
-        return True
-    return bool(getattr(va_cfg, "enabled", True))
 
 
 # ---------------------------------------------------------------------------
@@ -492,29 +456,7 @@ class BoardOCRWorker:
         if not records:
             return None
 
-        cleaned: list[dict] = []
-        for rec in records:
-            text = (rec.get("text") or "").strip()
-            if not text:
-                continue
-
-            if cleaned:
-                prev = cleaned[-1]
-                prev_text = prev.get("text") or ""
-                if self._is_write_erase_noise(prev_text, text):
-                    # Case 1: keep whichever version is more complete.
-                    if len(text) >= len(prev_text):
-                        cleaned[-1] = rec
-                    continue
-                if self._is_minor_change(prev_text, text):
-                    # Case 2: near-same meaning; keep the later version.
-                    cleaned[-1] = rec
-                    continue
-
-            cleaned.append(rec)
-
-        for idx, rec in enumerate(cleaned, start=1):
-            rec["frame"] = idx
+        cleaned = clean_records(records)
 
         if _board_ocr_debug():
             raw_path = self.output_file.with_name(self.output_file.stem + "_raw" + self.output_file.suffix)
@@ -524,12 +466,21 @@ class BoardOCRWorker:
             except Exception as e:
                 logger.warning(f"Failed to save raw board OCR file: {e}")
 
+        # Write to a sibling temp file and swap it in atomically: readers
+        # (the summarizer / the /board-ocr endpoints) poll this file while the
+        # pipeline runs, and a plain "w" would expose a truncated file to them.
+        tmp_path = self.output_file.with_suffix(self.output_file.suffix + ".tmp")
         try:
-            with open(self.output_file, "w", encoding="utf-8") as f:
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 for rec in cleaned:
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, self.output_file)
         except Exception as e:
             logger.error(f"Failed to write cleaned board OCR file: {e}")
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
             return None
 
         logger.info(
@@ -557,23 +508,59 @@ class BoardOCRWorker:
             return []
         return records
 
-    @staticmethod
-    def _is_write_erase_noise(a: str, b: str) -> bool:
-        """True if one text is largely contained in the other (write/erase noise)."""
-        shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
-        if not shorter:
-            return True
-        matcher = SequenceMatcher(None, shorter, longer)
-        matched = sum(block.size for block in matcher.get_matching_blocks())
-        return (matched / len(shorter)) >= _CLEAN_CONTAINMENT
 
-    @staticmethod
-    def _is_minor_change(a: str, b: str) -> bool:
-        """True if two texts are highly similar overall (minor change / same meaning)."""
-        if not a or not b:
-            return False
-        return SequenceMatcher(None, a, b).ratio() >= _CLEAN_SIMILARITY
+# ---------------------------------------------------------------------------
+# Record cleaning (shared by the worker's finalize pass and by readers that
+# need a cleaned view of a still-growing board_ocr.txt)
+# ---------------------------------------------------------------------------
 
+def _is_write_erase_noise(a: str, b: str) -> bool:
+    """True if one text is largely contained in the other (write/erase noise)."""
+    shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+    if not shorter:
+        return True
+    matcher = SequenceMatcher(None, shorter, longer)
+    matched = sum(block.size for block in matcher.get_matching_blocks())
+    return (matched / len(shorter)) >= _CLEAN_CONTAINMENT
+
+
+def _is_minor_change(a: str, b: str) -> bool:
+    """True if two texts are highly similar overall (minor change / same meaning)."""
+    if not a or not b:
+        return False
+    return SequenceMatcher(None, a, b).ratio() >= _CLEAN_SIMILARITY
+
+
+def clean_records(records: list) -> list:
+    """Collapse redundant adjacent OCR records; see BoardOCRWorker.clean_output.
+
+    Pure and side-effect free, so callers reading a partially written
+    board_ocr.txt can get the same cleaned view in memory without touching the
+    file. Returns new records renumbered from 1; the input list is not mutated.
+    """
+    cleaned: list = []
+    for rec in records:
+        text = (rec.get("text") or "").strip()
+        if not text:
+            continue
+
+        if cleaned:
+            prev_text = cleaned[-1].get("text") or ""
+            if _is_write_erase_noise(prev_text, text):
+                # Case 1: keep whichever version is more complete.
+                if len(text) >= len(prev_text):
+                    cleaned[-1] = dict(rec)
+                continue
+            if _is_minor_change(prev_text, text):
+                # Case 2: near-same meaning; keep the later version.
+                cleaned[-1] = dict(rec)
+                continue
+
+        cleaned.append(dict(rec))
+
+    for idx, rec in enumerate(cleaned, start=1):
+        rec["frame"] = idx
+    return cleaned
 
 
 # ---------------------------------------------------------------------------
@@ -711,21 +698,10 @@ def get_active_session_id() -> Optional[str]:
 def start_board_ocr(session_id: str, content_source: Optional[str]) -> bool:
     """Start the board OCR twin pipeline for a content pipeline.
 
-    Called from endpoints.py when the VA content pipeline starts. Idempotent.
-    No-op (with a log line) when board OCR or the VA pipeline is disabled.
+    Called from endpoints.py when the VA content pipeline starts, and only when
+    Per the feature resolver, video_analytics is auto-enabled.
     """
-    if not board_ocr_enabled():
-        logger.info("Board OCR disabled in config; not starting")
-        return False
-
     global _active_pipeline
-
-    if not va_pipeline_enabled():
-        logger.warning(
-            "board_ocr.enabled is true but the VA pipeline is not enabled; "
-            "the content source is unavailable, so board OCR will NOT start."
-        )
-        return False
 
     if not session_id:
         logger.error("Board OCR needs a session_id to start; skipping")

@@ -824,7 +824,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
       "destination": {
          "frame": {
             "type": "webrtc",
-            "peer-id": "pdds3"
+            "peer-id": "pdds3",
+             "overlay-properties": {
+                 "font-scale": 1.0,
+                 "draw-txt-bg": false
+             }
          }
       },
       "parameters": {
@@ -849,7 +853,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
      "destination": {
        "frame": {
             "type": "webrtc",
-            "peer-id": "anomaly_s3"
+            "peer-id": "anomaly_s3",
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
+           }
        }
      },
      "parameters": {
@@ -937,7 +945,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -967,7 +979,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1079,7 +1095,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1109,7 +1129,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {

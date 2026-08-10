@@ -2,6 +2,8 @@
 
 An AI Agent-native video analysis platform designed for MCP (Model Context Protocol) integration. Provides a universal, framework-agnostic toolkit for video surveillance and analysis — agents can autonomously create, manage, and respond to custom use cases without modifying core components.
 
+The MCP server also hosts a Vue dashboard at `http://localhost:3100/`. It discovers monitors from the runtime database, provides RTSP live preview through a bounded server-side ffmpeg proxy, and shows activity, reports, local token usage, and optional Router/OpenClaw integrations.
+
 Below, you'll find links to detailed documentation to help you get started, configure, and deploy the sample application.
 
 ## Documentation

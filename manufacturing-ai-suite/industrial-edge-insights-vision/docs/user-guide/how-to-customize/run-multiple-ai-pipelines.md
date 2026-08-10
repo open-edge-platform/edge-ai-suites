@@ -32,7 +32,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -53,7 +57,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly1"
+               "peer-id": "anomaly1",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -85,7 +93,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pddstream"
+               "peer-id": "pddstream",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -106,7 +118,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly2"
+               "peer-id": "anomaly2",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {

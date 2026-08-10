@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+namespace: anomalib
+description: Anomalib — Anomaly detection training, inference, and deployment
+version: "1.0"
+
+tools:
+  - id: train
+    description: >
+      Train an anomaly detection model. Supports 30+ algorithms including PatchCore,
+      PaDiM, EfficientAD, DRAEM, Fastflow, CFlow. Only requires normal (good) images —
+      anomalies are detected as deviations from learned patterns.
+      Use for manufacturing defect detection, PCB inspection, texture analysis, quality control.
+    parameters:
+      type: object
+      properties:
+        model:
+          type: string
+          enum: [Padim, PatchCore, EfficientAd, Draem, Fastflow, Cflow, Stfpm, Ganomaly, Reverse_distillation, Ai_vad]
+          description: Anomaly detection algorithm
+        data_path:
+          type: string
+          description: "Path to dataset folder (expects normal/ subdir, optionally abnormal/ and mask/)"
+        category:
+          type: string
+          description: "Dataset category for MVTec-style datasets (e.g., bottle, cable, pcb)"
+        max_epochs:
+          type: integer
+          description: Maximum training epochs
+        image_size:
+          type: integer
+          description: "Input image size (square, e.g., 256)"
+        accelerator:
+          type: string
+          enum: [auto, gpu, cpu]
+          description: Training hardware
+      required: [model, data_path]
+    handler: train
+    timeout: 3600
+
+  - id: predict
+    description: >
+      Run anomaly detection inference on images. Returns anomaly scores,
+      heatmaps, and segmentation masks per image.
+    parameters:
+      type: object
+      properties:
+        model_path:
+          type: string
+          description: Path to trained model checkpoint (.ckpt file)
+        data_path:
+          type: string
+          description: Path to images or directory for inference
+        output_path:
+          type: string
+          description: Directory to save prediction visualizations
+      required: [model_path, data_path]
+    handler: predict
+    timeout: 600
+
+  - id: export
+    description: >
+      Export a trained model to OpenVINO IR, ONNX, or TorchScript format.
+      OpenVINO IR provides optimized inference on Intel CPUs, GPUs, and NPUs.
+    parameters:
+      type: object
+      properties:
+        model_path:
+          type: string
+          description: Path to trained model checkpoint (.ckpt)
+        export_type:
+          type: string
+          enum: [openvino, onnx, torch]
+          description: Target format (openvino recommended for Intel hardware)
+        input_size:
+          type: string
+          description: "Fixed input resolution as '[H, W]' (e.g., '[256, 256]')"
+      required: [model_path]
+    handler: export
+    timeout: 300
+
+  - id: benchmark
+    description: >
+      Benchmark multiple anomaly detection algorithms on the same dataset.
+      Reports image AUROC, pixel AUROC, F1, and inference latency.
+      Use to select the best model for a specific use case.
+    parameters:
+      type: object
+      properties:
+        data_path:
+          type: string
+          description: Dataset path for benchmarking
+        models:
+          type: array
+          items:
+            type: string
+          description: "List of models to compare (e.g., [PatchCore, Padim, EfficientAd])"
+        category:
+          type: string
+          description: Dataset category
+        config_path:
+          type: string
+          description: Path to benchmark config YAML (alternative to specifying models)
+      required: [data_path]
+    handler: benchmark
+    timeout: 7200
+
+  - id: openvino_inference
+    description: >
+      Run optimized inference using an exported OpenVINO model.
+      Use for production deployment or testing exported models on Intel hardware.
+    parameters:
+      type: object
+      properties:
+        model_path:
+          type: string
+          description: Path to OpenVINO model (.xml file)
+        image_path:
+          type: string
+          description: Path to image or image directory
+        device:
+          type: string
+          enum: [CPU, GPU, NPU, AUTO]
+          description: Intel hardware for inference
+      required: [model_path, image_path]
+    handler: openvino_inference
+    timeout: 300

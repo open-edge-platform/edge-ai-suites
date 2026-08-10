@@ -117,9 +117,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("APP_LANGUAGE", app.get("language", "en"))
 
         # OCR
-        models = data.get("models", {})
-        ocr = models.get("ocr", {})
-        _set("OCR_ENABLED", str(ocr.get("enabled", False)).lower())
+        _set("OCR_ENABLED", str(cs.get("ocr_enabled", True)).lower())
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
@@ -262,11 +260,21 @@ def _wait_for_main_app() -> bool:
     return False
 
 def main() -> None:
-    _load_config_to_env()
-
     parser = argparse.ArgumentParser(description="Start services via Environment Variables.")
     parser.add_argument("--services", nargs="+", default=["chromadb", "preprocess", "ingest", "main_app"])
+    parser.add_argument("--config", type=str, default="config.yaml",
+                        help="Path to config.yaml (relative to smart-classroom/ or absolute)")
     args = parser.parse_args()
+
+    # Check for SC_CONFIG_PATH environment variable (used by Flutter integration)
+    # If set, it overrides both the default and --config argument
+    config_path = os.environ.get("SC_CONFIG_PATH")
+    if config_path:
+        print(f"[launcher] Using config from SC_CONFIG_PATH environment variable: {config_path}")
+    else:
+        config_path = args.config
+    
+    _load_config_to_env(config_path)
 
     requested = []
     for v in args.services:

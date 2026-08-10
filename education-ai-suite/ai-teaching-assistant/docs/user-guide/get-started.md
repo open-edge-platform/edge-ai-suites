@@ -1,82 +1,118 @@
 # Get Started
 
-Clone the repository, start the full stack, and confirm a working voice
-request end to end.
+Set up the AI Teaching Assistant on Windows and ingest your first course materials.
 
-Confirm your machine meets the
-[System Requirements](./get-started/system-requirements.md) before starting.
+Confirm your machine meets the [System Requirements](./get-started/system-requirements.md) before starting.
 
-## Step 1: Clone The Repository
+## Step 1: Prerequisites
 
-```bash
-git clone https://github.com/intel-retail/voice-enabled-interactions.git
-cd voice-enabled-interactions/smart-kiosk-assistant
+- **Git for Windows** — [Download here](https://git-scm.com/download/win)
+- **Python 3.10+** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
+- **Visual C++ Build Tools** — Required for some Python packages
+
+## Step 2: Clone The Repository
+
+Open PowerShell and run:
+
+```powershell
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git `
+; cd edge-ai-suites `
+; git sparse-checkout set education-ai-suite/ai-teaching-assistant `
+; cd education-ai-suite/ai-teaching-assistant
 ```
 
-## Step 2: Pull Images And Start The Stack
+## Step 3: Run Windows Setup
 
-```bash
-docker compose pull
-docker compose up -d
+PowerShell script handles all setup (Python venv, dependencies, models):
+
+```powershell
+# If prompted about execution policy, run:
+# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+.\setup_windows.ps1
 ```
 
-All five images are pulled from Docker Hub under the `intel/` namespace at the tag pinned in
-[.env](https://github.com/intel-retail/voice-enabled-interactions/blob/main/smart-kiosk-assistant/.env).
-Model files and caches live in Docker named volumes, so no extra host directories need to be
-created. First startup downloads model assets into those volumes and can take a few minutes.
+Note: This setup script also initializes the required submodules automatically.
 
-To rebuild from source instead of pulling, see the
-[Build From Source](./get-started/build-from-source.md) guide.
+The script will:
+1. Create and activate a Python virtual environment
+2. Download and install model files (~30-50 GB)
+3. Install all dependencies for the five services
 
-## Step 3: Verify the Stack Is Healthy
+**First run may take 10-30 minutes** while models are downloaded and cached.
 
-```bash
-docker compose ps
-curl --noproxy '*' http://127.0.0.1:8010/health   # audio-analyzer
-curl --noproxy '*' http://127.0.0.1:8011/health   # text-to-speech
-curl --noproxy '*' http://127.0.0.1:8020/health   # rag-service
-curl --noproxy '*' http://127.0.0.1:8012/health   # kiosk-core
+## Step 4: Start the Application
+
+```powershell
+.\start_kiosk.ps1
 ```
 
-Every response should be `{"status": "ok"}`.
+Services will start in sequence:
+- `audio-analyzer` (8010)
+- `text-to-speech` (8011)
+- `rag-service` (8020)
+- `kiosk-core` (8012)
+- `ai-teaching-assistant ui` (7860)
 
-## Step 4: Run the Voice Flow
+Wait for all services to show "ready" in the terminal.
 
-Open the Gradio UI in a browser:
+## Step 5: Verify All Services Are Running
 
-```text
+Open PowerShell and verify health:
+
+```powershell
+# Audio-to-text
+curl http://127.0.0.1:8010/health
+
+# Text-to-speech
+curl http://127.0.0.1:8011/health
+
+# RAG service
+curl http://127.0.0.1:8020/health
+
+# Session orchestrator
+curl http://127.0.0.1:8012/health
+```
+
+Each response should be: `{"status": "ok"}`
+
+## Step 6: Access the Web Interface
+
+Open your browser and navigate to:
+
+```
 http://127.0.0.1:7860
 ```
 
-Then:
+You should see the AI Teaching Assistant interface.
 
-1. When the browser prompts for microphone permission, click **Allow**.
-2. Use the **knowledge base** panel to ingest the bundled sample content,
-   or upload your own `.txt` / `.md` files. Sample content is in
-   [knowledge-base-samples/](https://github.com/intel-retail/voice-enabled-interactions/tree/main/smart-kiosk-assistant/knowledge-base-samples).
-3. Click the microphone button and ask a question that the knowledge base
-   can answer (for example, "What are the store hours?").
-4. Wait for the assistant card to update with:
-   - the transcript of what you said,
-   - the streamed answer text,
-   - a spoken response that plays back automatically.
+## Step 7: Ingest Course Materials
+
+1. In the browser, go to the **"Knowledge Base"** panel
+2. Click **"Choose Files"** and select your course material (`.txt`, `.md`, `.docx`, or `.pdf`)
+3. Click **"Upload"** — wait for "Upload successful" confirmation
+
+
+## Stopping the Application
+
+```powershell
+.\stop_kiosk.ps1
+```
+
+To stop individual services, use `Ctrl+C` in their respective terminal windows.
 
 ## Next Steps
 
-- [How It Works](./how-it-works.md)
-- [Configuration](./get-started/configuration.md)
-- [Run With Docker Compose](./get-started/run-container.md) /
-  [Run On The Host](./get-started/run-standalone.md)
-- [API Reference](./api-reference.md)
-- [Troubleshooting](./troubleshooting.md)
+- [How It Works](./how-it-works.md) — Understand the architecture
+- [Configuration](./get-started/configuration.md) — Adjust models, temperature, and settings
+- [Troubleshooting](./troubleshooting.md) — Debug common issues
+- [API Reference](./api-reference.md) — Integrate with external apps
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 ./get-started/system-requirements.md
-./get-started/build-from-source.md
-./get-started/run-container.md
 ./get-started/run-standalone.md
 ./get-started/configuration.md
 

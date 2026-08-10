@@ -11,7 +11,9 @@ function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderDetectionsRows(byClass) {
@@ -34,10 +36,20 @@ function statusBadgeHtml(run) {
   return `<span class="status-badge status-${escapeHtml(run.status)}">${escapeHtml(run.status)}${suffix}</span>`;
 }
 
+function runningLabel(activeRun) {
+  return activeRun && activeRun.phase
+    ? `Inspection: RUNNING (${activeRun.phase})`
+    : "Inspection: RUNNING";
+}
+
 function runActionHtml(run) {
-  if (run.status === "completed") return `<a href="/results/${run.run_id}">View Results</a>`;
-  if (run.status === "running") return `<a href="/results/${run.run_id}">Waiting…</a>`;
-  return `<a href="/results/${run.run_id}">View Error</a>`;
+  const runPath = encodeURIComponent(run.run_id);
+  if (run.status === "completed") {
+    return `<a href="/results/${runPath}">View Results</a><span aria-hidden="true"> · </span>`
+      + `<a href="/chat?run_id=${runPath}">Ask about run</a>`;
+  }
+  if (run.status === "running") return `<a href="/results/${runPath}">Waiting…</a>`;
+  return `<a href="/results/${runPath}">View Error</a>`;
 }
 
 function renderRunsRows(runs) {
@@ -46,7 +58,7 @@ function renderRunsRows(runs) {
     .map(
       (run) => `
       <tr>
-        <td><code title="${run.run_id}">${run.run_id.slice(0, 8)}…</code></td>
+        <td class="run-id-cell"><code>${escapeHtml(run.run_id)}</code></td>
         <td>${statusBadgeHtml(run)}</td>
         <td>${runActionHtml(run)}</td>
       </tr>`
@@ -103,15 +115,22 @@ async function pollStatus() {
       banner.classList.toggle("live-on", isActive);
       banner.classList.toggle("live-off", !isActive);
       bannerText.textContent = isActive
-        ? `Pipeline: RUNNING (${data.active_run.phase})`
-        : "Pipeline: IDLE";
+        ? runningLabel(data.active_run)
+        : "Inspection: IDLE";
     }
 
     const runBtn = document.getElementById("run-pipeline-btn");
     if (runBtn) {
       runBtn.disabled = !!data.active_run;
-      runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Pipeline";
+      runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Inspection";
     }
+
+    // Re-enable the Device/Video config fields once the run finishes — the
+    // fieldset is disabled server-side only for the initial page render
+    // (based on active_run at load time), so without this it would stay
+    // grayed out forever after a run completes since this page never reloads.
+    const configFieldset = document.getElementById("pipeline-config-fieldset");
+    if (configFieldset) configFieldset.disabled = !!data.active_run;
 
     const phaseHint = document.getElementById("run-phase-hint");
     if (phaseHint) phaseHint.textContent = phaseHintText(data.active_run);

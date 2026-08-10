@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Live Video Captioning Analytics App shim.
@@ -6,7 +6,7 @@
 Integrates the Intel Live Video Captioning application as a VMS analytics app.
 
 Data flow:
-  Camera RTSP ──► LVC stack (DLStreamer + gvagenai VLM)
+  Camera RTSP ──► LVC stack (DL Streamer + gvagenai VLM)
                   ├─► captions via MQTT → SSE  → dashboard
                   └─► annotated video  → MediaMTX WebRTC → dashboard
 

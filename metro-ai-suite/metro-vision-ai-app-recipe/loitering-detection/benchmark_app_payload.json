@@ -1,7 +1,7 @@
 [
     {
         "pipeline": "object_tracking_cpu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
                 "type": "uri"
@@ -10,11 +10,15 @@
                 "metadata": {
                     "type": "mqtt",
                     "topic": "object_tracking_$x",
-                    "publish_frame":false
+                    "publish_frame": false
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -27,7 +31,7 @@
     },
     {
         "pipeline": "object_tracking_gpu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
                 "type": "uri"
@@ -36,11 +40,15 @@
                 "metadata": {
                     "type": "mqtt",
                     "topic": "object_tracking_$x",
-                    "publish_frame":false
+                    "publish_frame": false
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {
@@ -53,7 +61,7 @@
     },
     {
         "pipeline": "object_tracking_npu",
-        "payload":{
+        "payload": {
             "source": {
                 "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101_looped.mp4",
                 "type": "uri"
@@ -62,11 +70,15 @@
                 "metadata": {
                     "type": "mqtt",
                     "topic": "object_tracking_$x",
-                    "publish_frame":false
+                    "publish_frame": false
                 },
                 "frame": {
                     "type": "webrtc",
-                    "peer-id": "object_tracking_$x"
+                    "peer-id": "object_tracking_$x",
+                    "overlay-properties": {
+                        "font-scale": 1.0,
+                        "draw-txt-bg": false
+                    }
                 }
             },
             "parameters": {

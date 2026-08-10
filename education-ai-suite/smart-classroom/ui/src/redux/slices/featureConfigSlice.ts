@@ -9,18 +9,8 @@ export interface FeatureDescriptor {
   requires: string[];
   
   // Optional UI-specific fields
-  type?: string;
-  panel?: string;
-  title?: string;
   endpoints?: Record<string, string>;
   mode?: string;
-  
-  // Video Analytics specific
-  cameras?: {
-    front?: boolean;
-    back?: boolean;
-    board?: boolean;
-  };
 }
 
 interface FeatureConfigState {

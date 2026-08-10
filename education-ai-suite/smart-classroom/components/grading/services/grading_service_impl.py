@@ -13,11 +13,23 @@ from services.job_store import JsonJobStore
 from services.vlm_grading_pipeline import run_vlm_grading_pipeline
 
 
-def _check_url(url: str, timeout: float = 3.0) -> str:
+def _check_vlm(url: str) -> str:
+    if not url:
+        return "unavailable"
     try:
-        import urllib.request
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return "healthy" if r.status < 400 else "unavailable"
+        from services.vlm_client import check_health
+        check_health(url)
+        return "healthy"
+    except Exception:
+        return "unavailable"
+
+
+def _check_layout(url: str) -> str:
+    if not url:
+        return "unavailable"
+    try:
+        from services.detection_client import check_service_health
+        return "healthy" if check_service_health(url) else "unavailable"
     except Exception:
         return "unavailable"
 
@@ -31,8 +43,8 @@ def get_health(language: str) -> dict[str, Any]:
         "service": "grading",
         "language": language,
         "dependencies": {
-            "vlm": _check_url(f"{vlm_url}/health") if vlm_url else "unavailable",
-            "layout_detection": _check_url(f"{layout_url}/health") if layout_url else "unavailable",
+            "vlm": _check_vlm(vlm_url),
+            "layout_detection": _check_layout(layout_url),
         },
     }
 
@@ -387,14 +399,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
         if slot is None:
             slot = str(len(students) + 1)
 
-        questions = {}
-        for qid, q in (data.get("questions") or {}).items():
-            questions[qid] = {
-                "catalog": q.get("catalog"),
-                "type": q.get("type"),
-                "score": q.get("vlm_score"),
-                "max_score": q.get("max_score"),
-            }
+        questions_hierarchy = data.get("questions_hierarchy") or []
 
         students[slot] = {
             "student_id": student_id,
@@ -402,6 +407,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "class_name": student_meta.get("class_name"),
             "exam_number": student_meta.get("exam_number"),
             "paper_path": source_input.get("paper_path"),
+            "result_path": str(result_path),
             "total_score": source_summary.get("total_score"),
             "total_max": source_summary.get("total_max"),
             "objective_score": source_summary.get("objective_score"),
@@ -409,7 +415,7 @@ def _update_summary(task_id: str, student_id: str, result_path: str) -> None:
             "subjective_score": source_summary.get("subjective_score"),
             "subjective_max": source_summary.get("subjective_max"),
             "processing_seconds": data.get("processing_seconds"),
-            "questions": questions,
+            "questions_hierarchy": questions_hierarchy,
         }
         summary["updated_at"] = _now_utc_iso()
         summary["student_count"] = len(students)
@@ -471,6 +477,27 @@ def get_task_summary(task_id: str) -> dict[str, Any]:
     if summary_path.exists():
         return json.loads(summary_path.read_text(encoding="utf-8"))
     return _empty_summary(name)
+
+
+def get_student_result(task_id: str, slot: str) -> dict[str, Any]:
+    name = _validate_task_id(task_id)
+    task_root = (_outputs_root() / name).resolve()
+    summary_path = task_root / "summary.json"
+    if not summary_path.exists():
+        raise ValueError(f"summary not found for task {name}")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    student = (summary.get("students") or {}).get(str(slot))
+    if not student:
+        raise ValueError(f"student slot {slot} not found")
+    result_path = student.get("result_path")
+    if not result_path:
+        raise ValueError(f"result_path missing for slot {slot}")
+    result_path = Path(str(result_path)).resolve()
+    if task_root not in result_path.parents:
+        raise ValueError("result path outside task output directory")
+    if not result_path.exists():
+        raise ValueError(f"result file not found: {result_path}")
+    return json.loads(result_path.read_text(encoding="utf-8"))
 
 
 def _build_submission_key(paper_path: str, student_id: str | None) -> str:
@@ -838,6 +865,10 @@ def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
 
 def update_grading_config(
     dpi: int | None = None,
+    page_columns: int | None = None,
+    column_split_ratio: float | None = None,
+    force_split: bool | None = None,
+    force_split_pairs: list[list[int]] | None = None,
     contrast_enhance: bool | None = None,
     contrast_factor: float | None = None,
     max_tokens: int | None = None,
@@ -868,8 +899,63 @@ def update_grading_config(
     def yaml_bool(v: bool) -> str:
         return "true" if v else "false"
 
+    def replace_force_split_pairs(t: str, pairs: list[list[int]]) -> str:
+        lines = t.splitlines()
+        for i, line in enumerate(lines):
+            m = re.match(r"^(\s*)force_split_pairs\s*:\s*(.*)$", line)
+            if not m:
+                continue
+            indent = m.group(1)
+            j = i + 1
+            while j < len(lines):
+                nxt = lines[j]
+                if not nxt.strip():
+                    break
+                if len(nxt) - len(nxt.lstrip(" ")) <= len(indent):
+                    break
+                if not re.match(r"^\s*-\s*\[[^\]]+\]\s*$", nxt):
+                    break
+                j += 1
+
+            if pairs:
+                new_lines = [f"{indent}force_split_pairs:"]
+                new_lines.extend(f"{indent}  - [{int(p[0])}, {int(p[1])}]" for p in pairs)
+            else:
+                new_lines = [f"{indent}force_split_pairs: []"]
+
+            out = lines[:i] + new_lines + lines[j:]
+            return "\n".join(out) + ("\n" if t.endswith("\n") else "")
+
+        for i, line in enumerate(lines):
+            if re.match(r"^section_split\s*:\s*$", line):
+                if pairs:
+                    new_lines = ["  force_split_pairs:"]
+                    new_lines.extend(f"  - [{int(p[0])}, {int(p[1])}]" for p in pairs)
+                else:
+                    new_lines = ["  force_split_pairs: []"]
+                out = lines[: i + 1] + new_lines + lines[i + 1:]
+                return "\n".join(out) + ("\n" if t.endswith("\n") else "")
+        return t
+
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
+    if page_columns is not None:
+        text = replace_scalar(text, "page_columns", str(int(page_columns)))
+    if column_split_ratio is not None:
+        text = replace_scalar(text, "column_split_ratio", str(float(column_split_ratio)))
+    if force_split is not None:
+        text = replace_scalar(text, "force_split", yaml_bool(force_split))
+    if force_split_pairs is not None:
+        normalized_pairs: list[list[int]] = []
+        for pair in force_split_pairs:
+            if not isinstance(pair, list) or len(pair) != 2:
+                raise ValueError("force_split_pairs must be a list of [start_page, end_page] pairs")
+            start_page = int(pair[0])
+            end_page = int(pair[1])
+            if start_page <= 0 or end_page <= 0 or end_page != start_page + 1:
+                raise ValueError("each force_split_pairs entry must be adjacent positive pages, e.g. [4, 5]")
+            normalized_pairs.append([start_page, end_page])
+        text = replace_force_split_pairs(text, normalized_pairs)
     if contrast_enhance is not None:
         text = replace_scalar(text, "contrast_enhance", yaml_bool(contrast_enhance))
     if contrast_factor is not None:
@@ -914,6 +1000,7 @@ def get_grading_config() -> dict[str, Any]:
     vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
     watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
     detection = cfg.get("detection_service") if isinstance(cfg.get("detection_service"), dict) else {}
+    section_split = cfg.get("section_split") if isinstance(cfg.get("section_split"), dict) else {}
 
     sc_config_path = _component_root().parents[1] / "config.yaml"
     try:
@@ -934,6 +1021,10 @@ def get_grading_config() -> dict[str, Any]:
 
     return {
         "dpi": image.get("dpi"),
+        "page_columns": image.get("page_columns"),
+        "column_split_ratio": image.get("column_split_ratio"),
+        "force_split": section_split.get("force_split"),
+        "force_split_pairs": section_split.get("force_split_pairs"),
         "contrast_enhance": image.get("contrast_enhance"),
         "contrast_factor": image.get("contrast_factor"),
         "max_tokens": vlm.get("max_tokens"),

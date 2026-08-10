@@ -32,6 +32,7 @@ npm run build
 | `test_api/test_mcp_subscription_api.py` | [api-reference-mcp-subscription.md](../docs/user-guide/get-started/api-reference-mcp-subscription.md) | Real MCP sessions, subscriptions, cursor reads, unsubscribe requests, and SSE connection setup. |
 | `test_api/test_webhook_api.py` | [api-reference-mcp-webhook-event.md](../docs/user-guide/get-started/api-reference-mcp-webhook-event.md) | Real webhook endpoint and temporary SQLite database; validates motion, static, recording, and error requests. |
 | `test_api/test_videostream_analytics_api.py` | [api-reference-videostream-analytics.md](../docs/user-guide/get-started/api-reference-videostream-analytics.md) | Real FastAPI routes with a mocked `SourceManager`; no RTSP, OpenCV, recorder, or worker threads. |
+| `test_api/test_dashboard_api.py` | [api-reference-dashboard.md](../docs/user-guide/get-started/api-reference-dashboard.md) | Real dashboard HTTP routes with temporary SQLite/media data; validates monitor redaction, contained media access, full-clip preview, and OpenClaw configuration. |
 
 Tests use free local ports and temporary directories. They do not connect to the default service ports or write to `~/.mcp-smartbuilding`.
 
@@ -51,6 +52,7 @@ pytest -q tests/test_api/test_mcp_api.py
 pytest -q tests/test_api/test_mcp_subscription_api.py
 pytest -q tests/test_api/test_webhook_api.py
 pytest -q tests/test_api/test_videostream_analytics_api.py
+pytest -q tests/test_api/test_dashboard_api.py
 ```
 
 The API suite is intentionally separate from video-pipeline integration tests. Add tests that require real RTSP input, model serving, or Docker services to an opt-in integration suite rather than introducing those dependencies here.

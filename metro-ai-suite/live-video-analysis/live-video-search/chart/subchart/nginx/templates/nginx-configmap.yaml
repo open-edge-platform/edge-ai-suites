@@ -6,4 +6,4 @@ metadata:
     {{- include "lvs.nginx.labels" . | nindent 4 }}
 data:
   nginx.conf.template: |
-{{ .Values.nginx.config | nindent 4 }}
+{{ tpl .Values.nginx.config . | nindent 4 }}

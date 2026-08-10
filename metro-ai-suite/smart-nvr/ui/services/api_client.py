@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import time
 from ui.config import API_BASE_URL, logger
@@ -16,6 +16,26 @@ def fetch_cameras() -> Dict[str, List[str]]:
     except Exception as e:
         logger.error(f"Error fetching cameras: {e}")
         return {}
+
+
+def fetch_vss_features() -> Dict[str, bool]:
+    """Return which VSS features (summary/search) are enabled.
+
+    Falls back to both enabled if the backend is unreachable, so the UI shows
+    all options rather than hiding a working feature.
+    """
+    fallback = {"summary_enabled": True, "search_enabled": True}
+    try:
+        response = requests.get(f"{API_BASE_URL}/vss-features", timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        return {
+            "summary_enabled": bool(data.get("summary_enabled", True)),
+            "search_enabled": bool(data.get("search_enabled", True)),
+        }
+    except Exception as e:
+        logger.warning(f"Could not fetch VSS features: {e}. Defaulting to all enabled.")
+        return fallback
 
 
 def fetch_cameras_with_labels() -> (List[str], Dict[str, List[str]]):
