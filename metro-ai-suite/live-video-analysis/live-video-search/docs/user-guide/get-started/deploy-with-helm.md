@@ -92,7 +92,7 @@ Common optional values:
 | `global.vectordbBackend` | Vector database used by Multimodal DataPrep and Vector Retriever | `vdms` (default) or `milvus` |
 | `global.metricsManager.enabled` | Deploy Metrics Manager and enable live system/DataPrep metrics | `true` (default) or `false` |
 | `metrics-manager.image.repository` | Metrics Manager image repository | `intel/metrics-manager` |
-| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0-20260804-weekly` |
+| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0-rc1` |
 | `global.proxy.httpProxy` | HTTP proxy | `http://proxy-example.com:000` |
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
