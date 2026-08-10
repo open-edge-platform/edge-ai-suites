@@ -126,8 +126,3 @@ misses were narrow: eval 3 did not explicitly offer the `vss-deploy-helm`
 Kubernetes variant, and eval 4 did not surface the optional follow-on deploy
 path (`model-download-user` → `metro-ai-apps-recipe`) after the IR is produced —
 both are additive polish items, not routing errors.
-
-> Token consumption was not separately instrumented in this lightweight
-> plan-only harness; wall-clock is reported as the latency proxy. To capture
-> per-run token metrics, re-run through skill-creator's `run_multi_cli_eval.py`
-> aggregator (command above) and read `<workspace>/copilot/benchmark.json`.
