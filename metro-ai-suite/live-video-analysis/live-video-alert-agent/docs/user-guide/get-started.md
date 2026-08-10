@@ -22,7 +22,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/live-video-analysis/live-video-alert-agent
