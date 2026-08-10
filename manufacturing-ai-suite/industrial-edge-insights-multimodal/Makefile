@@ -31,11 +31,15 @@ $(shell chmod 600 .env helm/values.yaml)
 KEY_LENGTH=3072
 DAYS=365
 SHA_ALGO="sha384"
+LLM_DEVICE_LOWER := $(shell printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lower:]')
+LLM_WEIGHT_FORMAT_LOWER := $(shell printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]')
+MODEL_PATH ?= /model/llm_model_agentic/openvino_models/$(LLM_DEVICE_LOWER)/$(LLM_WEIGHT_FORMAT_LOWER)/$(LLM_MODEL_NAME)
+export MODEL_PATH
 
 # Build Docker containers
 .PHONY: build
 build:
-	@echo "Building Docker containers..."
+	@echo "Building Docker containers...";
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) build --pull;
 
 .PHONY: build_copyleft_sources
@@ -257,7 +261,7 @@ up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 download_model:
 	@echo "Starting Model Download Service..."; \
 	mkdir -p configs/agentic/models; \
-	$(shell chmod -R 755 configs/agentic/models) \
+	chmod -R 755 configs/agentic/models; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d model-download; \
 	echo "Waiting for model-download service to become healthy on port 8200..."; \
 	i=0; \

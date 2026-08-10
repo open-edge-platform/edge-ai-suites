@@ -74,7 +74,7 @@ services:
     # is rejected with "unsupported model settings" by OVMS for graph-based
     # models).
     command: >
-      --model_path /model/llm_model_agentic/openvino_models/cpu/int4/microsoft/Phi-4-mini-instruct
+      --model_path ${MODEL_PATH:?MODEL_PATH must be set}
       --model_name ${LLM_MODEL_NAME:?LLM_MODEL_NAME must be set}
       --rest_port 8000
     environment:
@@ -85,10 +85,24 @@ services:
     restart: unless-stopped
     devices:
       - /dev/dri:/dev/dri
+      - /dev/accel:/dev/accel
     group_add:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}
       - ${RENDER_GROUP_ID:-1002}
+      # render group ID for ubuntu 20.04 host OS
+      - "109"
+      # render group ID for ubuntu 22.04 host OS
+      - "110"
+      # render group ID for ubuntu 24.04 host OS
+      - "992"
+      - "993"
+    device_cgroup_rules:
+      # Default run - device-cgroup-rule='c 189:* rmw'
+      # Selective rules can be applied for deployment
+      - 'c 189:* rmw'
+      - 'c 209:* rmw'
+      - 'a 189:* rwm'
     volumes:
       - ./configs/agentic/models:/model:ro
     ports:
@@ -142,13 +156,33 @@ services:
     environment:
       http_proxy: ${http_proxy:-}
       https_proxy: ${https_proxy:-}
-      no_proxy: ${no_proxy:-},localhost
+      no_proxy: ${no_proxy:-},localhost,apm-metrics,apm-agent
+      METRICS_PORT: "9090"
+      TELEGRAF_PORT: "9273"
+      TELEGRAF_HTTP_PORT: "8186"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      METRICS_RETENTION_SECONDS: ${METRICS_RETENTION_SECONDS:-300}
+      MAX_METRICS_BATCH_SIZE: ${MAX_METRICS_BATCH_SIZE:-1000}
+      PROMETHEUS_POLLER_INTERVAL_MS: ${METRICS_POLL_INTERVAL_MS:-1000}
+    privileged: true
+    pid: host
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - "/sys:/sys:ro"
+      - "/run:/run:ro"
     networks:
       - timeseries_network
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=8)"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
