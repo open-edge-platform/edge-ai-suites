@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 LABEL org.opencontainers.image.title="APM UI Service"
 LABEL org.opencontainers.image.description="Web UI for agentic predictive maintenance blueprint"
