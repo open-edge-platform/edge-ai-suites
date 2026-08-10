@@ -1,14 +1,5 @@
 """
 Smart Classroom Session API - example client.
-
-Submits a transcription + video-analytics task, polls its status every 10s,
-and prints the output directory when it finishes.
-
-Usage:
-    python example_client.py
-
-Edit HOST / AUDIO_PATH / VIDEO_SOURCES below to match your setup.
-Uses only the Python standard library (no extra dependencies).
 """
 
 import json
@@ -19,17 +10,14 @@ import urllib.error
 
 # ---- configuration: edit these ----
 HOST = "http://127.0.0.1:8000"
-# AUDIO_PATH = r"C:\media\class1.wav"
-# VIDEO_SOURCES = {
-#     "front": r"C:\media\front.mp4",
-#     "back": r"C:\media\back.mp4",
-# }
-AUDIO_PATH = r"C:\Users\user\jianfeng\EDU-AI\PR\edu-ai-suite-20260-mandarin-test-files\input_part_5min.wav"
+
+AUDIO_PATH = r"C:\media\class1.wav"
 VIDEO_SOURCES = {
-    "front": r"C:\Users\user\jianfeng\EDU-AI\PR\edu-ai-suite-20260-mandarin-test-files\qian5.mp4",
-    "back": r"C:\Users\user\jianfeng\EDU-AI\PR\edu-ai-suite-20260-mandarin-test-files\hou5.mp4",
-    "content": r"C:\Users\user\jianfeng\EDU-AI\PR\edu-ai-suite-20260-mandarin-test-files\board5.mp4",
+    "front": r"C:\media\front.mp4",
+    "back": r"C:\media\back.mp4",
+    "content": r"C:\media\content.mp4",
 }
+
 STAGES = ["transcribe", "va", "summarize", "mindmap"]
 POLL_INTERVAL_SEC = 5
 # ------------------------------------
