@@ -15,7 +15,7 @@ import os
 import paho.mqtt.client as mqtt
 import requests
 
-BROKER = "localhost"
+BROKER = "host.docker.internal"
 PORT = 1884
 TOPIC = "uav/uav-1/telemetry/status"
 
@@ -24,7 +24,8 @@ PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"
 
 MODEL_PATH = "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
 
-RTSP_BASE_URL = "rtsp://localhost:8554/uav-1"
+RTSP_BASE_URL = f"rtsp://{BROKER}:8554/uav-1"
+RTSP_OUTPUT_BASE_URL = f"rtsp://localhost:8555/"
 
 # How long to wait (seconds) for ffprobe to confirm a stream is up, and how
 # many times / how long to retry before giving up on a given pipeline.
@@ -152,10 +153,10 @@ def start_pipelines():
         except requests.RequestException as exc:
             print(f"[pipeline] Failed to start '{pipeline['name']}': {exc}")
 
-    stream_urls = "\n".join(f"{p['device']}: {p['rtsp_url']}" for p in PIPELINES)
+    stream_urls = "\n".join(f"{p['device']}: {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in PIPELINES)
     print(f"RTSP streams available at:\n{stream_urls}")
 
-    inputs = " \\\n".join(f"  -rtsp_transport tcp -i {p['rtsp_url']}" for p in PIPELINES)
+    inputs = " \\\n".join(f"  -rtsp_transport tcp -i {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in PIPELINES)
     outputs = " \\\n".join(f"  -map {i}:v -c:v copy {p['frame_path']}.mkv" for i, p in enumerate(PIPELINES))
     print(f"\nTo save all streams to disk, run:\nffmpeg \\\n{inputs} \\\n{outputs}")
 
