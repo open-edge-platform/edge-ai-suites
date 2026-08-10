@@ -488,6 +488,18 @@ foreach ($Service in $Services) {
         
         if ($LASTEXITCODE -eq 0) {
             Write-Success "Dependencies installed for $($Service.Name)"
+
+            # openwakeword pip package ships only .tflite files; download the
+            # .onnx models (melspectrogram, embedding_model, etc.) explicitly.
+            if ($Service.Name -eq "kiosk-core") {
+                Write-Info "Downloading openwakeword ONNX model assets..."
+                & $PythonExe -c "import openwakeword; openwakeword.utils.download_models()" 2>&1 | Out-Null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "openwakeword models downloaded"
+                } else {
+                    Write-Error-Custom "openwakeword model download failed (exit $LASTEXITCODE). Wake-word detection will not work until models are available."
+                }
+            }
         }
         else {
             throw "pip install failed with exit code $LASTEXITCODE"
