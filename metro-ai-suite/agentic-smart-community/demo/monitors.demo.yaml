@@ -58,7 +58,7 @@ monitors:
     source_url: rtsp://localhost:8554/live/elder
     use_case: elder_wakeup
     pipeline_config:
-      motion: { enabled: true, diff_threshold: 25, area_ratio: 0.015, stable_frames: 30 }
+      motion: { enabled: true, diff_threshold: 20, area_ratio: 0.004, stable_frames: 20 }
       prefilter:
         enabled: true
         device: NPU

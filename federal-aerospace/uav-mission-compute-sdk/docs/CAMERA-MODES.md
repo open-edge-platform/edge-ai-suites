@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Camera Modes
 
-This document describes the two camera input modes available in the fedaero-drone-sdk-poc: **simulated cameras** (Gazebo) and **USB cameras** (real hardware).
+This document describes the two camera input modes available in the uav-mission-compute-sdk: **simulated cameras** (Gazebo) and **USB cameras** (real hardware).
 
 ## Overview
 
@@ -91,7 +91,7 @@ VISION_CAMERA_IDS=nadir,forward,rear
 ### Startup
 
 ```bash
-cd ~/fedaero-drone-sdk-poc
+cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 make init                    # Set passwords in .env
 make up-sim-camera                      # Start PX4 + Gazebo + camera-bridge
 docker compose ps            # Wait for px4 (healthy) ~90s
@@ -219,7 +219,7 @@ ffmpeg -f rawvideo -pix_fmt bgr24 -s {width}x{height} -r {fps}
 ### Startup
 
 ```bash
-cd ~/fedaero-drone-sdk-poc
+cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 
 # 1. Enumerate USB devices
 v4l2-ctl --list-devices
@@ -267,7 +267,7 @@ services:
 ### From Sim to USB
 
 ```bash
-cd ~/fedaero-drone-sdk-poc
+cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 
 # 1. Enumerate USB device
 v4l2-ctl --list-devices
@@ -289,7 +289,7 @@ make apps
 ### From USB to Sim
 
 ```bash
-cd ~/fedaero-drone-sdk-poc
+cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 
 # 1. Update .env back to 3 cameras
 sed -i 's/VISION_CAMERA_IDS=nadir/VISION_CAMERA_IDS=nadir,forward,rear/' .env
