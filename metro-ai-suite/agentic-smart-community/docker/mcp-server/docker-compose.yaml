@@ -11,7 +11,7 @@ services:
   # SmartBuilding MCP server (Streamable-HTTP + UI on :3100, events webhook on
   # :3101). The MCP server Node process, containerised and joined to the stack so
   # the whole thing comes up with one `docker compose up`.
-  smartbuilding-mcp-server:
+  smart-community-mcp-server:
     # Context is the repo root (two levels up from docker/mcp-server/); the
     # Dockerfile path is stated relative to that context.
     build:
@@ -21,7 +21,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY:-}
         HTTPS_PROXY: ${HTTPS_PROXY:-}
         NO_PROXY: ${NO_PROXY:-}
-    image: ${REGISTRY:-}smartbuilding-mcp-server:${TAG:-latest}
+    image: ${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}
     # Host network keeps localhost semantics in both directions: the MCP server
     # reaches multilevel/vllm/videostream-analytics on localhost, and VSA (also on
     # host network) POSTs events back to localhost:3101 — no port remapping.

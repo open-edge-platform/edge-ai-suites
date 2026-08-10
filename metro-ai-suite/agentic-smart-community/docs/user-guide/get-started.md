@@ -58,7 +58,7 @@ The on-device stack is defined in [docker/compose.yaml](https://github.com/open-
 | `vllm-ipex-serving`              | `:41091`                   | On-device model serving for VLM and LLM requests                                  |
 | `multilevel-video-understanding` | `:8192`                    | Video-summary microservice                                                        |
 | `videostream-analytics`          | `:8999`                    | Video capture and optional detector-as-prefilter; posts events to the MCP webhook |
-| `smartbuilding-mcp-server`       | `:3100` (+`:3101` webhook) | MCP server: Streamable-HTTP + Web UI, and the events webhook                      |
+| `smart-community-mcp-server`       | `:3100` (+`:3101` webhook) | MCP server: Streamable-HTTP + Web UI, and the events webhook                      |
 
 First, create the runtime data directory and copy the configuration templates into it. The MCP server reads these at startup (if you skip this, it auto-seeds the same templates on first start):
 
@@ -84,7 +84,7 @@ bash setup_docker.sh
 
 > **Note:**
 >
-> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smartbuilding-mcp-server`.
+> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smart-community-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 
@@ -98,19 +98,19 @@ curl -fsS http://localhost:8999/health
 
 ### Step 2 - Verify the MCP server
 
-The MCP server starts as part of the stack in Step 1 (the `smartbuilding-mcp-server` container). It uses host networking, so it exposes the same endpoints as before:
+The MCP server starts as part of the stack in Step 1 (the `smart-community-mcp-server` container). It uses host networking, so it exposes the same endpoints as before:
 
 ```text
 UI:     http://localhost:3100/
 MCP:    http://localhost:3100/mcp
 Events: http://localhost:3101/events
-Logs:   docker logs -f smartbuilding-mcp-server
+Logs:   docker logs -f smart-community-mcp-server
 ```
 
 It always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` (bind-mounted at the same absolute path inside the container). For later configuration changes, update these two files and reload the server:
 
 ```bash
-docker compose -f docker/compose.yaml up -d --force-recreate smartbuilding-mcp-server
+docker compose -f docker/compose.yaml up -d --force-recreate smart-community-mcp-server
 ```
 
 Verify that the MCP endpoint, events webhook, and data root are available:

@@ -89,7 +89,7 @@ mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
 mkdir -p "${SMARTBUILDING_DATA_DIR}"
 
-# Run smartBuilding-mcp-server and videostream-analytics as the host user
+# Run smart-community-mcp-server and videostream-analytics as the host user
 export HOST_UID=$(id -u)
 export HOST_GID=$(id -g)
 
@@ -111,7 +111,7 @@ fi
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
 # =========================================================================
 # Runs on the host network, so it reaches the MCP server's EventsEndpoint (the
-# smartbuilding-mcp-server container, also on the host network, at localhost:3101 —
+# smart-community-mcp-server container, also on the host network, at localhost:3101 —
 # see docker/mcp-server/). Override only if the MCP server listens elsewhere.
 export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 
