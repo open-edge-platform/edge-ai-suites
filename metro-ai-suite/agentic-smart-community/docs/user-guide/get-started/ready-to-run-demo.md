@@ -43,7 +43,7 @@ From the component root (`metro-ai-suite/agentic-smart-community`), run:
 bash demo/scripts/start-demo.sh
 ```
 
-This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMARTBUILDING_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smartbuilding-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
+This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMARTBUILDING_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
 The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
@@ -56,7 +56,7 @@ cat demo/videos/.run/active-streams.txt
 cat "${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
-docker logs -f smartbuilding-mcp-server
+docker logs -f smart-community-mcp-server
 ```
 
 Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. Press `Ctrl-C` to stop following the log. Open `http://localhost:3100/` to verify that active monitors appear automatically and that selecting one starts its RTSP live preview. Multiple browser windows viewing the same monitor share one ffmpeg process. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
