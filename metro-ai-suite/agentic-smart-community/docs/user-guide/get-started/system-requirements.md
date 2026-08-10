@@ -4,11 +4,11 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ## Supported Platforms
 
-**Operating Systems**
+**Operating Systems**:
 
 - Ubuntu 24.04 LTS or later
 
-**Hardware**
+**Hardware**:
 
 - Intel® Core™ Ultra processor with integrated GPU (validated on Panther Lake, PTL 358H), sharing system RAM
 - At least **64 GB RAM** — default deployment target for `Qwen/Qwen3.6-35B-A3B` (FP8, 60k context)

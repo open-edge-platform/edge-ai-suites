@@ -20,6 +20,11 @@ from utils.rtsp_recorder import (
 )
 from utils.runtime_config_loader import RuntimeConfig
 from utils.system_checker import check_dlstreamer_installation
+from utils.gstreamer_env import (
+    GST_SUBPROCESS_TIMEOUT,
+    add_gst_plugin_path,
+    ensure_gst_registry,
+)
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -103,6 +108,10 @@ class VideoAnalyticsPipelineService:
         self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
         self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
 
+        # Settle the GStreamer environment before the first GStreamer process
+        # runs, so every process this service spawns shares one registry cache.
+        self._setup_environment()
+
         # Verify DL Streamer installation
         if not check_dlstreamer_installation():
             raise RuntimeError("DL Streamer is not installed or does not meet the minimum version requirement")
@@ -122,10 +131,9 @@ class VideoAnalyticsPipelineService:
             return None
 
     def _setup_environment(self):
-        """Setup GStreamer environment variables"""
-        current_path = os.environ.get("GST_PLUGIN_PATH", "")
-
-        os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
+        """Setup GStreamer environment variables. Idempotent."""
+        ensure_gst_registry()
+        add_gst_plugin_path(self.plugin_path)
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
@@ -152,7 +160,7 @@ class VideoAnalyticsPipelineService:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=10,
+                timeout=GST_SUBPROCESS_TIMEOUT,
             )
             combined_output = result.stdout + result.stderr
             if "An error was encountered while discovering the file" in combined_output:
@@ -683,6 +691,11 @@ class VideoAnalyticsPipelineService:
         if options is None:
             options = PipelineOptions()
 
+        # Setup environment before any GStreamer process runs, so gst-discoverer
+        # below and the pipeline itself see the same GST_PLUGIN_PATH and share
+        # one plugin registry cache.
+        self._setup_environment()
+
         # Auto-detect input type from source
         if source.startswith("rtsp://"):
             input_type = "rtsp"
@@ -698,9 +711,6 @@ class VideoAnalyticsPipelineService:
                 raise ValueError(f"Invalid source file '{source}': {error_msg}")
 
         try:
-            # Setup environment
-            self._setup_environment()
-
             # Build pipeline based on name
             if pipeline_name == PipelineName.FRONT.value:
                 pipeline_elements = self._build_pipeline_front(

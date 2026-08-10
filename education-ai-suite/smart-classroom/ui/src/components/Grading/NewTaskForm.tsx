@@ -6,12 +6,12 @@ import {
   gradingUploadRubric,
   gradingCreateTask,
 } from '../../services/api';
-import type { GradingRubricInfo, GradingTask } from '../../services/api';
+import type { GradingRubricInfo } from '../../services/api';
 import DirectoryPicker from './DirectoryPicker';
 import RubricEditor from './RubricEditor';
 
 interface NewTaskFormProps {
-  onTaskCreated: (task: GradingTask) => void;
+  onTaskCreated: () => void;
 }
 
 const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
@@ -64,7 +64,7 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       const res = await gradingUploadRubric(file);
       await loadRubrics(res.rubric_path);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toErrorMessage(err));
     } finally {
       setUploading(false);
     }
@@ -95,14 +95,14 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     setSubmitting(true);
     setError('');
     try {
-      const task = await gradingCreateTask({
+      await gradingCreateTask({
         paper_path: paperPath.trim(),
         rubric_path: rubricPath || undefined,
       });
-      onTaskCreated(task);
+      onTaskCreated();
       setPaperPath('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

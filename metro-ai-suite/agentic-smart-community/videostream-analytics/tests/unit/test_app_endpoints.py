@@ -1,7 +1,7 @@
 """Tests for FastAPI endpoints with mocked SourceManager.
 
-Phase 7 hard cutover: the request schemas in service.py now use the nested
-`pipeline` wrapper and reject the old flat format with HTTP 422.
+The request schemas in service.py use the nested `pipeline` wrapper and
+reject the old flat format with HTTP 422.
 """
 
 from unittest.mock import MagicMock
@@ -66,7 +66,7 @@ class TestListSources:
         mock_mgr.get_sources.return_value = []
         resp = client.get("/sources")
         assert resp.status_code == 200
-        # /sources returns a bare array (Phase 7 contract)
+        # /sources returns a bare array, not {"sources": [...]}
         assert resp.json() == []
 
     def test_with_sources(self, client, mock_mgr):
@@ -138,7 +138,7 @@ class TestRegisterSource:
         assert resp.json()["status"] == "started"
 
     def test_register_accepts_roi_block(self, client, mock_mgr):
-        """Phase 9: pipeline.roi top-level block must be accepted."""
+        """pipeline.roi top-level block must be accepted."""
         mock_mgr.register_source.return_value = {
             "status": "started",
             "source_id": "cam_child",
@@ -182,7 +182,7 @@ class TestRegisterSource:
         assert resp.json()["status"] == "already_running"
 
     def test_register_rejects_old_flat_body(self, client, mock_mgr):
-        """Phase 7 hard cutover: old rtsp_url / top-level motion must 422."""
+        """Old rtsp_url / top-level motion must 422."""
         resp = client.post("/register_source", json={
             "source_id": "cam1",
             "rtsp_url": "rtsp://localhost:8554/live/cam1",
@@ -208,9 +208,7 @@ class TestUnregisterSource:
             "status": "stopped",
             "source_id": "cam1",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "cam1",
-        })
+        resp = client.delete("/sources/cam1")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
 
@@ -219,9 +217,7 @@ class TestUnregisterSource:
             "status": "not_found",
             "source_id": "nonexistent",
         }
-        resp = client.request("DELETE", "/unregister_source", json={
-            "source_id": "nonexistent",
-        })
+        resp = client.delete("/sources/nonexistent")
         assert resp.status_code == 404
 
 

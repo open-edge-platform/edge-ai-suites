@@ -52,18 +52,15 @@ class SummaryFeature:
 
     def __init__(self) -> None:
         self.mode = None
-        self.system_prompt = None
 
     def build(self) -> None:
-        """Read the summary feature config (mode, system_prompt)."""
+        """Read the summary feature config (mode)."""
         summarizer_cfg = config.models.summarizer
         self.mode = getattr(summarizer_cfg, "mode", None)
-        self.system_prompt = getattr(summarizer_cfg, "system_prompt", None)
         logger.info("SummaryFeature built; mode=%s.", self.mode)
 
     def teardown(self) -> None:
         self.mode = None
-        self.system_prompt = None
         logger.info("SummaryFeature torn down.")
 
     def ui_descriptor(self) -> Dict:
