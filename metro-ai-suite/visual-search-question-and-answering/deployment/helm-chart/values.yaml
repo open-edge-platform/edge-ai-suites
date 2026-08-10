@@ -41,8 +41,8 @@ vlmOpenvinoServing:
   resources: {}
   name: vlm-openvino-serving
   image:
-    repository: "vlm-openvino-serving"
-    tag: "latest"
+    # The image reference is pinned in the deployment template and is not
+    # configurable, so that global.registry cannot repoint this upstream image.
     pullPolicy: "IfNotPresent"
   replicaCount: 1
   service:

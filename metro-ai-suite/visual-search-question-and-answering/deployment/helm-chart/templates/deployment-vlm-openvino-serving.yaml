@@ -26,7 +26,9 @@ spec:
           - {{ .Values.vlmOpenvinoServing.renderGroupId }}
       containers:
         - name: {{ .Values.vlmOpenvinoServing.name }}
-          image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.vlmOpenvinoServing.image.repository }}:{{ .Values.vlmOpenvinoServing.image.tag }}"
+          # Published upstream image, pinned deliberately. It is not built from
+          # this repository, so global.registry is intentionally not applied.
+          image: "intel/vlm-openvino-serving:2026.2.0-20260807-weekly"
           imagePullPolicy: {{ .Values.vlmOpenvinoServing.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}
