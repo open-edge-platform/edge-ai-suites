@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 global:
   registry: ''
-  tag: latest
+  tag: 2026.2.0-rc1
   vssStackTag: ''
   pullPolicy: ''
   vectordbBackend: vdms

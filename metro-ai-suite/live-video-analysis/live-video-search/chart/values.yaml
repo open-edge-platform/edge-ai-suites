@@ -1,6 +1,6 @@
 global:
   registry: "intel"
-  tag: "latest"
+  tag: "2026.2.0-rc1"
   vssStackTag: ""
   smartNvrStackTag: ""
   pullPolicy: ""
@@ -464,7 +464,7 @@ metrics-manager:
   coLocateWithDataPrep: true
   image:
     repository: intel/metrics-manager
-    tag: "2026.2.0-20260715-weekly"
+    tag: "2026.2.0-rc1"
     pullPolicy: IfNotPresent
 
 vdms-vector-db:

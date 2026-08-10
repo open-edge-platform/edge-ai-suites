@@ -23,6 +23,9 @@
 - The storage service and agent service both expose Prometheus metrics.
 - Reference use case: `pipeline-defect-detection` with four defect classes — Rupture, Deformation,
   Disconnect, and Obstacle.
+- **Interactive Chat (Ask & Analyze)**: conversational interface in the web dashboard that lets
+  operators query maintenance analysis, detection evidence, and pipeline data using natural language.
+  Answers are generated from available pipeline data via the LLM service.
 - Data preparation script for downloading and building sample video from a public Kaggle dataset.
 - On-demand "Run Pipeline" trigger: one full detect-then-reason cycle per click — the DL Streamer
   pipeline runs once over the (finite) source video, then the agent pipeline reasons over exactly

@@ -24,7 +24,7 @@ an introduction.
 
   ```bash
   export REGISTRY="intel"
-  export TAG="latest"
+  export TAG="2026.2.0-rc1"
   ```
 
 ## Quick Start with Setup Script
@@ -276,7 +276,7 @@ export METRICS_MANAGER_PRIVILEGED=True       # Required for GPU/NPU host telemet
 The **System Telemetry** panel in the UI is backed by Metrics Manager. If you override the
 Metrics Manager endpoint, keep `METRICS_MANAGER_URL` and `METRICS_STREAM_URL` reachable from
 the Traffic Intersection Agent container. Docker Compose uses the published
-`intel/metrics-manager:2026.2.0-20260715-weekly` image by default; set `METRICS_MANAGER_IMAGE` and
+`intel/metrics-manager:2026.2.0-rc1` image by default; set `METRICS_MANAGER_IMAGE` and
 `METRICS_MANAGER_TAG` only when deploying a custom Metrics Manager build.
 
 ### Customizing the video used by sample application

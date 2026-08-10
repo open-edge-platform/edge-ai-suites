@@ -2,7 +2,7 @@ global:
   proxy:
     noProxy: localhost,127.0.0.1,.svc.cluster.local
   registry: ''
-  tag: latest
+  tag: 2026.2.0-rc1
   smartNvrStackTag: ''
   pullPolicy: ''
 

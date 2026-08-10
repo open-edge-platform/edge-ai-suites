@@ -39,6 +39,12 @@ function statusBadgeHtml(run) {
   return `<span class="status-badge status-${escapeHtml(run.status)}">${escapeHtml(run.status)}${suffix}</span>`;
 }
 
+function runningLabel(activeRun) {
+  return activeRun && activeRun.phase
+    ? `Inspection: RUNNING (${activeRun.phase})`
+    : "Inspection: RUNNING";
+}
+
 function runActionHtml(run) {
   if (run.status === "completed") return `<a href="${withRoot(`/results/${run.run_id}`)}">View Results</a>`;
   if (run.status === "running") return `<a href="${withRoot(`/results/${run.run_id}`)}">Waiting…</a>`;
@@ -108,8 +114,8 @@ async function pollStatus() {
       banner.classList.toggle("live-on", isActive);
       banner.classList.toggle("live-off", !isActive);
       bannerText.textContent = isActive
-        ? `Pipeline: RUNNING (${data.active_run.phase})`
-        : "Pipeline: IDLE";
+        ? runningLabel(data.active_run)
+        : "Inspection: IDLE";
     }
 
     const runBtn = document.getElementById("run-pipeline-btn");
@@ -117,6 +123,14 @@ async function pollStatus() {
       runBtn.disabled = !!data.active_run;
       runBtn.textContent = data.active_run ? "▶ Running…" : "▶ Run Agentic Analysis";
     }
+
+    // Re-enable the Device/Video config fields once the run finishes — the
+    // fieldset is disabled server-side only for the initial page render
+    // (based on active_run at load time), so without this it would stay
+    // grayed out forever after a run completes since this page never reloads.
+    const configFieldset = document.getElementById("pipeline-config-fieldset");
+    if (configFieldset) configFieldset.disabled = !!data.active_run;
+
 
     const phaseHint = document.getElementById("run-phase-hint");
     if (phaseHint) phaseHint.textContent = phaseHintText(data.active_run);

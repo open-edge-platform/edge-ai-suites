@@ -7,17 +7,20 @@ This section shows how to deploy the multimodal sample application with the agen
 The agentic workflow is implemented as a **LangGraph framework-based, sequential multi-agent pipeline**. The `apm-agent`, which is the meta-agent, acts as the orchestrator that triggers the workflow when new fusion results arrive and coordinates the execution of specialized agents, each responsible for a distinct stage of reasoning. Each agent consumes the shared execution context together with outputs from previous stages and produces traceable intermediate artifacts and a final maintenance recommendation.
 
 
-```
+```text
 Vision (DL Streamer Pipeline Server)──┐
                                       ├─► Fusion Analytics ──► MQTT (Trigger batch request)
         Time-Series Analytics       ──┘                           │
                                                                   ▼
-                                                          agent (LangGraph)
-                                                                  │
-                                                     ┌────────────┼────────────┐
-                                                   Policy     Analysis      Evidence
-                                                                  │
-                                                          Maintenance Ticket
+                                                          Agent service FIFO queue
+                                                                  |
+                                                                  | bounded GET /detections
+                                                                  | bounded GET /detections/summary
+                                                                  v
+                                                      Policy -> Analysis -> Evidence -> Ticketing
+                                                                  |
+                                                                  v
+                                                         In-memory run results
                                                                   │
                                                             UI (Dashboard)
 ```
@@ -25,7 +28,7 @@ Vision (DL Streamer Pipeline Server)──┐
 | Agent | Input | Output |
 |--------|-------|--------|
 | **Policy Agent** | Fusion results (`fusion_result`) filtered according to the configured analysis thresholds. Uses `fused_decision`, `fusion_confidence`, modality confidence scores, anomaly indicators, and timestamp alignment (`vision_rtsp_ts_diff_ms`). | Structured policy violation report containing the detected defect class, fusion and modality confidence scores, alignment quality, and preliminary priority. Policy decisions are based on `fusion_mode` and configured severity rules. |
-| **Analysis Agent** | Policy violations together with fusion, vision, and time-series classifications for the detection window. | Root-cause analysis identifying the dominant defect, explaining conflicts between fusion and modality-specific classifications, and providing operational recommendations based on confidence and anomaly evidence. |
+| **Analysis Agent** | Policy output as the primary anchor, supplemented by fusion, vision, and time-series classifications for the detection window when available. | Policy-anchored analysis summarizing the policy finding and corroborating it with modality classification data and confidence evidence; falls back to event-level or summary-level analysis when no policy output is available. |
 | **Evidence Agent** | Fusion records selected according to the configured evidence criteria (evidence_fields, confidence threshold, and maximum record count). | Formal audit report containing an evidence summary, detailed evidence table, modality agreement status, time synchronization quality, and a deterministic evidence conclusion supporting the final decision. |
 | **Ticketing Agent** | Policy evaluation and root-cause analysis results. | Structured maintenance ticket containing the priority, title, description, affected component (if available), recommended action, estimated resolution time, and defect class tags. Ticket priority and escalation follow the configured ticketing rules. |
 
@@ -56,8 +59,10 @@ Vision (DL Streamer Pipeline Server)──┐
 
 Run the full agentic stack (downloads the LLM model first, then starts all containers):
 
-> **Note:** Model download time varies depending on network speed and hardware.
-> The service is polled every 5 seconds for up to 50 minutes.
+> **Note:** 
+> - Model download time varies depending on network speed and hardware.
+> - The service is polled every 5 seconds for up to 50 minutes. 
+> - Supported devices for Agentic Workflow are : `CPU`, `GPU`
 
 
 ```bash
@@ -70,6 +75,20 @@ For a fresh build before deployment:
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make build
+make up_agentic
+```
+
+### Running the Agentic Workflow on GPU
+
+By default, the agentic workflow is configured to run on `CPU`.
+
+To trigger the agentic workflow on `GPU`, update `LLM_DEVICE` in .env to `GPU`:
+
+```sh
+vi .env
+# change LLM_DEVICE to GPU
+LLM_DEVICE=GPU
+# Deploy Agentic Workflow
 make up_agentic
 ```
 
@@ -102,8 +121,9 @@ The policy and ticketing agents operate on the following class hierarchy:
 |----------|---------|
 | **CRITICAL** | Burnthrough, Lack of Fusion, and Crater Cracks |
 | **HIGH** | Excessive Penetration |
-| **MEDIUM** | Porosity, Porosity with Excessive Penetration, Undercut, Spatter, and Warping, Overlap, Excessive Convexity |
-| **LOW** | No Weld, Good Weld, and No Label |
+| **MEDIUM** | Porosity, Porosity with Excessive Penetration, Undercut, and Warping |
+| **LOW** | Overlap, Spatter, and Excessive Convexity |
+| **Non-actionable** | Good Weld, No Weld, and No Label |
 
 ### Prompts
 
@@ -112,10 +132,10 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 | Section | Controls |
 |---------|----------|
 | `[SYSTEM]` | Canonical class labels, label normalization rules (`No_Weld` → `No Weld`, `Good_Weld` → `Good Weld`, and `Porosity_w_Excessive_Penetration` → `Porosity with Excessive Penetration`), and available fusion fields |
-| `[POLICY]` | How violations are identified: `fusion_confidence` as the primary signal, `fused_decision and both anomalies` escalate the severity, and `vision_rtsp_ts_diff_ms` thresholds classify the time-sync quality (`≤ 50 ms` GOOD, `50–100 ms` WARN, and `> 100 ms` BAD) |
-| `[ANALYSIS]` | Root-cause correlation between `vision_classification` and `timeseries_classification`, and resolution of modality conflicts using confidence evidence |
-| `[EVIDENCE]` | Three-section output: Summary → Table (all 15 schema fields) → Conclusion, and rows annotated with `AGREED`/`DISAGREED` and `GOOD`/`WARN`/`BAD` time-sync status |
-| `[TICKETING]` | escalation rules tied to the class and `fusion_confidence` threshold (`CRITICAL` for critical classes at ≥ 0.8 fusion_confidence, `HIGH` for the Excessive Penetration class at ≥ 0.75 fusion_confidence) |
+| `[POLICY]` | How violations are identified: `fusion_confidence` as the primary signal, priority determined by defect class, confidence used only to verify the configured threshold is met, and `fused_decision` reported exactly when present |
+| `[ANALYSIS]` | Policy-anchored analysis treating the policy decision as the source of truth; corroborates with fusion and modality data when available; falls back to event-level or summary-level analysis when no policy output exists |
+| `[EVIDENCE]` | Three-section output: Summary → Table (one row per actionable event, all 15 schema fields) → Conclusion; summary-only mode when only aggregate statistics are available |
+| `[TICKETING]` | Escalation rules tied to defect class and `fusion_confidence` threshold: CRITICAL ≥ 0.80, HIGH ≥ 0.75, MEDIUM ≥ 0.65, LOW ≥ 0.55; ticket generated only when `fused_decision == 1` |
 
 ### Fallback Policy
 
