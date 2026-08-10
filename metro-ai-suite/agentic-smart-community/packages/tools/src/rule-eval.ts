@@ -1,4 +1,4 @@
-import type { SmartBuildingDB, SchemaDefinition } from "@smartbuilding-video/db";
+import type { SmartCommunityDB, SchemaDefinition } from "@smart-community-video/db";
 import type { RuleContext, RuleResult } from "./rule-engine/index.js";
 import { evaluateWithOverride } from "./rule-engine/index.js";
 
@@ -56,7 +56,7 @@ export interface RuleEvalResult {
  *   - Producing an alert retroactively when the poller was down at the time.
  */
 export async function ruleEval(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   deps: RuleEvalDeps,
   params: RuleEvalParams,
 ): Promise<RuleEvalResult> {

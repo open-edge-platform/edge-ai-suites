@@ -16,11 +16,11 @@ services:
       # bind-mounted at the same host path (below) so this resolves in-container.
       # Default matches docker/set_env.sh and setup_docker.sh's DEFAULT_PREFILTER_MODEL.
       - PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}
-      # MCP server's data root. Defaults to ~/.mcp-smartbuilding (the MCP default);
-      # override by exporting SMARTBUILDING_DATA_DIR before `docker compose up`.
-      # VSA derives its default output root as <SMARTBUILDING_DATA_DIR>/segments; the
+      # MCP server's data root. Defaults to ~/.mcp-smart-community (the MCP default);
+      # override by exporting SMART_COMMUNITY_DATA_DIR before `docker compose up`.
+      # VSA derives its default output root as <SMART_COMMUNITY_DATA_DIR>/segments; the
       # per-monitor data_dir MCP sends (<root>/segments/<id>) still takes priority.
-      - SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - SMART_COMMUNITY_DATA_DIR=${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
       - http_proxy=
       - https_proxy=
       - no_proxy=localhost,127.0.0.1
@@ -34,7 +34,7 @@ services:
       # (<root>/segments/<id>) resolves to the SAME real host directory inside the
       # container, so recordings/motion_events land on the host where the MCP clip
       # extractor / VLM can read them.
-      - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}:${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
       - ${MODEL_DIR:-${HOME}/models}:${MODEL_DIR:-${HOME}/models}:ro
       # setup_docker.sh generates this host-side runtime configuration with the
       # absolute PREFILTER_MODEL path before starting the service.

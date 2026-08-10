@@ -1,15 +1,15 @@
-# Smart Building Framework Adapter SDK
+# Smart Community Framework Adapter SDK
 
-The Framework Adapter SDK connects the Smart Building MCP server's proactive resource notifications to an agent framework or MCP client host. It keeps framework-specific session, channel, and message-delivery behavior outside the MCP server.
+The Framework Adapter SDK connects the Smart Community MCP server's proactive resource notifications to an agent framework or MCP client host. It keeps framework-specific session, channel, and message-delivery behavior outside the MCP server.
 
-Ordinary MCP clients do not need an adapter to call `smartbuilding_*` tools or read resources. Build an adapter when the host must react to server-side events without waiting for a user request, especially when it must route alerts into framework-owned sessions or external channels.
+Ordinary MCP clients do not need an adapter to call `smart_community_*` tools or read resources. Build an adapter when the host must react to server-side events without waiting for a user request, especially when it must route alerts into framework-owned sessions or external channels.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-		Server[Smart Building MCP server]
-		Adapter[SmartBuildingAdapter]
+		Server[Smart Community MCP server]
+		Adapter[SmartCommunityAdapter]
 		Cursor[CursorStore]
 		Sink[Framework-specific AlertSink]
 		Host[Agent sessions or channels]
@@ -23,7 +23,7 @@ flowchart LR
 The SDK owns the MCP-facing lifecycle:
 
 - Connect over Streamable HTTP or stdio.
-- Subscribe to `smartbuilding://monitor/<monitor_id>/alerts`.
+- Subscribe to `smart-community://monitor/<monitor_id>/alerts`.
 - Read alerts after resource-update notifications.
 - Serialize delivery per monitor and preserve ascending alert-ID order.
 - Reconnect with exponential backoff and resubscribe automatically.
@@ -36,7 +36,7 @@ The framework adapter owns the host-facing lifecycle:
 - Format the alert for the destination.
 - Authenticate to the host framework.
 - Deliver idempotently and apply host-specific retry or authorization policy.
-- Start and stop `SmartBuildingAdapter` with the host process or plugin lifecycle.
+- Start and stop `SmartCommunityAdapter` with the host process or plugin lifecycle.
 
 The MCP server remains unaware of agent IDs, session keys, channel providers, and framework credentials.
 
@@ -50,10 +50,10 @@ The MCP server remains unaware of agent IDs, session keys, channel providers, an
 
 ## Public interfaces
 
-### `SmartBuildingAdapter`
+### `SmartCommunityAdapter`
 
 ```ts
-const adapter = new SmartBuildingAdapter(config, sink);
+const adapter = new SmartCommunityAdapter(config, sink);
 await adapter.start();
 await adapter.stop();
 ```
@@ -99,18 +99,18 @@ Resolve `push()` only after delivery is complete. Rejecting it leaves the cursor
 ```ts
 import {
 	FileCursorStore,
-	SmartBuildingAdapter,
+	SmartCommunityAdapter,
 	type AlertSink,
-} from "@smartbuilding-video/framework-adapter-sdk";
+} from "@smart-community-video/framework-adapter-sdk";
 
 const sink: AlertSink = {
 	async push({ monitorId, alert }) {
-		const idempotencyKey = `smartbuilding:${monitorId}:${alert.id}`;
+		const idempotencyKey = `smart-community:${monitorId}:${alert.id}`;
 		await host.sendAlert({ idempotencyKey, monitorId, alert });
 	},
 };
 
-const adapter = new SmartBuildingAdapter(
+const adapter = new SmartCommunityAdapter(
 	{
 		transport: { kind: "http", url: "http://localhost:3100/mcp" },
 		monitorIds: ["cam_loading_dock"],
