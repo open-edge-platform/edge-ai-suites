@@ -51,6 +51,7 @@ export function useVoiceSession(deviceId?: string) {
   });
   const [wakewordEnabled, setWakewordEnabled] = useState<boolean>(WAKEWORD.enabledByDefault);
   const [wakewordListening, setWakewordListening] = useState(false);
+  const [wakewordScore, setWakewordScore] = useState(0);
   // Preferred audio capture source. Resolved once on mount from kiosk-core:
   // "host" when HOST_MIC is enabled on the backend, otherwise "browser".
   // Tracked via captureModeRef; no state needed since only the ref is read.
@@ -557,6 +558,7 @@ export function useVoiceSession(deviceId?: string) {
               return;
             }
             const res = await pushBrowserWakewordAudio(wakewordSessionId, wav);
+            setWakewordScore(res.score);
             if (res.detected) {
               detectedLabel = res.detected_label ?? undefined;
               detectedScore = res.score;
@@ -767,6 +769,7 @@ export function useVoiceSession(deviceId?: string) {
     recording,
     wakewordEnabled,
     wakewordListening,
+    wakewordScore,
     status,
     messages,
     partialUser,
