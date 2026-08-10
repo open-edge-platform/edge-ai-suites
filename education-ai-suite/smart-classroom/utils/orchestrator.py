@@ -151,13 +151,51 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
     if launched == 0:
         raise _OrchestrationError(f"all va pipelines failed to launch: {'; '.join(failures)}")
 
+    _start_board_ocr_if_enabled(session_id, wanted)
+
     if not done.wait(timeout=3600):
         raise _OrchestrationError("va timed out")
+
+    _stop_board_ocr_if_enabled(session_id, final_status)
 
     if not _any_success(final_status, wanted):
         raise _OrchestrationError("all va pipelines failed")
 
     session_state.SessionStateManager.set_stage(session_id, "va", "done")
+
+
+def _board_ocr_enabled() -> bool:
+    features = getattr(config, "features", None)
+    bo = getattr(features, "board_ocr", None) if features else None
+    return bool(getattr(bo, "enabled", False)) if bo else False
+
+
+def _start_board_ocr_if_enabled(session_id: str, wanted: dict) -> None:
+    content_source = wanted.get("content")
+    if not content_source or not _board_ocr_enabled():
+        return
+    try:
+        from components.board_ocr.board_ocr_pipeline import start_board_ocr
+        start_board_ocr(session_id, content_source)
+        logger.info(f"[orchestrator] board OCR started for session {session_id}")
+    except Exception as e:
+        logger.error(f"[orchestrator] failed to start board OCR: {e}", exc_info=True)
+
+
+def _stop_board_ocr_if_enabled(session_id: str, final_status: dict) -> None:
+    if not _board_ocr_enabled():
+        return
+    # Leave board OCR running if the content pipeline failed (it reads the source
+    # directly); otherwise stop it. Mirrors the UI behavior.
+    if final_status.get("content") == "failed":
+        logger.info("[orchestrator] content pipeline failed; leaving board OCR running")
+        return
+    try:
+        from components.board_ocr.board_ocr_pipeline import stop_board_ocr
+        stop_board_ocr(session_id)
+        logger.info(f"[orchestrator] board OCR stopped for session {session_id}")
+    except Exception as e:
+        logger.error(f"[orchestrator] failed to stop board OCR: {e}", exc_info=True)
 
 
 def _any_success(final_status: dict, wanted: dict) -> bool:

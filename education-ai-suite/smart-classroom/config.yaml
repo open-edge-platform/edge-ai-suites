@@ -2,7 +2,7 @@
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: True # True or False, applicable for provider: openvino
-  language: en # en or zh
+  language: zh # en or zh
 
 features:
   asr:                { enabled: true }
@@ -11,10 +11,10 @@ features:
   topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }
   board_ocr:          { enabled: true }
-  content_search:     { enabled: true }
-  qa:                 { enabled: true }
-  grading:            { enabled: true }
-  report:             { enabled: true }
+  content_search:     { enabled: false }
+  qa:                 { enabled: false }
+  grading:            { enabled: false }
+  report:             { enabled: false }
 
 output_layout:
   result_dir: result
@@ -33,8 +33,8 @@ monitoring:
 
 models:
   asr:
-    provider: openai # openvino, funasr and openai supported
-    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    provider: funasr # openvino, funasr and openai supported
+    name: paraformer-zh  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     diarization: False # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional

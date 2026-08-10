@@ -257,3 +257,109 @@ curl http://<host>:8000/sessions/20260807-143518-0085/status
 # 3. 查看所有任务
 curl http://<host>:8000/sessions
 ```
+
+---
+
+## 附:LLM / VLM 服务用法(独立接口)
+
+Smart Classroom 还提供一个**可直接单独调用的大模型接口**,客户可以把它当作一个 LLM / VLM 服务使用(不需要走完整的课堂处理流程)。
+
+### 接口
+
+```
+POST http://<host>:8000/v1/chat/completions
+```
+
+**OpenAI 兼容格式**——客户可以用标准的 OpenAI 客户端直接调用。
+
+- 纯文本请求(当 **LLM** 用)
+- 图文请求(当 **VLM** 用,消息里带图片路径/URL)
+- 支持流式 / 非流式
+
+### 支持的模型
+
+服务端当前支持以下模型(OpenVINO 量化版本):
+
+| 模型 | 支持的量化 |
+|---|---|
+| `Qwen/Qwen3-VL-8B-Instruct` | int4、int8 |
+| `Qwen/Qwen3.5-9B` | int4、int8 |
+| `Qwen/Qwen3.6-35B-A3B` | int4(无 int8) |
+
+说明:
+
+- **当前默认**为 `Qwen/Qwen3-VL-8B-Instruct`(config 里 `vlm_name`),多模态。
+- **切换模型**需改服务端 `config.yaml` 的 `text_gen.vlm_name`(以及 `weight_format`、`device`),重启服务生效。
+- 接口的 `model` 参数会被忽略——**以服务端配置的模型为准**,客户传入 `model` 名不会切换模型。
+- 具体可用模型和量化由服务端部署决定;若需在部署上新增模型,请与服务提供方确认。
+
+### 用 OpenAI 客户端调用(推荐)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://127.0.0.1:8000/v1",   # 指向本服务的 VLM 端点
+    api_key="unused",                        # 本服务无鉴权,任意值
+)
+
+# 纯文本(当作 LLM)
+resp = client.chat.completions.create(
+    model="Qwen/Qwen3-VL-8B-Instruct",       # 可选,省略则用服务端配置的模型
+    messages=[
+        {"role": "system", "content": "你是课堂助手,回答简洁。"},
+        {"role": "user", "content": "总结这段课堂转写的要点"},
+    ],
+    temperature=0.3,
+)
+print(resp.choices[0].message.content)
+
+# 图文(当作 VLM,image_url 可填本机图片路径或 URL)
+resp = client.chat.completions.create(
+    model="Qwen/Qwen3-VL-8B-Instruct",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "这张板书上写了什么?"},
+            {"type": "image_url", "image_url": {"url": "C:/path/to/board.jpg"}},
+        ],
+    }],
+)
+```
+
+### 用 curl 调用
+
+```bash
+# 纯文本
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"你好,介绍一下你自己"}]}'
+
+# 图文
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages":[{
+      "role":"user",
+      "content":[
+        {"type":"text","text":"这张图里有什么?"},
+        {"type":"image_url","image_url":{"url":"C:\\path\\to\\board.jpg"}}
+      ]
+    }]
+  }'
+```
+
+### 支持的能力
+
+| 能力 | 说明 |
+|---|---|
+| 纯文本 / 图文 | 只有 prompt 时按 LLM 处理;带图片时按 VLM 处理 |
+| 流式 | 请求加 `"stream": true`,响应为 SSE 流(`data: {...}` 直到 `data: [DONE]`) |
+| `model` | 可选,省略时用服务端 config 的模型;传了也会被忽略(以服务端为准) |
+| `temperature` / `max_completion_tokens` / `enable_thinking` | 均可设置 |
+
+### 注意事项
+
+- **无鉴权**:该接口未做访问控制,仅适合本机 / 内网使用;暴露到公网需自行加保护。
+- **单轮**:只取最后一个 user 消息作为输入。需要多轮对话时,客户需自行把历史拼接进最后一个 user 消息。
+- **依赖模型已加载**:调用前需确保服务已启动且大模型已加载(text_gen 配置为启用)。

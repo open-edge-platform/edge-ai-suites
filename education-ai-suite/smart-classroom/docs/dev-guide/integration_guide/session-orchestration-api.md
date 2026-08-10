@@ -250,3 +250,119 @@ curl http://<host>:8000/sessions/20260807-143518-0085/status
 # 3. List all tasks
 curl http://<host>:8000/sessions
 ```
+
+---
+
+## Appendix: LLM / VLM Service (Standalone Endpoint)
+
+Smart Classroom also exposes a **directly callable LLM/VLM endpoint**. Clients can
+use it as a standalone model service, without going through the full classroom
+processing flow.
+
+### Endpoint
+
+```
+POST http://<host>:8000/v1/chat/completions
+```
+
+**OpenAI-compatible** — use a standard OpenAI client.
+
+- Text-only requests (use as an **LLM**)
+- Text + image requests (use as a **VLM**, include image path/URL in the message)
+- Streaming and non-streaming supported
+
+### Supported Models
+
+The server currently supports the following models (OpenVINO quantized):
+
+| Model | Supported Quantization |
+|---|---|
+| `Qwen/Qwen3-VL-8B-Instruct` | int4, int8 |
+| `Qwen/Qwen3.5-9B` | int4, int8 |
+| `Qwen/Qwen3.6-35B-A3B` | int4 (no int8) |
+
+Notes:
+
+- **Current default** is `Qwen/Qwen3-VL-8B-Instruct` (config `vlm_name`), multimodal.
+- `Qwen/Qwen3.5-9B` and `Qwen/Qwen3.6-35B-A3B` are validated only on
+  `device: GPU` + `weight_format: int8`.
+- **To switch models**, edit `config.yaml` (`text_gen.vlm_name`, plus
+  `weight_format` / `device`) and restart the service.
+- The `model` parameter in the request is **ignored** — the server-side configured
+  model is always used. Passing a different `model` name does not switch models.
+- Actual model availability and quantization depend on the deployment; contact the
+  service provider to add models.
+
+### OpenAI Client Usage (recommended)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://127.0.0.1:8000/v1",   # point at the VLM endpoint
+    api_key="unused",                        # no auth on this service
+)
+
+# Text-only (as LLM)
+resp = client.chat.completions.create(
+    model="Qwen/Qwen3-VL-8B-Instruct",       # optional; server config used if omitted
+    messages=[
+        {"role": "system", "content": "You are a classroom assistant. Be concise."},
+        {"role": "user", "content": "Summarize this classroom transcript."},
+    ],
+    temperature=0.3,
+)
+print(resp.choices[0].message.content)
+
+# Text + image (as VLM; image_url can be a local path or URL)
+resp = client.chat.completions.create(
+    model="Qwen/Qwen3-VL-8B-Instruct",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What is written on this board?"},
+            {"type": "image_url", "image_url": {"url": "C:/path/to/board.jpg"}},
+        ],
+    }],
+)
+```
+
+### curl Usage
+
+```bash
+# Text-only
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello, introduce yourself"}]}'
+
+# Text + image
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages":[{
+      "role":"user",
+      "content":[
+        {"type":"text","text":"What is in this image?"},
+        {"type":"image_url","image_url":{"url":"C:\\path\\to\\board.jpg"}}
+      ]
+    }]
+  }'
+```
+
+### Capabilities
+
+| Feature | Description |
+|---|---|
+| Text / text+image | Text-only is treated as LLM; with images, as VLM |
+| Streaming | Add `"stream": true`; response is an SSE stream (`data: {...}` until `data: [DONE]`) |
+| `model` | Optional; ignored — server config decides |
+| `temperature` / `max_completion_tokens` / `enable_thinking` | Configurable |
+
+### Notes
+
+- **No authentication**: this endpoint has no access control; suitable for
+  local/Intranet use only. Add your own protection before exposing it publicly.
+- **Single-turn**: only the last user message is used as input. For multi-turn
+  conversations, the client must assemble history into the last user message.
+- **Model must be loaded**: ensure the service is running and the model is loaded
+  (`text_gen` enabled) before calling.
