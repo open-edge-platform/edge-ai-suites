@@ -40,7 +40,7 @@ technology**. You:
 1. **Ask business questions** — outcome, data/inputs, deployment target,
    hardware, scale — never framework/model/precision/device.
 2. **Discover** the relevant skill(s) from the
-   [open-edge-platform/skills](https://github.com/open-edge-platform/skills)
+   `open-edge-platform/skills`
    catalog (see [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and
    [`references/DISCOVERY.md`](references/DISCOVERY.md)).
 3. **Propose a plan** — deliverable, which skill(s) will build it, and the
@@ -194,12 +194,13 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 
 ## Notes
 
-- This skill wraps the [prompt library](../../../README.md); the minimal
+- This skill wraps the prompt library (`metro-ai-suite/prompt-library`); the minimal
   `prompts/*.yaml` files state only a business objective and hand off here.
 - The delegate that builds the end-to-end vision stack is
-  [`metro-ai-apps-recipe`](../metro-ai-apps-recipe/SKILL.md) in this same
-  repository; all other delegates live in
-  [open-edge-platform/skills](https://github.com/open-edge-platform/skills).
+  `metro-ai-apps-recipe`
+  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`)
+  in this same repository; all other delegates live in
+  `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
   in sync with the upstream `skills-config.json` — see
   [`references/DISCOVERY.md`](references/DISCOVERY.md).

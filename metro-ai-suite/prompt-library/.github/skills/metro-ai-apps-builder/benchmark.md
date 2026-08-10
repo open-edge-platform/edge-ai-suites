@@ -92,8 +92,8 @@ from the delegates' own benchmarks. Read the aggregated numbers from
 
 > Not yet measured for this skill. Run the command above in plan-only mode and
 > paste the aggregated per-eval pass rates and mean token/latency numbers here,
-> mirroring the table format used in
-> [`../metro-ai-apps-recipe/benchmark.md`](../metro-ai-apps-recipe/benchmark.md).
+> mirroring the table format used in the `metro-ai-apps-recipe` skill's
+> `benchmark.md`.
 > Report **routing accuracy** (correct delegate chosen per case), **plan-before-
 > build rate** (no artifacts created before confirmation), and **negative-case
 > trigger accuracy** (eval 6 must not trigger) as the headline metrics.
