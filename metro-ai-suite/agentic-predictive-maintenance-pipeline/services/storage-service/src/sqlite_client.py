@@ -10,6 +10,17 @@ import logging
 import os
 from typing import Optional
 
+from src.query_models import (
+    AggregateMetric,
+    AggregateQuery,
+    CountQuery,
+    DetectionQuery,
+    FramesQuery,
+    GroupByQuery,
+    ListQuery,
+    QueryFilter,
+)
+
 logger = logging.getLogger(__name__)
 
 SCHEMA = """
@@ -29,6 +40,40 @@ CREATE INDEX IF NOT EXISTS idx_frame_id   ON detections(frame_id);
 CREATE INDEX IF NOT EXISTS idx_label      ON detections(label);
 CREATE INDEX IF NOT EXISTS idx_confidence ON detections(confidence);
 """
+
+FIELD_SQL = {
+    "id": "id",
+    "frame_id": "frame_id",
+    "label": "label",
+    "confidence": "confidence",
+    "x": "x",
+    "y": "y",
+    "width": "width",
+    "height": "height",
+    "timestamp": "timestamp",
+}
+FRAME_FIELD_SQL = {
+    "frame_id": "frame_id",
+    "detection_count": "detection_count",
+    "avg_confidence": "avg_confidence",
+    "min_confidence": "min_confidence",
+    "max_confidence": "max_confidence",
+}
+OPERATOR_SQL = {
+    "eq": "=",
+    "ne": "!=",
+    "gt": ">",
+    "gte": ">=",
+    "lt": "<",
+    "lte": "<=",
+}
+AGGREGATE_SQL = {
+    "count": "COUNT(*)",
+    "avg": "AVG({field})",
+    "min": "MIN({field})",
+    "max": "MAX({field})",
+    "sum": "SUM({field})",
+}
 
 
 class SQLiteClient:
@@ -94,6 +139,128 @@ class SQLiteClient:
         with self._get_conn() as conn:
             rows = conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
+
+    @staticmethod
+    def _compile_filters(filters: list[QueryFilter]) -> tuple[str, list]:
+        conditions: list[str] = []
+        params: list = []
+        for item in filters:
+            field = FIELD_SQL[item.field]
+            if item.operator in OPERATOR_SQL:
+                conditions.append(f"{field} {OPERATOR_SQL[item.operator]} ?")
+                params.append(item.value)
+            elif item.operator in {"in", "not_in"}:
+                values = item.value
+                placeholders = ", ".join("?" for _ in values)
+                keyword = "IN" if item.operator == "in" else "NOT IN"
+                conditions.append(f"{field} {keyword} ({placeholders})")
+                params.extend(values)
+            elif item.operator == "between":
+                conditions.append(f"{field} BETWEEN ? AND ?")
+                params.extend(item.value)
+            elif item.operator in {"contains", "starts_with"}:
+                escaped = str(item.value).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                pattern = f"%{escaped}%" if item.operator == "contains" else f"{escaped}%"
+                conditions.append(f"{field} LIKE ? ESCAPE '\\'")
+                params.append(pattern)
+            else:  # Models reject unknown operators before this boundary.
+                raise ValueError("Unsupported filter operator")
+        return (f" WHERE {' AND '.join(conditions)}" if conditions else ""), params
+
+    @staticmethod
+    def _compile_metrics(metrics: list[AggregateMetric]) -> list[str]:
+        expressions = []
+        for metric in metrics:
+            field = FIELD_SQL[metric.field] if metric.field else None
+            expression = AGGREGATE_SQL[metric.function]
+            if field:
+                expression = expression.format(field=field)
+            expressions.append(f'{expression} AS "{metric.alias}"')
+        return expressions
+
+    def query_detections(self, query: DetectionQuery) -> dict:
+        """Execute a validated structured query without accepting raw SQL fragments."""
+        where, params = self._compile_filters(query.filters)
+        limit = None
+        offset = None
+        grouped_by: list[str] = []
+
+        if isinstance(query, ListQuery):
+            fields = list(query.fields)
+            select = ", ".join(FIELD_SQL[field] for field in fields)
+            order = ", ".join(
+                f"{FIELD_SQL[item.field]} {item.direction.upper()}" for item in query.sort
+            )
+            sql = f"SELECT {select} FROM detections{where}"
+            if order:
+                sql += f" ORDER BY {order}"
+            limit, offset = query.limit, query.offset
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit + 1, offset])
+        elif isinstance(query, CountQuery):
+            fields = ["count"]
+            sql = f"SELECT COUNT(*) AS count FROM detections{where}"
+        elif isinstance(query, AggregateQuery):
+            fields = [metric.alias for metric in query.metrics]
+            sql = f"SELECT {', '.join(self._compile_metrics(query.metrics))} FROM detections{where}"
+        elif isinstance(query, GroupByQuery):
+            grouped_by = list(query.group_by)
+            fields = grouped_by + [metric.alias for metric in query.metrics]
+            group_fields = ", ".join(FIELD_SQL[field] for field in query.group_by)
+            selections = [FIELD_SQL[field] for field in query.group_by]
+            selections.extend(self._compile_metrics(query.metrics))
+            sql = (
+                f"SELECT {', '.join(selections)} FROM detections{where} "
+                f"GROUP BY {group_fields}"
+            )
+            if query.sort:
+                allowed_sort_sql = {field: FIELD_SQL[field] for field in query.group_by}
+                allowed_sort_sql.update({metric.alias: f'"{metric.alias}"' for metric in query.metrics})
+                sql += " ORDER BY " + ", ".join(
+                    f"{allowed_sort_sql[item.field]} {item.direction.upper()}" for item in query.sort
+                )
+            limit, offset = query.limit, query.offset
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit + 1, offset])
+        elif isinstance(query, FramesQuery):
+            grouped_by = ["frame_id"]
+            fields = [
+                "frame_id", "detection_count", "avg_confidence",
+                "min_confidence", "max_confidence",
+            ]
+            sql = (
+                "SELECT frame_id, COUNT(*) AS detection_count, "
+                "AVG(confidence) AS avg_confidence, MIN(confidence) AS min_confidence, "
+                f"MAX(confidence) AS max_confidence FROM detections{where} GROUP BY frame_id"
+            )
+            if query.sort:
+                sql += " ORDER BY " + ", ".join(
+                    f"{FRAME_FIELD_SQL[item.field]} {item.direction.upper()}" for item in query.sort
+                )
+            limit, offset = query.limit, query.offset
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit + 1, offset])
+        else:
+            raise ValueError("Unsupported query operation")
+
+        with self._get_conn() as conn:
+            rows = [dict(row) for row in conn.execute(sql, params).fetchall()]
+
+        has_more = limit is not None and len(rows) > limit
+        if has_more:
+            rows = rows[:limit]
+        return {
+            "data": rows,
+            "meta": {
+                "operation": query.operation,
+                "returned": len(rows),
+                "fields": fields,
+                "limit": limit,
+                "offset": offset,
+                "has_more": has_more,
+                "grouped_by": grouped_by,
+            },
+        }
 
     def get_summary(self, min_id: Optional[int] = None,
                     max_id: Optional[int] = None) -> dict:

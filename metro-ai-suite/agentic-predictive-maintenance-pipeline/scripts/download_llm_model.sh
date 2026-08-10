@@ -100,7 +100,8 @@ mkdir -p "${USE_CASE_MODELS_DIR}"
 # apm-model-download runs as a non-root container user (appuser); make sure it
 # can write new model subdirectories into the host-mounted models directory
 # regardless of the host UID that owns it.
-chmod -R a+rwX "${USE_CASE_MODELS_DIR}" 2>/dev/null || true
+chmod -R a+rwX "${USE_CASE_MODELS_DIR}" 2>/dev/null || 
+chown -R appuser:appuser "${USE_CASE_MODELS_DIR}" 2>/dev/null || 
 
 log "Starting model-download service (apm-model-download)..."
 export USE_CASE_DIR USE_CASE_MODELS_DIR

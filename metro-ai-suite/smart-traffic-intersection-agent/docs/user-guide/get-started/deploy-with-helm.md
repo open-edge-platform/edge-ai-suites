@@ -45,7 +45,7 @@ Refer to release notes for details on the latest version to use.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
+tar -xvf smart-traffic-intersection-agent-2026.2.0-rc1-helm.tgz
 ```
 
 Navigate to the extracted directory:
@@ -265,7 +265,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `image.tag` | Image tag | `latest` |
+| `image.tag` | Image tag | `2026.2.0-rc1` |
 | `service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `service.backendPort` | Backend API port | `8081` |
 | `service.uiPort` | Gradio UI port | `7860` |
