@@ -1,0 +1,34 @@
+Summarize only the TEACHER explanations from the transcript.
+
+Instructions:
+- Ignore student dialog completely.
+- Focus strictly on teacher explanations.
+- Do not invent missing content.
+- If a section has no content, write "None".
+- List 5-8 of the main subject-matter keywords (only technical terms and concepts actually taught; do NOT include story characters, plot elements, or generic character-education words).
+- Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
+
+Output valid Markdown using exactly these sections:
+
+## Teacher Summary
+- ...
+
+## Questions
+- None
+
+## Key Takeaways
+- ...
+
+## Keywords
+- ...
+
+## Key Difficulty Points
+- ...
+
+## Session Outline
+- ...
+
+Rules:
+- Bullet points only.
+- Do not quote transcript text.
+- Do not add extra headings.
