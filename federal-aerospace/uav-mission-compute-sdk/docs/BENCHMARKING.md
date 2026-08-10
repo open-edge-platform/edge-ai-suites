@@ -313,7 +313,7 @@ The report has three top-level cards and two plot sections:
 
 | Header card | Contents |
 |---|---|
-| Run | Timestamp, broker host/port, drone ID |
+| Run | Timestamp, broker host/port, UAV ID |
 | System | Hostname, OS, arch, CPU model + core count, memory |
 | Deployment health | Broker reachability badge, live telemetry check, list of `docker compose` containers with state badges |
 
@@ -333,7 +333,7 @@ Each plot is followed by its raw-data table.
 **Client-sweep mode.** `--client-sweep` runs passive observation at each
 count in `--client-sweep-counts` (default `1,2,5,10,25,50,100`) using
 `--sweep-duration` per tier.  Requires the stack to be running and the
-drone providing telemetry.  Replaces the single-shot `--clients` passive
+UAV providing telemetry.  Replaces the single-shot `--clients` passive
 observation for the purpose of the HTML report.
 
 ### Environment overrides
