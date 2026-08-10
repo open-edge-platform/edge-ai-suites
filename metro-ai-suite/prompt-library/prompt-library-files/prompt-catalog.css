@@ -1,0 +1,179 @@
+/*
+ * SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Styling for the dynamic Metro Prompt Library catalog and prompt overlay.
+ */
+
+.prompt-catalog {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.prompt-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    background: var(--pst-color-background, #fff);
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.prompt-card:hover,
+.prompt-card:focus-visible {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    outline: none;
+}
+
+.prompt-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--pst-color-link, #0071c5);
+}
+
+.prompt-card .prompt-card-desc {
+    color: var(--pst-color-text-muted, #666);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.prompt-card .prompt-card-cta {
+    margin-top: auto;
+    font-size: 0.8rem;
+    color: var(--pst-color-link, #0071c5);
+    font-weight: 600;
+}
+
+.prompt-catalog-loading,
+.prompt-catalog-error {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--pst-color-text-muted, #666);
+}
+
+.prompt-catalog-error {
+    color: #c00;
+}
+
+/* Overlay */
+.prompt-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 1050;
+}
+
+.prompt-overlay[hidden] {
+    display: none;
+}
+
+.prompt-modal {
+    background: var(--pst-color-background, #fff);
+    color: var(--pst-color-text-base, #1a1a1a);
+    border-radius: 10px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.prompt-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 1rem;
+}
+
+.prompt-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.prompt-modal-body {
+    padding: 1.25rem;
+    overflow: auto;
+}
+
+.prompt-modal-body pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--pst-color-surface, #f5f5f5);
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.prompt-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.prompt-btn {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.prompt-btn-copy {
+    background: var(--pst-color-link, #0071c5);
+    color: #fff;
+}
+
+.prompt-btn-copy:hover {
+    background: #005a9e;
+}
+
+.prompt-btn-close {
+    background: transparent;
+    border-color: #c0c0c0;
+    color: var(--pst-color-text-base, #1a1a1a);
+}
+
+.prompt-btn-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .prompt-card,
+[data-theme="dark"] .prompt-modal {
+    border-color: #444;
+    background: var(--pst-color-background, #1a1a1a);
+}
+
+[data-theme="dark"] .prompt-modal-header,
+[data-theme="dark"] .prompt-modal-footer {
+    border-color: #444;
+}
+
+[data-theme="dark"] .prompt-modal-body pre {
+    background: #0f0f0f;
+    border-color: #444;
+}
