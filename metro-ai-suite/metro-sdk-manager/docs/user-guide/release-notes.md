@@ -14,7 +14,8 @@
 - **Gen AI SDK Enhancements**
     - Audio Analyzer updated to 2026.2.0-rc2.
     - Multimodal Embedding Serving and Model Download updated to 2026.2.0-rc1.
-    - Document Ingestion, Chat Q&A, and Chat Q&A UI updated to 2026.2.0-rc1.
+    - Document Ingestion and Chat Q&A UI updated to 2026.2.0-rc1.
+    - Chat Q&A is deprecated; the Gen AI SDK now uses Chat Q&A Core (2026.2.0-rc1).
     - Replaced Visual Data Preparation For Retrieval (VDMS) with Multimodal Data Preparation (2026.2.0-rc1).
     - Removed the VLM OpenVINO Serving microservice.
 - **Visual AI Demo Kit**

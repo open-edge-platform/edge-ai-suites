@@ -108,7 +108,6 @@ const CONFIG = {
             "Multimodal Embedding Serving",
             "Multimodal Data Preparation",
             "Model Download",
-            "Chat Q&A",
             "Chat Q&A Core",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo"
@@ -570,7 +569,6 @@ const CONFIG = {
             { text: "Document Ingestion - pgvector", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/pgvector/index.html" },
             { text: "Multimodal Embedding Serving", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/index.html" },
             { text: "Multimodal Data Preparation", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/Overview.md" },
-            { text: "Chat Q&A", url: "http://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/chat-question-and-answer/index.html" },
             { text: "Chat Q&A Core", url: "http://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/chat-question-and-answer-core/index.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html"}

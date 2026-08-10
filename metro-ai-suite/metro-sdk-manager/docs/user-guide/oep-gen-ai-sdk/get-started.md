@@ -99,7 +99,8 @@ http://localhost:8101
 
 ### Technical Documentation
 
-- [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
+- [Chat Q&A Core](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html)
+  \- Lightweight, single-container conversational Q&A (RAG) application
 - [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/get-started.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
 - [Document Ingestion - pgvector](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/pgvector/get-started.html)
