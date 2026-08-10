@@ -11,7 +11,7 @@ export default function UploadedFiles({ files, onRemove, disabled }: Props) {
   if (files.length === 0) {
     return (
       <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-blue-300 bg-white text-sm text-black/60">
-        No files uploaded — uploaded files will be listed here.
+        No files uploaded yet.
       </div>
     );
   }

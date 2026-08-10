@@ -3,7 +3,7 @@
 <template>
   <div class="monitor-panel">
     <div class="panel-header flex-between">
-      <div class="panel-title">{{ $t("smartBuilding.cameraMonitorTitle") }}</div>
+      <div class="panel-title">{{ $t("smartCommunity.cameraMonitorTitle") }}</div>
       <div class="panel-controls flex-left">
         <div class="date-switcher flex-left">
           <a-date-picker
@@ -24,7 +24,7 @@
           <template #icon>
             <FileTextOutlined />
           </template>
-          {{ $t("smartBuilding.viewReport") }}
+          {{ $t("smartCommunity.viewReport") }}
         </a-button>
         <a-button
           v-if="hasReports"
@@ -35,7 +35,7 @@
           <template #icon>
             <DownloadOutlined />
           </template>
-          {{ $t("smartBuilding.exportReport") }}
+          {{ $t("smartCommunity.exportReport") }}
         </a-button>
       </div>
     </div>
@@ -77,15 +77,15 @@
           :control-btns="mainControlButtons"
         />
         <div v-else class="main-empty-state vertical-center">
-          {{ $t("smartBuilding.reportNoContent") }}
+          {{ $t("smartCommunity.reportNoContent") }}
         </div>
 
         <div class="video-topbar flex-between">
           <div class="video-mode-tag" :class="{ live: isLiveMode }">
             {{
               isLiveMode
-                ? $t("smartBuilding.liveVideo")
-                : $t("smartBuilding.historyVideo")
+                ? $t("smartCommunity.liveVideo")
+                : $t("smartCommunity.historyVideo")
             }}
           </div>
           <div class="video-topbar-actions flex-end">
@@ -102,7 +102,7 @@
               <template #icon>
                 <RollbackOutlined />
               </template>
-              {{ $t("smartBuilding.backToNow") }}
+              {{ $t("smartCommunity.backToNow") }}
             </a-button>
           </div>
         </div>
@@ -111,7 +111,7 @@
           <div class="video-kicker">{{ activeRecord.camera }}</div>
           <div class="video-title">{{ activeRecord.title }}</div>
           <div class="video-time">
-            {{ isLiveMode ? $t("smartBuilding.liveNow") : activeRecord.time }}
+            {{ isLiveMode ? $t("smartCommunity.liveNow") : activeRecord.time }}
           </div>
         </div>
       </div>
@@ -153,8 +153,8 @@ import "vue3-video-play/dist/style.css";
 import {
   getCameraActivityList,
   getCamReport,
-} from "@/api/smartBuilding";
-import { getSmartBuildingSourceMeta } from "../deviceMeta";
+} from "@/api/smartCommunity";
+import { getSmartCommunitySourceMeta } from "../deviceMeta";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -199,7 +199,7 @@ const selectedSourceId = computed(() => {
 });
 
 const currentSourceMeta = computed(() => {
-  return getSmartBuildingSourceMeta(selectedSourceId.value, t);
+  return getSmartCommunitySourceMeta(selectedSourceId.value, t);
 });
 
 const liveVideoSrc = computed(() => {
@@ -230,7 +230,7 @@ const buildFallbackActiveRecord = (
   isoDate: targetDate.format("YYYY-MM-DD"),
   mediaType: "video",
   recordKind: "static",
-  statusLabel: t("smartBuilding.realtimeStatus"),
+  statusLabel: t("smartCommunity.realtimeStatus"),
   durationLabel: "",
   durationSecondsLabel: "0s",
   timestampLabel: `${targetDate.format("YYYY-MM-DD")} ${dayjs().format("HH:mm:ss")}`,
@@ -264,31 +264,31 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartCommunity.recordStatusCompleted") : status;
 };
 
 const buildReportExportContent = (reports: CameraReport[]) => {
   const exportTimestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const lines = [
-    `# ${t("smartBuilding.reportExportTitle")}`,
+    `# ${t("smartCommunity.reportExportTitle")}`,
     "",
-    `${t("smartBuilding.reportGeneratedAt")}: ${exportTimestamp}`,
-    `${t("smartBuilding.reportSelectedDate")}: ${selectedDateLabel.value}`,
-    `${t("smartBuilding.reportCountLabel")}: ${reports.length}`,
+    `${t("smartCommunity.reportGeneratedAt")}: ${exportTimestamp}`,
+    `${t("smartCommunity.reportSelectedDate")}: ${selectedDateLabel.value}`,
+    `${t("smartCommunity.reportCountLabel")}: ${reports.length}`,
     "",
   ];
 
   reports.forEach((report, index) => {
     lines.push(`## ${index + 1}. ${report.report_date}`);
-    lines.push(`${t("smartBuilding.reportCreatedAtLabel")}: ${report.created_at}`);
+    lines.push(`${t("smartCommunity.reportCreatedAtLabel")}: ${report.created_at}`);
     lines.push(
-      `${t("smartBuilding.reportStatusLabel")}: ${buildRecordStatus(report.status)}`,
+      `${t("smartCommunity.reportStatusLabel")}: ${buildRecordStatus(report.status)}`,
     );
-    lines.push(`${t("smartBuilding.reportEventCount")}: ${report.event_count}`);
-    lines.push(`${t("smartBuilding.reportMotionCount")}: ${report.motion_count}`);
-    lines.push(`${t("smartBuilding.reportPromptTokens")}: ${report.prompt_tokens}`);
+    lines.push(`${t("smartCommunity.reportEventCount")}: ${report.event_count}`);
+    lines.push(`${t("smartCommunity.reportMotionCount")}: ${report.motion_count}`);
+    lines.push(`${t("smartCommunity.reportPromptTokens")}: ${report.prompt_tokens}`);
     lines.push("");
-    lines.push(`### ${t("smartBuilding.reportDetailSection")}`);
+    lines.push(`### ${t("smartCommunity.reportDetailSection")}`);
     lines.push(report.report_text?.trim() || "");
     lines.push("");
   });
@@ -368,7 +368,7 @@ const queryCamReport = async (silent = true) => {
     reportList.value = [];
 
     if (!silent) {
-      message.error(t("smartBuilding.reportLoadFailed"));
+      message.error(t("smartCommunity.reportLoadFailed"));
     }
   } finally {
     if (requestId === latestReportRequestId) {
@@ -417,7 +417,7 @@ const handleOpenReport = async () => {
     await queryCamReport(false);
   }
   if (!hasReports.value) {
-    message.info(t("smartBuilding.reportEmptyHint"));
+    message.info(t("smartCommunity.reportEmptyHint"));
     return;
   }
   reportDrawerVisible.value = true;
@@ -430,7 +430,7 @@ const handleExportReport = async (reports?: CameraReport[]) => {
     }
 
     if (!reportList.value.length) {
-      message.warning(t("smartBuilding.reportNoContent"));
+      message.warning(t("smartCommunity.reportNoContent"));
       return;
     }
 
@@ -441,9 +441,9 @@ const handleExportReport = async (reports?: CameraReport[]) => {
       buildReportExportContent(reportsToExport),
       dayjs().format("YYYYMMDD-HHmmss"),
     );
-    message.success(t("smartBuilding.exportSuccess"));
+    message.success(t("smartCommunity.exportSuccess"));
   } catch {
-    message.error(t("smartBuilding.exportFailed"));
+    message.error(t("smartCommunity.exportFailed"));
   }
 };
 

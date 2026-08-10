@@ -134,7 +134,7 @@ export const requestGenerateReport = (data: Record<string, unknown>) => {
     },
     showLoading: true,
     showSuccessMsg: true,
-    successMsg: "smartBuilding.generateReportSuccess",
+    successMsg: "smartCommunity.generateReportSuccess",
   });
 };
 

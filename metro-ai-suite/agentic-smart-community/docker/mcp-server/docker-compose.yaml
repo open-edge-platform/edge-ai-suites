@@ -1,17 +1,17 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# SmartBuilding MCP server service definition, pulled into the stack via `extends`
+# Smart Community MCP server service definition, pulled into the stack via `extends`
 # from docker/compose.yaml (same pattern as multilevel-video-understanding, which
 # extends the upstream file). `extends` resolves THIS file's relative paths (the
 # build context below) against its own directory (docker/mcp-server/), so the
 # context still points at the repo root. `extends` does NOT copy depends_on, so the
 # ordering (needs multilevel healthy) is declared in the parent docker/compose.yaml.
 services:
-  # SmartBuilding MCP server (Streamable-HTTP + UI on :3100, events webhook on
+  # Smart Community MCP server (Streamable-HTTP + UI on :3100, events webhook on
   # :3101). The MCP server Node process, containerised and joined to the stack so
   # the whole thing comes up with one `docker compose up`.
-  smartbuilding-mcp-server:
+  smart-community-mcp-server:
     # Context is the repo root (two levels up from docker/mcp-server/); the
     # Dockerfile path is stated relative to that context.
     build:
@@ -21,21 +21,27 @@ services:
         HTTP_PROXY: ${HTTP_PROXY:-}
         HTTPS_PROXY: ${HTTPS_PROXY:-}
         NO_PROXY: ${NO_PROXY:-}
-    image: ${REGISTRY:-}smartbuilding-mcp-server:${TAG:-latest}
+    image: ${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}
     # Host network keeps localhost semantics in both directions: the MCP server
     # reaches multilevel/vllm/videostream-analytics on localhost, and VSA (also on
     # host network) POSTs events back to localhost:3101 — no port remapping.
     network_mode: host
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
-      SMARTBUILDING_DATA_DIR: ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      SMART_COMMUNITY_DATA_DIR: ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Timezone for the container
+      TZ: ${TZ:-Asia/Shanghai}
     volumes:
       # Identity bind mount (host X -> container X): the MCP server sees the data
       # root at the SAME absolute path as the host, so DB clip paths and the paths
       # VSA writes stay unchanged — and the clip paths it POSTs to multilevel need
       # no remapping (multilevel uses the same identity mount).
-      - ${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}:${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+      - ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}:${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
+      # Host timezone (read-only). Makes glibc localtime() — used by SQLite's
+      # 'localtime' modifier — and Node resolve to the host's zone. Only
+      # /etc/localtime is read for time conversion; matches videostream-analytics.
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3101/health"]

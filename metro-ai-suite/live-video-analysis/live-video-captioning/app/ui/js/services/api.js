@@ -87,28 +87,19 @@ const ApiService = (function () {
                 has_gpu: devices.some(
                     (device) => device?.present === true
                         && ['igpu', 'dgpu'].includes(device?.category)
+                        && Array.isArray(device?.sw_functional_capabilities)
+                        && device.sw_functional_capabilities.includes('openvino_gpu_inference')
                 ),
                 has_npu: devices.some(
                     (device) => device?.present === true && device?.category === 'npu'
                 ),
             };
         } catch (_err) {
-            try {
-                const resp = await fetch('/api/capabilities', { method: 'GET' });
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                return {
-                    has_gpu: data?.has_gpu === true,
-                    has_npu: data?.has_npu === true,
-                    devices: [],
-                };
-            } catch (_fallbackErr) {
-                return {
-                    has_gpu: null,
-                    has_npu: null,
-                    devices: [],
-                };
-            }
+            return {
+                has_gpu: null,
+                has_npu: null,
+                devices: [],
+            };
         }
     }
 
