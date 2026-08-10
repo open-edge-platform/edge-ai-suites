@@ -635,14 +635,15 @@ foreach ($Service in $Services) {
             # .onnx models (melspectrogram, embedding_model, etc.) explicitly.
             if ($Service.Name -eq "kiosk-core") {
                 Write-Info "Downloading openwakeword ONNX model assets..."
-                Invoke-NativeInstallCommand -Command "openwakeword base model download" -Quiet -ScriptBlock {
-                    & $PythonExe -c "import openwakeword; openwakeword.utils.download_models()"
+                try {
+                    Invoke-OpenWakeWordOnnxSync -PythonExe $PythonExe
+                    Write-Success "openwakeword ONNX assets ready"
                 }
-                Invoke-OpenWakeWordOnnxSync -PythonExe $PythonExe
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Success "openwakeword models downloaded"
-                } else {
-                    Write-Error-Custom "openwakeword model download failed (exit $LASTEXITCODE). Wake-word detection will not work until models are available."
+                catch {
+                    # Wake-word is optional by default. Keep setup usable even if
+                    # model download fails due to transient network/cert/proxy issues.
+                    Write-Warning "openwakeword ONNX model sync failed: $_"
+                    Write-Warning "Continuing setup. Wake-word detection will not work until models are available."
                 }
             }
         }
