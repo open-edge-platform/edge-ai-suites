@@ -119,6 +119,24 @@ export async function createTranscriptInjector(deps: {
     } catch (err) {
       return { ok: false, sessionKey, sessionId, reason: `transcript append failed: ${err}` };
     }
+
+    // Bump `updatedAt` so this session sorts as most-recently-active (the dashboard
+    // and ControlUI order sessions by it). The transcript API's publishUpdate does
+    // not touch the store entry's `updatedAt`, so without this the session that
+    // actually receives alerts stays frozen at its last settings change while an
+    // idle `:main` outranks it. Mirrors the FS-append fallback. Non-fatal.
+    try {
+      await patchSessionEntry({
+        agentId,
+        sessionKey,
+        env,
+        update: () => ({ updatedAt: nowMs }),
+        fallbackEntry: { sessionId, sessionFile, systemSent: true, updatedAt: nowMs },
+      });
+    } catch (err) {
+      logger.warn(`[sb-alerts] updatedAt bump failed for ${sessionKey}: ${err}`);
+    }
+
     return { ok: true, sessionKey, sessionId };
   };
 
