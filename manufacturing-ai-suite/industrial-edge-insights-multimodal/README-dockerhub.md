@@ -12,7 +12,7 @@ The **Fusion Analytics** module in the `Multimodal weld defect detection` sample
 
 ## Insights Workbench
 
-The **Insights Workbench** module in the `Multimodal weld defect detection` sample app is a small Flask web app that powers the dashboard. It reads fused inspection results and related sensor/vision data from InfluxDB, shows them in a paginated UI, and can call a vLLM backend to generate an AI explanation from selected timestamps
+The **Insights Workbench** module in the `Multimodal weld defect detection` sample app is a small Flask web app that powers the dashboard. It reads fused inspection results and related sensor/vision data from InfluxDB, shows them in a paginated UI, and can call a vLLM backend to generate an AI explanation from selected timestamps.
 
 ## Multimodal Agentic UI
 
