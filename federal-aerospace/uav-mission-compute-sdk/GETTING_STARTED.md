@@ -304,7 +304,7 @@ See [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md) → "Switching Between Modes" f
 
 **First-time setup**:
 ```bash
-cd ~/fedaero-drone-sdk-poc
+cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 make init           # Detect GPU, create .env
 make up-sim-camera             # Start with simulated cameras
 make apps           # Start dashboard
