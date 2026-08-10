@@ -70,7 +70,7 @@ flowchart LR
     end
 
     VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
-    CLIENT["QGC / ffplay"] -->|"RTSP :8555"| DLSPS
+    DLSPS -->|"RTSP :8555"| CLIENT["QGC / ffplay"]
 ```
 
 **Telemetry flow:**
@@ -101,6 +101,51 @@ sequenceDiagram
 
 ---
 
+### Mode 1b — Standalone / pymavlink + WebRTC (`docker-compose-pymavlink-mediamtx.yml`)
+
+Extends Mode 1 with a **WebRTC streaming path** alongside RTSP. MediaMTX acts as the WebRTC signaling server and coturn provides a TURN relay for NAT traversal. Clients can view the annotated video in a browser without a dedicated RTSP player.
+
+```mermaid
+flowchart LR
+    subgraph Stack["docker-compose-pymavlink-mediamtx.yml"]
+        direction TB
+        PX4["PX4 SITL\npx4io/px4-sitl"]
+        ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
+        BROKER["Eclipse Mosquitto\nMQTT :1883"]
+        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555 · WebRTC)"]
+        MTX["MediaMTX\nWebRTC signaling :8889"]
+        COTURN["coturn\nTURN/STUN :3478/udp"]
+        MM["Metrics Manager"]
+
+        PX4 -->|"MAVLink"| ROUTER
+        ROUTER -->|"UDP :14541"| DLSPS
+        DLSPS -->|"WebRTC signaling"| MTX
+        MTX -->|"ICE/TURN"| COTURN
+        DLSPS -.->|"inference metrics"| BROKER
+        MM -.->|"system metrics"| BROKER
+    end
+
+    VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
+    DLSPS -->|"RTSP :8555"| CLIENT_RTSP["QGC / ffplay"]
+    MTX -->|"WebRTC via :8889"| CLIENT_WEB["Browser"]
+```
+
+**WebRTC path:** DLSPS publishes the annotated video to MediaMTX over the WebRTC signaling endpoint (`http://mediamtx-server:8889`). Browsers connect to MediaMTX at `:8889`; coturn handles ICE relay for clients behind NAT using credentials set via `MTX_WEBRTCICESERVERS2_0_USERNAME` / `MTX_WEBRTCICESERVERS2_0_PASSWORD`.
+
+**Services:**
+
+| Service | Image | Ports | Role |
+|---|---|---|---|
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP + WebRTC output |
+| `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker |
+| `px4` | `px4io/px4-sitl` | — | Flight controller simulator |
+| `mavlink-router` | custom build | — | MAVLink UDP routing (:14550 → :14541) |
+| `mediamtx` | `bluenviron/mediamtx:1.11.3` | `8889` | WebRTC signaling server |
+| `coturn` | `coturn/coturn:4.12.0` | `3478/udp` | TURN/STUN relay for WebRTC NAT traversal |
+| `metrics-manager` | `intel/metrics-manager` | — | CPU/GPU/NPU/power metrics |
+
+---
+
 ### Mode 2 — MAVSDK / external SDK (`docker-compose-mavsdk.yml`)
 
 A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
@@ -125,7 +170,7 @@ flowchart LR
 
     BROKER_E -->|"MQTT armed state"| DLSPS2
     MEDIAMTX -->|"RTSP nadir/forward/rear"| DLSPS2
-    CLIENT2["QGC / ffplay"] -->|"RTSP :8555"| DLSPS2
+    DLSPS2 -->|"RTSP :8555"| CLIENT2["QGC / ffplay"]
 ```
 
 **Telemetry / pipeline lifecycle flow:**
@@ -217,10 +262,12 @@ See [export_model.md](export_model.md) for download and export instructions.
 
 | Port | Protocol | Service | Mode |
 |---|---|---|---|
-| `8081` | HTTP | DL Streamer REST API | Both |
-| `8555` | RTSP | Annotated video output | Both |
-| `1883` | TCP | Mosquitto MQTT broker | pymavlink only |
-| `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink only |
+| `8081` | HTTP | DL Streamer REST API | All modes |
+| `8555` | RTSP | Annotated video output | All modes |
+| `1883` | TCP | Mosquitto MQTT broker | pymavlink modes only |
+| `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes only |
+| `8889` | HTTP/WebRTC | MediaMTX WebRTC signaling | Mode 1b only |
+| `3478` | UDP | coturn TURN/STUN relay | Mode 1b only |
 
 ---
 
