@@ -10,7 +10,7 @@
 #     nothing is re-copied and upstream changes flow through automatically.
 #   * videostream-analytics is `extends`-ed from its own docker-compose.yaml (host
 #     network, NPU, POSTs events to the SmartBuilding MCP webhook on :3101).
-#   * smartbuilding-mcp-server is `extends`-ed from mcp-server/docker-compose.yaml
+#   * smart-community-mcp-server is `extends`-ed from mcp-server/docker-compose.yaml
 #     (same pattern) — the MCP server Node process, containerised and joined to this
 #     stack so the whole thing comes up with a single `setup_docker.sh` /
 #     `docker compose up`.
@@ -58,10 +58,10 @@ services:
   # Inherit the MCP server definition from mcp-server/docker-compose.yaml, then add
   # ONLY the depends_on (extends does not copy it, so it is restated here — same as
   # multilevel's depends_on: vllm-ipex-serving above).
-  smartbuilding-mcp-server:
+  smart-community-mcp-server:
     extends:
       file: mcp-server/docker-compose.yaml
-      service: smartbuilding-mcp-server
+      service: smart-community-mcp-server
     depends_on:
       multilevel-video-understanding:
         condition: service_healthy
