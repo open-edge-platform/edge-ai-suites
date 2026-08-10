@@ -22,9 +22,9 @@ board_ocr_router = APIRouter()
 def _board_summary_system_prompt(lang: str) -> str:
     """Standalone system prompt for summarizing board/screen OCR text.
 
-    Distinct from ``config.models.summarizer.board_ocr_prompt`` (which is phrased
-    as an addendum to the audio-transcript summary); this one stands on its own
-    for the /board-ocr/summary endpoint.
+    Distinct from ``prompts/summarizer/<lang>/board_ocr_addendum.txt`` (which is
+    phrased as an addendum to the audio-transcript summary); this one stands on
+    its own for the /board-ocr/summary endpoint.
     """
     if lang == "zh":
         return (

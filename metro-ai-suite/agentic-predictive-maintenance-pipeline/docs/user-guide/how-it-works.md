@@ -43,6 +43,10 @@ detection-agnostic and only reacts to the terminal "batch-complete" event.
 The UI service is the only component that talks to both, merging their two
 independent run states into one `phase` for display.
 
+Run history is scoped to the current application session. The Compose deployment clears stored
+detections when the detection service starts, before subscribing to new detection events, so a
+restarted application does not show detections without corresponding run IDs.
+
 ## Stage 1 — Startup
 
 Run the setup script with a use case:
@@ -68,6 +72,11 @@ Services started:
 | `apm-ui` | Web dashboard (Run Pipeline form, results, detections) |
 | `apm-nginx` | Reverse proxy (`localhost:8080`) |
 | `apm-llm` *(LLM mode only)* | LLM service (OpenVINO model server) for agent reasoning |
+
+Both `apm-agent` and `apm-ui` use `LLM_MODEL_NAME` and the same OpenAI-compatible OVMS endpoint
+(`http://apm-llm:8000/v3`). Ask & Analyze therefore does not introduce, download, or serve another
+model. All services communicate over the existing `apm_network`; `apm-llm` is included in the UI
+container's `no_proxy` list so internal model requests do not leave the Compose network.
 
 **Verify all containers are running:**
 
@@ -302,6 +311,118 @@ Open `http://localhost:8080` in a browser. The dashboard shows:
 - Run pipeline form (Use Case, Device, or Video).
 - Detection summary and browsing (`/detections`).
 - Run history with status, and generated maintenance tickets (`/results/<run_id>`).
+- Ask & Analyze (`/chat`) for grounded natural-language questions.
+
+## Ask & Analyze
+
+Ask & Analyze sends a question to the UI service, which gathers bounded supporting data before
+asking the existing OVMS-hosted model to explain it. The browser never calls OVMS or the storage
+database directly.
+
+### Modes and grounding
+
+| Mode | Source behavior |
+|------|-----------------|
+| `analysis` | Grounds the answer in completed analysis output. An optional `run_id` selects a specific completed run. |
+| `detections` | Translates the question into an allowlisted structured storage query and grounds the answer in its returned rows or aggregates. An optional `run_id` scopes the query to that completed run. Raw SQL is never accepted or generated at the storage boundary. |
+| `combined` | Uses both agent output and structured detection results, allowing the model to relate recommendations to detection evidence. |
+
+Detection queries use only allowlisted fields, filters, sort keys, and aggregate functions. The
+storage API permits up to 500 rows, but Ask & Analyze further caps returned rows and lists at 100.
+Storage plans permit up to 20 filters, 3 sort keys, and an offset of 10,000. These limits bound the
+amount of data supplied to the model. The response exposes the validated query object and supporting
+data so users can inspect the basis for an answer. The model can still make mistakes; the supporting
+data and original run result remain the authoritative sources.
+
+Before planning a detection query, the UI service loads the labels that are actually present in
+storage. For a selected run, this label catalog uses the same detection ID window as the final
+query. OVMS then produces one schema-constrained query plan using those canonical labels. Label
+variants are matched case-insensitively with spaces, underscores, and hyphens treated as equivalent,
+so `shipping_label` can resolve to `Shipping Label`. If the model omits a label that is explicitly
+present in the question, the UI service adds that canonical label filter before execution. Questions
+without a label produce no label filter and therefore include all labels. Unknown or ambiguous
+labels are rejected with the available label list.
+
+Every plan is validated before storage executes it, and the selected run's ID window is always
+enforced by the UI service. The full detection dataset is not sent to the LLM because large runs
+would exceed the bounded model context and make counts or aggregates incomplete. Generated SQL is
+never accepted.
+
+### Chat API contract
+
+The browser posts to `POST http://localhost:8080/api/chat`:
+
+```json
+{
+  "message": "Which detections need immediate attention, and why?",
+  "mode": "combined",
+  "run_id": "optional-completed-run-id"
+}
+```
+
+- `message` is required, non-blank, and limited to 4,000 characters.
+- `mode` is required and must be `analysis`, `detections`, or `combined`.
+- `run_id` is optional, 1-128 characters when supplied, and must match
+  `^[A-Za-z0-9][A-Za-z0-9._:-]*$`.
+- Extra fields and unsupported control characters are rejected.
+
+A successful response has this shape:
+
+```json
+{
+  "answer": "Rupture detections require immediate attention ...",
+  "mode": "combined",
+  "query": {
+    "operation": "group_by",
+    "group_by": ["label"],
+    "metrics": [{"function": "count", "alias": "detections"}],
+    "limit": 100
+  },
+  "data": {
+    "analysis": {
+      "run_id": "...",
+      "analysis": {},
+      "window": {"start_id": 1204, "end_id": 1339}
+    },
+    "detections": {
+      "data": [],
+      "meta": {"operation": "group_by", "returned": 0, "has_more": false}
+    }
+  }
+}
+```
+
+`answer` is the generated explanation, capped at 4,000 characters. `mode` is the mode actually used.
+`query` is the validated structured detection plan for `detections` and `combined`, and `null` for
+`analysis`. `data.analysis` contains only the selected run's bounded analysis and detection window;
+`data.detections` contains the storage query response.
+
+Analysis mode uses the requested completed run, or the latest completed run when `run_id` is omitted.
+Detection mode queries all stored detections unless `run_id` is supplied. Combined mode and
+run-scoped detection mode enforce the completed run's `id > start_id` and `id <= end_id` window
+server-side, even if the generated plan omits those filters.
+The chat page lists completed runs by their full ID and the dashboard links each completed run
+directly to a preselected, run-scoped chat. With multiple runs, selecting a run isolates analysis
+and detection evidence to that run; leaving the selector at its default uses the latest completed
+run for analysis/combined mode or all stored detections for detection mode.
+The planner and final answer each use a 15-second HTTP timeout. Planner output is limited to 700
+tokens; the final answer is limited to 500 tokens with temperature `0`. Model content is capped at
+16,000 characters and grounded prompt context at 12,000 characters.
+
+Expected errors are:
+
+| Status | Meaning |
+|--------|---------|
+| `422` | Invalid request, extra field, unsupported mode/control character, or malformed run ID |
+| `404` | Requested run does not exist, or no completed run is available |
+| `409` | Requested run exists but is not completed |
+| `503` | Required LLM endpoint or model configuration is absent |
+| `502` | Safe generic upstream error, including OVMS timeout/unavailability, an invalid generated query plan, or storage/agent failure |
+
+Errors expose a safe, human-readable `detail`, not internal exception text. Questions, retrieved
+results, and raw prompts are not logged. The UI keeps failed questions available for retry and
+limits one request at a time per browser page. The endpoint does not create a persistent chat
+session: each request is independently grounded.
 
 ## Quick Verification Checklist
 
