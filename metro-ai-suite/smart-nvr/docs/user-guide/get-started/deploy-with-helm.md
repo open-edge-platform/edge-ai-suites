@@ -24,7 +24,7 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-[VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html)
+[VSS Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/get-started.html)
 
 ### 2. VLM Microservice (Optional)
 

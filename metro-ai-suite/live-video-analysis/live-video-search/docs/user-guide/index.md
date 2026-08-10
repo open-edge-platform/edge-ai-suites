@@ -28,12 +28,12 @@ Live Video Search combines two existing stacks:
   - Frigate NVR ingests live camera streams and emits MQTT events.
   - NVR Event Router brokers event metadata and clip references.
   - Reference UI for Smart NVR management.
-  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/index.html)
+  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-nvr/index.html)
 
 - **VSS Search Mode** (Edge AI Libraries sample app)
   - Search‑MS + Multimodal DataPrep + Vector Retriever + VDMS or Milvus VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
-  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html)
+  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/index.html)
 
 ## Use Cases
 

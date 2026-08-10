@@ -47,7 +47,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/quick-start-guide.html)
+Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/live-video-captioning/quick-start-guide.html)
 to prepare models and configure the environment, then start the stack:
 
 ```bash
@@ -64,7 +64,7 @@ curl http://localhost:4173/health
 
 > **Note:** Skip this step if you are only using Live Video Captioning.
 
-Loitering Detection is a user-provided application based on the DL Streamer Pipeline Server. Follow the [Loitering Detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
+Loitering Detection is a user-provided application based on the DL Streamer Pipeline Server. Follow the [Loitering Detection Get Started guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
 | **Service**                 | **Default Port** | **Purpose**                          |
 | --------------------------- | ---------------- | ------------------------------------ |

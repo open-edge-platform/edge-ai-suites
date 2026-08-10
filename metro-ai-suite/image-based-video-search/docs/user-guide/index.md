@@ -79,7 +79,7 @@ continuously and appears in the UI as soon as the application starts.
 - [Get Started](./get-started.md)
 - [System Requirements](./get-started/system-requirements.md)
 - [Release Notes](./release-notes.md)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 <!--hide_directive
 :::{toctree}

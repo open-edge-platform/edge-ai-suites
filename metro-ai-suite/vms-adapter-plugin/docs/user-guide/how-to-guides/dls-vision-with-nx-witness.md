@@ -69,7 +69,7 @@ VMS Adapter Plugin (VAP)                                                │
 
 Clone the `edge-ai-suites` repository as instructed in the setup document, and install Loitering
 Detection according to the Loitering Detection
-[Get Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
+[Get Started Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
 
 Do not bring up the application yet.
 

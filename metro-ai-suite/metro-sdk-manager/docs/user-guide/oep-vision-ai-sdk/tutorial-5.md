@@ -209,7 +209,7 @@ ViPPET (Visual Pipeline and Platform Evaluation Tool) is an interactive web-base
 
 To learn more and get started with ViPPET, visit the official documentation:
 
-**[ViPPET Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
+**[ViPPET Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
 
 The documentation includes:
 

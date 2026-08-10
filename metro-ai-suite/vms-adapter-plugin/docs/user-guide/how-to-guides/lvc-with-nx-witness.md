@@ -70,7 +70,7 @@ the dynamic analytics form.
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started.html) to download models and configure its `.env`, then start the stack:
+Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/live-video-captioning/get-started.html) to download models and configure its `.env`, then start the stack:
 
 ```bash
 docker compose up -d
