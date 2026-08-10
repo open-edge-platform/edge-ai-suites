@@ -1,6 +1,6 @@
 # Register a New Use Case
 
-A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`smart-community-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smart-community-use-case-manager/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
+A *use case* tells the platform what to watch for in a video stream — for example, whether a pet is trying to escape its area, or whether workers on a construction site are wearing safety helmets. This guide shows how to create one **by conversation**: you describe what you need in a chat with a connected agent (for example, OpenClaw), and the [`smart-community-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/skills/smart-community-use-case-manager/SKILL.md) skill turns your description into a registered, running use case — no code, no restart.
 
 By the end of this guide you will know how to:
 
@@ -294,8 +294,4 @@ Check the monitor outcome in the response's `cascaded_monitors`:
 
 ---
 
-<<<<<<< HEAD
-For the full authoring rules the agent follows (prompt anchors, schema invariants, pipeline gates, retry behavior), see the [`smartbuilding-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md) and the [`use_case_register`](./mcp-tools.md#8-smartbuilding_use_case_register) / [`monitor_ctl`](./mcp-tools.md#5-smartbuilding_monitor_ctl) tool guides.
-=======
-For the full authoring rules the agent follows (prompt anchors, schema invariants, pipeline gates, retry behavior), see the [`smart-community-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smart-community-use-case-manager/SKILL.md) and the [`use_case_register`](./mcp-tools.md#8-smart_community_use_case_register) / [`monitor_ctl`](./mcp-tools.md#5-smart_community_monitor_ctl) tool guides.
->>>>>>> 6c58b61d (Standardize naming globally: replace smart building with smart community.)
+For the full authoring rules the agent follows (prompt anchors, schema invariants, pipeline gates, retry behavior), see the [`smart-community-use-case-manager` skill](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/skills/smart-community-use-case-manager/SKILL.md) and the [`use_case_register`](./mcp-tools.md#8-smart_community_use_case_register) / [`monitor_ctl`](./mcp-tools.md#5-smart_community_monitor_ctl) tool guides.

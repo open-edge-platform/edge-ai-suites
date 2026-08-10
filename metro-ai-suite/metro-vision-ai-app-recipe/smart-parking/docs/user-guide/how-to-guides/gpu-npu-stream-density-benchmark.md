@@ -1,7 +1,7 @@
 # Demonstrating NPU Value: GPU and NPU Stream Density Benchmark
 
 This document describes a structured benchmark workflow to demonstrate the value of Neural
-Processing Unit (NPU) offloading in the [Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking)
+Processing Unit (NPU) offloading in the [Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking)
 application. The workflow has three parts:
 
 
@@ -20,7 +20,7 @@ Indicator (KPI) interpretation. Refer to that guide before running any part of t
 
 - CPU telemetry in this document is captured using the `htop` utility.
 - GPU telemetry tool used in this document: [qmassa](https://github.com/ulissesf/qmassa/tree/main/qmassa)
-- NPU telemetry tool used in this document: [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/npu-monitor-tool)
+- NPU telemetry tool used in this document: [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/npu-monitor-tool)
 
 ---
 
@@ -32,7 +32,7 @@ highest sustainable stream density.
 ### Recommended GPU Pipeline Settings
 
 Use the `yolov11s_gpu` pipeline as defined in
-[smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
+[smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
 The pipeline uses the original configuration; note that metro pipelines are latency-focused by
 default.
 
@@ -100,7 +100,7 @@ This section follows the same structure as Part 1, but for the NPU pipeline.
 ### Recommended NPU Pipeline Settings
 
 Use the `yolov11s_npu` pipeline as defined in
-[smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
+[smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
 The pipeline uses the original configuration; note that metro pipelines are latency-focused by
 default.
 
@@ -129,7 +129,7 @@ For detailed metric definitions and KPI interpretation, refer to
 
 - **Observation at achieved stream density**: At 7 streams, the NPU run remained stable above
   target FPS while the accelerator showed sustained activity.
-- **Observed NPU telemetry from** [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/npu-monitor-tool)
+- **Observed NPU telemetry from** [npu-monitor-tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/npu-monitor-tool)
   **at achieved stream density**: `NPU Utilization: 86%` (see Fig. 3).
 - **Observed GPU telemetry from** [qmassa](https://github.com/ulissesf/qmassa/tree/main/qmassa)
   **during the NPU run**: `VCS: 18.5%`, `VECS: 22.2%` (see Fig. 4).
@@ -172,11 +172,11 @@ This section evaluates the best performance when **GPU and NPU pipelines run sim
 
 > **Note:** In this document, `GPU!NPU` is shorthand for the combined run (GPU and NPU
   together), not logical negation.
-  
+
 ### Run the Combined Stream Density Benchmark
 
 Run the combined workflow with 7 GPU streams and 5 NPU streams, using **nstreams** mode from
-[Benchmark Performance](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/how-to-guides/benchmark.md):
+[Benchmark Performance](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/how-to-guides/benchmark.md):
 
 ```bash
 # Navigate to the metro-vision-ai-app-recipe directory
@@ -234,7 +234,7 @@ shown in Fig. 6.
   `Stream Density(GPU!NPU)(12)` with 7 GPU streams and 5 NPU streams.
 
 Overall, **NPU offloading provides clear system-level value addition** for
-[Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking).
+[Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking).
 Applying a tuned backoff (for example, 2 streams per pipeline on this platform) creates GPU
 headroom for NPU-related media work, and enables higher total stream density than either
 standalone path while maintaining stable throughput.

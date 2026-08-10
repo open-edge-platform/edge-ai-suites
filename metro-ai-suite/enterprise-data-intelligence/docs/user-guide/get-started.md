@@ -18,7 +18,7 @@ Demo setup steps, including OpenClaw service, EC-RAG service, Router service, co
 
 ## 1. Setup Router and Compressor services
 
-The Router and compressor services are set up separately. See the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/inference-router) microservice for the full instructions on generating the config and starting both services.
+The Router and compressor services are set up separately. See the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/inference-router) microservice for the full instructions on generating the config and starting both services.
 
 ## 2. Setup EC-RAG
 

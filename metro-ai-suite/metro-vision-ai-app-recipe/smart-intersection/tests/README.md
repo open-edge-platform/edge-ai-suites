@@ -41,8 +41,8 @@ export SUDO_PASSWORD=your_sudo_password
 ## Installation
 
 - Clone the repository and install prerequisites according to the following guides (for Kubernetes, also set up proxy settings if needed):
-  - [Docker Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
-  - [Kubernetes Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md)
+  - [Docker Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md)
+  - [Kubernetes Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md)
 
 1. **Navigate to the smart-intersection directory:**
 

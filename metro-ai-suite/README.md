@@ -6,7 +6,7 @@ The Metro AI Suite includes Intel® software such as OpenVINO&trade; toolkit, De
 
 It includes the following tools and toolkits:
 - [Metro AI Suite SDK](https://builders.intel.com/intel-technologies/software/edge-ai-suites/metro-ai-suite#developer-tools): Provides a comprehensive and modular toolkit for accelerated media processing and AI inference, designed to fast-track the development of visual AI solutions.
-- [Visual Pipeline and Performance Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool): Assess Intel® hardware options, benchmark performance, and analyze key metrics to optimize hardware selection for AI workloads.
+- [Visual Pipeline and Performance Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool): Assess Intel® hardware options, benchmark performance, and analyze key metrics to optimize hardware selection for AI workloads.
 - [System Qualification Tool (ESQ)](https://builders.intel.com/ecosystem-engagement/solution-hub/systems/edge-systems-qualification/ai-edge-systems):
 a tool mostly for system manufacturers to verify and benchmark hardware performance and
 generate system qualification reports. It also enables showcasing high-performing products

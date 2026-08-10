@@ -55,7 +55,7 @@ Follow the setup guide to stand up all services and run the demo:
 
 The guide walks through, in order:
 
-1. **Router + compressor** — please refer to the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/inference-router) microservice.
+1. **Router + compressor** — please refer to the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/inference-router) microservice.
 2. **EC-RAG** — please refer to the [`agentic-rag`](../agentic-rag) directory.
 3. **OpenClaw** — install OpenClaw, merge the provider/agent/skill config into `openclaw.json`, and install the repository Skills into the agent workspace.
 4. **UI** — build and start the UI Docker Compose service, then open `http://<SERVER_HOST>:7000` to run the demo.

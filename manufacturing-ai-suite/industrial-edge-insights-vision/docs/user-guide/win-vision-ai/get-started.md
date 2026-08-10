@@ -87,7 +87,7 @@ Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries Git
 .\src\setup_genicam_runtime.ps1
 ```
 
-> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 
@@ -268,7 +268,7 @@ input:
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
-`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 > **Note:** If specified, `width` and `height` values must be greater than 60.
 
