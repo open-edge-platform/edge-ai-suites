@@ -13,7 +13,7 @@ Inspect via the server's booted config — the `config.yaml` in the server's
 data dir, NOT any config file in your CWD:
 
 ```bash
-CFG="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/config.yaml"
+CFG="${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}/config.yaml"
 
 yq '.use_case_dict.<use_case>.schema.video_summary_tasks.extensions // []' "$CFG"
 ```
@@ -22,12 +22,12 @@ Notes:
 
 - The active config is the one the MCP server booted from (its `--config`
   argument): `<data_dir>/config.yaml`, where `<data_dir>` is
-  `$SMARTBUILDING_DATA_DIR` or `~/.mcp-smartbuilding` by default.
+  `$SMART_COMMUNITY_DATA_DIR` or `~/.mcp-smart-community` by default.
   `persist=true` writes back into THAT file. A `config.yaml` /
   `config.yaml.example` in your CWD is not the live config. When the MCP
-  server is reachable, prefer `smartbuilding_use_case_register action=list`
+  server is reachable, prefer `smart_community_use_case_register action=list`
   over reading the file — it reflects the live in-memory `use_case_dict`.
-- The Smart Building runtime is **not** a JSON parser for summary output — it
+- The Smart Community runtime is **not** a JSON parser for summary output — it
   scans plain text for one `field_name: value` line per field. Field names in
   the Final Schema are consumed downstream by `parseSummaryFields`; the VLM
   must emit those exact field names or extraction/rules silently miss.

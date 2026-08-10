@@ -6,7 +6,7 @@ This bundle provides reference configurations for three Agentic Smart Community 
 
 | Item | Value |
 |---|---|
-| Purpose | Multi-camera, local-first smartbuilding video-understanding reference implementation |
+| Purpose | Multi-camera, local-first smart-community video-understanding reference implementation |
 | Compute platform | Intel Core Ultra (XPU runs the VLM, NPU runs YOLO pre-filtering) |
 | Inference path | Fully local — no cloud dependency |
 | Implemented use cases | Fridge Manager / Child Safety / Elder Get-Up |
@@ -100,7 +100,7 @@ Videos are user-provided and excluded from release artifacts. [videos/streams.ya
 
 | Use case | Stream path | Environment variable |
 |---|---|---|
-| Fridge Manager | `live/fridge` | `SMARTBUILDING_DEMO_FRIDGE_VIDEO` |
-| Child Safety | `live/child` | `SMARTBUILDING_DEMO_CHILD_VIDEO` |
-| Elder Get-Up | `live/elder` | `SMARTBUILDING_DEMO_ELDER_VIDEO` |
-| Elder Get-Up (second input) | `live/elder2` | `SMARTBUILDING_DEMO_ELDER_2_VIDEO` |
+| Fridge Manager | `live/fridge` | `SMART_COMMUNITY_DEMO_FRIDGE_VIDEO` |
+| Child Safety | `live/child` | `SMART_COMMUNITY_DEMO_CHILD_VIDEO` |
+| Elder Get-Up | `live/elder` | `SMART_COMMUNITY_DEMO_ELDER_VIDEO` |
+| Elder Get-Up (second input) | `live/elder2` | `SMART_COMMUNITY_DEMO_ELDER_2_VIDEO` |

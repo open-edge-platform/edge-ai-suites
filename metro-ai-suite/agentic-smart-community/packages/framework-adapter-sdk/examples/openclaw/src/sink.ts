@@ -1,4 +1,4 @@
-import type { AlertSink, AlertPayload, Logger } from "@smartbuilding-video/framework-adapter-sdk";
+import type { AlertSink, AlertPayload, Logger } from "@smart-community-video/framework-adapter-sdk";
 import type { PluginConfig } from "./config.js";
 import type { SessionAppender } from "./inject-types.js";
 import { formatAlert, formatSeparator } from "./format.js";
@@ -53,7 +53,9 @@ export function createOpenClawSink(deps: {
 
       const separator = formatSeparator(alert);
       const body = formatAlert(alert);
-      const idempotencyKey = `sb-alert:${monitorId}:${alert.id}`;
+      // `createdAt` prefix keeps the key unique across DB resets (id restarts at 1 but the
+      // timestamp only moves forward), so the transcript "scan" dedupe can't drop reused ids.
+      const idempotencyKey = `sb-alert:${monitorId}:${alert.createdAt}:${alert.id}`;
 
       await Promise.all(
         targets.map(async (t) => {

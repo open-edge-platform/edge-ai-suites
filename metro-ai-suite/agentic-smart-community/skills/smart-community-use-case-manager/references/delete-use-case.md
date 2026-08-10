@@ -6,8 +6,8 @@ operational detail.
 
 ## Display the real impact first
 
-Fetch the real impact with `smartbuilding_use_case_register action=list` and
-`smartbuilding_monitor_ctl action=list`, then display what deletion will do:
+Fetch the real impact with `smart_community_use_case_register action=list` and
+`smart_community_monitor_ctl action=list`, then display what deletion will do:
 
 - remove `<use_case>` from the in-memory `use_case_dict` and the booted
   config (`persist: true`);

@@ -108,7 +108,7 @@ def create_app(config: AppConfig) -> FastAPI:
     app = FastAPI(
         title="videostream-analytics",
         version="0.1.0",
-        description="Smart Building video stream analytics microservice",
+        description="Smart Community video stream analytics microservice",
         lifespan=lifespan,
     )
     app.state.config = config

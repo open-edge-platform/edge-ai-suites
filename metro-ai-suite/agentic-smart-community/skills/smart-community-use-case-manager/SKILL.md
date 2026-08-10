@@ -1,6 +1,6 @@
 ---
-name: smartbuilding-use-case-manager
-description: "MANDATORY for creating, previewing, refining, registering, or deleting any Smart Building video analytics use case, and for creating, rebinding, or updating any monitor. Use-case creation requires two cross-turn gates: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract. Monitor binding requires two additional cross-turn gates: explicit prefilter/ROI decisions (P2=yes applies ROI template defaults: mode=crop, expand=0.25, auto_split_area=0.35), then explicit approval of the exact assembled pipeline_config before register_source. Never infer, recommend-and-apply, or silently default any gated answer."
+name: smart-community-use-case-manager
+description: "MANDATORY for creating, previewing, refining, registering, or deleting any Smart Community video analytics use case, and for creating, rebinding, or updating any monitor. Use-case creation requires two cross-turn gates: explicit Q1/Q2 answers, then explicit approval of the proposed Final Schema, Rule Path, and Detection Contract. Monitor binding requires two additional cross-turn gates: explicit prefilter/ROI decisions (P2=yes applies ROI template defaults: mode=crop, expand=0.25, auto_split_area=0.35), then explicit approval of the exact assembled pipeline_config before register_source. Never infer, recommend-and-apply, or silently default any gated answer."
 homepage: https://github.com/open-edge-platform/edge-ai-suites
 metadata:
   {
@@ -11,9 +11,9 @@ metadata:
   }
 ---
 
-# Smart Building Use Case Manager
+# Smart Community Use Case Manager
 
-Creates and registers Smart Building video-analysis use cases. This Skill owns
+Creates and registers Smart Community video-analysis use cases. This Skill owns
 capability negotiation, output mode, Final Schema, rule path, registration, and
 monitor binding. It does not contain domain definitions; those are compiled
 into each use-case prompt from the user's business requirements.
@@ -43,7 +43,7 @@ Read references only at their stated trigger:
 Quick index of the two irreversible tool calls. Each is forbidden unless every
 predicate is true; the authoritative rules live in the referenced sections.
 
-### `smartbuilding_use_case_register` (`generate_task` / `register`)
+### `smart_community_use_case_register` (`generate_task` / `register`)
 
 - an explicit Q1/Q2 reply exists in a later user turn;
 - the proposed Final Schema, Rule Path, and Detection Contract were displayed;
@@ -51,7 +51,7 @@ predicate is true; the authoritative rules live in the referenced sections.
 
 See **Question flow**, **Q1/Q2 decision block**, **Register (two steps)**.
 
-### `smartbuilding_monitor_ctl action=register_source`
+### `smart_community_monitor_ctl action=register_source`
 
 - `source_url` is known and the `use_case` is verified to exist (M0);
 - P1 and P2 were explicitly answered `P1=yes|no, P2=yes|no` in a later turn;
@@ -126,7 +126,7 @@ After the name and description are available:
 1. Before the explicit Q1/Q2 reply, the only permitted tool call is reading this
   main `SKILL.md` file itself when it has not already been loaded. Do not read
   any reference, other skill, config, existing artifact, workspace file, or
-  memory. Do not call memory, search, shell, MCP, `smartbuilding_*`, or any
+  memory. Do not call memory, search, shell, MCP, `smart_community_*`, or any
   other tool. Once this main file is loaded and the name and description are
   available, ask the questions without another tool call.
 2. Ask Q1 and Q2 together using the wording below. Explain that Q2 applies only
@@ -202,7 +202,7 @@ In the assistant turn after the user's explicit Q1/Q2 reply:
 1. Show the applicable block and a compact resolved Detection Contract.
 2. Ask the user to confirm this proposed design and continue.
 3. End the assistant turn immediately. Do not read authoring references, draft
-  prompts, create or modify files, or call any `smartbuilding_*` tool.
+  prompts, create or modify files, or call any `smart_community_*` tool.
 
 This is a mandatory second cross-turn gate. Continue only after a later user
 message explicitly approves the displayed Final Schema, Rule Path, and Detection
@@ -238,7 +238,7 @@ Extended alerting
 - Omit `summarize`; register supplies
   `{ method: "SIMPLE", processor_kwargs: { levels: 1, level_sizes: [-1], process_fps: 2 } }`.
 - `persist: true` (tool default; mirrors into the booted `<data_dir>/config.yaml`
-  — `<data_dir>` = `$SMARTBUILDING_DATA_DIR` or `~/.mcp-smartbuilding`);
+  — `<data_dir>` = `$SMART_COMMUNITY_DATA_DIR` or `~/.mcp-smart-community`);
   `overwrite: false` unless the user explicitly updates an existing use case.
 - Never invent YAML fields such as `rules`, `alert_conditions`,
   `severity_levels`, or `cooldown_seconds`.
@@ -269,7 +269,7 @@ MACRO/T_MINUS; do not rely on those generic defaults for registered use cases.
 
 ## Register (two steps)
 
-Use only `smartbuilding_use_case_register`. Never manually POST `/v1/tasks`
+Use only `smart_community_use_case_register`. Never manually POST `/v1/tasks`
 while MCP is available.
 
 Before either registration step, verify both user messages are present in order:
@@ -326,7 +326,7 @@ create/bind a monitor, add a camera, rebind a source, or update a monitor's
 pipeline — whether the use case is new or pre-existing.
 
 Monitor creation is **fail-closed**. Never call
-`smartbuilding_monitor_ctl action=register_source` until every M0–M4
+`smart_community_monitor_ctl action=register_source` until every M0–M4
 precondition is met. Do not treat server defaults, an empty `pipeline_config`,
 recommendations, existing conventions, the initial request, or the agent's own
 judgment as user decisions.
@@ -354,7 +354,7 @@ Before starting monitor configuration:
    - For a use case registered earlier in this same workflow, require that
      preceding `register` result to contain `ok:true`.
    - For a previously registered use case, call the authoritative use-case
-     inventory (`smartbuilding_use_case_register action=list`) and verify the
+     inventory (`smart_community_use_case_register action=list`) and verify the
      exact `use_case` key is present. The user's claim that it exists is not
      verification.
    - If existence cannot be verified, stop before M1 and report it.
@@ -386,7 +386,7 @@ ambiguous, ask only for the missing part and end the turn again.
 
 Continue only after an explicit `P1=.., P2=..` reply.
 
-* **P1=yes** — call `smartbuilding_monitor_ctl action=prefilter_options`, present
+* **P1=yes** — call `smart_community_monitor_ctl action=prefilter_options`, present
   the returned `class_names` exactly, and have the user explicitly pick
   `target_classes`. Do not select for the user; a recommendation is never a
   selection; every pick must match a returned class name; handle `labels_source`

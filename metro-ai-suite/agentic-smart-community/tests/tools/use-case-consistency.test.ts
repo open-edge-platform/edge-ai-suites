@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { checkUseCaseConsistency } from "@smartbuilding-video/tools";
+import { checkUseCaseConsistency } from "@smart-community-video/tools";
 
 const DEFAULT_SCHEMA = [
   { name: "severity", type: "text", required: false },

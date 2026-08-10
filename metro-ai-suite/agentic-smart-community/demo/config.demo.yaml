@@ -11,10 +11,10 @@
 # All runtime data (DB, segments, logs) is stored under a single root directory.
 # Set via environment variable — NOT configurable here:
 #
-#   export SMARTBUILDING_DATA_DIR=/path/to/data   # default: ~/.mcp-smartbuilding
+#   export SMART_COMMUNITY_DATA_DIR=/path/to/data   # default: ~/.mcp-smart-community
 #
 # Layout under that directory:
-#   smartbuilding.db          — SQLite database
+#   smart-community.db          — SQLite database
 #   segments/<monitor_id>/    — video segments + latest.jpg (written by videostream-analytics)
 #     latest.jpg              — latest frame (read by scene_query)
 #     queries/                — archived frames from scene_query calls
@@ -54,7 +54,7 @@ logging:
   max_file_mb: 50 # stop appending to a single day's file past this size
 
 # Segment data retention. videostream-analytics writes recordings/motion_events/queries
-# under $SMARTBUILDING_DATA_DIR/segments/<monitor_id>/<subdir>/<YYYY-MM-DD>/;
+# under $SMART_COMMUNITY_DATA_DIR/segments/<monitor_id>/<subdir>/<YYYY-MM-DD>/;
 # MCP server keeps this many calendar days (today + N-1 previous) and purges older day-dirs.
 # Cleanup runs at server startup and hourly thereafter.
 storage:

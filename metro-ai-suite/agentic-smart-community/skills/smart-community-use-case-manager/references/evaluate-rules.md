@@ -20,7 +20,7 @@ Contract:
 - Pass its path as `evaluate_rules_path` to step 1 (`action=generate_task`).
   The file may live anywhere — the server stages it to
   `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (`<data_dir>` is the
-  server's data dir: `$SMARTBUILDING_DATA_DIR` or `~/.mcp-smartbuilding` by
+  server's data dir: `$SMART_COMMUNITY_DATA_DIR` or `~/.mcp-smart-community` by
   default), smoke-tests the staged
   copy, and persists that path into config.
 

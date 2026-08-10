@@ -18,7 +18,7 @@ imagePullPolicy: IfNotPresent
 
 # Global version configuration for external dependencies and assets
 version:
-  release: "v2026.1.0-rc2"
+  release: "2026.1"
   modelsRelease: "main"
   modelsReleaseType: branch  # Options: 'tag' or 'branch'
 
@@ -131,7 +131,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: 2026.2.0-20260804-weekly
+  tag: 2026.2.0-rc1
 
   service:
     type: ClusterIP
@@ -139,7 +139,7 @@ scene:
 
 analytics:
   repository: intel/scenescape-analytics
-  tag: 2026.2.0-20260804-weekly
+  tag: 2026.2.0-rc1
 
 pgserver:
   repository: postgres
@@ -155,7 +155,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: 2026.2.0-20260804-weekly
+    tag: 2026.2.0-rc1
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:

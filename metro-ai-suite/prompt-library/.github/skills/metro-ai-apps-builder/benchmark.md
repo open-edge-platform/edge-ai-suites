@@ -1,7 +1,5 @@
 # Benchmark — metro-ai-apps-builder
 
-_Generated: 2026-08-11 (GitHub Copilot CLI, plan-only mode, N=1 per cell)_
-
 Human-readable summary of the evaluation suite for the `metro-ai-apps-builder`
 orchestrator skill. The suite compares agent behaviour **with** the skill loaded
 against a **baseline** run without it, using the cases in

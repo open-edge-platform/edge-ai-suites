@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-shot install for the smartbuilding-alerts OpenClaw framework adapter.
+# One-shot install for the smart-community-alerts OpenClaw framework adapter.
 #
 #   1. build the framework-adapter-sdk (this plugin imports its built dist)
 #   2. install the plugin's own deps (links the SDK into node_modules)
@@ -21,7 +21,7 @@
 #
 # Env overrides:
 #   OPENCLAW_HOME   target home                       (default: ~/.openclaw)
-#   MCP_URL         SmartBuilding MCP endpoint         (default: http://localhost:3100/mcp)
+#   MCP_URL         Smart Community MCP endpoint         (default: http://localhost:3100/mcp)
 #   AGENT_MODEL     model for new demo agents          (default: agents.defaults.model.primary)
 #   SKIP_RESTART=1  skip the gateway restart (step 7)
 #   SKIP_WAKEUP=1   skip the agent wakeup   (step 8)
@@ -34,7 +34,7 @@ SDK_DIR="$REPO_ROOT/packages/framework-adapter-sdk"
 PLUGIN_DIR="$SDK_DIR/examples/openclaw"
 PERSONA_DIR="$HERE/agents"
 OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
-PLUGIN_ID="smartbuilding-alerts"
+PLUGIN_ID="smart-community-alerts"
 MCP_URL_EXPLICIT=false
 [[ -n "${MCP_URL+x}" ]] && MCP_URL_EXPLICIT=true
 MCP_URL="${MCP_URL:-http://localhost:3100/mcp}"
@@ -60,7 +60,7 @@ fi
 }
 
 echo "==> Building framework-adapter-sdk"
-npm --prefix "$REPO_ROOT" -w @smartbuilding-video/framework-adapter-sdk run build
+npm --prefix "$REPO_ROOT" -w @smart-community-video/framework-adapter-sdk run build
 
 echo "==> Installing plugin dependencies"
 npm --prefix "$PLUGIN_DIR" install
@@ -252,7 +252,7 @@ cat <<EOF
 
 ==> Done. Everything is automated — no manual openclaw.json editing required.
 
-The adapter subscribes to the configured monitors on the SmartBuilding MCP server
+The adapter subscribes to the configured monitors on the Smart Community MCP server
 ($MCP_URL) and injects each new alert into the routed session(s).
 
 Re-running this script is safe: personas, plugin config, and pre-existing agents

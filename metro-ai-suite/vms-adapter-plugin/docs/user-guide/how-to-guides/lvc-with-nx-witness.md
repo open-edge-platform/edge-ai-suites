@@ -299,10 +299,11 @@ settings changes automatically.
 
 #### 5.1.1 Open Camera Settings
 
-1. In the Nx Witness desktop client, right-click the camera in the resource tree.
-2. Select **Camera Settings**.
-3. Go to the **Integrations** tab.
-4. Click **VAP Analytics Integration** to expand the per-camera settings.
+1. In the Nx Witness desktop client, close any open camera visualizer window.
+2. Navigate to the left panel, and under the server, find the camera you wish to run analytics on and right-click to open context menu.
+3. Select **Camera Settings**.
+4. Go to the **Integrations** tab.
+5. Click **VAP Analytics Integration** to expand the per-camera settings.
 
 You will see a **Live Video Captioning** group with the following fields:
 
