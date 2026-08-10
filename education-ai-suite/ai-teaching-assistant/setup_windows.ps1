@@ -20,6 +20,10 @@ param(
 $ErrorActionPreference = "Stop"
 $WarningPreference = "SilentlyContinue"
 
+# PowerShell 7.4+ can promote native non-zero exits to PowerShell errors.
+# Track whether this preference exists so wrappers can temporarily disable it.
+$Script:HasPSNativeCommandUseErrorActionPreference = $null -ne (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue)
+
 # Color output for readability
 function Write-Header {
     param([string]$Message)
@@ -446,10 +450,15 @@ function Invoke-NativeInstallCommand {
     # surface as terminating RemoteException. Run installs with Continue and use
     # the process exit code as the source of truth.
     $SavedEAP = $ErrorActionPreference
+    $SavedPSNative = $null
     $ErrorActionPreference = 'Continue'
+    if ($Script:HasPSNativeCommandUseErrorActionPreference) {
+        $SavedPSNative = $Global:PSNativeCommandUseErrorActionPreference
+        $Global:PSNativeCommandUseErrorActionPreference = $false
+    }
     try {
         if ($Quiet) {
-            & $ScriptBlock 2>&1 | Out-Null
+            & $ScriptBlock *> $null
         }
         else {
             & $ScriptBlock
@@ -457,6 +466,9 @@ function Invoke-NativeInstallCommand {
     }
     finally {
         $ErrorActionPreference = $SavedEAP
+        if ($Script:HasPSNativeCommandUseErrorActionPreference) {
+            $Global:PSNativeCommandUseErrorActionPreference = $SavedPSNative
+        }
     }
 
     if ($LASTEXITCODE -ne 0) {
