@@ -68,6 +68,24 @@ openclaw configure
 ```
 
 
+## Proxy Configuration
+
+The gateway runs as a systemd **user service**, so it does not inherit the proxy
+variables from your login shell. Without them `web_search` / `web_fetch` fail
+with `request timed out` even though Tavily is configured correctly.
+
+```bash
+bash configure_proxy.sh              # menu: configure / clear / status
+bash configure_proxy.sh configure    # reuse http_proxy/https_proxy/no_proxy from the shell, else ask
+bash configure_proxy.sh clear        # remove the proxy from the gateway only
+bash configure_proxy.sh status       # show the drop-in + the running gateway's env
+```
+
+Writes a systemd drop-in at `~/.config/systemd/user/openclaw-gateway.service.d/proxy.conf`
+and restarts the gateway. `localhost,127.0.0.1,::1` is always appended to
+`no_proxy` so the local model and MCP endpoints stay direct. The system / shell
+proxy configuration is never modified.
+
 ## Uninstall
 
 ```bash

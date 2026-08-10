@@ -124,7 +124,7 @@ def cmd_health(args):
 def main():
     parser = argparse.ArgumentParser(
         prog="videostream-analytics",
-        description="Smart Building video stream analytics",
+        description="Smart Community video stream analytics",
     )
     # Defaults are set on the main parser only; subparsers use SUPPRESS so
     # omitting a flag after the subcommand doesn't overwrite a value the user

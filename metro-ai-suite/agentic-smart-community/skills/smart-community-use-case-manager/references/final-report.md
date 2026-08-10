@@ -7,10 +7,10 @@ system-inventory rendering rules.
 Report system inventory as ONE grouped view — use cases as headers, their
 monitors nested underneath — not two flat lists:
 
-- Fetch both sources: `smartbuilding_use_case_register action=list` (no other
+- Fetch both sources: `smart_community_use_case_register action=list` (no other
   arguments; reads the server's live in-memory `use_case_dict`, one entry per
   use case with `video_summary_task`, `schema_fields`, `rule_path`,
-  `report_source`) and `smartbuilding_monitor_ctl action=list`.
+  `report_source`) and `smart_community_monitor_ctl action=list`.
 - Render every use case on one line with its VLM task and rule path; nest each
   monitor bound to it (ID, source URL, online/offline) below. A use case with
   no monitor gets `(no camera bound yet)` — that is expected right after a

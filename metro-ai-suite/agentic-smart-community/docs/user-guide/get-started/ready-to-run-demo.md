@@ -27,10 +27,10 @@ Video files are not included in release artifacts. All four entries in [streams.
 Export an absolute path for every stream you want to run. Omit variables for streams you do not have; no YAML edits are required.
 
 ```bash
-export SMARTBUILDING_DEMO_FRIDGE_VIDEO=/absolute/path/fridge.mp4
-export SMARTBUILDING_DEMO_CHILD_VIDEO=/absolute/path/child-safety.mp4
-export SMARTBUILDING_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
-export SMARTBUILDING_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
+export SMART_COMMUNITY_DEMO_FRIDGE_VIDEO=/absolute/path/fridge.mp4
+export SMART_COMMUNITY_DEMO_CHILD_VIDEO=/absolute/path/child-safety.mp4
+export SMART_COMMUNITY_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
+export SMART_COMMUNITY_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
 ```
 
 To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml).
@@ -43,17 +43,17 @@ From the component root (`metro-ai-suite/agentic-smart-community`), run:
 bash demo/scripts/start-demo.sh
 ```
 
-This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMARTBUILDING_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
+This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMART_COMMUNITY_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
-If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMARTBUILDING_DATA_DIR`; the files under `demo/` remain unchanged.
+If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMART_COMMUNITY_DATA_DIR`; the files under `demo/` remain unchanged.
 
 It prints the active stream file at `demo/videos/.run/active-streams.txt`. Verify the running RTSP paths and the selected monitors:
 
 ```bash
 cat demo/videos/.run/active-streams.txt
-cat "${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/monitors.yaml"
+cat "${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
 docker logs -f smart-community-mcp-server
@@ -67,9 +67,9 @@ Connect an MCP client as described in [Get Started - Step 3](../get-started.md#s
 
 ## Step 4 - (Optional) Enable proactive OpenClaw alerts
 
-If you are connecting Smart Building to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
+If you are connecting Smart Community to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
 
-The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Building skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
+The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Community skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
 
 This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
@@ -127,7 +127,7 @@ openclaw cron rm <job-id>
 
 ## Step 5 - Talk with agents
 
-Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Building tools.
+Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Community tools.
 
 If you installed the OpenClaw adapter in Step 4, open the Control UI and select one of these agents:
 

@@ -2,9 +2,9 @@
 # Monitor declarations — passed to MCP server via `--monitors <path>`
 # ─────────────────────────────────────────────────────────────
 # Each monitor here is auto-registered at MCP server startup via
-# smartbuilding_monitor_ctl register_source. videostream-analytics
+# smart_community_monitor_ctl register_source. videostream-analytics
 # (:8999) must be reachable at startup; if not, MCP server logs a
-# warning and continues (use the smartbuilding_monitors_compose tool
+# warning and continues (use the smart_community_monitors_compose tool
 # to retry later: action=up).
 #
 # `use_case` must reference a key in config.yaml's `use_case_dict` —

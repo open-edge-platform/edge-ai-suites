@@ -61,9 +61,9 @@ class TestLoadConfig:
             assert config.server.port == 7777
 
     def test_data_dir_expanded(self):
-        # Isolate from shell-exported SMARTBUILDING_DATA_DIR to verify YAML expansion.
+        # Isolate from shell-exported SMART_COMMUNITY_DATA_DIR to verify YAML expansion.
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("SMARTBUILDING_DATA_DIR", None)
+            os.environ.pop("SMART_COMMUNITY_DATA_DIR", None)
             config = load_config(str(FIXTURES_DIR / "test_config.yaml"))
         assert "~" not in config.data_dir
         assert config.data_dir == "/tmp/videostream-test-data"

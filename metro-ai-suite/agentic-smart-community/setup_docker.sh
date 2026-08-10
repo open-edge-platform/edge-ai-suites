@@ -23,7 +23,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOCKER_DIR="${SCRIPT_DIR}/docker"
 
-# Load deployment env (group ids, model, ports, SMARTBUILDING_DATA_DIR, MODEL_DIR,
+# Load deployment env (group ids, model, ports, SMART_COMMUNITY_DATA_DIR, MODEL_DIR,
 # WEBHOOK_URL, ...). Sourcing here makes the script self-contained.
 if [ -f "${DOCKER_DIR}/set_env.sh" ]; then
   # shellcheck disable=SC1091

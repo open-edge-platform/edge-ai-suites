@@ -1,9 +1,9 @@
 import type { ServerConfig } from "../config.js";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import type { VideoSummaryClient } from "@smartbuilding-video/tools";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import type { VideoSummaryClient } from "@smart-community-video/tools";
 import type { VideoSummaryYield } from "./video-summary-yield.js";
 import type { AlertCallback } from "./index.js";
-import { evaluateWithOverride, normalizeSummaryTextBySchema, parseSummaryFields } from "@smartbuilding-video/tools";
+import { evaluateWithOverride, normalizeSummaryTextBySchema, parseSummaryFields } from "@smart-community-video/tools";
 import { logger } from "../logger.js";
 
 export class TaskPoller {
@@ -11,14 +11,14 @@ export class TaskPoller {
   // Tracks the currently in-flight poll promise per monitor for graceful stop
   private activePoll: Map<string, Promise<void>> = new Map();
   private config: ServerConfig;
-  private db: SmartBuildingDB;
+  private db: SmartCommunityDB;
   private videoSummaryClient: VideoSummaryClient;
   private yieldManager: VideoSummaryYield;
   private onAlert?: AlertCallback;
 
   constructor(
     config: ServerConfig,
-    db: SmartBuildingDB,
+    db: SmartCommunityDB,
     videoSummaryClient: VideoSummaryClient,
     yieldManager: VideoSummaryYield,
     onAlert?: AlertCallback,

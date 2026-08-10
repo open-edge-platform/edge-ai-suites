@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS plans (
 CREATE INDEX IF NOT EXISTS idx_plans_monitor ON plans(monitor_id);
 `;
 
-export class SmartBuildingDB {
+export class SmartCommunityDB {
   private db: Database.Database;
 
   constructor(dbPath: string) {
@@ -624,7 +624,7 @@ export class SmartBuildingDB {
   /**
    * Filter `video_summary_tasks` by monitor and optional status, sorted newest
    * first. Used by tools that need to rebuild historical rule contexts
-   * (e.g. `smartbuilding_rule_eval` for manual re-evaluation).
+   * (e.g. `smart_community_rule_eval` for manual re-evaluation).
    */
   queryTasks(options: {
     monitorId: string;
