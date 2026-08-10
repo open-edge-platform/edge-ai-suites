@@ -1,13 +1,14 @@
 use_case_id: weld-quality-monitoring
 
 analysis:
-  min_confidence: 0.50
+  min_confidence: 0.5
   max_detections_per_run: 1000
-  detection_schema: fusion_result
-  multimodal: true
+  detection_schema: fusion_result   # "bbox_detection" (legacy) | "fusion_result" (current)
+  multimodal: true  # Enable fusion processing
 
 policy:
-  actionable_classes:
+  # Consolidated class definitions
+  defect_classes:
     - Burnthrough
     - Crater Cracks
     - Excessive Convexity
@@ -19,85 +20,82 @@ policy:
     - Spatter
     - Undercut
     - Warping
-
-  ignored_classes:
+  
+  # Non-actionable classes (logged but don't trigger tickets)
+  non_actionable_classes:
     - Good Weld
     - No Weld
     - No Label
-
-  normalization:
-    Good_Weld: Good Weld
-    No_Weld: No Weld
-    Porosity_w_Excessive_Penetration: Porosity with Excessive Penetration
-    Porosity_with_Excessive_Penetration: Porosity with Excessive Penetration
-
-  classification_field: fusion_classification
-  confidence_field: fusion_confidence
-  decision_field: fused_decision
-  fusion_mode_field: mode
+  
+  alert_threshold: 0.75
+  
+  # Fusion strategy: both modalities must agree for high-confidence detection
+  critical_classes:
+    - Burnthrough
+    - Lack of Fusion
+    - Crater Cracks
+  
+  fusion_policy:
+    mode: OR  # "AND" (both modalities agree) | "OR" (either detects)
+    confidence_boost_when_both_agree: 0.90  # Multiplier when vision + timeseries both positive
+    confidence_penalty_single_modality: 0.75  # Multiplier when only one modality detects
 
 evidence:
   source_measurement: fusion_result
   evidence_schema: fusion_result_v1
-
+  
+  # Organized by data source
   evidence_fields:
+    # Fusion results (primary decision point)
     - time
     - fused_decision
     - fusion_classification
     - fusion_confidence
     - mode
+    
+    # Time-series modality (renamed: removed duplicate ts_anomaly)
     - timeseries_anomaly
     - timeseries_classification
     - timeseries_confidence
     - timeseries_timestamp
-    - ts_anomaly
+    
+    # Vision modality
     - vision_anomaly
     - vision_classification
     - vision_confidence
-    - vision_rtsp_ts_diff_ms
     - vision_timestamp
-
+    - vision_rtsp_ts_diff_ms
+  
   evidence_sort: time_desc
-  min_fusion_confidence: 0.60
+  min_fusion_confidence: 0.6
   max_records_per_evidence: 100
+  retention_frames: 2000
+  include_images: false
+  image_source: none
+  max_images_per_evidence: 0
 
 ticketing:
-  classification_source: fusion_classification
-  confidence_source: fusion_confidence
-  decision_source: fused_decision
-
+  # Priority rules: matched against policy.critical_classes
   priority_rules:
-    critical:
-      classes:
-        - Burnthrough
-        - Lack of Fusion
-        - Crater Cracks
-      confidence: 0.80
-
     high:
-      classes:
-        - Excessive Penetration
-      confidence: 0.75
-
+      classes: ["Burnthrough", "Lack of Fusion", "Crater Cracks", "Excessive Penetration"]
+      confidence_threshold: 0.80
+    
     medium:
-      classes:
-        - Porosity
-        - Porosity with Excessive Penetration
-        - Undercut
-        - Warping
-      confidence: 0.65
-
+      classes: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Spatter", "Warping", "Overlap", "Excessive Convexity"]
+      confidence_threshold: 0.70
+    
     low:
-      classes:
-        - Overlap
-        - Spatter
-        - Excessive Convexity
-      confidence: 0.55
-
-  ignored_classes:
-    - Good Weld
-    - No Weld
-    - No Label
-
-  create_ticket_when:
-    fused_decision: 1
+      classes: ["No Weld", "Good Weld", "No Label"]
+      confidence_threshold: 0.60
+  
+  # Ticketing backend configuration
+  auto_create: true
+  backend: jira  # "jira" | "servicenow" | "none"
+  notify_slack: true
+  slack_channel: "#weld-quality-alerts"
+  
+  # Fusion-aware ticket creation
+  escalate_when:
+    both_modalities_agree: true  # HIGH → CRITICAL if both vision & timeseries detect same defect
+    fusion_confidence_above: 0.85
