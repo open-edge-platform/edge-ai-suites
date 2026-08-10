@@ -41,10 +41,10 @@ sample application.
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion
   and deep learning inferencing functions.
-- [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html)
+- [Model Download](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/model-download/index.html)
   is a microservice to download AI models so that they may be used by DL Streamer Pipeline Server.
 
 It also consists of these Third-party microservices:

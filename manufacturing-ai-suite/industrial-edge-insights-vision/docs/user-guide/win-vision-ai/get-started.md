@@ -23,7 +23,7 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 ### Install Intel DL Streamer
 
-Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
 > **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
@@ -34,7 +34,7 @@ Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer
 ### Clone the Suite
 
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```powershell
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git

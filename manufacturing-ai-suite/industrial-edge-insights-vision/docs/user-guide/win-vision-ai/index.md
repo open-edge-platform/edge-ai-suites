@@ -32,8 +32,8 @@ outputs, see [How It Works](./how-it-works.md).
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/index.html)
+  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html)
   - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/main/scripts/download_models/README.md)
 
 <!--hide_directive
