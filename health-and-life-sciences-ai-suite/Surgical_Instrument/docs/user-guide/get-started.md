@@ -349,7 +349,7 @@ Three common shapes are used in practice:
 :::{toctree}
 :hidden:
 
-System Requirements <system-requirements.md>
+System Requirements <./get-started/system-requirements.md>
 
 :::
 hide_directive-->
