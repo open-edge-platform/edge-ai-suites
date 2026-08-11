@@ -19,12 +19,16 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|main|edge-ai-libraries"
   "https://github.com/open-edge-platform/edge-ai-suites|main|edge-ai-suites"
 )
 
-# Placeholder for Docker images to pull; currently empty
+# Placeholder for Docker images to pull;
 images=(
+  "influxdb:2.9.1"
+  "grafana/grafana:11.4.0"
+  "intel/metrics-manager:2026.1.0"
+  "bluenviron/mediamtx:1.19.2"
+  "eclipse-mosquitto:2.0.22"
 )
 
 NAME="UAV Mission Compute SDK"
