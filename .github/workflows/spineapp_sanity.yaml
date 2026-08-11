@@ -42,13 +42,13 @@ jobs:
           echo "branch=$REF_NAME" >> $GITHUB_OUTPUT
         fi
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
         path: edge-ai-suites-repo
         ref: ${{ steps.get_branch.outputs.branch }}
     - name: Set up Python
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v4.8.0
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: '3.10'
     - name: Install Robot Framework with pip (cached)
@@ -58,7 +58,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-nose libxml2-utils vlc
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #3.4.0
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}

@@ -27,6 +27,7 @@
   <nav>
     <a href="/" class="active">Dashboard</a>
     <a href="/detections">Detections</a>
+    <a href="/chat">Ask &amp; Analyze</a>
   </nav>
 
   <div class="layout-wrapper">
@@ -136,11 +137,13 @@
         <tbody id="runs-tbody">
           {% for run in runs[-10:]|reverse %}
           <tr>
-            <td><code title="{{ run.run_id }}">{{ run.run_id[:8] }}…</code></td>
+            <td class="run-id-cell"><code>{{ run.run_id }}</code></td>
             <td><span class="status-badge status-{{ run.status }}">{{ run.status }}{{ ' — ' ~ run.phase if run.status == 'running' and run.phase else '' }}</span></td>
             <td>
               {% if run.status == "completed" %}
               <a href="/results/{{ run.run_id }}">View Results</a>
+              <span aria-hidden="true"> · </span>
+              <a href="/chat?run_id={{ run.run_id | urlencode }}">Ask about run</a>
               {% elif run.status == "running" %}
               <a href="/results/{{ run.run_id }}">Waiting…</a>
               {% else %}

@@ -2,7 +2,7 @@
 
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection.zip"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/anomalib_pcb_test.avi"
 
@@ -93,8 +93,8 @@ download_artifacts() {
 
 download_artifacts "pcb-anomaly-detection"
 
-mkdir -p $SCRIPT_DIR/configs/nginx/ssl
-cd $SCRIPT_DIR/configs/nginx/ssl
+mkdir -p "$SCRIPT_DIR/configs/nginx/ssl"
+cd "$SCRIPT_DIR/configs/nginx/ssl" || exit
 if [ ! -f server.key ] || [ ! -f server.crt ]; then
     echo "Generate self-signed certificate..."
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"

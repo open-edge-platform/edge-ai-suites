@@ -59,6 +59,7 @@ export interface FeatureDescriptor {
   requires: string[];
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
 }
 
 /**
@@ -93,11 +94,25 @@ export function getFeatureEndpoint(
  * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
  */
 export function getContentSearchFileUrl(filePath: string): string {
+  return csDownloadUrl(extractFileKey(filePath), true);
+}
+
+/**
+ * Strip the `local://<bucket>/` prefix from a search result's file_path, yielding the
+ * storage file_key. Paths that are already keys are returned unchanged.
+ */
+export function extractFileKey(filePath: string): string {
   const LOCAL_PREFIX = 'local://content-search/';
-  const fileKey = filePath.startsWith(LOCAL_PREFIX)
-    ? filePath.slice(LOCAL_PREFIX.length)
-    : filePath;
-  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+  return filePath.startsWith(LOCAL_PREFIX) ? filePath.slice(LOCAL_PREFIX.length) : filePath;
+}
+
+/**
+ * Build the backend /download URL for a storage file_key.
+ * `inline` renders in the browser (preview); otherwise it downloads as an attachment.
+ */
+export function csDownloadUrl(fileKey: string, inline = false): string {
+  const base = `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+  return inline ? `${base}&inline=true` : base;
 }
 
 /**
@@ -1573,6 +1588,8 @@ export interface GradingConfig {
   dpi: number | null;
   page_columns: number | null;
   column_split_ratio: number | null;
+  force_split: boolean | null;
+  force_split_pairs: number[][] | null;
   contrast_enhance: boolean | null;
   contrast_factor: number | null;
   max_tokens: number | null;
@@ -1596,7 +1613,7 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
 }
 
 export type GradingConfigUpdate = Partial<Pick<GradingConfig,
-  'dpi' | 'page_columns' | 'column_split_ratio' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'force_split' | 'force_split_pairs' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
   'poll_interval' | 'stable_checks' | 'idle_timeout' |
   'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
 

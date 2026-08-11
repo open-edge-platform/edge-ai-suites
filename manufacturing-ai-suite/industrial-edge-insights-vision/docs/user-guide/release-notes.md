@@ -1,5 +1,16 @@
 # Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
+## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
+
+**New:**
+
+- Fixed coturn server configuration for webrtc relay.
+- Fixed Grafana MQTT datasource version to avoid errors with latest version.
+
+**Improved:**
+
+- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+
 ## Version 2.7.0 (Pallet Defect Detection) and Version 1.3.0 (PCB Anomaly Detection)
 
 **New:**

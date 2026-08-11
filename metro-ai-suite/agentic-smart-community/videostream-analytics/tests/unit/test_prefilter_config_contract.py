@@ -2,7 +2,7 @@
 
 Why this file exists
 --------------------
-Per design §7.3 "Register Source Request" and dev tracker §22 / §23.3:
+The register contract around prefilter:
 - The MCP Server decides per-use-case whether to enable prefilter (e.g.
   pet_safety / fridge → off; child_safety / elder_wakeup → on) and emits the
   resulting `prefilter` block in the register payload.
@@ -10,10 +10,9 @@ Per design §7.3 "Register Source Request" and dev tracker §22 / §23.3:
   must completely override `defaults.prefilter`, and an absent `source.prefilter`
   must fall through to defaults verbatim.
 
-A previous incident (dev tracker §23.3.2) showed prefilter init can fail
-silently when the model file does not exist — the pipeline must degrade to
-"no prefilter" rather than crash, so an unrelated config error doesn't take
-down a healthy stream.
+Prefilter init can also fail silently when the model file does not exist —
+the pipeline must degrade to "no prefilter" rather than crash, so an
+unrelated config error doesn't take down a healthy stream.
 
 These tests pin the override / fall-through / graceful-degrade contracts so
 future changes to the merge logic can't quietly break them.
@@ -193,7 +192,7 @@ class TestPrefilterFromHTTPRegister:
     def _resolve(self, payload: dict, defaults_prefilter: PrefilterConfig):
         """Simulate what FastAPI + SourceManager do, without starting threads.
 
-        Payload is the new nested-pipeline format (Phase 7 hard cutover).
+        Payload is the nested-pipeline format accepted by the service.
         """
         from service import RegisterSourceRequest
         req = RegisterSourceRequest(**payload)

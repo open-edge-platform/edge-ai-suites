@@ -57,7 +57,7 @@ class TestFullPipeline:
         pipeline.stop()
 
         # Check clip files were produced
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -76,7 +76,7 @@ class TestFullPipeline:
         time.sleep(20)
         pipeline.stop()
 
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -102,7 +102,7 @@ class TestFullPipeline:
         time.sleep(20)
         pipeline.stop()
 
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -124,7 +124,7 @@ class TestFullPipeline:
             assert 1.0 <= duration <= 11.0, f"Clip duration {duration:.1f}s out of range"
 
     def test_sink_receives_no_status_events(self, pipeline, mock_sink):
-        """§32: RTSP connection status is no longer pushed to the sink/webhook.
+        """RTSP connection status is not pushed to the sink/webhook.
         Starting and stopping the pipeline must not emit any `status` envelope
         (health is exposed via GET /sources/{id}/status; internal pipeline.status
         still tracks it)."""

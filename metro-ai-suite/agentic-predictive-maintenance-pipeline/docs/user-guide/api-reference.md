@@ -15,6 +15,7 @@ pipeline.
 |--------|------|-------------|
 | `POST` | `/detections` | Insert a single detection record |
 | `POST` | `/detections/batch` | Bulk insert multiple detections |
+| `POST` | `/detections/query` | Run a validated structured query (list, count, aggregate, group-by, or frame summary) |
 | `GET` | `/detections` | Query detections — supports `label`, `min_confidence`, and `limit` filters |
 | `GET` | `/detections/summary` | Per-class detection statistics |
 | `DELETE` | `/detections` | Clear all stored detections |
@@ -39,6 +40,47 @@ curl -X POST http://localhost:8080/api/storage/detections \
 
 ```bash
 curl "http://localhost:8080/api/storage/detections?label=Rupture&min_confidence=0.7&limit=20"
+```
+
+### Example: Structured Detection Query
+
+`POST /detections/query` accepts an allowlisted JSON plan, never raw SQL. The `operation` is one
+of `list`, `count`, `aggregate`, `group_by`, or `frames`. Detection fields are `id`, `frame_id`,
+`label`, `confidence`, `x`, `y`, `width`, `height`, and `timestamp`. Filters use `eq`, `ne`, `gt`,
+`gte`, `lt`, `lte`, `in`, `not_in`, `between`, `contains`, or `starts_with`. Limits are capped at
+500 rows.
+
+```bash
+curl -X POST http://localhost:8080/api/storage/detections/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "operation": "group_by",
+    "filters": [{"field": "confidence", "operator": "gte", "value": 0.7}],
+    "group_by": ["label"],
+    "metrics": [
+      {"function": "count", "alias": "detections"},
+      {"function": "avg", "field": "confidence", "alias": "avg_confidence"}
+    ],
+    "sort": [{"field": "detections", "direction": "desc"}],
+    "limit": 20
+  }'
+```
+
+All operations return a stable envelope:
+
+```json
+{
+  "data": [{"label": "Rupture", "detections": 30, "avg_confidence": 0.84}],
+  "meta": {
+    "operation": "group_by",
+    "returned": 1,
+    "fields": ["label", "detections", "avg_confidence"],
+    "limit": 20,
+    "offset": 0,
+    "has_more": false,
+    "grouped_by": ["label"]
+  }
+}
 ```
 
 ### Example: Get Detection Summary

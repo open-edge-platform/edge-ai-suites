@@ -107,10 +107,10 @@ Optional: Pull the Helm chart and replace the existing helm-chart folder with it
 cd loitering-detection
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.5.0
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.6.0-rc1
 
 #unzip the package using the following command
-tar -xvf loitering-detection-1.5.0.tgz
+tar -xvf loitering-detection-1.6.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv loitering-detection helm-chart
@@ -175,7 +175,11 @@ the Node IP. (Total 8 places)
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_tracking_1"
+               "peer-id": "object_tracking_1",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -197,7 +201,11 @@ the Node IP. (Total 8 places)
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_tracking_2"
+               "peer-id": "object_tracking_2",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -219,7 +227,11 @@ the Node IP. (Total 8 places)
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_tracking_3"
+               "peer-id": "object_tracking_3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -241,7 +253,11 @@ the Node IP. (Total 8 places)
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_tracking_4"
+               "peer-id": "object_tracking_4",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {

@@ -61,9 +61,9 @@ class TestLoadConfig:
             assert config.server.port == 7777
 
     def test_data_dir_expanded(self):
-        # Isolate from shell-exported SMARTBUILDING_DATA_DIR to verify YAML expansion.
+        # Isolate from shell-exported SMART_COMMUNITY_DATA_DIR to verify YAML expansion.
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("SMARTBUILDING_DATA_DIR", None)
+            os.environ.pop("SMART_COMMUNITY_DATA_DIR", None)
             config = load_config(str(FIXTURES_DIR / "test_config.yaml"))
         assert "~" not in config.data_dir
         assert config.data_dir == "/tmp/videostream-test-data"
@@ -157,8 +157,6 @@ class TestConfigModels:
         src = SourceConfig(source_id="cam1", source_url="rtsp://localhost:8554/live/test")
         assert src.source_id == "cam1"
         assert src.source_url == "rtsp://localhost:8554/live/test"
-        # Phase 7: source_url surfaces via legacy rtsp_url property too.
-        assert src.rtsp_url == src.source_url
         assert src.motion is None
         assert src.data_dir is None
 

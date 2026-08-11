@@ -72,7 +72,7 @@ def test_motion_examples_create_event_and_task(
 
     assert status == 200
     assert body["status"] == "ok"
-    with sqlite3.connect(mcp_api.data_dir / "smartbuilding.db") as database:  # type: ignore[attr-defined]
+    with sqlite3.connect(mcp_api.data_dir / "smart-community.db") as database:  # type: ignore[attr-defined]
         task_status = database.execute(
             "SELECT status FROM video_summary_tasks WHERE id = ?",
             (body["task_id"],),

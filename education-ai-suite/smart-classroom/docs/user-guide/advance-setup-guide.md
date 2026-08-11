@@ -151,8 +151,15 @@ board_ocr:
 
 ### F. Speaker Diarization Setup (Optional)
 
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+Speaker diarization labels each transcript line with the speaker who said it. Two backends are
+available:
+
+| Backend | Gated access | Speed (CPU) | Notes |
+| :--- | :--- | :--- | :--- |
+| `pyannote` (default) | Yes, Hugging Face token required | ~0.43x realtime | Detects overlapping speech |
+| `campplus` | No | ~0.01x realtime | FunASR VAD + CAM++, requires the funASR setup from section C |
+
+Steps a-c below set up the default pyannote backend. Skip to step d for CAM++.
 
 #### a. Request Model Access on Hugging Face
 
@@ -187,6 +194,33 @@ models:
 
 > **Note:** The diarization model downloads automatically on next startup once `diarization: true` is set.
 
+#### d. CAM++ Backend (funASR only)
+
+`campplus` needs no token and no gated access, but it requires `provider: funasr` and
+`name: paraformer-zh` from section C. Its speaker and VAD models are downloaded from ModelScope
+on first use and reused offline afterwards.
+
+```yaml
+models:
+  asr:
+    diarization: true
+  diarization:
+    backend: campplus
+```
+
+#### e. Whole-File Processing (funASR only)
+
+By default audio is transcribed and diarized in chunks, which streams results to the UI while
+the recording is still being processed. Setting `chunking: false` processes the whole recording
+in a single pass instead: speaker clustering sees all the speech at once, at the cost of no
+intermediate results. It also requires `provider: funasr` and `name: paraformer-zh`, and is
+ignored for microphone capture, where the recording is not available up front.
+
+```yaml
+audio_preprocessing:
+  chunking: false
+```
+
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
 ## Step 3: Run the Application
@@ -214,17 +248,11 @@ This means your pipeline server has started successfully and is ready to accept 
 
 Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
 
-### A. Create Content Search Virtual Environment
+### A. Content Search Dependencies
 
-```PowerShell
-cd smart-classroom\content_search
-python -m venv venv_content_search
-.\venv_content_search\Scripts\activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
+Content Search runs in the same `smartclassroom` environment as the backend.
 
-> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits. The steps below are only required for the one-time environment setup.
+> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits.
 
 When all services are ready:
 
@@ -432,7 +460,6 @@ To uninstall the application, follow these steps:
    Navigate to the directory and remove \
   For base environment : *education-ai-suite/smartclassroom*. \
   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
-  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*. \
   For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.
