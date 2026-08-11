@@ -37,8 +37,8 @@ RTSP_PIPELINES = [
 ]
 
 UDP_PIPELINES = [
-    {"name": "drone_udpsink_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU", "port": 5001},
-    {"name": "drone_udpsink_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU", "port": 5002},
+    {"name": "drone_udpsink_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU", "port": 5600},
+    {"name": "drone_udpsink_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU", "port": 5601},
 ]
 
 # ── Payload builders ──────────────────────────────────────────────────────────
