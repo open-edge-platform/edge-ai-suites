@@ -8,7 +8,7 @@ features:
   asr:                { enabled: true }
   summary:            { enabled: true }
   mindmap:            { enabled: true }
-  topic_segmentation: { enabled: true }
+  topic_segmentation: { enabled: false }
   video_analytics:    { enabled: true }
   board_ocr:          { enabled: true }
   content_search:     { enabled: false }
