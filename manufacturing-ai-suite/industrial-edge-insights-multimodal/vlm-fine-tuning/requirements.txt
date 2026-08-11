@@ -9,11 +9,11 @@
 # --- Data preparation (prepare_weld_dataset.py) ---
 pandas==2.3.3
 datasets==5.0.0
-pyarrow==22.0.0
-pillow==12.0.0
+pyarrow==23.0.1
+pillow==12.3.0
 
 # --- Fine-tuning & inference (train_qwen.py / infer_qwen.py) ---
-transformers==4.57.1
+transformers==5.5.0
 trl==0.24.0
 peft==0.19.1
 accelerate==1.11.0
