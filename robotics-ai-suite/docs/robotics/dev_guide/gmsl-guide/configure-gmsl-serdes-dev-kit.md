@@ -32,11 +32,11 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
     <!--hide_directive:sync: realsensehide_directive-->
     Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
-    This specific setup applies if you have the cameras connected to port on top left, and top right on the AAEON dev kit.
+    This specific setup applies if you have 4 cameras connected to both GMSL ports, and connected to the cables at top right for rotation 90, and 180 is top left. If you are using a single GMSL port, then use the setting for Camera suffix a, c.
 
    | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
    | ------------------- | ---------- | ---------- | ---------- | ---------- |
-   | GMSL Camera suffix   | a          | g          | e          | k          |
+   | GMSL Camera suffix   | b          | c          | f          | g          |
    | Custom HID          | `INTC10CD` | `INTC10CD` | `INTC10CD` | `INTC10CD` |
    | PPR Value           | 2          | 2          | 2          | 2          |
    | PPR Unit            | 1          | 1          | 1          | 1          |
