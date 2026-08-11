@@ -517,7 +517,7 @@ import {
   configureAgentFramework,
   getDashboardConfig,
   type AgentFrameworkOption,
-} from "@/api/smartBuilding";
+} from "@/api/smartCommunity";
 
 const emit = defineEmits<{
   collapse: [];

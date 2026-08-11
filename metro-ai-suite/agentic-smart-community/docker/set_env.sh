@@ -79,15 +79,15 @@ export VIDEO_SUMMARY_CACHE_HOST=${VIDEO_SUMMARY_CACHE_HOST:-${HOME}/.cache/.mult
 mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 
 # =========================================================================
-# integrate with SmartBuilding MCP Server
+# integrate with Smart Community MCP Server
 # =========================================================================
 
 # Host directory bind-mounted into the container at /data (read-only).
-# Defaults to the SmartBuilding MCP data root; override via env to point at any host dir.
-# multilevel itself doesn't know about SmartBuilding's layout — MCP server's
+# Defaults to the Smart Community MCP data root; override via env to point at any host dir.
+# multilevel itself doesn't know about Smart Community's layout — MCP server's
 # summary_service.path_remap rewrites paths from this host prefix to /data.
-export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
-mkdir -p "${SMARTBUILDING_DATA_DIR}"
+export SMART_COMMUNITY_DATA_DIR=${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
+mkdir -p "${SMART_COMMUNITY_DATA_DIR}"
 
 # Run smart-community-mcp-server and videostream-analytics as the host user
 export HOST_UID=$(id -u)

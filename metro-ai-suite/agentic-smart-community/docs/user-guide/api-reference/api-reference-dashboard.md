@@ -32,6 +32,6 @@ One ffmpeg session is shared per monitor. Client count, session count, initializ
 
 ## Optional integrations
 
-Set `SMARTBUILDING_ROUTER_URL` for Router statistics. Set both `SMARTBUILDING_OPENCLAW_GATEWAY_URL` and `SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN` for chat. These values are server-side environment variables and do not belong in `config.yaml`.
+Set `SMART_COMMUNITY_ROUTER_URL` for Router statistics. Set both `SMART_COMMUNITY_OPENCLAW_GATEWAY_URL` and `SMART_COMMUNITY_OPENCLAW_GATEWAY_TOKEN` for chat. These values are server-side environment variables and do not belong in `config.yaml`.
 
 The API has no end-user authentication. Bind it to loopback or a trusted network, or place it behind an authenticated reverse proxy for shared deployments.

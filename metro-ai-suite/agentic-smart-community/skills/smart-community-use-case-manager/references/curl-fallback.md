@@ -1,9 +1,9 @@
 # Direct `/v1/tasks` Curl Flow (fallback when MCP is unavailable)
 
-Use this only when the Smart Building MCP server is unavailable and the user
+Use this only when the Smart Community MCP server is unavailable and the user
 only asked for a video-summary task (list / show / create / edit / delete).
-Do **not** claim a Smart Building use case is registered unless
-`smartbuilding_use_case_register` succeeds — this flow manages raw VLM tasks
+Do **not** claim a Smart Community use case is registered unless
+`smart_community_use_case_register` succeeds — this flow manages raw VLM tasks
 only.
 
 Authoring rules (anchors, placeholders, `KEY: value` output contract, lint

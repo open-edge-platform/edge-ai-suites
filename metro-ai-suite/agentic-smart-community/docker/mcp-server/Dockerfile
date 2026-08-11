@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# SmartBuilding MCP server image. Runs the same Node process that
+# Smart Community MCP server image. Runs the same Node process that
 # scripts/mcp-server/start.sh launches on the host (Streamable-HTTP on :3100 +
 # events webhook on :3101), but as a container joined to the rest of the stack.
 #

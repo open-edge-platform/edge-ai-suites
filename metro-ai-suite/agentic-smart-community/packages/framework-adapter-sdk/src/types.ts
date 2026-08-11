@@ -1,8 +1,8 @@
-import type { Alert } from "@smartbuilding-video/db";
+import type { Alert } from "@smart-community-video/db";
 
 /**
  * The one alert record delivered to a sink. `alert` is the DB row exactly as the MCP server
- * returns it from `resources/read` (reused verbatim from @smartbuilding-video/db — no reshaping).
+ * returns it from `resources/read` (reused verbatim from @smart-community-video/db — no reshaping).
  */
 export interface AlertPayload {
   monitorId: string;
@@ -51,7 +51,7 @@ export type TransportConfig =
 
 export interface AdapterConfig {
   transport: TransportConfig;
-  /** Monitor ids to subscribe to. Each maps to `smartbuilding://monitor/<id>/alerts`. */
+  /** Monitor ids to subscribe to. Each maps to `smart-community://monitor/<id>/alerts`. */
   monitorIds: string[];
   reconnect?: ReconnectConfig;
   /** Omit for in-memory cursors (a restart replays the current day from the seed point). */
