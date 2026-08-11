@@ -507,7 +507,7 @@ mindmap:
   min_token: 20
 
 audio_preprocessing:
-  chunking: false # false: transcribe and diarize the whole recording in one pass, funasr/paraformer-zh only
+  chunking: true # false: transcribe and diarize the whole recording in one pass, funasr/paraformer-zh only
   chunk_duration_sec: 30
   silence_threshold: -35  # in dB
   silence_duration: 0.3   # minimum silence length in seconds
