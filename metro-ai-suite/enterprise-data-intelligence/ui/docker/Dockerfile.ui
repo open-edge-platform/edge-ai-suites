@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 FROM node:22.14.0 AS vue-app
 
 RUN apt-get update -y && apt-get install -y git

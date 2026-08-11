@@ -113,6 +113,10 @@
       "summary": "AI Summary",
       "mindmap":"Mind Map"
     },
+
+    "transcript": {
+      "processingWholeFile": "Transcribing the whole recording in a single pass — the transcript appears once processing finishes. Please wait…"
+    },
   
   "accordion": {
       "noData": "No data available",
@@ -188,6 +192,9 @@
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
     },
+    "summary": {
+      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete."
+    },
     "app": {
       "checkingBackendTitle": "Checking backend status",
       "checkingBackendMessage": "Please wait while we connect to the backend…",
@@ -221,7 +228,20 @@
     "videoAnalytics": "Video Analytics",
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
-    "noData": "No data available"
+    "noData": "No data available",
+    "live": "Live",
+    "waitingForData": "Waiting for data",
+    "playback": "Playback",
+    "finalResults": "Final results",
+    "students": "Students",
+    "stands": "Stands",
+    "hands": "Hands",
+    "participation": "{{percent}}% engaged",
+    "participationDetail": "{{active}} of {{total}} students participated",
+    "mostActive": "Most active students",
+    "showAll": "Show all {{count}} students",
+    "showTop": "Show top {{count}} students",
+    "errorLabel": "Error"
   },
   "search": {
     "preparingContent": "Content Generating...",
@@ -267,6 +287,9 @@
       "detectionGroup": "Layout Detection",
       "contrastFactor": "Contrast Factor",
       "contrastEnhance": "Contrast Enhance",
+      "forceSplit": "Force Split",
+      "forceSplitPairs": "Split After Pages",
+      "forceSplitAdd": "+ Add page",
       "maxTokens": "Max Tokens",
       "maxImagePixels": "Max Image Pixels",
       "sortBoxes": "Sort Boxes",
@@ -276,6 +299,7 @@
       "iouThreshold": "IoU Threshold",
       "invalidMinScore": "Min score must be between 0 and 1",
       "invalidIou": "IoU threshold must be between 0 and 1",
+      "pageColumns": "Page Columns",
       "dpi": "Render DPI",
       "vlmModel": "VLM Model",
       "ocrModel": "OCR Model",
@@ -285,6 +309,9 @@
       "saving": "Saving…",
       "saved": "Saved. Takes effect on next task.",
       "invalidDpi": "DPI must be a positive integer",
+      "invalidPageColumns": "Page columns must be 1 or 2",
+      "invalidColumnSplitRatio": "Column split ratio must be between 0 and 1",
+      "invalidForceSplitPairs": "Split pages must be positive integers.",
       "invalidTemp": "Temperature must be between 0 and 2",
       "pollInterval": "Poll Interval (s)",
       "stableChecks": "Stable Checks",
@@ -548,8 +575,10 @@
     "reportGenerationFailed": "Report generation failed",
     "updatingFields": "Updating fields...",
     "reportReady": "Report ready",
-    "downloadDocx": "📥 Download .docx",
-    "downloadPdf": "📄 Download .pdf",
+    "download": "Download",
+    "downloadDocxItem": "Word document (.docx)",
+    "downloadPdfItem": "PDF document (.pdf)",
+    "pdfUnavailableTooltip": "PDF export requires LibreOffice on the server. Install it and make sure 'soffice' is on the PATH, then reopen this panel (restart services if you changed PATH).",
     "preparingDownload": "⏳ Preparing...",
     "convertingPdf": "⏳ Converting to PDF..."
   },
@@ -571,7 +600,14 @@
     "score": "Score",
     "summarization": "Summarization",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "minScore": "Min score",
+    "scoreFormat": "Format",
+    "page": "Page",
+    "previewUnavailable": "Preview not available",
+    "previewUnavailableType": "Preview not available for this file type.",
+    "download": "Download {{name}}",
+    "closePreview": "Close preview"
   }
 }
  

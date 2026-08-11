@@ -517,7 +517,7 @@ import {
   configureAgentFramework,
   getDashboardConfig,
   type AgentFrameworkOption,
-} from "@/api/smartBuilding";
+} from "@/api/smartCommunity";
 
 const emit = defineEmits<{
   collapse: [];
@@ -565,12 +565,34 @@ const resizeObserverRef = ref<ResizeObserver | null>(null);
 const SCROLL_THRESHOLD = 80;
 const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
 const MAX_TOTAL_ATTACHMENT_BYTES = 12 * 1024 * 1024;
-const SOURCE_AGENT_NAME_MAP: Record<string, string> = {
-  cam_fridge: "fridge-agent-en",
-  cam_child: "child-safety-agent",
-  cam_elder_bedroom: "elder-wakeup-agent",
-  cam_elder_bedroom_2: "elder-wakeup-agent",
-};
+// Generic tokens shared across every camera / agent id — ignored so they can never
+// drive a match on their own (otherwise "agent" or "cam" would match everything).
+const SESSION_MATCH_STOPWORDS = new Set([
+  "cam",
+  "camera",
+  "agent",
+  "agents",
+  "monitor",
+  "en",
+  "zh",
+  "cn",
+  "us",
+]);
+
+// Split an id/label into meaningful lowercase word tokens (drops separators,
+// pure-numeric suffixes, and the generic stopwords above).
+const tokenizeForSessionMatch = (value: string): Set<string> =>
+  new Set(
+    value
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(
+        (token) =>
+          token.length > 1 &&
+          !/^\d+$/.test(token) &&
+          !SESSION_MATCH_STOPWORDS.has(token),
+      ),
+  );
 const AUTH_TOKEN = "";
 
 const resolveSocketUrl = () => {
@@ -818,22 +840,64 @@ const buildSessionDropdownLabel = (session: ChatSessionSummary) => {
     : label;
 };
 
-const resolvePreferredSessionKeyForSource = () => {
-  const mappedAgentName = SOURCE_AGENT_NAME_MAP[routeSourceId.value];
-
-  if (mappedAgentName) {
-    const matchedGroup = displaySessionGroups.value.find(
-      (group) =>
-        group.agentId === mappedAgentName ||
-        group.displayName === mappedAgentName,
-    );
-
-    if (matchedGroup?.sessions[0]?.key) {
-      return matchedGroup.sessions[0].key;
+// Pick the most recently active session from a list by `updatedAt` (bumped on
+// every appended turn, including proactive alert notifications). Ties keep the
+// first in the given order, so a group already sorted newest-first is preserved
+// and an unsorted fallback group degrades to its first entry.
+const pickLatestActiveSessionKey = (
+  groupSessions: ChatSessionSummary[],
+): string => {
+  let latest: ChatSessionSummary | undefined;
+  for (const session of groupSessions) {
+    if (!session?.key) {
+      continue;
+    }
+    if (!latest || session.updatedAt > latest.updatedAt) {
+      latest = session;
     }
   }
 
-  return sessions.value[0]?.key || "";
+  return latest?.key || "";
+};
+
+// Fuzzy-match the selected camera to an agent session group by shared word tokens
+// (e.g. cam_child ↔ child-safety-agent via "child"). No hardcoded agent names — the
+// tokens come from whatever agent id / label the backend supplies. Once the agent
+// is located, surface its most recently active session (not the default/first one);
+// if nothing overlaps, degrade to the latest active session overall.
+const resolvePreferredSessionKeyForSource = () => {
+  const fallbackKey = pickLatestActiveSessionKey(sessions.value);
+  const sourceTokens = tokenizeForSessionMatch(routeSourceId.value);
+  if (!sourceTokens.size) {
+    return fallbackKey;
+  }
+
+  let bestGroup: ChatSessionGroup | undefined;
+  let bestScore = 0;
+  for (const group of displaySessionGroups.value) {
+    if (!group.sessions.length) {
+      continue;
+    }
+    const groupTokens = new Set([
+      ...tokenizeForSessionMatch(group.agentId),
+      ...tokenizeForSessionMatch(group.displayName),
+    ]);
+    let score = 0;
+    for (const token of sourceTokens) {
+      if (groupTokens.has(token)) {
+        score += 1;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestGroup = group;
+    }
+  }
+
+  // Agent located → show its latest active session rather than the default one.
+  return (
+    (bestGroup && pickLatestActiveSessionKey(bestGroup.sessions)) || fallbackKey
+  );
 };
 
 const updateRouteSession = async (sessionKey: string) => {

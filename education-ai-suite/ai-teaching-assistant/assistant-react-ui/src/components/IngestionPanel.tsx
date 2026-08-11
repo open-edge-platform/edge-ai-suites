@@ -139,12 +139,6 @@ export default function IngestionPanel({
           {message}
         </p>
       )}
-
-      <p className="text-xs text-black/70">
-        Supported: {ALLOWED_EXTENSIONS.join(", ")} · max 10&nbsp;MB each. Select one or
-        more files; they are ingested together and answers span every uploaded document.
-        Re-ingest retries the last selection.
-      </p>
     </div>
   );
 }

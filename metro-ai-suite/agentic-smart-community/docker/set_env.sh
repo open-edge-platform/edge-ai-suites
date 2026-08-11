@@ -79,29 +79,42 @@ export VIDEO_SUMMARY_CACHE_HOST=${VIDEO_SUMMARY_CACHE_HOST:-${HOME}/.cache/.mult
 mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 
 # =========================================================================
-# integrate with SmartBuilding MCP Server
+# integrate with Smart Community MCP Server
 # =========================================================================
 
 # Host directory bind-mounted into the container at /data (read-only).
-# Defaults to the SmartBuilding MCP data root; override via env to point at any host dir.
-# multilevel itself doesn't know about SmartBuilding's layout — MCP server's
+# Defaults to the Smart Community MCP data root; override via env to point at any host dir.
+# multilevel itself doesn't know about Smart Community's layout — MCP server's
 # summary_service.path_remap rewrites paths from this host prefix to /data.
-export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+export SMART_COMMUNITY_DATA_DIR=${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
+mkdir -p "${SMART_COMMUNITY_DATA_DIR}"
+
+# Run smart-community-mcp-server and videostream-analytics as the host user
+export HOST_UID=$(id -u)
+export HOST_GID=$(id -g)
+
+# Host timezone, passed into the MCP server container so SQLite's
+# datetime('now','localtime') (used for every event/alert created_at) matches host
+# local time instead of defaulting to UTC. Prefer /etc/timezone, fall back to the
+# /etc/localtime symlink target; leave unset if neither is resolvable (the image's
+# ENV TZ default and the /etc/localtime bind mount then apply).
+if [ -z "${TZ:-}" ]; then
+  if [ -r /etc/timezone ]; then
+    TZ=$(cat /etc/timezone)
+  elif [ -L /etc/localtime ]; then
+    TZ=$(readlink -f /etc/localtime | sed 's#.*/zoneinfo/##')
+  fi
+  [ -n "${TZ:-}" ] && export TZ
+fi
 
 # =========================================================================
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
 # =========================================================================
-# Runs on the host network, so it reaches the MCP server's EventsEndpoint (a host
-# process on localhost:3101 — see scripts/mcp-server/). Override only if the MCP
-# server listens elsewhere.
+# Runs on the host network, so it reaches the MCP server's EventsEndpoint (the
+# smart-community-mcp-server container, also on the host network, at localhost:3101 —
+# see docker/mcp-server/). Override only if the MCP server listens elsewhere.
 export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 
 # OpenVINO prefilter model, e.g., yolo11s. Preserve an explicitly supplied
 # path so setup_docker.sh can validate or prepare that model at runtime.
 export PREFILTER_MODEL=${PREFILTER_MODEL:-${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml}
-
-# Run the container as the host user so segment/clip files written into the
-# bind-mounted SMARTBUILDING_DATA_DIR are owned by that user — the MCP server's
-# storage cleaner (a host process) can then purge them without root.
-export VSA_UID=$(id -u)
-export VSA_GID=$(id -g)

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
-import { SchemaManager, type SchemaExtension } from "@smartbuilding-video/db";
+import { SchemaManager, type SchemaExtension } from "@smart-community-video/db";
 import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
@@ -43,7 +43,7 @@ export interface UseCaseRegisterDeps {
    * Root directory that holds `use-cases/<use_case>/{prompt.md,evaluate_rules.py}`.
    * When `prompt_text` / `evaluate_rules_path` are omitted, register auto-picks
    * these conventional files. The MCP server passes `config.dataDir` here
-   * (`~/.mcp-smartbuilding` or `$SMARTBUILDING_DATA_DIR`); defaults to
+   * (`~/.mcp-smart-community` or `$SMART_COMMUNITY_DATA_DIR`); defaults to
    * `process.cwd()` when unset.
    */
   baseDir?: string;
@@ -533,7 +533,7 @@ export async function useCaseRegister(
   // prompt_text resolution — convention over configuration. When the caller
   // doesn't pass prompt_text explicitly, auto-read the conventional prompt file
   // use-cases/<use_case>/prompt.md so agents only need to drop the file (via the
-  // video-summary-prompt-studio skill) rather than re-cat it into the call.
+  // smart-community-use-case-manager skill) rather than re-cat it into the call.
   //
   // Resolved up-front, BEFORE any side effect (ALTER / VLM POST / config write),
   // so both the "no prompt" and the "schema↔prompt mismatch" gates below can
@@ -766,16 +766,16 @@ export async function useCaseRegister(
 }
 
 /**
- * Phase 1 of the two-step registration flow: register the VLM summary task from an
+ * Step 1 of the two-step registration flow: register the VLM summary task from an
  * inline `prompt_text`, and — only after the task registers successfully — persist
  * `prompt.md` (+ `evaluate_rules.py`) to `use-cases/<uc>/`. It does NOT touch the DB
- * schema, `use_case_dict`, or `config.yaml`; those are phase 2 (`action="register"`,
+ * schema, `use_case_dict`, or `config.yaml`; those are step 2 (`action="register"`,
  * which can then omit `prompt_text` and auto-read the files this step wrote).
  *
  * Splitting registration this way confines the large `prompt_text` argument to a
- * single call: once phase 1 lands the files on disk, phase 2 and every later tool
+ * single call: once step 1 lands the files on disk, step 2 and every later tool
  * read from disk, so an agent that intermittently fails to inline the big prompt no
- * longer bounces `register` forever (see the phase-2 "no prompt" error in
+ * longer bounces `register` forever (see the step-2 "no prompt" error in
  * useCaseRegister).
  */
 async function registerTaskOnly(
@@ -797,7 +797,7 @@ async function registerTaskOnly(
 
   // prompt_text is mandatory here — generate_task is the one place the full prompt is
   // supplied. It deliberately does NOT auto-read use-cases/<uc>/prompt.md (that is
-  // phase 2's job); a missing prompt is a terminal error, not a silent bounce.
+  // step 2's job); a missing prompt is a terminal error, not a silent bounce.
   const promptText = params.prompt_text;
   if (!promptText) {
     result.errors.push(
@@ -868,7 +868,7 @@ async function registerTaskOnly(
   }
 
   // Register the VLM task. On failure, stop BEFORE writing any file — artifacts are
-  // only persisted once the task is known-good ("注册成功后落盘").
+  // only persisted once the task is known-good.
   try {
     result.steps.vlm_task = await registerVlmTask(
       deps.summaryServiceUrl,
@@ -881,7 +881,7 @@ async function registerTaskOnly(
     return result;
   }
 
-  // 落盘: persisting the artifacts is the whole point of this action, so it is
+  // Persisting the artifacts is the whole point of this action, so it is
   // unconditional (not gated on persist). overwrite is honored by writeTextArtifact;
   // a same-content re-run returns "unchanged". The rules file is staged into the
   // conventional use-cases/<uc>/evaluate_rules.py so step 2 (register) can

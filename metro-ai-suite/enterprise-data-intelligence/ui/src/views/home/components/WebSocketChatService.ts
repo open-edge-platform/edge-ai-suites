@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 export type ConnectionStatus = "disconnected" | "connecting" | "connected";
 
 const CONNECT_FAILED_CLOSE_CODE = 4008;

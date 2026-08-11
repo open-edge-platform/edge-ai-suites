@@ -25,11 +25,11 @@ Develop, build, and deploy end-to-end mobile robot applications with this purpos
 
 The Autonomous Mobile Robot collection groups its components into **sensing**, **perception**, **SLAM & mapping**, **navigation**, and the **application** layer — all on ROS 2 and accelerated on Intel® Core™ / Core™ Ultra. Intel-optimized components (marked ★) sit alongside upstream ROS 2 packages such as Nav2.
 
-![Autonomous Mobile Robot application component grouping](../images/architecture/AMR-Application-Grouping.png)
+![Autonomous Mobile Robot application component grouping](../images/architecture/AMR-Application-Grouping.svg)
 
 The reference `Wandering` application ties these together end-to-end. Sensors feed perception and SLAM; the Wandering application — two Intel ROS 2 nodes, `WanderingMapper` (builds the occupancy map and picks the next unexplored frontier) and `GoalCatcher` (issues `NavigateToPose` goals) — drives exploration through Nav2, while obstacles from Object Detection, ADBScan, and GroundFloor Segmentation continuously update the Nav2 costmap. Nav2 then commands the robot base.
 
-![AMR reference application: Wandering plus Nav2](../images/architecture/AMR-Reference-Application.png)
+![AMR reference application: Wandering plus Nav2](../images/architecture/AMR-Reference-Application.svg)
 
 For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
 

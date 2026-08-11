@@ -7,16 +7,16 @@ This optional guide configures reference video streams and monitors for the bund
 Before starting the demo, complete both of the following sections in [Get Started](../get-started.md):
 
 1. Complete all [Prerequisites](../get-started.md#prerequisites), including the required system software and command-line tools.
-2. Complete [Step 1 - Start dependent services](../get-started.md#step-1---start-dependent-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
+2. Complete [Step 1 - Start all services](../get-started.md#step-1---start-all-services), and confirm that the model serving, video-summary, and video-stream analytics health checks succeed.
 
 The demo supports four independent video-analysis streams with bundled use cases.
 
-| Stream | Purpose |
-|---|---|
-| `cam_fridge` | Tracks fridge door activity and supports inventory-oriented daily reports. |
-| `cam_child` | Detects potentially dangerous child behavior for safety alerts and reports. |
-| `cam_elder_bedroom` | Tracks daily wakeup activity for the elder-wakeup workflow. |
-| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input. |
+| Stream                | Purpose                                                                     |
+| --------------------- | --------------------------------------------------------------------------- |
+| `cam_fridge`          | Tracks fridge door activity and supports inventory-oriented daily reports.  |
+| `cam_child`           | Detects potentially dangerous child behavior for safety alerts and reports. |
+| `cam_elder_bedroom`   | Tracks daily wakeup activity for the elder-wakeup workflow.                 |
+| `cam_elder_bedroom_2` | Runs a second, independent elder-wakeup camera input.                       |
 
 Prepare any subset of compatible local MP4 files. The RTSP pusher copies the source stream, so each selected file must be playable by `ffmpeg` and compatible with your MediaMTX deployment.
 
@@ -27,10 +27,10 @@ Video files are not included in release artifacts. All four entries in [streams.
 Export an absolute path for every stream you want to run. Omit variables for streams you do not have; no YAML edits are required.
 
 ```bash
-export SMARTBUILDING_DEMO_FRIDGE_VIDEO=/absolute/path/fridge.mp4
-export SMARTBUILDING_DEMO_CHILD_VIDEO=/absolute/path/child-safety.mp4
-export SMARTBUILDING_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
-export SMARTBUILDING_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
+export SMART_COMMUNITY_DEMO_FRIDGE_VIDEO=/absolute/path/fridge.mp4
+export SMART_COMMUNITY_DEMO_CHILD_VIDEO=/absolute/path/child-safety.mp4
+export SMART_COMMUNITY_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
+export SMART_COMMUNITY_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
 ```
 
 To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml).
@@ -43,20 +43,20 @@ From the component root (`metro-ai-suite/agentic-smart-community`), run:
 bash demo/scripts/start-demo.sh
 ```
 
-> If an MCP server is already running on port `3100`, stop it with `bash scripts/mcp-server/stop.sh` before starting the demo.
+This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMART_COMMUNITY_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The demo launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMARTBUILDING_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMARTBUILDING_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
-If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMARTBUILDING_DATA_DIR`; the files under `demo/` remain unchanged.
+If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMART_COMMUNITY_DATA_DIR`; the files under `demo/` remain unchanged.
 
 It prints the active stream file at `demo/videos/.run/active-streams.txt`. Verify the running RTSP paths and the selected monitors:
 
 ```bash
 cat demo/videos/.run/active-streams.txt
-cat "${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}/monitors.yaml"
+cat "${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
-tail -f /tmp/smartbuilding-$(id -u)/mcp-server.log
+docker logs -f smart-community-mcp-server
 ```
 
 Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. Press `Ctrl-C` to stop following the log. Open `http://localhost:3100/` to verify that active monitors appear automatically and that selecting one starts its RTSP live preview. Multiple browser windows viewing the same monitor share one ffmpeg process. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
@@ -65,11 +65,11 @@ Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`.
 
 Connect an MCP client as described in [Get Started - Step 3](../get-started.md#step-3---connect-an-agent-host). The demo supports reactive tool use immediately after the MCP server is registered.
 
-## Step 4 - *[Optional]* Enable proactive OpenClaw alerts
+## Step 4 - (Optional) Enable proactive OpenClaw alerts
 
-If you are connecting Smart Building to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
+If you are connecting Smart Community to OpenClaw and want an agent to proactively send alert notifications to a specific agent session, install the OpenClaw adapter described in this step. The adapter routes MCP alert updates to the configured OpenClaw agent and session; it is not required for interactive MCP tool calls.
 
-The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Building skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
+The adapter installer enables proactive alerts for this demo. It configures alert routes for `cam_child` and `cam_elder_bedroom`, imports the Smart Community skills, and provisions the Fridge, Child Safety, and Elder Wakeup agent personas.
 
 This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
@@ -88,7 +88,7 @@ Open the Control UI at `http://localhost:18789` with `openclaw dashboard`. When 
 The following optional OpenClaw cron jobs provide scheduled reports and a safety fallback for the demo agents:
 
 | Cron job | Schedule | Agent | Session | Behavior |
-|---|---|---|---|---|
+| -------- | -------- | ----- | ------- | -------- |
 | Fridge daily report | Daily at 22:00 | `fridge-agent` | `daily_report` | Generates a daily fridge inventory and dietary report. |
 | Child-safety daily report | Daily at 22:30 | `child-safety-agent` | `daily_report` | Summarizes the day's child-safety alerts and notable events. |
 | Elder-wakeup weekly report | Sunday at 22:00 | `elder-wakeup-agent` | `weekly_report` | Summarizes the week's wakeup activity for `cam_elder_bedroom`. |
@@ -127,7 +127,7 @@ openclaw cron rm <job-id>
 
 ## Step 5 - Talk with agents
 
-Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Building tools.
+Talk naturally with any demo agent about a camera or time period, then ask follow-up questions as needed. The agent will choose the appropriate Smart Community tools.
 
 If you installed the OpenClaw adapter in Step 4, open the Control UI and select one of these agents:
 
@@ -135,11 +135,9 @@ If you installed the OpenClaw adapter in Step 4, open the Control UI and select 
 
 Select `fridge-agent` to discuss the current fridge contents, reports, nutrition, and related lifestyle goals. For example:
 
-- "What is currently visible in my fridge?"
-- "Generate today's fridge report and summarize anything I should restock."
-- "Based on my health goals, is the food in my fridge reasonable?"
-- "Can you turn that into a practical meal plan for tomorrow?"
-- "What else could help with weight loss, and where can I exercise nearby?"
+- "Generate today's fridge daily report."
+- "Based on my health goals, is the food in my fridge reasonable? Give me some diet advice."
+- "Any other slimming tips? And where can I go to exercise nearby?"
 
 Try following up with questions such as "Why did you recommend that?", "What changed since yesterday?", or "Give me a shorter shopping list."
 
@@ -171,10 +169,10 @@ These are conversation starters, not a required script. Try your own wording, co
 
 ## Step 6 - Stop the demo
 
-Stop the MCP server and RTSP pushers together:
+Stop the demo RTSP pushers and the app tier (MCP server + analytics + video-summary) together, leaving `vllm-ipex-serving` running so its multi-minute recompile is not repaid on the next start:
 
 ```bash
 bash demo/scripts/stop-demo.sh
 ```
 
-To stop the dependent containers as well, run `bash setup_docker.sh --down`.
+To tear the whole stack down, including `vllm-ipex-serving`, run `bash setup_docker.sh --down`.

@@ -24,7 +24,13 @@ async def summarize_audio(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
+        warned_partial_board = False
         for token in pipeline.run_summarizer():
+            if not warned_partial_board and pipeline.board_ocr_partial:
+                warned_partial_board = True
+                yield json.dumps(
+                    {"token": "", "error": "", "board_ocr_partial": True}
+                ) + "\n"
             if token.startswith("[ERROR]:"):
                 logger.error(f"Error while summarizing: {token}")
                 yield json.dumps({"token": "", "error": token}) + "\n"
@@ -46,18 +52,15 @@ class SummaryFeature:
 
     def __init__(self) -> None:
         self.mode = None
-        self.system_prompt = None
 
     def build(self) -> None:
-        """Read the summary feature config (mode, system_prompt)."""
+        """Read the summary feature config (mode)."""
         summarizer_cfg = config.models.summarizer
         self.mode = getattr(summarizer_cfg, "mode", None)
-        self.system_prompt = getattr(summarizer_cfg, "system_prompt", None)
         logger.info("SummaryFeature built; mode=%s.", self.mode)
 
     def teardown(self) -> None:
         self.mode = None
-        self.system_prompt = None
         logger.info("SummaryFeature torn down.")
 
     def ui_descriptor(self) -> Dict:

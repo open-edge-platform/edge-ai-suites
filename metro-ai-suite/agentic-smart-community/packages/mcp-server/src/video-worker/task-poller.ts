@@ -1,9 +1,9 @@
 import type { ServerConfig } from "../config.js";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import type { VideoSummaryClient } from "@smartbuilding-video/tools";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import type { VideoSummaryClient } from "@smart-community-video/tools";
 import type { VideoSummaryYield } from "./video-summary-yield.js";
 import type { AlertCallback } from "./index.js";
-import { evaluateWithOverride, normalizeSummaryTextBySchema, parseSummaryFields } from "@smartbuilding-video/tools";
+import { evaluateWithOverride, normalizeSummaryTextBySchema, parseSummaryFields } from "@smart-community-video/tools";
 import { logger } from "../logger.js";
 
 export class TaskPoller {
@@ -11,14 +11,14 @@ export class TaskPoller {
   // Tracks the currently in-flight poll promise per monitor for graceful stop
   private activePoll: Map<string, Promise<void>> = new Map();
   private config: ServerConfig;
-  private db: SmartBuildingDB;
+  private db: SmartCommunityDB;
   private videoSummaryClient: VideoSummaryClient;
   private yieldManager: VideoSummaryYield;
   private onAlert?: AlertCallback;
 
   constructor(
     config: ServerConfig,
-    db: SmartBuildingDB,
+    db: SmartCommunityDB,
     videoSummaryClient: VideoSummaryClient,
     yieldManager: VideoSummaryYield,
     onAlert?: AlertCallback,
@@ -34,9 +34,20 @@ export class TaskPoller {
     if (this.intervals.has(monitorId)) return;
 
     const interval = setInterval(() => {
-      const promise = this.poll(monitorId).then(() => {
-        this.activePoll.delete(monitorId);
-      });
+      // Skip this tick if the previous poll for this monitor is still in
+      // flight. Otherwise, while a poll waits on yieldManager.acquire() (which
+      // can take minutes under backlog), every subsequent tick re-reads the
+      // same still-"pending" task and the clip gets summarized multiple times.
+      if (this.activePoll.has(monitorId)) return;
+      const promise = this.poll(monitorId)
+        .catch((err) => {
+          // poll() handles per-task errors internally; this catches failures
+          // outside that path (e.g. DB errors) so polling never stalls.
+          logger.error(`[task-poller] poll cycle failed for ${monitorId}: ${err?.message ?? err}`);
+        })
+        .then(() => {
+          this.activePoll.delete(monitorId);
+        });
       this.activePoll.set(monitorId, promise);
     }, this.config.pollIntervalMs);
 

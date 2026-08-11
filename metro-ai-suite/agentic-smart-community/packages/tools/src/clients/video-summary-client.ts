@@ -76,6 +76,8 @@ export interface SubtitleSummarizeRequest {
   processor_kwargs?: ProcessorKwargs;
 }
 
+import { Agent } from "undici";
+
 /** Default request timeout. Caption-only over long SRT can take minutes. */
 const DEFAULT_TIMEOUT_MS = 600_000;
 
@@ -88,11 +90,18 @@ export class VideoSummaryClient {
   private baseUrl: string;
   private pathRemap?: PathRemap;
   private timeoutMs: number;
+  private dispatcher: Agent;
 
   constructor(baseUrl: string, pathRemap?: PathRemap, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
     this.baseUrl = baseUrl;
     this.pathRemap = pathRemap;
     this.timeoutMs = timeoutMs;
+    // Node's global fetch (undici) defaults to a 300s headersTimeout on the
+    // shared dispatcher, which would fire BEFORE AbortSignal.timeout(timeoutMs)
+    // whenever the service holds the request open >5min (long VLM runs) —
+    // surfacing as a bare "fetch failed". Give this client its own Agent whose
+    // header/body timeouts match timeoutMs so the configured timeout wins.
+    this.dispatcher = new Agent({ headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
   }
 
   private remapVideoPath(path: string): string {
@@ -115,7 +124,8 @@ export class VideoSummaryClient {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(this.timeoutMs),
-    });
+      dispatcher: this.dispatcher,
+    } as RequestInit);
 
     if (!response.ok) {
       // FastAPI returns structured `detail` on 4xx/5xx — surface it to caller logs.

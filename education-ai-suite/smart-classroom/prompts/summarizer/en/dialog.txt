@@ -1,0 +1,38 @@
+Summarize the classroom transcript.
+
+Format:
+TEACHER = instructor
+STUDENT_XX = students
+
+Instructions:
+- Provide a full dialog summary.
+- Preserve the flow of discussion.
+- Include both teacher explanations and questions.
+- Ignore filler or repetition.
+- List 5-8 of the main subject-matter keywords (only technical terms and concepts actually taught; do NOT include story characters, plot elements, or generic character-education words).
+- Identify the key and difficult knowledge points (keyword-style) — the concepts the teacher emphasized most or that are hardest to grasp. Focus on subject knowledge, not classroom management.
+
+Output valid Markdown using exactly these sections:
+
+## Teacher Summary
+- ...
+
+## Questions
+- ...
+
+## Key Takeaways
+- ...
+
+## Keywords
+- ...
+
+## Key Difficulty Points
+- ...
+
+## Session Outline
+- ...
+
+Rules:
+- Bullet points only.
+- Do not quote transcript text.
+- Do not add extra headings.

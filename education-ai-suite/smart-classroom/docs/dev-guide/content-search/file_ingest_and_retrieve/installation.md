@@ -11,14 +11,7 @@ For full develop guide and API Reference, please see the [API Reference](../Cont
 
 ### Install Python Dependencies
 
-```powershell
-cd smart-classroom\content_search
-python -m venv venv_content_search
-.\venv_content_search\Scripts\activate
-pip install -r requirements.txt
-```
-
-> **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
+Content Search shares the base Smart Classroom environment. See [Install Python dependencies](../../../user-guide/advance-setup-guide.md#d-install-python-dependencies).
 
 #### LibreOffice (Optional)
 
@@ -33,8 +26,7 @@ LibreOffice setup (install, add `soffice` to `PATH`, and verify) is documented o
 $env:https_proxy="<your_https_proxy>"
 $env:http_proxy="<your_http_proxy>"
 
-# 2. Under content_search foler
-.\venv_content_search\Scripts\activate
+# 2. Under content_search folder, with the base environment activated
 python .\start_services.py
 ```
 

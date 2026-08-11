@@ -74,7 +74,7 @@ This script will:
   1. Configure proxy for downloads (if needed)
   2. Check system requirements (OS, RAM, Python, Node.js, etc.)
   3. Check application dependencies (FFmpeg, DL Streamer)
-  4. Configure smart-classroom settings (language, upload limits, OCR, board OCR)
+  4. Configure smart-classroom settings (features, language, upload limits, document OCR)
   5. Launch the startup script
 
 "@ -ForegroundColor Cyan
@@ -1571,6 +1571,18 @@ function Test-HfTokenSet {
     $token = Get-HfTokenRaw -Content $Content
     return -not ([string]::IsNullOrWhiteSpace($token) -or $token -eq "None")
 }
+function Get-DiarizationBackend {
+    param([string]$Content)
+    $diarBlockMatch = [regex]::Match($Content, "(?ms)^  diarization:.*?(?=^  \S)")
+    $diarBlock = if ($diarBlockMatch.Success) { $diarBlockMatch.Value } else { "" }
+    $m = [regex]::Match($diarBlock, 'backend:\s*"?([\w-]+)"?')
+    if ($m.Success) { return $m.Groups[1].Value.ToLower() } else { return "pyannote" }
+}
+
+function Test-DiarizationNeedsHfToken {
+    param([string]$Content)
+    return (Get-DiarizationBackend -Content $Content) -ne "campplus"
+}
 
 # ============================================================================
 # Current Configuration Overview (shown before asking to configure config.yaml)
@@ -1590,10 +1602,10 @@ $currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.
 $diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
 
 Write-Host "  models.asr:" -ForegroundColor White
-Write-Host ("    {0,-20} enabled: {1}" -f "diarization:", $currentDiarizationEnabled) -ForegroundColor Gray
+Write-Host ("    {0,-20} enabled: {1}  (backend: {2})" -f "diarization:", $currentDiarizationEnabled, (Get-DiarizationBackend -Content $configContent)) -ForegroundColor Gray
 Write-Host ""
 
-if ($diarizationWasEnabled -and -not (Test-HfTokenSet -Content $configContent)) {
+if ($diarizationWasEnabled -and (Test-DiarizationNeedsHfToken -Content $configContent) -and -not (Test-HfTokenSet -Content $configContent)) {
     Write-Host "  [WARNING] Diarization is enabled but hf_token is None. It needs to be filled in." -ForegroundColor Red
     Write-Host "            See the setup guide:" -ForegroundColor Red
     Write-Host "            https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Red
@@ -1816,6 +1828,8 @@ Write-Host "Current Speaker Diarization configuration in config.yaml:" -Foregrou
 Write-Host ""
 Write-Host "  models.asr:" -ForegroundColor White
 Write-Host "    diarization: $currentDiarizationEnabled   # labels TEACHER/STUDENT_XX speakers in ASR transcripts" -ForegroundColor Gray
+Write-Host "  models.diarization:" -ForegroundColor White
+Write-Host "    backend: $(Get-DiarizationBackend -Content $configContent)" -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
@@ -1849,8 +1863,15 @@ if ($changeDiarization.ToUpper() -eq "Y") {
 }
 
 $diarizationJustEnabled = $diarizationIsEnabled -and (-not $diarizationWasEnabled)
+$diarizationNeedsHfToken = Test-DiarizationNeedsHfToken -Content $configContent
 
-if ($diarizationIsEnabled) {
+if ($diarizationIsEnabled -and -not $diarizationNeedsHfToken) {
+    Write-Host ""
+    Write-Host "  Backend 'campplus' (FunASR CAM++) needs no Hugging Face token or access request;" -ForegroundColor Gray
+    Write-Host "  its speaker model is downloaded automatically on first run." -ForegroundColor Gray
+}
+
+if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
     Write-Host ""
 
     # Resolve the diarization model's local cache path (mirrors utils/ensure_model.py::get_diarization_model_path)
@@ -1975,97 +1996,51 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
 Write-Host ""
 
 # ============================================================================
-# [3.4] OCR Configuration
+# [3.4] Document OCR Configuration (Content Search)
 # ============================================================================
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.4] OCR Configuration" -ForegroundColor Cyan
+Write-Host "[3.4] Document OCR Configuration (Content Search)" -ForegroundColor Cyan
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-# Extract current OCR enabled value
-$ocrMatch = [regex]::Match($configContent, "ocr:\s*\n\s*enabled:\s*(true|false)")
+# Extract current content_search.ocr_enabled value
+$ocrMatch = [regex]::Match($configContent, "ocr_enabled:\s*(true|false)")
 $currentOcr = if ($ocrMatch.Success) { $ocrMatch.Groups[1].Value } else { "true" }
 
-Write-Host "Current OCR configuration in config.yaml:" -ForegroundColor Yellow
+Write-Host "Current document OCR configuration in config.yaml:" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentOcr" -ForegroundColor Gray
+Write-Host "  content_search:" -ForegroundColor White
+Write-Host "    ocr_enabled: $currentOcr" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: this only affects text extraction from images inside uploaded documents." -ForegroundColor Gray
+Write-Host "      Board OCR is switched on/off in the features block above." -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
-    Write-Host "Silent mode: keeping existing OCR setting" -ForegroundColor Gray
+    Write-Host "Silent mode: keeping existing document OCR setting" -ForegroundColor Gray
     $changeOcr = "N"
 } else {
-    $changeOcr = Read-Host "Do you want to change OCR setting? (Y/N)"
+    $changeOcr = Read-Host "Do you want to change document OCR setting? (Y/N)"
 }
 
 if ($changeOcr.ToUpper() -eq "Y") {
     Write-Host ""
-    Write-Host "OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable OCR (extracts text from images/PDFs)" -ForegroundColor Gray
+    Write-Host "Document OCR Options:" -ForegroundColor Yellow
+    Write-Host "  true  - Enable OCR (extracts text from images inside documents/PDFs)" -ForegroundColor Gray
     Write-Host "  false - Disable OCR" -ForegroundColor Gray
     Write-Host ""
-    
-    $newOcr = Read-Host "Enable OCR? (true/false, blank = $currentOcr)"
-    
+
+    $newOcr = Read-Host "Enable document OCR? (true/false, blank = $currentOcr)"
+
     if ($newOcr.ToLower() -eq "true" -or $newOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
-        Write-Host "  OCR enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "OCR configuration updated." -ForegroundColor Green
+        $configContent = $configContent -replace "(ocr_enabled:\s*)(true|false)", "`${1}$($newOcr.ToLower())"
+        Write-Host "  content_search.ocr_enabled set to $($newOcr.ToLower())" -ForegroundColor Gray
+        Write-Host "Document OCR configuration updated." -ForegroundColor Green
     } else {
-        Write-Host "Keeping current OCR setting." -ForegroundColor Gray
+        Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
     }
 } else {
-    Write-Host "Keeping current OCR setting." -ForegroundColor Gray
-}
-
-Write-Host ""
-
-# ============================================================================
-# [3.5] Board OCR Configuration
-# ============================================================================
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host "[3.5] Board OCR Configuration (IFPD content summary)" -ForegroundColor Cyan
-Write-Host "----------------------------------------" -ForegroundColor DarkGray
-Write-Host ""
-
-# Extract current Board OCR enabled value
-$boardOcrMatch = [regex]::Match($configContent, "board_ocr:\s*\n\s*enabled:\s*(true|false)")
-$currentBoardOcr = if ($boardOcrMatch.Success) { $boardOcrMatch.Groups[1].Value } else { "false" }
-
-Write-Host "Current Board OCR configuration in config.yaml:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  board_ocr:" -ForegroundColor White
-Write-Host "    enabled: $currentBoardOcr" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Note: Board OCR requires OCR to be enabled (ocr.enabled: true)." -ForegroundColor Gray
-Write-Host ""
-
-if ($Silent) {
-    Write-Host "Silent mode: keeping existing Board OCR setting" -ForegroundColor Gray
-    $changeBoardOcr = "N"
-} else {
-    $changeBoardOcr = Read-Host "Do you want to change Board OCR setting? (Y/N)"
-}
-
-if ($changeBoardOcr.ToUpper() -eq "Y") {
-    Write-Host ""
-    Write-Host "Board OCR Options:" -ForegroundColor Yellow
-    Write-Host "  true  - Enable Board OCR (extracts text from the teacher's display for summary)" -ForegroundColor Gray
-    Write-Host "  false - Disable Board OCR" -ForegroundColor Gray
-    Write-Host ""
-
-    $newBoardOcr = Read-Host "Enable Board OCR? (true/false, blank = $currentBoardOcr)"
-
-    if ($newBoardOcr.ToLower() -eq "true" -or $newBoardOcr.ToLower() -eq "false") {
-        $configContent = $configContent -replace "(board_ocr:\s*\n\s*enabled:\s*)(true|false)", "`${1}$($newBoardOcr.ToLower())"
-        Write-Host "  Board OCR enabled set to $($newBoardOcr.ToLower())" -ForegroundColor Gray
-        Write-Host "Board OCR configuration updated." -ForegroundColor Green
-    } else {
-        Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
-    }
-} else {
-    Write-Host "Keeping current Board OCR setting." -ForegroundColor Gray
+    Write-Host "Keeping current document OCR setting." -ForegroundColor Gray
 }
 
 Write-Host ""
@@ -2103,14 +2078,18 @@ $finalAsrDevice = if ($finalConfig -match "asr:[\s\S]*?device:\s*(\S+)") { $Matc
 $finalDiarization = if ($finalConfig -match "asr:[\s\S]*?diarization:\s*(True|False)") { $Matches[1] } else { "False" }
 $finalDocMax = if ($finalConfig -match "document_max_mb:\s*(\d+)") { $Matches[1] } else { "100" }
 $finalVideoMax = if ($finalConfig -match "video_max_mb:\s*(\d+)") { $Matches[1] } else { "1024" }
-$finalOcr = if ($finalConfig -match "ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "true" }
-$finalBoardOcr = if ($finalConfig -match "board_ocr:\s*\n\s*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
+$finalOcr = if ($finalConfig -match "ocr_enabled:\s*(true|false)") { $Matches[1] } else { "true" }
+$finalBoardOcr = Get-FeatureState -Content $finalConfig -Id "board_ocr"
 
 
 $csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
 $segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
 $qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
-$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+$csTriggers = @()
+if ($csFlag)  { $csTriggers += "content_search" }
+if ($segFlag) { $csTriggers += "topic_segmentation" }
+if ($qaFlag)  { $csTriggers += "qa" }
+$contentSearchEnabled = $csTriggers.Count -gt 0
 
 Write-Host "  Features:" -ForegroundColor White
 foreach ($fid in $featureIds) {
@@ -2123,15 +2102,15 @@ Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
 Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
-Write-Host "  Diarization:     $finalDiarization" -ForegroundColor White
-if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $finalConfig)) {
+Write-Host "  Diarization:     $finalDiarization$(if ($finalDiarization -match '(?i)^true$') { " (backend: $(Get-DiarizationBackend -Content $finalConfig))" })" -ForegroundColor White
+if ($finalDiarization -match "(?i)^true$" -and (Test-DiarizationNeedsHfToken -Content $finalConfig) -and -not (Test-HfTokenSet -Content $finalConfig)) {
     Write-Host "                   [WARNING] hf_token is None - diarization will not work until it is filled in" -ForegroundColor Red
 }
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
-Write-Host "  OCR Enabled:     $finalOcr" -ForegroundColor White
+Write-Host "  Document OCR:    $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
-Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { "Stack enabled (required by: $($csTriggers -join ', '))" } else { 'Stack disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
@@ -2144,14 +2123,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $venvBackend = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
-$venvContentSearch = Join-Path $ScriptDir "content_search\venv_content_search"
 $venvConvert = Join-Path $ScriptDir "components\grading\providers\layout_detection_service\venv_convert"
 
 $gradingEnabled = if ($configContent -match "grading:\s*\{[^}]*enabled:\s*(true|false)") { $Matches[1] } else { "false" }
 
 $recreateVenvs = $false
 $upgradeVenvs = $false
-if ((Test-Path $venvBackend) -or (Test-Path $venvContentSearch) -or (Test-Path $venvConvert)) {
+if ((Test-Path $venvBackend) -or (Test-Path $venvConvert)) {
     if ($Silent) {
         Write-Host "Virtual environments exist, using existing (faster startup)" -ForegroundColor Gray
         $recreateVenvs = $false
@@ -2186,45 +2164,32 @@ if (-not (Test-Path $venvBackend)) {
     }
     Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Failed to upgrade pip in Backend venv, continuing..." -ForegroundColor Yellow
+    }
     & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to install Backend dependencies" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
 } elseif ($upgradeVenvs) {
     Write-Host "Upgrading Backend dependencies (keeping existing venv)..." -ForegroundColor Yellow
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Failed to upgrade pip in Backend venv, continuing..." -ForegroundColor Yellow
+    }
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to upgrade Backend dependencies" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "[OK] Backend dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
 }
 Write-Host ""
 
-Write-Host "Setting up ContentSearch virtual environment..." -ForegroundColor Yellow
-if (-not $contentSearchEnabled) {
-    Write-Host "  Content Search disabled in config (content_search/topic_segmentation/qa all off) - skipping venv + dependencies" -ForegroundColor Gray
-} else {
-    if ($recreateVenvs -and (Test-Path $venvContentSearch)) {
-        Remove-Item $venvContentSearch -Recurse -Force
-    }
-    if (-not (Test-Path $venvContentSearch)) {
-        python -m venv $venvContentSearch
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to create ContentSearch venv" -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "Installing ContentSearch dependencies..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies installed" -ForegroundColor Green
-    } elseif ($upgradeVenvs) {
-        Write-Host "Upgrading ContentSearch dependencies (keeping existing venv)..." -ForegroundColor Yellow
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade pip --no-input
-        & "$venvContentSearch\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "content_search\requirements.txt") --no-input
-        Write-Host "[OK] ContentSearch dependencies upgraded" -ForegroundColor Green
-    } else {
-        Write-Host "[OK] ContentSearch venv already exists" -ForegroundColor Green
-    }
-}
-Write-Host ""
 
 if ($gradingEnabled -eq "true") {
     Write-Host "Setting up Grading model conversion environment..." -ForegroundColor Yellow
@@ -2239,12 +2204,26 @@ if ($gradingEnabled -eq "true") {
         }
         Write-Host "Installing Grading model conversion dependencies..." -ForegroundColor Yellow
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARN] Failed to upgrade pip in Grading conversion venv, continuing..." -ForegroundColor Yellow
+        }
         & "$venvConvert\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install Grading model conversion dependencies" -ForegroundColor Red
+            exit 1
+        }
         Write-Host "[OK] Grading conversion dependencies installed" -ForegroundColor Green
     } elseif ($upgradeVenvs) {
         Write-Host "Upgrading Grading conversion dependencies..." -ForegroundColor Yellow
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARN] Failed to upgrade pip in Grading conversion venv, continuing..." -ForegroundColor Yellow
+        }
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to upgrade Grading model conversion dependencies" -ForegroundColor Red
+            exit 1
+        }
         Write-Host "[OK] Grading conversion dependencies upgraded" -ForegroundColor Green
     } else {
         Write-Host "[OK] Grading conversion venv already exists" -ForegroundColor Green

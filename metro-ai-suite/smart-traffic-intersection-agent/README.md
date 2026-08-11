@@ -1,6 +1,17 @@
 # Smart Traffic Intersection Agent
 
-The Smart Traffic Intersection Agent application analyzes various traffic scenarios at the intersection by giving driving suggestions, sending alerts, and providing an interface for other agents to plug in and get the required information about a particular traffic intersection. These deployments only happen at the edge, at each traffic intersection.
+> Note!
+> This is a sample application **intended for evaluation and development purposes only**.
+  For more information, refer to
+  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
+
+The Smart Traffic Intersection Agent application demonstrates how Intel hardware performs
+in AI use cases for urban traffic management. It analyzes various traffic scenarios at the
+intersection by giving driving suggestions, sending alerts, and providing an interface for
+other agents to plug in and get the required information about a particular traffic
+intersection. These deployments only happen at the edge, at each traffic intersection.
+
+It is not intended for use in production environments, nor is it validated for that purpose.
 
 ## Get Started
 
