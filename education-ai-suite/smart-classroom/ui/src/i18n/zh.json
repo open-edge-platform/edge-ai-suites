@@ -114,6 +114,10 @@
     "mindmap":"思维导图"
   },
 
+  "transcript": {
+    "processingWholeFile": "正在一次性转录整段录音，处理完成后才会显示转录内容，请耐心等待…"
+  },
+
   "accordion": {
     "noData": "暂无数据",
     "noSessionActive": "无活动会话。请上传文件或开始录音以开始监控。",
@@ -224,7 +228,20 @@
     "videoAnalytics": "视频分析",
     "audioAnalytics": "音频分析",
     "lastUpdated": "最后更新",
-    "noData": "暂无数据"
+    "noData": "暂无数据",
+    "live": "实时",
+    "waitingForData": "等待数据",
+    "playback": "回放",
+    "finalResults": "最终结果",
+    "students": "学生",
+    "stands": "站立",
+    "hands": "举手",
+    "participation": "{{percent}}% 参与",
+    "participationDetail": "{{total}} 名学生中有 {{active}} 名参与",
+    "mostActive": "最活跃的学生",
+    "showAll": "显示全部 {{count}} 名学生",
+    "showTop": "仅显示前 {{count}} 名学生",
+    "errorLabel": "错误"
   },
   "search": {
     "preparingContent": "正在生成内容...",
@@ -585,6 +602,13 @@
     "score": "分数",
     "summarization": "总结",
     "showMore": "显示更多",
-    "showLess": "收起"
+    "showLess": "收起",
+    "minScore": "最低分数",
+    "scoreFormat": "格式",
+    "page": "页码",
+    "previewUnavailable": "无法预览",
+    "previewUnavailableType": "此文件类型不支持预览。",
+    "download": "下载 {{name}}",
+    "closePreview": "关闭预览"
   }
 }
