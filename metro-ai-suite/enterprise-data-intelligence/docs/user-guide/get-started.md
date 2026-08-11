@@ -1,7 +1,5 @@
 # Enterprise Data Intelligence
 
-For the Chinese version, see [get-started-CN.md](get-started-CN.md).
-
 Demo setup steps, including OpenClaw service, EC-RAG service, Router service, compressor service, and UI service.
 
 ## Table of Contents
@@ -22,7 +20,7 @@ The Router and compressor services are set up separately. See the [`inference-ro
 
 ## 2. Setup EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](../../../agentic-rag) directory.
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](https://github.com/opea-project/GenAIExamples/tree/f56422671c8bdf46f59dd758c8c9e38ca41d6555/EdgeCraftRAG) directory.
 
 
 ## 3. Setup OpenClaw
