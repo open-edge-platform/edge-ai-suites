@@ -26,7 +26,7 @@ The main features are as follows:
 ## Audio Pipeline
 
 - **Audio transcription** with ASR models (e.g., Whisper, Paraformer)
-- **Speaker diarization** using Pyannote Audio models
+- **Speaker diarization** using Pyannote Audio models or FunASR CAM++
 - **Summarization** using LLMs (e.g., Qwen, LLaMA) optimized with OpenVINO
 - **MindMap generation** using Mermaid.js for visual diagram rendering
 - **Content segmentation** for automatic topic extraction from transcripts

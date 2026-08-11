@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react';
+import '../../assets/css/ClassEngagementAccordion.css';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { 
-  setClassStatistics, 
-  setStreamingStatus, 
-  setError, 
+import {
+  setClassStatistics,
+  setStreamingStatus,
+  setError,
   clearError,
-  clearClassStatistics 
+  clearClassStatistics
 } from '../../redux/slices/fetchClassStatistics';
 import { getClassStatistics } from '../../services/api';
 import Accordion from '../common/Accordion';
@@ -17,6 +18,9 @@ interface ClassStatisticsAccordionProps {
   featureGuard: FeatureGuard;
 }
 
+/** Leaderboard rows shown before the "show all" toggle. */
+const TOP_STUDENTS = 5;
+
 const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ featureGuard }) => {
   const dispatch = useAppDispatch();
 
@@ -24,6 +28,8 @@ const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ fea
   const videoAnalyticsActive = useAppSelector(
     (state) => state.ui.videoAnalyticsActive
   );
+  const videoPlaybackMode = useAppSelector((state) => state.ui.videoPlaybackMode);
+  const videoStatus = useAppSelector((state) => state.ui.videoStatus);
 
   const { statistics, isStreaming, error, lastUpdated } = useAppSelector(
     (state) => state.classStatistics
@@ -31,6 +37,7 @@ const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ fea
 
   const cleanupRef = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
+  const [showAllStudents, setShowAllStudents] = useState(false);
 
   const handleStreamData = useCallback((data: any) => {
     dispatch(setClassStatistics(data));
@@ -83,99 +90,143 @@ const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ fea
     return new Date(lastUpdated).toLocaleTimeString();
   };
 
+  // Once the stream ends the app switches to playback and these numbers become
+  // the session's final tally. "Waiting for data" would contradict the stats
+  // still on screen, so distinguish playback from the pre-session state.
+  // `lastUpdated` is the backstop: if any data arrived, we are never "waiting".
+  const hasReceivedData = lastUpdated !== null;
+  const isPlayback =
+    !isStreaming && (videoPlaybackMode || videoStatus === 'completed' || hasReceivedData);
+
+  const statusLabel = isStreaming
+    ? t('classStatistics.live')
+    : isPlayback
+      ? t('classStatistics.playback')
+      : t('classStatistics.waitingForData');
+
+  // Distinct students seen standing, ranked by how often — this is what the
+  // leaderboard shows, and it also gives the counts context: `stand_count` on
+  // its own can't tell you whether one student stood 12 times or twelve did.
+  const rankedStudents = useMemo(
+    () => [...(statistics.stand_reid ?? [])].sort((a, b) => b.count - a.count),
+    [statistics.stand_reid]
+  );
+
+  const topCount = rankedStudents[0]?.count ?? 0;
+  const participants = rankedStudents.length;
+  const participationPercent =
+    statistics.student_count > 0
+      ? Math.min(100, Math.round((participants / statistics.student_count) * 100))
+      : 0;
+
+  const visibleStudents = showAllStudents ? rankedStudents : rankedStudents.slice(0, TOP_STUDENTS);
+  const hasOverflow = rankedStudents.length > TOP_STUDENTS;
+
   return (
     <Accordion title={t('accordion.classStatistics')}>
-      <div className="accordion-content">
-        <div
-          className="status-bar"
-          style={{
-            marginBottom: '10px',
-            fontSize: '12px',
-            color: '#666',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px',
-          }}
-        >
+      <div className="ce-content">
+        {/* Live status — previously computed but never rendered. */}
+        <div className="ce-status">
+          <span
+            className={`ce-status-dot${isStreaming ? ' ce-status-dot--live' : isPlayback ? ' ce-status-dot--playback' : ''
+              }`}
+          />
+          <span className="ce-status-label">{statusLabel}</span>
+          {lastUpdated && (
+            <span className="ce-status-time">
+              {isPlayback
+                ? t('classStatistics.finalResults')
+                : `${t('classStatistics.lastUpdated')} ${formatLastUpdated()}`}
+            </span>
+          )}
+          {statistics.student_count > 0 && (
+            <span className="ce-participation">
+              <span className="ce-participation-value">
+                {t('classStatistics.participation', { percent: participationPercent })}
+              </span>
+              <span className="ce-participation-detail">
+                {t('classStatistics.participationDetail', {
+                  active: participants,
+                  total: statistics.student_count,
+                })}
+              </span>
+            </span>
+          )}
         </div>
 
         {error && (
-          <div
-            style={{
-              color: '#d32f2f',
-              backgroundColor: '#ffebee',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              marginBottom: '15px',
-              fontSize: '14px',
-              border: '1px solid #ffcdd2',
-            }}
-          >
-            ⚠️ Error: {error}
+          <div className="ce-error">
+            ⚠️ {t('classStatistics.errorLabel')}: {error}
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: '8px' }}>
-          <p>
-            <strong>{t('classStatistics.studentCount')}:</strong>
-            <span style={{ marginLeft: '8px', fontSize: '16px', fontWeight: 'bold', color: '#0b0c0c' }}>
-              {statistics.student_count}
+        <div className="ce-tiles">
+          <div className="ce-tile">
+            <span className="ce-tile-value">{statistics.student_count}</span>
+            <span className="ce-tile-label" title={t('classStatistics.studentCount')}>
+              {t('classStatistics.students')}
             </span>
-          </p>
-
-          <p>
-            <strong>{t('classStatistics.standCount')}:</strong>
-            <span style={{ marginLeft: '8px', fontSize: '16px', fontWeight: 'bold', color: '#070707' }}>
-              {statistics.stand_count}
+          </div>
+          <div className="ce-tile">
+            <span className="ce-tile-value">{statistics.stand_count}</span>
+            <span className="ce-tile-label" title={t('classStatistics.standCount')}>
+              {t('classStatistics.stands')}
             </span>
-          </p>
-
-          <p>
-            <strong>{t('classStatistics.raiseUpCount')}:</strong>
-            <span style={{ marginLeft: '8px', fontSize: '16px', fontWeight: 'bold', color: '#0b0c0c' }}>
-              {statistics.raise_up_count}
+          </div>
+          <div className="ce-tile">
+            <span className="ce-tile-value">{statistics.raise_up_count}</span>
+            <span className="ce-tile-label" title={t('classStatistics.raiseUpCount')}>
+              {t('classStatistics.hands')}
             </span>
-          </p>
+          </div>
         </div>
 
-        <div style={{ marginTop: '15px' }}>
-          <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>
-            {t('classStatistics.standReIdData')}:
-          </h4>
+        <div>
+          <h4 className="ce-section-title">{t('classStatistics.mostActive')}</h4>
 
-          {statistics.stand_reid.length > 0 ? (
-            <ul
-              style={{
-                margin: '0',
-                paddingLeft: '20px',
-                maxHeight: '150px',
-                overflowY: 'auto',
-              }}
-            >
-              {statistics.stand_reid.map((entry) => (
-                <li key={entry.student_id}>
-                  <strong>{t('classStatistics.studentId')}:</strong> {entry.student_id}
-                  <span style={{ marginLeft: '10px', color: '#666' }}>
-                    {t('classStatistics.count')}: {entry.count}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          {rankedStudents.length > 0 ? (
+            <>
+              <div className={`ce-board${showAllStudents ? ' ce-board--scroll' : ''}`}>
+                {visibleStudents.map((entry) => (
+                  <div className="ce-board-row" key={entry.student_id}>
+                    <span
+                      className="ce-board-id"
+                      title={`${t('classStatistics.studentId')}: ${entry.student_id}`}
+                    >
+                      {`${t('classStatistics.studentId')}: ${entry.student_id}`}
+                    </span>
+                    <span className="ce-board-track">
+                      {/* Bar length is relative to the most active student. */}
+                      <span
+                        className="ce-board-bar"
+                        style={{
+                          width: `${topCount > 0 ? (entry.count / topCount) * 100 : 0}%`,
+                        }}
+                      />
+                    </span>
+                    <span className="ce-board-count">{entry.count}</span>
+                  </div>
+                ))}
+              </div>
+
+              {hasOverflow && (
+                <button
+                  className="ce-board-toggle"
+                  onClick={() => setShowAllStudents((prev) => !prev)}
+                >
+                  {showAllStudents
+                    ? t('classStatistics.showTop', { count: TOP_STUDENTS })
+                    : t('classStatistics.showAll', { count: rankedStudents.length })}
+                </button>
+              )}
+            </>
           ) : (
-            <p
-              style={{
-                fontStyle: 'italic',
-                color: '#666',
-                padding: '8px',
-                backgroundColor: '#f5f5f5',
-                borderRadius: '4px',
-              }}
-            />
+            <p className="ce-empty">{t('classStatistics.noData')}</p>
           )}
         </div>
-        
+
         {featureGuard.hasFeature('asr') && (
-          <div className="analytics-section audio-analytics" style={{ margin: '20px 2px 3px 4px' }}>
+          <div className="analytics-section audio-analytics">
             <Timeline />
           </div>
         )}
