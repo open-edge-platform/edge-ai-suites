@@ -40,7 +40,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
   ```bash
   ffprobe rtsp://localhost:8554/uav-1/nadir
   ```
-- Verify the drone is armed — pipelines only start on ARMED state
+- Verify the UAV is armed — pipelines only start on ARMED state
 
 ---
 

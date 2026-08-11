@@ -5,9 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # UAV Vision Analytics Application
 
-AI-powered drone object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
+AI-powered UAV object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
 
-This application processes video from a drone-mounted camera (or simulated RTSP feed), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by QGroundControl (QGC) or any RTSP-capable client.
+This application processes video from a UAV-mounted camera (or simulated RTSP feed), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by QGroundControl (QGC) or any RTSP-capable client.
 
 ---
 
@@ -75,7 +75,7 @@ INSTANCE_ID=$(curl -s -X POST \
         },
         "frame": {
             "type": "rtsp",
-            "path": "drone-cpu"
+            "path": "uav-cpu"
         }
     },
     "parameters": {
@@ -95,7 +95,7 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```
 
 The annotated RTSP stream is then available at:
-- `rtsp://<host-ip>:8555/drone-cpu`
+- `rtsp://<host-ip>:8555/uav-cpu`
 
 ---
 

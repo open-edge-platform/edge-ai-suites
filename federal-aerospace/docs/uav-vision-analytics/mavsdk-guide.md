@@ -24,15 +24,15 @@ make mavsdk-up
 make start-rtsp
 ```
 
-The pipeline manager subscribes to `uav/{id}/telemetry/status` on the SDK's MQTT broker. It automatically starts the inference pipelines when the drone is armed and stops them when disarmed. It also probes each RTSP source with `ffprobe` before starting to confirm the stream is live.
+The pipeline manager subscribes to `uav/{id}/telemetry/status` on the SDK's MQTT broker. It automatically starts the inference pipelines when the UAV is armed and stops them when disarmed. It also probes each RTSP source with `ffprobe` before starting to confirm the stream is live.
 
 ---
 
 ## 3. Run a simple mission
 
-> **Note:** Video streams are not available until the drone is armed and actively on a mission.
+> **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the drone, commands a takeoff to 10 m, holds for 20 seconds, then lands:
+The following sequence arms the UAV, commands a takeoff to 10 m, holds for 20 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm

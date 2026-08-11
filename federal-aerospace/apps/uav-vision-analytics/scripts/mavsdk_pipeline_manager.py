@@ -1,5 +1,5 @@
 """
-Monitors drone ARMED/DISARMED status via MQTT telemetry and starts/stops
+Monitors UAV ARMED/DISARMED status via MQTT telemetry and starts/stops
 the three DL Streamer pipelines defined in start_pipelines.sh accordingly:
   - armed == true  -> POST all three pipelines (nadir/CPU, forward/GPU,
                        rear/NPU), keeping track of their instance_ids

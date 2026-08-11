@@ -171,7 +171,7 @@ Expected services: `broker`, `mavlink-router`, `px4`, `dlstreamer-pipeline-serve
 
 ### Step 4: Start pipelines
 
-Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the container, which monitors the drone's armed state via MAVLink and starts/stops pipelines automatically:
+Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the container, which monitors the UAV's armed state via MAVLink and starts/stops pipelines automatically:
 
 ```bash
 make start-rtsp
@@ -193,7 +193,7 @@ INSTANCE_ID=$(curl -s -X POST \
       },
       "frame": {
         "type": "rtsp",
-        "path": "drone-cpu"
+        "path": "uav-cpu"
       }
     },
     "parameters": {
@@ -206,7 +206,7 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Started instance: $INSTANCE_ID"
 ```
 
-The annotated RTSP stream is available at `rtsp://<host-ip>:8555/drone-cpu`.
+The annotated RTSP stream is available at `rtsp://<host-ip>:8555/uav-cpu`.
 
 To stop it later:
 
@@ -317,7 +317,7 @@ INSTANCE_ID=$(curl -s -X POST \
   -d '{
     "destination": {
       "metadata": {"type": "file", "path": "/tmp/results.jsonl", "format": "json-lines"},
-      "frame": {"type": "rtsp", "path": "drone-cpu"}
+      "frame": {"type": "rtsp", "path": "uav-cpu"}
     },
     "parameters": {
       "detection-properties": {
@@ -352,7 +352,7 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ```bash
 # Install ffplay if needed: sudo apt install ffmpeg
-ffplay rtsp://localhost:8555/drone-cpu
+ffplay rtsp://localhost:8555/uav-cpu
 ```
 
 Or in QGroundControl: **Application Settings → Video** → set the RTSP URL.
@@ -360,7 +360,7 @@ Or in QGroundControl: **Application Settings → Video** → set the RTSP URL.
 ### Record a clip
 
 ```bash
-ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8555/drone-cpu" \
+ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8555/uav-cpu" \
   -c copy -map 0 output.mkv
 ```
 

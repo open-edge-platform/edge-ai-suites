@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """
-Monitors drone ARMED/DISARMED status via MAVLink and starts/stops DL Streamer
+Monitors UAV ARMED/DISARMED status via MAVLink and starts/stops DL Streamer
 pipelines accordingly:
   - ARMED    -> POST to start each configured pipeline
   - DISARMED -> DELETE each pipeline using its stored instance_id
@@ -32,13 +32,13 @@ MODEL_PATH          = (
 # ── Pipeline definitions ──────────────────────────────────────────────────────
 
 RTSP_PIPELINES = [
-    {"name": "uav_object_detection_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU"},
-    {"name": "uav_object_detection_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU"},
+    {"name": "uav_object_detection_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU"},
+    {"name": "uav_object_detection_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU"},
 ]
 
 UDP_PIPELINES = [
-    {"name": "uav_udpsink_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU", "port": 5600},
-    {"name": "uav_udpsink_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU", "port": 5601},
+    {"name": "uav_udpsink_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU", "port": 5600},
+    {"name": "uav_udpsink_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU", "port": 5601},
 ]
 
 # ── Payload builders ──────────────────────────────────────────────────────────
