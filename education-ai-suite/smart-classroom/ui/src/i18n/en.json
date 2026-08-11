@@ -113,6 +113,10 @@
       "summary": "AI Summary",
       "mindmap":"Mind Map"
     },
+
+    "transcript": {
+      "processingWholeFile": "Transcribing the whole recording in a single pass — the transcript appears once processing finishes. Please wait…"
+    },
   
   "accordion": {
       "noData": "No data available",

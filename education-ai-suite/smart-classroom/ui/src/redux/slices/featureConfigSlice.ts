@@ -11,6 +11,7 @@ export interface FeatureDescriptor {
   // Optional UI-specific fields
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
 }
 
 interface FeatureConfigState {
