@@ -90,10 +90,39 @@ from the delegates' own benchmarks. Read the aggregated numbers from
 
 ### Results
 
-> Not yet measured for this skill. Run the command above in plan-only mode and
-> paste the aggregated per-eval pass rates and mean token/latency numbers here,
-> mirroring the table format used in the `metro-ai-apps-recipe` skill's
-> `benchmark.md`.
-> Report **routing accuracy** (correct delegate chosen per case), **plan-before-
-> build rate** (no artifacts created before confirmation), and **negative-case
-> trigger accuracy** (eval 6 must not trigger) as the headline metrics.
+Measured with the GitHub Copilot CLI as executor in **plan-only** mode (6 eval
+cases, one with-skill run and one neutral baseline run each, N=1 per cell). Each
+run was graded against its `expectations`; per-eval pass rate = expectations
+satisfied / total. The build phase (`npx skills add` + delegate execution) was
+skipped by design so the numbers isolate the orchestrator's discovery, routing,
+and plan-before-build behaviour.
+
+| Eval | Case | With skill | Baseline |
+| ---- | ---- | ---------- | -------- |
+| 1 | Vision detection → `metro-ai-apps-recipe` | 4/4 (100%) | 1/4 (25%) |
+| 2 | Document chatbot → `chatqna-docker-deploy` | 4/4 (100%) | 1/4 (25%) |
+| 3 | Video search → `vss-deploy` (+`vdms-dataprep-user`,`vss-search-index`) | 3/4 (75%) | 1/4 (25%) |
+| 4 | Train defect model → `getitune-*` | 3/4 (75%) | 2/4 (50%) |
+| 5 | Ambiguous ("use AI with my cameras") | 3/3 (100%) | 2/3 (67%) |
+| 6 | User names `metro-ai-apps-recipe` (should NOT trigger) | 1/1 (100%) | 1/1 (100%) |
+
+| Metric | With skill | Baseline |
+| ------ | ---------- | -------- |
+| Expectations passed (all cases) | **18/20 (90%)** | 8/20 (40%) |
+| Expectation pass rate (mean per eval) | **92%** | 49% |
+| Routing accuracy (correct delegate, evals 1–5) | **5/5** | 0/5 |
+| Plan-before-build rate (no artifacts before confirmation) | **6/6** | 6/6 |
+| Negative-case trigger accuracy (eval 6 defers) | **1/1** | 1/1 |
+| Mean wall-clock / run | ~30 s | ~18 s |
+
+The skill more than doubles the expectation pass rate (+50 pts overall, +43 pts
+mean-per-eval) and lifts routing accuracy from 0/5 to 5/5: the baseline lands on
+a plausible architecture but never names the correct open-edge-platform delegate
+skill(s) or the exact `npx skills add` command, and on the vision case it leads
+with technology (OpenVINO/DL Streamer/MQTT) instead of business questions. Both
+configurations correctly hold the negative boundary (eval 6) and neither builds
+before confirming, since the runs were graded plan-only. The two with-skill
+misses were narrow: eval 3 did not explicitly offer the `vss-deploy-helm`
+Kubernetes variant, and eval 4 did not surface the optional follow-on deploy
+path (`model-download-user` → `metro-ai-apps-recipe`) after the IR is produced —
+both are additive polish items, not routing errors.

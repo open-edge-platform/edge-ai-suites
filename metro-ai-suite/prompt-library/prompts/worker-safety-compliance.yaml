@@ -1,10 +1,7 @@
 name: worker-safety-compliance
 description: >-
-  I want to keep workers safe by flagging anyone missing required protective
-  gear (hard hats, vests, and similar). Hands off to the metro-ai-apps-builder
-  orchestrator, which runs a short business Q&A, discovers the right
-  open-edge-platform skill, proposes a plan, and builds a PPE-compliance
-  deliverable on Intel hardware once I confirm.
+  Flag workers missing required protective gear such as hard hats and hi-vis
+  vests to keep sites safe and compliant.
 tags:
   - worker-safety
   - ppe-compliance
@@ -13,7 +10,7 @@ tags:
   - intel
 prompt: |
   I want to keep my workers safe by flagging anyone missing required protective
-  gear — such as a hard hat or hi-vis vest — and raise an alert so a supervisor
+  gear such as a hard hat or safety vest and raise an alert so a supervisor
   can act.
 
   Use the metro-ai-apps-builder skill to guide this process. Install and
