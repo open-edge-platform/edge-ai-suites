@@ -116,6 +116,31 @@
   font-style: italic;
 }
 
+.transcript-processing-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.8em 1em;
+  border-radius: 0.75em;
+  background: #eef4ff;
+  color: #1b4f72;
+  font-size: 0.9rem;
+}
+
+.transcript-processing-spinner {
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+  border: 2px solid #b7d0f2;
+  border-top-color: #1b4f72;
+  border-radius: 50%;
+  animation: transcript-spin 0.9s linear infinite;
+}
+
+@keyframes transcript-spin {
+  to { transform: rotate(360deg); }
+}
+
 .typewriter-cursor {
   font-weight: bold;
   color: #007bff;

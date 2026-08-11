@@ -113,6 +113,10 @@
       "summary": "AI Summary",
       "mindmap":"Mind Map"
     },
+
+    "transcript": {
+      "processingWholeFile": "Transcribing the whole recording in a single pass — the transcript appears once processing finishes. Please wait…"
+    },
   
   "accordion": {
       "noData": "No data available",
@@ -224,7 +228,20 @@
     "videoAnalytics": "Video Analytics",
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
-    "noData": "No data available"
+    "noData": "No data available",
+    "live": "Live",
+    "waitingForData": "Waiting for data",
+    "playback": "Playback",
+    "finalResults": "Final results",
+    "students": "Students",
+    "stands": "Stands",
+    "hands": "Hands",
+    "participation": "{{percent}}% engaged",
+    "participationDetail": "{{active}} of {{total}} students participated",
+    "mostActive": "Most active students",
+    "showAll": "Show all {{count}} students",
+    "showTop": "Show top {{count}} students",
+    "errorLabel": "Error"
   },
   "search": {
     "preparingContent": "Content Generating...",
@@ -583,7 +600,14 @@
     "score": "Score",
     "summarization": "Summarization",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "minScore": "Min score",
+    "scoreFormat": "Format",
+    "page": "Page",
+    "previewUnavailable": "Preview not available",
+    "previewUnavailableType": "Preview not available for this file type.",
+    "download": "Download {{name}}",
+    "closePreview": "Close preview"
   }
 }
  

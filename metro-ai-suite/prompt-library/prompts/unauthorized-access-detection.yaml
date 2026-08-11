@@ -1,10 +1,7 @@
 name: unauthorized-access-detection
 description: >-
-  I want to be alerted when someone enters a restricted area they shouldn't —
-  perimeter, after-hours, or a no-go zone. Hands off to the metro-ai-apps-builder
-  orchestrator, which runs a short business Q&A, discovers the right
-  open-edge-platform skill, proposes a plan, and builds an intrusion-alerting
-  deliverable on Intel hardware once I confirm.
+  Get real-time alerts when someone enters a restricted, perimeter, or
+  after-hours zone they shouldn't.
 tags:
   - unauthorized-access
   - intrusion-detection

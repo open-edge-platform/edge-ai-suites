@@ -467,7 +467,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
                   src={folderIcon}
                   alt={t('uploadFiles.chooseFile')}
                   className="folder-icon"
-                  onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
+                  onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3,.m4a')}
                 />
               </div>
             </div>

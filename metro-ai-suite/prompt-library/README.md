@@ -1,113 +1,75 @@
-# Prompt Library
+# Metro Prompt Library
 
-Reusable business-objective prompts in YAML format. Each prompt is **as simple as
-possible — it states only a business objective** (e.g. "I want to detect people
-in my camera feeds") and hands off to the
-[`metro-ai-apps-builder`](.github/skills/metro-ai-apps-builder/SKILL.md)
-orchestrator skill. The prompts carry **no technology and no parameters** — the
-skill owns all of that.
+The Metro AI Suite **Prompt Library** is a collection of reusable,
+business-objective prompts that turn a plain-language goal (for example,
+"I want to detect people in my camera feeds") into a running Intel® Edge AI
+application. Each prompt states **only a business outcome** — no framework, model,
+precision, or device — and hands off to the `metro-ai-apps-builder` orchestrator
+skill, which asks a few business questions, discovers the right
+[open-edge-platform](https://github.com/open-edge-platform/skills) skill,
+proposes a plan, and — after you confirm — builds the deliverable on Intel
+hardware.
 
-## The orchestrator: `metro-ai-apps-builder`
+---
 
-`metro-ai-apps-builder` **owns the conversation**. It turns a plain business
-outcome into a running Intel Edge AI application by:
+## How prompt-driven app development works
 
-- Running a **business-objective Q&A** — it asks what you want to achieve, your
-  inputs, where it runs, and your hardware, **not** which technology to use. You
-  are never asked to choose a framework, model, precision, or device.
-- **Discovering the relevant skill(s)** from the
-  [open-edge-platform/skills](https://github.com/open-edge-platform/skills)
-  catalog — vision analytics, multi-camera scene analysis, conversational
-  Q&A/RAG, video search & summarization, multimodal embeddings, model
-  download/convert, model training, or robotics — using a curated routing table
-  ([`references/SKILL_CATALOG.md`](.github/skills/metro-ai-apps-builder/references/SKILL_CATALOG.md))
-  plus live discovery
-  ([`references/DISCOVERY.md`](.github/skills/metro-ai-apps-builder/references/DISCOVERY.md)).
-- **Inferring all technology** (framework, model, precision, device, deployment
-  mode) from your business answers and the target skill's parameters.
-- **Presenting a plan and waiting for your confirmation** — it summarises the
-  deliverable, which skill(s) will build it, and the inferred technology, and
-  only starts building **after you approve**. Nothing is created before then.
-- **Building by delegating** to the chosen skill(s) — it does not re-implement
-  their work. For a computer-vision analytics stack it delegates to the
-  [`metro-ai-apps-recipe`](.github/skills/metro-ai-apps-recipe/SKILL.md) skill in
-  this same repository; for every other domain it installs and invokes the
-  matching open-edge-platform skill.
+A Metro AI App development prompt is intentionally minimal. Instead of encoding
+technology choices, it describes *what you want to achieve* and delegates every
+technical decision to the orchestrator skill.
 
-## The vision delegate: `metro-ai-apps-recipe`
+1. **State a business objective.** Point Copilot at the prompt matching the
+   outcome you want (for example, "detect people", "count vehicles", or "flag PPE
+   violations"), or simply describe your goal in your own words.
+2. **The orchestrator takes over.** The
+   [`metro-ai-apps-builder`](https://github.com/open-edge-platform/skills)
+   skill runs a short **business** Q&A — what you want to achieve, your inputs,
+   where it runs, and your hardware — never asking you to choose a framework,
+   model, or device.
+3. **Skill discovery.** From your answers the orchestrator discovers the relevant
+   open-edge-platform skill(s) — vision analytics, multi-camera scene analysis,
+   conversational Q&A/RAG, video search and summarization, multimodal embeddings,
+   model download/convert, model training, or robotics.
+4. **Plan and confirm.** It presents the deliverable, the skill(s) that will
+   build it, and the inferred technology, and waits for your approval. Nothing is
+   created before you confirm.
+5. **Build by delegation.** After you approve, the orchestrator builds the
+   deliverable by delegating to the chosen skill(s) — for a computer-vision
+   analytics stack it hands off to the `metro-ai-apps-recipe` vision delegate.
 
-For camera-feed detection/counting/zone-alerting, the orchestrator hands off to
-[`metro-ai-apps-recipe`](.github/skills/metro-ai-apps-recipe/SKILL.md), which
-builds a streamlined single-compose vision-analytics stack: DL Streamer Pipeline
-Server + MediaMTX/WebRTC + Coturn + Mosquitto + Node-RED + Grafana + Nginx TLS
-reverse proxy (live annotated video reaches Grafana over **WebRTC**, embedded in
-`<iframe>` panels; no Prometheus, no OpenTelemetry). It has an **opt-in
-multi-camera SceneScape** spatial-analysis path (smart-intersection style) that
-delegates to the external
-[`scenescape-setup`](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup)
-skill.
+---
 
-The solution architecture is inspired by the open-edge-platform
-[Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe).
+## Writing your own prompt
 
-```
-prompt-library/
-├── .github/skills/
-│   ├── metro-ai-apps-builder/             # orchestrator: Q&A + skill discovery + plan + delegate
-│   │   ├── SKILL.md
-│   │   ├── references/
-│   │   │   ├── SKILL_CATALOG.md           # business objective → open-edge-platform skill
-│   │   │   └── DISCOVERY.md               # live discovery + `npx skills add`
-│   │   ├── example-prompts/               # multi-domain walk-throughs
-│   │   └── evals/evals.json
-│   └── metro-ai-apps-recipe/              # vision delegate: end-to-end DLSPS + WebRTC stack
-│       ├── SKILL.md
-│       └── references/                    # pipeline, proxy/UI, node-red, install, tests, scenescape
-└── prompts/
-    ├── object-detection.yaml              # one minimal business-objective prompt per use-case
-    ├── person-detection.yaml
-    ├── vehicle-detection.yaml
-    ├── unauthorized-access-detection.yaml
-    └── worker-safety-compliance.yaml
+You don't need to learn any special format. Just describe the outcome you want in
+plain language and hand off to the `metro-ai-apps-builder` skill. Copy the
+template below into Copilot (or your AI agent tool), replace the objective with
+your own, and run it:
+
+```text
+I want to <state the business outcome in one or two sentences>.
+
+Use the metro-ai-apps-builder skill to guide this process. Install and
+invoke it:
+
+npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
 ```
 
-## Prompt file schema
+Keep it **business-only** — describe what you want to achieve, not which model,
+framework, precision, or device to use. The orchestrator infers all of that for
+you.
 
-Every `*.yaml` under `prompts/` uses the following fields:
+---
 
-| Field | Type | Purpose |
-|---|---|---|
-| `name` | string | Unique kebab-case identifier |
-| `description` | string | One-paragraph summary of the business objective it addresses |
-| `prompt` | string (block scalar `\|`) | A minimal business-objective statement + hand-off to the skill (no technology, no parameters) |
-| `tags` | list[string] | Discovery / filtering keywords (vertical, deliverable, hardware) |
+## Example prompts
 
-## How to use
+Ready-to-use, business-objective prompts you can copy and paste directly into
+Copilot or your AI agent tool. Each tile is loaded from a prompt file in the
+`prompts/` directory — click one to view the full prompt, then copy it.
 
-Point Copilot at the prompt matching the **outcome you want** (e.g.
-"detect people", "count vehicles", "flag PPE violations"), or just state your
-objective in your own words. The `metro-ai-apps-builder` orchestrator takes over:
-it asks a few **business** questions, discovers the right open-edge-platform
-skill(s) for your objective, presents a plan and inferred technology, and — only
-after you confirm — builds the deliverable by delegating to those skill(s).
+<link rel="stylesheet" href="../../_static/prompt-library-files/prompt-catalog.css">
+<div id="prompt-catalog" class="prompt-catalog" data-prompts-path="../../_static/prompt-library-files/prompts/" data-prompts="smart-city-object-detection,crowd-safety-monitoring,traffic-flow-monitoring,unauthorized-access-detection,worker-safety-compliance">
+  <p class="prompt-catalog-loading">Loading prompts…</p>
+</div>
+<script src="../../_static/prompt-library-files/prompt-catalog.js"></script>
 
-## Adding a new use-case
-
-The orchestrator is **domain-agnostic** and the vision delegate
-(`metro-ai-apps-recipe`) is **vertical-agnostic** — the same architecture serves
-any DL Streamer / OpenVINO pipeline (PPE compliance, ANPR, retail queue, defect
-detection, fall detection, livestock counting, etc.; see the vertical matrix in
-[`.github/skills/metro-ai-apps-recipe/SKILL.md`](.github/skills/metro-ai-apps-recipe/SKILL.md)).
-
-To add a new **vision** use-case, just drop a minimal `.yaml` file under
-`prompts/` that states only the business objective and hands off to the
-orchestrator (copy an existing one and change the objective wording). The
-orchestrator infers the object/model/rule/topics and delegates to
-`metro-ai-apps-recipe` — no per-use-case config file is required.
-
-To route a **new domain** (e.g. a new open-edge-platform skill), add a row to the
-orchestrator's routing table in
-[`.github/skills/metro-ai-apps-builder/references/SKILL_CATALOG.md`](.github/skills/metro-ai-apps-builder/references/SKILL_CATALOG.md)
-mapping the business objective to that skill. See
-[`references/DISCOVERY.md`](.github/skills/metro-ai-apps-builder/references/DISCOVERY.md)
-for keeping the catalog in sync with upstream `skills-config.json`.
