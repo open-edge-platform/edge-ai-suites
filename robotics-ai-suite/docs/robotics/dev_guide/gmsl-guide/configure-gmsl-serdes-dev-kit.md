@@ -32,6 +32,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
     <!--hide_directive:sync: realsensehide_directive-->
     Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
+    This specific setup applies if you have the cameras connected to port on top left, and top right on the AAEON dev kit.
+
    | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
    | ------------------- | ---------- | ---------- | ---------- | ---------- |
    | GMSL Camera suffix   | a          | g          | e          | k          |
@@ -39,7 +41,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | PPR Value           | 2          | 2          | 2          | 2          |
    | PPR Unit            | 1          | 1          | 1          | 1          |
    | Position            | Back       | Back       | Front      | Front      |
-   | Rotation            | 0          | 180        | 0          | 180        |
+   | Rotation            | 90          | 180       | 90         | 180        |
    | Camera module label | `d4xx`     | `d4xx`     | `d4xx`     | `d4xx`     |
    | MIPI Port (Index)   | 0          | 0          | 2          | 2          |
    | LaneUsed            | x2         | x2         | x2         | x2         |
