@@ -18,7 +18,7 @@ imagePullPolicy: IfNotPresent
 
 # Global version configuration for external dependencies and assets
 version:
-  release: "v2026.2.0-rc1"
+  release: "2026.1"
   modelsRelease: "main"
   modelsReleaseType: branch  # Options: 'tag' or 'branch'
 
