@@ -2,19 +2,19 @@
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: True # True or False, applicable for provider: openvino
-  language: zh # en or zh
+  language: en # en or zh
 
 features:
   asr:                { enabled: true }
   summary:            { enabled: true }
   mindmap:            { enabled: true }
-  topic_segmentation: { enabled: false }
+  topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }
   board_ocr:          { enabled: true }
-  content_search:     { enabled: false }
-  qa:                 { enabled: false }
-  grading:            { enabled: false }
-  report:             { enabled: false }
+  content_search:     { enabled: true }
+  qa:                 { enabled: true }
+  grading:            { enabled: true }
+  report:             { enabled: true }
 
 output_layout:
   result_dir: result
@@ -33,11 +33,11 @@ monitoring:
 
 models:
   asr:
-    provider: funasr # openvino, funasr and openai supported
-    name: paraformer-zh  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    provider: openai # openvino, funasr and openai supported
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
-    diarization: True # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
+    diarization: False # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
     hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
@@ -48,7 +48,7 @@ models:
     max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
   
   diarization: #Only applicable when diarization is set to True for ASR
-    backend: campplus  # pyannote, or campplus for funasr/paraformer-zh
+    backend: pyannote  # pyannote, or campplus for funasr/paraformer-zh
     provider: "huggingface"
     name: "pyannote/speaker-diarization-community-1"
     models_base_path: "models"
