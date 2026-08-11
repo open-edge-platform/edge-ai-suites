@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Enterprise Data Intelligence
 
 Demo setup steps, including OpenClaw service, EC-RAG service, Router service, compressor service, and UI service.
