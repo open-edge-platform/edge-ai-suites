@@ -1,68 +1,191 @@
-# Get Started - Surgical Instrument
+# Get Started - Deploy Surgical Instrument
 
 This is a deployment guide for the three-service Docker stack:
 - `surgical-backend` (Flask 3 + Ultralytics + OpenVINO bootstrap)
 - `surgical-pipeline` (GStreamer + DL Streamer runtime)
 - `surgical-ui` (nginx + React SPA)
 
-The UI is **health-gated on the backend**:
-the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`.
-On the first boot this time window is 20–35 minutes while YOLO11n trains on CVC-ColonDB on
-the Intel® Arc™ iGPU. Subsequent boots take seconds because the trained IR is cached in
-`./models/`.
+
+## Prerequisites
+
+Before you start, refer to [System Requirements](./get-started/system-requirements.md)
+to confirm your setup compatibility.
+
+If you work behind a proxy, see how to
+[configure the app for a proxy](./get-started/system-requirements.md#corporate-proxy-setup).
+
+The application does not ship with the medical dataset, trained model binaries, or demo videos.
+You will need to collect these resources separately, as described in the following steps, and
+store them locally. This keeps the demo reproducible without any dependency on a specific
+machine.
 
 ---
 
-## 1. Host prerequisites
+## 1. Clone the repo and download the dataset
 
-| Requirement                                                                  | Notes                                                                 |
-|------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| Linux with Docker Engine ≥ 24 and `docker compose` v2                        | Rootless Docker works if `/dev/dri` is accessible.                    |
-| Intel Arc iGPU (Meteor Lake / Lunar Lake / Arrow Lake) or discrete Arc GPU   | Container inherits the host driver via `/dev/dri` passthrough.        |
-| Host groups `render` and `video` exist                                       | The Makefile auto-detects the GIDs.                                   |
-| ≈ 15 GB free disk                                                            | 6 GB image, 2 GB dataset + cache, remainder for training checkpoints. |
+Open PowerShell and run:
 
-Verify iGPU visibility on the host before starting:
-
-```bash
-ls -l /dev/dri/renderD*
-getent group render
-getent group video
+```powershell
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git `
+; cd edge-ai-suites `
+; git sparse-checkout set health-and-life-sciences-ai-suite/Surgical_Instrument `
+; cd health-and-life-sciences-ai-suite/Surgical_Instrument
 ```
 
+Download the dataset and place it in the following local folder for datasets
+(create it if it does not exist), for example:
+`Surgical_Instrument/datasets/CVC-ColonDB/raw/`.
 
 
-## 2. One-time: drop the CVC-ColonDB dataset
+Download sources:
+- Official source (research-use terms):
+  [https://pages.cvc.uab.es/CVC-Colon/index.php/databases/](https://pages.cvc.uab.es/CVC-Colon/index.php/databases/)
+- Kaggle mirror (preferred working source) — same 380-image set + masks:
+  [https://www.kaggle.com/datasets/longvil/cvc-colondb](https://www.kaggle.com/datasets/longvil/cvc-colondb)
+  (`kaggle datasets download longvil/cvc-colondb` with a personal Kaggle API token).
+- Citation: *Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166–3182*.
 
-The bootstrap requires the dataset to start training.
-Since the dataset is not redistributed with the app, you must download it directly from the
-CVC lab (research use only).
-
-1. Visit **https://pages.cvc.uab.es/CVC-Colon/index.php/databases/** and download the
-   CVC-ColonDB archive after accepting the terms.
-   Citation: *Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166–3182*.
-2. Place the archive or extracted folder in: ``Surgical_Instrument/datasets/CVC-ColonDB/raw/``.
-   If you download `.rar`, extract it locally first, if it is `.zip`, `.tar`, `.tar.gz`, or
-   `.tgz`, you do not need to extract it.
+Archive support:
+- `.zip`, `.tar`, `.tar.gz`, `.tgz` can be consumed directly.
+- `.rar` must be extracted locally.
 
 The bootstrap will now auto-detect images + masks on the first launch, convert binary
 masks to YOLO bounding-box labels, split 70/15/15, and write `data.yaml`.
 
+
+
+
+## 2. Train and export the model
+
+Once the dataset is in the right place, the repo script will download the YOLO11n base model,
+train it, export it, and cache the final OpenVINO IR.
+
+Model references:
+- YOLO11n model family: https://docs.ultralytics.com/models/yolo11/
+- Ultralytics detect task: https://docs.ultralytics.com/tasks/detect/
+- Base weights (~5.4 MB, downloaded automatically during `make backend-bootstrap`):
+  https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt
+
+
 If you already have a trained IR, you can seed it into `models/` and skip the training
-entirely:
-
-```bash
-make assets   # copies best.xml + best.bin from poc/st2_app if present
-```
-
-The presence of both `models/yolo11n_polyp/best_openvino_model/best.xml` **and**
+entirely. The presence of both `models/yolo11n_polyp/best_openvino_model/best.xml` **and**
 `models/yolo11n_polyp/.trained_ok` short-circuits the bootstrap to `ready` in seconds.
 
+```bash
+make assets   # copies best.xml + best.bin from poc/st2_app, if present
+```
 
 
-## 3. Bring the stack up
+### 2.1 Optional: pre-place `yolo11n.pt` when GitHub is blocked
 
-First, discover the camera serial and the P-core set for your CPU:
+If downloading `yolo11n.pt` fails during bootstrap (for example, timeout / curl 28),
+pre-download it on a machine with GitHub access and copy it into the backend cache:
+
+```bash
+# On a machine that can access GitHub:
+curl -L -o yolo11n.pt \
+        https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt
+
+# On the target host (container must exist from at least one `make up`):
+docker cp yolo11n.pt surgical-backend:/cache/weights/yolo11n.pt
+docker restart surgical-backend
+```
+
+The backend checks `${CACHE_DIR}/weights/<model_name>.pt` (default
+`/cache/weights/yolo11n.pt`) before fallback to auto-download.
+
+### 2.2 Optional: pre-train and export model before `make up`
+
+You can prepare the model artifacts ahead of time:
+
+```bash
+make backend-venv       # one-time Python environment: torch+xpu, Ultralytics, OpenVINO
+make backend-bootstrap  # prepares CVC-ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
+```
+
+`backend-bootstrap` does the full model preparation in sequence:
+
+- reads the dataset from `datasets/CVC-ColonDB/raw/`
+- extracts the archive if needed
+- converts CVC masks into YOLO bounding-box labels
+- creates the train/validation/test split
+- downloads the base `yolo11n.pt` weights through Ultralytics
+- trains YOLO11n using the settings in `backend/config/model.yaml`
+- exports the best checkpoint to FP16 OpenVINO IR
+- writes the `.trained_ok` cache marker
+
+Expected output layout:
+
+```text
+models/yolo11n_polyp/
+├── .trained_ok
+└── best_openvino_model/
+        ├── best.xml
+        ├── best.bin
+        └── metadata.yaml
+```
+
+### 2.3 Optional: train elsewhere and import the IR
+
+If you have trained YOLO11n on CVC-ColonDB on another machine:
+
+1. Export the checkpoint to FP16 OpenVINO IR:
+
+   ```bash
+   yolo export model=/path/to/best.pt format=openvino half=True imgsz=640
+   ```
+
+2. Copy the result into this exact layout:
+
+   ```text
+   Surgical_Instrument/models/yolo11n_polyp/
+   ├── .trained_ok
+   └── best_openvino_model/
+       ├── best.xml
+       ├── best.bin
+       └── metadata.yaml
+   ```
+
+   `best.xml` and `best.bin` are required. `metadata.yaml` is recommended because
+   DL Streamer/OpenVINO can use the exported Ultralytics metadata.
+
+3. Create the `.trained_ok` cache marker (checked by `make up` and the backend):
+
+   ```bash
+   mkdir -p models/yolo11n_polyp/best_openvino_model
+   date -Is > models/yolo11n_polyp/.trained_ok
+   ```
+
+
+
+
+
+## 3. Generate demo video (required)
+
+Fresh clones do not include `videos/polyp_test.mp4`. Generate it before
+running `make doctor` / `make up`.
+
+```bash
+.venv-backend/bin/python scripts/create_endoscopy_video.py \
+        --images-dir datasets/CVC-ColonDB/raw/CVC-ColonDB/images \
+        --output videos/polyp_test.mp4 \
+        --seconds 60 --fps 60 --width 1920 --height 1080
+```
+
+The script creates or overwrites `videos/polyp_test.mp4` using an H.264-compatible codec
+(required by the default file-source pipeline). It tries OpenCV first, then falls back to
+system `ffmpeg` (`libx264`) when needed.
+
+
+## 4. Bring the stack up
+
+Before bringing the stack up, run the preflight check:
+
+```bash
+make doctor   # checks Docker, accelerators, cached IR, demo video, and port 8080
+```
+
+Then discover the camera serial and the P-core set for your CPU:
 
 ```bash
 make list-cameras   # prints Basler serial(s) -> SOURCE_ARG
@@ -71,7 +194,7 @@ make show-cores     # prints the P-core set    -> PIPELINE_GST_CORES
 
 `make up` supports two image sources, controlled by the `REGISTRY` flag.
 
-### 3a. Pull from registry (default)
+### 4a. Pull images from registry (default)
 
 `REGISTRY=true` (the default) pulls the prebuilt images at `TAG` (default `latest`) and
 starts them with `RENDER_GID` / `VIDEO_GID` auto-detected from the host — no local build
@@ -83,10 +206,11 @@ make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false
 
 # Default file source
-make up
+make up              # trains YOLO11n on first boot if IR is not cached
+make logs            # optional: follow readiness/startup logs
 ```
 
-### 3b. Build from source
+### 4b. Build images from source
 
 `REGISTRY=false` builds every image locally from its Dockerfile (backend = torch+xpu wheels +
 OpenVINO + Ultralytics, UI = Vite build → nginx, pipeline = DL Streamer + gencamsrc).
@@ -97,7 +221,8 @@ make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false REGISTRY=false
 
 # Default file source, built from source
-make up REGISTRY=false
+make up REGISTRY=false     # trains YOLO11n on first boot if IR is not cached
+make logs                  # optional: follow readiness/startup logs
 ```
 
 The `surgical-ui` service declares `depends_on: surgical-backend: condition: service_healthy`,
@@ -125,20 +250,43 @@ Expect to see the FSM walk through:
 [server] READY
 ```
 
-### Open the UI
+## 5. Open the UI
+
+Note that the UI is **health-gated on the backend** -
+the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`.
+On the first boot this time window is 20–35 minutes while YOLO11n trains (an estimate for
+CVC-ColonDB on the Intel® Arc™ iGPU).
+Subsequent boots take seconds because the trained IR is cached in `./models/`.
 
 Once the backend is healthy the UI starts and answers on `http://localhost:8080`
-(override with `make up UI_HOST_PORT=9090`). `make up` and `make run` also print the LAN URL
-(e.g. `http://10.223.23.206:8080`) so you can open it from another machine in the same network.
+(you can override it with `make up UI_HOST_PORT=9090`).
+`make up` and `make run` also print the LAN URL so you can access it from the same network.
+
 
 Use the left **Config** accordion to pick source (`file` or `basler`), source argument,
 and device, then click **Start** to kick off inference.
 The right-side KPI blocks begin populating within ~1 second.
 
-See more info on [the UI](./index.md#user-interface).
+See more info in [User Interface](./user-interface.md).
+
+For subsequent boots (IR already cached):
+
+```bash
+make run
+```
+
+`make run` requires cached IR files and `.trained_ok`. If they are missing,
+prepare or seed the model artifacts first.
+
+`make up` and `make run` auto-detect `/dev/video*` devices and layer in a
+compose override so cameras are available to the pipeline container.
+
+For runtime adjustments — source and device selection via the Settings modal,
+video upload, and API endpoints for scripting — see
+[Runtime Configuration](./runtime-configuration.md).
 
 
-## 4. Stop / clean up
+## 6. Stop / clean up
 
 If you want to stop or restart the app, you have the following options:
 
@@ -174,3 +322,34 @@ Example: run the whole stack CPU-only on port 9000:
 make up UI_HOST_PORT=9000 DETECTION_DEVICE=cpu
 ```
 
+## Next: pipeline tuning
+
+The DL Streamer pipeline can be tuned at launch time with environment
+variables passed to `make up`, including:
+
+- `SOURCE_KIND`
+- `DETECT`
+- `WATERMARK`
+- `MINIMAL`
+- `SCHEDULING_POLICY`
+- `BATCH_SIZE`
+- `AUTOVIDEOSINK`
+
+Three common shapes are used in practice:
+
+- File preview
+- Minimal live camera
+- Tuned live inference
+
+
+
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+System Requirements <system-requirements.md>
+
+:::
+hide_directive-->
