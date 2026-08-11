@@ -3,7 +3,7 @@
 
 # Surgical Instrument — DL Streamer pipeline container.
 #
-# Base: Intel DL Streamer Pipeline Server 2026.1.0 (contains gstreamer 1.28,
+# Base: Intel DL Streamer Pipeline Server 2026.2.0 (contains gstreamer 1.28,
 # gva* plugins, VA-API, OpenVINO 2026, and the latency_tracer plugin).
 #
 # We add a thin Flask control plane on :8000 that spawns `gst-launch-1.0` as
@@ -11,7 +11,7 @@
 # annotated video in a host X11 popup, and parses the latency_tracer stderr
 # into rolling P50/P90/P95/P99 percentiles served over HTTP.
 
-FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
 
 
 USER root

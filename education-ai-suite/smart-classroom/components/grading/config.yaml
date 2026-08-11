@@ -1,5 +1,5 @@
 image:
-  dpi: 50
+  dpi: 40
   contrast_enhance: true
   contrast_factor: 1.5
   # page layout: 1 = single column, 2 = two columns (left/right)
@@ -10,7 +10,7 @@ image:
 vlm:
   max_tokens: 4096
   temperature: 0.2
-  max_image_pixels: 4000000
+  max_image_pixels: 2000000
 
 grading:
   force_regrade: true
@@ -47,6 +47,8 @@ section_split:
   gap_threshold: 120        # only gaps larger than this are compressed
   keep_margin: 50           # margin left between content blocks after compression
   content_pad: 20           # padding added above/below each content block
+  force_split: false
+  force_split_pairs: []
 
   rubric_markers:
     zh:

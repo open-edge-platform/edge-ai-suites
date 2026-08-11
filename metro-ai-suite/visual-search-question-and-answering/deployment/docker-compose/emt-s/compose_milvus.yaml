@@ -3,7 +3,7 @@
 
 services:
   vlm-openvino-serving:
-    image: ${REGISTRY:-}vlm-openvino-serving:${TAG:-latest}
+    image: intel/vlm-openvino-serving:2026.2.0-rc1
     container_name: vlm-openvino-serving
     ports:
       - "${VLM_SERVICE_PORT}:8000"

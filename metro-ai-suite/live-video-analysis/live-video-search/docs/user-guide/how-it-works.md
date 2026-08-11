@@ -40,4 +40,5 @@ graph TD
 ## Related Architecture References
 
 - [Smart NVR How It Works](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-nvr/index.html#how-it-works)
+- [Vector Retriever How It Works](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/vector-retriever/how-it-works.html)
 - [Video Search and Summarization Architecture](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/how-it-works/video-search-and-summarization.html)
