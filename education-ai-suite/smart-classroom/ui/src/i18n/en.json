@@ -583,7 +583,14 @@
     "score": "Score",
     "summarization": "Summarization",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "minScore": "Min score",
+    "scoreFormat": "Format",
+    "page": "Page",
+    "previewUnavailable": "Preview not available",
+    "previewUnavailableType": "Preview not available for this file type.",
+    "download": "Download {{name}}",
+    "closePreview": "Close preview"
   }
 }
  

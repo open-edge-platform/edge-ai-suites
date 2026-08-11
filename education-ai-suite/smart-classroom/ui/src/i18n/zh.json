@@ -585,6 +585,13 @@
     "score": "分数",
     "summarization": "总结",
     "showMore": "显示更多",
-    "showLess": "收起"
+    "showLess": "收起",
+    "minScore": "最低分数",
+    "scoreFormat": "格式",
+    "page": "页码",
+    "previewUnavailable": "无法预览",
+    "previewUnavailableType": "此文件类型不支持预览。",
+    "download": "下载 {{name}}",
+    "closePreview": "关闭预览"
   }
 }
