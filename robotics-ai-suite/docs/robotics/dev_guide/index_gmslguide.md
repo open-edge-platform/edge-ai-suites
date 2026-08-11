@@ -10,7 +10,7 @@ In the context of robotics and autonomous mobile robots, GMSL sensors are often 
 
 When integrating GMSL sensors into a robotics system, it is important to consider factors such as compatibility with the processing unit, power requirements, and the physical layout of the system. Proper configuration and calibration of GMSL sensors are also crucial to ensure optimal performance and accurate data capture.
 
-Intel® GMSL cameras use the Intel® Image Processor Unit (IPU) to process the video data captured by the camera. The IPU is responsible for tasks such as image enhancement, noise reduction, and color correction, which are essential for improving the quality of the video feed before it is used for further processing in the autonomous mobile robot's perception system.
+GMSL cameras use the Intel® Image Processor Unit (IPU) to process the video data captured by the camera. The IPU is responsible for tasks such as image enhancement, noise reduction, and color correction, which are essential for improving the quality of the video feed before it is used for further processing in the autonomous mobile robot's perception system.
 
 ![GMSL overview](../images/gmsl/GMSL-overview2.png "gmsl overview")
 
