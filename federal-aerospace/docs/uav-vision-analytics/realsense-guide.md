@@ -31,9 +31,9 @@ Three inference pipelines are available. Only one can be active at a time becaus
 
 | Pipeline | Inference device | `device` value |
 |---|---|---|
-| `drone_realsense_cpu` | CPU | `CPU` |
-| `drone_realsense_gpu` | GPU | `GPU` |
-| `drone_realsense_npu` | NPU | `NPU` |
+| `uav_realsense_cpu` | CPU | `CPU` |
+| `uav_realsense_gpu` | GPU | `GPU` |
+| `uav_realsense_npu` | NPU | `NPU` |
 
 ### Starting a pipeline
 
@@ -74,7 +74,7 @@ echo "Instance ID: $INSTANCE_ID"
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/drone_realsense_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/uav_realsense_cpu \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {

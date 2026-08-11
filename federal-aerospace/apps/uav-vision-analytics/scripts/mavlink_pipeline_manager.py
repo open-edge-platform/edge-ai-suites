@@ -32,13 +32,13 @@ MODEL_PATH          = (
 # ── Pipeline definitions ──────────────────────────────────────────────────────
 
 RTSP_PIPELINES = [
-    {"name": "drone_object_detection_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU"},
-    {"name": "drone_object_detection_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU"},
+    {"name": "uav_object_detection_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU"},
+    {"name": "uav_object_detection_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU"},
 ]
 
 UDP_PIPELINES = [
-    {"name": "drone_udpsink_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU", "port": 5600},
-    {"name": "drone_udpsink_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU", "port": 5601},
+    {"name": "uav_udpsink_cpu", "frame_path": "drone-mavlink-cpu", "device": "CPU", "port": 5600},
+    {"name": "uav_udpsink_gpu", "frame_path": "drone-mavlink-gpu", "device": "GPU", "port": 5601},
 ]
 
 # ── Payload builders ──────────────────────────────────────────────────────────

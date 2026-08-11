@@ -185,15 +185,15 @@ flowchart LR
 
 | Pipeline | Device | Source |
 |---|---|---|
-| `drone_object_detection_cpu` | CPU | `multifilesrc` (loop file) |
-| `drone_object_detection_gpu` | GPU | `multifilesrc` (loop file) |
-| `drone_object_detection_npu` | NPU | `multifilesrc` (loop file) |
-| `drone_realsense_cpu` | CPU | RealSense (`v4l2src`) |
-| `drone_realsense_gpu` | GPU | RealSense (`v4l2src`) |
-| `drone_realsense_npu` | NPU | RealSense (`v4l2src`) |
-| `drone_udpsink_cpu` | CPU | `multifilesrc` → UDP sink |
-| `drone_udpsink_gpu` | GPU | `multifilesrc` → UDP sink |
-| `drone_udpsink_npu` | NPU | `multifilesrc` → UDP sink |
+| `uav_object_detection_cpu` | CPU | `multifilesrc` (loop file) |
+| `uav_object_detection_gpu` | GPU | `multifilesrc` (loop file) |
+| `uav_object_detection_npu` | NPU | `multifilesrc` (loop file) |
+| `uav_realsense_cpu` | CPU | RealSense (`v4l2src`) |
+| `uav_realsense_gpu` | GPU | RealSense (`v4l2src`) |
+| `uav_realsense_npu` | NPU | RealSense (`v4l2src`) |
+| `uav_udpsink_cpu` | CPU | `multifilesrc` → UDP sink |
+| `uav_udpsink_gpu` | GPU | `multifilesrc` → UDP sink |
+| `uav_udpsink_npu` | NPU | `multifilesrc` → UDP sink |
 
 ### MAVSDK pipelines (`config-mavsdk.json`)
 

@@ -182,7 +182,7 @@ Or start a pipeline manually via the REST API. The response body is the `instanc
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -312,7 +312,7 @@ curl http://localhost:8081/pipelines
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {

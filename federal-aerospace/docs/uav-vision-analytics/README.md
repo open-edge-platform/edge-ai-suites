@@ -64,7 +64,7 @@ integer `instance_id` — save it to stop the pipeline later:
 ```bash
 # CPU pipeline — pymavlink mode
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/drone_object_detection_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -106,15 +106,15 @@ The annotated RTSP stream is then available at:
 
 | Pipeline | Device | Source |
 |---|---|---|
-| `drone_object_detection_cpu` | CPU | Looped video file |
-| `drone_object_detection_gpu` | GPU | Looped video file |
-| `drone_object_detection_npu` | NPU | Looped video file |
-| `drone_realsense_cpu` | CPU | RealSense camera |
-| `drone_realsense_gpu` | GPU | RealSense camera |
-| `drone_realsense_npu` | NPU | RealSense camera |
-| `drone_udpsink_cpu` | CPU | Looped video → UDP sink |
-| `drone_udpsink_gpu` | GPU | Looped video → UDP sink |
-| `drone_udpsink_npu` | NPU | Looped video → UDP sink |
+| `uav_object_detection_cpu` | CPU | Looped video file |
+| `uav_object_detection_gpu` | GPU | Looped video file |
+| `uav_object_detection_npu` | NPU | Looped video file |
+| `uav_realsense_cpu` | CPU | RealSense camera |
+| `uav_realsense_gpu` | GPU | RealSense camera |
+| `uav_realsense_npu` | NPU | RealSense camera |
+| `uav_udpsink_cpu` | CPU | Looped video → UDP sink |
+| `uav_udpsink_gpu` | GPU | Looped video → UDP sink |
+| `uav_udpsink_npu` | NPU | Looped video → UDP sink |
 
 ### MAVSDK mode (`config-mavsdk.json`)
 
