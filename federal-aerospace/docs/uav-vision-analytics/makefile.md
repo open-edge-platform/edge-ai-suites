@@ -62,13 +62,13 @@ Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), whi
 
 ### `make mavsdk-up` / `make mavsdk-down`
 
-Manages the **MAVSDK stack** (`docker-compose-mavsdk.yml`), which requires the `fedaero-drone-sdk-poc` project to already be running.
+Manages the **MAVSDK stack** (`docker-compose-mavsdk.yml`), which requires the `edge-ai-suites/federal-aerospace/uav-mission-compute-sdk` project to already be running.
 
 Start order:
 
 ```bash
 # 1. Start the SDK project (provides PX4, MQTT telemetry)
-cd fedaero-drone-sdk-poc && make up
+cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera
 
 # 2. Start this application
 make mavsdk-up
@@ -119,7 +119,7 @@ make pymav-down
 
 ```bash
 make pymav-down                       # stop standalone stack if running
-cd fedaero-drone-sdk-poc && make up   # start SDK project
+cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera   # start SDK project
 cd .. && make mavsdk-up               # start MAVSDK stack
 make start-rtsp
 ```
