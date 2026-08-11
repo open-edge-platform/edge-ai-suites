@@ -59,6 +59,7 @@ export interface FeatureDescriptor {
   requires: string[];
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
 }
 
 /**

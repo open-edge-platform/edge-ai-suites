@@ -1571,6 +1571,18 @@ function Test-HfTokenSet {
     $token = Get-HfTokenRaw -Content $Content
     return -not ([string]::IsNullOrWhiteSpace($token) -or $token -eq "None")
 }
+function Get-DiarizationBackend {
+    param([string]$Content)
+    $diarBlockMatch = [regex]::Match($Content, "(?ms)^  diarization:.*?(?=^  \S)")
+    $diarBlock = if ($diarBlockMatch.Success) { $diarBlockMatch.Value } else { "" }
+    $m = [regex]::Match($diarBlock, 'backend:\s*"?([\w-]+)"?')
+    if ($m.Success) { return $m.Groups[1].Value.ToLower() } else { return "pyannote" }
+}
+
+function Test-DiarizationNeedsHfToken {
+    param([string]$Content)
+    return (Get-DiarizationBackend -Content $Content) -ne "campplus"
+}
 
 # ============================================================================
 # Current Configuration Overview (shown before asking to configure config.yaml)
@@ -1590,10 +1602,10 @@ $currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.
 $diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
 
 Write-Host "  models.asr:" -ForegroundColor White
-Write-Host ("    {0,-20} enabled: {1}" -f "diarization:", $currentDiarizationEnabled) -ForegroundColor Gray
+Write-Host ("    {0,-20} enabled: {1}  (backend: {2})" -f "diarization:", $currentDiarizationEnabled, (Get-DiarizationBackend -Content $configContent)) -ForegroundColor Gray
 Write-Host ""
 
-if ($diarizationWasEnabled -and -not (Test-HfTokenSet -Content $configContent)) {
+if ($diarizationWasEnabled -and (Test-DiarizationNeedsHfToken -Content $configContent) -and -not (Test-HfTokenSet -Content $configContent)) {
     Write-Host "  [WARNING] Diarization is enabled but hf_token is None. It needs to be filled in." -ForegroundColor Red
     Write-Host "            See the setup guide:" -ForegroundColor Red
     Write-Host "            https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Red
@@ -1816,6 +1828,8 @@ Write-Host "Current Speaker Diarization configuration in config.yaml:" -Foregrou
 Write-Host ""
 Write-Host "  models.asr:" -ForegroundColor White
 Write-Host "    diarization: $currentDiarizationEnabled   # labels TEACHER/STUDENT_XX speakers in ASR transcripts" -ForegroundColor Gray
+Write-Host "  models.diarization:" -ForegroundColor White
+Write-Host "    backend: $(Get-DiarizationBackend -Content $configContent)" -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
@@ -1849,8 +1863,15 @@ if ($changeDiarization.ToUpper() -eq "Y") {
 }
 
 $diarizationJustEnabled = $diarizationIsEnabled -and (-not $diarizationWasEnabled)
+$diarizationNeedsHfToken = Test-DiarizationNeedsHfToken -Content $configContent
 
-if ($diarizationIsEnabled) {
+if ($diarizationIsEnabled -and -not $diarizationNeedsHfToken) {
+    Write-Host ""
+    Write-Host "  Backend 'campplus' (FunASR CAM++) needs no Hugging Face token or access request;" -ForegroundColor Gray
+    Write-Host "  its speaker model is downloaded automatically on first run." -ForegroundColor Gray
+}
+
+if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
     Write-Host ""
 
     # Resolve the diarization model's local cache path (mirrors utils/ensure_model.py::get_diarization_model_path)
@@ -2064,7 +2085,11 @@ $finalBoardOcr = Get-FeatureState -Content $finalConfig -Id "board_ocr"
 $csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
 $segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
 $qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
-$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+$csTriggers = @()
+if ($csFlag)  { $csTriggers += "content_search" }
+if ($segFlag) { $csTriggers += "topic_segmentation" }
+if ($qaFlag)  { $csTriggers += "qa" }
+$contentSearchEnabled = $csTriggers.Count -gt 0
 
 Write-Host "  Features:" -ForegroundColor White
 foreach ($fid in $featureIds) {
@@ -2077,15 +2102,15 @@ Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
 Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
-Write-Host "  Diarization:     $finalDiarization" -ForegroundColor White
-if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $finalConfig)) {
+Write-Host "  Diarization:     $finalDiarization$(if ($finalDiarization -match '(?i)^true$') { " (backend: $(Get-DiarizationBackend -Content $finalConfig))" })" -ForegroundColor White
+if ($finalDiarization -match "(?i)^true$" -and (Test-DiarizationNeedsHfToken -Content $finalConfig) -and -not (Test-HfTokenSet -Content $finalConfig)) {
     Write-Host "                   [WARNING] hf_token is None - diarization will not work until it is filled in" -ForegroundColor Red
 }
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  Document OCR:    $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
-Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { "Stack enabled (required by: $($csTriggers -join ', '))" } else { 'Stack disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================
