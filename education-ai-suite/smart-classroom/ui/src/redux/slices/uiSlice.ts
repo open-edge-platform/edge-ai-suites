@@ -211,17 +211,24 @@ const uiSlice = createSlice({
       state.searchError = null;
     },
  
-    transcriptionComplete(state) {
+    transcriptionComplete(state, action: PayloadAction<{ enableSummary: boolean }>) {
       console.log('transcriptionComplete reducer called');
       state.transcriptionDone = true;
-      state.summaryEnabled = true;
-      state.summaryLoading = true;
-      state.summaryComplete = false;
-      state.shouldStartSummary = true;
-      state.audioStatus = 'summarizing';
-      if (!state.autoSwitched) {
-        state.activeTab = 'summary';
-        state.autoSwitched = true;
+      
+      // Only enable summary if the feature is enabled in backend
+      if (action.payload.enableSummary) {
+        state.summaryEnabled = true;
+        state.summaryLoading = true;
+        state.summaryComplete = false;
+        state.shouldStartSummary = true;
+        state.audioStatus = 'summarizing';
+        if (!state.autoSwitched) {
+          state.activeTab = 'summary';
+          state.autoSwitched = true;
+        }
+      } else {
+        // Summary feature disabled - mark as complete
+        state.audioStatus = 'complete';
       }
     },
  
@@ -284,17 +291,24 @@ const uiSlice = createSlice({
       state.audioStatus = 'summarizing';
     },
  
-    summaryDone(state) {
+    summaryDone(state, action: PayloadAction<{ enableMindmap: boolean }>) {
       state.aiProcessing = false;
       state.summaryComplete = true;
-      state.mindmapEnabled = true;
-      state.mindmapLoading = false;
-      state.shouldStartMindmap = true;
-      state.audioStatus = 'mindmapping';
- 
-      if (!state.autoSwitchedToMindmap) {
-        state.activeTab = 'mindmap';
-        state.autoSwitchedToMindmap = true;
+      
+      // Only enable mindmap if the feature is enabled in backend
+      if (action.payload.enableMindmap) {
+        state.mindmapEnabled = true;
+        state.mindmapLoading = false;
+        state.shouldStartMindmap = true;
+        state.audioStatus = 'mindmapping';
+   
+        if (!state.autoSwitchedToMindmap) {
+          state.activeTab = 'mindmap';
+          state.autoSwitchedToMindmap = true;
+        }
+      } else {
+        // Mindmap feature disabled - mark as complete
+        state.audioStatus = 'complete';
       }
     },
    

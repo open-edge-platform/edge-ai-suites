@@ -6,19 +6,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import { SmartBuildingDB, SchemaManager } from "@smartbuilding-video/db";
-import { VideoSummaryClient } from "@smartbuilding-video/tools";
+import { SmartCommunityDB, SchemaManager } from "@smart-community-video/db";
+import { VideoSummaryClient } from "@smart-community-video/tools";
 import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
 import { loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
 import { WorkerService } from "./video-worker/index.js";
 import { EventsEndpoint } from "./events-endpoint.js";
 import { logger } from "./logger.js";
-import { autoRegisterMonitors } from "./monitor-bootstrap.js";
+import { autoRegisterMonitors, reregisterUnknownMonitor } from "./monitor-bootstrap.js";
 import { startStorageCleaner } from "./storage-cleaner.js";
 import { startKeepaliveSender } from "./keepalive-sender.js";
 import { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
 import { startSessionSweeper } from "./session-sweeper.js";
+import { ChatCredentialStore, createDashboardRouter, LiveStreamManager, mountStaticUi, OpenClawChatProxy } from "./dashboard/index.js";
+import { loadDashboardIntegrationConfig } from "./dashboard/integration-env.js";
 
 /**
  * Build an McpServer for a single MCP session. Stateful HTTP creates one per new sessionId;
@@ -30,14 +32,14 @@ import { startSessionSweeper } from "./session-sweeper.js";
  */
 function createMcpServer(
   config: ServerConfig,
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   workerService: WorkerService,
   summaryClient: VideoSummaryClient,
   subscriberRegistry: McpSubscriberRegistry,
   getSessionId: () => string,
 ): McpServer {
   const server = new McpServer({
-    name: "smartbuilding-video",
+    name: "smart-community-video",
     version: "0.1.0",
   });
 
@@ -91,7 +93,7 @@ async function main() {
   mkdirSync(config.reportsLogsDir, { recursive: true });
   mkdirSync(config.monitorsLogsDir, { recursive: true });
 
-  const db = new SmartBuildingDB(config.dbPath);
+  const db = new SmartCommunityDB(config.dbPath);
   db.initialize();
 
   {
@@ -122,7 +124,7 @@ async function main() {
   // Broadcast `notifications/resources/updated` to every MCP session subscribed to this monitor's
   // alerts uri. See docs/framework-adapters/README.md for the end-to-end contract.
   const onAlert = (monitorId: string) => {
-    const uri = `smartbuilding://monitor/${monitorId}/alerts`;
+    const uri = `smart-community://monitor/${monitorId}/alerts`;
     const subs = subscriberRegistry.findSubscribers(uri);
     if (subs.length === 0) {
       logger.debug(`[worker] alert for ${monitorId} — no subscribers, dropped notification`);
@@ -137,9 +139,14 @@ async function main() {
 
   const summaryClient = new VideoSummaryClient(config.summaryService.url, config.summaryService.pathRemap);
   const workerService = new WorkerService(config, db, summaryClient, onAlert);
+  const liveStreams = new LiveStreamManager();
+  const chatCredentials = new ChatCredentialStore(loadDashboardIntegrationConfig());
+  const chatProxy = new OpenClawChatProxy(chatCredentials);
 
   if (transportMode === "http") {
     const app = createMcpExpressApp();
+
+    app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams, chatCredentials));
 
     // Stateful HTTP: one McpServer + transport per sessionId. Required for `resources/subscribe`
     // to persist across requests. Session lifetimes end when the transport closes (client DELETE
@@ -219,10 +226,13 @@ async function main() {
       }
     });
 
+    mountStaticUi(app);
+
     const port = config.mcp!.port;
-    app.listen(port, () => {
+    const httpServer = app.listen(port, () => {
       logger.info(`[mcp-server] Streamable HTTP (stateful) on http://localhost:${port}/mcp`);
     });
+    chatProxy.attach(httpServer);
 
     // Evict idle HTTP sessions (no open SSE + no requests past the timeout) so abandoned
     // subscriptions don't leak the registry. stdio mode has a single resident session, so no sweeper.
@@ -261,24 +271,39 @@ async function main() {
 
   // Keepalive heartbeat: POST /sources/{id}/keepalive for online monitors so the
   // videostream-analytics watchdog (armed at register_source) doesn't auto-pause them.
-  const stopKeepalive = startKeepaliveSender(config, db);
+  // A 404 means VSA lost its in-memory registry (container recreate) — re-register
+  // that monitor from monitors.yaml so it self-heals without manual intervention.
+  const stopKeepalive = startKeepaliveSender(config, db, (monitorId) => {
+    void reregisterUnknownMonitor(db, config, workerService, monitorId);
+  });
 
+  let shuttingDown = false;
   const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     logger.info("[mcp-server] Shutting down...");
     stopCleaner();
     stopKeepalive();
     stopSessionSweeper?.();
-    await workerService.stopAll();
     const onlineMonitors = db.listOnlineMonitors();
     if (onlineMonitors.length > 0) {
-      logger.info(`[shutdown] Pausing ${onlineMonitors.length} online monitors in videostream-analytics (${config.videostreamAnalytics.url})`);
+      logger.info(`[shutdown] Stopping ${onlineMonitors.length} online monitors in videostream-analytics (${config.videostreamAnalytics.url})`);
       await Promise.all(onlineMonitors.map((m) =>
-        fetch(`${config.videostreamAnalytics.url}/sources/${m.id}/pause`, {
-          method: "POST", signal: AbortSignal.timeout(3000),
-        }).catch(() => {})
+        fetch(`${config.videostreamAnalytics.url}/sources/${encodeURIComponent(m.id)}/stop`, {
+          method: "POST", signal: AbortSignal.timeout(25_000),
+        }).then((response) => {
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          db.updateMonitorStatus(m.id, "offline");
+        }).catch((error) => {
+          logger.warn(`[shutdown] Failed to stop ${m.id} in videostream-analytics: ${error?.message ?? error}`);
+        })
       ));
-      for (const m of onlineMonitors) db.updateMonitorStatus(m.id, "offline");
     }
+    await chatProxy.close();
+    await liveStreams.close();
+    await workerService.stopAll();
     eventsEndpoint.stop();
     db.close();
     process.exit(0);
@@ -289,7 +314,7 @@ async function main() {
 }
 
 async function reconcileOnStartup(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsUrl: string,
 ): Promise<void> {
   let analyticsSources: Map<string, unknown>;
@@ -313,8 +338,8 @@ async function reconcileOnStartup(
   const onlineMonitors = db.listOnlineMonitors();
   for (const m of onlineMonitors) {
     if (analyticsSources.has(m.id)) {
-      await fetch(`${analyticsUrl}/sources/${m.id}`, { method: "DELETE", signal: AbortSignal.timeout(5000) }).catch(() => {});
-      logger.warn(`[reconcile] monitor ${m.id} found in videostream-analytics (${analyticsUrl}) on startup, deleted and marked offline — call register_source to restart`);
+      const removed = await deleteAnalyticsSource(analyticsUrl, m.id);
+      logger.warn(`[reconcile] monitor ${m.id} found in videostream-analytics (${analyticsUrl}) on startup, ${removed ? "deleted" : "FAILED to delete"} and marked offline — call register_source to restart`);
     } else {
       logger.warn(`[reconcile] monitor ${m.id} not found in videostream-analytics (${analyticsUrl}) after restart, marked offline — call register_source to restart`);
     }
@@ -326,15 +351,31 @@ async function reconcileOnStartup(
   const dbIds = new Set(db.listMonitors().map((m) => m.id));
   for (const sourceId of analyticsSources.keys()) {
     if (!dbIds.has(sourceId)) {
-      await fetch(`${analyticsUrl}/sources/${sourceId}`, { method: "DELETE", signal: AbortSignal.timeout(5000) }).catch(() => {
+      if (await deleteAnalyticsSource(analyticsUrl, sourceId)) {
+        logger.info(`[reconcile] deleted orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
+        deleted++;
+      } else {
         logger.warn(`[reconcile] failed to delete orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
-      });
-      logger.info(`[reconcile] deleted orphan source ${sourceId} from videostream-analytics (${analyticsUrl})`);
-      deleted++;
+      }
     }
   }
 
   logger.info(`[reconcile] complete: ${offlined} marked offline, ${deleted} orphans deleted`);
+}
+
+// DELETE a source from videostream-analytics; retries once after 1s since the
+// analytics service may still be starting up. Returns true only on a 2xx response.
+async function deleteAnalyticsSource(analyticsUrl: string, sourceId: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await fetch(`${analyticsUrl}/sources/${sourceId}`, { method: "DELETE", signal: AbortSignal.timeout(5000) });
+      if (resp.ok) return true;
+    } catch {
+      // network error / timeout — fall through to retry
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 1000));
+  }
+  return false;
 }
 
 main().catch((err) => {

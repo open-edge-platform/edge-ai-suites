@@ -11,38 +11,11 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 
 from config import Config
-from data_loader import update_components, fetch_intersection_data
+from data_loader import update_components, fetch_intersection_data, get_latest_system_info_html
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-def update_dashboard(debug_mode=False):
-    """Update all dashboard components with fresh data"""
-    try:
-        # Load fresh data using API only
-        data = load_monitoring_data(api_url=Config.get_api_url())
-        
-        if not data:
-            # Return no-ops to preserve existing DOM (avoids flicker from metrics JS)
-            return (gr.update(), gr.update(), gr.update(), gr.update(),
-                    gr.update(), gr.update(), gr.update())
-        
-        # Generate UI components
-        header = UIComponents.create_header(data)
-        camera_gallery = UIComponents.create_camera_images(data)
-        traffic = UIComponents.create_traffic_summary(data)
-        environmental = UIComponents.create_environmental_panel(data)
-        alerts = UIComponents.create_alerts_panel(data)
-        system_info = UIComponents.create_system_info(data)
-        debug_panel = UIComponents.create_debug_panel(data)
-
-        return header, camera_gallery, traffic, environmental, alerts, system_info, gr.HTML(value=debug_panel, visible=debug_mode)
-
-    except Exception as e:
-        logging.exception("update_dashboard failed: %s", e)
-        return (gr.update(), gr.update(), gr.update(), gr.update(),
-                gr.update(), gr.update(), gr.update())
 
 def _metrics_panel_html():
     """HTML markup for the metrics panel — matches LVC chart-grid style."""
@@ -597,7 +570,10 @@ def create_dashboard_interface():
                     rows=2,
                     height="450px",
                     container=True,
-                    object_fit="cover"
+                    object_fit="cover",
+                    # Enable the native fullscreen button so pedestrian
+                    # detections can be viewed enlarged (ITEP-92089).
+                    buttons=["fullscreen", "download"]
                 )
 
             with gr.Column(scale=1):
@@ -649,6 +625,16 @@ def create_dashboard_interface():
             fn=lambda x: gr.update(visible=x),
             inputs=debug_mode,
             outputs=debug_panel_component
+        )
+
+        # Live clock: refresh the system-info panel every second so
+        # "Current Time" keeps advancing independent of MQTT/WebSocket data
+        # cadence, instead of appearing frozen between updates (ITEP-92089).
+        clock_timer = gr.Timer(value=1, active=True)
+        clock_timer.tick(
+            fn=get_latest_system_info_html,
+            inputs=None,
+            outputs=system_info_component
         )
 
     return interface

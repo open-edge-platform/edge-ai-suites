@@ -124,7 +124,7 @@ def cmd_health(args):
 def main():
     parser = argparse.ArgumentParser(
         prog="videostream-analytics",
-        description="Smart Building video stream analytics",
+        description="Smart Community video stream analytics",
     )
     # Defaults are set on the main parser only; subparsers use SUPPRESS so
     # omitting a flag after the subcommand doesn't overwrite a value the user
@@ -149,7 +149,6 @@ def main():
     p_stream.add_argument("--config", "-c", default=argparse.SUPPRESS, help="Path to config.yaml")
     p_stream.add_argument("--source-id", required=True, help="Source identifier")
     p_stream.add_argument("--rtsp-url", required=True, help="RTSP stream URL")
-    p_stream.add_argument("--use-case", default="default", help="Use case label")
     p_stream.add_argument("--sink", choices=["stdout", "webhook", "null"], default="stdout",
                           help="Event output sink (default: stdout)")
 

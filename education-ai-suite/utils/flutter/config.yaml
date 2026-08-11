@@ -1,0 +1,210 @@
+﻿# Flutter Smart Classroom Configuration
+# This is a complete copy of smart-classroom/config.yaml with ONLY content_search and qa enabled.
+# All other features are disabled to prevent loading ASR, OCR, summarizer, and VA models.
+# The backend uses this config when started by Flutter scripts via SC_CONFIG_PATH environment variable.
+
+app:
+  name: Smart Classroom
+  cleanup_on_exit: true
+  use_ov_genai: True # True or False, applicable for provider: openvino
+  language: en # en or zh
+
+features:
+  asr:                { enabled: false }
+  summary:            { enabled: false }
+  mindmap:            { enabled: false }
+  topic_segmentation: { enabled: false }
+  video_analytics:    { enabled: false }
+  board_ocr:          { enabled: false }
+  content_search:     { enabled: true }
+  qa:                 { enabled: true }
+  grading:            { enabled: false }
+  report:             { enabled: false }
+
+monitoring:
+  logs_dir: ./monitoring/logs
+  interval: 2
+  socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
+  npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
+  execution_logs: monitoring/executionlogs
+
+models:
+  asr:
+    provider: openai # openvino, funasr and openai supported
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    device: CPU # CPU Recommended
+    temperature: 0.0
+    diarization: False
+    hf_token: None   # needed only if diarization=true
+    models_base_path: "models"
+    threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
+    no_speech_threshold: 0.6
+    logprob_threshold: -1.0
+    min_duration_sec: 0.25
+    min_words: 2
+    max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
+  
+  diarization: #Only applicable when diarization is set to True for ASR
+    provider: "huggingface"
+    name: "pyannote/speaker-diarization-community-1"
+    models_base_path: "models"
+
+  summarizer:
+    provider: openvino 
+    name: Qwen/Qwen3-8B 
+    device: GPU # GPU or CPU
+    weight_format: int4 # supports fp16, int4, int8 (Recommended)
+    max_new_tokens: 5120
+    temperature: 0.0 # 0.5 default
+    use_cache: True
+    models_base_path: "models"
+    mode: dialog   # dialog | teacher | hybrid
+
+  model_hub: huggingface # huggingface or modelscope
+
+  va:
+    models_base_path: "models"
+    front_pose_model: yolov8m-pose # yolov8m-pose/yolo11m-pose/yolo26m-pose
+    back_pose_model: yolov8s-pose # yolov8s-pose/yolo11s-pose/yolo26s-pose
+    threshold: 0.5 # confidence threshold for YOLO detections
+  
+  embedding:
+    name: "BAAI/bge-large-en-v1.5"
+    min_score: 0.65
+
+  ocr:
+    enabled: true # Set to false to disable OCR features
+    provider: openvino # native or openvino
+    device: CPU # CPU or GPU
+    concurrency: 2    # CapabilityRunner max_concurrency (worker pool size)
+    queue_max: 16     # CapabilityRunner queue depth before 503 backpressure
+    model_dir: models/ocr # Base directory for OCR models
+    ocr_version: PP-OCRv6
+    det_model: PP-OCRv6_small_det
+    rec_model: PP-OCRv6_small_rec
+    cls_model: PP-LCNet_x1_0_doc_ori
+
+  text_gen:
+    enabled: true 
+    provider: vlm
+    vlm_name: Qwen/Qwen3-VL-8B-Instruct
+    device: GPU # GPU or CPU
+    weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
+    max_new_tokens: 5120
+    concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
+    queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
+
+mindmap:
+  min_token: 20
+
+audio_preprocessing:
+  chunk_duration_sec: 15
+  silence_threshold: -35  # in dB
+  silence_duration: 0.3   # minimum silence length in seconds
+  search_window_sec: 1    # how far to look for silence if no silence exactly at chunk boundary
+  chunk_output_path: chunks/
+
+audio_util:
+  max_size_mb: 300
+  allowed_extensions:
+    - .wav
+    - .mp3
+    - .m4a
+  chunk_size: 52428800   # 1024 * 1024 * 50 = 50MB
+
+pipeline:
+  delete_chunks_after_use: true
+
+va_pipeline:
+  mediamtx_path: components/va/bin/mediamtx
+  plugin_path: components/va
+  rtsp_codec: h264 # h264 or h265
+  output_rtsp_url: rtsp://127.0.0.1:8554
+  hls_base_url: http://127.0.0.1:8888
+  webrtc_base_url: http://127.0.0.1:8889
+  stream_protocol: webrtc # webrtc or hls
+
+  pose_statistics:
+    min_frames_for_transition: 3            # frames to confirm raise-hand for identified students
+    min_frames_for_transition_unid: 15      # frames to confirm raise-hand for unidentified students
+    absence_threshold: 90                   # forget student after unseen for N frames (90 ≈ 3s)
+    min_stand_frames: 10                    # frames a student must be seen before counting stand-up (10 ≈ 0.3s)
+    center_dist_threshold: 0.1              # how close two bounding boxes must be to count as same person (0~1)
+    unidentified_max: 50                    # max unidentified students to track
+    stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
+
+board_ocr:
+  enabled: true # requires ocr.enabled=true
+  frame_rate: "1/3"    # frame/seconds
+  debug: false
+
+report:
+  max_keywords: 8
+  max_difficulty_points: 4
+  pacing_slow_max: 260
+  pacing_fast_min: 520
+
+content_search:
+  host_addr: "127.0.0.1"
+  port: 9011
+  video_summarization_enabled: true
+
+  chromadb:
+    host: "127.0.0.1"
+    port: 9090
+    data_dir: './data/chroma_data'
+
+  storage:
+    data_dir: './data/local_storage'
+    bucket: "content-search"
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
+
+  vlm:
+    model_name: "Qwen/Qwen3-VL-8B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
+    device: "GPU"
+    weight_format: "int8"
+    ingest_enabled: true
+    stream: false  
+
+  video_preprocess:
+    host_addr: "127.0.0.1"
+    port: 8001
+    vlm_timeout_seconds: 300
+    chunk_duration_s: 30
+    chunk_overlap_s: 4
+    max_num_frames: 8
+    frame_width: 0
+    frame_height: 0
+
+  file_ingest:
+    host_addr: "127.0.0.1"
+    port: 9990
+    collection_name: "content-search"
+    doc_embedding_device: "CPU"
+    visual_embedding_model: "CLIP/clip-xlm-roberta-base-vit-b-32"
+    doc_embedding_model: "intfloat/multilingual-e5-small"
+    frame_extract_interval: 30      # for video: extract a frame every N frames
+    frame_extract_interval_sparse: 90  # for long videos (>20min): extract a frame every N frames
+    do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
+    document_parser:
+      chunk_method: "semantic"              # "fixed": split by character count; "semantic": split by topic/meaning using embeddings
+      chunk_size: 250                    # (fixed mode) max characters per chunk
+      chunk_overlap: 50                  # (fixed mode) overlapping characters between consecutive chunks
+      semantic_min_chunk_size: 250       # (semantic mode) chunks shorter than this are merged into the next one
+      semantic_breakpoint_percentile: 85 # (semantic mode) higher = fewer, larger chunks; lower = more, smaller chunks (range: 0-100)
+      semantic_buffer_size: 2            # (semantic mode) how many neighboring sentences to group when comparing similarity; larger = less sensitive to noise
+    reranker:
+      model: "BAAI/bge-reranker-base"
+      device: "GPU"
+      dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
+      overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
+
+  qa:
+    max_context: 5          # number of top chunks retrieved from ChromaDB to use as RAG context
+    max_tokens: 1024        # maximum tokens the VLM can generate for an answer (prevents mid-sentence cutoff)
+    max_history_turns: 3    # number of prior conversation turns (user+assistant pairs) sent to the VLM
+    context_window: 16384   # token budget for dynamic context selection; 
+    retrieval_score_threshold: 85  # minimum relevance score (0-100) a chunk must have to be used as context

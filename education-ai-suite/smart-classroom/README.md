@@ -1,6 +1,6 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models for the Windows OS. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
 
 The main features are as follows:
 
@@ -47,6 +47,7 @@ To see the system requirements and other installations, see the following guides
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
 - [Application Flow](./docs/user-guide/application-flow.md): Check the flow of application.
+- [Speaker Diarization Setup](./docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional): Optional one-time Hugging Face token setup required to enable speaker diarization.
 
 ## How It Works
 

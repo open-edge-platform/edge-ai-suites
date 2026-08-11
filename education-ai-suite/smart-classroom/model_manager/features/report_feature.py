@@ -15,7 +15,7 @@ class ReportFeature:
 
     id: str = "report"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = ["summary", "mindmap", "topic_segmentation"]
+    depends_on: List[str] = ["summary", "mindmap", "topic_segmentation", "video_analytics"]
     router: APIRouter = router
 
     def build(self) -> None:
@@ -30,6 +30,7 @@ class ReportFeature:
             "endpoints": {
                 "generate": "/report/generate",
                 "template_fields": "/report/template-fields",
+                "capabilities": "/report/capabilities",
                 "get_report": "/report/{session_id}",
                 "download": "/report/{session_id}/download",
                 "reselect": "/report/{session_id}/reselect",

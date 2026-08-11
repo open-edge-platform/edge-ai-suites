@@ -234,7 +234,7 @@ class TestHandleUnhealthy:
         with patch("stream_monitor.rtsp_monitor.time.sleep"):
             pipeline._handle_unhealthy()
 
-        # §32: unhealthy (RTSP health) is no longer pushed to the /events webhook.
+        # Unhealthy (RTSP health) is not pushed to the /events webhook.
         # Internal status is set instead — MCP reads it via GET /sources/{id}/status.
         sink.emit.assert_not_called()
         assert pipeline._status == "unhealthy"

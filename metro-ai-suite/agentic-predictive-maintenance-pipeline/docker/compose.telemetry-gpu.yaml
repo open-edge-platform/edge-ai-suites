@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Optional GPU device mapping for metrics collection.
+# Include this overlay only on systems where /dev/dri exists.
+
+services:
+  apm-metrics:
+    devices:
+      - /dev/dri:/dev/dri

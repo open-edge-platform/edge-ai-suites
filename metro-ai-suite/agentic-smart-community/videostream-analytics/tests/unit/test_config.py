@@ -61,9 +61,9 @@ class TestLoadConfig:
             assert config.server.port == 7777
 
     def test_data_dir_expanded(self):
-        # Isolate from shell-exported SMARTBUILDING_DATA_DIR to verify YAML expansion.
+        # Isolate from shell-exported SMART_COMMUNITY_DATA_DIR to verify YAML expansion.
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("SMARTBUILDING_DATA_DIR", None)
+            os.environ.pop("SMART_COMMUNITY_DATA_DIR", None)
             config = load_config(str(FIXTURES_DIR / "test_config.yaml"))
         assert "~" not in config.data_dir
         assert config.data_dir == "/tmp/videostream-test-data"
@@ -102,6 +102,38 @@ class TestLoadConfig:
         config = load_config(str(cfg_file))
         assert config.defaults.prefilter.model_path == ""
 
+    def test_prefilter_model_path_env_override(self, tmp_path):
+        # PREFILTER_MODEL overrides the config-file model_path (even a placeholder)
+        # and is expanded like the config value.
+        cfg_file = tmp_path / "mp_override.yaml"
+        cfg_file.write_text(
+            "defaults:\n"
+            "  prefilter:\n"
+            "    enabled: true\n"
+            "    model_path: /path/to/placeholder.xml\n"
+        )
+        with patch.dict(
+            os.environ, {"PREFILTER_MODEL": "${HOME}/models/real.xml"}, clear=False
+        ):
+            config = load_config(str(cfg_file))
+        assert config.defaults.prefilter.model_path == os.path.expanduser(
+            "~/models/real.xml"
+        )
+
+    def test_prefilter_model_path_no_env_keeps_config(self, tmp_path):
+        # Without PREFILTER_MODEL, the config-file model_path is preserved.
+        cfg_file = tmp_path / "mp_no_override.yaml"
+        cfg_file.write_text(
+            "defaults:\n"
+            "  prefilter:\n"
+            "    enabled: true\n"
+            "    model_path: /models/from_config.xml\n"
+        )
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("PREFILTER_MODEL", None)
+            config = load_config(str(cfg_file))
+        assert config.defaults.prefilter.model_path == "/models/from_config.xml"
+
 
 class TestConfigModels:
     def test_motion_config_defaults(self):
@@ -125,8 +157,6 @@ class TestConfigModels:
         src = SourceConfig(source_id="cam1", source_url="rtsp://localhost:8554/live/test")
         assert src.source_id == "cam1"
         assert src.source_url == "rtsp://localhost:8554/live/test"
-        # Phase 7: source_url surfaces via legacy rtsp_url property too.
-        assert src.rtsp_url == src.source_url
         assert src.motion is None
         assert src.data_dir is None
 

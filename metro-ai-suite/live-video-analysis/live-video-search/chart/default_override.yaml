@@ -6,10 +6,6 @@ frigate:
   mode: default
 rtspTest:
   enabled: false
-telemetry:
-  enabled: true
-  hostPathMounts: true
-
 frigate-vms:
   service:
     frigate:
@@ -31,7 +27,3 @@ nvr-event-router:
   service:
     nvrEventRouter:
       nodePort: null
-
-vss-collector:
-  collectorSignals:
-    usePvc: true

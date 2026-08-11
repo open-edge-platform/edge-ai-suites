@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { ServerConfig } from "./config.js";
 import { logger } from "./logger.js";
 
@@ -12,10 +12,19 @@ import { logger } from "./logger.js";
  * shorter than timeout_seconds is harmless, and a longer one legitimately pauses
  * the source (recovered by a subsequent register_source / start).
  *
+ * One exception: HTTP 404 means VSA is reachable but no longer knows the source —
+ * its registry is in-memory and wiped by a container recreate. That case is
+ * handed to the optional `onSourceUnknown` callback (wired in index.ts to
+ * reregisterUnknownMonitor) so the monitor self-heals instead of staying down.
+ *
  * No-op when keepalive is disabled in config. Returns a stop() callback to clear
  * the interval on shutdown.
  */
-export function startKeepaliveSender(config: ServerConfig, db: SmartBuildingDB): () => void {
+export function startKeepaliveSender(
+  config: ServerConfig,
+  db: SmartCommunityDB,
+  onSourceUnknown?: (monitorId: string) => void,
+): () => void {
   if (!config.keepalive.enabled) {
     logger.info("[keepalive] disabled in config — heartbeat sender not started");
     return () => {};
@@ -36,7 +45,11 @@ export function startKeepaliveSender(config: ServerConfig, db: SmartBuildingDB):
           signal: AbortSignal.timeout(reqTimeoutMs),
         })
           .then((resp) => {
-            if (!resp.ok) logger.debug(`[keepalive] ${m.id} → HTTP ${resp.status}`);
+            if (resp.status === 404 && onSourceUnknown) {
+              onSourceUnknown(m.id);
+            } else if (!resp.ok) {
+              logger.debug(`[keepalive] ${m.id} → HTTP ${resp.status}`);
+            }
           })
           .catch((err) => logger.debug(`[keepalive] ${m.id} failed: ${err?.message ?? err}`)),
       ),

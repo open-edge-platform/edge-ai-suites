@@ -11,34 +11,13 @@ For full develop guide and API Reference, please see the [API Reference](../Cont
 
 ### Install Python Dependencies
 
-```powershell
-cd smart-classroom\content_search
-python -m venv venv_content_search
-.\venv_content_search\Scripts\activate
-pip install -r requirements.txt
-```
-
-> **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
+Content Search shares the base Smart Classroom environment. See [Install Python dependencies](../../../user-guide/advance-setup-guide.md#d-install-python-dependencies).
 
 #### LibreOffice (Optional)
 
-This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
+Required only if you need to ingest legacy **.doc/.ppt/.xls** documents; modern formats (`.docx`, `.pptx`, `.xlsx`) do not need it.
 
-1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
-3. Add to PATH:
-
-   ```powershell
-   # Open PowerShell as Administrator:
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
-   ```
-
-4. Verify installation:
-
-   ```python
-   import shutil
-   shutil.which("soffice") is not None
-   ```
+LibreOffice setup (install, add `soffice` to `PATH`, and verify) is documented once in the user guide — see [Install LibreOffice](../../../user-guide/advance-setup-guide.md#e-install-libreoffice-optional-feature-dependent). The same `soffice` executable also powers PDF report export.
 
 ## Start service
 
@@ -47,8 +26,7 @@ This is for legacy **.doc/.ppt/.xls** support, only install if such formats requ
 $env:https_proxy="<your_https_proxy>"
 $env:http_proxy="<your_http_proxy>"
 
-# 2. Under content_search foler
-.\venv_content_search\Scripts\activate
+# 2. Under content_search folder, with the base environment activated
 python .\start_services.py
 ```
 

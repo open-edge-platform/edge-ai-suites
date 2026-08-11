@@ -129,7 +129,7 @@ def run_pipeline_to_completion(
     ``device`` selects which pipeline definition (CPU/GPU/NPU) to run.
     ``video_filename`` optionally overrides the source video, relative to the
     shared resources/videos directory; when omitted, the pipeline's own
-    default source (sample.mp4) is used.
+    default source (datastream.mp4) is used.
 
     Returns the final status dict (``{"id", "state", "avg_fps", "elapsed_time", ...}``).
     Raises ``PipelineRunError`` if the pipeline cannot be started, or times out
@@ -161,4 +161,3 @@ def run_pipeline_to_completion(
         f"Pipeline {instance_id} did not reach a terminal state within {timeout}s "
         f"(last known status: {last_status})"
     )
-

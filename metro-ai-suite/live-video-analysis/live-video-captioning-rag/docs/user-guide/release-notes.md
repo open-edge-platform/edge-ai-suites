@@ -1,8 +1,20 @@
 # Release Notes: Live Video Captioning RAG
 
-<!--## Version 2026.2.0-->
+## Version 2026.2.0-0
 
-<!--date TBD-->
+**Aug 4, 2026**
+
+**New**
+
+- Decoupled RAG-related charts, Docker Compose assets, and documentation from the Live Video Captioning folder into an independent Live Video Captioning RAG structure.
+- Integrated dedicated charts and Docker Compose configuration for Live Video Captioning RAG, designed to work together with the existing Live Video Captioning application.
+- Updated documentation to reflect the decoupled architecture, dedicated deployment assets, and all related workflow changes.
+- Bumped dependency package versions to address reported vulnerabilities.
+
+**Known Issues**
+
+- The sample application is not validated either on the Standalone or Developer Node
+  versions of Edge Microvisor Toolkit.
 
 ## Version 2026.1.0
 

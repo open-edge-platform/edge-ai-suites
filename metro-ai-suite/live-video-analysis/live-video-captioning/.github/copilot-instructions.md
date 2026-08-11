@@ -35,8 +35,6 @@ docker compose up -d        # launch the stack
 docker compose down         # stop the stack
 ```
 
-The optional embedding/RAG profile adds `multimodal-embedding-serving`,
-`vdms-vector-db`, and `live-video-captioning-rag` (gated by `ENABLE_EMBEDDING`).
 Use the `lvc-run-app` skill to drive deploy + smoke-test, and `lvc-test` for the
 backend unit suite.
 

@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import { logger } from "./logger.js";
 
 export interface VideoEvent {
@@ -28,7 +28,7 @@ type DispatchOutcome =
  * HTTP webhook receiver for events pushed by any upstream video-analytics client.
  * Listens on a dedicated port for POST /events.
  *
- * Response contract is documented in docs/apis/mcp_webhook_event_api.md.
+ * Response contract is documented in docs/user-guide/get-started/api-reference-mcp-webhook-event.md.
  * Summary:
  *   200 — DB write succeeded; body carries inserted row ids
  *   400 — body not JSON, or envelope shape invalid (transport / framing error)
@@ -41,7 +41,7 @@ type DispatchOutcome =
  */
 export class EventsEndpoint {
   private server: Server | null = null;
-  private db: SmartBuildingDB;
+  private db: SmartCommunityDB;
   private onEvent?: EventCallback;
   private maxBodyBytes: number;
 
@@ -50,7 +50,7 @@ export class EventsEndpoint {
    * @param onEvent Optional hook fired after every successfully handled webhook.
    * @param options Optional behavior knobs (max body size, …).
    */
-  constructor(db: SmartBuildingDB, onEvent?: EventCallback, options?: EventsEndpointOptions) {
+  constructor(db: SmartCommunityDB, onEvent?: EventCallback, options?: EventsEndpointOptions) {
     this.db = db;
     this.onEvent = onEvent;
     this.maxBodyBytes = options?.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;

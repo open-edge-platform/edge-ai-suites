@@ -15,15 +15,15 @@ class TestMotionDetectorWithRealVideo:
         assert result is False
 
     def test_detects_motion_in_video(self, video_frames):
-        """child_safety_demo.mp4 contains a moving child — should detect motion."""
+        """The generated fixture contains motion that should be detected."""
         detector = MotionDetector(MotionConfig())
         motion_count = 0
         for frame in video_frames:
             if detector.detect(frame):
                 motion_count += 1
         assert motion_count > 0, (
-            f"Should detect motion in child safety video "
-            f"(checked {len(video_frames)} frames starting from 40s)"
+            f"Should detect motion in generated test video "
+            f"(checked {len(video_frames)} frames)"
         )
 
     def test_motion_ratio_reasonable(self, video_frames):

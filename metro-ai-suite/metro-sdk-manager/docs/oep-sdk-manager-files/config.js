@@ -35,6 +35,15 @@ const CONFIG = {
         {
           label: "Metro AI Demo Kit",
           value: "VISUAL_AI_DEMO"
+        },
+        {
+          label: "UAV Mission Compute SDK",
+          value: "UAV_MISSION_COMPUTE",
+          // Limit which options in other categories are compatible with this SDK.
+          // Buttons for values not listed here will be greyed out when this SDK is selected.
+          supports: {
+            VERSION: ["latest"]
+          }
         }
       ]
     },
@@ -46,6 +55,10 @@ const CONFIG = {
         {
           label: "latest",
           value: "latest"
+        },
+        {
+          label: "2026.2",
+          value: "2026.2"
         },
         {
           label: "2026.0",
@@ -68,6 +81,57 @@ const CONFIG = {
           when: {
             SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          components: [
+            "DL Streamer",
+            "DL Streamer Pipeline Server",
+            "OpenVINO",
+            "OpenVINO Model Server",
+            "Scenescape Manager",
+            "Scenescape Controller",
+            "Scenescape Autocalibration",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo",
+            "Scenescape - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "OEP_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          components: [
+            "Audio Analyzer Microservice",
+            "Document Ingestion (pgvector)",
+            "Multimodal Embedding Serving",
+            "Multimodal Data Preparation",
+            "Model Download",
+            "Chat Q&A Core",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          components: [
+            "DL Streamer Pipeline Server",
+            "Node Red",
+            "Grafana",
+            "MediaMTX",
+            "MQTT Broker",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "OEP_VISION",
+            OP_SYSTEM: "UBUNTU",
             VERSION: "2026.1"
           },
           components: [
@@ -213,6 +277,17 @@ const CONFIG = {
             "Grafana",
             "MediaMTX",
             "MQTT Broker",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          components: [
+            "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo"
           ]
         }
@@ -223,6 +298,32 @@ const CONFIG = {
       label: "Install",
       fallback: "Select options to see a command…",
       rules: [
+        {
+          when: {
+            SDK: "OEP_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash`
+        },
+
+        {
+          when: {
+            SDK: "OEP_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/oep-gen-ai-sdk.sh | bash`
+        },
+
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
         {
           when: {
             SDK: "OEP_VISION",
@@ -300,6 +401,14 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash`
         }
 
       ]
@@ -309,6 +418,33 @@ const CONFIG = {
       label: "Next Steps",
       fallback: "Select options to see next steps…",
       rules: [
+        {
+          when: {
+            SDK: "OEP_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/oep-sdk-manager/oep-vision-ai-sdk/get-started.html`
+        },
+        {
+          when: {
+            SDK: "OEP_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/oep-sdk-manager/oep-gen-ai-sdk/get-started.html`
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
         {
           when: {
             SDK: "OEP_VISION",
@@ -389,6 +525,15 @@ const CONFIG = {
           },
           text: `Get Started`,
           link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/uav-mission-compute-sdk/get-started.html`
         }
       ]
     },
@@ -397,6 +542,51 @@ const CONFIG = {
       label: "Resources",
       fallback: "Select options to see resources…",
       rules: [
+        {
+          when: {
+            SDK: "OEP_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          links: [
+            { text: "DL Streamer", url: "http://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2026/get-started.html" },
+            { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2026/model-server/ovms_what_is_openvino_model_server.html" },
+            { text: "Scenescape", url: "https://github.com/open-edge-platform/scenescape" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "OEP_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          links: [
+            { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/audio-analyzer/index.html" },
+            { text: "Document Ingestion - pgvector", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/pgvector/index.html" },
+            { text: "Multimodal Embedding Serving", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/index.html" },
+            { text: "Multimodal Data Preparation", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/Overview.md" },
+            { text: "Chat Q&A Core", url: "http://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/chat-question-and-answer-core/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          links: [
+            { text: "DL Streamer", url: "http://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html"}
+          ]
+        },
         {
           when: {
             SDK: "OEP_VISION",
@@ -536,6 +726,17 @@ const CONFIG = {
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          links: [
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
         }
       ]
     }
@@ -604,6 +805,7 @@ function init() {
 
   // state from URL (shareable)
   STATE = { ...defaults, ...parseQuery(CONFIG.shareKeys || []) };
+  repairState(STATE);
 
   renderCategories();
   updateOutputsAndUrl();
@@ -631,13 +833,20 @@ function renderCategories() {
       const isActive = STATE[cat.key] === opt.value;
       if (isActive) btn.classList.add("spark-toggle-button-clicked-ghost", "pill-active");
 
+      const available = isOptionAvailable(cat, opt, STATE);
+      if (!available) {
+        btn.disabled = true;
+        btn.setAttribute("aria-disabled", "true");
+        btn.title = "Not available for the current selection";
+        btn.classList.add("pill-disabled");
+      }
+
       btn.addEventListener("click", () => {
+        if (btn.disabled) return;
         STATE[cat.key] = opt.value;
-        // update selected visuals
-        Array.from(group.children).forEach((b) =>
-          b.classList.remove("spark-toggle-button-clicked-ghost", "pill-active")
-        );
-        btn.classList.add("spark-toggle-button-clicked-ghost", "pill-active");
+        repairState(STATE);
+        // Re-render everything
+        renderCategories();
         updateOutputsAndUrl();
       });
 
@@ -648,6 +857,46 @@ function renderCategories() {
     content.append(row);
     sec.append(title, content);
     host.append(sec);
+  });
+}
+
+// Return true if `opt` in category `cat` is compatible with the rest of `state`.
+function isOptionAvailable(cat, opt, state) {
+  // Check constraints declared by other selected options against `opt`.
+  for (const other of CONFIG.categories || []) {
+    if (other.key === cat.key) continue;
+    const selectedValue = state[other.key];
+    if (selectedValue == null) continue;
+    const selectedOpt = (other.options || []).find((o) => o.value === selectedValue);
+    const allowed = selectedOpt && selectedOpt.supports && selectedOpt.supports[cat.key];
+    if (Array.isArray(allowed) && !allowed.includes(opt.value)) {
+      return false;
+    }
+  }
+
+  // Check constraints declared by `opt` against currently selected values in other categories.
+  if (opt.supports) {
+    for (const otherKey of Object.keys(opt.supports)) {
+      const allowed = opt.supports[otherKey];
+      const selectedValue = state[otherKey];
+      if (Array.isArray(allowed) && selectedValue != null && !allowed.includes(selectedValue)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+// If the current selection in any category is no longer available given the
+// rest of `state`, replace it with the first available option in that category.
+function repairState(state) {
+  (CONFIG.categories || []).forEach((cat) => {
+    const currentValue = state[cat.key];
+    const currentOpt = (cat.options || []).find((o) => o.value === currentValue);
+    if (currentOpt && isOptionAvailable(cat, currentOpt, state)) return;
+    const firstAvailable = (cat.options || []).find((o) => isOptionAvailable(cat, o, state));
+    if (firstAvailable) state[cat.key] = firstAvailable.value;
   });
 }
 

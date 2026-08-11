@@ -1,20 +1,28 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 import "../../assets/css/AISummaryTab.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { firstSummaryToken, summaryDone, clearSummaryStartRequest, summaryStreamComplete } from "../../redux/slices/uiSlice";
 import { appendSummary, finishSummary, startSummary } from "../../redux/slices/summarySlice";
 import { streamSummary } from "../../services/api";
+import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 
 const activeSummarySessions = new Set<string>();
 
 const AISummaryTab: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const summaryEnabled = useAppSelector(s => s.ui.summaryEnabled);
   const isLoading = useAppSelector(s => s.ui.summaryLoading);
   const { streamingText, finalText } = useAppSelector(s => s.summary);
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const shouldStartSummary = useAppSelector(s => s.ui.shouldStartSummary);
+  const [boardOcrPartial, setBoardOcrPartial] = useState(false);
+  
+  // Check if mindmap feature is enabled in backend
+  const { guard, loaded: featuresLoaded } = useFeatureConfig();
+  const hasMindmapFeature = featuresLoaded && guard.hasFeature('mindmap');
 
   const startedRef = useRef(false);
   const sessionRef = useRef<string | null>(null);
@@ -35,6 +43,7 @@ const AISummaryTab: React.FC = () => {
     activeSummarySessions.add(sessionId);
     dispatch(clearSummaryStartRequest());
     dispatch(startSummary());
+    setBoardOcrPartial(false);
 
     (async () => {
       try {
@@ -46,16 +55,18 @@ const AISummaryTab: React.FC = () => {
               sentFirst = true; 
             }
             dispatch(appendSummary(ev.token));
+          } else if (ev.type === "board_ocr_partial") {
+            setBoardOcrPartial(true);
           } else if (ev.type === "error") {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
-            dispatch(summaryDone()); // Dispatch immediately
+            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
             break;
           } else if (ev.type === "done") {
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
-            dispatch(summaryDone()); // Dispatch immediately
+            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
             break;
           }
         }
@@ -63,17 +74,22 @@ const AISummaryTab: React.FC = () => {
         if (e?.name !== 'AbortError') console.error('[AISummaryTab] stream error', e);
         dispatch(finishSummary());
         dispatch(summaryStreamComplete());
-        dispatch(summaryDone()); // Dispatch immediately
+        dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
       } finally {
         console.log('[AISummaryTab] stream finished', sessionId);
       }
     })();
-  }, [summaryEnabled, shouldStartSummary, sessionId, dispatch]);
+  }, [summaryEnabled, shouldStartSummary, sessionId, dispatch, hasMindmapFeature]);
 
   const typed = finalText ?? streamingText;
 
   return (
     <div className="summary-tab">
+      {boardOcrPartial && (
+        <div className="summary-board-warning" role="status">
+          {t("summary.boardOcrPartial")}
+        </div>
+      )}
       {typed && (
         <div className="summary-content">
           <ReactMarkdown>{typed}</ReactMarkdown>

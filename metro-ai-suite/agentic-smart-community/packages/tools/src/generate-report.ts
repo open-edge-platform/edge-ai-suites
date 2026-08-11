@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { VideoSummaryClient } from "./clients/video-summary-client.js";
 
 export interface GenerateReportParams {
@@ -22,6 +22,14 @@ export interface ReportConfig {
 // Time range helpers
 // ---------------------------------------------------------------------------
 
+/** Local calendar date as YYYY-MM-DD (not UTC — reports are about the local day). */
+function localYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function calcPeriod(
   type: string,
   period_start?: string,
@@ -33,17 +41,20 @@ function calcPeriod(
     }
     return { periodStart: period_start, periodEnd: period_end };
   }
+  // Bounds are local-time, space-separated (`YYYY-MM-DD HH:MM:SS`) to match the
+  // canonical format stored in start_time / created_at. A `T`-separated or UTC
+  // bound would mis-sort against space-separated column values in SQLite's
+  // lexicographic string comparison and silently drop same-day rows.
   const now = new Date();
-  const todayStart = now.toISOString().slice(0, 10) + " 00:00";
-  const todayEnd   = now.toISOString().slice(0, 10) + " 23:59";
-  if (type === "daily") return { periodStart: todayStart, periodEnd: todayEnd };
+  const todayEnd = localYmd(now) + " 23:59:59";
+  if (type === "daily") return { periodStart: localYmd(now) + " 00:00:00", periodEnd: todayEnd };
   if (type === "weekly") {
     const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return { periodStart: d.toISOString().slice(0, 10) + " 00:00", periodEnd: todayEnd };
+    return { periodStart: localYmd(d) + " 00:00:00", periodEnd: todayEnd };
   }
   if (type === "monthly") {
     const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    return { periodStart: d.toISOString().slice(0, 10) + " 00:00", periodEnd: todayEnd };
+    return { periodStart: localYmd(d) + " 00:00:00", periodEnd: todayEnd };
   }
   throw new Error(`Unknown report type: ${type}`);
 }
@@ -61,6 +72,22 @@ function formatSrtTs(iso: string): string {
   return `${hh}:${mm}:${ss},${ms}`;
 }
 
+/**
+ * Wall-clock `HH:MM:SS` (local) for embedding INTO each cue's text line.
+ *
+ * multilevel-video-understanding parses the SRT `-->` timestamps as video
+ * playback offsets and strips them — only the cue *text* reaches the summarizer.
+ * Our cue times are real wall-clock event times, so we inline them in the text
+ * (the one channel the model sees) or the model has no temporal grounding and
+ * fabricates "activity periods". Returns "" for unparseable input.
+ */
+function clockLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 function buildAlertsSrt(rows: any[]): string {
   if (rows.length === 0) return "";
   return rows
@@ -70,8 +97,9 @@ function buildAlertsSrt(rows: any[]): string {
         new Date(new Date(row.created_at).getTime() + 1000).toISOString()
       );
       const tag = `[alert:${row.severity ?? "info"}:${row.event ?? row.alert_type ?? "event"}]`;
+      const clock = clockLabel(row.created_at);
       const desc = (row.description ?? row.desc ?? "").trim() || "(no description)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
@@ -84,8 +112,9 @@ function buildEventsSrt(rows: any[]): string {
       const endTime = row.end_time ?? row.start_time ?? new Date().toISOString();
       const endTs = formatSrtTs(endTime);
       const tag = `[${row.motion_type ?? row.event_type ?? "event"}]`;
+      const clock = clockLabel(row.start_time ?? row.created_at);
       const desc = (row.summary ?? row.description ?? row.desc ?? "").trim() || "(no description)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
@@ -101,14 +130,15 @@ function buildTasksSrt(rows: any[]): string {
       const event = row.event ?? "task";
       const severity = row.severity ?? "info";
       const tag = `[task:${event}:${severity}]`;
+      const clock = clockLabel(row.created_at);
       const desc = (row.summary_text ?? row.desc ?? "").trim() || "(no summary)";
-      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${desc}\n`;
+      return `${idx + 1}\n${startTs} --> ${endTs}\n${tag} ${clock ? clock + " " : ""}${desc}\n`;
     })
     .join("\n");
 }
 
 // ---------------------------------------------------------------------------
-// Token estimation & level planning (ported from smarthome reference impl)
+// Token estimation & level planning
 // ---------------------------------------------------------------------------
 
 function estimateTokens(text: string): number {
@@ -145,7 +175,7 @@ function planLevels(
 // ---------------------------------------------------------------------------
 
 function queryData(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   dataSource: "events" | "alerts" | "video_summary_tasks",
   monitorId: string,
   periodStart: string,
@@ -184,7 +214,20 @@ function queryData(
   }
 
   const orderCol = dataSource === "events" ? "start_time" : "created_at";
-  const sql = `SELECT * FROM ${table} WHERE ${whereClauses.join(" AND ")} ORDER BY ${orderCol} ASC`;
+
+  // `events` rows carry no description — the VLM narration for each detection lives
+  // in the linked video_summary_tasks.summary_text. Pull the latest non-null summary
+  // per event (correlated subquery, so no row multiplication) and expose it as
+  // `summary`, which buildEventsSrt reads; otherwise every cue is "(no description)"
+  // and the summarizer sees an empty timeline. Other data sources are unaffected.
+  const selectClause =
+    dataSource === "events"
+      ? `*, (SELECT vst.summary_text FROM video_summary_tasks vst ` +
+        `WHERE vst.event_id = events.id AND vst.summary_text IS NOT NULL ` +
+        `ORDER BY vst.id DESC LIMIT 1) AS summary`
+      : "*";
+
+  const sql = `SELECT ${selectClause} FROM ${table} WHERE ${whereClauses.join(" AND ")} ORDER BY ${orderCol} ASC`;
   return db.rawQuery(sql, bindings) as any[];
 }
 
@@ -199,7 +242,7 @@ function queryData(
  * generated report text.
  */
 export async function generateReport(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   reportConfig: ReportConfig,
   params: GenerateReportParams
 ): Promise<unknown> {

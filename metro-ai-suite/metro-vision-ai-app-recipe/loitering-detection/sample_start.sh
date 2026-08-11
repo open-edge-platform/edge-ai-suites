@@ -31,7 +31,11 @@ function run_sample() {
         },
         "frame": {
             "type": "webrtc",
-            "peer-id": "object_tracking_$x"
+            "peer-id": "object_tracking_$x",
+            "overlay-properties": {
+                "font-scale": 1.0,
+                "draw-txt-bg": false
+            }
         }
     }
   }

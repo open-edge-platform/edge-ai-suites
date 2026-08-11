@@ -1,15 +1,26 @@
 # Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
+## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
+
+**New:**
+
+- Fixed coturn server configuration for webrtc relay.
+- Fixed Grafana MQTT datasource version to avoid errors with latest version.
+
+**Improved:**
+
+- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+
 ## Version 2.7.0 (Pallet Defect Detection) and Version 1.3.0 (PCB Anomaly Detection)
 
-**New**
+**New:**
 
 - Qualified on the Intel® Core™ Series 3 processor.
 - Deprecated Edge Manageability Framework deployment packages.
 
 ## Version 2.6.0 (Pallet Defect Detection) and Version 1.2.0 (PCB Anomaly Detection)
 
-**New**
+**New:**
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
 - Added support for NPU and iGPU, for the Intel® Core™ Ultra Series 3 processor.
@@ -18,7 +29,7 @@ host via Docker Compose tool and Helm chart.
 - MLOps is now demonstrated with the Model Download microservice instead of
 the Model Registry.
 
-**Improved**
+**Improved:**
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
 - Retrained the Model with Geti™ software v2.13.1.

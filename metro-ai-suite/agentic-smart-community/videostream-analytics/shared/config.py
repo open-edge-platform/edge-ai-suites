@@ -62,7 +62,7 @@ class RecordingConfig(BaseModel):
 
 
 class RoiConfig(BaseModel):
-    """ROI crop configuration (Phase 9, child_safety).
+    """ROI crop configuration (child_safety).
 
     Top-level pipeline block, at the same nesting depth as `prefilter`.
     When enabled and prefilter accumulates a `trajectory_region_xyxy`, the
@@ -100,7 +100,7 @@ class HealthConfig(BaseModel):
 
 
 class KeepaliveConfig(BaseModel):
-    """Keepalive protocol configuration (Phase 8).
+    """Keepalive protocol configuration.
 
     When `enabled`, the source must receive `POST /sources/{id}/keepalive`
     within `timeout_seconds` or the watchdog auto-pauses it. Default OFF so
@@ -138,8 +138,8 @@ class DefaultsConfig(BaseModel):
 class SourceConfig(BaseModel):
     """Per-source configuration provided at registration time.
 
-    Renamed `rtsp_url` → `source_url` and dropped `use_case` as part of the
-    Phase 7 hard cutover to match MCP's `analyticsRegister` body.
+    Field names (`source_url`, nested pipeline blocks) match MCP's
+    `analyticsRegister` body exactly.
     """
 
     source_id: str
@@ -155,16 +155,11 @@ class SourceConfig(BaseModel):
     health: Optional[HealthConfig] = None
     keepalive: Optional[KeepaliveConfig] = None
 
-    @property
-    def rtsp_url(self) -> str:
-        """Backwards-compatible accessor — internals still call this."""
-        return self.source_url
-
 
 class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     webhook: WebhookConfig = Field(default_factory=WebhookConfig)
-    data_dir: str = "~/.mcp-smartbuilding/segments"
+    data_dir: str = "~/.mcp-smart-community/segments"
     defaults: DefaultsConfig = Field(default_factory=DefaultsConfig)
     logging: dict = Field(default_factory=lambda: {"level": "INFO"})
 
@@ -213,13 +208,22 @@ def load_config(config_path: str | None = None) -> AppConfig:
     if webhook_url := os.environ.get("WEBHOOK_URL"):
         config.webhook.url = webhook_url
 
-    # SMARTBUILDING_DATA_DIR is the MCP server's data root. VSA writes under its
+    # PREFILTER_MODEL is the absolute, container-visible OpenVINO IR path that
+    # Docker injects (config.yaml may only carry a placeholder). It overrides the
+    # prefilter model_path so /capabilities/prefilter and the runtime prefilter
+    # read the real model, even on a plain `docker compose up` that mounts the
+    # placeholder config instead of the one setup_docker.sh generates. Expanded
+    # like the config-file value above (${HOME}/~ supported).
+    if prefilter_model := os.environ.get("PREFILTER_MODEL"):
+        config.defaults.prefilter.model_path = expand_path(prefilter_model)
+
+    # SMART_COMMUNITY_DATA_DIR is the MCP server's data root. VSA writes under its
     # `segments/` subdir so the DEFAULT output root lines up with the per-monitor
-    # data_dir MCP sends in register_source bodies (<SMARTBUILDING_DATA_DIR>/
+    # data_dir MCP sends in register_source bodies (<SMART_COMMUNITY_DATA_DIR>/
     # segments/<id>). An explicit `data_dir` in a register_source request still
     # takes precedence — see source_worker._resolve_data_dir. This supersedes the
     # old RECORDINGS_DIR override (Docker no longer sets that).
-    if root := os.environ.get("SMARTBUILDING_DATA_DIR"):
+    if root := os.environ.get("SMART_COMMUNITY_DATA_DIR"):
         config.data_dir = os.path.join(expand_path(root), "segments")
 
     return config

@@ -38,12 +38,15 @@ import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { resetMediaValidation } from '../../redux/slices/mediaValidationSlice';
 import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
+import type { FeatureGuard } from '../../utils/featureGuards';
+
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  featureGuard: FeatureGuard;
 }
 
-const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) => {
+const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, featureGuard }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [frontCameraPath, setFrontCameraPath] = useState<File | null>(null);
   const [rearCameraPath, setRearCameraPath] = useState<File | null>(null);
@@ -60,6 +63,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
+  
+  // Check if video_analytics feature is enabled
+  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  
+  // Check if any audio-related features are enabled
+  const hasAudioFeatures = featureGuard.hasFeature('asr') || 
+                           featureGuard.hasFeature('summary') || 
+                           featureGuard.hasFeature('mindmap') || 
+                           featureGuard.hasFeature('topic_segmentation') || 
+                           featureGuard.hasFeature('report');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
@@ -343,38 +356,46 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       const hasValidVideo = validPipelines.length > 0;
       console.log('🎯 Has valid video files:', hasValidVideo);
-      dispatch(setHasUploadedVideoFiles(hasValidVideo));
-
-      if (hasValidVideo) {
-        console.log('🎥 Setting uploaded video files in Redux (second time, inside video block):', {
-          front: frontCameraPath ? frontCameraPath.name : 'null',
-          back: rearCameraPath ? rearCameraPath.name : 'null',
-          board: boardCameraPath ? boardCameraPath.name : 'null'
-        });
-
-        dispatch(setUploadedVideoFiles({
-          front: frontCameraPath,
-          back: rearCameraPath,
-          board: boardCameraPath,
-        }));
-
-        dispatch(setHasUploadedVideoFiles(true));
-
-        if (rearCameraPath)
-          dispatch(setActiveStream('back'));
-
-        else if (boardCameraPath)
-          dispatch(setActiveStream('content'));
-
-        else if (frontCameraPath)
-          dispatch(setActiveStream('front'));
-      }
-      else {
+      
+      // Only process videos if video_analytics feature is enabled
+      if (!hasVideoAnalyticsFeature && hasValidVideo) {
+        console.warn('⚠️ Video files selected but video_analytics feature is disabled. Skipping video processing.');
         dispatch(setVideoStatus('no-config'));
+        dispatch(setHasUploadedVideoFiles(false));
+      } else {
+        dispatch(setHasUploadedVideoFiles(hasValidVideo));
+
+        if (hasValidVideo && hasVideoAnalyticsFeature) {
+          console.log('🎥 Setting uploaded video files in Redux (second time, inside video block):', {
+            front: frontCameraPath ? frontCameraPath.name : 'null',
+            back: rearCameraPath ? rearCameraPath.name : 'null',
+            board: boardCameraPath ? boardCameraPath.name : 'null'
+          });
+
+          dispatch(setUploadedVideoFiles({
+            front: frontCameraPath,
+            back: rearCameraPath,
+            board: boardCameraPath,
+          }));
+
+          dispatch(setHasUploadedVideoFiles(true));
+
+          if (rearCameraPath)
+            dispatch(setActiveStream('back'));
+
+          else if (boardCameraPath)
+            dispatch(setActiveStream('content'));
+
+          else if (frontCameraPath)
+            dispatch(setActiveStream('front'));
+        }
+        else {
+          dispatch(setVideoStatus('no-config'));
+        }
       }
 
       let videoAnalyticsStarted = false;
-      if (hasValidVideo) {
+      if (hasValidVideo && hasVideoAnalyticsFeature) {
         videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
         if (videoAnalyticsStarted) {
           console.log('✅ Video analytics started successfully');
@@ -382,6 +403,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           console.warn('⚠️ Video analytics failed to start');
           dispatch(setVideoStatus('failed'));
         }
+      } else if (!hasVideoAnalyticsFeature && hasValidVideo) {
+        console.log('📹 Video files present but feature disabled, skipping video analytics');
       } else {
         console.log('📹 No valid video files provided, skipping video analytics');
       }
@@ -424,83 +447,101 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 type="text"
                 value={baseDirectory}
                 onChange={(e) => setBaseDirectory(e.target.value)}
-                placeholder="Enter the base directory"
+                placeholder={t('uploadFiles.enterBaseDirectory')}
               />
             </div>
           )}
-          <div className="modal-input-group modal-title fw-semibold">
-            <label>{t('uploadFiles.audioFileLabel')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={audioFile?.name || ''}
-                readOnly
-                placeholder="Select an audio file"
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
-              />
+          
+          {/* Audio upload section - only show if audio features are enabled */}
+          {hasAudioFeatures ? (
+            <div className="modal-input-group modal-title fw-semibold">
+              <label>{t('uploadFiles.audioFileLabel')}</label>
+              <div className="file-input-wrapper">
+                <input
+                  type="text"
+                  value={audioFile?.name || ''}
+                  readOnly
+                  placeholder={t('uploadFiles.selectAudioFile')}
+                />
+                <img
+                  src={folderIcon}
+                  alt={t('uploadFiles.chooseFile')}
+                  className="folder-icon"
+                  onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
+                />
+              </div>
             </div>
-          </div>
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.frontCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={frontVideoFullPath || frontCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a front camera file"
-                title={frontVideoFullPath || frontCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
-              />
+          ) : (
+            <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+              {t('uploadFiles.audioFeaturesDisabled', 'Audio processing features are disabled. Audio uploads are not available.')}
             </div>
-          </div>
+          )}
+          
+          {/* Video upload sections - only show if video_analytics is enabled */}
+          {hasVideoAnalyticsFeature ? (
+            <>
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.frontCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={frontVideoFullPath || frontCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectFrontCameraFile')}
+                    title={frontVideoFullPath || frontCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
+                  />
+                </div>
+              </div>
 
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.backCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={rearVideoFullPath || rearCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a back camera file"
-                title={rearVideoFullPath || rearCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
-              />
-            </div>
-          </div>
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.backCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={rearVideoFullPath || rearCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectBackCameraFile')}
+                    title={rearVideoFullPath || rearCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
+                  />
+                </div>
+              </div>
 
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.boardCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={boardVideoFullPath || boardCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a board camera file"
-                title={boardVideoFullPath || boardCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
-              />
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.boardCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={boardVideoFullPath || boardCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectBoardCameraFile')}
+                    title={boardVideoFullPath || boardCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="modal-info-message" style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+              {t('uploadFiles.videoAnalyticsDisabled', 'Video analytics feature is disabled. Only audio files can be uploaded.')}
             </div>
-          </div>
+          )}
           {error && <div className="error-message">{error}</div>}
           {notification && <div className="notification-message">{notification}</div>}
         </div>

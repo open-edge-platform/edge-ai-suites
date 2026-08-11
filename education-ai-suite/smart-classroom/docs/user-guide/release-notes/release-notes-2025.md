@@ -18,7 +18,7 @@ This is the first release of Intel® Education AI Suite EAS-2025.2.
 
 **New**
 
-In this release, the **Smart Classroom** application is added. It is an extensible framework for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI.
+In this release, the **Smart Classroom** application is added. It is an extensible framework for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI for the Windows OS.
 
 ## Documentation and Source Code
 

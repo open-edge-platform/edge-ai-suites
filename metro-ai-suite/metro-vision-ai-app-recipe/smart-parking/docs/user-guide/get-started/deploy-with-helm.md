@@ -103,10 +103,10 @@ Optional: Pull the Helm chart and replace the existing `helm-chart` folder with 
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.5.0
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.6.0-rc1
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.5.0.tgz
+tar -xvf smart-parking-1.6.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart
@@ -168,7 +168,11 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_detection_1"
+               "peer-id": "object_detection_1",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -190,7 +194,11 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_detection_2"
+               "peer-id": "object_detection_2",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -212,7 +220,11 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_detection_3"
+               "peer-id": "object_detection_3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -234,7 +246,11 @@ Follow this procedure to run the sample application. In a typical deployment, mu
            },
            "frame": {
                "type": "webrtc",
-               "peer-id": "object_detection_4"
+               "peer-id": "object_detection_4",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {

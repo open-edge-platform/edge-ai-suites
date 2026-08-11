@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Optional GPU device mapping for the OpenVINO Model Server LLM service.
+# Include this overlay only on systems where /dev/dri exists.
+
+services:
+  apm-llm:
+    devices:
+      - /dev/dri:/dev/dri

@@ -12,12 +12,14 @@ import {
   reselectReport,
   downloadReport,
   downloadReportPdf,
+  getReportCapabilities,
   getTemplateFields,
   getReport,
   type TemplateFieldGroup,
   type TemplateFieldMeta,
 } from '../services/api';
 import { useTranslation } from 'react-i18next';
+import type { FeatureGuard } from '../utils/featureGuards';
 import '../assets/css/ReportPanel.css';
 
 const activeReportSessions = new Set<string>();
@@ -51,9 +53,10 @@ const fallbackGroupLabel = (g: TemplateFieldGroup, lang: 'en' | 'zh') =>
 interface ReportPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  featureGuard?: FeatureGuard;
 }
 
-const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
+const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard }) => {
   const dispatch = useAppDispatch();
   const { i18n, t } = useTranslation();
   const lang: 'en' | 'zh' = (i18n.language || 'en').startsWith('zh') ? 'zh' : 'en';
@@ -79,6 +82,22 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [reportText, setReportText] = useState<string>('');
   const [reapplying, setReapplying] = useState(false);
+  // Which download is in flight, if any. PDF conversion (server-side LibreOffice)
+  // can take several seconds; without this the buttons look idle and teachers
+  // click repeatedly, firing a fresh conversion each time. Disabling + showing a
+  // progress label makes the wait visible and blocks duplicate requests.
+  const [downloading, setDownloading] = useState<null | 'docx' | 'pdf'>(null);
+  // Whether the server can produce a PDF (LibreOffice present). Until we know,
+  // assume unavailable so we never offer a format the backend can't deliver;
+  // the PDF menu item stays disabled with an install hint in that case.
+  const [pdfExportAvailable, setPdfExportAvailable] = useState(false);
+  // The Download menu (DOCX / PDF) open state. A single Download button opens
+  // this so format choice lives in the menu, not in button colors.
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  // The PDF "unavailable" hint bubble next to the disabled item. Shows on hover
+  // (desktop, via CSS) and toggles on tap (touch) through this flag.
+  const [pdfHintOpen, setPdfHintOpen] = useState(false);
+  const downloadMenuRef = useRef<HTMLDivElement>(null);
   const [reportAvailable, setReportAvailable] = useState(true);
   const [reportUnavailableReason, setReportUnavailableReason] = useState('');
   // After a report exists, changing fields/inputs marks the view dirty; the
@@ -90,8 +109,15 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
 
   // Load the field catalog once on mount (NOT gated on the panel being open),
   // so UI-triggered generation always has a ready default selection.
+  // Only load if the report feature is enabled.
   useEffect(() => {
     if (fieldGroups.length > 0) return;
+    // Don't poll if report feature is disabled
+    if (!featureGuard?.hasFeature('report')) {
+      setReportAvailable(false);
+      setReportUnavailableReason(disabledMsg);
+      return;
+    }
     getTemplateFields()
       .then(data => {
         setReportAvailable(true);
@@ -109,7 +135,7 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
         setFieldGroups([]);
         setSelected(new Set());
       });
-  }, []);
+  }, [featureGuard]);
 
   // Load an already-generated report's content when the panel opens, so the
   // markdown is shown inline (not only downloadable) without re-running anything.
@@ -117,6 +143,33 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
     if (!reportAvailable || !isOpen || !sessionId || reportStatus !== 'done' || reportText) return;
     getReport(sessionId).then(setReportText).catch(() => { /* no report yet */ });
   }, [reportAvailable, isOpen, sessionId, reportStatus]);
+
+  // Probe which download formats the server can produce, so the PDF menu item
+  // reflects LibreOffice availability up front. Runs once the report is ready
+  // (when the Download control appears) and the panel is open.
+  useEffect(() => {
+    if (!reportAvailable || !isOpen || reportStatus !== 'done') return;
+    getReportCapabilities()
+      .then(c => setPdfExportAvailable(!!c.pdf_export))
+      .catch(() => setPdfExportAvailable(false));
+  }, [reportAvailable, isOpen, reportStatus]);
+
+  // Close the Download menu on outside click or Escape.
+  useEffect(() => {
+    if (!downloadMenuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!downloadMenuRef.current?.contains(e.target as Node)) setDownloadMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDownloadMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [downloadMenuOpen]);
 
   // Auto-start report generation if requested
   useEffect(() => {
@@ -246,11 +299,15 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
       alert(reportUnavailableReason || disabledMsg);
       return;
     }
-    if (!sessionId) return;
+    if (!sessionId || downloading) return;
+    setDownloadMenuOpen(false);
+    setDownloading('docx');
     try {
       await downloadReport(sessionId);
     } catch (err: any) {
       alert(err.message || t('reportPanel.downloadDocxFailed', 'Download failed'));
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -259,11 +316,15 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
       alert(reportUnavailableReason || disabledMsg);
       return;
     }
-    if (!sessionId) return;
+    if (!sessionId || downloading) return;
+    setDownloadMenuOpen(false);
+    setDownloading('pdf');
     try {
       await downloadReportPdf(sessionId);
     } catch (err: any) {
       alert(err.message || t('reportPanel.downloadPdfFailed', 'PDF download failed'));
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -321,6 +382,10 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
   const canGenerate = reportAvailable && Boolean(sessionId) && pipelineSettled && (audioStatus === 'complete' || videoOnlyReady);
   const generating = reportStatus === 'generating';
   const hasContent = selected.size > 0;
+  const pdfHintText = t(
+    'reportPanel.pdfUnavailableTooltip',
+    "PDF export requires LibreOffice on the server. Install it and make sure 'soffice' is on the PATH, then reopen this panel (restart services if you changed PATH).",
+  );
 
   if (!isOpen) return null;
 
@@ -543,12 +608,73 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
               <div className="report-done-actions">
-                <button className="report-download-btn" onClick={handleDownload}>
-                  {t('reportPanel.downloadDocx', '📥 Download .docx')}
-                </button>
-                <button className="report-download-btn" onClick={handleDownloadPdf}>
-                  {t('reportPanel.downloadPdf', '📄 Download .pdf')}
-                </button>
+                {/* Single Download control with a format menu (DOCX / PDF), so
+                    color never has to carry format meaning. PDF is disabled with
+                    an install hint when LibreOffice is missing. */}
+                <div className="report-download" ref={downloadMenuRef}>
+                  <button
+                    type="button"
+                    className="report-download-btn"
+                    onClick={() => { setDownloadMenuOpen(o => !o); setPdfHintOpen(false); }}
+                    disabled={downloading !== null}
+                    aria-haspopup="menu"
+                    aria-expanded={downloadMenuOpen}
+                  >
+                    {downloading === 'docx'
+                      ? t('reportPanel.preparingDownload', '⏳ Preparing...')
+                      : downloading === 'pdf'
+                      ? t('reportPanel.convertingPdf', '⏳ Converting to PDF...')
+                      : <>📥 {t('reportPanel.download', 'Download')}<span className="report-download-caret">▾</span></>}
+                  </button>
+
+                  {downloadMenuOpen && downloading === null && (
+                    <div className="report-download-menu" role="menu">
+                      <button
+                        type="button"
+                        className="report-download-item"
+                        role="menuitem"
+                        onClick={handleDownload}
+                      >
+                        <span className="report-download-item-icon">📘</span>
+                        {t('reportPanel.downloadDocxItem', 'Word document (.docx)')}
+                      </button>
+                      <div className="report-download-item-row">
+                        <button
+                          type="button"
+                          className="report-download-item"
+                          role="menuitem"
+                          onClick={handleDownloadPdf}
+                          disabled={!pdfExportAvailable}
+                        >
+                          <span className="report-download-item-icon">📕</span>
+                          {t('reportPanel.downloadPdfItem', 'PDF document (.pdf)')}
+                        </button>
+                        {!pdfExportAvailable && (
+                          <span
+                            className="report-pdf-hint"
+                            onMouseLeave={() => setPdfHintOpen(false)}
+                          >
+                            <button
+                              type="button"
+                              className="report-pdf-hint-icon"
+                              aria-label={pdfHintText}
+                              aria-expanded={pdfHintOpen}
+                              onClick={e => { e.stopPropagation(); setPdfHintOpen(o => !o); }}
+                            >
+                              ⓘ
+                            </button>
+                            <span
+                              className={`report-pdf-hint-bubble ${pdfHintOpen ? 'open' : ''}`}
+                              role="tooltip"
+                            >
+                              {pdfHintText}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

@@ -1,11 +1,11 @@
 {
-  "name": "@openclaw/smartbuilding-alerts",
+  "name": "@openclaw/smart-community-alerts",
   "version": "0.1.0",
   "private": true,
-  "description": "Reference OpenClaw framework adapter for SmartBuilding MCP alerts",
+  "description": "Reference OpenClaw framework adapter for Smart Community MCP alerts",
   "type": "module",
   "dependencies": {
-    "@smartbuilding-video/framework-adapter-sdk": "file:../.."
+    "@smart-community-video/framework-adapter-sdk": "file:../.."
   },
   "devDependencies": {
     "@types/node": "^22.0.0"

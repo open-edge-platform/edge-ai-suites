@@ -1,0 +1,88 @@
+image:
+  dpi: 40
+  contrast_enhance: true
+  contrast_factor: 1.5
+  # page layout: 1 = single column, 2 = two columns (left/right)
+  page_columns: 1
+  # for page_columns=2: left column width fraction (0.5 = middle, 0.4 = left 40% / right 60%)
+  column_split_ratio: 0.55
+
+vlm:
+  max_tokens: 4096
+  temperature: 0.2
+  max_image_pixels: 2000000
+
+grading:
+  force_regrade: true
+  debug_mode: false
+
+watch:
+  poll_interval: 5
+  stable_checks: 2
+  idle_timeout: 100
+
+detection_service:
+  # Detection filtering and processing (consumed by _run_layout_detection)
+  target_labels: ["text", "display_formula", "table", "image",
+                  "title", "doc_title", "paragraph_title",
+                  "aside_text", "vertical_text",
+                  "formula_number"
+                 ]
+  min_score: 0.5
+  sort_boxes: true
+  expand_margin: 10
+  merge_overlapping: false
+  iou_threshold: 0.7
+section_split:
+  title_labels: ["paragraph_title", "title"]   # which detected labels to OCR
+  title_patterns:
+    zh:
+      - "^\\s*[一二三四五六七八九十]+\\s*[、.．]"        # 一、  二、  三.
+      # - "^\\s*[（(]\\s*[一二三四五六七八九十]+\\s*[）)]"  # （一） （二）
+    en:
+      - "^\\s*SECTION\\s+[IVXLCDM]+"                    # SECTION I / SECTION II
+  stitch_direction: "vertical"                  # how to join cross-page section pieces
+
+  compress_whitespace: true
+  gap_threshold: 120        # only gaps larger than this are compressed
+  keep_margin: 50           # margin left between content blocks after compression
+  content_pad: 20           # padding added above/below each content block
+  force_split: false
+  force_split_pairs: []
+
+  rubric_markers:
+    zh:
+      section: "^\\s*\\[章节\\]"
+      context: "^\\s*\\[场景\\]"
+      exam_info: "^\\s*\\[考试信息\\]"
+      output: "^\\s*\\[输出格式\\]"
+      ignore: "^\\s*\\[填写注意事项\\]"
+    en:
+      section: "^\\s*\\[SECTION\\]"
+      context: "^\\s*\\[CONTEXT\\]"
+      exam_info: "^\\s*\\[EXAM_INFO\\]"
+      output: "^\\s*\\[OUTPUT_FORMAT\\]"
+      ignore: "^\\s*\\[INSTRUCTIONS\\]"
+
+  prompt_slicing:
+    enabled: true
+    separator: "^\\s*={5,}\\s*$"   # rubric block separator lines
+    keep_first_block: true         # scenario/intro block
+    keep_last_block: true          # output-format block
+    # regex to pull the leading ordinal from a heading (section title & rubric
+    # block heading share this); group 1 is the ordinal used for matching.
+    ordinal_pattern:
+      zh: "^\\s*[（(]?\\s*([一二三四五六七八九十]+)"
+      en: "^\\s*(?:Part|Section|SECTION)?\\s*([IVXLCDM]+)\\b"
+
+  header_extract:
+    enabled: true
+    marker_pattern: "^\\s*(?:\\[考试信息\\]|\\[EXAM_INFO\\]|\\[HEADER\\]|【卷头信息】)"   # rubric block marker
+    # separator defaults to prompt_slicing.separator when omitted
+
+  header_aliases:
+    paper_title: ["paper_title", "title", "paper", "exam_title", "试卷标题", "标题"]
+    subject: ["subject", "科目", "学科"]
+    student_name: ["student_name", "name", "姓名"]
+    class_name: ["class_name", "class", "班级"]
+    exam_number: ["exam_number", "exam_id", "exam_no", "admission_number", "student_id", "准考证号", "考号"]

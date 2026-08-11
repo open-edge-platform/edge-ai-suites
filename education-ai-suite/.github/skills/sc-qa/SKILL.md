@@ -13,8 +13,31 @@ description: >
 # SC QA
 
 Ask a question against the indexed content using the Content Search RAG Q&A
-endpoint. **Agent: execute every command below directly using your terminal tool
-and relay the output.** Endpoints use the base URL `http://127.0.0.1:9011`.
+endpoint with VLM-powered answer generation. **Agent: execute every command below
+directly using your terminal tool and relay the output.** Endpoints use the base
+URL `http://127.0.0.1:9011`.
+
+**How it works:**
+1. Content Search retrieves relevant chunks from indexed files (vector similarity via ChromaDB)
+2. Chunks are sent to VLM service (port 8000) at `/v1/chat/completions`
+3. VLM (Qwen3-VL-8B-Instruct) generates a grounded answer from the retrieved context
+4. Response includes answer + cited sources (document name, type, relevance score)
+
+**Two-phase operation:**
+- **Phase 1 (vector retrieval)**: Always completes quickly (< 3 seconds)
+- **Phase 2 (VLM generation)**: Takes 30-90 seconds; may fail with 503 if VLM is not ready
+
+If VLM fails, the backend returns `code: 50003` with sources but no answer.
+
+**Performance:** VLM answer generation can take 30-90 seconds for complex questions.
+
+**Flutter Implementation:**
+- `receiveTimeout`: 10 minutes (allows for long VLM processing)
+- `maxHistoryTurns`: 3 (6 messages total: 3 user + 3 assistant)
+- History snapshot is taken **before** appending the current question to avoid
+  sending the in-flight message to the backend
+- `UiKeepAliveInterceptor` keeps UI responsive during long VLM operations
+- Errors are displayed as assistant messages with `isError: true`
 
 Set `$BASE = "http://127.0.0.1:9011"` for all snippets.
 
@@ -109,10 +132,14 @@ $r = Invoke-WebRequest -Uri "$BASE/api/v1/object/qa" `
 ($r.Content | ConvertFrom-Json).data.answer
 ```
 
-> **History ordering rule:** history must contain completed turns only (no
-> in-flight user message). The Flutter `QaNotifier` captures a snapshot of
-> `state.messages` *before* appending the current question to avoid sending
-> a mid-conversation state to the backend.
+> **History ordering rule:** History must contain completed turns only (no
+> in-flight user message). 
+>
+> **Flutter implementation detail:** The `QaNotifier._buildHistory()` method
+> takes a snapshot of `state.messages` **before** appending the current question.
+> This prevents sending a mid-conversation state to the backend. The snapshot
+> captures the last `maxHistoryTurns * 2` (6) messages, filters out error messages,
+> and converts them to `{role, content}` pairs.
 
 ---
 
@@ -160,16 +187,64 @@ $result.sources | ForEach-Object {
 
 ---
 
+## 5. Understanding Partial Success (Code 50003)
+
+When the Content Search backend returns `code: 50003` with sources but no answer,
+it means:
+
+1. ✅ **Vector retrieval succeeded** — relevant chunks were found in ChromaDB
+2. ❌ **VLM answer generation failed** — VLM endpoint returned 503 Service Unavailable
+
+**Example response:**
+```json
+{
+  "code": 50003,
+  "data": {
+    "sources": [
+      {"file_name": "doc.pdf", "score": 99.12, "type": "document"},
+      ...
+    ]
+  },
+  "message": "Server error '503 Service Unavailable' for url 'http://127.0.0.1:8000/v1/chat/completions'"
+}
+```
+
+**Why this happens:**
+- VLM model may still be loading (first 2-3 minutes after startup)
+- VLM service crashed or is overloaded
+- Main backend `/v1/chat/completions` endpoint is not responding
+
+**How to fix:**
+```powershell
+# Check if VLM is ready
+$health = (Invoke-WebRequest -Uri "http://127.0.0.1:8000/health" -UseBasicParsing).Content | ConvertFrom-Json
+$health.hub.text_gen.state  # Should be "ready"
+
+# If not ready or service crashed, restart main backend
+# Close the backend window and run:
+.\utils\flutter\start.ps1
+```
+
+**Flutter behavior:**
+- The Flutter app catches this error and displays it as an assistant message with `isError: true`
+- Sources are still shown to the user even though answer generation failed
+- User can retry the question once VLM is healthy
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Action |
 |---|---|---|
 | `answer` is empty | No relevant content found | Check that the right files are indexed; verify tags filter isn't too narrow |
 | `code: 40000` / 400 Bad Request | Missing or malformed `question` field | Ensure `question` is a non-empty string |
-| Very slow response (>30 s) | LLM generation is slow | Normal for large context; wait up to the `receiveTimeout` (10 min in the Flutter app) |
+| `code: 50003` + sources returned | VLM endpoint 503 error (retrieval OK, generation failed) | Check main backend logs at `smart-classroom/logs`; VLM may be loading or crashed; restart main backend |
+| Very slow response (>30 s) | VLM generation is slow | Normal for complex questions; wait up to 10 min (Flutter `receiveTimeout`) |
 | Sources are from wrong files | Tag filter not set | Pass `filter.tags` to scope retrieval |
 | History causes hallucination | Too many stale turns | Limit history to last 3 turns (matches `AppConfig.maxHistoryTurns`) |
-| 500 Internal Server Error | Backend LLM error | Check backend logs via `sc-doctor`; verify LLM endpoint config |
+| 500 Internal Server Error | VLM service error | Check main backend logs (port 8000); verify VLM is healthy |
+| 503 Service Unavailable from VLM | VLM `/v1/chat/completions` not responding | VLM model may not be loaded; check main backend health shows `text_gen: ready`; restart if needed |
+| Connection timeout | VLM not responding | Check main backend health; VLM may need restart |
 
 ---
 

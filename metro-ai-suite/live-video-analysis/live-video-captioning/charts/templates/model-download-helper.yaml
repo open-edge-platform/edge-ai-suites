@@ -66,7 +66,7 @@ data:
 
     download_model() {
         local MODEL_NAME=$1
-        local MODEL_TYPE=$2  # vlm | llm | vision(yolo)
+        local MODEL_TYPE=$2  # vlm | vision(yolo)
         local WEIGHT_FORMAT=$3  # ""=fp16, "int8", or "int4"
         local HF_TOKEN=${4:-""}  # default to empty
         local OUTPUT_NAME=${5:-""}
@@ -81,11 +81,9 @@ data:
         if [ "$MODEL_TYPE" = "vision" ]; then
             TARGET_ROOT="/opt/data/detection-models"
             DEVICE="CPU"
-        elif [ "$MODEL_TYPE" = "llm" ]; then
-            TARGET_ROOT="/opt/data/llm_models"
         fi
 
-        if [ "$MODEL_TYPE" = "vlm" ] || [ "$MODEL_TYPE" = "llm" ]; then
+        if [ "$MODEL_TYPE" = "vlm" ]; then
             case "$DEVICE" in
                 CPU|GPU|NPU) ;;
                 *)
@@ -103,15 +101,7 @@ data:
             OUTPUT_NAME="${OUTPUT_NAME%-instruct}"
         fi
 
-        if [ "$MODEL_TYPE" = "llm" ]; then
-            TARGET_SUBPATH="$OUTPUT_NAME"
-            case "$TARGET_SUBPATH" in
-                */*) ;;
-                *) TARGET_SUBPATH="${MODEL_PROVIDER}/${TARGET_SUBPATH}" ;;
-            esac
-        else
-            TARGET_SUBPATH="$OUTPUT_NAME"
-        fi
+        TARGET_SUBPATH="$OUTPUT_NAME"
 
         local TARGET_DIR="${TARGET_ROOT}/${TARGET_SUBPATH}"
 
@@ -132,11 +122,10 @@ data:
         fi
 
         case "$MODEL_TYPE" in
-            llm) MODEL_DOWNLOAD_STAGING_DIR="downloaded_llm_models" ;;
             vlm) MODEL_DOWNLOAD_STAGING_DIR="downloaded_vlm_models" ;;
             vision) MODEL_DOWNLOAD_STAGING_DIR="downloaded_vision_models" ;;
             *)
-                echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm, vision, or llm)."
+                echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm or vision)."
                 exit 1
                 ;;
         esac
@@ -221,7 +210,7 @@ data:
         echo "Downloading ${MODEL_TYPE} model '${MODEL_NAME}' via model-download service..."
 
                 # Build JSON payload based on model type
-                if [ "$MODEL_TYPE" = "vlm" ] || [ "$MODEL_TYPE" = "llm" ]; then
+                if [ "$MODEL_TYPE" = "vlm" ]; then
                         HUB="openvino"
                         PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s","is_ovms":true,"config":{"precision":"%s","device":"%s"}}],"parallel_downloads":false}' \
                             "$MODEL_NAME" "$HUB" "$MODEL_TYPE" "$WEIGHT_FORMAT" "$DEVICE")
@@ -230,7 +219,7 @@ data:
                         PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s"}],"parallel_downloads":false}' \
                             "$MODEL_NAME" "$HUB" "$MODEL_TYPE")
                 else
-                        echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm, vision, or llm)."
+                        echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm or vision)."
                         exit 1
                 fi
 
@@ -340,7 +329,7 @@ data:
                     cp -a "$source_path"/. "$TARGET_DIR"/
                 fi
             else
-                # VLM/LLM models: use resolve_content_dir to handle nested provider/model structure
+                # VLM models: use resolve_content_dir to handle nested provider/model structure
                 content_dir=$(resolve_content_dir "$source_path")
 
                 if [ ! -d "$content_dir" ]; then
@@ -349,7 +338,7 @@ data:
                 fi
 
                 cp -a "$content_dir"/. "$TARGET_DIR"/
-                echo "Copied VLM/LLM model files from $content_dir"
+                echo "Copied VLM model files from $content_dir"
             fi
 
             echo "Successfully copied model files for job $job_id"

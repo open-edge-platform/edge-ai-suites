@@ -114,7 +114,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0
+         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0-rc1
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -122,7 +122,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.3.0
+         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0-rc1
          ```
 
          <!--hide_directive
@@ -137,7 +137,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         tar -xvf pallet-defect-detection-reference-implementation-2.7.0.tgz
+         tar -xvf pallet-defect-detection-reference-implementation-2.8.0-rc1.tgz
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -145,7 +145,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         tar -xvf pcb-anomaly-detection-1.3.0.tgz
+         tar -xvf pcb-anomaly-detection-1.4.0-rc1.tgz
          ```
 
          <!--hide_directive
@@ -435,7 +435,7 @@ configured Kubernetes cluster.
 
 ### Start GPU- and NPU-Based Pipelines
 
-For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines.
+For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-evaluate-accelerate/use-gpu-for-inference.md#deployment-with-helm) from here, and start the respective pipelines.
 
 <!--hide_directive::::{tab-set} hide_directive-->
 <!--hide_directive:::{tab-item} hide_directive-->Pallet Defect Detection
@@ -708,7 +708,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pdds3"
+               "peer-id": "pdds3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -733,7 +737,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly_s3"
+               "peer-id": "anomaly_s3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -821,7 +829,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "pdd"
+                   "peer-id": "pdd",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -851,7 +863,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -963,7 +979,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "pdd"
+                   "peer-id": "pdd",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -993,7 +1013,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {

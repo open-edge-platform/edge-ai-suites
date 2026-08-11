@@ -234,7 +234,7 @@ services:
       start_period: 10s
 
   web:
-    image: intel/scenescape-manager:2026.1.0
+    image: intel/scenescape-manager:2026.2.0-rc1
     init: true
     networks:
       scenescape:
@@ -253,7 +253,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       - SUPASS=${SUPASS}
-      - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - EXAMPLEDB=/home/scenescape/Scenescape/smart-intersection-ri.tar.bz2
       - DBHOST=pgserver
       - DBPORT=5432
     command: >
@@ -277,8 +277,8 @@ services:
     volumes:
       - pgserver-media:/workspace/media
       - pgserver-migrations:/workspace/migrations
-      - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/home/scenescape/SceneScape/user_access_config.json
-      - ./${SAMPLE_APP}/src/webserver/smart-intersection-ri.tar.bz2:/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/home/scenescape/Scenescape/user_access_config.json
+      - ./${SAMPLE_APP}/src/webserver/smart-intersection-ri.tar.bz2:/home/scenescape/Scenescape/smart-intersection-ri.tar.bz2
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -292,7 +292,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:2026.1.0
+    image: intel/scenescape-controller:2026.2.0-rc1
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -311,7 +311,7 @@ services:
       scenescape:
     configs:
       - source: tracker-config
-        target: /home/scenescape/SceneScape/tracker-config.json
+        target: /home/scenescape/Scenescape/tracker-config.json
     depends_on:
       web:
         condition: service_healthy
@@ -325,7 +325,39 @@ services:
       --broker broker.scenescape.intel.com
       --ntp ntpserv
     volumes:
-      - pgserver-media:/home/scenescape/SceneScape/media
+      - pgserver-media:/home/scenescape/Scenescape/media
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - django
+      - controller.auth
+    restart: on-failure:5
+
+  analytics:
+    image: intel/scenescape-analytics:2026.2.0-rc1
+    init: true
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
+      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - HTTP_PROXY=${http_proxy}
+      - HTTPS_PROXY=${https_proxy}
+    networks:
+      scenescape:
+    depends_on:
+      web:
+        condition: service_healthy
+      broker:
+        condition: service_started
+      ntpserver:
+        condition: service_started
+    command: >
+      --restauth /run/secrets/controller.auth
+      --brokerauth /run/secrets/controller.auth
+      --broker broker.scenescape.intel.com
+    volumes:
+      - pgserver-media:/home/scenescape/Scenescape/media
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -340,7 +372,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - "./${SAMPLE_APP}/src/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./${SAMPLE_APP}/src/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro"
       - "./${SAMPLE_APP}/src/nginx/ssl:/etc/nginx/ssl:ro"
     networks:
       - scenescape
@@ -355,6 +387,9 @@ services:
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},${HOST_IP}
       - NO_PROXY=${no_proxy},${HOST_IP}
+      - NGINX_CLIENT_MAX_BODY_SIZE=${NGINX_CLIENT_MAX_BODY_SIZE}
+      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
     restart: on-failure:5
 
 networks:

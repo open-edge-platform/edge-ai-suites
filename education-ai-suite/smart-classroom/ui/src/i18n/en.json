@@ -72,7 +72,12 @@
       "boardCamera2": "Board Camera 2",
       "frontCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/front",
       "backCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/back",
-      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content"
+      "boardCameraPlaceholder": "rtsp://xxx.x.x.x:xxxx/content",
+      "enterAudioPath": "Enter audio path",
+      "enterFrontCameraPath": "Enter front camera path",
+      "enterBackCameraPath": "Enter rear camera path",
+      "enterBoardCameraPath": "Enter board camera path",
+      "selectFolder": "Select Folder"
     },
     "uploadFiles": {
     "title": "Upload Files",
@@ -84,17 +89,33 @@
     "audioFileLabel": "Audio File",
     "frontCameraFile": "Front Camera File",
     "backCameraFile": "Back Camera File",
-    "boardCameraFile": "Board Camera File"
+    "boardCameraFile": "Board Camera File",
+    "enterBaseDirectory": "Enter the base directory",
+    "selectAudioFile": "Select an audio file",
+    "selectFrontCameraFile": "Select a front camera file",
+    "selectBackCameraFile": "Select a back camera file",
+    "selectBoardCameraFile": "Select a board camera file",
+    "chooseFile": "Choose File"
   },
     "menu": {
       "settings": "Settings",
       "help": "Help",
-      "about": "About"
+      "about": "About",
+      "toggle": "Toggle menu",
+      "navigation": "Navigation",
+      "home": "Home",
+      "appMenu": "Application menu",
+      "aboutDescription": "Learn more about the Smart Classroom application.",
+      "helpDescription": "Here you can find help and support resources."
     },
     "tabs": {
       "transcripts": "Transcripts",
       "summary": "AI Summary",
       "mindmap":"Mind Map"
+    },
+
+    "transcript": {
+      "processingWholeFile": "Transcribing the whole recording in a single pass — the transcript appears once processing finishes. Please wait…"
     },
   
   "accordion": {
@@ -154,7 +175,9 @@
       "backCamera": "Back",
       "boardCamera": "Board",
       "allCameras": "All",
-      "noSessionActiveContentSearch": "No active session. Upload content to begin searching."
+      "noSessionActiveContentSearch": "No active session. Upload content to begin searching.",
+      "speakingTimeline": "Speaking Timeline",
+      "totalDuration": "Total Duration"
     },
     "monitoring": {
     "pausedTitle": "Resource Monitoring Paused",
@@ -168,6 +191,19 @@
       "failedToStopRecording": "Failed to stop recording",
       "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
+    },
+    "summary": {
+      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete."
+    },
+    "app": {
+      "checkingBackendTitle": "Checking backend status",
+      "checkingBackendMessage": "Please wait while we connect to the backend…",
+      "backendUnavailableTitle": "Backend Not Available",
+      "backendUnavailableMessage": "The backend server is currently unreachable. Please ensure it is running.",
+      "loadingConfigTitle": "Loading configuration",
+      "loadingConfigMessage": "Detecting enabled features from backend…",
+      "configErrorTitle": "Configuration Error",
+      "configErrorMessage": "Please check your backend configuration."
     },
     "videoStream": {
     "configureCameras": "Configure cameras in settings to enable video analytics",
@@ -192,7 +228,20 @@
     "videoAnalytics": "Video Analytics",
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
-    "noData": "No data available"
+    "noData": "No data available",
+    "live": "Live",
+    "waitingForData": "Waiting for data",
+    "playback": "Playback",
+    "finalResults": "Final results",
+    "students": "Students",
+    "stands": "Stands",
+    "hands": "Hands",
+    "participation": "{{percent}}% engaged",
+    "participationDetail": "{{active}} of {{total}} students participated",
+    "mostActive": "Most active students",
+    "showAll": "Show all {{count}} students",
+    "showTop": "Show top {{count}} students",
+    "errorLabel": "Error"
   },
   "search": {
     "preparingContent": "Content Generating...",
@@ -222,6 +271,146 @@
     "upload": "Upload",
     "backendUnreachable": "Unable to connect to the Content Search backend. Please ensure the service is running.",
     "servicesUnhealthy": "Some backend services are unavailable: {{services}}. Functionality may be limited."
+  },
+  "grading": {
+    "title": "Smart Grading",
+    "open": "Grading",
+    "back": "← Back",
+    "tabMain": "Grading",
+    "tabResults": "Results",
+    "resultsTitle": "Results",
+    "config": {
+      "title": "Grading Configuration",
+      "imageGroup": "Image Rendering",
+      "vlmGroup": "VLM Parameters",
+      "pacingGroup": "Grading Pace",
+      "detectionGroup": "Layout Detection",
+      "contrastFactor": "Contrast Factor",
+      "contrastEnhance": "Contrast Enhance",
+      "forceSplit": "Force Split",
+      "forceSplitPairs": "Split After Pages",
+      "forceSplitAdd": "+ Add page",
+      "maxTokens": "Max Tokens",
+      "maxImagePixels": "Max Image Pixels",
+      "sortBoxes": "Sort Boxes",
+      "mergeOverlapping": "Merge Overlapping",
+      "minScore": "Min Score",
+      "expandMargin": "Expand Margin (px)",
+      "iouThreshold": "IoU Threshold",
+      "invalidMinScore": "Min score must be between 0 and 1",
+      "invalidIou": "IoU threshold must be between 0 and 1",
+      "pageColumns": "Page Columns",
+      "dpi": "Render DPI",
+      "vlmModel": "VLM Model",
+      "ocrModel": "OCR Model",
+      "layoutModel": "Layout Model",
+      "vlmTemperature": "Temperature",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved. Takes effect on next task.",
+      "invalidDpi": "DPI must be a positive integer",
+      "invalidPageColumns": "Page columns must be 1 or 2",
+      "invalidColumnSplitRatio": "Column split ratio must be between 0 and 1",
+      "invalidForceSplitPairs": "Split pages must be positive integers.",
+      "invalidTemp": "Temperature must be between 0 and 2",
+      "pollInterval": "Poll Interval (s)",
+      "stableChecks": "Stable Checks",
+      "idleTimeout": "Idle Timeout (s)"
+    },
+    "editor": {
+      "title": "Edit Rubric",
+      "loading": "Loading…",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "close": "Close"
+    },
+    "form": {
+      "title": "New grading task",
+      "rubric": "Rubric",
+      "noRubric": "No rubric available",
+      "upload": "Upload",
+      "uploading": "Uploading...",
+      "paperPath": "Target directory",
+      "paperPathPlaceholder": "/abs/path/to/papers",
+      "browse": "Browse",
+      "edit": "Edit",
+      "editDisabledHint": "Select a rubric first",
+      "pathHint": "A path visible to the server, not a browser upload.",
+      "start": "Start",
+      "starting": "Starting...",
+      "needPaperPath": "Please enter the target directory or file path."
+    },
+    "list": {
+      "title": "Tasks",
+      "refresh": "Refresh",
+      "running": "Running",
+      "completed": "Completed",
+      "paused": "Paused",
+      "total": "Total",
+      "empty": "No tasks yet.",
+      "emptyFiltered": "No tasks in this status.",
+      "progressUnknown": "—/—"
+    },
+    "detail": {
+      "total": "Total",
+      "completed": "Completed",
+      "failed": "Failed",
+      "processing": "Processing",
+      "delete": "Delete",
+      "timing": "Processing time",
+      "timingStudent": "Student",
+      "timingSeconds": "Time (s)",
+      "timingTotal": "Total",
+      "pause": "Pause",
+      "resume": "Resume",
+      "viewResults": "View results →",
+      "rubric": "Rubric",
+      "elapsed": "Elapsed",
+      "log": "Live log",
+      "logExpand": "Expand full log",
+      "logLoading": "Loading...",
+      "logEmpty": "No log output yet."
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "pausing": "Pausing",
+      "paused": "Paused",
+      "cancelling": "Cancelling",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "picker": {
+      "title": "Select a directory",
+      "up": "↑ Up",
+      "roots": "Drives",
+      "loading": "Loading...",
+      "empty": "Empty directory.",
+      "cancel": "Cancel",
+      "select": "Select this directory"
+    },
+    "results": {
+      "back": "← Back to tasks",
+      "refresh": "Refresh",
+      "export": "Export CSV",
+      "tableTitle": "Grading Results",
+      "viewDetail": "View grading detail",
+      "detailTitle": "Grading Detail",
+      "detailLoading": "Loading…",
+      "taskId": "Task",
+      "papersDir": "Directory",
+      "count": "Students",
+      "updated": "Updated",
+      "name": "Student",
+      "total": "Total",
+      "objective": "Objective",
+      "subjective": "Subjective",
+      "maxScore": "Max",
+      "empty": "No graded papers yet.",
+      "noTask": "Open a task from the list to view its results."
+    }
   },
   "uploadSection":{
     "upload":"Upload",
@@ -353,6 +542,7 @@
     }
   },
   "reportPanel": {
+    "title": "View Report",
     "classReport": "Class Report",
     "noSessionActive": "No session active",
     "reportFields": "Report Fields",
@@ -385,8 +575,12 @@
     "reportGenerationFailed": "Report generation failed",
     "updatingFields": "Updating fields...",
     "reportReady": "Report ready",
-    "downloadDocx": "📥 Download .docx",
-    "downloadPdf": "📄 Download .pdf"
+    "download": "Download",
+    "downloadDocxItem": "Word document (.docx)",
+    "downloadPdfItem": "PDF document (.pdf)",
+    "pdfUnavailableTooltip": "PDF export requires LibreOffice on the server. Install it and make sure 'soffice' is on the PATH, then reopen this panel (restart services if you changed PATH).",
+    "preparingDownload": "⏳ Preparing...",
+    "convertingPdf": "⏳ Converting to PDF..."
   },
   "resultSection": {
     "title": "Results",
@@ -406,7 +600,14 @@
     "score": "Score",
     "summarization": "Summarization",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "minScore": "Min score",
+    "scoreFormat": "Format",
+    "page": "Page",
+    "previewUnavailable": "Preview not available",
+    "previewUnavailableType": "Preview not available for this file type.",
+    "download": "Download {{name}}",
+    "closePreview": "Close preview"
   }
 }
  

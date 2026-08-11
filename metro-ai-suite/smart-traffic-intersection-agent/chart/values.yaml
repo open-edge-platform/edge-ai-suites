@@ -146,4 +146,4 @@ metricsManager:
     metricsPort: 9090
 
   securityContext:
-    privileged: false
+    privileged: true
