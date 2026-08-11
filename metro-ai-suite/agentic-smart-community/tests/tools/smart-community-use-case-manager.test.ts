@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const skillDir = join(repoRoot, "skills", "smartbuilding-use-case-manager");
+const skillDir = join(repoRoot, "skills", "smart-community-use-case-manager");
 
 async function readSkillFile(relativePath: string): Promise<string> {
   return readFile(join(skillDir, relativePath), "utf-8");
@@ -20,7 +20,7 @@ function outputKeys(text: string): string[] {
 
 test("main Skill stays slim and links every conditional reference", async () => {
   const skill = await readSkillFile("SKILL.md");
-  assert.match(skill, /^---\n[\s\S]*?name: smartbuilding-use-case-manager[\s\S]*?\n---\n/);
+  assert.match(skill, /^---\n[\s\S]*?name: smart-community-use-case-manager[\s\S]*?\n---\n/);
   assert.ok(skill.split("\n").length <= 600, "SKILL.md should remain decision-oriented");
 
   for (const relativePath of [
@@ -46,7 +46,7 @@ test("mode matrix and two confirmation gates preserve workflow invariants", asyn
   assert.match(skill, /The initial request never answers Q1 or Q2/);
   assert.match(skill, /the only permitted tool call is reading this[\s\S]*?main `SKILL\.md` file itself/);
   assert.match(skill, /Do not read[\s\S]*?reference, other skill, config, existing artifact, workspace file, or[\s\S]*?memory/);
-  assert.match(skill, /Do not call memory, search, shell, MCP, `smartbuilding_\*`, or any[\s\S]*?other tool/);
+  assert.match(skill, /Do not call memory, search, shell, MCP, `smart_community_\*`, or any[\s\S]*?other tool/);
   assert.match(skill, /End the assistant turn immediately after the questions/);
   assert.match(skill, /Do not draft a[\s\S]*?call any tool, write memory/);
   assert.match(skill, /Unlock the remaining workflow only from a later user message/);

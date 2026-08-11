@@ -7,6 +7,7 @@ import platform,time
 import logging
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
+from utils.pipeline_modes import resolve_chunking
 from dto.audiosource import AudioSource
 
 logger = logging.getLogger(__name__)
@@ -195,8 +196,15 @@ def chunk_audiostream_by_silence(session_id: str):
                 logger.warning(f"Could not remove {record_file}: {e}")
         logger.info(f"🎧 Live recording stopped for session {session_id}.")
 
+def whole_file_passthrough(audio_path):
+    """Yield the whole recording as a single chunk, so downstream stages are unchanged."""
+    yield process_audio_segment(audio_path, 0.0, get_audio_duration(audio_path), 0)
+
 def chunk_by_silence(input, session_id: str):
+    chunking = resolve_chunking(input.source_type)
     if input.source_type == AudioSource.MICROPHONE:
         yield from chunk_audiostream_by_silence(session_id)
-    else:
+    elif chunking:
         yield from chunk_audio_by_silence(input.audio_filename)
+    else:
+        yield from whole_file_passthrough(input.audio_filename)

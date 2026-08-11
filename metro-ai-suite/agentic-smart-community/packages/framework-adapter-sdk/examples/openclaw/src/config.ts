@@ -23,7 +23,7 @@ export interface MonitorRoutes {
 export interface PluginConfig {
   mcpServer: { url: string; headers?: Record<string, string> };
   monitors: Record<string, MonitorRoutes>;
-  /** Optional persistent cursor file. Defaults to `<OPENCLAW_HOME>/smartbuilding-alerts-cursor.json`. */
+  /** Optional persistent cursor file. Defaults to `<OPENCLAW_HOME>/smart-community-alerts-cursor.json`. */
   cursorFile?: string;
   /** Optional safety-net poll interval (ms). Default 0 (disabled). */
   pollFallbackMs?: number;

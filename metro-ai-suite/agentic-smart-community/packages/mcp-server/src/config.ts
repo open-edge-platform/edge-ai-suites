@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import type { SchemaDefinition } from "@smartbuilding-video/db";
+import type { SchemaDefinition } from "@smart-community-video/db";
 
 export interface MonitorConfig {
   enabled?: boolean;
@@ -47,7 +47,7 @@ export interface UseCaseConfig {
   schema?: SchemaDefinition;
   /** Optional per-clip summarization tuning (see SummarizeConfig). */
   summarize?: SummarizeConfig;
-  /** Optional default report configuration consumed by smartbuilding_generate_report. */
+  /** Optional default report configuration consumed by smart_community_generate_report. */
   reports?: {
     data_source: "events" | "alerts" | "video_summary_tasks";
     default_type?: "daily" | "weekly" | "monthly";
@@ -60,14 +60,14 @@ export interface ServerConfig {
   /**
    * Absolute path to the config.yaml the server was booted from. Present when
    * `--config <path>` was passed on the command line. Consumed by tools that
-   * need to write back to the same file (e.g. `smartbuilding_use_case_register`
+   * need to write back to the same file (e.g. `smart_community_use_case_register`
    * with `persist: true`). Undefined when booted without --config.
    */
   configPath?: string;
 
-  // Derived from SMARTBUILDING_DATA_DIR — not settable in config.yaml
-  dataDir: string;        // root: ~/.mcp-smartbuilding (or $SMARTBUILDING_DATA_DIR)
-  dbPath: string;         // dataDir/smartbuilding.db
+  // Derived from SMART_COMMUNITY_DATA_DIR — not settable in config.yaml
+  dataDir: string;        // root: ~/.mcp-smart-community (or $SMART_COMMUNITY_DATA_DIR)
+  dbPath: string;         // dataDir/smart-community.db
   segmentsDir: string;    // dataDir/segments/<monitor_id>/  (latest.jpg, queries/)
   reportsLogsDir: string; // dataDir/logs/reports/  (SRT debug artifacts)
   monitorsLogsDir: string; // dataDir/logs/monitors/<monitor_id>/<YYYY-MM-DD>.log
@@ -138,9 +138,9 @@ export interface ServerConfig {
 }
 
 function resolveDataDir(): string {
-  const env = process.env.SMARTBUILDING_DATA_DIR;
+  const env = process.env.SMART_COMMUNITY_DATA_DIR;
   if (env) return resolve(env);
-  return join(homedir(), ".mcp-smartbuilding");
+  return join(homedir(), ".mcp-smart-community");
 }
 
 export function loadConfig(configPath?: string): ServerConfig {
@@ -160,7 +160,7 @@ export function loadConfig(configPath?: string): ServerConfig {
   return {
     configPath: configPath ? resolve(configPath) : undefined,
     dataDir,
-    dbPath: join(dataDir, "smartbuilding.db"),
+    dbPath: join(dataDir, "smart-community.db"),
     segmentsDir: join(dataDir, "segments"),
     reportsLogsDir: join(dataDir, "logs", "reports"),
     monitorsLogsDir: join(dataDir, "logs", "monitors"),

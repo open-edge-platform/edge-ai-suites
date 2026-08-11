@@ -3,8 +3,8 @@
 
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import { generateReport, type VideoSummaryClient } from "@smartbuilding-video/tools";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import { generateReport, type VideoSummaryClient } from "@smart-community-video/tools";
 import type { ServerConfig } from "../config.js";
 import { loadDashboardIntegrationConfig } from "./integration-env.js";
 import { LiveStreamManager } from "./live-stream.js";
@@ -42,7 +42,7 @@ function parseOrReply<T>(schema: z.ZodType<T>, value: unknown, res: Response): T
 }
 
 export function createDashboardRouter(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   summaryClient: VideoSummaryClient,
   liveStreams: LiveStreamManager,
