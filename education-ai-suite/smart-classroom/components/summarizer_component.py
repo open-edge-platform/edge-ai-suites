@@ -5,6 +5,7 @@ from utils.config_loader import config
 from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import StreamThinkFilter
+from utils.model_family import is_qwen3_dense
 from model_manager import ModelManager
 import logging, os
 import time
@@ -91,7 +92,7 @@ class SummarizerComponent(PipelineComponent):
             body = input_text
 
         user_content = body
-        if "qwen3" in str(self.model_name).lower() and not body.lstrip().startswith("/no_think"):
+        if is_qwen3_dense(self.model_name) and not body.lstrip().startswith("/no_think"):
             user_content = "/no_think\n" + body
 
         return [
@@ -131,7 +132,7 @@ class SummarizerComponent(PipelineComponent):
         think_filter = StreamThinkFilter()
 
         try:
-            streamer = self.summarizer.generate(prompt)
+            streamer = self.summarizer.generate(prompt, pre_templated=True)
             for token in streamer:
                 if first_token_time is None:
                     first_token_time = time.perf_counter()

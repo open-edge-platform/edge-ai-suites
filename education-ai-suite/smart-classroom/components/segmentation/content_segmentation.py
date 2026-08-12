@@ -238,9 +238,15 @@ class ContentSegmentationComponent(PipelineComponent):
         raise ValueError("INVALID_TOPICS_FORMAT")
 
     def _generate(self, prompt: str) -> str:
+        # ``prompt`` is already chat-templated by the caller, so
+        # pre_templated=True keeps the pipeline from templating it a second time
+        # (which re-enables thinking and triggers repetition loops).
         try:
             return self.model.generate(
-                prompt, stream=False, json_schema=_topics_json_schema()
+                prompt,
+                stream=False,
+                json_schema=_topics_json_schema(),
+                pre_templated=True,
             )
         except TypeError:
             logger.info("Backend does not accept json_schema; generating unconstrained.")
@@ -248,7 +254,7 @@ class ContentSegmentationComponent(PipelineComponent):
             logger.warning(
                 "Constrained generation failed (%s); retrying unconstrained.", exc
             )
-        return self.model.generate(prompt, stream=False)
+        return self.model.generate(prompt, stream=False, pre_templated=True)
 
     def generate_topics(self, transcript_text, language=None):
         try:

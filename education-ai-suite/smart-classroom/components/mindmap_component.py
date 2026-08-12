@@ -42,7 +42,12 @@ class MindmapComponent(PipelineComponent):
                 enable_thinking=False
             )
 
-            full_mindmap = self.model.generate(mindmap_prompt, stream=False)
+            full_mindmap = self.model.generate(
+                mindmap_prompt, stream=False, pre_templated=True
+            )
+            # Non-streaming output bypasses StreamThinkFilter, so strip any
+            # reasoning block here before the JSON is parsed downstream.
+            full_mindmap = strip_think_tokens(full_mindmap)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

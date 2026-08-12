@@ -83,6 +83,8 @@ models:
   text_gen:
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
+    # Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also supported; both are
+    # validated only on device: GPU with weight_format: int8.
     device: GPU # GPU or CPU
     weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
