@@ -585,11 +585,15 @@ export class SmartCommunityDB {
     return rowToRecording(row);
   }
 
-  listRecordings(monitorId: string, options: { since?: string; limit?: number } = {}): Recording[] {
+  listRecordings(
+    monitorId: string,
+    options: { since?: string; until?: string; limit?: number; order?: "asc" | "desc" } = {},
+  ): Recording[] {
     let sql = "SELECT * FROM recordings WHERE monitor_id = ?";
     const bindings: any[] = [monitorId];
     if (options.since) { sql += " AND start_time >= ?"; bindings.push(options.since); }
-    sql += " ORDER BY start_time DESC";
+    if (options.until) { sql += " AND start_time < ?"; bindings.push(options.until); }
+    sql += options.order === "asc" ? " ORDER BY start_time ASC" : " ORDER BY start_time DESC";
     if (options.limit) { sql += " LIMIT ?"; bindings.push(options.limit); }
     return (this.db.prepare(sql).all(...bindings) as any[]).map(rowToRecording);
   }

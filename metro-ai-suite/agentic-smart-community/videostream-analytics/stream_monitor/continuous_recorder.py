@@ -21,6 +21,7 @@ from typing import Any
 from shared.config import RecordingConfig, SourceConfig
 from sinks import EventSink
 from stream_monitor.base_monitor import BaseMonitor
+from stream_monitor.h264_writer import H264SegmentWriter
 
 logger = logging.getLogger(__name__)
 
@@ -175,8 +176,8 @@ class ContinuousRecorder(BaseMonitor):
 
         self._cleanup_old_segments()
 
-    def _start_segment(self, fps: float, w: int, h: int) -> tuple[str, cv2.VideoWriter | None]:
-        """Create a new segment file and VideoWriter."""
+    def _start_segment(self, fps: float, w: int, h: int) -> tuple[str, H264SegmentWriter | None]:
+        """Create a new segment file and writer."""
         now = datetime.now()
         date_dir = os.path.join(self._output_dir, now.strftime("%Y-%m-%d"))
         os.makedirs(date_dir, exist_ok=True)
@@ -184,8 +185,9 @@ class ContinuousRecorder(BaseMonitor):
         filename = f"{self.source_id}_{now.strftime('%H%M%S')}.mp4"
         path = os.path.join(date_dir, filename)
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(path, fourcc, fps, (w, h))
+        # H.264, not cv2.VideoWriter's mp4v — the dashboard replays these in a
+        # browser, and no browser decodes MPEG-4 Part 2.
+        writer = H264SegmentWriter(path, fps, w, h)
         if not writer.isOpened():
             logger.error("[%s] Cannot create writer: %s", self.source_id, path)
             return path, None
