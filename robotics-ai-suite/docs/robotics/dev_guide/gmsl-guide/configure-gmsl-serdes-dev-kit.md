@@ -61,7 +61,6 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    | UEFI Custom Sensor  | Camera 1           | Camera 2           |
    | ------------------- | ------------------ | ------------------ |
-   | GMSL Camera suffix   | a                  | e                  |
    | Custom HID          | `INTC031M`         | `INTC031M`         |
    | Position            | Back               |  Front             |
    | Rotation            | 0                  | 0                  |

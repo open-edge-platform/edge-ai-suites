@@ -171,9 +171,9 @@
   <rect x="695" y="135" width="160" height="160" rx="14" fill="url(#gmsl)" stroke="#062f6b" stroke-width="3"/>
   <rect x="695" y="135" width="160" height="26" rx="14" fill="url(#gmslBevel)"/>
   <circle cx="742" cy="188" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
-  <text x="742" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">180°</text>
+  <text x="742" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">90°</text>
   <circle cx="808" cy="188" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
-  <text x="808" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">90°</text>
+  <text x="808" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">180°</text>
   <circle cx="742" cy="254" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
   <text x="742" y="260" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">270°</text>
   <circle cx="808" cy="254" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
@@ -183,7 +183,7 @@
   <g font-size="13" fill="#12233a">
     <rect x="640" y="330" width="230" height="66" rx="8" fill="#eef2f7" stroke="#c7ced7"/>
     <text x="656" y="352" font-weight="700" fill="#0f5cbe">Rotation layout</text>
-    <text x="656" y="372">Top-left = 180°   •   Top-right = 90°</text>
+    <text x="656" y="372">Top-left = 90°   •   Top-right = 180°</text>
     <text x="656" y="388">Bottom-left = 270°  •  Bottom-right = 0°</text>
   </g>
 </svg>
