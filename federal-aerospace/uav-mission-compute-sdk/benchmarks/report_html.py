@@ -7,10 +7,9 @@ HTML report generator for the MAVLink→MQTT benchmark.
 Layout (top-down):
   1. Header cards — run metadata, host system specs, deployment-component
      health (broker, bridge, container states).
-  2. Three focused plots — one per benchmark mode:
+  2. Two focused plots — one per benchmark mode:
        a) Client scaling  — per-client mean rate vs. number of subscribers
        b) Bridge sweep    — observed Hz per topic vs. requested cap
-       c) MQTT sweep      — effective broker throughput vs. requested cap
   3. Raw data tables under each plot.
 
 Chart.js is loaded from a CDN; open the resulting file with network access.
@@ -41,7 +40,6 @@ def write_html_report(
     health: dict[str, Any] | None = None,
     client_scaling: dict[str, Any] | None = None,
     bridge: dict[str, Any] | None = None,
-    broker: dict[str, Any] | None = None,
 ) -> None:
     """Write a self-contained HTML report to *path*.
 
@@ -52,8 +50,6 @@ def write_html_report(
         sections.append(_render_client_scaling(client_scaling))
     if bridge:
         sections.append(_render_bridge(bridge))
-    if broker:
-        sections.append(_render_broker(broker))
     body = "\n".join(sections) if sections else (
         '<section><p><em>No benchmark modes produced results.</em></p></section>'
     )
@@ -214,7 +210,7 @@ def _render_client_scaling(cs: dict) -> str:
         f'<h2>Client scaling</h2>'
         f'<p>Passive observation at escalating subscriber counts · '
         f'duration per tier: <code>{cs.get("duration_s", 0):.1f}s</code></p>'
-        f'{chart_html}{table}'
+        f'{chart_html}{table}{_render_resource_utilization(cs, chart_prefix="client-scaling", x_label="Subscribers (N)", x_field="n_clients")}'
         f'</section>'
     )
 
@@ -340,73 +336,130 @@ def _render_bridge(b: dict) -> str:
         f'<p>Recreates <code>companion-bridge</code> at each cap tier · '
         f'duration per tier: <code>{b.get("duration_s", 0):.1f}s</code> · '
         f'latency = recv − reader_ts_ns (full path)</p>'
-        f'{chart_html}{table}'
+        f'{chart_html}{table}{_render_resource_utilization(b, chart_prefix="bridge", x_label="Cap (Hz)", x_field="hz")}'
         f'</section>'
     )
 
 
-def _render_broker(b: dict) -> str:
-    tiers = b.get("tiers", [])
+def _render_resource_utilization(section: dict, *, chart_prefix: str, x_label: str, x_field: str) -> str:
+    tiers = section.get("tiers", [])
     if not tiers:
         return ""
 
-    records = [{
-        "hz":        t["hz"],
-        "eff_rate":  round(t.get("eff_rate", 0.0), 2),
-        "drop_pct":  round(t.get("drop_pct", 0.0), 2),
-        "avg_lat":   _ms(t.get("avg_lat")),
-        "p99_lat":   _ms(t.get("p99_lat")),
-        "jitter":    _ms(t.get("jitter")),
-    } for t in tiers]
+    containers = []
+    for tier in tiers:
+        for name in (tier.get("resources") or {}):
+            if name.startswith("_") or name in containers:
+                continue
+            containers.append(name)
+    if not containers:
+        return ""
 
+    x_values = [tier.get(x_field) for tier in tiers]
     metrics = {
-        "eff_rate": {"label": "Effective rate", "unit": "Hz",
-                     "show_yeqx": True, "yeqx_field": "hz"},
-        "drop_pct": {"label": "Drop %",         "unit": "%"},
-        "avg_lat":  {"label": "Avg latency",    "unit": "ms"},
-        "p99_lat":  {"label": "P99 latency",    "unit": "ms"},
-        "jitter":   {"label": "Jitter",         "unit": "ms"},
+        "avg_cpu_pct": {
+            "label": "CPU average",
+            "unit": "CPU %",
+            "series": {
+                name: [_num((tier.get("resources") or {}).get(name, {}).get("avg_cpu_pct"))
+                       for tier in tiers]
+                for name in containers
+            },
+        },
+        "avg_mem_mib": {
+            "label": "Memory average",
+            "unit": "Mem (MiB)",
+            "series": {
+                name: [_num((tier.get("resources") or {}).get(name, {}).get("avg_mem_mib"))
+                       for tier in tiers]
+                for name in containers
+            },
+        },
     }
 
-    chart_html = _switchable_chart(
-        chart_id="chart-broker",
-        title="Metric vs. requested rate",
-        x_label="Requested (Hz)",
-        x_field="hz",
-        records=records,
-        metrics=metrics,
-        default_metric="eff_rate",
-    )
+    rows = []
+    for tier in tiers:
+        x_value = tier.get(x_field)
+        row = [f"<tr><td>{html.escape(str(x_value))}</td>"]
+        for name in containers:
+            summary = (tier.get("resources") or {}).get(name, {})
+            row.append(f"<td>{_fmt(summary.get('avg_cpu_pct'))}</td>")
+            row.append(f"<td>{_fmt(summary.get('avg_mem_mib'))}</td>")
+        row.append("</tr>")
+        rows.append("".join(row))
 
-    rows = "".join(
-        f"<tr><td>{t['hz']:.0f}</td>"
-        f"<td>{t['published']}</td>"
-        f"<td>{t['received']}</td>"
-        f"<td>{t['drop_pct']:.2f}</td>"
-        f"<td>{t['eff_rate']:.2f}</td>"
-        f"<td>{_fmt(t.get('avg_lat'))}</td>"
-        f"<td>{_fmt(t.get('p99_lat'))}</td></tr>"
-        for t in tiers
+    header_groups = "".join(
+        f'<th colspan="2">{html.escape(name)}</th>'
+        for name in containers
     )
-    table = (
-        '<table class="tbl"><thead><tr>'
-        '<th>Cap (Hz)</th><th>Published</th><th>Received</th><th>Drop (%)</th>'
-        '<th>Eff (Hz)</th><th>Avg lat (ms)</th><th>P99 lat (ms)</th>'
-        '</tr></thead><tbody>' + rows + '</tbody></table>'
+    header_metrics = "".join(
+        '<th>CPU %</th><th>Mem (MiB)</th>'
+        for _name in containers
     )
 
     return (
-        f'<section id="broker">'
-        f'<h2>MQTT broker sweep</h2>'
-        f'<p>Synthetic publisher at escalating Hz (broker only) · '
-        f'duration per tier: <code>{b.get("duration_s", 0):.1f}s</code></p>'
-        f'{chart_html}{table}'
-        f'</section>'
+        '<div class="resource-block">'
+        '<h3>Container resource utilization</h3>'
+        '<p>Average CPU and average memory usage captured from Docker stats over each measurement window.</p>'
+        f'{_resource_metric_chart(chart_id=f"{chart_prefix}-resources", title="Container utilization", x_values=x_values, x_label=x_label, metrics=metrics)}'
+        '<table class="tbl resource-tbl"><thead>'
+        f'<tr><th rowspan="2">{html.escape(x_label)}</th>{header_groups}</tr>'
+        f'<tr>{header_metrics}</tr>'
+        '</thead><tbody>' + "".join(rows) + '</tbody></table>'
+        '</div>'
+    )
+
+
+def _resource_metric_chart(
+    *,
+    chart_id: str,
+    title: str,
+    x_values: list,
+    x_label: str,
+    metrics: dict[str, dict],
+) -> str:
+    data_js = json.dumps({
+        "x": x_values,
+        "metrics": metrics,
+        "palette": [{"border": b, "bg": g} for b, g in _PALETTE],
+        "x_label": x_label,
+    }, default=_json_default)
+    select_options = "".join(
+        f'<option value="{html.escape(key)}">'
+        f'{html.escape(spec["label"])} ({html.escape(spec["unit"])})</option>'
+        for key, spec in metrics.items()
+    )
+    return (
+        f'<div class="chart-box">'
+        f'<div class="chart-head">'
+        f'<h4>{html.escape(title)}</h4>'
+        f'<label for="{chart_id}-metric">Metric:</label> '
+        f'<select id="{chart_id}-metric">{select_options}</select>'
+        f'</div>'
+        f'<div class="canvas-wrap"><canvas id="{chart_id}"></canvas></div>'
+        f'<script>(function(){{'
+        f'const D = {data_js};'
+        f'const el = document.getElementById("{chart_id}");'
+        f'const sel = document.getElementById("{chart_id}-metric");'
+        f'function build(metric) {{'
+        f'  const spec = D.metrics[metric];'
+        f'  const datasets = Object.entries(spec.series).map(([label, data], i) => {{'
+        f'    const p = D.palette[i % D.palette.length];'
+        f'    return {{label, data, borderColor: p.border, backgroundColor: p.bg, fill: false, tension: 0.15, spanGaps: true}};'
+        f'  }});'
+        f'  return {{type: "line", data: {{labels: D.x, datasets}}, options: {{responsive: true, maintainAspectRatio: false, plugins: {{legend: {{position: "bottom", labels: {{boxWidth: 12}}}}}}, scales: {{x: {{title: {{display: true, text: D.x_label}}}}, y: {{beginAtZero: true, title: {{display: true, text: spec.unit}}}}}} }} }};'
+        f'}}'
+        f'let chart = new Chart(el, build(sel.value));'
+        f'sel.addEventListener("change", () => {{'
+        f'  chart.destroy(); chart = new Chart(el, build(sel.value));'
+        f'}});'
+        f'}})();</script>'
+        f'</div>'
     )
 
 
 # --------------------------------------------------------------------------
-# Single-series switchable chart (used by client scaling & broker sweep)
+# Single-series switchable chart (used by client scaling)
 # --------------------------------------------------------------------------
 
 def _switchable_chart(
@@ -585,6 +638,19 @@ section {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 2rem;
 }
 section > p { color: var(--muted); font-size: 0.9rem; margin: 0 0 1rem; }
+.resource-block { margin-top: 1.5rem; }
+.resource-block h3 { margin-top: 1.25rem; }
+.resource-tbl thead tr:first-child th {
+    text-align: center;
+    vertical-align: middle;
+}
+.resource-tbl thead tr:first-child th:first-child {
+    text-align: left;
+}
+.resource-tbl thead tr:last-child th {
+    text-align: right;
+    vertical-align: middle;
+}
 
 .chart-box {
   background: rgba(127, 127, 127, 0.04); border-radius: 6px;

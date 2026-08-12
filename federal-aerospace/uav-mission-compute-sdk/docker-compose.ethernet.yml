@@ -25,8 +25,10 @@ services:
   # ── Override companion-bridge for ethernet ─────────────────────────────────
   # Uses host networking so it can reach the remote FC over the physical NIC.
   # PX4_ADDRESS switches from udpin (listen) to udpout (connect to remote).
+  # profiles: [] clears the sim/usb-camera profile restriction from the base file.
   # depends_on overridden: px4 is excluded in ethernet mode.
   companion-bridge:
+    profiles: []
     network_mode: host
     environment:
       - PX4_ADDRESS=udpout://${FC_IP:?FC_IP must be set — IP of FC machine running mavlink-router}:14541

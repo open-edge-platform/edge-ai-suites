@@ -52,7 +52,7 @@ Expected: Second counts > first counts
 ```bash
 docker exec edge-ai-showcase python3 -c "
 import urllib.request, json
-resp = urllib.request.urlopen('http://px4-gazebo:8080/health', timeout=5)
+resp = urllib.request.urlopen('http://px4-gazebo:8080/health', timeout=5)  # px4-sitl:8080 in usb-camera mode
 print(json.loads(resp.read()))
 "
 ```
@@ -77,7 +77,7 @@ make apps
 |---------|-----|
 | No camera feeds | Check vision-processor: `docker logs vision-processor-multicam --tail 20` |
 | "Connection refused" on mission | Companion bridge needs restart: `docker compose restart companion-bridge` |
-| "Failed to resolve 'px4-gazebo'" | Wrong hostname in env. Must be `px4-gazebo` |
+| "Failed to resolve 'px4-gazebo'" | Wrong hostname. Use `px4-gazebo` (sim) or `px4-sitl` (usb) — set via `COMPANION_BRIDGE_URL` in `.env` |
 | App can't connect to MQTT | Check it's on `uav-mission-compute-sdk_default` network |
 | Processed feed not showing | Check `vision-processor-multicam` is running |
 | Only one camera visible in sim mode | Set `.env` `VISION_CAMERA_IDS=nadir,forward,rear`, then restart apps |
