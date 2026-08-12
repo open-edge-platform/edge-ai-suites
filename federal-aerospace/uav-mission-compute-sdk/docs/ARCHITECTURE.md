@@ -143,7 +143,7 @@ sequenceDiagram
    - Only detections published to MQTT (not raw frames)
 3. **AI Processing**: vision-processor (YOLOv2-tiny on GPU, RTSP input) → detections JSON → MQTT; annotated video (with bboxes) → MediaMTX `/uav-1/{cam}/processed`
 4. **Commands**: Applications/missions → REST API :8080 → companion-bridge → PX4 Autopilot (MAVLink)
-5. **Observability**: MQTT telemetry → topic-extractor → InfluxDB; host platform metrics → metrics-manager (Telegraf) → InfluxDB; InfluxDB → Grafana dashboards. metrics-manager also exposes a Prometheus endpoint at `:9273` (not scraped by this stack — available for external Prometheus integration)
+5. **Observability**: MQTT telemetry → topic-extractor → InfluxDB; host platform metrics → metrics-manager (Telegraf) → InfluxDB; InfluxDB → Grafana dashboards. metrics-manager exposes a Prometheus endpoint at `:9273` (container-internal only — not host-published)
 
 **Camera Mode Selection via Docker Compose Profiles**:
 - Sim mode: `docker compose --profile sim-camera up` (camera-bridge runs, usb-camera-bridge skipped)
@@ -211,7 +211,7 @@ v4l2-ctl --list-devices
 ```
 
 ### MediaMTX (RTSP Server)
-- **Port**: 8554 (RTSP), 8888 (HLS), 8889 (WebRTC), 9997 (API), 9998 (Metrics)
+- **Port**: 8554 (RTSP), 8888 (HLS), 8889 (WebRTC) — host-published; 9997 (API), 9998 (Metrics) — container-internal only
 - **Paths** (Sim mode, 3 cameras):
   - `rtsp://mediamtx:8554/uav-1/nadir` (raw, from camera-bridge)
   - `rtsp://mediamtx:8554/uav-1/forward` (raw, from camera-bridge)
@@ -332,8 +332,8 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 - **GPU**: all 5 Intel GPU engines (`rcs`, `ccs`, `vcs`, `bcs`, `vecs`) + frequency via qmassa/`inputs.execd`
 - **NPU**: `power`, `frequency`, `temperature`, `bandwidth`, `memory_mb`, `utilization` via Intel PMT sysfs/`inputs.execd`
 - **Disk/Network**: I/O rates via `inputs.diskio` and `inputs.net`
-- Dual output: `[[outputs.influxdb_v2]]` → InfluxDB bucket `telemetry`; `[[outputs.prometheus_client]]` → Prometheus `:9273`
-- FastAPI REST at `:9090`: `/health`, `/api/v1/metrics`, `/metrics/stream` (SSE)
+- Dual output: `[[outputs.influxdb_v2]]` → InfluxDB bucket `telemetry`; `[[outputs.prometheus_client]]` → Prometheus `:9273` (container-internal)
+- FastAPI REST at `:9090` (container-internal): `/health`, `/api/v1/metrics`, `/metrics/stream` (SSE)
 - Requires `--device /dev/dri` (GPU) and `--privileged` (NPU PMT sysfs)
 
 **MQTT for Detections**: Structured JSON data better suited for pub/sub than video

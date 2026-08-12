@@ -7,6 +7,17 @@
 logLevel: info
 logDestinations: [stdout]
 
+# allow unauthenticated access from within the Docker network
+authInternalUsers:
+  - user: any
+    ips: []
+    permissions:
+      - action: read
+      - action: publish
+      - action: api
+      - action: metrics
+      - action: pprof
+
 api: yes
 apiAddress: :9997
 
