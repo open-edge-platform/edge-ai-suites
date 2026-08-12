@@ -189,6 +189,7 @@ configured Kubernetes cluster.
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
+       no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
        SAMPLE_APP: pallet-defect-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
@@ -206,6 +207,7 @@ configured Kubernetes cluster.
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
+       no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
        SAMPLE_APP: pcb-anomaly-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
