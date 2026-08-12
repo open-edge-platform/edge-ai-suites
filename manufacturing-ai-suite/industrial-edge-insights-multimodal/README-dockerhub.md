@@ -10,9 +10,27 @@ Similarly, it ingests the .csv files as data points into **Telegraf** using the 
 
 The **Fusion Analytics** module in the `Multimodal weld defect detection` sample app subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
 
+## Insights Workbench
+
+The **Insights Workbench** module in the `Multimodal weld defect detection` sample app is a small Flask web app that powers the dashboard. It reads fused inspection results and related sensor/vision data from InfluxDB, shows them in a paginated UI, and can call a vLLM backend to generate an AI explanation from selected timestamps
+
+## Multimodal Agentic UI
+
+The **Multimodal Agentic UI** module in the `Multimodal weld defect detection` sample app is the FastAPI web frontend for the manufacturing `Agentic Weld Quality Analysis`` demo. It serves the main dashboard, a detections view, and a results page.
+
 # Supported versions
 
 > **Note**: The tags suffixed with `-weekly` and `-rcX` are developmental builds, may not be stable.
+
+### [2026.2.0](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/release-notes.html#version-2026-2)
+
+#### Deploy using Docker Compose
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started.html).
+
+#### Deploy on Kubernetes cluster using Helm Charts
+
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/get-started/deploy-with-helm.html).
 
 ### [2026.1.0](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-multimodal/release-notes.html#version-2026-1)
 
