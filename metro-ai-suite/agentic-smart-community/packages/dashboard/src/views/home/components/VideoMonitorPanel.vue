@@ -170,6 +170,10 @@ const route = useRoute();
 const MAX_STREAM_QUEUE_BYTES = 8 * 1024 * 1024;
 const MAX_STREAM_BUFFER_SECONDS = 30;
 const RETAIN_STREAM_BUFFER_SECONDS = 20;
+const LIVE_EDGE_TOLERANCE_SECONDS = 3;
+const LIVE_WATCHDOG_INTERVAL_MS = 1000;
+const LIVE_RECONNECT_MIN_DELAY_MS = 1000;
+const LIVE_RECONNECT_MAX_DELAY_MS = 15000;
 
 const mainControlButtons = [
   "speedRate",
@@ -258,6 +262,8 @@ let liveClockTimer: number | null = null;
 let latestActivityRequestId = 0;
 let latestReportRequestId = 0;
 let cleanupLiveStream: (() => void) | null = null;
+let liveReconnectTimer: number | null = null;
+let liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
 
 const buildRecordStatus = (status: string) => {
   if (!status) {
@@ -456,6 +462,11 @@ const refreshDashboardData = () => {
 };
 
 const stopLiveStreamPlayback = () => {
+  if (liveReconnectTimer !== null) {
+    window.clearTimeout(liveReconnectTimer);
+    liveReconnectTimer = null;
+  }
+
   cleanupLiveStream?.();
   cleanupLiveStream = null;
 
@@ -467,6 +478,27 @@ const stopLiveStreamPlayback = () => {
   try {
     video.pause();
   } catch {}
+};
+
+// The upstream ffmpeg session can end at any time (idle kill, transcoder
+// restart, server-side backpressure disconnect). Retry with backoff instead of
+// leaving the element frozen on its last decoded frame.
+const scheduleLiveStreamReconnect = () => {
+  if (
+    liveReconnectTimer !== null ||
+    document.hidden ||
+    !isLiveMode.value ||
+    !activeRecord.value.videoSrc
+  ) {
+    return;
+  }
+
+  const delay = liveReconnectDelay;
+  liveReconnectDelay = Math.min(delay * 2, LIVE_RECONNECT_MAX_DELAY_MS);
+  liveReconnectTimer = window.setTimeout(() => {
+    liveReconnectTimer = null;
+    void startLiveStreamPlayback();
+  }, delay);
 };
 
 const startLiveStreamPlayback = async () => {
@@ -492,6 +524,63 @@ const startLiveStreamPlayback = async () => {
   let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   let disposed = false;
   let playbackStarted = false;
+  let watchdogTimer: number | null = null;
+  let userPaused = false;
+
+  const seekToLiveEdge = (resume = true) => {
+    if (!sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+
+    const start = sourceBuffer.buffered.start(0);
+    const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+    video.currentTime = Math.max(start, end - 0.1);
+
+    if (resume) {
+      void video.play().catch((error) => {
+        console.error("[live] autoplay failed:", error);
+      });
+    }
+  };
+
+  // Without this the element stays frozen forever once the playhead falls out
+  // of the buffered range — nothing else ever moves it back to the live edge.
+  const watchLiveEdge = () => {
+    if (userPaused || !sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+
+    const start = sourceBuffer.buffered.start(0);
+    const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+    const current = video.currentTime;
+
+    if (current < start || end - current > LIVE_EDGE_TOLERANCE_SECONDS) {
+      seekToLiveEdge();
+      return;
+    }
+
+    if (video.paused) {
+      void video.play().catch(() => undefined);
+    }
+  };
+
+  // A pause event can only come from the viewer here — a stalled element stays
+  // `paused === false`. Honour it, and rejoin the live edge on resume.
+  const handlePause = () => {
+    if (!disposed) {
+      userPaused = true;
+    }
+  };
+
+  const handlePlay = () => {
+    userPaused = false;
+    if (!sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+    if (video.currentTime < sourceBuffer.buffered.start(0)) {
+      seekToLiveEdge(false);
+    }
+  };
 
   const pumpQueue = () => {
     if (!sourceBuffer || sourceBuffer.updating || disposed) {
@@ -501,8 +590,14 @@ const startLiveStreamPlayback = async () => {
     if (sourceBuffer.buffered.length) {
       const start = sourceBuffer.buffered.start(0);
       const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
-      if (end - start > MAX_STREAM_BUFFER_SECONDS) {
-        sourceBuffer.remove(start, end - RETAIN_STREAM_BUFFER_SECONDS);
+      // Never evict past the playhead: dropping the range that holds
+      // currentTime strands playback outside the buffered region. While the
+      // viewer has deliberately paused, let it slide — resuming rejoins live.
+      const evictEnd = userPaused
+        ? end - RETAIN_STREAM_BUFFER_SECONDS
+        : Math.min(end - RETAIN_STREAM_BUFFER_SECONDS, video.currentTime - 1);
+      if (end - start > MAX_STREAM_BUFFER_SECONDS && evictEnd > start) {
+        sourceBuffer.remove(start, evictEnd);
         return;
       }
     }
@@ -523,15 +618,20 @@ const startLiveStreamPlayback = async () => {
 
     if (!playbackStarted && sourceBuffer.buffered.length) {
       playbackStarted = true;
-      const liveEdge = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
-      video.currentTime = Math.max(sourceBuffer.buffered.start(0), liveEdge - 0.1);
-      void video.play().catch((error) => {
-        playbackStarted = false;
-        console.error("[live] autoplay failed:", error);
-      });
+      seekToLiveEdge();
     }
 
     pumpQueue();
+  };
+
+  const handleVideoError = () => {
+    if (disposed) {
+      return;
+    }
+
+    console.error("[live] media element error:", video.error?.message);
+    dispose();
+    scheduleLiveStreamReconnect();
   };
 
   const dispose = () => {
@@ -544,6 +644,13 @@ const startLiveStreamPlayback = async () => {
     void reader?.cancel().catch(() => undefined);
     mediaSource.removeEventListener("sourceopen", handleSourceOpen);
     sourceBuffer?.removeEventListener("updateend", handleUpdateEnd);
+    video.removeEventListener("error", handleVideoError);
+    video.removeEventListener("pause", handlePause);
+    video.removeEventListener("play", handlePlay);
+    if (watchdogTimer !== null) {
+      window.clearInterval(watchdogTimer);
+      watchdogTimer = null;
+    }
     appendQueue.length = 0;
     queuedBytes = 0;
 
@@ -578,6 +685,7 @@ const startLiveStreamPlayback = async () => {
         throw new Error(`Live stream returned HTTP ${response.status}`);
       }
 
+      liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
       reader = response.body.getReader();
       while (!disposed) {
         const { done, value } = await reader.read();
@@ -593,6 +701,12 @@ const startLiveStreamPlayback = async () => {
         queuedBytes += chunk.byteLength;
         pumpQueue();
       }
+
+      // Upstream closed the response — the transcoder died or was idle-killed.
+      if (!disposed) {
+        dispose();
+        scheduleLiveStreamReconnect();
+      }
     } catch (error) {
       if (
         !disposed &&
@@ -600,6 +714,7 @@ const startLiveStreamPlayback = async () => {
       ) {
         console.error("[live] stream playback failed:", error);
         dispose();
+        scheduleLiveStreamReconnect();
       }
     }
   }
@@ -609,6 +724,10 @@ const startLiveStreamPlayback = async () => {
   video.muted = true;
   video.defaultMuted = true;
   video.autoplay = true;
+  video.addEventListener("error", handleVideoError);
+  video.addEventListener("pause", handlePause);
+  video.addEventListener("play", handlePlay);
+  watchdogTimer = window.setInterval(watchLiveEdge, LIVE_WATCHDOG_INTERVAL_MS);
   mediaSource.addEventListener("sourceopen", handleSourceOpen, { once: true });
 };
 
@@ -619,6 +738,7 @@ const handleVisibilityChange = () => {
   }
 
   if (isLiveMode.value) {
+    liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
     void startLiveStreamPlayback();
   }
 };
