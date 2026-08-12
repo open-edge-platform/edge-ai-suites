@@ -78,7 +78,6 @@ services:
       - "./gvapython/telemetry-overlay-pymavlink.py:/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py"
       - "./scripts/mavlink_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
       - "/run/udev:/run/udev:ro"
-      - "/dev:/dev"
       - "/tmp:/tmp"
     group_add:
       - "44"
@@ -94,7 +93,9 @@ services:
       - "c 209:* rmw"
       - "a 189:* rwm"
     devices:
-      - "/dev:/dev"
+      - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
+      - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
+      - ${NPU_DEVICE:-/dev/accel/accel0}:${NPU_DEVICE:-/dev/accel/accel0}
     ports:
       - '8081:8081'
       - "8555:8555"
@@ -114,9 +115,11 @@ services:
     image: intel/metrics-manager:2026.1.0-20260508-weekly
     container_name: metrics-manager
     privileged: true
+    pid: host
+    devices:
+      - /dev/dri            # Intel GPU — card0 + renderD128 required for qmassa
     volumes:
-      - /sys:/sys
-      - /dev:/dev
+      - /sys:/sys:ro
     restart: unless-stopped
     networks:
       - app_network
