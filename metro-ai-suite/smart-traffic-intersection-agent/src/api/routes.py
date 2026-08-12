@@ -171,3 +171,6 @@ async def ws_current_traffic_intelligence(
             await websocket.close(code=1011, reason="Internal server error")
         except Exception as e:
             logger.error("Failed to close WebSocket after error", error=str(e))
+    finally:
+        logger.info("WebSocket connection closed")
+        await websocket.close()
