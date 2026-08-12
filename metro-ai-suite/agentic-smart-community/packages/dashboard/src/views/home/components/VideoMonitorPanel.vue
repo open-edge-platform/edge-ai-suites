@@ -42,7 +42,22 @@
     <div class="video-stage-shell">
       <div class="video-stage">
         <video
-          v-if="isLiveMode && activeRecord.videoSrc"
+          v-if="recordingSession"
+          ref="recordingVideoRef"
+          :key="recordingSession.segment.id"
+          class="main-player live-player"
+          :src="recordingStreamUrl"
+          autoplay
+          playsinline
+          controls
+          preload="auto"
+          @loadedmetadata="handleRecordingLoaded"
+          @timeupdate="handleRecordingTimeUpdate"
+          @ended="handleRecordingEnded"
+          @error="handleRecordingError"
+        ></video>
+        <video
+          v-else-if="isLiveMode && activeRecord.videoSrc"
           ref="liveVideoRef"
           :key="activeRecord.videoSrc"
           class="main-player live-player"
@@ -82,11 +97,7 @@
 
         <div class="video-topbar flex-between">
           <div class="video-mode-tag" :class="{ live: isLiveMode }">
-            {{
-              isLiveMode
-                ? $t("smartCommunity.liveVideo")
-                : $t("smartCommunity.historyVideo")
-            }}
+            {{ videoModeLabel }}
           </div>
           <div class="video-topbar-actions flex-end">
             <div class="realtime-pill flex-left">
@@ -111,7 +122,7 @@
           <div class="video-kicker">{{ activeRecord.camera }}</div>
           <div class="video-title">{{ activeRecord.title }}</div>
           <div class="video-time">
-            {{ isLiveMode ? $t("smartCommunity.liveNow") : activeRecord.time }}
+            {{ videoTimeLabel }}
           </div>
         </div>
       </div>
@@ -120,9 +131,12 @@
     <ActivityFeed
       :loading="activityLoading"
       :tasks="taskList"
+      :recordings="recordingList"
+      :playback-time-ms="playbackTimeMs"
       :selected-date="selectedDateLabel"
       :selected-source-id="selectedSourceId"
       @select="handleHistoryRecordSelect"
+      @seek-recording="handleSeekRecording"
     />
 
     <ReportDrawer
@@ -148,13 +162,21 @@ import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import ActivityFeed from "./ActivityFeed.vue";
 import ReportDrawer from "./ReportDrawer.vue";
-import type { CameraReport, ActivityRecord, CameraTaskRecord } from "../type";
+import type {
+  CameraReport,
+  ActivityRecord,
+  CameraTaskRecord,
+  RecordingSegment,
+} from "../type";
 import "vue3-video-play/dist/style.css";
 import {
+  buildRecordingStreamUrl,
   getCameraActivityList,
+  getCameraRecordings,
   getCamReport,
 } from "@/api/smartCommunity";
 import { getSmartCommunitySourceMeta } from "../deviceMeta";
+import { findNextRecording, findRecordingAt } from "../recordings";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -191,6 +213,13 @@ const activityLoading = ref(false);
 const reportLoading = ref(false);
 const liveNow = ref(dayjs());
 const liveVideoRef = ref<HTMLVideoElement | null>(null);
+const recordingList = ref<RecordingSegment[]>([]);
+const recordingVideoRef = ref<HTMLVideoElement | null>(null);
+const recordingSession = ref<{
+  segment: RecordingSegment;
+  offsetSeconds: number;
+} | null>(null);
+const recordingElapsedSeconds = ref(0);
 
 const selectedDate = computed({
   get: () => props.selectedDate,
@@ -250,10 +279,54 @@ const selectedDateLabel = computed(() => {
 
 const hasReports = computed(() => reportList.value.length > 0);
 
+const recordingStreamUrl = computed(() => {
+  const session = recordingSession.value;
+  if (!session || !selectedSourceId.value) {
+    return "";
+  }
+
+  return buildRecordingStreamUrl(session.segment.id, selectedSourceId.value);
+});
+
+// Wall-clock instant currently on screen during playback — drives both the
+// header pill and the timeline's playback marker.
+const playbackTimeMs = computed(() => {
+  const session = recordingSession.value;
+  if (!session) {
+    return null;
+  }
+
+  return session.segment.startMs + recordingElapsedSeconds.value * 1000;
+});
+
+const videoModeLabel = computed(() => {
+  if (recordingSession.value) {
+    return t("smartCommunity.recordingPlayback");
+  }
+
+  return isLiveMode.value
+    ? t("smartCommunity.liveVideo")
+    : t("smartCommunity.historyVideo");
+});
+
 const realtimeEventValue = computed(() => {
+  if (playbackTimeMs.value !== null) {
+    return dayjs(playbackTimeMs.value).format("YYYY-MM-DD HH:mm:ss");
+  }
+
   return isLiveMode.value
     ? `${selectedDateLabel.value} ${liveNow.value.format("HH:mm:ss")}`
     : `${activeRecord.value.date} ${activeRecord.value.time}`;
+});
+
+const videoTimeLabel = computed(() => {
+  if (playbackTimeMs.value !== null) {
+    return dayjs(playbackTimeMs.value).format("HH:mm:ss");
+  }
+
+  return isLiveMode.value
+    ? t("smartCommunity.liveNow")
+    : activeRecord.value.time;
 });
 
 let activityPollingTimer: number | null = null;
@@ -261,9 +334,11 @@ let reportPollingTimer: number | null = null;
 let liveClockTimer: number | null = null;
 let latestActivityRequestId = 0;
 let latestReportRequestId = 0;
+let latestRecordingRequestId = 0;
 let cleanupLiveStream: (() => void) | null = null;
 let liveReconnectTimer: number | null = null;
 let liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
+let recordingErrorStreak = 0;
 
 const buildRecordStatus = (status: string) => {
   if (!status) {
@@ -343,6 +418,32 @@ const queryCamFridgeList = async ({ showLoading = false } = {}) => {
   }
 };
 
+const queryRecordings = async () => {
+  const requestId = ++latestRecordingRequestId;
+
+  if (!selectedSourceId.value) {
+    recordingList.value = [];
+    return;
+  }
+
+  try {
+    const res = await getCameraRecordings({
+      date: selectedDate.value.format("YYYY-MM-DD"),
+      source_id: selectedSourceId.value,
+    });
+
+    if (requestId !== latestRecordingRequestId) {
+      return;
+    }
+
+    recordingList.value = res.recordings || [];
+  } catch {
+    if (requestId === latestRecordingRequestId) {
+      recordingList.value = [];
+    }
+  }
+};
+
 const queryCamReport = async (silent = true) => {
   const requestId = ++latestReportRequestId;
 
@@ -395,10 +496,12 @@ const disableDate = (current: Dayjs) => {
 
 const handleDateChange = (value: Dayjs | null) => {
   selectedDate.value = value ?? dayjs();
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
   resetReportData();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
 };
 
@@ -455,6 +558,7 @@ const handleExportReport = async (reports?: CameraReport[]) => {
 
 const refreshActivityList = () => {
   void queryCamFridgeList();
+  void queryRecordings();
 };
 
 const refreshDashboardData = () => {
@@ -743,12 +847,99 @@ const handleVisibilityChange = () => {
   }
 };
 
+const clearRecordingSession = () => {
+  recordingSession.value = null;
+  recordingElapsedSeconds.value = 0;
+  recordingErrorStreak = 0;
+};
+
+const startRecordingSegment = (
+  segment: RecordingSegment,
+  offsetSeconds: number,
+) => {
+  // Leaving live mode tears down the MSE stream via the isLiveMode watcher.
+  isLiveMode.value = false;
+  recordingElapsedSeconds.value = offsetSeconds;
+  recordingSession.value = { segment, offsetSeconds };
+};
+
+const handleSeekRecording = (timeMs: number) => {
+  const segment = findRecordingAt(recordingList.value, timeMs);
+  if (!segment) {
+    message.warning(t("smartCommunity.noRecordingAtTime"));
+    return;
+  }
+
+  startRecordingSegment(segment, Math.max(0, (timeMs - segment.startMs) / 1000));
+};
+
+const handleRecordingLoaded = (event: Event) => {
+  const video = event.target as HTMLVideoElement;
+  const session = recordingSession.value;
+  if (!session) {
+    return;
+  }
+
+  recordingErrorStreak = 0;
+  // The DB duration and the muxed file can disagree by a frame or two.
+  const target = Math.min(
+    session.offsetSeconds,
+    Math.max((video.duration || 0) - 0.1, 0),
+  );
+  if (Number.isFinite(target) && target > 0) {
+    video.currentTime = target;
+  }
+
+  void video.play().catch(() => undefined);
+};
+
+const handleRecordingTimeUpdate = (event: Event) => {
+  recordingElapsedSeconds.value = (event.target as HTMLVideoElement).currentTime;
+};
+
+const handleRecordingEnded = () => {
+  const session = recordingSession.value;
+  if (!session) {
+    return;
+  }
+
+  const next = findNextRecording(recordingList.value, session.segment.startMs);
+  if (!next) {
+    message.info(t("smartCommunity.recordingReachedEnd"));
+    return;
+  }
+
+  startRecordingSegment(next, 0);
+};
+
+// Retention can delete the mp4 while the DB row survives. Skip over a few dead
+// segments, then give up rather than racing through the rest of the day.
+const handleRecordingError = () => {
+  const session = recordingSession.value;
+  recordingErrorStreak += 1;
+
+  const next =
+    recordingErrorStreak <= 3 && session
+      ? findNextRecording(recordingList.value, session.segment.startMs)
+      : null;
+
+  if (!next) {
+    clearRecordingSession();
+    message.warning(t("smartCommunity.recordingLoadFailed"));
+    return;
+  }
+
+  startRecordingSegment(next, 0);
+};
+
 const handleHistoryRecordSelect = (record: ActivityRecord) => {
+  clearRecordingSession();
   activeRecord.value = record;
   isLiveMode.value = false;
 };
 
 const switchToLive = () => {
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
 };
@@ -771,6 +962,7 @@ onMounted(() => {
   activeRecord.value = buildFallbackActiveRecord();
   liveNow.value = dayjs();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
   activityPollingTimer = window.setInterval(refreshActivityList, 30 * 1000);
   reportPollingTimer = window.setInterval(refreshDashboardData, 3 * 60 * 1000);
@@ -780,11 +972,13 @@ onMounted(() => {
 });
 
 watch(selectedSourceId, () => {
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
   reportDrawerVisible.value = false;
   resetReportData();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
 });
 
