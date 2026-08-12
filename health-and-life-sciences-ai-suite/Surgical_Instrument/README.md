@@ -34,7 +34,7 @@ HOST :8080 ─→ surgical-ui        (nginx + React SPA + /api reverse-proxy)
 ```
 
 The UI does **not** unblock until `surgical-backend` reports `/api/readiness → ready`.
-On the first boot this includes the full train pipeline; the browser tab simply won't answer
+On the first boot this includes the full train pipeline; the browser tab simply will not answer
 until the model is trained and served. This is the "gate UI on BE ready" contract —
 no user-visible bootstrap UX.
 
