@@ -75,14 +75,10 @@ fi
 
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
-
-# Fallback to localhost if HOST_IP is empty
-if [[ -z "$HOST_IP" ]]; then
-    HOST_IP="127.0.0.1"
-    echo -e "${YELLOW}Warning: Could not detect host IP, using fallback: ${HOST_IP}${NC}"
-fi
-
 export HOST_IP
+# Fallback to localhost if HOST_IP is empty
+[[ -z "$HOST_IP" ]] && export HOST_IP="127.0.0.1"
+
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
 
@@ -91,9 +87,7 @@ export TAG=${TAG:-latest}
 if [[ -n "$REGISTRY" ]]; then
     export REGISTRY="${REGISTRY%/}/"
 fi
-PROJECT_NAME="routeplanner"
-
-echo -e "${GREEN}Using registry: ${YELLOW}$REGISTRY ${NC}"
+PROJECT_NAME="srpa"
 
 # Traffic Analysis Configuration
 export TRAFFIC_BUFFER_DURATION=${TRAFFIC_BUFFER_DURATION:-60}
@@ -214,7 +208,7 @@ case "$1" in
 
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
-            echo -e "${YELLOW}Removing container images...${NC}"
+            echo -e "${YELLOW}Removing container image for Smart Route Planning Agent ...${NC}"
             docker rmi -f "${REGISTRY}smart-route-planning-agent:${TAG}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
