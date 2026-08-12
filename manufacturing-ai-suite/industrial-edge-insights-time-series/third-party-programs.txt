@@ -22,15 +22,15 @@ License-Identifier: MIT
 - influxdb:1.12.4
 ----------------------------------------------------------------------
 
-License-Identifier: AGPLv3
+License-Identifier: AGPL-3.0-only
 - grafana/grafana-oss:13.0.2
 ----------------------------------------------------------------------
 
-License-Identifier: EPL-2.0/EPL-1.0
+License-Identifier: EPL-2.0 OR EPL-1.0
 - eclipse-mosquitto:2.0.22
 ----------------------------------------------------------------------
 
-License-Identifier: 2-clause BSD-like
+License-Identifier: BSD-2-Clause
 - nginx:1.31.3
 
 ---------------------------------------------------------------------------------------------------------------------------
@@ -43,24 +43,11 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 
 ----------------------------------------------------------------------
 
-apps/weld-defect-detection/classification-training/requirements.txt
-================================================================
-License-Identifier: Apache License 2.0
-scikit-learn-intelex==2025.11.0
-----------------------------------------------------------------------
-
-License-Identifier: BSD-3-Clause
-joblib==1.5.3
-numpy==2.2.6
-pandas==2.3.3
-scikit-learn==1.6.1
-----------------------------------------------------------------------
-
 ---------------------------------------------------------------------------------------------------------------------------
 
 apps/wind-turbine-anomaly-detection/training/requirements.txt
 ================================================================
-License-Identifier: Apache License 2.0
+License-Identifier: Apache-2.0
 dpctl==0.21.1
 scikit-learn-intelex==2025.2.0
 ----------------------------------------------------------------------
@@ -81,82 +68,132 @@ ia-opcua-server microservice:
 =============================
 
 1. Base docker image: python:3.13-slim
-License-Identifier: PSF License
+License-Identifier: PSF-2.0
 
 2. requirements.txt
 
-License-Identifier: Apache License 2.0
+License-Identifier: Apache-2.0
 aiofiles==25.1.0
-pyOpenSSL==26.2.0
+pyOpenSSL==26.4.0
 sortedcontainers==2.4.0
-tzdata==2026.2
+tzdata==2026.3
 ----------------------------------------------------------------------
 
-License-Identifier: MIT License
+License-Identifier: MIT
 aiosqlite==0.22.1
-cffi==2.0.0
-pytz==2026.2
+pytz==2026.3.post1
 six==1.17.0
 ----------------------------------------------------------------------
 
-License-Identifier: LGPL-3.0
+License-Identifier: MIT-0
+cffi==2.1.1
+----------------------------------------------------------------------
+
+License-Identifier: LGPL-3.0-or-later
 asyncua==1.1.5
 ----------------------------------------------------------------------
 
-License-Identifier: BSD License
-numpy==2.4.4
+License-Identifier: Apache-2.0 OR BSD-3-Clause
+python-dateutil==2.9.0.post0
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
 pandas==2.2.3
 pycparser==3.0
-python-dateutil==2.9.0.post0
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+numpy==2.5.1
+----------------------------------------------------------------------
 
 License-Identifier: PSF-2.0
-typing_extensions==4.15.0
+typing_extensions==4.16.0
 ----------------------------------------------------------------------
 
-License-Identifier: MIT License / Proprietary
-pip==26.1.1
+License-Identifier: MIT OR LicenseRef-Proprietary
+pip==26.2.1
 ----------------------------------------------------------------------
 
-License-Identifier: BSD License or Apache License 2.0
-cryptography==47.0.0
+License-Identifier: Apache-2.0 OR BSD-3-Clause
+cryptography==49.0.0
 ---------------------------------------------------------------------------------------------------------------------------
 
 ia-mqtt-publisher microservice:
 ===============================
 
 1. Base docker image: python:3.13-slim
-License-Identifier: PSF License
+License-Identifier: PSF-2.0
 
 2. requirements.txt
 
-License-Identifier: Apache License 2.0
-tzdata==2026.2
+License-Identifier: Apache-2.0
+tzdata==2026.3
 ----------------------------------------------------------------------
 
-License-Identifier: EPL-1.0 / EDL-1.0
+License-Identifier: EPL-1.0 OR EDL-1.0
 paho-mqtt==1.4.0
 ----------------------------------------------------------------------
 
 
-License-Identifier: BSD License
-numpy==2.4.4
-pandas==2.3.1
+License-Identifier: Apache-2.0 OR BSD-3-Clause
 python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
-License-Identifier: MIT License
-pip==26.1.1
-pytz==2026.2
+License-Identifier: BSD-3-Clause
+pandas==2.3.1
+----------------------------------------------------------------------
+
+License-Identifier: MIT OR LicenseRef-Proprietary
+pip==26.2.1
+----------------------------------------------------------------------
+
+License-Identifier: MIT
+pytz==2026.3.post1
 six==1.17.0
 
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+numpy==2.5.1
+
 ---------------------------------------------------------------------------------------------------------------------------
+
+tests/requirements.txt
+================================================================
+License-Identifier: Apache-2.0
+aiohttp==3.14.1
+playwright==1.58.0
+requests==2.33.0
+----------------------------------------------------------------------
+
+License-Identifier: EPL-2.0 OR BSD-3-Clause
+paho-mqtt==2.1.0
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
+pandas==2.2.3
+----------------------------------------------------------------------
+
+License-Identifier: MIT
+influxdb-client==1.50.0
+pytest==9.0.3
+pytest-env==1.6.0
+ruamel.yaml==0.19.1
+PyYAML==6.0.3
+----------------------------------------------------------------------
+
+License-Identifier: MPL-2.0
+pytest-html==4.2.0
+
+---------------------------------------------------------------------------------------------------------------------------
+
 Dataset:
 ========
 
 Distributing only subset of video and csv files for testing
 
 Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset
-License-Identifier: Apache License 2.0
+License-Identifier: Apache-2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
