@@ -4,10 +4,13 @@
 
 **September 2026**
 
-This release introduces **Agentic Integration** for autonomous weld quality monitoring,
-a **standalone Qwen VLM fine-tuning toolkit**, a **vLLM-based deployment path for defect
-explainability**, and a new **insight-workbench UI service**, along with various fixes, 
-security updates, and documentation improvements.
+This release introduces **Agentic Integration for user-triggered weld quality monitoring**,
+enabling users to initiate analysis for a selected time range. It also introduces a 
+**standalone Unsloth-based Qwen3.5-2B VLM fine-tuning toolkit** with a weld explainability
+LoRA adapter for vLLM-based defect explainability.
+
+The release also includes various bug fixes, security updates, performance improvements, and
+documentation enhancements.`
 
 **New**
 
@@ -22,6 +25,10 @@ security updates, and documentation improvements.
   corresponding how-to guide.
 - **Insight-Workbench UI Service**: A new UI service has been added for exploring and analyzing
   weld defect detection results.
+- **Multimodal Agentic UI Service**: A new UI service has been added for the agentic
+  weld quality analysis workflow. It provides a dashboard for triggering analysis runs,
+  monitoring live detection and agent-reasoning phases, and reviewing per-run results including
+  policy, analysis, evidence, and ticket agent outputs.
 
 **Improved**
 
