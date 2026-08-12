@@ -2,6 +2,13 @@
 
 - **Prerequisite:** Follow the instructions in [Getting Started Guide](../gsg_robot/index.md). To use GMSL cameras, The minimum required setup to get GMSL working is setting up `amrdocs` APT repository, and `kobuk` APT repository.
 
+**Required Packages:**
+    - intel-mipi-gmsl-dkms
+    - v4l-utils
+    - i2c-tools
+    - librealsense2
+    - libreal
+
 **GMSL (Gigabit Multimedia Serial Link)** is a high-speed serial interface designed for transmitting uncompressed video, audio, and control data over long distances. It is commonly used in automotive applications for connecting cameras and other multimedia devices to the central processing unit.
 
 GMSL supports data rates of up to 6 Gbps, allowing for high-resolution video transmission with low latency. It uses a differential signaling method to ensure signal integrity and reduce electromagnetic interference (EMI). GMSL also includes features such as error correction and power management to enhance reliability and efficiency.
