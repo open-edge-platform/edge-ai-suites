@@ -58,6 +58,10 @@ Follow the setup guide to stand up all services and run the demo:
 
 - [User Guide](docs/user-guide/get-started.md).
 
+Follow the guide to use knowledgebase skill alone:
+
+- [User Guide](docs/user-guide/knowledgebase_get_started.md).
+
 The guide walks through, in order:
 
 1. **Router + compressor** — please refer to the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/inference-router) microservice.
