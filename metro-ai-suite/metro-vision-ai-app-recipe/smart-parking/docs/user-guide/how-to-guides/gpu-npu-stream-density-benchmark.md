@@ -1,14 +1,11 @@
 # Demonstrating NPU Value: GPU and NPU Stream Density Benchmark
 
 This document describes a structured benchmark workflow to demonstrate the value of Neural
-Processing Unit (NPU) offloading in the [Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking)
-application. The workflow has three parts:
-
+Processing Unit (NPU) offloading in the Smart Parking application. The workflow has three parts:
 
 1. [Establish the best GPU-only stream density baseline](#part-1-gpu-baseline---peak-stream-density)
 2. [Establish the best NPU-only stream density baseline](#part-2-npu-baseline---peak-stream-density)
-3. [Establish the best combined stream density with GPU and NPU pipelines running together](#part-3-combined-baseline---gpu-and-npu-simultaneously-gpu--npu)
-
+3. [Establish the best combined stream density with GPU and NPU pipelines running together](#part-3-combined-baseline---gpu-and-npu-simultaneously-gpunpu)
 
 ---
 
@@ -35,7 +32,6 @@ Use the `yolov11s_gpu` pipeline as defined in
 [smart-parking/benchmark_app_payload.json](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/benchmark_app_payload.json).
 The pipeline uses the original configuration; note that metro pipelines are latency-focused by
 default.
-
 
 ### Run the GPU Stream Density Benchmark
 
@@ -78,6 +74,7 @@ For detailed metric definitions and KPI interpretation, refer to
   of the decode and inference compute (see Fig. 2).
 
 ### Part 1 Section Summary
+
 - **Standalone GPU ceiling**: `Stream Density(GPU)(9)` at target FPS.
 - **Hardware takeaway**: GPU engines carry primary inference/media load (see Fig. 1), while
   CPU is mainly utilized for host-side data-feeding tasks (see Fig. 2).
@@ -85,11 +82,11 @@ For detailed metric definitions and KPI interpretation, refer to
 **Supporting screenshots (cropped to include only benchmark-relevant telemetry)**:
 ![GPU telemetry (qmassa) at 9 streams](../_assets/npu-val-add/gpu_9_focus.png)
 
- *Fig. 1: GPU telemetry (qmassa) at 9 streams*
+_Fig. 1: GPU telemetry (qmassa) at 9 streams_
 
 ![CPU telemetry (htop) during GPU baseline run](../_assets/npu-val-add/cpu_9_focus.png)
 
- *Fig. 2: CPU telemetry (htop) during GPU baseline run*
+_Fig. 2: CPU telemetry (htop) during GPU baseline run_
 
 ---
 
@@ -140,6 +137,7 @@ For detailed metric definitions and KPI interpretation, refer to
     signals visible during the same run.
 
 ### Part 2 Section Summary
+
 - **Standalone NPU ceiling**: `Stream Density(NPU)(7)` at target FPS.
 - **Hardware takeaway**: NPU carries inference load (see Fig. 3), and GPU decode/frame-handling
   activity (`VCS`/`VECS`) remains part of the end-to-end path (see Fig. 4).
@@ -148,11 +146,11 @@ For detailed metric definitions and KPI interpretation, refer to
 
 ![NPU telemetry monitor at 7 streams](../_assets/npu-val-add/npu_7_monitor_focus.png)
 
-*Fig. 3: NPU telemetry (npu-monitor-tool) at 7 streams*
+_Fig. 3: NPU telemetry (npu-monitor-tool) at 7 streams_
 
 ![GPU/qmassa telemetry during NPU baseline run](../_assets/npu-val-add/npu_7_qmassa_focus.png)
 
-*Fig. 4: GPU telemetry (qmassa) during NPU baseline run*
+_Fig. 4: GPU telemetry (qmassa) during NPU baseline run_
 
 ---
 
@@ -171,12 +169,12 @@ This section evaluates the best performance when **GPU and NPU pipelines run sim
   streams.
 
 > **Note:** In this document, `GPU!NPU` is shorthand for the combined run (GPU and NPU
-  together), not logical negation.
+> together), not logical negation.
 
 ### Run the Combined Stream Density Benchmark
 
 Run the combined workflow with 7 GPU streams and 5 NPU streams, using **nstreams** mode from
-[Benchmark Performance](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/how-to-guides/benchmark.md):
+[Benchmark Performance](./benchmark.md):
 
 ```bash
 # Navigate to the metro-vision-ai-app-recipe directory
@@ -188,21 +186,21 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ### Example Results (GPU!NPU)
 
-| Symbol | Value | Notes |
-|---|---:|---|
-| Stream Density(GPU) | 9 | GPU-only peak stream density |
-| Stream Density(NPU) | 7 | NPU-only peak stream density |
-| Stream Density(GPU!NPU) | 12 | Combined run with 7 GPU streams and 5 NPU streams |
-| Throughput median | 29.8523 | Combined run KPI |
-| Throughput average | 29.9193 | Combined run KPI |
-| Throughput cumulative | 359.031 | Combined run KPI |
-| Throughput min | 29.8098 | Combined run KPI |
+| Symbol                  |   Value | Notes                                             |
+| ----------------------- | ------: | ------------------------------------------------- |
+| Stream Density(GPU)     |       9 | GPU-only peak stream density                      |
+| Stream Density(NPU)     |       7 | NPU-only peak stream density                      |
+| Stream Density(GPU!NPU) |      12 | Combined run with 7 GPU streams and 5 NPU streams |
+| Throughput median       | 29.8523 | Combined run KPI                                  |
+| Throughput average      | 29.9193 | Combined run KPI                                  |
+| Throughput cumulative   | 359.031 | Combined run KPI                                  |
+| Throughput min          | 29.8098 | Combined run KPI                                  |
 
 For detailed metric definitions and KPI interpretation, refer to
 [Benchmark Performance](./benchmark.md).
 
-
 ### Part 3 Section Summary
+
 - **Combined stream density**: `Stream Density(GPU!NPU)(12)`
 - **GPU stream share**: `7`
 - **NPU stream share**: `5`
@@ -215,11 +213,11 @@ shown in Fig. 6.
 
 ![Combined GPU telemetry at 7 GPU streams](<../_assets/npu-val-add/gpu_npu_7_5(qmassa).png>)
 
-*Fig. 5: Combined run, GPU telemetry (qmassa) at 7 GPU streams*
+_Fig. 5: Combined run, GPU telemetry (qmassa) at 7 GPU streams_
 
 ![Combined NPU telemetry at 5 NPU streams](<../_assets/npu-val-add/gpu_npu_7_5(npu).v3.png>)
 
-*Fig. 6: Combined NPU telemetry (npu-monitor-tool) at 5 NPU streams*
+_Fig. 6: Combined NPU telemetry (npu-monitor-tool) at 5 NPU streams_
 
 ---
 
@@ -233,12 +231,11 @@ shown in Fig. 6.
 - [Part 3 Section Summary](#part-3-section-summary) shows the combined result
   `Stream Density(GPU!NPU)(12)` with 7 GPU streams and 5 NPU streams.
 
-Overall, **NPU offloading provides clear system-level value addition** for
-[Smart Parking](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking).
+Overall, **NPU offloading provides clear system-level value addition** for Smart Parking.
 Applying a tuned backoff (for example, 2 streams per pipeline on this platform) creates GPU
 headroom for NPU-related media work, and enables higher total stream density than either
 standalone path while maintaining stable throughput.
 
 > **Note:** The values in this document are example reference results. Actual stream density
-  and throughput can vary by platform setup, software stack, and runtime conditions. Re-run the
-  benchmark in your target environment to validate expected behavior.
+> and throughput can vary by platform setup, software stack, and runtime conditions. Re-run the
+> benchmark in your target environment to validate expected behavior.

@@ -307,7 +307,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    <!--hide_directive:::::
    :::::{tab-item}hide_directive--> **Axiomtek® ROBOX500**
 
-   The [Axiomtek® ROBOX500](https://www.axiomtek.com/ROBOX500/) may provide either 4x GMSL or 8x GMSL camera interfaces (FAKRA universal type).
+   The [Axiomtek® ROBOX500](https://www.axiomtek.com/products/intelligent-solutions/autonomous-mobile-robots/amr-controller/robox500) may provide either 4x GMSL or 8x GMSL camera interfaces (FAKRA universal type).
 
    <!--hide_directive::::{tab-set}
    :::{tab-item}hide_directive--> **RealSense™ D457**
