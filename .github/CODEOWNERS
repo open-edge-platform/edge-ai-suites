@@ -79,6 +79,8 @@ README.md          @xwu2intel
 /metro-ai-suite/live-video-analysis/**/README.md                 @bharagha @yogeshmpandey  @hteeyeoh  @open-edge-platform/open-edge-platform-docs-write
 
 # /metro-ai-suite/metro-sdk-manager/                             no codeowners, the top codeowners apply
+/metro-ai-suite/metro-sdk-manager/docs/user-guide/                         @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-sdk-manager/docs/oep-sdk-manager-files/config.js     @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # inside vision ai recipe
 /metro-ai-suite/metro-vision-ai-app-recipe/docs/                           @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write

@@ -228,8 +228,9 @@ RUN apt-get purge -y --allow-remove-essential perl-base \
 WORKDIR /app
 COPY config/ config/
 
-# No USER here on purpose: docker compose runs the container as the host uid
-# (VSA_UID/VSA_GID, with group_add on the render gid for /dev/accel access).
+RUN groupadd appuser \
+    && useradd -m -s /bin/bash -g appuser appuser
+USER appuser
 
 EXPOSE 8999
 
