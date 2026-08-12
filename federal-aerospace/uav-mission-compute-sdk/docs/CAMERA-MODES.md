@@ -241,7 +241,7 @@ make apps
 
 | Component | CPU | GPU | Memory | Notes |
 |-----------|-----|-----|--------|-------|
-| px4-gazebo | 150-250% | 40% | 3.8 GB | Sim still runs for telemetry |
+| px4-sitl | 150-250% | 40% | 3.8 GB | Sim still runs for telemetry |
 | usb-camera-bridge | ~10% | - | 50 MB | 1 ffmpeg process |
 | vision-processor | 15-30% | 25% | 400 MB | 1 GStreamer pipeline |
 | **Total** | **~250%** | **~65%** | **~4.2 GB** | Less resource-intensive |
@@ -272,14 +272,13 @@ cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 # 1. Enumerate USB device
 v4l2-ctl --list-devices
 
-# 2. Update .env
-sed -i 's/VISION_CAMERA_IDS=nadir,forward,rear/VISION_CAMERA_IDS=nadir/' .env
+# 2. Update .env with correct USB_VIDEO_DEVICE
 echo "USB_VIDEO_DEVICE=/dev/video32" >> .env   # Adjust to your device
 
 # 3. Stop all containers
 make down
 
-# 4. Start with USB profile
+# 4. Start with USB profile (sets VISION_CAMERA_IDS=nadir automatically)
 make up-usb-camera
 
 # 5. Restart apps with 1-camera config
@@ -291,28 +290,25 @@ make apps
 ```bash
 cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 
-# 1. Update .env back to 3 cameras
-sed -i 's/VISION_CAMERA_IDS=nadir/VISION_CAMERA_IDS=nadir,forward,rear/' .env
-
-# 2. Stop all containers
+# 1. Stop all containers
 make down
 
-# 3. Start with default sim profile
+# 2. Start with default sim profile (sets VISION_CAMERA_IDS=nadir,forward,rear automatically)
 make up-sim-camera
 
-# 4. Restart apps with 3-camera config
+# 3. Restart apps with 3-camera config
 make apps
 ```
 
 ### Environment Variable Checklist
 
-| Variable | Sim Mode | USB Mode |
-|----------|----------|----------|
-| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` |
-| `GZ_WORLD` | `baylands_multicam` | `baylands_multicam` |
-| `USB_VIDEO_DEVICE` | — | `/dev/video32` (your device) |
-| `USB_CAMERA_ID` | — | `nadir` |
-| `USB_CAPTURE_FORMAT` | — | `mjpeg` or `raw` |
+| Variable | Sim Mode | USB Mode | Set by |
+|----------|----------|----------|--------|
+| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | auto (`make up-*`) |
+| `GZ_WORLD` | `baylands_multicam` | `baylands_multicam` | `.env` |
+| `USB_VIDEO_DEVICE` | — | `/dev/video32` (your device) | `.env` manually |
+| `USB_CAMERA_ID` | — | `nadir` | `.env` |
+| `USB_CAPTURE_FORMAT` | — | `mjpeg` or `raw` | `.env` |
 
 ---
 

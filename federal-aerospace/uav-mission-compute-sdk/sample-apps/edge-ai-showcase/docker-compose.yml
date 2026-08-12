@@ -11,12 +11,12 @@ services:
         - no_proxy=${no_proxy}
     container_name: edge-ai-showcase
     ports:
-      - "5002:5002"
+      - "127.0.0.1:5002:5002"
     environment:
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=1883
       - UAV_ID=${UAV_ID:-uav-1}
-      - COMPANION_BRIDGE_URL=http://px4-gazebo:8080
+      - COMPANION_BRIDGE_URL=${COMPANION_BRIDGE_URL:-http://px4-gazebo:8080}
       - RTSP_HOST=mediamtx
       - RTSP_PORT=8554
       - http_proxy=
