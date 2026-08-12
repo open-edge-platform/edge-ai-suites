@@ -32,7 +32,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ----------------------------------------------------------------------------
 # GPU Driver Installation (Same as rppg)
 # ----------------------------------------------------------------------------
-ARG INSTALL_DRIVER_VERSION="25.31.34666"
+ARG INSTALL_DRIVER_VERSION="26.18.38308"
 
 COPY scripts/install_ubuntu_gpu_drivers.sh /tmp/install_gpu_drivers.sh
 RUN chmod +x /tmp/install_gpu_drivers.sh
