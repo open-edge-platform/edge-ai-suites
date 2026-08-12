@@ -12,6 +12,7 @@ An agent-native automation platform that combines a local knowledge base with au
 | Skill | Description | Status |
 |-------|-------------|--------|
 | `competitive_analysis_PDF_generator` | Competitive-analysis report generator — gathers product info from the local RAG knowledge base plus web search, then produces a professional Chinese HTML/PDF comparison report | Shipped (`SKILL.md` + `query_rag.sh`) |
+| `knowledgebase` | Generic RAG query skill — retrieves any information from the local EC-RAG knowledge base via a curl-based `ecrag` wrapper and generates structured reports, summaries, comparisons, or Q&A responses | Shipped (`SKILL.md` + `ecrag`) |
 
 See [skills/](skills/) for the shipped Skills and [docs/user-guide/](docs/user-guide/) for how to install and enable a Skill in OpenClaw.
 
@@ -57,10 +58,6 @@ The platform is built around a UI service that talks to the OpenClaw agent runti
 Follow the setup guide to stand up all services and run the demo:
 
 - [User Guide](docs/user-guide/get-started.md).
-
-Follow the guide to use knowledgebase skill alone:
-
-- [User Guide](docs/user-guide/knowledgebase_get_started.md).
 
 The guide walks through, in order:
 
